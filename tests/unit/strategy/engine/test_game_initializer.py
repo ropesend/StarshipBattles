@@ -455,3 +455,192 @@ class TestGameSessionFleetLookup:
 
         result = session._get_fleet_by_id(999)
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# FEAT-27: galaxy size 1, default 2, distinct empire placement at N≥2
+# ---------------------------------------------------------------------------
+
+class TestFeat27EmpirePlacement:
+    """Empire-to-system / empire-to-planet assignment under FEAT-27 rules."""
+
+    @staticmethod
+    def _config(system_count: int, num_empires: int, seed: int = 42):
+        from game.strategy.engine.game_config import GameConfig, PlayerConfig
+        players = [PlayerConfig(name=f"E{i}") for i in range(num_empires)]
+        return GameConfig(
+            system_count=system_count,
+            players=players,
+            galaxy_radius=2000,
+            galaxy_seed=seed,
+        )
+
+    def test_n1_e1_works(self):
+        from game.strategy.engine.game_initializer import GameInitializer
+        config = self._config(system_count=1, num_empires=1)
+        galaxy, empires = GameInitializer.initialize(config)
+        assert len(galaxy.systems) == 1
+        assert len(empires) == 1
+        assert len(empires[0].colonies) == 1
+
+    def test_n1_e2_shares_system_distinct_planets(self):
+        """N=1 + E=2: both empires colonise the lone system on different planets."""
+        from game.strategy.engine.game_initializer import GameInitializer
+
+        config = self._config(system_count=1, num_empires=2)
+        galaxy, empires = GameInitializer.initialize(config)
+
+        assert len(galaxy.systems) == 1
+        the_system = list(galaxy.systems.values())[0]
+
+        # Both empires have a colony.
+        assert len(empires[0].colonies) == 1
+        assert len(empires[1].colonies) == 1
+
+        # Both colonies are inside the lone system.
+        assert empires[0].colonies[0] in the_system.planets
+        assert empires[1].colonies[0] in the_system.planets
+
+        # Different planets — not the same Python object.
+        assert empires[0].colonies[0] is not empires[1].colonies[0]
+
+        # owner_id consistency: each planet reports the correct empire.
+        assert empires[0].colonies[0].owner_id == empires[0].id
+        assert empires[1].colonies[0].owner_id == empires[1].id
+
+    def test_n1_e2_no_warp_points(self):
+        from game.strategy.engine.game_initializer import GameInitializer
+        config = self._config(system_count=1, num_empires=2)
+        galaxy, _empires = GameInitializer.initialize(config)
+        total_warps = sum(len(sys.warp_points) for sys in galaxy.systems.values())
+        assert total_warps == 0
+
+    def test_n2_e2_distinct_systems(self):
+        """N=2 + E=2: each empire owns a different system (the original invariant)."""
+        from game.strategy.engine.game_initializer import GameInitializer
+
+        config = self._config(system_count=2, num_empires=2)
+        galaxy, empires = GameInitializer.initialize(config)
+
+        assert len(galaxy.systems) == 2
+        # Find each empire's home system by looking up which system contains its colony.
+        sys_for_empire = []
+        for empire in empires:
+            home_planet = empire.colonies[0]
+            for sys in galaxy.systems.values():
+                if home_planet in sys.planets:
+                    sys_for_empire.append(sys)
+                    break
+
+        assert len(sys_for_empire) == 2
+        assert sys_for_empire[0] is not sys_for_empire[1], (
+            "Empires must occupy distinct systems at N≥2"
+        )
+
+    def test_n2_e2_one_warp_link(self):
+        from game.strategy.engine.game_initializer import GameInitializer
+        config = self._config(system_count=2, num_empires=2)
+        galaxy, _empires = GameInitializer.initialize(config)
+        total_warps = sum(len(sys.warp_points) for sys in galaxy.systems.values())
+        assert total_warps == 2  # one bidirectional link = one warp point per system
+
+    def test_n5_e4_distinct_systems_evenly_spread(self):
+        """N=5 + E=4: linspace places empires at indices [0, 1, 3, 4] (no clustering)."""
+        from game.strategy.engine.game_initializer import GameInitializer
+
+        config = self._config(system_count=5, num_empires=4)
+        galaxy, empires = GameInitializer.initialize(config)
+
+        # All four empires must be in distinct systems.
+        empire_systems = []
+        for empire in empires:
+            home_planet = empire.colonies[0]
+            for idx, sys in enumerate(galaxy.systems.values()):
+                if home_planet in sys.planets:
+                    empire_systems.append(idx)
+                    break
+
+        assert len(empire_systems) == 4
+        assert len(set(empire_systems)) == 4, (
+            f"All empires must occupy distinct systems, got indices {empire_systems}"
+        )
+
+
+class TestFeat27PlanetShortageRetry:
+    """N=1 with insufficient planets must retry generation, then refuse."""
+
+    def test_planet_shortage_eventually_raises(self, monkeypatch):
+        """If every regeneration attempt produces too few planets, raise ValidationException."""
+        from game.core.exceptions import ValidationException
+        from game.strategy.engine.game_initializer import GameInitializer
+        from game.strategy.engine.game_config import GameConfig, PlayerConfig
+
+        # Force every generated system to have zero planets.
+        from game.strategy.data import galaxy_system_generator
+
+        original = galaxy_system_generator.GalaxySystemGenerator.generate_systems
+
+        def _generate_no_planets(self, galaxy, count, *args, **kwargs):
+            systems = original(self, galaxy, count, *args, **kwargs)
+            for sys in systems:
+                sys.planets = []
+            return systems
+
+        monkeypatch.setattr(
+            galaxy_system_generator.GalaxySystemGenerator,
+            "generate_systems",
+            _generate_no_planets,
+        )
+
+        players = [PlayerConfig(name=f"E{i}") for i in range(2)]
+        config = GameConfig(
+            system_count=1,
+            players=players,
+            galaxy_radius=2000,
+            galaxy_seed=99,
+        )
+
+        with pytest.raises(ValidationException) as exc_info:
+            GameInitializer.initialize(config)
+
+        msg = str(exc_info.value).lower()
+        assert "planet" in msg or "insufficient" in msg or "regener" in msg or "attempts" in msg
+
+    def test_planet_shortage_retry_succeeds_when_a_later_attempt_has_enough(self, monkeypatch):
+        """If the first attempt is short but a later attempt succeeds, initialize() should win."""
+        from game.strategy.engine.game_initializer import GameInitializer
+        from game.strategy.engine.game_config import GameConfig, PlayerConfig
+
+        from game.strategy.data import galaxy_system_generator
+
+        original = galaxy_system_generator.GalaxySystemGenerator.generate_systems
+        call_count = {"n": 0}
+
+        def _flaky_generate(self, galaxy, count, *args, **kwargs):
+            call_count["n"] += 1
+            systems = original(self, galaxy, count, *args, **kwargs)
+            if call_count["n"] == 1:
+                # First attempt: zero planets to force a retry.
+                for sys in systems:
+                    sys.planets = []
+            return systems
+
+        monkeypatch.setattr(
+            galaxy_system_generator.GalaxySystemGenerator,
+            "generate_systems",
+            _flaky_generate,
+        )
+
+        players = [PlayerConfig(name=f"E{i}") for i in range(2)]
+        config = GameConfig(
+            system_count=1,
+            players=players,
+            galaxy_radius=2000,
+            galaxy_seed=7,
+        )
+
+        galaxy, empires = GameInitializer.initialize(config)
+        assert call_count["n"] >= 2, "initialize() should have retried generation at least once"
+        assert len(empires[0].colonies) == 1
+        assert len(empires[1].colonies) == 1
+        assert empires[0].colonies[0] is not empires[1].colonies[0]

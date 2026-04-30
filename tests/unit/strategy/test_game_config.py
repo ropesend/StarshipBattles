@@ -71,7 +71,9 @@ class TestGameConfig:
             PlayerConfig(name="Empire 3", theme="Romulans", color=(0, 180, 0)),
         ]
 
-        config = GameConfig(players=players)
+        # FEAT-27: pin system_count >= len(players) to satisfy the
+        # N>=2 distinct-system invariant (default is 2).
+        config = GameConfig(players=players, system_count=3)
 
         assert len(config.players) == 3
         assert config.players[0].name == "Empire 1"

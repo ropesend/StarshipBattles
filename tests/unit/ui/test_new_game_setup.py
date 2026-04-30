@@ -86,10 +86,10 @@ class TestNewGameSetupValidationUniqueness:
 
 
 class TestNewGameSetupSystemCountDefault:
-    """FEAT-24: Default system_count is 5 for fast iteration."""
+    """FEAT-27: default system_count is 2, sourced from GameConfig dataclass."""
 
-    def test_build_game_config_default_system_count_is_5(self):
-        """build_game_config uses 5 as the default system_count."""
+    def test_build_game_config_default_system_count_is_2(self):
+        """build_game_config uses 2 as the default system_count."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
         config = NewGameSetupScreen.build_game_config(
@@ -98,15 +98,104 @@ class TestNewGameSetupSystemCountDefault:
             empire_names=["Solo"]
         )
 
-        assert config.system_count == 5
+        assert config.system_count == 2
 
-    def test_build_game_config_signature_default_is_5(self):
-        """The system_count parameter's default value is 5 (introspection)."""
+    def test_build_game_config_signature_default_matches_dataclass(self):
+        """The system_count parameter's default is sourced from GameConfig.
+
+        FEAT-27 single-source-of-truth contract: the UI must NOT hardcode
+        the default; it imports DEFAULT_SYSTEM_COUNT from the GameConfig
+        module so changing one place updates both.
+        """
         import inspect
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+        from game.strategy.engine.game_config import DEFAULT_SYSTEM_COUNT
 
         sig = inspect.signature(NewGameSetupScreen.build_game_config)
-        assert sig.parameters["system_count"].default == 5
+        assert sig.parameters["system_count"].default == DEFAULT_SYSTEM_COUNT
+        assert DEFAULT_SYSTEM_COUNT == 2
+
+
+class TestSystemCountSliderCurve:
+    """FEAT-27: continuous quadratic mapping for the galaxy-size slider.
+
+    Internal slider value t ∈ [0, 1000] maps to game `system_count` ∈ [1, 150]
+    via `value = max(1, min(150, int(round(1 + 149 * (t/1000) ** 2))))`.
+
+    The curve is fine-grained at the low end (each thumb-pixel produces a
+    1-step change near 1) and coarser at the high end (a thumb-pixel near
+    100% drags through ~5–10 systems).
+    """
+
+    def test_curve_at_t_zero_returns_1(self):
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        assert system_count_slider_curve(0) == 1
+
+    def test_curve_at_t_max_returns_150(self):
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        assert system_count_slider_curve(1000) == 150
+
+    def test_curve_clamps_below_zero(self):
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        assert system_count_slider_curve(-50) == 1
+
+    def test_curve_clamps_above_max(self):
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        assert system_count_slider_curve(2000) == 150
+
+    def test_curve_low_end_fine_grained(self):
+        """Adjacent t values near 0 must yield single-system increments."""
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        prev = system_count_slider_curve(0)
+        max_jump = 0
+        for t in range(0, 100):
+            v = system_count_slider_curve(t)
+            max_jump = max(max_jump, v - prev)
+            prev = v
+        assert max_jump <= 1, (
+            f"Low-end curve must give 1-system increments; saw a {max_jump}-system jump"
+        )
+
+    def test_curve_high_end_traverses_more_systems_than_low_end(self):
+        """Equal slider-travel deltas should cover more systems at the high
+        end than at the low end. Concretely, the last 10% of slider travel
+        must cover strictly more `system_count` ground than the first 10%.
+        This is the user's "fine at low, coarse at high" contract."""
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        low_span = system_count_slider_curve(100) - system_count_slider_curve(0)
+        high_span = system_count_slider_curve(1000) - system_count_slider_curve(900)
+        assert high_span > low_span, (
+            f"High-end must cover more systems than low-end per equal travel; "
+            f"low_span={low_span}, high_span={high_span}"
+        )
+        # Concrete sanity check: the top 10% should cover at least 10x as
+        # many systems as the bottom 10% (quadratic gives ~28x in practice).
+        assert high_span >= 10 * max(1, low_span), (
+            f"High-end span {high_span} should be at least 10x low-end span {low_span}"
+        )
+
+    def test_curve_is_monotonic_non_decreasing(self):
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        prev = system_count_slider_curve(0)
+        for t in range(1, 1001):
+            v = system_count_slider_curve(t)
+            assert v >= prev, f"curve regressed at t={t}: {prev} -> {v}"
+            prev = v
+
+    def test_curve_landings_cover_full_range(self):
+        """Every system_count in [1, 150] must be reachable by some t."""
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        landings = {system_count_slider_curve(t) for t in range(0, 1001)}
+        assert 1 in landings and 150 in landings
+        assert len(landings) >= 100, (
+            f"Curve must produce broad coverage; only {len(landings)} distinct values"
+        )
+
+    def test_default_system_count_2_is_reachable(self):
+        """The default value 2 must be reachable by some slider position."""
+        from game.ui.screens.new_game_setup_screen import system_count_slider_curve
+        landings = {system_count_slider_curve(t) for t in range(0, 1001)}
+        assert 2 in landings
 
 
 class TestNewGameSetupConfigBuilding:
@@ -132,10 +221,12 @@ class TestNewGameSetupConfigBuilding:
         """Setup produces valid GameConfig for 4 players."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
+        # FEAT-27: 4 players require system_count >= 4 at N>=2.
         config = NewGameSetupScreen.build_game_config(
             save_name="BigGame",
             player_count=4,
-            empire_names=["Empire A", "Empire B", "Empire C", "Empire D"]
+            empire_names=["Empire A", "Empire B", "Empire C", "Empire D"],
+            system_count=4,
         )
 
         assert len(config.players) == 4
@@ -147,10 +238,12 @@ class TestNewGameSetupConfigBuilding:
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
         from game.strategy.engine.game_config import THEME_DEFAULTS
 
+        # FEAT-27: 4 players require system_count >= 4 at N>=2.
         config = NewGameSetupScreen.build_game_config(
             save_name="ThemeTest",
             player_count=4,
-            empire_names=["E1", "E2", "E3", "E4"]
+            empire_names=["E1", "E2", "E3", "E4"],
+            system_count=4,
         )
 
         # Verify themes match THEME_DEFAULTS

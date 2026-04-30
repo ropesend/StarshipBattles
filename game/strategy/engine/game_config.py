@@ -49,6 +49,16 @@ VALID_GALAXY_TYPES = frozenset([
 ])
 
 
+# FEAT-27: single source of truth for the new-game default galaxy size.
+# Both `GameConfig.system_count` and the New Game Setup UI slider read
+# from this constant — bump it here and both update together.
+DEFAULT_SYSTEM_COUNT: int = 2
+
+# FEAT-27: hard bounds on the galaxy slider / GameConfig.system_count.
+MIN_SYSTEM_COUNT: int = 1
+MAX_SYSTEM_COUNT: int = 150
+
+
 @dataclass
 class PlayerConfig:
     """
@@ -135,13 +145,24 @@ class GameConfig:
 
     All paths use sensible defaults that work across environments.
     Override specific fields as needed for testing or deployment.
+
+    FEAT-27 — Galaxy size contract:
+      * `system_count` is bounded `MIN_SYSTEM_COUNT ≤ N ≤ MAX_SYSTEM_COUNT`
+        (1–150). The dataclass default is `DEFAULT_SYSTEM_COUNT` (2) and
+        is the single source of truth — the New Game Setup UI imports it
+        rather than hardcoding a default.
+      * **N = 1 (shared-system mode):** all empires colonise the lone
+        system on different planets. No warp lanes are generated. The
+        empire-count limit (≤ 4) still applies.
+      * **N ≥ 2 (separated mode):** every empire owns a distinct system.
+        Configurations with `len(players) > system_count` are rejected.
     """
     # Asset paths
     asset_base_path: str = field(default_factory=_get_default_asset_path)
 
     # Galaxy generation
     galaxy_radius: int = 4000
-    system_count: int = 25
+    system_count: int = DEFAULT_SYSTEM_COUNT
     galaxy_type: str = "random"
     galaxy_seed: Optional[int] = None
 
@@ -170,6 +191,31 @@ class GameConfig:
                 f"Invalid galaxy type '{self.galaxy_type}'",
                 code=ErrorCode.VALIDATION_FAILED.value,
                 context={"galaxy_type": self.galaxy_type, "valid_types": sorted(VALID_GALAXY_TYPES)}
+            )
+        # FEAT-27: galaxy size bounds.
+        if not (MIN_SYSTEM_COUNT <= self.system_count <= MAX_SYSTEM_COUNT):
+            raise ValidationException(
+                f"system_count {self.system_count} out of range",
+                code=ErrorCode.OUT_OF_RANGE.value,
+                context={
+                    "field": "system_count",
+                    "value": self.system_count,
+                    "valid_range": f"{MIN_SYSTEM_COUNT}-{MAX_SYSTEM_COUNT}",
+                },
+            )
+        # FEAT-27: at N=1 every empire shares the single system on a
+        # different planet (intentional). At N≥2 we require one distinct
+        # system per empire, so reject E > N to surface the misconfig
+        # early instead of silently colliding empires onto the same hex.
+        if self.system_count >= 2 and len(self.players) > self.system_count:
+            raise ValidationException(
+                "More empires than star systems",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "empires": len(self.players),
+                    "system_count": self.system_count,
+                    "rule": "N>=2 requires len(players) <= system_count",
+                },
             )
 
     def get_player_theme_path(self, player_index: int) -> Optional[str]:
@@ -207,7 +253,7 @@ class GameConfig:
         return cls(
             asset_base_path=data.get('asset_base_path', _get_default_asset_path()),
             galaxy_radius=data.get('galaxy_radius', 4000),
-            system_count=data.get('system_count', 25),
+            system_count=data.get('system_count', DEFAULT_SYSTEM_COUNT),
             galaxy_type=data.get('galaxy_type', 'random'),
             galaxy_seed=data.get('galaxy_seed'),
             save_name=data.get('save_name', ''),

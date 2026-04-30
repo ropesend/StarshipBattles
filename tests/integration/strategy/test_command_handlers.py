@@ -75,7 +75,7 @@ class MockGalaxy:
 
 def test_preview_fleet_path():
     """Test that preview_fleet_path returns a path without modifying state."""
-    config = GameConfig(system_count=0)
+    config = GameConfig(system_count=1)
     session = GameSession(config=config)
     session.galaxy = MockGalaxy() # Override with empty mock
     
@@ -98,7 +98,7 @@ def test_preview_fleet_path():
 
 def test_handle_move_command():
     """Test handling of IssueMoveCommand."""
-    config = GameConfig(system_count=0)
+    config = GameConfig(system_count=1)
     session = GameSession(config=config)
     session.galaxy = MockGalaxy()
 
@@ -123,7 +123,7 @@ def test_handle_move_command():
 
 def test_handle_move_command_invalid_fleet():
     """Test IssueMoveCommand with bad fleet ID."""
-    config = GameConfig(system_count=0)
+    config = GameConfig(system_count=1)
     session = GameSession(config=config)
     cmd = IssueMoveCommand(9999, HexCoord(0,0)) # ID not in empire
     
@@ -148,7 +148,7 @@ class TestInterceptCommandHandler:
         """Intercept command creates MOVE_TO_FLEET order targeting the fleet."""
         from game.strategy.engine.commands import IssueInterceptCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -172,7 +172,7 @@ class TestInterceptCommandHandler:
         """Intercept command fails if source fleet doesn't exist."""
         from game.strategy.engine.commands import IssueInterceptCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -189,7 +189,7 @@ class TestInterceptCommandHandler:
         """Intercept command fails if target fleet doesn't exist."""
         from game.strategy.engine.commands import IssueInterceptCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -215,7 +215,7 @@ class TestJoinFleetCommandHandler:
         """Join fleet command creates MOVE_TO_FLEET and JOIN_FLEET orders."""
         from game.strategy.engine.commands import IssueJoinFleetCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -241,7 +241,7 @@ class TestJoinFleetCommandHandler:
         """Join fleet command fails if source fleet doesn't exist."""
         from game.strategy.engine.commands import IssueJoinFleetCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -258,7 +258,7 @@ class TestJoinFleetCommandHandler:
         """Join fleet command fails if target fleet doesn't exist."""
         from game.strategy.engine.commands import IssueJoinFleetCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -284,7 +284,7 @@ class TestColonizeMissionCommandHandler:
         """Colonize mission queues MOVE and COLONIZE orders with path."""
         from game.strategy.engine.commands import QueueColonizeMissionCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -324,7 +324,7 @@ class TestColonizeMissionCommandHandler:
         """Colonize mission fails if no path to target."""
         from game.strategy.engine.commands import QueueColonizeMissionCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -358,7 +358,7 @@ class TestColonizeMissionCommandHandler:
         """Colonize mission fails if fleet doesn't exist."""
         from game.strategy.engine.commands import QueueColonizeMissionCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -372,7 +372,7 @@ class TestColonizeMissionCommandHandler:
         """Colonize mission fails if planet doesn't exist."""
         from game.strategy.engine.commands import QueueColonizeMissionCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -390,7 +390,7 @@ class TestColonizeMissionCommandHandler:
         """If fleet has existing orders, use last order target as path start."""
         from game.strategy.engine.commands import QueueColonizeMissionCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -440,7 +440,7 @@ class TestClearFleetOrdersCommandHandler:
         """Clear orders command removes all orders and path from fleet."""
         from game.strategy.engine.commands import ClearOrdersCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -465,7 +465,7 @@ class TestClearFleetOrdersCommandHandler:
         """Clear orders succeeds even if fleet has no orders."""
         from game.strategy.engine.commands import ClearOrdersCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -485,7 +485,7 @@ class TestClearFleetOrdersCommandHandler:
         """Clear orders fails if fleet doesn't exist."""
         from game.strategy.engine.commands import ClearOrdersCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
@@ -504,7 +504,7 @@ class TestClearFleetOrdersCommandHandler:
         """
         from game.strategy.engine.commands import ClearOrdersCommand
 
-        config = GameConfig(system_count=0)
+        config = GameConfig(system_count=1)
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 

@@ -64,12 +64,15 @@ def _two_empire_session() -> tuple[GameSession, Empire, Empire]:
     by setting `session.active_empire = empire_1` to simulate the
     `StrategyGameStateManager.advance_turn` push.
     """
+    # FEAT-27: system_count must be >= 1 (was 0 sentinel pre-FEAT-27).
+    # Galaxy is replaced with _MockGalaxy() below, so the value is moot
+    # except for satisfying GameConfig validation.
     config = GameConfig(
         players=[
             PlayerConfig(name="P1", theme="Federation", color=(255, 0, 0), is_human=True),
             PlayerConfig(name="P2", theme="Atlantians", color=(0, 255, 0), is_human=True),
         ],
-        system_count=0,
+        system_count=2,
     )
     session = GameSession(config=config)
     session.galaxy = _MockGalaxy()

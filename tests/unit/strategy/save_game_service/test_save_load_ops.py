@@ -76,12 +76,15 @@ class TestSaveGameServiceFolderStructure:
 
     def test_save_creates_per_empire_design_folders(self):
         """Save creates designs/empire_N/ for each empire"""
+        # FEAT-27: pin system_count >= num players to satisfy the N>=2
+        # distinct-system invariant.
         config = GameConfig(
             players=[
                 PlayerConfig(name="Empire A", theme="Federation", color=(255, 0, 0)),
                 PlayerConfig(name="Empire B", theme="Atlantians", color=(0, 255, 0)),
                 PlayerConfig(name="Empire C", theme="Romulans", color=(0, 0, 255)),
-            ]
+            ],
+            system_count=3,
         )
         session = MockGameSession(config=config, num_empires=3)
 
@@ -292,12 +295,15 @@ class TestSaveGameServiceMetadata:
 
     def test_metadata_includes_empire_count(self):
         """Metadata includes number of empires"""
+        # FEAT-27: pin system_count >= num players to satisfy the N>=2
+        # distinct-system invariant.
         config = GameConfig(
             players=[
                 PlayerConfig(name="E1", theme="Federation", color=(255, 0, 0)),
                 PlayerConfig(name="E2", theme="Atlantians", color=(0, 255, 0)),
                 PlayerConfig(name="E3", theme="Romulans", color=(0, 0, 255)),
-            ]
+            ],
+            system_count=3,
         )
         session = MockGameSession(config=config, num_empires=3)
 

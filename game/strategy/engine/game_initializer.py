@@ -10,6 +10,8 @@ import logging
 import random
 from typing import List, Optional, Tuple
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 from game.strategy.data.empire import Empire
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,19 @@ from game.strategy.generation.density.density_map import DensityMap
 from game.strategy.generation.loaders.galaxy_layouts_loader import GalaxyLayoutsLoader
 
 
+# FEAT-27: at N=1 with E>1 the lone star system must contain at least
+# one planet per empire. Some system blueprints (e.g. binary_no_planets,
+# empty_warp_hub) can roll 0–1 planets, so when an attempt produces too
+# few planets we regenerate up to this many times before raising.
+_PLANET_SHORTAGE_RETRY_ATTEMPTS: int = 10
+
+
+class _PlanetShortageError(Exception):
+    """Internal: raised by _setup_initial_scenario when the lone N=1
+    system has fewer planets than empires. Caught by `initialize()` to
+    drive the regeneration retry loop."""
+
+
 class GameInitializer:
     """
     Handles initialization of new game galaxies and empires.
@@ -36,21 +51,62 @@ class GameInitializer:
         """
         Initialize a new game galaxy and empires from configuration.
 
+        FEAT-27 — At N=1 with multiple empires, the lone system must
+        contain enough planets for each empire to homestead. If the
+        first generated system is short on planets we re-roll up to
+        ``_PLANET_SHORTAGE_RETRY_ATTEMPTS`` times before raising
+        ``ValidationException``.
+
         Args:
             config: Game configuration with player, galaxy, and seed settings.
 
         Returns:
             Tuple of (Galaxy, list[Empire]) ready for gameplay.
         """
-        # Create empires from config
+        # Create empires from config (deterministic — does not consume RNG)
         empires = GameInitializer._create_empires(config)
 
-        # Create and populate galaxy
-        galaxy = Galaxy(radius=config.galaxy_radius)
-        systems = GameInitializer._initialize_galaxy(galaxy, config)
+        last_error: Optional[_PlanetShortageError] = None
+        for attempt in range(_PLANET_SHORTAGE_RETRY_ATTEMPTS):
+            galaxy = Galaxy(radius=config.galaxy_radius)
+            attempt_config = config
+            if attempt > 0 and config.galaxy_seed is not None:
+                # Perturb the seed deterministically so each retry rolls a
+                # fresh blueprint without polluting global random state.
+                # Use dataclasses.replace to keep all other fields intact.
+                from dataclasses import replace
+                attempt_config = replace(config, galaxy_seed=config.galaxy_seed + attempt)
 
-        # Set up initial scenario (homeworlds, colonies)
-        GameInitializer._setup_initial_scenario(systems, empires, config)
+            systems = GameInitializer._initialize_galaxy(galaxy, attempt_config)
+
+            try:
+                # Reset any colony state from a prior failed attempt before
+                # re-running placement (empires are reused across attempts).
+                for empire in empires:
+                    empire.colonies.clear()
+                GameInitializer._setup_initial_scenario(systems, empires, attempt_config)
+                break
+            except _PlanetShortageError as exc:
+                last_error = exc
+                logger.info(
+                    "GameInitializer: planet shortage at N=1 on attempt %d/%d (%s); regenerating",
+                    attempt + 1, _PLANET_SHORTAGE_RETRY_ATTEMPTS, exc,
+                )
+                continue
+        else:
+            raise ValidationException(
+                "Galaxy generation could not produce a single-system layout "
+                f"with at least {len(empires)} planets after "
+                f"{_PLANET_SHORTAGE_RETRY_ATTEMPTS} attempts. "
+                "Try a different seed or fewer players.",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "system_count": config.system_count,
+                    "num_empires": len(empires),
+                    "attempts": _PLANET_SHORTAGE_RETRY_ATTEMPTS,
+                    "last_error": str(last_error) if last_error else None,
+                },
+            )
 
         # PROJ-219: Set galaxy back-references for auto fleet registration
         for empire in empires:
@@ -191,59 +247,107 @@ class GameInitializer:
         return systems
 
     @staticmethod
+    def _empire_home_indices(num_empires: int, num_systems: int) -> List[int]:
+        """FEAT-27: pick a home-system index for each empire.
+
+        Two modes:
+          * **N = 1 (shared-system mode):** every empire goes to system 0.
+            Distinct planets are assigned downstream in
+            ``_setup_initial_scenario``.
+          * **N ≥ 2 (separated mode):** evenly spread empire homes across
+            the galaxy with a hand-rolled linspace so each empire gets a
+            unique system. The caller has already validated
+            ``num_empires <= num_systems`` via ``GameConfig.__post_init__``.
+
+        Returns:
+            List of length ``num_empires`` with system indices.
+        """
+        if num_empires <= 1 or num_systems == 1:
+            return [0] * num_empires
+        # Hand-rolled linspace(0, N-1, E, dtype=int) — avoids a numpy dep.
+        # For E=4, N=8 this produces [0, 2, 5, 7] (vs the old stair-step
+        # [0, 2, 4, 6] which clustered empires at the low end).
+        return [
+            round(i * (num_systems - 1) / (num_empires - 1))
+            for i in range(num_empires)
+        ]
+
+    @staticmethod
     def _setup_initial_scenario(systems: list, empires: List[Empire], config: GameConfig) -> None:
-        """Set up starting colonies and homeworlds for all empires."""
+        """Set up starting colonies and homeworlds for all empires.
+
+        FEAT-27 — At N=1 every empire shares ``systems[0]`` and is given
+        a distinct planet. If the lone system has fewer planets than
+        empires this raises ``_PlanetShortageError`` so that
+        ``initialize()`` can drive a regeneration retry.
+        """
         if not systems:
             return
 
         num_empires = len(empires)
         num_systems = len(systems)
+        home_indices = GameInitializer._empire_home_indices(num_empires, num_systems)
 
-        # Distribute starting colonies across the galaxy
-        # Use evenly spaced system indices to spread empires apart
-        if num_empires == 1:
-            # Single player gets first system
-            home_indices = [0]
-        elif num_empires == 2:
-            # Two players get first and last systems (opposite ends)
-            home_indices = [0, num_systems - 1]
-        elif num_empires == 3:
-            # Three players: first, middle, last
-            mid = num_systems // 2
-            home_indices = [0, mid, num_systems - 1]
-        else:  # 4+ players
-            # Distribute evenly
-            step = max(1, num_systems // num_empires)
-            home_indices = [min(i * step, num_systems - 1) for i in range(num_empires)]
+        # FEAT-27: at N=1, every empire colonises a distinct planet within
+        # the lone system. Verify supply up-front so we can request a
+        # regeneration retry instead of half-applying placement.
+        if num_systems == 1 and num_empires > 1:
+            lone = systems[0]
+            if len(lone.planets) < num_empires:
+                raise _PlanetShortageError(
+                    f"single system '{lone.name}' has {len(lone.planets)} "
+                    f"planet(s); need {num_empires}"
+                )
 
-        # Assign home systems to empires
+        # Per-system counter so we hand each empire a different planet
+        # when several empires share a home system (only at N=1, but the
+        # mechanic is general).
+        next_planet_in_system: dict[int, int] = {}
+
         for i, empire in enumerate(empires):
-            if i < len(home_indices) and home_indices[i] < num_systems:
-                home_sys = systems[home_indices[i]]
-                if home_sys.planets:
-                    # Assign first planet as home colony
-                    home_planet = home_sys.planets[0]
+            sys_idx = home_indices[i]
+            if sys_idx >= num_systems:
+                continue
+            home_sys = systems[sys_idx]
+            if not home_sys.planets:
+                continue
 
-                    # Adjust planet conditions to match species preferences (BUG-63)
-                    if empire.race_config is not None:
-                        GameInitializer._adjust_homeworld_to_race(home_planet, empire.race_config)
+            planet_offset = next_planet_in_system.get(sys_idx, 0)
+            if planet_offset >= len(home_sys.planets):
+                # Should be unreachable at N≥2 (one empire per system) and
+                # at N=1 it's caught above. Defensive fallback — log and
+                # skip rather than overwrite a planet's owner.
+                logger.warning(
+                    "GameInitializer: no free planet in system %s for empire '%s'",
+                    home_sys.name, empire.name,
+                )
+                continue
+            home_planet = home_sys.planets[planet_offset]
+            next_planet_in_system[sys_idx] = planet_offset + 1
 
-                    # Ensure minimum resource quality for fair starts
-                    GameInitializer._ensure_homeworld_resource_quality(home_planet)
+            # Adjust planet conditions to match species preferences (BUG-63)
+            if empire.race_config is not None:
+                GameInitializer._adjust_homeworld_to_race(home_planet, empire.race_config)
 
-                    empire.add_colony(home_planet)
+            # Ensure minimum resource quality for fair starts
+            GameInitializer._ensure_homeworld_resource_quality(home_planet)
 
-                    # Seed initial population if empire has race_config
-                    if empire.race_config is not None:
-                        initial_pop = SpeciesPopulation(
-                            race_id=empire.race_config.race_id,
-                            count=home_planet.max_population,
-                            happiness=0.7
-                        )
-                        home_planet.populations.append(initial_pop)
-                        logger.info(f"GameInitializer: Seeded {initial_pop.count} population on {home_planet.name}")
+            empire.add_colony(home_planet)
 
-                    logger.info(f"GameInitializer: Empire '{empire.name}' home at system {home_indices[i]}")
+            # Seed initial population if empire has race_config
+            if empire.race_config is not None:
+                initial_pop = SpeciesPopulation(
+                    race_id=empire.race_config.race_id,
+                    count=home_planet.max_population,
+                    happiness=0.7
+                )
+                home_planet.populations.append(initial_pop)
+                logger.info(f"GameInitializer: Seeded {initial_pop.count} population on {home_planet.name}")
+
+            logger.info(
+                "GameInitializer: Empire '%s' home at system %d planet %d",
+                empire.name, sys_idx, planet_offset,
+            )
 
     @staticmethod
     def _adjust_homeworld_to_race(planet, race_config) -> None:

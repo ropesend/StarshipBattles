@@ -23,13 +23,62 @@ import logging
 logger = logging.getLogger(__name__)
 from game.core.paths import Paths
 from game.ui.colors import TEXT_ERROR
-from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS, VALID_GALAXY_TYPES
+from game.strategy.engine.game_config import (
+    GameConfig,
+    PlayerConfig,
+    THEME_DEFAULTS,
+    VALID_GALAXY_TYPES,
+    DEFAULT_SYSTEM_COUNT,
+    MIN_SYSTEM_COUNT,
+    MAX_SYSTEM_COUNT,
+)
 from game.strategy.systems.race_library import RaceLibrary
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
+
+
+# FEAT-27: the underlying pygame_gui slider runs over an integer
+# 0..SLIDER_T_MAX range. The visible system_count is derived from the
+# slider position via a quadratic curve so dragging is fine-grained at
+# the low end (1→2→3 selectable) and coarser at the high end.
+SLIDER_T_MAX: int = 1000
+
+
+def system_count_slider_curve(t: int) -> int:
+    """Map an internal slider position ``t`` (0..SLIDER_T_MAX) to a
+    galaxy ``system_count`` in the closed range
+    ``[MIN_SYSTEM_COUNT, MAX_SYSTEM_COUNT]`` using a quadratic curve.
+
+    ``value = MIN + (MAX - MIN) * (t/T_MAX)**2``, clamped on both ends.
+
+    The quadratic is concave-up, so equal slider increments at the low
+    end yield small system_count changes (fine-grained) while equal
+    increments at the high end yield larger changes (coarse).
+    """
+    if t <= 0:
+        return MIN_SYSTEM_COUNT
+    if t >= SLIDER_T_MAX:
+        return MAX_SYSTEM_COUNT
+    span = MAX_SYSTEM_COUNT - MIN_SYSTEM_COUNT
+    normalized = t / SLIDER_T_MAX
+    raw = MIN_SYSTEM_COUNT + span * (normalized ** 2)
+    return max(MIN_SYSTEM_COUNT, min(MAX_SYSTEM_COUNT, int(round(raw))))
+
+
+def system_count_slider_inverse(value: int) -> int:
+    """Inverse of ``system_count_slider_curve`` — used to position the
+    slider thumb when initialising the UI from a default ``system_count``.
+    """
+    if value <= MIN_SYSTEM_COUNT:
+        return 0
+    if value >= MAX_SYSTEM_COUNT:
+        return SLIDER_T_MAX
+    span = MAX_SYSTEM_COUNT - MIN_SYSTEM_COUNT
+    normalized = ((value - MIN_SYSTEM_COUNT) / span) ** 0.5
+    return int(round(normalized * SLIDER_T_MAX))
 
 
 class NewGameSetupScreen(pygame_gui.elements.UIWindow):
@@ -147,14 +196,19 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         )
         y_offset += 25
 
-        self.system_count = 5  # Default
+        # FEAT-27: source the default from GameConfig (single source of
+        # truth) and drive the slider over an internal 0..SLIDER_T_MAX
+        # range. The visible system_count is derived via the quadratic
+        # `system_count_slider_curve` so dragging is fine-grained at the
+        # low end and coarser at the high end.
+        self.system_count = DEFAULT_SYSTEM_COUNT
         self.system_count_slider = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect(10, y_offset, content_width - 60, 30),
-            start_value=self.system_count,
-            value_range=(5, 150),
+            start_value=system_count_slider_inverse(self.system_count),
+            value_range=(0, SLIDER_T_MAX),
             manager=self.ui_manager,
             container=container,
-            click_increment=5
+            click_increment=1,
         )
         self.system_count_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(content_width - 40, y_offset, 50, 30),
@@ -373,7 +427,9 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
             if event.ui_element == self.system_count_slider:
-                self.system_count = int(event.value)
+                # FEAT-27: slider runs over 0..SLIDER_T_MAX; convert to
+                # a real galaxy size via the quadratic curve.
+                self.system_count = system_count_slider_curve(int(event.value))
                 self.system_count_label.set_text(str(self.system_count))
                 handled = True
 
@@ -579,7 +635,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                           empire_names: List[str],
                           race_configs: Optional[List[Optional[RaceConfig]]] = None,
                           galaxy_type: str = "spiral",
-                          system_count: int = 5) -> GameConfig:
+                          system_count: int = DEFAULT_SYSTEM_COUNT) -> GameConfig:
         """
         Build a GameConfig from setup screen values.
 
@@ -589,13 +645,17 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             empire_names: List of empire names (may include empty strings)
             race_configs: Optional list of RaceConfig for each player (None = use defaults)
             galaxy_type: Galaxy layout type (default: "spiral")
-            system_count: Number of star systems (5-150, default: 5)
+            system_count: Number of star systems
+                (``MIN_SYSTEM_COUNT``-``MAX_SYSTEM_COUNT``, default
+                ``DEFAULT_SYSTEM_COUNT``). FEAT-27: at ``system_count=1``
+                all empires share the lone system on different planets.
 
         Returns:
             Configured GameConfig
 
         Raises:
-            ValidationException: If player_count is invalid
+            ValidationException: If player_count or system_count is
+                invalid (e.g. more empires than systems at N≥2).
         """
         if player_count < 1 or player_count > 4:
             raise ValidationException(

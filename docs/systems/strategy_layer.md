@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-04-29 — BUG-125 fix: `Command.empire_id` field removed (Q5=DROP); `session.player_empire` renamed to `session.active_empire` and now rotated by `StrategyGameStateManager.advance_turn` on each hot-seat turn change. Fleet command handlers gate on `session.active_empire.id` via the new `BaseCommandHandler._resolve_player_fleet` helper; planet handlers continue to gate on `session.active_empire.id` (now correct in hot-seat). Earlier verification (2026-04-28): BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
+> **Last verified:** 2026-04-29 — Added §6 "Galaxy Size Contract" subsection documenting FEAT-27: `DEFAULT_SYSTEM_COUNT = 2` single-source-of-truth in `game_config.py`, `1 ≤ system_count ≤ 150` validation, N=1 shared-system mode (multiple empires on distinct planets, no warp lanes, planet-shortage retry loop), N≥2 distinct-system invariant with hard error on E>N, hand-rolled linspace home-index distribution, per-system planet counter, and the continuous quadratic slider curve `value = 1 + 149 * (t / SLIDER_T_MAX) ** 2`. BUG-125 fix from same-day verification still current: `Command.empire_id` field removed (Q5=DROP); `session.player_empire` renamed to `session.active_empire` and now rotated by `StrategyGameStateManager.advance_turn` on each hot-seat turn change. Fleet command handlers gate on `session.active_empire.id` via the new `BaseCommandHandler._resolve_player_fleet` helper; planet handlers continue to gate on `session.active_empire.id` (now correct in hot-seat). Earlier verification (2026-04-28): BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
 
 System documentation for the turn-based strategy layer.
 
@@ -1224,6 +1224,30 @@ Orbital generation parameters are data-driven via `astrophysics.json`. Follows t
 - `mass_generation` -- log-normal mu/sigma per bias type (small, large, default), max iterations
 - `moon_system` -- mass threshold log-interpolation (Jupiter/Earth/Ceres breakpoints and chances), moon mass ratio bounds, max moons per body
 - `surface` -- tectonic activity and magnetic field ranges per body mass class, water temperature thresholds
+
+### Galaxy Size Contract (FEAT-27)
+
+**Files:**
+- `game/strategy/engine/game_config.py` -- `GameConfig`, `DEFAULT_SYSTEM_COUNT`, `MIN_SYSTEM_COUNT`, `MAX_SYSTEM_COUNT`
+- `game/strategy/engine/game_initializer.py` -- `GameInitializer.initialize`, `_setup_initial_scenario`, `_empire_home_indices`
+- `game/ui/screens/new_game_setup_screen.py` -- `system_count_slider_curve`, `system_count_slider_inverse`
+
+`GameConfig.system_count` is bounded `MIN_SYSTEM_COUNT ≤ N ≤ MAX_SYSTEM_COUNT` (1–150), enforced in `__post_init__`. The dataclass field default is `DEFAULT_SYSTEM_COUNT = 2` and is the **single source of truth** for the new-game default. The New Game Setup UI imports `DEFAULT_SYSTEM_COUNT` rather than hardcoding a value, so changing the constant updates both surfaces.
+
+Two galaxy-size modes:
+
+- **N = 1 (shared-system mode):** every empire colonises the lone star system on a *different* planet. No warp lanes are generated (`GalaxyWarpGenerator.generate_warp_lanes` early-returns at `len(systems) < 2`). The empire-vs-system count check in `__post_init__` is bypassed — `len(players) > 1` at `N = 1` is intentional. If the lone system rolls fewer planets than empires, `GameInitializer.initialize` re-rolls the layout up to 10 times (perturbing `galaxy_seed` by the attempt index via `dataclasses.replace`) before raising `ValidationException`. `Empire.colonies` is cleared between attempts so a partially-applied placement does not persist.
+- **N ≥ 2 (separated mode):** every empire owns a *distinct* system. `__post_init__` rejects `len(players) > system_count`. `_setup_initial_scenario` calls `_empire_home_indices(num_empires, num_systems)` which returns a hand-rolled linspace `[round(i * (N-1) / (E-1)) for i in range(E)]` so empires are spread evenly across the galaxy (e.g. `E=4, N=8 → [0, 2, 5, 7]`, not the old stair-step `[0, 2, 4, 6]` that clustered at the low end).
+
+A per-system `next_planet_in_system` counter ensures shared-system mode never silently overwrites `Planet.owner_id` — each empire is handed a different planet index. Defensive fallback: if a planet supply is somehow exhausted, the assignment is skipped with a `WARNING` log rather than overwriting another empire's home.
+
+The New Game Setup slider runs over an internal integer range `[0, SLIDER_T_MAX]` (1000) and maps to `system_count` via `system_count_slider_curve(t)`:
+
+```python
+value = max(1, min(150, int(round(1 + 149 * (t / SLIDER_T_MAX) ** 2))))
+```
+
+The quadratic curve is fine-grained at the low end (each pixel near `t=0` produces a 1-system change, so `1 → 2 → 3` are individually selectable) and coarser at the high end (the top 10% of slider travel covers ~28× as many systems as the bottom 10%). The inverse `system_count_slider_inverse(value)` is used to position the thumb when seeding the slider from a default `system_count`.
 
 ## 7. Race Preferences & Habitability (PROJ-283)
 
