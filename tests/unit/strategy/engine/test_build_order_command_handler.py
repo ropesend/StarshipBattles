@@ -49,7 +49,9 @@ class TestBuildOrderCommandHandler:
         # Setup
         handler = BuildOrderCommandHandler()
         session = Mock()
+        session.active_empire = Mock(id=0)
         mock_fleet = Mock()
+        mock_fleet.owner_id = 0
         mock_fleet.orders = []
         session._get_fleet_by_id.return_value = mock_fleet
 
@@ -68,10 +70,12 @@ class TestBuildOrderCommandHandler:
         """BUILD order should be inserted at position 0 (front of queue)."""
         handler = BuildOrderCommandHandler()
         session = Mock()
+        session.active_empire = Mock(id=0)
 
         # Fleet already has a MOVE order
         existing_order = Order(OrderType.MOVE, target=Mock())
         mock_fleet = Mock()
+        mock_fleet.owner_id = 0
         mock_fleet.orders = [existing_order]
         session._get_fleet_by_id.return_value = mock_fleet
 
@@ -88,7 +92,9 @@ class TestBuildOrderCommandHandler:
         """Handler should clear fleet.path when adding BUILD order."""
         handler = BuildOrderCommandHandler()
         session = Mock()
+        session.active_empire = Mock(id=0)
         mock_fleet = Mock()
+        mock_fleet.owner_id = 0
         mock_fleet.orders = []
         mock_fleet.path = [Mock(), Mock(), Mock()]  # Existing path
         session._get_fleet_by_id.return_value = mock_fleet
@@ -104,6 +110,7 @@ class TestBuildOrderCommandHandler:
         """Handler should return error if fleet doesn't exist."""
         handler = BuildOrderCommandHandler()
         session = Mock()
+        session.active_empire = Mock(id=0)
         session._get_fleet_by_id.return_value = None
 
         cmd = IssueBuildOrderCommand(fleet_id=999)
@@ -131,8 +138,11 @@ class TestRemoveBuildOrderCommand:
 
         handler = RemoveBuildOrderCommandHandler()
         session = Mock()
+        session.active_empire = Mock(id=0)
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         session._get_fleet_by_id.return_value = mock_fleet
 
         cmd = RemoveBuildOrderCommand(fleet_id=15)
@@ -149,10 +159,12 @@ class TestRemoveBuildOrderCommand:
 
         handler = RemoveBuildOrderCommandHandler()
         session = Mock()
+        session.active_empire = Mock(id=0)
 
         # Fleet with only MOVE order
         move_order = Order(OrderType.MOVE, target=Mock())
         mock_fleet = Mock()
+        mock_fleet.owner_id = 0
         mock_fleet.orders = [move_order]
         session._get_fleet_by_id.return_value = mock_fleet
 

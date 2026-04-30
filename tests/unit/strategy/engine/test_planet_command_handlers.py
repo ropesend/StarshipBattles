@@ -21,8 +21,8 @@ from game.strategy.data.order_types import OrderType
 def mock_session():
     """Create a mock GameSession with planet resolution support."""
     session = MagicMock()
-    session.player_empire = MagicMock()
-    session.player_empire.id = 0
+    session.active_empire = MagicMock()
+    session.active_empire.id = 0
     session.registries = MagicMock()
     session.registries.components = {}
     # Default: planet not found

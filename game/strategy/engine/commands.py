@@ -22,9 +22,16 @@ class BuildEntityType(str, Enum):
 
 @dataclass
 class Command:
-    """Base class for all game commands."""
+    """Base class for all game commands.
+
+    BUG-125: commands do NOT carry an empire identifier. Identity is
+    session context — handlers gate on ``session.active_empire.id``. The
+    UI must never supply identity through a request body; doing so was
+    the root cause of the original cross-empire-orders bug (UI passed
+    ``empire_id=fleet.owner_id``; handler checked ``cmd.empire_id ==
+    fleet.owner_id``, a tautology that authorized any selectable fleet).
+    """
     type: CommandType = field(init=False)
-    empire_id: int = field(default=-1, kw_only=True)
 
     def __post_init__(self):
         self.type = CommandType.ISSUE_ORDER

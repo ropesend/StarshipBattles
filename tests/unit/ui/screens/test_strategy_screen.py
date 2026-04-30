@@ -32,7 +32,7 @@ def _make_strategy_screen():
     session.galaxy = MagicMock()
     session.empires = [MagicMock(id=0), MagicMock(id=1)]
     session.systems = [MagicMock()]
-    session.player_empire = session.empires[0]
+    session.active_empire = session.empires[0]
     session.enemy_empire = session.empires[1]
     session.human_player_ids = [0]
     screen.session = session

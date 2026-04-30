@@ -104,7 +104,7 @@ def test_handle_move_command():
 
     # Setup Fleet
     fleet = Fleet(101, 0, HexCoord(0,0))
-    session.player_empire.fleets = [fleet]
+    session.active_empire.fleets = [fleet]
     session.galaxy.register_fleet(fleet)
 
     target_hex = HexCoord(5,5)
@@ -155,7 +155,7 @@ class TestInterceptCommandHandler:
         # Setup two fleets
         fleet = Fleet(101, 0, HexCoord(0, 0))
         target_fleet = Fleet(102, 0, HexCoord(10, 10))
-        session.player_empire.fleets = [fleet, target_fleet]
+        session.active_empire.fleets = [fleet, target_fleet]
         session.galaxy.register_fleet(fleet)
         session.galaxy.register_fleet(target_fleet)
 
@@ -177,7 +177,7 @@ class TestInterceptCommandHandler:
         session.galaxy = MockGalaxy()
 
         target_fleet = Fleet(102, 0, HexCoord(10, 10))
-        session.player_empire.fleets = [target_fleet]
+        session.active_empire.fleets = [target_fleet]
 
         cmd = IssueInterceptCommand(fleet_id=9999, target_fleet_id=102)
         result = session.handle_command(cmd)
@@ -194,7 +194,7 @@ class TestInterceptCommandHandler:
         session.galaxy = MockGalaxy()
 
         fleet = Fleet(101, 0, HexCoord(0, 0))
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         cmd = IssueInterceptCommand(fleet_id=101, target_fleet_id=9999)
@@ -222,7 +222,7 @@ class TestJoinFleetCommandHandler:
         # Setup two fleets
         fleet = Fleet(101, 0, HexCoord(0, 0))
         target_fleet = Fleet(102, 0, HexCoord(10, 10))
-        session.player_empire.fleets = [fleet, target_fleet]
+        session.active_empire.fleets = [fleet, target_fleet]
         session.galaxy.register_fleet(fleet)
         session.galaxy.register_fleet(target_fleet)
 
@@ -246,7 +246,7 @@ class TestJoinFleetCommandHandler:
         session.galaxy = MockGalaxy()
 
         target_fleet = Fleet(102, 0, HexCoord(10, 10))
-        session.player_empire.fleets = [target_fleet]
+        session.active_empire.fleets = [target_fleet]
 
         cmd = IssueJoinFleetCommand(fleet_id=9999, target_fleet_id=102)
         result = session.handle_command(cmd)
@@ -263,7 +263,7 @@ class TestJoinFleetCommandHandler:
         session.galaxy = MockGalaxy()
 
         fleet = Fleet(101, 0, HexCoord(0, 0))
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         cmd = IssueJoinFleetCommand(fleet_id=101, target_fleet_id=9999)
@@ -291,7 +291,7 @@ class TestColonizeMissionCommandHandler:
         # Setup fleet with colony ship (PROJ-140: needs matching pod)
         fleet = Fleet(101, 0, HexCoord(0, 0))
         fleet.ships = [make_colony_ship("CONTINENTAL", owner_id=0)]
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         # Mock planet with proper planet_type
@@ -331,7 +331,7 @@ class TestColonizeMissionCommandHandler:
         # PROJ-140: Fleet needs colony ship with matching pod
         fleet = Fleet(101, 0, HexCoord(0, 0))
         fleet.ships = [make_colony_ship("ICE_DWARF", owner_id=0)]
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         # Mock planet with proper planet_type
@@ -377,7 +377,7 @@ class TestColonizeMissionCommandHandler:
         session.galaxy = MockGalaxy()
 
         fleet = Fleet(101, 0, HexCoord(0, 0))
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         cmd = QueueColonizeMissionCommand(fleet_id=101, target_hex=HexCoord(10, 10), planet_id=9999)
@@ -401,7 +401,7 @@ class TestColonizeMissionCommandHandler:
         fleet.ships = [make_colony_ship("JOVIAN", owner_id=0)]
         existing_order = Order(OrderType.MOVE, HexCoord(5, 5))
         fleet.add_order(existing_order)
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         # Mock planet with proper planet_type
@@ -451,7 +451,7 @@ class TestClearFleetOrdersCommandHandler:
             Order(OrderType.COLONIZE, MagicMock())
         ]
         fleet.path = [HexCoord(1, 1), HexCoord(2, 2), HexCoord(5, 5)]
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         cmd = ClearOrdersCommand(fleet_id=101)
@@ -471,7 +471,7 @@ class TestClearFleetOrdersCommandHandler:
 
         # Fleet with no orders
         fleet = Fleet(101, 0, HexCoord(0, 0))
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         cmd = ClearOrdersCommand(fleet_id=101)
@@ -513,7 +513,7 @@ class TestClearFleetOrdersCommandHandler:
         colonize_order = Order(OrderType.COLONIZE, MagicMock())
         colonize_order.execution_progress = 3  # Simulating partial progress
         fleet.orders = [colonize_order]
-        session.player_empire.fleets = [fleet]
+        session.active_empire.fleets = [fleet]
         session.galaxy.register_fleet(fleet)
 
         # Verify progress exists before clear

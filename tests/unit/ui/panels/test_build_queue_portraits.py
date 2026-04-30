@@ -19,8 +19,8 @@ def mock_design_library():
 def mock_session():
     """Create mock session with player_empire."""
     session = Mock()
-    session.player_empire = Mock()
-    session.player_empire.empire_theme_id = "Federation"
+    session.active_empire = Mock()
+    session.active_empire.empire_theme_id = "Federation"
     return session
 
 

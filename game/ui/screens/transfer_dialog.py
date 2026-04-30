@@ -692,7 +692,6 @@ class TransferDialog(StrategyModalWindow):
                 amount=transfer_amount,
                 species_id=species_id,
                 target_fleet_id=target_fleet_id,
-                empire_id=self.source_fleet.owner_id if self.source_fleet else -1,
             )
 
             result = self.facade.handle_command(cmd)

@@ -39,6 +39,9 @@ class TestWarpOrderCommand:
         session.galaxy = MagicMock()
         session.galaxy._global_hex_warp_points = {HexCoord(10, 5): source_system}
 
+        # BUG-125: align active_empire with the test fleet's owner (0).
+        session.active_empire = MagicMock(id=0)
+
         return session
 
     @pytest.fixture

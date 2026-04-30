@@ -152,8 +152,15 @@ class StrategyScreen:
         return self.session.systems
 
     @property
-    def player_empire(self) -> Any:
-        return self.session.player_empire
+    def active_empire(self) -> Any:
+        """The empire whose turn it currently is.
+
+        BUG-125: renamed from `player_empire` (which never rotated and
+        silently broke authorization in hot-seat). Delegates to
+        `session.active_empire`, which is rotated by
+        `StrategyGameStateManager.advance_turn`.
+        """
+        return self.session.active_empire
 
     @property
     def enemy_empire(self) -> Any:
@@ -300,6 +307,11 @@ class StrategyScreen:
 
     def request_colonize_order(self, fleet, planet=None) -> None:
         """Handle colonize request from UI."""
+        # BUG-125: gate against active empire — never select an opponent's
+        # fleet for command issuance.
+        active = self.session.active_empire
+        if active is not None and fleet.owner_id != active.id:
+            return
         self.selected_fleet = fleet
         result = self._colonization.request_colonize_order(fleet, planet)
         if result and result.get('type') == 'success':
@@ -331,6 +343,12 @@ class StrategyScreen:
         """Enter EDIT_MOVE mode: pan to old destination, show ghost, wait for new click."""
         old_hex = order.target
         if not isinstance(old_hex, HexCoord):
+            return
+
+        # BUG-125: gate against active empire — opponent fleets are
+        # informational only (read-only via on_ui_selection's gate).
+        active = self.session.active_empire
+        if active is not None and fleet.owner_id != active.id:
             return
 
         self._edit_move_ghost_hex = old_hex
@@ -463,7 +481,7 @@ class StrategyScreen:
 
         # Gather context data for integrated mode
         context_data = {
-            'empire': self.session.player_empire,
+            'empire': self.session.active_empire,
             'game_session': self.session
         }
 
@@ -607,8 +625,8 @@ class StrategyScreen:
 
     def _focus_on_player_home(self) -> None:
         """Focus camera on player's home colony at startup."""
-        if self.player_empire.colonies:
-            home_colony = self.player_empire.colonies[0]
+        if self.active_empire.colonies:
+            home_colony = self.active_empire.colonies[0]
             home_sys = next((s for s in self.systems if home_colony in s.planets), None)
             if home_sys:
                 target_hex = home_sys.global_location + home_colony.location

@@ -66,7 +66,7 @@ class TestFleetMovement:
 
     def test_fleet_path_preview_matches_actual(self, game_session):
         """Path preview matches actual movement path."""
-        empire = game_session.player_empire
+        empire = game_session.active_empire
         if not empire:
             pytest.skip("No player empire")
 

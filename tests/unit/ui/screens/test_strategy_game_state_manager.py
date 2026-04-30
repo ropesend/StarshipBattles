@@ -34,7 +34,7 @@ def _make_game_state_manager():
     mock_screen.session.empires = [empire0, empire1]
     mock_screen.session.human_player_ids = [0, 1]
     mock_screen.human_player_ids = [0, 1]
-    mock_screen.player_empire = empire0
+    mock_screen.active_empire = empire0
 
     # Property mock for current_empire
     type(mock_screen).current_empire = property(lambda s: empire0)

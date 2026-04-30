@@ -40,6 +40,7 @@ class TestCommandHandlerRegistry:
 
         registry.register('TestCommand', mock_handler)
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_command = Mock()
 
         result = registry.dispatch('TestCommand', mock_session, mock_command)
@@ -51,6 +52,7 @@ class TestCommandHandlerRegistry:
         """Unknown command type returns failure result."""
         registry = CommandHandlerRegistry()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_command = Mock()
 
         result = registry.dispatch('UnknownCommand', mock_session, mock_command)
@@ -92,8 +94,9 @@ class TestColonizeCommandHandler:
         """Returns failure when fleet not found."""
         handler = ColonizeCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999, planet_id=1)
+        mock_cmd = Mock(fleet_id=999, planet_id=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -105,6 +108,8 @@ class TestColonizeCommandHandler:
         handler = ColonizeCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.location = HexCoord(0, 0)  # Fleet already at planet location
         mock_fleet.orders = []
@@ -115,12 +120,14 @@ class TestColonizeCommandHandler:
         mock_planet.populations = []
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session._get_planet_by_id.return_value = mock_planet
         mock_session.galaxy.get_planet_global_hex.return_value = HexCoord(0, 0)
         mock_session.turn_engine.validate_colonize_order.return_value = ValidationResult()
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, planet_id=10)
+        mock_cmd = Mock(fleet_id=1, planet_id=10)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -136,8 +143,9 @@ class TestMoveCommandHandler:
         """Returns failure when fleet not found."""
         handler = MoveCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999, target_hex=(0, 0))
+        mock_cmd = Mock(fleet_id=999, target_hex=(0, 0))
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -149,13 +157,17 @@ class TestMoveCommandHandler:
         handler = MoveCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.location = (0, 0)
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.preview_fleet_path.return_value = None
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_hex=(100, 100))
+        mock_cmd = Mock(fleet_id=1, target_hex=(100, 100))
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -167,15 +179,19 @@ class TestMoveCommandHandler:
         handler = MoveCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.location = (0, 0)
         mock_fleet.orders = []
         mock_fleet.add_order = Mock()
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.preview_fleet_path.return_value = [(1, 0), (2, 0)]
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_hex=(2, 0))
+        mock_cmd = Mock(fleet_id=1, target_hex=(2, 0))
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -194,8 +210,9 @@ class TestInterceptCommandHandler:
         """Returns failure when source fleet not found."""
         handler = InterceptCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999, target_fleet_id=2)
+        mock_cmd = Mock(fleet_id=999, target_fleet_id=2)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -207,12 +224,16 @@ class TestInterceptCommandHandler:
         handler = InterceptCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.side_effect = lambda fid: mock_fleet if fid == 1 else None
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_fleet_id=999)
+        mock_cmd = Mock(fleet_id=1, target_fleet_id=999)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -224,6 +245,8 @@ class TestInterceptCommandHandler:
         handler = InterceptCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.add_order = Mock()
 
@@ -231,9 +254,11 @@ class TestInterceptCommandHandler:
         mock_target.id = 2
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.side_effect = lambda fid: mock_fleet if fid == 1 else mock_target
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_fleet_id=2)
+        mock_cmd = Mock(fleet_id=1, target_fleet_id=2)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -249,6 +274,8 @@ class TestJoinCommandHandler:
         handler = JoinCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.owner_id = 0
         mock_fleet.add_order = Mock()
@@ -258,9 +285,11 @@ class TestJoinCommandHandler:
         mock_target.owner_id = 0
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.side_effect = lambda fid: mock_fleet if fid == 1 else mock_target
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, target_fleet_id=2)
+        mock_cmd = Mock(fleet_id=1, target_fleet_id=2)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -274,6 +303,7 @@ class TestJoinCommandHandlerPursuerTracking:
     def _make_session_with_real_fleets(self, fleet, target):
         """Helper: create mock session that returns real Fleet objects."""
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         lookup = {fleet.id: fleet, target.id: target}
         mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
         return mock_session
@@ -282,7 +312,7 @@ class TestJoinCommandHandlerPursuerTracking:
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         target = Fleet("f2", 0, HexCoord(5, 5))
         session = self._make_session_with_real_fleets(fleet, target)
-        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f2")
+        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
 
         result = JoinCommandHandler().execute(session, cmd)
 
@@ -293,7 +323,7 @@ class TestJoinCommandHandlerPursuerTracking:
     def test_join_self_targeting_rejected(self):
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         session = self._make_session_with_real_fleets(fleet, fleet)
-        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f1")
+        cmd = Mock(fleet_id="f1", target_fleet_id="f1")
 
         result = JoinCommandHandler().execute(session, cmd)
 
@@ -304,7 +334,7 @@ class TestJoinCommandHandlerPursuerTracking:
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         target = Fleet("f2", 1, HexCoord(5, 5))  # Different owner
         session = self._make_session_with_real_fleets(fleet, target)
-        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f2")
+        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
 
         result = JoinCommandHandler().execute(session, cmd)
 
@@ -317,6 +347,7 @@ class TestInterceptCommandHandlerPursuerTracking:
 
     def _make_session_with_real_fleets(self, fleet, target):
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         lookup = {fleet.id: fleet, target.id: target}
         mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
         return mock_session
@@ -325,7 +356,7 @@ class TestInterceptCommandHandlerPursuerTracking:
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         target = Fleet("f2", 0, HexCoord(5, 5))
         session = self._make_session_with_real_fleets(fleet, target)
-        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f2")
+        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
 
         result = InterceptCommandHandler().execute(session, cmd)
 
@@ -336,7 +367,7 @@ class TestInterceptCommandHandlerPursuerTracking:
     def test_intercept_self_targeting_rejected(self):
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         session = self._make_session_with_real_fleets(fleet, fleet)
-        cmd = Mock(empire_id=-1, fleet_id="f1", target_fleet_id="f1")
+        cmd = Mock(fleet_id="f1", target_fleet_id="f1")
 
         result = InterceptCommandHandler().execute(session, cmd)
 
@@ -351,8 +382,9 @@ class TestColonizeMissionCommandHandler:
         """Returns failure when fleet not found."""
         handler = ColonizeMissionCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999, planet_id=None, target_hex=(0, 0))
+        mock_cmd = Mock(fleet_id=999, planet_id=None, target_hex=(0, 0))
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -364,14 +396,18 @@ class TestColonizeMissionCommandHandler:
         handler = ColonizeMissionCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.location = (0, 0)
         mock_fleet.orders = []
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session._get_planet_by_id.return_value = None
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, planet_id=None, target_hex=(100, 100))
+        mock_cmd = Mock(fleet_id=1, planet_id=None, target_hex=(100, 100))
 
         # PROJ-207: Patch at command_handlers where function is imported
         with patch('game.strategy.engine.handlers.base.find_hybrid_path', return_value=None):
@@ -388,8 +424,9 @@ class TestClearOrdersCommandHandler:
         """Returns failure when fleet not found."""
         handler = ClearOrdersCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999)
+        mock_cmd = Mock(fleet_id=999)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -401,12 +438,16 @@ class TestClearOrdersCommandHandler:
         handler = ClearOrdersCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1)
+        mock_cmd = Mock(fleet_id=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -421,8 +462,9 @@ class TestTransferCommandHandler:
         """Returns failure when fleet not found."""
         handler = TransferCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999)
+        mock_cmd = Mock(fleet_id=999)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -430,23 +472,28 @@ class TestTransferCommandHandler:
         assert "Fleet not found" in result.message
 
     def test_fleet_owner_not_found(self):
-        """Returns failure when fleet owner empire not found."""
+        """Returns failure when fleet owner empire not found.
+
+        BUG-125: aligning active_empire with the fleet's owner_id passes
+        the authorization gate; the owner-empire-lookup failure is then
+        the next branch reached.
+        """
         handler = TransferCommandHandler()
 
         mock_fleet = Mock()
+        mock_fleet.owner_id = 99
         mock_fleet.id = 1
         mock_fleet.ships = []
         mock_fleet.location = (0, 0)
-        mock_fleet.owner_id = 99  # Invalid owner_id
-
-        mock_empire = Mock()
-        mock_empire.fleets = []  # Fleet not in any empire
 
         mock_session = Mock()
+        # active_empire matches fleet owner so auth passes; empires list
+        # is empty so the owner-not-found branch fires.
+        mock_session.active_empire = Mock(id=99)
         mock_session._get_fleet_by_id.return_value = mock_fleet
-        mock_session.empires = [mock_empire]
+        mock_session.empires = []
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1)
+        mock_cmd = Mock(fleet_id=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -458,6 +505,8 @@ class TestTransferCommandHandler:
         handler = TransferCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.ships = []
         mock_fleet.location = (0, 0)
@@ -467,11 +516,13 @@ class TestTransferCommandHandler:
         mock_empire.fleets = [mock_fleet]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.empires = [mock_empire]
         mock_session._get_planet_by_id.return_value = None
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, planet_id=999)
+        mock_cmd = Mock(fleet_id=1, planet_id=999)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -483,6 +534,8 @@ class TestTransferCommandHandler:
         handler = TransferCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.ships = []
         mock_fleet.location = HexCoord(0, 0)  # Fleet already at planet location
@@ -500,6 +553,8 @@ class TestTransferCommandHandler:
         mock_planet.total_population = 1000
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.empires = [mock_empire]
         mock_session._get_planet_by_id.return_value = mock_planet
@@ -507,7 +562,6 @@ class TestTransferCommandHandler:
         mock_session.galaxy.get_planet_global_hex.return_value = HexCoord(0, 0)
 
         mock_cmd = Mock(
-            empire_id=-1,
             fleet_id=1,
             planet_id=10,
             cargo_type='fuel',
@@ -533,9 +587,12 @@ class TestBaseCommandHandler:
 
         handler = BaseCommandHandler()
         mock_fleet = Mock()
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
         fleet = handler._resolve_fleet_required(mock_session, 1)
@@ -548,6 +605,7 @@ class TestBaseCommandHandler:
 
         handler = BaseCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
 
         with pytest.raises(ValueError) as exc_info:
@@ -561,10 +619,13 @@ class TestBaseCommandHandler:
 
         handler = BaseCommandHandler()
         mock_fleet = Mock()
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.owner_id = 0
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
         with pytest.raises(ValueError) as exc_info:
@@ -581,6 +642,8 @@ class TestBaseCommandHandler:
         mock_planet.id = 10
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         planet = handler._resolve_planet_optional(mock_session, 10)
@@ -593,6 +656,7 @@ class TestBaseCommandHandler:
 
         handler = BaseCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = None
 
         planet = handler._resolve_planet_optional(mock_session, 999, required=False)
@@ -605,6 +669,7 @@ class TestBaseCommandHandler:
 
         handler = BaseCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = None
 
         with pytest.raises(ValueError) as exc_info:
@@ -621,11 +686,15 @@ class TestCommandHelpers:
         from game.strategy.engine.command_handlers import add_move_order_if_needed
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.location = HexCoord(5, 5)
         mock_fleet.orders = []
         mock_fleet.add_order = Mock()
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
 
         result = add_move_order_if_needed(mock_session, mock_fleet, HexCoord(5, 5))
 
@@ -638,11 +707,15 @@ class TestCommandHelpers:
         from game.strategy.data.order_types import OrderType
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.location = HexCoord(0, 0)
         mock_fleet.orders = []
         mock_fleet.add_order = Mock()
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session.galaxy = Mock()
 
         target = HexCoord(5, 5)
@@ -662,10 +735,14 @@ class TestCommandHelpers:
         from game.strategy.engine.command_handlers import add_move_order_if_needed
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.location = HexCoord(0, 0)
         mock_fleet.orders = []
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session.galaxy = Mock()
 
         with patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
@@ -687,8 +764,9 @@ class TestSplitFleetCommandHandler:
         """Returns failure when source fleet not found."""
         handler = SplitFleetCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999, ship_instance_ids=['ship-1'])
+        mock_cmd = Mock(fleet_id=999, ship_instance_ids=['ship-1'])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -700,13 +778,17 @@ class TestSplitFleetCommandHandler:
         handler = SplitFleetCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.ships = []
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=[])
+        mock_cmd = Mock(fleet_id=1, ship_instance_ids=[])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -721,13 +803,17 @@ class TestSplitFleetCommandHandler:
         mock_ship.instance_id = 'ship-existing'
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.ships = [mock_ship]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=['ship-nonexistent'])
+        mock_cmd = Mock(fleet_id=1, ship_instance_ids=['ship-nonexistent'])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -744,13 +830,17 @@ class TestSplitFleetCommandHandler:
         mock_ship2.instance_id = 'ship-2'
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.ships = [mock_ship1, mock_ship2]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=['ship-1', 'ship-2'])
+        mock_cmd = Mock(fleet_id=1, ship_instance_ids=['ship-1', 'ship-2'])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -758,7 +848,11 @@ class TestSplitFleetCommandHandler:
         assert "At least one ship must remain" in result.message
 
     def test_fleet_owner_not_found(self):
-        """Returns failure when fleet owner empire not found."""
+        """Returns failure when fleet owner empire not found.
+
+        BUG-125: align active_empire with fleet owner so auth passes;
+        empires list is empty so the owner-not-found branch fires.
+        """
         handler = SplitFleetCommandHandler()
 
         mock_ship1 = Mock()
@@ -767,15 +861,16 @@ class TestSplitFleetCommandHandler:
         mock_ship2.instance_id = 'ship-2'
 
         mock_fleet = Mock()
+        mock_fleet.owner_id = 99
         mock_fleet.id = 1
         mock_fleet.ships = [mock_ship1, mock_ship2]
-        mock_fleet.owner_id = 99  # Invalid
 
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=99)
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.empires = []  # No empires
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=['ship-1'])
+        mock_cmd = Mock(fleet_id=1, ship_instance_ids=['ship-1'])
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -792,6 +887,8 @@ class TestSplitFleetCommandHandler:
         mock_ship2.instance_id = 'ship-2'
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.ships = [mock_ship1, mock_ship2]
         mock_fleet.owner_id = 0
@@ -804,10 +901,12 @@ class TestSplitFleetCommandHandler:
         mock_empire.add_fleet = Mock()
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.empires = [mock_empire]
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, ship_instance_ids=['ship-1'])
+        mock_cmd = Mock(fleet_id=1, ship_instance_ids=['ship-1'])
 
         # Patch Fleet class in the data module where it's imported from
         with patch('game.strategy.data.fleet.Fleet') as MockFleet:
@@ -830,8 +929,9 @@ class TestDeleteOrderCommandHandler:
         """Returns failure when fleet not found."""
         handler = DeleteOrderCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999, order_index=0)
+        mock_cmd = Mock(fleet_id=999, order_index=0)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -843,13 +943,17 @@ class TestDeleteOrderCommandHandler:
         handler = DeleteOrderCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=-1)
+        mock_cmd = Mock(fleet_id=1, order_index=-1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -861,13 +965,17 @@ class TestDeleteOrderCommandHandler:
         handler = DeleteOrderCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=5)
+        mock_cmd = Mock(fleet_id=1, order_index=5)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -879,13 +987,17 @@ class TestDeleteOrderCommandHandler:
         handler = DeleteOrderCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=0)
+        mock_cmd = Mock(fleet_id=1, order_index=0)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -897,13 +1009,17 @@ class TestDeleteOrderCommandHandler:
         handler = DeleteOrderCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=1)
+        mock_cmd = Mock(fleet_id=1, order_index=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -918,8 +1034,9 @@ class TestReorderOrderCommandHandler:
         """Returns failure when fleet not found."""
         handler = ReorderOrderCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, fleet_id=999, order_index=0, direction=1)
+        mock_cmd = Mock(fleet_id=999, order_index=0, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -931,13 +1048,17 @@ class TestReorderOrderCommandHandler:
         handler = ReorderOrderCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=5, direction=1)
+        mock_cmd = Mock(fleet_id=1, order_index=5, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -949,13 +1070,17 @@ class TestReorderOrderCommandHandler:
         handler = ReorderOrderCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=0, direction=2)  # Invalid
+        mock_cmd = Mock(fleet_id=1, order_index=0, direction=2)  # Invalid
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -967,13 +1092,17 @@ class TestReorderOrderCommandHandler:
         handler = ReorderOrderCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=0, direction=-1)
+        mock_cmd = Mock(fleet_id=1, order_index=0, direction=-1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -985,13 +1114,17 @@ class TestReorderOrderCommandHandler:
         handler = ReorderOrderCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=1, direction=1)
+        mock_cmd = Mock(fleet_id=1, order_index=1, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1007,14 +1140,18 @@ class TestReorderOrderCommandHandler:
         mock_order3 = Mock(name='order3')
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [mock_order1, mock_order2, mock_order3]
         mock_fleet.path = []
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=1, direction=1)
+        mock_cmd = Mock(fleet_id=1, order_index=1, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1030,14 +1167,18 @@ class TestReorderOrderCommandHandler:
         mock_order3 = Mock(name='order3')
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [mock_order1, mock_order2, mock_order3]
         mock_fleet.path = []
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=2, direction=-1)
+        mock_cmd = Mock(fleet_id=1, order_index=2, direction=-1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1052,15 +1193,19 @@ class TestReorderOrderCommandHandler:
         mock_order2 = Mock(name='order2')
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [mock_order1, mock_order2]
         mock_fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
         # Move order 0 down to 1
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=0, direction=1)
+        mock_cmd = Mock(fleet_id=1, order_index=0, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1077,16 +1222,20 @@ class TestReorderOrderCommandHandler:
         mock_order3 = Mock(name='order3')
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.id = 1
         mock_fleet.orders = [mock_order1, mock_order2, mock_order3]
         original_path = [HexCoord(1, 0), HexCoord(2, 0)]
         mock_fleet.path = original_path.copy()
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
         # Move order 1 down to 2 (doesn't affect order 0)
-        mock_cmd = Mock(empire_id=-1, fleet_id=1, order_index=1, direction=1)
+        mock_cmd = Mock(fleet_id=1, order_index=1, direction=1)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1106,6 +1255,7 @@ class TestAddToConstructionQueueCommandHandler:
         """Returns failure when planet not found."""
         handler = AddToConstructionQueueCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = None
         mock_cmd = Mock(
             entity_id=999,
@@ -1126,6 +1276,7 @@ class TestAddToConstructionQueueCommandHandler:
         """Returns failure when fleet not found."""
         handler = AddToConstructionQueueCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
         mock_cmd = Mock(
             entity_id=999,
@@ -1146,6 +1297,7 @@ class TestAddToConstructionQueueCommandHandler:
         """Returns failure for invalid entity type."""
         handler = AddToConstructionQueueCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_cmd = Mock(
             entity_id=1,
             entity_type="invalid",
@@ -1170,6 +1322,8 @@ class TestAddToConstructionQueueCommandHandler:
         mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1196,6 +1350,8 @@ class TestAddToConstructionQueueCommandHandler:
         mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1222,6 +1378,8 @@ class TestAddToConstructionQueueCommandHandler:
         mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1251,6 +1409,8 @@ class TestAddToConstructionQueueCommandHandler:
         mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1275,10 +1435,14 @@ class TestAddToConstructionQueueCommandHandler:
         handler = AddToConstructionQueueCommandHandler()
 
         mock_fleet = Mock()
+
+        mock_fleet.owner_id = 0
         mock_fleet.construction_queue = []
         mock_fleet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
         mock_cmd = Mock(
@@ -1305,6 +1469,8 @@ class TestAddToConstructionQueueCommandHandler:
         mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1338,6 +1504,8 @@ class TestAddToConstructionQueueCommandHandler:
         mock_planet.facilities = []
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1378,8 +1546,9 @@ class TestRemoveFromConstructionQueueCommandHandler:
         """Returns failure when planet not found."""
         handler = RemoveFromConstructionQueueCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, entity_id=999, entity_type="planet", item_index=0, queue_id=None)
+        mock_cmd = Mock(entity_id=999, entity_type="planet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1390,8 +1559,9 @@ class TestRemoveFromConstructionQueueCommandHandler:
         """Returns failure when fleet not found."""
         handler = RemoveFromConstructionQueueCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, entity_id=999, entity_type="fleet", item_index=0, queue_id=None)
+        mock_cmd = Mock(entity_id=999, entity_type="fleet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1406,9 +1576,11 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_planet.construction_queue = [{"design_id": "scout"}]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", item_index=-1, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=-1, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1423,9 +1595,11 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_planet.construction_queue = [{"design_id": "scout"}]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", item_index=5, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=5, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1442,9 +1616,11 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_planet.construction_queue = [item1, item2]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", item_index=0, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1458,12 +1634,15 @@ class TestRemoveFromConstructionQueueCommandHandler:
 
         item1 = {"design_id": "fighter"}
         mock_fleet = Mock()
+        mock_fleet.owner_id = 0
         mock_fleet.construction_queue = [item1]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="fleet", item_index=0, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="fleet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1489,6 +1668,8 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_planet.facilities = [mock_facility]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1515,6 +1696,8 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_planet.facilities = []
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1541,6 +1724,8 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_planet.facilities = [mock_facility]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(
@@ -1561,8 +1746,9 @@ class TestReorderConstructionQueueCommandHandler:
         """Returns failure when planet not found."""
         handler = ReorderConstructionQueueCommandHandler()
         mock_session = Mock()
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = None
-        mock_cmd = Mock(empire_id=-1, entity_id=999, entity_type="planet", from_index=0, to_index=1, queue_id=None)
+        mock_cmd = Mock(entity_id=999, entity_type="planet", from_index=0, to_index=1, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1577,9 +1763,11 @@ class TestReorderConstructionQueueCommandHandler:
         mock_planet.construction_queue = [{"design_id": "scout"}, {"design_id": "cruiser"}]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", from_index=5, to_index=0, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=5, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1594,9 +1782,11 @@ class TestReorderConstructionQueueCommandHandler:
         mock_planet.construction_queue = [{"design_id": "scout"}, {"design_id": "cruiser"}]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", from_index=0, to_index=5, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=5, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1614,10 +1804,12 @@ class TestReorderConstructionQueueCommandHandler:
         mock_planet.construction_queue = [item1, item2, item3]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         # Move item at index 0 to index 2
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", from_index=0, to_index=2, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=2, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1636,10 +1828,12 @@ class TestReorderConstructionQueueCommandHandler:
         mock_planet.construction_queue = [item1, item2, item3]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         # Move item at index 2 to index 0
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="planet", from_index=2, to_index=0, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=2, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1654,12 +1848,15 @@ class TestReorderConstructionQueueCommandHandler:
         item1 = {"design_id": "fighter"}
         item2 = {"design_id": "bomber"}
         mock_fleet = Mock()
+        mock_fleet.owner_id = 0
         mock_fleet.construction_queue = [item1, item2]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(empire_id=-1, entity_id=1, entity_type="fleet", from_index=1, to_index=0, queue_id=None)
+        mock_cmd = Mock(entity_id=1, entity_type="fleet", from_index=1, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1685,6 +1882,8 @@ class TestReorderConstructionQueueCommandHandler:
         mock_planet.facilities = [mock_facility]
 
         mock_session = Mock()
+
+        mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = mock_planet
 
         mock_cmd = Mock(

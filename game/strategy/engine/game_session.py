@@ -117,8 +117,13 @@ class GameSession:
             i for i, p in enumerate(config.players) if p.is_human
         ]
 
-        # Convenience references for common empires
-        self.player_empire = self.empires[0] if len(self.empires) > 0 else None
+        # BUG-125: `active_empire` is the empire whose turn it currently is.
+        # Defaults to empires[0] at session creation; rotated by
+        # `StrategyGameStateManager.advance_turn` on each hot-seat turn change.
+        # Authorization gates in command handlers read this — never the
+        # original session creator. Save/load resets to empires[0]; the UI
+        # rotation index lives in `StrategyScreen.current_player_index`.
+        self.active_empire = self.empires[0] if len(self.empires) > 0 else None
         self.enemy_empire = self.empires[1] if len(self.empires) > 1 else None
 
     @staticmethod
@@ -430,8 +435,8 @@ class GameSession:
                         if hasattr(order.target, 'pursuer_tracker'):
                             order.target.pursuer_tracker.add_pursuer(fleet)
 
-        # Set convenience references
-        session.player_empire = session.empires[0] if len(session.empires) > 0 else None
+        # BUG-125: see __init__ for `active_empire` contract.
+        session.active_empire = session.empires[0] if len(session.empires) > 0 else None
         session.enemy_empire = session.empires[1] if len(session.empires) > 1 else None
 
         return session

@@ -68,17 +68,15 @@ class OrdersRegistrar:
             ) -> None:
                 pass  # Planet order reordering not yet implemented
         else:
-            owner_id = entity.owner_id
-
             def clear_orders_callback(entity_id: int) -> None:
                 from game.strategy.engine.commands import ClearOrdersCommand
-                cmd = ClearOrdersCommand(fleet_id=entity_id, empire_id=owner_id)
+                cmd = ClearOrdersCommand(fleet_id=entity_id)
                 facade.handle_command(cmd)
 
             def delete_order_callback(entity_id: int, order_index: int) -> None:
                 from game.strategy.engine.commands import DeleteOrderCommand
                 cmd = DeleteOrderCommand(
-                    fleet_id=entity_id, order_index=order_index, empire_id=owner_id
+                    fleet_id=entity_id, order_index=order_index
                 )
                 facade.handle_command(cmd)
 
@@ -90,7 +88,6 @@ class OrdersRegistrar:
                     fleet_id=entity_id,
                     order_index=order_index,
                     direction=direction,
-                    empire_id=owner_id,
                 )
                 facade.handle_command(cmd)
 

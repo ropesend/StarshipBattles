@@ -118,7 +118,7 @@ class FleetOperations:
         preview_path = self.facade.get_fleet_path_preview(fleet.id, target_hex)
 
         if preview_path:
-            cmd = IssueMoveCommand(fleet.id, target_hex, empire_id=fleet.owner_id)
+            cmd = IssueMoveCommand(fleet.id, target_hex)
             result = self.facade.handle_command(cmd)
 
             if result and result.is_valid:
@@ -144,7 +144,7 @@ class FleetOperations:
         """
         logger.debug(f"Intercepting Fleet {target_fleet.fleet_id}...")
 
-        cmd = IssueInterceptCommand(fleet.id, target_fleet.fleet_id, empire_id=fleet.owner_id)
+        cmd = IssueInterceptCommand(fleet.id, target_fleet.fleet_id)
         result = self.facade.handle_command(cmd)
 
         if result and result.is_valid:
@@ -207,7 +207,7 @@ class FleetOperations:
         """
         logger.debug(f"Queueing Join Order with Fleet {target_fleet_info.fleet_id}...")
 
-        cmd = IssueJoinFleetCommand(fleet.id, target_fleet_info.fleet_id, empire_id=fleet.owner_id)
+        cmd = IssueJoinFleetCommand(fleet.id, target_fleet_info.fleet_id)
         result = self.facade.handle_command(cmd)
 
         if result and result.is_valid:

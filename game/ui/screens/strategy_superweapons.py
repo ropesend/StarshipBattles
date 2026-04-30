@@ -101,7 +101,7 @@ class SuperweaponOperations:
     def _queue_implode_planet(self, fleet: 'Fleet', target_hex, planet) -> dict:
         """Queue implode planet mission with confirmation."""
         def on_confirm() -> None:
-            cmd = QueueImplodePlanetMissionCommand(fleet.id, target_hex, planet.id, empire_id=fleet.owner_id)
+            cmd = QueueImplodePlanetMissionCommand(fleet.id, target_hex, planet.id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
                 logger.info(f"Mission Queued: Implode Planet {planet.name}")
@@ -145,7 +145,7 @@ class SuperweaponOperations:
             return {'type': 'error', 'message': 'No star system at target location'}
 
         def on_confirm() -> None:
-            cmd = QueueStellerateStarMissionCommand(fleet.id, target_hex, empire_id=fleet.owner_id)
+            cmd = QueueStellerateStarMissionCommand(fleet.id, target_hex)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
                 logger.info(f"Mission Queued: Stellerate {system.name}")
@@ -207,7 +207,7 @@ class SuperweaponOperations:
             return {'type': 'error', 'message': 'No available systems to link to'}
 
         def on_system_selected(system_name: str) -> None:
-            cmd = QueueOpenWarpPointMissionCommand(fleet.id, target_hex, system_name, empire_id=fleet.owner_id)
+            cmd = QueueOpenWarpPointMissionCommand(fleet.id, target_hex, system_name)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
                 logger.info(f"Mission Queued: Open Warp Point to {system_name}")
@@ -247,7 +247,7 @@ class SuperweaponOperations:
             return {'type': 'error', 'message': 'No warp point at target location'}
 
         def on_confirm() -> None:
-            cmd = QueueCloseWarpPointMissionCommand(fleet.id, target_hex, warp_point.destination_id, empire_id=fleet.owner_id)
+            cmd = QueueCloseWarpPointMissionCommand(fleet.id, target_hex, warp_point.destination_id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
                 logger.info(f"Mission Queued: Close Warp Point to {warp_point.destination_id}")
@@ -291,7 +291,7 @@ class SuperweaponOperations:
             return {'type': 'error', 'message': 'No star system at target location'}
 
         def on_confirm() -> None:
-            cmd = QueueCreateDysonSphereMissionCommand(fleet.id, target_hex, empire_id=fleet.owner_id)
+            cmd = QueueCreateDysonSphereMissionCommand(fleet.id, target_hex)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
                 logger.info(f"Mission Queued: Create Dyson Sphere at {system.name}")
@@ -330,7 +330,7 @@ class SuperweaponOperations:
         def on_ships_selected(ship_ids: List[int]) -> None:
             if not ship_ids:
                 return
-            cmd = IssueSelfDestructCommand(fleet.id, ship_ids, empire_id=fleet.owner_id)
+            cmd = IssueSelfDestructCommand(fleet.id, ship_ids)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
                 logger.info(f"Self-destruct ordered for {len(ship_ids)} ships")

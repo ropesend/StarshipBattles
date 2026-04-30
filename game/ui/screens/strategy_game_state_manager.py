@@ -52,15 +52,36 @@ class StrategyGameStateManager:
             self._screen.current_player_index = 0
             self.process_full_turn()
             self._update_player_label()
+            # BUG-125: rotation reset to player 1 — push into session
+            # so command handlers see the active turn-taker.
+            self._sync_active_empire()
         else:
             # Switch to next human player's view
             next_player_id = self._screen.human_player_ids[self._screen.current_player_index]
             logger.info(f"Player {next_player_id + 1}'s turn to give orders.")
             self._update_player_label()
+            # BUG-125: push rotation into the session so command handlers
+            # gate on the active empire, not the original session creator.
+            self._sync_active_empire()
             # Center on their home colony
             next_empire = next((e for e in self._screen.empires if e.id == next_player_id), None)
             if next_empire and next_empire.colonies:
                 self._screen.center_camera_on(next_empire.colonies[0])
+
+    def _sync_active_empire(self) -> None:
+        """Push the UI rotation index into `session.active_empire`.
+
+        BUG-125: the strategy screen tracks rotation via
+        `current_player_index`; the session needs to know who is acting so
+        every command handler authorizes against the correct empire. Called
+        from `advance_turn`.
+        """
+        current_player_id = self._screen.human_player_ids[self._screen.current_player_index]
+        current_empire = next(
+            (e for e in self._screen.empires if e.id == current_player_id), None
+        )
+        if current_empire is not None:
+            self._screen.session.active_empire = current_empire
 
     def process_full_turn(self) -> list:
         """Process the turn for all empires simultaneously.
@@ -98,7 +119,7 @@ class StrategyGameStateManager:
 
         # Re-center Camera on current player's home
         current_player_id = self._screen.human_player_ids[self._screen.current_player_index]
-        current_empire = next((e for e in self._screen.empires if e.id == current_player_id), self._screen.player_empire)
+        current_empire = next((e for e in self._screen.empires if e.id == current_player_id), self._screen.session.active_empire)
         if current_empire.colonies:
             self._screen.center_camera_on(current_empire.colonies[0])
 

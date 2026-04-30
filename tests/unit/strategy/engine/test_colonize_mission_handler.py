@@ -87,6 +87,9 @@ def make_mock_session(fleet, planet=None, component_registry=None):
     # Mock galaxy for pathfinding
     session.galaxy = MagicMock()
 
+    # BUG-125: align active_empire with the test fleet's owner so authorization passes.
+    session.active_empire = MagicMock(id=fleet.owner_id)
+
     # Mock registries (public API)
     if component_registry is not None:
         registries = MagicMock()

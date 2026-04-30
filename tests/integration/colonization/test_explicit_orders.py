@@ -16,6 +16,8 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         self.empire.id = 0
         self.empire.fleets = [self.fleet]
         self.session.empires = [self.empire]
+        # BUG-125: align active_empire with the test fleet's owner so authorization passes.
+        self.session.active_empire = self.empire
         self.galaxy = MagicMock()
 
         # Mock facade

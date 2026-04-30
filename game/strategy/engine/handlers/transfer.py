@@ -32,7 +32,7 @@ class TransferCommandHandler(BaseCommandHandler):
         logger.info(f"TransferCommandHandler: fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
 
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
+        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             logger.warning(f"TransferCommandHandler: Fleet {cmd.fleet_id} not found")
             return error

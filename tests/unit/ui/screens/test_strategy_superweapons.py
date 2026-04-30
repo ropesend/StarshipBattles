@@ -517,7 +517,7 @@ class TestCommandDispatch:
         # Execute the confirmation callback
         confirm_callback()
 
-        mock_cmd_class.assert_called_once_with("F-001", (5, 5), "planet-1", empire_id=0)
+        mock_cmd_class.assert_called_once_with("F-001", (5, 5), "planet-1")
         mock_facade.handle_command.assert_called_once()
 
     @patch('game.ui.screens.strategy_superweapons.IssueSelfDestructCommand')
@@ -541,5 +541,5 @@ class TestCommandDispatch:
         # Execute the picker callback
         picker_callback([1, 2])
 
-        mock_cmd_class.assert_called_once_with("F-001", [1, 2], empire_id=0)
+        mock_cmd_class.assert_called_once_with("F-001", [1, 2])
         mock_facade.handle_command.assert_called_once()

@@ -96,10 +96,10 @@ class BuildQueuePortraitLoader:
         Returns:
             Scaled pygame.Surface or None if not found
         """
-        # Get theme from session's player empire
+        # Get theme from session's active empire
         theme = "Federation"  # Default
-        if hasattr(self.session, 'player_empire') and hasattr(self.session.player_empire, 'empire_theme_id'):
-            theme = self.session.player_empire.empire_theme_id
+        if hasattr(self.session, 'active_empire') and hasattr(self.session.active_empire, 'empire_theme_id'):
+            theme = self.session.active_empire.empire_theme_id
 
         ship_class = getattr(design, 'ship_class', 'Unknown')
         if not isinstance(ship_class, str):

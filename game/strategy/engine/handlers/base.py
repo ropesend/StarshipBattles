@@ -116,7 +116,8 @@ class BaseCommandHandler:
             session: The game session with empires and galaxy.
             fleet_id: The fleet ID to resolve.
             empire_id: Optional empire ID to validate ownership.
-                None or -1 skips validation (backward compat for tests).
+                None skips validation (used by intercept-target lookup, where
+                cross-empire targets are legitimate).
 
         Returns:
             tuple[Fleet, None] on success, tuple[None, ValidationResult] on failure.
@@ -125,10 +126,34 @@ class BaseCommandHandler:
         if fleet is None:
             return (None, ValidationResult.error("Fleet not found."))
 
-        if empire_id is not None and empire_id != -1 and fleet.owner_id != empire_id:
+        if empire_id is not None and fleet.owner_id != empire_id:
             return (None, ValidationResult.error("Fleet does not belong to this empire."))
 
         return (fleet, None)
+
+    @staticmethod
+    def _resolve_player_fleet(session: 'GameSession', fleet_id: int) -> tuple:
+        """Resolve a fleet and authorize against the active empire.
+
+        BUG-125: this is the standard authorization path for fleet command
+        handlers. Identity is session context (`session.active_empire.id`)
+        — handlers must NEVER trust an empire identifier supplied through
+        the request body. Use `_resolve_fleet(empire_id=None)` for the
+        rare cases where cross-empire fleet lookup is legitimate (e.g.
+        intercept TARGET; the source-fleet command authorization always
+        flows through this helper).
+
+        Args:
+            session: The game session with empires and galaxy.
+            fleet_id: The fleet ID to resolve.
+
+        Returns:
+            tuple[Fleet, None] on success, tuple[None, ValidationResult] on failure.
+        """
+        active = session.active_empire
+        if active is None:
+            return (None, ValidationResult.error("No active empire."))
+        return BaseCommandHandler._resolve_fleet(session, fleet_id, empire_id=active.id)
 
     @staticmethod
     def _resolve_fleet_required(session: 'GameSession', fleet_id: int, empire_id: int = None) -> 'Fleet':
@@ -140,7 +165,7 @@ class BaseCommandHandler:
             session: The game session with empires and galaxy.
             fleet_id: The fleet ID to resolve.
             empire_id: Optional empire ID to validate ownership.
-                None or -1 skips validation (backward compat for tests).
+                None skips validation.
 
         Returns:
             Fleet object if found.
@@ -152,7 +177,7 @@ class BaseCommandHandler:
         if fleet is None:
             raise ValueError("Fleet not found.")
 
-        if empire_id is not None and empire_id != -1 and fleet.owner_id != empire_id:
+        if empire_id is not None and fleet.owner_id != empire_id:
             raise ValueError("Fleet does not belong to this empire.")
 
         return fleet

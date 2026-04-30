@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-04-28 — BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
+> **Last verified:** 2026-04-29 — BUG-125 fix: `Command.empire_id` field removed (Q5=DROP); `session.player_empire` renamed to `session.active_empire` and now rotated by `StrategyGameStateManager.advance_turn` on each hot-seat turn change. Fleet command handlers gate on `session.active_empire.id` via the new `BaseCommandHandler._resolve_player_fleet` helper; planet handlers continue to gate on `session.active_empire.id` (now correct in hot-seat). Earlier verification (2026-04-28): BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
 
 System documentation for the turn-based strategy layer.
 
@@ -79,21 +79,55 @@ class ICommandHandler(Protocol):
     def execute(self, session: GameSession, command: Command) -> ValidationResult: ...
 ```
 
-### Command Ownership Validation
+### Command Ownership Validation (BUG-125)
 
-All `Command` subclasses carry `empire_id: int` (keyword-only, default -1). The UI
-populates this from `fleet.owner_id` when creating commands. Handlers pass
-`empire_id=cmd.empire_id` to `_resolve_fleet()`, which rejects commands targeting
-fleets owned by a different empire. `empire_id=-1` or `None` skips validation
-(backward compatibility for tests).
+`Command` DTOs do **not** carry an empire identifier. Identity is session
+context — handlers gate on `session.active_empire.id`. The UI must never
+supply identity through a request body; doing so was the root cause of
+the original cross-empire-orders bug (UI passed `empire_id=fleet.owner_id`,
+handler checked `cmd.empire_id == fleet.owner_id`, a tautology that
+authorized any selectable fleet).
+
+**The active-empire rotation contract:**
+`session.active_empire` (renamed from `session.player_empire` in
+BUG-125) is the empire whose turn it currently is. It defaults to
+`empires[0]` at session creation and is rotated by
+`StrategyGameStateManager.advance_turn` on each hot-seat turn change
+(via `_sync_active_empire`). Save/load resets to `empires[0]`; the UI
+rotation index lives in `StrategyScreen.current_player_index`.
+
+**Authorization helper:** every fleet-command handler calls
+`BaseCommandHandler._resolve_player_fleet(session, fleet_id)`, which
+loads the fleet and checks `fleet.owner_id == session.active_empire.id`.
+Use the lower-level `_resolve_fleet(empire_id=None)` only for the rare
+case of a legitimate cross-empire fleet lookup (e.g. the
+intercept-target fleet — the source-fleet command authorization always
+flows through `_resolve_player_fleet`).
+
+Planet handlers gate on `planet.owner_id == session.active_empire.id`
+inline; before BUG-125 they read `session.player_empire.id`, which never
+rotated and silently broke planet-command authorization in hot-seat
+for player 2.
 
 ### BaseCommandHandler
 
 Mixin providing resolution helpers used by all handlers:
-- `_resolve_fleet(session, fleet_id, empire_id?)` -- returns `(Fleet, None)` or `(None, ValidationResult)`. Validates `fleet.owner_id == empire_id` when `empire_id` is not None/-1.
-- `_resolve_fleet_required(session, fleet_id, empire_id?)` -- returns Fleet or raises ValueError
-- `_resolve_planet(session, planet_id)` -- returns `(Planet, None)` or `(None, ValidationResult)`
-- `_resolve_planet_optional(session, planet_id, required?)` -- returns Planet or None/raises
+- `_resolve_player_fleet(session, fleet_id)` -- BUG-125 standard
+  authorization path: returns `(Fleet, None)` if
+  `fleet.owner_id == session.active_empire.id`, else
+  `(None, ValidationResult.error(...))`. Use this for source-fleet
+  resolution in every fleet handler.
+- `_resolve_fleet(session, fleet_id, empire_id?)` -- returns
+  `(Fleet, None)` or `(None, ValidationResult)`. Validates
+  `fleet.owner_id == empire_id` when `empire_id` is not None.
+  `empire_id=None` is the intercept-target path (cross-empire targets
+  are legitimate; the source-fleet authorization is the gate).
+- `_resolve_fleet_required(session, fleet_id, empire_id?)` -- returns
+  Fleet or raises ValueError.
+- `_resolve_planet(session, planet_id)` -- returns `(Planet, None)` or
+  `(None, ValidationResult)`.
+- `_resolve_planet_optional(session, planet_id, required?)` -- returns
+  Planet or None/raises.
 
 ### CommandHandlerRegistry
 

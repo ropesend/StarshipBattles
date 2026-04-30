@@ -132,7 +132,6 @@ class ColonizationSystem:
             fleet.id, planet.id,
             population_amount=population_amount,
             cargo_amounts=cargo_amounts,
-            empire_id=fleet.owner_id,
         )
         logger.info(f"Issued IssueColonizeCommand for {planet.name}")
 
@@ -213,7 +212,6 @@ class ColonizationSystem:
             fleet.id, target_hex, planet_id,
             population_amount=population_amount,
             cargo_amounts=cargo_amounts,
-            empire_id=fleet.owner_id,
         )
         result = self.facade.handle_command(cmd)
 

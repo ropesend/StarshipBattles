@@ -37,7 +37,7 @@ class ColonizeCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueColonizeCommand') -> ValidationResult:
         """Handle IssueColonizeCommand."""
         # 1. Resolve Fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
+        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
 
@@ -75,7 +75,7 @@ class MoveCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueMoveCommand') -> ValidationResult:
         """Handle IssueMoveCommand."""
         # 1. Resolve Fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
+        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
 
@@ -109,7 +109,7 @@ class InterceptCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueInterceptCommand') -> ValidationResult:
         """Handle IssueInterceptCommand - creates a MOVE_TO_FLEET order."""
         # 1. Resolve source fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
+        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
 
@@ -139,7 +139,7 @@ class JoinCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueJoinFleetCommand') -> ValidationResult:
         """Handle IssueJoinFleetCommand - creates MOVE_TO_FLEET and JOIN_FLEET orders."""
         # 1. Resolve source fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
+        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
 
@@ -177,7 +177,7 @@ class WarpCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'IssueWarpCommand') -> ValidationResult:
         """Handle IssueWarpCommand - creates WARP order with optional MOVE prefix."""
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
+        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
 

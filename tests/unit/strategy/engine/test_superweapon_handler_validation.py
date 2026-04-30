@@ -21,6 +21,7 @@ def mock_fleet():
     """Create a mock fleet with basic attributes."""
     fleet = Mock()
     fleet.id = 1
+    fleet.owner_id = 0
     fleet.location = HexCoord(5, 5)
     fleet.orders = []
     fleet.path = []
@@ -68,6 +69,8 @@ def mock_session(mock_fleet, mock_galaxy, mock_planet, mock_component_registry):
     session._get_planet_by_id = Mock(return_value=mock_planet)
     session.galaxy = mock_galaxy
     session.empires = []
+    # BUG-125: align active_empire with mock_fleet owner so authorization passes.
+    session.active_empire = Mock(id=mock_fleet.owner_id)
 
     # Use public registries API
     registries = Mock()

@@ -15,8 +15,8 @@ def test_game_session_initialization():
     
     # Check start scenario
     # Player @ System 0
-    assert session.player_empire.colonies
-    assert session.systems[0].planets[0].owner_id == session.player_empire.id
+    assert session.active_empire.colonies
+    assert session.systems[0].planets[0].owner_id == session.active_empire.id
     
     # Enemy @ System -1
     assert session.enemy_empire.colonies

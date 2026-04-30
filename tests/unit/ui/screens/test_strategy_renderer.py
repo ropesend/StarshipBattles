@@ -882,7 +882,7 @@ class TestCoordinateConversion:
 def _setup_outline_scene(mock_scene):
     """Configure mock_scene with hex outline prerequisites."""
     mock_scene.session = MagicMock()
-    mock_scene.session.player_empire = MagicMock(id=0)
+    mock_scene.session.active_empire = MagicMock(id=0)
     mock_scene.session.turn_number = 1
     mock_scene.galaxy._global_hex_planets = {}
     mock_scene.galaxy._global_hex_zones = {}

@@ -27,7 +27,7 @@ class HexOutlineLayer:
         Returns:
             Dict mapping HexCoord -> (has_player_owned: bool, has_non_player: bool)
         """
-        player_id = r.scene.session.player_empire.id if r.scene.session.player_empire else None
+        player_id = r.scene.session.active_empire.id if r.scene.session.active_empire else None
         result = {}
 
         # 1. Planets (from spatial index)

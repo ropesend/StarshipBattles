@@ -34,7 +34,7 @@ class BuildOrderCommandHandler(BaseCommandHandler):
         Clears the fleet path since fleet must stay stationary to build.
         """
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
+        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
 
@@ -55,7 +55,7 @@ class RemoveBuildOrderCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: 'RemoveBuildOrderCommand') -> ValidationResult:
         """Handle RemoveBuildOrderCommand - removes BUILD orders from fleet."""
         # 1. Resolve fleet
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id, empire_id=cmd.empire_id)
+        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
 

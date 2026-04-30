@@ -44,7 +44,7 @@ class IssuePlanetOrderCommandHandler:
             return error
 
         # 2. Validate ownership
-        if planet.owner_id != session.player_empire.id:
+        if planet.owner_id != session.active_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
         # 3. Parse order type
@@ -107,7 +107,7 @@ class ClearPlanetOrdersCommandHandler:
         if error:
             return error
 
-        if planet.owner_id != session.player_empire.id:
+        if planet.owner_id != session.active_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
         planet.clear_orders()
@@ -125,7 +125,7 @@ class DeletePlanetOrderCommandHandler:
         if error:
             return error
 
-        if planet.owner_id != session.player_empire.id:
+        if planet.owner_id != session.active_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
         if cmd.order_index < 0 or cmd.order_index >= len(planet.orders):
@@ -146,7 +146,7 @@ class SetAtmosphereTargetCommandHandler:
         if error:
             return error
 
-        if planet.owner_id != session.player_empire.id:
+        if planet.owner_id != session.active_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
         planet.atmosphere_target = dict(cmd.atmosphere_target)
@@ -167,7 +167,7 @@ class SetGravityTargetCommandHandler:
         if error:
             return error
 
-        if planet.owner_id != session.player_empire.id:
+        if planet.owner_id != session.active_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
         planet.gravity_target = cmd.gravity_target
@@ -188,7 +188,7 @@ class SetWaterTargetCommandHandler:
         if error:
             return error
 
-        if planet.owner_id != session.player_empire.id:
+        if planet.owner_id != session.active_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
         planet.water_target = cmd.water_target
@@ -209,7 +209,7 @@ class SetRadiationShieldTargetCommandHandler:
         if error:
             return error
 
-        if planet.owner_id != session.player_empire.id:
+        if planet.owner_id != session.active_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
         planet.radiation_shielding_target = cmd.shielding_target

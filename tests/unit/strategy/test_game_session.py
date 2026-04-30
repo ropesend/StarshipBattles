@@ -192,11 +192,18 @@ class TestGameSessionMultiEmpire:
         assert len(session.empires[0].colonies) > 0
 
 
-class TestGameSessionCompatibility:
-    """Tests for compatibility references"""
+class TestGameSessionActiveEmpire:
+    """`session.active_empire` is the active turn-taker (BUG-125).
 
-    def test_player_empire_reference(self):
-        """player_empire convenience reference points to first empire"""
+    Renamed from `player_empire`, which never rotated and silently broke
+    every authorization gate that read it in hot-seat. The rename to
+    `active_empire` makes the rotation contract explicit, and
+    `StrategyGameStateManager.advance_turn` pushes the rotation into the
+    session each turn change."""
+
+    def test_active_empire_defaults_to_first_empire(self):
+        """At session creation, active_empire is empires[0] (the first
+        player's turn comes first)."""
         config = GameConfig(
             players=[
                 PlayerConfig(name="First", theme="Federation", color=(255, 0, 0)),
@@ -207,10 +214,25 @@ class TestGameSessionCompatibility:
 
         session = GameSession(config=config)
 
-        assert session.player_empire is session.empires[0]
+        assert session.active_empire is session.empires[0]
+
+    def test_active_empire_rotates_on_assignment(self):
+        """`session.active_empire = next_empire` rotates the active empire."""
+        config = GameConfig(
+            players=[
+                PlayerConfig(name="First", theme="Federation", color=(255, 0, 0)),
+                PlayerConfig(name="Second", theme="Atlantians", color=(0, 255, 0)),
+            ],
+            system_count=10
+        )
+
+        session = GameSession(config=config)
+        session.active_empire = session.empires[1]
+
+        assert session.active_empire is session.empires[1]
 
     def test_enemy_empire_reference(self):
-        """enemy_empire convenience reference points to second empire"""
+        """enemy_empire convenience reference points to second empire."""
         config = GameConfig(
             players=[
                 PlayerConfig(name="First", theme="Federation", color=(255, 0, 0)),
@@ -222,3 +244,25 @@ class TestGameSessionCompatibility:
         session = GameSession(config=config)
 
         assert session.enemy_empire is session.empires[1]
+
+    def test_active_empire_round_trips_through_save_load(self):
+        """`active_empire` defaults to empires[0] after `from_dict` —
+        rotation is the UI's concern (rotation index lives in
+        StrategyScreen.current_player_index, which is also the source
+        that pushes into session.active_empire on advance_turn).
+        Save/load explicitly reset to empires[0] so loading a save
+        always lands on player 1's turn."""
+        config = GameConfig(
+            players=[
+                PlayerConfig(name="First", theme="Federation", color=(255, 0, 0)),
+                PlayerConfig(name="Second", theme="Atlantians", color=(0, 255, 0)),
+            ],
+            system_count=10
+        )
+        session = GameSession(config=config)
+        session.active_empire = session.empires[1]
+
+        data = session.to_dict()
+        restored = GameSession.from_dict(data)
+
+        assert restored.active_empire is restored.empires[0]

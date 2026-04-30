@@ -57,7 +57,7 @@ class TestCommandExecution:
     def test_move_command_adds_order(self, game_session):
         """Move command adds order to fleet."""
         # Get player empire and create a fleet
-        empire = game_session.player_empire
+        empire = game_session.active_empire
         if not empire:
             pytest.skip("No player empire")
 
@@ -80,7 +80,7 @@ class TestCommandExecution:
 
     def test_colonize_command_validates_planet(self, game_session):
         """Colonize command validates target planet."""
-        empire = game_session.player_empire
+        empire = game_session.active_empire
         if not empire:
             pytest.skip("No player empire")
 
