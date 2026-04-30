@@ -12,9 +12,12 @@
 |------|---------|------|
 | [agent_coordination](agent_coordination/) | Generate tracked agent surface inventory artifacts | Diagnostics |
 | [analyze_dependency_graph](analyze_dependency_graph/) | Import dependency graph from entry points | Analysis |
-| [background_eraser](background_eraser/) | Remove image backgrounds via FastAPI server | Asset Processing |
+| [audit_shrink](audit_shrink/) | Code shrinkage audit (vulture, radon, clones, orphans, dependency graph) | Analysis |
+| [captioning](captioning/) | Pre-bake JSON caption sidecars for visual assets (PROJ-299) | Asset Processing |
 | [check_context](check_context/) | Report Claude Code session context usage (ground-truth via transcript `usage` data) | Diagnostics |
-| [check_orphans](check_orphans/) | Find orphaned modules in game/ | Analysis |
+| [check_file_size](check_file_size/) | Enforce the 500-LOC ceiling on production files (PROJ-309) | Diagnostics |
+| [check_orphans](check_orphans/) | Find orphaned modules in game/ (legacy: superseded by `analyze_dependency_graph`) | Analysis |
+| [component_transparency_viewer](component_transparency_viewer/) | Browser-based reviewer for processed component images | QA |
 | [component_visuals_manager](component_visuals_manager/) | Web UI for managing component visual assets | GUI Editor |
 | [diagnose_blueprints](diagnose_blueprints/) | Verify star system blueprints produce expected results | Diagnostics |
 | [find_orphaned_tests](find_orphaned_tests/) | Find test files without matching source modules | Testing |
@@ -24,10 +27,11 @@
 | [inspect_galaxy](inspect_galaxy/) | Galaxy generation stats inspector (JSON + console) | Visualization |
 | [loc](loc/) | Lines of code counter with section breakdowns | Analysis |
 | [nebula_to_alpha](nebula_to_alpha/) | Convert nebula/background images to transparent PNGs | Asset Processing |
-| [profiling](profiling/) | Repeatable Scalene CPU/memory profiling workflow | Diagnostics |
+| [process_components](process_components/) | Component image processing pipeline (background removal, resize, tagging) | Asset Processing |
 | [process_cursors](process_cursors/) | Process cursor sprite sheets into individual files | Asset Processing |
 | [process_flags](process_flags/) | Process flag images into multi-resolution variants | Asset Processing |
 | [process_planet_spheres](process_planet_spheres/) | Detect and mask planet spheres (OpenCV) | Asset Processing |
+| [profiling](profiling/) | Repeatable Scalene CPU/memory profiling workflow | Diagnostics |
 | [qa_observer](qa_observer/) | QA session recorder (audio + screenshots) | QA |
 | [regenerate_ship_portraits](regenerate_ship_portraits/) | Generate and audit ship-theme portraits via OpenAI gpt-image-2 | Asset Processing |
 | [ship_background_remover](ship_background_remover/) | Remove black backgrounds from ship images | Asset Processing |
@@ -50,8 +54,9 @@
 
 ### Asset Processing
 
-- **[background_eraser](background_eraser/)** -- FastAPI web server for interactively removing image backgrounds.
+- **[captioning](captioning/)** -- Pre-bake structured JSON caption sidecars for visual assets so the in-game LLM narrative generator (PROJ-299) can describe them without a multimodal runtime model. Includes a validator + tests.
 - **[nebula_to_alpha](nebula_to_alpha/)** -- Batch converts nebula/system background/warp point images from opaque to transparent PNGs using luminance-based alpha with gamma correction.
+- **[process_components](process_components/)** -- Main component image processing pipeline: background removal, resizing, AI-assisted recreation, sprite tagging.
 - **[process_cursors](process_cursors/)** -- Splits cursor sprite sheet into individual cursor files at 64x64 and 32x32.
 - **[process_flags](process_flags/)** -- Extracts flags from composite images, trims, and generates multi-resolution variants (1024 down to 32).
 - **[process_planet_spheres](process_planet_spheres/)** -- Detects circular planet bounds using Hough circles (OpenCV) and applies transparency masks.
@@ -66,10 +71,13 @@
 
 ### Diagnostics & Analysis
 
-- **[agent_coordination](agent_coordination/)** -- Generates tracked, schema-versioned inventories of agent-facing skill/config surfaces for coordination and later validation work.
-- **[check_orphans](check_orphans/)** -- Scans `game/` for modules that aren't imported by anything. Helps identify dead code.
+- **[agent_coordination](agent_coordination/)** -- Generates tracked, schema-versioned inventories of agent-facing skill/config surfaces; runs the full validator (11 checks) on coordination state. The canonical entry point for coordination tooling.
+- **[audit_shrink](audit_shrink/)** -- Comprehensive shrinkage audit pipeline: vulture (dead code), radon (complexity), clone detector, orphan/dependency graph, LOC tracking. Driven by the `/ocode-audit-shrink` skill in Phase 2.
+- **[check_context](check_context/)** -- Reports Claude Code session context usage from the live transcript. Wired as a Stop hook in `.claude/settings.json`.
+- **[check_file_size](check_file_size/)** -- Enforces the 500-LOC ceiling on production files (PROJ-309).
+- **[check_orphans](check_orphans/)** -- Regex-based orphan-module detector. **Legacy:** prefer `analyze_dependency_graph` for new audits; this tool is kept for fast ad-hoc checks.
 - **[diagnose_blueprints](diagnose_blueprints/)** -- Generates star systems from each blueprint and verifies they match expected characteristics.
-- **[analyze_dependency_graph](analyze_dependency_graph/)** -- Parses Python imports from entry points to build a dependency graph. Identifies unreachable modules.
+- **[analyze_dependency_graph](analyze_dependency_graph/)** -- Parses Python imports from entry points to build a dependency graph. Identifies unreachable modules. Preferred over `check_orphans` for production audits.
 - **[loc](loc/)** -- Counts lines of code by section (production, tests, simulation tests, extras). Supports JSON output for tracking.
 - **[profiling](profiling/)** -- Runs repeatable Scalene profiling passes and writes generated profiles under `output/profiles/scalene/`.
 
@@ -83,6 +91,7 @@
 
 - **[qa_observer](qa_observer/)** -- Passive QA session helper. Records microphone audio and Windows Snipping Tool screenshots, aligns them into unified Markdown logs for agent review. Uses Google Cloud Speech-to-Text.
 - **[image_comparator](image_comparator/)** -- FastAPI web tool for side-by-side comparison of original vs recreated component images.
+- **[component_transparency_viewer](component_transparency_viewer/)** -- Browser-based reviewer for staged component images before promotion to the canonical asset set.
 
 ---
 

@@ -12,7 +12,6 @@ Unified system for tracking and resolving bugs and features via TDD workflows.
 | `features/active/FEAT-XX.md` | Active feature tickets being worked on |
 | `features/archived/FEAT-XX.md` | Completed and archived feature tickets |
 | `protocols/` | Shared ticket workflow protocols (11 files) |
-| `prompts/` | Legacy prompt files (being replaced by `/ticket-*` skills) |
 | `scripts/` | Python utilities for archiving and confirming tickets |
 | `debug_plan.md` | Bug queue dashboard with status tracking |
 | `feature_plan.md` | Feature queue dashboard with status tracking |
