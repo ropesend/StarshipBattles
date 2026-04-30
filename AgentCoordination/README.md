@@ -17,7 +17,7 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 - `skill_rename_map.toml` — current-state report from the renamer. After the atomic prefix migration completed every entry shows `already_compliant`. The original migration map is preserved in git history at commit `c1b774b29` (atomic prefix rename).
 - `SKILL_RENAMES.md` — current-state audit report. See `skill_rename_map.toml` note above; for the original old→new mapping, see git history at `c1b774b29`.
 - `local/` — gitignored per-checkout state (install IDs).
-- `*_v[1-4]_*.md`, `*_baseline_inventory_review.md`, `*_implementation_review.md`, `*_system_review.md` — historical agent review artifacts. Read for context only; do not treat as current policy.
+- Historical V1–V4 plans, agent comments, baseline/implementation/system reviews — staged at `_marked_for_deletion_2026-05-29/AgentCoordination/historical_reviews/` and removed from this directory on 2026-04-29. Recoverable via `git mv` until 2026-05-29; recoverable from git history thereafter.
 
 ## Tooling
 
