@@ -262,7 +262,79 @@ class FleetMovementEngine(IMovementEngine):
                     if next_hex is not None:
                         move_queue.append((fleet, next_hex))
 
+        # FEAT-28: Drop the larger fleet's move from any mutual-pursuit pair
+        # whose next-hexes would swap. Otherwise the pair oscillates past
+        # each other forever at parity speed (e.g. distance 1, both speed 2).
+        move_queue = self._filter_jump_past_collisions(move_queue)
+
         return move_queue
+
+    def _filter_jump_past_collisions(
+        self,
+        move_queue: List[Tuple[Fleet, HexCoord]],
+    ) -> List[Tuple[Fleet, HexCoord]]:
+        """FEAT-28: Drop the larger fleet's queue entry when both fleets in a
+        mutual-pursuit pair would swap hexes on the same tick.
+
+        "Larger" = more ships; tiebreak smaller `fleet.id` (mirrors BUG-122
+        `_elect_canonical_merges`). After dropping, the smaller fleet still
+        moves to the larger's current hex this tick, the larger waits, and
+        next tick they co-locate so OrderProcessor Phase 1 fires the merge.
+
+        v1 covers swap parity only (`next_a == fleet_b.location and
+        next_b == fleet_a.location`). The broader leapfrog case (e.g.
+        distance 3, both speed 2 → A moves 2, B moves 2, they pass through
+        but neither lands on the other's start) is deferred — fleets at
+        distance 3 land 1 hex apart and merge naturally next tick.
+        """
+        if not move_queue:
+            return move_queue
+
+        by_fleet = {fleet: next_hex for fleet, next_hex in move_queue}
+        drop_ids: set = set()
+
+        # When `calculate_next_hex` resolves a MOVE_TO_FLEET path of length
+        # 1 (e.g. distance 1, both speed 2 — destination = next hex), it
+        # pops the MOVE_TO_FLEET so the queue head becomes JOIN_FLEET. The
+        # filter must therefore accept either order type as the trigger,
+        # matching `_is_mutual_pursuit`.
+        _PURSUIT = (OrderType.MOVE_TO_FLEET, OrderType.JOIN_FLEET)
+        for fleet_a, next_a in move_queue:
+            if id(fleet_a) in drop_ids:
+                continue
+            order_a = fleet_a.get_current_order()
+            if order_a is None or order_a.type not in _PURSUIT:
+                continue
+            fleet_b = order_a.target
+            if not isinstance(fleet_b, Fleet) or fleet_b not in by_fleet:
+                continue
+            order_b = fleet_b.get_current_order()
+            if order_b is None or order_b.type not in _PURSUIT:
+                continue
+            if order_b.target is not fleet_a:
+                continue
+            next_b = by_fleet[fleet_b]
+            # Swap parity: A is heading to B's current hex AND B is heading
+            # to A's current hex on the same tick.
+            if next_a != fleet_b.location or next_b != fleet_a.location:
+                continue
+            # Pick the larger fleet to delay.
+            ships_a = len(fleet_a.ships)
+            ships_b = len(fleet_b.ships)
+            if ships_a > ships_b:
+                drop_ids.add(id(fleet_a))
+            elif ships_b > ships_a:
+                drop_ids.add(id(fleet_b))
+            else:
+                # Tie on ships: smaller id delays (BUG-122 precedent).
+                if str(fleet_a.id) < str(fleet_b.id):
+                    drop_ids.add(id(fleet_a))
+                else:
+                    drop_ids.add(id(fleet_b))
+
+        if not drop_ids:
+            return move_queue
+        return [(f, h) for f, h in move_queue if id(f) not in drop_ids]
 
     def apply_movements(
         self,

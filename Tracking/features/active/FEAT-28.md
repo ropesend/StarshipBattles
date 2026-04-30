@@ -120,7 +120,7 @@ sides have the same intent.
 
 ## Status
 
-Pending
+Awaiting Confirmation
 
 ## Related
 
@@ -132,3 +132,83 @@ Pending
 
 - 2026-04-28: Created from QA Session 20260428_190154 [19:10:51 –
   19:11:11]. Code investigation completed during triage.
+- 2026-04-29: Implemented under deep-dive-resume team
+  (worktree `.claude/worktrees/feat-feat-28`, rebased onto main
+  `0ab9b0e25` post-FEAT-27 merge).
+
+  **Diagnosis confirmed empirically:** today's `calculate_intercept_point`
+  is asymmetric for mutual pursuit. The evaluator scores candidates by
+  `abs(chaser_turns - target_turn)` after the in-time filter, so the
+  candidate equal to the chaser's own current location wins
+  (chaser_turns=0). One fleet sees a populated target_path and picks
+  "stay still"; the other (whose nested projection trips the
+  `_projection_guard`) gets a fallback chase path. Result: one fleet
+  moves, the other waits. Verified via the new
+  `test_distance_10_today_baseline_takes_many_ticks` test (≥100 sub-ticks
+  baseline at distance 10, equal speed 5).
+
+  **Implementation:**
+  - `game/strategy/services/fleet_navigation_service.py` —
+    new `_is_mutual_pursuit(self_fleet, target_fleet)` predicate (reads
+    target's head order; True iff `MOVE_TO_FLEET`/`JOIN_FLEET` targeting
+    `self_fleet`). `get_destination` MOVE_TO_FLEET branch checks the
+    predicate first; on True, returns `target_fleet.location` directly,
+    bypassing `calculate_intercept_point`. Optional `self_fleet=None`
+    parameter threaded through `compute_next_step` and
+    `_resolve_path_for_order`; `calculate_fleet_next_hex` and
+    `_project_path_inner` pass `self_fleet=fleet`. Default `None`
+    preserves backward compatibility for any callers without a Fleet
+    identity.
+  - `game/strategy/engine/fleet_movement_engine.py` — new
+    `_filter_jump_past_collisions(move_queue)` post-processor called at
+    the end of `collect_movements`. Detects mutual-pursuit pairs whose
+    next-hex assignments would swap (`next_a == fleet_b.location` AND
+    `next_b == fleet_a.location`) and drops the larger fleet's entry.
+    "Larger" = more ships; tiebreak smaller `fleet.id` (mirrors BUG-122
+    `_elect_canonical_merges`). v1 covers swap parity only; broader
+    leapfrog cases are deferred (fleets at distance 3 land 1 hex apart
+    next tick anyway and merge naturally).
+
+  **Tests (TDD per CLAUDE.md Rule 1):**
+  - `tests/unit/strategy/services/test_fleet_navigation_mutual_pursuit.py`
+    (NEW, 10 cases) — predicate truth table (`MOVE_TO_FLEET` /
+    `JOIN_FLEET` / no orders / 3rd-party / `MOVE` / `COLONIZE`),
+    `get_destination` mutual branch returns target's location,
+    fall-through to `calculate_intercept_point` when not mutual,
+    `self_fleet=None` falls through, signature has `self_fleet`
+    keyword default `None`.
+  - `tests/integration/strategy/test_mutual_join_rendezvous.py` (NEW,
+    7 cases) — empirical baseline (≥100 sub-ticks at distance 10 with
+    predicate disabled), rendezvous ≤2/3 of baseline, JOIN_FLEET not
+    prematurely cancelled, one-fleet-cancels-fallback (no crash),
+    swap-parity larger fleet delays, swap-parity ship-count tiebreak,
+    no-swap no-filter passthrough.
+
+  **Anti-reversion verified:**
+  - BUG-122 `redirect_pursuers(exclude=)`, `_elect_canonical_merges`,
+    `process_instant_orders` Phase A/B/C: not touched
+    (`tests/integration/strategy/test_fleet_join_redirect.py`,
+    `tests/unit/strategy/test_fleet_order_processor.py` all pass).
+  - BUG-125 `_resolve_player_fleet` handler authorization: not touched
+    (`handlers/movement.py` unchanged).
+  - PROJ-222 pursuer tracker construction: not touched (predicate reads
+    head order directly, not the tracker).
+  - `_projection_guard` re-entrancy:
+    `tests/unit/strategy/pathfinding/test_intercept_recursion.py` 4/4
+    pass (cycle tests use plain `MOVE_TO_FLEET` orders that still hit
+    today's intercept path).
+
+  **Tests:** Full suite `python -m pytest tests/ -n 12`: **16184 passed,
+  3 skipped** (75s). Targeted anti-regression suite: 170/170 pass.
+
+  **Docs updated:** `docs/systems/strategy_layer.md` — added
+  "Mutual-Pursuit Rendezvous Routing (FEAT-28)" subsection under
+  FleetPursuerTracker; bumped `> **Last verified:**` to today.
+
+  **Out-of-scope deferrals (per ticket):**
+  - Speed-balanced rendezvous (meet hex shifts toward slower fleet) —
+    out of scope per ticket; v1 is geometric-natural convergence.
+  - Visual indicator on map for mutual-joining state — out of scope.
+  - Multi-way (3+) rendezvous — out of scope.
+  - Leapfrog jump-past (distance 3+, both speed ≥2 passing through but
+    not swapping) — implementer-deferred; merges naturally next tick.
