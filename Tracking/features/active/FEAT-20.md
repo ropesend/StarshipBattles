@@ -39,7 +39,7 @@ Reproduced layout in QA Session 20260427_151244 at 15:52:
 Low
 
 ## Status
-In-Progress (revised scope per QA Session 20260428_190154 — see User Update below)
+Awaiting Confirmation (revised scope landed — `--dev` plumbing eradicated, button now always-visible)
 
 ## Work Log
 - 2026-04-27: Created from QA Session 20260427_151244.
@@ -115,5 +115,77 @@ QA Session 20260428_190154 [19:12:50 – 19:13:11]:
 **No re-rejection of the original implementation** — the
 synchronous-loop, Esc-cancel, per-turn auto-save behaviour is all
 correct. Only the visibility gate changes.
+
+---
+
+### Implementation [2026-04-28 — revised scope]
+
+Sole-consumer audit (grep `dev_mode` across `game/` + `tests/`)
+confirmed FEAT-20 was the only consumer of `--dev` /
+`BootstrapResult.dev_mode` / `dev_mode` kwargs. Per CLAUDE.md System
+Migration Policy ("ERADICATE the old system completely"), the entire
+flag plumbing was deleted.
+
+**Production deletions (6 files):**
+- `game/app_bootstrap.py` — `--dev` arg + `BootstrapResult.dev_mode`
+  field + propagation in `bootstrap()`.
+- `game/screen_router.py` — `self.dev_mode = boot.dev_mode` + 4
+  `dev_mode=self.dev_mode` kwarg sites at `StrategyScreen(...)`
+  constructions.
+- `game/ui/screens/strategy_screen.py` — `dev_mode` kwarg + docstring
+  + `self.dev_mode` field + forwarding to `StrategyUI`.
+- `game/ui/screens/strategy_ui.py` — `dev_mode` kwarg + `self.dev_mode`
+  field + forwarding to `create_strategy_panels`.
+- `game/ui/screens/strategy_panel_manager.py` — `dev_mode` kwarg on
+  `create_strategy_panels` + `if dev_mode:` guard around
+  `btn_run_10_turns` (button now rendered unconditionally).
+- `game/ui/screens/strategy_input_handler.py` — `is not None` guard on
+  click branch (button is always populated, so the guard is redundant).
+  Branch simplified to `event.ui_element == ui.btn_run_10_turns`.
+
+**Test deletions (−4 net):**
+- `tests/unit/test_app_bootstrap_invariants.py` — −2 dev-flag tests.
+- `tests/unit/ui/screens/test_strategy_panel_manager.py` — collapsed 2
+  visibility variants → 1 "always present" assertion (−1 test, kept
+  the 2 field-existence tests).
+- `tests/unit/ui/screens/test_strategy_input_handler_core.py` — −1
+  `test_btn_run_10_turns_skipped_when_button_not_present` (the guard
+  it tested no longer exists).
+
+**Docs:**
+- `docs/03_CONVENTIONS.md` §10 (Dev-Mode CLI Flag) deleted; §11 Ship
+  Theme renumbered to §10 (with subsections 10.1–10.4). Top-of-file
+  `> **Last verified:**` date bumped per PROJ-307 convention.
+
+**What stays unchanged:**
+- `btn_run_10_turns` field on `StrategyWidgets` dataclass (default
+  `None` is harmless; `create_strategy_panels` always populates it).
+- `StrategyScreen.run_n_turns()`, `StrategyGameStateManager.run_n_turns()`,
+  `_pump_cancel_events()`, `dev_run_cancel_requested` field (kept the
+  name to avoid diff noise across test references — purely cosmetic),
+  `turn_processing_message`, `_suppress_event_log`,
+  `process_full_turn()` returning event list.
+- `tests/unit/ui/screens/test_strategy_game_state_manager.py` (7
+  `run_n_turns` tests) — no changes.
+- `tests/unit/ui/screens/test_strategy_screen.py` (draw-overlay
+  signature test) — no changes.
+
+**Operational note:** argparse will reject `--dev` after deletion (the
+flag no longer exists). Anyone relying on a stale shell alias will see
+a clear `unrecognized arguments` error.
+
+**Test results:**
+- Targeted (FEAT-20 + adjacent): 145 passed
+  (`tests/unit/test_app_bootstrap_invariants.py` +
+  `tests/unit/ui/screens/test_strategy_*.py`).
+- Broader UI sweep: 3696 passed, 1 skipped, 2 pre-existing sprite
+  failures (sprite directory not found — present on baseline,
+  unrelated to FEAT-20).
+- Full pytest suite (`pytest tests/ -n 12 --ignore=tests/unit/ui/test_sprites.py`):
+  **16100 passed, 3 skipped** in 68s. Sharded runner blocked by
+  pre-existing path-escape bug in `Tools/test_sharded/test_sharded.py`
+  when worktree path contains characters that match Python escape
+  sequences (e.g. `\f` in `feat-20`); this bug pre-dates FEAT-20 and
+  is out of scope for this ticket.
 
 ---

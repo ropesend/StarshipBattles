@@ -44,12 +44,11 @@ class StrategyUI:
     - strategy_detail_formatter: Detail panel formatting
     """
 
-    def __init__(self, scene, screen_width, screen_height, input_mapper=None, dev_mode: bool = False):
+    def __init__(self, scene, screen_width, screen_height, input_mapper=None):
         self.scene = scene
         self.width = screen_width
         self.height = screen_height
         self._mapper = input_mapper
-        self.dev_mode = dev_mode
         self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
 
         # PROJ-86: Window state managed by StrategyWindowManager
@@ -68,7 +67,6 @@ class StrategyUI:
         widgets = create_strategy_panels(
             self.manager, screen_width, screen_height,
             self.sidebar_width, self.on_ui_selection,
-            dev_mode=dev_mode,
         )
 
         # Store the widgets dataclass directly — all btn_*, lbl_*, panel, etc.

@@ -1,9 +1,8 @@
-"""FEAT-20: Tests for the dev-mode `Run 10 Turns` button in the strategy top bar.
+"""FEAT-20: Tests for the `Run 10 Turns` button in the strategy top bar.
 
-The button is conditionally instantiated by `create_strategy_panels` only when
-`dev_mode=True`. When dev_mode is False (production builds), the button is left
-as None on the StrategyWidgets dataclass so click-handler comparisons safely
-skip routing to it.
+The button is unconditionally instantiated by `create_strategy_panels` (the
+revised FEAT-20 scope removed the `--dev` gate so the button always appears
+next to End Turn).
 """
 from __future__ import annotations
 
@@ -28,13 +27,14 @@ class TestRun10TurnsButtonField:
         assert "btn_run_10_turns" in field_names
 
     def test_btn_run_10_turns_default_is_none(self):
-        """Default value is None so production (no dev_mode) leaves it unset."""
+        """Default value is None on the bare dataclass; populated by
+        `create_strategy_panels`."""
         from game.ui.screens.strategy_panel_manager import StrategyWidgets
         widgets = StrategyWidgets()
         assert widgets.btn_run_10_turns is None
 
 
-def _create_panels(dev_mode: bool):
+def _create_panels():
     """Create panels via `create_strategy_panels` with a real UIManager."""
     import pygame
     import pygame_gui
@@ -50,18 +50,13 @@ def _create_panels(dev_mode: bool):
     widgets = create_strategy_panels(
         manager, 1440, 900, sidebar_width=400,
         on_ui_selection_callback=selection_cb,
-        dev_mode=dev_mode,
     )
     return widgets
 
 
 class TestRun10TurnsButtonVisibility:
-    """The button is created only when dev_mode=True."""
+    """The button is always created by `create_strategy_panels`."""
 
-    def test_present_when_dev_mode_true(self):
-        widgets = _create_panels(dev_mode=True)
+    def test_button_always_present(self):
+        widgets = _create_panels()
         assert widgets.btn_run_10_turns is not None
-
-    def test_absent_when_dev_mode_false(self):
-        widgets = _create_panels(dev_mode=False)
-        assert widgets.btn_run_10_turns is None

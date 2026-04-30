@@ -55,7 +55,7 @@ class StrategyScreen:
 
     TOP_BAR_HEIGHT = 50
 
-    def __init__(self, screen_width: int, screen_height: int, session=None, scene_callback=None, input_mapper=None, dev_mode: bool = False):
+    def __init__(self, screen_width: int, screen_height: int, session=None, scene_callback=None, input_mapper=None):
         """Initialize strategy screen.
 
         Args:
@@ -66,15 +66,11 @@ class StrategyScreen:
                            Called with (action, **kwargs) where action is:
                            - "open_builder": Open design workshop with context kwarg
             input_mapper: Optional InputMapper for centralized keybinding resolution.
-            dev_mode: When True, render developer-mode UI affordances such as
-                the strategy top-bar "Run 10 Turns" button (FEAT-20). Sourced
-                from the ``--dev`` CLI flag via ``BootstrapResult.dev_mode``.
         """
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.scene_callback = scene_callback
         self.input_mapper = input_mapper
-        self.dev_mode = dev_mode
 
         # Session Management
         if session:
@@ -101,7 +97,7 @@ class StrategyScreen:
         self._focus_on_player_home()
 
         # UI
-        self.ui = StrategyUI(self, screen_width, screen_height, input_mapper=input_mapper, dev_mode=dev_mode)
+        self.ui = StrategyUI(self, screen_width, screen_height, input_mapper=input_mapper)
 
         # State
         self.hover_hex = None

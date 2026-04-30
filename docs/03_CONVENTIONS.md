@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-04-28 — Added §11 Ship Theme Asset Conventions (PROJ-314) including the canonical `theme.json` schema, 2048×2048 PNG standard, lowercase-with-underscores filename rule, and skin/portrait basename matching; §10 Dev-Mode CLI Flag (FEAT-20) verified intact.
+> **Last verified:** 2026-04-28 — Removed §10 Dev-Mode CLI Flag: FEAT-20's revised scope (Run 10 Turns button always-visible) ERADICATED the `--dev` flag plumbing, leaving zero consumers. §11 Ship Theme Asset Conventions (PROJ-314) unchanged.
 
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
@@ -539,23 +539,7 @@ See PROJ-307 for the backfill that established this convention.
 
 ---
 
-## 10. Dev-Mode CLI Flag
-
-The application accepts a `--dev` CLI flag (parsed in `game/app_bootstrap.py::parse_args()`) that enables developer-only UI affordances. The flag's value is exposed as `BootstrapResult.dev_mode: bool` and propagated downward by `ScreenRouter` into scenes that opt in via a `dev_mode: bool = False` keyword argument.
-
-Conventions for adding new dev-only widgets or affordances:
-
-- **Source of truth:** `BootstrapResult.dev_mode`. Don't read environment variables or define a parallel "debug" flag elsewhere.
-- **Plumbing pattern:** match the existing `input_mapper` plumbing: kwarg on the scene's `__init__`, forwarded into UI / panel-manager constructors. Default `False` so test fixtures and non-dev paths are unaffected.
-- **Visibility rule:** when `dev_mode=False`, the widget should NOT be rendered (return early or skip construction). Click-handler code that compares `event.ui_element` against the widget MUST guard with `is not None` so a sentinel `None` does not match unrelated events.
-- **No greyed-out clutter:** prefer "absent in production" over "always-rendered-but-disabled".
-- **Naming:** prefix dev-only widget fields with their domain, e.g. `btn_run_10_turns` (NOT `btn_dev_run`).
-
-Established by FEAT-20 (Run-10-Turns dev button on the strategy top bar).
-
----
-
-## 11. Ship Theme Asset Conventions (PROJ-314)
+## 10. Ship Theme Asset Conventions (PROJ-314)
 
 Every ship-theme directory under `assets/ShipThemes/<Theme>/` must
 declare its skin and portrait art via a single `theme.json` file in the
@@ -563,7 +547,7 @@ canonical schema below. The legacy `images:` schema (flat
 `{class: path}` map) and the hardcoded `<Class>_Portrait.jpg` filename
 convention have both been retired.
 
-### 11.1 Canonical `theme.json` schema
+### 10.1 Canonical `theme.json` schema
 
 ```json
 {
@@ -603,14 +587,14 @@ convention have both been retired.
   synthetic placeholder Surface (consistent with `load_image()`).
 - `assets[<class>].scale` defaults to `1.0`.
 
-### 11.2 Image format and resolution
+### 10.2 Image format and resolution
 
 - All ship-theme assets are PNG only (per §5 / `docs/03_CONVENTIONS.md`
   §285–288). JPG is not supported.
 - Standard resolution is **2048×2048 square**, exposed as
   `Paths.SHIP_THEMES_TARGET_SIZE` (PROJ-314 Phase 1).
 
-### 11.3 Filename rules
+### 10.3 Filename rules
 
 - Filenames MUST be `lowercase_with_underscores.png`.
 - Skin and portrait basenames MUST match per ship class (e.g.
@@ -619,7 +603,7 @@ convention have both been retired.
   CI on mixed-case Federation/Klingons/Romulans/Atlantians filenames
   prior to PROJ-314.
 
-### 11.4 Adding a new theme
+### 10.4 Adding a new theme
 
 1. Create `assets/ShipThemes/<NewTheme>/`,
    `<NewTheme>/Skins/`, `<NewTheme>/Portraits/`.
