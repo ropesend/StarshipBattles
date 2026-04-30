@@ -12,8 +12,9 @@ from typing import Dict, List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
-from game.assets.asset_manager import get_asset_manager
 from game.core.paths import Paths
+from game.core.ship_classes import FLEET_ICON_SHIP_CLASS
+from game.ui.assets.ship_theme_manager import get_default_ship_theme_manager
 from game.ui.colors import PLACEHOLDER_BORDER
 
 
@@ -215,43 +216,33 @@ class RaceAssetLoader:
 
         return result
 
-    def load_empire_theme_assets(self, theme_id: str, asset_base: str) -> Dict[str, pygame.Surface]:
+    def load_empire_theme_assets(self, theme_id: str) -> Dict[str, pygame.Surface]:
         """
         Load theme-based assets for empire display in strategy view.
 
+        Delegates to :class:`ShipThemeManager` (PROJ-314), the canonical
+        reader of ``theme.json``'s ``assets:`` schema. The fleet-icon ship
+        class is governed by :data:`FLEET_ICON_SHIP_CLASS`.
+
         Args:
             theme_id: The empire theme identifier (e.g., 'Federation', 'Atlantians')
-            asset_base: Base path for ship themes (from GameConfig.asset_base_path)
 
         Returns:
-            Dict with keys 'colony' (Colony_Flag.jpg) and 'fleet' (Battlecruiser.png).
-            Returns empty dict if theme directory doesn't exist.
+            Dict with key 'fleet' when the theme declares the fleet-icon
+            skin and the file is present on disk; empty dict otherwise.
         """
-        result = {}
+        if not theme_id:
+            return {}
 
-        if not theme_id or not asset_base:
-            return result
+        manager = get_default_ship_theme_manager()
+        manager.initialize()
 
-        theme_path = os.path.join(asset_base, theme_id)
-        if not os.path.exists(theme_path):
-            logger.warning(f"Theme directory not found: {theme_path}")
-            return result
+        if manager.get_skin_path(theme_id, FLEET_ICON_SHIP_CLASS) is None:
+            return {}
 
-        am = get_asset_manager()
+        return {'fleet': manager.load_image(theme_id, FLEET_ICON_SHIP_CLASS)}
 
-        # Load colony flag
-        colony_path = os.path.join(theme_path, "Flags", "Colony_Flag.jpg")
-        if os.path.exists(colony_path):
-            result['colony'] = am.load_external_image(colony_path)
-
-        # Load fleet icon (Battlecruiser skin)
-        fleet_path = os.path.join(theme_path, "Skins", "Battlecruiser.png")
-        if os.path.exists(fleet_path):
-            result['fleet'] = am.load_external_image(fleet_path)
-
-        return result
-
-    def load_all_empire_assets(self, empire, asset_base: str) -> Dict[str, pygame.Surface]:
+    def load_all_empire_assets(self, empire) -> Dict[str, pygame.Surface]:
         """
         Load all visual assets for an empire (flags and fleet icon).
 
@@ -259,7 +250,6 @@ class RaceAssetLoader:
 
         Args:
             empire: Empire object with flag_id and empire_theme_id attributes
-            asset_base: Base path for ship themes
 
         Returns:
             Dict with keys 'colony', 'fleet', and optionally 'fleet_flag'.
@@ -268,7 +258,7 @@ class RaceAssetLoader:
 
         # Load theme assets first (lower priority)
         if empire.empire_theme_id:
-            theme_assets = self.load_empire_theme_assets(empire.empire_theme_id, asset_base)
+            theme_assets = self.load_empire_theme_assets(empire.empire_theme_id)
             result.update(theme_assets)
 
         # Load race assets second (higher priority - overwrites theme 'colony')

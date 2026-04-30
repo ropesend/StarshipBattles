@@ -13,6 +13,16 @@ loader code, theme JSONs, and ad-hoc tests.
 from __future__ import annotations
 
 
+FLEET_ICON_SHIP_CLASS: str = "Battle Cruiser"
+"""Ship class whose theme skin renders as the fleet icon on the strategy map.
+
+Read by :class:`game.ui.screens.race_asset_loader.RaceAssetLoader` to look up
+the correct skin path via :class:`game.ui.assets.ship_theme_manager.ShipThemeManager`.
+Constant rather than per-theme metadata: the icon class is global game-design
+policy, not theme decoration.
+"""
+
+
 SHIP_CLASSES_WITH_VISUAL_THEMES: frozenset[str] = frozenset({
     # Capital ships (11)
     "Escort",
