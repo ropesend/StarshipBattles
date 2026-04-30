@@ -384,3 +384,189 @@ def test_main_emits_json_format(tmp_path: Path, capsys: pytest.CaptureFixture[st
     data = json.loads(captured.out)
     assert data["schema_version"] == 1
     assert "findings" in data
+
+
+# ---------------------------------------------------------------------------
+# Reinforcement: unmarked duplication detection
+# ---------------------------------------------------------------------------
+
+
+def test_unmarked_duplication_detects_5_consecutive_identical_lines(tmp_path: Path) -> None:
+    agents = (
+        "Always run the full test suite before declaring a task complete.\n"
+        "Document architectural changes in the same commit as the code.\n"
+        "Prefer integration tests over unit tests for behavior verification.\n"
+        "Avoid silent fallback paths that mask configuration drift.\n"
+        "Never commit secrets or per-machine paths into shared settings.\n"
+    )
+    duplicate = (
+        "# Adapter\n\n"
+        "Always run the full test suite before declaring a task complete.\n"
+        "Document architectural changes in the same commit as the code.\n"
+        "Prefer integration tests over unit tests for behavior verification.\n"
+        "Avoid silent fallback paths that mask configuration drift.\n"
+        "Never commit secrets or per-machine paths into shared settings.\n"
+    )
+    _make_repo(tmp_path, agents_md=agents, claude_md=duplicate)
+    findings = validator.check_reinforcement_markers(tmp_path)
+    assert any(f.rule == "rein.unmarked_duplication" for f in findings)
+
+
+def test_unmarked_duplication_passes_below_threshold(tmp_path: Path) -> None:
+    agents = (
+        "Always run the full test suite before declaring a task complete.\n"
+        "Document architectural changes in the same commit as the code.\n"
+        "Prefer integration tests over unit tests for behavior verification.\n"
+        "Avoid silent fallback paths that mask configuration drift.\n"
+        "Never commit secrets or per-machine paths into shared settings.\n"
+    )
+    only_three = (
+        "# Adapter\n\n"
+        "Always run the full test suite before declaring a task complete.\n"
+        "Document architectural changes in the same commit as the code.\n"
+        "Prefer integration tests over unit tests for behavior verification.\n"
+        "(unrelated text)\n"
+    )
+    _make_repo(tmp_path, agents_md=agents, claude_md=only_three)
+    findings = validator.check_reinforcement_markers(tmp_path)
+    assert not any(f.rule == "rein.unmarked_duplication" for f in findings)
+
+
+def test_unmarked_duplication_allowed_with_preceding_marker(tmp_path: Path) -> None:
+    agents = (
+        "Always run the full test suite before declaring a task complete.\n"
+        "Document architectural changes in the same commit as the code.\n"
+        "Prefer integration tests over unit tests for behavior verification.\n"
+        "Avoid silent fallback paths that mask configuration drift.\n"
+        "Never commit secrets or per-machine paths into shared settings.\n"
+    )
+    duplicate_with_marker = (
+        "# Adapter\n\n"
+        "<!-- agent-coordination:reinforcement tdd -->\n"
+        "Always run the full test suite before declaring a task complete.\n"
+        "Document architectural changes in the same commit as the code.\n"
+        "Prefer integration tests over unit tests for behavior verification.\n"
+        "Avoid silent fallback paths that mask configuration drift.\n"
+        "Never commit secrets or per-machine paths into shared settings.\n"
+    )
+    _make_repo(tmp_path, agents_md=agents, claude_md=duplicate_with_marker)
+    findings = validator.check_reinforcement_markers(tmp_path)
+    assert not any(f.rule == "rein.unmarked_duplication" for f in findings)
+
+
+def test_unmarked_duplication_ignores_short_decorative_lines(tmp_path: Path) -> None:
+    # Headings and decorative lines should not contribute to a 5-line match.
+    agents = (
+        "## Section\n"
+        "---\n"
+        "## Other\n"
+        "---\n"
+        "## Yet another\n"
+    )
+    duplicate = (
+        "## Section\n"
+        "---\n"
+        "## Other\n"
+        "---\n"
+        "## Yet another\n"
+    )
+    _make_repo(tmp_path, agents_md=agents, claude_md=duplicate)
+    findings = validator.check_reinforcement_markers(tmp_path)
+    # All five lines are decorative/short headings. Should NOT trigger.
+    assert not any(f.rule == "rein.unmarked_duplication" for f in findings)
+
+
+def test_usage_counter_shape_passes_when_no_usage_files(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    findings = validator.check_usage_counter_shape(tmp_path)
+    assert findings == []
+
+
+def test_usage_counter_shape_passes_on_valid_files(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    by_install = tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
+    by_install.mkdir(parents=True)
+    (by_install / "abc123.json").write_text(json.dumps({
+        "schema_version": 1,
+        "install_id": "abc123",
+        "skills": {"claude-proj-start": {"count": 3, "last_used": "2026-04-29T00:00:00Z"}},
+    }), encoding="utf-8")
+    summary_path = by_install.parent / "summary.json"
+    summary_path.write_text(json.dumps({
+        "schema_version": 1,
+        "skills": {
+            "claude-proj-start": {
+                "total_count": 3,
+                "by_install": {"abc123": 3},
+                "last_used": "2026-04-29T00:00:00Z",
+            }
+        },
+    }), encoding="utf-8")
+    findings = validator.check_usage_counter_shape(tmp_path)
+    assert findings == []
+
+
+def test_usage_counter_shape_fails_on_missing_install_id(tmp_path: Path) -> None:
+    by_install = tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
+    by_install.mkdir(parents=True)
+    (by_install / "x.json").write_text(json.dumps({
+        "schema_version": 1,
+        "skills": {},
+    }), encoding="utf-8")
+    findings = validator.check_usage_counter_shape(tmp_path)
+    assert any(f.rule == "usage.missing_install_id_field" for f in findings)
+
+
+def test_usage_counter_shape_fails_on_negative_count(tmp_path: Path) -> None:
+    by_install = tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
+    by_install.mkdir(parents=True)
+    (by_install / "x.json").write_text(json.dumps({
+        "schema_version": 1,
+        "install_id": "x",
+        "skills": {"claude-foo": {"count": -1}},
+    }), encoding="utf-8")
+    findings = validator.check_usage_counter_shape(tmp_path)
+    assert any(f.rule == "usage.invalid_counter_value" for f in findings)
+
+
+def test_usage_counter_shape_warns_on_summary_mismatch(tmp_path: Path) -> None:
+    by_install = tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
+    by_install.mkdir(parents=True)
+    (by_install / "x.json").write_text(json.dumps({
+        "schema_version": 1,
+        "install_id": "x",
+        "skills": {"claude-foo": {"count": 5}},
+    }), encoding="utf-8")
+    summary_path = by_install.parent / "summary.json"
+    summary_path.write_text(json.dumps({
+        "schema_version": 1,
+        "skills": {
+            "claude-foo": {"total_count": 99, "by_install": {"x": 5}},  # 99 != 5
+        },
+    }), encoding="utf-8")
+    findings = validator.check_usage_counter_shape(tmp_path)
+    assert any(f.rule == "usage.summary_mismatch" and f.severity == "warn" for f in findings)
+
+
+def test_unmarked_duplication_blank_lines_do_not_break_run(tmp_path: Path) -> None:
+    # Blank lines between matching content are skipped during normalization.
+    agents = (
+        "Always run the full test suite before declaring a task complete.\n"
+        "Document architectural changes in the same commit as the code.\n"
+        "Prefer integration tests over unit tests for behavior verification.\n"
+        "Avoid silent fallback paths that mask configuration drift.\n"
+        "Never commit secrets or per-machine paths into shared settings.\n"
+    )
+    duplicate_with_blanks = (
+        "# Adapter\n\n"
+        "Always run the full test suite before declaring a task complete.\n"
+        "\n"
+        "Document architectural changes in the same commit as the code.\n"
+        "\n"
+        "Prefer integration tests over unit tests for behavior verification.\n"
+        "Avoid silent fallback paths that mask configuration drift.\n"
+        "Never commit secrets or per-machine paths into shared settings.\n"
+    )
+    _make_repo(tmp_path, agents_md=agents, claude_md=duplicate_with_blanks)
+    findings = validator.check_reinforcement_markers(tmp_path)
+    assert any(f.rule == "rein.unmarked_duplication" for f in findings)

@@ -9,6 +9,8 @@ This file is the Codex-specific supplement for Starship Battles. Read it after `
 - Keep Codex behavior thin: skills should route to shared project docs and protocols rather than duplicating long workflow text.
 - Repo-local Codex configuration lives in `.codex/config.toml`. Local Codex artifacts under `.codex/` remain ignored except that config file.
 
+<!-- agent-coordination:reinforcement docs-first -->
+<!-- agent-coordination:reinforcement no-revert-unrelated -->
 ## Startup Checklist
 
 1. Read `AGENTS.md`.

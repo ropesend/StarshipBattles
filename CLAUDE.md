@@ -10,6 +10,7 @@ This file provides context for Claude Code when working on the Starship Battles 
 
 These three rules apply to ALL work, ALL tasks, ALL conversations. They are not guidelines — they are hard requirements. Violating any of them is a failed task, even if the code works.
 
+<!-- agent-coordination:reinforcement tdd -->
 ### Rule 1: Test-Driven Development — ALWAYS
 
 **Write tests BEFORE implementation. No exceptions.**
@@ -37,6 +38,8 @@ DO:
 
 **Reminder at every stage:** Before writing any function, class, or method — ask yourself: "Have I written a test for this yet?" If no, write the test first.
 
+<!-- agent-coordination:reinforcement docs-first -->
+<!-- agent-coordination:reinforcement code-doc-consistency -->
 ### Rule 2: Documentation — CHECK Before, UPDATE After
 
 **Read the relevant docs before starting. Update them when you're done. Every time.**
@@ -69,6 +72,7 @@ DO:
 
 **The docs directory is the source of truth.** See the [Documentation First](#documentation-first) section below for the full reading order.
 
+<!-- agent-coordination:reinforcement root-cause -->
 ### Rule 3: Clean-Sheet Design — ALWAYS the Right Solution
 
 **Solve the real problem. Never bandaid, never workaround, never "good enough for now."**
@@ -110,6 +114,7 @@ When working in VS Code, you are a **helpful technical consultant**, not an auto
 
 ## Documentation First
 
+<!-- agent-coordination:reinforcement no-ignore-folder -->
 **IGNORE `docs/_ignore/`** — This folder contains the user's personal scratch pad notes. Do NOT read, reference, summarize, or act on any files in `docs/_ignore/`. They are not documentation and not relevant to any task.
 
 **Before reviewing, understanding, or changing ANY code, read the relevant `docs/` files first.**

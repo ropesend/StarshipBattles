@@ -409,15 +409,117 @@ def _is_skill_md(path: Path) -> bool:
     return path.name == "SKILL.md"
 
 
+DUPLICATION_MIN_LINES = 5
+MARKER_LOOKBACK_LIMIT = 10
+
+
+def _normalize_line(line: str) -> str | None:
+    """Return None for blank/trivial/decorative lines that shouldn't count
+    toward a duplication match. Otherwise return the stripped form.
+    """
+    stripped = line.strip()
+    if not stripped:
+        return None
+    if len(stripped) < 8:
+        return None
+    if re.fullmatch(r"#{1,6}\s+.{0,40}", stripped):
+        return None  # short heading
+    if re.fullmatch(r"[-*=#`_ ]+", stripped):
+        return None  # decorative
+    return stripped
+
+
+def _has_preceding_marker(raw_lines: list[str], target_index: int) -> bool:
+    """Walk back from target_index looking for a valid reinforcement marker
+    within MARKER_LOOKBACK_LIMIT non-blank lines.
+    """
+    seen_nonblank = 0
+    for j in range(target_index - 1, -1, -1):
+        line = raw_lines[j]
+        match = REINFORCEMENT_RE.match(line)
+        if match and match.group("tag") in ALLOWED_REINFORCEMENT_TAGS:
+            return True
+        if line.strip():
+            seen_nonblank += 1
+            if seen_nonblank >= MARKER_LOOKBACK_LIMIT:
+                return False
+    return False
+
+
+def _find_unmarked_duplications(
+    agents_lines: list[str],
+    target_lines: list[str],
+) -> list[tuple[int, int]]:
+    """Return (start_index, length) tuples for runs of >= DUPLICATION_MIN_LINES
+    consecutive normalized target lines that exist verbatim in agents_lines.
+
+    Indices are 0-based into target_lines. Blank/decorative lines are skipped
+    during the matching window but the returned `start_index` references the
+    original target file's line position.
+    """
+    agents_norm: list[str] = []
+    for line in agents_lines:
+        normalized = _normalize_line(line)
+        if normalized is not None:
+            agents_norm.append(normalized)
+
+    if len(agents_norm) < DUPLICATION_MIN_LINES:
+        return []
+
+    agents_ngrams: dict[tuple[str, ...], int] = {}
+    for i in range(len(agents_norm) - DUPLICATION_MIN_LINES + 1):
+        window = tuple(agents_norm[i:i + DUPLICATION_MIN_LINES])
+        agents_ngrams[window] = i
+
+    target_norm: list[tuple[int, str]] = []  # (original_line_index, normalized_text)
+    for idx, line in enumerate(target_lines):
+        normalized = _normalize_line(line)
+        if normalized is not None:
+            target_norm.append((idx, normalized))
+
+    if len(target_norm) < DUPLICATION_MIN_LINES:
+        return []
+
+    findings: list[tuple[int, int]] = []
+    cursor = 0
+    while cursor <= len(target_norm) - DUPLICATION_MIN_LINES:
+        window = tuple(t[1] for t in target_norm[cursor:cursor + DUPLICATION_MIN_LINES])
+        if window in agents_ngrams:
+            agents_start = agents_ngrams[window]
+            length = DUPLICATION_MIN_LINES
+            while (
+                cursor + length < len(target_norm)
+                and agents_start + length < len(agents_norm)
+                and target_norm[cursor + length][1] == agents_norm[agents_start + length]
+            ):
+                length += 1
+            start_line_index = target_norm[cursor][0]
+            findings.append((start_line_index, length))
+            cursor += length
+        else:
+            cursor += 1
+    return findings
+
+
 def check_reinforcement_markers(repo_root: Path) -> list[Finding]:
     findings: list[Finding] = []
+    agents_path = repo_root / "AGENTS.md"
+    agents_lines: list[str] = []
+    if agents_path.exists():
+        try:
+            agents_lines = agents_path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            agents_lines = []
+
     for path in _reinforcement_target_files(repo_root):
         rel = path.relative_to(repo_root).as_posix()
         try:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        for line_no, line in enumerate(text.splitlines(), start=1):
+        raw_lines = text.splitlines()
+
+        for line_no, line in enumerate(raw_lines, start=1):
             if REINFORCEMENT_HINT not in line:
                 continue
             match = REINFORCEMENT_RE.match(line)
@@ -451,6 +553,27 @@ def check_reinforcement_markers(repo_root: Path) -> list[Finding]:
                     ),
                     path=rel, line=line_no,
                 ))
+
+        if path.resolve() == agents_path.resolve():
+            continue  # AGENTS.md is the source; don't compare it to itself
+
+        if not agents_lines:
+            continue
+
+        for start_index, length in _find_unmarked_duplications(agents_lines, raw_lines):
+            if _has_preceding_marker(raw_lines, start_index):
+                continue
+            findings.append(Finding(
+                rule="rein.unmarked_duplication", severity="fail",
+                message=(
+                    f"{length} consecutive lines duplicate AGENTS.md without a preceding "
+                    f"`<!-- agent-coordination:reinforcement <tag> -->` marker. Either add a "
+                    f"marker (closed tags: {sorted(ALLOWED_REINFORCEMENT_TAGS)}) or remove "
+                    f"the duplicated content."
+                ),
+                path=rel, line=start_index + 1,
+            ))
+
     return findings
 
 
@@ -479,6 +602,89 @@ def check_stale_surfaces(repo_root: Path) -> list[Finding]:
 # ---------------------------------------------------------------------------
 # Claude settings policy
 # ---------------------------------------------------------------------------
+
+
+def check_usage_counter_shape(repo_root: Path) -> list[Finding]:
+    """Validate the per-install usage counter files and the summary."""
+    by_install_dir = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
+    summary_path = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "summary.json"
+
+    if not by_install_dir.is_dir() and not summary_path.exists():
+        return []
+
+    findings: list[Finding] = []
+    install_totals: dict[str, dict[str, int]] = {}
+
+    if by_install_dir.is_dir():
+        for install_path in sorted(by_install_dir.glob("*.json")):
+            rel = install_path.relative_to(repo_root).as_posix()
+            try:
+                data = json.loads(install_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError) as exc:
+                findings.append(Finding(
+                    rule="usage.unparsable", severity="fail",
+                    message=f"Could not parse usage counter file: {exc}",
+                    path=rel,
+                ))
+                continue
+            install_id = data.get("install_id") if isinstance(data, dict) else None
+            if not isinstance(install_id, str) or not install_id:
+                findings.append(Finding(
+                    rule="usage.missing_install_id_field", severity="fail",
+                    message="`install_id` field is missing or empty.",
+                    path=rel,
+                ))
+                continue
+            skills = data.get("skills") if isinstance(data, dict) else None
+            if not isinstance(skills, dict):
+                continue
+            counts: dict[str, int] = {}
+            for skill_name, entry in skills.items():
+                count = entry.get("count") if isinstance(entry, dict) else None
+                if not isinstance(count, int) or count < 0:
+                    findings.append(Finding(
+                        rule="usage.invalid_counter_value", severity="fail",
+                        message=(
+                            f"Skill {skill_name!r} has invalid count {count!r}; "
+                            "must be a non-negative integer."
+                        ),
+                        path=rel,
+                    ))
+                    continue
+                counts[skill_name] = count
+            install_totals[install_id] = counts
+
+    if summary_path.exists():
+        try:
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as exc:
+            findings.append(Finding(
+                rule="usage.summary_unparsable", severity="fail",
+                message=f"Could not parse summary.json: {exc}",
+                path=summary_path.relative_to(repo_root).as_posix(),
+            ))
+        else:
+            summary_skills = summary.get("skills") if isinstance(summary, dict) else None
+            if isinstance(summary_skills, dict):
+                computed: dict[str, int] = {}
+                for counts in install_totals.values():
+                    for name, count in counts.items():
+                        computed[name] = computed.get(name, 0) + count
+                for name, summary_entry in summary_skills.items():
+                    expected = computed.get(name, 0)
+                    if not isinstance(summary_entry, dict):
+                        continue
+                    actual = summary_entry.get("total_count")
+                    if isinstance(actual, int) and actual != expected:
+                        findings.append(Finding(
+                            rule="usage.summary_mismatch", severity="warn",
+                            message=(
+                                f"Skill {name!r} summary total {actual} does not match "
+                                f"sum across by_install ({expected}). Re-run summarize_skill_usage.py."
+                            ),
+                            path=summary_path.relative_to(repo_root).as_posix(),
+                        ))
+    return findings
 
 
 def check_claude_settings_policy(repo_root: Path) -> list[Finding]:
@@ -526,6 +732,7 @@ CHECKS = (
     ("volatile_facts", check_volatile_facts),
     ("stale_surfaces", check_stale_surfaces),
     ("claude_settings_policy", check_claude_settings_policy),
+    ("usage_counter_shape", check_usage_counter_shape),
 )
 
 

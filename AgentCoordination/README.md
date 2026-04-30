@@ -48,5 +48,41 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 ## CI
 
 GitHub Actions workflow at `.github/workflows/agent_coordination.yml` runs the
-focused tooling tests and the validator on PRs that touch agent surfaces. See
-that file for the exact path triggers.
+focused tooling tests, the prefix checker, the inventory freshness check, and
+the full validator on PRs that touch agent surfaces. See that file for the
+exact path triggers.
+
+## Optional pre-commit setup
+
+`pre-commit` is not required, but if you want the validator and inventory
+freshness checks to run before every commit that touches an agent surface,
+the following config drops in cleanly. Save as `.pre-commit-config.yaml` at
+the repo root:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: agent-prefix-check
+        name: Agent skill prefix check
+        entry: python Tools/agent_coordination/check_skill_prefixes.py
+        language: system
+        pass_filenames: false
+        files: ^(\.claude|\.agent|\.agents|\.opencode)/skills/
+      - id: agent-inventory-freshness
+        name: Agent surface inventory freshness
+        entry: python Tools/agent_coordination/inventory_agent_surfaces.py
+        language: system
+        pass_filenames: false
+        files: ^(\.claude|\.agent|\.agents|\.opencode)/skills/|^opencode\.json$|^AGENTS\.md$|^CLAUDE\.md$|^\.agents/CODEX\.md$
+      - id: agent-validator
+        name: Agent surface validator
+        entry: python Tools/agent_coordination/validate_agent_surfaces.py
+        language: system
+        pass_filenames: false
+        files: ^(AgentCoordination|\.claude|\.agent|\.agents|\.opencode|Projects/protocols|Tracking/protocols)/|^AGENTS\.md$|^CLAUDE\.md$|^opencode\.json$
+```
+
+Install once with `pre-commit install`. The same commands run unconditionally
+in CI, so the hook is purely a local convenience to surface failures before
+the push.

@@ -43,7 +43,6 @@ jobs:
             -q
       - name: Prefix compliance check
         run: python Tools/agent_coordination/check_skill_prefixes.py
-        continue-on-error: true   # pre-rename; flip to required once Phase 5 lands
       - name: Inventory freshness
         run: |
           python Tools/agent_coordination/inventory_agent_surfaces.py
@@ -54,4 +53,3 @@ jobs:
           fi
       - name: Full validator
         run: python Tools/agent_coordination/validate_agent_surfaces.py
-        continue-on-error: true   # currently surfaces pre-rename findings; flip after Phase 5
