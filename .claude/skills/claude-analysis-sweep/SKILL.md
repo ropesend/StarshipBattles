@@ -34,11 +34,11 @@ This skill launches 25 general-purpose agents (5 sweep types x 5 module shards) 
 
 | Wave | Sweep Type | Prefix | Prompt File |
 |------|-----------|--------|-------------|
-| 1 | Duplication & Fragmentation | DUP | `Reviews/Prompts/Sweep - Duplication.txt` |
-| 2 | Legacy System Holdovers | LEG | `Reviews/Prompts/Sweep - Legacy Holdovers.txt` |
-| 3 | Consistency Violations | CON | `Reviews/Prompts/Sweep - Consistency Violations.txt` |
-| 4 | Architecture Drift | ADR | `Reviews/Prompts/Sweep - Architecture Drift.txt` |
-| 5 | Test Coverage Gaps | TCG | `Reviews/Prompts/Sweep - Test Coverage Gaps.txt` |
+| 1 | Duplication & Fragmentation | DUP | `Reviews/prompts/Sweep - Duplication.txt` |
+| 2 | Legacy System Holdovers | LEG | `Reviews/prompts/Sweep - Legacy Holdovers.txt` |
+| 3 | Consistency Violations | CON | `Reviews/prompts/Sweep - Consistency Violations.txt` |
+| 4 | Architecture Drift | ADR | `Reviews/prompts/Sweep - Architecture Drift.txt` |
+| 5 | Test Coverage Gaps | TCG | `Reviews/prompts/Sweep - Test Coverage Gaps.txt` |
 
 ## Execution Sequence
 
@@ -69,11 +69,11 @@ Before launching agents, read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, 
 ### Step 4: Read All Prompt Files
 
 Read all 5 sweep prompt files:
-1. `Reviews/Prompts/Sweep - Duplication.txt`
-2. `Reviews/Prompts/Sweep - Legacy Holdovers.txt`
-3. `Reviews/Prompts/Sweep - Consistency Violations.txt`
-4. `Reviews/Prompts/Sweep - Architecture Drift.txt`
-5. `Reviews/Prompts/Sweep - Test Coverage Gaps.txt`
+1. `Reviews/prompts/Sweep - Duplication.txt`
+2. `Reviews/prompts/Sweep - Legacy Holdovers.txt`
+3. `Reviews/prompts/Sweep - Consistency Violations.txt`
+4. `Reviews/prompts/Sweep - Architecture Drift.txt`
+5. `Reviews/prompts/Sweep - Test Coverage Gaps.txt`
 
 ### Step 4-8: Execute 5 Waves
 
@@ -134,7 +134,7 @@ If the `prospective_projects/` directory already exists from a previous run, add
 
 ### Step 12: Launch Project Generation Agent
 
-Read the prompt file `Reviews/Prompts/Sweep - Generate Projects.txt`.
+Read the prompt file `Reviews/prompts/Sweep - Generate Projects.txt`.
 
 Launch **1 general-purpose agent** using a single Task tool call:
 

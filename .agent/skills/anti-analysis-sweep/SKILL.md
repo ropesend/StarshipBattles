@@ -12,11 +12,11 @@ Exhaustively scan the codebase for multiple categories of issues.
 Claude launched 25 agents (5 waves of 5 parallel shards). As Antigravity, you will execute these waves sequentially using your high-context capability to maintain consistency across the entire codebase.
 
 ### Wave Categories
-1. **Duplication & Fragmentation** (`Reviews/Prompts/Sweep - Duplication.txt`)
-2. **Legacy System Holdovers** (`Reviews/Prompts/Sweep - Legacy Holdovers.txt`)
-3. **Consistency Violations** (`Reviews/Prompts/Sweep - Consistency Violations.txt`)
-4. **Architecture Drift** (`Reviews/Prompts/Sweep - Architecture Drift.txt`)
-5. **Test Coverage Gaps** (`Reviews/Prompts/Sweep - Test Coverage Gaps.txt`)
+1. **Duplication & Fragmentation** (`Reviews/prompts/Sweep - Duplication.txt`)
+2. **Legacy System Holdovers** (`Reviews/prompts/Sweep - Legacy Holdovers.txt`)
+3. **Consistency Violations** (`Reviews/prompts/Sweep - Consistency Violations.txt`)
+4. **Architecture Drift** (`Reviews/prompts/Sweep - Architecture Drift.txt`)
+5. **Test Coverage Gaps** (`Reviews/prompts/Sweep - Test Coverage Gaps.txt`)
 
 ## Execution Steps
 
@@ -38,7 +38,7 @@ Claude launched 25 agents (5 waves of 5 parallel shards). As Antigravity, you wi
    ```bash
    python Reviews/scripts/generate_prospective_projects.py Reviews/results/{FOLDER}
    ```
-   Launch the project generation logic (`Reviews/Prompts/Sweep - Generate Projects.txt`) to create project proposals.
+   Launch the project generation logic (`Reviews/prompts/Sweep - Generate Projects.txt`) to create project proposals.
 7. **Approve**: Present proposals to user and execute approvals:
    ```bash
    python Reviews/scripts/approve_prospective_projects.py Reviews/results/{FOLDER} --approve "{USER_SELECTIONS}"

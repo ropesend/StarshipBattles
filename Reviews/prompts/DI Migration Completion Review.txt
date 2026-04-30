@@ -119,6 +119,6 @@ This review's output should be **project-ready**:
 - Estimated effort per phase
 - Clear definition of "done" (what registry.py looks like after)
 
-The goal is to take this review's output and immediately convert it to a PROJ-XX via `Reviews/Prompts/Review to Project.txt`.
+The goal is to take this review's output and immediately convert it to a PROJ-XX via `Reviews/prompts/Review to Project.txt`.
 
 </known_context>

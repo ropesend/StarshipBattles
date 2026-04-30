@@ -12,7 +12,7 @@ I want to conduct a Technical Debt Review focused on a **single systemic issue**
    - Phase D: Findings Compilation (create debt assessment report)
    - Phase E: User Summary (present debt inventory with prioritized payoff plan)
 
-**IMPORTANT:** This review is intended to produce a report that can be directly converted to a PROJ-XX project via `Reviews/Prompts/Review to Project.txt`. Structure findings as actionable work items with clear phases.
+**IMPORTANT:** This review is intended to produce a report that can be directly converted to a PROJ-XX project via `Reviews/prompts/Review to Project.txt`. Structure findings as actionable work items with clear phases.
 
 <review_scope>
 

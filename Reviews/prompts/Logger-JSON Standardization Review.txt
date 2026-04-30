@@ -122,7 +122,7 @@ I want to conduct a Consistency Review focused on **Logger and JSON Loading patt
 
 ## Goal: Project-Ready Migration Plan
 
-This review should produce findings detailed enough to be **converted directly into a PROJ-XX project** using `Reviews/Prompts/Review to Project.txt`.
+This review should produce findings detailed enough to be **converted directly into a PROJ-XX project** using `Reviews/prompts/Review to Project.txt`.
 
 ### Desired Output Structure:
 
