@@ -677,6 +677,7 @@ LEGACY_SCAN_EXCLUDE_DIRS = (
     "Projects/deep_archive",
     "Tracking/bugs/archived",
     "Tracking/features/archived",
+    "_marked_for_deletion_2026-05-29",
 )
 
 
