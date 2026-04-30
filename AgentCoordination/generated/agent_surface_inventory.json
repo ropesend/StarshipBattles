@@ -57,6 +57,13 @@
       "path": ".claude/settings.local.json",
       "pattern": "c:\\\\Developer\\\\StarshipBattles\\\\Projects\\\\active_projects\\\\PROJ-218\\\\findings",
       "severity": "warn"
+    },
+    {
+      "kind": "absolute_path",
+      "line": 95,
+      "path": "CLAUDE.md",
+      "pattern": "s://github.com/anthropics/claude-code/issues.",
+      "severity": "warn"
     }
   ],
   "surfaces": [
