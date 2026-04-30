@@ -8,10 +8,10 @@
 | ID | Date Found | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
 | BUG-122 | 2026-04-28 | Multiple fleets disappear when joining each other in the same hex — mutual-join + redirect-without-self-exclusion | Awaiting Confirmation | [BUG-122.md](bugs/active/BUG-122.md) |
-| BUG-123 | 2026-04-28 | Event Log shows events from all empires combined; should filter to the active empire | Pending | [BUG-123.md](bugs/active/BUG-123.md) |
-| BUG-124 | 2026-04-28 | Ship skin icons broken on strategy map for every theme — loader looks for `Battlecruiser.png`, files are `battle_cruiser.png` | Pending | [BUG-124.md](bugs/active/BUG-124.md) |
-| BUG-125 | 2026-04-28 | Hot-seat player can issue orders to opponent fleets — fleet command handlers trust UI-supplied empire_id | Pending | [BUG-125.md](bugs/active/BUG-125.md) |
-| BUG-126 | 2026-04-28 | Strategy-layer combat ends with weaponless ship "winning" — likely sole-survivor shortcut firing on a non-empty opposing fleet | Pending | [BUG-126.md](bugs/active/BUG-126.md) |
+| BUG-123 | 2026-04-28 | Event Log shows events from all empires combined; should filter to the active empire | Awaiting Confirmation | [BUG-123.md](bugs/active/BUG-123.md) |
+| BUG-124 | 2026-04-28 | Ship skin icons broken on strategy map for every theme — loader looks for `Battlecruiser.png`, files are `battle_cruiser.png` | In-Progress | [BUG-124.md](bugs/active/BUG-124.md) |
+| BUG-125 | 2026-04-28 | Hot-seat — drop Command.empire_id + fix session.active_empire rotation; planet + fleet command handlers gate correctly | Awaiting Confirmation | [BUG-125.md](bugs/active/BUG-125.md) |
+| BUG-126 | 2026-04-28 | Strategy-layer combat draw silently destroys the smaller fleet — `_resolve_winner_team` survivor-count tiebreaker treats `BattleOutcome.winner=None` as a winnable contest | Awaiting Confirmation | [BUG-126.md](bugs/active/BUG-126.md) |
 
 ## 3. Current Focus: None
 No bugs currently in progress.

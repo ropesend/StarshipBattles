@@ -159,8 +159,14 @@ until BUG-126 is also addressed.
     `BattleResult` regardless).
   - `engine.replay_id` typed-attribute cleanup (currently
     `# type: ignore[attr-defined]` on `BattleEngine`).
-  - `docs/systems/strategy_layer.md` replay capture/playback section
-    (file held by FEAT-27 during this implementation; will land in a
-    separate follow-up doc PR after FEAT-27 merges).
+  - ~~`docs/systems/strategy_layer.md` replay capture/playback section~~
+    — DONE 2026-04-29. FEAT-27 ended up Blocked, so the doc lock
+    released without merging FEAT-27's content. The deferred Replay
+    Wiring subsection was added to `docs/systems/strategy_layer.md`
+    §5 Event System: capture flow diagram, click flow steps 1-5,
+    `ReplayResolver` graceful-degradation states, `Game.start_replay`
+    forwarder, `screen_router.start_battle(config=...)` widening,
+    `BattleScreen` REPLAY MODE label, and the out-of-scope follow-ups
+    listed above. Doc `> **Last verified:**` line bumped.
 
 ---

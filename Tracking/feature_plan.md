@@ -7,12 +7,12 @@
 ## 2. Feature Queue
 | ID | Date Added | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| FEAT-20 | 2026-04-27 | "Run 10 turns" button next to End Turn (revised: always-visible, no longer dev-gated) | In-Progress | [FEAT-20.md](features/active/FEAT-20.md) |
-| FEAT-22 | 2026-04-28 | Startup phase profiling — log timings before main menu appears | Pending | [FEAT-22.md](features/active/FEAT-22.md) |
-| FEAT-25 | 2026-04-28 | Planet Registry — upgrade Effects filter from on/off chips to 3-way tri-state | Pending | [FEAT-25.md](features/active/FEAT-25.md) |
-| FEAT-26 | 2026-04-28 | Wire replay_id through to Event Log and add Replay button on combat entries (closes PROJ-312 UI gap) | Pending | [FEAT-26.md](features/active/FEAT-26.md) |
-| FEAT-27 | 2026-04-28 | Allow new-game galaxy size as low as 1 system (default 2; enforce distinct systems per empire when N≥2) | Pending | [FEAT-27.md](features/active/FEAT-27.md) |
-| FEAT-28 | 2026-04-28 | Mutual JOIN orders should make both fleets move toward each other (rendezvous) | Pending | [FEAT-28.md](features/active/FEAT-28.md) |
+| FEAT-20 | 2026-04-27 | "Run 10 turns" button next to End Turn (revised: always-visible, no longer dev-gated) | Awaiting Confirmation | [FEAT-20.md](features/active/FEAT-20.md) |
+| FEAT-22 | 2026-04-28 | Startup phase profiling — log timings before main menu appears | Awaiting Confirmation | [FEAT-22.md](features/active/FEAT-22.md) |
+| FEAT-25 | 2026-04-28 | Planet Registry — upgrade Effects filter from on/off chips to 3-way tri-state | Awaiting Confirmation | [FEAT-25.md](features/active/FEAT-25.md) |
+| FEAT-26 | 2026-04-28 | Wire replay_id through to Event Log and add Replay button on combat entries (closes PROJ-312 UI gap) | Awaiting Confirmation | [FEAT-26.md](features/active/FEAT-26.md) |
+| FEAT-27 | 2026-04-28 | Allow new-game galaxy size as low as 1 system (default 2; enforce distinct systems per empire when N≥2) | Awaiting Confirmation | [FEAT-27.md](features/active/FEAT-27.md) |
+| FEAT-28 | 2026-04-28 | Mutual JOIN orders should make both fleets move toward each other (rendezvous) | In-Progress | [FEAT-28.md](features/active/FEAT-28.md) |
 
 ## 3. Current Focus: None
 No features currently in progress.
