@@ -553,6 +553,108 @@ def test_legacy_slash_fails_in_active_project_manifest(tmp_path: Path) -> None:
     assert any(f.rule == "legacy.unprefixed_slash" for f in findings)
 
 
+# ---------------------------------------------------------------------------
+# Reviews SLA check
+# ---------------------------------------------------------------------------
+
+
+def test_reviews_sla_passes_when_no_index(tmp_path: Path) -> None:
+    findings = validator.check_reviews_sla(tmp_path)
+    assert findings == []
+
+
+def test_reviews_sla_passes_on_recent_in_progress(tmp_path: Path, monkeypatch) -> None:
+    from datetime import date
+    monkeypatch.setattr(validator, "_today", lambda: date(2026, 4, 29))
+    (tmp_path / "Reviews").mkdir()
+    (tmp_path / "Reviews" / "reviews_index.md").write_text(
+        "# Reviews Index\n\n## Active\n"
+        "| Date | Type | Description | Status | Link |\n"
+        "|---|---|---|---|---|\n"
+        "| 2026-04-15 | General Review | recent-thing | In Progress | [link](results/x) |\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_reviews_sla(tmp_path)
+    assert findings == []
+
+
+def test_reviews_sla_warns_on_60_day_in_progress(tmp_path: Path, monkeypatch) -> None:
+    from datetime import date
+    monkeypatch.setattr(validator, "_today", lambda: date(2026, 4, 29))
+    (tmp_path / "Reviews").mkdir()
+    (tmp_path / "Reviews" / "reviews_index.md").write_text(
+        "# Reviews Index\n\n## Active\n"
+        "| Date | Type | Description | Status | Link |\n"
+        "|---|---|---|---|---|\n"
+        "| 2026-02-15 | General Review | stale-thing | In Progress | [link](results/x) |\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_reviews_sla(tmp_path)
+    assert any(f.rule == "reviews.sla_violation" and f.severity == "warn" for f in findings)
+
+
+def test_reviews_sla_does_not_warn_on_terminal_states(tmp_path: Path, monkeypatch) -> None:
+    from datetime import date
+    monkeypatch.setattr(validator, "_today", lambda: date(2026, 4, 29))
+    (tmp_path / "Reviews").mkdir()
+    (tmp_path / "Reviews" / "reviews_index.md").write_text(
+        "# Reviews Index\n\n## Active\n"
+        "| Date | Type | Description | Status | Link |\n"
+        "|---|---|---|---|---|\n"
+        "| 2026-01-15 | General Review | done-thing | Completed | [link](r) |\n"
+        "| 2026-01-15 | General Review | aged-thing | Abandoned (>60d) | [link](r) |\n"
+        "| 2026-01-15 | General Review | proj-thing | Led to Project | [link](r) |\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_reviews_sla(tmp_path)
+    assert findings == []
+
+
+# ---------------------------------------------------------------------------
+# Tools inventory check
+# ---------------------------------------------------------------------------
+
+
+def test_tools_inventory_passes_when_readme_matches_tree(tmp_path: Path) -> None:
+    tools = tmp_path / "Tools"
+    (tools / "alpha").mkdir(parents=True)
+    (tools / "beta").mkdir()
+    (tools / "README.md").write_text(
+        "# Tools\n\n| Tool | Purpose | Type |\n|---|---|---|\n"
+        "| [alpha](alpha/) | Alpha thing | Misc |\n"
+        "| [beta](beta/) | Beta thing | Misc |\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_tools_inventory(tmp_path)
+    assert findings == []
+
+
+def test_tools_inventory_fails_on_missing_listing(tmp_path: Path) -> None:
+    tools = tmp_path / "Tools"
+    (tools / "alpha").mkdir(parents=True)
+    (tools / "undocumented").mkdir()
+    (tools / "README.md").write_text(
+        "# Tools\n\n| Tool | Purpose | Type |\n|---|---|---|\n"
+        "| [alpha](alpha/) | Alpha thing | Misc |\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_tools_inventory(tmp_path)
+    assert any(f.rule == "tools.missing_from_inventory" and "undocumented" in f.message for f in findings)
+
+
+def test_tools_inventory_skips_underscore_dirs(tmp_path: Path) -> None:
+    tools = tmp_path / "Tools"
+    (tools / "alpha").mkdir(parents=True)
+    (tools / "__pycache__").mkdir()
+    (tools / "README.md").write_text(
+        "# Tools\n\n| Tool | Purpose | Type |\n|---|---|---|\n"
+        "| [alpha](alpha/) | Alpha thing | Misc |\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_tools_inventory(tmp_path)
+    assert findings == []
+
+
 def test_legacy_slash_does_not_match_localhost_or_unrelated_words(tmp_path: Path) -> None:
     # `loc` is a legacy skill name, but `/localhost`, `/locator`, etc. should
     # not be flagged because they are not exact matches.

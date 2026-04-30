@@ -707,6 +707,95 @@ def _legacy_scan_files(repo_root: Path) -> list[Path]:
     return sorted(excluded, key=lambda p: p.as_posix())
 
 
+def _today():
+    """Return today's date. Patched in tests for deterministic results."""
+    from datetime import date
+    return date.today()
+
+
+REVIEWS_SLA_DAYS = 60
+REVIEWS_SLA_TERMINAL_STATUSES = ("Completed", "Archived", "Led to Project")
+_REVIEWS_INDEX_ROW_RE = re.compile(
+    r"^\|\s*(?P<date>\d{4}-\d{2}-\d{2})\s*\|\s*[^|]+\|\s*[^|]+\|\s*(?P<status>[^|]+?)\s*\|"
+)
+
+
+def check_reviews_sla(repo_root: Path) -> list[Finding]:
+    """Warn on `In Progress` reviews older than REVIEWS_SLA_DAYS days.
+
+    Initially warn-only. After one cleanup cycle, promote to fail.
+    """
+    from datetime import date
+    index = repo_root / "Reviews" / "reviews_index.md"
+    if not index.is_file():
+        return []
+    findings: list[Finding] = []
+    today = _today()
+    try:
+        text = index.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return []
+    rel = index.relative_to(repo_root).as_posix()
+    for line_no, line in enumerate(text.splitlines(), start=1):
+        match = _REVIEWS_INDEX_ROW_RE.match(line)
+        if not match:
+            continue
+        status = match.group("status").strip()
+        if "In Progress" not in status or any(t in status for t in REVIEWS_SLA_TERMINAL_STATUSES):
+            continue
+        try:
+            entry_date = date.fromisoformat(match.group("date"))
+        except ValueError:
+            continue
+        age_days = (today - entry_date).days
+        if age_days > REVIEWS_SLA_DAYS:
+            findings.append(Finding(
+                rule="reviews.sla_violation", severity="warn",
+                message=(
+                    f"Review entry dated {entry_date.isoformat()} has been `In Progress` for "
+                    f"{age_days} days (SLA: {REVIEWS_SLA_DAYS}). Update or close to "
+                    f"`Completed`/`Archived`/`Abandoned (>60d)`/`Led to Project`."
+                ),
+                path=rel, line=line_no,
+            ))
+    return findings
+
+
+def check_tools_inventory(repo_root: Path) -> list[Finding]:
+    """Diff Tools/ subdirectories against Tools/README.md's inventory."""
+    tools_dir = repo_root / "Tools"
+    readme = tools_dir / "README.md"
+    if not tools_dir.is_dir() or not readme.is_file():
+        return []
+    try:
+        readme_text = readme.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return []
+    listed: set[str] = set()
+    for match in re.finditer(r"\[([a-z0-9_]+)\]\(\1/\)", readme_text):
+        listed.add(match.group(1))
+    findings: list[Finding] = []
+    for child in sorted(tools_dir.iterdir(), key=lambda p: p.name):
+        if not child.is_dir():
+            continue
+        name = child.name
+        # Skip Python build artifacts and intentionally-private dirs.
+        if name.startswith("_") or name.startswith("."):
+            continue
+        if name == "__pycache__":
+            continue
+        if name not in listed:
+            findings.append(Finding(
+                rule="tools.missing_from_inventory", severity="fail",
+                message=(
+                    f"Tools/{name}/ exists on disk but is not listed in Tools/README.md. "
+                    f"Add a row to the inventory table."
+                ),
+                path="Tools/README.md",
+            ))
+    return findings
+
+
 def check_legacy_slash_commands(repo_root: Path) -> list[Finding]:
     findings: list[Finding] = []
     for path in _legacy_scan_files(repo_root):
@@ -867,6 +956,8 @@ CHECKS = (
     ("claude_settings_policy", check_claude_settings_policy),
     ("usage_counter_shape", check_usage_counter_shape),
     ("legacy_slash_commands", check_legacy_slash_commands),
+    ("reviews_sla", check_reviews_sla),
+    ("tools_inventory", check_tools_inventory),
 )
 
 
