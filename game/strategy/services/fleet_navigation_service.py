@@ -142,11 +142,29 @@ class FleetNavigationService:
     execution use the same logic through this service.
     """
 
+    def _is_mutual_pursuit(self, self_fleet, target_fleet) -> bool:
+        """FEAT-28: Mutual-pursuit predicate.
+
+        Returns True iff `target_fleet`'s current head order is
+        `MOVE_TO_FLEET` or `JOIN_FLEET` and points back at `self_fleet`.
+        The order queue is canonical; the pursuer tracker is a derived
+        index that can lag, so we read the head order directly.
+        """
+        if self_fleet is None or target_fleet is None:
+            return False
+        target_order = target_fleet.get_current_order()
+        if target_order is None:
+            return False
+        if target_order.type not in (OrderType.MOVE_TO_FLEET, OrderType.JOIN_FLEET):
+            return False
+        return target_order.target is self_fleet
+
     def get_destination(
         self,
         state: NavigationState,
         order: Order,
-        galaxy
+        galaxy,
+        self_fleet=None,
     ) -> Optional[HexCoord]:
         """
         Determine the destination hex for a given order.
@@ -155,6 +173,10 @@ class FleetNavigationService:
             state: Current navigation state (immutable snapshot)
             order: The order to process
             galaxy: Galaxy object for pathfinding context
+            self_fleet: Optional Fleet whose state was snapshotted. Required
+                for FEAT-28 mutual-pursuit detection on `MOVE_TO_FLEET`
+                orders. Defaults to None for callers that don't have a Fleet
+                identity (e.g. UI projection of a synthesised state).
 
         Returns:
             HexCoord destination or None if order has no movement component
@@ -169,6 +191,16 @@ class FleetNavigationService:
             # Fleet always has location, just check target exists
             if target_fleet is None:
                 return None
+            # FEAT-28: When two fleets are mutually pursuing each other (each
+            # head order is MOVE_TO_FLEET / JOIN_FLEET targeting the other),
+            # `calculate_intercept_point` is asymmetric — its evaluator
+            # ranks "stay still" as the best intercept (chaser_turns=0 at
+            # chaser's own location), so one fleet sits while the other
+            # chases. Bypass intercept and pathfind directly to the target's
+            # current hex; both fleets converge along the shortest line at
+            # their own speeds.
+            if self._is_mutual_pursuit(self_fleet, target_fleet):
+                return target_fleet.location
             # Use intercept calculation with NavigationState directly
             # (PROJ-35 Phase 3: calculate_intercept_point now accepts NavigationState)
             from game.strategy.data.pathfinding import calculate_intercept_point
@@ -316,7 +348,8 @@ class FleetNavigationService:
     def compute_next_step(
         self,
         state: NavigationState,
-        galaxy
+        galaxy,
+        self_fleet=None,
     ) -> NavigationStep:
         """
         Calculate the next hex for movement without mutating the input state.
@@ -327,6 +360,8 @@ class FleetNavigationService:
         Args:
             state: Current navigation state (immutable)
             galaxy: Galaxy object for pathfinding
+            self_fleet: Optional Fleet — passed through to `get_destination`
+                for FEAT-28 mutual-pursuit detection on MOVE_TO_FLEET orders.
 
         Returns:
             NavigationStep with next_hex, new_state, and order_complete flag
@@ -335,7 +370,7 @@ class FleetNavigationService:
             return NavigationStep(next_hex=None, new_state=state, order_complete=False)
 
         order = state.orders[0]
-        destination = self.get_destination(state, order, galaxy)
+        destination = self.get_destination(state, order, galaxy, self_fleet=self_fleet)
 
         if destination is None:
             # Non-movement order (COLONIZE, JOIN_FLEET, etc.) - leave it for
@@ -484,7 +519,9 @@ class FleetNavigationService:
                     continue
 
                 # Movement orders: resolve path
-                new_state = self._resolve_path_for_order(state, order, galaxy)
+                new_state = self._resolve_path_for_order(
+                    state, order, galaxy, self_fleet=fleet,
+                )
                 if new_state is None:
                     break
                 state = new_state
@@ -621,7 +658,8 @@ class FleetNavigationService:
         self,
         state: NavigationState,
         order: Order,
-        galaxy
+        galaxy,
+        self_fleet=None,
     ) -> Optional[NavigationState]:
         """
         Resolve destination and compute path for a movement order.
@@ -630,11 +668,13 @@ class FleetNavigationService:
             state: Current navigation state
             order: The movement order to resolve
             galaxy: Galaxy object for pathfinding
+            self_fleet: Optional Fleet — threaded through so projections of
+                a real Fleet can use FEAT-28 mutual-pursuit routing.
 
         Returns:
             New NavigationState with computed path, or None if no valid path
         """
-        destination = self.get_destination(state, order, galaxy)
+        destination = self.get_destination(state, order, galaxy, self_fleet=self_fleet)
         if destination is None:
             return None
 
@@ -704,7 +744,7 @@ class FleetNavigationService:
                 return None
 
         state = NavigationState.from_fleet(fleet)
-        step = self.compute_next_step(state, galaxy)
+        step = self.compute_next_step(state, galaxy, self_fleet=fleet)
 
         if step.next_hex is None:
             if step.order_complete:
