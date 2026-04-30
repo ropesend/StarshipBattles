@@ -9,6 +9,8 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 - **Abandoned (>60d)** - Review marked In Progress for >60 days with no recent activity. Bulk-closed on 2026-04-29. Result folders under `results/` remain as research archive.
 - **Led to Project** - Review resulted in a PROJ-XX project
 
+> **Sweep Reviews (retired 2026-04-29):** "Sweep" was an experimental codebase-wide multi-agent review type (see prior entries below). The 8 Sweep prompts were staged for deletion at `_marked_for_deletion_2026-05-29/Reviews/Prompts/` and were never paired with a formal protocol in `Reviews/protocols/`. Existing Sweep Review entries are kept as historical record. Do not start new Sweep reviews; use the documented review types (general, test-coverage, focused-question, migration, security, performance, technical-debt, consistency, update) instead.
+
 ---
 
 ## Active Reviews
