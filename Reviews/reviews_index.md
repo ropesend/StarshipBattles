@@ -3,9 +3,10 @@
 This index tracks all code reviews conducted on the Starship Battles codebase.
 
 ## Status Legend
-- **In Progress** - Review currently being conducted
+- **In Progress** - Review currently being conducted (must be updated or closed within 60 days)
 - **Completed** - Review finished, findings documented
 - **Archived** - Review findings addressed or superseded
+- **Abandoned (>60d)** - Review marked In Progress for >60 days with no recent activity. Bulk-closed on 2026-04-29. Result folders under `results/` remain as research archive.
 - **Led to Project** - Review resulted in a PROJ-XX project
 
 ---
@@ -18,60 +19,60 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 | 2026-03-13 | Consistency Review | full-codebase-all-patterns | In Progress | [2026-03-13_182542_consistency_full-codebase-all-patterns](results/2026-03-13_182542_consistency_full-codebase-all-patterns/) |
 | 2026-03-13 | Consistency Review | all-patterns-game-codebase | In Progress | [2026-03-13_180002_consistency_all-patterns-game-codebase](results/2026-03-13_180002_consistency_all-patterns-game-codebase/) |
 | 2026-03-13 | Consistency Review | all-patterns-game-codebase | In Progress | [2026-03-13_173626_consistency_all-patterns-game-codebase](results/2026-03-13_173626_consistency_all-patterns-game-codebase/) |
-| 2026-02-27 | General Review | strategy-god-classes | In Progress | [2026-02-27_211327_general_strategy-god-classes](results/2026-02-27_211327_general_strategy-god-classes/) |
-| 2026-02-27 | General Review | circular-dependency-deferred-imports | In Progress | [2026-02-27_211243_general_circular-dependency-deferred-imports](results/2026-02-27_211243_general_circular-dependency-deferred-imports/) |
+| 2026-02-27 | General Review | strategy-god-classes | Abandoned (>60d) | [2026-02-27_211327_general_strategy-god-classes](results/2026-02-27_211327_general_strategy-god-classes/) |
+| 2026-02-27 | General Review | circular-dependency-deferred-imports | Abandoned (>60d) | [2026-02-27_211243_general_circular-dependency-deferred-imports](results/2026-02-27_211243_general_circular-dependency-deferred-imports/) |
 | 2026-02-27 | General Review | di-inconsistency-strategy | Led to Project | [2026-02-27_211222_general_di-inconsistency-strategy](results/2026-02-27_211222_general_di-inconsistency-strategy/) |
-| 2026-02-27 | General Review | cyclomatic-complexity-deep-dive | In Progress | [2026-02-27_211154_general_cyclomatic-complexity-deep-dive](results/2026-02-27_211154_general_cyclomatic-complexity-deep-dive/) |
-| 2026-02-27 | General Review | facade-bypass-layering-violations | In Progress | [2026-02-27_211111_general_facade-bypass-layering-violations](results/2026-02-27_211111_general_facade-bypass-layering-violations/) |
-| 2026-02-27 | General Review | fleet-order-systems | In Progress | [2026-02-27_153151_general_fleet-order-systems](results/2026-02-27_153151_general_fleet-order-systems/) |
-| 2026-02-27 | General Review | legacy-code-audit | In Progress | [2026-02-27_141504_general_legacy-code-audit](results/2026-02-27_141504_general_legacy-code-audit/) |
-| 2026-02-27 | General Review | dead-code-elimination | In Progress | [2026-02-27_141459_general_dead-code-elimination](results/2026-02-27_141459_general_dead-code-elimination/) |
-| 2026-02-27 | General Review | strategy-workshop-duplication | In Progress | [2026-02-27_141256_general_strategy-workshop-duplication](results/2026-02-27_141256_general_strategy-workshop-duplication/) |
+| 2026-02-27 | General Review | cyclomatic-complexity-deep-dive | Abandoned (>60d) | [2026-02-27_211154_general_cyclomatic-complexity-deep-dive](results/2026-02-27_211154_general_cyclomatic-complexity-deep-dive/) |
+| 2026-02-27 | General Review | facade-bypass-layering-violations | Abandoned (>60d) | [2026-02-27_211111_general_facade-bypass-layering-violations](results/2026-02-27_211111_general_facade-bypass-layering-violations/) |
+| 2026-02-27 | General Review | fleet-order-systems | Abandoned (>60d) | [2026-02-27_153151_general_fleet-order-systems](results/2026-02-27_153151_general_fleet-order-systems/) |
+| 2026-02-27 | General Review | legacy-code-audit | Abandoned (>60d) | [2026-02-27_141504_general_legacy-code-audit](results/2026-02-27_141504_general_legacy-code-audit/) |
+| 2026-02-27 | General Review | dead-code-elimination | Abandoned (>60d) | [2026-02-27_141459_general_dead-code-elimination](results/2026-02-27_141459_general_dead-code-elimination/) |
+| 2026-02-27 | General Review | strategy-workshop-duplication | Abandoned (>60d) | [2026-02-27_141256_general_strategy-workshop-duplication](results/2026-02-27_141256_general_strategy-workshop-duplication/) |
 | 2026-02-23 | Consistency Review | logger-json-pattern-standardization | Led to Project | [2026-02-23_195305_consistency_logger-json-pattern-standardization](results/2026-02-23_195305_consistency_logger-json-pattern-standardization/) |
 | 2026-02-23 | Technical Debt Review | missing-abstractions-duplication-elimination | Completed | [2026-02-23_194404_tech-debt_missing-abstractions-duplication-elimination](results/2026-02-23_194404_tech-debt_missing-abstractions-duplication-elimination/) |
-| 2026-02-23 | Technical Debt Review | protocol-gap-hasattr-migration | In Progress | [2026-02-23_193625_tech-debt_protocol-gap-hasattr-migration](results/2026-02-23_193625_tech-debt_protocol-gap-hasattr-migration/) |
-| 2026-02-23 | Focused Question Review | registry-consolidation-migration | In Progress | [2026-02-23_185804_focused_registry-consolidation-migration](results/2026-02-23_185804_focused_registry-consolidation-migration/) |
-| 2026-02-23 | Technical Debt Review | god-class-decomposition-planning | In Progress | [2026-02-23_182728_tech-debt_god-class-decomposition-planning](results/2026-02-23_182728_tech-debt_god-class-decomposition-planning/) |
-| 2026-02-23 | Focused Question Review | exception-handling-migration-audit | In Progress | [2026-02-23_180421_focused_exception-handling-migration-audit](results/2026-02-23_180421_focused_exception-handling-migration-audit/) |
-| 2026-02-23 | Focused Question Review | dead-code-cleanup-audit | In Progress | [2026-02-23_180329_focused_dead-code-cleanup-audit](results/2026-02-23_180329_focused_dead-code-cleanup-audit/) |
+| 2026-02-23 | Technical Debt Review | protocol-gap-hasattr-migration | Abandoned (>60d) | [2026-02-23_193625_tech-debt_protocol-gap-hasattr-migration](results/2026-02-23_193625_tech-debt_protocol-gap-hasattr-migration/) |
+| 2026-02-23 | Focused Question Review | registry-consolidation-migration | Abandoned (>60d) | [2026-02-23_185804_focused_registry-consolidation-migration](results/2026-02-23_185804_focused_registry-consolidation-migration/) |
+| 2026-02-23 | Technical Debt Review | god-class-decomposition-planning | Abandoned (>60d) | [2026-02-23_182728_tech-debt_god-class-decomposition-planning](results/2026-02-23_182728_tech-debt_god-class-decomposition-planning/) |
+| 2026-02-23 | Focused Question Review | exception-handling-migration-audit | Abandoned (>60d) | [2026-02-23_180421_focused_exception-handling-migration-audit](results/2026-02-23_180421_focused_exception-handling-migration-audit/) |
+| 2026-02-23 | Focused Question Review | dead-code-cleanup-audit | Abandoned (>60d) | [2026-02-23_180329_focused_dead-code-cleanup-audit](results/2026-02-23_180329_focused_dead-code-cleanup-audit/) |
 | 2026-02-23 | General Review | deliberate-design-debt-audit | Completed | [2026-02-23_160923_general_deliberate-design-debt-audit](results/2026-02-23_160923_general_deliberate-design-debt-audit/) |
-| 2026-02-23 | General Review | duplication-consolidation-analysis | In Progress | [2026-02-23_160413_general_duplication-consolidation-analysis](results/2026-02-23_160413_general_duplication-consolidation-analysis/) |
-| 2026-02-16 | General Review | test-suite-cleanup-v3 | In Progress | [2026-02-16_105410_general_test-suite-cleanup-v3](results/2026-02-16_105410_general_test-suite-cleanup-v3/) |
-| 2026-02-16 | General Review | test-suite-cleanup | In Progress | [2026-02-16_075913_general_test-suite-cleanup](results/2026-02-16_075913_general_test-suite-cleanup/) |
-| 2026-02-16 | General Review | test-suite-cleanup | In Progress | [2026-02-16_071059_general_test-suite-cleanup](results/2026-02-16_071059_general_test-suite-cleanup/) |
-| 2026-02-14 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-14_100116_sweep_full-codebase-sweep](results/2026-02-14_100116_sweep_full-codebase-sweep/) |
-| 2026-02-14 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-14_031258_sweep_full-codebase-sweep](results/2026-02-14_031258_sweep_full-codebase-sweep/) |
-| 2026-02-13 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-13_223809_sweep_full-codebase-sweep](results/2026-02-13_223809_sweep_full-codebase-sweep/) |
-| 2026-02-13 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-13_215604_sweep_full-codebase-sweep](results/2026-02-13_215604_sweep_full-codebase-sweep/) |
-| 2026-02-13 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-13_134059_sweep_full-codebase-sweep](results/2026-02-13_134059_sweep_full-codebase-sweep/) |
-| 2026-02-13 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-13_092036_sweep_full-codebase-sweep](results/2026-02-13_092036_sweep_full-codebase-sweep/) |
-| 2026-02-13 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-13_sweep_full-codebase-sweep](results/2026-02-13_sweep_full-codebase-sweep/) |
-| 2026-02-13 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-13_sweep_full-codebase-sweep](results/2026-02-13_sweep_full-codebase-sweep/) |
-| 2026-02-11 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-11_sweep_full-codebase-sweep](results/2026-02-11_sweep_full-codebase-sweep/) |
-| 2026-02-11 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-11_sweep_full-codebase-sweep](results/2026-02-11_sweep_full-codebase-sweep/) |
+| 2026-02-23 | General Review | duplication-consolidation-analysis | Abandoned (>60d) | [2026-02-23_160413_general_duplication-consolidation-analysis](results/2026-02-23_160413_general_duplication-consolidation-analysis/) |
+| 2026-02-16 | General Review | test-suite-cleanup-v3 | Abandoned (>60d) | [2026-02-16_105410_general_test-suite-cleanup-v3](results/2026-02-16_105410_general_test-suite-cleanup-v3/) |
+| 2026-02-16 | General Review | test-suite-cleanup | Abandoned (>60d) | [2026-02-16_075913_general_test-suite-cleanup](results/2026-02-16_075913_general_test-suite-cleanup/) |
+| 2026-02-16 | General Review | test-suite-cleanup | Abandoned (>60d) | [2026-02-16_071059_general_test-suite-cleanup](results/2026-02-16_071059_general_test-suite-cleanup/) |
+| 2026-02-14 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-14_100116_sweep_full-codebase-sweep](results/2026-02-14_100116_sweep_full-codebase-sweep/) |
+| 2026-02-14 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-14_031258_sweep_full-codebase-sweep](results/2026-02-14_031258_sweep_full-codebase-sweep/) |
+| 2026-02-13 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-13_223809_sweep_full-codebase-sweep](results/2026-02-13_223809_sweep_full-codebase-sweep/) |
+| 2026-02-13 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-13_215604_sweep_full-codebase-sweep](results/2026-02-13_215604_sweep_full-codebase-sweep/) |
+| 2026-02-13 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-13_134059_sweep_full-codebase-sweep](results/2026-02-13_134059_sweep_full-codebase-sweep/) |
+| 2026-02-13 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-13_092036_sweep_full-codebase-sweep](results/2026-02-13_092036_sweep_full-codebase-sweep/) |
+| 2026-02-13 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-13_sweep_full-codebase-sweep](results/2026-02-13_sweep_full-codebase-sweep/) |
+| 2026-02-13 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-13_sweep_full-codebase-sweep](results/2026-02-13_sweep_full-codebase-sweep/) |
+| 2026-02-11 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-11_sweep_full-codebase-sweep](results/2026-02-11_sweep_full-codebase-sweep/) |
+| 2026-02-11 | Sweep Review | full-codebase-sweep | Abandoned (>60d) | [2026-02-11_sweep_full-codebase-sweep](results/2026-02-11_sweep_full-codebase-sweep/) |
 | 2026-02-10 | Sweep Review | full-codebase-sweep | Led to Project | [2026-02-10_sweep_full-codebase-sweep](results/2026-02-10_sweep_full-codebase-sweep/) |
-| 2026-02-10 | General Review | resource-state-duplication-audit | In Progress | [2026-02-10_general_resource-state-duplication-audit](results/2026-02-10_general_resource-state-duplication-audit/) |
-| 2026-02-07 | General Review | rust-bevy-migration-feasibility | In Progress | [2026-02-07_general_rust-bevy-migration-feasibility](results/2026-02-07_general_rust-bevy-migration-feasibility/) |
-| 2026-02-01 | General Review | Full Codebase Health Check | In Progress | [2026-02-01_general_full-codebase-health-check](results/2026-02-01_general_full-codebase-health-check/) |
-| 2026-01-31 | General Review | resource-system-legacy-audit | In Progress | [2026-01-31_general_resource-system-legacy-audit](results/2026-01-31_general_resource-system-legacy-audit/) |
-| 2026-01-28 | General Review | maintainability-extensibility | In Progress | [2026-01-28_general_maintainability-extensibility](results/2026-01-28_general_maintainability-extensibility/) |
-| 2026-01-28 | General Review | full-codebase-legacy-consistency-audit | In Progress | [2026-01-28_general_full-codebase-legacy-consistency-audit](results/2026-01-28_general_full-codebase-legacy-consistency-audit/) |
-| 2026-01-28 | Consistency Review | full-codebase-patterns | In Progress | [2026-01-28_consistency_full-codebase-patterns](results/2026-01-28_consistency_full-codebase-patterns/) |
-| 2026-01-27 | General Review | docs-health-audit | In Progress | [2026-01-27_general_docs-health-audit](results/2026-01-27_general_docs-health-audit/) |
-| 2026-01-27 | General Review | self-contained-systems | In Progress | [2026-01-27_general_self-contained-systems](results/2026-01-27_general_self-contained-systems/) |
+| 2026-02-10 | General Review | resource-state-duplication-audit | Abandoned (>60d) | [2026-02-10_general_resource-state-duplication-audit](results/2026-02-10_general_resource-state-duplication-audit/) |
+| 2026-02-07 | General Review | rust-bevy-migration-feasibility | Abandoned (>60d) | [2026-02-07_general_rust-bevy-migration-feasibility](results/2026-02-07_general_rust-bevy-migration-feasibility/) |
+| 2026-02-01 | General Review | Full Codebase Health Check | Abandoned (>60d) | [2026-02-01_general_full-codebase-health-check](results/2026-02-01_general_full-codebase-health-check/) |
+| 2026-01-31 | General Review | resource-system-legacy-audit | Abandoned (>60d) | [2026-01-31_general_resource-system-legacy-audit](results/2026-01-31_general_resource-system-legacy-audit/) |
+| 2026-01-28 | General Review | maintainability-extensibility | Abandoned (>60d) | [2026-01-28_general_maintainability-extensibility](results/2026-01-28_general_maintainability-extensibility/) |
+| 2026-01-28 | General Review | full-codebase-legacy-consistency-audit | Abandoned (>60d) | [2026-01-28_general_full-codebase-legacy-consistency-audit](results/2026-01-28_general_full-codebase-legacy-consistency-audit/) |
+| 2026-01-28 | Consistency Review | full-codebase-patterns | Abandoned (>60d) | [2026-01-28_consistency_full-codebase-patterns](results/2026-01-28_consistency_full-codebase-patterns/) |
+| 2026-01-27 | General Review | docs-health-audit | Abandoned (>60d) | [2026-01-27_general_docs-health-audit](results/2026-01-27_general_docs-health-audit/) |
+| 2026-01-27 | General Review | self-contained-systems | Abandoned (>60d) | [2026-01-27_general_self-contained-systems](results/2026-01-27_general_self-contained-systems/) |
 | 2026-01-27 | General Review | path-centralization | Led to Project | [2026-01-27_general_path-centralization](results/2026-01-27_general_path-centralization/) |
-| 2026-01-27 | General Review | legacy-directory-assessment | In Progress | [2026-01-27_general_legacy-directory-assessment](results/2026-01-27_general_legacy-directory-assessment/) |
-| 2026-01-27 | General Review | legacy-cleanup-verification | In Progress | [2026-01-27_general_legacy-cleanup-verification](results/2026-01-27_general_legacy-cleanup-verification/) |
-| 2026-01-26 | Consistency Review | naming-inconsistencies | In Progress | [2026-01-26_consistency_naming-inconsistencies](results/2026-01-26_consistency_naming-inconsistencies/) |
-| 2026-01-24 | General Review | maintainability-extensibility-health | In Progress | [2026-01-24_general_maintainability-extensibility-health](results/2026-01-24_general_maintainability-extensibility-health/) |
-| 2026-01-23 | Test Coverage Review | full-codebase-coverage-gaps | In Progress | [2026-01-23_test-coverage_full-codebase-coverage-gaps](results/2026-01-23_test-coverage_full-codebase-coverage-gaps/) |
+| 2026-01-27 | General Review | legacy-directory-assessment | Abandoned (>60d) | [2026-01-27_general_legacy-directory-assessment](results/2026-01-27_general_legacy-directory-assessment/) |
+| 2026-01-27 | General Review | legacy-cleanup-verification | Abandoned (>60d) | [2026-01-27_general_legacy-cleanup-verification](results/2026-01-27_general_legacy-cleanup-verification/) |
+| 2026-01-26 | Consistency Review | naming-inconsistencies | Abandoned (>60d) | [2026-01-26_consistency_naming-inconsistencies](results/2026-01-26_consistency_naming-inconsistencies/) |
+| 2026-01-24 | General Review | maintainability-extensibility-health | Abandoned (>60d) | [2026-01-24_general_maintainability-extensibility-health](results/2026-01-24_general_maintainability-extensibility-health/) |
+| 2026-01-23 | Test Coverage Review | full-codebase-coverage-gaps | Abandoned (>60d) | [2026-01-23_test-coverage_full-codebase-coverage-gaps](results/2026-01-23_test-coverage_full-codebase-coverage-gaps/) |
 
 ---
 
 ## Update Reviews
 | Update Date | Original Review | Original Date | Progress | Link |
 |-------------|-----------------|---------------|----------|------|
-| 2026-01-31 | [2026-01-31_general_resource-system-legacy-audit](results/2026-01-31_general_resource-system-legacy-audit/) | 2026-01-31 | In Progress | [2026-01-31_update_resource-system-legacy-audit](results/2026-01-31_update_resource-system-legacy-audit/) |
+| 2026-01-31 | [2026-01-31_general_resource-system-legacy-audit](results/2026-01-31_general_resource-system-legacy-audit/) | 2026-01-31 | Abandoned (>60d) | [2026-01-31_update_resource-system-legacy-audit](results/2026-01-31_update_resource-system-legacy-audit/) |
 | 2026-01-27 | [2026-01-26_consistency_naming-inconsistencies](results/2026-01-26_consistency_naming-inconsistencies/) | 2026-01-26 | 29% Fixed (4/14) + 6 NEW | [2026-01-27_update_naming-inconsistencies](results/2026-01-27_update_naming-inconsistencies/) |
 
 ---
