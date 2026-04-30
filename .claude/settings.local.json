@@ -10,7 +10,7 @@
       "Bash(Select-String -Pattern \"FAILED|test_structure_visibility\" -Context 0,3)",
       "Bash(for i in {1..5})",
       "Bash(for i in {1..10})",
-      "Bash(do pytest \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\ui\\\\test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic\" -q)",
+      "Bash(do pytest \"c:\\\\Developer\\\\StarshipBattles\\\\tests\\\\unit\\\\ui\\\\test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic\" -q)",
       "Bash(do pytest tests/unit/ -q)",
       "Bash(python:*)",
       "Bash(Select-String -Pattern \"DERELICT|Bridge|Command and Control\")",
@@ -24,12 +24,11 @@
       "Bash(dir:*)",
       "Bash(ping:*)",
       "Bash(taskkill:*)",
-      "Bash(if exist \"combat_lab\\\\scenarios\\\\__pycache__\" rmdir /s /q \"combat_lab\\\\scenarios\\\\__pycache__\")",
       "Bash(find:*)",
       "Bash([ -f combat_lab.log ])",
       "Bash(git diff:*)",
       "Bash(git checkout:*)",
-      "Bash(if not exist \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\services\" mkdir \"c:\\\\Dev\\\\Starship Battles\\\\tests\\\\unit\\\\services\")",
+      "Bash(if not exist \"c:\\\\Developer\\\\StarshipBattles\\\\tests\\\\unit\\\\services\" mkdir \"c:\\\\Developer\\\\StarshipBattles\\\\tests\\\\unit\\\\services\")",
       "Bash(while read file)",
       "Bash(do if ! grep -q \"log_\\\\|logger\\\\|logging\\\\.\" \"$file\")",
       "Bash(then echo \"$file\")",
@@ -37,19 +36,19 @@
       "Bash(where:*)",
       "Bash(move:*)",
       "Bash(pip show:*)",
-      "Read(//c/Dev/Starship Battles/**)",
+      "Read(//c/Developer/StarshipBattles/**)",
       "Bash(claude:*)",
       "Bash(radon cc:*)",
       "Bash(git log:*)",
       "Bash(git ls-files:*)",
-      "Bash(git -C \"c:\\\\Dev\\\\Starship Battles\" log --all --oneline -- saves/)",
+      "Bash(git -C \"c:\\\\Developer\\\\StarshipBattles\" log --all --oneline -- saves/)",
       "Bash(for seed:*)",
       "Bash(do python:*)",
       "Read(//c/Users/rossr/AppData/Roaming/Python/Python311/site-packages/pygame_gui/elements/**)"
     ],
     "additionalDirectories": [
-      "c:\\Dev\\Starship Battles\\Projects\\active_projects\\PROJ-216\\findings",
-      "c:\\Dev\\Starship Battles\\Projects\\active_projects\\PROJ-218\\findings"
+      "c:\\Developer\\StarshipBattles\\Projects\\active_projects\\PROJ-216\\findings",
+      "c:\\Developer\\StarshipBattles\\Projects\\active_projects\\PROJ-218\\findings"
     ]
   }
 }

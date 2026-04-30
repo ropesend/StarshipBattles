@@ -386,6 +386,67 @@ def _exit_code(reports: list[FileReport]) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Apply mode
+# ---------------------------------------------------------------------------
+
+
+def _apply_to_file(path: Path, report: FileReport) -> tuple[int, list[str]]:
+    """Rewrite STALE_WARN entries in `path` using their proposed_rewrite.
+
+    Returns (number_of_rewrites, error_messages). Refuses to apply if any
+    classification is SECRET or DANGEROUS — those need human handling.
+    """
+    errors: list[str] = []
+    blockers = [c for c in report.classifications if c.level in {"SECRET", "DANGEROUS", "EXTERNAL_REVIEW"}]
+    if blockers:
+        for c in blockers:
+            errors.append(f"{path}: refusing to apply because of {c.level}: {c.rule_text}")
+        return 0, errors
+
+    rewrites = {
+        c.rule_text: c.proposed_rewrite
+        for c in report.classifications
+        if c.level == "STALE_WARN" and c.proposed_rewrite is not None
+    }
+    if not rewrites:
+        return 0, []
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        errors.append(f"{path}: parse error: {exc}")
+        return 0, errors
+
+    backup = path.with_suffix(path.suffix + f".backup.{_safe_now()}")
+    try:
+        backup.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
+    except OSError as exc:
+        errors.append(f"{path}: backup failed: {exc}")
+        return 0, errors
+
+    rewrite_count = 0
+
+    permissions = data.get("permissions") if isinstance(data, dict) else None
+    if isinstance(permissions, dict):
+        for key in ("allow", "deny", "ask", "additionalDirectories"):
+            entries = permissions.get(key)
+            if not isinstance(entries, list):
+                continue
+            for i, entry in enumerate(entries):
+                if isinstance(entry, str) and entry in rewrites:
+                    entries[i] = rewrites[entry]
+                    rewrite_count += 1
+
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    return rewrite_count, errors
+
+
+def _safe_now() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -405,10 +466,29 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Sanitize Claude settings files (dry-run by default)")
     parser.add_argument("--repo-root", type=Path, default=None)
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument("--apply", action="store_true",
+                        help="Rewrite STALE_WARN entries in place (refuses if SECRET/DANGEROUS/EXTERNAL_REVIEW present).")
     args = parser.parse_args(argv)
 
     repo_root = args.repo_root.resolve() if args.repo_root else _find_repo_root(Path.cwd())
     reports = [scan_file(repo_root / target) for target in TARGET_FILES]
+
+    if args.apply:
+        total_rewrites = 0
+        all_errors: list[str] = []
+        for report in reports:
+            if report.missing or report.parse_error:
+                continue
+            rewrites, errors = _apply_to_file(report.path, report)
+            total_rewrites += rewrites
+            all_errors.extend(errors)
+        if all_errors:
+            for err in all_errors:
+                print(err, file=sys.stderr)
+            return 1
+        print(f"Applied {total_rewrites} rewrite(s).")
+        # Re-scan after apply so the printed report reflects post-apply state.
+        reports = [scan_file(repo_root / target) for target in TARGET_FILES]
 
     if args.format == "json":
         print(_format_json_report(reports))

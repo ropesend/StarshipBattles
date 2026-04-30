@@ -46,6 +46,10 @@ MagicMock/
 # Agent coordination per-checkout state (install IDs, local usage logs).
 AgentCoordination/local/
 
+# Sanitizer backups for Claude settings files.
+.claude/settings.json.backup.*
+.claude/settings.local.json.backup.*
+
 # Generated analysis output
 dead_code_candidates.txt
 

@@ -6,56 +6,56 @@
       "kind": "absolute_path",
       "line": 13,
       "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\\\\\Dev\\\\\\\\Starship",
+      "pattern": "c:\\\\\\\\Developer\\\\\\\\StarshipBattles\\\\\\\\tests\\\\\\\\unit\\\\\\\\ui\\\\\\\\test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic\\",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 32,
+      "line": 31,
       "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\\\\\Dev\\\\\\\\Starship",
+      "pattern": "c:\\\\\\\\Developer\\\\\\\\StarshipBattles\\\\\\\\tests\\\\\\\\unit\\\\\\\\services\\",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 32,
+      "line": 31,
       "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\\\\\Dev\\\\\\\\Starship",
+      "pattern": "c:\\\\\\\\Developer\\\\\\\\StarshipBattles\\\\\\\\tests\\\\\\\\unit\\\\\\\\services\\",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 40,
+      "line": 39,
       "path": ".claude/settings.local.json",
-      "pattern": "//c/Dev/Starship",
+      "pattern": "//c/Developer/StarshipBattles/**",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 45,
+      "line": 44,
       "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\\\\\Dev\\\\\\\\Starship",
+      "pattern": "c:\\\\\\\\Developer\\\\\\\\StarshipBattles\\",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 48,
+      "line": 47,
       "path": ".claude/settings.local.json",
       "pattern": "//c/Users/rossr/AppData/Roaming/Python/Python311/site-packages/pygame_gui/elements/**",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 51,
+      "line": 50,
       "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\Dev\\\\Starship",
+      "pattern": "c:\\\\Developer\\\\StarshipBattles\\\\Projects\\\\active_projects\\\\PROJ-216\\\\findings",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 52,
+      "line": 51,
       "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\Dev\\\\Starship",
+      "pattern": "c:\\\\Developer\\\\StarshipBattles\\\\Projects\\\\active_projects\\\\PROJ-218\\\\findings",
       "severity": "warn"
     }
   ],

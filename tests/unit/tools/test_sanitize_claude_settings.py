@@ -251,3 +251,89 @@ def test_main_emits_json_report_when_requested(tmp_path: Path, capsys: pytest.Ca
         any(c["level"] == "STALE_WARN" for c in entry["classifications"])
         for entry in data["files"]
     )
+
+
+# ---------------------------------------------------------------------------
+# Apply mode
+# ---------------------------------------------------------------------------
+
+
+def test_apply_rewrites_stale_entries_in_allow_list(tmp_path: Path) -> None:
+    settings = tmp_path / ".claude" / "settings.local.json"
+    _write_settings(
+        settings,
+        rules=[
+            "Bash(pytest:*)",
+            "Read(//c/Dev/Starship Battles/**)",
+        ],
+    )
+
+    rc = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc == 0
+
+    data = json.loads(settings.read_text(encoding="utf-8"))
+    rules = data["permissions"]["allow"]
+    assert "Bash(pytest:*)" in rules
+    assert "Read(//c/Dev/Starship Battles/**)" not in rules
+    assert "Read(//c/Developer/StarshipBattles/**)" in rules
+
+
+def test_apply_creates_backup(tmp_path: Path) -> None:
+    settings = tmp_path / ".claude" / "settings.local.json"
+    _write_settings(settings, rules=["Read(//c/Dev/Starship Battles/**)"])
+
+    rc = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc == 0
+    backups = list(settings.parent.glob("settings.local.json.backup.*"))
+    assert backups, "Expected at least one backup file after --apply"
+
+
+def test_apply_refuses_when_secret_present(tmp_path: Path) -> None:
+    settings = tmp_path / ".claude" / "settings.local.json"
+    _write_settings(settings, rules=["Bash(echo AKIAIOSFODNN7EXAMPLE)"])
+
+    before = settings.read_text(encoding="utf-8")
+    rc = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc != 0
+    # File must not be modified when a SECRET is found.
+    assert settings.read_text(encoding="utf-8") == before
+
+
+def test_apply_refuses_when_dangerous_present(tmp_path: Path) -> None:
+    settings = tmp_path / ".claude" / "settings.local.json"
+    _write_settings(settings, rules=["Bash(rm -rf:*)", "Read(//c/Dev/Starship Battles/**)"])
+
+    before = settings.read_text(encoding="utf-8")
+    rc = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc != 0
+    assert settings.read_text(encoding="utf-8") == before
+
+
+def test_apply_is_idempotent(tmp_path: Path) -> None:
+    settings = tmp_path / ".claude" / "settings.local.json"
+    _write_settings(settings, rules=["Read(//c/Dev/Starship Battles/**)"])
+
+    rc1 = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
+    rc2 = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc1 == 0
+    assert rc2 == 0
+    data = json.loads(settings.read_text(encoding="utf-8"))
+    assert "Read(//c/Developer/StarshipBattles/**)" in data["permissions"]["allow"]
+    # Second run finds nothing to rewrite.
+
+
+def test_apply_preserves_unchanged_entries(tmp_path: Path) -> None:
+    settings = tmp_path / ".claude" / "settings.local.json"
+    _write_settings(
+        settings,
+        rules=[
+            "Bash(pytest:*)",
+            "Bash(grep:*)",
+            "Read(//c/Dev/Starship Battles/**)",
+        ],
+    )
+    rc = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
+    assert rc == 0
+    rules = json.loads(settings.read_text(encoding="utf-8"))["permissions"]["allow"]
+    assert "Bash(pytest:*)" in rules
+    assert "Bash(grep:*)" in rules
