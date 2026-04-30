@@ -337,16 +337,18 @@ When faced with choices, prefer:
 
 ## Skill Usage Logging
 
-When you invoke a `claude-*` skill (any of the 32 skills under `.claude/skills/`), call the usage counter once with `--agent claude`:
+Claude usage logging is **automatic** for `claude-*` skills via two hooks in `.claude/settings.json`:
+
+- `UserPromptExpansion` (matcher `*`) fires when the user types `/claude-<name>` and exposes `command_name`.
+- `PreToolUse` (matcher `Skill`) fires when Claude calls the Skill tool itself.
+
+Both events run `Tools/agent_coordination/claude_skill_usage_hook.py`, which filters to the `claude-` prefix and calls `log_skill_usage.py --agent claude --skill <name>`. No manual invocation needed.
+
+If you want to log a usage manually (for example while testing), the script is still callable directly:
 
 ```bash
 python Tools/agent_coordination/log_skill_usage.py --agent claude --skill claude-proj-start
 ```
-
-Substitute the full prefixed skill name (e.g. `claude-ticket-work`, `claude-proj-extract-phase`). The script:
-- Auto-creates `AgentCoordination/local/install_id.json` (UUID, gitignored) on first call.
-- Increments the per-skill, per-agent counter at `AgentCoordination/generated/skill_usage/by_install/<install_id>.json`.
-- Records `last_used` timestamp.
 
 Counters are **advisory only** — they identify cleanup candidates and never authorize automatic deletion. See `AGENTS.md §"Skill Usage Logging"` and `Tools/agent_coordination/README.md §"Skill usage tracking"` for full context.
 

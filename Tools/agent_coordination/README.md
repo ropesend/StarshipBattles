@@ -4,9 +4,14 @@ Generate tracked coordination artifacts for agent-facing repo surfaces.
 
 ## Purpose
 
-This tool records observed facts about Codex, Claude, OpenCode, and
-Antigravity skill/config surfaces. The generated inventory is an input to the
-later validator and prefix migration work; it does not enforce policy itself.
+This directory contains the Starship Battles agent coordination tooling:
+inventory, baseline, prefix migration, settings sanitizer, validator, prefix
+checker, usage counters, and a back-fill helper for legacy doc rewrites.
+
+The atomic prefix migration completed at commit `c1b774b29`. All eleven
+validator checks now pass on the live repo. The inventory and baseline are
+generated artifacts that record observed state; the validator enforces
+policy.
 
 ## Requirements
 
@@ -59,11 +64,12 @@ strategy must be done with a manifest update, not a silent reorder.
 ## Claude settings sanitizer
 
 ```powershell
-python Tools/agent_coordination/sanitize_claude_settings.py
+python Tools/agent_coordination/sanitize_claude_settings.py            # dry-run report
 python Tools/agent_coordination/sanitize_claude_settings.py --format json
+python Tools/agent_coordination/sanitize_claude_settings.py --apply    # rewrite STALE_WARN entries
 ```
 
-Dry-run only. Classifies entries in `.claude/settings.json` and
+Dry-run by default. Classifies entries in `.claude/settings.json` and
 `.claude/settings.local.json` as one of:
 
 - `OK` — repo-relative, current Starship Battles checkout, or known-safe system library
@@ -78,9 +84,10 @@ Exit codes:
 - `1` — at least one DANGEROUS, SECRET, or EXTERNAL_REVIEW finding.
 - `2` — file parse error.
 
-Apply mode is intentionally not implemented yet. Per the final coordination
-plan, apply only lands once the dry-run reports have been reviewed and the
-classification rules have been exercised on the real settings file.
+`--apply` rewrites every `STALE_WARN` entry to its `proposed_rewrite` form
+and creates a timestamped `.backup.<UTC>` alongside the source file. It
+**refuses** to apply if any classification is `SECRET`, `DANGEROUS`, or
+`EXTERNAL_REVIEW`; clear those manually first. Idempotent.
 
 ## Skill usage tracking
 
@@ -103,10 +110,24 @@ candidates; they never authorize automatic deletion.
 - Allowed `--agent` values: `claude`, `anti`, `ocode`, `codex`. Skill names
   must satisfy the Agent Skills regex `^[a-z0-9]+(-[a-z0-9]+)*$`.
 
-For Claude Code the natural integration is a skill-scoped hook in
-`.claude/settings.json` that calls `log_skill_usage.py` with the matched
-skill name. Other agents call the script explicitly; transcript-scanning is
-a viable alternative if hook support is missing.
+### Hook automation
+
+Claude Code's `UserPromptExpansion` hook fires when the user types
+`/<skill-name>`, exposing `command_name` in stdin JSON. The repo's
+`.claude/settings.json` wires that event to
+`Tools/agent_coordination/claude_skill_usage_hook.py`, which filters to
+`claude-*` skills and calls `log_skill_usage.py` automatically. No agent
+self-reporting required for Claude Code skill usage.
+
+Other agents:
+
+- **Codex** has no documented `Skill` event, so Codex skills are logged
+  manually per `.agents/CODEX.md §"Skill Usage Logging"`.
+- **OpenCode** supports plugin hooks (TypeScript) but no declarative
+  skill-event hook. For now, OpenCode/DeepSeek users invoke the script
+  manually per `AGENTS.md §"Skill Usage Logging"`. Transcript scanning is a
+  viable future alternative.
+- **Antigravity** is lower priority; manual invocation only.
 
 ## Test baseline `git_sha` semantics
 

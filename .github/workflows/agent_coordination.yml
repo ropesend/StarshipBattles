@@ -39,6 +39,7 @@ jobs:
             tests/unit/tools/test_agent_skill_prefix_checker.py \
             tests/unit/tools/test_agent_skill_prefix_renamer.py \
             tests/unit/tools/test_sanitize_claude_settings.py \
+            tests/unit/tools/test_skill_usage_tracking.py \
             tests/unit/tools/test_validate_agent_surfaces.py \
             -q
       - name: Prefix compliance check

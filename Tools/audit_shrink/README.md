@@ -70,7 +70,7 @@ The `audit-shrink` skill launches 3 agents:
 Single command — loads the skill and it handles everything:
 
 ```
-/audit-shrink
+/ocode-audit-shrink
 ```
 
 This automatically:

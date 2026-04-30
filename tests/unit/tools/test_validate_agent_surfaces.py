@@ -476,6 +476,95 @@ def test_unmarked_duplication_ignores_short_decorative_lines(tmp_path: Path) -> 
     assert not any(f.rule == "rein.unmarked_duplication" for f in findings)
 
 
+# ---------------------------------------------------------------------------
+# Legacy slash-command detection
+# ---------------------------------------------------------------------------
+
+
+def test_legacy_slash_pass_when_only_prefixed_commands(tmp_path: Path) -> None:
+    (tmp_path / "Projects").mkdir()
+    (tmp_path / "Projects" / "README.md").write_text(
+        "Use `/claude-proj-start` to begin a project.\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert not any(f.severity == "fail" for f in findings)
+
+
+def test_legacy_slash_fails_on_unprefixed_command_in_readme(tmp_path: Path) -> None:
+    (tmp_path / "Projects").mkdir()
+    (tmp_path / "Projects" / "README.md").write_text(
+        "Use `/proj-start` to begin.\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert any(f.rule == "legacy.unprefixed_slash" for f in findings)
+
+
+def test_legacy_slash_fails_on_dollar_form(tmp_path: Path) -> None:
+    (tmp_path / ".agents").mkdir()
+    (tmp_path / ".agents" / "CODEX.md").write_text(
+        "Run $proj-start to begin.\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert any(f.rule == "legacy.unprefixed_dollar" for f in findings)
+
+
+def test_legacy_slash_fails_in_tools_readme(tmp_path: Path) -> None:
+    (tmp_path / "Tools" / "audit_shrink").mkdir(parents=True)
+    (tmp_path / "Tools" / "audit_shrink" / "README.md").write_text(
+        "Then run `/audit-shrink` to start phase 2.\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert any(f.rule == "legacy.unprefixed_slash" for f in findings)
+
+
+def test_legacy_slash_skips_archived_paths(tmp_path: Path) -> None:
+    archived = tmp_path / "Tracking" / "bugs" / "archived"
+    archived.mkdir(parents=True)
+    (archived / "BUG-9.md").write_text("Closed via `/ticket-close bug 9`.\n", encoding="utf-8")
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert findings == []
+
+
+def test_legacy_slash_skips_agent_coordination_history(tmp_path: Path) -> None:
+    coord = tmp_path / "AgentCoordination"
+    coord.mkdir()
+    (coord / "claude_code_v2_comments.md").write_text("Old: `/proj-start`.\n", encoding="utf-8")
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert findings == []
+
+
+def test_legacy_slash_skips_docs_ignore(tmp_path: Path) -> None:
+    ignore = tmp_path / "docs" / "_ignore"
+    ignore.mkdir(parents=True)
+    (ignore / "scratch.md").write_text("`/proj-start` here\n", encoding="utf-8")
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert findings == []
+
+
+def test_legacy_slash_fails_in_active_project_manifest(tmp_path: Path) -> None:
+    proj = tmp_path / "Projects" / "active_projects" / "PROJ-300"
+    proj.mkdir(parents=True)
+    (proj / "manifest.md").write_text("Run `/ticket-work bug 5`.\n", encoding="utf-8")
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert any(f.rule == "legacy.unprefixed_slash" for f in findings)
+
+
+def test_legacy_slash_does_not_match_localhost_or_unrelated_words(tmp_path: Path) -> None:
+    # `loc` is a legacy skill name, but `/localhost`, `/locator`, etc. should
+    # not be flagged because they are not exact matches.
+    (tmp_path / "Tools" / "x").mkdir(parents=True)
+    (tmp_path / "Tools" / "x" / "README.md").write_text(
+        "Visit `/localhost:8080`. Then `/locator/api`. Both are unrelated.\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_legacy_slash_commands(tmp_path)
+    assert findings == []
+
+
 def test_usage_counter_shape_passes_when_no_usage_files(tmp_path: Path) -> None:
     _make_repo(tmp_path)
     findings = validator.check_usage_counter_shape(tmp_path)

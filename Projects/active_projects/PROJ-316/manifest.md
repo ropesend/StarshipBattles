@@ -1,6 +1,6 @@
 # PROJ-316 File Manifest
 
-> Generated during project setup. Used by /proj-parallel for conflict detection.
+> Generated during project setup. Used by /claude-proj-parallel for conflict detection.
 > Updated if implementation discovers additional files.
 
 ## Files

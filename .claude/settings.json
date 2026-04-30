@@ -16,6 +16,30 @@
           }
         ]
       }
+    ],
+    "UserPromptExpansion": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python Tools/agent_coordination/claude_skill_usage_hook.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python Tools/agent_coordination/claude_skill_usage_hook.py",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }

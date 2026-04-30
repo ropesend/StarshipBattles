@@ -604,6 +604,138 @@ def check_stale_surfaces(repo_root: Path) -> list[Finding]:
 # ---------------------------------------------------------------------------
 
 
+LEGACY_BARE_NAMES = (
+    # Antigravity-only originals
+    "proj-close",
+    "proj-sequential",
+    "debug-sequential",
+    "deep-dive-sequential",
+    # OpenCode original
+    "audit-shrink",
+    # Claude-only originals
+    "proj-parallel",
+    "debug-parallel",
+    "deep-dive-parallel",
+    # Shared originals (existed in both Claude and Antigravity)
+    "analysis-complexity",
+    "analysis-dead-code",
+    "analysis-sweep",
+    "fix-crash",
+    "loc",
+    "proj-add-to-plan",
+    "proj-archive",
+    "proj-audit",
+    "proj-continue",
+    "proj-extract-phase",
+    "proj-manage-plan",
+    "proj-reset-baseline",
+    "proj-review",
+    "proj-revise",
+    "proj-start",
+    "qa-feedback",
+    "qa-triage",
+    "ticket-add",
+    "ticket-answer",
+    "ticket-batch-close",
+    "ticket-close",
+    "ticket-continue",
+    "ticket-deep-dive",
+    "ticket-next",
+    "ticket-reject",
+    "ticket-update",
+    "ticket-work",
+    "triage-to-proj",
+    "validate-designs",
+)
+# Sort longest-first so e.g. `proj-extract-phase` matches before `proj-`.
+_LEGACY_NAME_ALT = "|".join(re.escape(name) for name in sorted(LEGACY_BARE_NAMES, key=len, reverse=True))
+LEGACY_SLASH_RE = re.compile(rf"(?<![A-Za-z0-9_-])/(?P<name>{_LEGACY_NAME_ALT})\b")
+LEGACY_DOLLAR_RE = re.compile(rf"(?<![A-Za-z0-9_-])\$(?P<name>{_LEGACY_NAME_ALT})\b")
+
+LEGACY_SCAN_TARGETS = (
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".agents/CODEX.md",
+    "Projects/README.md",
+    "Tracking/README.md",
+    "docs/README.md",
+)
+LEGACY_SCAN_GLOBS = (
+    "Tools/*/README.md",
+    "Projects/protocols/*.md",
+    "Tracking/protocols/*.md",
+    "Projects/active_projects/*/manifest.md",
+    "Projects/active_projects/*/plan.md",
+    "Projects/active_projects/*/design.md",
+    "Tracking/bugs/active/*.md",
+    "Tracking/features/active/*.md",
+)
+LEGACY_SCAN_EXCLUDE_DIRS = (
+    "AgentCoordination",
+    "docs/_ignore",
+    "Projects/archived_projects",
+    "Projects/deep_archive",
+    "Tracking/bugs/archived",
+    "Tracking/features/archived",
+)
+
+
+def _legacy_scan_files(repo_root: Path) -> list[Path]:
+    candidates: set[Path] = set()
+    for rel in LEGACY_SCAN_TARGETS:
+        path = repo_root / rel
+        if path.is_file():
+            candidates.add(path)
+    for pattern in LEGACY_SCAN_GLOBS:
+        for path in repo_root.glob(pattern):
+            if path.is_file():
+                candidates.add(path)
+    # Also scan SKILL.md files (current state, not archived).
+    for surface in (".claude/skills", ".agent/skills", ".agents/skills", ".opencode/skills"):
+        d = repo_root / surface
+        if d.is_dir():
+            for skill_md in d.rglob("SKILL.md"):
+                candidates.add(skill_md)
+    # Apply exclusions.
+    excluded: list[Path] = []
+    for path in candidates:
+        rel = path.relative_to(repo_root).as_posix()
+        if any(rel.startswith(prefix + "/") or rel == prefix for prefix in LEGACY_SCAN_EXCLUDE_DIRS):
+            continue
+        excluded.append(path)
+    return sorted(excluded, key=lambda p: p.as_posix())
+
+
+def check_legacy_slash_commands(repo_root: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    for path in _legacy_scan_files(repo_root):
+        rel = path.relative_to(repo_root).as_posix()
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for line_no, line in enumerate(text.splitlines(), start=1):
+            for match in LEGACY_SLASH_RE.finditer(line):
+                findings.append(Finding(
+                    rule="legacy.unprefixed_slash", severity="fail",
+                    message=(
+                        f"Legacy unprefixed slash invocation `/{match.group('name')}` "
+                        f"in current docs. Use the prefixed form (claude-, anti-, ocode-, codex-)."
+                    ),
+                    path=rel, line=line_no,
+                ))
+            for match in LEGACY_DOLLAR_RE.finditer(line):
+                findings.append(Finding(
+                    rule="legacy.unprefixed_dollar", severity="fail",
+                    message=(
+                        f"Legacy unprefixed `$` invocation `${match.group('name')}` "
+                        f"in current docs. Use the prefixed form."
+                    ),
+                    path=rel, line=line_no,
+                ))
+    return findings
+
+
 def check_usage_counter_shape(repo_root: Path) -> list[Finding]:
     """Validate the per-install usage counter files and the summary."""
     by_install_dir = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
@@ -733,6 +865,7 @@ CHECKS = (
     ("stale_surfaces", check_stale_surfaces),
     ("claude_settings_policy", check_claude_settings_policy),
     ("usage_counter_shape", check_usage_counter_shape),
+    ("legacy_slash_commands", check_legacy_slash_commands),
 )
 
 
