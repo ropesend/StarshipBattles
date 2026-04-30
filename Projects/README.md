@@ -61,10 +61,7 @@ ticket-update ──────────► Tracking/protocols/04_update...
 ticket-reject ──────────► Tracking/protocols/05_reject...
 ticket-answer ──────────► Tracking/protocols/06_answer...
 
-Loop Workers ───────────► Projects/protocols/WORKER_TEMPLATE.md
-  refactor_loop/WORKER.md
-  continuous_loop/CYCLE_WORKER.md
-  complexity_loop/REFACTOR_WORKER.md
+Loop Workers (retired) ─► see _marked_for_deletion_2026-05-29/Projects/
 ```
 
 **Key principle:** Skills are thin entry points that set configuration and reference protocols. Protocols contain the detailed workflow logic. This means changes to workflow behavior only need to be made in one place (the protocol).
@@ -116,29 +113,22 @@ The ticket system uses unified skills and protocols that handle both bugs and fe
 
 ---
 
-## Loop Systems
+## Loop Systems (retired 2026-04-29)
 
-Three automated loop systems execute work without human interaction. Each uses a thin WORKER.md that references the shared `Projects/protocols/WORKER_TEMPLATE.md`.
+Three CLI loop systems (`refactor_loop`, `complexity_loop`, `continuous_loop`)
+were built between January and March 2026 but are no longer in use. The last
+activity across all three was between 2026-02-13 and 2026-03-01. They have
+been staged for deletion at `_marked_for_deletion_2026-05-29/Projects/`;
+permanent deletion happens after the 30-day cooling-off period ends.
 
-| Loop | Purpose | Plan File | When to Use |
-|------|---------|-----------|-------------|
-| **refactor_loop** | Execute queued refactoring projects | `refactor_loop/refactor_plan.md` | User-curated list of projects to execute sequentially |
-| **continuous_loop** | Autonomous improvement cycles | `continuous_loop/cycle_plan.md` | Sweep → find issues → create projects → execute → repeat |
-| **complexity_loop** | Reduce cyclomatic complexity | `complexity_loop/cycle_plan.md` | Target high-complexity functions for automated refactoring |
+The active project workflow operates without them. To restart automated work
+in the future, decide whether to revive one of the staged loops (the
+critical-review report has the rationale for archival) or build a new
+automation layer with the lessons from those three.
 
-### Running a loop
-```bash
-# Refactor loop
-./Projects/refactor_loop/loop_runner.sh    # or .ps1 on Windows
-
-# Continuous loop
-powershell ./Projects/continuous_loop/continuous_loop.ps1
-
-# Complexity loop
-powershell ./Projects/complexity_loop/complexity_loop.ps1
-```
-
-Each loop iteration: reads plan → finds next incomplete item → executes one phase or audit → updates plan → commits → exits. The shell script restarts for the next iteration.
+If you were directed to this section by an old WORKER.md path, the
+WORKER.md files now live in the staging directory:
+`_marked_for_deletion_2026-05-29/Projects/<loop>/WORKER.md`.
 
 ---
 

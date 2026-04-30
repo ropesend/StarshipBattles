@@ -4,14 +4,11 @@
 
 **Goal:** Execute refactoring work in a stateless loop, integrating seamlessly with the audit system and maintaining long-term code quality.
 
-> **Plan File:** This protocol is used by multiple loop systems. The actual plan
-> file path is specified by the caller's system prompt (e.g., WORKER.md or
-> CYCLE_WORKER.md). Wherever this protocol says "the master plan", it means
-> whichever plan file your system prompt specifies:
-> - `Projects/refactor_loop/refactor_plan.md` (manual refactor loop)
-> - `Projects/continuous_loop/cycle_plan.md` (continuous improvement loop)
->
-> Always defer to your system prompt for the correct file path.
+> **Status (2026-04-29):** The three CLI loops that originally consumed this
+> protocol (`refactor_loop`, `complexity_loop`, `continuous_loop`) were
+> retired and staged at `_marked_for_deletion_2026-05-29/Projects/`. This
+> protocol is preserved as a reference for any future automation layer; the
+> plan-file path is whatever the caller's system prompt specifies.
 
 ---
 
