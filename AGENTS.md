@@ -79,6 +79,7 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 - Tickets (GitHub Issues, parallel): https://github.com/ropesend/StarshipBattles/issues. Skills: `/claude-gi-*`. New tickets should go here unless the legacy system is more convenient. Both systems run side-by-side; legacy will be sunset on user signal.
 - Reviews: `Reviews/protocols/` and `Reviews/results/`. Historical audit reports stored here.
 - Archive: `Projects/archived_projects/` and `Projects/deep_archive/` — do not reference as current.
+- Scratchpad: `AgentCoordination/Scratchpad/` (gitignored) — transient agent files. Subdirs: `plans/`, `reviews/`, `reports/`, `handoffs/`, `tmp/`. **Do not write transient files outside the repo.** Persist-worthy artifacts go in tracked dirs (`Projects/`, `docs/`, `Reviews/results/`). Full rules: `AgentCoordination/SCRATCHPAD.md`.
 
 ## Skill Usage Logging
 
