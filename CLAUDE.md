@@ -1,353 +1,95 @@
-# Claude Code - Project Context
+# Claude Code — Project Adapter
 
-This file provides context for Claude Code when working on the Starship Battles project **in interactive mode** (VS Code plugin).
+@AGENTS.md
 
-> **Note:** For automated CLI loop execution, see `Projects/refactor_loop/WORKER.md`. This file is for interactive sessions where you want explanations, questions, and collaborative problem-solving.
+This file is the Claude-Code-specific delta over `AGENTS.md`. Read `AGENTS.md` first; it owns the non-negotiable rules, canonical commands, test infrastructure summary, conventions, architecture overview, and skill-usage policy. This file adds only Claude Code-specific behavior.
 
----
-
-## THREE NON-NEGOTIABLE RULES
-
-These three rules apply to ALL work, ALL tasks, ALL conversations. They are not guidelines — they are hard requirements. Violating any of them is a failed task, even if the code works.
-
-### Rule 1: Test-Driven Development — ALWAYS
-
-**Write tests BEFORE implementation. No exceptions.**
-
-The TDD cycle is:
-1. **Write a failing test** that describes the behavior you want
-2. **Run the test** — confirm it fails for the right reason
-3. **Write the minimum code** to make it pass
-4. **Run the test** — confirm it passes
-5. **Refactor** while keeping tests green
-6. **Run the full relevant test suite** before considering the task done
-
-**If you catch yourself writing implementation code without a failing test, STOP.** Delete or stash what you wrote, write the test first, then reimplement. This is not optional.
-
-- DO NOT write implementation code first and then "backfill" tests after
-- DO NOT write tests that are designed to pass against code you already wrote — that's confirmation bias, not TDD
-- DO NOT skip the "run tests to see them fail" step — a test that has never failed has never proven anything
-- DO NOT treat tests as a chore to do at the end — they are the FIRST thing you do
-
-DO:
-- Start every task by asking "what test would prove this works?"
-- Write tests that would catch regressions if someone broke this feature
-- Test edge cases, not just the happy path
-- Run tests incrementally as you work, not just at the end
-
-**Reminder at every stage:** Before writing any function, class, or method — ask yourself: "Have I written a test for this yet?" If no, write the test first.
-
-### Rule 2: Documentation — CHECK Before, UPDATE After
-
-**Read the relevant docs before starting. Update them when you're done. Every time.**
-
-**BEFORE starting any task:**
-1. Read [`docs/README.md`](docs/README.md) to identify which docs are relevant
-2. Read the relevant docs (always 01-03, plus task-specific ones)
-3. Understand the existing architecture and patterns before proposing changes
-
-**AFTER completing any task that changes behavior, architecture, or patterns:**
-1. Identify which docs are affected by your changes
-2. Update those docs in the same commit as your code changes
-3. If you added a new system, pattern, or convention — document it
-
-**If you catch yourself about to commit code without checking whether docs need updating, STOP.** Review your changes against the docs before committing.
-
-- DO NOT start coding without reading the relevant architecture docs first
-- DO NOT finish a task and forget to update documentation
-- DO NOT assume docs are up to date — verify by reading them
-- DO NOT leave documentation updates for "later" — later never comes
-- DO NOT silently diverge from documented patterns without raising it
-- DO NOT bump the **Last verified:** date for cosmetic edits (typos, formatting). Bump only when you've actually re-read the file and confirmed it matches current code.
-
-DO:
-- Treat docs as part of the deliverable, not an afterthought
-- When you find a discrepancy between docs and code, STOP and raise it with the user
-- Update docs in the same commit as the code change, not a separate commit
-- When in doubt about whether a doc needs updating, update it
-- Update the **Last verified:** date at the top of any doc you verify or substantively edit. Format: `> **Last verified:** YYYY-MM-DD — <one-sentence summary>`. The date represents an intentional accuracy check, not a cosmetic edit.
-
-**The docs directory is the source of truth.** See the [Documentation First](#documentation-first) section below for the full reading order.
-
-### Rule 3: Clean-Sheet Design — ALWAYS the Right Solution
-
-**Solve the real problem. Never bandaid, never workaround, never "good enough for now."**
-
-When faced with any design decision, ask: **"If I were building this from scratch with no legacy constraints, what would I do?"** Then do that.
-
-- DO NOT override internal methods to work around a bug — fix the bug
-- DO NOT monkey-patch objects to change behavior — redesign the interface
-- DO NOT add special-case `if` branches to handle edge cases that reveal a design flaw — fix the design
-- DO NOT duplicate existing logic because it's "easier than refactoring" — refactor
-- DO NOT suppress errors or default behavior — understand why the error occurs and fix the cause
-- DO NOT add backward compatibility layers — migrate and delete the old system
-- DO NOT accept "this works for now" — if it's not the right design, it doesn't work
-
-DO:
-- Trace problems to their root cause before writing any code
-- Refactor surrounding code if needed to support the clean solution
-- Delete old systems entirely when replacing them (see [System Migration Policy](#system-migration-policy))
-- Propose a larger refactor if the right fix requires it — let the user decide scope
-- When the clean solution is significantly more work, explain the trade-off to the user and recommend the clean approach
-
-**If you catch yourself writing a workaround, STOP.** Ask: "What is the real problem here?" Fix that instead.
+> **Note:** For automated CLI loop execution, see retired loop systems at `_marked_for_deletion_2026-05-29/Projects/`. The active workflow is interactive sessions; this file is the interactive-mode adapter.
 
 ---
 
 ## Your Role: Technical Consultant
 
-When working in VS Code, you are a **helpful technical consultant**, not an automated worker.
+When working in VS Code (or Antigravity), you are a **helpful technical consultant**, not an automated worker. Be conversational and collaborative:
 
-**Be conversational and collaborative:**
-- Explain your changes and reasoning
-- Ask clarifying questions when requirements are unclear
-- Suggest alternatives and trade-offs
-- Provide context and background information
-- Point out potential issues or improvements
-- Discuss design decisions
+- Explain your changes and reasoning.
+- Ask clarifying questions when requirements are unclear.
+- Suggest alternatives and trade-offs.
+- Point out potential issues or improvements.
+- Discuss design decisions.
 
 ---
 
-## Documentation First
+## Reinforcement of `AGENTS.md` rules
 
-**IGNORE `docs/_ignore/`** — This folder contains the user's personal scratch pad notes. Do NOT read, reference, summarize, or act on any files in `docs/_ignore/`. They are not documentation and not relevant to any task.
+The five rules below are restated here because Claude Code's context can grow long and the model loses fidelity past ~50% of the window. The closed validator markers signal these are *intentional* duplications, not drift.
 
-**Before reviewing, understanding, or changing ANY code, read the relevant `docs/` files first.**
+<!-- agent-coordination:reinforcement tdd -->
+**TDD always.** Write or identify the failing test first, run it to confirm failure, then implement. No exceptions. If you catch yourself writing implementation code without a failing test, **stop**. Delete or stash, write the test first, reimplement.
 
-The `docs/` directory is the authoritative source of truth for architecture, patterns, conventions, and system design. Start at [`docs/README.md`](docs/README.md) which provides a reading order by task type.
+<!-- agent-coordination:reinforcement docs-first -->
+<!-- agent-coordination:reinforcement code-doc-consistency -->
+**Read docs before coding; update docs in the same commit.** Start at `docs/README.md`. Always read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`, plus any task-specific docs the README points at. When you change behavior or architecture, update the relevant docs in the same commit. Bump the `Last verified:` date when you've actually re-read a doc against current code.
 
-**Mandatory reading before any work:**
-1. [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md) — Layer structure, package APIs, protocols
-2. [`docs/02_PATTERNS.md`](docs/02_PATTERNS.md) — 27 design patterns with file locations
-3. [`docs/03_CONVENTIONS.md`](docs/03_CONVENTIONS.md) — Naming, file organization, imports
+<!-- agent-coordination:reinforcement root-cause -->
+**Root cause fixes only.** No bandaids, no workarounds, no "good enough for now." If you catch yourself writing a workaround, ask: *what is the real problem here?* and fix that. Refactor surrounding code if the clean fix requires it; propose a larger refactor and let the user decide scope rather than ship a hack.
 
-**Then read task-specific docs** (services, error handling, UI styling, combat, strategy, AI, etc.) as listed in the README.
-
-### Code-Documentation Consistency
-
-All code changes MUST remain consistent with the documentation. This is a two-way contract:
-
-- **When writing code:** Follow the patterns, conventions, and architecture described in `docs/`. If the docs say to use a pattern, use it. If the docs say not to do something, don't do it.
-- **When you find a discrepancy** between the docs and the code: **STOP and raise it with the user.** Do not silently follow stale docs or silently ignore them. Ask which is correct — the code or the docs — and fix whichever is wrong.
-- **When changing architecture or patterns:** Update the relevant doc in the same change. Documentation and code must stay in sync.
+<!-- agent-coordination:reinforcement no-ignore-folder -->
+**Never read `docs/_ignore/`.** It is the user's personal scratch pad. Not documentation; not relevant to any task.
 
 ---
 
-## Project Overview
+## Skill Usage Logging
 
-**Starship Battles** is a turn-based space combat strategy game with:
-- Tactical ship-to-ship combat simulation
-- Strategic galaxy map with fleet management
-- Ship design workshop with component customization
-- AI opponents with various difficulty levels
+Claude usage logging is **automatic** for `claude-*` skills via two hooks in `.claude/settings.json`:
 
-**Tech Stack:**
-- Python **3.13+** (upgraded from 3.10 in PROJ-295 on 2026-04-26; 3.10 EOL was 2026-10-04). Repo declares `requires-python = ">=3.13"` in `pyproject.toml`. Activate the local venv via `.\.venv\Scripts\Activate.ps1` (PowerShell) or `source .venv/Scripts/activate` (bash).
-- Pygame for rendering (pygame-ce 2.5.7)
-- Pytest for testing (15405 tests baseline; 100% return-type annotation coverage in `game/` per PROJ-311)
-- Test parallelization with pytest-xdist; sharded runner at `Tools/test_sharded/test_sharded.py`
+- `UserPromptExpansion` (matcher `*`) fires when the user types `/claude-<name>` and exposes `command_name`.
+- `PreToolUse` (matcher `Skill`) fires when Claude calls the Skill tool itself.
 
-**Display Target:**
-- Minimum resolution: 2560x1600
-- Optimized for: 4K (3840x2160)
-- All UI layout calculations should assume 2560px minimum width
+Both events run `Tools/agent_coordination/claude_skill_usage_hook.py`, which filters to the `claude-` prefix and calls `log_skill_usage.py --agent claude --skill <name>`. No manual invocation needed.
 
-**Spatial Terminology (used throughout codebase and docs):**
-- **System (Star System):** A collection of hexes around a central star, radius 50 hexes (diameter 101). Contains stars, planets, warp points. Defined by `get_system_at_hex(radius=50)` in `game/strategy/data/pathfinding.py`.
-- **Sector:** A single hex on the galaxy map. A system contains many sectors.
-- **System scope:** Abilities/effects that apply across the entire star system (all ~8000 hexes).
-- **Sector scope:** Abilities/effects that apply to a single hex only.
-- The strategy UI has separate panels: the **System panel** (top) shows system-wide info including system effects; the **Sector panel** (middle) shows contents of the clicked hex including sector effects.
+Manual call (testing or override):
 
----
-
-## Project Structure
-
-```
-game/
-├── core/              # Foundation (registries, validation, utilities, protocols, formula_evaluator)
-├── simulation/        # Combat simulation engine
-│   ├── combat/        # Damage pipeline, telemetry, events
-│   ├── components/    # Ship components and abilities
-│   ├── entities/      # Ship, projectile, ship_combat_engine
-│   ├── services/      # registry_loader, ship_materializer
-│   └── systems/       # battle_engine, resource_manager
-├── strategy/          # Galaxy map, fleets, planets, research
-├── ai/                # AI controllers, behaviors, spatial_behaviors
-└── ui/                # Pygame screens, panels, widgets, services
-
-tests/
-├── unit/              # Fast unit tests
-├── integration/       # Integration tests
-└── unit/combat_lab/   # Combat Lab pytest tests
-
-combat_lab/                # In-game Combat Lab (scenarios, runner, services)
-
-Tools/               # Development utilities (see Tools/README.md)
-
-Projects/
-├── active_projects/   # Current refactoring projects
-└── protocols/         # Development workflows
-```
-
----
-
-## Development Workflows
-
-### For Refactoring Projects
-
-Projects are organized in `Projects/active_projects/PROJ-XX/`:
-- `plan.md` - Project overview and current state
-- `design.md` - Architecture and design decisions
-- `decisions.md` - Decision log
-- `phase_N_checklist.md` - Detailed task lists
-
-**Protocols** (in `Projects/protocols/`):
-- `02_plan_protocol.md` - How to use project plans
-- `03a_continue_working.md` - Autonomous work loop
-- `04_audit_project.md` - Audit methodology
-- `08_automated_loop_protocol.md` - CLI automation (reference)
-
-### TDD Workflow (Mandatory for ALL Code Changes)
-
-**Every code change follows this workflow. No exceptions.**
-
-1. **Read docs** — Understand the architecture before touching code (Rule 2)
-2. **Write failing tests** — Define the expected behavior (Rule 1)
-3. **Run tests** — Verify they fail for the right reason (Rule 1)
-4. **Implement** — Write the cleanest solution, not the quickest (Rule 3)
-5. **Run tests** — Verify they pass
-6. **Refactor** — Clean up while tests stay green
-7. **Update docs** — If behavior/architecture/patterns changed (Rule 2)
-8. **Run full suite** — `python Tools/test_sharded/test_sharded.py` before committing
-
-**Test commands:**
 ```bash
-# Incremental (fast)
-pytest tests/ --testmon
-
-# Targeted
-pytest tests/path/to/test.py
-
-# Full suite (sharded parallel runner, auto-detects CPU count)
-python Tools/test_sharded/test_sharded.py
-
-# With coverage
-pytest tests/ --cov=game -n 12
+python Tools/agent_coordination/log_skill_usage.py --agent claude --skill claude-proj-start
 ```
 
----
-
-## Key Conventions
-
-### Code Quality
-- **Return-type annotations are required on every public function/method.** Use modern syntax (PEP 604 unions like `int | None`, native generics like `list[int]`). `__init__` and other dunders are exempt (PEP 484). Functions with no `return` statement annotate `-> None` explicitly.
-- Use type hints for function parameters where they aid clarity (parameter coverage is not yet enforced project-wide; return coverage is).
-- Add docstrings to public APIs
-- Keep functions focused and small (<50 lines preferred)
-- Avoid deep nesting (max 3 levels)
-- Keep production-source files under 500 lines. When a file approaches 500 LOC, that's a signal to split into single-responsibility sub-modules. Test files are exempt — long test files are often legitimate. See `docs/03_CONVENTIONS.md` §File Size and PROJ-309 for the audit that established this rule.
-
-### Long-Term Quality
-When faced with choices, prefer:
-- Proper refactor over quick fix
-- Root cause fix over workaround
-- Comprehensive tests over minimal tests
-- Named constants over magic numbers
-- **Specific exceptions over broad catches.** When a broad catch is genuinely necessary (e.g., third-party callback dispatch, platform-dependent init, fire-and-forget event emission), it MUST carry an `# Intentional broad catch: <specific reason>` comment on the same line or the line above. A broad catch without a justification comment is a code-review failure.
-- Extract abstraction over copy-paste
-- Dependency injection over singletons
-- Delegate to existing logic over reimplementing it
-
-### System Migration Policy
-
-**When a new system replaces an old one, ERADICATE the old system completely.**
-
-- DO NOT add "fallback" code paths to old systems
-- DO NOT keep backward compatibility layers "just in case"
-- DO NOT leave old code commented out or behind feature flags
-- DO NOT maintain parallel systems that do the same thing
-- DO delete the old system entirely
-- DO update ALL call sites to use the new system
-- DO remove old data files, configs, and dependencies
-
-**Save files are disposable.** Old saves are not migrated — they are discarded. Do not write compatibility shims or migration code for save data.
-
----
-
-## Architecture Principles
-
-**See [`docs/`](docs/README.md) for full architecture documentation.** The summary below is for quick reference only — the docs are authoritative.
-
-### Layer Separation
-- **Core** - No dependencies on other layers
-- **Simulation** - Depends on Core only (no UI, no Pygame)
-- **Strategy** - Depends on Core and Simulation
-- **UI** - Top layer, depends on all others
-- **AI** - Depends on Simulation and Strategy
-
-### Key Patterns (see `docs/02_PATTERNS.md` for full list)
-- **Registry Pattern** - Centralized component/ship/planet registration
-- **ApplicationContext DI** - `game/context.py` manages all 9 services (PROJ-258)
-- **Protocol + TypeGuard** - Duck typing with runtime checks
-- **Dependency Injection** - IRegistryProvider for production/test split, ApplicationContext for services
-- **Facade/Delegate** - StrategySessionFacade, Ship→ShipCombatEngine
-- **CQRS-lite** - Command/query separation with frozen DTOs
-- **Two-Phase Ability Aggregation** - Intra-group MAX, inter-group SUM
-- **Habitability Factor Registry** (PROJ-283) - `FACTOR_REGISTRY` in `game/strategy/data/habitability_factors.py` declares every habitability axis (gravity, temperature, gases, ...) as one entry. The habitability formula, race UI, point budget, and homeworld presets all iterate this registry — adding a new axis is a single data edit. See `docs/systems/strategy_layer.md §7`.
-
----
-
-## Common Tasks
-
-### Adding a New Component Ability
-1. Read [`docs/guides/adding_abilities.md`](docs/guides/adding_abilities.md) first
-2. **Write tests** in `tests/unit/simulation/components/abilities/`
-3. Define ability in `game/simulation/components/abilities/`
-4. Add to `__init__.py` exports
-5. Document in component schema
-6. Update `components.json` with example usage
-7. **Update [`docs/systems/ability_reference.md`](docs/systems/ability_reference.md)** with the new ability
-
----
-
-## Testing Configuration
-
-- **CLI parallel workers:** 12 (`-n 12`)
-- **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
-- **Test monitor:** `--testmon` for incremental runs
-- **Baseline:** 15405 passed, 2 skipped (post-PROJ-311). One known flake — `test_colony_owner_id_matches_empire` — passes when run alone (test-isolation issue, unrelated to PROJ-311).
-
----
-
-## Git Workflow
-
-- Commit frequently with clear messages
-- Use conventional commit format when applicable
-- **Run full test suite before pushing** (Rule 1)
-- **Verify docs are updated before committing** (Rule 2)
-- Keep commits focused on single changes
+Counters are **advisory only** — they identify cleanup candidates and never authorize automatic deletion. Full context: `AGENTS.md §"Skill Usage Logging"` and `Tools/agent_coordination/README.md`.
 
 ---
 
 ## Subagent Report Output
 
-Subagent reports go to `.agent_reports/` by default. This directory is git-ignored and its contents are disposable.
+Subagent reports go to `.agent_reports/` by default. The directory is gitignored and disposable.
 
-### Default Workflow
+**Default workflow:**
 
-1. **Main agent** creates `.agent_reports/<descriptive-job-name>/` before spawning subagents
-2. **Main agent** passes the full path to each subagent in its prompt
-3. **Subagents** write reports ONLY to the provided directory, using the Write tool (not Bash)
-4. **Main agent** reads/processes reports, then deletes the job folder when the task is complete
+1. Main agent creates `.agent_reports/<descriptive-job-name>/` before spawning subagents.
+2. Main agent passes the full path to each subagent in its prompt.
+3. Subagents write reports to that directory only, using the Write tool (not Bash).
+4. Main agent reads the reports, then deletes the job folder when the task is complete.
 
-Reports in `.agent_reports/` are **ephemeral** — they will be deleted once the main agent finishes its task. Do not rely on them persisting across conversations.
+**Skill / protocol overrides:** when a skill or protocol specifies its own report location, use it. The skill is authoritative. Examples:
 
-### Skill/Protocol Override
+- Project reviews → `Projects/active_projects/PROJ-XX/findings/` (protocols 01, 04, 09).
+- Codebase analysis sweeps → `Reviews/results/{DATE}_{TYPE}_{SCOPE}/`.
 
-When a skill or protocol specifies its own report location, use that location instead of `.agent_reports/`. The skill/protocol is authoritative. Examples:
+The main agent passes the override path to subagents the same way; subagents always write to whatever path they are given.
 
-- **Project reviews** → `Projects/active_projects/PROJ-XX/findings/` (protocols 01, 04, 09)
-- **Codebase analysis sweeps** → `Reviews/results/{DATE}_{TYPE}_{SCOPE}/` (analysis-sweep skill)
+---
 
-The main agent passes the skill-specified path to subagents in the same way — subagents should always write to whatever path they are given.
+## Testing Configuration
+
+- **CLI parallel workers:** 12 (`-n 12`).
+- **VS Code Test Explorer:** use 4 workers; higher breaks the integrated panel.
+- **Test monitor:** `--testmon` for incremental runs.
+- Repo-wide baseline at `AgentCoordination/generated/test_baseline.json` (auto-updated on green whole-suite runs). One known flake: `test_colony_owner_id_matches_empire` passes when run alone (test-isolation).
+
+---
+
+## Help and Feedback
+
+If a user asks for help or feedback:
+
+- `/help` for Claude Code help.
+- File feedback at https://github.com/anthropics/claude-code/issues.

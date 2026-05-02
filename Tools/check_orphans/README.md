@@ -1,5 +1,11 @@
 # Check Orphans
 
+> **Status (2026-04-29):** **Legacy.** Prefer
+> [`analyze_dependency_graph`](../analyze_dependency_graph/) for production
+> audits — it uses AST parsing and entry-point tracing, which is more accurate
+> than the regex-based detection here. This tool is kept for fast ad-hoc
+> checks where false positives are acceptable.
+
 Finds Python modules under `game/` that are not imported by any other module in the codebase.
 
 ## Purpose

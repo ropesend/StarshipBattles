@@ -27,7 +27,7 @@ Each project must have:
 2. A file manifest (`manifest.md` listing all files the project will modify)
 3. Phase checklists (`phase_N_checklist.md`)
 
-Projects without `manifest.md` are rejected — tell the user to generate one via `/proj-start` or manually.
+Projects without `manifest.md` are rejected — tell the user to generate one via `/anti-proj-start` or manually.
 
 ---
 
@@ -249,7 +249,7 @@ Your project modifies these files (from manifest.md):
 ```markdown
 # PROJ-XX File Manifest
 
-> Generated during /proj-start. Used by /proj-parallel for conflict detection.
+> Generated during /anti-proj-start. Used by /claude-proj-parallel for conflict detection.
 > Updated if implementation discovers additional files.
 
 ## Files
@@ -266,7 +266,7 @@ Your project modifies these files (from manifest.md):
 - Include ALL test files (new and existing) that will be modified
 - Type is `Production` or `Test`
 - Notes briefly describe what changes
-- Generated during `/proj-start` by scanning task `**File:**` fields and Key Files table
+- Generated during `/anti-proj-start` by scanning task `**File:**` fields and Key Files table
 
 ---
 
@@ -346,4 +346,4 @@ If the coordinator runs out of context mid-session:
    - Projects still running (with branch names)
    - Projects in queue
    - Waiting queue state
-4. Inform user: "Context at capacity. Session state saved. Resume with `/proj-parallel` to continue remaining projects."
+4. Inform user: "Context at capacity. Session state saved. Resume with `/claude-proj-parallel` to continue remaining projects."

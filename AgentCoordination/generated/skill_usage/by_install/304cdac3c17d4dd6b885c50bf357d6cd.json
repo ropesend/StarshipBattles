@@ -1,0 +1,13 @@
+{
+  "install_id": "304cdac3c17d4dd6b885c50bf357d6cd",
+  "schema_version": 1,
+  "skills": {
+    "claude-proj-start": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-04-29T13:47:16Z"
+    }
+  }
+}

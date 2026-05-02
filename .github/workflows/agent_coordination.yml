@@ -1,0 +1,56 @@
+name: agent-coordination
+
+on:
+  pull_request:
+    paths:
+      - "AgentCoordination/**"
+      - ".claude/**"
+      - ".agent/**"
+      - ".agents/**"
+      - ".opencode/**"
+      - "Projects/protocols/**"
+      - "Tracking/protocols/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "opencode.json"
+      - ".codex/config.toml"
+      - "Tools/agent_coordination/**"
+      - "Tools/test_sharded/**"
+      - "tests/unit/tools/**"
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pytest
+        run: python -m pip install pytest pytest-xdist
+      - name: Run focused coordination tests
+        run: |
+          python -m pytest \
+            tests/unit/tools/test_agent_surface_inventory.py \
+            tests/unit/tools/test_test_sharded_baseline.py \
+            tests/unit/tools/test_agent_skill_prefix_checker.py \
+            tests/unit/tools/test_agent_skill_prefix_renamer.py \
+            tests/unit/tools/test_sanitize_claude_settings.py \
+            tests/unit/tools/test_skill_usage_tracking.py \
+            tests/unit/tools/test_validate_agent_surfaces.py \
+            -q
+      - name: Prefix compliance check
+        run: python Tools/agent_coordination/check_skill_prefixes.py
+      - name: Inventory freshness
+        run: |
+          python Tools/agent_coordination/inventory_agent_surfaces.py
+          if ! git diff --quiet AgentCoordination/generated/agent_surface_inventory.json; then
+            echo "::error::Committed agent_surface_inventory.json is stale. Re-run inventory_agent_surfaces.py and commit."
+            git --no-pager diff AgentCoordination/generated/agent_surface_inventory.json | head -100
+            exit 1
+          fi
+      - name: Full validator
+        run: python Tools/agent_coordination/validate_agent_surfaces.py

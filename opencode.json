@@ -2,7 +2,9 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "deepseek/deepseek-v4-pro",
   "shell": "pwsh",
-  "instructions": ["./AGENTS.md"],
+  "instructions": [
+    "./AGENTS.md"
+  ],
   "autoupdate": true,
   "snapshot": true,
   "compaction": {
@@ -19,8 +21,8 @@
     }
   },
   "command": {
-    "audit-shrink": {
-      "template": "Load the audit-shrink skill and run a comprehensive code shrinkage audit on the production codebase (game/).",
+    "ocode-audit-shrink": {
+      "template": "Load the ocode-audit-shrink skill and run a comprehensive code shrinkage audit on the production codebase (game/).",
       "description": "Run a comprehensive code shrinkage audit"
     }
   },
@@ -35,17 +37,10 @@
   "permission": {
     "skill": {
       "*": "allow",
-      "proj-*": "deny",
-      "ticket-*": "deny",
+      "claude-*": "deny",
       "codex-*": "deny",
-      "analysis-*": "deny",
-      "debug-*": "deny",
-      "deep-dive-*": "deny",
-      "qa-*": "deny",
-      "fix-crash": "deny",
-      "loc": "deny",
-      "triage-to-proj": "deny",
-      "validate-designs": "deny"
+      "anti-*": "deny",
+      "ocode-*": "allow"
     }
   }
 }

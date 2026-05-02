@@ -12,7 +12,6 @@ Unified system for tracking and resolving bugs and features via TDD workflows.
 | `features/active/FEAT-XX.md` | Active feature tickets being worked on |
 | `features/archived/FEAT-XX.md` | Completed and archived feature tickets |
 | `protocols/` | Shared ticket workflow protocols (11 files) |
-| `prompts/` | Legacy prompt files (being replaced by `/ticket-*` skills) |
 | `scripts/` | Python utilities for archiving and confirming tickets |
 | `debug_plan.md` | Bug queue dashboard with status tracking |
 | `feature_plan.md` | Feature queue dashboard with status tracking |
@@ -48,22 +47,22 @@ Bugs and features share the same protocols but store data in separate subdirecto
 
 | Skill | What it does |
 |-------|-------------|
-| `/ticket-add bug <desc>` | Create new bug ticket(s) |
-| `/ticket-add feature <desc>` | Create new feature ticket(s) |
-| `/ticket-work bug 42` | Fix a specific bug by ID (TDD) |
-| `/ticket-work feature 7` | Implement a specific feature by ID (TDD) |
-| `/ticket-next bug` | Pick highest-priority pending bug and start working |
-| `/ticket-next feature` | Pick highest-priority pending feature and start working |
-| `/ticket-continue bug` | Autonomous batch: fix bugs until context limit |
-| `/ticket-continue feature` | Autonomous batch: implement features until context limit |
-| `/ticket-deep-dive bug 42` | Deep investigation for persistent bugs |
-| `/ticket-deep-dive feature 7` | Scope assessment for complex features |
-| `/ticket-close bug 42` | Archive a confirmed fix |
-| `/ticket-close feature 7` | Archive a confirmed feature |
-| `/ticket-batch-close bug 46 49` | Archive multiple confirmed tickets |
-| `/ticket-reject bug 42 <reason>` | Reject a fix, revert to In-Progress |
-| `/ticket-update bug 42 <text>` | Append context to a ticket (no analysis) |
-| `/ticket-answer bug 42 <answers>` | Log answers to clarification questions |
+| `/claude-ticket-add bug <desc>` | Create new bug ticket(s) |
+| `/claude-ticket-add feature <desc>` | Create new feature ticket(s) |
+| `/claude-ticket-work bug 42` | Fix a specific bug by ID (TDD) |
+| `/claude-ticket-work feature 7` | Implement a specific feature by ID (TDD) |
+| `/claude-ticket-next bug` | Pick highest-priority pending bug and start working |
+| `/claude-ticket-next feature` | Pick highest-priority pending feature and start working |
+| `/claude-ticket-continue bug` | Autonomous batch: fix bugs until context limit |
+| `/claude-ticket-continue feature` | Autonomous batch: implement features until context limit |
+| `/claude-ticket-deep-dive bug 42` | Deep investigation for persistent bugs |
+| `/claude-ticket-deep-dive feature 7` | Scope assessment for complex features |
+| `/claude-ticket-close bug 42` | Archive a confirmed fix |
+| `/claude-ticket-close feature 7` | Archive a confirmed feature |
+| `/claude-ticket-batch-close bug 46 49` | Archive multiple confirmed tickets |
+| `/claude-ticket-reject bug 42 <reason>` | Reject a fix, revert to In-Progress |
+| `/claude-ticket-update bug 42 <text>` | Append context to a ticket (no analysis) |
+| `/claude-ticket-answer bug 42 <answers>` | Log answers to clarification questions |
 
 ## Protocols
 
@@ -97,4 +96,4 @@ All ticket resolution protocols enforce these rules:
 Agents working tickets can set status to `[Awaiting Confirmation]` but **cannot**:
 - Mark tickets as `[Solved]` or `[Completed]`
 - Move files to archive directories
-- Those actions require the user to invoke `/ticket-close`
+- Those actions require the user to invoke `/claude-ticket-close`

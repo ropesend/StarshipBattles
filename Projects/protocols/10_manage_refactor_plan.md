@@ -1,6 +1,11 @@
 # Protocol 10: Manage Refactor Plan
 
-This protocol defines the standard procedures for adding, removing, updating, and reordering projects in the master `Projects/refactor_loop/refactor_plan.md`.
+> **Status (2026-04-29):** The `refactor_loop` was retired and staged at
+> `_marked_for_deletion_2026-05-29/Projects/refactor_loop/`. This protocol is
+> preserved for reference if automated work resumes; the master plan file
+> would live under whatever loop replaces it.
+
+This protocol defines the standard procedures for adding, removing, updating, and reordering projects in the master refactor plan (historically `Projects/refactor_loop/refactor_plan.md`).
 
 ---
 

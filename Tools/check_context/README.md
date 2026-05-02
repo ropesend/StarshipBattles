@@ -50,7 +50,7 @@ current context usage appears before the next user prompt. No manual
 invocation needed during a session.
 
 Also invoked by the autonomous work loop protocols:
-- `Projects/protocols/03a_continue_working.md` (`/proj-continue` workflow)
+- `Projects/protocols/03a_continue_working.md` (`/claude-proj-continue` workflow)
 - `Projects/protocols/08_automated_loop_protocol.md`
 - `Projects/protocols/03b_parallel_projects.md`
 

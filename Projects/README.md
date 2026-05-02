@@ -8,32 +8,32 @@ This directory contains the infrastructure for managing multi-file refactoring p
 
 | I want to... | Skill | Example |
 |---|---|---|
-| **Start a new refactoring project** | `/proj-start` | `/proj-start Refactor ship combat engine` |
-| **Continue working on a project** | `/proj-continue` | `/proj-continue 87` |
-| **Review a project plan** | `/proj-review` | `/proj-review 87` |
-| **Audit a completed project** | `/proj-audit` | `/proj-audit 87` |
-| **Close/archive a project** | `/proj-close` | `/proj-close 87` or `/proj-close 87 88 89` |
-| **Revise a completed project** | `/proj-revise` | `/proj-revise 87 Add error handling` |
-| **Extract a phase to sub-project** | `/proj-extract-phase` | `/proj-extract-phase 87 3` |
-| **Report a bug** | `/ticket-add` | `/ticket-add bug Ship doesn't move after turn 5` |
-| **Request a feature** | `/ticket-add` | `/ticket-add feature Add zoom to galaxy map` |
-| **Fix a specific bug** | `/ticket-work` | `/ticket-work bug 42` |
-| **Implement a feature** | `/ticket-work` | `/ticket-work feature 7` |
-| **Auto-fix next bug** | `/ticket-next` | `/ticket-next bug` |
-| **Auto-implement next feature** | `/ticket-next` | `/ticket-next feature` |
-| **Batch fix bugs** | `/ticket-continue` | `/ticket-continue bug` |
-| **Deep investigate a bug** | `/ticket-deep-dive` | `/ticket-deep-dive bug 42` |
-| **Close a resolved ticket** | `/ticket-close` | `/ticket-close bug 42` |
-| **Batch close tickets** | `/ticket-batch-close` | `/ticket-batch-close bug 46 49 50` |
-| **Reject a fix/implementation** | `/ticket-reject` | `/ticket-reject bug 42 Still crashes on turn 3` |
-| **Answer ticket questions** | `/ticket-answer` | `/ticket-answer bug 42 Only happens in 4K mode` |
-| **Update ticket with new info** | `/ticket-update` | `/ticket-update bug 42 Also affects fleet view` |
-| **Run QA triage session** | `/qa-triage` | `/qa-triage` |
-| **Convert triage to project** | `/triage-to-proj` | `/triage-to-proj star_rendering` |
-| **Manage refactor plan** | `/proj-manage-plan` | `/proj-manage-plan ADD 87` |
-| **Add projects to refactor plan** | `/proj-add-to-plan` | `/proj-add-to-plan 87 88` |
-| **Reset loop baseline** | `/proj-reset-baseline` | `/proj-reset-baseline` |
-| **Archive from refactor plan** | `/proj-archive` | `/proj-archive 87 88` |
+| **Start a new refactoring project** | `/claude-proj-start` | `/claude-proj-start Refactor ship combat engine` |
+| **Continue working on a project** | `/claude-proj-continue` | `/claude-proj-continue 87` |
+| **Review a project plan** | `/claude-proj-review` | `/claude-proj-review 87` |
+| **Audit a completed project** | `/claude-proj-audit` | `/claude-proj-audit 87` |
+| **Close/archive a project** | `/anti-proj-close` | `/anti-proj-close 87` or `/anti-proj-close 87 88 89` |
+| **Revise a completed project** | `/claude-proj-revise` | `/claude-proj-revise 87 Add error handling` |
+| **Extract a phase to sub-project** | `/claude-proj-extract-phase` | `/claude-proj-extract-phase 87 3` |
+| **Report a bug** | `/claude-ticket-add` | `/claude-ticket-add bug Ship doesn't move after turn 5` |
+| **Request a feature** | `/claude-ticket-add` | `/claude-ticket-add feature Add zoom to galaxy map` |
+| **Fix a specific bug** | `/claude-ticket-work` | `/claude-ticket-work bug 42` |
+| **Implement a feature** | `/claude-ticket-work` | `/claude-ticket-work feature 7` |
+| **Auto-fix next bug** | `/claude-ticket-next` | `/claude-ticket-next bug` |
+| **Auto-implement next feature** | `/claude-ticket-next` | `/claude-ticket-next feature` |
+| **Batch fix bugs** | `/claude-ticket-continue` | `/claude-ticket-continue bug` |
+| **Deep investigate a bug** | `/claude-ticket-deep-dive` | `/claude-ticket-deep-dive bug 42` |
+| **Close a resolved ticket** | `/claude-ticket-close` | `/claude-ticket-close bug 42` |
+| **Batch close tickets** | `/claude-ticket-batch-close` | `/claude-ticket-batch-close bug 46 49 50` |
+| **Reject a fix/implementation** | `/claude-ticket-reject` | `/claude-ticket-reject bug 42 Still crashes on turn 3` |
+| **Answer ticket questions** | `/claude-ticket-answer` | `/claude-ticket-answer bug 42 Only happens in 4K mode` |
+| **Update ticket with new info** | `/claude-ticket-update` | `/claude-ticket-update bug 42 Also affects fleet view` |
+| **Run QA triage session** | `/claude-qa-triage` | `/claude-qa-triage` |
+| **Convert triage to project** | `/claude-triage-to-proj` | `/claude-triage-to-proj star_rendering` |
+| **Manage refactor plan** | `/claude-proj-manage-plan` | `/claude-proj-manage-plan ADD 87` |
+| **Add projects to refactor plan** | `/claude-proj-add-to-plan` | `/claude-proj-add-to-plan 87 88` |
+| **Reset loop baseline** | `/claude-proj-reset-baseline` | `/claude-proj-reset-baseline` |
+| **Archive from refactor plan** | `/claude-proj-archive` | `/claude-proj-archive 87 88` |
 
 ---
 
@@ -61,10 +61,7 @@ ticket-update ──────────► Tracking/protocols/04_update...
 ticket-reject ──────────► Tracking/protocols/05_reject...
 ticket-answer ──────────► Tracking/protocols/06_answer...
 
-Loop Workers ───────────► Projects/protocols/WORKER_TEMPLATE.md
-  refactor_loop/WORKER.md
-  continuous_loop/CYCLE_WORKER.md
-  complexity_loop/REFACTOR_WORKER.md
+Loop Workers (retired) ─► see _marked_for_deletion_2026-05-29/Projects/
 ```
 
 **Key principle:** Skills are thin entry points that set configuration and reference protocols. Protocols contain the detailed workflow logic. This means changes to workflow behavior only need to be made in one place (the protocol).
@@ -74,20 +71,20 @@ Loop Workers ───────────► Projects/protocols/WORKER_TEMP
 ## Project Lifecycle
 
 ```
-/proj-start ──► Planning ──► /proj-continue ──► Implementation ──► /proj-audit ──► /proj-close
+/claude-proj-start ──► Planning ──► /claude-proj-continue ──► Implementation ──► /claude-proj-audit ──► /anti-proj-close
                    │              │ (repeat)           │                  │
                    │              └──────────────────────┘                  │
                    │                                                       │
-                   └─── /proj-review (validate plan mid-project)           │
+                   └─── /claude-proj-review (validate plan mid-project)           │
                                                                            │
-                   /proj-revise (add phases to completed project) ◄────────┘
+                   /claude-proj-revise (add phases to completed project) ◄────────┘
 ```
 
-1. **Start** (`/proj-start`): Deep code review, swarm analysis, create plan. Planning only — no implementation.
-2. **Continue** (`/proj-continue N`): Autonomous TDD work loop. Executes tasks, updates plan, provides handoff context.
-3. **Review** (`/proj-review N`): Validate plan against codebase. 5 parallel review agents check alignment, freshness, gaps.
-4. **Audit** (`/proj-audit N`): Skeptical post-completion review. Up to 5 cycles of audit → fix → re-audit.
-5. **Close** (`/proj-close N`): Archive to `archived_projects/`. No validation — user has already accepted.
+1. **Start** (`/claude-proj-start`): Deep code review, swarm analysis, create plan. Planning only — no implementation.
+2. **Continue** (`/claude-proj-continue N`): Autonomous TDD work loop. Executes tasks, updates plan, provides handoff context.
+3. **Review** (`/claude-proj-review N`): Validate plan against codebase. 5 parallel review agents check alignment, freshness, gaps.
+4. **Audit** (`/claude-proj-audit N`): Skeptical post-completion review. Up to 5 cycles of audit → fix → re-audit.
+5. **Close** (`/anti-proj-close N`): Archive to `archived_projects/`. No validation — user has already accepted.
 
 ---
 
@@ -116,29 +113,22 @@ The ticket system uses unified skills and protocols that handle both bugs and fe
 
 ---
 
-## Loop Systems
+## Loop Systems (retired 2026-04-29)
 
-Three automated loop systems execute work without human interaction. Each uses a thin WORKER.md that references the shared `Projects/protocols/WORKER_TEMPLATE.md`.
+Three CLI loop systems (`refactor_loop`, `complexity_loop`, `continuous_loop`)
+were built between January and March 2026 but are no longer in use. The last
+activity across all three was between 2026-02-13 and 2026-03-01. They have
+been staged for deletion at `_marked_for_deletion_2026-05-29/Projects/`;
+permanent deletion happens after the 30-day cooling-off period ends.
 
-| Loop | Purpose | Plan File | When to Use |
-|------|---------|-----------|-------------|
-| **refactor_loop** | Execute queued refactoring projects | `refactor_loop/refactor_plan.md` | User-curated list of projects to execute sequentially |
-| **continuous_loop** | Autonomous improvement cycles | `continuous_loop/cycle_plan.md` | Sweep → find issues → create projects → execute → repeat |
-| **complexity_loop** | Reduce cyclomatic complexity | `complexity_loop/cycle_plan.md` | Target high-complexity functions for automated refactoring |
+The active project workflow operates without them. To restart automated work
+in the future, decide whether to revive one of the staged loops (the
+critical-review report has the rationale for archival) or build a new
+automation layer with the lessons from those three.
 
-### Running a loop
-```bash
-# Refactor loop
-./Projects/refactor_loop/loop_runner.sh    # or .ps1 on Windows
-
-# Continuous loop
-powershell ./Projects/continuous_loop/continuous_loop.ps1
-
-# Complexity loop
-powershell ./Projects/complexity_loop/complexity_loop.ps1
-```
-
-Each loop iteration: reads plan → finds next incomplete item → executes one phase or audit → updates plan → commits → exits. The shell script restarts for the next iteration.
+If you were directed to this section by an old WORKER.md path, the
+WORKER.md files now live in the staging directory:
+`_marked_for_deletion_2026-05-29/Projects/<loop>/WORKER.md`.
 
 ---
 

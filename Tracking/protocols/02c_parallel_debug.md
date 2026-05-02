@@ -418,4 +418,4 @@ If the coordinator runs out of context mid-session:
    - Bugs still in queue
    - Files currently in use
    - Waiting queue state
-4. Inform user: "Context at capacity. Session state saved. Resume with `/debug-parallel` to continue."
+4. Inform user: "Context at capacity. Session state saved. Resume with `/claude-debug-parallel` to continue."

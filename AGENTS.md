@@ -31,7 +31,7 @@ python -m combat_lab.run_tests
 
 # Code shrinkage audit (read-only analysis)
 python Tools/audit_shrink/audit_shrink.py   # Phase 1: deterministic tools
-# Then /audit-shrink                         # Phase 2: agents + report
+# Then /ocode-audit-shrink                         # Phase 2: agents + report
 ```
 
 ## Architecture (Quick Reference)
@@ -64,12 +64,12 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 - `conftest.py` force-sets `SDL_VIDEODRIVER=dummy` before imports — tests run headless.
 - `reset_game_state` fixture (autouse function-scoped) clears singletons, hydrates registries from session cache.
 - Session-scoped registries via `session_registries` fixture. Function-scoped variant: `fresh_registries`.
-- 15477+ tests baseline. Known flakes: `test_colony_owner_id_matches_empire` (test-isolation) and some `test_fleet_operations.py` resource-accumulation tests. If 1-4 random failures appear in those areas, re-run before triaging.
+- Repo-wide test baseline lives in `AgentCoordination/generated/test_baseline.json`. Known flakes: `test_colony_owner_id_matches_empire` (test-isolation) and some `test_fleet_operations.py` resource-accumulation tests. If 1-4 random failures appear in those areas, re-run before triaging.
 
 ## Tooling Notes
 
 - **`Tools/test_sharded/`** — Sharded parallel runner. Auto-detects CPU count with greedy load balancing from `.test_durations.json`. This is the canonical full-suite runner.
-- **`Tools/audit_shrink/`** — Code shrinkage audit: vulture (dead code), radon (complexity), clone detector (near-duplicate functions), orphan/dependency analysis. See `.opencode/skills/audit-shrink/SKILL.md` for the agent-driven Phase 2 workflow.
+- **`Tools/audit_shrink/`** — Code shrinkage audit: vulture (dead code), radon (complexity), clone detector (near-duplicate functions), orphan/dependency analysis. See `.opencode/skills/ocode-audit-shrink/SKILL.md` for the agent-driven Phase 2 workflow.
 - **`requirements-dev.txt`** includes radon, vulture, Pillow, numpy, opencv-python, matplotlib, fastapi, uvicorn, dearpygui, and QA tooling. Runtime-only deps in `requirements.txt`.
 
 ## Project Management
@@ -78,3 +78,27 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 - Tickets: `Tracking/bugs/active/` and `Tracking/features/active/`. Protocols: `Tracking/protocols/`.
 - Reviews: `Reviews/protocols/` and `Reviews/results/`. Historical audit reports stored here.
 - Archive: `Projects/archived_projects/` and `Projects/deep_archive/` — do not reference as current.
+
+## Skill Usage Logging
+
+**Claude Code logs `claude-*` skill invocations automatically** via the
+`UserPromptExpansion` and `PreToolUse(Skill)` hooks wired in
+`.claude/settings.json` → `Tools/agent_coordination/claude_skill_usage_hook.py`.
+No manual call required.
+
+Other agents call the script explicitly because their hook surfaces are
+narrower (Codex has no skill event; OpenCode's plugin hooks don't expose a
+skill-invoked event in the declarative config; Antigravity is lower
+priority):
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent <claude|anti|ocode|codex> --skill <full-prefixed-skill-name>
+```
+
+Examples:
+- Codex invoking `$codex-starship-project-system` → `python Tools/agent_coordination/log_skill_usage.py --agent codex --skill codex-starship-project-system`
+- OpenCode invoking `/ocode-audit-shrink` → `python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-audit-shrink`
+- Antigravity invoking an `anti-*` skill → `python Tools/agent_coordination/log_skill_usage.py --agent anti --skill <name>`
+- Claude Code (manual override or testing) → same script with `--agent claude`.
+
+Counters are **advisory only** and identify cleanup candidates; they never authorize automatic deletion. Counter data is per-checkout (a UUID install ID is auto-generated on first call); only the aggregated `summary.json` is meant for cross-checkout review.

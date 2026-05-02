@@ -864,4 +864,4 @@ If the coordinator runs out of context mid-session:
    - Waiting queue state and paused investigators
    - Team name (for cleanup)
 4. Send shutdown requests to all teammates.
-5. Inform user: "Context at capacity. Session state saved to dashboard. Resume with `/deep-dive-parallel {type} {remaining ticket IDs}` to continue."
+5. Inform user: "Context at capacity. Session state saved to dashboard. Resume with `/claude-deep-dive-parallel {type} {remaining ticket IDs}` to continue."

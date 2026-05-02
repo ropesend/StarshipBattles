@@ -90,7 +90,7 @@ If the project is in `archived_projects/`:
 
 ### 5. Update File Manifest
 
-If the project has a `manifest.md` file (required for parallel execution via `/proj-parallel`):
+If the project has a `manifest.md` file (required for parallel execution via `/claude-proj-parallel`):
 - Add any NEW files referenced in the revision phase tasks to `manifest.md`
 - Do NOT remove existing entries (previous phases still used those files)
 - If no `manifest.md` exists, create one by scanning ALL phase checklists for `**File:**` fields

@@ -31,7 +31,7 @@ Use this skill for review, audit, and analysis tasks that may produce findings r
 
 ### Codebase Sweep
 
-- Use `Reviews/Prompts/Sweep - *.txt` and `Reviews/scripts/create_review.py` when running formal sweeps.
+- Use `Reviews/prompts/Sweep - *.txt` and `Reviews/scripts/create_review.py` when running formal sweeps.
 - Exclude generated output, archives, `.agent_reports/`, `.claude/worktrees/`, and `docs/_ignore/`.
 - Organize findings by category: duplication, legacy holdovers, consistency, architecture drift, and test coverage.
 
