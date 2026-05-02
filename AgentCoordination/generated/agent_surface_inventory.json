@@ -46,14 +46,14 @@
     },
     {
       "kind": "absolute_path",
-      "line": 50,
+      "line": 52,
       "path": ".claude/settings.local.json",
       "pattern": "c:\\\\Developer\\\\StarshipBattles\\\\Projects\\\\active_projects\\\\PROJ-216\\\\findings",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 51,
+      "line": 53,
       "path": ".claude/settings.local.json",
       "pattern": "c:\\\\Developer\\\\StarshipBattles\\\\Projects\\\\active_projects\\\\PROJ-218\\\\findings",
       "severity": "warn"
