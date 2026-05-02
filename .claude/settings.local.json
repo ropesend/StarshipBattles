@@ -44,7 +44,9 @@
       "Bash(git -C \"c:\\\\Developer\\\\StarshipBattles\" log --all --oneline -- saves/)",
       "Bash(for seed:*)",
       "Bash(do python:*)",
-      "Read(//c/Users/rossr/AppData/Roaming/Python/Python311/site-packages/pygame_gui/elements/**)"
+      "Read(//c/Users/rossr/AppData/Roaming/Python/Python311/site-packages/pygame_gui/elements/**)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "c:\\Developer\\StarshipBattles\\Projects\\active_projects\\PROJ-216\\findings",
