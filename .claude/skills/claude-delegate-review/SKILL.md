@@ -42,11 +42,45 @@ except (OSError, ProcessLookupError, ValueError):
 echo $?
 ```
 
-If the daemon is NOT running, tell the user to start it in a separate terminal:
+If the daemon is NOT running, **start it yourself** as a background process —
+do not ask the user to start it. The daemon writes its own PID file
+(`AgentCoordination/opencodereview/local/review_daemon.pid`) on startup, so
+launching once is enough; subsequent invocations of the same skill will detect
+it via the check above.
+
+Launch via Bash with `run_in_background: true`:
+
+```bash
+cd "<project root>" && python Tools/agent_coordination/review_daemon.py
+```
+
+Or via PowerShell (also backgrounded):
+
+```powershell
+Start-Process -FilePath "powershell" `
+  -ArgumentList "-NoProfile","-File",".\Tools\agent_coordination\Start-ReviewDaemon.ps1" `
+  -WindowStyle Hidden
+```
+
+After launching, poll the PID file for up to ~5 seconds before proceeding:
+
+```bash
+for i in 1 2 3 4 5; do
+  [ -f "AgentCoordination/opencodereview/local/review_daemon.pid" ] && break
+  sleep 1
+done
+```
+
+If the PID file still hasn't appeared, check
+`AgentCoordination/opencodereview/local/review_daemon.log` for startup errors and
+surface them to the user before continuing.
+
+Only ask the user to start the daemon manually if your background-launch
+attempt fails (e.g., missing `opencode` in PATH, venv activation issues that
+require interactive input). In that case point them at:
 ```
 .\Tools\agent_coordination\Start-ReviewDaemon.ps1
 ```
-Do not write the request file until the daemon is running.
 
 ## Follow-Up Reviews
 
