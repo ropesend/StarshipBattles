@@ -24,6 +24,10 @@
     "ocode-audit-shrink": {
       "template": "Load the ocode-audit-shrink skill and run a comprehensive code shrinkage audit on the production codebase (game/).",
       "description": "Run a comprehensive code shrinkage audit"
+    },
+    "ocode-review-request": {
+      "template": "Load the ocode-review-request skill and process the review request at $ARGUMENTS.",
+      "description": "Process a delegated code review request"
     }
   },
   "agent": {

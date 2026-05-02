@@ -6,7 +6,13 @@ Generate tracked coordination artifacts for agent-facing repo surfaces.
 
 This directory contains the Starship Battles agent coordination tooling:
 inventory, baseline, prefix migration, settings sanitizer, validator, prefix
-checker, usage counters, and a back-fill helper for legacy doc rewrites.
+checker, usage counters, a back-fill helper for legacy doc rewrites, and the
+**OpenCode review delegation system** (daemon + helpers).
+
+Cross-agent systems each have their own state directory under
+`AgentCoordination/<system_name>/`. The delegation system's state and
+operating doc live at `AgentCoordination/opencodereview/`; helper scripts
+live here.
 
 The atomic prefix migration completed at commit `c1b774b29`. All eleven
 validator checks now pass on the live repo. The inventory and baseline are
@@ -115,9 +121,10 @@ candidates; they never authorize automatic deletion.
 Claude Code's `UserPromptExpansion` hook fires when the user types
 `/<skill-name>`, exposing `command_name` in stdin JSON. The repo's
 `.claude/settings.json` wires that event to
-`Tools/agent_coordination/claude_skill_usage_hook.py`, which filters to
-`claude-*` skills and calls `log_skill_usage.py` automatically. No agent
-self-reporting required for Claude Code skill usage.
+`Tools/agent_coordination/claude_skill_usage_hook.py`, which passes
+through ALL skills (prefixed `claude-*` and builtins like `loop`,
+`simplify`, `review`, etc.) to `log_skill_usage.py` automatically.
+No agent self-reporting required for Claude Code skill usage.
 
 Other agents:
 
@@ -128,6 +135,35 @@ Other agents:
   manually per `AGENTS.md §"Skill Usage Logging"`. Transcript scanning is a
   viable future alternative.
 - **Antigravity** is lower priority; manual invocation only.
+
+## OpenCode review delegation
+
+The delegation system lets Claude Code (or any local agent) request a
+code/plan/architecture/test/security review from OpenCode asynchronously.
+Claude writes a structured request file; a daemon picks it up and runs
+`opencode run --dangerously-skip-permissions ...`; OpenCode produces a
+report and a `result.json` sidecar in `Reviews/results/<dated_dir>/`.
+
+State lives at `AgentCoordination/opencodereview/`; helpers live here:
+
+| Script | Role |
+|--------|------|
+| `review_daemon.py` | Watches `pending_review_requests/`, spawns one OpenCode subprocess per request via a worker pool, writes a `## Results` section to the completed request file. |
+| `create_review_request.py` | Atomic, collision-resistant request creation from a JSON payload file. The single supported interface is `--payload-file`. |
+| `parse_results.py` | Reads the `## Results` section from a completed request file and prints fields as JSON. Used by the OpenCode skill to load parent context for follow-up reviews. |
+| `Start-ReviewDaemon.ps1` | Windows launcher. Activates `.venv` if present, otherwise runs against system Python. |
+
+Operating doc with full lifecycle, schema, lock-file semantics, and the
+trust boundary: [`AgentCoordination/opencodereview/DELEGATION.md`](../../AgentCoordination/opencodereview/DELEGATION.md).
+
+Skill files:
+- `.claude/skills/claude-delegate-review/SKILL.md` — how Claude submits a request.
+- `.opencode/skills/ocode-review-request/SKILL.md` — how OpenCode processes one.
+
+The system is verified end-to-end as of 2026-05-02 including the follow-up
+flow (parent's `## Results` is parsed by `parse_results.py` and consumed
+by the OpenCode skill). Tests at `Tools/agent_coordination/test_*.py` —
+53/53 green.
 
 ## Test baseline `git_sha` semantics
 

@@ -45,6 +45,8 @@ MagicMock/
 
 # Agent coordination per-checkout state (install IDs, local usage logs).
 AgentCoordination/local/
+# Per-checkout state for the OpenCode review system (PID, log, payload temp/failed dirs).
+AgentCoordination/opencodereview/local/
 
 # Sanitizer backups for Claude settings files.
 .claude/settings.json.backup.*
