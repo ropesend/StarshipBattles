@@ -124,6 +124,23 @@ should be thin entry points that route to shared protocols in `Projects/`,
 Use the current surface name in examples and handoffs. Do not reference retired
 Antigravity project, ticket, QA, or debug skills from Claude files.
 
+### Ticket systems (parallel, both active)
+
+Two ticket systems run side-by-side. Both are valid.
+
+| System | Skills | Storage | Use for |
+|---|---|---|---|
+| Legacy markdown | `/claude-ticket-*` (10 skills) | `Tracking/bugs/active/`, `Tracking/features/active/` | Existing in-flight tickets; new tickets if you specifically want offline-first or the on-disk audit trail |
+| GitHub Issues | `/claude-gi-*` (10 skills) | https://github.com/ropesend/StarshipBattles/issues | New tickets by default — visible on the GitHub page, native PR/commit linkage |
+
+Both systems use the same authority constraint: agents may set
+`status:awaiting-confirmation` (or its legacy equivalent), but only the user
+closes / archives. Screenshots and logs for the GitHub system live under
+`tracking-assets/`.
+
+The Projects system (`Projects/active_projects/PROJ-XX/`) is **not** migrating
+to GitHub — it stays on disk with its existing `claude-proj-*` skills.
+
 ## Skill Usage Logging
 
 Claude usage logging is automatic for ALL skills through hooks in
