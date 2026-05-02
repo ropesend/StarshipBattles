@@ -49,7 +49,7 @@ Optional flags:
 
 After extraction:
 1. The script outputs the new project ID (e.g., PROJ-55)
-2. Run `/anti-proj-start` on the new project
+2. Run `/claude-proj-start` on the new project
 3. The extraction context in `findings/extraction_context.md` provides background
 4. Plan the new project fresh - not constrained by original phase structure
 

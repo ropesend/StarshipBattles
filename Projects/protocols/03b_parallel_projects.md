@@ -27,7 +27,7 @@ Each project must have:
 2. A file manifest (`manifest.md` listing all files the project will modify)
 3. Phase checklists (`phase_N_checklist.md`)
 
-Projects without `manifest.md` are rejected — tell the user to generate one via `/anti-proj-start` or manually.
+Projects without `manifest.md` are rejected — tell the user to generate one via the project start skill for the current agent surface or create it manually.
 
 ---
 
@@ -139,8 +139,10 @@ When a project worker completes:
    d. **If merge conflict:**
       - Attempt auto-resolve. If ambiguous, present to user.
       - If unresolvable: `git merge --abort`, mark `failed`.
-   e. **If tests fail:**
-      - `git reset --hard HEAD~1`
+   e. **If tests fail after a merge commit exists:**
+      - Require `git status --short` to be clean.
+      - Revert the merge commit with `git revert -m 1 <merge_commit_sha> --no-edit`.
+      - If the worktree is dirty, the merge commit SHA is unclear, or the revert conflicts, stop and ask the user.
       - Report failures to user. Mark `failed`.
 
 3. **If worker hit context threshold (PARTIAL):**
@@ -249,7 +251,7 @@ Your project modifies these files (from manifest.md):
 ```markdown
 # PROJ-XX File Manifest
 
-> Generated during /anti-proj-start. Used by /claude-proj-parallel for conflict detection.
+> Generated during project start. Used by /claude-proj-parallel for conflict detection.
 > Updated if implementation discovers additional files.
 
 ## Files
@@ -266,7 +268,7 @@ Your project modifies these files (from manifest.md):
 - Include ALL test files (new and existing) that will be modified
 - Type is `Production` or `Test`
 - Notes briefly describe what changes
-- Generated during `/anti-proj-start` by scanning task `**File:**` fields and Key Files table
+- Generated during project start by scanning task `**File:**` fields and Key Files table
 
 ---
 

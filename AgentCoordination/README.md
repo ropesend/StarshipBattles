@@ -9,7 +9,8 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 
 ## Contents
 
-- `codex_agent_coordination_plan_final.md` — authoritative policy.
+- `codex_agent_coordination_plan_final.md` — authoritative historical policy.
+- `agent_surface_policy.json` — current mutable policy manifest for validator-enforced agent surface rules.
 - `generated/test_baseline.json` — repo-wide test count baseline; auto-updated by the sharded runner on green whole-suite runs. Tracked.
 - `generated/agent_surface_inventory.json` — schema-versioned inventory of every skill surface. Regenerate with `inventory_agent_surfaces.py`. Tracked.
 - `generated/skill_usage/by_install/<install_id>.json` — per-checkout skill usage counters. Tracked.
@@ -26,11 +27,11 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 | `python Tools/agent_coordination/inventory_agent_surfaces.py` | Regenerate `agent_surface_inventory.json`. |
 | `python Tools/agent_coordination/check_skill_prefixes.py` | Fast prefix-only check; pre-commit-friendly. |
 | `python Tools/agent_coordination/rename_skills_with_prefixes.py --dry-run` | Re-emit the rename plan/report (now a no-op; kept for audit and future renames). |
-| `python Tools/agent_coordination/sanitize_claude_settings.py` | Classify entries in `.claude/settings*.json`. Dry-run by default. |
+| `python Tools/agent_coordination/sanitize_claude_settings.py` | Classify entries in tracked shared Claude settings. Dry-run by default. |
 | `python Tools/agent_coordination/sanitize_claude_settings.py --apply` | Rewrite `STALE_WARN` entries to their proposed canonical form. Refuses if any `SECRET`/`DANGEROUS`/`EXTERNAL_REVIEW` finding is present. Creates a timestamped backup. |
-| `python Tools/agent_coordination/validate_agent_surfaces.py` | Run every coordination check (11 currently). |
-| `python Tools/agent_coordination/log_skill_usage.py --agent <name> --skill <name>` | Record one skill invocation. Auto-installed via Claude Code's `UserPromptExpansion` hook for `claude-*` skills; called manually by other agents per `AGENTS.md §"Skill Usage Logging"`. |
-| `python Tools/agent_coordination/summarize_skill_usage.py` | Aggregate per-install counters into `summary.json`. |
+| `python Tools/agent_coordination/validate_agent_surfaces.py` | Run every coordination check. |
+| `python Tools/agent_coordination/log_skill_usage.py --agent <name> --skill <name>` | Record one skill invocation and update both the per-install counter and `summary.json`. Auto-installed via Claude Code hooks for `claude-*` skills; called manually by other agents per `AGENTS.md §"Skill Usage Logging"`. |
+| `python Tools/agent_coordination/summarize_skill_usage.py` | Regenerate `summary.json` from per-install counters as a repair/maintenance command. |
 | `python Tools/agent_coordination/backfill_legacy_slash_commands.py` | One-shot rewrite of leftover unprefixed `/foo` and `$foo` invocations in current docs. Idempotent. |
 | `python Tools/test_sharded/test_sharded.py --refresh-baseline-timestamp` | Refresh `test_baseline.json verified_at` after a green run. |
 
@@ -39,13 +40,14 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 1. `AGENTS.md` is the shared source of truth.
 2. Runtime skills use `claude-`, `anti-`, `ocode-`, or `codex-` prefixes; reserved cross-agent prefix is `shared-`. Atomic migration completed at commit `c1b774b29`.
 3. Generated baseline, inventory, and usage-counter files are tracked.
-4. Claude local settings (`.claude/settings*.json`) are tracked. The sanitizer rewrites stale paths and the validator hard-fails on any `SECRET`/`DANGEROUS`/`EXTERNAL_REVIEW` finding.
+4. Shared Claude settings (`.claude/settings.json`) are tracked. Local settings (`.claude/settings.local.json`) are ignored and skipped by validator content checks by default.
 5. Stable reinforcement duplication is allowed only with closed validator markers (`tdd`, `docs-first`, `code-doc-consistency`, `root-cause`, `no-ignore-folder`, `no-revert-unrelated`).
 6. Volatile facts (exact test counts in prose, removed paths, stale baselines, `python -m unittest discover`) belong in generated artifacts.
 7. OpenCode permission map keeps `*: allow` first; specific deny patterns follow. Defensive `anti-*: deny` is enforced.
 8. Antigravity remains lower priority and focused on tooling/assets.
-9. Legacy `.agent/workflows/` and `.agent/MIGRATION_PROGRESS.md` were removed at commit `af08531c8`. Git history is the archive.
-10. Skill usage counters are advisory only and never authorize automatic deletion.
+9. Antigravity's live skill surface is limited by `agent_surface_policy.json`.
+10. Legacy `.agent/workflows/` and `.agent/MIGRATION_PROGRESS.md` were removed at commit `af08531c8`. Git history is the archive.
+11. Skill usage counters are advisory only and never authorize automatic deletion.
 
 ## Maintenance cadence
 

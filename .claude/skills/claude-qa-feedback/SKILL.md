@@ -172,7 +172,7 @@ The skill ends by flowing into the next task. There is no formal "skill complete
 - **SOCRATIC FIRST**: Always ask before assuming. The goal is understanding, not speed.
 - **ONE AT A TIME**: Process observations sequentially — don't batch or rush.
 - **SCREENSHOTS ARE EVIDENCE**: Always read and view screenshot image files. They show what the user actually saw.
-- **NO TICKETS**: This skill does not create bug tickets, feature tickets, or triage items. If the user wants tickets, point them to `/anti-qa-triage`.
+- **NO TICKETS**: This skill does not create bug tickets, feature tickets, or triage items. If the user wants tickets, point them to `/claude-qa-triage`.
 - **AGENT DISCRETION ON INVESTIGATION**: You decide when you need to look at code vs. when your existing context is sufficient.
 - **MEMORY, NOT FILES**: Persist learnings as auto-memory entries, not report files or summaries.
 - **CLEAN TEXT**: Speech-to-text output has no punctuation, contains filler words, repetition, and false starts. Clean it up into proper sentences when restating observations. Preserve the original meaning faithfully.

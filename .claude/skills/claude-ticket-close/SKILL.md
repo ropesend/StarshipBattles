@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-close
-description: Archive a confirmed ticket — move to archive and update indexes (e.g., /anti-ticket-close bug 42)
+description: Archive a confirmed ticket — move to archive and update indexes (e.g., /claude-ticket-close bug 42)
 disable-model-invocation: true
 argument-hint: bug|feature <number>
 ---

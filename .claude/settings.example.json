@@ -1,0 +1,36 @@
+{
+  "effortLevel": "high",
+  "permissions": {
+    "allow": [
+      "Bash(python Tools/agent_coordination/validate_agent_surfaces.py:*)",
+      "Bash(python Tools/agent_coordination/check_skill_prefixes.py:*)",
+      "Bash(python Tools/test_sharded/test_sharded.py:*)"
+    ]
+  },
+  "hooks": {
+    "UserPromptExpansion": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python Tools/agent_coordination/claude_skill_usage_hook.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python Tools/agent_coordination/claude_skill_usage_hook.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

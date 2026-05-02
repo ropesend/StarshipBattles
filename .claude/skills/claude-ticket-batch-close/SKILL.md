@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-batch-close
-description: Archive multiple confirmed tickets in one operation (e.g., /anti-ticket-batch-close bug 46 49 50)
+description: Archive multiple confirmed tickets in one operation (e.g., /claude-ticket-batch-close bug 46 49 50)
 disable-model-invocation: true
 argument-hint: bug|feature <numbers...>
 ---

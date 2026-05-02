@@ -35,7 +35,7 @@ Parse `$ARGUMENTS` as either:
 1. **Identify target projects:**
    - If `all`: scan `{ACTIVE_DIR}/` for directories containing both `plan.md` and `manifest.md`.
    - If specific IDs: verify each exists in `{ACTIVE_DIR}/` with both files.
-   - **Reject** any project missing `manifest.md` — inform user: "PROJ-XX has no manifest. Run `/anti-proj-start` or create manifest.md manually."
+   - **Reject** any project missing `manifest.md` — inform user: "PROJ-XX has no manifest. Run `/claude-proj-start` or create manifest.md manually."
    - **Skip** projects with all phases already Complete.
 
 2. **Read manifests and plans:**
@@ -91,7 +91,7 @@ When a worker returns:
    - Mark project `done`.
    - Report: "PROJ-XX complete! Tests: {count} passed."
 4. If merge conflict: attempt auto-resolve, present to user if ambiguous.
-5. If tests fail: `git reset --hard HEAD~1`, mark `failed`, report to user.
+5. If tests fail after a merge commit exists, require `git status --short` to be clean, then revert the merge commit with `git revert -m 1 <merge_commit_sha> --no-edit`, mark `failed`, and report to the user. If the worktree is dirty, the merge commit SHA is unclear, or the revert conflicts, stop and ask the user.
 
 **PARTIAL (context overflow):**
 1. Merge partial branch (has completed phases).

@@ -82,7 +82,7 @@ If the original project has a `manifest.md` (required for `/claude-proj-parallel
 2. Remove files that were ONLY referenced in the extracted phase
 3. Keep files that are referenced by both the extracted phase AND other phases
 
-The new sub-project will get its own `manifest.md` during `/anti-proj-start` (Protocol 01, Step 5).
+The new sub-project will get its own `manifest.md` during project start (Protocol 01, Step 5).
 
 ### Step 5: Verify Original Project
 

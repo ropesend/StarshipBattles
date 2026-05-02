@@ -47,4 +47,4 @@ Every time you invoke a `codex-*` skill, call the usage counter once with `--age
 python Tools/agent_coordination/log_skill_usage.py --agent codex --skill <full-prefixed-skill-name>
 ```
 
-The script auto-creates a per-checkout install ID and increments the counter in `AgentCoordination/generated/skill_usage/by_install/<install_id>.json`. See `AGENTS.md §"Skill Usage Logging"` for full context. Counters are advisory only.
+The script auto-creates a per-checkout install ID, increments the counter in `AgentCoordination/generated/skill_usage/by_install/<install_id>.json`, and rewrites the aggregate `AgentCoordination/generated/skill_usage/summary.json`. See `AGENTS.md §"Skill Usage Logging"` for full context. Counters are advisory only.

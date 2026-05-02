@@ -60,17 +60,22 @@ def _aggregate(by_install_dir: Path) -> dict[str, object]:
     }
 
 
+def write_summary(repo_root: Path) -> None:
+    by_install = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
+    summary = _aggregate(by_install)
+    summary_path = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "summary.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Aggregate skill usage counters into summary.json")
     parser.add_argument("--repo-root", type=Path, default=None)
     args = parser.parse_args(argv)
 
     repo_root = args.repo_root.resolve() if args.repo_root else Path.cwd()
-    by_install = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
-    summary = _aggregate(by_install)
     summary_path = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "summary.json"
-    summary_path.parent.mkdir(parents=True, exist_ok=True)
-    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    write_summary(repo_root)
     print(f"Wrote {summary_path}")
     return 0
 

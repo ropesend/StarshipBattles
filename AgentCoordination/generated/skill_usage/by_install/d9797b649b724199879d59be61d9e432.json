@@ -1,0 +1,13 @@
+{
+  "install_id": "d9797b649b724199879d59be61d9e432",
+  "schema_version": 1,
+  "skills": {
+    "codex-starship-analysis-review": {
+      "agents": {
+        "codex": 5
+      },
+      "count": 5,
+      "last_used": "2026-05-02T16:10:37Z"
+    }
+  }
+}

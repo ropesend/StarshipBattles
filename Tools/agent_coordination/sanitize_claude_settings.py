@@ -4,9 +4,9 @@
 Dry-run by default. Apply mode is opt-in and refuses rewrites that broaden
 permissions.
 
-Operates on:
+Operates by default on tracked shared settings:
 - .claude/settings.json
-- .claude/settings.local.json
+- .claude/settings.example.json
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 TARGET_FILES = (
     Path(".claude/settings.json"),
-    Path(".claude/settings.local.json"),
+    Path(".claude/settings.example.json"),
 )
 
 # Anything that *isn't* a settings entry under permissions.allow / additionalDirectories

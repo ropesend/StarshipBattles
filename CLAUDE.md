@@ -1,6 +1,4 @@
-# Claude Code — Project Adapter
-
-@AGENTS.md
+# Claude Code Adapter
 
 This file is the Claude-Code-specific delta over `AGENTS.md`. Read `AGENTS.md` first; it owns the non-negotiable rules, canonical commands, test infrastructure summary, conventions, architecture overview, and skill-usage policy. This file adds only Claude Code-specific behavior.
 
@@ -48,71 +46,123 @@ If you catch yourself writing "this will take ~30 minutes" or "in a follow-up pa
 The five rules below are restated here because Claude Code's context can grow long and the model loses fidelity past ~50% of the window. The closed validator markers signal these are *intentional* duplications, not drift.
 
 <!-- agent-coordination:reinforcement tdd -->
-**TDD always.** Write or identify the failing test first, run it to confirm failure, then implement. No exceptions. If you catch yourself writing implementation code without a failing test, **stop**. Delete or stash, write the test first, reimplement.
+### 1. Strict TDD
+
+Write or identify the failing test first, run it to confirm failure, then
+implement. Do not backfill tests after implementation. Run the focused tests
+while working and the relevant final validation before declaring the task done.
+
+Canonical commands:
+
+```bash
+python Tools/test_sharded/test_sharded.py
+pytest tests/ --testmon
+pytest tests/path/to/test.py -k test_name
+python -m combat_lab.run_tests
+```
 
 <!-- agent-coordination:reinforcement docs-first -->
 <!-- agent-coordination:reinforcement code-doc-consistency -->
-**Read docs before coding; update docs in the same commit.** Start at `docs/README.md`. Always read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`, plus any task-specific docs the README points at. When you change behavior or architecture, update the relevant docs in the same commit. Bump the `Last verified:` date when you've actually re-read a doc against current code.
+### 2. Documentation First
 
-<!-- agent-coordination:reinforcement root-cause -->
-**Root cause fixes only.** No bandaids, no workarounds, no "good enough for now." If you catch yourself writing a workaround, ask: *what is the real problem here?* and fix that. Refactor surrounding code if the clean fix requires it; propose a larger refactor and let the user decide scope rather than ship a hack.
+Before code work, read `docs/README.md`, then always read:
+
+1. `docs/01_ARCHITECTURE.md`
+2. `docs/02_PATTERNS.md`
+3. `docs/03_CONVENTIONS.md`
+
+Read task-specific docs listed in `docs/README.md`. Update docs in the same
+change when behavior, architecture, workflow, or conventions change.
 
 <!-- agent-coordination:reinforcement no-ignore-folder -->
-**Never read `docs/_ignore/`.** It is the user's personal scratch pad. Not documentation; not relevant to any task.
+Never read, summarize, reference, or act on `docs/_ignore/`. It is the user's
+scratch space, not project documentation.
 
----
+<!-- agent-coordination:reinforcement root-cause -->
+### 3. Root Cause Fixes
+
+Fix the real problem. Do not add compatibility shims, fallback systems, monkey
+patches, duplicate logic, or save-file migrations. Old saves are disposable.
+When a system is replaced, remove the old path and update all callers.
+
+<!-- agent-coordination:reinforcement no-revert-unrelated -->
+Do not revert unrelated user changes. Check `git status --short` before editing
+and work around existing dirty state.
+
+## Project Facts
+
+- Python baseline: 3.13+.
+- UI target: minimum 2560x1600, optimized for 3840x2160.
+- Starship Battles is a tactical combat and strategic galaxy-map game using
+  Pygame, pytest, and repo-local development tools.
+- Spatial terms are precise: a star system is the radius-50 region around a
+  star; a sector is one hex. System-scope effects apply across the star system.
+  Sector-scope effects apply to one hex.
+
+For layer boundaries, patterns, and current package APIs, use `docs/` as the
+source of truth. Do not copy architecture summaries into this adapter.
+
+## Key Conventions
+
+- Public functions and methods require return-type annotations. Use modern
+  syntax such as `int | None`; dunders are exempt.
+- Production files under `game/` should stay under 500 LOC. Split by
+  responsibility when a touched file approaches that ceiling.
+- Broad `except Exception` catches require an intentional-reason comment on
+  the same line or immediately above.
+- Prefer existing registries, services, protocols, and helpers over new local
+  mechanisms.
+- Keep code and docs consistent. If code and docs disagree, stop and surface
+  the discrepancy instead of silently choosing one.
+
+## Claude Skills
+
+Claude skills live under `.claude/skills/` and use the `claude-` prefix. Skills
+should be thin entry points that route to shared protocols in `Projects/`,
+`Tracking/`, `Reviews/`, and `docs/`.
+
+Use the current surface name in examples and handoffs. Do not reference retired
+Antigravity project, ticket, QA, or debug skills from Claude files.
 
 ## Skill Usage Logging
 
-Claude usage logging is **automatic** for ALL skills via two hooks in `.claude/settings.json`:
+Claude usage logging is automatic for ALL skills through hooks in
+`.claude/settings.json`:
 
-- `UserPromptExpansion` (matcher `*`) fires when the user types `/skill-name` and exposes `command_name`.
-- `PreToolUse` (matcher `Skill`) fires when Claude calls the Skill tool itself.
+- `UserPromptExpansion` records typed `/skill-name` commands.
+- `PreToolUse` with matcher `Skill` records direct Skill tool use.
 
-Both events run `Tools/agent_coordination/claude_skill_usage_hook.py`, which calls `log_skill_usage.py --agent claude --skill <name>` for all skill names (prefixed `claude-*` and builtins like `loop`, `simplify`, `review`, etc.). No manual invocation needed.
-
-Manual call (testing or override):
+Both hooks call:
 
 ```bash
-python Tools/agent_coordination/log_skill_usage.py --agent claude --skill claude-proj-start
+python Tools/agent_coordination/log_skill_usage.py --agent claude --skill <skill-name>
 ```
 
-Counters are **advisory only** — they identify cleanup candidates and never authorize automatic deletion. Full context: `AGENTS.md §"Skill Usage Logging"` and `Tools/agent_coordination/README.md`.
+The logging command updates the per-install counter and aggregated
+`AgentCoordination/generated/skill_usage/summary.json` in one invocation.
+Counters are advisory only and never authorize automatic skill deletion.
 
----
+## Git Workflow
+
+- Check `git status --short` before edits.
+- Keep commits focused when asked to commit.
+- For failed merge rollbacks in parallel workflows, use
+  `git revert -m 1 <merge_commit_sha> --no-edit` after confirming the worktree
+  is clean. If the SHA is unclear, the worktree is dirty, or revert conflicts,
+  stop and ask the user.
 
 ## Subagent Report Output
 
-Subagent reports go to `.agent_reports/` by default. The directory is gitignored and disposable.
+Subagent reports go to `.agent_reports/` by default. This directory is ignored
+and disposable.
 
-**Default workflow:**
+When launching subagents:
 
-1. Main agent creates `.agent_reports/<descriptive-job-name>/` before spawning subagents.
-2. Main agent passes the full path to each subagent in its prompt.
-3. Subagents write reports to that directory only, using the Write tool (not Bash).
-4. Main agent reads the reports, then deletes the job folder when the task is complete.
+1. Create `.agent_reports/<job-name>/`.
+2. Pass that path to every subagent.
+3. Tell subagents to write reports only to that path.
+4. Read and clean up reports when the task is complete.
 
-**Skill / protocol overrides:** when a skill or protocol specifies its own report location, use it. The skill is authoritative. Examples:
-
-- Project reviews → `Projects/active_projects/PROJ-XX/findings/` (protocols 01, 04, 09).
-- Codebase analysis sweeps → `Reviews/results/{DATE}_{TYPE}_{SCOPE}/`.
-
-The main agent passes the override path to subagents the same way; subagents always write to whatever path they are given.
-
----
-
-## Testing Configuration
-
-- **CLI parallel workers:** 12 (`-n 12`).
-- **VS Code Test Explorer:** use 4 workers; higher breaks the integrated panel.
-- **Test monitor:** `--testmon` for incremental runs.
-- Repo-wide baseline at `AgentCoordination/generated/test_baseline.json` (auto-updated on green whole-suite runs). One known flake: `test_colony_owner_id_matches_empire` passes when run alone (test-isolation).
-
----
-
-## Help and Feedback
-
-If a user asks for help or feedback:
-
-- `/help` for Claude Code help.
-- File feedback at https://github.com/anthropics/claude-code/issues.
+If a skill or protocol specifies another report directory, use that location
+instead. Examples include `Projects/active_projects/PROJ-XX/findings/` and
+`Reviews/results/<date>_<type>_<scope>/`.

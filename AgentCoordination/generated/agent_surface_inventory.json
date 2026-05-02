@@ -57,13 +57,6 @@
       "path": ".claude/settings.local.json",
       "pattern": "c:\\\\Developer\\\\StarshipBattles\\\\Projects\\\\active_projects\\\\PROJ-218\\\\findings",
       "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
-      "line": 95,
-      "path": "CLAUDE.md",
-      "pattern": "s://github.com/anthropics/claude-code/issues.",
-      "severity": "warn"
     }
   ],
   "surfaces": [
@@ -882,10 +875,10 @@
           "directory": "claude-ticket-add",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Create new bug or feature tickets (e.g., /anti-ticket-add bug <descriptions> or /anti-ticket-add feature <descriptions>)",
+            "description": "Create new bug or feature tickets (e.g., /claude-ticket-add bug <descriptions> or /claude-ticket-add feature <descriptions>)",
             "name": "claude-ticket-add"
           },
-          "frontmatter_description": "Create new bug or feature tickets (e.g., /anti-ticket-add bug <descriptions> or /anti-ticket-add feature <descriptions>)",
+          "frontmatter_description": "Create new bug or feature tickets (e.g., /claude-ticket-add bug <descriptions> or /claude-ticket-add feature <descriptions>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -910,10 +903,10 @@
           "directory": "claude-ticket-answer",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /anti-ticket-answer bug 42 <answers>)",
+            "description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /claude-ticket-answer bug 42 <answers>)",
             "name": "claude-ticket-answer"
           },
-          "frontmatter_description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /anti-ticket-answer bug 42 <answers>)",
+          "frontmatter_description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /claude-ticket-answer bug 42 <answers>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -938,10 +931,10 @@
           "directory": "claude-ticket-batch-close",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Archive multiple confirmed tickets in one operation (e.g., /anti-ticket-batch-close bug 46 49 50)",
+            "description": "Archive multiple confirmed tickets in one operation (e.g., /claude-ticket-batch-close bug 46 49 50)",
             "name": "claude-ticket-batch-close"
           },
-          "frontmatter_description": "Archive multiple confirmed tickets in one operation (e.g., /anti-ticket-batch-close bug 46 49 50)",
+          "frontmatter_description": "Archive multiple confirmed tickets in one operation (e.g., /claude-ticket-batch-close bug 46 49 50)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -966,10 +959,10 @@
           "directory": "claude-ticket-close",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /anti-ticket-close bug 42)",
+            "description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /claude-ticket-close bug 42)",
             "name": "claude-ticket-close"
           },
-          "frontmatter_description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /anti-ticket-close bug 42)",
+          "frontmatter_description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /claude-ticket-close bug 42)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -994,10 +987,10 @@
           "directory": "claude-ticket-continue",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /anti-ticket-continue bug or /anti-ticket-continue feature)",
+            "description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /claude-ticket-continue bug or /claude-ticket-continue feature)",
             "name": "claude-ticket-continue"
           },
-          "frontmatter_description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /anti-ticket-continue bug or /anti-ticket-continue feature)",
+          "frontmatter_description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /claude-ticket-continue bug or /claude-ticket-continue feature)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1022,10 +1015,10 @@
           "directory": "claude-ticket-deep-dive",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /anti-ticket-deep-dive bug 42)",
+            "description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /claude-ticket-deep-dive bug 42)",
             "name": "claude-ticket-deep-dive"
           },
-          "frontmatter_description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /anti-ticket-deep-dive bug 42)",
+          "frontmatter_description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /claude-ticket-deep-dive bug 42)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1050,10 +1043,10 @@
           "directory": "claude-ticket-next",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Pick the highest priority pending ticket and start working on it (e.g., /anti-ticket-next bug or /anti-ticket-next feature)",
+            "description": "Pick the highest priority pending ticket and start working on it (e.g., /claude-ticket-next bug or /claude-ticket-next feature)",
             "name": "claude-ticket-next"
           },
-          "frontmatter_description": "Pick the highest priority pending ticket and start working on it (e.g., /anti-ticket-next bug or /anti-ticket-next feature)",
+          "frontmatter_description": "Pick the highest priority pending ticket and start working on it (e.g., /claude-ticket-next bug or /claude-ticket-next feature)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1078,10 +1071,10 @@
           "directory": "claude-ticket-reject",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /anti-ticket-reject bug 42 <reason>)",
+            "description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /claude-ticket-reject bug 42 <reason>)",
             "name": "claude-ticket-reject"
           },
-          "frontmatter_description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /anti-ticket-reject bug 42 <reason>)",
+          "frontmatter_description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /claude-ticket-reject bug 42 <reason>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1106,10 +1099,10 @@
           "directory": "claude-ticket-update",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Append new context or information to an existing ticket without analyzing it (e.g., /anti-ticket-update bug 42 <text>)",
+            "description": "Append new context or information to an existing ticket without analyzing it (e.g., /claude-ticket-update bug 42 <text>)",
             "name": "claude-ticket-update"
           },
-          "frontmatter_description": "Append new context or information to an existing ticket without analyzing it (e.g., /anti-ticket-update bug 42 <text>)",
+          "frontmatter_description": "Append new context or information to an existing ticket without analyzing it (e.g., /claude-ticket-update bug 42 <text>)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1134,10 +1127,10 @@
           "directory": "claude-ticket-work",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Fix a bug or implement a feature by ticket ID (e.g., /anti-ticket-work bug 42 or /anti-ticket-work feature 7)",
+            "description": "Fix a bug or implement a feature by ticket ID (e.g., /claude-ticket-work bug 42 or /claude-ticket-work feature 7)",
             "name": "claude-ticket-work"
           },
-          "frontmatter_description": "Fix a bug or implement a feature by ticket ID (e.g., /anti-ticket-work bug 42 or /anti-ticket-work feature 7)",
+          "frontmatter_description": "Fix a bug or implement a feature by ticket ID (e.g., /claude-ticket-work bug 42 or /claude-ticket-work feature 7)",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1248,20 +1241,65 @@
     },
     {
       "agent": "antigravity",
-      "directory_count": 6,
+      "directory_count": 5,
       "exists": true,
       "expected_prefix": "anti-",
       "kind": "skill_surface",
       "opencode_visible": false,
       "skill_names": [
+        "anti-analysis-complexity",
+        "anti-analysis-dead-code",
         "anti-analysis-sweep",
-        "anti-fix-crash",
         "anti-loc",
-        "anti-qa-feedback",
-        "anti-qa-triage",
         "anti-validate-designs"
       ],
       "skills": [
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": false,
+          "claude_specific_frontmatter": [],
+          "directory": "anti-analysis-complexity",
+          "expected_prefix": "anti-",
+          "frontmatter": {
+            "description": "Run cyclomatic complexity analysis using radon and report high-complexity functions",
+            "name": "anti-analysis-complexity"
+          },
+          "frontmatter_description": "Run cyclomatic complexity analysis using radon and report high-complexity functions",
+          "frontmatter_fields": [
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "anti-analysis-complexity",
+          "name_matches_directory": true,
+          "opencode_permission": "not_visible",
+          "opencode_visible": false,
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-analysis-complexity/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": false,
+          "claude_specific_frontmatter": [],
+          "directory": "anti-analysis-dead-code",
+          "expected_prefix": "anti-",
+          "frontmatter": {
+            "description": "Run Vulture dead code analysis on game/ and tests/, categorize findings, and report confirmed dead code",
+            "name": "anti-analysis-dead-code"
+          },
+          "frontmatter_description": "Run Vulture dead code analysis on game/ and tests/, categorize findings, and report confirmed dead code",
+          "frontmatter_fields": [
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "anti-analysis-dead-code",
+          "name_matches_directory": true,
+          "opencode_permission": "not_visible",
+          "opencode_visible": false,
+          "prefix_compliant": true,
+          "skill_md": ".agent/skills/anti-analysis-dead-code/SKILL.md",
+          "spec_violations": []
+        },
         {
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
@@ -1289,34 +1327,6 @@
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": true,
           "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "anti-fix-crash",
-          "expected_prefix": "anti-",
-          "frontmatter": {
-            "description": "Diagnose a crash from a traceback \u2014 root cause analysis, pattern compliance check, and TDD fix with no bandaids",
-            "name": "anti-fix-crash"
-          },
-          "frontmatter_description": "Diagnose a crash from a traceback \u2014 root cause analysis, pattern compliance check, and TDD fix with no bandaids",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "anti-fix-crash",
-          "name_matches_directory": true,
-          "opencode_permission": "not_visible",
-          "opencode_visible": false,
-          "prefix_compliant": true,
-          "skill_md": ".agent/skills/anti-fix-crash/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
             "disable-model-invocation"
           ],
           "directory": "anti-loc",
@@ -1337,62 +1347,6 @@
           "opencode_visible": false,
           "prefix_compliant": true,
           "skill_md": ".agent/skills/anti-loc/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "anti-qa-feedback",
-          "expected_prefix": "anti-",
-          "frontmatter": {
-            "description": "Process a QA session interactively within the current agent session, using Socratic questioning to deeply understand each observation before continuing work",
-            "name": "anti-qa-feedback"
-          },
-          "frontmatter_description": "Process a QA session interactively within the current agent session, using Socratic questioning to deeply understand each observation before continuing work",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "anti-qa-feedback",
-          "name_matches_directory": true,
-          "opencode_permission": "not_visible",
-          "opencode_visible": false,
-          "prefix_compliant": true,
-          "skill_md": ".agent/skills/anti-qa-feedback/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "anti-qa-triage",
-          "expected_prefix": "anti-",
-          "frontmatter": {
-            "description": "Process QA session logs into bugs, features, and prospective projects through interactive triage",
-            "name": "anti-qa-triage"
-          },
-          "frontmatter_description": "Process QA session logs into bugs, features, and prospective projects through interactive triage",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "anti-qa-triage",
-          "name_matches_directory": true,
-          "opencode_permission": "not_visible",
-          "opencode_visible": false,
-          "prefix_compliant": true,
-          "skill_md": ".agent/skills/anti-qa-triage/SKILL.md",
           "spec_violations": []
         },
         {

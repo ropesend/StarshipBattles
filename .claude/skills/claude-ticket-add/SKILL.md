@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-add
-description: Create new bug or feature tickets (e.g., /anti-ticket-add bug <descriptions> or /anti-ticket-add feature <descriptions>)
+description: Create new bug or feature tickets (e.g., /claude-ticket-add bug <descriptions> or /claude-ticket-add feature <descriptions>)
 disable-model-invocation: true
 argument-hint: bug|feature <descriptions>
 ---
