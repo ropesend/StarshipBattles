@@ -49,13 +49,13 @@ The script creates `REVIEW_DIR/raw/` with these outputs against `game/`:
 5. `dead_deps.txt` — unreachable files from entry points
 6. `radon.json` — complexity hotspots (CC >= 11)
 7. `clones.json` — AST near-duplicate function clusters
-8. `manifest.json` — file inventory + shard rotation
+8. `manifest.json` — file inventory + shard assignments
 
 ### Step 2: Read Phase 1 Outputs
 
 Read these files into memory for use in agent prompts:
 
-1. Read `REVIEW_DIR/raw/manifest.json` — extract ALL 4 shard file lists from `shards.UI.files`, `shards.SIM.files`, `shards.STR.files`, `shards.FND.files` (all 4 shards are deep-reviewed every cycle)
+1. Read `REVIEW_DIR/raw/manifest.json` — extract ALL 4 shard file lists from `shards.01.files`, `shards.02.files`, `shards.03.files`, `shards.04.files` (all 4 shards are deep-reviewed every cycle)
 2. Read `REVIEW_DIR/raw/clones.json` — clone detector clusters (get the full JSON content)
 3. Read `REVIEW_DIR/raw/vulture_100.txt` — dead code candidates (get the full text)
 4. Read `REVIEW_DIR/raw/vulture_80.txt` — high-likelihood dead code (get the full text)
@@ -73,15 +73,15 @@ mkdir -p REVIEW_DIR/findings
 
 Launch **6 agents** in parallel using the Task tool with `subagent_type: general`:
 - **1 cross-shard duplication agent** (scans all of game/)
-- **4 in-shard deep review agents** (one per shard: UI, SIM, STR, FND)
+- **4 in-shard deep review agents** (one per shard: 01, 02, 03, 04)
 - **1 dead code validator agent** (validates vulture/dead_deps/orphans)
 
 Each agent receives EXACTLY the prompt template below with placeholder text replaced by actual data.
 
 **Replace these placeholders in each template before sending:**
 - `{REVIEW_DIR}` → the actual review directory (e.g., `Reviews/results/2026-04-27_133045_audit_shrink`)
-- `{shard_id}` → the shard ID: `UI`, `SIM`, `STR`, or `FND`
-- `{shard_label}` → from manifest.json `shards.{shard_id}.label` (e.g., "UI Layer", "Simulation Layer", "Strategy Layer", "Foundation Layer")
+- `{shard_id}` → the shard ID: `01`, `02`, `03`, or `04`
+- `{shard_label}` → from manifest.json `shards.{shard_id}.label` (e.g., "Shard 01")
 - `{shard_files}` → the files list from manifest.json `shards.{shard_id}.files`, formatted as markdown list
 - `{clones_json}` → the full content of clones.json
 - `{vulture_100}` → the full content of vulture_100.txt
@@ -169,7 +169,7 @@ Use EXACTLY this structure:
 
 #### Agents 2a–2d: In-Shard Deep Review (4 agents — one per shard)
 
-Launch **4 agents** using the template below — one for each shard: UI, SIM, STR, FND. Replace `{shard_id}`, `{shard_label}`, and `{shard_files}` with the values from manifest.json for each shard. All 4 agents write to different output files: `deep_review_UI.md`, `deep_review_SIM.md`, `deep_review_STR.md`, `deep_review_FND.md`.
+Launch **4 agents** using the template below — one for each shard: 01, 02, 03, 04. Replace `{shard_id}`, `{shard_label}`, and `{shard_files}` with the values from manifest.json for each shard. All 4 agents write to different output files: `deep_review_01.md`, `deep_review_02.md`, `deep_review_03.md`, `deep_review_04.md`.
 
 ```
 # In-Shard Deep Review Agent
@@ -378,10 +378,10 @@ Items with zero production callers but referenced by tests or docs:
 After all 6 agents complete, check that these 6 files exist and are non-empty:
 
 - `REVIEW_DIR/findings/duplication_cross_shard.md`
-- `REVIEW_DIR/findings/deep_review_UI.md`
-- `REVIEW_DIR/findings/deep_review_SIM.md`
-- `REVIEW_DIR/findings/deep_review_STR.md`
-- `REVIEW_DIR/findings/deep_review_FND.md`
+- `REVIEW_DIR/findings/deep_review_01.md`
+- `REVIEW_DIR/findings/deep_review_02.md`
+- `REVIEW_DIR/findings/deep_review_03.md`
+- `REVIEW_DIR/findings/deep_review_04.md`
 - `REVIEW_DIR/findings/dead_code_validation.md`
 
 If any agent failed, note it in the report but continue with available data.
@@ -394,10 +394,10 @@ Launch **1 verification agent** to cross-check all CRITICAL dead-code findings a
 # Dead Code Cross-Verifier
 
 Read these files:
-1. REVIEW_DIR/findings/deep_review_UI.md
-2. REVIEW_DIR/findings/deep_review_SIM.md
-3. REVIEW_DIR/findings/deep_review_STR.md
-4. REVIEW_DIR/findings/deep_review_FND.md
+1. REVIEW_DIR/findings/deep_review_01.md
+2. REVIEW_DIR/findings/deep_review_02.md
+3. REVIEW_DIR/findings/deep_review_03.md
+4. REVIEW_DIR/findings/deep_review_04.md
 5. REVIEW_DIR/findings/dead_code_validation.md
 
 For EVERY finding marked CRITICAL (should delete code):
@@ -445,10 +445,10 @@ Read all agent reports and the verification report. Write `REVIEW_DIR/report.md`
 **2. Coverage Status**
 | Shard | Files | LOC | Deep Review File | Status |
 |-------|-------|-----|-----------------|--------|
-| UI | [N] | [N] | `deep_review_UI.md` | ✓ |
-| SIM | [N] | [N] | `deep_review_SIM.md` | ✓ |
-| STR | [N] | [N] | `deep_review_STR.md` | ✓ |
-| FND | [N] | [N] | `deep_review_FND.md` | ✓ |
+| 01 | [N] | [N] | `deep_review_01.md` | ✓ |
+| 02 | [N] | [N] | `deep_review_02.md` | ✓ |
+| 03 | [N] | [N] | `deep_review_03.md` | ✓ |
+| 04 | [N] | [N] | `deep_review_04.md` | ✓ |
 
 **3. Dead Code Inventory**
 Aggregate Agent 3's confirmed dead code by tier with LOC estimates.
@@ -477,10 +477,10 @@ Separate dead-code from product-decision findings.
 | Dead imports | [N] | Simple | Safe |
 | Duplicate consolidation | [N] | Medium-High | Needs design |
 | Complexity reduction | [N] | Medium-High | Needs care |
-| In-shard cleanup (UI) | [N] | Low-Medium | Safe |
-| In-shard cleanup (SIM) | [N] | Low-Medium | Safe |
-| In-shard cleanup (STR) | [N] | Low-Medium | Safe |
-| In-shard cleanup (FND) | [N] | Low-Medium | Safe |
+| In-shard cleanup (Shard 01) | [N] | Low-Medium | Safe |
+| In-shard cleanup (Shard 02) | [N] | Low-Medium | Safe |
+| In-shard cleanup (Shard 03) | [N] | Low-Medium | Safe |
+| In-shard cleanup (Shard 04) | [N] | Low-Medium | Safe |
 | Product decision items (not counted yet) | [N] | — | Needs decision |
 | **Total (safe items only)** | **[N]** | | |
 
@@ -507,8 +507,8 @@ with open("{REVIEW_DIR}/raw/manifest.json") as f:
 run_data = {
     "date": "{REVIEW_DIR}".split("/")[1].split("_")[0],
     "review_dir": "{REVIEW_DIR}",
-    "deep_review_shards": ["UI", "SIM", "STR", "FND"],
-    "rotation_index": manifest["rotation_index"],
+    "deep_review_shards": ["01", "02", "03", "04"],
+    "seed": manifest["seed"],
     "production_loc": ...,  # from loc_baseline.txt
     "dead_code_files": ...,  # count from Agent 3 Tier 1
     "dead_code_functions": ...,  # count from Agent 3 Tier 2+3
