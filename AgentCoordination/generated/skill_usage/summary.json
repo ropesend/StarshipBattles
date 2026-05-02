@@ -10,10 +10,25 @@
     },
     "codex-starship-analysis-review": {
       "by_install": {
+        "304cdac3c17d4dd6b885c50bf357d6cd": 6,
         "d9797b649b724199879d59be61d9e432": 5
       },
-      "last_used": "2026-05-02T16:10:37Z",
-      "total_count": 5
+      "last_used": "2026-05-02T18:50:06Z",
+      "total_count": 11
+    },
+    "codex-starship-qa-observer": {
+      "by_install": {
+        "d9797b649b724199879d59be61d9e432": 2
+      },
+      "last_used": "2026-05-02T20:35:44Z",
+      "total_count": 2
+    },
+    "ocode-review-request": {
+      "by_install": {
+        "304cdac3c17d4dd6b885c50bf357d6cd": 11
+      },
+      "last_used": "2026-05-02T19:43:13Z",
+      "total_count": 11
     }
   }
 }
