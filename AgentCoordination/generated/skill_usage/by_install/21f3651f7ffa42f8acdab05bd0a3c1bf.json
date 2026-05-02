@@ -1,0 +1,13 @@
+{
+  "install_id": "21f3651f7ffa42f8acdab05bd0a3c1bf",
+  "schema_version": 1,
+  "skills": {
+    "ocode-review-request": {
+      "agents": {
+        "ocode": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-02T20:26:12Z"
+    }
+  }
+}

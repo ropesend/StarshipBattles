@@ -117,10 +117,11 @@ def run(force_output_dir=None):
         "clone_detector",
     )
 
-    # Step 8: Manifest with rotation
-    print("8. File manifest + shard rotation...")
+    # Step 8: Manifest with seeded shuffle
+    print("8. File manifest + shard shuffle...")
+    seed = f"shrink-{date_slug}"
     _run_tool(
-        [sys.executable, os.path.join(AUDIT_DIR, "manifest.py"), raw_dir],
+        [sys.executable, os.path.join(AUDIT_DIR, "manifest.py"), raw_dir, "--seed", seed],
         None,
         "manifest",
     )

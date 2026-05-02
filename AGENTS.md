@@ -75,7 +75,8 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 ## Project Management
 
 - Active projects: `Projects/active_projects/PROJ-XX/`. Protocols: `Projects/protocols/`.
-- Tickets: `Tracking/bugs/active/` and `Tracking/features/active/`. Protocols: `Tracking/protocols/`.
+- Tickets (legacy, parallel): `Tracking/bugs/active/` and `Tracking/features/active/`. Protocols: `Tracking/protocols/`. Skills: `/claude-ticket-*`.
+- Tickets (GitHub Issues, parallel): https://github.com/ropesend/StarshipBattles/issues. Skills: `/claude-gi-*`. New tickets should go here unless the legacy system is more convenient. Both systems run side-by-side; legacy will be sunset on user signal.
 - Reviews: `Reviews/protocols/` and `Reviews/results/`. Historical audit reports stored here.
 - Archive: `Projects/archived_projects/` and `Projects/deep_archive/` — do not reference as current.
 

@@ -1,0 +1,63 @@
+name: Bug Report
+description: Report a defect — something is broken, crashes, or behaves unexpectedly.
+title: ""
+labels:
+  - "type:bug"
+  - "status:pending"
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is broken? Be specific.
+      placeholder: |
+        When I do X, Y happens instead of Z.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Exact steps to trigger the bug. Include game state, screen, action sequence.
+      placeholder: |
+        1. Launch a 2-empire battle from the strategy map
+        2. Open the fleet panel
+        3. Click "Reorganize"
+        4. Observe: …
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs Actual
+      placeholder: |
+        Expected: …
+        Actual: …
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know the bug is fixed? Concrete, testable assertions.
+      placeholder: |
+        - When the user clicks Reorganize, the panel does not crash
+        - A test in tests/integration/ui/ exercises the click path
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot / Logs
+      description: |
+        Commit any screenshots to `tracking-assets/screenshots/YYYY-MM/issue-NNN-<slug>.png`
+        and any logs to `tracking-assets/logs/issue-NNN/<filename>`, then link them here.
+        Use the `?raw=1` query for inline rendering:
+        `![alt](https://github.com/ropesend/StarshipBattles/blob/main/tracking-assets/screenshots/2026-05/issue-127-hud.png?raw=1)`
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Set by the reporter; revisable by the project manager during triage.
+      options:
+        - critical
+        - high
+        - medium
+        - low
+      default: 2
+    validations:
+      required: true
