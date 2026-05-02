@@ -141,6 +141,17 @@ closes / archives. Screenshots and logs for the GitHub system live under
 The Projects system (`Projects/active_projects/PROJ-XX/`) is **not** migrating
 to GitHub — it stays on disk with its existing `claude-proj-*` skills.
 
+**Setup (one-time per machine)** for the GitHub Issues system:
+
+1. Install the GitHub CLI: `winget install GitHub.cli` (Windows), `brew install gh` (macOS), or per platform.
+2. Authenticate: `gh auth login` — pick GitHub.com, HTTPS, web browser flow.
+3. If `gh` is not on `PATH` after install (Windows: shells started before the install won't see it), add a machine-local `.claude/settings.local.json` (gitignored) with an env override, e.g. on Windows:
+   ```json
+   { "env": { "PATH": "C:\\Program Files\\GitHub CLI;${PATH}" } }
+   ```
+   Restart Claude Code to pick up the change. Do NOT put system-specific paths in the synced `.claude/settings.json`.
+4. Sync labels (one-time per repo): `python Tools/agent_coordination/sync_github_labels.py`.
+
 ## Skill Usage Logging
 
 Claude usage logging is automatic for ALL skills through hooks in

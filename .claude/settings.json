@@ -1,8 +1,5 @@
 {
   "effortLevel": "high",
-  "env": {
-    "PATH": "C:\\Program Files\\GitHub CLI;${PATH}"
-  },
   "permissions": {
     "allow": [
       "Bash(cd:*)"
