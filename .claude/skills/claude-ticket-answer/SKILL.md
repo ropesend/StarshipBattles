@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-answer
-description: Log answers to clarification questions and return a ticket to the work queue (e.g., /anti-ticket-answer bug 42 <answers>)
+description: Log answers to clarification questions and return a ticket to the work queue (e.g., /claude-ticket-answer bug 42 <answers>)
 disable-model-invocation: true
 argument-hint: bug|feature <number> <answers>
 ---

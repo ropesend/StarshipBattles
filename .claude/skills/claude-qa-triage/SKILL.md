@@ -250,7 +250,7 @@ Pending
 [Why this warrants a full project rather than a bug fix or feature]
 ```
 
-6. Report: "Created triage item: `<filename>.md` — use `/anti-triage-to-proj <filename>` to convert to a full project."
+6. Report: "Created triage item: `<filename>.md` — use `/claude-triage-to-proj <filename>` to convert to a full project."
 
 ---
 
@@ -351,7 +351,7 @@ Same relative path pattern as bugs:
 
 **COPY** images from the session `images/` directory to `Projects/Triage/assets/`. Reference them as `./assets/<filename>.png` in the triage markdown.
 
-This is required because the `/anti-triage-to-proj` skill expects `./assets/` references and handles copying them to the project directory during conversion. If images are not in `./assets/`, the conversion will break.
+This is required because the `/claude-triage-to-proj` skill expects `./assets/` references and handles copying them to the project directory during conversion. If images are not in `./assets/`, the conversion will break.
 
 ---
 

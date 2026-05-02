@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import fnmatch
 import json
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -69,6 +71,41 @@ REMOVED_PATH_LITERALS = (
 # excluding from a volatile-fact rule.
 VOLATILE_EXCLUDE_SUFFIXES: tuple[str, ...] = ()
 
+POLICY_RELATIVE_PATH = Path("AgentCoordination") / "agent_surface_policy.json"
+POLICY_REQUIRED_SECTIONS = (
+    "skill_prefixes",
+    "antigravity",
+    "cross_agent_references",
+    "claude_settings",
+    "rollback",
+)
+
+SURFACE_BY_ROOT = {
+    ".claude/skills": "claude",
+    ".agents/skills": "codex",
+    ".opencode/skills": "ocode",
+    ".agent/skills": "anti",
+}
+SURFACE_BY_ADAPTER = {
+    "CLAUDE.md": "claude",
+    ".agents/CODEX.md": "codex",
+}
+PREFIX_TO_AGENT = {
+    "claude-": "claude",
+    "codex-": "codex",
+    "ocode-": "ocode",
+    "anti-": "anti",
+}
+
+SKILL_INVOCATION_RE = re.compile(
+    r"(?<![A-Za-z0-9_-])(?P<marker>[/$])(?P<skill>(?:claude|codex|ocode|anti)-[a-z0-9]+(?:-[a-z0-9]+)*)\b"
+)
+SKILL_PATH_RE = re.compile(
+    r"(?P<path>\.(?:claude|agent|agents|opencode)[/\\]skills[/\\]"
+    r"(?P<skill>[a-z0-9]+(?:-[a-z0-9]+)*)[/\\]SKILL\.md)"
+)
+ROLLBACK_HARD_RESET_RE = re.compile(r"\bgit\s+reset\s+--hard\s+HEAD~1\b")
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -77,6 +114,138 @@ class Finding:
     message: str
     path: str | None = None
     line: int | None = None
+
+
+# ---------------------------------------------------------------------------
+# Policy manifest
+# ---------------------------------------------------------------------------
+
+
+def load_agent_surface_policy(repo_root: Path) -> dict[str, object]:
+    """Load the mutable agent surface policy manifest.
+
+    Missing or malformed policy files return an empty dict; callers that need
+    diagnostic detail should use `check_agent_surface_policy`.
+    """
+    path = repo_root / POLICY_RELATIVE_PATH
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def check_agent_surface_policy(repo_root: Path) -> list[Finding]:
+    path = repo_root / POLICY_RELATIVE_PATH
+    rel = POLICY_RELATIVE_PATH.as_posix()
+    if not path.exists():
+        return [Finding(
+            rule="policy.missing",
+            severity="fail",
+            message="AgentCoordination/agent_surface_policy.json is missing.",
+            path=rel,
+        )]
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [Finding(
+            rule="policy.unparsable",
+            severity="fail",
+            message=f"Could not parse agent_surface_policy.json: {exc}",
+            path=rel,
+        )]
+    if not isinstance(data, dict):
+        return [Finding(
+            rule="policy.not_object",
+            severity="fail",
+            message="agent_surface_policy.json must contain a JSON object.",
+            path=rel,
+        )]
+
+    findings: list[Finding] = []
+    if "schema_version" not in data:
+        findings.append(Finding(
+            rule="policy.schema_version_missing",
+            severity="fail",
+            message="`schema_version` field missing from agent_surface_policy.json.",
+            path=rel,
+        ))
+    elif data.get("schema_version") != 1:
+        findings.append(Finding(
+            rule="policy.schema_version_unknown",
+            severity="fail",
+            message=f"Unknown policy schema_version: {data.get('schema_version')!r}.",
+            path=rel,
+        ))
+
+    for section in POLICY_REQUIRED_SECTIONS:
+        if section not in data:
+            findings.append(Finding(
+                rule="policy.required_section_missing",
+                severity="fail",
+                message=f"Required section {section!r} missing from agent_surface_policy.json.",
+                path=rel,
+            ))
+        elif not isinstance(data.get(section), dict):
+            findings.append(Finding(
+                rule="policy.required_section_malformed",
+                severity="fail",
+                message=f"Required section {section!r} must be an object.",
+                path=rel,
+            ))
+
+    skill_prefixes = data.get("skill_prefixes")
+    if isinstance(skill_prefixes, dict):
+        for agent, expected in {
+            "claude": "claude-",
+            "codex": "codex-",
+            "ocode": "ocode-",
+            "anti": "anti-",
+        }.items():
+            if skill_prefixes.get(agent) != expected:
+                findings.append(Finding(
+                    rule="policy.skill_prefix_mismatch",
+                    severity="fail",
+                    message=f"Policy prefix for {agent!r} must be {expected!r}.",
+                    path=rel,
+                ))
+
+    antigravity = data.get("antigravity")
+    if isinstance(antigravity, dict):
+        if not isinstance(antigravity.get("allowed_skills"), list):
+            findings.append(Finding(
+                rule="policy.antigravity_allowed_skills_missing",
+                severity="fail",
+                message="Policy antigravity.allowed_skills must be a list.",
+                path=rel,
+            ))
+        if not isinstance(antigravity.get("retired_patterns"), list):
+            findings.append(Finding(
+                rule="policy.antigravity_retired_patterns_missing",
+                severity="fail",
+                message="Policy antigravity.retired_patterns must be a list.",
+                path=rel,
+            ))
+
+    rollback = data.get("rollback")
+    if isinstance(rollback, dict):
+        if rollback.get("failed_merge_strategy") != "revert":
+            findings.append(Finding(
+                rule="policy.rollback_strategy_mismatch",
+                severity="fail",
+                message="Policy rollback.failed_merge_strategy must be 'revert'.",
+                path=rel,
+            ))
+        expected_command = "git revert -m 1 <merge_commit_sha> --no-edit"
+        if rollback.get("merge_commit_revert_command") != expected_command:
+            findings.append(Finding(
+                rule="policy.rollback_command_mismatch",
+                severity="fail",
+                message=f"Policy rollback.merge_commit_revert_command must be {expected_command!r}.",
+                path=rel,
+            ))
+
+    return findings
 
 
 # ---------------------------------------------------------------------------
@@ -263,6 +432,264 @@ def check_agent_skills_spec(repo_root: Path) -> list[Finding]:
                         f"{surface.get('surface_path')!r}: {violation}"
                     ),
                     path=skill.get("skill_md"),
+                ))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Agent surface policy enforcement
+# ---------------------------------------------------------------------------
+
+
+def _current_surface_for_path(rel: str) -> str | None:
+    normalized = rel.replace("\\", "/")
+    if normalized in SURFACE_BY_ADAPTER:
+        return SURFACE_BY_ADAPTER[normalized]
+    for root, surface in SURFACE_BY_ROOT.items():
+        if normalized.startswith(root + "/"):
+            return surface
+    return None
+
+
+def _surface_from_skill_name(skill_name: str) -> str | None:
+    for prefix, surface in PREFIX_TO_AGENT.items():
+        if skill_name.startswith(prefix):
+            return surface
+    return None
+
+
+def _surface_from_skill_path(path_text: str) -> str | None:
+    normalized = path_text.replace("\\", "/")
+    for root, surface in SURFACE_BY_ROOT.items():
+        if normalized.startswith(root + "/"):
+            return surface
+    return None
+
+
+def _policy_text_targets(repo_root: Path) -> list[Path]:
+    candidates: set[Path] = set()
+    for rel in (
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".agents/CODEX.md",
+        "Projects/README.md",
+        "Tracking/README.md",
+        "AgentCoordination/README.md",
+        "Tools/agent_coordination/README.md",
+    ):
+        path = repo_root / rel
+        if path.is_file():
+            candidates.add(path)
+    for pattern in ("Projects/protocols/*.md", "Tracking/protocols/*.md"):
+        for path in repo_root.glob(pattern):
+            if path.is_file():
+                candidates.add(path)
+    for surface in SURFACES:
+        skills_dir = repo_root / str(surface["surface_path"])
+        if skills_dir.is_dir():
+            for skill_md in skills_dir.rglob("SKILL.md"):
+                candidates.add(skill_md)
+    return sorted(candidates, key=lambda p: p.relative_to(repo_root).as_posix())
+
+
+def _policy_allows_reference(policy: dict[str, object], rel: str, reference: str) -> bool:
+    cross_agent = policy.get("cross_agent_references")
+    if not isinstance(cross_agent, dict):
+        return False
+    allowed = cross_agent.get("allowed")
+    if not isinstance(allowed, list):
+        return False
+    for entry in allowed:
+        if not isinstance(entry, dict):
+            continue
+        path_pattern = entry.get("path")
+        reference_pattern = entry.get("reference")
+        if not isinstance(path_pattern, str) or not isinstance(reference_pattern, str):
+            continue
+        if fnmatch.fnmatch(rel, path_pattern) and fnmatch.fnmatch(reference, reference_pattern):
+            return True
+    return False
+
+
+def check_cross_agent_references(repo_root: Path) -> list[Finding]:
+    policy = load_agent_surface_policy(repo_root)
+    findings: list[Finding] = []
+    for path in _policy_text_targets(repo_root):
+        rel = path.relative_to(repo_root).as_posix()
+        current_surface = _current_surface_for_path(rel)
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            continue
+        for line_no, line in enumerate(lines, start=1):
+            for match in SKILL_INVOCATION_RE.finditer(line):
+                skill_name = match.group("skill")
+                ref_surface = _surface_from_skill_name(skill_name)
+                reference = match.group(0)
+                is_cross_surface = current_surface is not None and ref_surface != current_surface
+                is_anti_outside_antigravity = ref_surface == "anti" and current_surface != "anti"
+                if not (is_cross_surface or is_anti_outside_antigravity):
+                    continue
+                if _policy_allows_reference(policy, rel, reference):
+                    continue
+                findings.append(Finding(
+                    rule="policy.cross_agent_reference",
+                    severity="fail",
+                    message=(
+                        f"{reference!r} references the {ref_surface!r} surface from "
+                        f"{current_surface or 'shared'} context."
+                    ),
+                    path=rel,
+                    line=line_no,
+                ))
+            for match in SKILL_PATH_RE.finditer(line):
+                path_text = match.group("path").replace("\\", "/")
+                ref_surface = _surface_from_skill_path(path_text)
+                skill_surface = _surface_from_skill_name(match.group("skill"))
+                surfaces = {s for s in (ref_surface, skill_surface) if s is not None}
+                is_cross_surface = current_surface is not None and any(s != current_surface for s in surfaces)
+                is_anti_outside_antigravity = "anti" in surfaces and current_surface != "anti"
+                if not (is_cross_surface or is_anti_outside_antigravity):
+                    continue
+                if _policy_allows_reference(policy, rel, path_text):
+                    continue
+                findings.append(Finding(
+                    rule="policy.cross_agent_reference",
+                    severity="fail",
+                    message=(
+                        f"{path_text!r} references {sorted(surfaces)!r} from "
+                        f"{current_surface or 'shared'} context."
+                    ),
+                    path=rel,
+                    line=line_no,
+                ))
+    return findings
+
+
+def check_nonexistent_skill_path_references(repo_root: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    for path in _policy_text_targets(repo_root):
+        rel = path.relative_to(repo_root).as_posix()
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            continue
+        for line_no, line in enumerate(lines, start=1):
+            for match in SKILL_PATH_RE.finditer(line):
+                target = match.group("path").replace("\\", "/")
+                if (repo_root / target).is_file():
+                    continue
+                findings.append(Finding(
+                    rule="policy.nonexistent_skill_path",
+                    severity="fail",
+                    message=f"Referenced skill path does not exist: {target}.",
+                    path=rel,
+                    line=line_no,
+                ))
+    return findings
+
+
+def check_antigravity_policy(repo_root: Path) -> list[Finding]:
+    policy = load_agent_surface_policy(repo_root)
+    antigravity = policy.get("antigravity")
+    allowed = set()
+    retired_patterns: list[str] = []
+    if isinstance(antigravity, dict):
+        raw_allowed = antigravity.get("allowed_skills")
+        if isinstance(raw_allowed, list):
+            allowed = {str(name) for name in raw_allowed if isinstance(name, str)}
+        raw_patterns = antigravity.get("retired_patterns")
+        if isinstance(raw_patterns, list):
+            retired_patterns = [str(pattern) for pattern in raw_patterns if isinstance(pattern, str)]
+
+    findings: list[Finding] = []
+    skills_dir = repo_root / ".agent" / "skills"
+    if not skills_dir.is_dir():
+        return findings
+    for skill_dir in sorted(skills_dir.iterdir(), key=lambda p: p.name):
+        if not skill_dir.is_dir() or not (skill_dir / "SKILL.md").exists():
+            continue
+        name = skill_dir.name
+        if not name.startswith("anti-") or name in allowed:
+            continue
+        matched_retired = any(fnmatch.fnmatch(name, pattern) for pattern in retired_patterns)
+        detail = "matches retired Antigravity policy" if matched_retired else "is not in the Antigravity allowlist"
+        findings.append(Finding(
+            rule="policy.antigravity_unapproved_skill",
+            severity="fail",
+            message=f"Antigravity skill {name!r} {detail}.",
+            path=f".agent/skills/{name}/SKILL.md",
+        ))
+    return findings
+
+
+def _tracked_files_from_git(repo_root: Path) -> set[str]:
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "-z"],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            text=False,
+        )
+    except FileNotFoundError:
+        return set()
+    if result.returncode != 0:
+        return set()
+    raw = result.stdout.decode("utf-8", errors="replace")
+    return {item.replace("\\", "/") for item in raw.split("\0") if item}
+
+
+def check_tracked_local_settings(repo_root: Path) -> list[Finding]:
+    policy = load_agent_surface_policy(repo_root)
+    claude_settings = policy.get("claude_settings")
+    ignored_files: list[str] = [".claude/settings.local.json"]
+    if isinstance(claude_settings, dict):
+        raw_ignored = claude_settings.get("ignored_files")
+        if isinstance(raw_ignored, list):
+            ignored_files = [str(item).replace("\\", "/") for item in raw_ignored if isinstance(item, str)]
+    tracked = _tracked_files_from_git(repo_root)
+    findings: list[Finding] = []
+    for rel in ignored_files:
+        if rel in tracked:
+            findings.append(Finding(
+                rule="policy.tracked_local_settings",
+                severity="fail",
+                message=f"{rel} is policy-ignored local state but is tracked by git.",
+                path=rel,
+            ))
+    return findings
+
+
+def check_rollback_policy(repo_root: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    targets: set[Path] = set()
+    for pattern in ("Projects/protocols/*.md", "Tracking/protocols/*.md"):
+        for path in repo_root.glob(pattern):
+            if path.is_file():
+                targets.add(path)
+    for surface in SURFACES:
+        skills_dir = repo_root / str(surface["surface_path"])
+        if skills_dir.is_dir():
+            for skill_md in skills_dir.rglob("SKILL.md"):
+                targets.add(skill_md)
+    for path in sorted(targets, key=lambda p: p.relative_to(repo_root).as_posix()):
+        rel = path.relative_to(repo_root).as_posix()
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            continue
+        for line_no, line in enumerate(lines, start=1):
+            if ROLLBACK_HARD_RESET_RE.search(line):
+                findings.append(Finding(
+                    rule="policy.rollback_hard_reset",
+                    severity="fail",
+                    message=(
+                        "Parallel rollback guidance must use merge revert, not "
+                        "`git reset --hard HEAD~1`."
+                    ),
+                    path=rel,
+                    line=line_no,
                 ))
     return findings
 
@@ -911,7 +1338,21 @@ def check_usage_counter_shape(repo_root: Path) -> list[Finding]:
 
 def check_claude_settings_policy(repo_root: Path) -> list[Finding]:
     findings: list[Finding] = []
-    for target in sanitizer.TARGET_FILES:
+    policy = load_agent_surface_policy(repo_root)
+    claude_settings = policy.get("claude_settings")
+    targets = list(sanitizer.TARGET_FILES)
+    if isinstance(claude_settings, dict):
+        raw_tracked = claude_settings.get("tracked_files")
+        if isinstance(raw_tracked, list):
+            targets = [Path(str(item)) for item in raw_tracked if isinstance(item, str)]
+        if claude_settings.get("validate_ignored_file_contents") is False:
+            ignored = {
+                str(item).replace("\\", "/")
+                for item in claude_settings.get("ignored_files", [])
+                if isinstance(item, str)
+            }
+            targets = [target for target in targets if target.as_posix() not in ignored]
+    for target in targets:
         report = sanitizer.scan_file(repo_root / target)
         if report.parse_error:
             findings.append(Finding(
@@ -945,10 +1386,16 @@ def check_claude_settings_policy(repo_root: Path) -> list[Finding]:
 
 
 CHECKS = (
+    ("agent_surface_policy", check_agent_surface_policy),
     ("inventory_freshness", check_inventory_freshness),
     ("test_baseline_validity", check_test_baseline_validity),
     ("prefix_compliance", check_prefix_compliance),
     ("agent_skills_spec", check_agent_skills_spec),
+    ("cross_agent_references", check_cross_agent_references),
+    ("nonexistent_skill_path_references", check_nonexistent_skill_path_references),
+    ("antigravity_policy", check_antigravity_policy),
+    ("tracked_local_settings", check_tracked_local_settings),
+    ("rollback_policy", check_rollback_policy),
     ("opencode_permissions", check_opencode_permissions),
     ("reinforcement_markers", check_reinforcement_markers),
     ("volatile_facts", check_volatile_facts),

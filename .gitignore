@@ -49,6 +49,7 @@ AgentCoordination/local/
 # Sanitizer backups for Claude settings files.
 .claude/settings.json.backup.*
 .claude/settings.local.json.backup.*
+.claude/settings.local.json
 
 # Generated analysis output
 dead_code_candidates.txt

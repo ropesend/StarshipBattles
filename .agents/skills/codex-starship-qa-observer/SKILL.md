@@ -22,9 +22,9 @@ Use this skill for QA Observer session analysis and conversion work.
 
 ## Workflows
 
-- Triage a session: follow the behavior from `.claude/skills/anti-qa-triage/SKILL.md`, adapted to Codex mechanics.
-- Review feedback for a session: follow `.claude/skills/anti-qa-feedback/SKILL.md`, adapted to Codex mechanics.
-- Convert an accepted triage item into a project: follow `.claude/skills/anti-triage-to-proj/SKILL.md` and `Projects/protocols/01_initialize_project.md`.
+- Triage a session: inspect the session artifacts, classify each observation as bug, feature, project candidate, or no-op, and write evidence-backed conclusions.
+- Review feedback for a session: compare user feedback against the triage summary, update conclusions where evidence supports it, and preserve rejected observations with rationale.
+- Convert an accepted triage item into a project: use `Projects/protocols/01_initialize_project.md` and copy referenced images into the new project's findings assets folder.
 
 ## Rules
 

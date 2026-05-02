@@ -22,6 +22,8 @@ if __name__ == "__main__" and __package__ is None:
             break
         _here = _here.parent
 
+from Tools.agent_coordination.summarize_skill_usage import write_summary  # noqa: E402
+
 SCHEMA_VERSION = 1
 ALLOWED_AGENTS = ("claude", "anti", "ocode", "codex")
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -109,6 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     repo_root = args.repo_root.resolve() if args.repo_root else Path.cwd()
     install_id = _ensure_install_id(repo_root)
     _record_usage(repo_root, install_id, args.agent, args.skill)
+    write_summary(repo_root)
     return 0
 
 

@@ -169,8 +169,10 @@ When an implementation agent completes:
    d. **If merge conflict:**
       - Attempt auto-resolution. If ambiguous, present conflict to user.
       - If unresolvable, revert merge (`git merge --abort`), mark bug as `blocked`.
-   e. **If tests fail:**
-      - Revert merge: `git reset --hard HEAD~1`
+   e. **If tests fail after a merge commit exists:**
+      - Require `git status --short` to be clean.
+      - Revert the merge commit: `git revert -m 1 <merge_commit_sha> --no-edit`.
+      - If the worktree is dirty, the merge commit SHA is unclear, or the revert conflicts, stop and ask the user.
       - Report failing tests to user.
       - Mark bug as `blocked`.
 3. **If BLOCKED or NEEDS_CLARIFICATION:**
@@ -390,7 +392,7 @@ Written to `{SESSION_DIR}/dashboard.md` and updated throughout the session:
 | Implementation agent fails | Release files, mark `blocked`, check waiting queue |
 | Merge conflict (auto-resolvable) | Resolve and continue |
 | Merge conflict (ambiguous) | Present to user, ask for resolution |
-| Tests fail after merge | `git reset --hard HEAD~1`, mark `blocked`, release files |
+| Tests fail after merge | Require clean worktree, `git revert -m 1 <merge_commit_sha> --no-edit`, mark `blocked`, release files |
 | Agent needs unplanned file | Note in result; coordinator handles at merge review |
 | User stops session mid-way | Stop launching new agents, wait for active ones to complete, merge what succeeded |
 | All slots blocked by file conflicts | Present situation to user; suggest reordering or skipping a bug |

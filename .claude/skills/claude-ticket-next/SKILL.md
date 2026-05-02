@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-next
-description: Pick the highest priority pending ticket and start working on it (e.g., /anti-ticket-next bug or /anti-ticket-next feature)
+description: Pick the highest priority pending ticket and start working on it (e.g., /claude-ticket-next bug or /claude-ticket-next feature)
 disable-model-invocation: true
 argument-hint: bug|feature
 ---

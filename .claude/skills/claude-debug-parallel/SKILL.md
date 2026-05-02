@@ -114,8 +114,10 @@ When an implementation agent returns:
    d. If merge conflict:
       - Attempt auto-resolve. If ambiguous, present to user.
       - If unresolvable: `git merge --abort`, mark `blocked`.
-   e. If tests fail:
-      - `git reset --hard HEAD~1`
+   e. If tests fail after a merge commit exists:
+      - Require `git status --short` to be clean.
+      - Revert the merge commit with `git revert -m 1 <merge_commit_sha> --no-edit`.
+      - If the worktree is dirty, the merge commit SHA is unclear, or the revert conflicts, stop and ask the user.
       - Report failures to user. Mark `blocked`.
 3. **If BLOCKED / NEEDS_CLARIFICATION:**
    - Update bug ticket with findings from agent.

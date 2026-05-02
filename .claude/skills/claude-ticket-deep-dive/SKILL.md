@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-deep-dive
-description: Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /anti-ticket-deep-dive bug 42)
+description: Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /claude-ticket-deep-dive bug 42)
 disable-model-invocation: true
 argument-hint: bug|feature <number>
 ---

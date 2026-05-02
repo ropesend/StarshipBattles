@@ -22,6 +22,21 @@ def test_log_creates_install_id_file_on_first_use(tmp_path: Path) -> None:
     assert len(data["install_id"]) >= 8
 
 
+def test_log_updates_summary_on_first_use(tmp_path: Path) -> None:
+    rc = log_skill_usage.main([
+        "--repo-root", str(tmp_path),
+        "--agent", "claude",
+        "--skill", "claude-proj-start",
+    ])
+    assert rc == 0
+
+    summary_path = tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "summary.json"
+    assert summary_path.exists()
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert summary["schema_version"] == 1
+    assert summary["skills"]["claude-proj-start"]["total_count"] == 1
+
+
 def test_log_appends_to_per_install_file(tmp_path: Path) -> None:
     rc = log_skill_usage.main([
         "--repo-root", str(tmp_path),
@@ -58,6 +73,53 @@ def test_log_increments_existing_skill_count(tmp_path: Path) -> None:
     assert payload["skills"]["claude-proj-start"]["count"] == 3
 
 
+def test_log_updates_summary_when_incrementing_existing_skill(tmp_path: Path) -> None:
+    for _ in range(2):
+        rc = log_skill_usage.main([
+            "--repo-root", str(tmp_path),
+            "--agent", "claude",
+            "--skill", "claude-proj-start",
+        ])
+        assert rc == 0
+
+    summary = json.loads(
+        (tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "summary.json")
+        .read_text(encoding="utf-8")
+    )
+    assert summary["skills"]["claude-proj-start"]["total_count"] == 2
+
+
+def test_log_updates_summary_for_multiple_installs(tmp_path: Path) -> None:
+    local = tmp_path / "AgentCoordination" / "local"
+    local.mkdir(parents=True)
+    install_id_path = local / "install_id.json"
+
+    install_id_path.write_text(json.dumps({"install_id": "install-a"}), encoding="utf-8")
+    rc = log_skill_usage.main([
+        "--repo-root", str(tmp_path),
+        "--agent", "claude",
+        "--skill", "claude-proj-start",
+    ])
+    assert rc == 0
+
+    install_id_path.write_text(json.dumps({"install_id": "install-b"}), encoding="utf-8")
+    rc = log_skill_usage.main([
+        "--repo-root", str(tmp_path),
+        "--agent", "codex",
+        "--skill", "codex-starship-project-system",
+    ])
+    assert rc == 0
+
+    summary = json.loads(
+        (tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "summary.json")
+        .read_text(encoding="utf-8")
+    )
+    assert summary["skills"]["claude-proj-start"]["total_count"] == 1
+    assert summary["skills"]["claude-proj-start"]["by_install"]["install-a"] == 1
+    assert summary["skills"]["codex-starship-project-system"]["total_count"] == 1
+    assert summary["skills"]["codex-starship-project-system"]["by_install"]["install-b"] == 1
+
+
 def test_log_records_separate_skills(tmp_path: Path) -> None:
     log_skill_usage.main([
         "--repo-root", str(tmp_path),
@@ -84,6 +146,8 @@ def test_log_rejects_invalid_agent(tmp_path: Path) -> None:
         "--skill", "claude-proj-start",
     ])
     assert rc != 0
+    assert not (tmp_path / "AgentCoordination" / "local" / "install_id.json").exists()
+    assert not (tmp_path / "AgentCoordination" / "generated" / "skill_usage").exists()
 
 
 def test_log_rejects_invalid_skill_name(tmp_path: Path) -> None:
@@ -93,6 +157,8 @@ def test_log_rejects_invalid_skill_name(tmp_path: Path) -> None:
         "--skill", "INVALID NAME",
     ])
     assert rc != 0
+    assert not (tmp_path / "AgentCoordination" / "local" / "install_id.json").exists()
+    assert not (tmp_path / "AgentCoordination" / "generated" / "skill_usage").exists()
 
 
 # ---------------------------------------------------------------------------

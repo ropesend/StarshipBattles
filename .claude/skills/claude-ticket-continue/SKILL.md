@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-continue
-description: Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /anti-ticket-continue bug or /anti-ticket-continue feature)
+description: Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /claude-ticket-continue bug or /claude-ticket-continue feature)
 disable-model-invocation: true
 argument-hint: bug|feature
 ---
