@@ -56,12 +56,67 @@ def test_extract_returns_none_for_empty_payload() -> None:
     assert hook._extract_skill_name({}) is None
 
 
-def test_main_no_op_for_non_claude_prefix(monkeypatch, tmp_path: Path, capsys) -> None:
-    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"command_name": "ocode-audit-shrink"})))
+def test_main_passes_builtin_skill_loop(monkeypatch, tmp_path: Path) -> None:
+    """Builtin skill 'loop' is passed through to log_skill_usage.py."""
+    _setup_fake_repo(monkeypatch, tmp_path)
+    captured: list[list[str]] = []
+    monkeypatch.setattr(hook.subprocess, "run", _fake_run(captured))
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"command_name": "loop"})))
     rc = hook.main()
     assert rc == 0
-    # No subprocess called means no by_install file.
-    assert not (tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "by_install").exists()
+    assert captured
+    assert captured[0][captured[0].index("--skill") + 1] == "loop"
+
+
+def test_main_passes_builtin_skill_simplify(monkeypatch, tmp_path: Path) -> None:
+    """Builtin skill 'simplify' is passed through."""
+    _setup_fake_repo(monkeypatch, tmp_path)
+    captured: list[list[str]] = []
+    monkeypatch.setattr(hook.subprocess, "run", _fake_run(captured))
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"command_name": "simplify"})))
+    rc = hook.main()
+    assert rc == 0
+    assert captured
+    assert captured[0][captured[0].index("--skill") + 1] == "simplify"
+
+
+def test_main_passes_builtin_skill_security_review(monkeypatch, tmp_path: Path) -> None:
+    """Builtin skill 'security-review' is passed through."""
+    _setup_fake_repo(monkeypatch, tmp_path)
+    captured: list[list[str]] = []
+    monkeypatch.setattr(hook.subprocess, "run", _fake_run(captured))
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"command_name": "security-review"})))
+    rc = hook.main()
+    assert rc == 0
+    assert captured
+    assert captured[0][captured[0].index("--skill") + 1] == "security-review"
+
+
+def test_main_rejects_invalid_skill_syntax(monkeypatch) -> None:
+    """Skill names with uppercase or spaces are rejected by SKILL_NAME_RE."""
+    for bad_name in ("BadName", "with spaces"):
+        monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"command_name": bad_name})))
+        rc = hook.main()
+        assert rc == 0  # hook never fails, but should not call log_skill_usage
+
+
+def _setup_fake_repo(monkeypatch, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
+    (tmp_path / "AGENTS.md").write_text("# AGENTS", encoding="utf-8")
+    log_script_dir = tmp_path / "Tools" / "agent_coordination"
+    log_script_dir.mkdir(parents=True)
+    (log_script_dir / "log_skill_usage.py").write_text("# stub\n", encoding="utf-8")
+    monkeypatch.setattr(hook, "_resolve_repo_root", lambda: tmp_path)
+
+
+def _fake_run(captured: list[list[str]]):  # type: ignore[no-untyped-def]
+    def fake_run(cmd, **kwargs):  # type: ignore[no-untyped-def]
+        captured.append(list(cmd))
+        class _Result:
+            returncode = 0
+            stdout = b""
+            stderr = b""
+        return _Result()
+    return fake_run
 
 
 def test_main_no_op_for_invalid_skill_name(monkeypatch) -> None:

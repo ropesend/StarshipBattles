@@ -81,10 +81,10 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 
 ## Skill Usage Logging
 
-**Claude Code logs `claude-*` skill invocations automatically** via the
-`UserPromptExpansion` and `PreToolUse(Skill)` hooks wired in
-`.claude/settings.json` → `Tools/agent_coordination/claude_skill_usage_hook.py`.
-No manual call required.
+**Claude Code logs ALL skill invocations automatically** (prefixed `claude-*` and
+builtins like `loop`, `simplify`, `review`) via the `UserPromptExpansion` and
+`PreToolUse(Skill)` hooks wired in `.claude/settings.json` →
+`Tools/agent_coordination/claude_skill_usage_hook.py`. No manual call required.
 
 Other agents call the script explicitly because their hook surfaces are
 narrower (Codex has no skill event; OpenCode's plugin hooks don't expose a

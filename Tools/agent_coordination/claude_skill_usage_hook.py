@@ -3,8 +3,9 @@
 
 Reads hook input JSON from stdin, extracts the skill name from either
 `UserPromptExpansion` (`command_name`) or `PreToolUse` for the Skill tool
-(`tool_input`), filters to repo-local `claude-*` skills, and calls
-`log_skill_usage.py` with `--agent claude` and the matched skill name.
+(`tool_input`), and calls `log_skill_usage.py` with `--agent claude` and
+the skill name. Tracks ALL skills (prefixed `claude-*` and builtins like
+`loop`, `simplify`, `review`, `security-review`, etc.).
 
 Designed to be invoked from `.claude/settings.json` `hooks.UserPromptExpansion`
 and `hooks.PreToolUse` (matcher: `Skill`). Failures are silent — a usage hook
@@ -20,7 +21,6 @@ import sys
 from pathlib import Path
 
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-ALLOWED_PREFIXES = ("claude-",)
 
 
 def _resolve_repo_root() -> Path:
@@ -63,8 +63,6 @@ def main() -> int:
 
     skill_name = _extract_skill_name(payload)
     if not skill_name or not SKILL_NAME_RE.fullmatch(skill_name):
-        return 0
-    if not any(skill_name.startswith(p) for p in ALLOWED_PREFIXES):
         return 0
 
     repo_root = _resolve_repo_root()
