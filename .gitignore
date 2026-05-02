@@ -51,6 +51,9 @@ AgentCoordination/local/
 AgentCoordination/generated/skill_usage/summary.json
 # Per-checkout state for the OpenCode review system (PID, log, payload temp/failed dirs).
 AgentCoordination/opencodereview/local/
+# Scratchpad: agent transient working area. Contents are local-only and may be
+# deleted at any time. See AgentCoordination/SCRATCHPAD.md for conventions.
+AgentCoordination/Scratchpad/
 
 # Sanitizer backups for Claude settings files.
 .claude/settings.json.backup.*
