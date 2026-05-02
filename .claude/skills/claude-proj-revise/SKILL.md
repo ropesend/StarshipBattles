@@ -54,8 +54,8 @@ Before stopping, ensure Current State reflects:
 
 ### Next Steps
 - [ ] User approves revision plan
-- [ ] Use `/anti-proj-continue $0` to implement
-- [ ] `/anti-proj-audit $0` when complete
+- [ ] Use `/claude-proj-continue $0` to implement
+- [ ] `/claude-proj-audit $0` when complete
 
 ## Revision Feedback
 

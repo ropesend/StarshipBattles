@@ -102,3 +102,5 @@ Examples:
 - Claude Code (manual override or testing) → same script with `--agent claude`.
 
 Counters are **advisory only** and identify cleanup candidates; they never authorize automatic deletion. Counter data is per-checkout (a UUID install ID is auto-generated on first call); only the aggregated `summary.json` is meant for cross-checkout review.
+Each logging invocation updates both the per-install counter and the aggregated
+`AgentCoordination/generated/skill_usage/summary.json`.

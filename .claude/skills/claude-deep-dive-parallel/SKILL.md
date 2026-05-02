@@ -148,8 +148,10 @@ When a teammate reports implementation complete:
    - Update `{ACTIVE_DIR}/{PREFIX}-{ID}.md`: set status to `[Awaiting Confirmation]`.
    - Update `{DASHBOARD}` with new status.
    - Mark ticket `done`.
-6. If tests fail:
-   - `git reset --hard HEAD~1`
+6. If tests fail after a merge commit exists:
+   - Require `git status --short` to be clean.
+   - Revert the merge commit with `git revert -m 1 <merge_commit_sha> --no-edit`.
+   - If the worktree is dirty, the merge commit SHA is unclear, or the revert conflicts, stop and ask the user.
    - Mark ticket `blocked`.
 7. **Always after implementation completes:**
    - Remove ticket's files from `FILES_IN_USE` (and `PREDICTED_FILES` if entries remain).

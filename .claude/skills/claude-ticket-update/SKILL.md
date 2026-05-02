@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-update
-description: Append new context or information to an existing ticket without analyzing it (e.g., /anti-ticket-update bug 42 <text>)
+description: Append new context or information to an existing ticket without analyzing it (e.g., /claude-ticket-update bug 42 <text>)
 disable-model-invocation: true
 argument-hint: bug|feature <number> <update text>
 ---

@@ -98,7 +98,7 @@ For each wave (sweep type), launch 5 Explore agents **in a SINGLE message using 
 
 **After each wave**, check that all 5 output files exist in `findings/` and are non-empty. If any file is missing or empty (<100 bytes), retry that single agent once.
 
-**Scope override behavior:** If the user specified a single directory (e.g., `/anti-analysis-sweep game/simulation/`), skip sharding entirely. Instead, launch just 5 agents (one per sweep type) all targeting the specified directory, in a single wave.
+**Scope override behavior:** If the user specified a single directory (e.g., `/claude-analysis-sweep game/simulation/`), skip sharding entirely. Instead, launch just 5 agents (one per sweep type) all targeting the specified directory, in a single wave.
 
 ### Step 9: Compile Findings
 

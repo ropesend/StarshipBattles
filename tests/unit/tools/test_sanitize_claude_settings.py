@@ -211,7 +211,7 @@ def test_scan_includes_additional_directories(tmp_path: Path) -> None:
 
 
 def test_main_dry_run_does_not_write_files(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(settings, rules=["Read(//c/Dev/Starship Battles/**)"])
     before = settings.read_text(encoding="utf-8")
 
@@ -224,21 +224,28 @@ def test_main_dry_run_does_not_write_files(tmp_path: Path, capsys: pytest.Captur
 
 
 def test_main_returns_nonzero_on_dangerous(tmp_path: Path) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(settings, rules=["Bash(rm -rf:*)"])
     rc = sanitizer.main(["--repo-root", str(tmp_path)])
     assert rc != 0
 
 
 def test_main_returns_nonzero_on_secret(tmp_path: Path) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(settings, rules=["Bash(echo AKIAIOSFODNN7EXAMPLE)"])
     rc = sanitizer.main(["--repo-root", str(tmp_path)])
     assert rc != 0
 
 
-def test_main_emits_json_report_when_requested(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_main_skips_local_settings_by_default(tmp_path: Path) -> None:
     settings = tmp_path / ".claude" / "settings.local.json"
+    _write_settings(settings, rules=["Bash(rm -rf:*)"])
+    rc = sanitizer.main(["--repo-root", str(tmp_path)])
+    assert rc == 0
+
+
+def test_main_emits_json_report_when_requested(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(settings, rules=["Bash(pytest:*)", "Read(//c/Dev/Starship Battles/**)"])
 
     rc = sanitizer.main(["--repo-root", str(tmp_path), "--format", "json"])
@@ -259,7 +266,7 @@ def test_main_emits_json_report_when_requested(tmp_path: Path, capsys: pytest.Ca
 
 
 def test_apply_rewrites_stale_entries_in_allow_list(tmp_path: Path) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(
         settings,
         rules=[
@@ -279,17 +286,17 @@ def test_apply_rewrites_stale_entries_in_allow_list(tmp_path: Path) -> None:
 
 
 def test_apply_creates_backup(tmp_path: Path) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(settings, rules=["Read(//c/Dev/Starship Battles/**)"])
 
     rc = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
     assert rc == 0
-    backups = list(settings.parent.glob("settings.local.json.backup.*"))
+    backups = list(settings.parent.glob("settings.json.backup.*"))
     assert backups, "Expected at least one backup file after --apply"
 
 
 def test_apply_refuses_when_secret_present(tmp_path: Path) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(settings, rules=["Bash(echo AKIAIOSFODNN7EXAMPLE)"])
 
     before = settings.read_text(encoding="utf-8")
@@ -300,7 +307,7 @@ def test_apply_refuses_when_secret_present(tmp_path: Path) -> None:
 
 
 def test_apply_refuses_when_dangerous_present(tmp_path: Path) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(settings, rules=["Bash(rm -rf:*)", "Read(//c/Dev/Starship Battles/**)"])
 
     before = settings.read_text(encoding="utf-8")
@@ -310,7 +317,7 @@ def test_apply_refuses_when_dangerous_present(tmp_path: Path) -> None:
 
 
 def test_apply_is_idempotent(tmp_path: Path) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(settings, rules=["Read(//c/Dev/Starship Battles/**)"])
 
     rc1 = sanitizer.main(["--repo-root", str(tmp_path), "--apply"])
@@ -323,7 +330,7 @@ def test_apply_is_idempotent(tmp_path: Path) -> None:
 
 
 def test_apply_preserves_unchanged_entries(tmp_path: Path) -> None:
-    settings = tmp_path / ".claude" / "settings.local.json"
+    settings = tmp_path / ".claude" / "settings.json"
     _write_settings(
         settings,
         rules=[

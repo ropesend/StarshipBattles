@@ -8,10 +8,10 @@ This directory contains the Starship Battles agent coordination tooling:
 inventory, baseline, prefix migration, settings sanitizer, validator, prefix
 checker, usage counters, and a back-fill helper for legacy doc rewrites.
 
-The atomic prefix migration completed at commit `c1b774b29`. All eleven
-validator checks now pass on the live repo. The inventory and baseline are
-generated artifacts that record observed state; the validator enforces
-policy.
+The atomic prefix migration completed at commit `c1b774b29`. The original
+validator checks passed after that migration. The inventory and baseline are
+generated artifacts that record observed state; `agent_surface_policy.json` is
+the human-maintained policy manifest; the validator enforces both.
 
 ## Requirements
 
@@ -69,8 +69,8 @@ python Tools/agent_coordination/sanitize_claude_settings.py --format json
 python Tools/agent_coordination/sanitize_claude_settings.py --apply    # rewrite STALE_WARN entries
 ```
 
-Dry-run by default. Classifies entries in `.claude/settings.json` and
-`.claude/settings.local.json` as one of:
+Dry-run by default. Classifies entries in tracked shared files
+`.claude/settings.json` and `.claude/settings.example.json` as one of:
 
 - `OK` — repo-relative, current Starship Battles checkout, or known-safe system library
 - `STALE_WARN` — references the legacy `Dev\Starship Battles` checkout layout. Proposed rewrites preserve scope and separator style; the sanitizer refuses any rewrite that would broaden permissions.
@@ -93,7 +93,6 @@ and creates a timestamped `.backup.<UTC>` alongside the source file. It
 
 ```powershell
 python Tools/agent_coordination/log_skill_usage.py --agent claude --skill claude-proj-start
-python Tools/agent_coordination/summarize_skill_usage.py
 ```
 
 Counters are **advisory only**. They identify rarely-used skills as cleanup
@@ -103,10 +102,12 @@ candidates; they never authorize automatic deletion.
   `AgentCoordination/local/install_id.json` (gitignored).
 - Each invocation increments the counter for one (skill, agent) pair in
   `AgentCoordination/generated/skill_usage/by_install/<install_id>.json`.
-- `summarize_skill_usage.py` aggregates every per-install file into
+- The same invocation rewrites
   `AgentCoordination/generated/skill_usage/summary.json` (tracked artifact
   with `schema_version`, total counts, per-install breakdown, and most-recent
   `last_used` timestamp).
+- `summarize_skill_usage.py` remains available to regenerate `summary.json`
+  from the per-install files during repair or maintenance.
 - Allowed `--agent` values: `claude`, `anti`, `ocode`, `codex`. Skill names
   must satisfy the Agent Skills regex `^[a-z0-9]+(-[a-z0-9]+)*$`.
 

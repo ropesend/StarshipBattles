@@ -48,7 +48,7 @@ Use this exact template (substitute the extracted values):
 ---
 ```
 
-Default priority is **Medium**. The user can adjust later via `/anti-proj-manage-plan`.
+Default priority is **Medium**. The user can adjust later via `/claude-proj-manage-plan`.
 
 ### Step 5: Insert into refactor_plan.md
 
@@ -58,4 +58,4 @@ Append the entry block at the **end of the Master Task List** section — just b
 
 - List each project added with its title and phase count
 - Note any projects skipped (with reason)
-- Remind: "Use `/anti-proj-manage-plan REORDER` to adjust priority or ordering"
+- Remind: "Use `/claude-proj-manage-plan REORDER` to adjust priority or ordering"

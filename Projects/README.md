@@ -12,7 +12,7 @@ This directory contains the infrastructure for managing multi-file refactoring p
 | **Continue working on a project** | `/claude-proj-continue` | `/claude-proj-continue 87` |
 | **Review a project plan** | `/claude-proj-review` | `/claude-proj-review 87` |
 | **Audit a completed project** | `/claude-proj-audit` | `/claude-proj-audit 87` |
-| **Close/archive a project** | `/anti-proj-close` | `/anti-proj-close 87` or `/anti-proj-close 87 88 89` |
+| **Close/archive a project** | `/claude-proj-archive` | `/claude-proj-archive 87` or `/claude-proj-archive 87 88 89` |
 | **Revise a completed project** | `/claude-proj-revise` | `/claude-proj-revise 87 Add error handling` |
 | **Extract a phase to sub-project** | `/claude-proj-extract-phase` | `/claude-proj-extract-phase 87 3` |
 | **Report a bug** | `/claude-ticket-add` | `/claude-ticket-add bug Ship doesn't move after turn 5` |
@@ -74,7 +74,7 @@ Loop Workers ───────────► Projects/protocols/WORKER_TEMP
 ## Project Lifecycle
 
 ```
-/claude-proj-start ──► Planning ──► /claude-proj-continue ──► Implementation ──► /claude-proj-audit ──► /anti-proj-close
+/claude-proj-start ──► Planning ──► /claude-proj-continue ──► Implementation ──► /claude-proj-audit ──► /claude-proj-archive
                    │              │ (repeat)           │                  │
                    │              └──────────────────────┘                  │
                    │                                                       │
@@ -87,7 +87,7 @@ Loop Workers ───────────► Projects/protocols/WORKER_TEMP
 2. **Continue** (`/claude-proj-continue N`): Autonomous TDD work loop. Executes tasks, updates plan, provides handoff context.
 3. **Review** (`/claude-proj-review N`): Validate plan against codebase. 5 parallel review agents check alignment, freshness, gaps.
 4. **Audit** (`/claude-proj-audit N`): Skeptical post-completion review. Up to 5 cycles of audit → fix → re-audit.
-5. **Close** (`/anti-proj-close N`): Archive to `archived_projects/`. No validation — user has already accepted.
+5. **Close** (`/claude-proj-archive N`): Archive to `archived_projects/`. No validation — user has already accepted.
 
 ---
 

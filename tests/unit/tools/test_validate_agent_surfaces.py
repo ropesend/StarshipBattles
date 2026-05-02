@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -23,6 +24,7 @@ def _make_repo(
     settings_local: dict | None = None,
     baseline: dict | None = None,
     inventory: dict | None = None,
+    policy: dict | None | bool = True,
     stale_workflows: bool = False,
     stale_migration: bool = False,
 ) -> Path:
@@ -59,6 +61,11 @@ def _make_repo(
         inv_path = tmp_path / "AgentCoordination" / "generated" / "agent_surface_inventory.json"
         inv_path.parent.mkdir(parents=True, exist_ok=True)
         inv_path.write_text(json.dumps(inventory, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if policy is not None:
+        policy_payload = _good_policy() if policy is True else policy
+        policy_path = tmp_path / "AgentCoordination" / "agent_surface_policy.json"
+        policy_path.parent.mkdir(parents=True, exist_ok=True)
+        policy_path.write_text(json.dumps(policy_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if stale_workflows:
         wf = tmp_path / ".agent" / "workflows"
         wf.mkdir(parents=True, exist_ok=True)
@@ -69,6 +76,82 @@ def _make_repo(
         (agent_dir / "MIGRATION_PROGRESS.md").write_text("legacy", encoding="utf-8")
 
     return tmp_path
+
+
+def _good_policy() -> dict:
+    return {
+        "schema_version": 1,
+        "skill_prefixes": {
+            "claude": "claude-",
+            "codex": "codex-",
+            "ocode": "ocode-",
+            "anti": "anti-",
+        },
+        "antigravity": {
+            "allowed_skills": [
+                "anti-analysis-complexity",
+                "anti-analysis-dead-code",
+                "anti-analysis-sweep",
+                "anti-loc",
+                "anti-validate-designs",
+            ],
+            "retired_patterns": [
+                "anti-debug-*",
+                "anti-deep-dive-*",
+                "anti-fix-crash",
+                "anti-proj-*",
+                "anti-qa-*",
+                "anti-ticket-*",
+                "anti-triage-to-proj",
+            ],
+        },
+        "cross_agent_references": {
+            "default": "deny",
+            "allowed": [],
+        },
+        "claude_settings": {
+            "tracked_files": [".claude/settings.json"],
+            "ignored_files": [".claude/settings.local.json"],
+            "validate_ignored_file_contents": False,
+        },
+        "rollback": {
+            "failed_merge_strategy": "revert",
+            "merge_commit_revert_command": "git revert -m 1 <merge_commit_sha> --no-edit",
+            "requires_clean_worktree": True,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Agent surface policy manifest
+# ---------------------------------------------------------------------------
+
+
+def test_agent_surface_policy_fails_when_missing(tmp_path: Path) -> None:
+    _make_repo(tmp_path, policy=None)
+    findings = validator.check_agent_surface_policy(tmp_path)
+    assert any(f.rule == "policy.missing" for f in findings)
+
+
+def test_agent_surface_policy_fails_without_schema_version(tmp_path: Path) -> None:
+    policy = _good_policy()
+    del policy["schema_version"]
+    _make_repo(tmp_path, policy=policy)
+    findings = validator.check_agent_surface_policy(tmp_path)
+    assert any(f.rule == "policy.schema_version_missing" for f in findings)
+
+
+def test_agent_surface_policy_fails_without_required_sections(tmp_path: Path) -> None:
+    policy = {"schema_version": 1}
+    _make_repo(tmp_path, policy=policy)
+    findings = validator.check_agent_surface_policy(tmp_path)
+    assert any(f.rule == "policy.required_section_missing" for f in findings)
+
+
+def test_agent_surface_policy_passes_on_valid_minimal_policy(tmp_path: Path) -> None:
+    _make_repo(tmp_path, policy=_good_policy())
+    findings = validator.check_agent_surface_policy(tmp_path)
+    assert findings == []
 
 
 # ---------------------------------------------------------------------------
@@ -188,6 +271,100 @@ def test_agent_skills_spec_fails_on_name_mismatch(tmp_path: Path) -> None:
     _make_repo(tmp_path, skills=skills)
     findings = validator.check_agent_skills_spec(tmp_path)
     assert any(f.rule == "spec.violation" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Cross-agent references and skill paths
+# ---------------------------------------------------------------------------
+
+
+def test_cross_agent_reference_fails_on_foreign_slash_command(tmp_path: Path) -> None:
+    skills = {".claude/skills": {"claude-foo": {"name": "claude-foo", "description": "x"}}}
+    _make_repo(tmp_path, skills=skills)
+    skill_md = tmp_path / ".claude" / "skills" / "claude-foo" / "SKILL.md"
+    skill_md.write_text(skill_md.read_text(encoding="utf-8") + "\nRun `/anti-ticket-work`.\n", encoding="utf-8")
+    findings = validator.check_cross_agent_references(tmp_path)
+    assert any(f.rule == "policy.cross_agent_reference" for f in findings)
+
+
+def test_cross_agent_reference_fails_on_foreign_skill_path(tmp_path: Path) -> None:
+    skills = {".agents/skills": {"codex-foo": {"name": "codex-foo", "description": "x"}}}
+    _make_repo(tmp_path, skills=skills)
+    skill_md = tmp_path / ".agents" / "skills" / "codex-foo" / "SKILL.md"
+    skill_md.write_text(
+        skill_md.read_text(encoding="utf-8")
+        + "\nSee `.claude/skills/anti-qa-triage/SKILL.md`.\n",
+        encoding="utf-8",
+    )
+    cross_findings = validator.check_cross_agent_references(tmp_path)
+    path_findings = validator.check_nonexistent_skill_path_references(tmp_path)
+    assert any(f.rule == "policy.cross_agent_reference" for f in cross_findings)
+    assert any(f.rule == "policy.nonexistent_skill_path" for f in path_findings)
+
+
+def test_cross_agent_reference_ignores_ordinary_anti_words(tmp_path: Path) -> None:
+    skills = {".claude/skills": {"claude-foo": {"name": "claude-foo", "description": "x"}}}
+    _make_repo(tmp_path, skills=skills)
+    skill_md = tmp_path / ".claude" / "skills" / "claude-foo" / "SKILL.md"
+    skill_md.write_text(
+        skill_md.read_text(encoding="utf-8")
+        + "\nDiscuss anti-pattern, anti-reversion, and anti-aliasing examples.\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_cross_agent_references(tmp_path)
+    assert findings == []
+
+
+def test_cross_agent_reference_allows_same_surface_command(tmp_path: Path) -> None:
+    skills = {".claude/skills": {"claude-foo": {"name": "claude-foo", "description": "x"}}}
+    _make_repo(tmp_path, skills=skills)
+    skill_md = tmp_path / ".claude" / "skills" / "claude-foo" / "SKILL.md"
+    skill_md.write_text(skill_md.read_text(encoding="utf-8") + "\nRun `/claude-ticket-work`.\n", encoding="utf-8")
+    findings = validator.check_cross_agent_references(tmp_path)
+    assert findings == []
+
+
+def test_nonexistent_skill_path_reference_fails(tmp_path: Path) -> None:
+    skills = {".claude/skills": {"claude-foo": {"name": "claude-foo", "description": "x"}}}
+    _make_repo(tmp_path, skills=skills)
+    skill_md = tmp_path / ".claude" / "skills" / "claude-foo" / "SKILL.md"
+    skill_md.write_text(
+        skill_md.read_text(encoding="utf-8")
+        + "\nSee `.agents/skills/codex-missing/SKILL.md`.\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_nonexistent_skill_path_references(tmp_path)
+    assert any(f.rule == "policy.nonexistent_skill_path" for f in findings)
+
+
+def test_existing_skill_path_reference_passes(tmp_path: Path) -> None:
+    skills = {
+        ".claude/skills": {"claude-foo": {"name": "claude-foo", "description": "x"}},
+        ".agents/skills": {"codex-helper": {"name": "codex-helper", "description": "x"}},
+    }
+    _make_repo(tmp_path, skills=skills)
+    skill_md = tmp_path / ".claude" / "skills" / "claude-foo" / "SKILL.md"
+    skill_md.write_text(
+        skill_md.read_text(encoding="utf-8")
+        + "\nSee `.agents/skills/codex-helper/SKILL.md`.\n",
+        encoding="utf-8",
+    )
+    findings = validator.check_nonexistent_skill_path_references(tmp_path)
+    assert findings == []
+
+
+def test_antigravity_policy_fails_on_unapproved_skill(tmp_path: Path) -> None:
+    skills = {".agent/skills": {"anti-ticket-work": {"name": "anti-ticket-work", "description": "x"}}}
+    _make_repo(tmp_path, skills=skills)
+    findings = validator.check_antigravity_policy(tmp_path)
+    assert any(f.rule == "policy.antigravity_unapproved_skill" for f in findings)
+
+
+def test_antigravity_policy_passes_on_allowed_skill(tmp_path: Path) -> None:
+    skills = {".agent/skills": {"anti-validate-designs": {"name": "anti-validate-designs", "description": "x"}}}
+    _make_repo(tmp_path, skills=skills)
+    findings = validator.check_antigravity_policy(tmp_path)
+    assert findings == []
 
 
 # ---------------------------------------------------------------------------
@@ -336,15 +513,64 @@ def test_stale_surfaces_clean(tmp_path: Path) -> None:
 
 
 def test_claude_settings_policy_fails_on_dangerous(tmp_path: Path) -> None:
-    _make_repo(tmp_path, settings_local={"permissions": {"allow": ["Bash(rm -rf:*)"]}})
+    _make_repo(tmp_path, settings_json={"permissions": {"allow": ["Bash(rm -rf:*)"]}})
     findings = validator.check_claude_settings_policy(tmp_path)
     assert any(f.rule == "claude.dangerous_permission" for f in findings)
 
 
 def test_claude_settings_policy_warns_on_stale(tmp_path: Path) -> None:
-    _make_repo(tmp_path, settings_local={"permissions": {"allow": ["Read(//c/Dev/Starship Battles/**)"]}})
+    _make_repo(tmp_path, settings_json={"permissions": {"allow": ["Read(//c/Dev/Starship Battles/**)"]}})
     findings = validator.check_claude_settings_policy(tmp_path)
     assert any(f.rule == "claude.stale_starship_path" and f.severity == "warn" for f in findings)
+
+
+def test_claude_settings_policy_skips_ignored_local_content(tmp_path: Path) -> None:
+    _make_repo(tmp_path, settings_local={"permissions": {"allow": ["Bash(rm -rf:*)"]}})
+    findings = validator.check_claude_settings_policy(tmp_path)
+    assert not any(f.path == ".claude/settings.local.json" for f in findings)
+
+
+def test_tracked_local_settings_fails_when_git_tracks_local_file(tmp_path: Path) -> None:
+    _make_repo(tmp_path, settings_local={"permissions": {"allow": []}})
+    try:
+        subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    except FileNotFoundError:
+        pytest.skip("git is unavailable")
+    subprocess.run(["git", "add", ".claude/settings.local.json"], cwd=tmp_path, check=True, capture_output=True)
+
+    findings = validator.check_tracked_local_settings(tmp_path)
+    assert any(f.rule == "policy.tracked_local_settings" for f in findings)
+
+
+def test_tracked_local_settings_passes_when_local_file_untracked(tmp_path: Path) -> None:
+    _make_repo(tmp_path, settings_local={"permissions": {"allow": ["Bash(rm -rf:*)"]}})
+    findings = validator.check_tracked_local_settings(tmp_path)
+    assert findings == []
+
+
+# ---------------------------------------------------------------------------
+# Rollback policy
+# ---------------------------------------------------------------------------
+
+
+def test_rollback_policy_fails_on_hard_reset_guidance(tmp_path: Path) -> None:
+    protocol = tmp_path / "Projects" / "protocols" / "03b_parallel_projects.md"
+    protocol.parent.mkdir(parents=True)
+    protocol.write_text("If tests fail, run `git reset --hard HEAD~1`.\n", encoding="utf-8")
+    _make_repo(tmp_path)
+
+    findings = validator.check_rollback_policy(tmp_path)
+    assert any(f.rule == "policy.rollback_hard_reset" for f in findings)
+
+
+def test_rollback_policy_passes_on_merge_revert_guidance(tmp_path: Path) -> None:
+    protocol = tmp_path / "Projects" / "protocols" / "03b_parallel_projects.md"
+    protocol.parent.mkdir(parents=True)
+    protocol.write_text("Use `git revert -m 1 <merge_commit_sha> --no-edit`.\n", encoding="utf-8")
+    _make_repo(tmp_path)
+
+    findings = validator.check_rollback_policy(tmp_path)
+    assert findings == []
 
 
 # ---------------------------------------------------------------------------

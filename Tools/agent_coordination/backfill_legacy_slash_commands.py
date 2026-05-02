@@ -34,14 +34,14 @@ from Tools.agent_coordination.validate_agent_surfaces import (  # noqa: E402
 # Historical migration map. Keys are the pre-rename names; values are the
 # post-rename names. For skills that existed in both Claude and Antigravity,
 # user-facing READMEs almost always meant the Claude version, so default to
-# the `claude-` prefix. Antigravity-only skills (originally only in
-# `.agent/skills/`) get `anti-`. The single OpenCode skill gets `ocode-`.
+# the `claude-` prefix. Retired Antigravity-only project/debug flows map to
+# the nearest current Claude workflow. The single OpenCode skill gets `ocode-`.
 HISTORICAL_RENAME_MAP: dict[str, str] = {
-    # Antigravity-only originals
-    "proj-close": "anti-proj-close",
-    "proj-sequential": "anti-proj-sequential",
-    "debug-sequential": "anti-debug-sequential",
-    "deep-dive-sequential": "anti-deep-dive-sequential",
+    # Retired Antigravity-only originals
+    "proj-close": "claude-proj-archive",
+    "proj-sequential": "claude-proj-continue",
+    "debug-sequential": "claude-ticket-continue",
+    "deep-dive-sequential": "claude-ticket-deep-dive",
     # OpenCode original
     "audit-shrink": "ocode-audit-shrink",
     # Claude-only originals

@@ -1,0 +1,46 @@
+{
+  "antigravity": {
+    "allowed_skills": [
+      "anti-analysis-complexity",
+      "anti-analysis-dead-code",
+      "anti-analysis-sweep",
+      "anti-loc",
+      "anti-validate-designs"
+    ],
+    "retired_patterns": [
+      "anti-debug-*",
+      "anti-deep-dive-*",
+      "anti-fix-crash",
+      "anti-proj-*",
+      "anti-qa-*",
+      "anti-ticket-*",
+      "anti-triage-to-proj"
+    ]
+  },
+  "claude_settings": {
+    "ignored_files": [
+      ".claude/settings.local.json"
+    ],
+    "tracked_files": [
+      ".claude/settings.json",
+      ".claude/settings.example.json"
+    ],
+    "validate_ignored_file_contents": false
+  },
+  "cross_agent_references": {
+    "allowed": [],
+    "default": "deny"
+  },
+  "rollback": {
+    "failed_merge_strategy": "revert",
+    "merge_commit_revert_command": "git revert -m 1 <merge_commit_sha> --no-edit",
+    "requires_clean_worktree": true
+  },
+  "schema_version": 1,
+  "skill_prefixes": {
+    "anti": "anti-",
+    "claude": "claude-",
+    "codex": "codex-",
+    "ocode": "ocode-"
+  }
+}

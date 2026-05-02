@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-work
-description: Fix a bug or implement a feature by ticket ID (e.g., /anti-ticket-work bug 42 or /anti-ticket-work feature 7)
+description: Fix a bug or implement a feature by ticket ID (e.g., /claude-ticket-work bug 42 or /claude-ticket-work feature 7)
 disable-model-invocation: true
 argument-hint: bug|feature <number>
 ---

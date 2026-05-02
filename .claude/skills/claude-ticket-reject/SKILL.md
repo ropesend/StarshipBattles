@@ -1,6 +1,6 @@
 ---
 name: claude-ticket-reject
-description: Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /anti-ticket-reject bug 42 <reason>)
+description: Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /claude-ticket-reject bug 42 <reason>)
 disable-model-invocation: true
 argument-hint: bug|feature <number> <rejection reason>
 ---

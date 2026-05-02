@@ -372,8 +372,10 @@ When a teammate reports implementation complete:
    d. **If merge conflict:**
       - Attempt auto-resolve. If ambiguous, present conflict to user.
       - If unresolvable: `git merge --abort`, mark `blocked`.
-   e. **If tests fail:**
-      - `git reset --hard HEAD~1`
+   e. **If tests fail after a merge commit exists:**
+      - Require `git status --short` to be clean.
+      - Revert the merge commit with `git revert -m 1 <merge_commit_sha> --no-edit`.
+      - If the worktree is dirty, the merge commit SHA is unclear, or the revert conflicts, stop and ask the user.
       - Report failing tests to user. Mark `blocked`.
 5. **If BLOCKED / NEEDS_CLARIFICATION from teammate:**
    - Update ticket with findings.
@@ -817,7 +819,7 @@ Written to `{SESSION_DIR}/dashboard.md` and updated after each state change:
 | Implementation agent needs unapproved file | Teammate messages coordinator. Coordinator checks FILES_IN_USE, asks user to expand approved list. |
 | Merge conflict (auto-resolvable) | Resolve and continue. |
 | Merge conflict (ambiguous) | Present conflict to user, ask for resolution. |
-| Tests fail after merge | `git reset --hard HEAD~1`, mark `blocked`, release files from `FILES_IN_USE` and `PREDICTED_FILES`, scan waiting queue and paused investigators. |
+| Tests fail after merge | Require clean worktree, `git revert -m 1 <merge_commit_sha> --no-edit`, mark `blocked`, release files from `FILES_IN_USE` and `PREDICTED_FILES`, scan waiting queue and paused investigators. |
 | All approved tickets blocked by file conflicts | Present situation to user. Suggest reordering or skipping a blocking ticket. |
 | User stops session mid-way | Stop spawning new teammates. Wait for active ones to complete. Merge successes. Shutdown and cleanup. |
 | Phantom messages (wrong ticket ID) | Coordinator validates message prefix against expected ticket. Discard and re-request if mismatched. |
