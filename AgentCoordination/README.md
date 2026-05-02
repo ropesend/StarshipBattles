@@ -13,8 +13,8 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 - `agent_surface_policy.json` — current mutable policy manifest for validator-enforced agent surface rules.
 - `generated/test_baseline.json` — repo-wide test count baseline; auto-updated by the sharded runner on green whole-suite runs. Tracked.
 - `generated/agent_surface_inventory.json` — schema-versioned inventory of every skill surface. Regenerate with `inventory_agent_surfaces.py`. Tracked.
-- `generated/skill_usage/by_install/<install_id>.json` — per-checkout skill usage counters. Tracked.
-- `generated/skill_usage/summary.json` — aggregated usage summary. Tracked.
+- `generated/skill_usage/by_install/<install_id>.json` — per-checkout skill usage counters. Tracked. Each checkout writes only its own UUID-keyed file, so there are no cross-checkout merge conflicts.
+- `generated/skill_usage/summary.json` — aggregated usage summary. **Gitignored.** Purely derived from `by_install/*.json` and rewritten on every skill invocation; tracking it produced meaningless merge conflicts on every parallel-checkout merge. Regenerate locally with `summarize_skill_usage.py` (or just invoke any skill — the logger rewrites it).
 - `skill_rename_map.toml` — current-state report from the renamer. After the atomic prefix migration completed every entry shows `already_compliant`. The original migration map is preserved in git history at commit `c1b774b29` (atomic prefix rename).
 - `SKILL_RENAMES.md` — current-state audit report. See `skill_rename_map.toml` note above; for the original old→new mapping, see git history at `c1b774b29`.
 - `local/` — gitignored per-checkout state (install IDs).
@@ -39,7 +39,7 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 
 1. `AGENTS.md` is the shared source of truth.
 2. Runtime skills use `claude-`, `anti-`, `ocode-`, or `codex-` prefixes; reserved cross-agent prefix is `shared-`. Atomic migration completed at commit `c1b774b29`.
-3. Generated baseline, inventory, and usage-counter files are tracked.
+3. Generated baseline, inventory, and per-install usage-counter files are tracked. The aggregated `skill_usage/summary.json` is gitignored — it is purely derived from the per-install files.
 4. Shared Claude settings (`.claude/settings.json`) are tracked. Local settings (`.claude/settings.local.json`) are ignored and skipped by validator content checks by default.
 5. Stable reinforcement duplication is allowed only with closed validator markers (`tdd`, `docs-first`, `code-doc-consistency`, `root-cause`, `no-ignore-folder`, `no-revert-unrelated`).
 6. Volatile facts (exact test counts in prose, removed paths, stale baselines, `python -m unittest discover`) belong in generated artifacts.
@@ -48,6 +48,7 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 9. Antigravity's live skill surface is limited by `agent_surface_policy.json`.
 10. Legacy `.agent/workflows/` and `.agent/MIGRATION_PROGRESS.md` were removed at commit `af08531c8`. Git history is the archive.
 11. Skill usage counters are advisory only and never authorize automatic deletion.
+12. Per-install counter files (`generated/skill_usage/by_install/<uuid>.json`) are owned by the machine whose `local/install_id.json` matches the filename UUID. Other checkouts' files may be pulled but never modified locally. The validator's `usage_counter_ownership` check enforces this at commit time (when a local `install_id.json` exists); see `Tools/agent_coordination/README.md` for details.
 
 ## Maintenance cadence
 

@@ -102,6 +102,10 @@ Examples:
 - Antigravity invoking an `anti-*` skill → `python Tools/agent_coordination/log_skill_usage.py --agent anti --skill <name>`
 - Claude Code (manual override or testing) → same script with `--agent claude`.
 
-Counters are **advisory only** and identify cleanup candidates; they never authorize automatic deletion. Counter data is per-checkout (a UUID install ID is auto-generated on first call); only the aggregated `summary.json` is meant for cross-checkout review.
-Each logging invocation updates both the per-install counter and the aggregated
-`AgentCoordination/generated/skill_usage/summary.json`.
+Counters are **advisory only** and identify cleanup candidates; they never authorize automatic deletion. Counter data is per-checkout (a UUID install ID is auto-generated on first call); the aggregated `summary.json` is the artifact a human reviews for cross-checkout totals.
+
+Each logging invocation updates the per-install counter at
+`AgentCoordination/generated/skill_usage/by_install/<install_id>.json` (tracked,
+no cross-checkout conflicts because filenames are UUIDs) and rewrites the
+aggregated `AgentCoordination/generated/skill_usage/summary.json` (**gitignored**;
+purely derived from the per-install files, regenerated on every skill use).
