@@ -1,6 +1,13 @@
 {
   "schema_version": 1,
   "skills": {
+    "claude-delegate-review": {
+      "by_install": {
+        "304cdac3c17d4dd6b885c50bf357d6cd": 1
+      },
+      "last_used": "2026-05-02T20:39:17Z",
+      "total_count": 1
+    },
     "claude-proj-start": {
       "by_install": {
         "304cdac3c17d4dd6b885c50bf357d6cd": 1
