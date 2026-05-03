@@ -2068,7 +2068,7 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "metals",
-                    "base_harvest_rate": 100.0
+                    "base_harvest_rate": 1000.0
                 },
                 "CrewRequired": 20
             },
@@ -2094,7 +2094,7 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "organics",
-                    "base_harvest_rate": 100.0
+                    "base_harvest_rate": 1000.0
                 },
                 "CrewRequired": 20
             },
@@ -2120,7 +2120,7 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "vapors",
-                    "base_harvest_rate": 100.0
+                    "base_harvest_rate": 1000.0
                 },
                 "CrewRequired": 20
             },
@@ -2146,7 +2146,7 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "radioactives",
-                    "base_harvest_rate": 50.0
+                    "base_harvest_rate": 500.0
                 },
                 "CrewRequired": 25
             },
@@ -2173,7 +2173,7 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "exotics",
-                    "base_harvest_rate": 25.0
+                    "base_harvest_rate": 250.0
                 },
                 "CrewRequired": 30
             },
@@ -3849,7 +3849,10 @@
             ],
             "description": "Projects a coordinated shield-bonus aura to allied ships sharing this fleet's hex on the strategy map. PROJ-305 sample component demonstrating fleet strategic-layer ability projection.",
             "abilities": {
-                "ShieldModifier": {"multiplier": 1.25, "scope": "allied_sector"}
+                "ShieldModifier": {
+                    "multiplier": 1.25,
+                    "scope": "allied_sector"
+                }
             },
             "major_classification": "Defense",
             "resource_cost": {
