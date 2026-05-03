@@ -403,9 +403,12 @@ class TestRemoveButtonState:
         mock_empire = Mock()
 
         # Patch pygame_gui elements and TriStateFilterWidget
+        # PROJ-319 DUP-X-08: column toggles moved to game.ui.widgets.column_toggle_section.
         with patch('game.ui.screens.fleet_report_sidebar.UIPanel'):
-            with patch('game.ui.screens.fleet_report_sidebar.UILabel'):
-                with patch('game.ui.screens.fleet_report_sidebar.UIButton'):
+            with patch('game.ui.screens.fleet_report_sidebar.UILabel'), \
+                 patch('game.ui.widgets.column_toggle_section.UILabel'):
+                with patch('game.ui.screens.fleet_report_sidebar.UIButton'), \
+                     patch('game.ui.widgets.column_toggle_section.UIButton'):
                     with patch('game.ui.screens.fleet_report_sidebar.TriStateFilterWidget'):
                         sidebar = FleetReportSidebar(
                             panel=mock_panel,

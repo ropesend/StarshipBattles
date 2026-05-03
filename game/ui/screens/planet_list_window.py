@@ -11,9 +11,10 @@ from typing import Any, TYPE_CHECKING
 import pygame
 import pygame_gui.windows
 from game.core.resources import ResourceCatalog
-from pygame_gui.elements import UIPanel, UIButton, UIDropDownMenu
+from pygame_gui.elements import UIPanel, UIButton
 
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
+from game.ui.screens.data_list_window_mixin import DataListWindowMixin
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
@@ -107,7 +108,7 @@ def build_effect_columns(effect_keys: list[str]) -> list[dict]:
         })
     return columns
 
-class PlanetListWindow(StrategyModalWindow):
+class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
     def __init__(self, rect, manager, galaxy, empire, *,
                  window_manager: "StrategyWindowManager",
                  on_close_callback=None, asset_resolver=None, empires=None,
@@ -491,17 +492,7 @@ class PlanetListWindow(StrategyModalWindow):
             self.virtual_table.update_visible_rows()
 
         # Slider text sync (only when slider actually moved)
-        for key in ['gravity', 'temp', 'mass']:
-            f = self.ui_filters.get(key)
-            if not f:
-                continue
-            for which in ['min', 'max']:
-                slider = f[which]
-                if not slider.has_moved_recently:
-                    continue
-                txt_box = f[f'{which}_txt']
-                if not txt_box.is_focused:
-                    txt_box.set_text(f"{slider.get_current_value():.1f}")
+        self._sync_slider_text(['gravity', 'temp', 'mass'])
 
         # Header sort/swap (check_presses iterates header buttons)
         header_result = self.virtual_table.check_header_presses()
@@ -567,35 +558,7 @@ class PlanetListWindow(StrategyModalWindow):
         btn.set_text(f"[{label}]" if state else f"{label}")
         self.refresh_list()
 
-    def _toggle_column(self, btn) -> None:
-        """Toggle column visibility from a sidebar button."""
-        col = btn.col_ref
-        new_visible = self.column_manager.toggle_column(col['id'])
-        if new_visible is not None:
-            t = f"[x] {col['title'] or col['id']}" if new_visible else f"[ ] {col['title'] or col['id']}"
-            btn.set_text(t)
-            col['visible'] = new_visible
-            self.virtual_table.rebuild_headers()
-            self.virtual_table.rebuild_row_pool()
-            self.refresh_list()
-
-    def _save_preset(self) -> None:
-        """Save the current state as a preset."""
-        name = self.txt_preset_name.get_text()
-        if name:
-            state = self._capture_current_state()
-            self.preset_manager.save_preset(name, state)
-            rect = self.dd_presets.relative_rect
-            container = self.dd_presets.ui_container
-            self.dd_presets.kill()
-            self.dd_presets = UIDropDownMenu(
-                options_list=self.preset_manager.get_preset_names(),
-                starting_option=name,
-                relative_rect=rect,
-                manager=self.ui_manager,
-                container=container
-            )
-            self.last_preset_selection = name
+    # `_toggle_column` and `_save_preset` provided by DataListWindowMixin.
 
     def _capture_current_state(self) -> Any:
         """Serialize current filters and column config."""

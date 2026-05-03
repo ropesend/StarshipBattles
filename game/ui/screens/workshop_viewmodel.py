@@ -126,6 +126,38 @@ class WorkshopViewModel:
             return False
         return True
 
+    def _with_ship(
+        self,
+        op_name: str,
+        service_call,
+        on_success,
+        on_failure,
+    ):
+        """Run a ship operation with the standard guard / notify / log pattern.
+
+        Extracted in PROJ-319 (DUP-X-10) to consolidate the boilerplate around
+        every workshop ship operation.
+
+        Args:
+            op_name: Short verb phrase used by `_require_ship` and the
+                "Failed to ..." warning log line.
+            service_call: Callable taking the current ship and returning a
+                `DesignResult` (or any object with `.success` and `.errors`).
+            on_success: Callable taking the DesignResult and returning the
+                value the caller wants on success.
+            on_failure: Value returned when `_require_ship` fails or the
+                service result is unsuccessful.
+        """
+        if not self._require_ship(op_name):
+            return on_failure
+        result = service_call(self._ship)
+        self._last_result = result
+        if result.success:
+            self.notify_ship_changed()
+            return on_success(result)
+        logger.warning("Failed to %s: %s", op_name, result.errors)
+        return on_failure
+
     # ─────────────────────────────────────────────────────────────────
     # Ship Property
     # ─────────────────────────────────────────────────────────────────

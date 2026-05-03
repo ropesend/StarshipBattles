@@ -109,3 +109,28 @@ material disagreements, the items in this project's plan are sound.
 **One real adjustment was made:** DEEP-04-005's line number was off by 1–2
 in the audit (actual redundant pair is lines 97 + 100; audit said 99).
 Corrected in `phase_1_checklist.md` Task 1.14 and `manifest.md`.
+
+## Round 3 — Live Discovery During Phase 4 Task 4.1
+
+A real failure surfaced during Phase 4 Task 4.1 execution that BOTH verification
+rounds missed: `tests/integration/strategy/test_planet_physics.py:4` imported
+`MASS_MOON` from `game/strategy/data/planet_gen.py` as a re-export, not from
+its actual definition site `game/strategy/data/planet_physics.py`. Because
+`planet_gen.py` did `from planet_physics import (..., MASS_MOON, ...)` at its
+own top, the dead-but-imported symbol was effectively a re-export hub for
+external consumers.
+
+The Phase 1 deletion of `MASS_MOON` (C4) was technically correct in that
+`planet_gen.py` itself never used the symbol — but it broke the test's
+re-export reliance. The fix was to update the test to import from the
+definition site. The Phase 1 sharded run did not catch this because the
+test file lives under `tests/integration/strategy/` — the integration
+strategy tests run in a different shard than the planet_gen import path is
+exercised; only Phase 4 Task 4.1's targeted run on `tests/integration/strategy/`
+hit the broken import.
+
+**Lesson for the audit-shrink and verifier prompts:** when a candidate is
+"dead import," it is not enough to grep for the symbol within the file; you
+must also grep for `from <module_path> import <symbol>` across `tests/` and
+any other module — the symbol may be functioning as a re-export pointer.
+This is a real verifier bug the audit-shrink skill should fix.

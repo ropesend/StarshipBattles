@@ -94,7 +94,6 @@ class BuildQueueSelector:
         self.buttons.clear()
         self._button_index_map.clear()
 
-        y_offset = 0
         row_height = 30
         row_width = self.panel.get_relative_rect().width - 30
         y_offset = 0

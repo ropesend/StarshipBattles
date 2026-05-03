@@ -300,7 +300,7 @@ class StarGenerator:
     # luminosity = radius^2 * (temperature / SOLAR_TEMP_K)^4
     _SB_TYPES = frozenset({StarType.RED_GIANT, StarType.BROWN_DWARF, StarType.WHITE_DWARF})
 
-    def _determine_type_and_radius(self, mass: float, age_ratio: float = 0.5) -> tuple:
+    def _determine_type_and_radius(self, mass: float) -> tuple:
         """
         Determine star type via weighted roll, then set physical properties.
 

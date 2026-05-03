@@ -4,11 +4,11 @@ Loose behavior: ships distribute evenly around the anchor at a
 configured radius, maintaining spread to avoid clumping.
 """
 
-import math
 from typing import Any, List, Optional
 
 from game.core.math import Vector2
 from game.ai.spatial_behaviors.base import SpatialBehavior
+from game.ai.spatial_behaviors._formation_utils import compute_circular_position
 
 
 class ScreenBehavior(SpatialBehavior):
@@ -48,12 +48,10 @@ class ScreenBehavior(SpatialBehavior):
         if anchor_position is None:
             return None
 
-        total = max(len(group_ships), 1)
-
-        # Distribute evenly around the circle
-        angle = (2 * math.pi * slot_index) / total
-
-        target_x = anchor_position.x + math.cos(angle) * self.radius
-        target_y = anchor_position.y + math.sin(angle) * self.radius
-
-        return Vector2(target_x, target_y)
+        return compute_circular_position(
+            anchor_position.x,
+            anchor_position.y,
+            self.radius,
+            slot_index,
+            len(group_ships),
+        )

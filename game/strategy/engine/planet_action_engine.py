@@ -22,7 +22,6 @@ from game.strategy.data.component_activation_state import (
     ComponentActivationState,
 )
 from game.strategy.services.action_time_resolver import ActionTimeResolver
-from game.strategy.engine.planet_energy_engine import get_shield_info
 from game.strategy.interfaces.engines import IPlanetActionEngine
 from game.strategy.events.event_types import EventType, EventCategory
 

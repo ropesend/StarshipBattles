@@ -203,21 +203,14 @@ class WorkshopLayerOps:
         Returns:
             True if successful, False otherwise.
         """
-        vm = self._viewmodel
-        if not vm._require_ship("move component"):
-            return False
-
-        result = self._ship_service.move_component(
-            vm._ship, source_layer, index, target_layer
+        return self._viewmodel._with_ship(
+            "move component",
+            lambda ship: self._ship_service.move_component(
+                ship, source_layer, index, target_layer
+            ),
+            lambda _result: True,
+            False,
         )
-        vm._last_result = result
-
-        if result.success:
-            vm.notify_ship_changed()
-            return True
-        else:
-            logger.warning("Failed to move component: %s", result.errors)
-            return False
 
     def move_component_group(
         self,

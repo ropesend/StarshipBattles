@@ -621,13 +621,12 @@ class Galaxy:
         }
 
     @classmethod
-    def from_dict(cls, data: dict, naming_data_path: str = None) -> 'Galaxy':
+    def from_dict(cls, data: dict) -> 'Galaxy':
         """
         Deserialize Galaxy from dict.
 
         Args:
             data: Saved galaxy data
-            naming_data_path: Path to star_system_names.yaml (optional)
 
         Returns:
             Reconstructed Galaxy with all indexes rebuilt

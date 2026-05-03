@@ -808,16 +808,24 @@ class TestSidebarEffectsSection:
 
     def _patch_widgets(self):
         """Patch every pygame_gui widget the sidebar instantiates.
-        Returns the mock-patcher context manager list (use enter/exit)."""
+        Returns the mock-patcher context manager list (use enter/exit).
+
+        PROJ-319 DUP-X-07: range slider widgets moved to
+        `game.ui.widgets.range_slider_builder`; patch BOTH the sidebar module
+        (for non-range widgets it still uses) and the builder module.
+        """
         return [
             patch('game.ui.screens.planet_list_sidebar.UIScrollingContainer'),
             patch('game.ui.screens.planet_list_sidebar.UILabel'),
             patch('game.ui.screens.planet_list_sidebar.UIButton'),
             patch('game.ui.screens.planet_list_sidebar.UITextEntryLine'),
-            patch('game.ui.screens.planet_list_sidebar.UIHorizontalSlider'),
             patch('game.ui.screens.planet_list_sidebar.UIDropDownMenu'),
             # FEAT-25: Effects section now uses TriStateFilterWidget
             patch('game.ui.screens.planet_list_sidebar.TriStateFilterWidget'),
+            # PROJ-319 DUP-X-07: range-slider widgets moved to shared builder.
+            patch('game.ui.widgets.range_slider_builder.UILabel'),
+            patch('game.ui.widgets.range_slider_builder.UIHorizontalSlider'),
+            patch('game.ui.widgets.range_slider_builder.UITextEntryLine'),
         ]
 
     def _call_build_sidebar(self, effect_keys):

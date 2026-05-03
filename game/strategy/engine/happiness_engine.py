@@ -33,6 +33,7 @@ from typing import Any, List, Optional, TYPE_CHECKING
 
 from game.strategy.formulas.habitability import score_planet_for_race
 from game.strategy.interfaces.engines import IHappinessEngine
+from game.strategy.services.race_resolver import resolve_race_config
 
 if TYPE_CHECKING:
     from game.core.protocols import IRaceRegistry
@@ -134,26 +135,7 @@ class HappinessEngine(IHappinessEngine):
     ) -> Optional['RaceConfig']:
         """Resolve the `RaceConfig` for a given species on this empire.
 
-        PROJ-291 C3 resolution order:
-          1. If a race registry is wired, consult it first. When it
-             returns a `RaceConfig`, use that — this is the multi-species
-             path.
-          2. Otherwise (or when the registry doesn't know the race_id),
-             fall back to `empire.race_config` ONLY when the race_id
-             matches the empire's primary race. Return None for any
-             mismatch so non-primary species are gracefully skipped
-             instead of silently computed against the wrong base value
-             (the pre-PROJ-291 bug).
+        Thin wrapper over `resolve_race_config` (extracted in PROJ-319 DUP-X-01
+        to keep happiness and population resolution in lockstep).
         """
-        # PROJ-291 C3: registry resolves multi-species correctly when wired.
-        if self._race_registry is not None:
-            race_config = self._race_registry.get_race(race_id)
-            if race_config is not None:
-                return race_config
-        # Legacy single-race fallback (preserves pre-PROJ-291 tests).
-        race_config = empire.race_config
-        if race_config is None:
-            return None
-        if race_config.race_id == race_id:
-            return race_config
-        return None  # PROJ-291 C3: stop returning the wrong race silently
+        return resolve_race_config(race_id, empire, self._race_registry)

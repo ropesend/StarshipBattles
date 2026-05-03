@@ -215,6 +215,23 @@ class GalaxySystemGenerator:
         return generated
 
 
+# PROJ-319 (DUP-X-11): shared lazy JSON loader for the three module-level
+# caches below. Returns the parsed JSON (optionally narrowed to a sub-key) or
+# an empty dict if the file is missing.
+def _load_json_or_empty(path_value: Any, dict_key: Optional[str] = None) -> Dict[str, Any]:
+    from pathlib import Path
+    import json
+
+    path = Path(path_value)
+    if not path.exists():
+        return {}
+    with path.open('r', encoding='utf-8') as f:
+        data = json.load(f)
+    if dict_key is None:
+        return data
+    return data.get(dict_key, {})
+
+
 # PROJ-301 — module-level helper. Loads planet_types.json once on first call
 # and rolls each planet's intrinsic abilities according to its planet_type.
 _PLANET_TYPES_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
@@ -223,18 +240,38 @@ _PLANET_TYPES_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
 def _load_planet_types() -> Dict[str, Dict[str, Any]]:
     global _PLANET_TYPES_CACHE
     if _PLANET_TYPES_CACHE is None:
-        from pathlib import Path
-        import json
         from game.core.paths import Paths
-
-        path = Path(Paths.PLANET_TYPES_FILE)
-        if path.exists():
-            with path.open('r', encoding='utf-8') as f:
-                data = json.load(f)
-            _PLANET_TYPES_CACHE = data.get('planet_types', {})
-        else:
-            _PLANET_TYPES_CACHE = {}
+        _PLANET_TYPES_CACHE = _load_json_or_empty(Paths.PLANET_TYPES_FILE, 'planet_types')
     return _PLANET_TYPES_CACHE
+
+
+def _apply_intrinsic_abilities(
+    entities: List[Any],
+    types_data: Dict[str, Dict[str, Any]],
+    get_type_key: Any,
+    rng: Optional[random.Random] = None,
+) -> None:
+    """Shared roller for intrinsic abilities (DUP-X-12 consolidation).
+
+    Idempotent: entities with non-empty `intrinsic_abilities` are left alone
+    (e.g. for hand-crafted scenario entities). Caller-supplied seeded RNG
+    threads determinism through galaxy generation; defaults to an unseeded
+    `Random()` for back-compat.
+    """
+    from game.strategy.services.ability_sources import roll_intrinsic_abilities
+
+    if not types_data:
+        return
+    if rng is None:
+        rng = random.Random()
+    for entity in entities:
+        if entity.intrinsic_abilities:
+            continue
+        type_key = get_type_key(entity)
+        template = types_data.get(type_key, {}).get('abilities', {})
+        if not template:
+            continue
+        entity.intrinsic_abilities = roll_intrinsic_abilities(template, rng)
 
 
 def _apply_planet_intrinsic_abilities(
@@ -243,29 +280,11 @@ def _apply_planet_intrinsic_abilities(
 ) -> None:
     """Roll intrinsic abilities for each planet from data/planet_types.json (PROJ-301).
 
-    Idempotent: planets with non-empty `intrinsic_abilities` are left alone
-    (e.g. for hand-crafted scenario planets).
-
-    PROJ-301 D9 (added 2026-04-27): caller-supplied seeded RNG threads
-    determinism through galaxy generation. Defaults to an unseeded
-    Random() for back-compat with existing callers.
+    Thin wrapper over `_apply_intrinsic_abilities`.
     """
-    from game.strategy.services.ability_sources import roll_intrinsic_abilities
-
-    types_data = _load_planet_types()
-    if not types_data:
-        return
-
-    if rng is None:
-        rng = random.Random()
-    for planet in planets:
-        if planet.intrinsic_abilities:  # Idempotent: respect pre-set values.
-            continue
-        type_key = planet.planet_type.name  # Enum value -> registry key.
-        template = types_data.get(type_key, {}).get('abilities', {})
-        if not template:
-            continue
-        planet.intrinsic_abilities = roll_intrinsic_abilities(template, rng)
+    _apply_intrinsic_abilities(
+        planets, _load_planet_types(), lambda p: p.planet_type.name, rng,
+    )
 
 
 # PROJ-302 — module-level star intrinsics helper.
@@ -275,17 +294,8 @@ _STAR_TYPES_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
 def _load_star_types() -> Dict[str, Dict[str, Any]]:
     global _STAR_TYPES_CACHE
     if _STAR_TYPES_CACHE is None:
-        from pathlib import Path
-        import json
         from game.core.paths import Paths
-
-        path = Path(Paths.STAR_TYPES_FILE)
-        if path.exists():
-            with path.open('r', encoding='utf-8') as f:
-                data = json.load(f)
-            _STAR_TYPES_CACHE = data.get('star_types', {})
-        else:
-            _STAR_TYPES_CACHE = {}
+        _STAR_TYPES_CACHE = _load_json_or_empty(Paths.STAR_TYPES_FILE, 'star_types')
     return _STAR_TYPES_CACHE
 
 
@@ -295,26 +305,11 @@ def _apply_star_intrinsic_abilities(
 ) -> None:
     """PROJ-302: roll intrinsic abilities for each star from data/star_types.json.
 
-    Caller-supplied seeded RNG threads determinism through galaxy generation
-    (PROJ-302 follow-up to skeptical-review RNG-determinism finding).
-    Defaults to unseeded Random() for back-compat.
+    Thin wrapper over `_apply_intrinsic_abilities`.
     """
-    from game.strategy.services.ability_sources import roll_intrinsic_abilities
-
-    types_data = _load_star_types()
-    if not types_data:
-        return
-
-    if rng is None:
-        rng = random.Random()
-    for star in stars:
-        if star.intrinsic_abilities:
-            continue
-        type_key = star.star_type.name
-        template = types_data.get(type_key, {}).get('abilities', {})
-        if not template:
-            continue
-        star.intrinsic_abilities = roll_intrinsic_abilities(template, rng)
+    _apply_intrinsic_abilities(
+        stars, _load_star_types(), lambda s: s.star_type.name, rng,
+    )
 
 
 # PROJ-304 — module-level system archetype helper.
@@ -324,16 +319,8 @@ _SYSTEM_ARCHETYPES_CACHE: Optional[Dict[str, Any]] = None
 def _load_system_archetypes() -> Dict[str, Any]:
     global _SYSTEM_ARCHETYPES_CACHE
     if _SYSTEM_ARCHETYPES_CACHE is None:
-        from pathlib import Path
-        import json
         from game.core.paths import Paths
-
-        path = Path(Paths.SYSTEM_ARCHETYPES_FILE)
-        if path.exists():
-            with path.open('r', encoding='utf-8') as f:
-                _SYSTEM_ARCHETYPES_CACHE = json.load(f)
-        else:
-            _SYSTEM_ARCHETYPES_CACHE = {}
+        _SYSTEM_ARCHETYPES_CACHE = _load_json_or_empty(Paths.SYSTEM_ARCHETYPES_FILE)
     return _SYSTEM_ARCHETYPES_CACHE
 
 

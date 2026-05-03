@@ -113,7 +113,6 @@ class ApplicationContext:
         # returns the same instances as ctx.xxx (prevents instance divergence)
         from game.core.registry import set_default_registry_manager
         from game.core.profiling import set_default_profiler
-        from game.simulation.components.component_loader import get_default_cache_manager as _ccm_mod
         from game.assets.asset_manager import set_default_asset_manager
         from game.ui.renderer.sprites import set_default_sprite_manager
         from game.ui.assets.ship_theme_manager import set_default_ship_theme_manager

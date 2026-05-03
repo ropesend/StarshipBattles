@@ -13,18 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Dead imports / params / unreachable code | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Dead functions | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 4. Duplication consolidation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Dead imports / params / unreachable code | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Dead functions | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 4. Duplication consolidation | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 (Phase 3 — dead classes / dead files — skipped: zero verified items in source audit.)
 
 ## Current State
 **Last Updated:** 2026-05-02
-**Active Phase:** Phase 1 (not started)
-**Last Action:** Project created from `Reviews/results/2026-05-02_184210_audit_shrink/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** All phases complete; ready for project archive
+**Last Action:** All 30 verified items implemented across Phases 1, 2, and 4. Final sharded test suite: 16374 passed, 0 failed, 3 skipped. New shared modules: `game/strategy/services/race_resolver.py`, `game/ui/widgets/column_toggle_section.py`, `game/ui/widgets/range_slider_builder.py`, `game/ai/spatial_behaviors/_formation_utils.py`, `game/ui/screens/list_data_source_base.py`, `game/ui/screens/planet_target_editor_base.py`, `game/ui/screens/data_list_window_mixin.py`. New base classes / mixins added in place: `RaceConfigResolverMixin`, `PlanetTargetEditor`, `DataListWindowMixin`, `ListDataSource`, plus `_with_ship` on `WorkshopViewModel` and `_emit_validated_order` on `BaseCommandHandler`.
+**Next Action:** Archive project; consider running a follow-up audit-shrink in a few weeks to measure realized LOC delta vs the audit's claim.
 **Blockers:** None
+**Context for Next Agent:** Two known-flake tests surfaced during this project (recorded in `decisions.md`): `tests/unit/services/llm/test_background.py::test_elapsed_seconds_is_monotonic_then_frozen` (Windows `time.sleep` resolution) and `tests/integration/strategy/test_mutual_join_rendezvous.py` (intermittent on certain shard orderings). Pre-existing on main. Do not treat them as regressions if they show up alone in a sharded run.
 
 ## Overview
 Cleanup project derived from the 2026-05-02 audit-shrink review at

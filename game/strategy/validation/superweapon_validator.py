@@ -96,22 +96,19 @@ class SuperweaponValidator:
         return ValidationResult.success()
 
     @staticmethod
-    def validate_stellerate_star(
+    def _validate_star_targeted_superweapon(
         galaxy,
         fleet,
-        component_registry: Optional[Dict[str, Any]] = None
+        ability_name: str,
+        no_stars_message: str,
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> ValidationResult:
-        """Validate if a fleet can stellerate (destroy) the star at its location.
+        """Common validation for star-targeted superweapons (DUP-X-09).
 
-        Args:
-            galaxy: The Galaxy object
-            fleet: The Fleet object
-            component_registry: Optional component registry for ability lookup
-
-        Returns:
-            ValidationResult with is_valid and message.
+        Checks: ability present on fleet, fleet at a star system, system has stars.
+        Used by `validate_stellerate_star` and `validate_create_dyson_sphere`.
         """
-        error = SuperweaponValidator._require_ability(fleet, "DestroyStar", component_registry)
+        error = SuperweaponValidator._require_ability(fleet, ability_name, component_registry)
         if error:
             return error
 
@@ -120,9 +117,22 @@ class SuperweaponValidator:
             return error
 
         if not system.stars:
-            return ValidationResult.error("System has no stars to destroy.")
+            return ValidationResult.error(no_stars_message)
 
         return ValidationResult.success()
+
+    @staticmethod
+    def validate_stellerate_star(
+        galaxy,
+        fleet,
+        component_registry: Optional[Dict[str, Any]] = None
+    ) -> ValidationResult:
+        """Validate if a fleet can stellerate (destroy) the star at its location."""
+        return SuperweaponValidator._validate_star_targeted_superweapon(
+            galaxy, fleet, "DestroyStar",
+            "System has no stars to destroy.",
+            component_registry,
+        )
 
     @staticmethod
     def validate_open_warp_point(
@@ -215,28 +225,12 @@ class SuperweaponValidator:
         fleet,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> ValidationResult:
-        """Validate if a fleet can create a Dyson Sphere at its location.
-
-        Args:
-            galaxy: The Galaxy object
-            fleet: The Fleet object
-            component_registry: Optional component registry for ability lookup
-
-        Returns:
-            ValidationResult with is_valid and message.
-        """
-        error = SuperweaponValidator._require_ability(fleet, "CreateDysonSphere", component_registry)
-        if error:
-            return error
-
-        system, error = SuperweaponValidator._require_at_star_system(galaxy, fleet)
-        if error:
-            return error
-
-        if not system.stars:
-            return ValidationResult.error("System must have stars to create a Dyson Sphere.")
-
-        return ValidationResult.success()
+        """Validate if a fleet can create a Dyson Sphere at its location."""
+        return SuperweaponValidator._validate_star_targeted_superweapon(
+            galaxy, fleet, "CreateDysonSphere",
+            "System must have stars to create a Dyson Sphere.",
+            component_registry,
+        )
 
     @staticmethod
     def validate_self_destruct(

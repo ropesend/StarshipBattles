@@ -53,3 +53,4 @@
 | game/ai/spatial_behaviors/_formation_utils.py | Production (NEW) | Phase 4 — host `_compute_circular_position(anchor_x, anchor_y, distance, slot_index, total)` (DUP-X-13) |
 | game/ai/spatial_behaviors/escort.py | Production | Phase 4 — call `_compute_circular_position` in `compute_target_position` (lines 26-52) (DUP-X-13) |
 | game/ai/spatial_behaviors/screen.py | Production | Phase 4 — call `_compute_circular_position` in `compute_target_position` (lines 33-59) (DUP-X-13) |
+| tests/integration/strategy/test_planet_physics.py | Test | Phase 1 follow-up — re-import `MASS_MOON` from `planet_physics` (definition site) instead of `planet_gen` (re-export hub broken by C4 deletion) |

@@ -91,19 +91,12 @@ class WorkshopShipOps:
         Returns:
             True if successful, False otherwise
         """
-        vm = self._viewmodel
-        if not vm._require_ship("add component"):
-            return False
-
-        result = self._ship_service.add_component(vm._ship, component_id, layer)
-        vm._last_result = result
-
-        if result.success:
-            vm.notify_ship_changed()
-            return True
-        else:
-            logger.warning(f"Failed to add component: {result.errors}")
-            return False
+        return self._viewmodel._with_ship(
+            "add component",
+            lambda ship: self._ship_service.add_component(ship, component_id, layer),
+            lambda _result: True,
+            False,
+        )
 
     def add_component_bulk(
         self, component_id: str, layer: LayerType, count: int
@@ -139,19 +132,12 @@ class WorkshopShipOps:
         Returns:
             True if successful, False otherwise
         """
-        vm = self._viewmodel
-        if not vm._require_ship("add component instance"):
-            return False
-
-        result = self._ship_service.add_component_instance(vm._ship, component, layer)
-        vm._last_result = result
-
-        if result.success:
-            vm.notify_ship_changed()
-            return True
-        else:
-            logger.warning(f"Failed to add component instance: {result.errors}")
-            return False
+        return self._viewmodel._with_ship(
+            "add component instance",
+            lambda ship: self._ship_service.add_component_instance(ship, component, layer),
+            lambda _result: True,
+            False,
+        )
 
     def remove_component(
         self, layer: LayerType, index: int
@@ -161,19 +147,12 @@ class WorkshopShipOps:
         Returns:
             The removed component, or None if removal failed
         """
-        vm = self._viewmodel
-        if not vm._require_ship("remove component"):
-            return None
-
-        result = self._ship_service.remove_component(vm._ship, layer, index)
-        vm._last_result = result
-
-        if result.success:
-            vm.notify_ship_changed()
-            return result.removed_component
-        else:
-            logger.warning(f"Failed to remove component: {result.errors}")
-            return None
+        return self._viewmodel._with_ship(
+            "remove component",
+            lambda ship: self._ship_service.remove_component(ship, layer, index),
+            lambda result: result.removed_component,
+            None,
+        )
 
     def pick_up_component(
         self, layer: LayerType, index: int

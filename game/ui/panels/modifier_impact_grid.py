@@ -270,9 +270,9 @@ class ModifierImpactGrid:
             return f"={self._format_sig_digits(value)}"
         return str(value)
 
-    def _format_sig_digits(self, value: float, sig_digits: int = 4) -> str:
+    def _format_sig_digits(self, value: float) -> str:
         """
-        Format a value to a specified number of significant digits.
+        Format a value to a magnitude-dependent precision.
 
         Examples:
             1000.73 -> '1001'
@@ -283,7 +283,6 @@ class ModifierImpactGrid:
 
         Args:
             value: The numeric value
-            sig_digits: Number of significant digits (default 4)
 
         Returns:
             Formatted string

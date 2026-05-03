@@ -210,67 +210,62 @@ class StrategyEventRouter:
             race_config=race_config,
         )
 
-    def _open_gravity_editor(self, planet) -> None:
-        """Open gravity target editor for a planet."""
-        from game.ui.screens.gravity_target_editor import GravityTargetEditor
-        from game.strategy.engine.commands import SetGravityTargetCommand
+    def _open_planet_target_editor(
+        self,
+        planet,
+        editor_cls,
+        command_cls,
+        target_kwarg: str,
+        rect_size=(400, 300),
+    ) -> None:
+        """Open a planet target editor with the standard wiring.
+
+        Extracted in PROJ-319 (DUP-X-06) from the three near-identical
+        `_open_gravity_editor`, `_open_water_editor`, `_open_radiation_shield_editor`
+        methods. Callers pass the editor class, the command class, and the
+        keyword the command expects to receive the new target value under.
+        """
         from game.ui.utils import create_centered_rect
 
         ui = self.ui
         scene = ui.scene
         race_config = self._get_race_config(planet)
 
-        def on_apply(planet_id, gravity_target) -> None:
-            cmd = SetGravityTargetCommand(planet_id=planet_id, gravity_target=gravity_target)
+        def on_apply(planet_id, target_value) -> None:
+            cmd = command_cls(planet_id=planet_id, **{target_kwarg: target_value})
             scene.facade.handle_command(cmd)
 
-        rect = create_centered_rect(400, 300, ui.width, ui.height)
-        GravityTargetEditor(
+        width, height = rect_size
+        rect = create_centered_rect(width, height, ui.width, ui.height)
+        editor_cls(
             rect=rect, manager=ui.manager, planet=planet,
             window_manager=ui.window_manager,
             on_apply_callback=on_apply, race_config=race_config,
+        )
+
+    def _open_gravity_editor(self, planet) -> None:
+        """Open gravity target editor for a planet."""
+        from game.ui.screens.gravity_target_editor import GravityTargetEditor
+        from game.strategy.engine.commands import SetGravityTargetCommand
+        self._open_planet_target_editor(
+            planet, GravityTargetEditor, SetGravityTargetCommand, "gravity_target",
         )
 
     def _open_water_editor(self, planet) -> None:
         """Open water target editor for a planet."""
         from game.ui.screens.water_target_editor import WaterTargetEditor
         from game.strategy.engine.commands import SetWaterTargetCommand
-        from game.ui.utils import create_centered_rect
-
-        ui = self.ui
-        scene = ui.scene
-        race_config = self._get_race_config(planet)
-
-        def on_apply(planet_id, water_target) -> None:
-            cmd = SetWaterTargetCommand(planet_id=planet_id, water_target=water_target)
-            scene.facade.handle_command(cmd)
-
-        rect = create_centered_rect(400, 300, ui.width, ui.height)
-        WaterTargetEditor(
-            rect=rect, manager=ui.manager, planet=planet,
-            window_manager=ui.window_manager,
-            on_apply_callback=on_apply, race_config=race_config,
+        self._open_planet_target_editor(
+            planet, WaterTargetEditor, SetWaterTargetCommand, "water_target",
         )
 
     def _open_radiation_shield_editor(self, planet) -> None:
         """Open radiation shield editor for a planet."""
         from game.ui.screens.radiation_shield_editor import RadiationShieldEditor
         from game.strategy.engine.commands import SetRadiationShieldTargetCommand
-        from game.ui.utils import create_centered_rect
-
-        ui = self.ui
-        scene = ui.scene
-        race_config = self._get_race_config(planet)
-
-        def on_apply(planet_id, shielding_target) -> None:
-            cmd = SetRadiationShieldTargetCommand(planet_id=planet_id, shielding_target=shielding_target)
-            scene.facade.handle_command(cmd)
-
-        rect = create_centered_rect(400, 300, ui.width, ui.height)
-        RadiationShieldEditor(
-            rect=rect, manager=ui.manager, planet=planet,
-            window_manager=ui.window_manager,
-            on_apply_callback=on_apply, race_config=race_config,
+        self._open_planet_target_editor(
+            planet, RadiationShieldEditor, SetRadiationShieldTargetCommand,
+            "shielding_target",
         )
 
     def _open_food_allocation_editor(self, planet) -> None:
