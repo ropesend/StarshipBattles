@@ -426,7 +426,7 @@ class TransferDialog(StrategyModalWindow):
         try:
             from game.strategy.systems.design_library import DesignLibrary
             session = self.scene.session
-            empire = getattr(session, 'player_empire', None)
+            empire = getattr(session, 'active_empire', None)
             empire_id = empire.id if empire else 0
             library = DesignLibrary(session.save_path, empire_id)
             pod_designs = library.filter_designs(vehicle_type="Drop Pod")

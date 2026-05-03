@@ -80,7 +80,7 @@ class BuildQueuePortraitLoader:
 
         Args:
             design_library: DesignLibrary for looking up designs
-            session: Game session with player_empire for theme lookup
+            session: Game session with active_empire for theme lookup
         """
         self.design_library = design_library
         self.session = session
