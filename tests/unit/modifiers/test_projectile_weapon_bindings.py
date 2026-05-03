@@ -7,7 +7,18 @@ Note: ProjectileWeaponAbility doesn't add new stats beyond WeaponAbility,
 but it should inherit all parent bindings.
 """
 import pytest
-from game.simulation.components.abilities.stat_keys import StatKey, AbilityStatBinding
+
+from game.simulation.components.abilities.weapons import (
+    ProjectileWeaponAbility,
+    WeaponAbility,
+)
+
+
+class _MockComponent:
+    def __init__(self, stats):
+        self.stats = stats
+        self.ability_stats = {}
+        self.data = {}
 
 
 class TestProjectileWeaponAbilityStatBindings:
@@ -15,8 +26,6 @@ class TestProjectileWeaponAbilityStatBindings:
 
     def test_projectile_weapon_inherits_weapon_bindings(self):
         """ProjectileWeaponAbility should inherit all WeaponAbility bindings."""
-        from game.simulation.components.abilities.weapons import ProjectileWeaponAbility, WeaponAbility
-
         projectile_stats = ProjectileWeaponAbility.get_consumed_stats()
         weapon_stats = WeaponAbility.get_consumed_stats()
 
@@ -26,8 +35,6 @@ class TestProjectileWeaponAbilityStatBindings:
 
     def test_projectile_weapon_has_stat_bindings(self):
         """ProjectileWeaponAbility should have STAT_BINDINGS attribute."""
-        from game.simulation.components.abilities.weapons import ProjectileWeaponAbility
-
         assert hasattr(ProjectileWeaponAbility, 'STAT_BINDINGS')
         assert isinstance(ProjectileWeaponAbility.STAT_BINDINGS, list)
         # Should have at least the 5 weapon bindings
@@ -39,15 +46,7 @@ class TestProjectileWeaponAbilityRecalculate:
 
     def test_recalculate_applies_damage_mult(self):
         """recalculate() should apply damage_mult from stats."""
-        from game.simulation.components.abilities.weapons import ProjectileWeaponAbility
-
-        class MockComponent:
-            def __init__(self):
-                self.stats = {'damage_mult': 2.0}
-                self.ability_stats = {}
-                self.data = {}
-
-        component = MockComponent()
+        component = _MockComponent({'damage_mult': 2.0})
         ability = ProjectileWeaponAbility(component, {
             'damage': 75,
             'range': 800,
@@ -60,15 +59,7 @@ class TestProjectileWeaponAbilityRecalculate:
 
     def test_recalculate_applies_range_mult(self):
         """recalculate() should apply range_mult from stats."""
-        from game.simulation.components.abilities.weapons import ProjectileWeaponAbility
-
-        class MockComponent:
-            def __init__(self):
-                self.stats = {'range_mult': 4.0}
-                self.ability_stats = {}
-                self.data = {}
-
-        component = MockComponent()
+        component = _MockComponent({'range_mult': 4.0})
         ability = ProjectileWeaponAbility(component, {
             'damage': 75,
             'range': 1000,

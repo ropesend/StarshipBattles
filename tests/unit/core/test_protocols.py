@@ -7,25 +7,53 @@ duck typing replacement.
 
 import pytest
 
+from game.core.hex_math import HexCoord
+from game.core.protocols import (
+    ICamera,
+    ICombatant,
+    ICombatShip,
+    IEmpire,
+    IFacility,
+    IFleet,
+    IPlanet,
+    ISectorEnvironment,
+    IShipInstance,
+    IStar,
+    IStarSystem,
+    IWarpPoint,
+    IZoneOccupant,
+    is_camera,
+    is_combat_ship,
+    is_empire,
+    is_facility,
+    is_fleet,
+    is_planet,
+    is_sector_environment,
+    is_ship_instance,
+    is_star,
+    is_star_system,
+    is_warp_point,
+    is_zone_occupant,
+)
+from game.strategy.data.empire import Empire
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.galaxy import StarSystem, WarpPoint
+from game.strategy.data.physics import SectorEnvironment
+from game.strategy.data.planet import Planet, PlanetaryFacility, PlanetType
+from game.strategy.data.ship_instance import ShipInstance
+from game.strategy.data.stars import Spectrum, Star, StarType
+
 
 class TestProtocolsWithRealClasses:
     """Test that real game classes satisfy the Protocols."""
 
     def test_fleet_satisfies_ifleet(self):
         """Fleet class should satisfy IFleet Protocol."""
-        from game.core.protocols import IFleet
-        from game.strategy.data.fleet import Fleet
-        from game.core.hex_math import HexCoord
-
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
         assert isinstance(fleet, IFleet)
 
     def test_planet_satisfies_iplanet(self):
         """Planet class should satisfy IPlanet Protocol."""
-        from game.core.protocols import IPlanet
-        from game.strategy.data.planet import Planet, PlanetType
-        from game.core.hex_math import HexCoord
-
         planet = Planet(
             name="Test Planet",
             location=HexCoord(1, 1),
@@ -46,19 +74,11 @@ class TestProtocolsWithRealClasses:
 
     def test_star_system_satisfies_istarsystem(self):
         """StarSystem class should satisfy IStarSystem Protocol."""
-        from game.core.protocols import IStarSystem
-        from game.strategy.data.galaxy import StarSystem
-        from game.core.hex_math import HexCoord
-
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         assert isinstance(system, IStarSystem)
 
     def test_star_satisfies_istar(self):
         """Star class should satisfy IStar Protocol."""
-        from game.core.protocols import IStar
-        from game.strategy.data.stars import Star, StarType, Spectrum
-        from game.core.hex_math import HexCoord
-
         spectrum = Spectrum(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
         star = Star(
             name="Sun",
@@ -76,20 +96,11 @@ class TestProtocolsWithRealClasses:
 
     def test_warp_point_satisfies_iwarppoint(self):
         """WarpPoint class should satisfy IWarpPoint Protocol."""
-        from game.core.protocols import IWarpPoint
-        from game.strategy.data.galaxy import WarpPoint
-        from game.core.hex_math import HexCoord
-
         wp = WarpPoint(destination_id="Alpha Centauri", location=HexCoord(5, 3))
         assert isinstance(wp, IWarpPoint)
 
     def test_sector_environment_satisfies_isectorenvironment(self):
         """SectorEnvironment class should satisfy ISectorEnvironment Protocol."""
-        from game.core.protocols import ISectorEnvironment
-        from game.strategy.data.physics import SectorEnvironment
-        from game.strategy.data.galaxy import StarSystem
-        from game.core.hex_math import HexCoord
-
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         sector = SectorEnvironment(local_hex=HexCoord(3, 2), system=system)
         assert isinstance(sector, ISectorEnvironment)
@@ -100,27 +111,17 @@ class TestTypeGuardFunctions:
 
     def test_is_fleet_returns_true_for_fleet(self):
         """is_fleet should return True for Fleet instances."""
-        from game.core.protocols import is_fleet
-        from game.strategy.data.fleet import Fleet
-        from game.core.hex_math import HexCoord
-
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
         assert is_fleet(fleet) is True
 
     def test_is_fleet_returns_false_for_non_fleet(self):
         """is_fleet should return False for non-Fleet objects."""
-        from game.core.protocols import is_fleet
-
         assert is_fleet("not a fleet") is False
         assert is_fleet(123) is False
         assert is_fleet({"ships": []}) is False
 
     def test_is_planet_returns_true_for_planet(self):
         """is_planet should return True for Planet instances."""
-        from game.core.protocols import is_planet
-        from game.strategy.data.planet import Planet, PlanetType
-        from game.core.hex_math import HexCoord
-
         planet = Planet(
             name="Test",
             location=HexCoord(0, 0),
@@ -140,33 +141,21 @@ class TestTypeGuardFunctions:
 
     def test_is_planet_returns_false_for_non_planet(self):
         """is_planet should return False for non-Planet objects."""
-        from game.core.protocols import is_planet
-
         assert is_planet("not a planet") is False
         assert is_planet(None) is False
 
     def test_is_star_system_returns_true_for_system(self):
         """is_star_system should return True for StarSystem instances."""
-        from game.core.protocols import is_star_system
-        from game.strategy.data.galaxy import StarSystem
-        from game.core.hex_math import HexCoord
-
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         assert is_star_system(system) is True
 
     def test_is_star_system_returns_false_for_non_system(self):
         """is_star_system should return False for non-StarSystem objects."""
-        from game.core.protocols import is_star_system
-
         assert is_star_system("Sol") is False
         assert is_star_system(None) is False
 
     def test_is_star_returns_true_for_star(self):
         """is_star should return True for Star instances."""
-        from game.core.protocols import is_star
-        from game.strategy.data.stars import Star, StarType, Spectrum
-        from game.core.hex_math import HexCoord
-
         spectrum = Spectrum(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
         star = Star(
             name="Sun",
@@ -183,40 +172,25 @@ class TestTypeGuardFunctions:
 
     def test_is_star_returns_false_for_non_star(self):
         """is_star should return False for non-Star objects."""
-        from game.core.protocols import is_star
-
         assert is_star("Sun") is False
 
     def test_is_warp_point_returns_true_for_warppoint(self):
         """is_warp_point should return True for WarpPoint instances."""
-        from game.core.protocols import is_warp_point
-        from game.strategy.data.galaxy import WarpPoint
-        from game.core.hex_math import HexCoord
-
         wp = WarpPoint(destination_id="Alpha", location=HexCoord(1, 1))
         assert is_warp_point(wp) is True
 
     def test_is_warp_point_returns_false_for_non_warppoint(self):
         """is_warp_point should return False for non-WarpPoint objects."""
-        from game.core.protocols import is_warp_point
-
         assert is_warp_point("Alpha") is False
 
     def test_is_sector_environment_returns_true_for_sector(self):
         """is_sector_environment should return True for SectorEnvironment."""
-        from game.core.protocols import is_sector_environment
-        from game.strategy.data.physics import SectorEnvironment
-        from game.strategy.data.galaxy import StarSystem
-        from game.core.hex_math import HexCoord
-
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         sector = SectorEnvironment(local_hex=HexCoord(1, 1), system=system)
         assert is_sector_environment(sector) is True
 
     def test_is_sector_environment_returns_false_for_non_sector(self):
         """is_sector_environment should return False for non-SectorEnvironment."""
-        from game.core.protocols import is_sector_environment
-
         assert is_sector_environment({}) is False
 
 
@@ -225,10 +199,6 @@ class TestNoneSafety:
 
     def test_none_does_not_satisfy_any_protocol(self):
         """None should not satisfy any Protocol."""
-        from game.core.protocols import (
-            IFleet, IPlanet, IStarSystem, IStar, IWarpPoint, ISectorEnvironment
-        )
-
         assert not isinstance(None, IFleet)
         assert not isinstance(None, IPlanet)
         assert not isinstance(None, IStarSystem)
@@ -238,15 +208,7 @@ class TestNoneSafety:
 
     def test_typeguards_return_false_for_none(self):
         """All TypeGuard functions should return False for None."""
-        from game.core.protocols import (
-            is_fleet,
-            is_planet,
-            is_star_system,
-            is_star,
-            is_warp_point,
-            is_sector_environment,
-            is_combatant,
-        )
+        from game.core.protocols import is_combatant
 
         assert is_fleet(None) is False
         assert is_planet(None) is False
@@ -262,12 +224,6 @@ class TestRuntimeCheckable:
 
     def test_protocols_are_runtime_checkable(self):
         """All Protocols should have @runtime_checkable decorator."""
-        from typing import runtime_checkable
-        from game.core.protocols import (
-            IFleet, IPlanet, IStarSystem, IStar, IWarpPoint,
-            ISectorEnvironment, ICombatant
-        )
-
         # If Protocol is runtime_checkable, isinstance() should work without error
         # Just calling isinstance with a non-matching object should not raise
         try:
@@ -287,22 +243,16 @@ class TestIZoneOccupantProtocol:
 
     def test_izoneoccupant_protocol_importable(self):
         """IZoneOccupant and is_zone_occupant should be importable."""
-        from game.core.protocols import IZoneOccupant, is_zone_occupant
         assert IZoneOccupant is not None
         assert callable(is_zone_occupant)
 
     def test_izoneoccupant_is_runtime_checkable(self):
         """IZoneOccupant should be runtime_checkable."""
-        from game.core.protocols import IZoneOccupant
         # Should not raise TypeError
         assert isinstance("not a zone occupant", IZoneOccupant) is False
 
     def test_star_satisfies_izoneoccupant(self):
         """Star class should satisfy IZoneOccupant protocol."""
-        from game.core.protocols import IZoneOccupant, is_zone_occupant
-        from game.strategy.data.stars import Star, StarType, Spectrum
-        from game.core.hex_math import HexCoord
-
         spectrum = Spectrum(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
         star = Star(
             name="Sun",
@@ -323,10 +273,6 @@ class TestIZoneOccupantProtocol:
 
     def test_planet_satisfies_izoneoccupant(self):
         """Planet class should satisfy IZoneOccupant protocol."""
-        from game.core.protocols import IZoneOccupant, is_zone_occupant
-        from game.strategy.data.planet import Planet, PlanetType
-        from game.core.hex_math import HexCoord
-
         planet = Planet(
             name="Test Planet",
             location=HexCoord(1, 1),
@@ -350,7 +296,6 @@ class TestIZoneOccupantProtocol:
 
     def test_is_zone_occupant_returns_false_for_non_occupant(self):
         """is_zone_occupant should return False for non-occupant objects."""
-        from game.core.protocols import is_zone_occupant
         assert is_zone_occupant("not a zone") is False
         assert is_zone_occupant(None) is False
         assert is_zone_occupant({"occupied_hexes": set()}) is False
@@ -361,20 +306,17 @@ class TestICameraProtocol:
 
     def test_icamera_protocol_importable(self):
         """ICamera and is_camera should be importable."""
-        from game.core.protocols import ICamera, is_camera
         assert ICamera is not None
         assert callable(is_camera)
 
     def test_icamera_is_runtime_checkable(self):
         """ICamera should be runtime_checkable."""
-        from game.core.protocols import ICamera
         # Should not raise TypeError
         assert isinstance("not a camera", ICamera) is False
 
     def test_camera_satisfies_icamera(self):
         """Real Camera class should satisfy ICamera protocol."""
         pytest.importorskip("pygame")
-        from game.core.protocols import ICamera, is_camera
         from game.ui.renderer.camera import Camera
 
         camera = Camera(width=800, height=600)
@@ -383,7 +325,6 @@ class TestICameraProtocol:
 
     def test_is_camera_returns_false_for_non_camera(self):
         """is_camera should return False for non-Camera objects."""
-        from game.core.protocols import is_camera
         assert is_camera("not a camera") is False
         assert is_camera(None) is False
         assert is_camera({}) is False
@@ -428,18 +369,12 @@ class TestPROJ193ProtocolSatisfaction:
 
     def test_empire_satisfies_iempire(self):
         """Empire class should satisfy IEmpire Protocol."""
-        from game.core.protocols import IEmpire, is_empire
-        from game.strategy.data.empire import Empire
-
         empire = Empire(empire_id=1, name="Test Empire", color=(255, 0, 0))
         assert isinstance(empire, IEmpire)
         assert is_empire(empire) is True
 
     def test_ship_instance_satisfies_ishipinstance(self):
         """ShipInstance class should satisfy IShipInstance Protocol."""
-        from game.core.protocols import IShipInstance, is_ship_instance
-        from game.strategy.data.ship_instance import ShipInstance
-
         ship = ShipInstance(
             instance_id="ship-001",
             design_id="frigate_001",
@@ -452,9 +387,6 @@ class TestPROJ193ProtocolSatisfaction:
 
     def test_facility_satisfies_ifacility(self):
         """PlanetaryFacility class should satisfy IFacility Protocol."""
-        from game.core.protocols import IFacility, is_facility
-        from game.strategy.data.planet import PlanetaryFacility
-
         # Create minimal facility for protocol test
         facility = PlanetaryFacility(
             instance_id="facility-001",
@@ -467,7 +399,6 @@ class TestPROJ193ProtocolSatisfaction:
 
     def test_combat_ship_satisfies_icombatship(self, fresh_registries):
         """Simulation Ship class should satisfy ICombatShip Protocol."""
-        from game.core.protocols import ICombatShip, is_combat_ship
         from game.simulation.entities.ship import Ship
 
         ship = Ship(
@@ -489,10 +420,6 @@ class TestPROJ193ExtendedIPlanet:
 
     def test_planet_has_extended_properties(self):
         """Planet should have all extended IPlanet properties."""
-        from game.core.protocols import IPlanet
-        from game.strategy.data.planet import Planet, PlanetType
-        from game.core.hex_math import HexCoord
-
         planet = Planet(
             name="Extended Test",
             location=HexCoord(0, 0),
@@ -529,10 +456,6 @@ class TestPROJ193ExtendedIFleet:
 
     def test_fleet_has_extended_properties(self):
         """Fleet should have all extended IFleet properties."""
-        from game.core.protocols import IFleet
-        from game.strategy.data.fleet import Fleet
-        from game.core.hex_math import HexCoord
-
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
 
         # Check PROJ-193 extended properties exist

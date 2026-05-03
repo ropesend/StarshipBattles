@@ -275,19 +275,11 @@ class TestSaveJsonAtomicWrite:
 
 
 class TestLoadJsonRequired:
-    """Tests for load_json_required() function."""
+    """Tests for load_json_required() function.
 
-    def test_load_json_required_success(self, tmp_path):
-        """Load valid JSON file returns parsed data."""
-        from game.core.json_utils import load_json_required
-
-        test_file = tmp_path / "required.json"
-        test_data = {"required": True}
-        test_file.write_text(json.dumps(test_data))
-
-        result = load_json_required(str(test_file))
-
-        assert result == test_data
+    Success-path coverage is provided by `TestLoadJson.test_load_json_success`;
+    this class focuses on the error-path semantic difference (raise vs return default).
+    """
 
     def test_load_json_required_file_not_found_raises(self):
         """Raise FileNotFoundError when file doesn't exist."""

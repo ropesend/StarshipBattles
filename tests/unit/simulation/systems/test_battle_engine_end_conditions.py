@@ -20,32 +20,29 @@ from game.simulation.systems.battle_end_conditions import (
 from game.simulation.systems.battle_engine import BattleEngine
 
 
-@pytest.fixture
-def mock_ship():
-    """Create a mock ship for testing."""
+def _make_mock_ship(team_id: int = 0) -> Mock:
+    """Build a minimal Mock ship for engine end-condition tests."""
     ship = Mock()
     ship.is_alive = True
     ship.is_derelict = False
-    ship.team_id = 0
+    ship.team_id = team_id
     ship.position = pygame.math.Vector2(0, 0)
     ship.total_thrust = 100
     ship.turn_speed = 10
     ship.get_all_components.return_value = []
     return ship
+
+
+@pytest.fixture
+def mock_ship():
+    """Create a mock ship for testing (team 0)."""
+    return _make_mock_ship(team_id=0)
 
 
 @pytest.fixture
 def mock_ship_team1():
     """Create a mock ship for team 1."""
-    ship = Mock()
-    ship.is_alive = True
-    ship.is_derelict = False
-    ship.team_id = 1
-    ship.position = pygame.math.Vector2(0, 0)
-    ship.total_thrust = 100
-    ship.turn_speed = 10
-    ship.get_all_components.return_value = []
-    return ship
+    return _make_mock_ship(team_id=1)
 
 
 @pytest.fixture

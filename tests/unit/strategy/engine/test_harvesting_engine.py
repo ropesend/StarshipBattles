@@ -142,12 +142,17 @@ def _make_mock_registries(harvesters=None):
 # Tests
 # ===========================================================================
 
+
+def _make_engine(registries=None):
+    """Module-level helper. Promoted from per-class duplicates to dedupe."""
+    from game.strategy.engine.harvesting_engine import HarvestingEngine
+    return HarvestingEngine(registries=registries or _make_mock_registries())
+
+
 class TestHarvestingEngine:
     """Tests for HarvestingEngine.process_harvesting_tick() - PROJ-161 per-tick only."""
 
-    def _make_engine(self, registries=None):
-        from game.strategy.engine.harvesting_engine import HarvestingEngine
-        return HarvestingEngine(registries=registries or _make_mock_registries())
+    _make_engine = staticmethod(_make_engine)
 
     def _process_full_turn(self, engine, empires):
         """Helper to simulate full turn (100 ticks) of harvesting."""
@@ -514,9 +519,7 @@ def _make_storage_facility(
 class TestStorageAggregation:
     """Tests for HarvestingEngine.recalculate_storage()."""
 
-    def _make_engine(self, registries=None):
-        from game.strategy.engine.harvesting_engine import HarvestingEngine
-        return HarvestingEngine(registries=registries or _make_mock_registries())
+    _make_engine = staticmethod(_make_engine)
 
     def test_single_storage_facility(self):
         """Single storage facility sets colony max_stockpile and empire max_storage."""
@@ -691,9 +694,7 @@ class TestStorageAggregation:
 class TestPerTickHarvesting:
     """Tests for HarvestingEngine.process_harvesting_tick() - PROJ-161."""
 
-    def _make_engine(self, registries=None):
-        from game.strategy.engine.harvesting_engine import HarvestingEngine
-        return HarvestingEngine(registries=registries or _make_mock_registries())
+    _make_engine = staticmethod(_make_engine)
 
     def test_single_tick_harvests_one_hundredth(self):
         """Single tick extracts 1/100th of per-turn harvest rate."""

@@ -55,6 +55,21 @@ def _mock_fleet(**kwargs):
     return fleet
 
 
+@pytest.fixture
+def _mock_race_registry():
+    """Stub race registry used by upkeep / harvest tests.
+
+    `.get_race(*) -> None` so the projector's harvest + yard paths
+    (which consult habitability via `race_registry.get_race`)
+    short-circuit cleanly to 1.0. Upkeep projection does NOT consult
+    `race_registry` at all — this fixture exists only because the
+    projector constructor requires one.
+    """
+    stub = Mock()
+    stub.get_race.return_value = None
+    return stub
+
+
 class TestEmpireEconomySnapshot:
     """Tests for EmpireEconomySnapshot dataclass."""
 
@@ -823,17 +838,6 @@ class TestPopulationUpkeepAggregation:
             "radioactives": 0.00001,
         })
 
-    @pytest.fixture
-    def _mock_race_registry(self):
-        """Stub with `.get_race(*) -> None` so the projector's harvest +
-        yard paths (which consult habitability via `race_registry.get_race`)
-        short-circuit cleanly to 1.0. Upkeep projection does NOT consult
-        race_registry at all — this fixture exists only because the
-        projector constructor requires one."""
-        stub = Mock()
-        stub.get_race.return_value = None
-        return stub
-
     def _colony_with_populations(self, populations):
         """Build a real Planet so `get_species_config` lazy-creates
         `ColonySpeciesConfig` entries with the default `food_allocation=1.0`."""
@@ -1060,12 +1064,6 @@ class TestTreasuryTotalIncludesUpkeep:
             "organics": 0.001,
             "metals": 0.0001,
         })
-
-    @pytest.fixture
-    def _mock_race_registry(self):
-        stub = Mock()
-        stub.get_race.return_value = None
-        return stub
 
     def _colony_with_populations(self, populations):
         from game.core.hex_math import HexCoord

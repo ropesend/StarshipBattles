@@ -16,9 +16,9 @@
 **File:** `tests/unit/core/test_json_utils.py`
 **Tests:** `pytest tests/unit/core/test_json_utils.py`
 
-- [ ] [S10-CAT9-003] `TestLoadJsonRequired success path` (lines 277-307): Remove the success-path duplicate; keep error-path tests in TestLoadJsonRequired.
+- [x] [S10-CAT9-003] `TestLoadJsonRequired success path` (lines 277-307): Remove the success-path duplicate; keep error-path tests in TestLoadJsonRequired.
 
-- [ ] Verify: `pytest tests/unit/core/test_json_utils.py` passes; LOC delta ≈ 15
+- [x] Verify: `pytest tests/unit/core/test_json_utils.py` passes; LOC delta ≈ 15
 
 **Notes:** _(none yet)_
 
@@ -28,9 +28,9 @@
 **File:** `tests/unit/core/test_protocols.py`
 **Tests:** `pytest tests/unit/core/test_protocols.py`
 
-- [ ] [S09-CAT9-002] `Repeated local imports` (lines 14-220): Move imports to module top-level.
+- [x] [S09-CAT9-002] `Repeated local imports` (lines 14-220): Move imports to module top-level.
 
-- [ ] Verify: `pytest tests/unit/core/test_protocols.py` passes; LOC delta ≈ 40
+- [x] Verify: `pytest tests/unit/core/test_protocols.py` passes; LOC delta ≈ 40
 
 **Notes:** _(none yet)_
 
@@ -40,9 +40,9 @@
 **File:** `tests/unit/modifiers/test_projectile_weapon_bindings.py`
 **Tests:** `pytest tests/unit/modifiers/test_projectile_weapon_bindings.py`
 
-- [ ] [S10-CAT9-001] `Repeated imports` (lines 16-34): Hoist imports; consider merging tests.
+- [x] [S10-CAT9-001] `Repeated imports` (lines 16-34): Hoist imports; consider merging tests.
 
-- [ ] Verify: `pytest tests/unit/modifiers/test_projectile_weapon_bindings.py` passes; LOC delta ≈ 19
+- [x] Verify: `pytest tests/unit/modifiers/test_projectile_weapon_bindings.py` passes; LOC delta ≈ 19
 
 **Notes:** _(none yet)_
 
@@ -52,9 +52,9 @@
 **File:** `tests/unit/research/research_scene/test_callbacks.py`
 **Tests:** `pytest tests/unit/research/research_scene/test_callbacks.py`
 
-- [ ] [S03-CAT9-004] `Identical mock setup repeated` (lines 17-323): Extract a shared fixture.
+- [x] [S03-CAT9-004] `Identical mock setup repeated` (lines 17-323): Extract a shared fixture.
 
-- [ ] Verify: `pytest tests/unit/research/research_scene/test_callbacks.py` passes; LOC delta ≈ 80
+- [x] Verify: `pytest tests/unit/research/research_scene/test_callbacks.py` passes; LOC delta ≈ 80
 
 **Notes:** _(none yet)_
 
@@ -64,11 +64,11 @@
 **File:** `tests/unit/research/research_scene/test_cycle_detection.py`
 **Tests:** `pytest tests/unit/research/research_scene/test_cycle_detection.py`
 
-- [ ] [S03-CAT9-006] `Repeated cycle-node structure` (lines 109-182): Extract helper for cycle setup.
+- [x] [S03-CAT9-006] `Repeated cycle-node structure` (lines 109-182): Extract helper for cycle setup. _(skipped — upstream project already deleted target file)_
 
-- [ ] Verify: `pytest tests/unit/research/research_scene/test_cycle_detection.py` passes; LOC delta ≈ 74
+- [x] Verify: `pytest tests/unit/research/research_scene/test_cycle_detection.py` passes; LOC delta ≈ 74 _(skipped — upstream project already deleted target file)_
 
-**Notes:** _(none yet)_
+**Notes:** _(skipped — upstream project already deleted target file)_
 
 ---
 
@@ -76,9 +76,9 @@
 **File:** `tests/unit/research/research_scene/test_initialization.py`
 **Tests:** `pytest tests/unit/research/research_scene/test_initialization.py`
 
-- [ ] [S03-CAT9-005] `Identical mock setup across 7 tests` (lines 13-262): Extract a shared fixture.
+- [x] [S03-CAT9-005] `Identical mock setup across 7 tests` (lines 13-262): Extract a shared fixture.
 
-- [ ] Verify: `pytest tests/unit/research/research_scene/test_initialization.py` passes; LOC delta ≈ 60
+- [x] Verify: `pytest tests/unit/research/research_scene/test_initialization.py` passes; LOC delta ≈ 60
 
 **Notes:** _(none yet)_
 
@@ -88,9 +88,9 @@
 **File:** `tests/unit/simulation/combat/test_fleet_aura_manager_modifier_stack.py`
 **Tests:** `pytest tests/unit/simulation/combat/test_fleet_aura_manager_modifier_stack.py`
 
-- [ ] [S10-CAT9-002] `4 similar helper functions` (lines 34-53, 173-189, 288-302): Consolidate into one parametrized factory; ~15 LOC savings.
+- [x] [S10-CAT9-002] `4 similar helper functions` (lines 34-53, 173-189, 288-302): Consolidate into one parametrized factory; ~15 LOC savings.
 
-- [ ] Verify: `pytest tests/unit/simulation/combat/test_fleet_aura_manager_modifier_stack.py` passes; LOC delta ≈ 30
+- [x] Verify: `pytest tests/unit/simulation/combat/test_fleet_aura_manager_modifier_stack.py` passes; LOC delta ≈ 30
 
 **Notes:** _(none yet)_
 
@@ -102,12 +102,12 @@
 
 > **PRE-CONDITION:** The original verification flagged this finding's line ranges as fictitious. **BEFORE starting**, run `grep -n "proj.position = Vector2" tests/unit/simulation/projectile/test_projectile_manager.py` and update the task with the actual line numbers. Estimated 27 occurrences exist somewhere in the file.
 
-- [ ] [S09-CAT9-004] `Repeated MagicMock projectile boilerplate` (lines throughout (27 occurrences)): Extract a _make_projectile(position, velocity, ...) helper; verify accurate line ranges before refactor.
+- [x] [S09-CAT9-004] `Repeated MagicMock projectile boilerplate` (lines throughout (27 occurrences)): Extract a _make_projectile(position, velocity, ...) helper; verify accurate line ranges before refactor. _(skipped — upstream project already deleted target file)_
       _(verification adjusted from review's "Extract _make_projectile helper across cited lines 1831-1840 and 1997-2007." — see verification_report.md)_
 
-- [ ] Verify: `pytest tests/unit/simulation/projectile/test_projectile_manager.py` passes; LOC delta ≈ 200
+- [x] Verify: `pytest tests/unit/simulation/projectile/test_projectile_manager.py` passes; LOC delta ≈ 200 _(skipped — upstream project already deleted target file)_
 
-**Notes:** _(none yet)_
+**Notes:** _(skipped — upstream project already deleted target file)_
 
 ---
 
@@ -115,9 +115,9 @@
 **File:** `tests/unit/simulation/systems/test_battle_engine_end_conditions.py`
 **Tests:** `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py`
 
-- [ ] [S08-CAT9-002] `Near-identical mock_ship/mock_ship_team1` (lines 21-60): Parametrize fixture.
+- [x] [S08-CAT9-002] `Near-identical mock_ship/mock_ship_team1` (lines 21-60): Parametrize fixture.
 
-- [ ] Verify: `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py` passes; LOC delta ≈ 40
+- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py` passes; LOC delta ≈ 40
 
 **Notes:** _(none yet)_
 
@@ -127,11 +127,11 @@
 **File:** `tests/unit/strategy/data/test_fleet_cargo_resources.py`
 **Tests:** `pytest tests/unit/strategy/data/test_fleet_cargo_resources.py`
 
-- [ ] [S06-CAT9-002] `_make_ship duplicates _make_cargo_ship` (lines 14-45): Extract to shared fixture.
+- [x] [S06-CAT9-002] `_make_ship duplicates _make_cargo_ship` (lines 14-45): Extract to shared fixture. _(no-op — `_make_cargo_ship` lives in two unrelated integration test files, not in this unit-test file. The cited `_make_ship` here is already a clean module-level helper. Cross-file unification with integration tests is out-of-scope for P2 — would risk integration-test fixture coupling for no measurable saving.)_
 
-- [ ] Verify: `pytest tests/unit/strategy/data/test_fleet_cargo_resources.py` passes; LOC delta ≈ 32
+- [x] Verify: `pytest tests/unit/strategy/data/test_fleet_cargo_resources.py` passes; LOC delta ≈ 32 _(no-op — see above)_
 
-**Notes:** _(none yet)_
+**Notes:** _Cross-file dedupe not pursued; `_make_ship` here already optimal at module scope._
 
 ---
 
@@ -139,9 +139,9 @@
 **File:** `tests/unit/strategy/engine/test_empire_economy_calculator.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_empire_economy_calculator.py`
 
-- [ ] [S04-CAT9-003] `_mock_race_registry duplicated` (lines 826-835, 1064-1068): Promote to module-level fixture.
+- [x] [S04-CAT9-003] `_mock_race_registry duplicated` (lines 826-835, 1064-1068): Promote to module-level fixture.
 
-- [ ] Verify: `pytest tests/unit/strategy/engine/test_empire_economy_calculator.py` passes; LOC delta ≈ 15
+- [x] Verify: `pytest tests/unit/strategy/engine/test_empire_economy_calculator.py` passes; LOC delta ≈ 15
 
 **Notes:** _(none yet)_
 
@@ -151,9 +151,9 @@
 **File:** `tests/unit/strategy/engine/test_harvesting_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_harvesting_engine.py`
 
-- [ ] [S04-CAT9-002] `_make_engine duplicated in 3 classes` (lines 148-150, 517-519, 694-696): Promote to module-level fixture.
+- [x] [S04-CAT9-002] `_make_engine duplicated in 3 classes` (lines 148-150, 517-519, 694-696): Promote to module-level fixture.
 
-- [ ] Verify: `pytest tests/unit/strategy/engine/test_harvesting_engine.py` passes; LOC delta ≈ 9
+- [x] Verify: `pytest tests/unit/strategy/engine/test_harvesting_engine.py` passes; LOC delta ≈ 9
 
 **Notes:** _(none yet)_
 
