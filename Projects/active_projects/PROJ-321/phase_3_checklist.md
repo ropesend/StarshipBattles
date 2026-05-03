@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Delete or relocate the 8 verified CAT-3 dead-test-code items identified by review `2026-05-02_204633_test-review` (repro scripts, empty placeholder classes, files with no unique coverage).
 
 _Note: Task 3.5 is a relocation/rename, not a deletion. The source verification recommends keeping the file as a regression guard under `tests/regression/`. The phase objective is "Delete or relocate the 8 verified CAT-3 dead-test-code items"._

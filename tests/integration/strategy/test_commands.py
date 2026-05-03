@@ -187,17 +187,6 @@ class TestCommands:
         assert res.error_code == "NO_CANDIDATES"
 
 
-class TestGameSessionCommands:
-    def test_handle_command(self):
-        # Mock Session logic
-        # Ideally we test GameSession class but it has complex init.
-        # We can implement a partial mock or just test the dispatch logic if we extracted it.
-        # Given we modified GameSession, let's try to mock it properly if possible or just rely on TurnEngine tests
-        # since GameSession just delegates.
-        # But we added `handle_command` in GameSession.
-        pass
-
-
 class TestIssueInterceptCommand:
     """Tests for IssueInterceptCommand class."""
 
