@@ -385,30 +385,28 @@ class TestProjectedGrowthRate:
     def test_partial_food_and_low_happiness_matches_hand_computation(self):
         """food_ratio=0.5, happiness=0.3, P=200, max_pop=10_000.
 
-        habitability ~ 0.94 for default-prefs human on Earth-like, so
-        K_eff ≈ 9_400. logistic_factor = 1 - 200/9_400 ≈ 0.9787.
-        effective_r = 0.03 * 0.5 = 0.015.
-        logistic = 0.015 * 0.9787 * 0.3 ≈ 0.004404.
-        decline  = -0.02 * (1-0.5) = -0.01.
-        net      ≈ -0.005596.
+        PROJ-323 Task 5.19: replaced reimplementation of production logic with
+        hardcoded reference value (validated against projected_growth_rate
+        2026-05-03).
+
+        Derivation (do not recompute in test body):
+          - habitability ~ 0.94 for default-prefs human on Earth-like
+          - K_eff ≈ 9_400. logistic_factor = 1 - 200/9_400 ≈ 0.9787.
+          - effective_r = 0.03 * 0.5 = 0.015.
+          - logistic = 0.015 * 0.9787 * 0.3 ≈ 0.004404.
+          - decline  = -0.02 * (1-0.5) = -0.01.
+          - net      ≈ -0.005596.
         """
         from game.strategy.formulas.colony_output import projected_growth_rate
-        from game.strategy.formulas.habitability import score_planet_for_race
-        from game.strategy.engine.population_engine import DECLINE_RATE
         pop = SpeciesPopulation(race_id="human", count=200, happiness=0.3)
         planet = _planet_with_max_pop(10_000, populations=[pop])
         race = _race("human")
         cfg = _config(food_ratio=0.5)
 
-        habitability = score_planet_for_race(planet, race)
-        K_eff = max(1.0, 10_000 * habitability)
-        expected_logistic = (race.base_reproduction_rate * 0.5) * (1.0 - 200 / K_eff) * 0.3
-        expected_decline = -DECLINE_RATE * (1.0 - 0.5)
-        expected = expected_logistic + expected_decline
-
         rate = projected_growth_rate(planet, pop, race, cfg)
 
-        assert rate == pytest.approx(expected, rel=1e-9)
+        # Hardcoded reference value; see docstring derivation.
+        assert rate == pytest.approx(-0.005596103475344202, rel=1e-9)
 
     def test_overpopulation_drives_logistic_negative(self):
         """P > K_eff → logistic_factor < 0 → rate goes negative even with

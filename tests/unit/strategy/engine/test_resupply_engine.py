@@ -484,7 +484,17 @@ class TestFleetResupply:
         other_ship.resupply.assert_not_called()
 
     def test_fuel_distributed_to_equalize_range(self):
-        """Fuel is distributed to equalize effective range across fleet ships."""
+        """Fuel is distributed to equalize effective range across fleet ships.
+
+        PROJ-323 Task 5.18: hardcoded expected values (200.0 / 40.0).
+        Derivation (validated against ResupplyEngine 2026-05-03):
+          - 240 fuel available; combined cost 10+2=12/hex -> max equalized
+            range = 240/12 = 20 hexes.
+          - Ship A allocation = cost(10) * range(20) = 200.0
+          - Ship B allocation = cost(2)  * range(20) =  40.0
+        Total: 240.0. Updating these values without re-validating production
+        is a regression signal — the engine has changed the equalization rule.
+        """
         registries = _make_mock_registries()
         engine = ResupplyEngine(registries=registries)
 
@@ -497,8 +507,6 @@ class TestFleetResupply:
 
         fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship_a, ship_b])
 
-        # 240 fuel available: with 10+2=12 cost/hex -> max_range = 240/12 = 20 hexes
-        # Ship A gets 10*20 = 200 fuel, Ship B gets 2*20 = 40 fuel => total = 240 ✓
         facility = _make_fuel_facility(consumable_levels={"fuel": 240.0})
         planet = MagicMock()
         planet.owner_id = 0
@@ -509,18 +517,16 @@ class TestFleetResupply:
         empire = MagicMock()
         empire.fleets = [fleet]
 
-        events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
+        engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
-        # Check that resupply was called on both ships
+        # Hardcoded reference values; see docstring for derivation.
         ship_a.resupply.assert_called()
         ship_b.resupply.assert_called()
 
-        # Ship A should receive 200.0 fuel (10 cost * 20 range)
         a_call_args = ship_a.resupply.call_args
         assert a_call_args[0][0] == 'fuel'
         assert a_call_args[0][1] == pytest.approx(200.0)
 
-        # Ship B should receive 40.0 fuel (2 cost * 20 range)
         b_call_args = ship_b.resupply.call_args
         assert b_call_args[0][0] == 'fuel'
         assert b_call_args[0][1] == pytest.approx(40.0)
