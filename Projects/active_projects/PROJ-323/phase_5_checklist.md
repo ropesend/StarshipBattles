@@ -16,10 +16,10 @@
 **File:** `tests/unit/ui/screens/test_strategy_game_state_manager.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_game_state_manager.py`
 
-- [x] [S06-CAT12-001] `test_stops_on_cancel_after_current_turn` (lines 279-299): Use side_effect that increments a Counter; assert outcome rather than internal call counts. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
-- [x] [S06-CAT12-002] `test_suppresses_event_log_during_loop_and_surfaces_combined_at_end` (lines 329-354): Compare sets or sequences with explicit equality. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S06-CAT12-001] `test_stops_on_cancel_after_current_turn` (lines 279-299): Use side_effect that increments a Counter; assert outcome rather than internal call counts. _(pass 2: replaced dict-based counter with itertools.count; removed mock_pft.call_count internal assertion; kept outcome assertion (completed == 2).)_
+- [x] [S06-CAT12-002] `test_suppresses_event_log_during_loop_and_surfaces_combined_at_end` (lines 329-354): Compare sets or sequences with explicit equality. _(pass 2 leave-as-is: existing test already asserts via `combined_events[i] is e2[i]` identity per element, which is more stringent than set equality. The single call_count==1 check is the structural assertion required to verify "one combined call at end" — replacing it with set comparison would lose that guarantee.)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_game_state_manager.py` passes; LOC delta ≈ 47 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_game_state_manager.py` passes; LOC delta ≈ 47 _(pass 2: 22 passed)_
 
 **Notes:** _(none yet)_
 
@@ -65,9 +65,9 @@
 **File:** `tests/integration/strategy/test_fleet_navigation_consistency.py`
 **Tests:** `pytest tests/integration/strategy/test_fleet_navigation_consistency.py`
 
-- [x] [S06-CAT12-006] `test_multi_turn_consistency` (lines 134-174): Extract grouping into helper. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S06-CAT12-006] `test_multi_turn_consistency` (lines 134-174): Extract grouping into helper. _(pass 2: extracted _positions_by_turn module-level helper using collections.defaultdict.)_
 
-- [x] Verify: `pytest tests/integration/strategy/test_fleet_navigation_consistency.py` passes; LOC delta ≈ 41 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/integration/strategy/test_fleet_navigation_consistency.py` passes; LOC delta ≈ 41 _(pass 2: 10 passed)_
 
 **Notes:** _(none yet)_
 
@@ -137,9 +137,9 @@
 **File:** `tests/unit/ai/test_advanced_behaviors.py`
 **Tests:** `pytest tests/unit/ai/test_advanced_behaviors.py`
 
-- [x] [S05-CAT12-001] `Vector arithmetic in test bodies` (lines 102-217): Acceptable for spatial behavior tests; document expected geometry in fixtures. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S05-CAT12-001] `Vector arithmetic in test bodies` (lines 102-217): Acceptable for spatial behavior tests; document expected geometry in fixtures. _(pass 2 leave-as-is: added module-level docstring documenting spatial-test geometry conventions; existing inline geometry comments preserved.)_
 
-- [x] Verify: `pytest tests/unit/ai/test_advanced_behaviors.py` passes; LOC delta ≈ 116 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ai/test_advanced_behaviors.py` passes; LOC delta ≈ 116 _(pass 2 leave-as-is: 7 passed)_
 
 **Notes:** _(none yet)_
 
@@ -281,9 +281,9 @@
 **File:** `tests/unit/ui/screens/test_fleet_report_filters.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_filters.py`
 
-- [x] [S08-CAT12-002] `TestCalculateFleetStats 9 tests` (lines 81-197): Hardcode expected values. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S08-CAT12-002] `TestCalculateFleetStats 9 tests` (lines 81-197): Hardcode expected values. _(pass 2: tests already used hardcoded reference values; cleaned up test_average_hp_calculation docstring to be derivation-source-of-truth, removed inline arithmetic comment. Other 8 tests already in target form.)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py` passes; LOC delta ≈ 117 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py` passes; LOC delta ≈ 117 _(pass 2: 61 passed)_
 
 **Notes:** _(none yet)_
 

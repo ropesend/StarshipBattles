@@ -115,17 +115,22 @@ class TestCalculateFleetStats:
         assert stats['total_tonnage'] == 3500
 
     def test_average_hp_calculation(self):
-        """Average HP should be calculated correctly."""
+        """Average HP should be calculated correctly.
+
+        PROJ-323 Task 5.23: hardcoded reference 0.7667 (validated against
+        calculate_fleet_stats 2026-05-03). For inputs (1.0, 0.5, 0.8) the
+        production avg is (1.0 + 0.5 + 0.8) / 3 ≈ 0.7666666...
+        """
         from game.ui.screens.fleet_report_filters import calculate_fleet_stats
 
         ships = [
-            make_mock_ship(hp_pct=1.0),   # 100%
-            make_mock_ship(hp_pct=0.5),   # 50%
-            make_mock_ship(hp_pct=0.8),   # 80%
+            make_mock_ship(hp_pct=1.0),
+            make_mock_ship(hp_pct=0.5),
+            make_mock_ship(hp_pct=0.8),
         ]
         stats = calculate_fleet_stats(ships)
 
-        # Average: (1.0 + 0.5 + 0.8) / 3 = 0.7667
+        # Hardcoded reference; see docstring derivation.
         assert abs(stats['avg_hp_percent'] - 0.7667) < 0.01
 
     def test_combat_capable_excludes_destroyed(self):

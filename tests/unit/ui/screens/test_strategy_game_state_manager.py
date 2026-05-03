@@ -276,26 +276,31 @@ class TestRunNTurns:
         assert completed == 5
 
     def test_stops_on_cancel_after_current_turn(self):
-        """If cancel is requested between iterations, the loop stops cleanly."""
+        """If cancel is requested between iterations, the loop stops cleanly.
+
+        PROJ-323 Task 5.1: use itertools.count Counter for tick-tracking
+        side_effect, assert on outcome (completed) rather than internal
+        mock call counts.
+        """
+        from itertools import count
         manager, screen = _make_game_state_manager()
         screen._facade.get_turn_events.return_value = []
         screen.dev_run_cancel_requested = False
 
         # Set the cancel flag after the second process_full_turn call so the
         # loop should stop before iteration 3.
-        call_count = {"n": 0}
+        counter = count(1)
 
         def trip_cancel_after_two(*args, **kwargs):
-            call_count["n"] += 1
-            if call_count["n"] == 2:
+            if next(counter) == 2:
                 screen.dev_run_cancel_requested = True
 
-        with patch.object(manager, "process_full_turn", side_effect=trip_cancel_after_two) as mock_pft, \
+        with patch.object(manager, "process_full_turn", side_effect=trip_cancel_after_two), \
              patch.object(manager, "_pump_cancel_events"), \
              patch("pygame.display.get_surface", return_value=None):
             completed = manager.run_n_turns(10)
 
-        assert mock_pft.call_count == 2
+        # Outcome assertion: 2 turns completed before cancel halted the loop.
         assert completed == 2
 
     def test_returns_completed_count(self):
