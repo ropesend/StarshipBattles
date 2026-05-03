@@ -16,6 +16,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-04-18 | Skeptical Audit | proj-283-290 (5-lens parallel) | Completed | [2026-04-18_skeptic_proj-283-290](results/2026-04-18_skeptic_proj-283-290/) |
 | 2026-04-05 | General Review | strategy-layer-health | In Progress | [2026-04-05_110710_general_strategy-layer-health](results/2026-04-05_110710_general_strategy-layer-health/) |
 | 2026-03-24 | General Review | duplication-consolidation-full-codebase | Led to Project | [2026-03-24_200858_general_duplication-consolidation-full-codebase](results/2026-03-24_200858_general_duplication-consolidation-full-codebase/) → PROJ-224 through PROJ-228 |
 | 2026-03-13 | Consistency Review | full-codebase-all-patterns | In Progress | [2026-03-13_182542_consistency_full-codebase-all-patterns](results/2026-03-13_182542_consistency_full-codebase-all-patterns/) |
