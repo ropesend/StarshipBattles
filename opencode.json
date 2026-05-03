@@ -1,7 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "deepseek/deepseek-v4-pro",
-  "shell": "pwsh",
   "instructions": [
     "./AGENTS.md"
   ],

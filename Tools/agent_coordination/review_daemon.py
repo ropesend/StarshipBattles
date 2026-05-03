@@ -426,6 +426,7 @@ def process_request(request_path: Path, opencode_cmd: list[str] | None = None) -
         proc = subprocess.Popen(
             cmd,
             cwd=str(PROJECT_ROOT),
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
