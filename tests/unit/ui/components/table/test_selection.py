@@ -2,14 +2,19 @@
 
 import pytest
 
+from game.ui.components.table.selection import (
+    ISelectionStrategy,
+    MultiSelect,
+    NoSelect,
+    SingleSelect,
+)
+
 
 class TestSingleSelect:
     """Tests for SingleSelect strategy."""
 
     def test_handle_click_selects_index(self):
         """handle_click should select the clicked index."""
-        from game.ui.components.table.selection import SingleSelect
-
         strategy = SingleSelect()
         result = strategy.handle_click(5, False)
 
@@ -18,8 +23,6 @@ class TestSingleSelect:
 
     def test_handle_click_replaces_previous_selection(self):
         """Clicking a different index replaces the selection."""
-        from game.ui.components.table.selection import SingleSelect
-
         strategy = SingleSelect()
         strategy.handle_click(5, False)
         result = strategy.handle_click(3, False)
@@ -29,8 +32,6 @@ class TestSingleSelect:
 
     def test_handle_click_ctrl_ignored(self):
         """Ctrl+click behaves same as regular click in SingleSelect."""
-        from game.ui.components.table.selection import SingleSelect
-
         strategy = SingleSelect()
         strategy.handle_click(5, False)
         result = strategy.handle_click(3, True)  # Ctrl held
@@ -40,8 +41,6 @@ class TestSingleSelect:
 
     def test_clear_empties_selection(self):
         """clear() should empty the selection."""
-        from game.ui.components.table.selection import SingleSelect
-
         strategy = SingleSelect()
         strategy.handle_click(5, False)
         strategy.clear()
@@ -50,8 +49,6 @@ class TestSingleSelect:
 
     def test_set_selected_sets_indices(self):
         """set_selected() should set specific indices."""
-        from game.ui.components.table.selection import SingleSelect
-
         strategy = SingleSelect()
         strategy.set_selected({7})
 
@@ -59,8 +56,6 @@ class TestSingleSelect:
 
     def test_initial_state_is_empty(self):
         """Initial state should have no selection."""
-        from game.ui.components.table.selection import SingleSelect
-
         strategy = SingleSelect()
         assert strategy.get_selected_indices() == set()
 
@@ -70,8 +65,6 @@ class TestMultiSelect:
 
     def test_handle_click_selects_index(self):
         """handle_click without ctrl selects just that index."""
-        from game.ui.components.table.selection import MultiSelect
-
         strategy = MultiSelect()
         result = strategy.handle_click(5, False)
 
@@ -80,8 +73,6 @@ class TestMultiSelect:
 
     def test_handle_click_ctrl_adds_to_selection(self):
         """Ctrl+click adds to existing selection."""
-        from game.ui.components.table.selection import MultiSelect
-
         strategy = MultiSelect()
         strategy.handle_click(5, False)
         result = strategy.handle_click(3, True)  # Ctrl held
@@ -91,8 +82,6 @@ class TestMultiSelect:
 
     def test_handle_click_ctrl_toggles_off(self):
         """Ctrl+click on selected index toggles it off."""
-        from game.ui.components.table.selection import MultiSelect
-
         strategy = MultiSelect()
         strategy.handle_click(5, False)
         strategy.handle_click(3, True)  # Add 3
@@ -103,8 +92,6 @@ class TestMultiSelect:
 
     def test_handle_click_ctrl_cannot_deselect_last(self):
         """Cannot deselect the last selected item with Ctrl+click."""
-        from game.ui.components.table.selection import MultiSelect
-
         strategy = MultiSelect()
         strategy.handle_click(3, False)
         result = strategy.handle_click(3, True)  # Try to toggle off last
@@ -114,8 +101,6 @@ class TestMultiSelect:
 
     def test_clear_empties_selection(self):
         """clear() should empty the selection."""
-        from game.ui.components.table.selection import MultiSelect
-
         strategy = MultiSelect()
         strategy.handle_click(5, False)
         strategy.handle_click(3, True)
@@ -125,8 +110,6 @@ class TestMultiSelect:
 
     def test_set_selected_sets_indices(self):
         """set_selected() should set specific indices."""
-        from game.ui.components.table.selection import MultiSelect
-
         strategy = MultiSelect()
         strategy.set_selected({1, 2, 3})
 
@@ -134,15 +117,11 @@ class TestMultiSelect:
 
     def test_initial_state_is_empty(self):
         """Initial state should have no selection."""
-        from game.ui.components.table.selection import MultiSelect
-
         strategy = MultiSelect()
         assert strategy.get_selected_indices() == set()
 
     def test_click_without_ctrl_replaces_selection(self):
         """Clicking without ctrl replaces entire selection."""
-        from game.ui.components.table.selection import MultiSelect
-
         strategy = MultiSelect()
         strategy.handle_click(5, False)
         strategy.handle_click(3, True)
@@ -157,8 +136,6 @@ class TestNoSelect:
 
     def test_handle_click_returns_empty(self):
         """handle_click should always return empty set."""
-        from game.ui.components.table.selection import NoSelect
-
         strategy = NoSelect()
         result = strategy.handle_click(5, False)
 
@@ -166,8 +143,6 @@ class TestNoSelect:
 
     def test_handle_click_with_ctrl_returns_empty(self):
         """handle_click with ctrl should also return empty set."""
-        from game.ui.components.table.selection import NoSelect
-
         strategy = NoSelect()
         result = strategy.handle_click(3, True)
 
@@ -175,8 +150,6 @@ class TestNoSelect:
 
     def test_get_selected_indices_always_empty(self):
         """get_selected_indices should always return empty set."""
-        from game.ui.components.table.selection import NoSelect
-
         strategy = NoSelect()
         strategy.handle_click(5, False)
         strategy.handle_click(3, True)
@@ -185,8 +158,6 @@ class TestNoSelect:
 
     def test_set_selected_ignored(self):
         """set_selected should be ignored."""
-        from game.ui.components.table.selection import NoSelect
-
         strategy = NoSelect()
         strategy.set_selected({1, 2, 3})
 
@@ -194,8 +165,6 @@ class TestNoSelect:
 
     def test_clear_is_noop(self):
         """clear() should work without error."""
-        from game.ui.components.table.selection import NoSelect
-
         strategy = NoSelect()
         strategy.clear()  # Should not raise
 
@@ -207,8 +176,6 @@ class TestISelectionStrategy:
 
     def test_base_class_raises_not_implemented(self):
         """Base class methods should raise NotImplementedError."""
-        from game.ui.components.table.selection import ISelectionStrategy
-
         strategy = ISelectionStrategy()
 
         with pytest.raises(NotImplementedError):

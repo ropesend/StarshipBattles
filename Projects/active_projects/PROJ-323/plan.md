@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. CAT-9 Simplification (32 items) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. CAT-9 Simplification (32 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-8 Needless Complexity (32 items) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CAT-10 Parametrize (53 items) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-11 Fragile Assertion (15 items) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,9 +21,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 1 CAT-9 Simplification
-**Last Action:** Project created from 2026-05-02_204633_test-review after independent verification (3rd skeptical pass)
-**Next Action:** Begin Phase 1 tasks: simplify 32 verified CAT-9 cases
+**Active Phase:** Phase 2 CAT-8 Needless Complexity
+**Last Action:** Phase 1 (32 tasks) complete: 19 substantive refactors landed, 3 obsolete-skipped (1.5, 1.8, 1.26 — files deleted by upstream), 5 no-op (helpers already at optimal scope). All Phase 1 test files green.
+**Next Action:** Begin Phase 2 tasks: 30 CAT-8 needless-complexity refactors.
 **Blockers:** None
 
 ## Overview

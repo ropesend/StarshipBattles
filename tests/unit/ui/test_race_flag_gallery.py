@@ -47,6 +47,29 @@ def mock_asset_loader():
     return loader
 
 
+def _bypass_init_gallery(race_config, *, asset_buttons=None, flag_preview_images=None):
+    """Construct a `RaceFlagGallery` without invoking `__init__` and pre-populate
+    the standard attribute set required by the on_asset_selected/set_from_config
+    code paths.
+
+    PROJ-323 Task 1.30: extracted from per-test inline `with patch.object(..., '__init__', ...)`
+    blocks (8 occurrences across the file).
+    """
+    from game.ui.panels.race_flag_gallery import RaceFlagGallery
+
+    with patch.object(RaceFlagGallery, '__init__', lambda self, *args, **kwargs: None):
+        gallery = RaceFlagGallery.__new__(RaceFlagGallery)
+    gallery.race_config = race_config
+    gallery.asset_buttons = asset_buttons if asset_buttons is not None else []
+    gallery.flag_preview_images = flag_preview_images if flag_preview_images is not None else []
+    gallery.preview_panel = MagicMock()
+    gallery._asset_loader = MagicMock()
+    gallery._asset_loader.load_flag_full.return_value = []
+    gallery.ui_manager = MagicMock()
+    gallery.on_select_callback = None
+    return gallery
+
+
 # =============================================================================
 # Test: RaceFlagGallery Import and Creation
 # =============================================================================
@@ -60,22 +83,11 @@ class TestFlagSelection:
 
     def test_on_asset_selected_updates_race_config(self, mock_race_config):
         """Selecting a flag updates race_config.flag_id."""
-        from game.ui.panels.race_flag_gallery import RaceFlagGallery
+        gallery = _bypass_init_gallery(mock_race_config)
 
-        with patch.object(RaceFlagGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceFlagGallery.__new__(RaceFlagGallery)
-            gallery.race_config = mock_race_config
-            gallery.asset_buttons = []
-            gallery.flag_preview_images = []
-            gallery.preview_panel = MagicMock()
-            gallery._asset_loader = MagicMock()
-            gallery._asset_loader.load_flag_full.return_value = []
-            gallery.ui_manager = MagicMock()
-            gallery.on_select_callback = None
+        gallery.on_asset_selected("flag_001")
 
-            gallery.on_asset_selected("flag_001")
-
-            assert mock_race_config.flag_id == "flag_001"
+        assert mock_race_config.flag_id == "flag_001"
 
     def test_on_asset_selected_clears_old_preview_images(self, mock_race_config):
         """Selecting a flag clears existing preview images."""
@@ -125,21 +137,10 @@ class TestFlagSelection:
 
     def test_on_asset_selected_no_callback_no_error(self, mock_race_config):
         """Selecting a flag with no callback doesn't raise an error."""
-        from game.ui.panels.race_flag_gallery import RaceFlagGallery
+        gallery = _bypass_init_gallery(mock_race_config)
 
-        with patch.object(RaceFlagGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceFlagGallery.__new__(RaceFlagGallery)
-            gallery.race_config = mock_race_config
-            gallery.asset_buttons = []
-            gallery.flag_preview_images = []
-            gallery.preview_panel = MagicMock()
-            gallery._asset_loader = MagicMock()
-            gallery._asset_loader.load_flag_full.return_value = []
-            gallery.ui_manager = MagicMock()
-            gallery.on_select_callback = None
-
-            # Should not raise
-            gallery.on_asset_selected("flag_001")
+        # Should not raise
+        gallery.on_asset_selected("flag_001")
 
 
 # =============================================================================

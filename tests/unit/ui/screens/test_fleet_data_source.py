@@ -8,27 +8,32 @@ from unittest.mock import Mock, patch
 import pygame
 
 
+def _make_data_source(ships=None):
+    """Build a FleetDataSource over a mock view_model exposing
+    `get_filtered_ships(...) -> ships`. Defaults to an empty list.
+
+    PROJ-323 Task 1.29: extracted from per-test view_model construction.
+    """
+    from game.ui.screens.fleet_data_source import FleetDataSource
+
+    view_model = Mock()
+    view_model.get_filtered_ships = Mock(return_value=list(ships or []))
+    return FleetDataSource(view_model)
+
+
 class TestFleetDataSourceColumns:
     """Test FleetDataSource column configuration."""
 
     def test_get_columns_returns_19_columns(self):
         """get_columns returns all 19 fleet columns."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
-
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source()
 
         columns = ds.get_columns()
         assert len(columns) == 19
 
     def test_get_columns_includes_required_ids(self):
         """get_columns includes all required column ids."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
-
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source()
 
         columns = ds.get_columns()
         col_ids = [c["id"] for c in columns]
@@ -60,11 +65,7 @@ class TestFleetDataSourceColumns:
 
     def test_columns_have_required_properties(self):
         """Each column has id, width, title, visible."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
-
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source()
 
         for col in ds.get_columns():
             assert "id" in col
@@ -78,21 +79,13 @@ class TestFleetDataSourceRowCount:
 
     def test_get_row_count_delegates_to_view_model(self):
         """get_row_count returns len of filtered ships."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
-
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[Mock(), Mock(), Mock()])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[Mock(), Mock(), Mock()])
 
         assert ds.get_row_count() == 3
 
     def test_get_row_count_empty(self):
         """get_row_count returns 0 when no ships."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
-
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source()
 
         assert ds.get_row_count() == 0
 
@@ -108,9 +101,7 @@ class TestFleetDataSourceCellValueSerial:
         ship.get_display_id = Mock(return_value="SN-0001")
         ship.instance_id = "abc123"
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "serial") == "SN-0001"
 
@@ -122,9 +113,7 @@ class TestFleetDataSourceCellValueSerial:
         ship.get_display_id = Mock(return_value=None)
         ship.instance_id = "abc123456789"
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "serial") == "abc12345"
 
@@ -140,9 +129,7 @@ class TestFleetDataSourceCellValueDesign:
         ship.design_data = {"name": "Cruiser Mk II"}
         ship.design_id = "cruiser_2"
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "design") == "Cruiser Mk II"
 
@@ -154,9 +141,7 @@ class TestFleetDataSourceCellValueDesign:
         ship.design_data = {}
         ship.design_id = "cruiser_2"
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "design") == "cruiser_2"
 
@@ -171,9 +156,7 @@ class TestFleetDataSourceCellValueName:
         ship = Mock()
         ship.name = "USS Enterprise"
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "name") == "USS Enterprise"
 
@@ -188,9 +171,7 @@ class TestFleetDataSourceCellValueHpPct:
         ship = Mock()
         ship.get_hp_percentage = Mock(return_value=0.75)
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "hp_pct") == "75%"
 
@@ -201,9 +182,7 @@ class TestFleetDataSourceCellValueHpPct:
         ship = Mock()
         ship.get_hp_percentage = Mock(return_value=1.0)
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "hp_pct") == "100%"
 
@@ -220,9 +199,7 @@ class TestFleetDataSourceCellValueStatus:
         ship.is_derelict = False
         ship.is_damaged = Mock(return_value=False)
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "status") == "OK"
 
@@ -233,9 +210,7 @@ class TestFleetDataSourceCellValueStatus:
         ship = Mock()
         ship.is_alive = False
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "status") == "DESTROYED"
 
@@ -247,9 +222,7 @@ class TestFleetDataSourceCellValueStatus:
         ship.is_alive = True
         ship.is_derelict = True
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "status") == "DERELICT"
 
@@ -262,9 +235,7 @@ class TestFleetDataSourceCellValueStatus:
         ship.is_derelict = False
         ship.is_damaged = Mock(return_value=True)
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "status") == "DAMAGED"
 
@@ -277,9 +248,7 @@ class TestFleetDataSourceCellValueSpeed:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         with patch(
             "game.strategy.services.fleet_speed_calculator.FleetSpeedCalculator.calculate_ship_speed",
@@ -298,9 +267,7 @@ class TestFleetDataSourceCellValueTonnage:
         ship = Mock()
         ship.get_calculated_stats = Mock(return_value={"mass": 12500})
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "tonnage") == "12,500"
 
@@ -311,9 +278,7 @@ class TestFleetDataSourceCellValueTonnage:
         ship = Mock()
         ship.get_calculated_stats = Mock(return_value={"mass": 0})
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "tonnage") == "0"
 
@@ -326,9 +291,7 @@ class TestFleetDataSourceCellValueWarp:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         with patch(
             "game.strategy.services.component_inspector.has_warp_capability",
@@ -341,9 +304,7 @@ class TestFleetDataSourceCellValueWarp:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         with patch(
             "game.strategy.services.component_inspector.has_warp_capability",
@@ -360,9 +321,7 @@ class TestFleetDataSourceCellValueSpaceyard:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         with patch(
             "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard",
@@ -375,9 +334,7 @@ class TestFleetDataSourceCellValueSpaceyard:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         with patch(
             "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard",
@@ -397,9 +354,7 @@ class TestFleetDataSourceCellValueTransport:
         ship.get_cargo_capacity = Mock(return_value=100)
         ship.get_current_cargo = Mock(return_value=50)
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "transport") == "50/100"
 
@@ -411,9 +366,7 @@ class TestFleetDataSourceCellValueTransport:
         ship.get_cargo_capacity = Mock(return_value=0)
         ship.get_current_cargo = Mock(return_value=0)
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "transport") == "--"
 
@@ -438,9 +391,7 @@ class TestFleetDataSourceCellValueResources:
 
         ship.get_resource_percentage = mock_get_resource_pct
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         value = ds.get_cell_value(0, "resources")
         assert "E:80" in value
@@ -454,9 +405,7 @@ class TestFleetDataSourceCellValueResources:
         ship = Mock()
         ship.get_resource_percentage = Mock(return_value=None)
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "resources") == "--"
 
@@ -471,9 +420,7 @@ class TestFleetDataSourceCellValueCargo:
         ship = Mock()
         ship.cargo_contents = {"minerals": 50, "food": 30}
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "cargo") == "80"
 
@@ -484,9 +431,7 @@ class TestFleetDataSourceCellValueCargo:
         ship = Mock()
         ship.cargo_contents = {}
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "cargo") == "--"
 
@@ -497,9 +442,7 @@ class TestFleetDataSourceCellValueCargo:
         ship = Mock()
         ship.cargo_contents = None
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "cargo") == "--"
 
@@ -512,9 +455,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         with patch(
             "game.strategy.services.component_inspector.ship_has_ability",
@@ -527,9 +468,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         with patch(
             "game.strategy.services.component_inspector.ship_has_ability",
@@ -545,9 +484,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
         )
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         for col_id in SPECIAL_CAPABILITY_COLUMNS:
             with patch(
@@ -565,9 +502,7 @@ class TestFleetDataSourceCellValueImageColumns:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "portrait") == ""
 
@@ -576,9 +511,7 @@ class TestFleetDataSourceCellValueImageColumns:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "topdown") == ""
 
@@ -594,9 +527,7 @@ class TestFleetDataSourceGetCellImage:
         ship.instance_id = "ship123"
         ship.design_data = {"theme_id": "Federation", "ship_class": "Cruiser"}
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         # Mock the theme manager
         mock_surface = pygame.Surface((40, 40))
@@ -621,9 +552,7 @@ class TestFleetDataSourceGetCellImage:
         ship.instance_id = "ship123"
         ship.design_data = {"theme_id": "Federation", "ship_class": "Cruiser"}
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         mock_surface = pygame.Surface((60, 60))
         with patch(
@@ -643,9 +572,7 @@ class TestFleetDataSourceGetCellImage:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_image(0, "serial") is None
         assert ds.get_cell_image(0, "name") is None
@@ -658,9 +585,7 @@ class TestFleetDataSourceGetCellImage:
         ship.instance_id = "ship123"
         ship.design_data = {"theme_id": "Federation", "ship_class": "Cruiser"}
 
-        view_model = Mock()
-        view_model.get_filtered_ships = Mock(return_value=[ship])
-        ds = FleetDataSource(view_model)
+        ds = _make_data_source(ships=[ship])
 
         mock_surface = pygame.Surface((40, 40))
         with patch(

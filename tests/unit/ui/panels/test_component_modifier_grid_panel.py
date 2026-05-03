@@ -28,6 +28,19 @@ def _make_mock_event_bus():
     return bus
 
 
+def _bypass_init_panel():
+    """Construct a `ComponentModifierGridPanel` instance without invoking
+    `__init__` (which requires real pygame_gui infrastructure).
+
+    Promoted from per-test inline `with patch.object(..., '__init__', ...)` +
+    `__new__()` patterns; PROJ-323 Task 1.24.
+    """
+    from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
+
+    with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
+        return ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+
+
 # --- Selection Changed Handler Tests ---
 
 class TestOnSelectionChanged:
@@ -35,10 +48,7 @@ class TestOnSelectionChanged:
 
     def test_selection_tuple_extracts_component(self):
         """_on_selection_changed extracts component from tuple."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         comp = _make_mock_component()
         panel.update_component = MagicMock()
@@ -50,10 +60,7 @@ class TestOnSelectionChanged:
 
     def test_selection_object_with_id(self):
         """_on_selection_changed handles object with id attribute."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         comp = _make_mock_component()
         panel.update_component = MagicMock()
@@ -64,10 +71,7 @@ class TestOnSelectionChanged:
 
     def test_selection_none_clears_component(self):
         """_on_selection_changed with None clears component."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.update_component = MagicMock()
 
@@ -77,10 +81,7 @@ class TestOnSelectionChanged:
 
     def test_selection_invalid_clears_component(self):
         """_on_selection_changed with invalid data clears component."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.update_component = MagicMock()
 
@@ -97,10 +98,7 @@ class TestOnShipUpdated:
 
     def test_ship_updated_refreshes_grid(self):
         """_on_ship_updated refreshes modifier_grid."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         comp = _make_mock_component()
         panel.current_component = comp
@@ -112,10 +110,7 @@ class TestOnShipUpdated:
 
     def test_ship_updated_no_component_no_refresh(self):
         """_on_ship_updated does nothing without current_component."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.current_component = None
         panel.modifier_grid = MagicMock()
@@ -132,10 +127,7 @@ class TestUpdateComponent:
 
     def test_update_stores_component(self):
         """update_component stores component reference."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         comp = _make_mock_component()
         panel.modifier_grid = MagicMock()
@@ -146,10 +138,7 @@ class TestUpdateComponent:
 
     def test_update_with_modifiers_updates_grid(self):
         """update_component with modifiers updates grid."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         comp = _make_mock_component()
         panel.modifier_grid = MagicMock()
@@ -160,10 +149,7 @@ class TestUpdateComponent:
 
     def test_update_none_clears_grid(self):
         """update_component(None) clears grid."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.modifier_grid = MagicMock()
 
@@ -173,10 +159,7 @@ class TestUpdateComponent:
 
     def test_update_no_modifiers_clears_grid(self):
         """update_component with no modifiers clears grid."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         comp = MagicMock()
         comp.modifiers = None
@@ -194,10 +177,7 @@ class TestDraw:
 
     def test_draw_calls_grid_draw(self):
         """draw calls modifier_grid.draw when visible."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.panel = MagicMock()
         panel.panel.visible = True
@@ -210,10 +190,7 @@ class TestDraw:
 
     def test_draw_skips_when_hidden(self):
         """draw skips grid.draw when panel hidden."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.panel = MagicMock()
         panel.panel.visible = False
@@ -232,10 +209,7 @@ class TestHandleEvent:
 
     def test_handle_event_visible_delegates(self):
         """handle_event delegates to modifier_grid when visible."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.panel = MagicMock()
         panel.panel.visible = True
@@ -250,10 +224,7 @@ class TestHandleEvent:
 
     def test_handle_event_hidden_returns_false(self):
         """handle_event returns False when panel hidden."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.panel = MagicMock()
         panel.panel.visible = False
@@ -273,10 +244,7 @@ class TestVisibility:
 
     def test_show_shows_panel(self):
         """show calls panel.show."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.panel = MagicMock()
 
@@ -286,10 +254,7 @@ class TestVisibility:
 
     def test_hide_hides_panel(self):
         """hide calls panel.hide."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.panel = MagicMock()
 
@@ -305,10 +270,7 @@ class TestPanelKill:
 
     def test_kill_destroys_modifier_grid(self):
         """kill destroys modifier_grid."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.modifier_grid = MagicMock()
         panel.panel = MagicMock()
@@ -320,10 +282,7 @@ class TestPanelKill:
 
     def test_kill_destroys_main_panel(self):
         """kill destroys main panel."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.modifier_grid = MagicMock()
         panel.panel = MagicMock()
@@ -335,10 +294,7 @@ class TestPanelKill:
 
     def test_kill_handles_dead_panel(self):
         """kill handles case where panel is already dead."""
-        from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-
-        with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-            panel = ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+        panel = _bypass_init_panel()
 
         panel.modifier_grid = MagicMock()
         panel.panel = MagicMock()

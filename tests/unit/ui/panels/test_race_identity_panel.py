@@ -43,6 +43,24 @@ def mock_panel():
     return panel
 
 
+def _bypass_init_panel(race_config=None):
+    """Construct a `RaceIdentityPanel` instance without invoking `__init__`
+    (which requires real pygame_gui infrastructure). Optionally attaches a
+    `race_config` and calls `_init_empty_refs()`.
+
+    Promoted from per-test inline `with patch.object(..., '__init__', ...)` +
+    `__new__()` blocks; PROJ-323 Task 1.25.
+    """
+    from game.ui.panels.race_identity_panel import RaceIdentityPanel
+
+    with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
+        panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
+    if race_config is not None:
+        panel.race_config = race_config
+        panel._init_empty_refs()
+    return panel
+
+
 # =============================================================================
 # Test: RaceIdentityPanel Import and Creation
 # =============================================================================
@@ -56,83 +74,58 @@ class TestUpdateConfig:
 
     def test_update_config_reads_race_name(self, mock_race_config):
         """update_config reads race_name from text input."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
+        panel.race_name_input = MagicMock()
+        panel.race_name_input.get_text.return_value = "Rossarian"
 
-            panel.race_name_input = MagicMock()
-            panel.race_name_input.get_text.return_value = "Rossarian"
+        panel.update_config()
 
-            panel.update_config()
-
-            assert mock_race_config.race_name == "Rossarian"
+        assert mock_race_config.race_name == "Rossarian"
 
     def test_update_config_reads_race_name_plural(self, mock_race_config):
         """update_config reads race_name_plural from text input."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
+        panel.race_name_plural_input = MagicMock()
+        panel.race_name_plural_input.get_text.return_value = "Rossarians"
 
-            panel.race_name_plural_input = MagicMock()
-            panel.race_name_plural_input.get_text.return_value = "Rossarians"
+        panel.update_config()
 
-            panel.update_config()
-
-            assert mock_race_config.race_name_plural == "Rossarians"
+        assert mock_race_config.race_name_plural == "Rossarians"
 
     def test_update_config_reads_government_type(self, mock_race_config):
         """update_config reads government_type from dropdown."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
+        panel.government_type_dropdown = MagicMock()
+        panel.government_type_dropdown.selected_option = ("Empire", "Empire")
 
-            panel.government_type_dropdown = MagicMock()
-            panel.government_type_dropdown.selected_option = ("Empire", "Empire")
+        panel.update_config()
 
-            panel.update_config()
-
-            assert mock_race_config.government_type == "Empire"
+        assert mock_race_config.government_type == "Empire"
 
     def test_update_config_reads_faction_name(self, mock_race_config):
         """update_config reads faction_name from text input."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
+        panel.faction_name_input = MagicMock()
+        panel.faction_name_input.get_text.return_value = "Rossarian Empire"
 
-            panel.faction_name_input = MagicMock()
-            panel.faction_name_input.get_text.return_value = "Rossarian Empire"
+        panel.update_config()
 
-            panel.update_config()
-
-            assert mock_race_config.faction_name == "Rossarian Empire"
+        assert mock_race_config.faction_name == "Rossarian Empire"
 
     def test_update_config_handles_empty_dropdown(self, mock_race_config):
         """update_config handles empty dropdown selection."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
+        panel.government_type_dropdown = MagicMock()
+        panel.government_type_dropdown.selected_option = ("-- Select --", "")
 
-            panel.government_type_dropdown = MagicMock()
-            panel.government_type_dropdown.selected_option = ("-- Select --", "")
+        panel.update_config()
 
-            panel.update_config()
-
-            assert mock_race_config.government_type == ""
+        assert mock_race_config.government_type == ""
 
 
 # =============================================================================
@@ -366,19 +359,14 @@ class TestLeaderNameField:
 
     def test_update_config_reads_leader_name(self, mock_race_config):
         """update_config reads leader_name from text input."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
+        panel.leader_name_input = MagicMock()
+        panel.leader_name_input.get_text.return_value = "Zara IV"
 
-            panel.leader_name_input = MagicMock()
-            panel.leader_name_input.get_text.return_value = "Zara IV"
+        panel.update_config()
 
-            panel.update_config()
-
-            assert mock_race_config.leader_name == "Zara IV"
+        assert mock_race_config.leader_name == "Zara IV"
 
     def test_set_from_config_populates_leader_name(self, mock_race_config):
         """set_from_config sets leader_name text input."""

@@ -31,6 +31,34 @@ def _drop_pod_item(design_id="test_pod", name="Test Pod"):
     }
 
 
+def _make_planet(planet_type_name: str, name: str = "Test Planet"):
+    """Create a mock planet of the given type with all IPlanet protocol fields.
+
+    Promoted from per-class duplicates (PROJ-323 Task 1.21) to dedupe
+    `_make_planet` helpers that were copied across two test classes.
+    """
+    from game.strategy.data.planet import Planet
+
+    planet = MagicMock(spec=Planet)
+    planet.name = name
+    planet.owner_id = None
+    planet.location = HexCoord(0, 0)
+    planet.planet_type = MockPlanetType[planet_type_name]
+    planet.deposits = {}
+    # PROJ-193: Required IPlanet properties
+    planet.id = 1
+    planet.populations = []
+    planet.max_population = 1000
+    planet.facilities = []
+    planet.atmosphere = {}
+    planet.surface_gravity = 9.8
+    planet.surface_temperature = 300.0
+    planet.orbit_distance = 1
+    planet.radius_hexes = 0
+    planet.image_id = ""
+    return planet
+
+
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -750,28 +778,7 @@ class TestColonizeValidatorAnyPlanetPods:
         """Create a mock component registry (kept for API compatibility)."""
         return {}
 
-    def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
-        """Create a mock planet of the given type."""
-        from enum import Enum
-        from game.strategy.data.planet import Planet
-
-        planet = MagicMock(spec=Planet)
-        planet.name = name
-        planet.owner_id = None
-        planet.location = HexCoord(0, 0)
-        planet.planet_type = MockPlanetType[planet_type_name]
-        planet.deposits = {}
-        planet.id = 1
-        planet.populations = []
-        planet.max_population = 1000
-        planet.facilities = []
-        planet.atmosphere = {}
-        planet.surface_gravity = 9.8
-        planet.surface_temperature = 300.0
-        planet.orbit_distance = 1
-        planet.radius_hexes = 0
-        planet.image_id = ""
-        return planet
+    _make_planet = staticmethod(_make_planet)
 
     def _make_ship_with_pod(self, pod_type: str):
         """Create a mock ship with a drop pod in carried_items."""
@@ -887,30 +894,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         """Create a mock component registry (kept for API compatibility)."""
         return {}
 
-    def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
-        """Create a mock planet of the given type."""
-        from enum import Enum
-        from game.strategy.data.planet import Planet
-
-        # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
-        planet = MagicMock(spec=Planet)
-        planet.name = name
-        planet.owner_id = None
-        planet.location = HexCoord(0, 0)
-        planet.planet_type = MockPlanetType[planet_type_name]
-        planet.deposits = {}
-        # PROJ-193: Required IPlanet properties
-        planet.id = 1
-        planet.populations = []
-        planet.max_population = 1000
-        planet.facilities = []
-        planet.atmosphere = {}
-        planet.surface_gravity = 9.8
-        planet.surface_temperature = 300.0
-        planet.orbit_distance = 1
-        planet.radius_hexes = 0
-        planet.image_id = ""
-        return planet
+    _make_planet = staticmethod(_make_planet)
 
     def test_overcommit_succeeds_at_command_time(self, mock_component_registry):
         """Validation succeeds even with overcommitted pods — pod check deferred to execution."""

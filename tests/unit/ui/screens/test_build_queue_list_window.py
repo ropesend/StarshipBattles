@@ -87,11 +87,15 @@ class TestBuildQueueListWindowInit:
         assert window._mapper is mapper
 
 
+@patch('pygame_gui.elements.UIWindow.__init__')
+@patch('game.ui.screens.build_queue_list_window.UILabel')
 class TestBuildList:
-    """Tests for _build_list method."""
+    """Tests for _build_list method.
 
-    @patch('pygame_gui.elements.UIWindow.__init__')
-    @patch('game.ui.screens.build_queue_list_window.UILabel')
+    PROJ-323 Task 1.28: Per-test `@patch` decorators promoted to class scope —
+    every test in this class needs the same UIWindow + UILabel patches.
+    """
+
     def test_shows_colony_queue_items(self, mock_label, mock_init):
         """Verify colony construction queue items are displayed."""
         from game.ui.screens.build_queue_list_window import BuildQueueListWindow
@@ -121,8 +125,6 @@ class TestBuildList:
         label_texts = [call[1]['text'] for call in mock_label.call_args_list]
         assert any('Earth' in text and 'Frigate' in text for text in label_texts)
 
-    @patch('pygame_gui.elements.UIWindow.__init__')
-    @patch('game.ui.screens.build_queue_list_window.UILabel')
     def test_shows_fleet_queue_items(self, mock_label, mock_init):
         """Verify fleet construction queue items are displayed."""
         from game.ui.screens.build_queue_list_window import BuildQueueListWindow
@@ -151,8 +153,6 @@ class TestBuildList:
         label_texts = [call[1]['text'] for call in mock_label.call_args_list]
         assert any('First Fleet' in text and 'Cruiser' in text for text in label_texts)
 
-    @patch('pygame_gui.elements.UIWindow.__init__')
-    @patch('game.ui.screens.build_queue_list_window.UILabel')
     def test_skips_fleets_without_queue(self, mock_label, mock_init):
         """Verify fleets without construction queues are skipped."""
         from game.ui.screens.build_queue_list_window import BuildQueueListWindow
@@ -184,8 +184,6 @@ class TestBuildList:
         assert any('Has Queue' in text for text in label_texts)
         assert not any('No Queue' in text for text in label_texts)
 
-    @patch('pygame_gui.elements.UIWindow.__init__')
-    @patch('game.ui.screens.build_queue_list_window.UILabel')
     def test_shows_empty_message(self, mock_label, mock_init):
         """Verify 'No active build queues' shown when empty."""
         from game.ui.screens.build_queue_list_window import BuildQueueListWindow
@@ -208,8 +206,6 @@ class TestBuildList:
         label_texts = [call[1]['text'] for call in mock_label.call_args_list]
         assert any('No active build queues' in text for text in label_texts)
 
-    @patch('pygame_gui.elements.UIWindow.__init__')
-    @patch('game.ui.screens.build_queue_list_window.UILabel')
     def test_handles_missing_fields(self, mock_label, mock_init):
         """Verify missing fields default to '?'."""
         from game.ui.screens.build_queue_list_window import BuildQueueListWindow

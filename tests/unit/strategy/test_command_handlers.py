@@ -297,16 +297,20 @@ class TestJoinCommandHandler:
         assert mock_fleet.add_order.call_count == 2
 
 
+def _make_session_with_real_fleets(fleet, target):
+    """Helper: create a mock session that returns real Fleet objects via
+    `_get_fleet_by_id`. Shared by Join and Intercept handler tests."""
+    mock_session = Mock()
+    mock_session.active_empire = Mock(id=0)
+    lookup = {fleet.id: fleet, target.id: target}
+    mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
+    return mock_session
+
+
 class TestJoinCommandHandlerPursuerTracking:
     """Tests for JoinCommandHandler pursuer registration and validation (PROJ-222)."""
 
-    def _make_session_with_real_fleets(self, fleet, target):
-        """Helper: create mock session that returns real Fleet objects."""
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        lookup = {fleet.id: fleet, target.id: target}
-        mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
-        return mock_session
+    _make_session_with_real_fleets = staticmethod(_make_session_with_real_fleets)
 
     def test_join_registers_pursuer(self):
         fleet = Fleet("f1", 0, HexCoord(0, 0))
@@ -345,12 +349,7 @@ class TestJoinCommandHandlerPursuerTracking:
 class TestInterceptCommandHandlerPursuerTracking:
     """Tests for InterceptCommandHandler pursuer registration and validation (PROJ-222)."""
 
-    def _make_session_with_real_fleets(self, fleet, target):
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        lookup = {fleet.id: fleet, target.id: target}
-        mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
-        return mock_session
+    _make_session_with_real_fleets = staticmethod(_make_session_with_real_fleets)
 
     def test_intercept_registers_pursuer(self):
         fleet = Fleet("f1", 0, HexCoord(0, 0))

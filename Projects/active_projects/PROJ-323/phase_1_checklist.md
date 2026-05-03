@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Simplify the 32 verified CAT-9 cases identified by review `2026-05-02_204633_test-review` (smallest deltas first — repeated imports, micro-duplications).
 
 ---
@@ -163,9 +163,9 @@
 **File:** `tests/unit/strategy/engine/test_organics_consumption_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_organics_consumption_engine.py`
 
-- [ ] [S08-CAT9-003] `_colony helper` (lines 42-67): Promote to class-scoped fixture.
+- [x] [S08-CAT9-003] `_colony helper` (lines 42-67): Promote to class-scoped fixture. _(no-op — `_colony` is already a module-level helper function used directly by every test that needs a Planet. Wrapping it in `@pytest.fixture` would add a layer of indirection without removing duplication; the helper IS the dedupe.)_
 
-- [ ] Verify: `pytest tests/unit/strategy/engine/test_organics_consumption_engine.py` passes; LOC delta ≈ 26
+- [x] Verify: `pytest tests/unit/strategy/engine/test_organics_consumption_engine.py` passes; LOC delta ≈ 26 _(no-op)_
 
 **Notes:** _(none yet)_
 
@@ -175,9 +175,9 @@
 **File:** `tests/unit/strategy/engine/test_planetary_yard_requirement.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_planetary_yard_requirement.py`
 
-- [ ] [S11-CAT9-001] `_make_yard_facility duplicates helper` (lines 15-25): Move to shared fixture.
+- [x] [S11-CAT9-001] `_make_yard_facility duplicates helper` (lines 15-25): Move to shared fixture. _(no-op — `_make_yard_facility` is already a single module-level helper. No duplicates exist to consolidate.)_
 
-- [ ] Verify: `pytest tests/unit/strategy/engine/test_planetary_yard_requirement.py` passes; LOC delta ≈ 11
+- [x] Verify: `pytest tests/unit/strategy/engine/test_planetary_yard_requirement.py` passes; LOC delta ≈ 11 _(no-op)_
 
 **Notes:** _(none yet)_
 
@@ -187,9 +187,9 @@
 **File:** `tests/unit/strategy/fleet_navigation/test_service_edge_cases.py`
 **Tests:** `pytest tests/unit/strategy/fleet_navigation/test_service_edge_cases.py`
 
-- [ ] [S10-CAT9-004] `Repeated mock fleet boilerplate` (lines 392-510): Extract _make_mock_fleet helper.
+- [x] [S10-CAT9-004] `Repeated mock fleet boilerplate` (lines 392-510): Extract _make_mock_fleet helper.
 
-- [ ] Verify: `pytest tests/unit/strategy/fleet_navigation/test_service_edge_cases.py` passes; LOC delta ≈ 35
+- [x] Verify: `pytest tests/unit/strategy/fleet_navigation/test_service_edge_cases.py` passes; LOC delta ≈ 35
 
 **Notes:** _(none yet)_
 
@@ -199,9 +199,9 @@
 **File:** `tests/unit/strategy/services/ability_sources/test_system_archetype.py`
 **Tests:** `pytest tests/unit/strategy/services/ability_sources/test_system_archetype.py`
 
-- [ ] [S02-CAT9-002] `Repeated _MockSystem` (lines 16, 21, 26, 32, 41, 46): Create @pytest.fixture for _MockSystem and parametrize archetype/abilities.
+- [x] [S02-CAT9-002] `Repeated _MockSystem` (lines 16, 21, 26, 32, 41, 46): Create @pytest.fixture for _MockSystem and parametrize archetype/abilities. _(no-op — `_MockSystem` is a module-level dataclass; each test instantiates it with different per-test args. A fixture wrapper would not reduce LOC and would obscure the per-test arg differences.)_
 
-- [ ] Verify: `pytest tests/unit/strategy/services/ability_sources/test_system_archetype.py` passes; LOC delta ≈ 20
+- [x] Verify: `pytest tests/unit/strategy/services/ability_sources/test_system_archetype.py` passes; LOC delta ≈ 20 _(no-op)_
 
 **Notes:** _(none yet)_
 
@@ -211,9 +211,9 @@
 **File:** `tests/unit/strategy/test_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/test_command_handlers.py`
 
-- [ ] [S12-CAT9-001] `Duplicate _make_session_with_real_fleets` (lines 303-353): Promote to module-level helper.
+- [x] [S12-CAT9-001] `Duplicate _make_session_with_real_fleets` (lines 303-353): Promote to module-level helper.
 
-- [ ] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta ≈ 14
+- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta ≈ 14
 
 **Notes:** _(none yet)_
 
@@ -223,9 +223,9 @@
 **File:** `tests/unit/strategy/test_engine_event_emission.py`
 **Tests:** `pytest tests/unit/strategy/test_engine_event_emission.py`
 
-- [ ] [S04-CAT9-001] `3 module helpers encode internals` (lines 34-61): Convert to fixtures that minimize implementation coupling.
+- [x] [S04-CAT9-001] `3 module helpers encode internals` (lines 34-61): Convert to fixtures that minimize implementation coupling. _(no-op — `_make_mock_empire`, `_make_mock_planet`, `_make_mock_galaxy` are already concise module-level factories. "Minimize implementation coupling" is a design-level critique that would require deeper API refactoring outside P2 scope.)_
 
-- [ ] Verify: `pytest tests/unit/strategy/test_engine_event_emission.py` passes; LOC delta ≈ 28
+- [x] Verify: `pytest tests/unit/strategy/test_engine_event_emission.py` passes; LOC delta ≈ 28 _(no-op)_
 
 **Notes:** _(none yet)_
 
@@ -235,9 +235,9 @@
 **File:** `tests/unit/strategy/test_fleet_speed_calculator.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet_speed_calculator.py`
 
-- [ ] [S02-CAT9-001] `Repeated mock construction across 7 tests` (lines 13-131): Extract _make_mock_ship_with_stats(mass, speed) helper.
+- [x] [S02-CAT9-001] `Repeated mock construction across 7 tests` (lines 13-131): Extract _make_mock_ship_with_stats(mass, speed) helper.
 
-- [ ] Verify: `pytest tests/unit/strategy/test_fleet_speed_calculator.py` passes; LOC delta ≈ 50
+- [x] Verify: `pytest tests/unit/strategy/test_fleet_speed_calculator.py` passes; LOC delta ≈ 50
 
 **Notes:** _(none yet)_
 
@@ -247,9 +247,9 @@
 **File:** `tests/unit/strategy/test_quickstart_builder.py`
 **Tests:** `pytest tests/unit/strategy/test_quickstart_builder.py`
 
-- [ ] [S09-CAT9-001] `Repeated spawn_initial_complexes setup` (lines 216-409): Extract a fixture and parametrize.
+- [x] [S09-CAT9-001] `Repeated spawn_initial_complexes setup` (lines 216-409): Extract a fixture and parametrize.
 
-- [ ] Verify: `pytest tests/unit/strategy/test_quickstart_builder.py` passes; LOC delta ≈ 150
+- [x] Verify: `pytest tests/unit/strategy/test_quickstart_builder.py` passes; LOC delta ≈ 150
 
 **Notes:** _(none yet)_
 
@@ -259,9 +259,9 @@
 **File:** `tests/unit/strategy/validation/test_colonize_validator.py`
 **Tests:** `pytest tests/unit/strategy/validation/test_colonize_validator.py`
 
-- [ ] [S05-CAT9-001] `Repeated _make_planet helpers` (lines 753-774, 890-913, 620-635): Move to a module fixture with kwargs overrides.
+- [x] [S05-CAT9-001] `Repeated _make_planet helpers` (lines 753-774, 890-913, 620-635): Move to a module fixture with kwargs overrides.
 
-- [ ] Verify: `pytest tests/unit/strategy/validation/test_colonize_validator.py` passes; LOC delta ≈ 61
+- [x] Verify: `pytest tests/unit/strategy/validation/test_colonize_validator.py` passes; LOC delta ≈ 61
 
 **Notes:** _(none yet)_
 
@@ -271,9 +271,9 @@
 **File:** `tests/unit/ui/components/filters/test_tri_state_widget.py`
 **Tests:** `pytest tests/unit/ui/components/filters/test_tri_state_widget.py`
 
-- [ ] [S06-CAT9-003] `Repeated UIButton/UILabel patches` (lines 27-141): Move shared patches to class level.
+- [x] [S06-CAT9-003] `Repeated UIButton/UILabel patches` (lines 27-141): Move shared patches to class level.
 
-- [ ] Verify: `pytest tests/unit/ui/components/filters/test_tri_state_widget.py` passes; LOC delta ≈ 40
+- [x] Verify: `pytest tests/unit/ui/components/filters/test_tri_state_widget.py` passes; LOC delta ≈ 40
 
 **Notes:** _(none yet)_
 
@@ -283,9 +283,9 @@
 **File:** `tests/unit/ui/components/table/test_selection.py`
 **Tests:** `pytest tests/unit/ui/components/table/test_selection.py`
 
-- [ ] [S08-CAT9-001] `Delayed imports per test method` (lines 9-203): Move imports to module top-level.
+- [x] [S08-CAT9-001] `Delayed imports per test method` (lines 9-203): Move imports to module top-level.
 
-- [ ] Verify: `pytest tests/unit/ui/components/table/test_selection.py` passes; LOC delta ≈ 40
+- [x] Verify: `pytest tests/unit/ui/components/table/test_selection.py` passes; LOC delta ≈ 40
 
 **Notes:** _(none yet)_
 
@@ -295,9 +295,9 @@
 **File:** `tests/unit/ui/panels/test_component_modifier_grid_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_component_modifier_grid_panel.py`
 
-- [ ] [S03-CAT9-002] `Repeated bypass-init pattern` (lines 38-437): Extract helper.
+- [x] [S03-CAT9-002] `Repeated bypass-init pattern` (lines 38-437): Extract helper.
 
-- [ ] Verify: `pytest tests/unit/ui/panels/test_component_modifier_grid_panel.py` passes; LOC delta ≈ 80
+- [x] Verify: `pytest tests/unit/ui/panels/test_component_modifier_grid_panel.py` passes; LOC delta ≈ 80
 
 **Notes:** _(none yet)_
 
@@ -307,9 +307,9 @@
 **File:** `tests/unit/ui/panels/test_race_identity_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_race_identity_panel.py`
 
-- [ ] [S03-CAT9-001] `Repeated bypass-init pattern` (lines 55-428): Extract bypass-init into helper or move imports to module scope.
+- [x] [S03-CAT9-001] `Repeated bypass-init pattern` (lines 55-428): Extract bypass-init into helper or move imports to module scope.
 
-- [ ] Verify: `pytest tests/unit/ui/panels/test_race_identity_panel.py` passes; LOC delta ≈ 120
+- [x] Verify: `pytest tests/unit/ui/panels/test_race_identity_panel.py` passes; LOC delta ≈ 120
 
 **Notes:** _(none yet)_
 
@@ -319,11 +319,11 @@
 **File:** `tests/unit/ui/panels/test_system_tree_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_system_tree_panel.py`
 
-- [ ] [S04-CAT9-004] `30+ __init__ patches duplicated` (lines 61-660): Address by switching to real construction; this duplication becomes moot.
+- [x] [S04-CAT9-004] `30+ __init__ patches duplicated` (lines 61-660): Address by switching to real construction; this duplication becomes moot. _(skipped — upstream project already deleted target file)_
 
-- [ ] Verify: `pytest tests/unit/ui/panels/test_system_tree_panel.py` passes; LOC delta ≈ 120
+- [x] Verify: `pytest tests/unit/ui/panels/test_system_tree_panel.py` passes; LOC delta ≈ 120 _(skipped — upstream project already deleted target file)_
 
-**Notes:** _(Plan-review M-06 (2026-05-03): "switch to real construction" requires real pygame_gui elements + StrategySessionFacade + registry data — effectively converts unit tests to integration tests, not a simplification.)_
+**Notes:** _(skipped — upstream project already deleted target file; Plan-review M-06 (2026-05-03): "switch to real construction" requires real pygame_gui elements + StrategySessionFacade + registry data — effectively converts unit tests to integration tests, not a simplification.)_
 
 ---
 
@@ -331,9 +331,9 @@
 **File:** `tests/unit/ui/screens/builder/test_modifier_logic_smart_floor.py`
 **Tests:** `pytest tests/unit/ui/screens/builder/test_modifier_logic_smart_floor.py`
 
-- [ ] [S09-CAT9-005] `Weak assertion` (lines 37-44): Tighten to `result == pytest.approx(0.1, abs=0.01)`.
+- [x] [S09-CAT9-005] `Weak assertion` (lines 37-44): Tighten to `result == pytest.approx(0.1, abs=0.01)`.
 
-- [ ] Verify: `pytest tests/unit/ui/screens/builder/test_modifier_logic_smart_floor.py` passes; LOC delta ≈ 8
+- [x] Verify: `pytest tests/unit/ui/screens/builder/test_modifier_logic_smart_floor.py` passes; LOC delta ≈ 8
 
 **Notes:** _(none yet)_
 
@@ -343,9 +343,9 @@
 **File:** `tests/unit/ui/screens/test_build_queue_list_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_build_queue_list_window.py`
 
-- [ ] [S05-CAT9-003] `Redundant @patch decorators` (lines 95, 126, 156, 189, 213): Remove redundant decorators; rely on the fixture's existing patch.
+- [x] [S05-CAT9-003] `Redundant @patch decorators` (lines 95, 126, 156, 189, 213): Remove redundant decorators; rely on the fixture's existing patch.
 
-- [ ] Verify: `pytest tests/unit/ui/screens/test_build_queue_list_window.py` passes; LOC delta ≈ 15
+- [x] Verify: `pytest tests/unit/ui/screens/test_build_queue_list_window.py` passes; LOC delta ≈ 15
 
 **Notes:** _(none yet)_
 
@@ -355,9 +355,9 @@
 **File:** `tests/unit/ui/screens/test_fleet_data_source.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_data_source.py`
 
-- [ ] [S06-CAT9-001] `Repeated view_model creation` (lines 88-549): Extract a fixture/factory.
+- [x] [S06-CAT9-001] `Repeated view_model creation` (lines 88-549): Extract a fixture/factory.
 
-- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_data_source.py` passes; LOC delta ≈ 80
+- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_data_source.py` passes; LOC delta ≈ 80
 
 **Notes:** _(none yet)_
 
@@ -367,9 +367,9 @@
 **File:** `tests/unit/ui/test_race_flag_gallery.py`
 **Tests:** `pytest tests/unit/ui/test_race_flag_gallery.py`
 
-- [ ] [S03-CAT9-003] `Repeated bypass-init pattern` (lines 61-323): Extract helper.
+- [x] [S03-CAT9-003] `Repeated bypass-init pattern` (lines 61-323): Extract helper.
 
-- [ ] Verify: `pytest tests/unit/ui/test_race_flag_gallery.py` passes; LOC delta ≈ 80
+- [x] Verify: `pytest tests/unit/ui/test_race_flag_gallery.py` passes; LOC delta ≈ 80
 
 **Notes:** _(none yet)_
 
@@ -379,9 +379,9 @@
 **File:** `tests/unit/ui/utils/test_formatters.py`
 **Tests:** `pytest tests/unit/ui/utils/test_formatters.py`
 
-- [ ] [S09-CAT9-003] `12 method-level imports` (lines 9-57): Hoist the import to module scope.
+- [x] [S09-CAT9-003] `12 method-level imports` (lines 9-57): Hoist the import to module scope.
 
-- [ ] Verify: `pytest tests/unit/ui/utils/test_formatters.py` passes; LOC delta ≈ 12
+- [x] Verify: `pytest tests/unit/ui/utils/test_formatters.py` passes; LOC delta ≈ 12
 
 **Notes:** _(none yet)_
 
@@ -391,9 +391,9 @@
 **File:** `tests/unit/ui/utils/test_portraits.py`
 **Tests:** `pytest tests/unit/ui/utils/test_portraits.py`
 
-- [ ] [S05-CAT9-002] `7 method-level imports` (lines 7-52): Move imports to module top-level.
+- [x] [S05-CAT9-002] `7 method-level imports` (lines 7-52): Move imports to module top-level.
 
-- [ ] Verify: `pytest tests/unit/ui/utils/test_portraits.py` passes; LOC delta ≈ 15
+- [x] Verify: `pytest tests/unit/ui/utils/test_portraits.py` passes; LOC delta ≈ 15
 
 **Notes:** _(none yet)_
 
@@ -401,9 +401,9 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
 
 _Source review: `Reviews/results/2026-05-02_204633_test-review/`. See `findings/source_review.md` for the link._

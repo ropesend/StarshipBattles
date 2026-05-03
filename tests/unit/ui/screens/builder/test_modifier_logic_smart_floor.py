@@ -41,4 +41,5 @@ class TestSmartFloorSubOne:
             min_val=0.1, max_val=1024.0, smart_floor=True
         )
         # current (1.0) <= step (1.0) and direction < 0, so smart_floor activates
-        assert result >= 0.1
+        # PROJ-323 Task 1.27: tightened from `>= 0.1` to exact min_val match.
+        assert result == pytest.approx(0.1, abs=0.01)
