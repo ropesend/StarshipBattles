@@ -5,6 +5,8 @@ function that previously lived in `planet_list_sidebar.py` and
 `star_list_sidebar.py`. Both sidebars build identical Min/Max rows with
 slider + text-entry pairs for range filters.
 """
+from __future__ import annotations
+
 from typing import Any, Dict, Tuple
 
 import pygame

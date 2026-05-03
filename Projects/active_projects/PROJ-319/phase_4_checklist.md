@@ -184,7 +184,7 @@
 - [x] Extract `DataListWindow` base class parameterized by entity type, slider keys, and column manager. Implementation should cover the shared `update`, `_toggle_column`, `_save_preset`, `_capture_current_state`, `_apply_state` methods identified by the audit. Verifier confirmed planet/star list windows already share ~60% of their code; drift exists (planet has effect filters, star has type filters) so the base must NOT force a unified column set.
 - [x] Migrate `planet_list_window.py:486-528` (`update`) and shared methods onto the base
 - [x] Migrate `star_list_window.py:338-379` (`update`) and shared methods onto the base
-- [x] Share the sort-key utility between `planet_list_filters.py:221-232` and `star_list_filters.py:134-145` (DUP-X-17 INFO partially absorbed by this refactor)
+- [x] Share the sort-key utility between `planet_list_filters.py:221-232` and `star_list_filters.py:134-145` (DUP-X-17). **DEFERRED at the time and resolved in Phase 6 Task 6.1** — the original Task 4.14 claim that this was absorbed by DUP-X-03 was incorrect; the OpenCode review (`req_20260503_042208_1f0252`, finding H3) caught the gap. Resolution: extracted `make_attr_sort_key(col)` to new `game/ui/screens/list_filter_utils.py`; both filter files now import and use it. See `phase_6_checklist.md` Task 6.1.
 - [x] Verify: `pytest tests/ --testmon` passes; both list windows still render, sort, filter, and preset-save correctly; LOC delta ~ -100 (rest of DUP-X-03's 150 LOC absorbed by Tasks 4.4 and 4.13)
 
 ---

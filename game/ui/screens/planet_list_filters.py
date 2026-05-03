@@ -27,6 +27,7 @@ from game.core.constants import EARTH_MASS
 from game.ui.filters.filter_state import FilterState
 from game.ui.utils.formatters import format_compact_number
 from game.strategy.services.system_effects_collector import make_group_key
+from game.ui.screens.list_filter_utils import make_attr_sort_key
 
 
 def gather_planets(galaxy, empire) -> Any:
@@ -217,21 +218,8 @@ def sort_planets(planets, sort_column_id, sort_descending, columns) -> Any:
     elif col['id'] == 'type':
         planets.sort(key=lambda p: p._cached_type_category, reverse=sort_descending)
     else:
-        # Fallback for other columns
-        def sort_key(p) -> Any:
-            if 'func' in col:
-                return col['func'](p)
-            elif 'attr' in col:
-                attrs = col['attr'].split('.')
-                obj = p
-                for a in attrs:
-                    if hasattr(obj, a):
-                        obj = getattr(obj, a)
-                    else:
-                        return ""
-                return obj
-            return ""
-        planets.sort(key=sort_key, reverse=sort_descending)
+        # Fallback for other columns — shared with star_list_filters via list_filter_utils.
+        planets.sort(key=make_attr_sort_key(col), reverse=sort_descending)
 
     return planets
 

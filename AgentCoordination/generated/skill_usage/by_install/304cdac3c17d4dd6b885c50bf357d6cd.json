@@ -4,10 +4,10 @@
   "skills": {
     "claude-delegate-review": {
       "agents": {
-        "claude": 1
+        "claude": 2
       },
-      "count": 1,
-      "last_used": "2026-05-02T20:39:17Z"
+      "count": 2,
+      "last_used": "2026-05-03T04:19:42Z"
     },
     "claude-proj-continue": {
       "agents": {
@@ -39,17 +39,17 @@
     },
     "ocode-review-request": {
       "agents": {
-        "ocode": 16
+        "ocode": 18
       },
-      "count": 16,
-      "last_used": "2026-05-03T01:16:36Z"
+      "count": 18,
+      "last_used": "2026-05-03T05:11:22Z"
     },
     "ocode-test-review": {
       "agents": {
-        "ocode": 3
+        "ocode": 15
       },
-      "count": 3,
-      "last_used": "2026-05-03T04:11:17Z"
+      "count": 15,
+      "last_used": "2026-05-03T04:50:36Z"
     }
   }
 }

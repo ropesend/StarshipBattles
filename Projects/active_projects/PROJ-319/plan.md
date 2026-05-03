@@ -16,16 +16,18 @@
 | 1. Dead imports / params / unreachable code | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Dead functions | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 4. Duplication consolidation | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Remediation — manifest, hygiene, false claims | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Remediation — sort-key extraction (claimed-but-not-done) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 (Phase 3 — dead classes / dead files — skipped: zero verified items in source audit.)
 
 ## Current State
-**Last Updated:** 2026-05-02
-**Active Phase:** All phases complete; ready for project archive
-**Last Action:** All 30 verified items implemented across Phases 1, 2, and 4. Final sharded test suite: 16374 passed, 0 failed, 3 skipped. New shared modules: `game/strategy/services/race_resolver.py`, `game/ui/widgets/column_toggle_section.py`, `game/ui/widgets/range_slider_builder.py`, `game/ai/spatial_behaviors/_formation_utils.py`, `game/ui/screens/list_data_source_base.py`, `game/ui/screens/planet_target_editor_base.py`, `game/ui/screens/data_list_window_mixin.py`. New base classes / mixins added in place: `RaceConfigResolverMixin`, `PlanetTargetEditor`, `DataListWindowMixin`, `ListDataSource`, plus `_with_ship` on `WorkshopViewModel` and `_emit_validated_order` on `BaseCommandHandler`.
-**Next Action:** Archive project; consider running a follow-up audit-shrink in a few weeks to measure realized LOC delta vs the audit's claim.
+**Last Updated:** 2026-05-03
+**Active Phase:** All phases complete (Phases 1, 2, 4, 5, 6); ready for follow-up review and archive
+**Last Action:** Phases 5 and 6 complete. Phase 5: manifest fully rewritten (10 missing entries added, line-30 inaccurate `strategy_superweapons.py` claim corrected, `_compute_circular_position` → `compute_circular_position` naming fixed); 6 new modules now have `from __future__ import annotations`; decisions.md captures OpenCode verdict + Phase 5/6 rationale + deferred items. Phase 6: extracted `make_attr_sort_key(col)` to new `game/ui/screens/list_filter_utils.py`; both `planet_list_filters.py:221` and `star_list_filters.py:134` now use it (sort-key duplication finally resolved). Final sharded test: 16374 passed, 0 failed (one transient test-ordering flake on first run, clean on re-run — same documented pattern).
+**Next Action:** Submit follow-up review to OpenCode (parent: `req_20260503_042208_1f0252`) to verify H1, H3, M1, M2 are resolved; then archive project.
 **Blockers:** None
-**Context for Next Agent:** Two known-flake tests surfaced during this project (recorded in `decisions.md`): `tests/unit/services/llm/test_background.py::test_elapsed_seconds_is_monotonic_then_frozen` (Windows `time.sleep` resolution) and `tests/integration/strategy/test_mutual_join_rendezvous.py` (intermittent on certain shard orderings). Pre-existing on main. Do not treat them as regressions if they show up alone in a sharded run.
+**Context for Next Agent:** The OpenCode review report lives at `Reviews/results/2026-05-03_042208_code_proj-319-audit-shrink-cleanup-independent-review-o_req-req_20260503_042208_1f0252/report.md`. Trust the report's verdicts but treat its counts as approximate — verify each claim before acting. Two known-flake tests still apply (LLM background timing on Windows; mutual-join rendezvous on certain shard orderings) — see `decisions.md`. After Phase 5+6, the project is genuinely ready to archive.
 
 ## Overview
 Cleanup project derived from the 2026-05-02 audit-shrink review at
