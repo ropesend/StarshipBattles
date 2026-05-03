@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-319 | Audit-shrink cleanup 2026-05-02 | Planning | 2026-05-02 | 2026-05-02 |
 | PROJ-318 | PROJ-314 Closeout Remediations | Complete | 2026-04-28 | 2026-04-28 |
 | PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | Awaiting User Verification | 2026-04-28 | 2026-04-28 |
 | PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | Awaiting Verification | 2026-04-28 | 2026-04-28 |
