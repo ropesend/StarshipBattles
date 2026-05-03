@@ -40,6 +40,55 @@ Parse these fields:
 - **Context** — why this review, what changed
 - **Expected Deliverable** — what kind of output
 
+## Step 1.25: Scope Sanity Check — Return Early For Out-Of-Repo Paths
+
+**This is a hard precondition. Run it before any other work.** If the
+scope references a path the worker cannot reach, the skill must exit
+immediately — it must not attempt the read, must not launch any review
+agents, must not produce a partial report.
+
+Determine the project root at runtime — it is the current working directory
+of this process. Do not assume any specific absolute path; resolve it via
+`pathlib.Path.cwd().resolve()` and compare each scope path's resolved form
+against it.
+
+A scope path is **reachable** if (after resolution) it equals the project
+root or is one of its descendants. Anything else is unreachable. Common
+unreachable cases:
+
+- Paths under a user home directory not inside the repo (e.g.
+  `~/.claude/...`, `C:\Users\<name>\...`, `/home/<name>/...`,
+  `/Users/<name>/...`)
+- System paths (`C:\Windows\`, `C:\Program Files\`, `/etc/`, `/usr/`,
+  `/var/`, etc.)
+- Sibling-repo paths or scratch directories adjacent to the project
+
+If **any** scope path is unreachable, write the error sidecar shown below
+to `{REVIEW_DIR}/result.json` and exit the skill. Do not retry, do not
+attempt to read the file, do not launch agents:
+
+```json
+{
+  "request_id": "req_<id>",
+  "error": "cannot reach <offending path>: it resolves outside the project root (cwd=<project root>). The OpenCode worker can only review files inside the repository. Ask the requester to copy the file into the repo and resubmit.",
+  "completed_at": "<UTC timestamp>"
+}
+```
+
+The daemon reads `error` from the sidecar and surfaces it to the requester
+as the `FailureReason` on the completed request — so the message above is
+what the user sees. Phrase it clearly: "cannot reach &lt;path&gt;" plus a
+short reason and the corrective action.
+
+This guard exists because a previous request
+(`req_20260502_204250_1944dc`) hung for the full 30-minute timeout pointing
+at a plan file under `~/.claude/plans/`. The skill should fail in seconds,
+not minutes.
+
+Conceptual scopes that name no filesystem paths at all (e.g. "the
+error-handling patterns across the simulation layer") pass this check —
+only paths are validated.
+
 ## Step 1.5: Parent Context (for follow-up reviews)
 
 If the request has a `**Parent:** req_<id>` field:

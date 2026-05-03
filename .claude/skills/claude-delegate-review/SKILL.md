@@ -48,6 +48,49 @@ If the daemon is NOT running, tell the user to start it in a separate terminal:
 ```
 Do not write the request file until the daemon is running.
 
+## Pre-Flight: Scope Must Be Inside The Project
+
+**Every path referenced in the review scope must live inside the project
+root** — the directory the OpenCode worker is launched from. That is the
+current working directory you observe when the daemon is running (the
+`PROJECT_ROOT` value used by `Tools/agent_coordination/review_daemon.py`),
+not a hard-coded absolute path. OpenCode does not have reliable access to
+paths outside its working tree.
+
+Do NOT include any of the following in scope:
+
+- Absolute paths under the user's home directory (e.g. `~/.claude/...`,
+  `C:\Users\<name>\...`, `/home/<name>/...`)
+- System paths (`C:\Windows\...`, `/etc/...`, `/usr/...`)
+- Paths in sibling repositories or scratch directories outside this repo
+
+Prefer **repo-relative paths** in scope (e.g. `game/foo.py`,
+`docs/01_ARCHITECTURE.md`). If you must use absolute paths, verify they
+resolve under the project root before submitting. A quick check:
+
+```bash
+python -c "
+from pathlib import Path
+import sys
+root = Path.cwd().resolve()
+for p in sys.argv[1:]:
+    rp = Path(p).resolve()
+    inside = root == rp or root in rp.parents
+    print(('OK ' if inside else 'OUTSIDE '), rp)
+" "<path1>" "<path2>"
+```
+
+If the user wants OpenCode to review a document that lives outside the project
+(e.g. a plan file under `~/.claude/plans/`), **copy the document into the repo
+first** (a sensible target is `Projects/active_projects/<PROJ-XX>/` or a temp
+path under `Reviews/results/<date>_<scope>/`), reference the in-repo copy in
+scope, and tell the user you did so they can clean up afterwards.
+
+A previously-failed request (`req_20260502_204250_1944dc`) timed out at 30
+minutes after pointing OpenCode at a plan file under the user's home dir.
+The worker hung attempting to read a path outside its working tree. Avoid
+that footgun.
+
 ## Follow-Up Reviews
 
 If the user wants to verify that issues from a prior review were fixed,
