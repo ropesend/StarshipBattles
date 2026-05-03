@@ -5,7 +5,6 @@ import pytest
 import tempfile
 import shutil
 import os
-import time
 from unittest.mock import MagicMock
 
 from game.strategy.engine.game_config import GameConfig
@@ -117,11 +116,15 @@ class TestAutoSave:
 
         # Get modification time of turn 1
         turn1_path = os.path.join(save_path, "turns", "turn_1.json")
-        turn1_mtime = os.path.getmtime(turn1_path)
         turn1_content = load_json(turn1_path)
 
-        # Wait a tiny bit to ensure different mtime
-        time.sleep(0.01)
+        # PROJ-322 Task 4.7 (S08-CAT7-001): set turn_1.json's mtime to a
+        # known stamp via os.utime instead of using time.sleep(0.01) to
+        # rely on filesystem timer resolution. Any subsequent write to
+        # the same file would necessarily produce a different mtime.
+        baseline_ns = 1_700_000_000_000_000_000  # Nov-2023, deterministic
+        os.utime(turn1_path, ns=(baseline_ns, baseline_ns))
+        turn1_mtime = os.path.getmtime(turn1_path)
 
         # Process multiple turns
         session.turn_number = 2

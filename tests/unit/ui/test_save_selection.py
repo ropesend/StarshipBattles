@@ -204,16 +204,29 @@ class TestSaveSelectionListSaves:
         assert 'timestamp' in save
 
     def test_list_saves_sorted_by_timestamp(self):
-        """Saves are sorted by timestamp (newest first)."""
-        import time
+        """Saves are sorted by timestamp (newest first).
 
+        PROJ-322 Task 4.8 (S09-CAT7-001): replaced the sleep(0.1) with
+        an explicit os.utime backdating of the older save's metadata
+        file, so the ordering is deterministic instead of depending on
+        wall-clock progression and filesystem mtime resolution.
+        """
         # Create separate sessions to avoid save_path reuse
         session1 = MockGameSession(turn_number=1)
         session2 = MockGameSession(turn_number=1)
 
-        SaveGameService.save_game(session1, "OldSave")
-        time.sleep(0.1)  # Ensure different timestamp
-        SaveGameService.save_game(session2, "NewSave")
+        success_old, _, old_path = SaveGameService.save_game(session1, "OldSave")
+        success_new, _, new_path = SaveGameService.save_game(session2, "NewSave")
+        assert success_old and success_new
+
+        # Backdate the OldSave's metadata file by ~10 seconds so the
+        # st_mtime-based sort in SaveGameService.list_saves places
+        # NewSave first regardless of how close the two saves landed.
+        old_metadata = os.path.join(old_path, "save_metadata.json")
+        new_metadata = os.path.join(new_path, "save_metadata.json")
+        new_mtime_ns = os.stat(new_metadata).st_mtime_ns
+        backdated_ns = new_mtime_ns - 10 * 1_000_000_000  # 10 s earlier
+        os.utime(old_metadata, ns=(backdated_ns, backdated_ns))
 
         saves = SaveGameService.list_saves()
 

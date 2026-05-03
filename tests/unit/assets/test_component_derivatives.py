@@ -1,5 +1,5 @@
 import json
-import time
+import os
 from pathlib import Path
 
 from PIL import Image
@@ -66,7 +66,12 @@ def test_regenerates_when_master_hash_changes(tmp_path: Path) -> None:
 
     target = root / "Components 64" / "64Portrait_Comp_001.png"
     first_mtime = target.stat().st_mtime_ns
-    time.sleep(0.01)
+    # PROJ-322 Task 4.2 (S06-CAT7-001): use os.utime to backdate the
+    # master file so the rebuild's mtime is unambiguously newer,
+    # avoiding the time.sleep(0.01) timer-resolution dependency on
+    # Windows.
+    backdated_ns = first_mtime - 1_000_000_000  # 1 s earlier
+    os.utime(master, ns=(backdated_ns, backdated_ns))
     _write_master(master, (0, 255, 0, 255))
 
     result = ensure_component_derivatives(root, sizes=(64,))

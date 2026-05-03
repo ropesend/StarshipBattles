@@ -100,19 +100,26 @@ class TestNewGameSetupSystemCountDefault:
 
         assert config.system_count == 2
 
-    def test_build_game_config_signature_default_matches_dataclass(self):
-        """The system_count parameter's default is sourced from GameConfig.
+    def test_build_game_config_default_matches_dataclass_constant(self):
+        """The default system_count produced by build_game_config matches
+        the DEFAULT_SYSTEM_COUNT constant from game_config.
 
         FEAT-27 single-source-of-truth contract: the UI must NOT hardcode
-        the default; it imports DEFAULT_SYSTEM_COUNT from the GameConfig
-        module so changing one place updates both.
+        the default; it imports DEFAULT_SYSTEM_COUNT so changing one
+        place updates both. PROJ-322 Task 5.25 (S08-CAT5-... / APC-002-F09):
+        rewritten as a behavioural test (call build_game_config with no
+        system_count and observe the resulting GameConfig) instead of
+        signature/getsource source-inspection.
         """
-        import inspect
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
         from game.strategy.engine.game_config import DEFAULT_SYSTEM_COUNT
 
-        sig = inspect.signature(NewGameSetupScreen.build_game_config)
-        assert sig.parameters["system_count"].default == DEFAULT_SYSTEM_COUNT
+        config = NewGameSetupScreen.build_game_config(
+            save_name="DefaultSig",
+            player_count=1,
+            empire_names=["Solo"],
+        )
+        assert config.system_count == DEFAULT_SYSTEM_COUNT
         assert DEFAULT_SYSTEM_COUNT == 2
 
 
