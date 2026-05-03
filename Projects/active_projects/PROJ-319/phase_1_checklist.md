@@ -133,7 +133,7 @@
 **File:** `game/ui/screens/build_queue_selector.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Remove redundant `y_offset = 0` (line 99) — immediately overwritten by the next line — DEEP-04-005
+- [ ] Remove the first redundant `y_offset = 0` (actually line 97; the audit listed line 99). The same assignment is repeated at line 100 with no read between, so delete the line-97 copy. — DEEP-04-005
 - [ ] Verify: `pytest tests/ --testmon` passes; LOC delta ≈ -1
 
 ---

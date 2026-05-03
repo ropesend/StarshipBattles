@@ -20,7 +20,7 @@
 | game/ui/screens/test_lab/screen.py | Production | Phase 1 — remove unused import `ConfirmationDialog` (line 32) |
 | game/ui/services/ship_io_adapter.py | Production | Phase 1 — remove unused TYPE_CHECKING import `ShipIOType` (line 19) |
 | game/ui/screens/galaxy_test/system_mode.py | Production | Phase 1 — remove unused import `STAR_FALLBACK` (line 17) |
-| game/ui/screens/build_queue_selector.py | Production | Phase 1 — remove redundant `y_offset = 0` assignment (line 99) |
+| game/ui/screens/build_queue_selector.py | Production | Phase 1 — remove redundant `y_offset = 0` assignment (audit said line 99; actual redundant pair is lines 97 + 100) |
 | game/simulation/battle_runner.py | Production | Phase 2 — delete dead method `_extract_weapon_summaries` (lines 647-671, 25 LOC) |
 | game/ui/screens/strategy_detail_fmt.py | Production | Phase 2 — delete dead helper `_planet_has_shield_facility` (lines 316-347, 32 LOC) |
 | game/strategy/services/race_resolver.py | Production (NEW) | Phase 4 — host shared `resolve_race_config(race_id, empire, race_registry)` (DUP-X-01, DUP-X-04) |
