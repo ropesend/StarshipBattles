@@ -43,8 +43,8 @@
 **File:** `tests/unit/ui/test_race_description_panel.py`
 **Tests:** `pytest tests/unit/ui/test_race_description_panel.py`
 
-- [ ] Replace the `__new__` bypass-init (~230 LOC) with `make_ui_widget(RaceDescriptionPanel, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/test_race_description_panel.py` passes; LOC delta approximately -110 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Replace the `__new__` bypass-init (~230 LOC) with `make_ui_widget(RaceDescriptionPanel, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(Module-scope `_bypass_init_panel` helper added that delegates to `make_ui_widget`. 12 inline `RaceDescriptionPanel.__new__` blocks across 4 test classes converted; class-private `_make_panel_with_widgets` helpers (in `TestProj299ControllerIntegration` and `TestUpdateTicksElapsedTimer`) updated to call `_bypass_init_panel` then re-mock the controller-side widgets the tests assert against.)_
+- [x] Verify: `pytest tests/unit/ui/test_race_description_panel.py` passes; LOC delta approximately -110 _(25 tests pass; ~115 LOC removed.)_
 
 ---
 
