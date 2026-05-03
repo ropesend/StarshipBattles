@@ -466,3 +466,154 @@ class TestProj299ControllerIntegration:
         panel.set_state(ctrl)
 
         panel.bio_text_box.set_text.assert_not_called()
+
+
+# =============================================================================
+# Issue #6: per-frame elapsed-timer tick + textbox-sizing constant
+# =============================================================================
+
+
+class TestUpdateTicksElapsedTimer:
+    """Issue #6: panel.update(time_delta) re-renders the elapsed-seconds
+    label while a field is RUNNING. PROJ-299 wired set_state() only as the
+    controller's on_change callback, which fires on state transitions; the
+    label was never repainted while RUNNING. update() is the per-frame pump."""
+
+    def _make_panel_with_widgets(self, lbl_initial_text: str = ""):
+        """Helper: panel skeleton with widgets + a UILabel-like status mock
+        whose `text` attribute mirrors what `set_text(...)` was last called
+        with. Required so the idempotence guard can compare correctly."""
+        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+
+        panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
+        panel.panel = MagicMock()
+        panel.ui_manager = MagicMock()
+
+        def _make_label(initial: str):
+            lbl = MagicMock()
+            lbl.text = initial
+
+            def _set_text(new):
+                lbl.text = new
+            lbl.set_text.side_effect = _set_text
+            return lbl
+
+        panel.lbl_bio_status = _make_label(lbl_initial_text)
+        panel.lbl_socio_status = _make_label(lbl_initial_text)
+        panel.bio_text_box = MagicMock()
+        panel.socio_text_box = MagicMock()
+        panel._controller = None
+        return panel
+
+    def test_update_ticks_status_label_while_running(self):
+        """Calling panel.update(dt) while bio is RUNNING re-renders
+        lbl_bio_status with the current int(elapsed) seconds."""
+        from game.strategy.services.race_description_llm_controller import FieldStatus
+
+        panel = self._make_panel_with_widgets(lbl_initial_text="Generating Bio… 0s")
+        ctrl = MagicMock()
+        ctrl.bio_status = FieldStatus.RUNNING
+        ctrl.socio_status = FieldStatus.IDLE
+        ctrl.bio_elapsed_seconds = 5.0
+        ctrl.socio_elapsed_seconds = 0.0
+        panel._controller = ctrl
+
+        panel.update(1 / 60)
+
+        panel.lbl_bio_status.set_text.assert_called()
+        text = panel.lbl_bio_status.set_text.call_args[0][0]
+        assert "5s" in text
+        assert "Generat" in text
+
+    def test_update_does_not_overwrite_label_when_not_running(self):
+        """When status is IDLE / DONE / ERROR / CANCELLED, update()
+        must NOT touch lbl_*_status — that would stomp the label that
+        _apply_field_state set on the last transition (e.g., the error
+        message or the empty-on-DONE label)."""
+        from game.strategy.services.race_description_llm_controller import FieldStatus
+
+        for status in (
+            FieldStatus.IDLE,
+            FieldStatus.DONE,
+            FieldStatus.ERROR,
+            FieldStatus.CANCELLED,
+        ):
+            panel = self._make_panel_with_widgets(
+                lbl_initial_text="<previously-set label>"
+            )
+            ctrl = MagicMock()
+            ctrl.bio_status = status
+            ctrl.socio_status = status
+            ctrl.bio_elapsed_seconds = 7.0
+            ctrl.socio_elapsed_seconds = 7.0
+            panel._controller = ctrl
+
+            panel.update(1 / 60)
+
+            panel.lbl_bio_status.set_text.assert_not_called(), (
+                f"set_text was called for non-RUNNING status {status}"
+            )
+            panel.lbl_socio_status.set_text.assert_not_called(), (
+                f"set_text was called for non-RUNNING status {status}"
+            )
+
+    def test_update_skips_set_text_when_string_unchanged(self):
+        """Idempotence guard: same int second across many frames must
+        not generate a set_text storm. Mirrors the text_box guard in
+        _apply_field_state."""
+        from game.strategy.services.race_description_llm_controller import FieldStatus
+
+        panel = self._make_panel_with_widgets()
+        ctrl = MagicMock()
+        ctrl.bio_status = FieldStatus.RUNNING
+        ctrl.socio_status = FieldStatus.IDLE
+        ctrl.bio_elapsed_seconds = 4.2
+        ctrl.socio_elapsed_seconds = 0.0
+        panel._controller = ctrl
+
+        panel.update(1 / 60)
+        first_call_count = panel.lbl_bio_status.set_text.call_count
+        # Five more frames within the same int-second.
+        for _ in range(5):
+            panel.update(1 / 60)
+
+        assert panel.lbl_bio_status.set_text.call_count == first_call_count
+
+    def test_update_handles_controller_None(self):
+        """No-LLM-provider path: attach_controller() never ran, so
+        self._controller is None. update() must short-circuit, not raise."""
+        panel = self._make_panel_with_widgets()
+        panel._controller = None
+
+        panel.update(1 / 60)  # MUST NOT raise
+
+
+class TestHeaderOverheadConstantSizing:
+    """Issue #6: HEADER_OVERHEAD class constant replaces magic 100 in
+    text_area_height = (panel_height - HEADER_OVERHEAD) // 2. Ensures
+    the new value gives at least as much vertical room as the old one."""
+
+    def test_header_overhead_constant_exists_and_is_no_more_than_old_value(self):
+        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+
+        assert hasattr(RaceDescriptionPanel, "HEADER_OVERHEAD"), (
+            "HEADER_OVERHEAD must be exposed as a class constant so "
+            "_create_content and attach_controller stay in sync."
+        )
+        # The original magic constant was 100. The fix loosens it so the
+        # textboxes get more vertical space. Loosening means HEADER_OVERHEAD
+        # <= 100 → text_area_height >= old value.
+        assert RaceDescriptionPanel.HEADER_OVERHEAD <= 100
+
+    def test_text_area_height_grew_relative_to_old_formula(self):
+        """At the production panel size (~1020 px), the new formula must
+        yield text_area_height STRICTLY greater than the old (panel_height
+        - 100) // 2 — otherwise the cramped-textbox bug isn't fixed."""
+        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+
+        panel_height = 1020  # production interior height
+        old_formula = (panel_height - 100) // 2
+        new_formula = (panel_height - RaceDescriptionPanel.HEADER_OVERHEAD) // 2
+        assert new_formula > old_formula, (
+            f"new {new_formula} must be > old {old_formula} for the fix to help"
+        )
