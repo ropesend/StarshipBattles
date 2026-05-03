@@ -16,14 +16,14 @@
 | 1. CAT-9 Simplification (32 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-8 Needless Complexity (32 items) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CAT-10 Parametrize (53 items) | Partial | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. CAT-11 Fragile Assertion (15 items) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. CAT-11 Fragile Assertion (15 items) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. CAT-12 Logic-Heavy (27 items) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 4 CAT-11 Fragile Assertion
-**Last Action:** Phase 3 (46 tasks) PARTIAL: 18 obsolete-skipped (files deleted upstream), 1 substantive parametrize landed (3.10 marker abilities), 3 leave-as-is per directive (3.15 / S01-CAT10-003 / S06-CAT10-002), 24 deferred with rationale (each parametrize requires careful body-equivalence inspection; recommend follow-up dedicated parametrize project PROJ-324 for the deferred set).
-**Next Action:** Begin Phase 4 tasks: 15 CAT-11 fragile-assertion replacements.
+**Active Phase:** Phase 5 CAT-12 Logic-Heavy
+**Last Action:** Phase 4 (15 tasks) complete: 7 obsolete-skipped (files deleted upstream), 1 substantive (4.9 duplicate dict key removed), 2 keep-as-is per directive (4.3 __slots__ guard, 4.4 profanity gate), 5 deferred-with-rationale (4.2 already soft, 4.8/4.10/4.11/4.13/4.14 require schema/registry-side work outside P2 scope).
+**Next Action:** Begin Phase 5 tasks: 26 CAT-12 logic-heavy refactors.
 **Blockers:** None
 
 ## Overview

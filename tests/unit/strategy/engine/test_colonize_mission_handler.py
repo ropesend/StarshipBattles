@@ -103,13 +103,11 @@ def make_mock_session(fleet, planet=None, component_registry=None):
 
 
 def make_component_registry():
-    """Create a component registry with colony pod definitions."""
+    """Create a component registry with colony pod definitions.
+
+    PROJ-323 Task 4.9: removed duplicate 'colony_pod' key (was line 113-117).
+    """
     return {
-        'colony_pod': {
-            'abilities': {
-                'ColonizePlanet': True
-            }
-        },
         'colony_pod': {
             'abilities': {
                 'ColonizePlanet': True
