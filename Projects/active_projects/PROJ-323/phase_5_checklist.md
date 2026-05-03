@@ -269,11 +269,11 @@
 **File:** `tests/unit/strategy/test_warp_logic_rework.py`
 **Tests:** `pytest tests/unit/strategy/test_warp_logic_rework.py`
 
-- [ ] [S08-CAT12-004] `test_angle_clearance_calculation` (lines 60-84): Promote _is_angle_clear to a public helper or test through public warp generation.
+- [ ] [S08-CAT12-004] `test_angle_clearance_calculation` (lines 60-84): **Test through public warp generation**.
 
 - [ ] Verify: `pytest tests/unit/strategy/test_warp_logic_rework.py` passes; LOC delta ≈ 25
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-10 (2026-05-03): P2 polish projects do not modify production signatures. Test through public API only.)_
 
 ---
 

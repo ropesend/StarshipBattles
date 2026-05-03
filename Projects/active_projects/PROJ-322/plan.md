@@ -20,6 +20,8 @@
 | 5. APC cluster remediation (APC-001 16 + APC-002 10 + APC-003 8 = 34 items) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. DUP/HLP consolidation (DUP-001..3 + HLP-001..4 = 7 cluster items) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
+> Phase 5 must NOT begin until Phase 3 (CAT-6 mocking brittleness) is complete. 11 Phase 5 tasks reference Phase 3 tasks (e.g., "Coordinate with Task 3.17"); applying APC fixes before the boundary-patching refactor would undo Phase 3 work.
+
 ## Current State
 **Last Updated:** 2026-05-03
 **Active Phase:** Phase 1 CAT-4 Duplicate Testing
@@ -66,6 +68,29 @@ This project remediates the P1 (brittle/bloated) findings from the OpenCode test
 - [decisions.md](decisions.md) - Full decisions log
 - [findings/verification_report.md](findings/verification_report.md) - Independent third-pass verification of OpenCode CONFIRMED claims
 - [findings/source_review.md](findings/source_review.md) - Pointer to the source OpenCode test-review
+
+## Cross-Project Dependencies
+
+PROJ-322 is downstream of PROJ-321 (P0 deletions). 21 files overlap between
+the two projects' manifests — primarily APC-001 UI test files where PROJ-321
+deletes CAT-1/CAT-2 trivial tests and PROJ-322 rewrites the broader
+__new__-bypass pattern. Four CAT-2/APC-002 files have direct overlap:
+
+- `tests/unit/modifiers/test_seeker_multi_ability.py`
+- `tests/unit/strategy/services/test_fleet_navigation_mutual_pursuit.py`
+- `tests/unit/strategy/services/test_fleet_navigation_no_mock_hack.py`
+- `tests/integration/test_app_integration.py`
+
+**Required execution order:** PROJ-321 must complete before PROJ-322 begins
+Phase 5 (APC clusters). Phase 1-4 of PROJ-322 may interleave with PROJ-321
+since they target different files.
+
+Before starting any Phase 5 task, re-check whether the target file still
+exists and contains the cited APC pattern. If PROJ-321 deleted the file
+entirely, mark the corresponding APC task as **obsolete** (not done).
+
+PROJ-323 is downstream of PROJ-322 — see PROJ-323/plan.md for its
+dependency on this project.
 
 ## Verification
 - [ ] All phase checklists complete

@@ -16,6 +16,7 @@
 **File:** `tests/unit/modifiers/test_beam_weapon_bindings.py`
 **Tests:** `pytest tests/unit/modifiers/test_beam_weapon_bindings.py tests/unit/modifiers/test_weapon_ability_bindings.py`
 
+- [ ] Verify `test_weapon_ability_bindings.py` shares compatible fixtures/conftest with `test_beam_weapon_bindings.py`. If not, migrate the shared fixture to parent conftest first.
 - [ ] S11-CAT4-002: collapse the 3-class structure (lines 1-123) into `test_weapon_ability_bindings.py` as additional parametrized cases or a child class; only the `accuracy_add` binding differs.
 - [ ] Verify: `pytest tests/unit/modifiers/test_weapon_ability_bindings.py` passes; LOC delta approximately -123
 
@@ -80,6 +81,12 @@
 **Tests:** `pytest tests/unit/strategy/data/test_colony_species_config.py`
 
 - [ ] S08-CAT4-003 (NEEDS_REWORK): KEEP the 5 `TestLastFoodRatioAggregation` tests (lines 76-118); they cover distinct MIN-aggregation edge cases (single-resource pass-through, multi-resource min, zero-collapses, all-ones, empty-dict-returns-1). Add a brief docstring/note to each making the edge case explicit. _(verification adjusted from review's "Parametrize the 5 duplicate tests" - see verification_report.md)_
+- [ ] Add a one-line docstring to each of the 5 tests naming its specific edge case:
+   1. single-resource pass-through
+   2. multi-resource MIN aggregation
+   3. zero-collapses-to-zero
+   4. all-ones-yields-one
+   5. empty-dict-defaults-to-1
 - [ ] Verify: `pytest tests/unit/strategy/data/test_colony_species_config.py` passes; LOC delta approximately 0 (documentation only)
 
 ---

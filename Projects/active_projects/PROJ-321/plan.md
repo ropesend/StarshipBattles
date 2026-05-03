@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. CAT-1 Trivial Pass (46 items) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-2 Tests Nothing Real (26 items) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-3 Dead Test Code (8 items) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. CAT-3 Dead Test Code (8 items, 1 relocate + 7 delete) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-03
@@ -30,7 +30,7 @@ This project implements the P0 dead-trivial cleanup recommendations from the Ope
 ## Goals
 - Delete or convert to pytest.skip 46 verified CAT-1 trivial-pass tests
 - Delete or rewrite 26 verified CAT-2 tests-nothing-real tests/files
-- Delete 8 verified CAT-3 dead-test-code files / sections
+- Delete or relocate 8 verified CAT-3 dead-test-code files / sections (Task 3.5 relocates `test_bug_12_energy_gen.py` to `tests/regression/`; the other 7 delete)
 
 ## Scope
 **In:** CAT-1, CAT-2, CAT-3 - verified items only.
@@ -55,6 +55,23 @@ This project implements the P0 dead-trivial cleanup recommendations from the Ope
 - [decisions.md](decisions.md) - Full decisions log
 - [findings/verification_report.md](findings/verification_report.md) - Independent verification of OpenCode CONFIRMED claims
 - [findings/source_review.md](findings/source_review.md) - Source review reference
+
+## Cross-Project Dependencies
+
+PROJ-321 is the upstream of PROJ-322 (P1) and PROJ-323 (P2). Several files
+appear in multiple projects:
+
+- 21 files overlap between PROJ-321 (CAT-1/2/3 deletions) and PROJ-322
+  (APC-001/002/003 cluster rewrites and CAT-4..7 fixes).
+- 4 files (`test_testruncard_propulsion.py`, `test_commands.py`,
+  `test_build_queue_screen.py`, etc.) overlap with PROJ-323 (P2 polish).
+
+**Required execution order:** PROJ-321 → PROJ-322 → PROJ-323. The downstream
+projects assume PROJ-321 has completed; if PROJ-321 deletes a file or test,
+the downstream task on that file should be marked obsolete (not retried).
+
+Each phase in PROJ-322 and PROJ-323 should re-check whether its target files
+still exist and contain the cited tests before starting.
 
 ## Verification
 - [ ] All phase checklists complete

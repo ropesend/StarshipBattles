@@ -6,7 +6,9 @@
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Objective:** Delete the 8 verified CAT-3 dead-test-code files / sections identified by review `2026-05-02_204633_test-review` (repro scripts, empty placeholder classes, files with no unique coverage).
+**Objective:** Delete or relocate the 8 verified CAT-3 dead-test-code items identified by review `2026-05-02_204633_test-review` (repro scripts, empty placeholder classes, files with no unique coverage).
+
+_Note: Task 3.5 is a relocation/rename, not a deletion. The source verification recommends keeping the file as a regression guard under `tests/regression/`. The phase objective is "Delete or relocate the 8 verified CAT-3 dead-test-code items"._
 
 ---
 
@@ -47,26 +49,26 @@
 - [ ] `WORKING-AS-DESIGNED guard` (lines 32-109, 78 LOC) - Move to tests/regression/ with rename; keep as design-intent regression guard.
 - [ ] Verify: `pytest tests/repro_issues/test_bug_12_energy_gen.py` passes; LOC delta approximate 78
 
-### Task 3.6: `tests/unit/ai/interfaces/test_controllable_adapter_edge_cases.py`
-**File:** `tests/unit/ai/interfaces/test_controllable_adapter_edge_cases.py`
-**Tests:** `pytest tests/unit/ai/interfaces/test_controllable_adapter_edge_cases.py`
+### Task 3.6: `tests/unit/ai/test_controllable_adapter_edge_cases.py`
+**File:** `tests/unit/ai/test_controllable_adapter_edge_cases.py`
+**Tests:** `pytest tests/unit/ai/test_controllable_adapter_edge_cases.py`
 
 - [ ] `TestAttributeDelegationRemoved` (lines 339-365, 27 LOC) - Keep as documented removal guard.
-- [ ] Verify: `pytest tests/unit/ai/interfaces/test_controllable_adapter_edge_cases.py` passes; LOC delta approximate 27
+- [ ] Verify: `pytest tests/unit/ai/test_controllable_adapter_edge_cases.py` passes; LOC delta approximate 27
 
-### Task 3.7: `tests/unit/strategy/test_commands.py`
-**File:** `tests/unit/strategy/test_commands.py`
-**Tests:** `pytest tests/unit/strategy/test_commands.py`
+### Task 3.7: `tests/integration/strategy/test_commands.py`
+**File:** `tests/integration/strategy/test_commands.py`
+**Tests:** `pytest tests/integration/strategy/test_commands.py`
 
 - [ ] `test_handle_command` (lines 191-198, 8 LOC) - Remove.
-- [ ] Verify: `pytest tests/unit/strategy/test_commands.py` passes; LOC delta approximate 8
+- [ ] Verify: `pytest tests/integration/strategy/test_commands.py` passes; LOC delta approximate 8
 
-### Task 3.8: `tests/unit/strategy/test_ship_stat_querier.py`
-**File:** `tests/unit/strategy/test_ship_stat_querier.py`
-**Tests:** `pytest tests/unit/strategy/test_ship_stat_querier.py`
+### Task 3.8: `tests/unit/entities/test_ship_stat_querier.py`
+**File:** `tests/unit/entities/test_ship_stat_querier.py`
+**Tests:** `pytest tests/unit/entities/test_ship_stat_querier.py`
 
 - [ ] `TestShipStatQuerierCachedSummary` (lines 252-257, 6 LOC) - Remove the empty class.
-- [ ] Verify: `pytest tests/unit/strategy/test_ship_stat_querier.py` passes; LOC delta approximate 6
+- [ ] Verify: `pytest tests/unit/entities/test_ship_stat_querier.py` passes; LOC delta approximate 6
 
 ---
 

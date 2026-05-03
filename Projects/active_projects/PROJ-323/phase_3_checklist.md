@@ -58,6 +58,7 @@
 
 - [ ] [S06-CAT10-001] `3 set-filter tests parametrizable` (lines 194-224): Parametrize the 3 truly identical tests; ~6 LOC savings (not 35).
       _(verification adjusted from review's "Parametrize all 5 set-filter tests for ~35 LOC savings." — see verification_report.md)_
+- [ ] Open `tests/unit/ui/screens/test_fleet_data_source.py` and identify which 3 of the 5 set-filter tests have truly identical test bodies (the verification report says `test_set_filter_to_production`, `test_set_filter_to_colonies`, `test_set_filter_to_fleet_operations` are the 3; `test_set_filter_updates_current` and `test_set_filter_back_to_all` differ).
 - [ ] [S06-CAT10-003] `6 yes/no special-capability tests` (lines 324-538): Parametrize across (capability, return, expected) tuples.
 
 - [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_data_source.py` passes; LOC delta ≈ 93
@@ -144,6 +145,8 @@
 **File:** `tests/unit/qa/test_testruncard_propulsion.py`
 **Tests:** `pytest tests/unit/qa/test_testruncard_propulsion.py`
 
+> **Cross-project:** PROJ-321 may delete this entire file. Verify file still exists before starting; if deleted, mark task obsolete.
+
 - [ ] [S11-CAT10-001] `4 format-string tests` (lines 193-229): Parametrize.
 
 - [ ] Verify: `pytest tests/unit/qa/test_testruncard_propulsion.py` passes; LOC delta ≈ 37
@@ -192,11 +195,11 @@
 **File:** `tests/unit/simulation/components/abilities/test_static_value_ability.py`
 **Tests:** `pytest tests/unit/simulation/components/abilities/test_static_value_ability.py`
 
-- [ ] [S04-CAT10-001] `positive/negative format pair` (lines 166-176): Parametrize.
+- [ ] [S04-CAT10-001] `positive/negative format pair` (lines 166-176): **Leave as-is**. The 2-test cluster is below the protocol threshold; parametrizing 2 items adds indirection without LOC reduction.
 
 - [ ] Verify: `pytest tests/unit/simulation/components/abilities/test_static_value_ability.py` passes; LOC delta ≈ 11
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-08 (2026-05-03): below ≥3-member parametrize threshold. Two-test clusters do not benefit from parametrization.)_
 
 ---
 
@@ -336,11 +339,11 @@
 **File:** `tests/unit/strategy/data/test_population_model.py`
 **Tests:** `pytest tests/unit/strategy/data/test_population_model.py`
 
-- [ ] [S06-CAT10-002] `2 max-population tests` (lines 102-117): Parametrize.
+- [ ] [S06-CAT10-002] `2 max-population tests` (lines 102-117): **Leave as-is** or extract a small helper if both tests share >5 lines of setup.
 
 - [ ] Verify: `pytest tests/unit/strategy/data/test_population_model.py` passes; LOC delta ≈ 16
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-08 (2026-05-03): below ≥3-member parametrize threshold. Two-test clusters do not benefit from parametrization.)_
 
 ---
 
@@ -432,9 +435,11 @@
 **File:** `tests/unit/strategy/test_commands.py`
 **Tests:** `pytest tests/unit/strategy/test_commands.py`
 
-- [ ] [S11-CAT10-010] `Command property tests` (lines 38-342): Parametrize across (Command, kwargs, expected_type).
+> **Cross-project:** PROJ-321 deletes some tests in this file (CAT-2/CAT-3) and PROJ-322 consolidates fleet-not-found patterns (DUP-002). Re-scope the line ranges 38-342 to the surviving tests after upstream projects complete; replace any single large parametrize task with sub-tasks per identified cluster.
 
-- [ ] Verify: `pytest tests/unit/strategy/test_commands.py` passes; LOC delta ≈ 305
+- [ ] [S11-CAT10-010] `Command property tests` (lines 38-342): After upstream PROJ-321/PROJ-322 complete, re-scope to surviving tests, identify clusters in the surviving range, and add one sub-task per cluster (replace this single task with per-cluster sub-tasks). Then parametrize each cluster across (Command, kwargs, expected_type).
+
+- [ ] Verify: `pytest tests/unit/strategy/test_commands.py` passes; LOC delta ≈ 305 (re-scope after upstream)
 
 **Notes:** _(none yet)_
 
@@ -456,11 +461,11 @@
 **File:** `tests/unit/strategy/test_fleet_consumable_aggregator.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet_consumable_aggregator.py`
 
-- [ ] [S07-CAT10-005] `True/False variant pairs` (lines 84-108, 191-207): Parametrize.
+- [ ] [S07-CAT10-005] `True/False variant pairs` (lines 84-108, 191-207): **Leave as-is**.
 
 - [ ] Verify: `pytest tests/unit/strategy/test_fleet_consumable_aggregator.py` passes; LOC delta ≈ 41
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-08 (2026-05-03): below ≥3-member parametrize threshold. Two-test clusters do not benefit from parametrization.)_
 
 ---
 

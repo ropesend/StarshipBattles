@@ -6,6 +6,11 @@
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
+
+> **Prerequisite:** Phase 3 (CAT-6 mocking brittleness) must be marked Complete before starting Phase 5.
+
+> Phase 5 is the largest phase (34 tasks). Implementers may need multiple sessions; track progress via individual task checkboxes rather than expecting single-session completion.
+
 **Objective:** Eliminate the cross-cutting anti-pattern clusters identified during cross-shard review: APC-001 (`__new__` bypass-init across 16 UI test files), APC-002 (source-inspection across 10 files), and APC-003 (private-method patching across 8 files).
 
 ---
@@ -79,9 +84,11 @@
 
 ---
 
-### Task 5.7: APC-001-F07 - test_fleet_report_window_multi_select [Complex]
+### Task 5.7: APC-001-F07 / APC-003 boundary — test_fleet_report_window_multi_select.py [Complex]
 **File:** `tests/unit/ui/screens/test_fleet_report_window_multi_select.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py`
+
+> **Boundary case:** This file's pattern is APC-003 (private-method patching) more than APC-001 (__new__ bypass). Apply the APC-003 remediation (patch at service boundaries / promote private methods) instead of the make_ui_widget factory.
 
 - [ ] Replace the 3-5 nested `patch` blocks (~150 LOC) with `make_ui_widget(FleetReportWindow, **kwargs)` and patch at the service boundary; switch to public-API tests where possible. (Pattern is closer to APC-003 than APC-001.) Coordinate with Task 3.20 in Phase 3.
 - [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py` passes; LOC delta approximately -75
@@ -110,8 +117,12 @@
 **File:** `tests/unit/ui/screens/test_workshop_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_workshop_screen.py`
 
-- [ ] Replace the `__new__` bypass-init with test-local lambda method overrides (~450 LOC) by either `make_ui_widget(WorkshopScreen, **kwargs)` or migration to integration tests with headless pygame_gui.
-- [ ] Verify: `pytest tests/unit/ui/screens/test_workshop_screen.py` passes; LOC delta approximately -225
+_(Plan-review M-001 (2026-05-03): factory approach rejected for screens without integration counterparts. Create integration tests first, then delete unit file.)_
+
+- [ ] Sub-task 5.10a: **Create** integration tests for WorkshopScreen core flows under `tests/integration/ui/workshop_screen/` (headless pygame_gui setup similar to `tests/integration/ui/build_queue_screen/conftest.py`). Cover at minimum: open/close, ship-design-list interaction, design save/load.
+- [ ] Sub-task 5.10b: After integration tests exist and pass, **DELETE** the 450-LOC unit file `tests/unit/ui/screens/test_workshop_screen.py`.
+- [ ] Sub-task 5.10c: Add the new `tests/integration/ui/workshop_screen/` path to `manifest.md` as `Type=Test (NEW)` (already done as part of plan-review remediation; verify the manifest entry exists before closing the task).
+- [ ] Verify: `pytest tests/integration/ui/workshop_screen/` passes after creation; existing unit-file removal yields LOC delta approximately -450 (offset by new integration tests).
 
 ---
 
@@ -153,10 +164,14 @@
 
 ### Task 5.15: APC-001-F15 - test_build_queue_screen [Complex]
 **File:** `tests/unit/ui/screens/test_build_queue_screen.py`
-**Tests:** `pytest tests/unit/ui/screens/test_build_queue_screen.py`
+**Tests:** `pytest tests/integration/ui/build_queue_screen/`
 
-- [ ] Replace the `__new__` bypass-init across the entire file (~580 LOC) with `make_ui_widget(BuildQueueScreen, **kwargs)`; or migrate to integration tests with headless pygame_gui. Coordinate with Task 2.14 in Phase 2.
-- [ ] Verify: `pytest tests/unit/ui/screens/test_build_queue_screen.py` passes; LOC delta approximately -290
+_(Plan-review C-001 (2026-05-03): committed to deletion since integration tests already exist. Do NOT introduce a make_ui_widget(BuildQueueScreen) factory.)_
+
+- [ ] **DELETE** the 580-LOC unit file `tests/unit/ui/screens/test_build_queue_screen.py` entirely. The 7 existing integration tests at `tests/integration/ui/build_queue_screen/{test_basics.py, test_controller_multi_queue.py, test_crash_tooltips.py, test_drag_handler_multi_queue.py, test_portrait_logging.py, test_queue_selector.py}` cover the same flows.
+- [ ] If a coverage gap is identified during implementation, add a targeted integration test under `tests/integration/ui/build_queue_screen/` rather than reviving the unit file.
+- [ ] Coordinate with Task 2.14 in Phase 2 (the fixture-rescope work becomes obsolete once the unit file is deleted; mark Task 2.14 obsolete if it is still open at that point).
+- [ ] Verify: `pytest tests/integration/ui/build_queue_screen/` passes; LOC delta approximately -580.
 
 ---
 
@@ -175,6 +190,8 @@
 **File:** `tests/unit/modifiers/test_seeker_multi_ability.py`
 **Tests:** `pytest tests/unit/modifiers/test_seeker_multi_ability.py`
 
+_(Cross-project: PROJ-321 may delete this file as a CAT-2 finding. If deleted, this task is obsolete.)_
+
 - [ ] Replace `inspect.getsource()` string-pattern absence assertion (~17 LOC) with a behavioural test that exercises the seeker multi-ability code path.
 - [ ] Verify: `pytest tests/unit/modifiers/test_seeker_multi_ability.py` passes; LOC delta approximately -10
 
@@ -183,6 +200,8 @@
 ### Task 5.18: APC-002-F02 - replace signature default check with construction test [Simple]
 **File:** `tests/unit/strategy/services/test_fleet_navigation_mutual_pursuit.py`
 **Tests:** `pytest tests/unit/strategy/services/test_fleet_navigation_mutual_pursuit.py`
+
+_(Cross-project: PROJ-321 may delete this file as a CAT-2 finding. If deleted, this task is obsolete.)_
 
 - [ ] Replace `inspect.signature()` parameter-default verification (~12 LOC) with a behavioural default-construction test.
 - [ ] Verify: `pytest tests/unit/strategy/services/test_fleet_navigation_mutual_pursuit.py` passes; LOC delta approximately -8
@@ -193,6 +212,8 @@
 **File:** `tests/unit/strategy/services/test_fleet_navigation_no_mock_hack.py`
 **Tests:** `pytest tests/unit/strategy/services/test_fleet_navigation_no_mock_hack.py`
 
+_(Cross-project: PROJ-321 may delete this file as a CAT-2 finding. If deleted, this task is obsolete.)_
+
 - [ ] Replace the 3 tests using `signature` + `getsource` source-inspection (~40 LOC) with behavioural tests that exercise the production fleet-navigation surface.
 - [ ] Verify: `pytest tests/unit/strategy/services/test_fleet_navigation_no_mock_hack.py` passes; LOC delta approximately -25
 
@@ -201,6 +222,8 @@
 ### Task 5.20: APC-002-F04 - 3 source-inspection tests in app integration [Medium]
 **File:** `tests/integration/test_app_integration.py`
 **Tests:** `pytest tests/integration/test_app_integration.py`
+
+_(Cross-project: PROJ-321 may delete this file as a CAT-2 finding. If deleted, this task is obsolete.)_
 
 - [ ] Replace the 3 tests using `getsource` + `signature` source-inspection (~80 LOC) with behavioural integration assertions.
 - [ ] Verify: `pytest tests/integration/test_app_integration.py` passes; LOC delta approximately -50
@@ -229,7 +252,9 @@
 **File:** `tests/unit/ui/screens/battle_setup/test_renderer.py`
 **Tests:** `pytest tests/unit/ui/screens/battle_setup/test_renderer.py`
 
-- [ ] Replace `inspect.getsource(FleetBattleSetupScreen._rebuild_ui)` (~11 LOC) with a behavioural test that calls `_rebuild_ui` and asserts on the resulting UI state.
+_(Plan-review M-004 (2026-05-03): the original adjusted suggestion still tested a private method, which is APC-003 anti-pattern. Test through public API only.)_
+
+- [ ] Replace the `inspect.getsource(FleetBattleSetupScreen._rebuild_ui)` source-text assertion (~11 LOC) with a behavioural test that triggers `_rebuild_ui` via a public path (`handle_event` with the appropriate UI event, or `update`) and asserts on observable UI element state after the trigger. Do NOT call or patch `_rebuild_ui` directly — that swaps source-inspection brittleness for private-method coupling.
 - [ ] Verify: `pytest tests/unit/ui/screens/battle_setup/test_renderer.py` passes; LOC delta approximately -8
 
 ---

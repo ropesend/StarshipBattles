@@ -1,5 +1,7 @@
 # PROJ-321 Verification Report
 
+> **Path errata (2026-05-03):** Several file paths cited in the review tables below were stale. The implementation manifest and phase checklists use corrected paths. See `../manifest.md` for the canonical paths.
+
 - **Source review directory:** `Reviews/results/2026-05-02_204633_test-review/`
 - **Run date:** 2026-05-03
 - **Priority tier:** P0 (categories CAT-1, CAT-2, CAT-3)

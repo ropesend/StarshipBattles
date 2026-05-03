@@ -106,7 +106,10 @@
 **File:** `tests/unit/ui/panels/test_empire_treasury_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_empire_treasury_panel.py`
 
-- [ ] S05-CAT5-001 (NEEDS_REWORK): rescope the 4 fixtures `sample_snapshot`, `mock_ui_manager`, `mock_panel`, `mock_resource_icons` (lines 72-88) to module scope after verifying no test mutates shared mock state. Actual test count is 17 methods (not 12 as originally claimed). _(verification adjusted from review's "Module-scope the fixtures (claim: 13 test methods)" - see verification_report.md)_
+_(Plan-review M-002 (2026-05-03): mutable MagicMock objects accumulate assert state — either keep per-test or add reset_mock() autouse fixture.)_
+
+- [ ] S05-CAT5-001 (NEEDS_REWORK): rescope `mock_ui_manager` and `mock_resource_icons` (immutable inputs) to module scope. Keep `sample_snapshot` and `mock_panel` at function scope — they accumulate `assert_called_*` state which must be per-test. Actual test count is 17 methods (not 12 as originally claimed). _(verification adjusted from review's "Module-scope the fixtures (claim: 13 test methods)" - see verification_report.md)_
+- [ ] **Alternative approach:** rescope ALL four fixtures to module scope BUT add a `conftest.py` autouse fixture that calls `reset_mock()` on the shared mocks between tests. Document in this task body which approach was chosen and why before marking complete.
 - [ ] Verify: `pytest tests/unit/ui/panels/test_empire_treasury_panel.py` passes; LOC delta approximately -10
 
 ---

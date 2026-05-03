@@ -100,6 +100,8 @@
 **File:** `tests/unit/simulation/projectile/test_projectile_manager.py`
 **Tests:** `pytest tests/unit/simulation/projectile/test_projectile_manager.py`
 
+> **PRE-CONDITION:** The original verification flagged this finding's line ranges as fictitious. **BEFORE starting**, run `grep -n "proj.position = Vector2" tests/unit/simulation/projectile/test_projectile_manager.py` and update the task with the actual line numbers. Estimated 27 occurrences exist somewhere in the file.
+
 - [ ] [S09-CAT9-004] `Repeated MagicMock projectile boilerplate` (lines throughout (27 occurrences)): Extract a _make_projectile(position, velocity, ...) helper; verify accurate line ranges before refactor.
       _(verification adjusted from review's "Extract _make_projectile helper across cited lines 1831-1840 and 1997-2007." — see verification_report.md)_
 
@@ -313,7 +315,7 @@
 
 ---
 
-### Task 1.26: test_system_tree_panel.py [Simple]
+### Task 1.26: test_system_tree_panel.py [Complex]
 **File:** `tests/unit/ui/panels/test_system_tree_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_system_tree_panel.py`
 
@@ -321,7 +323,7 @@
 
 - [ ] Verify: `pytest tests/unit/ui/panels/test_system_tree_panel.py` passes; LOC delta ≈ 120
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-06 (2026-05-03): "switch to real construction" requires real pygame_gui elements + StrategySessionFacade + registry data — effectively converts unit tests to integration tests, not a simplification.)_
 
 ---
 

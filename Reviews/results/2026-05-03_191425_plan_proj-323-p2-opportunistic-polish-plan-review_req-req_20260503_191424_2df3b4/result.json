@@ -1,0 +1,19 @@
+{
+  "request_id": "req_20260503_191424_2df3b4",
+  "review_dir": "Reviews/results/2026-05-03_191425_plan_proj-323-p2-opportunistic-polish-plan-review_req-req_20260503_191424_2df3b4",
+  "report_path": "Reviews/results/2026-05-03_191425_plan_proj-323-p2-opportunistic-polish-plan-review_req-req_20260503_191424_2df3b4/report.md",
+  "findings": {
+    "critical": 2,
+    "major": 13,
+    "minor": 17,
+    "info": 5
+  },
+  "completed_at": "2026-05-03T19:14:25Z",
+  "verification": {
+    "156_verified_items_in_checklists": "CONFIRMED",
+    "1_rejected_item_excluded": "CONFIRMED",
+    "6_out_of_scope_items_excluded": "CONFIRMED",
+    "3_needs_rework_adjusted": "CONFIRMED",
+    "manifest_checklist_consistency": "CONFIRMED"
+  }
+}

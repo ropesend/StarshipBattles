@@ -17,6 +17,7 @@
 **Tests:** `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py tests/unit/strategy/engine/test_superweapon_handler_validation.py`
 
 - [ ] DUP-001 (NEEDS_REWORK): create a parameterized fixture factory that supplies BOTH contract variants (execution path in `test_superweapon_command_handlers.py` and DI validation path in `test_superweapon_handler_validation.py`); do NOT merge the test classes - DI vs execution are different concerns. Affected files: `tests/unit/strategy/engine/test_superweapon_command_handlers.py` and `tests/unit/strategy/engine/test_superweapon_handler_validation.py`. _(verification adjusted from review's "Merge SHARD_07 DI validation tests into SHARD_03 test classes as additional methods or single parametrized class" - see verification_report.md)_
+- [ ] Factory shape: `@pytest.fixture(params=[(handler_cls, mock_session_factory_for_execution), (handler_cls, mock_session_factory_for_di_validation)], ids=["execution", "di_validation"])` — supplies both contract variants without merging the test classes.
 - [ ] Verify: `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py tests/unit/strategy/engine/test_superweapon_handler_validation.py` passes; LOC delta approximately -100 (~200 LOC duplication minus shared factory cost)
 
 ---

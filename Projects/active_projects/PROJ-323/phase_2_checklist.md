@@ -8,6 +8,8 @@
 **Status:** Not Started
 **Objective:** Reduce the 32 verified CAT-8 needless-complexity cases (flatten nested patches, reduce mock setup boilerplate).
 
+> **Class-level autouse caveat:** Before promoting any per-test patches to class-level autouse fixtures, scan each test method in the class for patch-value customizations. If any method overrides a shared patch with a different return value or side effect, that method must remain in its own class or use a function-scoped patch — class-level autouse cannot accommodate per-method customization without workarounds that defeat the purpose.
+
 ---
 
 ## Tasks
@@ -106,7 +108,7 @@
 
 - [ ] Verify: `pytest tests/unit/research/research_scene/test_callbacks.py` passes; LOC delta ≈ 307
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-02 (2026-05-03): apply class-level autouse caveat from phase header — scan test methods for per-method patch customization before promoting.)_
 
 ---
 
@@ -118,7 +120,7 @@
 
 - [ ] Verify: `pytest tests/unit/research/research_scene/test_initialization.py` passes; LOC delta ≈ 250
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-02 (2026-05-03): apply class-level autouse caveat from phase header — scan test methods for per-method patch customization before promoting.)_
 
 ---
 
@@ -130,7 +132,7 @@
 
 - [ ] Verify: `pytest tests/unit/research/research_scene/test_interaction.py` passes; LOC delta ≈ 50
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-02 (2026-05-03): apply class-level autouse caveat from phase header — scan test methods for per-method patch customization before promoting.)_
 
 ---
 
@@ -162,11 +164,11 @@
 **File:** `tests/unit/simulation/test_battle_runner_di.py`
 **Tests:** `pytest tests/unit/simulation/test_battle_runner_di.py`
 
-- [ ] [S09-CAT8-001] `test_no_simulation_call_to_get_default_registry_provider` (lines 218-271): Move to a pre-commit hook or CI check.
+- [ ] [S09-CAT8-001] `test_no_simulation_call_to_get_default_registry_provider` (lines 218-271): Keep the existing test in the suite (it's the canonical CI gate). If the same check is also added as a pre-commit hook for fast local feedback, extract the check logic into a shared helper used by both — do not duplicate.
 
 - [ ] Verify: `pytest tests/unit/simulation/test_battle_runner_di.py` passes; LOC delta ≈ 54
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-04 (2026-05-03): pre-commit hooks are bypassable with --no-verify; the test suite is the canonical quality gate.)_
 
 ---
 
@@ -174,12 +176,12 @@
 **File:** `tests/unit/strategy/services/test_fleet_navigation_action_timing.py`
 **Tests:** `pytest tests/unit/strategy/services/test_fleet_navigation_action_timing.py`
 
-- [ ] [S10-CAT8-002] `Nested patching of internal deps` (lines 55-69, 113-127, 171-185, 247-259, 290-300): Inject path-finder and resolver via DI rather than patching internals; or document why 2-level nesting is acceptable.
+- [ ] [S10-CAT8-002] `Nested patching of internal deps` (lines 55-69, 113-127, 171-185, 247-259, 290-300): **Document why 2-level nesting is acceptable** (the simpler option). Add a comment to the test class explaining the nesting is intentional for boundary patching of two distinct DI dependencies.
       _(verification adjusted from review's "Reduce 3+ levels of nested patching by injecting dependencies." — see verification_report.md)_
 
 - [ ] Verify: `pytest tests/unit/strategy/services/test_fleet_navigation_action_timing.py` passes; LOC delta ≈ 60
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-09 (2026-05-03): chose documentation-only path over DI injection to avoid production signature changes in a P2 polish project.)_
 
 ---
 
@@ -259,9 +261,14 @@
 **File:** `tests/unit/ui/screens/test_build_queue_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_build_queue_screen.py`
 
+> **Cross-project:** PROJ-322 will DELETE this unit file entirely (its plan-review committed to that approach). Skip Task 2.21 if PROJ-322 has run; the integration tests at `tests/integration/ui/build_queue_screen/` will remain.
+
 - [ ] [S12-CAT8-001] `Tautological error/edge case tests` (lines 442-580): Remove all tautological tests; rewrite to exercise real edge-case behavior.
+- [ ] Audit lines 442-580: produce explicit keep/delete list per "tautological" criterion (assert True / assert x == x / asserts mock state set in same test). Tests that exercise a code path — even poorly — should be rewritten, not deleted.
 
 - [ ] Verify: `pytest tests/unit/ui/screens/test_build_queue_screen.py` passes; LOC delta ≈ 140
+
+_(Plan-review M-01 (2026-05-03): if file still exists after PROJ-322 runs, audit lines 442-580 and produce an explicit keep/delete list before deleting any tests.)_
 
 **Notes:** _(none yet)_
 
@@ -359,7 +366,7 @@
 
 - [ ] Verify: `pytest tests/unit/ui/test_detail_panel_rendering.py` passes; LOC delta ≈ 26
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-02 (2026-05-03): apply class-level autouse caveat from phase header — scan test methods for per-method patch customization before promoting.)_
 
 ---
 

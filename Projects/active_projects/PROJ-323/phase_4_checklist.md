@@ -28,11 +28,11 @@
 **File:** `tests/regression/test_deprecated_code_removed.py`
 **Tests:** `pytest tests/regression/test_deprecated_code_removed.py`
 
-- [ ] [S02-CAT11-001] `EXPECTED_GAME_COUNT magic numbers` (lines 152-199): Remove the count-based tests or make them advisory-only. The hasattr checks already guard against reintroduced code.
+- [ ] [S02-CAT11-001] `EXPECTED_GAME_COUNT magic numbers` (lines 152-199): Convert count-based tests to **advisory soft assertions** (e.g., `if EXPECTED_GAME_COUNT != actual: pytest.skip(reason=...)` or `pytest.warns()` instead of hard `assert`). This preserves the dual-layer regression guard (catches newly-added classes that should have been blocked) without failing the build on expected additions.
 
 - [ ] Verify: `pytest tests/regression/test_deprecated_code_removed.py` passes; LOC delta ≈ 48
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-03 (2026-05-03): hard removal would lose a regression layer. Soft-assertion approach preserves signal.)_
 
 ---
 
@@ -40,11 +40,11 @@
 **File:** `tests/unit/core/test_combat_types.py`
 **Tests:** `pytest tests/unit/core/test_combat_types.py`
 
-- [ ] [S06-CAT11-001] `test_slots` (lines 29-31): Remove or merge.
+- [ ] [S06-CAT11-001] `test_slots` (lines 29-31): **Keep as-is**. The single-line `assert hasattr(ctx, "__slots__")` is trivial in form but is the only regression guard against accidental `__slots__` removal (which would silently bloat memory).
 
-- [ ] Verify: `pytest tests/unit/core/test_combat_types.py` passes; LOC delta ≈ 3
+- [ ] Verify: `pytest tests/unit/core/test_combat_types.py` passes; LOC delta ≈ 3 (no change — kept)
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-12 (2026-05-03): kept — provides regression guard for the dataclass __slots__ invariant.)_
 
 ---
 
@@ -52,11 +52,11 @@
 **File:** `tests/unit/qa/test_formation_files_have_professional_names.py`
 **Tests:** `pytest tests/unit/qa/test_formation_files_have_professional_names.py`
 
-- [ ] [S11-CAT11-002] `Profanity regex test` (lines 24-48): Move to pre-commit hook.
+- [ ] [S11-CAT11-002] `Profanity regex test` (lines 24-48): Keep the existing test in the suite (it's the canonical CI gate). If the same check is also added as a pre-commit hook for fast local feedback, extract the check logic into a shared helper used by both — do not duplicate.
 
 - [ ] Verify: `pytest tests/unit/qa/test_formation_files_have_professional_names.py` passes; LOC delta ≈ 25
 
-**Notes:** _(none yet)_
+**Notes:** _(Plan-review M-04 (2026-05-03): pre-commit hooks are bypassable with --no-verify; the test suite is the canonical quality gate.)_
 
 ---
 

@@ -30,11 +30,14 @@
 
 ---
 
-### Task 4.3: Replace LLM background polling sleeps with Event sync [Complex]
+### Task 4.3: Replace LLM background polling sleeps with mocked clock [Complex]
 **File:** `tests/unit/services/llm/test_background.py`
 **Tests:** `pytest tests/unit/services/llm/test_background.py`
 
-- [ ] S12-CAT7-001: replace the 7+ `time.sleep` calls inside while-deadline polling loops (lines 120-289) with `Event`-based synchronization where feasible; keep deadlines as safety nets.
+_(Plan-review M-005 (2026-05-03): original Event-sync proposal required production change. Mocked clock keeps the fix in test scope.)_
+
+- [ ] S12-CAT7-001: **Replace the polling sleep loops with a mocked clock** (e.g., `freezegun.freeze_time` or a manual `time.monotonic` patch). Do NOT modify `game/services/llm/background.py` to add a `threading.Event` — that's a production change out of P1 test-cleanup scope. Keep deadlines as safety nets where they remain meaningful under a mocked clock.
+- [ ] Fallback: if mocked clock is infeasible (e.g., the polling logic uses a non-monotonic clock), skip the test with `@pytest.mark.skip(reason="Polling-loop test pending production-side Event API; tracked in PROJ-XXX")` and create a follow-up project for the production change.
 - [ ] Verify: `pytest tests/unit/services/llm/test_background.py` passes; LOC delta approximately -20
 
 ---
@@ -57,13 +60,25 @@
 
 ---
 
-### Task 4.6: Event/clock sync for race-description LLM controller tests [Medium]
+### Task 4.6a: S08-CAT7-002 — race-description LLM controller test_sleep replacements [Medium]
 **File:** `tests/unit/services/llm/test_race_description_llm_controller.py`
 **Tests:** `pytest tests/unit/services/llm/test_race_description_llm_controller.py`
 
-- [ ] S08-CAT7-002: replace the 4 `time.sleep(0.02)` calls (lines 135, 139, 325, 343) and the `_wait_until` spin-loop using `time.sleep(0.01)` with event-based synchronization or a mocked clock.
-- [ ] S08-CAT7-003: replace the `_BlockingProvider.complete` polling (lines 82-91) - `while time.monotonic() < end` with `time.sleep(0.005)` - with `Event`/`Condition` or mocked time; current shape can take up to 5 seconds.
-- [ ] Verify: `pytest tests/unit/services/llm/test_race_description_llm_controller.py` passes; LOC delta approximately -8
+_(Plan-review N-003 (2026-05-03): split from original Task 4.6 because the two sub-findings have different remediation shapes. Stay consistent with M-005 — prefer test-only changes; if Event sync requires production changes, swap to mocked clock with a TODO.)_
+
+- [ ] S08-CAT7-002: replace the 4 `time.sleep(0.02)` calls (lines 135, 139, 325, 343) with **Event-based synchronization** in the test (test-side helper, not a production change). The `_wait_until` spin-loop using `time.sleep(0.01)` should use the same helper.
+- [ ] Verify: `pytest tests/unit/services/llm/test_race_description_llm_controller.py` passes; LOC delta approximately -5
+
+---
+
+### Task 4.6b: S08-CAT7-003 — _BlockingProvider polling replacement [Medium]
+**File:** `tests/unit/services/llm/test_race_description_llm_controller.py`
+**Tests:** `pytest tests/unit/services/llm/test_race_description_llm_controller.py`
+
+_(Plan-review N-003 (2026-05-03): split from original Task 4.6.)_
+
+- [ ] S08-CAT7-003: replace the `_BlockingProvider.complete` polling (lines 82-91) — `while time.monotonic() < end` with `time.sleep(0.005)` — with a **mocked clock** (`freezegun` or a manual `time.monotonic`/`time.sleep` patch). Current shape can take up to 5 seconds. If mocked-clock is infeasible, fall back to the M-005 skip pattern with a follow-up project tracker.
+- [ ] Verify: `pytest tests/unit/services/llm/test_race_description_llm_controller.py` passes; LOC delta approximately -3
 
 ---
 

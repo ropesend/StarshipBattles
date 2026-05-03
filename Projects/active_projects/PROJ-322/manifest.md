@@ -9,6 +9,7 @@
 |------|------|-------|
 | `tests/fixtures/ui_widget_factory.py` | Production | NEW shared `make_ui_widget(Cls, **kwargs)` factory used across APC-001 cleanup (Phase 5 Task 5.0) |
 | `tests/fixtures/test_ui_widget_factory.py` | Test | NEW smoke test for the widget factory (Phase 5 Task 5.0) |
+| `tests/integration/ui/workshop_screen/` | Test (NEW) | NEW headless pygame_gui integration tests covering open/close, ship-design-list, save/load (Phase 5 Task 5.10a / M-001 plan-review remediation) |
 | `tests/fixtures/cargo_mock_ship.py` | Production | NEW shared `make_cargo_mock_ship` factory (Phase 6 Task 6.3 / DUP-003) |
 | `tests/fixtures/test_entities.py` | Production | NEW shared mock-ship/fleet/empire/planet factories (Phase 6 Task 6.4 / HLP-001) |
 | `tests/fixtures/yard_facility.py` | Production | NEW shared yard-facility factories (Phase 6 Task 6.6 / HLP-003) |
@@ -89,7 +90,7 @@
 | `tests/unit/ui/screens/test_battle_panels_extended.py` | Test | Extract shared setup_mocks (Phase 1 Task 1.17); targeted patch.object (Phase 3 Task 3.18) |
 | `tests/unit/ui/screens/test_battle_setup_logic.py` | Test | Module-scope autouse (Phase 2 Task 2.13) |
 | `tests/unit/ui/screens/test_build_queue_list_window.py` | Test | Boundary-patch (Phase 3 Task 3.19, Phase 5 Task 5.29 / APC-003-F03) |
-| `tests/unit/ui/screens/test_build_queue_screen.py` | Test | Class-scoped fixture (Phase 2 Task 2.14); APC-001 widget-factory migration (Phase 5 Task 5.15 / APC-001-F15) |
+| `tests/unit/ui/screens/test_build_queue_screen.py` | Test (DELETE) | DELETED entirely (Phase 5 Task 5.15 / APC-001-F15 / plan-review C-001); 7 existing integration tests at `tests/integration/ui/build_queue_screen/` cover the same flows. Phase 2 Task 2.14 becomes obsolete. |
 | `tests/unit/ui/screens/test_fleet_report_filters.py` | Test | Extract make_mock_ship to shared (Phase 2 Task 2.15, Phase 6 Task 6.4 / HLP-001) |
 | `tests/unit/ui/screens/test_fleet_report_window.py` | Test | APC-001 widget-factory migration (Phase 5 Task 5.6 / APC-001-F06) |
 | `tests/unit/ui/screens/test_fleet_report_window_multi_select.py` | Test | Boundary patches + shared factory (Phase 3 Task 3.20, Phase 5 Task 5.7 / APC-001-F07) |
@@ -105,7 +106,7 @@
 | `tests/unit/ui/screens/test_strategy_window_manager_public_api.py` | Test | Behavioural registrar assertion (Phase 5 Task 5.26 / APC-002-F10) |
 | `tests/unit/ui/screens/test_sub_window_hotkeys.py` | Test | Real construction (Phase 3 Task 3.26, Phase 5 Task 5.16 / APC-001-F16) |
 | `tests/unit/ui/screens/test_warp_hotkey.py` | Test | Merge mode-activation into strategy-input-handler tests (Phase 1 Task 1.18) |
-| `tests/unit/ui/screens/test_workshop_screen.py` | Test | APC-001 widget-factory migration (Phase 5 Task 5.10 / APC-001-F10) |
+| `tests/unit/ui/screens/test_workshop_screen.py` | Test (DELETE) | DELETED after integration tests created at `tests/integration/ui/workshop_screen/` (Phase 5 Task 5.10b / APC-001-F10 / plan-review M-001). |
 | `tests/unit/ui/services/test_ship_io.py` | Test | Rescope Ship fixtures (Phase 2 Task 2.19) |
 | `tests/unit/ui/test_camera.py` | Test | Single module-scoped pygame.init fixture (Phase 2 Task 2.20) |
 | `tests/unit/ui/test_new_game_setup.py` | Test | Behavioural default test (Phase 5 Task 5.25 / APC-002-F09) |

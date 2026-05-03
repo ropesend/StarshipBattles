@@ -68,6 +68,34 @@ approximately 10,735 LOC of reclaimable test code.
 - [findings/verification_report.md](findings/verification_report.md) - Independent re-verification results
 - [findings/source_review.md](findings/source_review.md) - Pointer to the source OpenCode test review
 
+## Cross-Project Dependencies
+
+PROJ-323 is downstream of both PROJ-321 (P0 deletions) and PROJ-322 (P1
+remediation). 36 files overlap with at least one sibling project. Four
+files appear in all three projects (`test_commands.py`,
+`test_component_modifier_grid_panel.py`, `test_race_identity_panel.py`,
+`test_fleet_report_window.py`).
+
+**Required execution order:** PROJ-321 → PROJ-322 → PROJ-323. The
+downstream projects assume upstream deletions and refactors are complete.
+
+**Before starting each phase, re-check** whether each cited test file
+still exists and contains the cited tests. If an upstream project deleted
+the file or test, mark the corresponding PROJ-323 task as **obsolete**
+(not done) and proceed.
+
+Specific high-risk overlaps requiring per-task attention (already noted
+in the affected task bodies):
+
+- `test_testruncard_propulsion.py` (Task 3.11) — PROJ-321 may delete
+  the entire file (CAT-2 zero-game-imports). Skip Task 3.11 if deleted.
+- `test_commands.py` (Task 3.35) — PROJ-321 deletes some tests, PROJ-322
+  consolidates fleet-not-found via DUP-002. Re-scope Task 3.35 to the
+  surviving range after both upstream projects complete.
+- `test_build_queue_screen.py` (Task 2.21) — PROJ-322 may DELETE the
+  entire unit file (committed to in PROJ-322 plan-review C-001). Skip
+  Task 2.21 if deleted.
+
 ## Verification
 - [ ] All phase checklists complete
 - [ ] All tests passing
