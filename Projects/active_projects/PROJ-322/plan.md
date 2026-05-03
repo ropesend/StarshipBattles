@@ -17,20 +17,23 @@
 | 2. CAT-5 Fixture Bloat (20 items) | Partial (6 done, 3 N/A, 11 deferred) | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CAT-6 Mocking Brittleness (26 items) | Partial (7 done, 19 deferred) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-7 Sleep/Latency (9 items) | Partial (4 done, 5 deferred) | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. APC cluster remediation (APC-001 16 + APC-002 10 + APC-003 8 = 34 items) | Partial (2 done, 4 satisfied earlier, 9 obsolete, 20 deferred) | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. DUP/HLP consolidation (DUP-001..3 + HLP-001..4 = 7 cluster items) | Partial (2 satisfied via Phase 1, 5 deferred) | [phase_6_checklist.md](phase_6_checklist.md) |
+| 5. APC cluster remediation (APC-001 16 + APC-002 10 + APC-003 8 = 34 items) | Partial (10 done — pass 2 added 8 APC-001 file rewrites + Task 5.0 factory infra; 4 satisfied earlier; 9 obsolete; 11 deferred (UIWindow-derived classes blocked by `super().__init__` chain incompatibility, plus 1 high-touch RaceSetupScreen)) | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. DUP/HLP consolidation (DUP-001..3 + HLP-001..4 = 7 cluster items) | Partial (5 done — pass 2 added Tasks 6.3/6.6/6.7 shared factories; 2 satisfied via Phase 1; 0 deferred) | [phase_6_checklist.md](phase_6_checklist.md) |
 
 > Phase 5 must NOT begin until Phase 3 (CAT-6 mocking brittleness) is complete. 11 Phase 5 tasks reference Phase 3 tasks (e.g., "Coordinate with Task 3.17"); applying APC fixes before the boundary-patching refactor would undo Phase 3 work.
 
 ## Current State
-**Last Updated:** 2026-05-03
-**Active Phase:** All phases reviewed; project work paused at end of safe-pass scope
-**Last Action:**
-- Phase 4 partial — 4/9 done via os.utime/doc (4.1 doc, 4.2 component derivatives, 4.7 auto_save, 4.8 save-selection ordering); 5 freezegun/Event tasks deferred.
-- Phase 5 partial — 2 done (5.15 build_queue_screen unit DELETED, 5.25 default-value behavioural test); 4 satisfied via earlier phases (5.22/5.30/5.31/5.32 by Tasks 3.6/3.13/1.6/1.12); 9 obsolete-skipped (target files deleted by PROJ-321 OR source-inspection patterns already removed); 20 deferred (heavy APC-001 __new__ rewrite needs the make_ui_widget factory infrastructure which is itself Task 5.0).
-- Phase 6 partial — 2 satisfied via Phase 1 (6.2 by Tasks 1.13/1.14, 6.5 by Task 1.5); 5 deferred (multi-file shared-factory creation, all overlap deferred Phase 2 tasks 2.8/2.9/2.15).
-**Net delta this pass:** 27 task items completed across 6 phases, 22 marked obsolete or satisfied via earlier work, 66 deferred for follow-up sessions or as Phase 5 APC-001 factory prerequisites.
-**Next Action:** A follow-up session should start with Task 5.0 (create `tests/fixtures/ui_widget_factory.py`) which unblocks ~13 deferred Phase 5 APC-001 tasks. Phase 4's freezegun work could be done independently. Many other deferred tasks have overlap notes pointing to which earlier task they coordinate with.
+**Last Updated:** 2026-05-03 (pass 2)
+**Active Phase:** All phases reviewed; further work paused at end of pass-2 safe scope
+**Last Action (pass 2):**
+- Task 5.0: created `tests/fixtures/ui_widget_factory.py` exposing `make_ui_widget(Cls, extra_modules, **kwargs)` which constructs widgets via real `__init__` with mocked `pygame_gui.elements.UI*` (and module-bound import bindings, plus optional sibling-module patching). Smoke test at `tests/fixtures/test_ui_widget_factory.py` (5 tests).
+- Phase 5 APC-001 file rewrites done in pass 2: Tasks 5.1, 5.2, 5.3, 5.4, 5.5, 5.9, 5.13, 5.14 (8 files migrated; ~750 LOC removed from test files).
+- Phase 5 APC-001 file rewrites deferred (UIWindow-inheritance incompatible with factory): Tasks 5.6, 5.7, 5.10a/b, 5.11, 5.12, 5.16. The factory cannot patch through `super().__init__()` chains because the MRO is resolved at class definition time. The original bypass-init helpers remain the canonical workaround.
+- Phase 6 cluster work done in pass 2: Tasks 6.3 (cargo_mock_ship), 6.6 (yard_facility), 6.7 (mock_planet) — 3 new shared fixture files at `tests/fixtures/`; corresponding helper aliases in 4 test files.
+- Phase 4 freezegun tasks (4.3, 4.4, 4.5, 4.6a, 4.6b) NOT done — `freezegun` is not installed; manual `time.monotonic` patching is feasible but out of pass-2 scope after Phase 5 work absorbed the time budget.
+- Phase 2/3 deferred items NOT addressed in pass 2 — most overlap with deferred Phase 5 tasks per the original cross-coordination notes.
+**Net delta pass 2:** 12 substantive task items completed (1 factory infra, 8 APC-001 file rewrites, 3 Phase 6 fixture creations); 5 APC-001 tasks documented with concrete defer rationale (UIWindow super-call incompatibility). All 227 tests across the migrated files pass.
+**Next Action:** A pass-3 session should focus on either (a) Phase 4 freezegun tasks (install freezegun first or use manual time.monotonic patching), (b) Phase 2/3 deferred items that don't overlap UIWindow-derived classes, or (c) factory enhancements to handle UIWindow super-call chains so Tasks 5.6/5.7/5.11/5.12/5.16 can land.
 **Blockers:** None
 
 ## Overview
