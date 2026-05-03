@@ -35,8 +35,8 @@
 **File:** `tests/fixtures/cargo_mock_ship.py` (new)
 **Tests:** `pytest tests/unit/strategy/data/test_fleet_cargo_resources.py tests/unit/strategy/engine/test_resupply_engine.py`
 
-- [ ] DUP-003: create `tests/fixtures/cargo_mock_ship.py` exposing `make_cargo_mock_ship(cargo_capacity, cargo_contents)`; replace the closure-based cargo mock helpers (`_make_ship` and `_make_mock_ship`) in `tests/unit/strategy/data/test_fleet_cargo_resources.py` and `tests/unit/strategy/engine/test_resupply_engine.py` with calls into the shared factory. _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
-- [ ] Verify: `pytest tests/unit/strategy/data/test_fleet_cargo_resources.py tests/unit/strategy/engine/test_resupply_engine.py` passes; LOC delta approximately -30 (~50 LOC dedup minus shared file) _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
+- [x] DUP-003: create `tests/fixtures/cargo_mock_ship.py` exposing `make_cargo_mock_ship(cargo_capacity, cargo_contents)`; replace the closure-based cargo mock helpers (`_make_ship` and `_make_mock_ship`) in `tests/unit/strategy/data/test_fleet_cargo_resources.py` and `tests/unit/strategy/engine/test_resupply_engine.py` with calls into the shared factory. _(Created `tests/fixtures/cargo_mock_ship.py` exposing `make_cargo_mock_ship(cargo_capacity, cargo_contents, *, is_combat_capable)`. Migrated `tests/unit/strategy/data/test_fleet_cargo_resources.py` (kept `_make_ship` as a thin alias). The other file's `_make_mock_ship` is actually a FUEL-resource mock (`get_resource_capacity`, `resupply` for the 'fuel' resource), not cargo — different API surface, no overlap with the cargo factory; left as-is.)_
+- [x] Verify: `pytest tests/unit/strategy/data/test_fleet_cargo_resources.py tests/unit/strategy/engine/test_resupply_engine.py` passes; LOC delta approximately -30 (~50 LOC dedup minus shared file) _(11 cargo tests pass; the resupply-engine `_make_mock_ship` is a different fuel-API mock so it stays.)_
 
 ---
 
