@@ -243,9 +243,9 @@
 **File:** `tests/unit/simulation/services/test_modifier_service.py`
 **Tests:** `pytest tests/unit/simulation/services/test_modifier_service.py`
 
-- [x] [S10-CAT10-003] `5+5 turret_mount duplicate tests` (lines 488-528, 634-664): Parametrize the resolution logic; test both APIs against the same matrix. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-003] `5+5 turret_mount duplicate tests` (lines 488-528, 634-664): Parametrize the resolution logic; test both APIs against the same matrix. _(pass 2: 4 turret_mount tests in TestGetInitialValue and 4 in TestGetLocalMinMax each parametrized via fixture name + data dict tuples; one outlier test_turret_mount_finds_firing_arc_in_novel_weapon_ability kept separate.)_
 
-- [x] Verify: `pytest tests/unit/simulation/services/test_modifier_service.py` passes; LOC delta ≈ 80 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/services/test_modifier_service.py` passes; LOC delta ≈ 80 _(pass 2: 71 passed, ≈40 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -363,9 +363,9 @@
 **File:** `tests/unit/strategy/engine/test_planet_action_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_planet_action_engine.py`
 
-- [x] [S10-CAT10-002] `3 event-logging tests` (lines 336-437): Optional parametrization preserving descriptive names. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-002] `3 event-logging tests` (lines 336-437): Optional parametrization preserving descriptive names. _(pass 2 leave-as-is: only 2 of 3 tests share enough setup for parametrization (deactivate_from_active + deactivate_from_activating), which is below the 3-member threshold. Activate test asserts SHIELD_ACTIVATED with different state setup; no_event test exercises the no-event-bus path.)_
 
-- [x] Verify: `pytest tests/unit/strategy/engine/test_planet_action_engine.py` passes; LOC delta ≈ 102 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/engine/test_planet_action_engine.py` passes; LOC delta ≈ 102 _(pass 2 leave-as-is: 14 passed)_
 
 **Notes:** _(none yet)_
 
@@ -375,9 +375,9 @@
 **File:** `tests/unit/strategy/engine/test_superweapon_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py`
 
-- [x] [S03-CAT10-001] `Identical 3-test pattern across 6 handler classes` (lines 73-312): Parametrize across handlers. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S03-CAT10-001] `Identical 3-test pattern across 6 handler classes` (lines 73-312): Parametrize across handlers. _(pass 2: 5 of 6 test_execute_returns_valid_when_validation_passes tests collapsed via _build_handler_command_pairs helper; SelfDestruct kept separate (needs ships pre-populated). Per-handler order-type assertions retained as distinct.)_
 
-- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py` passes; LOC delta ≈ 240 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py` passes; LOC delta ≈ 240 _(pass 2: 24 passed, ≈55 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -533,9 +533,9 @@
 **File:** `tests/unit/ui/screens/test_planet_data_source.py`
 **Tests:** `pytest tests/unit/ui/screens/test_planet_data_source.py`
 
-- [x] [S02-CAT10-003] `Attr-value extraction tests` (lines 150-208): Parametrize to single test. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S02-CAT10-003] `Attr-value extraction tests` (lines 150-208): Parametrize to single test. _(pass 2: 4 attr-extraction tests collapsed into one parametrized test with module-level planet factories.)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_planet_data_source.py` passes; LOC delta ≈ 59 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_planet_data_source.py` passes; LOC delta ≈ 59 _(pass 2: 29 passed, ≈30 LOC saved)_
 
 **Notes:** _(none yet)_
 

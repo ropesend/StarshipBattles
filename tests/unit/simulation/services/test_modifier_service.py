@@ -483,37 +483,33 @@ class TestGetInitialValue:
         service = ModifierService(modifier_registry=full_registry)
         assert service.get_initial_value('precision_mount', mock_weapon_component) == 0.0
 
-    def test_turret_mount_uses_base_firing_arc_from_abilities(
-        self, full_registry, mock_weapon_component
+    # PROJ-323 Task 3.19: 4 turret_mount initial-value tests parametrized.
+    # mock_weapon_component has ProjectileWeaponAbility with firing_arc: 30
+    # mock_beam_component has BeamWeaponAbility with firing_arc: 45
+    @pytest.mark.parametrize("comp_fixture,expected_value", [
+        pytest.param("mock_weapon_component", 30.0, id="projectile_weapon_ability"),
+        pytest.param("mock_beam_component", 45.0, id="beam_weapon_ability"),
+    ])
+    def test_turret_mount_uses_ability_firing_arc(
+        self, full_registry, request, comp_fixture, expected_value,
     ):
-        """turret_mount initial value comes from component's firing_arc in abilities."""
+        """turret_mount initial value comes from ability firing_arc."""
+        comp = request.getfixturevalue(comp_fixture)
         service = ModifierService(modifier_registry=full_registry)
-        # mock_weapon_component has ProjectileWeaponAbility with firing_arc: 30
-        value = service.get_initial_value('turret_mount', mock_weapon_component)
-        assert value == 30.0
+        assert service.get_initial_value('turret_mount', comp) == expected_value
 
-    def test_turret_mount_uses_beam_ability_firing_arc(self, full_registry, mock_beam_component):
-        """turret_mount checks BeamWeaponAbility for firing_arc."""
-        service = ModifierService(modifier_registry=full_registry)
-        # mock_beam_component has BeamWeaponAbility with firing_arc: 45
-        value = service.get_initial_value('turret_mount', mock_beam_component)
-        assert value == 45.0
-
-    def test_turret_mount_uses_root_firing_arc(self, full_registry):
-        """turret_mount checks root-level firing_arc first."""
+    @pytest.mark.parametrize("data,expected_value", [
+        pytest.param({'firing_arc': 60, 'abilities': {}}, 60.0, id="root_firing_arc"),
+        pytest.param({'abilities': {}}, 15.0, id="fallback_to_min_val"),  # min_val of turret_mount
+    ])
+    def test_turret_mount_initial_value_from_data(
+        self, full_registry, data, expected_value,
+    ):
+        """turret_mount checks root-level firing_arc, falls back to modifier min_val."""
         comp = MagicMock()
-        comp.data = {'firing_arc': 60, 'abilities': {}}
+        comp.data = data
         service = ModifierService(modifier_registry=full_registry)
-        value = service.get_initial_value('turret_mount', comp)
-        assert value == 60.0
-
-    def test_turret_mount_fallback_to_min_val(self, full_registry):
-        """turret_mount uses modifier min_val if no firing_arc found."""
-        comp = MagicMock()
-        comp.data = {'abilities': {}}  # No firing_arc anywhere
-        service = ModifierService(modifier_registry=full_registry)
-        value = service.get_initial_value('turret_mount', comp)
-        assert value == 15.0  # min_val of turret_mount
+        assert service.get_initial_value('turret_mount', comp) == expected_value
 
     def test_turret_mount_finds_firing_arc_in_novel_weapon_ability(self, full_registry):
         """turret_mount should find firing_arc in ANY ability, not just hardcoded weapon names."""
@@ -631,37 +627,32 @@ class TestGetLocalMinMax:
         assert min_val == 1.0
         assert max_val == 1024.0
 
-    def test_turret_mount_min_uses_base_firing_arc(self, full_registry, mock_weapon_component):
-        """turret_mount min is constrained by component's base firing_arc."""
-        service = ModifierService(modifier_registry=full_registry)
-        min_val, max_val = service.get_local_min_max('turret_mount', mock_weapon_component)
-        # mock_weapon_component has ProjectileWeaponAbility with firing_arc: 30
-        assert min_val == 30.0
-        assert max_val == 180.0
-
-    def test_turret_mount_min_uses_beam_firing_arc(self, full_registry, mock_beam_component):
-        """turret_mount min uses BeamWeaponAbility firing_arc."""
-        service = ModifierService(modifier_registry=full_registry)
-        min_val, max_val = service.get_local_min_max('turret_mount', mock_beam_component)
-        # mock_beam_component has BeamWeaponAbility with firing_arc: 45
-        assert min_val == 45.0
-        assert max_val == 180.0
-
-    def test_turret_mount_min_uses_root_firing_arc(self, full_registry):
-        """turret_mount checks root-level firing_arc for min."""
-        comp = MagicMock()
-        comp.data = {'firing_arc': 60, 'abilities': {}}
+    # PROJ-323 Task 3.19: 4 turret_mount min/max tests parametrized.
+    @pytest.mark.parametrize("comp_fixture,expected_min", [
+        pytest.param("mock_weapon_component", 30.0, id="projectile_weapon_ability"),
+        pytest.param("mock_beam_component", 45.0, id="beam_weapon_ability"),
+    ])
+    def test_turret_mount_min_from_ability_firing_arc(
+        self, full_registry, request, comp_fixture, expected_min,
+    ):
+        """turret_mount min derives from ability firing_arc; max stays at 180."""
+        comp = request.getfixturevalue(comp_fixture)
         service = ModifierService(modifier_registry=full_registry)
         min_val, max_val = service.get_local_min_max('turret_mount', comp)
-        assert min_val == 60.0
+        assert min_val == expected_min
+        assert max_val == 180.0
 
-    def test_turret_mount_fallback_to_modifier_min(self, full_registry):
-        """turret_mount uses modifier min_val if no firing_arc found."""
+    @pytest.mark.parametrize("data,expected_min", [
+        pytest.param({'firing_arc': 60, 'abilities': {}}, 60.0, id="root_firing_arc"),
+        pytest.param({'abilities': {}}, 15.0, id="fallback_to_modifier_min"),
+    ])
+    def test_turret_mount_min_from_data(self, full_registry, data, expected_min):
+        """turret_mount min checks root-level firing_arc, falls back to modifier min_val."""
         comp = MagicMock()
-        comp.data = {'abilities': {}}  # No firing_arc
+        comp.data = data
         service = ModifierService(modifier_registry=full_registry)
-        min_val, max_val = service.get_local_min_max('turret_mount', comp)
-        assert min_val == 15.0  # turret_mount min_val
+        min_val, _max_val = service.get_local_min_max('turret_mount', comp)
+        assert min_val == expected_min
 
 
 # =============================================================================
