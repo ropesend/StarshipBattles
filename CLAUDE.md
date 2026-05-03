@@ -124,6 +124,50 @@ should be thin entry points that route to shared protocols in `Projects/`,
 Use the current surface name in examples and handoffs. Do not reference retired
 Antigravity project, ticket, QA, or debug skills from Claude files.
 
+### Ticket systems (parallel, both active)
+
+Two ticket systems run side-by-side. Both are valid.
+
+| System | Skills | Storage | Use for |
+|---|---|---|---|
+| Legacy markdown | `/claude-ticket-*` (10 skills) | `Tracking/bugs/active/`, `Tracking/features/active/` | Existing in-flight tickets; new tickets if you specifically want offline-first or the on-disk audit trail |
+| GitHub Issues | `/claude-gi-*` (10 skills) | https://github.com/ropesend/StarshipBattles/issues | New tickets by default — visible on the GitHub page, native PR/commit linkage |
+
+Both systems use the same authority constraint: agents may set
+`status:awaiting-confirmation` (or its legacy equivalent), but only the user
+closes / archives. Screenshots and logs for the GitHub system live under
+`tracking-assets/`.
+
+The Projects system (`Projects/active_projects/PROJ-XX/`) is **not** migrating
+to GitHub — it stays on disk with its existing `claude-proj-*` skills.
+
+**Setup (one-time per machine)** for the GitHub Issues system:
+
+1. Install the GitHub CLI: `winget install GitHub.cli` (Windows), `brew install gh` (macOS), or per platform.
+2. Authenticate: `gh auth login` — pick GitHub.com, HTTPS, web browser flow.
+3. If `gh` is not on `PATH` after install (Windows: shells started before the install won't see it), add a machine-local `.claude/settings.local.json` (gitignored) with an env override, e.g. on Windows:
+   ```json
+   { "env": { "PATH": "C:\\Program Files\\GitHub CLI;${PATH}" } }
+   ```
+   Restart Claude Code to pick up the change. Do NOT put system-specific paths in the synced `.claude/settings.json`.
+4. Sync labels (one-time per repo): `python Tools/agent_coordination/sync_github_labels.py`.
+
+## Scratchpad
+
+Transient agent working area lives in `AgentCoordination/Scratchpad/`
+(gitignored). Plans, reviews, reports, handoffs, and any throwaway scratch go
+there in subdirs `plans/`, `reviews/`, `reports/`, `handoffs/`, `tmp/`.
+
+**Do not write transient files outside the repo** (`~/.claude/plans/`, `/tmp/`,
+desktop, etc.). If a file should persist, put it in a tracked location
+(`Projects/`, `docs/`, `Reviews/results/`) — Scratchpad contents may be
+deleted at any time. See `AgentCoordination/SCRATCHPAD.md` for the full
+convention.
+
+The one exception is Claude Code's plan-mode, which writes to a
+harness-specified path under `~/.claude/plans/`. Once edit access is
+available, prefer `Scratchpad/plans/`.
+
 ## Skill Usage Logging
 
 Claude usage logging is automatic for ALL skills through hooks in

@@ -965,6 +965,119 @@ def test_usage_counter_shape_warns_on_summary_mismatch(tmp_path: Path) -> None:
     assert any(f.rule == "usage.summary_mismatch" and f.severity == "warn" for f in findings)
 
 
+# ---------------------------------------------------------------------------
+# Per-install counter ownership (machine-specific authorization)
+# ---------------------------------------------------------------------------
+
+
+def _write_local_install_id(repo_root: Path, install_id: str) -> None:
+    path = repo_root / "AgentCoordination" / "local" / "install_id.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"install_id": install_id}), encoding="utf-8")
+
+
+def _write_counter_file(repo_root: Path, filename_id: str, content_id: str) -> Path:
+    by_install = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
+    by_install.mkdir(parents=True, exist_ok=True)
+    file_path = by_install / f"{filename_id}.json"
+    file_path.write_text(
+        json.dumps({
+            "schema_version": 1,
+            "install_id": content_id,
+            "skills": {"claude-foo": {"count": 1, "last_used": "2026-05-02T00:00:00Z"}},
+        }),
+        encoding="utf-8",
+    )
+    return file_path
+
+
+def _git_init(tmp_path: Path) -> None:
+    try:
+        subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    except FileNotFoundError:
+        pytest.skip("git is unavailable")
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True, capture_output=True)
+
+
+def test_usage_counter_ownership_passes_with_no_files(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    findings = validator.check_usage_counter_ownership(tmp_path)
+    assert findings == []
+
+
+def test_usage_counter_ownership_passes_when_filename_matches_content_install_id(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _write_counter_file(tmp_path, filename_id="abc123", content_id="abc123")
+    findings = validator.check_usage_counter_ownership(tmp_path)
+    assert findings == []
+
+
+def test_usage_counter_ownership_fails_on_filename_content_mismatch(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _write_counter_file(tmp_path, filename_id="abc123", content_id="xyz789")
+    findings = validator.check_usage_counter_ownership(tmp_path)
+    assert any(
+        f.rule == "usage.filename_install_id_mismatch" and f.severity == "fail"
+        for f in findings
+    )
+
+
+def test_usage_counter_ownership_skipped_when_no_local_install_id(tmp_path: Path) -> None:
+    # No AgentCoordination/local/install_id.json present — fresh checkout.
+    # Foreign-install detection must skip silently rather than failing.
+    _make_repo(tmp_path)
+    _git_init(tmp_path)
+    _write_counter_file(tmp_path, filename_id="other", content_id="other")
+    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True, capture_output=True)
+
+    findings = validator.check_usage_counter_ownership(tmp_path)
+    assert not any(f.rule == "usage.foreign_install_modified" for f in findings)
+
+
+def test_usage_counter_ownership_fails_on_foreign_install_modification(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _git_init(tmp_path)
+    _write_local_install_id(tmp_path, "self-install")
+    _write_counter_file(tmp_path, filename_id="other-install", content_id="other-install")
+    subprocess.run(
+        ["git", "add", "AgentCoordination/generated/skill_usage/by_install/other-install.json"],
+        cwd=tmp_path, check=True, capture_output=True,
+    )
+
+    findings = validator.check_usage_counter_ownership(tmp_path)
+    assert any(
+        f.rule == "usage.foreign_install_modified" and f.severity == "fail"
+        for f in findings
+    )
+
+
+def test_usage_counter_ownership_allows_local_install_modification(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _git_init(tmp_path)
+    _write_local_install_id(tmp_path, "self-install")
+    _write_counter_file(tmp_path, filename_id="self-install", content_id="self-install")
+    subprocess.run(
+        ["git", "add", "AgentCoordination/generated/skill_usage/by_install/self-install.json"],
+        cwd=tmp_path, check=True, capture_output=True,
+    )
+
+    findings = validator.check_usage_counter_ownership(tmp_path)
+    assert not any(f.rule == "usage.foreign_install_modified" for f in findings)
+
+
+def test_usage_counter_ownership_ignores_unstaged_foreign_file(tmp_path: Path) -> None:
+    # Pulled-from-another-machine file present but not staged: this is normal.
+    _make_repo(tmp_path)
+    _git_init(tmp_path)
+    _write_local_install_id(tmp_path, "self-install")
+    _write_counter_file(tmp_path, filename_id="other-install", content_id="other-install")
+    # Note: no git add — file is just sitting on disk.
+
+    findings = validator.check_usage_counter_ownership(tmp_path)
+    assert not any(f.rule == "usage.foreign_install_modified" for f in findings)
+
+
 def test_unmarked_duplication_blank_lines_do_not_break_run(tmp_path: Path) -> None:
     # Blank lines between matching content are skipped during normalization.
     agents = (

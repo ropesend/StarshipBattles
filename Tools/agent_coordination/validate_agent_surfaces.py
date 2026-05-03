@@ -1336,6 +1336,107 @@ def check_usage_counter_shape(repo_root: Path) -> list[Finding]:
     return findings
 
 
+USAGE_BY_INSTALL_PREFIX = "AgentCoordination/generated/skill_usage/by_install/"
+
+
+def _local_install_id(repo_root: Path) -> str | None:
+    path = repo_root / "AgentCoordination" / "local" / "install_id.json"
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    install_id = data.get("install_id")
+    return install_id if isinstance(install_id, str) and install_id else None
+
+
+def _staged_files_from_git(repo_root: Path) -> set[str] | None:
+    """Return staged file paths (forward-slash relative). None if git unavailable."""
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--cached", "--name-only", "-z"],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            text=False,
+        )
+    except FileNotFoundError:
+        return None
+    if result.returncode != 0:
+        return None
+    raw = result.stdout.decode("utf-8", errors="replace")
+    return {item.replace("\\", "/") for item in raw.split("\0") if item}
+
+
+def check_usage_counter_ownership(repo_root: Path) -> list[Finding]:
+    """Enforce per-machine ownership invariants on by_install/<uuid>.json files.
+
+    Two rules:
+      * `usage.filename_install_id_mismatch` (always run when files exist):
+        each `by_install/<X>.json` must carry `install_id == "<X>"` in its
+        body. A divergence indicates the file was hand-edited or renamed.
+      * `usage.foreign_install_modified` (run when both git and a local
+        install_id are available): a staged change to `by_install/<X>.json`
+        is only allowed when `<X>` matches the local machine's install_id.
+        Other machines' counter files may be pulled but never modified locally.
+    """
+    findings: list[Finding] = []
+    by_install_dir = repo_root / "AgentCoordination" / "generated" / "skill_usage" / "by_install"
+
+    if by_install_dir.is_dir():
+        for path in sorted(by_install_dir.glob("*.json")):
+            rel = path.relative_to(repo_root).as_posix()
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            if not isinstance(data, dict):
+                continue
+            content_id = data.get("install_id")
+            filename_id = path.stem
+            if isinstance(content_id, str) and content_id and content_id != filename_id:
+                findings.append(Finding(
+                    rule="usage.filename_install_id_mismatch",
+                    severity="fail",
+                    message=(
+                        f"Counter file {rel} has filename install_id "
+                        f"{filename_id!r} but content install_id {content_id!r}. "
+                        "Filenames and content must match; the file may have "
+                        "been hand-edited or renamed."
+                    ),
+                    path=rel,
+                ))
+
+    local_id = _local_install_id(repo_root)
+    if local_id is None:
+        return findings
+    staged = _staged_files_from_git(repo_root)
+    if staged is None:
+        return findings
+    for rel in sorted(staged):
+        if not rel.startswith(USAGE_BY_INSTALL_PREFIX):
+            continue
+        filename_id = Path(rel).stem
+        if filename_id == local_id:
+            continue
+        findings.append(Finding(
+            rule="usage.foreign_install_modified",
+            severity="fail",
+            message=(
+                f"Refusing staged change to {rel}: this counter file belongs "
+                f"to install {filename_id!r}, but this machine's install_id "
+                f"is {local_id!r}. Either the file was edited by hand, or "
+                f"AgentCoordination/local/install_id.json was copied from "
+                f"another machine."
+            ),
+            path=rel,
+        ))
+    return findings
+
+
 def check_claude_settings_policy(repo_root: Path) -> list[Finding]:
     findings: list[Finding] = []
     policy = load_agent_surface_policy(repo_root)
@@ -1402,6 +1503,7 @@ CHECKS = (
     ("stale_surfaces", check_stale_surfaces),
     ("claude_settings_policy", check_claude_settings_policy),
     ("usage_counter_shape", check_usage_counter_shape),
+    ("usage_counter_ownership", check_usage_counter_ownership),
     ("legacy_slash_commands", check_legacy_slash_commands),
     ("reviews_sla", check_reviews_sla),
     ("tools_inventory", check_tools_inventory),

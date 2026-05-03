@@ -1,0 +1,65 @@
+# Declarative label set for the GitHub Issues tracking system.
+#
+# Apply via the helper script:
+#   python Tools/agent_coordination/sync_github_labels.py
+#
+# Or one-shot via gh:
+#   gh label create "type:bug" --color "d73a4a" --description "Defect" --force
+#   ... (one line per label)
+#
+# Invariant per issue: exactly one type:*, one priority:*, one status:* label.
+
+- name: "type:bug"
+  color: "d73a4a"
+  description: "A defect — something is broken or behaves unexpectedly."
+- name: "type:feature"
+  color: "0e8a16"
+  description: "New functionality or enhancement."
+
+- name: "priority:critical"
+  color: "b60205"
+  description: "Blocks core gameplay or causes crashes."
+- name: "priority:high"
+  color: "d93f0b"
+  description: "Significant feature broken / important impact."
+- name: "priority:medium"
+  color: "fbca04"
+  description: "Minor feature issue or visual bug / nice-to-have."
+- name: "priority:low"
+  color: "c5def5"
+  description: "Polish, QoL, minor enhancement."
+
+- name: "status:pending"
+  color: "ededed"
+  description: "Awaiting work."
+- name: "status:in-progress"
+  color: "1d76db"
+  description: "An agent is actively working on it."
+- name: "status:awaiting-confirmation"
+  color: "8a2be2"
+  description: "Agent finished; awaiting user smoke + verification."
+- name: "status:needs-clarification"
+  color: "fbca04"
+  description: "Blocked on the user answering questions."
+- name: "status:deep-investigation"
+  color: "5319e7"
+  description: "Bug under deep investigation — root cause unclear."
+- name: "status:needs-human-debug"
+  color: "b60205"
+  description: "Bug requires human reproduction or stepping through with breakpoints."
+- name: "status:blocked"
+  color: "000000"
+  description: "Cannot progress until an external dependency resolves."
+- name: "status:needs-refactor"
+  color: "8b572a"
+  description: "Feature blocked on a refactor that should ship first."
+- name: "status:needs-project"
+  color: "8b572a"
+  description: "Feature scope warrants a PROJ-XX, not a single ticket."
+- name: "status:analysis"
+  color: "c5b3e7"
+  description: "Feature requires upfront analysis before implementation."
+
+- name: "verified"
+  color: "0e8a16"
+  description: "Applied by repo owner only — gates issue closure. Do not add manually if you are an agent."

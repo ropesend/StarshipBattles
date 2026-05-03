@@ -75,9 +75,11 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 ## Project Management
 
 - Active projects: `Projects/active_projects/PROJ-XX/`. Protocols: `Projects/protocols/`.
-- Tickets: `Tracking/bugs/active/` and `Tracking/features/active/`. Protocols: `Tracking/protocols/`.
+- Tickets (legacy, parallel): `Tracking/bugs/active/` and `Tracking/features/active/`. Protocols: `Tracking/protocols/`. Skills: `/claude-ticket-*`.
+- Tickets (GitHub Issues, parallel): https://github.com/ropesend/StarshipBattles/issues. Skills: `/claude-gi-*`. New tickets should go here unless the legacy system is more convenient. Both systems run side-by-side; legacy will be sunset on user signal.
 - Reviews: `Reviews/protocols/` and `Reviews/results/`. Historical audit reports stored here.
 - Archive: `Projects/archived_projects/` and `Projects/deep_archive/` — do not reference as current.
+- Scratchpad: `AgentCoordination/Scratchpad/` (gitignored) — transient agent files. Subdirs: `plans/`, `reviews/`, `reports/`, `handoffs/`, `tmp/`. **Do not write transient files outside the repo.** Persist-worthy artifacts go in tracked dirs (`Projects/`, `docs/`, `Reviews/results/`). Full rules: `AgentCoordination/SCRATCHPAD.md`.
 
 ## Skill Usage Logging
 
@@ -101,6 +103,10 @@ Examples:
 - Antigravity invoking an `anti-*` skill → `python Tools/agent_coordination/log_skill_usage.py --agent anti --skill <name>`
 - Claude Code (manual override or testing) → same script with `--agent claude`.
 
-Counters are **advisory only** and identify cleanup candidates; they never authorize automatic deletion. Counter data is per-checkout (a UUID install ID is auto-generated on first call); only the aggregated `summary.json` is meant for cross-checkout review.
-Each logging invocation updates both the per-install counter and the aggregated
-`AgentCoordination/generated/skill_usage/summary.json`.
+Counters are **advisory only** and identify cleanup candidates; they never authorize automatic deletion. Counter data is per-checkout (a UUID install ID is auto-generated on first call); the aggregated `summary.json` is the artifact a human reviews for cross-checkout totals.
+
+Each logging invocation updates the per-install counter at
+`AgentCoordination/generated/skill_usage/by_install/<install_id>.json` (tracked,
+no cross-checkout conflicts because filenames are UUIDs) and rewrites the
+aggregated `AgentCoordination/generated/skill_usage/summary.json` (**gitignored**;
+purely derived from the per-install files, regenerated on every skill use).

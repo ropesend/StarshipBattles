@@ -1,0 +1,50 @@
+name: Feature Request
+description: Propose new functionality or an enhancement to existing functionality.
+title: ""
+labels:
+  - "type:feature"
+  - "status:pending"
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What should the system do that it currently doesn't?
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this valuable? What pain does it remove or what new gameplay does it enable?
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know the feature is done? Concrete, testable assertions.
+      placeholder: |
+        - The new minimap zoom slider appears in the strategy HUD
+        - Slider range 0.5x–4x with a default of 1x
+        - A test in tests/unit/ui/ verifies the zoom transform
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Mockups / References
+      description: |
+        Optional. Commit any reference images to `tracking-assets/screenshots/YYYY-MM/issue-NNN-<slug>.png`
+        and link them here with `?raw=1` for inline rendering.
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Set by the reporter; revisable by the project manager during triage.
+      options:
+        - critical
+        - high
+        - medium
+        - low
+      default: 2
+    validations:
+      required: true

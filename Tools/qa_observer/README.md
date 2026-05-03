@@ -5,7 +5,15 @@ The QA Session Observer is a set of background Python scripts designed to passiv
 ## Setup Instructions
 
 1. **Install Dependencies**
-   Navigate to this directory and install the required packages:
+   From the project root, create the repo venv and install the dev requirements:
+   ```bash
+   py -3.14 -m venv .venv
+   .venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+   ```
+
+   `qa_launcher.py` requires Python 3.14 and prefers `.venv` automatically
+   when it exists. For standalone observer-only work, this smaller dependency
+   set is also valid from this directory:
    ```bash
    pip install -r requirements.txt
    ```
@@ -37,7 +45,13 @@ The QA Session Observer is a set of background Python scripts designed to passiv
 ## Usage
 
 ### Stage 1 & 2: Record and Process
-Before starting your play session, run:
+Before starting your play session, either launch the full game+observer workflow
+from the project root:
+```bash
+python qa_launcher.py
+```
+
+Or run the observer by itself from this directory:
 ```bash
 python observer.py
 ```

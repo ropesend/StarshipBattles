@@ -45,8 +45,15 @@ MagicMock/
 
 # Agent coordination per-checkout state (install IDs, local usage logs).
 AgentCoordination/local/
+# Skill usage summary is purely derived from by_install/*.json and is regenerated
+# by Tools/agent_coordination/log_skill_usage.py on every skill invocation.
+# Tracking it produces meaningless merge conflicts on every parallel-checkout merge.
+AgentCoordination/generated/skill_usage/summary.json
 # Per-checkout state for the OpenCode review system (PID, log, payload temp/failed dirs).
 AgentCoordination/opencodereview/local/
+# Scratchpad: agent transient working area. Contents are local-only and may be
+# deleted at any time. See AgentCoordination/SCRATCHPAD.md for conventions.
+AgentCoordination/Scratchpad/
 
 # Sanitizer backups for Claude settings files.
 .claude/settings.json.backup.*
