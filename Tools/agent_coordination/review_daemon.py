@@ -18,6 +18,7 @@ Signals:
 from __future__ import annotations
 
 import argparse
+import atexit
 import concurrent.futures
 import json
 import os
@@ -117,6 +118,8 @@ def _check_no_other_daemon(force: bool = False) -> None:
                 f"Use --force to override."
             )
         log(f"--force specified; overriding existing PID file (was PID={existing_pid})")
+    elif existing_pid:
+        log(f"Clearing stale PID file (recorded PID={existing_pid} is not running)")
 
 
 def get_pending_requests() -> list[Path]:
@@ -440,10 +443,15 @@ def process_request(request_path: Path, opencode_cmd: list[str] | None = None) -
         except subprocess.TimeoutExpired:
             log(f"Request {request_id} timed out after {OPENCODE_TIMEOUT}s — killing process")
             _kill_process_tree(proc)
+            stdout, stderr = "", ""
             try:
                 stdout, stderr = proc.communicate(timeout=10)
             except subprocess.TimeoutExpired:
                 pass
+            if stdout:
+                log(f"  stdout (last 500 chars): {stdout[-500:]}")
+            if stderr:
+                log(f"  stderr (last 500 chars): {stderr[-500:]}")
             move_to_completed(in_progress_path, success=False, failure_reason="timed out")
             return False
 
@@ -532,6 +540,7 @@ def run_daemon(install_signal_handlers: bool = True, force: bool = False) -> Non
 
     _check_no_other_daemon(force=force)
     write_pid()
+    atexit.register(remove_pid)
 
     log(f"Review daemon started (PID={os.getpid()})")
     log(f"Watching: {PENDING_DIR}")
