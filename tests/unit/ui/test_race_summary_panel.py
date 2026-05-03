@@ -3,11 +3,19 @@ Unit tests for RaceSummaryPanel.
 
 PROJ-44 Phase 7 Task 7.1: TDD tests for the summary panel extraction.
 Tests the race summary display panel functionality.
+
+PROJ-322 Task 5.14 (APC-001-F14): the legacy `RaceSummaryPanel.__new__` +
+`patch.object(__init__, ...)` blocks have been replaced with the shared
+`make_ui_widget` factory from `tests.fixtures.ui_widget_factory`. The
+`TestFeat14RegistryDrivenSummary` helper keeps its bespoke mocking because
+it needs to capture every UILabel constructor call by `side_effect`.
 """
 
 import pygame
 import pytest
 from unittest.mock import MagicMock, patch
+
+from tests.fixtures.ui_widget_factory import make_ui_widget
 
 
 # =============================================================================
@@ -102,6 +110,45 @@ def mock_asset_loader():
     return loader
 
 
+def _make_summary_panel(race_config=None, **overrides):
+    """Build a `RaceSummaryPanel` via the shared `make_ui_widget` factory.
+
+    Replaces the legacy ``with patch.object(RaceSummaryPanel, '__init__', ...)``
+    + ``__new__`` + manual attribute wiring blocks (PROJ-322 Task 5.14 /
+    APC-001-F14). The factory patches every ``pygame_gui.elements.UI*`` class
+    with a Mock for the duration of `__init__`, so heavy `_create_content`
+    runs but is bounded.
+
+    Post-construction the helper also forces `summary_flag_panel` /
+    `summary_portrait_panel` / `summary_ship_panel` / `_env_scroll_container`
+    to `None` because `refresh()`'s helpers short-circuit on those when None
+    but cannot do arithmetic on the MagicMock geometry the factory leaves.
+
+    `race_config` is required by the production `__init__`. Tests typically
+    then override `panel.summary_labels` (or similar attrs) with their own
+    `MagicMock`-keyed dict before calling `panel.refresh()` to assert against
+    the controlled label.
+    """
+    from game.ui.panels.race_summary_panel import RaceSummaryPanel
+
+    asset_loader = overrides.pop("asset_loader", MagicMock())
+    panel = make_ui_widget(
+        RaceSummaryPanel,
+        race_config=race_config,
+        asset_loader=asset_loader,
+        **overrides,
+    )
+    # Disable the geometry-driven refresh paths (flag/portrait/ship panel
+    # rebuilds + column-3 env scroll) — they were wired to MagicMocks during
+    # __init__ but the legacy refresh tests expect None-guarded short-
+    # circuits. Tests can re-assign these attrs if they need the real path.
+    panel.summary_flag_panel = None
+    panel.summary_portrait_panel = None
+    panel.summary_ship_panel = None
+    panel._env_scroll_container = None
+    return panel
+
+
 # =============================================================================
 # Test: RaceSummaryPanel Import and Creation
 # =============================================================================
@@ -109,23 +156,16 @@ def mock_asset_loader():
 class TestRaceSummaryPanelCreation:
     """Tests for RaceSummaryPanel initialization."""
 
-    def test_race_summary_panel_has_expected_attributes(self):
+    def test_race_summary_panel_has_expected_attributes(self, mock_race_config):
         """RaceSummaryPanel has expected UI element attributes."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+        panel = _make_summary_panel(race_config=mock_race_config)
 
-        # Use mock to avoid pygame initialization
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.summary_labels = {}
-            panel.summary_flag_images = []
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-
-            # Verify the attributes exist
-            assert hasattr(panel, 'summary_labels')
-            assert hasattr(panel, 'summary_flag_images')
-            assert hasattr(panel, 'summary_portrait_image')
-            assert hasattr(panel, 'summary_ship_images')
+        # Real __init__ ran (with mocked pygame_gui elements) — every UI
+        # collection attribute is initialized.
+        assert hasattr(panel, 'summary_labels')
+        assert hasattr(panel, 'summary_flag_images')
+        assert hasattr(panel, 'summary_portrait_image')
+        assert hasattr(panel, 'summary_ship_images')
 
 # =============================================================================
 # Test: Summary Data Formatting
@@ -141,29 +181,21 @@ class TestSummaryDataFormatting:
 
     def test_format_description_status_with_content(self, mock_race_config):
         """Description status shows character count when content exists."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+        panel = _make_summary_panel(race_config=mock_race_config)
 
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
+        bio_status = panel._format_bio_status()
+        socio_status = panel._format_socio_status()
 
-            bio_status = panel._format_bio_status()
-            socio_status = panel._format_socio_status()
-
-            assert "chars" in bio_status or "Set" in bio_status
-            assert "chars" in socio_status or "Set" in socio_status
+        assert "chars" in bio_status or "Set" in bio_status
+        assert "chars" in socio_status or "Set" in socio_status
 
     def test_format_description_status_empty(self, mock_race_config_empty):
         """Description status shows empty when no content."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+        panel = _make_summary_panel(race_config=mock_race_config_empty)
 
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config_empty
+        bio_status = panel._format_bio_status()
 
-            bio_status = panel._format_bio_status()
-
-            assert "Empty" in bio_status or "0" in bio_status
+        assert "Empty" in bio_status or "0" in bio_status
 
 
 # =============================================================================
@@ -178,82 +210,42 @@ class TestRefreshSummary:
 
         PROJ-66 Phase 6: Changed from name_value to faction_value.
         """
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+        panel = _make_summary_panel(race_config=mock_race_config)
+        # Override the labels dict with a controlled mock so the assertion
+        # has a deterministic target — the factory's `_create_content` had
+        # populated this with mocked-element instances we don't care about.
+        panel.summary_labels = {'faction_value': MagicMock()}
+        # _env_scroll_container is None for legacy refresh paths.
+        panel._env_scroll_container = None
 
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-            panel.summary_labels = {'faction_value': MagicMock()}
-            panel.summary_flag_images = []
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-            panel.summary_ship_labels = []
-            panel._asset_loader = MagicMock()
-            panel.summary_flag_panel = None
-            panel.summary_portrait_panel = None
-            panel.summary_ship_panel = None
-            # FEAT-14: column-3 scroll container is None in these legacy
-            # tests — _rebuild_env_scroll_content treats that as a no-op.
-            panel._env_scroll_container = None
-            panel._dynamic_env_labels = []
+        panel.refresh()
 
-            panel.refresh()
-
-            panel.summary_labels['faction_value'].set_text.assert_called()
+        panel.summary_labels['faction_value'].set_text.assert_called()
 
     def test_refresh_updates_theme_label(self, mock_race_config):
         """refresh() updates theme label from race_config."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+        panel = _make_summary_panel(race_config=mock_race_config)
+        panel.summary_labels = {'theme_value': MagicMock()}
+        panel._env_scroll_container = None
 
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-            panel.summary_labels = {'theme_value': MagicMock()}
-            panel.summary_flag_images = []
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-            panel.summary_ship_labels = []
-            panel._asset_loader = MagicMock()
-            panel.summary_flag_panel = None
-            panel.summary_portrait_panel = None
-            panel.summary_ship_panel = None
-            # FEAT-14: column-3 scroll container is None in these legacy
-            # tests — _rebuild_env_scroll_content treats that as a no-op.
-            panel._env_scroll_container = None
-            panel._dynamic_env_labels = []
+        panel.refresh()
 
-            panel.refresh()
-
-            panel.summary_labels['theme_value'].set_text.assert_called()
+        panel.summary_labels['theme_value'].set_text.assert_called()
 
     def test_refresh_clears_previous_flag_images(self, mock_race_config):
         """refresh() clears previous flag images before creating new ones."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+        panel = _make_summary_panel(race_config=mock_race_config)
 
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
+        # Mock previous flag image — replace whatever _create_content put
+        # in summary_flag_images with this one we control.
+        old_image = MagicMock()
+        panel.summary_flag_images = [old_image]
+        panel._env_scroll_container = None
 
-            # Mock previous flag image
-            old_image = MagicMock()
-            panel.summary_flag_images = [old_image]
-            panel.summary_labels = {}
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-            panel.summary_ship_labels = []
-            panel._asset_loader = MagicMock()
-            panel.summary_flag_panel = None
-            panel.summary_portrait_panel = None
-            panel.summary_ship_panel = None
-            # FEAT-14: column-3 scroll container is None in these legacy
-            # tests — _rebuild_env_scroll_content treats that as a no-op.
-            panel._env_scroll_container = None
-            panel._dynamic_env_labels = []
+        panel.refresh()
 
-            panel.refresh()
-
-            # Old image should be killed
-            old_image.kill.assert_called()
+        # Old image should be killed
+        old_image.kill.assert_called()
 
 
 # =============================================================================
@@ -268,63 +260,29 @@ class TestPlaceholders:
 
         PROJ-66 Phase 6: Changed from name_value to faction_value.
         """
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+        panel = _make_summary_panel(race_config=mock_race_config_empty)
+        faction_label = MagicMock()
+        panel.summary_labels = {'faction_value': faction_label}
+        panel._env_scroll_container = None
 
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config_empty
+        panel.refresh()
 
-            # Mock labels
-            faction_label = MagicMock()
-            panel.summary_labels = {'faction_value': faction_label}
-            panel.summary_flag_images = []
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-            panel.summary_ship_labels = []
-            panel._asset_loader = MagicMock()
-            panel.summary_flag_panel = None
-            panel.summary_portrait_panel = None
-            panel.summary_ship_panel = None
-            # FEAT-14: column-3 scroll container is None in these legacy
-            # tests — _rebuild_env_scroll_content treats that as a no-op.
-            panel._env_scroll_container = None
-            panel._dynamic_env_labels = []
-
-            panel.refresh()
-
-            # Should show placeholder text
-            call_arg = faction_label.set_text.call_args[0][0]
-            assert "Identity" in call_arg or "set" in call_arg.lower()
+        # Should show placeholder text
+        call_arg = faction_label.set_text.call_args[0][0]
+        assert "Identity" in call_arg or "set" in call_arg.lower()
 
     def test_theme_placeholder_when_not_set(self, mock_race_config_empty):
         """Shows placeholder when theme not set."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
+        panel = _make_summary_panel(race_config=mock_race_config_empty)
+        theme_label = MagicMock()
+        panel.summary_labels = {'theme_value': theme_label}
+        panel._env_scroll_container = None
 
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config_empty
+        panel.refresh()
 
-            # Mock labels
-            theme_label = MagicMock()
-            panel.summary_labels = {'theme_value': theme_label}
-            panel.summary_flag_images = []
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-            panel.summary_ship_labels = []
-            panel._asset_loader = MagicMock()
-            panel.summary_flag_panel = None
-            panel.summary_portrait_panel = None
-            panel.summary_ship_panel = None
-            # FEAT-14: column-3 scroll container is None in these legacy
-            # tests — _rebuild_env_scroll_content treats that as a no-op.
-            panel._env_scroll_container = None
-            panel._dynamic_env_labels = []
-
-            panel.refresh()
-
-            # Should show placeholder text
-            call_arg = theme_label.set_text.call_args[0][0]
-            assert "Ships" in call_arg or "set" in call_arg.lower()
+        # Should show placeholder text
+        call_arg = theme_label.set_text.call_args[0][0]
+        assert "Ships" in call_arg or "set" in call_arg.lower()
 
 
 # =============================================================================

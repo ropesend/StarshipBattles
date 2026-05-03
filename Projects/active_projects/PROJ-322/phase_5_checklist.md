@@ -157,8 +157,8 @@ _(Plan-review M-001 (2026-05-03): factory approach rejected for screens without 
 **File:** `tests/unit/ui/test_race_summary_panel.py`
 **Tests:** `pytest tests/unit/ui/test_race_summary_panel.py`
 
-- [ ] Replace the `__new__` bypass-init across multiple test classes (~47 LOC) with `make_ui_widget(RaceSummaryPanel, **kwargs)`. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/test_race_summary_panel.py` passes; LOC delta approximately -25 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Replace the `__new__` bypass-init across multiple test classes (~47 LOC) with `make_ui_widget(RaceSummaryPanel, **kwargs)`. _(8 bypass-init blocks across 8 test methods replaced with `_make_summary_panel(race_config=...)` which delegates to the shared factory; `TestFeat14RegistryDrivenSummary._refresh_with_mocked_uilabel` left as-is because it captures every UILabel constructor call by side_effect, which the generic factory cannot do.)_
+- [x] Verify: `pytest tests/unit/ui/test_race_summary_panel.py` passes; LOC delta approximately -25 _(14 tests pass, ~57 LOC removed — 8 bypass blocks ranged from 5 to 16 LOC each.)_
 
 ---
 
