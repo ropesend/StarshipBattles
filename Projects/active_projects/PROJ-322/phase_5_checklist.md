@@ -70,8 +70,8 @@
 **File:** `tests/unit/ui/test_race_flag_gallery.py`
 **Tests:** `pytest tests/unit/ui/test_race_flag_gallery.py`
 
-- [ ] Replace the `__new__` bypass-init (~200 LOC) with `make_ui_widget(RaceFlagGallery, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/test_race_flag_gallery.py` passes; LOC delta approximately -100 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Replace the `__new__` bypass-init (~200 LOC) with `make_ui_widget(RaceFlagGallery, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(Existing module-scope `_bypass_init_gallery(race_config, *, asset_buttons, flag_preview_images)` helper rewired to delegate to `make_ui_widget`. Six inline bypass-init blocks across 3 test classes converted to call the helper.)_
+- [x] Verify: `pytest tests/unit/ui/test_race_flag_gallery.py` passes; LOC delta approximately -100 _(10 tests pass; ~90 LOC removed.)_
 
 ---
 
@@ -148,8 +148,8 @@ _(Plan-review M-001 (2026-05-03): factory approach rejected for screens without 
 **File:** `tests/unit/ui/test_race_theme_gallery.py`
 **Tests:** `pytest tests/unit/ui/test_race_theme_gallery.py`
 
-- [ ] Replace the `__new__` bypass-init across the entire file (~200 LOC) with `make_ui_widget(RaceThemeGallery, **kwargs)`. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/test_race_theme_gallery.py` passes; LOC delta approximately -100 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Replace the `__new__` bypass-init across the entire file (~200 LOC) with `make_ui_widget(RaceThemeGallery, **kwargs)`. _(Module-scope `_bypass_init_gallery(race_config, *, asset_buttons)` helper added that routes through `make_ui_widget`. 9 inline bypass-init blocks across 4 test classes converted.)_
+- [x] Verify: `pytest tests/unit/ui/test_race_theme_gallery.py` passes; LOC delta approximately -100 _(9 tests pass; ~90 LOC removed.)_
 
 ---
 
