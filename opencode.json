@@ -5,7 +5,7 @@
     "./AGENTS.md"
   ],
   "autoupdate": true,
-  "snapshot": true,
+  "snapshot": false,
   "compaction": {
     "auto": true,
     "prune": true,
