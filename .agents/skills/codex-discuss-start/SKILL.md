@@ -1,66 +1,62 @@
 ---
 name: codex-discuss-start
-description: Start an inter-agent discussion with Claude Code through a shared folder, with optional user-supplied focus context, shared plan files, in-band extension, and default Codex user-facing ownership. Use when the user asks Codex to initiate a direct Codex/Claude planning, code, architecture, review, or approach discussion by writing message 001 first and then alternating until consensus, needs-user, timeout, or the active message cap.
+description: Start an inter-agent discussion with Claude Code through a generated child folder, with optional user focus context, shared immutable plan revisions, in-band extension, continuation arcs, and explicit user-facing and implementation ownership. Use when the user asks Codex to initiate a direct Codex/Claude planning, code, architecture, review, or approach discussion.
 ---
 
 # Codex Discuss Start
 
-Start a shared-folder discussion by writing Codex message 001, then alternate with Claude Code using the `interagent-discussion/v1` protocol.
+Start a v2.3 shared-folder discussion by creating a child discussion leaf under a parent folder, writing Codex message 001, then alternating with Claude Code until `consensus`, `needs-user`, timeout, or the active per-arc message cap.
+
+Reference: `AgentCoordination/Scratchpad/Discussion/20260503T162834Z/plans/v2.3_spec_r001.md`.
 
 ## Inputs
 
-- Require a folder path from the user. Parse the first argument as the folder and all remaining text as inline user-supplied context.
-- Resolve relative paths against the repository root or current working directory.
-- Create the folder if it does not exist.
-- If the folder path contains spaces, require the user to wrap it in double quotes. Prefer discussion folder names without spaces.
-- Read `<folder>/topic.md` if it exists, and treat its contents as additional user-supplied context.
-- Abort before writing if the folder already contains any `???_*_to_*.md` message file or `outcome.md`.
-- Recommend folders under `AgentCoordination/Scratchpad/discussions/`, but accept any user-provided folder.
-- Codex is the default user-facing agent for discussions it starts unless both agents explicitly agree to hand over.
+Argument surface: `<parent> [--slug <slug>] [context...]`. Do not add `argument-hint` frontmatter to Codex skills; Codex documents argument surfaces in this body and in `agents/openai.yaml`.
 
-## Protocol
+- Resolve `<parent>` against the repository root or current working directory.
+- Treat the user-supplied path as a parent folder, not the discussion leaf.
+- If the resolved parent folder's final segment contains whitespace, warn but do not reject. Suggest a no-space alternative and remind the user to quote paths with spaces.
+- Create a child leaf named `YYYYMMDDTHHMMSSZ` by default.
+- If `--slug <kebab-case-slug>` is present, create `YYYYMMDDTHHMMSSZ_<slug>`. Validate the slug as lowercase kebab-case. Do not infer a slug from positional context tokens.
+- All tokens after the optional slug become inline user context.
+- Read `<leaf>/topic.md` if it exists and forward it as additional user context.
+- Pre-flight checks must not mutate an existing discussion folder before deciding it is valid to use. Create `<leaf>/plans/` only after the leaf is accepted for a live discussion, or immediately before an actual plan write.
+- Abort before writing if the generated leaf already contains protocol files or `outcome.md`.
+- Report the full generated leaf path to the user and tell them to invoke the Claude-side discussion skill on that leaf or the parent folder.
 
-Use these globally ordered message filenames when Codex starts:
+## Filenames
+
+v2.3 requires arc-prefixed filenames everywhere. Sole message regex: `^arc\d{2}_\d{3}_(claude|codex)_to_(claude|codex)\.md$`.
+
+For a Codex-started arc:
 
 ```text
-001_codex_to_claude.md
-002_claude_to_codex.md
-003_codex_to_claude.md
-004_claude_to_codex.md
-005_codex_to_claude.md
-006_claude_to_codex.md
-007_codex_to_claude.md
-008_claude_to_codex.md
-009_codex_to_claude.md
-010_claude_to_codex.md
+arc01_001_codex_to_claude.md
+arc01_002_claude_to_codex.md
+arc01_003_codex_to_claude.md
+arc01_004_claude_to_codex.md
+arc01_005_codex_to_claude.md
+arc01_006_claude_to_codex.md
+arc01_007_codex_to_claude.md
+arc01_008_claude_to_codex.md
+arc01_009_codex_to_claude.md
+arc01_010_claude_to_codex.md
 ```
 
-If Claude starts in a different discussion, the first file is `001_claude_to_codex.md` and the order reverses.
+If Claude starts a different discussion, the order reverses, beginning with `arc01_001_claude_to_codex.md`. Continuation arcs use the same pattern, such as `arc02_001_codex_to_claude.md`. Do not add fallback handling for old unprefixed transcripts.
 
-Every message file must start with frontmatter on line 1. Put human-readable headings in the body after the closing frontmatter delimiter.
+## Message Format
 
-Required frontmatter fields:
+Every message starts with frontmatter on line 1. Put headings in the body.
 
-- `protocol`
-- `message_index`
-- `from`
-- `to`
-- `status`
-- `reply_to`
-- `created_at_utc`
+Required fields: `protocol`, `arc`, `message_index`, `from`, `to`, `status`, `reply_to`, `created_at_utc`. The arc field is written as `arc: <int>`.
 
-Optional frontmatter fields:
-
-- `agent_turn` - informational only; do not validate it for routing.
-- `message_cap` - omit while the cap is the default 10; include after extension acceptance.
-- `extension_requested_cap`
-- `extension_accepted`
-
-Codex message example:
+Optional fields: `agent_turn` (informational only), `message_cap`, `extension_requested_cap`, `extension_accepted`.
 
 ```markdown
 ---
 protocol: interagent-discussion/v1
+arc: 1
 message_index: 1
 from: codex
 to: claude
@@ -70,118 +66,51 @@ created_at_utc: YYYY-MM-DDTHH:MM:SSZ
 ---
 
 # Codex message 001
-
-Message body.
 ```
 
 Use `continue | consensus | needs-user` for `status`.
 
-## First Message
+## User-Supplied Context
 
-Write message 001 with `status: continue`. Include enough cold-start context for Claude:
-
-- The user's request and goal.
-- Current proposal, plan, code question, or disagreement to refine.
-- Relevant repo rules, files, tests, or constraints.
-- The specific critique, improvement, or decision wanted from Claude.
-
-If inline context or `topic.md` content is present, message 001 must include `## User-supplied context`. Forward the user text verbatim in separate labeled fenced blocks:
-
-````markdown
-## User-supplied context
-
-### Inline context
-
-```text
-verbatim inline context
-```
-
-### topic.md
-
-```text
-verbatim topic.md content
-```
-````
-
-Do not summarize, paraphrase, or modify those verbatim blocks. If useful, add synthesis below the blocks. If the user-supplied content itself contains triple backticks, use a longer fence.
+If inline context or `topic.md` exists, message 001 must include `## User-supplied context`. Forward text verbatim in separate labeled fenced blocks. Do not summarize, paraphrase, or modify those blocks. If the content contains the default fence marker, use a longer fence.
 
 ## Shared Plans
 
-Agents may create and edit shared working plans separately from discussion messages.
-
-- Store plan files under `<folder>/plans/<name>.md`.
-- Only the agent currently composing a reply may edit plans. The waiting agent treats `plans/` as read-only.
-- Plan writes use temporary files in `<folder>/plans/` whose names begin `.tmp_*`, then atomic rename to the final plan filename. Readers ignore `.tmp_*`.
-- Plan frontmatter starts on line 1 and includes `protocol: interagent-discussion/v1`, `last_edited_by`, `last_edited_at_utc`, and `revision: <int>`.
-- Increment `revision:` on every edit because Scratchpad discussions are not a git audit trail.
-- Optionally include a `## Revision log` body section.
-- If Codex creates or edits plans, its next message must include `## Plans touched` listing each path and a one-line reason.
-- When Claude lists touched plans, re-read those plan files before composing the next Codex reply.
-- Treat plans as working artifacts; `outcome.md` remains authoritative.
-
-## Extension
-
-Default message cap is 10. A discussion may extend once from 10 to 20 messages.
-
-- To request extension, set `extension_requested_cap: 20` and include `## Extension request` with the human-readable reason.
-- To accept extension, set `message_cap: 20` and `extension_accepted: true`, and acknowledge in the body.
-- To decline extension, omit acceptance fields and explain in the body.
-- Acceptance may happen at message 10; if accepted at message 10, that message may use `status: continue` because the cap is now 20.
-- After acceptance, every subsequent message must include `message_cap: 20`.
-- Do not request or accept any second extension.
-- Do not use a separate `*-discuss-extend` skill for v2.
-
-## User-Facing Agent
-
-The starter is the default user-facing agent. For this skill, default `user_facing_agent` is `codex`.
-
-- Either agent may include `## Handover proposal` in a normal message body, explaining why the other agent should summarize or continue with the user.
-- The receiving agent accepts or declines in body markdown.
-- Never perform a silent handover.
-- Record the final choice in `outcome.md` as `user_facing_agent: claude|codex` plus a one-line rationale in the summary.
-
-## Atomic Writes
-
-Write each message to a temporary file in the same folder, then rename it to the final filename. Readers must ignore temporary files.
-
-PowerShell pattern:
-
-```powershell
-$tmp = Join-Path $folder "001_codex_to_claude.md.tmp"
-$final = Join-Path $folder "001_codex_to_claude.md"
-Set-Content -LiteralPath $tmp -Value $content -Encoding utf8
-Move-Item -LiteralPath $tmp -Destination $final
-```
+- Plan files live under `plans/`.
+- Plan revisions are immutable siblings: `plans/<name>_r001.md`, `plans/<name>_r002.md`, ...
+- Latest = highest revision number. There is no mutable latest alias.
+- Never overwrite an existing revision file. Each edit creates exactly one new revision file.
+- Plan frontmatter includes `protocol: interagent-discussion/v1`, `last_edited_by`, `last_edited_at_utc`, and `revision: <int>`. The `revision:` value must match the `_rNNN` suffix.
+- `## Plans touched` names the specific new revision file.
 
 ## Loop
 
-After writing message 001:
+1. Atomic-write `arc01_001_codex_to_claude.md` with `status: continue`.
+2. Wait for the next expected Claude file.
+3. Read the full latest Claude message.
+4. If `outcome.md` exists, stop and summarize it.
+5. Re-read any files listed in `## Plans touched`.
+6. If the latest message is terminal, reply only if needed to create two consecutive terminal messages within the active per-arc cap.
+7. If continuing, write `continue`; if converged, write `consensus`; if blocked on user input, write `needs-user`.
+8. After atomic-writing a reply, if the outgoing status and just-read incoming status are the same terminal status, this is the second matching terminal confirmation: write `outcome.md` immediately, race-safely, and stop.
 
-1. Wait for the next expected Claude file.
-2. Read the full latest Claude message.
-3. If `outcome.md` exists, stop and summarize it to the user.
-4. Re-read any files listed in `## Plans touched`.
-5. If the latest message status is terminal, reply only if needed to create two consecutive terminal messages from different agents and there is room under the active message cap.
-6. If discussion should continue, write the next Codex file with `status: continue`.
-7. If Codex believes the agents have converged, write `status: consensus`.
-8. If user input is required, write `status: needs-user`.
+At the active cap, do not write `continue`; use `consensus` if settled, otherwise `needs-user`, then write `outcome.md`.
 
-Completion conditions:
+## Extension
 
-- Two consecutive messages from different agents have the same terminal status: `consensus` or `needs-user`.
-- The active message cap is reached.
-- `outcome.md` already exists.
+Default per-arc cap is 10. A single in-band extension to 20 is allowed per arc.
 
-At the active message cap, do not write `continue`; use `consensus` if settled, otherwise `needs-user`.
+- Request with `extension_requested_cap: 20` and `## Extension request`.
+- Accept with `message_cap: 20` and `extension_accepted: true`.
+- After acceptance, every later message in the arc includes `message_cap: 20`.
+- Do not request a second extension in the same arc.
 
 ## Waiting
 
-Polling mechanics are implementation-specific. A simple loop can wait up to about 5 minutes, write `heartbeat_codex.txt` as a best-effort liveness hint, and then surface a timeout to the user. Do not write `outcome.md` on timeout.
-
-PowerShell wait pattern:
+Poll every 30 seconds for up to 5 minutes, watching both the target message and `outcome.md`; then retry once before surfacing timeout. Never write `outcome.md` on timeout.
 
 ```powershell
-$target = Join-Path $folder "002_claude_to_codex.md"
+$target = Join-Path $folder "arc01_002_claude_to_codex.md"
 $outcome = Join-Path $folder "outcome.md"
 $heartbeat = Join-Path $folder "heartbeat_codex.txt"
 $deadline = (Get-Date).AddMinutes(5)
@@ -193,42 +122,47 @@ while (
     Set-Content -LiteralPath $heartbeat -Value (Get-Date -Format o) -Encoding utf8
     Start-Sleep -Seconds 30
 }
-if (Test-Path -LiteralPath $outcome) { "OUTCOME" }
-elseif (Test-Path -LiteralPath $target) { "READY" }
-else { "TIMEOUT" }
 ```
 
-Treat `heartbeat_claude.txt` as an optional liveness hint only. The protocol must not depend on heartbeat files.
+Treat `heartbeat_claude.txt` as an optional liveness hint only.
+
+## Atomic Writes
+
+Use `.tmp_<guid>.md` temporary file names for messages and plans; readers ignore `.tmp_*`.
+
+```powershell
+$tmp = Join-Path $folder ('.tmp_' + [guid]::NewGuid().ToString('N') + '.md')
+$final = Join-Path $folder "arc01_001_codex_to_claude.md"
+Set-Content -LiteralPath $tmp -Value $content -Encoding utf8
+Move-Item -LiteralPath $tmp -Destination $final
+```
 
 ## Outcome
 
-Write `outcome.md` once when the discussion is complete. If it already exists, read and summarize it instead of overwriting it.
+Write `outcome.md` once when complete. If it already exists, read it and skip overwriting.
 
 ```markdown
 ---
 protocol: interagent-discussion/v1
 ended_at_message: 6
+ended_at_arc: 1
 ended_by: codex
 status: consensus
 user_facing_agent: codex
+implementation_owner: codex
 ---
-
-## Summary
-
-What was discussed, what was agreed, unresolved questions, the handover rationale if any, and the recommended next action.
 ```
 
-Use a temporary file then rename for `outcome.md` when practical.
+All seven outcome fields are required. `user_facing_agent` defaults to the starter unless handover is proposed and accepted through a `## Handover proposal` body section. `implementation_owner` defaults to the starter unless the discussion explicitly records another accepted owner; use `both` for coordinated self-owned work.
 
-## Status Judgment
+## Continuation
 
-Use `consensus` when both agents have converged on a concrete plan or answer with no meaningful disagreement.
+Continuation arcs are started by `codex-discuss-continue`. For a continued Codex-started discussion, the next arc begins with `arc02_001_codex_to_claude.md`. Prior latest outcomes are archived as `outcome_arc<NN>.md`.
 
-Use `needs-user` when:
+## Implementation Notes
 
-- A factual or preference question only the user can answer blocks progress.
-- The remaining trade-off needs user authority over scope, priorities, or risk.
-- The agents are repeating disagreement without producing new evidence.
-- The active message cap is reached and the issue is not settled.
-
-When reporting back to the user, include the outcome status, the last message read or written, the `user_facing_agent`, and the discussion folder.
+- Use host-neutral wording when referring to the peer side, such as "invoke the Claude-side discussion skill".
+- Warn when the final segment contains whitespace, but do not reject.
+- pre-flight checks must not mutate existing folders before validation.
+- Use `v2.3_spec_r001.md` as the current implementation reference.
+- The second matching terminal writer writes `outcome.md` immediately.

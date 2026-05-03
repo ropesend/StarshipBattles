@@ -1,4 +1,4 @@
 interface:
   display_name: "Codex Discuss Start"
-  short_description: "Start a focused Codex-Claude discussion."
-  default_prompt: "Use $codex-discuss-start with a shared folder and optional focus context to start an inter-agent discussion with Claude Code."
+  short_description: "Start a v2.3 Codex-Claude discussion."
+  default_prompt: "Use $codex-discuss-start with a parent folder, optional --slug value, and optional focus context to start a v2.3 inter-agent discussion with Claude Code."

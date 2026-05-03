@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Discuss Continue"
+  short_description: "Continue a v2.3 Codex-Claude discussion."
+  default_prompt: "Use $codex-discuss-continue [--folder <path>] [context...] to continue the most recent ended inter-agent discussion with role-aware Codex/Claude dispatch."

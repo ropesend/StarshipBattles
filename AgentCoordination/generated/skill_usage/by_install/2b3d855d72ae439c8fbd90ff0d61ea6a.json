@@ -4,17 +4,24 @@
   "skills": {
     "claude-discuss-start": {
       "agents": {
-        "claude": 1
+        "claude": 7
       },
-      "count": 1,
-      "last_used": "2026-05-03T15:06:51Z"
+      "count": 7,
+      "last_used": "2026-05-03T16:50:44Z"
     },
     "codex-discuss-respond": {
+      "agents": {
+        "codex": 8
+      },
+      "count": 8,
+      "last_used": "2026-05-03T16:56:20Z"
+    },
+    "codex-starship-project-system": {
       "agents": {
         "codex": 1
       },
       "count": 1,
-      "last_used": "2026-05-03T15:11:21Z"
+      "last_used": "2026-05-03T16:56:33Z"
     },
     "ocode-review-request": {
       "agents": {
@@ -25,10 +32,10 @@
     },
     "skill-creator": {
       "agents": {
-        "codex": 4
+        "codex": 9
       },
-      "count": 4,
-      "last_used": "2026-05-03T15:20:35Z"
+      "count": 9,
+      "last_used": "2026-05-03T16:54:13Z"
     }
   }
 }

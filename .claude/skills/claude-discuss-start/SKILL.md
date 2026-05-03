@@ -1,144 +1,198 @@
 ---
 name: claude-discuss-start
-description: Open an inter-agent discussion with Codex via a shared folder. Claude writes message 001 (with cold-start context plus any user-supplied focus), then alternates with Codex up to 10 messages (extendable once to 20). Use when you want Claude and Codex to refine a plan, design, or code path directly without the user copy-pasting between sessions.
-argument-hint: <folder> [context...]
+description: Open an inter-agent discussion with Codex. The user supplies a parent folder; this skill creates a timestamped child sub-folder (optionally `--slug`-suffixed) for the discussion, writes message 001 with optional user-supplied focus context, and alternates with Codex up to 10 messages per arc (extendable once to 20). Use when you want Claude and Codex to refine a plan, design, or code path directly without the user copy-pasting between sessions.
+argument-hint: <parent> [--slug <kebab-case>] [context...]
 ---
 
-# Inter-Agent Discussion — Claude Starts (v2 spec)
+# Inter-Agent Discussion — Claude Starts (v2.3)
 
-You are opening a multi-turn discussion with Codex. The user invokes
-`/codex-discuss-respond <same folder>` on the Codex side. You exchange
-messages through files in the shared folder until you reach consensus, agree
-the user needs to weigh in, or hit the active message cap (10 by default,
-extendable once to 20 in-band).
+You are opening a multi-turn discussion with Codex. The user supplies a
+**parent** folder; you create a timestamped child sub-folder for this
+discussion. The user invokes the Codex-side `codex-discuss-respond` skill
+(which can take either the parent or the exact child leaf — it discovers via
+parent scan).
 
 This is a peer-to-peer dialogue, not a delegation. Codex is your equal here.
 Push back, propose alternatives, agree where you actually agree.
 
-## Protocol — interagent-discussion/v1 (v2 spec)
+## Protocol — interagent-discussion/v1 (v2.3 spec)
 
 | Field | Value |
 |-------|-------|
-| Folder | `$args[0]`; absolute or repo-relative; quote if it contains spaces |
-| Inline context | tokens after the folder, joined and forwarded verbatim |
-| `topic.md` | optional `<folder>/topic.md`, read at start, forwarded verbatim |
-| Filename pattern | `NNN_<from>_to_<to>.md` (zero-padded) |
-| Default cap | 10 messages (one in-band extension to 20 allowed) |
+| Parent | `$args[0]`; absolute or repo-relative; quote if it contains spaces |
+| Discussion leaf | child of parent: `YYYYMMDDTHHMMSSZ[_<slug>]/` (created by this skill) |
+| Slug flag | optional `--slug <kebab-case>` (separate flag arg, NOT positional context) |
+| Inline context | tokens after the optional `--slug <slug>` pair, joined and forwarded verbatim |
+| `topic.md` | optional `<leaf>/topic.md`, read at start, forwarded verbatim |
+| Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md` (zero-padded; arc resets `message_index`) |
+| Default per-arc cap | 10 messages (one in-band extension to 20 allowed per arc) |
 | Message format | YAML frontmatter (line 1 = `---`) + markdown body |
-| Termination | Two consecutive matching terminal statuses, OR cap reached, OR pre-existing `outcome.md` |
-| Atomicity | `.tmp_<guid>` then `Move-Item` to final name |
-| Shared plans | `<folder>/plans/<name>.md` — current-turn agent only may edit |
+| Termination | Two consecutive matching terminal statuses, OR cap reached, OR pre-existing `outcome.md` (per arc) |
+| Atomicity | `.tmp_<guid>.md` then `Move-Item` to final name |
+| Shared plans | `<leaf>/plans/<name>_r<NNN>.md` — versioned siblings, never overwrite |
 
 ## Step 1 — Parse arguments
 
-First token = folder. All remaining tokens, joined with spaces = inline
-context. If the folder path contains spaces, the user must wrap it in double
-quotes; recommend no spaces in discussion-folder names.
+```powershell
+$Parent = $args[0]
+if (-not [System.IO.Path]::IsPathRooted($Parent)) {
+  $Parent = Join-Path 'c:\Dev\StarshipBattles' $Parent
+}
+
+# Look for an optional --slug <slug> flag immediately after the parent
+$Slug = ''
+$ContextStartIdx = 1
+if ($args.Length -ge 3 -and $args[1] -eq '--slug') {
+  $Slug = $args[2]
+  $ContextStartIdx = 3
+  if ($Slug -match '\s' -or $Slug -notmatch '^[a-z0-9][a-z0-9-]*$') {
+    Write-Output "ABORT: --slug must be lowercase kebab-case (a-z, 0-9, '-'), got '$Slug'"
+    exit 1
+  }
+}
+$InlineContext = if ($args.Length -gt $ContextStartIdx) {
+  ($args[$ContextStartIdx..($args.Length - 1)] -join ' ')
+} else { '' }
+```
+
+**Slug parsing is flag-based**, not positional. Inline context never gets confused with a slug.
+
+## Step 2 — Whitespace warning on the parent leaf
 
 ```powershell
-$Folder = $args[0]
-if (-not [System.IO.Path]::IsPathRooted($Folder)) {
-  $Folder = Join-Path 'c:\Dev\StarshipBattles' $Folder
+$parentLeaf = Split-Path -Path $Parent -Leaf
+if ($parentLeaf -match '\s') {
+  $suggestion = ($parentLeaf -replace '\s+', '-')
+  Write-Warning "Parent folder leaf '$parentLeaf' contains whitespace. Recommended: rename to '$suggestion'. The generated child folder will use no spaces regardless."
 }
-$InlineContext = if ($args.Length -gt 1) { ($args[1..($args.Length - 1)] -join ' ') } else { '' }
+```
+
+Warning only — the user may genuinely want a parent name with spaces. The
+generated child uses timestamps and never has spaces.
+
+## Step 3 — Pre-flight: refuse to clobber a leaf-shaped path
+
+The parent must not itself look like a discussion leaf. If it has discussion
+files at the top level, the user passed a leaf when they meant a parent:
+
+```powershell
+if (Test-Path -LiteralPath $Parent) {
+  $leafFiles = Get-ChildItem -LiteralPath $Parent -File -ErrorAction SilentlyContinue |
+    Where-Object {
+      $_.Name -match '^arc\d{2}_\d{3}_(claude|codex)_to_(claude|codex)\.md$' -or
+      $_.Name -eq 'outcome.md' -or
+      $_.Name -match '^outcome_arc\d{2}\.md$'
+    }
+  if ($leafFiles) {
+    Write-Output "ABORT: '$Parent' looks like an existing discussion leaf (contains discussion files), not a parent."
+    Write-Output "Pick a parent folder that contains discussion sub-folders, or a fresh path."
+    $leafFiles | Select-Object -First 5 | ForEach-Object { Write-Output "  - $($_.Name)" }
+    exit 1
+  }
+}
+```
+
+**Pre-flight before any mutation.** Don't create the child folder until the parent has been accepted.
+
+## Step 4 — Generate the child leaf name and create folder structure
+
+```powershell
+$timestamp = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
+$ChildLeaf = if ($Slug) { "${timestamp}_${Slug}" } else { $timestamp }
+$Folder = Join-Path $Parent $ChildLeaf
+
+# Now safe to create — parent passed pre-flight
+New-Item -ItemType Directory -Force -Path $Parent | Out-Null
 New-Item -ItemType Directory -Force -Path $Folder | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $Folder 'plans') | Out-Null
+
+Write-Output "Discussion leaf: $Folder"
 ```
 
-Recommended (not enforced) location: `AgentCoordination/Scratchpad/discussions/<topic>/`
+The leaf path is what you'll report to the user later. Codex's responder
+side can find it via parent scan, so the user usually doesn't need to copy
+it manually.
+
+Recommended (not enforced) parent location: `AgentCoordination/Scratchpad/discussions/`
 per the CLAUDE.md scratchpad rule.
 
-## Step 2 — Pre-flight: refuse to clobber an existing discussion
-
-If the folder already contains any `???_*_to_*.md` file or `outcome.md`,
-**abort** and tell the user to pick a different folder. (`plans/`, `topic.md`,
-heartbeat files are inputs and may pre-exist.)
-
-```powershell
-$existing = Get-ChildItem -Path $Folder -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -match '^\d{3}_(claude|codex)_to_(claude|codex)\.md$' -or $_.Name -eq 'outcome.md' }
-if ($existing) {
-  Write-Output "ABORT: discussion files already exist in $Folder"
-  $existing | ForEach-Object { Write-Output "  - $($_.Name)" }
-  exit 1
-}
-```
-
-## Step 3 — Read optional `topic.md`
-
-If the user pre-created `<folder>/topic.md`, read its contents. This is an
-alternative or supplement to inline context (useful when the focus brief is
-long enough to make command-line quoting painful).
+## Step 5 — Read optional `<leaf>/topic.md`
 
 ```powershell
 $TopicMd = ''
 $topicPath = Join-Path $Folder 'topic.md'
-if (Test-Path $topicPath) { $TopicMd = Get-Content $topicPath -Raw }
+if (Test-Path -LiteralPath $topicPath) { $TopicMd = Get-Content -LiteralPath $topicPath -Raw }
 ```
 
-## Step 4 — Compose and write message 001
+The user usually won't pre-create `topic.md` because the leaf is generated;
+but the option is preserved for explicit-leaf invocations or seeded folders.
+
+## Step 6 — Compose and write `arc01_001_claude_to_codex.md`
 
 Body must include, in order:
 
 1. **`## User-supplied context`** — only if inline context or `topic.md` is
-   non-empty. Each goes into a separate fenced block, **verbatim**. You
-   **MUST NOT** summarize, paraphrase, or modify these blocks. You may add
-   your own synthesis below them in the same section if useful.
+   non-empty. Each in a separate fenced block, **verbatim**. **MUST NOT**
+   summarize, paraphrase, or modify these blocks. Synthesis below them is OK.
+
+   **Fence-collision rule:** if verbatim content contains `~~~`, use a longer
+   fence (`~~~~` etc.) so the inner text doesn't terminate the outer block.
 
 2. **Cold-start context** — Codex has no shared memory with you. Convey:
    - The user's underlying request or problem.
    - The current state (what's been proposed, tried, decided).
    - Relevant files/constraints/conventions Codex needs to know.
-   - What you specifically want from Codex (critique, alternative, code, plan
-     refinement, etc.).
+   - What you want from Codex (critique, alternative, code, plan refinement).
 
-### Message file format
+### Message file format (note `arc:` field, arc-prefixed filename)
 
 Frontmatter is the **first thing in the file** (line 1 = `---`). Heading goes
-inside the body — never above frontmatter. Use the actual current UTC time
-in `created_at_utc`, not the placeholder.
+inside the body. Use the actual current UTC time, not the placeholder.
 
 ```markdown
 ---
 protocol: interagent-discussion/v1
+arc: 1
 message_index: 1
 from: claude
 to: codex
 status: continue
 reply_to: null
-created_at_utc: <ISO 8601 UTC, e.g. 2026-05-03T20:00:00Z>
+created_at_utc: <ISO 8601 UTC>
 ---
 
-# Claude → Codex, message 001
+# Claude → Codex, message arc01-001
 
 ## User-supplied context
 
 Inline context (verbatim):
 ~~~
-<exact inline context, do not modify>
+<exact inline context, do not modify; use ~~~~ if content has ~~~ inside>
 ~~~
 
 topic.md (verbatim):
 ~~~
-<exact topic.md content, do not modify>
+<exact topic.md content, do not modify; longer fence if content has ~~~>
 ~~~
 
 [optional synthesis below the verbatim blocks]
 
-## [your cold-start brief — current state, what's been tried, what you want from Codex]
+## [your cold-start brief]
 
 ...
 ```
 
-### Frontmatter schema (v2)
+### Frontmatter schema
 
-**Required:** `protocol`, `message_index`, `from`, `to`, `status`, `reply_to`, `created_at_utc`.
+**Required:** `protocol`, `arc`, `message_index`, `from`, `to`, `status`, `reply_to`, `created_at_utc`.
 
 **Optional:**
-- `agent_turn: <int>` — informational only; receivers do not validate.
-- `message_cap: <int>` — omit unless an extension was accepted (then `20`).
+- `agent_turn: <int>` — informational only.
+- `message_cap: <int>` — omit unless extension accepted (then `20`).
 - `extension_requested_cap: 20` — set to propose extension.
-- `extension_accepted: true` — set when accepting a proposed extension.
+- `extension_accepted: true` — set when accepting extension.
+
+`arc` is per-arc-numbered. `message_index` is per-arc and resets each arc to 1.
 
 ### Status values
 
@@ -153,128 +207,142 @@ topic.md (verbatim):
 function Write-MessageAtomic {
   param([string]$Folder, [string]$FinalName, [string]$Content)
   $tmp = Join-Path $Folder ('.tmp_' + [guid]::NewGuid().ToString('N') + '.md')
-  Set-Content -Path $tmp -Value $Content -Encoding utf8
-  Move-Item -Path $tmp -Destination (Join-Path $Folder $FinalName)
+  Set-Content -LiteralPath $tmp -Value $Content -Encoding utf8
+  Move-Item -LiteralPath $tmp -Destination (Join-Path $Folder $FinalName)
 }
 
-function Write-PlanAtomic {
-  param([string]$Folder, [string]$PlanName, [string]$Content)
+function Write-PlanRevision {
+  param([string]$Folder, [string]$PlanBaseName, [int]$Revision, [string]$Content)
   $plansDir = Join-Path $Folder 'plans'
+  New-Item -ItemType Directory -Force -Path $plansDir | Out-Null
+  $finalName = "{0}_r{1:D3}.md" -f $PlanBaseName, $Revision
+  $finalPath = Join-Path $plansDir $finalName
+  if (Test-Path -LiteralPath $finalPath) {
+    throw "Plan revision file '$finalName' already exists. Plan revisions are immutable; bump to revision $($Revision + 1)."
+  }
   $tmp = Join-Path $plansDir ('.tmp_' + [guid]::NewGuid().ToString('N') + '.md')
-  Set-Content -Path $tmp -Value $Content -Encoding utf8
-  Move-Item -Path $tmp -Destination (Join-Path $plansDir $PlanName) -Force
+  Set-Content -LiteralPath $tmp -Value $Content -Encoding utf8
+  Move-Item -LiteralPath $tmp -Destination $finalPath
 }
 ```
 
-Final filename for message 1: `001_claude_to_codex.md`.
+Final filename for arc 1 message 1: `arc01_001_claude_to_codex.md`.
 
-## Step 5 — Discussion loop
+## Step 7 — Discussion loop
 
-Repeat until terminal. The active cap starts at 10; if an extension is
-accepted, it becomes 20 for the rest of the discussion.
+The active per-arc cap starts at 10; if an extension is accepted, it becomes
+20 for the rest of the arc.
 
-1. **Wait for Codex's next message.** Codex writes even indexes
-   (`002`, `004`, ..., `010`; post-extension `012`, ..., `020`). Filename:
-   `<NNN>_codex_to_claude.md`. Use the polling helper below.
+1. **Wait for Codex's next message.** Codex writes even per-arc indexes
+   (`arc01_002_codex_to_claude.md`, etc.). Use the polling helper — it
+   watches both the target file AND `outcome.md`.
 
-2. **Read and validate.** `protocol == interagent-discussion/v1`,
-   `from == codex`, `to == claude`, `message_index` = expected next even
-   number. If anything is off, surface to the user.
+2. **Branch on what appeared:**
+   - `outcome.md` appeared → done; read it, summarize to user, exit.
+   - Target message appeared → read and validate (`protocol`, `arc`, `from`,
+     `to`, `message_index` = expected next even). Surface mismatch to user.
 
-3. **Apply termination rules** (in order):
-   - `outcome.md` already exists → done; read it, summarize, exit.
+3. **Apply termination rules** (against the just-read incoming message):
    - Incoming `status: consensus` AND your previous outgoing `status` was
      `consensus` → write `outcome.md`, summarize, exit.
    - Same for `needs-user`.
    - Incoming `message_index == active_cap` → cap reached. Write
-     `outcome.md`, summarize, exit. (No reply after the final message.)
+     `outcome.md`, summarize, exit.
 
 4. **Re-read any plans listed in `## Plans touched`.** If the incoming
-   message has that section, re-read each listed `<folder>/plans/<name>.md`
-   before composing your reply.
+   message has that section, re-read each listed `<leaf>/plans/<name>_r<NNN>.md`
+   before composing your reply. The references are to specific revisions.
 
 5. **Handle extension request, if any.** If incoming has
-   `extension_requested_cap: 20` and the discussion has not yet been extended:
-   - **Accept** by setting `message_cap: 20` and `extension_accepted: true`
-     in your reply's frontmatter, plus a one-line body acknowledgement.
-     After acceptance, **every subsequent message must include
-     `message_cap: 20`** so the latest message is self-describing.
+   `extension_requested_cap: 20` and this arc has not yet been extended:
+   - **Accept** by setting `message_cap: 20` and `extension_accepted: true`,
+     plus a one-line body acknowledgement. After acceptance, **every
+     subsequent message in this arc must include `message_cap: 20`**.
    - **Decline** by omitting both fields and explaining in body.
-   - Acceptance may happen at message 10; if accepted at 10, that message
-     may use `status: continue` because the cap is now 20.
-   - At most one extension per discussion (10 → 20, no further).
+   - Acceptance may happen at message 10; that message may use
+     `status: continue` because the cap is now 20.
+   - At most one extension per arc.
 
 6. **Handle handover proposal, if any.** If incoming body has
-   `## Handover proposal`, either accept or decline in your reply's body
-   markdown (no frontmatter ceremony). If accepted, the eventual
-   `outcome.md` records `user_facing_agent: codex` plus rationale.
-   Per the user's rule: handover only via explicit proposal, never silent.
+   `## Handover proposal`, accept or decline in your reply's body. If
+   accepted, eventual `outcome.md` records `user_facing_agent: codex`.
 
 7. **Compose your reply.** Status:
    - `continue` — more to discuss.
-   - `consensus` — you actually agree with Codex's position.
-   - `needs-user` — a question only the user can answer.
-   - **At the active cap**: must use `consensus` or `needs-user`, not
-     `continue`. After writing the final message, write `outcome.md` directly
-     without waiting for a reply (none is coming).
+   - `consensus` — you actually agree.
+   - `needs-user` — only the user can answer.
+   - **At the active cap**: must be `consensus` or `needs-user`. Write
+     `outcome.md` directly without waiting (no reply coming).
 
 8. **Edit shared plans this turn (if appropriate).** Plan files live at
-   `<folder>/plans/<name>.md`. Only the agent currently composing a reply
-   may edit. Plan frontmatter:
+   `<leaf>/plans/<name>_r<NNN>.md`. **Never overwrite an existing revision
+   file.** Each edit is a new file with bumped revision number. Plan
+   frontmatter:
    ```yaml
    ---
    protocol: interagent-discussion/v1
    last_edited_by: claude
    last_edited_at_utc: <UTC ISO 8601>
-   revision: <int, increment on each edit>
+   revision: <int matching filename suffix>
    ---
    ```
-   Optional `## Revision log` body section appending one line per edit.
-   If you edit, include a `## Plans touched` section in your message listing
-   each path + one-line reason. (Required only when you actually edited.)
+   Optional `## Revision log` body section appending one line per revision.
+   If you edit, include a `## Plans touched` section listing each new
+   revision file path + one-line reason. Use `Write-PlanRevision`.
 
 9. **Atomic-write the message** via `Write-MessageAtomic` to
-   `<NNN>_claude_to_codex.md` (odd index).
+   `arc01_<MMM>_claude_to_codex.md` (odd index per arc).
 
-10. Loop back to step 1.
+10. **Writer-detects-match termination rule.** After atomic-writing your
+    reply, check: did your outgoing `status` match the just-read incoming
+    `status` AND is that status terminal?
+    - **Yes** → two consecutive matching terminal messages from different
+      agents. Write `outcome.md` race-safely (Step 8) and exit. Do NOT
+      loop back.
+    - **No** → continue to step 11.
 
-### Polling helper (5-min wait, retry once on TIMEOUT)
+11. Loop back to step 1.
+
+### Polling helper (30s sleep, 5-min wait, retry once on TIMEOUT)
 
 ```powershell
-$target = Join-Path $Folder ('{0:D3}_codex_to_claude.md' -f $expectedIndex)
+$arc = 1
+$target = Join-Path $Folder ("arc{0:D2}_{1:D3}_codex_to_claude.md" -f $arc, $expectedIndex)
+$outcomePath = Join-Path $Folder 'outcome.md'
 $start = Get-Date
 $deadline = $start.AddMinutes(5)
-while (-not (Test-Path $target) -and (Get-Date) -lt $deadline) {
+while (-not (Test-Path -LiteralPath $target) -and -not (Test-Path -LiteralPath $outcomePath) -and (Get-Date) -lt $deadline) {
   $elapsed = [int]((Get-Date) - $start).TotalSeconds
-  Write-Output "waiting... ${elapsed}s elapsed, target=$target"
-  Set-Content -Path (Join-Path $Folder 'heartbeat_claude.txt') -Value (Get-Date -Format o) -Encoding utf8
-  Start-Sleep -Seconds 60
+  Write-Output "waiting... ${elapsed}s elapsed"
+  Set-Content -LiteralPath (Join-Path $Folder 'heartbeat_claude.txt') -Value (Get-Date -Format o) -Encoding utf8
+  Start-Sleep -Seconds 30
 }
-if (-not (Test-Path $target)) { Write-Output 'TIMEOUT'; exit 1 }
-Write-Output 'READY'
+if (Test-Path -LiteralPath $outcomePath) { Write-Output 'OUTCOME' }
+elseif (Test-Path -LiteralPath $target) { Write-Output 'READY' }
+else { Write-Output 'TIMEOUT' }
 ```
 
-Run via PowerShell tool with `timeout: 320000` (~5.3 min). On `TIMEOUT`,
-retry once (~10 min total wall clock). If still no file, surface to user:
+Run via PowerShell tool with `timeout: 320000`. On TIMEOUT, retry once
+(~10 min total). If still no file, surface to user:
 
-> Codex hasn't responded after ~10 minutes. Invoke
-> `/codex-discuss-respond <folder>` (or `start`) on the Codex side, or tell
-> me to keep waiting.
+> Codex hasn't responded after ~10 minutes. Invoke the Codex-side
+> `codex-discuss-respond` skill (it can find the discussion via parent
+> scan), or tell me to keep waiting.
 
-**Do not write `outcome.md` on timeout.** Timeout means the discussion is
-paused, not concluded.
+**Do not write `outcome.md` on timeout.**
 
-## Step 6 — Write outcome.md (exactly once, race-safe)
+## Step 8 — Write outcome.md (exactly once, race-safe)
 
-When a terminal condition fires:
+`outcome.md` requires all seven fields below. `ended_at_arc` (an integer)
+is required so readers know which arc terminated without filename
+inference.
 
 ```powershell
 $outcomePath = Join-Path $Folder 'outcome.md'
-if (-not (Test-Path $outcomePath)) {
+if (-not (Test-Path -LiteralPath $outcomePath)) {
   Write-MessageAtomic -Folder $Folder -FinalName 'outcome.md' -Content $outcomeBody
 } else {
-  # Codex got there first — read theirs, do not overwrite.
-  Get-Content $outcomePath
+  Get-Content -LiteralPath $outcomePath
 }
 ```
 
@@ -284,59 +352,68 @@ Format:
 ---
 protocol: interagent-discussion/v1
 ended_at_message: <int>
+ended_at_arc: 1
 ended_by: claude
 status: consensus               # consensus | needs-user
 user_facing_agent: claude       # claude | codex
+implementation_owner: claude    # claude | codex | both
 ---
 
 ## Summary
 
-[2–4 paragraphs: what was discussed, what was agreed, unresolved questions,
-recommended next action.]
+[2–4 paragraphs.]
 
 ## Handover (only if applicable)
 
-[1-line rationale for why `user_facing_agent` is set to the accepting agent,
-if a handover was proposed and accepted during the discussion.]
+[1-line rationale for `user_facing_agent` if handover was proposed and accepted.]
+
+## Implementation responsibility (only if non-default)
+
+[1-line rationale if `implementation_owner` is not the starter, or if `both`.]
 ```
 
-- `status: consensus` — both sides confirmed agreement.
-- `status: needs-user` — both sides confirmed user input is needed, OR
-  active cap hit without consensus.
-- `user_facing_agent` — default = starter (`claude` here); changes only via
-  accepted handover proposal.
+`implementation_owner` defaults to the starter (`claude` for this skill).
+Use `both` for coordinated work where each agent updates their own files
+(e.g. updating both sides of this discussion-skill family). The agent that
+writes `outcome.md` records the value based on whether anyone proposed a
+non-default owner during the discussion.
 
-## Step 7 — Report to the user
+## Step 9 — Report to the user
 
 Tell the user:
 
-- Folder path.
+- Generated leaf path (under the parent they supplied).
 - Number of messages exchanged (and whether an extension was used).
-- Terminal status (`consensus` / `needs-user`) and `user_facing_agent`.
-- 1–2 sentence summary of the outcome.
-- If `needs-user`: what specifically the user must decide.
-- File listing so they can review the transcript and any plans.
+- Terminal status, `user_facing_agent`, `implementation_owner`.
+- 1–2 sentence summary.
+- If `needs-user`: what the user must decide.
+- File listing.
 
-Per the agreed v2 default: **the starter is the user-facing agent** unless
-a handover was proposed and accepted during the discussion. Since you
-(`claude-discuss-start`) are the starter, you are the user-facing agent by
-default — you handle this report.
+You (`claude-discuss-start`) are the starter, so by default you are the
+user-facing agent.
 
 ## Notes & gotchas
 
-- **Filename parity (starter).** Claude writes odd indexes; Codex writes even.
-  Reversed when Claude is responding (`claude-discuss-respond`).
-- **Frontmatter on line 1.** No prefix above the `---`. Strict YAML parsers
-  require it.
-- **Heartbeat files** (`heartbeat_claude.txt`) are best-effort liveness hints,
-  not load-bearing.
+- **Filename parity (starter, per arc).** Claude writes odd `message_index`;
+  Codex writes even. Resets each arc.
+- **Frontmatter on line 1.** No prefix above `---`.
+- **Heartbeat files** are best-effort liveness hints, not load-bearing.
 - **Temp files** matching `.tmp_*` are ignored by readers.
-- **Folder paths with spaces** must be double-quoted by the user. Recommend
-  no spaces.
-- **Plans are working artifacts**; `outcome.md` is authoritative.
-- **Plan write rule:** only the current-turn agent may edit `plans/`. The
-  waiting agent treats `plans/` as read-only.
-- **Scratchpad is gitignored.** Don't rely on git for plan history; use the
-  `revision: <int>` field and an optional `## Revision log`.
-- **Verbatim user context** must not be paraphrased. The starter's job is to
-  forward, not summarize.
+- **Parent paths with spaces** generate a warning. The generated child leaf
+  uses no spaces regardless.
+- **Pre-flight before mutation.** No directory creation until parent passes
+  pre-flight.
+- **Plans never overwrite.** Each edit is a new revision file
+  (`<name>_r<NNN>.md`).
+- **Use `-LiteralPath`** on path cmdlets for safety with special characters.
+- **Cross-host invocation wording.** "Invoke the Codex-side
+  `codex-discuss-respond` skill" rather than slash-prefixed examples.
+- **`argument-hint` asymmetry.** Claude exposes the argument surface
+  through `argument-hint` (in the frontmatter above). Codex skills cannot
+  use that frontmatter key (validator constraint) and instead document the
+  argument surface in the body and `agents/openai.yaml`.
+- **No legacy compatibility.** v2.3 active skills use arc-prefixed filenames
+  exclusively. Unprefixed `001_..._md` files belong to retired pre-v2.3
+  transcripts and are NOT continuation targets — the most-recent-leaf scan
+  in `claude-discuss-continue` ignores folders that lack arc-prefixed
+  message files.
