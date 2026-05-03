@@ -52,8 +52,8 @@
 **File:** `tests/unit/ui/panels/test_race_identity_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_race_identity_panel.py`
 
-- [ ] Replace the `__new__` bypass-init (~200 LOC) with `make_ui_widget(RaceIdentityPanel, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/panels/test_race_identity_panel.py` passes; LOC delta approximately -100 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Replace the `__new__` bypass-init (~200 LOC) with `make_ui_widget(RaceIdentityPanel, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(Module-scope `_bypass_init_panel` helper now delegates to `make_ui_widget`; 12 inline `RaceIdentityPanel.__new__` blocks across 3 test classes converted to use the helper. Two tests had to call `panel._init_empty_refs()` after the factory to short-circuit `set_from_config`'s dropdown-recreation path on None.)_
+- [x] Verify: `pytest tests/unit/ui/panels/test_race_identity_panel.py` passes; LOC delta approximately -100 _(18 tests pass; ~100 LOC removed.)_
 
 ---
 

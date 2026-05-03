@@ -3,10 +3,17 @@ Unit tests for RaceIdentityPanel.
 
 PROJ-66 Phase 3: TDD tests for race identity configuration panel.
 Tests race name, government, faction name, and identity field handling.
+
+PROJ-322 Task 5.3 (APC-001-F03): the legacy `RaceIdentityPanel.__new__` +
+`patch.object(__init__, ...)` blocks (both the helper at module scope and
+the per-test inline ones) now route through the shared `make_ui_widget`
+factory from `tests.fixtures.ui_widget_factory`.
 """
 
 import pytest
 from unittest.mock import MagicMock, patch
+
+from tests.fixtures.ui_widget_factory import make_ui_widget
 
 
 # =============================================================================
@@ -44,21 +51,27 @@ def mock_panel():
 
 
 def _bypass_init_panel(race_config=None):
-    """Construct a `RaceIdentityPanel` instance without invoking `__init__`
-    (which requires real pygame_gui infrastructure). Optionally attaches a
-    `race_config` and calls `_init_empty_refs()`.
+    """Build a `RaceIdentityPanel` via the shared `make_ui_widget` factory.
 
-    Promoted from per-test inline `with patch.object(..., '__init__', ...)` +
-    `__new__()` blocks; PROJ-323 Task 1.25.
+    Replaces the legacy `__new__` + `patch.object(__init__, ...)` block.
+    The factory mocks every `pygame_gui.elements.UI*` class for the duration
+    of `__init__`, so heavy `_create_content` runs but is bounded; the real
+    `_init_empty_refs()` runs as part of `__init__` so all dropdown / input
+    refs exist (the elements are Mocks, but the attributes are present).
+
+    `race_config` is required by production `__init__`; tests then
+    overwrite specific element refs (e.g. `panel.race_name_input`) with a
+    controlled `MagicMock` before exercising `update_config()` /
+    `set_from_config()`.
+
+    PROJ-322 Task 5.3 / APC-001-F03 (originally promoted from inline blocks
+    in PROJ-323 Task 1.25; the factory cuts the bypass-init pattern entirely).
     """
+    if race_config is None:
+        race_config = MagicMock()
     from game.ui.panels.race_identity_panel import RaceIdentityPanel
 
-    with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-        panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-    if race_config is not None:
-        panel.race_config = race_config
-        panel._init_empty_refs()
-    return panel
+    return make_ui_widget(RaceIdentityPanel, race_config=race_config)
 
 
 # =============================================================================
@@ -137,117 +150,101 @@ class TestSetFromConfig:
 
     def test_set_from_config_populates_race_name(self, mock_race_config):
         """set_from_config sets race_name text input."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        mock_race_config.race_name = "Terrakin"
+        panel = _bypass_init_panel(race_config=mock_race_config)
+        # Reset the dropdowns + inputs (factory's _create_content created
+        # mocks; the test wants its own controlled MagicMock).
+        panel._init_empty_refs()
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            mock_race_config.race_name = "Terrakin"
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
+        panel.race_name_input = MagicMock()
 
-            panel.race_name_input = MagicMock()
+        panel.set_from_config()
 
-            panel.set_from_config()
-
-            panel.race_name_input.set_text.assert_called_with("Terrakin")
+        panel.race_name_input.set_text.assert_called_with("Terrakin")
 
     def test_set_from_config_recreates_dropdowns(self, mock_race_config):
         """set_from_config kills old dropdowns and creates new ones with correct values."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        mock_race_config.government_type = "Federation"
+        mock_race_config.physical_type = "Humanoid"
+        mock_race_config.government_organization = "Democracy"
+        mock_race_config.leader_title = "President"
+        mock_race_config.society_type = "Diplomats"
+        panel = _bypass_init_panel(race_config=mock_race_config)
+        # Override _create_content's auto-mocked dropdowns with controlled
+        # mocks bearing the relative_rect / ui_container attrs the production
+        # code reads when killing + recreating them.
+        for attr in ['physical_type_dropdown', 'government_type_dropdown',
+                     'government_org_dropdown', 'leader_title_dropdown',
+                     'society_type_dropdown']:
+            mock_dd = MagicMock()
+            mock_dd.relative_rect = MagicMock()
+            mock_dd.ui_container = MagicMock()
+            setattr(panel, attr, mock_dd)
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            mock_race_config.government_type = "Federation"
-            mock_race_config.physical_type = "Humanoid"
-            mock_race_config.government_organization = "Democracy"
-            mock_race_config.leader_title = "President"
-            mock_race_config.society_type = "Diplomats"
-            panel.race_config = mock_race_config
-            panel.ui_manager = MagicMock()
-            panel._init_empty_refs()
+        old_dropdowns = {
+            'physical': panel.physical_type_dropdown,
+            'gov_type': panel.government_type_dropdown,
+            'gov_org': panel.government_org_dropdown,
+            'leader': panel.leader_title_dropdown,
+            'society': panel.society_type_dropdown,
+        }
 
-            # Create mock dropdowns with required attributes
-            for attr in ['physical_type_dropdown', 'government_type_dropdown',
-                         'government_org_dropdown', 'leader_title_dropdown',
-                         'society_type_dropdown']:
-                mock_dd = MagicMock()
-                mock_dd.relative_rect = MagicMock()
-                mock_dd.ui_container = MagicMock()
-                setattr(panel, attr, mock_dd)
+        with patch('game.ui.panels.race_identity_panel.pygame_gui.elements.UIDropDownMenu') as MockDD:
+            MockDD.return_value = MagicMock()
+            panel.set_from_config()
 
-            old_dropdowns = {
-                'physical': panel.physical_type_dropdown,
-                'gov_type': panel.government_type_dropdown,
-                'gov_org': panel.government_org_dropdown,
-                'leader': panel.leader_title_dropdown,
-                'society': panel.society_type_dropdown,
-            }
+        # Old dropdowns were killed
+        for name, old_dd in old_dropdowns.items():
+            old_dd.kill.assert_called_once(), f"{name} dropdown was not killed"
 
-            with patch('game.ui.panels.race_identity_panel.pygame_gui.elements.UIDropDownMenu') as MockDD:
-                MockDD.return_value = MagicMock()
-                panel.set_from_config()
-
-            # Old dropdowns were killed
-            for name, old_dd in old_dropdowns.items():
-                old_dd.kill.assert_called_once(), f"{name} dropdown was not killed"
-
-            # New dropdown was created for each (5 dropdowns total)
-            assert MockDD.call_count == 5
+        # New dropdown was created for each (5 dropdowns total)
+        assert MockDD.call_count == 5
 
     def test_set_from_config_passes_correct_starting_option(self, mock_race_config):
         """set_from_config passes the config value as starting_option to new dropdowns."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        mock_race_config.government_type = "Empire"
+        mock_race_config.physical_type = ""  # empty = should use EMPTY_OPTION
+        mock_race_config.government_organization = "Autocracy"
+        mock_race_config.leader_title = "Emperor"
+        mock_race_config.society_type = "Conquerors"
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            mock_race_config.government_type = "Empire"
-            mock_race_config.physical_type = ""  # empty = should use EMPTY_OPTION
-            mock_race_config.government_organization = "Autocracy"
-            mock_race_config.leader_title = "Emperor"
-            mock_race_config.society_type = "Conquerors"
-            panel.race_config = mock_race_config
-            panel.ui_manager = MagicMock()
-            panel._init_empty_refs()
+        for attr in ['physical_type_dropdown', 'government_type_dropdown',
+                     'government_org_dropdown', 'leader_title_dropdown',
+                     'society_type_dropdown']:
+            mock_dd = MagicMock()
+            mock_dd.relative_rect = MagicMock()
+            mock_dd.ui_container = MagicMock()
+            setattr(panel, attr, mock_dd)
 
-            for attr in ['physical_type_dropdown', 'government_type_dropdown',
-                         'government_org_dropdown', 'leader_title_dropdown',
-                         'society_type_dropdown']:
-                mock_dd = MagicMock()
-                mock_dd.relative_rect = MagicMock()
-                mock_dd.ui_container = MagicMock()
-                setattr(panel, attr, mock_dd)
+        with patch('game.ui.panels.race_identity_panel.pygame_gui.elements.UIDropDownMenu') as MockDD:
+            MockDD.return_value = MagicMock()
+            panel.set_from_config()
 
-            with patch('game.ui.panels.race_identity_panel.pygame_gui.elements.UIDropDownMenu') as MockDD:
-                MockDD.return_value = MagicMock()
-                panel.set_from_config()
+        # Extract starting_option from each call's kwargs
+        starting_options = [
+            call.kwargs['starting_option']
+            for call in MockDD.call_args_list
+        ]
 
-            # Extract starting_option from each call's kwargs
-            starting_options = [
-                call.kwargs['starting_option']
-                for call in MockDD.call_args_list
-            ]
-
-            # Order: physical, government_type, government_org, leader_title, society
-            assert starting_options[0] == "-- Select --"  # empty physical_type
-            assert starting_options[1] == "Empire"
-            assert starting_options[2] == "Autocracy"
-            assert starting_options[3] == "Emperor"
-            assert starting_options[4] == "Conquerors"
+        # Order: physical, government_type, government_org, leader_title, society
+        assert starting_options[0] == "-- Select --"  # empty physical_type
+        assert starting_options[1] == "Empire"
+        assert starting_options[2] == "Autocracy"
+        assert starting_options[3] == "Emperor"
+        assert starting_options[4] == "Conquerors"
 
     def test_set_from_config_handles_none_dropdown(self, mock_race_config):
         """set_from_config handles None dropdowns gracefully."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        mock_race_config.government_type = ""
+        panel = _bypass_init_panel(race_config=mock_race_config)
+        # Force all dropdowns back to None — the factory's _create_content
+        # populated them with mocks; the production set_from_config must
+        # handle the None case without erroring.
+        panel._init_empty_refs()
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            mock_race_config.government_type = ""
-            panel.race_config = mock_race_config
-            panel.ui_manager = MagicMock()
-            panel._init_empty_refs()
-
-            # All dropdowns are None from _init_empty_refs
-            # Should not error
-            panel.set_from_config()
+        # Should not error
+        panel.set_from_config()
 
 
 # =============================================================================
@@ -259,68 +256,47 @@ class TestFactionAutoGeneration:
 
     def test_auto_generate_faction_name_both_set(self):
         """Faction auto-generates as 'RaceName GovernmentType'."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel._init_empty_refs()
+        result = panel._auto_generate_faction_name("Rossarian", "Empire")
 
-            result = panel._auto_generate_faction_name("Rossarian", "Empire")
-
-            assert result == "Rossarian Empire"
+        assert result == "Rossarian Empire"
 
     def test_auto_generate_faction_name_race_only(self):
         """Faction uses race_name alone when government not set."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel._init_empty_refs()
+        result = panel._auto_generate_faction_name("Rossarian", "")
 
-            result = panel._auto_generate_faction_name("Rossarian", "")
-
-            assert result == "Rossarian"
+        assert result == "Rossarian"
 
     def test_auto_generate_faction_name_government_only(self):
         """Faction uses government_type alone when race not set."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel._init_empty_refs()
+        result = panel._auto_generate_faction_name("", "Empire")
 
-            result = panel._auto_generate_faction_name("", "Empire")
-
-            assert result == "Empire"
+        assert result == "Empire"
 
     def test_auto_generate_faction_name_neither_set(self):
         """Faction returns empty string when both unset."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel._init_empty_refs()
+        result = panel._auto_generate_faction_name("", "")
 
-            result = panel._auto_generate_faction_name("", "")
-
-            assert result == ""
+        assert result == ""
 
     def test_auto_generate_faction_name_resets_when_not_overridden(self, mock_race_config):
         """Auto-generation updates when not manually overridden."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
+        panel._faction_name_overridden = False
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
-            panel._faction_name_overridden = False
+        panel.faction_name_input = MagicMock()
 
-            panel.faction_name_input = MagicMock()
+        # When not overridden, faction updates
+        panel._update_faction_if_not_overridden("Terrakin", "Alliance")
 
-            # When not overridden, faction updates
-            panel._update_faction_if_not_overridden("Terrakin", "Alliance")
-
-            panel.faction_name_input.set_text.assert_called_with("Terrakin Alliance")
+        panel.faction_name_input.set_text.assert_called_with("Terrakin Alliance")
 
 
 # =============================================================================
@@ -332,13 +308,10 @@ class TestUpdateLabels:
 
     def test_update_labels_is_no_op(self):
         """update_labels does nothing for identity panel (labels are static)."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-
-            # Should not raise
-            panel.update_labels()
+        # Should not raise
+        panel.update_labels()
 
 
 # =============================================================================
@@ -350,12 +323,8 @@ class TestLeaderNameField:
 
     def test_identity_panel_has_leader_name_input(self):
         """RaceIdentityPanel has leader_name_input attribute."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
-
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel._init_empty_refs()
-            assert hasattr(panel, 'leader_name_input')
+        panel = _bypass_init_panel()
+        assert hasattr(panel, 'leader_name_input')
 
     def test_update_config_reads_leader_name(self, mock_race_config):
         """update_config reads leader_name from text input."""
@@ -370,16 +339,15 @@ class TestLeaderNameField:
 
     def test_set_from_config_populates_leader_name(self, mock_race_config):
         """set_from_config sets leader_name text input."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+        mock_race_config.leader_name = "Emperor Zog"
+        panel = _bypass_init_panel(race_config=mock_race_config)
+        # Reset dropdowns to None so set_from_config short-circuits past
+        # the dropdown-recreation path (real pygame_gui.UIDropDownMenu
+        # construction would be attempted otherwise).
+        panel._init_empty_refs()
 
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            mock_race_config.leader_name = "Emperor Zog"
-            panel.race_config = mock_race_config
-            panel._init_empty_refs()
+        panel.leader_name_input = MagicMock()
 
-            panel.leader_name_input = MagicMock()
+        panel.set_from_config()
 
-            panel.set_from_config()
-
-            panel.leader_name_input.set_text.assert_called_with("Emperor Zog")
+        panel.leader_name_input.set_text.assert_called_with("Emperor Zog")
