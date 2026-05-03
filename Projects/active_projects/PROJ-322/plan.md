@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. CAT-4 Duplicate Testing (19 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-5 Fixture Bloat (20 items) | Partial (6 done, 3 N/A, 11 deferred) | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-6 Mocking Brittleness (26 items) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. CAT-6 Mocking Brittleness (26 items) | Partial (7 done, 19 deferred) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-7 Sleep/Latency (9 items) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. APC cluster remediation (APC-001 16 + APC-002 10 + APC-003 8 = 34 items) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. DUP/HLP consolidation (DUP-001..3 + HLP-001..4 = 7 cluster items) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -24,9 +24,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 3 CAT-6 Mocking Brittleness
-**Last Action:** Phase 2 partial — 6 safe scope-rebates done (2.2 dialog, 2.10 astrophysics, 2.12 modifier-editor parametrize, 2.13 battle-setup-logic, 2.18 save-selection tmpdir, 2.20 camera). 3 documented N/A (2.4 reset_registry needs per-test reset, 2.5 exit-policy boundaries genuinely vary, 2.7 full_registry mock-state pollution risk). 11 deferred for risk or Phase 5 overlap (2.1, 2.3, 2.6, 2.8, 2.9, 2.11, 2.14, 2.15, 2.16, 2.17, 2.19).
-**Next Action:** Begin Phase 3 — boundary patching of the 26 CAT-6 brittle-mocking patterns. Phase 3 is a Phase 5 PREREQUISITE.
+**Active Phase:** Phase 4 CAT-7 Sleep/Latency
+**Last Action:** Phase 3 partial — 7/26 done (3.2 attack_run threshold, 3.4 satisfied by Task 1.2 deletion, 3.6 source-text test removed, 3.11 kwargs-or-positional, 3.13 movement_engine DI via _movement_engine, 3.16 cloned-attribute assertions, 3.22 doc note). 19 deferred — most are Complex/Medium boundary refactors that overlap Phase 5 APC-001/002/003 clusters (3.5, 3.7, 3.20, 3.21, 3.24-3.26 all rated Complex). Phase 3 prereq for Phase 5 is partially satisfied: the boundary-patching philosophy is documented; Phase 5 will absorb the remaining boundary work as part of APC cluster cleanup.
+**Next Action:** Begin Phase 4 — replace 9 CAT-7 time.sleep() with deterministic waits.
 **Blockers:** None
 
 ## Overview

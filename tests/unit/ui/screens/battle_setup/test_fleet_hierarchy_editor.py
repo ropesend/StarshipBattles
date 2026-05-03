@@ -78,24 +78,26 @@ class TestCreateSquadron:
 
 
 class TestCloneShip:
-    def test_clone_ship_calls_ship_instance_create(self):
+    def test_clone_ship_returns_clone_with_matching_attributes(self, fresh_registries):
+        """The cloned ship's observable attributes should mirror the
+        original's design_data, owner_id, and name.
+
+        PROJ-322 Task 3.16 (S01-CAT6-002): rewritten to assert on the
+        cloned ship's attributes instead of mocking
+        `ShipInstance.create` and asserting on the kwargs.
+        """
         from game.ui.screens.battle_setup.fleet_hierarchy_editor import (
             FleetHierarchyEditor,
         )
         original = _make_ship("Original")
+        original._registries = fresh_registries
 
-        with pytest.MonkeyPatch.context() as mp:
-            from game.strategy.data import ship_instance
-            mock_create = MagicMock(return_value=_make_ship("Clone"))
-            mp.setattr(ship_instance.ShipInstance, "create", mock_create)
+        clone = FleetHierarchyEditor._clone_ship(original, registries=fresh_registries)
 
-            FleetHierarchyEditor._clone_ship(original, registries=None)
-
-        mock_create.assert_called_once()
-        _, kwargs = mock_create.call_args
-        assert kwargs["design_data"] is original.design_data
-        assert kwargs["owner_id"] == 0
-        assert kwargs["name"] == "Original"
+        assert clone is not None
+        assert clone.design_data is original.design_data
+        assert clone.owner_id == original.owner_id
+        assert clone.name == original.name
 
 
 class TestDuplicateSquadron:

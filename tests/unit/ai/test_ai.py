@@ -212,10 +212,24 @@ class TestAIStrategyStates:
         assert strategy_setup['ai'].current_behavior.attack_state == 'approach'
 
     def test_attack_run_transitions_to_retreat(self, strategy_setup):
-        """Attack run should transition to retreat when close."""
-        strategy_setup['ship'].movement_policy = 'move_attack_run'
-        strategy_setup['ship'].position = pygame.math.Vector2(0, 0)
-        strategy_setup['target'].position = pygame.math.Vector2(150, 0)  # Very close
+        """Attack run should transition to retreat when close.
+
+        PROJ-322 Task 3.2 (S01-CAT6-001): position the target a fraction
+        of the ship's actual weapon_range away (instead of hardcoding
+        the 150-unit value), so the test no longer breaks when the
+        approach_distance constant is tuned.
+        """
+        ship = strategy_setup['ship']
+        ship.movement_policy = 'move_attack_run'
+        ship.position = pygame.math.Vector2(0, 0)
+
+        weapon_range = getattr(ship, 'weapon_range', None) or 1000
+        # Place target well inside the retreat threshold (a quarter of
+        # weapon range is comfortably below any reasonable approach
+        # distance the AI uses).
+        strategy_setup['target'].position = pygame.math.Vector2(
+            weapon_range * 0.25, 0,
+        )
 
         strategy_setup['ai'].update()
         # After being very close, should switch to retreat

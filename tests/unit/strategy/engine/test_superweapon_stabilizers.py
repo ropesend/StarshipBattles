@@ -86,7 +86,10 @@ class TestCheckBlockingStabilizer:
                 empires=[],
                 component_registry=sentinel,
             )
-        _args, kwargs_or_pos = mock_find.call_args
-        # Accept either positional or keyword passing; just assert the sentinel
-        # was forwarded.
-        assert sentinel in mock_find.call_args.args
+        # PROJ-322 Task 3.11 (S03-CAT6-001): accept either positional
+        # or keyword passing — the documented intent is just "forwarded
+        # unchanged", not "passed positionally".
+        args, kwargs = mock_find.call_args
+        assert sentinel in args or sentinel in kwargs.values(), (
+            f"sentinel not forwarded; args={args}, kwargs={kwargs}"
+        )

@@ -8,6 +8,12 @@ established in `strategy_detail_formatter.py:_show_planet_report`.
 
 Uses the bypass-init pattern so the test exercises `_on_planet_selected`
 without constructing live pygame_gui widgets.
+
+PROJ-322 Task 3.22 (S10-CAT6-002): the deep mocking of
+PlanetReportPanel/`compute_planet_production`/UIButton (lines 71-111)
+is intentionally retained — it follows the project bypass-init
+convention. Revisit this file when PROJ-322 Phase 5 APC-001 cleanup
+consolidates the bypass-init pattern across UI tests.
 """
 from __future__ import annotations
 
