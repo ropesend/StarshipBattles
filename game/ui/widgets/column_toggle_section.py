@@ -4,6 +4,8 @@ Extracted in PROJ-319 (DUP-X-08) to remove the duplicated
 `_build_column_section` method that previously lived in both
 `EventLogSidebar` and `FleetReportSidebar`.
 """
+from __future__ import annotations
+
 from typing import Any, Dict, Tuple
 
 import pygame

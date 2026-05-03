@@ -4,6 +4,8 @@ Extracted in PROJ-319 (DUP-X-13) to remove the duplicated circular-positioning
 math from `EscortBehavior.compute_target_position` and
 `ScreenBehavior.compute_target_position`.
 """
+from __future__ import annotations
+
 import math
 from typing import Optional
 

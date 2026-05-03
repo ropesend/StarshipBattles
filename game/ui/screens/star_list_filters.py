@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from game.ui.screens.list_filter_utils import make_attr_sort_key
+
 
 def gather_stars(galaxy) -> Any:
     """Collect all stars from the galaxy with pre-computed filter values.
@@ -130,21 +132,8 @@ def sort_stars(stars, sort_column_id, sort_descending, columns) -> Any:
     elif col['id'] == 'type':
         stars.sort(key=lambda s: s._cached_type_category, reverse=sort_descending)
     else:
-        # Fallback for other columns (func/attr based)
-        def sort_key(s) -> Any:
-            if 'func' in col:
-                return col['func'](s)
-            elif 'attr' in col:
-                attrs = col['attr'].split('.')
-                obj = s
-                for a in attrs:
-                    if hasattr(obj, a):
-                        obj = getattr(obj, a)
-                    else:
-                        return ""
-                return obj
-            return ""
-        stars.sort(key=sort_key, reverse=sort_descending)
+        # Fallback for other columns — shared with planet_list_filters via list_filter_utils.
+        stars.sort(key=make_attr_sort_key(col), reverse=sort_descending)
 
     return stars
 

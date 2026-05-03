@@ -7,6 +7,8 @@ lookup, value extraction, icon caching, row-count plumbing).
 Subclasses provide entity-specific icon rendering by overriding
 `_render_icon`. The base class owns the column / row / value plumbing.
 """
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional
 
 import pygame

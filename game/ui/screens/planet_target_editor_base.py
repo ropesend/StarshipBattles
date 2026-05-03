@@ -15,6 +15,8 @@ Per-editor logic (`_on_apply`, `_set_species_ideal`, `_set_match_current`,
 diverge enough on slider geometry and unit handling that consolidating those
 bodies would obscure intent.
 """
+from __future__ import annotations
+
 from typing import Any, Callable, Dict, Optional
 
 import pygame

@@ -23,6 +23,8 @@ effect filters, star has type filters), so this mixin only covers the
 genuinely shared pieces. Subclasses keep their own `update`, but call
 `self._sync_slider_text(self._slider_filter_keys)` from there.
 """
+from __future__ import annotations
+
 from typing import Iterable
 
 from pygame_gui.elements import UIDropDownMenu
