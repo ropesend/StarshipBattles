@@ -632,3 +632,69 @@ class TestStrategyCompilerNFleets:
         assert len(fleets[0].ships) == 1, "Survivor stays in team 0 fleet"
         assert len(fleets[1].ships) == 0, "Team 1 ship destroyed → removed"
         assert len(fleets[2].ships) == 0, "Team 2 ship destroyed → removed"
+
+
+# ===========================================================================
+# Issue #8: max_ticks kwarg for the no_capable_ships truncated run.
+# ===========================================================================
+
+
+class TestMaxTicksKwarg:
+    """Issue #8: ``build_strategy_battle_spec(..., max_ticks=N)`` produces
+    a spec with BOTH ``absolute_max_ticks=N`` and
+    ``end_condition=TickLimitCondition(max_ticks=N)``.
+
+    Both are required: the strategy default is
+    ``TeamEliminatedCondition``, which would never fire in a no-weapons
+    battle (neither team can be eliminated), so the spec would tick to
+    the safety ceiling without the swap.
+    """
+
+    def test_max_ticks_overrides_absolute_max_ticks(
+        self, fleets_on_hex, session_registries
+    ):
+        spec = build_strategy_battle_spec(
+            fleets_on_hex,
+            empires={},
+            settings=_FakeSettings(),
+            registries=session_registries,
+            max_ticks=2000,
+        )
+        assert spec.absolute_max_ticks == 2000
+
+    def test_max_ticks_swaps_end_condition_to_tick_limit(
+        self, fleets_on_hex, session_registries
+    ):
+        from game.simulation.systems.battle_end_conditions import (
+            TickLimitCondition,
+        )
+
+        spec = build_strategy_battle_spec(
+            fleets_on_hex,
+            empires={},
+            settings=_FakeSettings(),
+            registries=session_registries,
+            max_ticks=2000,
+        )
+        assert isinstance(spec.end_condition, TickLimitCondition)
+        assert spec.end_condition.max_ticks == 2000
+
+    def test_max_ticks_default_keeps_team_eliminated_condition(
+        self, fleets_on_hex, session_registries
+    ):
+        from game.simulation.systems.battle_end_conditions import (
+            TeamEliminatedCondition,
+        )
+
+        spec = build_strategy_battle_spec(
+            fleets_on_hex,
+            empires={},
+            settings=_FakeSettings(),
+            registries=session_registries,
+        )
+        assert isinstance(spec.end_condition, TeamEliminatedCondition)
+
+    def test_brief_run_tick_budget_constant_is_2000(self):
+        from game.strategy.combat.spec_compiler import _BRIEF_RUN_TICK_BUDGET
+
+        assert _BRIEF_RUN_TICK_BUDGET == 2000

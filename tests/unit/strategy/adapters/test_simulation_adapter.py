@@ -283,9 +283,10 @@ class TestSimulationAdapterReplayId:
 
         assert result.replay_id is None
 
-    def test_no_capable_shortcut_branch_replay_id_is_none(self):
-        """The 'no team can fight' shortcut never runs the simulator,
-        so there is no replay_id."""
+    def test_no_ships_shortcut_branch_replay_id_is_none_with_reason(self):
+        """Issue #8: the 'no ships anywhere' edge case keeps the
+        shortcut and surfaces ``replay_unavailable_reason='no_ships'``
+        so the Event Log can show an honest tooltip."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
@@ -295,10 +296,13 @@ class TestSimulationAdapterReplayId:
         result = resolver.resolve_battle([fleet1, fleet2])
 
         assert result.replay_id is None
+        assert result.replay_unavailable_reason == "no_ships"
 
-    def test_sole_survivor_shortcut_branch_replay_id_is_none(self):
-        """The 'one team has all combat-capable ships' shortcut never
-        runs the simulator, so there is no replay_id."""
+    def test_sole_survivor_branch_replay_id_is_none_with_reason(self):
+        """Issue #8: the 'one team has all combat-capable ships'
+        shortcut keeps ``replay_id=None`` (there was no battle to
+        replay) and surfaces ``replay_unavailable_reason='sole_survivor'``
+        so the UI can show an honest tooltip instead of 'older save'."""
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
@@ -308,3 +312,27 @@ class TestSimulationAdapterReplayId:
         result = resolver.resolve_battle([fleet1, fleet2])
 
         assert result.replay_id is None
+        assert result.replay_unavailable_reason == "sole_survivor"
+
+    def test_no_capable_with_ships_runs_truncated_simulator_threads_replay_id(self):
+        """Issue #8: the 'both fleets have ships but no team is
+        combat-capable' case now runs the simulator at the brief
+        tick budget and threads the captured ``replay_id`` through."""
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=False)])
+        fleet2 = _make_fleet(2, [_MockShipInstance("b", combat_capable=False)])
+
+        outcome = _make_outcome_with_replay_id(
+            replay_id="brief-replay-uuid", winner_team_id=0, duration=2000,
+        )
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            return_value=outcome,
+        ) as mock_run:
+            result = resolver.resolve_battle([fleet1, fleet2])
+
+        mock_run.assert_called_once()
+        assert result.replay_id == "brief-replay-uuid"
+        assert result.replay_unavailable_reason is None

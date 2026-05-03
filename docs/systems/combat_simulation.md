@@ -1,6 +1,6 @@
 # Combat Simulation System
 
-> **Last verified:** 2026-04-29 — FEAT-26: documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`) so the Event Log can render the per-row Replay button. Empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract from prior verification still current.
+> **Last verified:** 2026-05-02 — issue #8: `SimulationBattleResolver` shortcut branches differentiated. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10` = 2 000 ticks) so the existing replay-capture pipeline records a real (brief) replay; `BattleResult.replay_id` is populated. `sole_survivor` (one team has ≥1 capable ship, the other has 0 ships at start) keeps its shortcut and stays non-replayable, but now ships `BattleResult.replay_unavailable_reason="sole_survivor"` so the Event Log button shows an honest tooltip ("No combat — one side had no ships.") instead of the legacy "older save." wording. Defensive `no_ships` (both fleets empty) keeps the shortcut with `replay_unavailable_reason="no_ships"`. New `max_ticks` kwarg on `build_strategy_battle_spec` swaps BOTH `absolute_max_ticks` AND `end_condition` (to `TickLimitCondition`) — required because the strategy default `TeamEliminatedCondition` cannot fire in a no-weapons battle. Earlier verification (2026-04-29): FEAT-26 documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`); empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract still current.
 
 System documentation for the real-time combat simulation layer.
 
@@ -1012,12 +1012,17 @@ no longer carries `winner_fleet_id` / `loser_fleet_id`. Keys:
   marker).
 * `replay_id: Optional[str]` (FEAT-26) — uuid of the captured replay
   sidecar at `output/saves/<save>/replays/replay_<uuid>.json`, or
-  `None` for legacy events / shortcut-branch battles / runs without
-  a registered capture sink. The Event Log UI reads this to render a
-  per-row Replay button. Older saves with events from before
-  FEAT-26 simply have no `replay_id` key in `Event.details`;
-  `details.get("replay_id")` resolves to `None` and the button
-  renders disabled with the "older save" tooltip.
+  `None` for legacy events / `sole_survivor` / `no_ships` shortcuts
+  / runs without a registered capture sink. The Event Log UI reads
+  this to render a per-row Replay button. Older saves with events
+  from before FEAT-26 simply have no `replay_id` key in
+  `Event.details`; `details.get("replay_id")` resolves to `None` and
+  the button renders disabled with the "older save" tooltip.
+* `replay_unavailable_reason: Optional[str]` (issue #8) — when
+  `replay_id` is `None` for a structural reason (not a missing-capture
+  accident), this carries the reason key (`"sole_survivor"` /
+  `"no_ships"`) so the Event Log shows an honest disabled-button
+  tooltip instead of "older save."
 
 Every resolved combat emits exactly one event, even on draws. Old
 clients reading `winner_fleet_id` will silently see `None` — per
@@ -1032,8 +1037,11 @@ logs its branch decision and post-battle survivor counts at INFO so
 operators can grep `battle.log` for which path each battle took:
 
 * `simulation_adapter.py`:
-  `Strategy battle resolved branch={shortcut_no_capable |
-  shortcut_sole_survivor | simulator} fleets=[Fleet 1, Fleet 2]`
+  `Strategy battle resolved branch={shortcut_sole_survivor |
+  shortcut_no_ships | truncated_no_capable | simulator}
+  fleets=[Fleet 1, Fleet 2]` (issue #8 split the legacy
+  `shortcut_no_capable` into `shortcut_no_ships` and
+  `truncated_no_capable`)
 * `simulation_adapter.py` (after the simulator runs):
   `Strategy battle complete: ticks=N simulator_winner=X
   survivors[team 0=K, team 1=K]`
@@ -1107,19 +1115,24 @@ engine.replay_id  (battle_runner.py:start_engine_from_spec)
    ▼  extract_outcome reads engine.replay_id; "" → None coercion
 BattleOutcome.replay_id : Optional[str]
    │
-   ▼  SimulationBattleResolver.resolve_battle (simulator branch only)
-BattleResult.replay_id : Optional[str]    ← shortcut branches stay None
+   ▼  SimulationBattleResolver.resolve_battle (simulator + truncated branches)
+BattleResult.replay_id : Optional[str]
+BattleResult.replay_unavailable_reason : Optional[str]    ← issue #8
    │
-   ▼  ConflictResolutionEngine._resolve_combat_at_hex captures the
-   │  return value and forwards via _log_combat_result(replay_id=...)
-EventBus.log_event(... replay_id=...)
+   ▼  ConflictResolutionEngine._resolve_combat_at_hex captures both
+   │  fields and forwards via _log_combat_result(replay_id=...,
+   │  replay_unavailable_reason=...)
+EventBus.log_event(... replay_id=..., replay_unavailable_reason=...)
    │
    ▼  Event.details=kwargs (auto-persists in saves; no schema change)
-event["details"]["replay_id"] : Optional[str]
+event["details"]["replay_id"]                : Optional[str]
+event["details"]["replay_unavailable_reason"] : Optional[str]    ← issue #8
    │
    ▼  EventLogDataSource.get_cell_replay_id(row_index)
+   ▼  EventLogDataSource.get_cell_replay_unavailable_reason(row_index)
 VirtualTable replay_action column → per-row Replay button
-   │
+   │  When disabled, _disabled_replay_tooltip() picks an honest
+   │  string from the reason key instead of "older save."
    ▼  EventLogWindow._handle_replay_click → ReplayResolver.resolve(...)
    │  graceful-degradation dispatch (UIMessageWindow on missing /
    │  corrupt / version_drift / registry_drift) + launch callback
@@ -1136,13 +1149,27 @@ Log rows that never had a real replay to begin with.
 
 **Where `replay_id` stays `None`:**
 
-* Shortcut branches in `SimulationBattleResolver` that skip the
-  simulator (no combat-capable team / sole survivor).
+* `SimulationBattleResolver`'s `sole_survivor` shortcut (one team has
+  any combat-capable ship; the other has 0 ships at battle start).
+  Ships `replay_unavailable_reason="sole_survivor"` so the UI tooltip
+  reads "No combat — one side had no ships." (issue #8).
+* `SimulationBattleResolver`'s `no_ships` defensive shortcut (both
+  fleets have empty ship lists at battle start). Ships
+  `replay_unavailable_reason="no_ships"` (issue #8).
 * Headless paths that pass `capture_context=None` (replay-of-replay
   playback, deterministic verification tests).
 * Combat Lab + Battle Setup — capture context is not built for these
   contexts in v1 (loose acceptance scope; tracked for follow-up).
-* Legacy events from saves predating FEAT-26.
+* Legacy events from saves predating FEAT-26 / issue #8.
 
-In every case the Event Log button renders disabled with the "older
-save" tooltip — no crashes, no false positives.
+**Issue #8 — truncated no_capable run.** When both fleets have ships
+but no team is combat-capable (e.g. civilian transports vs damaged-out
+fleet), `SimulationBattleResolver` runs the simulator at the truncated
+`_BRIEF_RUN_TICK_BUDGET` (`game/strategy/combat/spec_compiler.py:_BRIEF_RUN_TICK_BUDGET`,
+2 000 ticks = `_DEFAULT_ABSOLUTE_MAX_TICKS // 10`). This produces a
+real (short) replay so the player can inspect the encounter; ships
+manoeuvre but no shots fire. The truncated path uses
+`build_strategy_battle_spec(..., max_ticks=N)` which sets BOTH
+`absolute_max_ticks=N` AND `end_condition=TickLimitCondition(max_ticks=N)`
+— required because the strategy default `TeamEliminatedCondition`
+cannot fire when neither team has any way to destroy the other.

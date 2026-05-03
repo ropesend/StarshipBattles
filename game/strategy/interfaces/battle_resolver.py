@@ -37,14 +37,24 @@ class BattleResult:
 
     FEAT-26: `replay_id` carries the captured replay's uuid string from
     `BattleOutcome.replay_id`. None when no real replay was written
-    (shortcut branches that skip the simulator, or simulator runs with
-    no capture sink). The strategy `ConflictResolutionEngine` reads this
-    to attach the replay reference to the `COMBAT_RESOLVED` event.
+    (a sole-survivor shortcut, or a simulator run with no capture sink).
+    The strategy `ConflictResolutionEngine` reads this to attach the
+    replay reference to the `COMBAT_RESOLVED` event.
+
+    Issue #8: `replay_unavailable_reason` is a UI-friendly identifier
+    explaining WHY `replay_id` is None. Reserved values:
+      * "sole_survivor" — only one team had any ships at battle start
+      * "no_ships" — neither fleet had any ships to materialize
+    The Event Log button uses this string to show an honest tooltip
+    instead of falling back to the generic "older save" wording. None
+    when `replay_id` is set, or for legacy events from saves predating
+    this field.
     """
     winner: Optional[int]
     tick_count: int
     team_survivors: Dict[int, List[IPostBattleShip]] = field(default_factory=dict)
     replay_id: Optional[str] = None
+    replay_unavailable_reason: Optional[str] = None
 
 
 class IBattleResolver(ABC):
