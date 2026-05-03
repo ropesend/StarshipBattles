@@ -436,50 +436,33 @@ class TestResourceConsumptionEdgeCases:
 class TestMultipleResourceTypes:
     """Tests for handling different resource types."""
 
-    def test_fuel_consumption(self, mock_component_with_ship, resource_registry):
-        """Test consuming fuel resource."""
+    # PROJ-323 Task 3.14: 3 nearly-identical resource consumption tests parametrized.
+    @pytest.mark.parametrize("resource,amount,expected_remaining", [
+        pytest.param('fuel', 25.0, 75.0, id='fuel'),
+        pytest.param('energy', 30.0, 20.0, id='energy'),
+        pytest.param('ammo', 5.0, 15.0, id='ammo'),
+    ])
+    def test_resource_consumption(
+        self,
+        mock_component_with_ship,
+        resource_registry,
+        resource,
+        amount,
+        expected_remaining,
+    ):
+        """Test consuming each supported resource type."""
         mock_component_with_ship.ship.resources = resource_registry
         data = {
-            'resource': 'fuel',
-            'amount': 25.0,
-            'trigger': 'activation'
+            'resource': resource,
+            'amount': amount,
+            'trigger': 'activation',
         }
         ability = ResourceConsumption(mock_component_with_ship, data)
 
         result = ability.check_and_consume()
 
         assert result is True
-        assert resource_registry.get_value('fuel') == 75.0
-
-    def test_energy_consumption(self, mock_component_with_ship, resource_registry):
-        """Test consuming energy resource."""
-        mock_component_with_ship.ship.resources = resource_registry
-        data = {
-            'resource': 'energy',
-            'amount': 30.0,
-            'trigger': 'activation'
-        }
-        ability = ResourceConsumption(mock_component_with_ship, data)
-
-        result = ability.check_and_consume()
-
-        assert result is True
-        assert resource_registry.get_value('energy') == 20.0
-
-    def test_ammo_consumption(self, mock_component_with_ship, resource_registry):
-        """Test consuming ammo resource."""
-        mock_component_with_ship.ship.resources = resource_registry
-        data = {
-            'resource': 'ammo',
-            'amount': 5.0,
-            'trigger': 'activation'
-        }
-        ability = ResourceConsumption(mock_component_with_ship, data)
-
-        result = ability.check_and_consume()
-
-        assert result is True
-        assert resource_registry.get_value('ammo') == 15.0
+        assert resource_registry.get_value(resource) == expected_remaining
 
     def test_multiple_consumptions_different_resources(self, mock_component_with_ship, resource_registry):
         """Test multiple abilities consuming different resources."""

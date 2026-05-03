@@ -97,9 +97,9 @@
 **File:** `tests/integration/strategy/turn_engine/test_resources.py`
 **Tests:** `pytest tests/integration/strategy/turn_engine/test_resources.py`
 
-- [x] [S10-CAT10-001] `Full-turn duplicate setup` (lines 214-270): Extract setup helper; keep both tests for distinct properties. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-001] `Full-turn duplicate setup` (lines 214-270): Extract setup helper; keep both tests for distinct properties. _(pass 2: extracted _build_per_turn_scenario helper; both distinct tests retained.)_
 
-- [x] Verify: `pytest tests/integration/strategy/turn_engine/test_resources.py` passes; LOC delta ≈ 57 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/integration/strategy/turn_engine/test_resources.py` passes; LOC delta ≈ 57 _(pass 2: 14 passed, ≈10 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -159,9 +159,9 @@
 **File:** `tests/unit/research/test_tech_node.py`
 **Tests:** `pytest tests/unit/research/test_tech_node.py`
 
-- [x] [S09-CAT10-003] `TestTechNodePriceCurves` (lines 315-373): Parametrize across price_curve. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S09-CAT10-003] `TestTechNodePriceCurves` (lines 315-373): Parametrize across price_curve. _(pass 2: 7 price-curve tests collapsed into single parametrized test with 20 cases.)_
 
-- [x] Verify: `pytest tests/unit/research/test_tech_node.py` passes; LOC delta ≈ 59 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/research/test_tech_node.py` passes; LOC delta ≈ 59 _(pass 2: 117 passed, ≈25 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -183,9 +183,9 @@
 **File:** `tests/unit/simulation/components/abilities/test_resource_consumption.py`
 **Tests:** `pytest tests/unit/simulation/components/abilities/test_resource_consumption.py`
 
-- [x] [S05-CAT10-004] `3 nearly-identical resource tests` (lines 439-506): Parametrize. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S05-CAT10-004] `3 nearly-identical resource tests` (lines 439-506): Parametrize. _(pass 2: 3 fuel/energy/ammo tests collapsed into single parametrized test.)_
 
-- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_resource_consumption.py` passes; LOC delta ≈ 68 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_resource_consumption.py` passes; LOC delta ≈ 68 _(pass 2: 64 passed, ≈18 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -207,9 +207,9 @@
 **File:** `tests/unit/simulation/components/abilities/test_system_stabilizers.py`
 **Tests:** `pytest tests/unit/simulation/components/abilities/test_system_stabilizers.py`
 
-- [x] [S10-CAT10-006] `Stellar/Warp Stabilizer near-identical classes` (lines 12-109): Single parametrized class with (AbilityClass, expected_drain, activation, deactivation) tuples. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-006] `Stellar/Warp Stabilizer near-identical classes` (lines 12-109): Single parametrized class with (AbilityClass, expected_drain, activation, deactivation) tuples. _(pass 2: collapsed two near-identical test classes into one parametrized class.)_
 
-- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_system_stabilizers.py` passes; LOC delta ≈ 98 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_system_stabilizers.py` passes; LOC delta ≈ 98 _(pass 2: 12 passed, ≈45 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -255,9 +255,9 @@
 **File:** `tests/unit/simulation/systems/test_battle_end_conditions.py`
 **Tests:** `pytest tests/unit/simulation/systems/test_battle_end_conditions.py`
 
-- [x] [S05-CAT10-001] `3 duplicate parametrize blocks` (lines 546-588): Collapse into a single parametrized class. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S05-CAT10-001] `3 duplicate parametrize blocks` (lines 546-588): Collapse into a single parametrized class. _(pass 2: extracted shared _END_CONDITION_CASES constant; class-level @pytest.mark.parametrize.)_
 
-- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_end_conditions.py` passes; LOC delta ≈ 43 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_end_conditions.py` passes; LOC delta ≈ 43 _(pass 2: 73 passed, ≈25 LOC saved)_
 
 **Notes:** _(none yet)_
 

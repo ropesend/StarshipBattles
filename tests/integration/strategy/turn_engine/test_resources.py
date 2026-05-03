@@ -214,25 +214,35 @@ class TestResourceDepletion:
 class TestFullTurnIntegration:
     """Group 5.4: Full Turn Integration Tests"""
 
-    def test_full_turn_depletes_per_turn_resources_completely(self, fresh_registries):
-        """Verify a full turn (100 ticks) consumes the entire per-turn cost."""
+    @staticmethod
+    def _build_per_turn_scenario(fresh_registries, costs, consume_fn):
+        """Set up engine + single-ship empire with given per-turn costs and consume callback.
+
+        PROJ-323 Task 3.7: shared setup helper for full-turn integration tests.
+        """
         engine = TurnEngine(registries=fresh_registries)
-
         ship = create_mock_ship_instance()
-        ship.get_all_resource_costs_per_turn = MagicMock(return_value={'energy': 50.0})
+        ship.get_all_resource_costs_per_turn = MagicMock(return_value=costs)
         ship.is_combat_capable = MagicMock(return_value=True)
-
-        # Track total consumption
-        total_consumed = {'energy': 0.0}
-        def mock_consume(resource_type, amount):
-            total_consumed[resource_type] = total_consumed.get(resource_type, 0) + amount
-            return True
-        ship.consume_resource = mock_consume
+        ship.consume_resource = consume_fn
 
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=0)  # No movement
         fleet.ships = [ship]
         empire = Empire(0, "P1", (255, 0, 0))
         empire.add_fleet(fleet)
+        return engine, empire
+
+    def test_full_turn_depletes_per_turn_resources_completely(self, fresh_registries):
+        """Verify a full turn (100 ticks) consumes the entire per-turn cost."""
+        # Track total consumption
+        total_consumed = {'energy': 0.0}
+        def mock_consume(resource_type, amount):
+            total_consumed[resource_type] = total_consumed.get(resource_type, 0) + amount
+            return True
+
+        engine, empire = self._build_per_turn_scenario(
+            fresh_registries, {'energy': 50.0}, mock_consume,
+        )
 
         # Process all 100 ticks
         for tick in range(1, 101):
@@ -243,22 +253,14 @@ class TestFullTurnIntegration:
 
     def test_full_turn_does_not_overconsume_resources(self, fresh_registries):
         """Verify full turn consumes exactly the per-turn amount, not more."""
-        engine = TurnEngine(registries=fresh_registries)
-
-        ship = create_mock_ship_instance()
-        ship.get_all_resource_costs_per_turn = MagicMock(return_value={'fuel': 25.0})
-        ship.is_combat_capable = MagicMock(return_value=True)
-
         consume_calls = []
         def mock_consume(resource_type, amount):
             consume_calls.append(amount)
             return True
-        ship.consume_resource = mock_consume
 
-        fleet = Fleet(1, 0, HexCoord(0, 0), speed=0)
-        fleet.ships = [ship]
-        empire = Empire(0, "P1", (255, 0, 0))
-        empire.add_fleet(fleet)
+        engine, empire = self._build_per_turn_scenario(
+            fresh_registries, {'fuel': 25.0}, mock_consume,
+        )
 
         for tick in range(1, 101):
             engine.resource_engine.process_per_turn_consumption(tick, [empire])

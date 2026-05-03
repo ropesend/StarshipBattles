@@ -540,48 +540,32 @@ class TestDeserialization:
 # Protocol Conformance
 # ============================================================================
 
+# PROJ-323 Task 3.20: collapsed 3 duplicate parametrize blocks into shared constant.
+_END_CONDITION_CASES = [
+    (TickLimitCondition, {"max_ticks": 100}),
+    (TeamEliminatedCondition, {}),
+    (TeamIncapacitatedCondition, {}),
+    (EscapeCondition, {"escape_radius": 5000.0}),
+    (ShipDestroyedCondition, {"ship_name": "Test"}),
+    (NeverCondition, {}),
+    (AnyCondition, {"conditions": []}),
+    (AllCondition, {"conditions": []}),
+]
+
+
+@pytest.mark.parametrize("cls,kwargs", _END_CONDITION_CASES)
 class TestProtocolConformance:
     """All condition classes implement IEndCondition."""
 
-    @pytest.mark.parametrize("cls,kwargs", [
-        (TickLimitCondition, {"max_ticks": 100}),
-        (TeamEliminatedCondition, {}),
-        (TeamIncapacitatedCondition, {}),
-        (EscapeCondition, {"escape_radius": 5000.0}),
-        (ShipDestroyedCondition, {"ship_name": "Test"}),
-        (NeverCondition, {}),
-        (AnyCondition, {"conditions": []}),
-        (AllCondition, {"conditions": []}),
-    ])
     def test_isinstance_check(self, cls, kwargs):
         cond = cls(**kwargs)
         assert isinstance(cond, IEndCondition)
 
-    @pytest.mark.parametrize("cls,kwargs", [
-        (TickLimitCondition, {"max_ticks": 100}),
-        (TeamEliminatedCondition, {}),
-        (TeamIncapacitatedCondition, {}),
-        (EscapeCondition, {"escape_radius": 5000.0}),
-        (ShipDestroyedCondition, {"ship_name": "Test"}),
-        (NeverCondition, {}),
-        (AnyCondition, {"conditions": []}),
-        (AllCondition, {"conditions": []}),
-    ])
     def test_has_description(self, cls, kwargs):
         cond = cls(**kwargs)
         assert isinstance(cond.description, str)
         assert len(cond.description) > 0
 
-    @pytest.mark.parametrize("cls,kwargs", [
-        (TickLimitCondition, {"max_ticks": 100}),
-        (TeamEliminatedCondition, {}),
-        (TeamIncapacitatedCondition, {}),
-        (EscapeCondition, {"escape_radius": 5000.0}),
-        (ShipDestroyedCondition, {"ship_name": "Test"}),
-        (NeverCondition, {}),
-        (AnyCondition, {"conditions": []}),
-        (AllCondition, {"conditions": []}),
-    ])
     def test_to_dict_has_type(self, cls, kwargs):
         cond = cls(**kwargs)
         data = cond.to_dict()
