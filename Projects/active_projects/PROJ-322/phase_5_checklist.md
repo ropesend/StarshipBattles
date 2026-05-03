@@ -108,8 +108,8 @@
 **File:** `tests/unit/ui/panels/test_design_report_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_design_report_panel.py`
 
-- [ ] Replace the `__new__` bypass-init (~336 LOC) with `make_ui_widget(DesignReportPanel, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/panels/test_design_report_panel.py` passes; LOC delta approximately -170 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Replace the `__new__` bypass-init (~336 LOC) with `make_ui_widget(DesignReportPanel, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(Module-scope `_bypass_init_panel` helper added that delegates to `make_ui_widget(DesignReportPanel, extra_modules=(design_stats_panel,))`. Helper also forces `panel.portrait_image.relative_rect` to a real `pygame.Rect` so `update_design`'s geometry calls work. 14 inline bypass blocks across 4 test classes converted.)_
+- [x] Verify: `pytest tests/unit/ui/panels/test_design_report_panel.py` passes; LOC delta approximately -170 _(14 tests pass; ~140 LOC removed.)_
 
 ---
 
