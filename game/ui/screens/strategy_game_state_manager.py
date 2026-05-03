@@ -105,8 +105,27 @@ class StrategyGameStateManager:
             self._screen.draw(screen)
             pygame.display.flip()
 
-        # Process turn for all empires
-        self._screen._facade.process_turn()
+        # Issue #7: per-tick callback that lets pygame paint a frame so the
+        # "PROCESSING TURN..." overlay can show "Tick N / 100" updating in
+        # real time. The turn engine otherwise blocks the main thread for
+        # the full 100-tick loop. event.pump() keeps the OS event queue
+        # drained so the window does not show "Not Responding".
+        def _on_tick(current: int, total: int) -> None:
+            self._screen.current_tick = current
+            self._screen.total_ticks = total
+            pygame.event.pump()
+            surface = pygame.display.get_surface()
+            if surface is not None:
+                self._screen.draw(surface)
+                pygame.display.flip()
+
+        try:
+            # Process turn for all empires
+            self._screen._facade.process_turn(progress_callback=_on_tick)
+        finally:
+            # Hide the per-tick line once the turn finishes (or aborts).
+            self._screen.current_tick = None
+            self._screen.total_ticks = None
 
         # Auto-save after turn processing
         # PROJ-208: Use facade.get_save_path() instead of session.save_path

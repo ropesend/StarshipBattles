@@ -118,6 +118,12 @@ class StrategyScreen:
         # FEAT-20: progress text shown by the "PROCESSING TURN..." overlay
         # during dev `run_n_turns`. None means default message.
         self.turn_processing_message: str | None = None
+        # Issue #7: per-tick progress (1..TICKS_PER_TURN) shown as a smaller
+        # secondary line below the main "PROCESSING TURN..." label. Set by
+        # the StrategyGameStateManager callback every tick; None outside the
+        # turn-processing window so the secondary line is hidden.
+        self.current_tick: int | None = None
+        self.total_ticks: int | None = None
 
         # Assets
         self.empire_assets = {}
@@ -213,7 +219,13 @@ class StrategyScreen:
         if self.turn_processing:
             # FEAT-20: dev `run_n_turns` overrides the message with progress text.
             message = getattr(self, 'turn_processing_message', None) or "PROCESSING TURN..."
-            self._renderer.draw_processing_overlay(screen, message)
+            # Issue #7: getattr defaults match the FEAT-20 idiom — keeps the
+            # call site safe under partial-construction in tests.
+            self._renderer.draw_processing_overlay(
+                screen, message,
+                current_tick=getattr(self, 'current_tick', None),
+                total_ticks=getattr(self, 'total_ticks', None),
+            )
 
         self.ui.draw(screen)
 
