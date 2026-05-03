@@ -167,9 +167,19 @@ def _build_default_kwargs(cls: Type[T]) -> dict[str, Any]:
 
 
 @contextlib.contextmanager
-def _patch_pygame_gui_elements():
+def _patch_pygame_gui_elements(target_modules: tuple = ()):
     """Context manager that replaces every ``pygame_gui.elements.UI*`` class
     with a ``MagicMock`` for the duration of the block.
+
+    Patches BOTH:
+
+    * ``pygame_gui.elements.UI*`` — covers code that does
+      ``pygame_gui.elements.UILabel(...)`` (qualified lookup).
+    * Every ``UI*`` name imported into the ``target_modules`` tuple — covers
+      code that does ``from pygame_gui.elements import UILabel`` and then
+      uses ``UILabel(...)`` directly. ``patch.object(elements_module, ...)``
+      does not affect already-imported bindings, so we have to walk each
+      production module and patch its local copy.
 
     Using ``patch`` (vs assigning to module attributes manually) means each
     test gets a fresh Mock and the originals are guaranteed restored even
@@ -184,18 +194,52 @@ def _patch_pygame_gui_elements():
 
     patches = []
     try:
+        # 1. Patch the canonical pygame_gui.elements namespace.
         for element_name in _PYGAME_GUI_ELEMENT_NAMES:
             if hasattr(elements_module, element_name):
                 p = patch.object(elements_module, element_name, MagicMock())
                 p.start()
                 patches.append(p)
+        # 2. Patch any module that re-bound the same names via
+        #    `from pygame_gui.elements import UI...`.
+        for mod in target_modules:
+            for element_name in _PYGAME_GUI_ELEMENT_NAMES:
+                if hasattr(mod, element_name):
+                    p = patch.object(mod, element_name, MagicMock())
+                    p.start()
+                    patches.append(p)
         yield
     finally:
         for p in reversed(patches):
             p.stop()
 
 
-def make_ui_widget(cls: Type[T], **kwargs: Any) -> T:
+def _resolve_target_modules(cls: Type) -> tuple:
+    """Return a tuple of modules whose `pygame_gui.elements.UI*` bindings
+    need patching when constructing ``cls``.
+
+    Always includes ``cls``'s defining module. Walks the MRO so subclasses
+    that inherit a heavy ``__init__`` from a base also patch the base
+    module (the base's qualified vs. local imports both get covered).
+    """
+
+    import sys
+
+    modules = []
+    seen = set()
+    for klass in cls.__mro__:
+        mod_name = getattr(klass, "__module__", None)
+        if mod_name and mod_name not in seen and mod_name in sys.modules:
+            seen.add(mod_name)
+            modules.append(sys.modules[mod_name])
+    return tuple(modules)
+
+
+def make_ui_widget(
+    cls: Type[T],
+    extra_modules: tuple = (),
+    **kwargs: Any,
+) -> T:
     """Build an instance of ``cls`` via real ``__init__`` with mock pygame_gui.
 
     Arguments
@@ -204,6 +248,12 @@ def make_ui_widget(cls: Type[T], **kwargs: Any) -> T:
         The widget class to construct. May be any class whose ``__init__``
         builds ``pygame_gui.elements.UI*`` instances internally — panels,
         screens, windows, and gallery widgets are all in scope.
+    extra_modules
+        Optional tuple of additional modules to patch ``UI*`` bindings in.
+        Use this when ``cls.__init__`` instantiates a sibling widget class
+        from another module (the factory automatically patches ``cls``'s
+        MRO modules, but not transitively-imported helpers like
+        ``ModifierImpactGrid`` which live in their own module).
     **kwargs
         Any constructor arguments. Defaults are supplied for the
         well-known names (``panel``, ``manager`` / ``ui_manager``,
@@ -221,7 +271,8 @@ def make_ui_widget(cls: Type[T], **kwargs: Any) -> T:
     defaults = _build_default_kwargs(cls)
     defaults.update(kwargs)
 
-    with _patch_pygame_gui_elements():
+    target_modules = _resolve_target_modules(cls) + tuple(extra_modules)
+    with _patch_pygame_gui_elements(target_modules=target_modules):
         return cls(**defaults)
 
 

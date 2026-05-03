@@ -61,8 +61,8 @@
 **File:** `tests/unit/ui/panels/test_component_modifier_grid_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/test_component_modifier_grid_panel.py`
 
-- [ ] Replace the `__new__` bypass-init (~200 LOC) with `make_ui_widget(ComponentModifierGridPanel, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/panels/test_component_modifier_grid_panel.py` passes; LOC delta approximately -100 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Replace the `__new__` bypass-init (~200 LOC) with `make_ui_widget(ComponentModifierGridPanel, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(Existing module-scope `_bypass_init_panel` helper rewired to delegate to `make_ui_widget`. Required extending the factory: the production code uses `from pygame_gui.elements import UIPanel, UILabel` (module-bound imports), and `__init__` instantiates `ModifierImpactGrid` from a sibling module. Factory upgraded to (a) automatically patch every module in the target class's MRO, (b) accept `extra_modules` kwarg for transitively-imported helpers like `ModifierImpactGrid`. The `_bypass_init_panel` helper passes `extra_modules=(modifier_impact_grid,)`.)_
+- [x] Verify: `pytest tests/unit/ui/panels/test_component_modifier_grid_panel.py` passes; LOC delta approximately -100 _(19 tests pass; ~5 LOC removed from the helper since the existing `_bypass_init_panel` was already the consolidated path. The bigger win is the factory upgrade which now handles the full import-binding problem class.)_
 
 ---
 

@@ -1,11 +1,16 @@
 """Tests for ComponentModifierGridPanel (PROJ-142 Phase 2 Task 2.6).
 
 Tests the dedicated panel for displaying component modifier impact grids.
+
+PROJ-322 Task 5.4 (APC-001-F04): the existing module-scope `_bypass_init_panel`
+helper now delegates to the shared `make_ui_widget` factory.
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import pygame
+
+from tests.fixtures.ui_widget_factory import make_ui_widget
 
 
 # --- Helpers ---
@@ -29,16 +34,28 @@ def _make_mock_event_bus():
 
 
 def _bypass_init_panel():
-    """Construct a `ComponentModifierGridPanel` instance without invoking
-    `__init__` (which requires real pygame_gui infrastructure).
+    """Build a `ComponentModifierGridPanel` via the shared `make_ui_widget`
+    factory.
 
-    Promoted from per-test inline `with patch.object(..., '__init__', ...)` +
-    `__new__()` patterns; PROJ-323 Task 1.24.
+    Production `__init__` constructs `UIPanel`/`UILabel` (imported via
+    `from pygame_gui.elements import UIPanel, UILabel`) AND a
+    `ModifierImpactGrid` from a sibling module. The factory's standard
+    MRO-based module patching covers `component_modifier_grid_panel`
+    itself; the `extra_modules` kwarg adds `modifier_impact_grid` so its
+    own pygame_gui imports also get mocked.
+
+    PROJ-322 Task 5.4 / APC-001-F04 (originally promoted from inline
+    blocks in PROJ-323 Task 1.24).
     """
-    from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
+    from game.ui.panels.component_modifier_grid_panel import (
+        ComponentModifierGridPanel,
+    )
+    from game.ui.panels import modifier_impact_grid as _mig_module
 
-    with patch.object(ComponentModifierGridPanel, '__init__', lambda self, *a, **kw: None):
-        return ComponentModifierGridPanel.__new__(ComponentModifierGridPanel)
+    return make_ui_widget(
+        ComponentModifierGridPanel,
+        extra_modules=(_mig_module,),
+    )
 
 
 # --- Selection Changed Handler Tests ---
