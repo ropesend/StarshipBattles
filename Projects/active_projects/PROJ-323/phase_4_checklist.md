@@ -100,7 +100,7 @@
 **File:** `tests/unit/strategy/data/test_superweapon_orders.py`
 **Tests:** `pytest tests/unit/strategy/data/test_superweapon_orders.py`
 
-- [x] [S08-CAT11-003] `Exact dict-structure assertions` (lines 62-123): Assert structural invariants; consider schema validation. _(deferred � "schema validation" requires defining a JSONSchema for superweapon order dicts (production-side artifact). Replacing exact dict-checks with structural invariants requires per-field semantic analysis. ROI does not justify P2 budget; better suited to a dedicated typed-DTO migration project.)_
+- [x] [S08-CAT11-003] `Exact dict-structure assertions` (lines 62-123): Assert structural invariants; consider schema validation. _(deferred — "schema validation" requires defining a JSONSchema for superweapon order dicts (production-side artifact). Replacing exact dict-checks with structural invariants requires per-field semantic analysis. ROI does not justify P2 budget; better suited to a dedicated typed-DTO migration project.)_
 
 - [x] Verify: `pytest tests/unit/strategy/data/test_superweapon_orders.py` passes; LOC delta ≈ 62
 
@@ -148,7 +148,7 @@
 **File:** `tests/unit/ui/screens/battle_setup/test_renderer.py`
 **Tests:** `pytest tests/unit/ui/screens/battle_setup/test_renderer.py`
 
-- [x] [S07-CAT11-001] `test_renderer_is_stateless_between_calls` (lines 29-38): Replace with behavioral assertion on stateless behavior. _(deferred � "behavioral assertion on stateless behavior" requires designing a probe sequence (e.g., compute  and verify equal results). The existing test already does this in spirit; rewriting requires careful invariant selection. Defer to a focused refactor.)_
+- [x] [S07-CAT11-001] `test_renderer_is_stateless_between_calls` (lines 29-38): Replace with behavioral assertion on stateless behavior. _(deferred — "behavioral assertion on stateless behavior" requires designing a probe sequence (e.g., compute  and verify equal results). The existing test already does this in spirit; rewriting requires careful invariant selection. Defer to a focused refactor.)_
 
 - [x] Verify: `pytest tests/unit/ui/screens/battle_setup/test_renderer.py` passes; LOC delta ≈ 10
 
@@ -160,7 +160,7 @@
 **File:** `tests/unit/ui/screens/test_empire_build_queue_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_empire_build_queue_window.py`
 
-- [x] [S05-CAT11-001] `Hardcoded 18-column set` (lines 388-402): Replace with a behavioral assertion on column purpose, not literal IDs. _(deferred � column-purpose assertions require defining "purpose" enums or tags on the production side (out of P2 scope). Hardcoded ID list is the canonical schema-pin.)_
+- [x] [S05-CAT11-001] `Hardcoded 18-column set` (lines 388-402): Replace with a behavioral assertion on column purpose, not literal IDs. _(deferred — column-purpose assertions require defining "purpose" enums or tags on the production side (out of P2 scope). Hardcoded ID list is the canonical schema-pin.)_
 
 - [x] Verify: `pytest tests/unit/ui/screens/test_empire_build_queue_window.py` passes; LOC delta ≈ 15
 
@@ -172,7 +172,7 @@
 **File:** `tests/unit/ui/test_new_game_setup.py`
 **Tests:** `pytest tests/unit/ui/test_new_game_setup.py`
 
-- [x] [S09-CAT11-001] `test_build_game_config_signature_default_matches_dataclass` (lines 103-117): Replace with a behavioral default-construction test. _(deferred � "behavioral default-construction test" requires defining a representative subset of GameConfig defaults to assert against; that subset duplicates the dataclass-defaults match the test currently performs. Net change is form-only; defer.)_
+- [x] [S09-CAT11-001] `test_build_game_config_signature_default_matches_dataclass` (lines 103-117): Replace with a behavioral default-construction test. _(deferred — "behavioral default-construction test" requires defining a representative subset of GameConfig defaults to assert against; that subset duplicates the dataclass-defaults match the test currently performs. Net change is form-only; defer.)_
 
 - [x] Verify: `pytest tests/unit/ui/test_new_game_setup.py` passes; LOC delta ≈ 15
 
