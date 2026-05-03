@@ -4,6 +4,54 @@ from dataclasses import FrozenInstanceError
 from game.core.hex_math import HexCoord
 
 
+# PROJ-323 Task 3.31: 4 is_frozen tests across StarInfo/WarpPointInfo/SystemInfo/PlanetInfo
+# consolidated into one parametrized test.
+def _star_info():
+    from game.strategy.facade.dto.system_dto import StarInfo
+    return StarInfo(
+        name="Sol", star_type="MAIN_SEQUENCE",
+        color=(255, 255, 200), location=HexCoord(0, 0),
+    )
+
+
+def _warp_point_info():
+    from game.strategy.facade.dto.system_dto import WarpPointInfo
+    return WarpPointInfo(
+        destination_system_name="Proxima", location=HexCoord(5, 5),
+    )
+
+
+def _system_info():
+    from game.strategy.facade.dto.system_dto import SystemInfo
+    return SystemInfo(
+        name="Alpha Centauri", global_location=HexCoord(0, 0),
+    )
+
+
+def _planet_info():
+    from game.strategy.facade.dto.planet_dto import PlanetInfo
+    return PlanetInfo(
+        planet_id=1,
+        name="Venus",
+        planet_type="CONTINENTAL",
+        location=HexCoord(2, 0),
+        orbit_distance=2,
+    )
+
+
+@pytest.mark.parametrize("dto_factory,attr,new_value", [
+    pytest.param(_star_info, "name", "Proxima", id="StarInfo"),
+    pytest.param(_warp_point_info, "destination_system_name", "Sirius", id="WarpPointInfo"),
+    pytest.param(_system_info, "name", "Beta Centauri", id="SystemInfo"),
+    pytest.param(_planet_info, "name", "Mercury", id="PlanetInfo"),
+])
+def test_dto_is_frozen(dto_factory, attr, new_value):
+    """All DTO frozen dataclasses raise FrozenInstanceError on field mutation."""
+    dto = dto_factory()
+    with pytest.raises(FrozenInstanceError):
+        setattr(dto, attr, new_value)
+
+
 class TestStarInfo:
     """Tests for StarInfo frozen dataclass."""
 
@@ -23,20 +71,6 @@ class TestStarInfo:
         assert star.color == (255, 200, 150)
         assert star.location == HexCoord(0, 0)
 
-    def test_is_frozen(self):
-        """StarInfo is immutable (frozen)."""
-        from game.strategy.facade.dto.system_dto import StarInfo
-
-        star = StarInfo(
-            name="Sol",
-            star_type="MAIN_SEQUENCE",
-            color=(255, 255, 200),
-            location=HexCoord(0, 0),
-        )
-
-        with pytest.raises(FrozenInstanceError):
-            star.name = "Proxima"
-
 
 class TestWarpPointInfo:
     """Tests for WarpPointInfo frozen dataclass."""
@@ -52,18 +86,6 @@ class TestWarpPointInfo:
 
         assert warp.destination_system_name == "Beta Cygni"
         assert warp.location == HexCoord(15, -8)
-
-    def test_is_frozen(self):
-        """WarpPointInfo is immutable (frozen)."""
-        from game.strategy.facade.dto.system_dto import WarpPointInfo
-
-        warp = WarpPointInfo(
-            destination_system_name="Proxima",
-            location=HexCoord(5, 5),
-        )
-
-        with pytest.raises(FrozenInstanceError):
-            warp.destination_system_name = "Sirius"
 
 
 class TestSystemInfo:
@@ -110,19 +132,6 @@ class TestSystemInfo:
         assert system.planet_count == 8
         assert system.warp_point_count == 2
         assert system.colony_count == 1
-
-    def test_is_frozen(self):
-        """SystemInfo is immutable (frozen)."""
-        from game.strategy.facade.dto.system_dto import SystemInfo
-
-        system = SystemInfo(
-            name="Alpha Centauri",
-            global_location=HexCoord(0, 0),
-        )
-
-        with pytest.raises(FrozenInstanceError):
-            system.name = "Beta Centauri"
-
 
 class TestSystemInfoFactory:
     """Tests for SystemInfo.from_star_system factory method."""
@@ -308,22 +317,6 @@ class TestPlanetInfo:
         assert planet.owner_id == 0
         assert planet.is_colonized is True
         assert planet.has_space_shipyard is True
-
-    def test_is_frozen(self):
-        """PlanetInfo is immutable (frozen)."""
-        from game.strategy.facade.dto.planet_dto import PlanetInfo
-
-        planet = PlanetInfo(
-            planet_id=1,
-            name="Venus",
-            planet_type="CONTINENTAL",
-            location=HexCoord(2, 0),
-            orbit_distance=2,
-        )
-
-        with pytest.raises(FrozenInstanceError):
-            planet.name = "Mercury"
-
 
 class TestPlanetInfoFactory:
     """Tests for PlanetInfo.from_planet factory method."""

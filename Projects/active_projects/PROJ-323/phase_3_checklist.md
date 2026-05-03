@@ -171,9 +171,9 @@
 **File:** `tests/unit/simulation/components/abilities/test_defense_isolation.py`
 **Tests:** `pytest tests/unit/simulation/components/abilities/test_defense_isolation.py`
 
-- [x] [S05-CAT10-003] `10 paired Attack/Defense tests` (lines 366-527): Parametrize across classes/modifiers. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S05-CAT10-003] `10 paired Attack/Defense tests` (lines 366-527): Parametrize across classes/modifiers. _(pass 2: 10 paired tests collapsed via class-level parametrize across (ability_cls, label, color_hint); float-init kept separate.)_
 
-- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_defense_isolation.py` passes; LOC delta ≈ 162 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_defense_isolation.py` passes; LOC delta ≈ 162 _(pass 2: 71 passed, ≈90 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -267,9 +267,9 @@
 **File:** `tests/unit/simulation/systems/test_battle_engine_end_conditions.py`
 **Tests:** `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py`
 
-- [x] [S08-CAT10-006] `TestEscapeBasedMode 7 tests` (lines 115-239): Optional parametrization of common setup. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S08-CAT10-006] `TestEscapeBasedMode 7 tests` (lines 115-239): Optional parametrization of common setup. _(pass 2: parametrized first 3 single-ship escape tests (radius/inside/dead-ignored). Tests 4-7 cover team-specific, all-ships, mixed-team, and Euclidean modes — each distinct enough to keep separate.)_
 
-- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py` passes; LOC delta ≈ 125 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py` passes; LOC delta ≈ 125 _(pass 2: 20 passed, ≈15 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -387,9 +387,9 @@
 **File:** `tests/unit/strategy/facade/test_system_dto.py`
 **Tests:** `pytest tests/unit/strategy/facade/test_system_dto.py`
 
-- [x] [S01-CAT10-001] `DTO creation + frozen tests cluster` (lines 26-38, 44-54, 72-113, 272-306): Consolidate into @pytest.mark.parametrize. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S01-CAT10-001] `DTO creation + frozen tests cluster` (lines 26-38, 44-54, 72-113, 272-306): Consolidate into @pytest.mark.parametrize. _(pass 2: 4 is_frozen tests across StarInfo/WarpPointInfo/SystemInfo/PlanetInfo collapsed into one parametrized test with module-level dto factories.)_
 
-- [x] Verify: `pytest tests/unit/strategy/facade/test_system_dto.py` passes; LOC delta ≈ 80 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/facade/test_system_dto.py` passes; LOC delta ≈ 80 _(pass 2: 18 passed, ≈25 LOC saved)_
 
 **Notes:** _(none yet)_
 
