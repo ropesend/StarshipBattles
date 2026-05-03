@@ -725,11 +725,32 @@ class TurnEngine:
         # --- Phase 2: Calculate Moves ---
         move_queue = self._time_phase('movement_calc', self.movement_engine.collect_movements, empires, galaxy, tick)
 
+        # PROJ-320: snapshot fleet locations BEFORE Phase 3 so that after
+        # Phase 3 (`apply_movements`) we can compute the set of fleet ids
+        # that actually moved this tick. The conflict trigger predicate
+        # needs this to skip combat for fleets that successfully left a
+        # contested hex on their movement-opportunity tick.
+        pre_movement_locations = {
+            f.id: f.location for emp in empires for f in emp.fleets
+        }
+
         # --- Phase 3: Apply Moves ---
         self._time_phase('movement_apply', self.movement_engine.apply_movements, move_queue, galaxy)
 
+        # PROJ-320: derive `moved_fleet_ids` from pre/post-Phase-3 location
+        # diff. Cost is O(fleets) — same order as the legacy hex-map scan.
+        moved_fleet_ids = {
+            f.id
+            for emp in empires for f in emp.fleets
+            if pre_movement_locations.get(f.id) != f.location
+        }
+
         # --- Phase 4: Combat ---
-        self._time_phase('combat', self.conflict_engine.resolve_all_conflicts, empires, galaxy=galaxy)
+        self._time_phase(
+            'combat', self.conflict_engine.resolve_all_conflicts,
+            empires, galaxy=galaxy,
+            tick=tick, moved_fleet_ids=moved_fleet_ids,
+        )
 
 
 def create_default_turn_engine(registries: GameRegistries, ai_factory=None, config=None) -> TurnEngine:

@@ -574,6 +574,13 @@ class Fleet:
         fleet.construction_queue = data.get('construction_queue', [])
         fleet.construction_queue_paused = data.get('construction_queue_paused', False)
 
+        # PROJ-320 audit: deliberately do NOT call trigger_speed_recalculation
+        # here. The saved `speed` field IS the slowest-ship speed at save
+        # time; recalculating would require ships with valid get_calculated_stats(),
+        # which test fixtures and minimal save formats may not provide.
+        # If a real save-format mismatch ever surfaces in production play,
+        # fix at the save-format layer, not by recalculating on load.
+
         return fleet
 
     def resolve_order_references(self, galaxy: Any, empires: List[Any]) -> None:

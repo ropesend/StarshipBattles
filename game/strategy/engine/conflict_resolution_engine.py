@@ -15,9 +15,16 @@ fleet stays on the strategy map. Empty fleets (every ship destroyed)
 are pruned by `PostBattleHook._prune_empty_fleets` — the strategy
 engine just reports their ids in `ConflictResult.fleets_destroyed`.
 
-If two co-located fleets both retain ships, combat re-engages on the
-next strategy tick (the tick loop rebuilds the hex_map from scratch
-each call — see `_resolve_conflicts`).
+PROJ-320: combat dispatch is per-fleet on movement-opportunity ticks
+(`tick % get_tick_interval(fleet.speed) == 0`) gated by whether the
+fleet successfully left the hex on that tick. Pre-PROJ-320 the
+`_resolve_conflicts` rebuilt a hex_map from scratch every tick and
+fired combat unconditionally for every contested hex — producing ~100
+battles per turn at any stalemated sector. The new model produces one
+battle per fleet per opportunity (sum-of-speeds), typically 5-30 per
+encounter. See [docs/systems/strategy_layer.md] § Turn Engine and
+[docs/systems/combat_simulation.md] § 9 (PROJ-320 closure note) for
+the design rationale.
 """
 
 from __future__ import annotations
@@ -218,10 +225,13 @@ class ConflictResolutionEngine(IConflictEngine):
     def resolve_all_conflicts(
         self,
         empires,
-        galaxy: Optional['Galaxy'] = None
+        galaxy: Optional['Galaxy'] = None,
+        *,
+        tick: Optional[int] = None,
+        moved_fleet_ids: Optional[set] = None,
     ) -> ConflictResult:
         """
-        Resolve all conflicts between empires.
+        Resolve all conflicts between empires for a single strategic sub-tick.
 
         Public API method that wraps _resolve_conflicts and returns
         a structured result.
@@ -230,6 +240,14 @@ class ConflictResolutionEngine(IConflictEngine):
             empires: List of Empire objects to check for conflicts
             galaxy: Optional Galaxy for environmental effect lookup (PROJ-189).
                    Required when area_effect_manager is set.
+            tick: PROJ-320 — current strategic sub-tick (1..TICKS_PER_TURN).
+                When None, no combat fires (the trigger predicate cannot
+                evaluate `tick % interval`). Production callers always
+                supply this.
+            moved_fleet_ids: PROJ-320 — set of fleet ids whose location
+                changed in this tick's Phase 3. Combat is skipped for any
+                fleet in this set (it exercised its movement opportunity
+                by leaving the hex). Defaults to an empty set when omitted.
 
         Returns:
             ConflictResult with combat statistics
@@ -244,34 +262,100 @@ class ConflictResolutionEngine(IConflictEngine):
         self._combats_resolved = 0
         self._fleets_destroyed: List[int] = []
 
-        self._resolve_conflicts(empires)
+        if tick is None:
+            # PROJ-320: no tick supplied → no combat. Caller must opt in.
+            return ConflictResult(
+                combats_resolved=0, fleets_destroyed=[],
+            )
+
+        self._resolve_conflicts(
+            empires, tick=tick, moved_fleet_ids=moved_fleet_ids or set(),
+        )
 
         return ConflictResult(
             combats_resolved=self._combats_resolved,
             fleets_destroyed=self._fleets_destroyed
         )
 
-    def _resolve_conflicts(self, empires) -> None:
-        """Check for collisions and resolve battles."""
-        # Map: Hex -> List[(Empire, Fleet)]
-        hex_map = {}
+    def _should_trigger_combat_for_fleet(
+        self,
+        fleet: 'Fleet',
+        tick: int,
+        moved_fleet_ids,
+    ) -> bool:
+        """PROJ-320: per-fleet combat trigger predicate.
 
-        for emp in empires:
-            for f in emp.fleets:
-                if f.location not in hex_map:
-                    hex_map[f.location] = []
-                hex_map[f.location].append((emp, f))
+        Returns True iff `fleet` is on a movement-opportunity tick
+        (`tick % get_tick_interval(fleet.speed) == 0`) AND did not leave
+        the hex this tick (`fleet.id not in moved_fleet_ids`). Fully
+        derived from per-tick state — no persistent fleet field is
+        needed. The unifying rule is "did the fleet leave?", not "did
+        the fleet have orders?" — idle, action-ordered, blocked, and
+        path-failed fleets all satisfy "did not leave" and trigger combat.
+        """
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval
 
-        # Check collisions
-        for loc, occupants in hex_map.items():
-            if len(occupants) < 2:
+        if fleet.speed <= 0:
+            return False
+        interval = get_tick_interval(fleet.speed)
+        if tick % interval != 0:
+            return False
+        if fleet.id in moved_fleet_ids:
+            return False
+        return True
+
+    def _resolve_conflicts(
+        self,
+        empires,
+        *,
+        tick: int,
+        moved_fleet_ids,
+    ) -> None:
+        """PROJ-320: per-fleet movement-opportunity dispatch.
+
+        Iterate every empire's every fleet in deterministic
+        `(empire_id, fleet_id)` order. For each fleet at a contested hex
+        whose `_should_trigger_combat_for_fleet` returns True, dispatch
+        a battle. Multiple combat rounds may fire at the same hex on the
+        same tick if multiple fleets' opportunity ticks coincide; each
+        round re-derives its occupants list from current `Empire.fleets`
+        (fresh after any preceding round's `apply_outcome_to_fleets`)
+        rather than reusing a cached snapshot.
+
+        Determinism: iteration order is `(empire_id, fleet_id)` so the
+        deterministic `_battle_seed_counter` produces stable replays.
+        """
+        # Snapshot the (empire, fleet) pairs at the start of the tick in
+        # deterministic `(empire_id, fleet_id)` order for replay stability.
+        # The snapshot identifies which fleets HAD opportunities this tick;
+        # liveness re-checks below catch fleets pruned by earlier rounds.
+        sorted_fleet_refs: List[Any] = sorted(
+            ((emp, f) for emp in empires for f in emp.fleets),
+            key=lambda pair: (pair[0].id, pair[1].id),
+        )
+
+        for triggering_empire, fleet in sorted_fleet_refs:
+            # Re-derive liveness — an earlier round in this tick may have
+            # pruned this fleet via `apply_outcome_to_fleets`. The
+            # post-battle hook removes destroyed/retreated ships via
+            # `fleet.remove_ship(...)` and prunes empty fleets via
+            # `Empire.fleets.remove(fleet)`.
+            if fleet not in triggering_empire.fleets:
                 continue
-
-            # Check if multiple EMPIRES present
-            occupied_empires = set(emp.id for emp, f in occupants)
-            if len(occupied_empires) > 1:
-                # CONFLICT!
-                self._resolve_combat_at_hex(occupants)
+            if not self._should_trigger_combat_for_fleet(
+                fleet, tick, moved_fleet_ids,
+            ):
+                continue
+            # Build current occupants list at this fleet's hex from LIVE
+            # empire.fleets state. Skip if no opposing empire is present.
+            occupants = []
+            for other_empire in empires:
+                for other_fleet in other_empire.fleets:
+                    if other_fleet.location == fleet.location:
+                        occupants.append((other_empire, other_fleet))
+            if len({emp.id for emp, _ in occupants}) < 2:
+                continue
+            self._resolve_combat_at_hex(occupants)
 
     def _resolve_combat_at_hex(self, occupants) -> None:
         """Resolve a multi-empire conflict at one hex as a single N-team battle.
@@ -279,38 +363,53 @@ class ConflictResolutionEngine(IConflictEngine):
         PROJ-275 Phase 7: single `IBattleResolver.resolve_battle(fleets)`
         call resolving all participating fleets at once.
 
+        PROJ-320 Phase 3: every fleet of every empire at the contested
+        hex now participates. Pre-PROJ-320 the engine kept only the FIRST
+        fleet per empire (silently dropping the rest). Allies are grouped
+        into a single team by the spec compiler (`build_strategy_battle_spec`
+        groups by `owner_id`), so adding extra fleets per empire just
+        bulks up that team's ship count — no extra teams.
+
         BUG-126: the strategy layer no longer assigns a winner. The
         resolver's `PostBattleHook` mutates each `Fleet.ships` list to
         reflect what survived — this engine then reports any fleet
         whose ships list ended up empty as "destroyed" in
-        `ConflictResult.fleets_destroyed`. Fleets that retain ships
-        stay in their empires, and combat re-engages on subsequent
-        ticks until one side is wiped or the fleets separate.
+        `ConflictResult.fleets_destroyed`.
+
+        PROJ-320: subsequent rounds at the same hex (within the same
+        tick or on later ticks) are gated by per-fleet movement-
+        opportunity ticks (see `_should_trigger_combat_for_fleet`).
+        Stalemated fleets re-engage on each side's opportunity tick
+        rather than every sub-tick.
 
         Args:
             occupants: `List[(Empire, Fleet)]` for the contested hex.
                 Order is the empire-iteration order from
-                `_resolve_conflicts`; converted to per-team
-                `fleets[i]` placement for the resolver.
+                `_resolve_conflicts`; ALL fleets per empire are kept
+                (PROJ-320) and forwarded to the resolver.
         """
         if len(occupants) < 2:
             return
 
-        # One fleet per empire, in deterministic empire-id order. (Empires
-        # with multiple fleets at the hex contribute their first; later
-        # work could merge intra-empire fleets before the call.)
-        fleets_by_empire: Dict[int, 'Fleet'] = {}
+        # PROJ-320 Phase 3: collect ALL fleets per empire (not just the first).
+        fleets_by_empire: Dict[int, List['Fleet']] = {}
         empire_by_id: Dict[int, Any] = {}
         for empire, fleet in occupants:
-            if empire.id not in fleets_by_empire:
-                fleets_by_empire[empire.id] = fleet
-                empire_by_id[empire.id] = empire
+            fleets_by_empire.setdefault(empire.id, []).append(fleet)
+            empire_by_id[empire.id] = empire
 
         if len(fleets_by_empire) < 2:
-            return  # Only one empire actually present after dedup.
+            return  # Only one empire actually present.
 
         empire_order: List[int] = sorted(fleets_by_empire.keys())
-        fleets: List['Fleet'] = [fleets_by_empire[eid] for eid in empire_order]
+        # Flat fleet list in deterministic (empire_id, fleet_id) order.
+        # The spec compiler re-groups by `fleet.owner_id` to produce one
+        # team per empire (PROJ-320 Phase 3), so iteration order here is
+        # cosmetic for the engine and load-bearing for replay determinism.
+        fleets: List['Fleet'] = []
+        for eid in empire_order:
+            for fleet in sorted(fleets_by_empire[eid], key=lambda f: f.id):
+                fleets.append(fleet)
         location = fleets[0].location
 
         # BUG-126: every-fleet-empty case is not a real combat. The
@@ -327,18 +426,22 @@ class ConflictResolutionEngine(IConflictEngine):
         logger.info(
             f"Combat at {location}: "
             + " vs ".join(
-                f"empire {eid}/Fleet {fleets_by_empire[eid].id}"
-                f"({len(fleets_by_empire[eid].ships)} ships)"
+                f"empire {eid}/[" + ", ".join(
+                    f"Fleet {f.id}({len(f.ships)} ships)"
+                    for f in sorted(fleets_by_empire[eid], key=lambda f: f.id)
+                ) + "]"
                 for eid in empire_order
             )
         )
 
         environmental_effects = self._lookup_environmental_effects(location)
-        modifiers = self._collect_team_modifiers(fleets)
+        modifiers = self._collect_team_modifiers(fleets_by_empire, empire_order)
         seed = self._generate_battle_seed()
+        # PROJ-320 Phase 3: one team per empire, so empires_by_team_id has
+        # `len(empire_order)` entries (was `len(fleets)` pre-PROJ-320).
         empires_by_team_id: Dict[int, Any] = {
             tid: empire_by_id[empire_order[tid]]
-            for tid in range(len(fleets))
+            for tid in range(len(empire_order))
         }
         # PROJ-269 Phase 6: fleet updates (component HP, ship pruning)
         # happen via the compiler's `PostBattleHook` inside `run_battle`.
@@ -408,31 +511,45 @@ class ConflictResolutionEngine(IConflictEngine):
         )
 
     def _collect_team_modifiers(
-        self, fleets: List['Fleet']
+        self,
+        fleets_by_empire: Dict[int, List['Fleet']],
+        empire_order: List[int],
     ) -> Optional[Dict[int, Any]]:
         """Collect strategic combat modifiers for each team.
 
-        For N teams, each fleet's modifiers are computed against the
-        union of opposing fleets (one representative is enough — only
-        the opponent's empire id matters for facility scope queries).
+        PROJ-320 Phase 3: rewritten to operate on per-empire fleet lists.
+        With per-owner team grouping (spec compiler PROJ-320 Phase 3),
+        team_id corresponds to a position in `empire_order`. Each team's
+        modifier set is computed once using a representative fleet of
+        that empire (the lowest-id one, deterministic) — only the
+        opponent's empire id matters for facility scope queries, so a
+        single representative per side suffices.
         """
         if self._galaxy is None:
             return None
         all_empires = getattr(self, '_empires', [])
         modifiers: Dict[int, Any] = {}
+        # Pre-pick one representative fleet per empire for the modifier
+        # collector — sorted by fleet.id for determinism.
+        representatives: Dict[int, 'Fleet'] = {
+            eid: sorted(fleets_by_empire[eid], key=lambda f: f.id)[0]
+            for eid in empire_order
+        }
         try:
             from game.strategy.services.combat_modifier_collector import (
                 collect_combat_modifiers,
             )
-            for team_id, fleet in enumerate(fleets):
-                opponents = [f for tid, f in enumerate(fleets) if tid != team_id]
-                if not opponents:
+            for team_id, eid in enumerate(empire_order):
+                fleet = representatives[eid]
+                opponent_empires = [other for other in empire_order if other != eid]
+                if not opponent_empires:
                     continue
+                opponent_fleet = representatives[opponent_empires[0]]
                 modifiers[team_id] = collect_combat_modifiers(
-                    fleet, opponents[0], self._galaxy, all_empires,
+                    fleet, opponent_fleet, self._galaxy, all_empires,
                     self._registries,
                 )
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: external collector
             logger.warning(f"Failed to collect combat modifiers: {e}")
             return None
         return modifiers or None

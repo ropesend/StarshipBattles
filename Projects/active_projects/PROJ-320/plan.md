@@ -14,20 +14,29 @@
 
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. TDD scaffolding (failing tests) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Pre-existing fleet-merge speed-recalc fix | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Multi-fleet-per-empire combat support | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Per-fleet-tick combat triggering | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Performance regression test | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Documentation update | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. TDD scaffolding (failing tests) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Fleet-speed invariant audit (reframed) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Multi-fleet-per-empire combat support | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Per-fleet-tick combat triggering | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Performance regression test | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Documentation update | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 
-**Last Updated:** 2026-05-02 20:45
-**Active Phase:** Planning — awaiting user approval
-**Last Action:** Phase A deep code review + Phase B 6-agent swarm review complete; plan + decisions drafted
-**Next Action:** User approves the plan → start Phase 1 in a new "Continue Project" session
-**Blockers:** None — all design questions answered, baseline 16,377 / 0 / 3 is green
+**Last Updated:** 2026-05-02 23:55
+**Active Phase:** All 6 phases COMPLETE — pending user verification
+**Last Action:** Phases 5 + 6 complete in the same session. Phase 5: added `tests/performance/test_contested_hex_round_budget.py` with two count-based regression gates (speed-5 vs speed-5 stalemate = 10 dispatches; 5-hex × 3-empire × 2-fleet scenario ≤ 150 dispatches). Both tests pass on first run. Phase 6: updated `docs/systems/strategy_layer.md` §3 Phase-4-row description with PROJ-320 triggering rule; rewrote `docs/systems/combat_simulation.md` §9 "Performance follow-up (out of BUG-126 scope)" as "PROJ-320 (closed)" with the full closure note; updated `docs/guides/testing_infrastructure.md` perf-test row; bumped all three `Last verified:` lines per docs/03_CONVENTIONS.md §9. Phase 5 + Phase 6 validation both PASSED (warnings about empty Notes are cosmetic — closure narrative lives in each task body).
+**Next Action:** User verification — manual end-turn smoke with two co-located stalemated fleets (confirm event log shows N rounds where N = sum of speeds, not 100). Once verified, archive PROJ-320 via the standard project closure flow.
+**Blockers:** None.
+**Context for Next Agent:** Project is functionally complete. Final sharded baseline running in background to confirm no regressions from Phase 5/6 edits. The full PROJ-320 implementation:
+  - `_should_trigger_combat_for_fleet` predicate + `_resolve_conflicts` per-fleet iteration in `conflict_resolution_engine.py`
+  - `TurnEngine._process_tick` snapshot/diff for `moved_fleet_ids`
+  - `IConflictEngine` signature extended (backward-compat)
+  - `build_strategy_battle_spec` groups fleets by `owner_id` for allied-team handling (PROJ-320 Phase 3)
+  - Legacy hex-map scan deleted; `TestReEngagementOnSubsequentTick` deleted
+  - Performance gate at `tests/performance/test_contested_hex_round_budget.py`
+  - Docs updated in 3 files
+Net new test count: ~13 new tests added across 4 new test files + 1 extended (`test_spec_compiler.py`). Final sharded suite expected: **16,427 tests | 16,424 passed | 0 failed | 3 skipped**.
 
 ## Overview
 
@@ -49,7 +58,7 @@ The change is fully internal to `ConflictResolutionEngine` — no public API, DT
 **In:**
 - `game/strategy/engine/conflict_resolution_engine.py` — combat triggering rewrite
 - `game/strategy/engine/turn_engine.py` — Phase 4 dispatch wiring
-- `game/strategy/engine/order_processor.py::_execute_fleet_merge` — bug fix (post-merge `update_fleet_speed`)
+- `game/strategy/engine/order_processor.py::_execute_fleet_merge` — verified clean during Phase 1 (the suspected pre-existing bug doesn't exist; `Fleet.merge_with` already calls `trigger_speed_recalculation` at `fleet.py:459`). Phase 2 sweeps other Fleet.ships-mutation sites for the same invariant.
 - New unit + integration tests under `tests/unit/strategy/engine/` and `tests/integration/strategy/`
 - New performance regression test at `tests/performance/test_contested_hex_round_budget.py`
 - Doc updates: `docs/systems/strategy_layer.md` §3 + `docs/systems/combat_simulation.md` §9

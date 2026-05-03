@@ -156,6 +156,64 @@ def test_compiler_post_battle_hook_is_callable(fleets_on_hex, session_registries
 
 
 # ---------------------------------------------------------------------------
+# PROJ-320 Phase 3: multi-fleet-per-empire grouping
+# ---------------------------------------------------------------------------
+
+
+def test_compiler_groups_multi_fleet_per_empire_into_one_team(
+    session_registries, ship_factory
+):
+    """PROJ-320 Phase 3: when a single empire has multiple fleets at the
+    contested hex, all of those fleets' ships join the SAME team in the
+    BattleSpec — they are allies, not separate combat units.
+
+    The pre-PROJ-320 contract was "one team per fleet" (PROJ-269 Phase 1).
+    That worked when `_resolve_combat_at_hex` silently dropped extra
+    fleets per empire (`conflict_resolution_engine.py:298-300` first-fleet
+    selection). Once that batching is removed (PROJ-320), the spec
+    compiler must group fleets by `owner_id` so allied fleets stay on
+    the same side instead of fighting each other (the engine has no
+    alliances — every non-self team is hostile by default).
+    """
+    fleet1 = Fleet(fleet_id=101, owner_id=0, location=HexCoord(0, 0))
+    fleet1.add_ship(ship_factory(_minimal_design("E0F1S1"), owner_id=0))
+    fleet1.add_ship(ship_factory(_minimal_design("E0F1S2"), owner_id=0))
+
+    fleet2 = Fleet(fleet_id=102, owner_id=0, location=HexCoord(0, 0))
+    fleet2.add_ship(ship_factory(_minimal_design("E0F2S1"), owner_id=0))
+
+    fleet3 = Fleet(fleet_id=201, owner_id=1, location=HexCoord(0, 0))
+    fleet3.add_ship(ship_factory(_minimal_design("E1F3S1"), owner_id=1))
+
+    spec = build_strategy_battle_spec(
+        [fleet1, fleet2, fleet3],
+        empires={},
+        settings=_FakeSettings(),
+        registries=session_registries,
+    )
+
+    # Two unique owners → two teams (NOT three).
+    assert len(spec.teams) == 2, (
+        f"Expected 2 teams (one per unique owner_id), got {len(spec.teams)}. "
+        f"Allied fleets must group into a single team."
+    )
+
+    # Team 0 holds 3 ships (Fleet 101's 2 + Fleet 102's 1); team 1 holds 1.
+    team_ship_counts = []
+    for team in spec.teams:
+        count = sum(
+            len(sq.ships)
+            for tf in team.fleet_hierarchy
+            for sq in tf.squadrons
+        )
+        team_ship_counts.append(count)
+    assert sorted(team_ship_counts) == [1, 3], (
+        f"Expected ship counts [1, 3] (allied 2+1=3 vs solo 1), got "
+        f"{sorted(team_ship_counts)}."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Modifier translation
 # ---------------------------------------------------------------------------
 

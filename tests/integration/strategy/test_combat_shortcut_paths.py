@@ -242,42 +242,17 @@ class TestClearVictoryDoesNotDestroyNonEmptyFleets:
 # ===========================================================================
 
 
-class TestReEngagementOnSubsequentTick:
-    """Two co-located fleets must re-engage every strategy tick.
-
-    Once `_resolve_combat_at_hex` stops destroying non-empty fleets,
-    the existing `_resolve_conflicts` rebuilds `hex_map` from scratch
-    each call — so two stationary fleets at the same hex get a fresh
-    battle on every tick.
-    """
-
-    def test_two_back_to_back_resolve_all_calls_each_fire_one_battle(self):
-        emp1 = _empire(0)
-        emp2 = _empire(1)
-        f1 = _fleet(1, owner_id=0, ship_count=1, location=HexCoord(7, 7))
-        f2 = _fleet(2, owner_id=1, ship_count=1, location=HexCoord(7, 7))
-        emp1.fleets = [f1]
-        emp2.fleets = [f2]
-
-        resolver = _ScriptedResolver([
-            BattleResult(
-                winner=None, tick_count=20000,
-                team_survivors={0: list(f1.ships), 1: list(f2.ships)},
-            ),
-            BattleResult(
-                winner=None, tick_count=20000,
-                team_survivors={0: list(f1.ships), 1: list(f2.ships)},
-            ),
-        ])
-        engine = _engine_with(resolver)
-
-        engine.resolve_all_conflicts([emp1, emp2])
-        engine.resolve_all_conflicts([emp1, emp2])
-
-        assert len(resolver.calls) == 2
-        # Both fleets still in their empires after both ticks
-        assert f1 in emp1.fleets
-        assert f2 in emp2.fleets
+# PROJ-320 Phase 4 Task 4.6: deleted `TestReEngagementOnSubsequentTick`.
+# That class encoded the legacy per-tick re-engagement behaviour where
+# every call to `resolve_all_conflicts` unconditionally fired combat at
+# every contested hex (~100 battles per turn). PROJ-320 replaced that
+# with per-fleet movement-opportunity triggering — combat fires only on
+# the engaged fleets' opportunity ticks (`tick % get_tick_interval(speed)
+# == 0`). The "two back-to-back resolve_all_calls each fire one battle"
+# assertion is no longer meaningful — opportunity ticks are sparse.
+# Round-budget semantics are now covered by `tests/integration/strategy/
+# test_combat_round_budget.py` and `tests/unit/strategy/engine/
+# test_conflict_round_budget.py`.
 
 
 # ===========================================================================

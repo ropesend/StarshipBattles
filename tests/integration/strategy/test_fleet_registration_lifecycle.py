@@ -173,7 +173,10 @@ class TestCombatUnregistersDestroyedFleet:
             battle_resolver=InstantBattleResolver(empires_by_team={0: emp1, 1: emp2}),
             registries=fresh_registries,
         )
-        result = engine.resolve_all_conflicts([emp1, emp2], galaxy)
+        # PROJ-320: speed-15 fleets have opportunity every 6 ticks.
+        result = engine.resolve_all_conflicts(
+            [emp1, emp2], galaxy, tick=6, moved_fleet_ids=set(),
+        )
 
         # Exactly one fleet should have been destroyed
         assert result.combats_resolved == 1

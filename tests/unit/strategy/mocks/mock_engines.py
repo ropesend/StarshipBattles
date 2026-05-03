@@ -166,7 +166,11 @@ class MockConflictEngine(IConflictEngine):
     def resolve_all_conflicts_called(self) -> bool:
         return len(self.resolve_all_conflicts_calls) > 0
 
-    def resolve_all_conflicts(self, empires, galaxy=None):
+    def resolve_all_conflicts(
+        self, empires, galaxy=None, *, tick=None, moved_fleet_ids=None,
+    ):
+        # PROJ-320: signature parity with the new IConflictEngine contract.
+        # Mock ignores the extra kwargs and just records the empires/galaxy.
         self.resolve_all_conflicts_calls.append((empires, galaxy))
         return self.resolve_all_conflicts_result
 

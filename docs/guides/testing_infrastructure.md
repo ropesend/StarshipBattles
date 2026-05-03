@@ -1,6 +1,6 @@
 # Testing Infrastructure Guide
 
-> **Last verified:** 2026-04-16
+> **Last verified:** 2026-05-02 — PROJ-320: noted `tests/performance/test_contested_hex_round_budget.py` as the count-based regression gate locking the per-fleet-tick combat dispatch reduction (5-hex × 3-empire × 2-fleet scenario asserting ≤150 invocations per turn vs the legacy ~500). Earlier verification (2026-04-16):
 
 Reference for agents working with the Starship Battles test suite. Covers DI fixtures, conftest hierarchy, test helpers, and common patterns.
 
@@ -159,7 +159,7 @@ Pytest fixtures: `project_root`, `data_dir`, `assets_dir`, `test_data_dir`, `uni
 | `tests/integration/` | Cross-module integration | Medium | `fresh_registries` |
 | `tests/simulation/` | Simulation subsystem tests | Medium | `fresh_registries` |
 | `tests/regression/` | Bug regression tests | Varies | `fresh_registries` |
-| `tests/performance/` | Performance benchmarks | Slow | `fresh_registries` |
+| `tests/performance/` | Performance benchmarks + count-based regression gates (e.g. `test_contested_hex_round_budget.py` locks PROJ-320's per-fleet-tick combat dispatch reduction) | Slow | `fresh_registries` |
 | `combat_lab/` | Combat Lab scenarios (separate pytest root) | Slow | Own conftest and data |
 
 The `combat_lab/` directory has its own `pytest.ini` and is **excluded** from the main test run (`--ignore=combat_lab` in root `pytest.ini`). Run it separately.

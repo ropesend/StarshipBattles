@@ -1,6 +1,6 @@
 # Combat Simulation System
 
-> **Last verified:** 2026-05-02 — issue #8: `SimulationBattleResolver` shortcut branches differentiated. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10` = 2 000 ticks) so the existing replay-capture pipeline records a real (brief) replay; `BattleResult.replay_id` is populated. `sole_survivor` (one team has ≥1 capable ship, the other has 0 ships at start) keeps its shortcut and stays non-replayable, but now ships `BattleResult.replay_unavailable_reason="sole_survivor"` so the Event Log button shows an honest tooltip ("No combat — one side had no ships.") instead of the legacy "older save." wording. Defensive `no_ships` (both fleets empty) keeps the shortcut with `replay_unavailable_reason="no_ships"`. New `max_ticks` kwarg on `build_strategy_battle_spec` swaps BOTH `absolute_max_ticks` AND `end_condition` (to `TickLimitCondition`) — required because the strategy default `TeamEliminatedCondition` cannot fire in a no-weapons battle. Earlier verification (2026-04-29): FEAT-26 documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`); empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract still current.
+> **Last verified:** 2026-05-02 — PROJ-320: rewrote § 9 "Performance follow-up (out of BUG-126 scope)" as "PROJ-320 (closed)". Per-fleet movement-opportunity combat triggering replaces the legacy per-tick scan; ~10× fewer dispatches at typical contested sectors. Performance regression gate at `tests/performance/test_contested_hex_round_budget.py`. Earlier same-day pass — issue #8: `SimulationBattleResolver` shortcut branches differentiated. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10` = 2 000 ticks) so the existing replay-capture pipeline records a real (brief) replay; `BattleResult.replay_id` is populated. `sole_survivor` (one team has ≥1 capable ship, the other has 0 ships at start) keeps its shortcut and stays non-replayable, but now ships `BattleResult.replay_unavailable_reason="sole_survivor"` so the Event Log button shows an honest tooltip ("No combat — one side had no ships.") instead of the legacy "older save." wording. Defensive `no_ships` (both fleets empty) keeps the shortcut with `replay_unavailable_reason="no_ships"`. New `max_ticks` kwarg on `build_strategy_battle_spec` swaps BOTH `absolute_max_ticks` AND `end_condition` (to `TickLimitCondition`) — required because the strategy default `TeamEliminatedCondition` cannot fire in a no-weapons battle. Earlier verification (2026-04-29): FEAT-26 documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`); empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract still current.
 
 System documentation for the real-time combat simulation layer.
 
@@ -1059,14 +1059,26 @@ wiped). The `empires` kwarg (BUG-126) carries the
 `{team_id: Empire}` mapping the spec compiler's `PostBattleHook` needs to
 prune empty fleets.
 
-**Performance follow-up (out of BUG-126 scope).** Two stationary
-co-located fleets re-engage every sub-tick of every turn (up to 100
-battles per turn) until one side is wiped. With weaponless fleets
-the simulator runs to its `absolute_max_ticks` ceiling each time —
-~4.4s per battle observed in BUG-126's repro. A follow-on ticket
-should add an early-termination condition (e.g. "no damage dealt by
-either side in last N ticks → end as draw") or a tighter
-strategy-layer `absolute_max_ticks` ceiling.
+**PROJ-320 (closed — was the BUG-126 performance follow-up).** Two
+stationary co-located fleets historically re-engaged every sub-tick of
+every turn (~100 battles per turn). PROJ-320 reframed strategy combat
+to per-fleet movement-opportunity triggering: combat fires once per
+fleet per `tick % get_tick_interval(fleet.speed) == 0` tick, gated by
+whether the fleet successfully left the hex on that tick (TurnEngine
+derives `moved_fleet_ids` from a pre/post Phase-3 location diff).
+A speed-6 vs speed-4 stalemate now resolves in 6 + 4 = 10 rounds — a
+~10× reduction at typical contested sectors. Multi-fleet-per-empire
+encounters now have every fleet contributing rounds independently,
+with allied fleets grouped into a single team by the spec compiler
+(`build_strategy_battle_spec` groups by `owner_id` so allies don't
+fight each other). Performance regression gate at
+`tests/performance/test_contested_hex_round_budget.py`. The orthogonal
+"weaponless-fleet simulator runs to `absolute_max_ticks`" issue was
+addressed by issue #8's truncated-run path — `SimulationBattleResolver`
+now passes a `max_ticks=_BRIEF_RUN_TICK_BUDGET` cap when both fleets
+have ships but no team has weapons. Design + decisions log: see
+`Projects/active_projects/PROJ-320/` (or `archived_projects/PROJ-320/`
+post-archive).
 
 **Max teams = 8.** UI cap + ring entry-vector sanity cap. The simulation
 engine has no hard cap; the limit lives in `BattleSetupState`, the two

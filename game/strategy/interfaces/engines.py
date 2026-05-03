@@ -248,7 +248,10 @@ class IConflictEngine(ABC):
     def resolve_all_conflicts(
         self,
         empires: List,
-        galaxy: Optional['Galaxy'] = None
+        galaxy: Optional['Galaxy'] = None,
+        *,
+        tick: Optional[int] = None,
+        moved_fleet_ids: Optional[set] = None,
     ) -> 'ConflictResult':
         """
         Resolve all conflicts between empires.
@@ -257,6 +260,19 @@ class IConflictEngine(ABC):
             empires: List of Empire objects to check for conflicts
             galaxy: Optional Galaxy for environmental effect lookup (PROJ-189).
                    When provided, storm effects are applied to combat.
+            tick: PROJ-320 — current strategic sub-tick (1..TICKS_PER_TURN).
+                When provided, combat is dispatched per-fleet on movement-
+                opportunity ticks via `_should_trigger_combat_for_fleet`.
+                When None, no combat fires (defensive: predicate cannot
+                evaluate `tick % interval`). Production callers always pass
+                this; legacy tests that omit it get a no-op behaviour and
+                must opt in by supplying the tick to exercise the engine.
+            moved_fleet_ids: PROJ-320 — set of fleet ids whose location
+                actually changed during this tick's Phase 3
+                (`FleetMovementEngine.apply_movements`). Combat is skipped
+                for any fleet in this set on this tick (the fleet exercised
+                its movement opportunity by leaving the hex). Defaults to
+                an empty set when omitted.
 
         Returns:
             ConflictResult with combat statistics

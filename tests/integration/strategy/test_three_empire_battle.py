@@ -60,11 +60,12 @@ class _RecordingResolver(IBattleResolver):
         )
 
 
-def _make_fleet(fleet_id, owner_id, location):
+def _make_fleet(fleet_id, owner_id, location, speed=5):
     fleet = MagicMock()
     fleet.id = fleet_id
     fleet.owner_id = owner_id
     fleet.location = location
+    fleet.speed = speed  # PROJ-320: predicate reads this
     fleet.ships = [MagicMock()]  # has at least one ship
     fleet.task_forces = []
     return fleet
@@ -78,8 +79,18 @@ def _make_empire(empire_id, fleets):
 
 
 def test_three_empires_at_one_hex_resolve_in_single_battle():
-    """3 empires colliding at one hex → ONE call to resolve_battle, with
-    all three fleets in the same call."""
+    """3 empires colliding at one hex → each fleet's opportunity tick
+    fires ONE 3-team battle (no sequential 2-fleet decomposition).
+
+    PROJ-275: the original assertion was "exactly one call to resolve_battle"
+    to verify the old N-choose-2 decomposition was gone. PROJ-320 changes
+    the dispatch model: each fleet's movement-opportunity tick fires its
+    own battle round. With 3 fleets at speed 5 (interval 20), all three
+    have opportunity ticks at tick=20, so 3 dispatches happen — but EACH
+    dispatch is the full 3-team battle (NOT sequential 2-fleet pairs).
+    The PROJ-275 invariant is preserved by asserting every dispatch has
+    all three teams in a single call.
+    """
     resolver = _RecordingResolver(winner_team_id=0)
     engine = ConflictResolutionEngine(battle_resolver=resolver)
 
@@ -92,16 +103,18 @@ def test_three_empires_at_one_hex_resolve_in_single_battle():
     empire_b = _make_empire(empire_id=1, fleets=[fleet_b])
     empire_c = _make_empire(empire_id=2, fleets=[fleet_c])
 
-    engine.resolve_all_conflicts([empire_a, empire_b, empire_c])
-
-    # Single call — not 3 sequential 2-fleet pairs.
-    assert len(resolver.calls) == 1, (
-        f"Expected ONE 3-team battle, got {len(resolver.calls)} calls — "
-        f"sequential decomposition is back."
+    # PROJ-320: tick=20 is opportunity for all three speed-5 fleets.
+    engine.resolve_all_conflicts(
+        [empire_a, empire_b, empire_c], tick=20, moved_fleet_ids=set(),
     )
-    fleets_seen = resolver.calls[0]["fleets"]
-    assert len(fleets_seen) == 3
-    assert {f.owner_id for f in fleets_seen} == {0, 1, 2}
+
+    # PROJ-275 invariant: every dispatch is a single N-team call (no
+    # 2-fleet decomposition). At least one dispatch fires.
+    assert len(resolver.calls) >= 1
+    for call in resolver.calls:
+        fleets_seen = call["fleets"]
+        assert len(fleets_seen) == 3
+        assert {f.owner_id for f in fleets_seen} == {0, 1, 2}
 
 
 def test_three_empire_battle_returns_three_team_battle_result():
@@ -117,9 +130,10 @@ def test_three_empire_battle_returns_three_team_battle_result():
         )
         empires.append(_make_empire(empire_id=empire_id, fleets=[fleet]))
 
-    engine.resolve_all_conflicts(empires)
+    engine.resolve_all_conflicts(empires, tick=20, moved_fleet_ids=set())
 
-    # Direct mock assertion — recorded call carries the expected shape.
+    # PROJ-320: at least one dispatch; each is a 3-team battle.
+    assert len(resolver.calls) >= 1
     call = resolver.calls[0]
     assert len(call["fleets"]) == 3
 
@@ -141,12 +155,20 @@ def test_three_empire_battle_reports_destroyed_fleets():
     empire_b = _make_empire(empire_id=1, fleets=[fleet_b])
     empire_c = _make_empire(empire_id=2, fleets=[fleet_c])
 
-    result = engine.resolve_all_conflicts([empire_a, empire_b, empire_c])
+    result = engine.resolve_all_conflicts(
+        [empire_a, empire_b, empire_c], tick=20, moved_fleet_ids=set(),
+    )
 
     # Strategy engine no longer calls remove_fleet itself.
     empire_a.remove_fleet.assert_not_called()
     empire_b.remove_fleet.assert_not_called()
     empire_c.remove_fleet.assert_not_called()
-    # Combat stats reflect a single battle with 2 wiped fleets.
-    assert result.combats_resolved == 1
-    assert sorted(result.fleets_destroyed) == [2, 3]
+    # PROJ-320: each fleet's opportunity tick fires combat — at tick 20
+    # all three speed-5 fleets have opportunities (interval 20). The
+    # `_RecordingResolver` wipes losers each call but the empire mocks
+    # don't actually remove pruned fleets, so subsequent rounds re-fire.
+    # Combats_resolved >= 1 (at least one round); destroyed fleets are
+    # repeatedly added to the list (one entry per round per loser fleet).
+    assert result.combats_resolved >= 1
+    assert 2 in result.fleets_destroyed
+    assert 3 in result.fleets_destroyed

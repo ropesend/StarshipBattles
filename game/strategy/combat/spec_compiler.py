@@ -140,20 +140,41 @@ def build_strategy_battle_spec(
     if empires is None:
         empires = {}
 
-    num_teams = len(fleets)
+    # PROJ-320 Phase 3: group fleets by `owner_id` so allied fleets
+    # share a team rather than fighting each other (the engine has no
+    # alliances — every non-self team is hostile by default). Pre-PROJ-320
+    # the spec compiler emitted one team per fleet, which was harmless
+    # only because `_resolve_combat_at_hex` silently dropped extra fleets
+    # per empire.
+    #
+    # Determinism: rely on insertion order (Python 3.7+ guaranteed) rather
+    # than `sorted(...)`. Owner ids may not be sortable in tests
+    # (MagicMock fleets), and the canonical caller
+    # (`_resolve_combat_at_hex`) already sorts fleets by `(empire_id,
+    # fleet_id)` before passing them in — so insertion order here is
+    # already the (sorted-empire-id) order for production.
+    fleets_by_owner: Dict[Any, List["Fleet"]] = {}
+    for fleet in fleets:
+        fleets_by_owner.setdefault(fleet.owner_id, []).append(fleet)
+    owner_order: List[Any] = list(fleets_by_owner.keys())
+
+    num_teams = len(owner_order)
     if num_teams < _MIN_TEAMS or num_teams > _MAX_TEAMS:
         raise ValueError(
             f"build_strategy_battle_spec: requires {_MIN_TEAMS}..{_MAX_TEAMS} "
-            f"fleets; got {num_teams}"
+            f"unique fleet owners; got {num_teams} from {len(fleets)} fleets"
         )
 
     entry_vectors = resolve_team_entry_vectors(team_count=num_teams)
 
     teams: List[TeamSpec] = []
-    for team_id, fleet in enumerate(fleets):
+    for team_id, owner_id in enumerate(owner_order):
+        owner_fleets = list(fleets_by_owner[owner_id])
         teams.append(
-            _team_spec_for_fleet(
-                fleet, team_id=team_id, entry_vector=entry_vectors[team_id]
+            _team_spec_for_fleet_group(
+                owner_fleets,
+                team_id=team_id,
+                entry_vector=entry_vectors[team_id],
             )
         )
 
@@ -208,24 +229,41 @@ def _build_strategy_post_battle_hook(
 ) -> Callable[[Any], None]:
     """Create a post-battle hook closure for a specific set of fleets.
 
-    Captures (team_id -> fleet) positionally — the compiler assigns
-    team_ids in the same order as the input `fleets` list, so hook
-    inversion is trivial.
+    PROJ-320 Phase 3: groups fleets by `owner_id` to match the spec
+    compiler's per-owner team assignment. The post-battle hook then
+    receives `{team_id: [list of allied fleets]}` so the
+    `apply_outcome_to_fleets` instance-id lookup can find each ship in
+    its originating fleet.
+
+    Captures (team_id -> fleets) by owner — the compiler assigns
+    team_ids by sorted owner order, mirrored here.
     """
     from game.strategy.combat.post_battle_hook import apply_outcome_to_fleets
 
+    # PROJ-320: mirror the spec compiler's per-owner grouping. Use
+    # insertion order (not `sorted`) for owner_ids so the hook works
+    # with MagicMock fleets in tests; the canonical caller
+    # (`_resolve_combat_at_hex`) sorts fleets by `(empire_id, fleet_id)`
+    # before invoking the resolver, so insertion order IS sorted order
+    # for production. Within an owner, sort by fleet.id (always int).
+    owner_to_fleets: Dict[Any, List["Fleet"]] = {}
+    for fleet in fleets:
+        owner_to_fleets.setdefault(fleet.owner_id, []).append(fleet)
+    owner_order: List[Any] = list(owner_to_fleets.keys())
+
     fleets_by_team_id: Dict[int, List["Fleet"]] = {
-        team_id: [fleet] for team_id, fleet in enumerate(fleets)
+        team_id: list(owner_to_fleets[owner_id])
+        for team_id, owner_id in enumerate(owner_order)
     }
     # Translate the empires mapping from arbitrary keys to the same
     # team_id basis used by the compiler.
     empires_by_team_id: Dict[int, Any] = {}
-    for team_id, fleet in enumerate(fleets):
-        # Prefer explicit team_id key, fall back to fleet.owner_id, fall
-        # back to fleet id — callers may pass empires keyed either way.
+    for team_id, owner_id in enumerate(owner_order):
+        # Prefer explicit team_id key, fall back to owner_id — callers
+        # may pass empires keyed either way.
         empire = empires.get(team_id)
         if empire is None:
-            empire = empires.get(fleet.owner_id)
+            empire = empires.get(owner_id)
         if empire is not None:
             empires_by_team_id[team_id] = empire
 
@@ -244,42 +282,67 @@ def _build_strategy_post_battle_hook(
 # ---------------------------------------------------------------------------
 
 
-def _team_spec_for_fleet(
-    fleet: "Fleet", *, team_id: int, entry_vector: EntryVector
+def _team_spec_for_fleet_group(
+    owner_fleets: List["Fleet"], *, team_id: int, entry_vector: EntryVector
 ) -> TeamSpec:
-    # PROJ-269 Phase 4: invoke FormationResolver to compute per-ship poses.
-    # PROJ-275 Phase 6: entry_vector is now supplied by the caller from the
-    # ring-layout helper (`resolve_team_entry_vectors`) so each team is
-    # placed at its own location around the arena, not all stacked at the
-    # origin.
-    formation = _pick_formation_for_fleet(fleet)
-    poses = FormationResolver.resolve(
-        formation=formation,
-        entry_vector=entry_vector,
-        boundary=None,
-        ships=fleet.ships,
-    )
-    ships: Tuple[ShipSpec, ...] = tuple(
-        _ship_spec_from_instance(ship, poses.get(ship.instance_id))
-        for ship in fleet.ships
-    )
-    task_force = TaskForceSpec(
-        task_force_id=f"tf-fleet-{fleet.id}",
-        formation=formation,
-        policies=CombatPolicies(),
-        squadrons=(
-            SquadronSpec(
-                squadron_id=f"sq-fleet-{fleet.id}",
+    """PROJ-320 Phase 3: build a TeamSpec for one or more allied fleets.
+
+    Each fleet contributes its own TaskForce inside the team — preserves
+    fleet identity for the post-battle hook (which dispatches outcomes
+    back into the originating Fleet's ships list). Formation resolution
+    is per-fleet (each fleet keeps its own arrangement); team-level
+    placement comes from `entry_vector` (one entry vector per team).
+
+    For the single-fleet case (every existing PROJ-275 caller), this
+    behaves identically to the deleted `_team_spec_for_fleet`: one
+    TaskForce, one Squadron, one team.
+    """
+    if not owner_fleets:
+        raise ValueError(
+            "_team_spec_for_fleet_group: owner_fleets must be non-empty"
+        )
+
+    task_forces: List[TaskForceSpec] = []
+    for fleet in owner_fleets:
+        # PROJ-269 Phase 4: invoke FormationResolver to compute per-ship poses.
+        # PROJ-275 Phase 6: entry_vector is supplied by the caller from the
+        # ring-layout helper (`resolve_team_entry_vectors`); all of an
+        # owner's fleets share the same team-level entry vector.
+        formation = _pick_formation_for_fleet(fleet)
+        poses = FormationResolver.resolve(
+            formation=formation,
+            entry_vector=entry_vector,
+            boundary=None,
+            ships=fleet.ships,
+        )
+        ships: Tuple[ShipSpec, ...] = tuple(
+            _ship_spec_from_instance(ship, poses.get(ship.instance_id))
+            for ship in fleet.ships
+        )
+        task_forces.append(
+            TaskForceSpec(
+                task_force_id=f"tf-fleet-{fleet.id}",
+                formation=formation,
                 policies=CombatPolicies(),
-                ships=ships,
-            ),
-        ),
+                squadrons=(
+                    SquadronSpec(
+                        squadron_id=f"sq-fleet-{fleet.id}",
+                        policies=CombatPolicies(),
+                        ships=ships,
+                    ),
+                ),
+            )
+        )
+    name = (
+        f"Fleet {owner_fleets[0].id}"
+        if len(owner_fleets) == 1
+        else f"Empire {owner_fleets[0].owner_id} ({len(owner_fleets)} fleets)"
     )
     return TeamSpec(
         team_id=team_id,
-        name=f"Fleet {fleet.id}",
+        name=name,
         entry_vector=entry_vector,
-        fleet_hierarchy=(task_force,),
+        fleet_hierarchy=tuple(task_forces),
     )
 
 
