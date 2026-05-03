@@ -83,312 +83,169 @@ def mock_session(mock_fleet, mock_galaxy, mock_planet, mock_component_registry):
 # =============================================================================
 # Task 2.1: Direct Handlers Pass component_registry (VC-001)
 # =============================================================================
-
-class TestImplodePlanetCommandHandlerPassesRegistry:
-    """Tests that ImplodePlanetCommandHandler passes component_registry to validator."""
-
-    def test_passes_component_registry_to_validator(self, mock_session, mock_component_registry):
-        """Validator is called with component_registry parameter."""
-        from game.strategy.engine.superweapon_command_handlers import ImplodePlanetCommandHandler
-        from game.strategy.engine.commands import IssueImplodePlanetCommand
-
-        cmd = IssueImplodePlanetCommand(fleet_id=1, planet_id=100)
-        handler = ImplodePlanetCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_implode_planet.return_value = ValidationResult()
-            handler.execute(mock_session, cmd)
-
-            # Verify component_registry was passed
-            call_kwargs = mock_validator.validate_implode_planet.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
+# PROJ-323 Task 3.2: 5 near-identical direct-handler tests parametrized.
 
 
-
-class TestStellerateStarCommandHandlerPassesRegistry:
-    """Tests that StellerateStarCommandHandler passes component_registry to validator."""
-
-    def test_passes_component_registry_to_validator(self, mock_session, mock_component_registry):
-        """Validator is called with component_registry parameter."""
-        from game.strategy.engine.superweapon_command_handlers import StellerateStarCommandHandler
-        from game.strategy.engine.commands import IssueStellerateStarCommand
-
-        cmd = IssueStellerateStarCommand(fleet_id=1)
-        handler = StellerateStarCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_stellerate_star.return_value = ValidationResult()
-            handler.execute(mock_session, cmd)
-
-            call_kwargs = mock_validator.validate_stellerate_star.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
-
-
-
-class TestOpenWarpPointCommandHandlerPassesRegistry:
-    """Tests that OpenWarpPointCommandHandler passes component_registry to validator."""
-
-    def test_passes_component_registry_to_validator(self, mock_session, mock_component_registry):
-        """Validator is called with component_registry parameter."""
-        from game.strategy.engine.superweapon_command_handlers import OpenWarpPointCommandHandler
-        from game.strategy.engine.commands import IssueOpenWarpPointCommand
-
-        cmd = IssueOpenWarpPointCommand(
-            fleet_id=1, target_hex=HexCoord(10, 10), target_system_name="Target System"
-        )
-        handler = OpenWarpPointCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_open_warp_point.return_value = ValidationResult()
-            handler.execute(mock_session, cmd)
-
-            call_kwargs = mock_validator.validate_open_warp_point.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
-
-
-
-class TestCloseWarpPointCommandHandlerPassesRegistry:
-    """Tests that CloseWarpPointCommandHandler passes component_registry to validator."""
-
-    def test_passes_component_registry_to_validator(self, mock_session, mock_component_registry):
-        """Validator is called with component_registry parameter."""
-        from game.strategy.engine.superweapon_command_handlers import CloseWarpPointCommandHandler
-        from game.strategy.engine.commands import IssueCloseWarpPointCommand
-
-        cmd = IssueCloseWarpPointCommand(fleet_id=1, warp_point_destination_id="Alpha Centauri")
-        handler = CloseWarpPointCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_close_warp_point.return_value = ValidationResult()
-            handler.execute(mock_session, cmd)
-
-            call_kwargs = mock_validator.validate_close_warp_point.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
+def _direct_handler_cases():
+    from game.strategy.engine.superweapon_command_handlers import (
+        ImplodePlanetCommandHandler,
+        StellerateStarCommandHandler,
+        OpenWarpPointCommandHandler,
+        CloseWarpPointCommandHandler,
+        CreateDysonSphereCommandHandler,
+    )
+    from game.strategy.engine.commands import (
+        IssueImplodePlanetCommand,
+        IssueStellerateStarCommand,
+        IssueOpenWarpPointCommand,
+        IssueCloseWarpPointCommand,
+        IssueCreateDysonSphereCommand,
+    )
+    return [
+        (
+            ImplodePlanetCommandHandler,
+            IssueImplodePlanetCommand(fleet_id=1, planet_id=100),
+            'validate_implode_planet',
+        ),
+        (
+            StellerateStarCommandHandler,
+            IssueStellerateStarCommand(fleet_id=1),
+            'validate_stellerate_star',
+        ),
+        (
+            OpenWarpPointCommandHandler,
+            IssueOpenWarpPointCommand(
+                fleet_id=1, target_hex=HexCoord(10, 10), target_system_name="Target System",
+            ),
+            'validate_open_warp_point',
+        ),
+        (
+            CloseWarpPointCommandHandler,
+            IssueCloseWarpPointCommand(fleet_id=1, warp_point_destination_id="Alpha Centauri"),
+            'validate_close_warp_point',
+        ),
+        (
+            CreateDysonSphereCommandHandler,
+            IssueCreateDysonSphereCommand(fleet_id=1),
+            'validate_create_dyson_sphere',
+        ),
+    ]
 
 
+@pytest.mark.parametrize(
+    "handler_cls,cmd,validator_attr",
+    [pytest.param(*case, id=case[0].__name__) for case in _direct_handler_cases()],
+)
+def test_direct_handler_passes_component_registry(
+    mock_session, mock_component_registry, handler_cls, cmd, validator_attr,
+):
+    """All direct superweapon handlers pass component_registry to their validator."""
+    handler = handler_cls()
+    with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
+        getattr(mock_validator, validator_attr).return_value = ValidationResult()
+        handler.execute(mock_session, cmd)
 
-class TestCreateDysonSphereCommandHandlerPassesRegistry:
-    """Tests that CreateDysonSphereCommandHandler passes component_registry to validator."""
-
-    def test_passes_component_registry_to_validator(self, mock_session, mock_component_registry):
-        """Validator is called with component_registry parameter."""
-        from game.strategy.engine.superweapon_command_handlers import CreateDysonSphereCommandHandler
-        from game.strategy.engine.commands import IssueCreateDysonSphereCommand
-
-        cmd = IssueCreateDysonSphereCommand(fleet_id=1)
-        handler = CreateDysonSphereCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_create_dyson_sphere.return_value = ValidationResult()
-            handler.execute(mock_session, cmd)
-
-            call_kwargs = mock_validator.validate_create_dyson_sphere.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
+        call_kwargs = getattr(mock_validator, validator_attr).call_args.kwargs
+        assert 'component_registry' in call_kwargs
+        assert call_kwargs['component_registry'] == mock_component_registry
 
 
 
 # =============================================================================
 # Task 2.2: Mission Handlers Call Validators (VC-002/CP-005)
 # =============================================================================
-
-class TestImplodePlanetMissionCommandHandlerValidates:
-    """Tests that ImplodePlanetMissionCommandHandler calls validator."""
-
-    def test_calls_validator_with_component_registry(self, mock_session, mock_component_registry):
-        """Mission handler calls validator with component_registry."""
-        from game.strategy.engine.superweapon_command_handlers import ImplodePlanetMissionCommandHandler
-        from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
-
-        cmd = QueueImplodePlanetMissionCommand(
-            fleet_id=1, target_hex=HexCoord(10, 10), planet_id=100
-        )
-        handler = ImplodePlanetMissionCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
-            mock_validator.validate_implode_planet.return_value = ValidationResult()
-            mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
-            handler.execute(mock_session, cmd)
-
-            # Verify validator was called with component_registry
-            mock_validator.validate_implode_planet.assert_called_once()
-            call_kwargs = mock_validator.validate_implode_planet.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
-
-    def test_rejects_fleet_without_ability(self, mock_session):
-        """Mission handler rejects fleet without DestroyPlanet ability."""
-        from game.strategy.engine.superweapon_command_handlers import ImplodePlanetMissionCommandHandler
-        from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
-
-        cmd = QueueImplodePlanetMissionCommand(
-            fleet_id=1, target_hex=HexCoord(10, 10), planet_id=100
-        )
-        handler = ImplodePlanetMissionCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "DestroyPlanet" in result.message
+# PROJ-323 Task 3.2: 5 mission-handler tests collapsed into two parametrized
+# tests (validates-with-registry and rejects-fleet-without-ability).
 
 
-class TestStellerateStarMissionCommandHandlerValidates:
-    """Tests that StellerateStarMissionCommandHandler calls validator."""
-
-    def test_calls_validator_with_component_registry(self, mock_session, mock_component_registry):
-        """Mission handler calls validator with component_registry."""
-        from game.strategy.engine.superweapon_command_handlers import StellerateStarMissionCommandHandler
-        from game.strategy.engine.commands import QueueStellerateStarMissionCommand
-
-        cmd = QueueStellerateStarMissionCommand(fleet_id=1, target_hex=HexCoord(10, 10))
-        handler = StellerateStarMissionCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
-            mock_validator.validate_stellerate_star.return_value = ValidationResult()
-            mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
-            handler.execute(mock_session, cmd)
-
-            mock_validator.validate_stellerate_star.assert_called_once()
-            call_kwargs = mock_validator.validate_stellerate_star.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
-
-    def test_rejects_fleet_without_ability(self, mock_session):
-        """Mission handler rejects fleet without DestroyStar ability."""
-        from game.strategy.engine.superweapon_command_handlers import StellerateStarMissionCommandHandler
-        from game.strategy.engine.commands import QueueStellerateStarMissionCommand
-
-        cmd = QueueStellerateStarMissionCommand(fleet_id=1, target_hex=HexCoord(10, 10))
-        handler = StellerateStarMissionCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "DestroyStar" in result.message
-
-
-class TestOpenWarpPointMissionCommandHandlerValidates:
-    """Tests that OpenWarpPointMissionCommandHandler calls validator."""
-
-    def test_calls_validator_with_component_registry(self, mock_session, mock_component_registry):
-        """Mission handler calls validator with component_registry."""
-        from game.strategy.engine.superweapon_command_handlers import OpenWarpPointMissionCommandHandler
-        from game.strategy.engine.commands import QueueOpenWarpPointMissionCommand
-
-        cmd = QueueOpenWarpPointMissionCommand(
-            fleet_id=1, target_hex=HexCoord(10, 10), target_system_name="Target System"
-        )
-        handler = OpenWarpPointMissionCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
-            mock_validator.validate_open_warp_point.return_value = ValidationResult()
-            mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
-            handler.execute(mock_session, cmd)
-
-            mock_validator.validate_open_warp_point.assert_called_once()
-            call_kwargs = mock_validator.validate_open_warp_point.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
-
-    def test_rejects_fleet_without_ability(self, mock_session):
-        """Mission handler rejects fleet without OpenWarpPoint ability."""
-        from game.strategy.engine.superweapon_command_handlers import OpenWarpPointMissionCommandHandler
-        from game.strategy.engine.commands import QueueOpenWarpPointMissionCommand
-
-        cmd = QueueOpenWarpPointMissionCommand(
-            fleet_id=1, target_hex=HexCoord(10, 10), target_system_name="Target System"
-        )
-        handler = OpenWarpPointMissionCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "OpenWarpPoint" in result.message
+def _mission_handler_cases():
+    from game.strategy.engine.superweapon_command_handlers import (
+        ImplodePlanetMissionCommandHandler,
+        StellerateStarMissionCommandHandler,
+        OpenWarpPointMissionCommandHandler,
+        CloseWarpPointMissionCommandHandler,
+        CreateDysonSphereMissionCommandHandler,
+    )
+    from game.strategy.engine.commands import (
+        QueueImplodePlanetMissionCommand,
+        QueueStellerateStarMissionCommand,
+        QueueOpenWarpPointMissionCommand,
+        QueueCloseWarpPointMissionCommand,
+        QueueCreateDysonSphereMissionCommand,
+    )
+    return [
+        (
+            ImplodePlanetMissionCommandHandler,
+            QueueImplodePlanetMissionCommand(fleet_id=1, target_hex=HexCoord(10, 10), planet_id=100),
+            'validate_implode_planet',
+            'DestroyPlanet',
+        ),
+        (
+            StellerateStarMissionCommandHandler,
+            QueueStellerateStarMissionCommand(fleet_id=1, target_hex=HexCoord(10, 10)),
+            'validate_stellerate_star',
+            'DestroyStar',
+        ),
+        (
+            OpenWarpPointMissionCommandHandler,
+            QueueOpenWarpPointMissionCommand(
+                fleet_id=1, target_hex=HexCoord(10, 10), target_system_name="Target System",
+            ),
+            'validate_open_warp_point',
+            'OpenWarpPoint',
+        ),
+        (
+            CloseWarpPointMissionCommandHandler,
+            QueueCloseWarpPointMissionCommand(
+                fleet_id=1, target_hex=HexCoord(10, 10), warp_point_destination_id="Alpha Centauri",
+            ),
+            'validate_close_warp_point',
+            'CloseWarpPoint',
+        ),
+        (
+            CreateDysonSphereMissionCommandHandler,
+            QueueCreateDysonSphereMissionCommand(fleet_id=1, target_hex=HexCoord(10, 10)),
+            'validate_create_dyson_sphere',
+            'CreateDysonSphere',
+        ),
+    ]
 
 
-class TestCloseWarpPointMissionCommandHandlerValidates:
-    """Tests that CloseWarpPointMissionCommandHandler calls validator."""
+@pytest.mark.parametrize(
+    "handler_cls,cmd,validator_attr,ability_name",
+    [pytest.param(*case, id=case[0].__name__) for case in _mission_handler_cases()],
+)
+def test_mission_handler_passes_component_registry(
+    mock_session, mock_component_registry, handler_cls, cmd, validator_attr, ability_name,
+):
+    """All mission handlers call validator with component_registry."""
+    handler = handler_cls()
+    with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+         patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
+        getattr(mock_validator, validator_attr).return_value = ValidationResult()
+        mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
+        handler.execute(mock_session, cmd)
 
-    def test_calls_validator_with_component_registry(self, mock_session, mock_component_registry):
-        """Mission handler calls validator with component_registry."""
-        from game.strategy.engine.superweapon_command_handlers import CloseWarpPointMissionCommandHandler
-        from game.strategy.engine.commands import QueueCloseWarpPointMissionCommand
-
-        cmd = QueueCloseWarpPointMissionCommand(
-            fleet_id=1, target_hex=HexCoord(10, 10), warp_point_destination_id="Alpha Centauri"
-        )
-        handler = CloseWarpPointMissionCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
-            mock_validator.validate_close_warp_point.return_value = ValidationResult()
-            mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
-            handler.execute(mock_session, cmd)
-
-            mock_validator.validate_close_warp_point.assert_called_once()
-            call_kwargs = mock_validator.validate_close_warp_point.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
-
-    def test_rejects_fleet_without_ability(self, mock_session):
-        """Mission handler rejects fleet without CloseWarpPoint ability."""
-        from game.strategy.engine.superweapon_command_handlers import CloseWarpPointMissionCommandHandler
-        from game.strategy.engine.commands import QueueCloseWarpPointMissionCommand
-
-        cmd = QueueCloseWarpPointMissionCommand(
-            fleet_id=1, target_hex=HexCoord(10, 10), warp_point_destination_id="Alpha Centauri"
-        )
-        handler = CloseWarpPointMissionCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "CloseWarpPoint" in result.message
+        getattr(mock_validator, validator_attr).assert_called_once()
+        call_kwargs = getattr(mock_validator, validator_attr).call_args.kwargs
+        assert 'component_registry' in call_kwargs
+        assert call_kwargs['component_registry'] == mock_component_registry
 
 
-class TestCreateDysonSphereMissionCommandHandlerValidates:
-    """Tests that CreateDysonSphereMissionCommandHandler calls validator."""
+@pytest.mark.parametrize(
+    "handler_cls,cmd,validator_attr,ability_name",
+    [pytest.param(*case, id=case[0].__name__) for case in _mission_handler_cases()],
+)
+def test_mission_handler_rejects_fleet_without_ability(
+    mock_session, handler_cls, cmd, validator_attr, ability_name,
+):
+    """All mission handlers reject when fleet lacks the relevant ability."""
+    handler = handler_cls()
+    with patch(
+        'game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability',
+        return_value=None,
+    ):
+        result = handler.execute(mock_session, cmd)
 
-    def test_calls_validator_with_component_registry(self, mock_session, mock_component_registry):
-        """Mission handler calls validator with component_registry."""
-        from game.strategy.engine.superweapon_command_handlers import CreateDysonSphereMissionCommandHandler
-        from game.strategy.engine.commands import QueueCreateDysonSphereMissionCommand
-
-        cmd = QueueCreateDysonSphereMissionCommand(fleet_id=1, target_hex=HexCoord(10, 10))
-        handler = CreateDysonSphereMissionCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
-            mock_validator.validate_create_dyson_sphere.return_value = ValidationResult()
-            mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
-            handler.execute(mock_session, cmd)
-
-            mock_validator.validate_create_dyson_sphere.assert_called_once()
-            call_kwargs = mock_validator.validate_create_dyson_sphere.call_args.kwargs
-            assert 'component_registry' in call_kwargs
-            assert call_kwargs['component_registry'] == mock_component_registry
-
-    def test_rejects_fleet_without_ability(self, mock_session):
-        """Mission handler rejects fleet without CreateDysonSphere ability."""
-        from game.strategy.engine.superweapon_command_handlers import CreateDysonSphereMissionCommandHandler
-        from game.strategy.engine.commands import QueueCreateDysonSphereMissionCommand
-
-        cmd = QueueCreateDysonSphereMissionCommand(fleet_id=1, target_hex=HexCoord(10, 10))
-        handler = CreateDysonSphereMissionCommandHandler()
-
-        with patch('game.strategy.validation.superweapon_validator.SuperweaponValidator.find_ship_with_ability', return_value=None):
-            result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "CreateDysonSphere" in result.message
+    assert not result.is_valid
+    assert ability_name in result.message

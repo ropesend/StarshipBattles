@@ -16,11 +16,11 @@
 **File:** `tests/unit/ui/screens/test_fleet_report_filters.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_filters.py`
 
-- [x] [S08-CAT10-002] `TestSpecialCapabilityFilter (7 tests)` (lines 970-1143): Parametrize across (ability, filter_key, expected) tuples. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
-- [x] [S08-CAT10-003] `TestFilterShipsSpaceyard` (lines 587-665): Parametrize. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
-- [x] [S08-CAT10-004] `TestFilterShipsCargo` (lines 668-784): Parametrize. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S08-CAT10-002] `TestSpecialCapabilityFilter (7 tests)` (lines 970-1143): Parametrize across (ability, filter_key, expected) tuples. _(pass 2: 4 of 7 capability filter tests (open_warp/close_warp/destroy_star/create_sphere) collapsed; 3 with distinct shape kept separate.)_
+- [x] [S08-CAT10-003] `TestFilterShipsSpaceyard` (lines 587-665): Parametrize. _(pass 2: 3 spaceyard NO/YES/IGNORE tests collapsed.)_
+- [x] [S08-CAT10-004] `TestFilterShipsCargo` (lines 668-784): Parametrize. _(pass 2: 2 NO/YES tests collapsed; population/zero/IGNORE variants kept separate.)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py` passes; LOC delta ≈ 370 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py` passes; LOC delta ≈ 370 _(pass 2: 61 passed, ≈190 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -30,10 +30,10 @@
 **File:** `tests/unit/strategy/engine/test_superweapon_handler_validation.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_superweapon_handler_validation.py`
 
-- [x] [S07-CAT10-001] `5 near-identical direct-handler test classes` (lines 87-192): Parametrize across handlers. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
-- [x] [S07-CAT10-002] `5 near-identical mission-handler test classes` (lines 199-393): Parametrize across mission handlers. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S07-CAT10-001] `5 near-identical direct-handler test classes` (lines 87-192): Parametrize across handlers. _(pass 2: 5 direct-handler test classes collapsed into one parametrized test using _direct_handler_cases().)_
+- [x] [S07-CAT10-002] `5 near-identical mission-handler test classes` (lines 199-393): Parametrize across mission handlers. _(pass 2: 5 mission-handler test classes collapsed into 2 parametrized tests (validates-with-registry + rejects-without-ability) using _mission_handler_cases().)_
 
-- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_handler_validation.py` passes; LOC delta ≈ 300 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_handler_validation.py` passes; LOC delta ≈ 300 _(pass 2: 15 passed, ≈190 LOC saved)_
 
 **Notes:** _(none yet)_
 
