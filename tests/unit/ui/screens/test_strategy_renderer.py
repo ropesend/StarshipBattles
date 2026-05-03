@@ -845,6 +845,53 @@ class TestDrawProcessingOverlay:
         # Verify surface was blitted
         screen.blit.assert_called()
 
+    def test_draw_processing_overlay_renders_tick_subline_when_kwargs_present(
+        self, renderer, mock_scene
+    ):
+        """Issue #7: when current_tick + total_ticks are provided, the overlay
+        renders a second smaller "Tick N / M" line below the main label.
+
+        We verify by capturing every string passed to ``font.render`` — the
+        render with the tick string MUST appear when both kwargs are non-None.
+        """
+        screen = MagicMock()
+        screen.get_size.return_value = (1920, 1080)
+
+        font = MagicMock()
+        rendered_strings: list[str] = []
+        font.render.side_effect = lambda s, *a, **k: (rendered_strings.append(s) or MagicMock())
+
+        # Patch the renderer's font provider so every font_provider(size, bold)
+        # returns our spy font regardless of size.
+        with patch.object(renderer, '_get_font', return_value=font), \
+             patch('pygame.Surface', return_value=MagicMock()):
+            renderer.draw_processing_overlay(
+                screen, "PROCESSING TURN...",
+                current_tick=47, total_ticks=100,
+            )
+
+        assert "PROCESSING TURN..." in rendered_strings
+        assert "Tick 47 / 100" in rendered_strings
+
+    def test_draw_processing_overlay_omits_tick_subline_when_kwargs_none(
+        self, renderer, mock_scene
+    ):
+        """Issue #7: when current_tick / total_ticks are None (the default),
+        only the main label is rendered — no "Tick N / M" line appears.
+        """
+        screen = MagicMock()
+        screen.get_size.return_value = (1920, 1080)
+
+        font = MagicMock()
+        rendered_strings: list[str] = []
+        font.render.side_effect = lambda s, *a, **k: (rendered_strings.append(s) or MagicMock())
+
+        with patch.object(renderer, '_get_font', return_value=font), \
+             patch('pygame.Surface', return_value=MagicMock()):
+            renderer.draw_processing_overlay(screen, "PROCESSING TURN...")
+
+        assert rendered_strings == ["PROCESSING TURN..."]
+
 
 # ===========================================================================
 # Coordinate Conversion Tests

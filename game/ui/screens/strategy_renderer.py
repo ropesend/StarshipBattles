@@ -302,9 +302,21 @@ class StrategyRenderer:
             viewport_rect = pygame.Rect(0, self.TOP_BAR_HEIGHT, viewport_w, viewport_h)
             pygame.draw.rect(screen, COLORS['border_normal'], viewport_rect, 2)
 
-    def draw_processing_overlay(self, screen, message: str = "PROCESSING TURN...") -> None:
+    def draw_processing_overlay(
+        self,
+        screen,
+        message: str = "PROCESSING TURN...",
+        *,
+        current_tick: int | None = None,
+        total_ticks: int | None = None,
+    ) -> None:
         """Draw a modal overlay for turn processing.
 
         FEAT-20: optional ``message`` lets ``run_n_turns`` show progress text.
+        Issue #7: optional ``current_tick`` / ``total_ticks`` render a smaller
+        secondary "Tick N / M" line below the main label.
         """
-        _layer_draw_processing_overlay(screen, self._get_font, message)
+        _layer_draw_processing_overlay(
+            screen, self._get_font, message,
+            current_tick=current_tick, total_ticks=total_ticks,
+        )
