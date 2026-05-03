@@ -1,4 +1,10 @@
-"""Tests for Camera class viewport and coordinate transformations."""
+"""Tests for Camera class viewport and coordinate transformations.
+
+PROJ-322 Task 2.20 (S02-CAT5-001): the 8 per-class pygame.init autouse
+fixtures collapsed into one module-scoped autouse fixture.
+SDL_VIDEODRIVER='dummy' is set by the repo conftest, but we keep an
+explicit fall-back here for runs that bypass that conftest.
+"""
 import pytest
 import sys
 import os
@@ -7,6 +13,14 @@ from unittest.mock import patch
 
 
 from game.ui.renderer.camera import Camera
+
+
+@pytest.fixture(autouse=True, scope='module')
+def _camera_module_pygame_init():
+    """Initialise pygame once for the whole test_camera module."""
+    os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+    pygame.init()
+    yield
 
 
 class MockTarget:
@@ -18,11 +32,6 @@ class MockTarget:
 
 class TestCameraBasics:
     """Test basic camera initialization and properties."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_camera_initialization(self):
         """Camera should initialize with correct dimensions."""
@@ -44,11 +53,6 @@ class TestCameraBasics:
 
 class TestCameraTransformations:
     """Test coordinate transformation functions."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_world_to_screen_center(self):
         """World origin should map to screen center when camera at origin."""
@@ -112,11 +116,6 @@ class TestCameraTransformations:
 class TestCameraFitObjects:
     """Test camera fit_objects functionality."""
 
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-
     def test_fit_objects_centers_camera(self):
         """fit_objects should center camera on objects."""
         camera = Camera(800, 600)
@@ -160,11 +159,6 @@ class TestCameraFitObjects:
 
 class TestCameraZoomAnimation:
     """Test zoom animation and anchor stability."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_zoom_anchor_stability_during_animation(self):
         """World point under anchor screen position should stay constant during zoom."""
@@ -234,11 +228,6 @@ class TestCameraZoomAnimation:
 class TestCameraTargetFollowing:
     """Test camera target following behavior."""
 
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-
     def test_dead_target_following(self):
         """Camera should still follow dead target's position."""
         camera = Camera(800, 600)
@@ -255,11 +244,6 @@ class TestCameraTargetFollowing:
 
 class TestCameraOffsetPropagation:
     """Test offset_x/offset_y in coordinate transforms."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_world_to_screen_with_offset(self):
         """world_to_screen should account for offset_x/offset_y."""
@@ -301,11 +285,6 @@ class TestCameraOffsetPropagation:
 
 class TestCameraEdgeCases:
     """Test edge cases for camera behavior."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_very_large_world_coordinates(self):
         """Camera should handle very large world coordinates."""

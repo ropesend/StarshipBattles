@@ -2,6 +2,12 @@
 
 BUG-89: Verify that the panel has an update(dt) method,
 which workshop_screen.py calls every frame.
+
+PROJ-322 Task 2.12 (S10-CAT5-001): the 3 tests collapsed into a
+single parametrized test exercising update(dt) at 0 and a typical
+frame delta. The `modifier_panel` fixture remains at function scope
+because each test instantiates a real ModifierEditorPanel and the
+panel records mutable state during update().
 """
 import pytest
 from unittest.mock import MagicMock
@@ -36,10 +42,9 @@ class TestModifierEditorPanelUpdate:
         )
         assert callable(modifier_panel.update)
 
-    def test_update_does_not_raise(self, modifier_panel):
-        """Calling update(dt) must not raise an error."""
-        modifier_panel.update(0.016)  # ~60fps dt
-
-    def test_update_with_zero_dt(self, modifier_panel):
-        """update(0) must not raise."""
-        modifier_panel.update(0)
+    @pytest.mark.parametrize('dt', [0, 0.016])
+    def test_update_does_not_raise(self, modifier_panel, dt):
+        """Calling update(dt) must not raise for either zero or a typical
+        ~60fps frame delta. Parametrized in PROJ-322 Task 2.12 from two
+        near-identical method-shape tests."""
+        modifier_panel.update(dt)

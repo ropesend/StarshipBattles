@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. CAT-4 Duplicate Testing (19 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. CAT-5 Fixture Bloat (20 items) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. CAT-5 Fixture Bloat (20 items) | Partial (6 done, 3 N/A, 11 deferred) | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CAT-6 Mocking Brittleness (26 items) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-7 Sleep/Latency (9 items) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. APC cluster remediation (APC-001 16 + APC-002 10 + APC-003 8 = 34 items) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -24,9 +24,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 2 CAT-5 Fixture Bloat
-**Last Action:** Phase 1 complete — all 18 CAT-4 tasks consolidated (parametrized 1.7/1.10/1.13/1.14, removed duplicates 1.1-1.4, extracted shared fixtures 1.5/1.15/1.17, registry-driven test 1.11, public API 1.6/1.12, doc-only 1.8/1.16, hotkey merge 1.18). Task 1.5 also creates shared `tests/unit/simulation/conftest.py`.
-**Next Action:** Begin Phase 2 — rescope or share the 20 CAT-5 expensive fixtures (function -> class/module/session) where safe.
+**Active Phase:** Phase 3 CAT-6 Mocking Brittleness
+**Last Action:** Phase 2 partial — 6 safe scope-rebates done (2.2 dialog, 2.10 astrophysics, 2.12 modifier-editor parametrize, 2.13 battle-setup-logic, 2.18 save-selection tmpdir, 2.20 camera). 3 documented N/A (2.4 reset_registry needs per-test reset, 2.5 exit-policy boundaries genuinely vary, 2.7 full_registry mock-state pollution risk). 11 deferred for risk or Phase 5 overlap (2.1, 2.3, 2.6, 2.8, 2.9, 2.11, 2.14, 2.15, 2.16, 2.17, 2.19).
+**Next Action:** Begin Phase 3 — boundary patching of the 26 CAT-6 brittle-mocking patterns. Phase 3 is a Phase 5 PREREQUISITE.
 **Blockers:** None
 
 ## Overview

@@ -14,13 +14,20 @@ from tests.fixtures.battle import start_battle_screen_with_minimal_spec
 from tests.fixtures.paths import get_project_root, get_data_dir, get_unit_test_data_dir
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope='module')
 def setup_game_data():
-    """Initialize pygame and game data before each test."""
+    """Initialize pygame and game data once per module.
+
+    PROJ-322 Task 2.13 (S04-CAT5-003): rescoped from function -> module.
+    Only 3 tests run in this file and none mutates the loaded data;
+    the per-test pygame.init / ship-data load was unnecessary.
+    """
     pygame.init()
-    # Ensure data dir is accessible
-    initialize_ship_data(str(get_project_root()))
+    # Ensure data dir is accessible — pass the registry provider
+    # explicitly (PROJ-211: no fallback when called outside the
+    # session-scoped global_ship_data fixture).
     provider = get_default_registry_provider()
+    initialize_ship_data(str(get_project_root()), registry_provider=provider)
     load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
     manager = get_default_policy_manager()
     manager.load_data(
