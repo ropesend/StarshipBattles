@@ -62,6 +62,7 @@ AgentCoordination/Scratchpad/
 
 # Generated analysis output
 dead_code_candidates.txt
+coverage.json
 
 # Corrupt backup files
 *.corrupt
