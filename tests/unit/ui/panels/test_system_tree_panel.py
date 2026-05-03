@@ -578,3 +578,87 @@ class TestSetDimensions:
         panel.set_dimensions((300, 500))
 
         panel.layout.assert_called_once()
+
+
+# --- Empire Context Tests (issue #5 regression) ---
+
+class TestGetEmpireContext:
+    """`_get_empire_context` reads the active empire from the GameSession.
+
+    Issue #5 regression: BUG-125 renamed `session.player_empire` →
+    `session.active_empire` (commit 9885acd0d, 2026-04-29). This helper
+    was added 2026-04-11 and was missed in the rename sweep, so it was
+    silently returning `empire_id=None` — which made every caller
+    (`_add_sector_effects`, `_add_system_effects`, `_add_system_hazard_hint`)
+    bail before invoking the system-effects collector. Net effect: storms
+    and every other sector/system-scope ability source were invisible in
+    both panels.
+    """
+
+    def test_returns_active_empire_id_and_registries(self):
+        """Given a scene_interface whose .scene.session exposes the
+        post-BUG-125 attributes (`active_empire` + `registries`), the helper
+        returns `(empire_id, registries)`.
+
+        Pre-fix this test fails because the helper reads the old
+        `player_empire` attribute name.
+        """
+        from game.ui.panels.system_tree_panel import SystemTreePanel
+
+        with patch.object(SystemTreePanel, '__init__', lambda self, *a, **kw: None):
+            panel = SystemTreePanel.__new__(SystemTreePanel)
+
+        sentinel_registries = object()
+        active_empire = MagicMock()
+        active_empire.id = 7
+        session = MagicMock(spec=['active_empire', 'registries'])
+        session.active_empire = active_empire
+        session.registries = sentinel_registries
+        scene = MagicMock(spec=['session'])
+        scene.session = session
+        scene_interface = MagicMock(spec=['scene'])
+        scene_interface.scene = scene
+
+        empire_id, registries = panel._get_empire_context(scene_interface)
+
+        assert empire_id == 7
+        assert registries is sentinel_registries
+
+    def test_returns_none_when_no_active_empire(self):
+        """When the session has no active empire (e.g. galaxy not yet built),
+        the helper returns `(None, registries)` so callers can bail."""
+        from game.ui.panels.system_tree_panel import SystemTreePanel
+
+        with patch.object(SystemTreePanel, '__init__', lambda self, *a, **kw: None):
+            panel = SystemTreePanel.__new__(SystemTreePanel)
+
+        sentinel_registries = object()
+        session = MagicMock(spec=['active_empire', 'registries'])
+        session.active_empire = None
+        session.registries = sentinel_registries
+        scene = MagicMock(spec=['session'])
+        scene.session = session
+        scene_interface = MagicMock(spec=['scene'])
+        scene_interface.scene = scene
+
+        empire_id, registries = panel._get_empire_context(scene_interface)
+
+        assert empire_id is None
+        assert registries is sentinel_registries
+
+    def test_returns_none_pair_when_no_session(self):
+        """When the scene has no session attached, both values are None."""
+        from game.ui.panels.system_tree_panel import SystemTreePanel
+
+        with patch.object(SystemTreePanel, '__init__', lambda self, *a, **kw: None):
+            panel = SystemTreePanel.__new__(SystemTreePanel)
+
+        scene = MagicMock(spec=['session'])
+        scene.session = None
+        scene_interface = MagicMock(spec=['scene'])
+        scene_interface.scene = scene
+
+        empire_id, registries = panel._get_empire_context(scene_interface)
+
+        assert empire_id is None
+        assert registries is None

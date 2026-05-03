@@ -433,9 +433,9 @@ class SystemTreePanel:
         if session:
             session = getattr(session, 'session', None)
         if session:
-            player_empire = getattr(session, 'player_empire', None)
-            if player_empire:
-                empire_id = player_empire.id
+            active_empire = getattr(session, 'active_empire', None)
+            if active_empire:
+                empire_id = active_empire.id
             registries = getattr(session, 'registries', None)
         return empire_id, registries
 
