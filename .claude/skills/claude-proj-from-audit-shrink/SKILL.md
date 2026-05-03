@@ -29,9 +29,11 @@ not re-litigate it.
 
 `$ARGUMENTS` is the path to an audit-shrink review directory, e.g.
 `Reviews/results/2026-05-02_184210_audit_shrink/`. Accept absolute or
-relative paths, with or without a trailing slash. If `$ARGUMENTS` is empty,
-list the most recent `*_audit_shrink` directories under `Reviews/results/`
-and ask the user to pick one with `AskUserQuestion`.
+relative paths, with or without a trailing slash. **If `$ARGUMENTS` is
+empty, automatically pick the most recent `*_audit_shrink` directory
+under `Reviews/results/`** (newest by directory-name timestamp; fall back
+to mtime if names don't sort). Print the chosen path so the user sees
+which audit is being processed, then continue without prompting.
 
 ## Execution (high level — full detail in the protocol file)
 

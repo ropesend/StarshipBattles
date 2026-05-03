@@ -9,6 +9,13 @@
       "count": 1,
       "last_used": "2026-05-02T20:39:17Z"
     },
+    "claude-proj-from-audit-shrink": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-03T02:36:17Z"
+    },
     "claude-proj-start": {
       "agents": {
         "claude": 1

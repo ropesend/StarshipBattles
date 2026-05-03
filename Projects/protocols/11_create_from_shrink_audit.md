@@ -40,9 +40,16 @@ an auditable safety floor before any code is removed.**
    - Argument is a path to an audit-shrink review directory, e.g.
      `Reviews/results/2026-05-02_184210_audit_shrink/`. Accept absolute or
      relative, with or without trailing slash.
-   - If no argument was given, list the most recent `*_audit_shrink`
-     directories under `Reviews/results/` (sorted newest-first) and ask the
-     user to pick one with `AskUserQuestion`.
+   - **If no argument was given, automatically select the most recent
+     `*_audit_shrink` directory under `Reviews/results/`.** Sort by the
+     timestamp embedded in the directory name (e.g.
+     `2026-05-02_184210_audit_shrink`); the lexicographic newest is the
+     intended choice. If two or more share the same timestamp, fall back
+     to filesystem mtime. Print the chosen path on its own line
+     (`Auto-selected most recent audit: <path>`) so the user can see
+     which audit is being processed, then continue without prompting.
+   - If no `*_audit_shrink` directories exist at all, stop and tell the
+     user — do not invent a path or fall back to a non-shrink review.
 
 2. **Validate the structure.** Confirm all of:
    - `<audit_dir>/report.md` exists.
