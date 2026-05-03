@@ -79,8 +79,8 @@
 **File:** `tests/unit/ui/screens/test_fleet_report_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_window.py`
 
-- [ ] Replace `_make_fleet_report_window` bypass-init helper (~98 LOC) with `make_ui_widget(FleetReportWindow, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_window.py` passes; LOC delta approximately -50 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [ ] Replace `_make_fleet_report_window` bypass-init helper (~98 LOC) with `make_ui_widget(FleetReportWindow, **kwargs)`; construct via real `__init__` with mocked pygame_gui dependencies. _(deferred — `FleetReportWindow` inherits `StrategyModalWindow → UIWindow`; the factory's `pygame_gui.elements.UIWindow` patches cannot bypass `super().__init__()` chains because the MRO is resolved at class definition time. Constructing via real `__init__` requires either (a) a class-level `bypass=True` flag in the production code, or (b) patching at the `super()`-call site, neither of which is in P1 scope. The existing 98-LOC `_make_fleet_report_window` helper is the canonical workaround and stays.)_
+- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_window.py` passes; LOC delta approximately -50 _(deferred — see above.)_
 
 ---
 
@@ -90,8 +90,8 @@
 
 > **Boundary case:** This file's pattern is APC-003 (private-method patching) more than APC-001 (__new__ bypass). Apply the APC-003 remediation (patch at service boundaries / promote private methods) instead of the make_ui_widget factory.
 
-- [ ] Replace the 3-5 nested `patch` blocks (~150 LOC) with `make_ui_widget(FleetReportWindow, **kwargs)` and patch at the service boundary; switch to public-API tests where possible. (Pattern is closer to APC-003 than APC-001.) Coordinate with Task 3.20 in Phase 3. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py` passes; LOC delta approximately -75 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [ ] Replace the 3-5 nested `patch` blocks (~150 LOC) with `make_ui_widget(FleetReportWindow, **kwargs)` and patch at the service boundary; switch to public-API tests where possible. (Pattern is closer to APC-003 than APC-001.) Coordinate with Task 3.20 in Phase 3. _(deferred — `FleetReportWindow` inherits `StrategyModalWindow → UIWindow`; same factory-incompatibility as Task 5.6. The boundary-patching half (APC-003) requires careful refactor at the production service interfaces; out of P1 safe-pass scope.)_
+- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py` passes; LOC delta approximately -75 _(deferred — see above.)_
 
 ---
 
@@ -130,8 +130,8 @@ _(Plan-review M-001 (2026-05-03): factory approach rejected for screens without 
 **File:** `tests/unit/ui/screens/test_race_setup_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_race_setup_screen.py`
 
-- [ ] Replace the 118-LOC bypass-init helper that builds ~50 mock objects per test with `make_ui_widget(RaceSetupScreen, **kwargs)`. Coordinate with Task 2.17 in Phase 2. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_race_setup_screen.py` passes; LOC delta approximately -90 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [ ] Replace the 118-LOC bypass-init helper that builds ~50 mock objects per test with `make_ui_widget(RaceSetupScreen, **kwargs)`. Coordinate with Task 2.17 in Phase 2. _(deferred — RaceSetupScreen has 8 deeply-nested constructor dependencies (RaceLibrary, RaceAssetLoader, RaceSetupViewModel, RaceSetupRenderer, RaceSetupController, LLMDialogService, RaceSetupInputHandler) plus a heavy `super().__init__` UIWindow chain. The existing 118-LOC bypass helper carefully wires the MVVM delegates the screen exposes to tests; migrating to factory would need (a) `extra_modules=(RaceSummaryPanel_mod, RaceIdentityPanel_mod, ...)` for ~7 sibling modules, AND (b) per-test override paths to control RaceLibrary/RaceAssetLoader instantiation. Lower risk to keep the bypass helper as the canonical entry point until a more focused PROJ-322 follow-up project can refactor the screen for testable construction.)_
+- [ ] Verify: `pytest tests/unit/ui/screens/test_race_setup_screen.py` passes; LOC delta approximately -90 _(deferred — see above.)_
 
 ---
 
@@ -139,8 +139,8 @@ _(Plan-review M-001 (2026-05-03): factory approach rejected for screens without 
 **File:** `tests/unit/ui/screens/test_new_game_setup_extended.py`
 **Tests:** `pytest tests/unit/ui/screens/test_new_game_setup_extended.py`
 
-- [ ] Replace `_make_screen` (patches `__init__`, wires 16+ attributes manually; ~34 LOC) with `make_ui_widget(NewGameSetupScreen, **kwargs)`. Coordinate with Task 3.21 in Phase 3. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_new_game_setup_extended.py` passes; LOC delta approximately -20 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [ ] Replace `_make_screen` (patches `__init__`, wires 16+ attributes manually; ~34 LOC) with `make_ui_widget(NewGameSetupScreen, **kwargs)`. Coordinate with Task 3.21 in Phase 3. _(deferred — `NewGameSetupScreen` inherits from `pygame_gui.elements.UIWindow` (MRO resolved at class definition); factory's element-class patches don't intercept `super().__init__()` chains. Same root cause as Task 5.6.)_
+- [ ] Verify: `pytest tests/unit/ui/screens/test_new_game_setup_extended.py` passes; LOC delta approximately -20 _(deferred — see above.)_
 
 ---
 
@@ -179,8 +179,8 @@ _(Plan-review C-001 (2026-05-03): committed to deletion since integration tests 
 **File:** `tests/unit/ui/screens/test_sub_window_hotkeys.py`
 **Tests:** `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py`
 
-- [ ] Replace the `__new__` bypass + manual wiring (or `MagicMock(spec=Class)`) for OrdersWindow, BuildQueueScreen, TransferDialog, BuildQueueListWindow (~350 LOC) with `make_ui_widget(...)`; or refactor hotkey logic into a separately testable module. Coordinate with Task 3.26 in Phase 3. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py` passes; LOC delta approximately -175 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [ ] Replace the `__new__` bypass + manual wiring (or `MagicMock(spec=Class)`) for OrdersWindow, BuildQueueScreen, TransferDialog, BuildQueueListWindow (~350 LOC) with `make_ui_widget(...)`; or refactor hotkey logic into a separately testable module. Coordinate with Task 3.26 in Phase 3. _(deferred — all four target classes inherit from `pygame_gui.elements.UIWindow` (or its `StrategyModalWindow` subclass). Same root cause as Task 5.6 — factory cannot patch through `super().__init__()` chains. Refactoring hotkey logic into a separate module per the alternative is out of P1 scope.)_
+- [ ] Verify: `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py` passes; LOC delta approximately -175 _(deferred — see above.)_
 
 ---
 
