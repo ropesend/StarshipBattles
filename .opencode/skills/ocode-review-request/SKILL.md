@@ -40,6 +40,26 @@ Parse these fields:
 - **Context** — why this review, what changed
 - **Expected Deliverable** — what kind of output
 
+### 03c phase-aware request fields (optional)
+
+Requests dispatched by `phase_complete.py` (Projects/protocols/03c) include
+two additional blocks. The daemon has already validated the SHA and
+checked out a detached worktree for you, so your `cwd` is the project at
+the exact `project_tip_sha` named in the Coverage block — repo-relative
+paths in the scope resolve against that worktree, not against `main`.
+
+- **Checkout** block: `mode`, `ref`, `sha`, `worktree_path`. Informational
+  for the review report; do not act on it (the daemon already did).
+- **Coverage** block: `project_id`, `review_sequence`, `project_tip_sha`,
+  `focus_phase`, `review_mode`, `coverage_set`. Mention the focus_phase
+  and coverage_set in your report. If `review_mode` is `lightweight`,
+  scope your scrutiny down per the request's instructions (small phase,
+  correctness + regression risk only; skip stylistic findings).
+
+When these blocks are present, the report's findings MUST be emitted with
+**stable IDs and fingerprints** so 03c's findings ledger can dedupe
+across cumulative reviews — see Step 4 below.
+
 ## Step 1.25: Scope Sanity Check — Return Early For Out-Of-Repo Paths
 
 **This is a hard precondition. Run it before any other work.** If the
@@ -270,6 +290,46 @@ directory. If a specific path was provided by the daemon, use that exact path:
 - `parent_request_id` — present only for follow-up reviews.
 - `verification` — present only for follow-ups; maps parent finding IDs to
   status: `resolved`, `partially-resolved`, `unresolved`, or `regressed`.
+
+### 03c sidecar extension: `findings_by_id`
+
+When the request has a Coverage block, also emit a `findings_by_id`
+section so the project's findings ledger can dedupe and track each
+finding's lifecycle across cumulative reviews:
+
+```json
+{
+  "...": "...standard fields above...",
+  "coverage": {
+    "project_id": "PROJ-XX",
+    "focus_phase": "phase_3",
+    "coverage_set": ["phase_1", "phase_2", "phase_3"],
+    "project_tip_sha": "abc12345..."
+  },
+  "findings_by_id": {
+    "FND-001": {
+      "severity": "MAJ",
+      "title": "Layer violation: simulation imports from ui",
+      "file": "game/simulation/combat.py",
+      "line": 142,
+      "fingerprint": "sha256:<stable hash of severity|title|file|normalized snippet>",
+      "phase_attributed_to": "phase_2"
+    }
+  }
+}
+```
+
+Stable-ID requirements:
+- `fingerprint` MUST be deterministic across re-reviews of the same
+  finding — base it on a hash of (severity, title, file path, a
+  normalized one-line snippet of the offending code). Do not include
+  line numbers or surrounding whitespace in the hash input.
+- `phase_attributed_to` SHOULD be the phase whose changes introduced or
+  most recently touched the offending code. If it is genuinely cross-phase,
+  set `coverage[focus_phase]`.
+- IDs (`FND-001`, ...) are local to this review request. The ledger
+  matches via `fingerprint`, not ID, so the ID is allowed to differ
+  across runs.
 
 Do NOT move or rename the request file — the daemon handles that.
 

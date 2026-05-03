@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-04-28 — Removed §10 Dev-Mode CLI Flag: FEAT-20's revised scope (Run 10 Turns button always-visible) ERADICATED the `--dev` flag plumbing, leaving zero consumers. §11 Ship Theme Asset Conventions (PROJ-314) unchanged.
+> **Last verified:** 2026-05-03 — Added §11 Git Branch Conventions for 03c phase-aware execution (`proj/{PROJ-ID}/main`, `proj/{PROJ-ID}/{phase-id}`, `tmp/{PROJ-ID}/integrate-...`). §10 Ship Theme Asset Conventions (PROJ-314) unchanged.
 
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
@@ -624,3 +624,42 @@ convention have both been retired.
    `pytest tests/integration/ui/test_race_setup_ships_smoke.py`.
 
 Established by PROJ-314.
+
+---
+
+## 11. Git Branch Conventions
+
+### 11.1 Standard branch prefixes
+
+| Prefix | Purpose | Example |
+|---|---|---|
+| `feature/` | Feature development | `feature/dynamic-screen-resize` |
+| `cleanup/` | Cleanup / refactor | `cleanup/remove-unused-types` |
+| `claude/`, `codex/`, `copilot/` | Per-agent feature branches | `claude/snapshot-cache-fix` |
+| `worktree-agent-*` | Auto-named worktree branches (legacy) | (do not adopt for new work) |
+
+### 11.2 03c phase-aware execution branches
+
+Per [Projects/protocols/03c_phase_aware_execution.md](../Projects/protocols/03c_phase_aware_execution.md):
+
+| Branch pattern | Purpose | Lifetime |
+|---|---|---|
+| `proj/{PROJ-ID}/main` | Project trunk; carries plan + code from execution start to final merge | Created at first `claude-proj-continue`; merged to `main` at project completion. |
+| `proj/{PROJ-ID}/{phase-id}` | Phase branch; one per phase (e.g. `proj/PROJ-300/phase_1`) | Created by `spawn_phase_worker.py`; merged into `proj/{PROJ-ID}/main` via temp-integration. |
+| `tmp/{PROJ-ID}/integrate-{phase-id}-{shortsha}` | Ephemeral integration branch for sibling-aware testing | Created and deleted within `phase_complete.py`. |
+
+**Rationale for `/main` suffix on the project trunk.** Git refs cannot
+have both `proj/{PROJ-ID}` (a file at `refs/heads/proj/{PROJ-ID}`) and
+`proj/{PROJ-ID}/{phase}` (a directory under `refs/heads/proj/{PROJ-ID}/`).
+Adding the `/main` segment puts the trunk inside the same namespace as
+the phase branches, so all live alongside each other.
+
+Worktree paths follow the same shape, gitignored:
+
+| Worktree path | Owner |
+|---|---|
+| `.worktrees/phases/{PROJ-ID}/{phase-id}/` | Phase worker |
+| `.worktrees/integration/{PROJ-ID}-{phase-id}-{shortsha}/` | `phase_complete.py` (ephemeral) |
+| `AgentCoordination/opencodereview/local/worktrees/{request-id}/` | Daemon (ephemeral, SHA-pinned) |
+
+Established by 03c (2026-05-03).

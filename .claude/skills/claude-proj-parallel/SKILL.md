@@ -11,6 +11,13 @@ argument-hint: <PROJ-IDs or "all">
 
 Read and follow the full protocol file.
 
+> **Scope:** 03b is **inter-project** parallelism — N different projects
+> running in parallel worktrees off `main`. Each project optionally uses
+> [03c](../../../Projects/protocols/03c_phase_aware_execution.md)
+> internally for **intra-project** phase parallelism. The two protocols
+> nest cleanly: 03b sees a project as a single unit; 03c lives inside one
+> project's worktree.
+
 ## Your Role
 
 You are the **Coordinator** — managing parallel execution of multiple projects. You orchestrate worktree-isolated workers, track file conflicts, merge results, and report progress.

@@ -42,4 +42,26 @@ Adopt the **Skeptical Reviewer** persona. Your job is to **find problems**, not 
    - If clean: Mark audit as passed
    - If 3 cycles with persistent issues: Escalate to user
 
+## 03c projects: rigorous final cumulative gate
+
+If the project has `**Execution Protocol:** 03c-phase-aware-execution` in
+its `plan.md`, this audit is the **final cumulative review gate** — the
+project may NOT merge to `main` until every check below passes. Mid-project
+cumulative reviews already covered each phase as it landed; this gate
+confirms the integrated whole.
+
+`validate_audit_ready.py` (extended for 03c) hard-fails if ANY of:
+
+1. A finding has status `open` or `addressed_pending_review`.
+2. A `deferred_until_phase` finding's target phase is ≤ the latest clean
+   coverage and has not been resolved.
+3. The latest clean review's `coverage_set` does not include every
+   non-skipped phase (i.e. some phase has never been in a clean review).
+4. The project branch tip SHA differs from the SHA covered by the latest
+   clean review (i.e. unreviewed work is sitting on the project branch).
+
+On clean audit: merge `proj/{PROJ-ID}/main` into `main`, record
+`audit.merge_to_main_sha` and `audit.merge_to_main_at_utc` in
+`phase_state.json`, then hand off to `claude-proj-archive`.
+
 **MINDSET:** Be genuinely skeptical. Your job is to find problems, not approve.
