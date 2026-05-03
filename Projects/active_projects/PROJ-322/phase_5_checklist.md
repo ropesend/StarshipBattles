@@ -34,8 +34,8 @@
 **File:** `tests/unit/ui/test_race_portrait_gallery.py`
 **Tests:** `pytest tests/unit/ui/test_race_portrait_gallery.py`
 
-- [ ] Replace the `__new__` bypass-init (~240 LOC) with `make_ui_widget(RacePortraitGallery, **kwargs)` from `tests/fixtures/ui_widget_factory.py`; remove manual `__init__` + `__new__` patching and the manual attribute wiring. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/unit/ui/test_race_portrait_gallery.py` passes; LOC delta approximately -120 _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Replace the `__new__` bypass-init (~240 LOC) with `make_ui_widget(RacePortraitGallery, **kwargs)` from `tests/fixtures/ui_widget_factory.py`; remove manual `__init__` + `__new__` patching and the manual attribute wiring. _(Module-scope `_bypass_init_gallery(race_config, asset_loader)` helper added; the gallery's `__init__` requires positional `x/y/width/height` so the helper supplies sane defaults (0, 0, 600, 400). 11 inline bypass blocks across 4 test classes converted. The factory's `_create_content` does run real `_discover_assets` which scans the `Race Portraits` asset dir from disk — slower per construction but correct.)_
+- [x] Verify: `pytest tests/unit/ui/test_race_portrait_gallery.py` passes; LOC delta approximately -120 _(14 tests pass; ~110 LOC removed.)_
 
 ---
 
