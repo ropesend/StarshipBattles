@@ -46,60 +46,26 @@ class TestSuperweaponInputModeTransitions:
         handler = StrategyInputHandler(scene, input_mapper=None)
         return handler
 
-    def test_implode_planet_sets_mode(self, handler_with_mapper):
-        """FLEET_IMPLODE_PLANET sets IMPLODE_PLANET_TARGET mode."""
-        mapper = MockInputMapper(InputAction.FLEET_IMPLODE_PLANET)
+    # PROJ-323 Task 3.44: 5 mode-setting tests parametrized.
+    @pytest.mark.parametrize("input_action,expected_mode", [
+        pytest.param(InputAction.FLEET_IMPLODE_PLANET, 'IMPLODE_PLANET_TARGET', id="implode_planet"),
+        pytest.param(InputAction.FLEET_STELLERATE_STAR, 'STELLERATE_STAR_TARGET', id="stellerate_star"),
+        pytest.param(InputAction.FLEET_OPEN_WARP_POINT, 'OPEN_WARP_TARGET', id="open_warp"),
+        pytest.param(InputAction.FLEET_CLOSE_WARP_POINT, 'CLOSE_WARP_TARGET', id="close_warp"),
+        pytest.param(InputAction.FLEET_CREATE_DYSON_SPHERE, 'DYSON_SPHERE_TARGET', id="dyson_sphere"),
+    ])
+    def test_input_action_sets_corresponding_mode(
+        self, handler_with_mapper, input_action, expected_mode,
+    ):
+        """Each fleet superweapon input action sets the matching target-input mode."""
+        mapper = MockInputMapper(input_action)
         handler_with_mapper._mapper = mapper
         handler_with_mapper.scene.selected_fleet = MagicMock()
 
         event = MagicMock()
         handler_with_mapper._handle_keydown_mapped(event)
 
-        assert handler_with_mapper.input_mode == 'IMPLODE_PLANET_TARGET'
-
-    def test_stellerate_star_sets_mode(self, handler_with_mapper):
-        """FLEET_STELLERATE_STAR sets STELLERATE_STAR_TARGET mode."""
-        mapper = MockInputMapper(InputAction.FLEET_STELLERATE_STAR)
-        handler_with_mapper._mapper = mapper
-        handler_with_mapper.scene.selected_fleet = MagicMock()
-
-        event = MagicMock()
-        handler_with_mapper._handle_keydown_mapped(event)
-
-        assert handler_with_mapper.input_mode == 'STELLERATE_STAR_TARGET'
-
-    def test_open_warp_sets_mode(self, handler_with_mapper):
-        """FLEET_OPEN_WARP_POINT sets OPEN_WARP_TARGET mode."""
-        mapper = MockInputMapper(InputAction.FLEET_OPEN_WARP_POINT)
-        handler_with_mapper._mapper = mapper
-        handler_with_mapper.scene.selected_fleet = MagicMock()
-
-        event = MagicMock()
-        handler_with_mapper._handle_keydown_mapped(event)
-
-        assert handler_with_mapper.input_mode == 'OPEN_WARP_TARGET'
-
-    def test_close_warp_sets_mode(self, handler_with_mapper):
-        """FLEET_CLOSE_WARP_POINT sets CLOSE_WARP_TARGET mode."""
-        mapper = MockInputMapper(InputAction.FLEET_CLOSE_WARP_POINT)
-        handler_with_mapper._mapper = mapper
-        handler_with_mapper.scene.selected_fleet = MagicMock()
-
-        event = MagicMock()
-        handler_with_mapper._handle_keydown_mapped(event)
-
-        assert handler_with_mapper.input_mode == 'CLOSE_WARP_TARGET'
-
-    def test_dyson_sphere_sets_mode(self, handler_with_mapper):
-        """FLEET_CREATE_DYSON_SPHERE sets DYSON_SPHERE_TARGET mode."""
-        mapper = MockInputMapper(InputAction.FLEET_CREATE_DYSON_SPHERE)
-        handler_with_mapper._mapper = mapper
-        handler_with_mapper.scene.selected_fleet = MagicMock()
-
-        event = MagicMock()
-        handler_with_mapper._handle_keydown_mapped(event)
-
-        assert handler_with_mapper.input_mode == 'DYSON_SPHERE_TARGET'
+        assert handler_with_mapper.input_mode == expected_mode
 
     def test_self_destruct_calls_handler(self, handler_with_mapper):
         """FLEET_SELF_DESTRUCT calls superweapons handler directly."""
@@ -156,59 +122,24 @@ class TestSuperweaponClickRouting:
         handler = StrategyInputHandler(scene, input_mapper=None)
         return handler
 
-    def test_implode_planet_click_delegates_to_superweapons(self, handler):
-        """IMPLODE_PLANET_TARGET click delegates to superweapons handler."""
-        handler.input_mode = 'IMPLODE_PLANET_TARGET'
-        handler.scene._superweapons.handle_implode_planet_designation = MagicMock(return_value=True)
+    # PROJ-323 Task 3.44: 5 click-routing tests parametrized.
+    @pytest.mark.parametrize("mode,handler_attr", [
+        pytest.param('IMPLODE_PLANET_TARGET', 'handle_implode_planet_designation', id="implode_planet"),
+        pytest.param('STELLERATE_STAR_TARGET', 'handle_stellerate_star_designation', id="stellerate_star"),
+        pytest.param('OPEN_WARP_TARGET', 'handle_open_warp_designation', id="open_warp"),
+        pytest.param('CLOSE_WARP_TARGET', 'handle_close_warp_designation', id="close_warp"),
+        pytest.param('DYSON_SPHERE_TARGET', 'handle_dyson_sphere_designation', id="dyson_sphere"),
+    ])
+    def test_click_delegates_to_superweapons(self, handler, mode, handler_attr):
+        """Each superweapon target mode delegates left-click to its handler and resets to SELECT."""
+        handler.input_mode = mode
+        designation_mock = MagicMock(return_value=True)
+        setattr(handler.scene._superweapons, handler_attr, designation_mock)
 
         result = handler.handle_click(100, 200, 1)  # Left click
 
         assert result is True
-        handler.scene._superweapons.handle_implode_planet_designation.assert_called_once()
-        assert handler.input_mode == 'SELECT'
-
-    def test_stellerate_star_click_delegates_to_superweapons(self, handler):
-        """STELLERATE_STAR_TARGET click delegates to superweapons handler."""
-        handler.input_mode = 'STELLERATE_STAR_TARGET'
-        handler.scene._superweapons.handle_stellerate_star_designation = MagicMock(return_value=True)
-
-        result = handler.handle_click(100, 200, 1)  # Left click
-
-        assert result is True
-        handler.scene._superweapons.handle_stellerate_star_designation.assert_called_once()
-        assert handler.input_mode == 'SELECT'
-
-    def test_open_warp_click_delegates_to_superweapons(self, handler):
-        """OPEN_WARP_TARGET click delegates to superweapons handler."""
-        handler.input_mode = 'OPEN_WARP_TARGET'
-        handler.scene._superweapons.handle_open_warp_designation = MagicMock(return_value=True)
-
-        result = handler.handle_click(100, 200, 1)  # Left click
-
-        assert result is True
-        handler.scene._superweapons.handle_open_warp_designation.assert_called_once()
-        assert handler.input_mode == 'SELECT'
-
-    def test_close_warp_click_delegates_to_superweapons(self, handler):
-        """CLOSE_WARP_TARGET click delegates to superweapons handler."""
-        handler.input_mode = 'CLOSE_WARP_TARGET'
-        handler.scene._superweapons.handle_close_warp_designation = MagicMock(return_value=True)
-
-        result = handler.handle_click(100, 200, 1)  # Left click
-
-        assert result is True
-        handler.scene._superweapons.handle_close_warp_designation.assert_called_once()
-        assert handler.input_mode == 'SELECT'
-
-    def test_dyson_sphere_click_delegates_to_superweapons(self, handler):
-        """DYSON_SPHERE_TARGET click delegates to superweapons handler."""
-        handler.input_mode = 'DYSON_SPHERE_TARGET'
-        handler.scene._superweapons.handle_dyson_sphere_designation = MagicMock(return_value=True)
-
-        result = handler.handle_click(100, 200, 1)  # Left click
-
-        assert result is True
-        handler.scene._superweapons.handle_dyson_sphere_designation.assert_called_once()
+        designation_mock.assert_called_once()
         assert handler.input_mode == 'SELECT'
 
     @pytest.mark.parametrize("mode", [

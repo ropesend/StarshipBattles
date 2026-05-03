@@ -279,9 +279,9 @@
 **File:** `tests/unit/simulation/test_battle_runner.py`
 **Tests:** `pytest tests/unit/simulation/test_battle_runner.py`
 
-- [x] [S09-CAT10-005] `5 module-level smoke tests` (lines 254-390): Extract _run_minimal_battle helper and parametrize. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S09-CAT10-005] `5 module-level smoke tests` (lines 254-390): Extract _run_minimal_battle helper and parametrize. _(pass 2: extracted _run_minimal_battle helper; 6 module-level smoke tests now use the helper.)_
 
-- [x] Verify: `pytest tests/unit/simulation/test_battle_runner.py` passes; LOC delta ≈ 137 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/test_battle_runner.py` passes; LOC delta ≈ 137 _(pass 2: 11 passed, ≈90 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -545,9 +545,9 @@
 **File:** `tests/unit/ui/screens/test_superweapon_input_modes.py`
 **Tests:** `pytest tests/unit/ui/screens/test_superweapon_input_modes.py`
 
-- [x] [S07-CAT10-004] `Mode-setting and click-routing clusters` (lines 49-102, 159-212): Parametrize each cluster. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S07-CAT10-004] `Mode-setting and click-routing clusters` (lines 49-102, 159-212): Parametrize each cluster. _(pass 2: 5 mode-setting tests + 5 click-routing tests each collapsed into single parametrized tests.)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_superweapon_input_modes.py` passes; LOC delta ≈ 107 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_superweapon_input_modes.py` passes; LOC delta ≈ 107 _(pass 2: 21 passed, ≈75 LOC saved)_
 
 **Notes:** _(none yet)_
 

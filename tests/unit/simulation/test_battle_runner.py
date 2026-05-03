@@ -33,6 +33,44 @@ from game.simulation.systems.battle_end_conditions import (
 from tests.unit.simulation.conftest import _make_ship_spec, _make_team  # noqa: F401
 
 
+# PROJ-323 Task 3.22: shared helper for the standard 1v1 minimal-battle smoke pattern.
+def _run_minimal_battle(
+    ship_builder,
+    *,
+    seed=0,
+    max_ticks=2,
+    absolute_max_ticks=100,
+    end_condition=None,
+    teams=None,
+    post_battle_hook=None,
+    **run_kwargs,
+):
+    """Build a minimal 1v1 BattleSpec and run it. Returns the outcome."""
+    if end_condition is None:
+        end_condition = TickLimitCondition(max_ticks=max_ticks)
+    if teams is None:
+        teams = (
+            _make_team(0, (_make_ship_spec("s0", 0.0, 0.0),)),
+            _make_team(1, (_make_ship_spec("s1", 500.0, 0.0),)),
+        )
+    spec = BattleSpec(
+        seed=seed,
+        telemetry_level=TelemetryLevel.NORMAL,
+        boundary=None,
+        end_condition=end_condition,
+        absolute_max_ticks=absolute_max_ticks,
+        teams=teams,
+        modifier_stack=ModifierStack.empty(),
+        post_battle_hook=post_battle_hook,
+    )
+    return run_battle(
+        spec,
+        ai_factory=AIControllerFactory(),
+        ship_builder=ship_builder,
+        **run_kwargs,
+    )
+
+
 @pytest.fixture
 def ship_builder(fresh_registries) -> Callable[[ShipSpec, int], Ship]:
     """Minimal Phase-1 ship builder.
@@ -207,71 +245,22 @@ class TestShipBuilderDefaultsFromContext:
 
 
 def test_run_battle_returns_battle_outcome(ship_builder):
-    spec = BattleSpec(
-        seed=42,
-        telemetry_level=TelemetryLevel.NORMAL,
-        boundary=None,
-        end_condition=TickLimitCondition(max_ticks=5),
-        absolute_max_ticks=1000,
-        teams=(
-            _make_team(0, (_make_ship_spec("s0", 0.0, 0.0),)),
-            _make_team(1, (_make_ship_spec("s1", 500.0, 0.0),)),
-        ),
-        modifier_stack=ModifierStack.empty(),
-        post_battle_hook=None,
-    )
-
-    outcome = run_battle(
-        spec,
-        ai_factory=AIControllerFactory(),
-        ship_builder=ship_builder,
-    )
+    outcome = _run_minimal_battle(ship_builder, seed=42, max_ticks=5, absolute_max_ticks=1000)
     assert isinstance(outcome, BattleOutcome)
 
 
 def test_run_battle_hits_tick_limit_and_reports_correct_end_reason(ship_builder):
-    spec = BattleSpec(
-        seed=42,
-        telemetry_level=TelemetryLevel.NORMAL,
-        boundary=None,
-        end_condition=TickLimitCondition(max_ticks=3),
-        absolute_max_ticks=1000,
-        teams=(
-            _make_team(0, (_make_ship_spec("s0", 0.0, 0.0),)),
-            _make_team(1, (_make_ship_spec("s1", 500.0, 0.0),)),
-        ),
-        modifier_stack=ModifierStack.empty(),
-        post_battle_hook=None,
-    )
-
-    outcome = run_battle(
-        spec,
-        ai_factory=AIControllerFactory(),
-        ship_builder=ship_builder,
-    )
+    outcome = _run_minimal_battle(ship_builder, seed=42, max_ticks=3, absolute_max_ticks=1000)
     assert outcome.end_reason == EndReason.TICK_LIMIT
     assert outcome.duration_ticks >= 3
 
 
 def test_run_battle_team_ids_preserved_in_order(ship_builder):
-    spec = BattleSpec(
-        seed=1,
-        telemetry_level=TelemetryLevel.NORMAL,
-        boundary=None,
-        end_condition=TickLimitCondition(max_ticks=2),
-        absolute_max_ticks=100,
-        teams=(
-            _make_team(0, (_make_ship_spec("alpha", -200.0, 0.0),)),
-            _make_team(1, (_make_ship_spec("bravo", 200.0, 0.0),)),
-        ),
-        modifier_stack=ModifierStack.empty(),
-        post_battle_hook=None,
+    teams = (
+        _make_team(0, (_make_ship_spec("alpha", -200.0, 0.0),)),
+        _make_team(1, (_make_ship_spec("bravo", 200.0, 0.0),)),
     )
-    outcome = run_battle(
-        spec,
-        ai_factory=AIControllerFactory(),
-        ship_builder=ship_builder,
-    )
+    outcome = _run_minimal_battle(ship_builder, seed=1, max_ticks=2, teams=teams)
     assert [t.team_id for t in outcome.teams] == [0, 1]
     assert outcome.teams[0].name == "Team 0"
     assert outcome.teams[1].name == "Team 1"
@@ -324,24 +313,7 @@ def test_run_battle_every_ship_spec_has_matching_ship_outcome(ship_builder):
 
 
 def test_run_battle_seed_is_echoed(ship_builder):
-    spec = BattleSpec(
-        seed=12345,
-        telemetry_level=TelemetryLevel.NORMAL,
-        boundary=None,
-        end_condition=TickLimitCondition(max_ticks=2),
-        absolute_max_ticks=100,
-        teams=(
-            _make_team(0, (_make_ship_spec("s0", 0.0, 0.0),)),
-            _make_team(1, (_make_ship_spec("s1", 500.0, 0.0),)),
-        ),
-        modifier_stack=ModifierStack.empty(),
-        post_battle_hook=None,
-    )
-    outcome = run_battle(
-        spec,
-        ai_factory=AIControllerFactory(),
-        ship_builder=ship_builder,
-    )
+    outcome = _run_minimal_battle(ship_builder, seed=12345)
     assert outcome.seed == 12345
 
 
@@ -356,25 +328,7 @@ def test_run_battle_per_tick_callback_invoked_each_tick(ship_builder):
     def cb(engine):
         calls.append(engine.tick_counter)
 
-    spec = BattleSpec(
-        seed=0,
-        telemetry_level=TelemetryLevel.NORMAL,
-        boundary=None,
-        end_condition=TickLimitCondition(max_ticks=5),
-        absolute_max_ticks=100,
-        teams=(
-            _make_team(0, (_make_ship_spec("s0", 0.0, 0.0),)),
-            _make_team(1, (_make_ship_spec("s1", 500.0, 0.0),)),
-        ),
-        modifier_stack=ModifierStack.empty(),
-        post_battle_hook=None,
-    )
-    run_battle(
-        spec,
-        ai_factory=AIControllerFactory(),
-        ship_builder=ship_builder,
-        per_tick_callback=cb,
-    )
+    _run_minimal_battle(ship_builder, max_ticks=5, per_tick_callback=cb)
     assert len(calls) >= 5
     # Monotonic increasing tick counts
     assert calls == sorted(set(calls))
@@ -391,24 +345,7 @@ def test_run_battle_invokes_post_battle_hook_with_outcome(ship_builder):
     def hook(outcome: BattleOutcome) -> None:
         received.append(outcome)
 
-    spec = BattleSpec(
-        seed=0,
-        telemetry_level=TelemetryLevel.NORMAL,
-        boundary=None,
-        end_condition=TickLimitCondition(max_ticks=2),
-        absolute_max_ticks=100,
-        teams=(
-            _make_team(0, (_make_ship_spec("s0", 0.0, 0.0),)),
-            _make_team(1, (_make_ship_spec("s1", 500.0, 0.0),)),
-        ),
-        modifier_stack=ModifierStack.empty(),
-        post_battle_hook=hook,
-    )
-    outcome = run_battle(
-        spec,
-        ai_factory=AIControllerFactory(),
-        ship_builder=ship_builder,
-    )
+    outcome = _run_minimal_battle(ship_builder, post_battle_hook=hook)
     assert received == [outcome]
 
 
