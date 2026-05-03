@@ -60,29 +60,6 @@ def _make_viewmodel(sources=None):
 
 
 # ===========================================================================
-# Event Constants Tests
-# ===========================================================================
-
-class TestBuildQueueWindowEvents:
-    """Event constants should be defined."""
-
-    def test_sources_changed_event_exists(self):
-        """SOURCES_CHANGED event constant exists."""
-        assert hasattr(BuildQueueWindowEvents, 'SOURCES_CHANGED')
-        assert BuildQueueWindowEvents.SOURCES_CHANGED
-
-    def test_selection_changed_event_exists(self):
-        """SELECTION_CHANGED event constant exists."""
-        assert hasattr(BuildQueueWindowEvents, 'SELECTION_CHANGED')
-        assert BuildQueueWindowEvents.SELECTION_CHANGED
-
-    def test_filters_applied_event_exists(self):
-        """FILTERS_APPLIED event constant exists."""
-        assert hasattr(BuildQueueWindowEvents, 'FILTERS_APPLIED')
-        assert BuildQueueWindowEvents.FILTERS_APPLIED
-
-
-# ===========================================================================
 # Initialization Tests
 # ===========================================================================
 

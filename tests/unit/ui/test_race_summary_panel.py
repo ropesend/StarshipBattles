@@ -127,17 +127,6 @@ class TestRaceSummaryPanelCreation:
             assert hasattr(panel, 'summary_portrait_image')
             assert hasattr(panel, 'summary_ship_images')
 
-    def test_race_summary_panel_stores_race_config(self, mock_race_config):
-        """RaceSummaryPanel stores reference to race_config."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.race_config = mock_race_config
-
-            assert panel.race_config is mock_race_config
-
-
 # =============================================================================
 # Test: Summary Data Formatting
 # =============================================================================
@@ -344,62 +333,6 @@ class TestPlaceholders:
 
 class TestCallbackIntegration:
     """Tests for callback integration with parent screen."""
-
-    def test_on_load_race_callback_stored(self):
-        """on_load_race_callback is stored if provided."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            callback = MagicMock()
-            panel.on_load_race_callback = callback
-
-            assert panel.on_load_race_callback is callback
-
-    def test_has_load_button_reference(self):
-        """RaceSummaryPanel has btn_load attribute for Load Race button."""
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.btn_load = MagicMock()
-
-            assert hasattr(panel, 'btn_load')
-
-
-class TestFeat12RandomizeAllButton:
-    """FEAT-12 Sub-task 5: master Randomize All button on Summary panel.
-
-    Lives parallel to `btn_load`. Constructor accepts an
-    `on_randomize_all_callback` parameter; the panel exposes the new
-    `btn_randomize_all` attribute the screen wires up in `process_event`.
-    """
-
-    def test_on_randomize_all_callback_stored(self):
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *a, **kw: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            cb = MagicMock()
-            panel.on_randomize_all_callback = cb
-            assert panel.on_randomize_all_callback is cb
-
-    def test_has_btn_randomize_all_attribute(self):
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        with patch.object(RaceSummaryPanel, '__init__', lambda self, *a, **kw: None):
-            panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
-            panel.btn_randomize_all = MagicMock()
-            assert hasattr(panel, 'btn_randomize_all')
-
-    def test_constructor_accepts_on_randomize_all_callback(self):
-        """Construction signature accepts the new keyword without error."""
-        import inspect
-        from game.ui.panels.race_summary_panel import RaceSummaryPanel
-
-        sig = inspect.signature(RaceSummaryPanel.__init__)
-        assert "on_randomize_all_callback" in sig.parameters
-
 
 # =============================================================================
 # FEAT-14: Registry-driven Summary tab

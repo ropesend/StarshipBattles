@@ -51,13 +51,6 @@ class TestSprites:
         count = sum(1 for s in mgr.sprites if s is not None)
         assert count > 10, "Should have loaded multiple sprites"
 
-    def test_atlas_fallback_logic(self):
-        """Test that we can still conceptually load an atlas if we wanted to (via private method maybe? or just skip)."""
-        # Since load_atlas is deprecated/empty, this test is less relevant unless we test the fallback path explicitly.
-        # But we tested fallback logic with mocks in test_sprite_loading.py.
-        pass
-
-
 class TestSpriteManagerSingletonLifecycle:
     """Test singleton pattern for SpriteManager."""
 

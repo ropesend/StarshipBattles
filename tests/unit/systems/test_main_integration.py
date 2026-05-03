@@ -26,13 +26,11 @@ class TestMainIntegration:
     def test_import_main(self, cleanup):
         """Test that main.py can be imported without ImportError."""
         try:
-            from game import app
+            from game import app  # noqa: F401
         except ImportError as e:
             pytest.fail(f"Failed to import main.py: {e}")
         except Exception as e:
-            # Main might fail on init due to pygame headless issues, but we want to catch ImportErrors primarily/
-            # However, if it fails due to display, that's fine for this specific test case regarding BATTLE_LOG
-            print(f"Warning: main.py raised exception during import (likely pygame init): {e}")
+            pytest.skip(f"main.py raised non-import exception (likely pygame init): {e}")
 
     def test_game_instantiation(self, cleanup):
         """Test that the Game class can be instantiated."""

@@ -281,18 +281,6 @@ class TestScreenDelegatesViewStateToViewModel:
     between `screen.active_side` and `screen.view_model.active_side`.
     """
 
-    def test_screen_owns_a_view_model(self):
-        from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
-        screen = object.__new__(FleetBattleSetupScreen)
-        # Minimally reproduce __init__ for the attrs we care about.
-        from game.ui.screens.battle_setup_state import BattleSetupState
-        screen.state = BattleSetupState()
-        screen.view_model = BattleSetupViewModel()
-
-        assert isinstance(screen.view_model, BattleSetupViewModel)
-
     def test_active_side_shim_routes_to_view_model(self):
         from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
         from game.ui.screens.battle_setup.view_model import BattleSetupViewModel

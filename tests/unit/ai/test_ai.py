@@ -121,20 +121,6 @@ class TestAIController:
         # Kamikaze always fires
         assert ai_setup['ship1'].comp_trigger_pulled is True
 
-    def test_navigate_to_rotates_ship(self, ai_setup):
-        """Navigation should rotate ship toward target."""
-        ai_setup['ship1'].angle = 0  # Facing right
-        target_pos = pygame.math.Vector2(0, 1000)  # Target is below
-
-        # Navigate should rotate ship toward target
-        initial_angle = ai_setup['ship1'].angle
-        ai_setup['ai'].navigate_to(target_pos)
-
-        # Angle should change (rotating toward down/90 degrees)
-        # Can't assert exact value due to turn speed limits
-        # Just verify rotation happened if angle diff was > 5
-        pass  # Rotation logic verified visually in game
-
     def test_check_avoidance_returns_none_when_clear(self, ai_setup):
         """Avoidance check should return None when no obstacles nearby."""
         # Move ship2 far away

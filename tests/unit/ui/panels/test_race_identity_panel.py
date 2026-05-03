@@ -47,23 +47,6 @@ def mock_panel():
 # Test: RaceIdentityPanel Import and Creation
 # =============================================================================
 
-class TestRaceIdentityPanelCreation:
-    """Tests for RaceIdentityPanel initialization."""
-
-    def test_identity_panel_creates_successfully(self):
-        """RaceIdentityPanel initializes without errors when mocked."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
-
-        with patch.object(RaceIdentityPanel, '_create_content'):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.panel = MagicMock()
-            panel.ui_manager = MagicMock()
-            panel.race_config = MagicMock()
-            panel._faction_name_overridden = False
-
-            assert panel._faction_name_overridden is False
-
-
 # =============================================================================
 # Test: Configuration Updates (update_config)
 # =============================================================================
@@ -328,20 +311,6 @@ class TestFactionAutoGeneration:
             result = panel._auto_generate_faction_name("", "")
 
             assert result == ""
-
-    def test_auto_generate_faction_name_override_preserved(self, mock_race_config):
-        """Manual faction name edit sets override flag."""
-        from game.ui.panels.race_identity_panel import RaceIdentityPanel
-
-        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
-            panel.race_config = mock_race_config
-            panel._faction_name_overridden = False
-
-            # Simulate manual edit
-            panel._faction_name_overridden = True
-
-            assert panel._faction_name_overridden is True
 
     def test_auto_generate_faction_name_resets_when_not_overridden(self, mock_race_config):
         """Auto-generation updates when not manually overridden."""

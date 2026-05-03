@@ -45,38 +45,6 @@ def mock_panel():
 # Test: RaceThemeGallery Import and Creation
 # =============================================================================
 
-class TestRaceThemeGalleryCreation:
-    """Tests for RaceThemeGallery initialization."""
-
-    def test_race_theme_gallery_has_button_list(self):
-        """RaceThemeGallery has asset_buttons list attribute (via BaseGallery)."""
-        from game.ui.panels.race_theme_gallery import RaceThemeGallery
-
-        with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceThemeGallery.__new__(RaceThemeGallery)
-            gallery.asset_buttons = []
-
-            assert hasattr(gallery, 'asset_buttons')
-            assert isinstance(gallery.asset_buttons, list)
-
-    def test_race_theme_gallery_has_scroll_container(self):
-        """RaceThemeGallery has scroll_container attribute (via BaseGallery)."""
-        from game.ui.panels.race_theme_gallery import RaceThemeGallery
-
-        with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceThemeGallery.__new__(RaceThemeGallery)
-            gallery.scroll_container = None
-
-            assert hasattr(gallery, 'scroll_container')
-
-    def test_race_theme_gallery_extends_base_gallery(self):
-        """RaceThemeGallery extends BaseGallery."""
-        from game.ui.panels.race_theme_gallery import RaceThemeGallery
-        from game.ui.panels.base_gallery import BaseGallery
-
-        assert issubclass(RaceThemeGallery, BaseGallery)
-
-
 # =============================================================================
 # Test: Theme Selection
 # =============================================================================

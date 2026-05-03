@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. CAT-1 Trivial Pass (46 items) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. CAT-1 Trivial Pass (46 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-2 Tests Nothing Real (26 items) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CAT-3 Dead Test Code (8 items, 1 relocate + 7 delete) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 1 CAT-1 Trivial Pass
-**Last Action:** Project created from 2026-05-02_204633_test-review after independent verification (3rd skeptical pass)
-**Next Action:** Begin Phase 1 tasks: delete or pytest.skip 46 verified CAT-1 trivial-pass tests
+**Active Phase:** Phase 2 CAT-2 Tests Nothing Real
+**Last Action:** Phase 1 complete: deleted/skipped 46 CAT-1 trivial-pass items across 36 test files (3 files fully deleted).
+**Next Action:** Begin Phase 2 CAT-2 tasks (26 items, skip APC-001 cluster files)
 **Blockers:** None
 
 ## Overview

@@ -13,33 +13,12 @@ replay determinism holds (Pattern #18 / docs/02_PATTERNS.md).
 """
 import random
 import pytest
-from unittest.mock import MagicMock, patch
 
 from game.core.exceptions import StateException
 
 
 class TestAIControllerFactory:
     """Tests for AIControllerFactory."""
-
-    def test_factory_exists(self):
-        """AIControllerFactory should be importable from AI layer."""
-        from game.ai.ai_factory import AIControllerFactory
-        assert AIControllerFactory is not None
-
-    def test_factory_has_create_for_ship_method(self):
-        """Factory should have create_for_ship method."""
-        from game.ai.ai_factory import AIControllerFactory
-        assert hasattr(AIControllerFactory, 'create_for_ship')
-
-    def test_factory_has_create_for_ships_method(self):
-        """Factory should have create_for_ships method."""
-        from game.ai.ai_factory import AIControllerFactory
-        assert hasattr(AIControllerFactory, 'create_for_ships')
-
-    def test_factory_has_set_grid_method(self):
-        """Factory should have set_grid method."""
-        from game.ai.ai_factory import AIControllerFactory
-        assert hasattr(AIControllerFactory, 'set_grid')
 
     def test_create_for_ship_returns_ai_controller(self, fresh_registries):
         """create_for_ship should return an AIController."""
@@ -134,12 +113,6 @@ class TestAIControllerFactory:
         assert isinstance(controller.ship, ShipControllableAdapter)
         # And the adapter should wrap our original ship
         assert controller.ship.ship is ship
-
-    def test_factory_exported_from_ai_package(self):
-        """AIControllerFactory should be exported from ai package."""
-        from game.ai import AIControllerFactory
-        assert AIControllerFactory is not None
-
 
 class TestAIControllerFactoryIntegration:
     """Integration tests for AIControllerFactory with BattleEngine."""

@@ -120,9 +120,3 @@ def test_game_state_aliases_remain_removed() -> None:
     assert not hasattr(app_mod, "SETTINGS")
 
 
-def test_configure_logging_callable() -> None:
-    """`configure_logging` must remain accessible from the module."""
-    from game import app as app_mod
-    assert hasattr(app_mod, "configure_logging") or True
-    # Note: configure_logging may move to app_bootstrap. We still want
-    # `main()` to call it; presence on `game.app` is not strictly required.

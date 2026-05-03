@@ -51,52 +51,6 @@ def mock_asset_loader():
 # Test: RaceFlagGallery Import and Creation
 # =============================================================================
 
-class TestRaceFlagGalleryCreation:
-    """Tests for RaceFlagGallery initialization."""
-
-    def test_race_flag_gallery_has_button_list(self):
-        """RaceFlagGallery has asset_buttons list attribute."""
-        from game.ui.panels.race_flag_gallery import RaceFlagGallery
-
-        with patch.object(RaceFlagGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceFlagGallery.__new__(RaceFlagGallery)
-            gallery.asset_buttons = []
-
-            assert hasattr(gallery, 'asset_buttons')
-            assert isinstance(gallery.asset_buttons, list)
-
-    def test_race_flag_gallery_has_preview_images_list(self):
-        """RaceFlagGallery has flag_preview_images list attribute."""
-        from game.ui.panels.race_flag_gallery import RaceFlagGallery
-
-        with patch.object(RaceFlagGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceFlagGallery.__new__(RaceFlagGallery)
-            gallery.flag_preview_images = []
-
-            assert hasattr(gallery, 'flag_preview_images')
-            assert isinstance(gallery.flag_preview_images, list)
-
-    def test_race_flag_gallery_has_scroll_container(self):
-        """RaceFlagGallery has scroll_container attribute for scrolling container."""
-        from game.ui.panels.race_flag_gallery import RaceFlagGallery
-
-        with patch.object(RaceFlagGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceFlagGallery.__new__(RaceFlagGallery)
-            gallery.scroll_container = None
-
-            assert hasattr(gallery, 'scroll_container')
-
-    def test_race_flag_gallery_has_preview_panel(self):
-        """RaceFlagGallery has preview_panel attribute."""
-        from game.ui.panels.race_flag_gallery import RaceFlagGallery
-
-        with patch.object(RaceFlagGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceFlagGallery.__new__(RaceFlagGallery)
-            gallery.preview_panel = None
-
-            assert hasattr(gallery, 'preview_panel')
-
-
 # =============================================================================
 # Test: Flag Selection
 # =============================================================================

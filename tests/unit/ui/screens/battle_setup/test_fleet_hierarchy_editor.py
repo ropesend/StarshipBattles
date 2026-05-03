@@ -228,17 +228,3 @@ class TestDeleteOperations:
         assert ship not in fleet.ships
 
 
-class TestStateless:
-    def test_editor_has_no_instance_state(self):
-        from game.ui.screens.battle_setup.fleet_hierarchy_editor import (
-            FleetHierarchyEditor,
-        )
-        # Either a class with only staticmethods, or a module-level function
-        # bag. Either way, instances shouldn't carry state.
-        if isinstance(FleetHierarchyEditor, type):
-            editor = FleetHierarchyEditor()
-            # Fresh instance should not have meaningful attrs.
-            instance_attrs = {
-                k: v for k, v in editor.__dict__.items() if not k.startswith("__")
-            }
-            assert instance_attrs == {}

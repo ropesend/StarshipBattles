@@ -244,12 +244,6 @@ class TestComputePlanetProduction:
 
         assert result == {}
 
-    def test_function_exists(self):
-        """compute_planet_production function exists."""
-        from game.strategy.services.planet_economy_projector import compute_planet_production
-
-        assert callable(compute_planet_production)
-
     def test_function_accepts_planet(self, mock_registries):
         """compute_planet_production accepts planet argument."""
         from game.strategy.services.planet_economy_projector import compute_planet_production

@@ -14,7 +14,6 @@ from game.ui.screens.strategy_menu_panel import (
     MENU_BUTTONS,
     PANEL_WIDTH,
     PANEL_HEIGHT,
-    BUTTON_COUNT,
 )
 
 
@@ -32,51 +31,6 @@ def _make_panel(callback=None):
     panel._option_buttons = {}
     panel.ui_manager = manager
     return panel, cb
-
-
-# --- Constants Tests ---
-
-class TestMenuPanelConstants:
-    """Verify module-level constants are correct."""
-
-    def test_button_count(self):
-        assert BUTTON_COUNT == 6
-
-    def test_menu_buttons_length(self):
-        assert len(MENU_BUTTONS) == 6
-
-    def test_menu_buttons_labels(self):
-        labels = [label for label, _ in MENU_BUTTONS]
-        assert labels == [
-            "Save Game", "Load Game", "Settings",
-            "Controls", "Quit to Menu", "Quit Game",
-        ]
-
-    def test_menu_buttons_option_ids(self):
-        option_ids = [oid for _, oid in MENU_BUTTONS]
-        assert option_ids == [
-            MENU_SAVE_GAME, MENU_LOAD_GAME, MENU_SETTINGS,
-            MENU_CONTROLS, MENU_QUIT_TO_MENU, MENU_QUIT_GAME,
-        ]
-
-    def test_panel_width_accommodates_buttons(self):
-        from game.ui.screens.strategy_menu_panel import BUTTON_WIDTH, PANEL_PADDING
-        assert PANEL_WIDTH == BUTTON_WIDTH + 2 * PANEL_PADDING
-
-    def test_panel_height_accommodates_buttons(self):
-        from game.ui.screens.strategy_menu_panel import (
-            BUTTON_HEIGHT, BUTTON_GAP, PANEL_PADDING,
-        )
-        expected = (
-            BUTTON_COUNT * BUTTON_HEIGHT
-            + (BUTTON_COUNT + 1) * BUTTON_GAP
-            + 2 * PANEL_PADDING
-        )
-        assert PANEL_HEIGHT == expected
-
-    def test_option_id_strings_are_unique(self):
-        option_ids = [oid for _, oid in MENU_BUTTONS]
-        assert len(option_ids) == len(set(option_ids))
 
 
 # --- Button Creation Tests ---

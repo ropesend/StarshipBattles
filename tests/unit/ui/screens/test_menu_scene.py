@@ -51,22 +51,6 @@ class TestMenuScene:
 
         assert len(scene.buttons) == 3
 
-    def test_button_config_with_3_buttons(self, mock_scene_class):
-        """Test button_config with 3 buttons (New Game, Load, Settings)."""
-        MenuScene, _, _ = mock_scene_class
-        callbacks = {
-            "New Game": MagicMock(),
-            "Load": MagicMock(),
-            "Settings": MagicMock(),
-        }
-
-        button_config = [(name, cb) for name, cb in callbacks.items()]
-
-        scene = MenuScene(800, 600, button_config)
-
-        assert len(scene.buttons) == 3
-        assert len(scene._button_callbacks) == 3
-
     def test_button_click_dispatches_to_correct_callback(self, mock_scene_class):
         """Test button click dispatches to correct callback."""
         MenuScene, _, created_buttons = mock_scene_class

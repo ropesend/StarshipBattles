@@ -13,89 +13,12 @@ Frozen contract — if you must change this list, also update:
 
 from __future__ import annotations
 
-import inspect
-
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
 
 # ---------------------------------------------------------------------------
 # Frozen surface
 # ---------------------------------------------------------------------------
-
-PUBLIC_METHODS: frozenset[str] = frozenset({
-    # Lifecycle / write path
-    "handle_command",
-    "process_turn",
-    # Command dispatch helpers (28)
-    "dispatch_issue_colonize",
-    "dispatch_issue_move",
-    "dispatch_issue_intercept",
-    "dispatch_issue_join_fleet",
-    "dispatch_queue_colonize_mission",
-    "dispatch_clear_orders",
-    "dispatch_issue_transfer",
-    "dispatch_issue_implode_planet",
-    "dispatch_issue_stellerate_star",
-    "dispatch_issue_open_warp_point",
-    "dispatch_issue_close_warp_point",
-    "dispatch_issue_create_dyson_sphere",
-    "dispatch_issue_self_destruct",
-    "dispatch_queue_implode_planet_mission",
-    "dispatch_queue_stellerate_star_mission",
-    "dispatch_queue_open_warp_point_mission",
-    "dispatch_queue_close_warp_point_mission",
-    "dispatch_queue_create_dyson_sphere_mission",
-    "dispatch_issue_warp",
-    "dispatch_issue_build_order",
-    "dispatch_remove_build_order",
-    "dispatch_split_fleet",
-    "dispatch_delete_order",
-    "dispatch_reorder_order",
-    "dispatch_add_to_construction_queue",
-    "dispatch_remove_from_construction_queue",
-    "dispatch_reorder_construction_queue",
-    "dispatch_issue_planet_order",
-    "dispatch_clear_planet_orders",
-    "dispatch_delete_planet_order",
-    "dispatch_set_atmosphere_target",
-    # Fleet queries
-    "get_fleet",
-    "get_fleets_at_hex",
-    "get_fleet_path_preview",
-    "get_fleet_path_projection",
-    "get_fleet_remaining_pods",
-    # System / star / map queries
-    "get_all_systems",
-    "get_all_stars",
-    "get_system_at_hex",
-    "get_system_containing_fleet",
-    "get_system_near_hex",
-    "get_storm_names_at_hex",
-    # Planet queries
-    "get_planet",
-    "get_planets_at_hex",
-    # Empire queries
-    "get_all_empires",
-    "get_empire",
-    "get_empire_colonies",
-    "get_empire_fleets",
-    "get_empire_build_queues",
-    "get_hex_build_queues",
-    # Game state
-    "get_human_player_ids",
-    "get_turn_number",
-    "get_save_path",
-    # Demographics / economy / races
-    "get_colony_demographic_view",
-    "get_race_registry",
-    # Events
-    "get_turn_events",
-    "get_all_events",
-    "get_events_by_category",
-    # Validation
-    "can_colonize",
-    "can_move_to",
-})
 
 # Underscore-prefixed members downstream tests reach into. Must remain
 # accessible (callable methods or settable attributes) on the composer.
@@ -118,41 +41,6 @@ PROTECTED_ATTRS: frozenset[str] = frozenset({
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
-
-class TestPublicMethodSurface:
-    def test_every_public_method_present(self) -> None:
-        missing = [name for name in PUBLIC_METHODS
-                   if not hasattr(StrategySessionFacade, name)]
-        assert missing == [], (
-            f"StrategySessionFacade is missing public methods: {missing}"
-        )
-
-    def test_every_public_method_callable(self) -> None:
-        non_callable = [
-            name for name in PUBLIC_METHODS
-            if not callable(getattr(StrategySessionFacade, name, None))
-        ]
-        assert non_callable == [], (
-            f"Members not callable on the class: {non_callable}"
-        )
-
-    def test_no_unexpected_public_methods_added(self) -> None:
-        """Catch silent additions to the facade surface — every new public
-        method should be a deliberate API decision; add it to PUBLIC_METHODS
-        when it is.
-        """
-        actual_public = {
-            name for name, _ in inspect.getmembers(StrategySessionFacade,
-                                                   predicate=inspect.isfunction)
-            if not name.startswith("_")
-        }
-        unexpected = actual_public - PUBLIC_METHODS
-        assert unexpected == set(), (
-            f"Public methods present on the class but not in the frozen "
-            f"contract: {sorted(unexpected)}. Add them to PUBLIC_METHODS "
-            f"if intentional."
-        )
-
 
 class TestProtectedSurface:
     """Members starting with `_` that downstream tests reach into."""

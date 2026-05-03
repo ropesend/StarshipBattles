@@ -97,40 +97,6 @@ def _make_strategy_screen():
 # Task 4.1: Initialization Tests
 # ===========================================================================
 
-class TestStrategyScreenInitialization:
-    """Test StrategyScreen.__init__ behavior."""
-
-    def test_init_stores_screen_dimensions(self):
-        """__init__ should store screen width and height."""
-        screen, _ = _make_strategy_screen()
-        assert screen.screen_width == 1920
-        assert screen.screen_height == 1080
-
-    def test_init_accepts_session_parameter(self):
-        """__init__ should accept and store session parameter."""
-        screen, mocks = _make_strategy_screen()
-        assert screen.session is mocks['session']
-
-    def test_init_creates_facade(self):
-        """__init__ should create facade from session."""
-        screen, mocks = _make_strategy_screen()
-        assert screen._facade is mocks['facade']
-
-    def test_init_creates_sub_objects(self):
-        """__init__ should create renderer, camera_nav, input_handler, etc."""
-        screen, _ = _make_strategy_screen()
-        assert screen._renderer is not None
-        assert screen._camera_nav is not None
-        assert screen._input is not None
-        assert screen._fleet_ops is not None
-        assert screen._colonization is not None
-
-    def test_init_stores_input_mapper(self):
-        """__init__ should store input_mapper parameter."""
-        screen, _ = _make_strategy_screen()
-        assert screen.input_mapper is not None
-
-
 # ===========================================================================
 # Task 4.1: Turn Advancement Tests
 # ===========================================================================

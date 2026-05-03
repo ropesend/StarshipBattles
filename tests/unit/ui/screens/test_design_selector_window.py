@@ -161,53 +161,6 @@ def _make_selector_window(design_library=None, mode="load", on_select_callback=N
     return window, mocks
 
 
-# --- Initialization Tests ---
-
-class TestDesignSelectorWindowInit:
-    """Tests for initialization and mode handling."""
-
-    def test_init_load_mode_stores_mode(self):
-        """Test init with load mode stores mode correctly."""
-        window, _ = _make_selector_window(mode="load")
-
-        assert window.mode == "load"
-
-    def test_init_target_mode_stores_mode(self):
-        """Test init with target mode stores mode correctly."""
-        window, _ = _make_selector_window(mode="target")
-
-        assert window.mode == "target"
-
-    def test_init_stores_design_library_reference(self):
-        """Test init stores design_library reference."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
-
-        assert window.design_library is library
-
-    def test_init_stores_callback(self):
-        """Test init stores on_select_callback."""
-        callback = MagicMock()
-        window, _ = _make_selector_window(on_select_callback=callback)
-
-        assert window.on_select_callback is callback
-
-    def test_init_empty_filter_state(self):
-        """Test init has empty filter state."""
-        window, _ = _make_selector_window()
-
-        assert window.filter_name == ""
-        assert window.filter_ship_class is None
-        assert window.filter_vehicle_type is None
-        assert window.show_obsolete is False
-
-    def test_init_no_selected_design(self):
-        """Test init has no selected design."""
-        window, _ = _make_selector_window()
-
-        assert window.selected_design_id is None
-
-
 # --- Filtering Tests ---
 
 class TestDesignSelectorFiltering:
