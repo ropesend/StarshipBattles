@@ -59,12 +59,9 @@ class ImplodePlanetCommandHandler(BaseCommandHandler):
         )
 
         # 4. Apply
-        if result.is_valid:
-            order = Order(OrderType.IMPLODE_PLANET, target=planet)
-            fleet.add_order(order)
-            logger.info(f"GameSession: Issued IMPLODE_PLANET order for Fleet {fleet.id}")
-
-        return result
+        return self._emit_validated_order(
+            fleet, OrderType.IMPLODE_PLANET, planet, result, "IMPLODE_PLANET",
+        )
 
 
 class StellerateStarCommandHandler(BaseCommandHandler):
@@ -84,12 +81,9 @@ class StellerateStarCommandHandler(BaseCommandHandler):
         )
 
         # 3. Apply
-        if result.is_valid:
-            order = Order(OrderType.STELLERATE_STAR, target=None)
-            fleet.add_order(order)
-            logger.info(f"GameSession: Issued STELLERATE_STAR order for Fleet {fleet.id}")
-
-        return result
+        return self._emit_validated_order(
+            fleet, OrderType.STELLERATE_STAR, None, result, "STELLERATE_STAR",
+        )
 
 
 class OpenWarpPointCommandHandler(BaseCommandHandler):
@@ -109,16 +103,13 @@ class OpenWarpPointCommandHandler(BaseCommandHandler):
         )
 
         # 3. Apply
-        if result.is_valid:
-            target_dict = {
-                'target_hex': cmd.target_hex,
-                'target_system_name': cmd.target_system_name
-            }
-            order = Order(OrderType.OPEN_WARP_POINT, target=target_dict)
-            fleet.add_order(order)
-            logger.info(f"GameSession: Issued OPEN_WARP_POINT order for Fleet {fleet.id}")
-
-        return result
+        target_dict = {
+            'target_hex': cmd.target_hex,
+            'target_system_name': cmd.target_system_name,
+        }
+        return self._emit_validated_order(
+            fleet, OrderType.OPEN_WARP_POINT, target_dict, result, "OPEN_WARP_POINT",
+        )
 
 
 class CloseWarpPointCommandHandler(BaseCommandHandler):
@@ -137,18 +128,14 @@ class CloseWarpPointCommandHandler(BaseCommandHandler):
             component_registry=session.registries.components
         )
 
-        # 3. Apply
-        if result.is_valid:
-            # Store the warp point's sector (hex) for execution-time validation
-            target_dict = {
-                'destination_id': cmd.warp_point_destination_id,
-                'target_hex': {'q': fleet.location.q, 'r': fleet.location.r},
-            }
-            order = Order(OrderType.CLOSE_WARP_POINT, target=target_dict)
-            fleet.add_order(order)
-            logger.info(f"GameSession: Issued CLOSE_WARP_POINT order for Fleet {fleet.id}")
-
-        return result
+        # 3. Apply — store the warp point's sector (hex) for execution-time validation
+        target_dict = {
+            'destination_id': cmd.warp_point_destination_id,
+            'target_hex': {'q': fleet.location.q, 'r': fleet.location.r},
+        }
+        return self._emit_validated_order(
+            fleet, OrderType.CLOSE_WARP_POINT, target_dict, result, "CLOSE_WARP_POINT",
+        )
 
 
 class CreateDysonSphereCommandHandler(BaseCommandHandler):
@@ -168,12 +155,9 @@ class CreateDysonSphereCommandHandler(BaseCommandHandler):
         )
 
         # 3. Apply
-        if result.is_valid:
-            order = Order(OrderType.CREATE_DYSON_SPHERE, target=None)
-            fleet.add_order(order)
-            logger.info(f"GameSession: Issued CREATE_DYSON_SPHERE order for Fleet {fleet.id}")
-
-        return result
+        return self._emit_validated_order(
+            fleet, OrderType.CREATE_DYSON_SPHERE, None, result, "CREATE_DYSON_SPHERE",
+        )
 
 
 class SelfDestructCommandHandler(BaseCommandHandler):
@@ -190,12 +174,9 @@ class SelfDestructCommandHandler(BaseCommandHandler):
         result = SuperweaponValidator.validate_self_destruct(fleet, cmd.ship_ids)
 
         # 3. Apply
-        if result.is_valid:
-            order = Order(OrderType.SELF_DESTRUCT, target=cmd.ship_ids)
-            fleet.add_order(order)
-            logger.info(f"GameSession: Issued SELF_DESTRUCT order for Fleet {fleet.id}")
-
-        return result
+        return self._emit_validated_order(
+            fleet, OrderType.SELF_DESTRUCT, cmd.ship_ids, result, "SELF_DESTRUCT",
+        )
 
 
 # =============================================================================

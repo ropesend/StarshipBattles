@@ -12,10 +12,11 @@ from typing import Any
 import pygame
 from pygame_gui.elements import (
     UIScrollingContainer, UILabel, UIButton, UITextEntryLine,
-    UIHorizontalSlider, UIDropDownMenu
+    UIDropDownMenu
 )
 
 from game.ui.screens.star_list_filter_manager import STAR_TYPES
+from game.ui.widgets.range_slider_builder import build_range_slider_row
 
 
 def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
@@ -92,48 +93,9 @@ def build_sidebar(manager, sidebar_panel, sidebar_width, rect_height,
     # --- Range Sliders ---
     def add_range(label, key, min_limit, max_limit) -> None:
         nonlocal y_off
-        UILabel(pygame.Rect(10, y_off, width, 20), label, manager, container=content_container)
-        y_off += 20
-
-        # Min Row
-        UILabel(pygame.Rect(10, y_off, 30, 24), "Min", manager, container=content_container)
-        s_min = UIHorizontalSlider(
-            relative_rect=pygame.Rect(45, y_off, width - 105, 24),
-            start_value=min_limit,
-            value_range=(min_limit, max_limit),
-            manager=manager,
-            container=content_container
+        y_off, ui_filters[key] = build_range_slider_row(
+            label, key, min_limit, max_limit, y_off, width, manager, content_container,
         )
-        t_min = UITextEntryLine(
-            relative_rect=pygame.Rect(width - 55, y_off, 55, 24),
-            manager=manager,
-            container=content_container
-        )
-        t_min.set_text(f"{min_limit:.1f}")
-        y_off += 29
-
-        # Max Row
-        UILabel(pygame.Rect(10, y_off, 30, 24), "Max", manager, container=content_container)
-        s_max = UIHorizontalSlider(
-            relative_rect=pygame.Rect(45, y_off, width - 105, 24),
-            start_value=max_limit,
-            value_range=(min_limit, max_limit),
-            manager=manager,
-            container=content_container
-        )
-        t_max = UITextEntryLine(
-            relative_rect=pygame.Rect(width - 55, y_off, 55, 24),
-            manager=manager,
-            container=content_container
-        )
-        t_max.set_text(f"{max_limit:.1f}")
-        y_off += 35
-
-        ui_filters[key] = {
-            'min': s_min, 'max': s_max,
-            'min_txt': t_min, 'max_txt': t_max,
-            'limits': (min_limit, max_limit)
-        }
 
     mass_range = star_ranges['mass']
     temp_range = star_ranges['temperature']

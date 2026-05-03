@@ -53,9 +53,10 @@ def _make_sidebar(panel, manager, column_manager, on_toggle=None):
     """Create an EventLogSidebar with mocked pygame_gui elements."""
     from game.ui.screens.event_log_sidebar import EventLogSidebar
 
-    # Patch UILabel and UIButton to avoid pygame dependency
-    with patch('game.ui.screens.event_log_sidebar.UILabel'), \
-         patch('game.ui.screens.event_log_sidebar.UIButton') as mock_btn_class:
+    # Patch UILabel and UIButton in the shared column-toggle helper
+    # (PROJ-319 DUP-X-08: column-toggle widgets moved to game.ui.widgets.column_toggle_section)
+    with patch('game.ui.widgets.column_toggle_section.UILabel'), \
+         patch('game.ui.widgets.column_toggle_section.UIButton') as mock_btn_class:
         # Make UIButton return new mock instances each time
         mock_btn_class.side_effect = lambda **kwargs: MagicMock(**kwargs)
         sidebar = EventLogSidebar(

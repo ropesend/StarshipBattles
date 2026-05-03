@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Remove the 14 verified dead imports, unused parameters, and unreachable assignments identified by audit `Reviews/results/2026-05-02_184210_audit_shrink/`. Trivial deletions, lowest blast radius — used as a fast warm-up before the function/duplication phases.
 
 ---
@@ -16,8 +16,8 @@
 **File:** `game/core/constants.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Remove dead enum member `GameState.FORMATION = 4` (line 29) — DEEP-01-001
-- [ ] Verify: `pytest tests/ --testmon` passes; LOC delta ≈ -1
+- [x] Remove dead enum member `GameState.FORMATION = 4` (line 29) — DEEP-01-001
+- [x] Verify: `pytest tests/ --testmon` passes; LOC delta ~ -1 (full sharded suite ran: 16374 tests, 16371 passed, 3 skipped, 0 failed)
 
 ---
 
@@ -25,8 +25,8 @@
 **File:** `game/context.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Remove unused import `_ccm_mod` (line 116, alias of `crew_capacity_mod` already imported separately at line 138 as `_ccm_module`) — C1
-- [ ] Verify: `pytest tests/ --testmon` passes; LOC delta ≈ -1
+- [x] Remove unused import `_ccm_mod` (line 116, alias of `crew_capacity_mod` already imported separately at line 138 as `_ccm_module`) — C1
+- [x] Verify: `pytest tests/ --testmon` passes; LOC delta ~ -1 (full sharded suite ran: 16374 tests, 16371 passed, 3 skipped, 0 failed)
 
 ---
 
@@ -34,8 +34,8 @@
 **File:** `game/strategy/data/galaxy.py`
 **Tests:** `pytest tests/strategy/data/`
 
-- [ ] Remove unused parameter `naming_data_path` from function at line 624 (and update all call sites if any pass it) — C2
-- [ ] Verify: `pytest tests/strategy/data/` passes; LOC delta ≈ -3
+- [x] Remove unused parameter `naming_data_path` from function at line 624 (and update all call sites if any pass it) — C2 (verified: zero callers pass it; production callers in `game_session.py:384` and `turn_state_snapshot.py:84` both single-arg)
+- [x] Verify: `pytest tests/strategy/data/` passes; LOC delta ~ -3 (full sharded suite passed)
 
 ---
 
@@ -43,8 +43,8 @@
 **File:** `game/strategy/data/stars.py`
 **Tests:** `pytest tests/strategy/data/`
 
-- [ ] Remove unused parameter `age_ratio` from function at line 303 (all 3 callers omit it per verifier) — C3
-- [ ] Verify: `pytest tests/strategy/data/` passes; LOC delta ≈ -3
+- [x] Remove unused parameter `age_ratio` from function at line 303 (all 3 callers omit it per verifier) — C3 (callers at stars.py:576, 662, 714 all single-arg; tests in test_stars.py also single-arg)
+- [x] Verify: `pytest tests/strategy/data/` passes; LOC delta ~ -3 (full sharded suite passed)
 
 ---
 
@@ -52,8 +52,8 @@
 **File:** `game/strategy/data/planet_gen.py`
 **Tests:** `pytest tests/strategy/data/`
 
-- [ ] Remove unused import `MASS_MOON` (line 23) — C4
-- [ ] Verify: `pytest tests/strategy/data/` passes; LOC delta ≈ -1
+- [x] Remove unused import `MASS_MOON` (line 23) — C4
+- [x] Verify: `pytest tests/strategy/data/` passes; LOC delta ~ -1 (full sharded suite passed)
 
 ---
 
@@ -61,8 +61,8 @@
 **File:** `game/strategy/data/design_metadata.py`
 **Tests:** `pytest tests/strategy/data/`
 
-- [ ] Remove unused `import warnings` (line 13) — DEEP-04-003
-- [ ] Verify: `pytest tests/strategy/data/` passes; LOC delta ≈ -1
+- [x] Remove unused `import warnings` (line 13) — DEEP-04-003
+- [x] Verify: `pytest tests/strategy/data/` passes; LOC delta ~ -1 (full sharded suite passed)
 
 ---
 
@@ -70,8 +70,8 @@
 **File:** `game/strategy/engine/planet_action_engine.py`
 **Tests:** `pytest tests/strategy/engine/`
 
-- [ ] Remove unused import `get_shield_info` (line 25) — C5
-- [ ] Verify: `pytest tests/strategy/engine/` passes; LOC delta ≈ -1
+- [x] Remove unused import `get_shield_info` (line 25) — C5
+- [x] Verify: `pytest tests/strategy/engine/` passes; LOC delta ~ -1 (full sharded suite passed)
 
 ---
 
@@ -79,8 +79,8 @@
 **File:** `game/strategy/facade/dto/fleet_dto.py`
 **Tests:** `pytest tests/strategy/facade/`
 
-- [ ] Remove unused TYPE_CHECKING import `FleetType` (line 11). Confirm no string annotation `"FleetType"` exists in the file before deleting. — C6
-- [ ] Verify: `pytest tests/strategy/facade/` passes; LOC delta ≈ -1
+- [x] Remove unused TYPE_CHECKING import `FleetType` (line 11). Confirm no string annotation `"FleetType"` exists in the file before deleting. — C6 (also removed now-unused `TYPE_CHECKING` from `typing` import; was the only consumer)
+- [x] Verify: `pytest tests/strategy/facade/` passes; LOC delta ~ -1 (full sharded suite passed)
 
 ---
 
@@ -88,8 +88,8 @@
 **File:** `game/strategy/services/action_time_resolver.py`
 **Tests:** `pytest tests/strategy/services/`
 
-- [ ] Remove unreachable `return 1` (line 115) — the if/else above already returns on every branch — C7
-- [ ] Verify: `pytest tests/strategy/services/` passes; LOC delta ≈ -1
+- [x] Remove unreachable `return 1` (line 115) — the if/else above already returns on every branch — C7
+- [x] Verify: `pytest tests/strategy/services/` passes; LOC delta ~ -1 (full sharded suite passed)
 
 ---
 
@@ -97,8 +97,8 @@
 **File:** `game/ui/panels/modifier_impact_grid.py`
 **Tests:** `pytest tests/ui/panels/` (or `pytest tests/ --testmon` if no targeted path)
 
-- [ ] Remove unused parameter `sig_digits` from function at line 273 (all 3 callers omit it per verifier) — C8
-- [ ] Verify: `pytest tests/ --testmon` passes; LOC delta ≈ -2
+- [x] Remove unused parameter `sig_digits` from function at line 273 (all 3 callers omit it per verifier) — C8 (callers at lines 262, 264, 270 all single-arg; updated docstring to remove sig_digits mention)
+- [x] Verify: `pytest tests/ --testmon` passes; LOC delta ~ -2 (full sharded suite passed)
 
 ---
 
@@ -106,8 +106,8 @@
 **File:** `game/ui/screens/test_lab/screen.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Remove unused import `ConfirmationDialog` (line 32). Keep paired `JSONPopup` import (still live). — C9
-- [ ] Verify: `pytest tests/ --testmon` passes; LOC delta ≈ -1
+- [x] Remove unused import `ConfirmationDialog` (line 32). Keep paired `JSONPopup` import (still live). — C9
+- [x] Verify: `pytest tests/ --testmon` passes; LOC delta ~ -1 (full sharded suite ran: 16374 tests, 16371 passed, 3 skipped, 0 failed)
 
 ---
 
@@ -115,8 +115,8 @@
 **File:** `game/ui/services/ship_io_adapter.py`
 **Tests:** `pytest tests/ui/services/` (or `pytest tests/ --testmon` if no targeted path)
 
-- [ ] Remove unused TYPE_CHECKING import `ShipIOType` (line 19). Confirm no string annotation `"ShipIOType"` exists in the file. — C10
-- [ ] Verify: `pytest tests/ --testmon` passes; LOC delta ≈ -1
+- [x] Remove unused TYPE_CHECKING import `ShipIOType` (line 19). Confirm no string annotation `"ShipIOType"` exists in the file. — C10 (also removed now-unused `TYPE_CHECKING` import; was the only consumer)
+- [x] Verify: `pytest tests/ --testmon` passes; LOC delta ~ -1 (full sharded suite ran: 16374 tests, 16371 passed, 3 skipped, 0 failed)
 
 ---
 
@@ -124,8 +124,8 @@
 **File:** `game/ui/screens/galaxy_test/system_mode.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Remove unused import `STAR_FALLBACK` (line 17) — PD1 (upgraded from PRODUCT_DECISION by the audit's verifier)
-- [ ] Verify: `pytest tests/ --testmon` passes; LOC delta ≈ -1
+- [x] Remove unused import `STAR_FALLBACK` (line 17) — PD1 (upgraded from PRODUCT_DECISION by the audit's verifier)
+- [x] Verify: `pytest tests/ --testmon` passes; LOC delta ~ -1 (full sharded suite ran: 16374 tests, 16371 passed, 3 skipped, 0 failed)
 
 ---
 
@@ -133,8 +133,8 @@
 **File:** `game/ui/screens/build_queue_selector.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Remove the first redundant `y_offset = 0` (actually line 97; the audit listed line 99). The same assignment is repeated at line 100 with no read between, so delete the line-97 copy. — DEEP-04-005
-- [ ] Verify: `pytest tests/ --testmon` passes; LOC delta ≈ -1
+- [x] Remove the first redundant `y_offset = 0` (actually line 97; the audit listed line 99). The same assignment is repeated at line 100 with no read between, so delete the line-97 copy. — DEEP-04-005
+- [x] Verify: `pytest tests/ --testmon` passes; LOC delta ~ -1 (full sharded suite ran: 16374 tests, 16371 passed, 3 skipped, 0 failed)
 
 ---
 
@@ -142,11 +142,11 @@
 
 When all tasks above are done:
 
-- [ ] All task checkboxes above are checked
-- [ ] `python Tools/test_sharded/test_sharded.py` passes (or `pytest tests/ --testmon` is clean)
-- [ ] Total LOC delta is ≈ -19 (sum of per-task deltas)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 2
+- [x] All task checkboxes above are checked
+- [x] `python Tools/test_sharded/test_sharded.py` passes (16374 tests, 0 failures, 3 skipped)
+- [x] Total LOC delta is ~ -19 (sum of per-task deltas)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 2
 
 _Source audit: `Reviews/results/2026-05-02_184210_audit_shrink/`. See [findings/source_audit.md](findings/source_audit.md) for the link._

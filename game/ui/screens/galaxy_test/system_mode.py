@@ -14,7 +14,7 @@ from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMe
 import logging
 
 from game.ui.fonts import get_font
-from game.ui.colors import TEXT_LIGHT, TEXT_MUTED, FLEET_SELECTED, GRID_LINE, PLANET_TERRESTRIAL, STAR_FALLBACK
+from game.ui.colors import TEXT_LIGHT, TEXT_MUTED, FLEET_SELECTED, GRID_LINE, PLANET_TERRESTRIAL
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord

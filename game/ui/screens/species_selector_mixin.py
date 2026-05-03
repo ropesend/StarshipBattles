@@ -126,3 +126,38 @@ def load_race_config(race_id: Optional[str]) -> Any | None:
     except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; UI mixin must not crash species selection on bad data
         logger.warning("Failed to load race config for %s", race_id)
         return None
+
+
+class RaceConfigResolverMixin:
+    """Mixin for planet target editors that need the active race config.
+
+    Extracted in PROJ-319 (DUP-X-04) to remove the duplicated
+    `_get_active_race_config` method that previously lived in all four planet
+    target editors (atmosphere, gravity, water, radiation_shield).
+
+    Adopters must set these attributes on `self` during `__init__`:
+      - `_species_dropdown` (UIDropDownMenu | None) — created by
+        `build_species_selector`; may be None when only one species is on the planet.
+      - `_default_race_id` (str | None) — fallback race_id derived from the
+        planet's populations (typically the first species).
+      - `race_config` — the RaceConfig the editor was constructed with;
+        used as a final fallback.
+    """
+
+    def _get_active_race_config(self) -> Any:
+        """Resolve the race config for the currently selected species.
+
+        Resolution order: dropdown selection -> default_race_id -> race_config.
+        """
+        if getattr(self, "_species_dropdown", None) is not None:
+            race_id = get_selected_race_id(self._species_dropdown)
+            if race_id:
+                rc = load_race_config(race_id)
+                if rc:
+                    return rc
+        default_race_id = getattr(self, "_default_race_id", None)
+        if default_race_id:
+            rc = load_race_config(default_race_id)
+            if rc:
+                return rc
+        return getattr(self, "race_config", None)

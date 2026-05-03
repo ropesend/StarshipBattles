@@ -112,8 +112,6 @@ class ActionTimeResolver:
                 entity, ability_name, time_field, component_registry or {}
             )
 
-        return 1
-
     @staticmethod
     def _find_fleet_ability_time(
         fleet: 'Fleet',

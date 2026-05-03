@@ -27,6 +27,10 @@
     "ocode-review-request": {
       "template": "Load the ocode-review-request skill and process the review request at $ARGUMENTS.",
       "description": "Process a delegated code review request"
+    },
+    "ocode-test-review": {
+      "template": "Load the ocode-test-review skill and run an exhaustive test suite audit across 12 quality categories. $ARGUMENTS",
+      "description": "Run an exhaustive test suite audit"
     }
   },
   "agent": {

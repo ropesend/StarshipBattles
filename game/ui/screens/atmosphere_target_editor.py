@@ -14,10 +14,8 @@ from pygame_gui.elements import (
 )
 from typing import Any, Dict, Optional, Callable, TYPE_CHECKING
 
-from game.ui.screens.species_selector_mixin import (
-    build_species_selector, get_selected_race_id, load_race_config,
-)
-from game.ui.screens.strategy_modal_window import StrategyModalWindow
+from game.ui.screens.species_selector_mixin import build_species_selector
+from game.ui.screens.planet_target_editor_base import PlanetTargetEditor
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
@@ -45,7 +43,7 @@ GAS_DISPLAY = {
 MAX_SLIDER_PA = 150000.0
 
 
-class AtmosphereTargetEditor(StrategyModalWindow):
+class AtmosphereTargetEditor(PlanetTargetEditor):
     """Window for editing atmosphere modification targets on a planet.
 
     PROJ-313: Migrated to StrategyModalWindow base class.
@@ -222,31 +220,13 @@ class AtmosphereTargetEditor(StrategyModalWindow):
                 val = slider.get_current_value()
                 self.value_labels[gas].set_text(f"{val:.0f} Pa")
 
-    def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle button clicks."""
-        handled = super().process_event(event)
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_apply:
-                self._on_apply()
-                return True
-            elif event.ui_element == self.btn_species_ideal:
-                self._set_species_ideal()
-                return True
-            elif event.ui_element == self.btn_match_current:
-                self._set_match_current()
-                return True
-            elif event.ui_element == self.btn_clear:
-                self._clear_target()
-                return True
-
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self:
-                if self.on_close_callback:
-                    self.on_close_callback()
-                return True
-
-        return handled
+    def _button_handlers(self):
+        return {
+            self.btn_apply: self._on_apply,
+            self.btn_species_ideal: self._set_species_ideal,
+            self.btn_match_current: self._set_match_current,
+            self.btn_clear: self._clear_target,
+        }
 
     def _on_apply(self) -> None:
         """Apply the current slider values as atmosphere target."""
@@ -291,17 +271,3 @@ class AtmosphereTargetEditor(StrategyModalWindow):
         for gas, slider in self.sliders.items():
             slider.set_current_value(0.0)
             self.value_labels[gas].set_text("0 Pa")
-
-    def _get_active_race_config(self) -> Any:
-        """Get the race config for the currently selected species."""
-        if self._species_dropdown is not None:
-            race_id = get_selected_race_id(self._species_dropdown)
-            if race_id:
-                rc = load_race_config(race_id)
-                if rc:
-                    return rc
-        if self._default_race_id:
-            rc = load_race_config(self._default_race_id)
-            if rc:
-                return rc
-        return self.race_config

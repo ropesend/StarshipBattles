@@ -225,6 +225,28 @@ class BaseCommandHandler:
         return planet
 
     @staticmethod
+    def _emit_validated_order(
+        fleet,
+        order_type,
+        target,
+        result: ValidationResult,
+        log_label: str,
+    ) -> ValidationResult:
+        """Add an Order to fleet if validation passed; log either way.
+
+        PROJ-319 (DUP-X-02): consolidated tail of every superweapon command
+        handler. Handlers do their own resolve + validate, then call this to
+        finish the "create-and-log if valid" pattern.
+
+        Returns the same `result` so callers can `return self._emit_validated_order(...)`.
+        """
+        if result.is_valid:
+            order = Order(order_type, target=target)
+            fleet.add_order(order)
+            logger.info("GameSession: Issued %s order for Fleet %s", log_label, fleet.id)
+        return result
+
+    @staticmethod
     def _resolve_build_entity(session: 'GameSession', entity_id: int, entity_type: str) -> Any:
         """Resolve a planet or fleet by ID and type.
 

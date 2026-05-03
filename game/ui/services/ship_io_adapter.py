@@ -13,10 +13,7 @@ The adapter encapsulates:
 - Saving ship designs to file
 - Loading ship designs from file
 """
-from typing import Optional, Tuple, Any, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from game.ui.services.ship_io import ShipIO as ShipIOType
+from typing import Optional, Tuple, Any
 
 
 class ShipIOAdapter:

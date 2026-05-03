@@ -26,7 +26,6 @@ class GameState(IntEnum):
     BUILDER = 1
     BATTLE = 2
     BATTLE_SETUP = 3
-    FORMATION = 4
     TEST_LAB = 5
     STRATEGY = 6
     RACE_SETUP = 7

@@ -39,7 +39,6 @@ from game.simulation.battle_outcome import (
     ShipStats,
     ShipStatus,
     TeamOutcome,
-    WeaponSummary,
 )
 from game.simulation.battle_spec import BattleSpec, ComponentStateSpec, ShipSpec
 from game.simulation.combat.telemetry import (
@@ -642,33 +641,6 @@ def _extract_component_states(engine_ship: "Ship") -> tuple:
                 )
             )
     return tuple(out)
-
-
-def _extract_weapon_summaries(engine_ship: "Ship") -> List[WeaponSummary]:
-    """Pull per-weapon shots_fired / shots_hit counters off a ship.
-
-    Same access pattern as `TestScenario._collect_weapon_stats` — we read
-    the counters the engine maintains directly on each Component.
-    """
-    from game.simulation.components.abilities.weapons import WeaponAbility
-
-    summaries: List[WeaponSummary] = []
-    if not hasattr(engine_ship, "layers"):
-        return summaries
-    for layer_data in engine_ship.layers.values():
-        for comp in getattr(layer_data, "components", []):
-            if not hasattr(comp, "ability_instances"):
-                continue
-            if any(isinstance(ab, WeaponAbility) for ab in comp.ability_instances):
-                summaries.append(
-                    WeaponSummary(
-                        component_id=comp.id,
-                        component_name=comp.name,
-                        shots_fired=getattr(comp, "shots_fired", 0),
-                        shots_hit=getattr(comp, "shots_hit", 0),
-                    )
-                )
-    return summaries
 
 
 def _derive_end_reason(engine: "BattleEngine", spec: BattleSpec) -> EndReason:

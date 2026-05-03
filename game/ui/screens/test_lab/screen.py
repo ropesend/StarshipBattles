@@ -29,7 +29,7 @@ from combat_lab.test_history import TestHistory
 from combat_lab.logging_config import get_logger
 
 # Intra-package imports
-from .dialogs import JSONPopup, ConfirmationDialog
+from .dialogs import JSONPopup
 from .data_extractor import TestLabDataExtractor, get_test_data_dir
 from .panel_manager import TestLabPanelManager
 from .test_executor import TestLabExecutor

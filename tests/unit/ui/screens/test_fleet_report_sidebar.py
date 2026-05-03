@@ -32,14 +32,20 @@ def _create_sidebar(**overrides):
 
     mock_empire = overrides.get('empire', Mock())
 
-    with patch('game.ui.screens.fleet_report_sidebar.UILabel'):
-        with patch('game.ui.screens.fleet_report_sidebar.UIButton') as mock_btn_cls:
+    # PROJ-319 DUP-X-08: column toggles moved to game.ui.widgets.column_toggle_section,
+    # so patch UILabel/UIButton on BOTH the sidebar module (for filter rows) and
+    # the shared widget (for the column section).
+    with patch('game.ui.screens.fleet_report_sidebar.UILabel'), \
+         patch('game.ui.widgets.column_toggle_section.UILabel'):
+        with patch('game.ui.screens.fleet_report_sidebar.UIButton') as mock_btn_cls, \
+             patch('game.ui.widgets.column_toggle_section.UIButton') as _shared_btn_cls:
             # UIButton mocks default check_pressed to False
             def _make_btn(**kw):
                 btn = Mock()
                 btn.check_pressed.return_value = False
                 return btn
             mock_btn_cls.side_effect = _make_btn
+            _shared_btn_cls.side_effect = _make_btn
             with patch('game.ui.screens.fleet_report_sidebar.TriStateFilterWidget') as mock_tsw_cls:
                 # Each call to TriStateFilterWidget returns a unique mock
                 mock_tsw_cls.side_effect = lambda **kw: Mock(

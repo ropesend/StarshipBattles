@@ -280,12 +280,17 @@ class ClickModeDispatcher:
             return True
         return False
 
-    def _handle_implode_planet_click(self, mx: int, my: int, button: int) -> bool:
-        """Handle click in IMPLODE_PLANET_TARGET mode."""
-        if button == 1:  # Left Click
-            result = self.scene._superweapons.handle_implode_planet_designation(
-                mx, my, self.scene.selected_fleet
-            )
+    def _handle_superweapon_click(
+        self, mx: int, my: int, button: int, designation_method: str,
+    ) -> bool:
+        """Shared click handler for all superweapon-target modes (DUP-X-02).
+
+        Left-click invokes `self.scene._superweapons.<designation_method>(mx, my, fleet)`
+        and resets `input_mode` to 'SELECT' on success. Right-click cancels.
+        """
+        if button == 1:  # Left click — designate target
+            method = getattr(self.scene._superweapons, designation_method)
+            result = method(mx, my, self.scene.selected_fleet)
             if result:
                 self.input_mode = 'SELECT'
             return True
@@ -294,66 +299,26 @@ class ClickModeDispatcher:
             logger.debug("Input Mode: SELECT")
             return True
         return False
+
+    def _handle_implode_planet_click(self, mx: int, my: int, button: int) -> bool:
+        """Handle click in IMPLODE_PLANET_TARGET mode."""
+        return self._handle_superweapon_click(mx, my, button, 'handle_implode_planet_designation')
 
     def _handle_stellerate_star_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in STELLERATE_STAR_TARGET mode."""
-        if button == 1:  # Left Click
-            result = self.scene._superweapons.handle_stellerate_star_designation(
-                mx, my, self.scene.selected_fleet
-            )
-            if result:
-                self.input_mode = 'SELECT'
-            return True
-        elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
-        return False
+        return self._handle_superweapon_click(mx, my, button, 'handle_stellerate_star_designation')
 
     def _handle_open_warp_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in OPEN_WARP_TARGET mode."""
-        if button == 1:  # Left Click
-            result = self.scene._superweapons.handle_open_warp_designation(
-                mx, my, self.scene.selected_fleet
-            )
-            if result:
-                self.input_mode = 'SELECT'
-            return True
-        elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
-        return False
+        return self._handle_superweapon_click(mx, my, button, 'handle_open_warp_designation')
 
     def _handle_close_warp_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in CLOSE_WARP_TARGET mode."""
-        if button == 1:  # Left Click
-            result = self.scene._superweapons.handle_close_warp_designation(
-                mx, my, self.scene.selected_fleet
-            )
-            if result:
-                self.input_mode = 'SELECT'
-            return True
-        elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
-        return False
+        return self._handle_superweapon_click(mx, my, button, 'handle_close_warp_designation')
 
     def _handle_dyson_sphere_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in DYSON_SPHERE_TARGET mode."""
-        if button == 1:  # Left Click
-            result = self.scene._superweapons.handle_dyson_sphere_designation(
-                mx, my, self.scene.selected_fleet
-            )
-            if result:
-                self.input_mode = 'SELECT'
-            return True
-        elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
-        return False
+        return self._handle_superweapon_click(mx, my, button, 'handle_dyson_sphere_designation')
 
     def _handle_select_mode_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in SELECT mode."""

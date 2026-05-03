@@ -5,8 +5,9 @@ following the FleetReportSidebar pattern.
 """
 from typing import Callable, Dict, Optional
 
-import pygame
-from pygame_gui.elements import UIPanel, UILabel, UIButton
+from pygame_gui.elements import UIPanel, UIButton
+
+from game.ui.widgets.column_toggle_section import build_column_toggle_section
 
 
 class EventLogSidebar:
@@ -55,41 +56,12 @@ class EventLogSidebar:
         y = self._build_column_section(y)
 
     def _build_column_section(self, y: int) -> int:
-        """Build column visibility toggle buttons.
-
-        Args:
-            y: Starting y position.
-
-        Returns:
-            Updated y position after building section.
-        """
-        UILabel(
-            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
-            text="COLUMNS",
-            manager=self.manager,
-            container=self.panel,
+        """Build column visibility toggle buttons (delegates to shared helper)."""
+        new_y, buttons = build_column_toggle_section(
+            y, self.column_manager, self.sidebar_width, self.manager, self.panel,
         )
-        y += 35
-
-        # Column visibility toggles
-        for col in self.column_manager.get_toggleable_columns():
-            col_id = col["id"]
-            title = col["title"] or col_id
-            is_visible = col.get("visible", True)
-            btn_text = f"[x] {title}" if is_visible else f"[ ] {title}"
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
-                text=btn_text,
-                manager=self.manager,
-                container=self.panel,
-                object_id=f"#column_{col_id}",
-            )
-            btn.col_ref = col  # Store reference to column config
-            self.column_buttons[col_id] = btn
-            y += 30
-
-        y += 20
-        return y
+        self.column_buttons.update(buttons)
+        return new_y
 
     def handle_button_click(self, ui_element) -> Optional[str]:
         """Check if clicked element is a column toggle button.

@@ -12,10 +12,8 @@ import pygame_gui
 from pygame_gui.elements import UILabel, UIButton, UIHorizontalSlider
 from typing import Optional, Callable, Any, TYPE_CHECKING
 
-from game.ui.screens.species_selector_mixin import (
-    build_species_selector, get_selected_race_id, load_race_config,
-)
-from game.ui.screens.strategy_modal_window import StrategyModalWindow
+from game.ui.screens.species_selector_mixin import build_species_selector
+from game.ui.screens.planet_target_editor_base import PlanetTargetEditor
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
@@ -27,7 +25,7 @@ MIN_WATER = 0.0
 MAX_WATER = 1.0
 
 
-class WaterTargetEditor(StrategyModalWindow):
+class WaterTargetEditor(PlanetTargetEditor):
     """Window for editing water coverage target on a planet.
 
     PROJ-313: Migrated to StrategyModalWindow base class.
@@ -172,31 +170,13 @@ class WaterTargetEditor(StrategyModalWindow):
             val = self.slider.get_current_value()
             self.lbl_target.set_text(f"Target: {val * 100:.1f}%")
 
-    def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle button clicks and window close."""
-        handled = super().process_event(event)
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_apply:
-                self._on_apply()
-                return True
-            elif event.ui_element == self.btn_species_ideal:
-                self._set_species_ideal()
-                return True
-            elif event.ui_element == self.btn_match_current:
-                self._set_match_current()
-                return True
-            elif event.ui_element == self.btn_clear:
-                self._clear_target()
-                return True
-
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self:
-                if self.on_close_callback:
-                    self.on_close_callback()
-                return True
-
-        return handled
+    def _button_handlers(self):
+        return {
+            self.btn_apply: self._on_apply,
+            self.btn_species_ideal: self._set_species_ideal,
+            self.btn_match_current: self._set_match_current,
+            self.btn_clear: self._clear_target,
+        }
 
     def _on_apply(self) -> None:
         """Apply the current slider value as water coverage target."""
@@ -229,19 +209,6 @@ class WaterTargetEditor(StrategyModalWindow):
         self.lbl_target.set_text(f"Target: {clamped * 100:.1f}%")
         logger.debug("Set water to species ideal: %.1f%%", clamped * 100)
 
-    def _get_active_race_config(self) -> Any:
-        """Get the race config for the currently selected species."""
-        if self._species_dropdown is not None:
-            race_id = get_selected_race_id(self._species_dropdown)
-            if race_id:
-                rc = load_race_config(race_id)
-                if rc:
-                    return rc
-        if self._default_race_id:
-            rc = load_race_config(self._default_race_id)
-            if rc:
-                return rc
-        return self.race_config
 
     def _set_match_current(self) -> None:
         """Set slider to match current planet water coverage."""

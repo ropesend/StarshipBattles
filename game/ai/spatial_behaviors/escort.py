@@ -4,11 +4,11 @@ Loose behavior: ships position near an anchor ship, spreading
 evenly around it at a configured distance.
 """
 
-import math
 from typing import Any, List, Optional
 
 from game.core.math import Vector2
 from game.ai.spatial_behaviors.base import SpatialBehavior
+from game.ai.spatial_behaviors._formation_utils import compute_circular_position
 
 
 class EscortBehavior(SpatialBehavior):
@@ -41,12 +41,10 @@ class EscortBehavior(SpatialBehavior):
         if anchor_ship is None:
             return None
 
-        total = max(len(group_ships), 1)
-
-        # Distribute evenly around the anchor ship
-        angle = (2 * math.pi * slot_index) / total
-
-        target_x = anchor_ship.position.x + math.cos(angle) * self.distance
-        target_y = anchor_ship.position.y + math.sin(angle) * self.distance
-
-        return Vector2(target_x, target_y)
+        return compute_circular_position(
+            anchor_ship.position.x,
+            anchor_ship.position.y,
+            self.distance,
+            slot_index,
+            len(group_ships),
+        )

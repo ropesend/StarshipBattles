@@ -1,14 +1,16 @@
 ---
 name: ocode-test-review
-description: Exhaustive test suite audit across 12 quality categories. Seeded file-shuffle sharding for cross-run randomization. Read-only — produces findings documents, no code changes.
-argument-hint: [--seed STR] [--shards N] [--max-loc-per-shard N] [--skip-generate to reuse existing SHARD_CONFIG.json]
+description: Exhaustive test suite audit across 12 quality categories. Seeded file-shuffle sharding for cross-run randomization. Includes skeptical verification stage — only verified claims appear in final report. Read-only — produces findings documents, no code changes.
+argument-hint: "[--seed STR] [--shards N] [--max-loc-per-shard N] [--skip-generate to reuse existing SHARD_CONFIG.json]"
 ---
 
 # Test Suite Audit
 
 Run an exhaustive review of the test suite (`tests/`) for 12 categories of quality issues. Uses randomized seeded sharding so each run reviews tests in different groupings, increasing the chance of detecting cross-file duplicates.
 
-Does NOT change any code. Produces per-shard findings reports plus a unified summary.
+**Four-phase workflow**: Phase 1 (shard reviewers) → Phase 2 (cross-shard dedup) → Phase 3 (skeptical verification) → Phase 4 (final summary, verified claims only).
+
+Does NOT change any code. Produces per-shard findings reports, verification reports, and a unified summary.
 Excludes: `tests/unit/combat_lab/`, `conftest.py`, `__init__.py`, `__pycache__/`, `tests/infrastructure/`.
 All other test directories are in scope.
 
@@ -35,7 +37,7 @@ mkdir -p Reviews/results
 Run the shard generator. Use `--seed` if the user provided one, otherwise let it default (current date). Use `--max-loc-per-shard` to auto-adjust shard count as the test suite grows.
 
 ```bash
-python Tools/test_review/generate_shards.py --seed {seed} --shards 6
+python Tools/test_review/generate_shards.py --seed {seed} --shards 12
 ```
 
 If the user passed `--skip-generate`, find the most recent existing `SHARD_CONFIG.json` instead:
@@ -275,14 +277,139 @@ You MUST use the Write tool to save your report.
 ```
 ```
 
-### Step 5: Compile Final Summary
+### Step 5: Verify Phase 2 Completion
 
-Read all shard reports and the cross-shard report. Produce `SUMMARY.md`.
+Check that `CROSS_SHARD.md` exists and is non-empty.
+
+### Step 6: Launch Phase 3 — Skeptical Verification ({SHARD_COUNT} agents in parallel)
+
+Launch **one verification agent per shard** in parallel using the Task tool with `subagent_type: general`.
+
+Each verifier receives:
+1. Its shard's Phase 1 report (`SHARD_{SHARD_ID}.md`) — ALL claims from that shard
+2. The cross-shard report (`CROSS_SHARD.md`) — cross-shard duplicate claims involving this shard's files
+3. Instructions to independently read cited line ranges and verify each claim
+
+**Replace these placeholders** in the template below for each agent:
+- `{SHARD_ID}` → `"01"`, `"02"`, ... `"{SHARD_COUNT}"`
+- `{REVIEW_DIR}` → the actual review directory path
+
+```
+# Test Suite Audit — Shard {SHARD_ID} Verifier
+
+You are the SKEPTICAL VERIFIER for Shard {SHARD_ID}. Your job is to independently
+verify every claim made by the Phase 1 shard reviewer and any cross-shard claims
+involving your shard's files.
+
+You are skeptical. You must read the cited code before confirming. If a claim is
+overstated, false, or unverifiable, DISPUTE it with a specific reason drawn from
+the source code.
+
+## Inputs You Must Read
+
+1. **Phase 1 report**: {REVIEW_DIR}/SHARD_{SHARD_ID}.md — every claim for this shard
+2. **Cross-shard report**: {REVIEW_DIR}/CROSS_SHARD.md — claims involving this shard's files
+3. **The actual test files** cited in each claim — read the cited line ranges PLUS
+   at least 10 lines of surrounding context above and below. If after reading the
+   cited sections you still have reason to be suspicious, read more of the file.
+
+## Verification Methodology
+
+For each claim in the Phase 1 shard report:
+
+1. **Read the cited code**: Open the test file at the cited line range. Read at
+   least 10 lines above and below for context.
+2. **Validate the category**: Does the code actually match the category signals?
+   (e.g., for CAT-1: does the test genuinely have no meaningful assertion? For CAT-6:
+   is this truly mocking internals or is it mocking an I/O boundary?)
+3. **Check severity**: Is the severity appropriate? You may DOWNGRADE (e.g., CRITICAL
+   → MAJOR, MAJOR → MINOR) if the blast radius is small or the original was overstated.
+   You may NOT upgrade severity — only the Phase 1 agent has that authority.
+4. **Rate confidence**:
+   - **CONFIRMED** — The claim is accurate. The code has the issue described, at
+     the stated (or downgraded) severity.
+   - **DISPUTED** — The claim is false or overstated. Provide a specific falsification
+     reason citing the actual code you read. (e.g., "The test asserts `result == 42`,
+     not `assert True`; it exercises a real code path.")
+   - **INCONCLUSIVE** — You cannot determine with confidence after reading the cited
+     code. Do not default to CONFIRMED or DISPUTED.
+
+For cross-shard duplicate claims involving your files:
+1. Read both files at the cited lines.
+2. Verify the duplication is genuinely the same code path with same assertions.
+3. Rate as CONFIRMED, DISPUTED, or INCONCLUSIVE.
+
+## What NOT to Do
+- Do NOT create new claims — only verify or dispute existing claims
+- Do NOT re-read every file from scratch (use cited line ranges as starting points)
+- Do NOT invent additional findings
+- Do NOT skip claims because they seem "obvious" — read the code
+
+## Output — Save to: {REVIEW_DIR}/VERIFIED_SHARD_{SHARD_ID}.md
+
+You MUST use the Write tool to save your report.
+
+Use EXACTLY this structure:
+
+```
+# Shard {SHARD_ID} — Verified Findings
+
+## Summary
+- Shard: {SHARD_ID}
+- Claims reviewed: [N] (Phase 1: N, Cross-shard: N)
+- CONFIRMED: [N] | DISPUTED: [N] | INCONCLUSIVE: [N]
+- Severity downgrades: [N]
+
+## Verified Findings (CONFIRMED only)
+
+### tests/path/to/test_file.py
+
+#### CAT-N: test_function_name  [CRITICAL]
+- **Location**: test_file.py:line_range
+- **Issue**: [verified description]
+- **Suggestion**: [action]
+- **LOC affected**: N
+- **Verified**: CONFIRMED (severity kept / downgraded from MAJOR — reason)
+
+#### CAT-N: test_another_function  [MAJOR]
+- **Location**: test_file.py:line_range
+- **Issue**: [verified description]
+- **Suggestion**: [action]
+- **LOC affected**: N
+- **Verified**: CONFIRMED
+
+(Repeat for all CONFIRMED claims, including cross-shard duplications involving this shard)
+
+## Disputed & Inconclusive Claims (for transparency)
+
+| Original ID | File | CAT | Original Severity | Verdict | Reason |
+|-------------|------|-----|-------------------|---------|--------|
+| test_xyz | path/file.py:50 | CAT-1 | CRITICAL | DISPUTED | Test asserts result == 42, not a trivial pass |
+| ... | | | | INCONCLUSIVE | ... |
+```
+
+## Rules
+1. Be skeptical — it's better to DISPUTE a borderline claim than confirm a false one
+2. Always cite specific code to justify DISPUTED claims
+3. A claim stays INCONCLUSIVE if you need more context than you can reasonably read
+4. Cross-shard claims involving this shard's files appear inline in the verified findings
+5. Only CONFIRMED claims appear in the final summary — your report is the authoritative source
+```
+
+### Step 7: Verify Phase 3 Completion
+
+Check that all verified shard report files exist and are non-empty (one per shard: `VERIFIED_SHARD_01.md` through `VERIFIED_SHARD_{SHARD_COUNT}.md`).
+
+### Step 8: Compile Phase 4 — Final Summary (verified claims only)
+
+Read all VERIFIED shard reports (CONFIRMED claims only) plus the cross-shard report. Produce `SUMMARY.md`.
+
+Only include CONFIRMED claims from `VERIFIED_SHARD_*.md`. Do NOT include DISPUTED or INCONCLUSIVE claims.
 
 **SUMMARY.md structure:**
 
 ```markdown
-# Test Suite Audit — Summary
+# Test Suite Audit — Summary (Verified)
 
 ## Run Info
 - Date: {timestamp}
@@ -290,9 +417,9 @@ Read all shard reports and the cross-shard report. Produce `SUMMARY.md`.
 - Shards: {shard_count}
 - Total test files reviewed: {total_files}
 - Total LOC reviewed (est): {total_loc}
-- Total findings: {N}
+- Phase 1 claims: {N} → Verified: {N} | Disputed: {N} | Inconclusive: {N}
 
-## Findings by Category
+## Verified Findings by Category
 | Category | Critical | Major | Minor | Total |
 |----------|----------|-------|-------|-------|
 | CAT-1 Trivial Pass | | - | - | |
@@ -309,63 +436,59 @@ Read all shard reports and the cross-shard report. Produce `SUMMARY.md`.
 | CAT-12 Logic-Heavy | - | - | | |
 | **Totals** | | | | |
 
-## Top 20 Highest-Impact Findings
+## Top 20 Highest-Impact Verified Findings
 Ordered by estimated LOC affected × severity weight (CRITICAL=10, MAJOR=5, MINOR=1).
 List: finding ID, file, category, severity, LOC affected, brief description.
 
-## Shard Coverage
-| Shard | Files | Findings | Critical | Major | Minor |
-|-------|-------|----------|----------|-------|-------|
-| 01 | N | N | N | N | N |
-| ... | | | | | |
+## Shard Verification Summary
+| Shard | Phase 1 Claims | Verified | Disputed | Inconclusive |
+|-------|---------------|----------|----------|--------------|
+| 01 | N | N | N | N |
+| ... | | | | |
 
 ## Cross-Shard Duplicates
-Summary from CROSS_SHARD.md — N cross-shard duplicates found, N helper duplications.
+Summary from CROSS_SHARD.md — N cross-shard duplicates found, N confirmed by verifiers.
 
 ## Priority Action Plan
 
 ### P0 — Immediate Attention (CAT-1, CAT-2, CAT-3)
-Findings where tests provide zero or negative value. These should be removed or replaced.
+Verified findings where tests provide zero or negative value.
 
 ### P1 — Address Before Next Major Feature (CAT-4, CAT-5, CAT-6, CAT-7)
-Quality and performance debt that slows development velocity.
+Verified quality and performance debt that slows development velocity.
 
 ### P2 — Improve Opportunistically (CAT-8, CAT-9, CAT-10, CAT-11, CAT-12)
-Nice-to-have improvements that increase maintainability.
+Verified nice-to-have improvements.
 
-## Estimated Impact
+## Estimated Impact (Verified Only)
 - Tests removable with zero coverage loss: [N]
 - Tests mergeable via parametrize: [N clusters → N resulting tests]
 - Fixture rescoping candidates: [N]
 - Estimated total LOC reduction: [N]
 
 ## Full Report Paths
-- Shard reports: {REVIEW_DIR}/SHARD_*.md
-- CROSS_SHARD.md: {REVIEW_DIR}/CROSS_SHARD.md
+- Phase 1 shard reports: {REVIEW_DIR}/SHARD_*.md
+- Phase 2 cross-shard: {REVIEW_DIR}/CROSS_SHARD.md
+- Phase 3 verified reports: {REVIEW_DIR}/VERIFIED_SHARD_*.md
 - SHARD_CONFIG.json: {REVIEW_DIR}/SHARD_CONFIG.json
-
-## Context Headroom Across Shards
-| Shard | LOC Read (est) | Headroom |
-|-------|----------------|----------|
-| 01 | | High/Medium/Low |
-| ... | | |
+- Final summary: {REVIEW_DIR}/SUMMARY.md
 ```
 
-### Step 6: Log Skill Usage
+### Step 9: Log Skill Usage
 
 ```bash
 python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-test-review
 ```
 
-### Step 7: Present to User
+### Step 10: Present to User
 
 Show the user:
 1. Run info: date, seed, shards, files reviewed
-2. Findings by category table (summary totals)
-3. Top 5 highest-impact findings
-4. P0/P1/P2 counts
-5. Context headroom summary (High/Medium/Low counts across shards)
-6. Path to the full summary: `{REVIEW_DIR}/SUMMARY.md`
-7. Path to per-shard detail: `{REVIEW_DIR}/SHARD_*.md`
+2. Phase 1 claims → Verified/Disputed/Inconclusive counts
+3. Verified findings by category table (summary totals)
+4. Top 5 highest-impact verified findings
+5. P0/P1/P2 counts (verified only)
+6. Path to final summary: `{REVIEW_DIR}/SUMMARY.md`
+7. Paths to per-shard detail: `{REVIEW_DIR}/SHARD_*.md` and `{REVIEW_DIR}/VERIFIED_SHARD_*.md`
 
-Do NOT start making code changes. This is a read-only audit. All findings are advisory claims — another agent should independently verify each claim before any test is modified or removed.
+Do NOT start making code changes. This is a read-only audit. All findings in the summary are verified — they can be acted upon.
