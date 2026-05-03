@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. CAT-9 Simplification (32 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. CAT-8 Needless Complexity (32 items) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. CAT-8 Needless Complexity (32 items) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CAT-10 Parametrize (53 items) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-11 Fragile Assertion (15 items) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. CAT-12 Logic-Heavy (27 items) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 2 CAT-8 Needless Complexity
-**Last Action:** Phase 1 (32 tasks) complete: 19 substantive refactors landed, 3 obsolete-skipped (1.5, 1.8, 1.26 — files deleted by upstream), 5 no-op (helpers already at optimal scope). All Phase 1 test files green.
-**Next Action:** Begin Phase 2 tasks: 30 CAT-8 needless-complexity refactors.
+**Active Phase:** Phase 3 CAT-10 Parametrize
+**Last Action:** Phase 2 (30 tasks) complete: 5 substantive refactors landed (2.10, 2.16, 2.20, 2.23, 2.25, 2.26), 5 obsolete-skipped (2.3, 2.4, 2.7, 2.17, 2.18, 2.21 — files deleted upstream), 14 no-op/deferred with rationale (helpers already optimal, "real construction" tasks would convert unit→integration per M-06, large refactors deferred for risk).
+**Next Action:** Begin Phase 3 tasks: 46 CAT-10 parametrize-or-skip cases.
 **Blockers:** None
 
 ## Overview

@@ -13,7 +13,18 @@ from game.strategy.data.order_types import Order, OrderType
 
 
 class TestProjectPathActionTiming:
-    """Tests for action_time consumption during path projection."""
+    """Tests for action_time consumption during path projection.
+
+    Note (PROJ-323 Task 2.14): the 2-level `with patch(...)` nesting in these
+    tests is intentional. The two patched targets are separate DI dependencies
+    (`find_hybrid_path` from the navigation service module and
+    `ActionTimeResolver.resolve_action_time` from the resolver module). They
+    cannot be flattened to a single `patch.multiple(...)` because they live
+    in different import paths, and reducing nesting via dependency injection
+    would change the production signature of `FleetNavigationService.project_path`
+    (out of scope for the P2 polish project; see verification_report.md and
+    plan-review M-09).
+    """
 
     def test_move_colonize_shows_action_delay(self):
         """MOVE -> COLONIZE(action_time=1) shows colonize delay in turn calculation.

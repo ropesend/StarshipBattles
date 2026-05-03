@@ -8,6 +8,21 @@ import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 import sys
 import pygame
+from contextlib import contextmanager
+
+
+# PROJ-323 Task 2.25: shared helper for the 3 identical setup_mocks fixtures
+# (TestBattleSetupScreenTeamManagement, TestBattleSetupScreenSceneCallbacks,
+# TestBattleSetupScreenFileIO). Other classes (TestBattleSetupScreen and
+# TestBattleSetupScreenDropdown) have per-class customized strategies and
+# keep their own fixtures.
+
+@contextmanager
+def _patched_setup_screen_imports():
+    with patch('tkinter.Tk', return_value=MagicMock()):
+        with patch('tkinter.filedialog', MagicMock()):
+            from game.ui.screens.setup_screen import BattleSetupScreen
+            yield BattleSetupScreen
 
 
 class TestBattleSetupScreen:
@@ -120,12 +135,9 @@ class TestBattleSetupScreenTeamManagement:
         """Set up mocks."""
         self.mock_strategy_service = MagicMock()
         self.mock_strategy_service.strategies = {'standard_ranged': MagicMock()}
-
-        with patch('tkinter.Tk', return_value=MagicMock()):
-            with patch('tkinter.filedialog', MagicMock()):
-                from game.ui.screens.setup_screen import BattleSetupScreen
-                self.BattleSetupScreen = BattleSetupScreen
-                yield
+        with _patched_setup_screen_imports() as BattleSetupScreen:
+            self.BattleSetupScreen = BattleSetupScreen
+            yield
 
     def test_handle_ships_click_adds_to_team1_on_left_click(self):
         """Test clicking ship design adds to team1 on left click."""
@@ -189,12 +201,9 @@ class TestBattleSetupScreenSceneCallbacks:
         """Set up mocks."""
         self.mock_strategy_service = MagicMock()
         self.mock_strategy_service.strategies = {'standard_ranged': MagicMock()}
-
-        with patch('tkinter.Tk', return_value=MagicMock()):
-            with patch('tkinter.filedialog', MagicMock()):
-                from game.ui.screens.setup_screen import BattleSetupScreen
-                self.BattleSetupScreen = BattleSetupScreen
-                yield
+        with _patched_setup_screen_imports() as BattleSetupScreen:
+            self.BattleSetupScreen = BattleSetupScreen
+            yield
 
     def test_trigger_start_battle_invokes_callback(self):
         """Test _trigger_start_battle invokes scene_callback with 'start_battle'."""
@@ -248,12 +257,9 @@ class TestBattleSetupScreenFileIO:
         """Set up mocks."""
         self.mock_strategy_service = MagicMock()
         self.mock_strategy_service.strategies = {'standard_ranged': MagicMock()}
-
-        with patch('tkinter.Tk', return_value=MagicMock()):
-            with patch('tkinter.filedialog', MagicMock()):
-                from game.ui.screens.setup_screen import BattleSetupScreen
-                self.BattleSetupScreen = BattleSetupScreen
-                yield
+        with _patched_setup_screen_imports() as BattleSetupScreen:
+            self.BattleSetupScreen = BattleSetupScreen
+            yield
 
     def test_save_setup_calls_save_battle_setup(self):
         """Test save_setup calls save_battle_setup when path provided."""
