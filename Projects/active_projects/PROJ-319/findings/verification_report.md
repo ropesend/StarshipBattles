@@ -79,3 +79,33 @@ checks, equivalence notes, extraction-target free-checks) lives in:
 
 Those reports are scratchpad-style artifacts and may be deleted when this
 project is archived. The verdict roll-up above is the durable record.
+
+## Round 2 — Stricter Skeptical Re-Verification
+
+After the initial 30/30 pass returned zero rejections (suspicious on its
+face), three fresh `Explore` subagents were dispatched with stricter
+prompts requiring per-directory grep counts, paste-the-line evidence, and
+equivalence proof for every duplication site. Reports under
+`.agent_reports/2026-05-02_184210_audit_shrink/reverify_batch{1,2,3}_*.md`.
+
+Round 2 raw results: 11+2+11 = 24 VERIFIED, 3+0+2 = 5 REJECTED, 0+0+1 = 1
+UNCERTAIN. After human review of every Round-2 challenge, **none of the
+challenges held up**:
+
+| Challenged item | Round-2 verdict | Held up under review? |
+|-----------------|-----------------|------------------------|
+| C1 `_ccm_mod` | REJECTED | No — agent's evidence agrees the import is dead; verdict label was flipped (`REJECTED` should mean "audit was wrong / item is reachable"; here the agent used it to mean "audit was right / item is dead") |
+| C8 `sig_digits` | REJECTED | No — same label flip; function body uses hardcoded format specifiers, parameter is genuinely unused |
+| DEEP-04-005 `y_offset = 0` | REJECTED | No — same label flip; redundant assignment confirmed at lines 97 + 100. Audit said line 99 — minor line-number drift, fixed in `phase_1_checklist.md` Task 1.14 |
+| DUP-X-13 circle formation | REJECTED | No — agent argued the anchor-source distinction (escort: ship.position; screen: kwargs anchor_position) would be lost. The audit's proposed helper signature `_compute_circular_position(anchor_x, anchor_y, distance, slot_index, total)` takes the anchor as parameters, preserving the distinction. Agent misread the proposed signature. |
+| DUP-X-04 race-config 6-site | REJECTED | No — agent rejected on cross-layer-consolidation grounds. The audit's recommendation is already split per layer (`RaceConfigResolverMixin` for UI, `resolve_race_config` for strategy), which is what the project plan implements. Agent argued against a strawman. |
+| DUP-X-02 superweapon 3-file | UNCERTAIN | No — same misread as DUP-X-04: the audit consolidates *within* each layer (table dispatch in click_dispatcher, base class in command_handlers, helper in superweapons), it does not flatten the layering. Architectural intent is preserved. Item remains VERIFIED but the project plan already labels Task 4.12 as [Complex] with manual smoke-testing per superweapon. |
+
+**Final tally after both rounds:** 30 VERIFIED, 0 REJECTED, 0 UNCERTAIN. The
+zero-rejection rate is unusual but, having now done two passes (one lenient,
+one strict-but-occasionally-confused) plus human spot-checks on the most
+material disagreements, the items in this project's plan are sound.
+
+**One real adjustment was made:** DEEP-04-005's line number was off by 1–2
+in the audit (actual redundant pair is lines 97 + 100; audit said 99).
+Corrected in `phase_1_checklist.md` Task 1.14 and `manifest.md`.

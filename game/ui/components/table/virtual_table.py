@@ -20,6 +20,30 @@ from game.ui.components.table.selection import ISelectionStrategy
 from game.ui.config import UIConfig
 
 
+# Issue #8: structural reasons that the Replay button is disabled,
+# mapped to user-facing tooltips. Anything else (or no reason key)
+# falls back to the legacy "older save" wording, which is correct for
+# events from saves predating FEAT-26.
+_REPLAY_DISABLED_TOOLTIPS: Dict[str, str] = {
+    "sole_survivor": "No combat — one side had no ships.",
+    "no_ships": "No combat — neither side had any ships.",
+}
+_LEGACY_REPLAY_DISABLED_TOOLTIP = "No replay available — older save."
+
+
+def _disabled_replay_tooltip(data_source: Any, row_index: int) -> str:
+    """Pick the disabled-Replay tooltip for ``row_index`` (issue #8)."""
+    reason_getter = getattr(
+        data_source, "get_cell_replay_unavailable_reason", None
+    )
+    if reason_getter is None:
+        return _LEGACY_REPLAY_DISABLED_TOOLTIP
+    reason = reason_getter(row_index)
+    return _REPLAY_DISABLED_TOOLTIPS.get(
+        reason, _LEGACY_REPLAY_DISABLED_TOOLTIP
+    )
+
+
 class VirtualTable:
     """Virtual scrolling table with headers and selection.
 
@@ -323,6 +347,9 @@ class VirtualTable:
                         # non-None replay id for this row. Generic seam:
                         # data sources without the hook leave the button
                         # disabled (no replays => no clickable button).
+                        # Issue #8: when disabled, prefer a structural
+                        # reason (sole_survivor / no_ships) over the
+                        # generic "older save" wording.
                         btn = widget["button"]
                         replay_id_getter = getattr(
                             self._data_source, "get_cell_replay_id", None
@@ -337,8 +364,8 @@ class VirtualTable:
                             btn.tool_tip_text = "Replay this battle"
                         else:
                             btn.disable()
-                            btn.tool_tip_text = (
-                                "No replay available — older save."
+                            btn.tool_tip_text = _disabled_replay_tooltip(
+                                self._data_source, data_idx
                             )
                     else:
                         text = str(self._data_source.get_cell_value(data_idx, col_id))

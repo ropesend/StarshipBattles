@@ -112,6 +112,7 @@ class ConflictResolutionEngine(IConflictEngine):
         location,
         environmental_effects=None,
         replay_id: Optional[str] = None,
+        replay_unavailable_reason: Optional[str] = None,
     ) -> None:
         """Log a single combat_resolved event for an N-team battle.
 
@@ -125,8 +126,12 @@ class ConflictResolutionEngine(IConflictEngine):
         replay sidecar. The kwarg flows into `Event.details["replay_id"]`
         via `EventBus.log_event(**kwargs)` so the Event Log UI can
         render a Replay button for this row. None = no captured replay
-        (legacy event from before PROJ-312, shortcut-branch battle, or
+        (legacy event from before PROJ-312, sole-survivor shortcut, or
         capture sink unregistered).
+
+        Issue #8: `replay_unavailable_reason` (when present) is a
+        UI-friendly identifier — see `BattleResult` — that the Event
+        Log button maps to an honest tooltip when `replay_id` is None.
 
         Args:
             fleets: All participating fleets, in team_id order.
@@ -137,6 +142,7 @@ class ConflictResolutionEngine(IConflictEngine):
             environmental_effects: Optional sector-effects list from
                 `collect_sector_effects` (PROJ-300).
             replay_id: Optional uuid of the captured replay sidecar.
+            replay_unavailable_reason: Optional UI tooltip key (issue #8).
         """
         # Look up system name for granular event log columns.
         system_name = ""
@@ -191,6 +197,7 @@ class ConflictResolutionEngine(IConflictEngine):
             system_name=system_name,
             storm_names=storm_names,
             replay_id=replay_id,
+            replay_unavailable_reason=replay_unavailable_reason,
         )
 
     def _validate_tick_inputs(self, empires) -> None:
@@ -363,7 +370,10 @@ class ConflictResolutionEngine(IConflictEngine):
         # FEAT-26: thread the captured replay id (when present) into the
         # COMBAT_RESOLVED event so the Event Log can render a Replay
         # button for this battle. None = no captured replay (older
-        # save, shortcut branch, or no capture sink registered).
+        # save, sole-survivor shortcut, or no capture sink registered).
+        # Issue #8: also thread `replay_unavailable_reason` so the UI
+        # can show an honest tooltip instead of the generic "older save"
+        # wording when the absence is structural (sole_survivor / no_ships).
         self._log_combat_result(
             fleets,
             surviving_fleet_ids=surviving_fleet_ids,
@@ -371,6 +381,9 @@ class ConflictResolutionEngine(IConflictEngine):
             location=location,
             environmental_effects=environmental_effects,
             replay_id=getattr(result, "replay_id", None),
+            replay_unavailable_reason=getattr(
+                result, "replay_unavailable_reason", None
+            ),
         )
 
     def _lookup_environmental_effects(self, location) -> Optional[Any]:

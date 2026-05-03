@@ -596,3 +596,81 @@ class TestStormColumn:
         ds = EventLogDataSource(events)
         value = ds.get_cell_value(0, "storm")
         assert value == ""
+
+
+# ---------------------------------------------------------------------------
+# Issue #8 — Replay button data accessors
+# ---------------------------------------------------------------------------
+
+class TestGetCellReplayId:
+    """``get_cell_replay_id`` returns the captured uuid for combat rows."""
+
+    def test_combat_row_with_replay_id_returns_string(self):
+        events = [
+            _make_event(
+                "combat_resolved", "combat", 1, 0, "Battle",
+                details={"replay_id": "captured-uuid-001"},
+            )
+        ]
+        ds = EventLogDataSource(events)
+        assert ds.get_cell_replay_id(0) == "captured-uuid-001"
+
+    def test_combat_row_without_replay_id_returns_none(self):
+        events = [
+            _make_event("combat_resolved", "combat", 1, 0, "Battle", details={})
+        ]
+        ds = EventLogDataSource(events)
+        assert ds.get_cell_replay_id(0) is None
+
+    def test_non_combat_row_returns_none(self):
+        events = [
+            _make_event(
+                "ship_built", "production", 1, 0, "Built",
+                details={"replay_id": "should-be-ignored"},
+            )
+        ]
+        ds = EventLogDataSource(events)
+        assert ds.get_cell_replay_id(0) is None
+
+
+class TestGetCellReplayUnavailableReason:
+    """Issue #8: ``get_cell_replay_unavailable_reason`` surfaces the
+    structural reason a combat row's Replay button is disabled."""
+
+    def test_combat_row_with_sole_survivor_reason(self):
+        events = [
+            _make_event(
+                "combat_resolved", "combat", 1, 0, "Battle",
+                details={"replay_unavailable_reason": "sole_survivor"},
+            )
+        ]
+        ds = EventLogDataSource(events)
+        assert ds.get_cell_replay_unavailable_reason(0) == "sole_survivor"
+
+    def test_combat_row_with_no_ships_reason(self):
+        events = [
+            _make_event(
+                "combat_resolved", "combat", 1, 0, "Battle",
+                details={"replay_unavailable_reason": "no_ships"},
+            )
+        ]
+        ds = EventLogDataSource(events)
+        assert ds.get_cell_replay_unavailable_reason(0) == "no_ships"
+
+    def test_combat_row_without_reason_returns_none(self):
+        """Legacy combat rows from saves predating issue #8."""
+        events = [
+            _make_event("combat_resolved", "combat", 1, 0, "Battle", details={})
+        ]
+        ds = EventLogDataSource(events)
+        assert ds.get_cell_replay_unavailable_reason(0) is None
+
+    def test_non_combat_row_returns_none(self):
+        events = [
+            _make_event(
+                "ship_built", "production", 1, 0, "Built",
+                details={"replay_unavailable_reason": "should-be-ignored"},
+            )
+        ]
+        ds = EventLogDataSource(events)
+        assert ds.get_cell_replay_unavailable_reason(0) is None
