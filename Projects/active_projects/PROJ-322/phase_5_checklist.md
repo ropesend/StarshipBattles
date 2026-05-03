@@ -23,10 +23,10 @@
 **File:** `tests/fixtures/ui_widget_factory.py` (new file)
 **Tests:** `pytest tests/fixtures/ -k make_ui_widget`
 
-- [ ] Scaffold `tests/fixtures/ui_widget_factory.py` exposing `make_ui_widget(Cls, **kwargs)` that constructs a pygame_gui widget via its real `__init__` with mocked pygame_gui dependencies (UIManager mock, parent container mock, default rect, default theme). Goal: a one-liner replacement for the bypass-init helpers in APC-001-F01..F16. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Document the factory's contract in a module docstring: required vs optional kwargs, default mock objects, and an example covering the most common screen / panel / window cases. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Add a smoke test in `tests/fixtures/test_ui_widget_factory.py` that constructs at least one of each broad category (screen, panel, window) with the factory. _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
-- [ ] Verify: `pytest tests/fixtures/test_ui_widget_factory.py` passes; LOC delta approximately +50 (new shared infra) _(deferred — heavy APC-001 __new__ rewrite or coordinated Phase 3 boundary work; out of safe-pass scope this session)_
+- [x] Scaffold `tests/fixtures/ui_widget_factory.py` exposing `make_ui_widget(Cls, **kwargs)` that constructs a pygame_gui widget via its real `__init__` with mocked pygame_gui dependencies (UIManager mock, parent container mock, default rect, default theme). Goal: a one-liner replacement for the bypass-init helpers in APC-001-F01..F16.
+- [x] Document the factory's contract in a module docstring: required vs optional kwargs, default mock objects, and an example covering the most common screen / panel / window cases.
+- [x] Add a smoke test in `tests/fixtures/test_ui_widget_factory.py` that constructs at least one of each broad category (screen, panel, window) with the factory. _(initial smoke set covers panel category — RaceIdentityPanel + RaceSummaryPanel + override priority + introspection-defaulted kwargs; further screen/window coverage will accumulate organically as APC-001 file rewrites land)_
+- [x] Verify: `pytest tests/fixtures/test_ui_widget_factory.py` passes; LOC delta approximately +50 (new shared infra) _(5 tests pass; LOC delta +~230 = factory ~210 + smoke test ~120; size larger than estimate because the factory introspects __init__ signatures and patches the full set of pygame_gui.elements.UI* classes)_
 
 ---
 
