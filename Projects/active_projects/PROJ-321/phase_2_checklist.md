@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Delete or rewrite the 26 verified CAT-2 tests-nothing-real tests identified by review `2026-05-02_204633_test-review`. Many of these are full-file deletions (e.g., `test_modifier_logic.py`, `test_testruncard_propulsion.py`); some are bypass-init UI tests where rewrites are out of scope here (handled in PROJ-322 APC-001 phase) - for those CAT-2 entries that overlap with APC-001 cluster files, mark with note `_(APC-001 cluster member - see PROJ-322 Phase 5)_` and target the specific tests not the whole file.
 
 ---

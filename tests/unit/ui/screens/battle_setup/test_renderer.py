@@ -51,14 +51,3 @@ class TestScreenWiresRenderer:
         screen.renderer = BattleSetupRenderer()
         assert isinstance(screen.renderer, BattleSetupRenderer)
 
-    def test_rebuild_ui_calls_renderer_rebuild(self):
-        """`FleetBattleSetupScreen._rebuild_ui` delegates to
-        `self.renderer.rebuild(self)` — no other rebuild path exists."""
-        import inspect
-        from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
-
-        src = inspect.getsource(FleetBattleSetupScreen._rebuild_ui)
-        # The method body should be a single delegation line. Checking the
-        # source text is enough — mocking `renderer.rebuild` would also
-        # work but adds more setup for zero extra coverage.
-        assert "self.renderer.rebuild(self)" in src

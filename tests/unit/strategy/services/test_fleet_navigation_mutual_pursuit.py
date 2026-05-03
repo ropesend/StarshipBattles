@@ -172,15 +172,3 @@ class TestGetDestinationMutualBranch:
             mock_intercept.assert_called_once()
             assert destination == HexCoord(8, 0)
 
-    def test_get_destination_default_self_fleet_is_none(self, galaxy_no_systems):
-        """`self_fleet` is an OPTIONAL keyword argument with default None,
-        so existing callers (UI projection) don't break.
-        """
-        import inspect
-
-        from game.strategy.services.fleet_navigation_service import (
-            FleetNavigationService,
-        )
-        sig = inspect.signature(FleetNavigationService.get_destination)
-        assert "self_fleet" in sig.parameters
-        assert sig.parameters["self_fleet"].default is None

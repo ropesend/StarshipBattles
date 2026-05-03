@@ -14,14 +14,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. CAT-1 Trivial Pass (46 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. CAT-2 Tests Nothing Real (26 items) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. CAT-2 Tests Nothing Real (26 items) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CAT-3 Dead Test Code (8 items, 1 relocate + 7 delete) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 2 CAT-2 Tests Nothing Real
-**Last Action:** Phase 1 complete: deleted/skipped 46 CAT-1 trivial-pass items across 36 test files (3 files fully deleted).
-**Next Action:** Begin Phase 2 CAT-2 tasks (26 items, skip APC-001 cluster files)
+**Active Phase:** Phase 3 CAT-3 Dead Test Code
+**Last Action:** Phase 2 complete: deleted CAT-2 bulk per directive; APC-001 cluster files (2.13, 2.14, 2.18, 2.21, 2.22) deferred to PROJ-322 Phase 5; Task 2.7 (test_production_rates.py) and 2.12 (test_data_source.py) marked obsolete (file already trimmed / would-be-add-only); Task 2.6 (test_ship_component_manager_di.py) and 2.20 (test_strategy_window_manager_public_api.py) kept-as-is per checklist.
+**Next Action:** Begin Phase 3 CAT-3 tasks (8 items, 1 relocate + 7 delete)
 **Blockers:** None
 
 ## Overview
