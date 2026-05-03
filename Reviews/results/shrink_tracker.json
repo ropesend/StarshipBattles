@@ -43,6 +43,30 @@
         "ui/panels/system_tree_panel.py",
         "ui/screens/planet_list_window.py"
       ]
+    },
+    {
+      "date": "2026-05-02",
+      "review_dir": "Reviews/results/2026-05-02_184210_audit_shrink",
+      "deep_review_shards": [
+        "01",
+        "02",
+        "03",
+        "04"
+      ],
+      "seed": "shrink-2026-05-02_184210",
+      "production_loc": 150422,
+      "dead_code_files": 0,
+      "dead_code_functions": 2,
+      "dead_code_imports": 14,
+      "duplication_clusters": 38,
+      "estimated_shrinkable_loc": 1571,
+      "top_hotspots": [
+        "game/core/formula_evaluator.py",
+        "game/engine/collision.py",
+        "game/ai/controller.py",
+        "game/ai/behaviors.py",
+        "game/research/data/tech_tree.py"
+      ]
     }
   ]
 }
