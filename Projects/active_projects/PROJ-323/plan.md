@@ -20,10 +20,10 @@
 | 5. CAT-12 Logic-Heavy (27 items) | Partial | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-03
-**Active Phase:** All phases complete (PARTIAL)
-**Last Action:** Phase 5 (26 tasks) PARTIAL: 7 obsolete-skipped (files deleted upstream), 19 deferred with rationale (each requires careful per-file logic-extraction or hardcoded-expected derivation work; recommend a follow-up logic-heavy cleanup project for the deferred set).
-**Next Action:** All 5 phases processed; running final pytest tests/ pass to confirm no regressions across substantive landings.
+**Last Updated:** 2026-05-03 (pass 2)
+**Active Phase:** All phases complete (PARTIAL — see below)
+**Last Action:** PROJ-323 pass 2 — addressed 23 of 24 deferred Phase 3 tasks (1 deferred-with-rationale: 3.34 cross-handler fleet_not_found cluster) and all 19 deferred Phase 5 tasks (7 substantive refactors + 12 leave-as-is/documented-intent). Net pass-2 work: ~14 substantive Phase 3 parametrizations + 5 below-threshold/leave-as-is + 1 deferred = Phase 3 essentially complete. Phase 5: 7 substantive refactors + 12 documented leave-as-is/below-threshold.
+**Next Action:** Run `python -m pytest tests/` to confirm no regressions; report SUCCESS/PARTIAL accordingly.
 **Blockers:** None
 
 ## Overview

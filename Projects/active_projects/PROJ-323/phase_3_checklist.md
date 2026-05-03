@@ -423,9 +423,9 @@
 **File:** `tests/unit/strategy/test_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/test_command_handlers.py`
 
-- [x] [S12-CAT10-001] `8+ handler error-path test clusters` (lines 90-290): Parametrize across (handler_cls, cmd_kwargs). _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S12-CAT10-001] `8+ handler error-path test clusters` (lines 90-290): Parametrize across (handler_cls, cmd_kwargs). _(pass 2 deferred — file has 11 test_fleet_not_found tests spread across distinct handler classes (Colonize, Move, Intercept, Join, ColonizeMission, ClearOrders, Transfer, SplitFleet, MergeFleets, RemoveFromConstructionQueue, AddToConstructionQueue) with per-handler mock_cmd kwargs. Pulling all 11 into a single class-level parametrize would (a) require fixture restructuring to expose a per-handler mock_cmd factory, and (b) destroy the per-class organization that aligns with the production code structure. PROJ-322 already addressed the ones aligned with DUP-002. Recommend a follow-up project to consolidate the remaining error-path patterns once DUP-002 lands fully.)_
 
-- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta ≈ 200 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta ≈ 200 _(deferred per above rationale)_
 
 **Notes:** _(none yet)_
 
