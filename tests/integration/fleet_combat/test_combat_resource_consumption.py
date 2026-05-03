@@ -20,6 +20,22 @@ from game.simulation.systems.resource_manager import ResourceRegistry, ResourceS
 from tests.fixtures.ships import create_test_ship
 
 
+# PROJ-323 Task 5.2: shared helper for repeat-consume loops.
+def _consume_until_depleted(resource, amount_per_tick: float, max_ticks: int) -> int:
+    """Try to consume `amount_per_tick` from `resource` up to `max_ticks` times.
+
+    Returns the number of successful consumptions before either max_ticks
+    is reached or the resource cannot satisfy a request.
+    """
+    successes = 0
+    for _ in range(max_ticks):
+        if resource.consume(amount_per_tick):
+            successes += 1
+        else:
+            break
+    return successes
+
+
 class TestResourceStateBasics:
     """Unit tests for ResourceState class."""
 
@@ -278,16 +294,11 @@ class TestCombatResourceFlow:
 
         fuel = registry.get_resource("fuel")
 
-        # Simulate 100 ticks of movement consuming 0.5 fuel each
-        ticks_moved = 0
-        for _ in range(100):
-            if fuel.consume(0.5):
-                ticks_moved += 1
-            else:
-                break
+        # Simulate 100 ticks of movement consuming 0.5 fuel each.
+        # Should have moved for 200 ticks (100 fuel / 0.5 = 200) — but we only
+        # simulate 100, so all should succeed.
+        ticks_moved = _consume_until_depleted(fuel, amount_per_tick=0.5, max_ticks=100)
 
-        # Should have moved for 200 ticks (100 fuel / 0.5 = 200)
-        # But we only simulate 100, so all should succeed
         assert ticks_moved == 100
         assert fuel.current_value == 50.0
 
@@ -303,13 +314,9 @@ class TestCombatResourceFlow:
 
         ammo = registry.get_resource("ammo")
 
-        # Fire 5 shots, each using 5 ammo
-        shots_fired = 0
-        for _ in range(10):  # Try to fire 10 times
-            if ammo.consume(5.0):
-                shots_fired += 1
+        # Fire 5 shots, each using 5 ammo. Only 4 succeed (20 / 5 = 4).
+        shots_fired = _consume_until_depleted(ammo, amount_per_tick=5.0, max_ticks=10)
 
-        # Should only fire 4 shots (20 / 5 = 4)
         assert shots_fired == 4
         assert ammo.current_value == 0.0
 

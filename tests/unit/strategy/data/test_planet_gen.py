@@ -28,7 +28,14 @@ def mock_image_registry():
 
 @pytest.fixture
 def planet_generator(mock_image_registry):
-    """Create a PlanetGenerator with mock dependencies."""
+    """Create a PlanetGenerator with mock dependencies and a seeded RNG.
+
+    PROJ-323 Task 5.17: seed game.strategy.data.planet_gen.random globally
+    via random.seed() so statistical assertions become deterministic. Each
+    test gets a fresh seed; the fixture re-seeds on every invocation.
+    """
+    import random as _random
+    _random.seed(42)
     from game.strategy.data.planet_gen import PlanetGenerator
     return PlanetGenerator(mock_image_registry)
 

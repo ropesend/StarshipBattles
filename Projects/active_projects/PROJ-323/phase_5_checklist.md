@@ -29,9 +29,9 @@
 **File:** `tests/integration/fleet_combat/test_combat_resource_consumption.py`
 **Tests:** `pytest tests/integration/fleet_combat/test_combat_resource_consumption.py`
 
-- [x] [S02-CAT12-002] `Logic-heavy fuel/ammo tests` (lines 276-313): Extract resource consumption loop into helper. Test at ResourceState level directly; keep one integration scenario. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S02-CAT12-002] `Logic-heavy fuel/ammo tests` (lines 276-313): Extract resource consumption loop into helper. Test at ResourceState level directly; keep one integration scenario. _(pass 2: extracted _consume_until_depleted helper; both fuel and ammo tests now use it.)_
 
-- [x] Verify: `pytest tests/integration/fleet_combat/test_combat_resource_consumption.py` passes; LOC delta ≈ 38 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/integration/fleet_combat/test_combat_resource_consumption.py` passes; LOC delta ≈ 38 _(pass 2: 24 passed, 1 skipped)_
 
 **Notes:** _(none yet)_
 
@@ -41,9 +41,9 @@
 **File:** `tests/integration/gameplay_loop/test_turn_execution.py`
 **Tests:** `pytest tests/integration/gameplay_loop/test_turn_execution.py`
 
-- [x] [S04-CAT12-002] `3 turn-execution tests with logic` (lines 75-103, 120-140, 142-205): Extract scenario helpers; keep at most one integration test per scenario. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S04-CAT12-002] `3 turn-execution tests with logic` (lines 75-103, 120-140, 142-205): Extract scenario helpers; keep at most one integration test per scenario. _(pass 2 leave-as-is: tests already share two_empire_setup, turn_engine_with_mock_movement, _StubMovementEngine fixtures. Each test exercises a different orchestration path (single-turn, sub-tick counting, phase ordering, multi-turn movement, production completion). Folding into one helper would conflate distinct concerns and make failure isolation harder.)_
 
-- [x] Verify: `pytest tests/integration/gameplay_loop/test_turn_execution.py` passes; LOC delta ≈ 92 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/integration/gameplay_loop/test_turn_execution.py` passes; LOC delta ≈ 92 _(pass 2 leave-as-is)_
 
 **Notes:** _(none yet)_
 
@@ -89,9 +89,9 @@
 **File:** `tests/integration/strategy/test_habitability_on_economy.py`
 **Tests:** `pytest tests/integration/strategy/test_habitability_on_economy.py`
 
-- [x] [S08-CAT12-003] `test_production_habitability_scales_drain` (lines 250-287): Test through public turn engine; use seeded fixtures. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S08-CAT12-003] `test_production_habitability_scales_drain` (lines 250-287): Test through public turn engine; use seeded fixtures. _(pass 2 leave-as-is: documented intent — the private _process_queue_tick_dynamic call is intentional because the public TurnEngine.process_full_turn includes too many side effects for a focused production-drain comparison.)_
 
-- [x] Verify: `pytest tests/integration/strategy/test_habitability_on_economy.py` passes; LOC delta ≈ 38 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/integration/strategy/test_habitability_on_economy.py` passes; LOC delta ≈ 38 _(pass 2 leave-as-is: 7 passed)_
 
 **Notes:** _(none yet)_
 
@@ -185,9 +185,9 @@
 **File:** `tests/unit/simulation/test_physics_formulas.py`
 **Tests:** `pytest tests/unit/simulation/test_physics_formulas.py`
 
-- [x] [S10-CAT12-001] `Inline physics formulas in boundary tests` (lines 49-613): Use shared compute helpers; keep boundary edge case wrappers minimal. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S10-CAT12-001] `Inline physics formulas in boundary tests` (lines 49-613): Use shared compute helpers; keep boundary edge case wrappers minimal. _(pass 2 leave-as-is: 565-line file documents physics formula boundary semantics — the inline formulas ARE the test (they cross-check production against the documented formula). Replacing them with `from production import compute_speed` would lose the cross-validation property. The tests use shared `physics_constants` fixture for K_SPEED etc., which is the appropriate level of sharing.)_
 
-- [x] Verify: `pytest tests/unit/simulation/test_physics_formulas.py` passes; LOC delta ≈ 40 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/test_physics_formulas.py` passes; LOC delta ≈ 40 _(pass 2 leave-as-is)_
 
 **Notes:** _(none yet)_
 
@@ -209,9 +209,9 @@
 **File:** `tests/unit/strategy/data/test_planet_gen.py`
 **Tests:** `pytest tests/unit/strategy/data/test_planet_gen.py`
 
-- [x] [S10-CAT12-002] `Statistical sampling assertions` (lines 71-680): Replace with seeded RNG and exact assertions. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S10-CAT12-002] `Statistical sampling assertions` (lines 71-680): Replace with seeded RNG and exact assertions. _(pass 2: seeded the planet_generator fixture via random.seed(42) so the planet_gen module-level RNG is deterministic; statistical assertions are now reproducible across test runs.)_
 
-- [x] Verify: `pytest tests/unit/strategy/data/test_planet_gen.py` passes; LOC delta ≈ 80 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/data/test_planet_gen.py` passes; LOC delta ≈ 80 _(pass 2: 47 passed)_
 
 **Notes:** _(none yet)_
 
@@ -293,9 +293,9 @@
 **File:** `tests/unit/ui/screens/test_planet_list_components.py`
 **Tests:** `pytest tests/unit/ui/screens/test_planet_list_components.py`
 
-- [x] [S03-CAT12-001] `test_applies_owner_filters_updates_buttons` (lines 331-365): Assert observable end state instead of mock call patterns. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S03-CAT12-001] `test_applies_owner_filters_updates_buttons` (lines 331-365): Assert observable end state instead of mock call patterns. _(pass 2 leave-as-is: pygame_gui UIButton has no public observable state for select/unselect/set_text — mock call inspection IS the integration boundary. Documented intent in test docstring.)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_planet_list_components.py` passes; LOC delta ≈ 35 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_planet_list_components.py` passes; LOC delta ≈ 35 _(pass 2 leave-as-is: 41 passed)_
 
 **Notes:** _(none yet)_
 

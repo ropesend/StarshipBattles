@@ -329,7 +329,14 @@ class TestApplyPlanetListState:
         assert filter_owner == {'Player': True, 'Enemy': False, 'Unowned': True}
 
     def test_applies_owner_filters_updates_buttons(self):
-        """Test applies owner filters updates UI buttons (PROJ-220 bug fix)."""
+        """Test applies owner filters updates UI buttons (PROJ-220 bug fix).
+
+        PROJ-323 Task 5.24: kept mock-call assertions. The buttons are
+        pygame_gui UI widgets with no public observable state for
+        select/unselect/set_text — the only way to verify these side effects
+        is via mock call inspection. This test pattern is acceptable here
+        because the mocks ARE the integration boundary.
+        """
         from game.ui.screens.planet_list_presets import apply_planet_list_state
 
         state = {
