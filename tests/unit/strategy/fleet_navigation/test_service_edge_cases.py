@@ -430,7 +430,15 @@ class TestProjectPath:
 
 
 class TestProjectPathAsDicts:
-    """Tests for project_path_as_dicts method."""
+    """Tests for project_path_as_dicts method.
+
+    NOTE: surface overlap with `tests/unit/strategy/fleet_navigation/
+    test_projection.py:146-169` is intentional. These tests pin the
+    list-of-dict shape returned by the service (zero-speed empty-list
+    edge case is unique to this file) while `test_projection.py`
+    covers the geometric projection itself. PROJ-322 Task 1.16
+    (S10-CAT4-001).
+    """
 
     @pytest.fixture
     def service(self):

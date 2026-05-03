@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. CAT-4 Duplicate Testing (19 items) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. CAT-4 Duplicate Testing (19 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-5 Fixture Bloat (20 items) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CAT-6 Mocking Brittleness (26 items) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-7 Sleep/Latency (9 items) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -24,9 +24,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 1 CAT-4 Duplicate Testing
-**Last Action:** Project created from 2026-05-02_204633_test-review after independent verification (3rd skeptical pass)
-**Next Action:** Begin Phase 1 tasks: consolidate 19 verified CAT-4 duplicate tests
+**Active Phase:** Phase 2 CAT-5 Fixture Bloat
+**Last Action:** Phase 1 complete — all 18 CAT-4 tasks consolidated (parametrized 1.7/1.10/1.13/1.14, removed duplicates 1.1-1.4, extracted shared fixtures 1.5/1.15/1.17, registry-driven test 1.11, public API 1.6/1.12, doc-only 1.8/1.16, hotkey merge 1.18). Task 1.5 also creates shared `tests/unit/simulation/conftest.py`.
+**Next Action:** Begin Phase 2 — rescope or share the 20 CAT-5 expensive fixtures (function -> class/module/session) where safe.
 **Blockers:** None
 
 ## Overview

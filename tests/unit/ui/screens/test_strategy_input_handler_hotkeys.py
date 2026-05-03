@@ -133,6 +133,47 @@ class TestFleetActionsViaMapper:
         assert handler.input_mode == 'SELECT'
         assert handler.input_mode == initial_mode
 
+    # ------------------------------------------------------------------
+    # FEAT-07: 'W' hotkey for explicit warp orders
+    # Migrated from tests/unit/ui/screens/test_warp_hotkey.py via
+    # PROJ-322 Task 1.18 (S05-CAT4-001). The original W/M/fleet-None/
+    # capability-fail/ESC mode-activation tests are consolidated here
+    # alongside the existing M/J/C/T mode-activation coverage.
+    # ------------------------------------------------------------------
+
+    def test_w_triggers_warp_target_mode(self, mock_scene, mapper):
+        """Pressing W sets input mode to WARP_TARGET when warp-capable
+        fleet is selected."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        fleet = MagicMock()
+        fleet.capabilities.can_use_warp.return_value = True
+        mock_scene.selected_fleet = fleet
+        handler.handle_event(_keydown(pygame.K_w))
+        assert handler.input_mode == 'WARP_TARGET'
+
+    def test_w_ignored_without_fleet(self, mock_scene, mapper):
+        """W with no selected fleet leaves the handler in SELECT mode."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        mock_scene.selected_fleet = None
+        handler.handle_event(_keydown(pygame.K_w))
+        assert handler.input_mode == 'SELECT'
+
+    def test_w_ignored_when_fleet_cannot_warp(self, mock_scene, mapper):
+        """W is silently ignored when the selected fleet cannot warp."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        fleet = MagicMock()
+        fleet.capabilities.can_use_warp.return_value = False
+        mock_scene.selected_fleet = fleet
+        handler.handle_event(_keydown(pygame.K_w))
+        assert handler.input_mode == 'SELECT'
+
+    def test_escape_cancels_warp_target_mode(self, mock_scene, mapper):
+        """ESC returns the handler from WARP_TARGET to SELECT."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.input_mode = 'WARP_TARGET'
+        handler.handle_event(_keydown(pygame.K_ESCAPE))
+        assert handler.input_mode == 'SELECT'
+
 
 class TestZoomViaMapper:
     """Zoom hotkeys resolved via InputMapper."""

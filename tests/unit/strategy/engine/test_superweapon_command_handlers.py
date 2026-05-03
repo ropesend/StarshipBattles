@@ -102,19 +102,9 @@ class TestImplodePlanetCommandHandler:
         assert len(mock_fleet.orders) == 1
         assert mock_fleet.orders[0].type == OrderType.IMPLODE_PLANET
 
-    def test_execute_fails_when_fleet_not_found(self, mock_session):
-        """Handler returns invalid when fleet not found."""
-        from game.strategy.engine.superweapon_command_handlers import ImplodePlanetCommandHandler
-        from game.strategy.engine.commands import IssueImplodePlanetCommand
-
-        mock_session._get_fleet_by_id.return_value = None
-        cmd = IssueImplodePlanetCommand(fleet_id=999, planet_id=100)
-        handler = ImplodePlanetCommandHandler()
-
-        result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    # NOTE: ImplodePlanet's `_get_fleet_by_id.return_value = None` case is
+    # covered by the parametrized `test_mission_handler_fleet_not_found`
+    # in test_superweapon_edge_cases.py (PROJ-322 Task 1.13/1.14).
 
     def test_execute_fails_when_validation_fails(self, mock_session, mock_fleet):
         """Handler returns invalid when validation fails."""

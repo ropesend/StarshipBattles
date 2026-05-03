@@ -14,7 +14,6 @@ Note: Some seeker stats (like projectile_hp, projectile_stealth) may not have
 base attributes defined yet. We track what the bindings SHOULD be for the
 declarative contract, even if recalculate() doesn't fully use them yet.
 """
-import pytest
 from game.simulation.components.abilities.stat_keys import StatKey, AbilityStatBinding
 
 
@@ -97,97 +96,9 @@ class TestSeekerWeaponAbilityStatBindings:
         assert StatKey.PROJECTILE_STEALTH_LEVEL in consumed
 
 
-class TestSeekerWeaponAbilityRecalculate:
-    """Tests for SeekerWeaponAbility.recalculate() with seeker stats."""
-
-    def test_recalculate_applies_endurance_mult(self):
-        """recalculate() should apply endurance_mult from stats."""
-        from game.simulation.components.abilities.weapons import SeekerWeaponAbility
-
-        class MockComponent:
-            def __init__(self):
-                self.stats = {'endurance_mult': 2.0}
-                self.ability_stats = {}
-                self.data = {}
-
-        component = MockComponent()
-        ability = SeekerWeaponAbility(component, {
-            'damage': 100,
-            'range': 0,  # Will be calculated from endurance
-            'reload': 2.0,
-            'endurance': 5.0,
-            'projectile_speed': 500
-        })
-
-        assert ability._base_endurance == 5.0
-        ability.recalculate()
-        assert ability.endurance == pytest.approx(10.0)
-
-    def test_recalculate_applies_projectile_damage_mult(self):
-        """recalculate() should apply projectile_damage_mult from stats."""
-        from game.simulation.components.abilities.weapons import SeekerWeaponAbility
-
-        class MockComponent:
-            def __init__(self):
-                self.stats = {'projectile_damage_mult': 3.0}
-                self.ability_stats = {}
-                self.data = {}
-
-        component = MockComponent()
-        ability = SeekerWeaponAbility(component, {
-            'damage': 100,
-            'range': 1000,
-            'reload': 2.0,
-            'endurance': 5.0,
-            'projectile_speed': 500,
-            'projectile_damage': 50
-        })
-
-        ability.recalculate()
-        assert ability.projectile_damage == pytest.approx(150)
-
-    def test_recalculate_applies_projectile_hp_mult(self):
-        """recalculate() should apply projectile_hp_mult from stats."""
-        from game.simulation.components.abilities.weapons import SeekerWeaponAbility
-
-        class MockComponent:
-            def __init__(self):
-                self.stats = {'projectile_hp_mult': 5.0}
-                self.ability_stats = {}
-                self.data = {}
-
-        component = MockComponent()
-        ability = SeekerWeaponAbility(component, {
-            'damage': 100,
-            'range': 1000,
-            'reload': 2.0,
-            'endurance': 5.0,
-            'projectile_speed': 500,
-            'projectile_hp': 10
-        })
-
-        ability.recalculate()
-        assert ability.projectile_hp == pytest.approx(50)
-
-    def test_recalculate_applies_projectile_stealth_add(self):
-        """recalculate() should apply projectile_stealth_level (add) from stats."""
-        from game.simulation.components.abilities.weapons import SeekerWeaponAbility
-
-        class MockComponent:
-            def __init__(self):
-                self.stats = {'projectile_stealth_level': 3}
-                self.ability_stats = {}
-                self.data = {}
-
-        component = MockComponent()
-        ability = SeekerWeaponAbility(component, {
-            'damage': 100,
-            'range': 1000,
-            'reload': 2.0,
-            'endurance': 5.0,
-            'projectile_speed': 500,
-            'projectile_stealth': 0
-        })
-
-        ability.recalculate()
-        assert ability.projectile_stealth == 3
+# NOTE: SeekerWeaponAbility.recalculate() coverage lives in
+# tests/unit/simulation/components/abilities/test_weapons_isolation.py
+# (TestSeekerWeapon::test_recalculate_applies_seeker_modifiers, lines ~1011-1026),
+# which exercises endurance / projectile_damage / projectile_hp / projectile_stealth
+# in a single consolidated test. Per PROJ-322 Task 1.2 (S09-CAT4-002) the four
+# duplicated individual recalculate tests previously here have been removed.

@@ -137,44 +137,10 @@ class TestModifierManagerStatSummary:
             assert summary['mass_mult']['net_value'] == pytest.approx(2.0 * 1.25, abs=0.01)
 
 
-class TestModifierManagerStandalone:
-    """Test ModifierManager deprecated static methods (legacy API)."""
-
-    def test_manager_add_modifier_static(self, fresh_registries):
-        """ModifierManager.add_modifier_static should work with modifiers list."""
-        railgun = create_component('railgun', registries=fresh_registries)
-        registries = railgun._registries
-
-        result = ModifierManager.add_modifier_static(
-            railgun.modifiers,
-            'simple_size_mount',
-            2.0,
-            registries
-        )
-
-        assert result is True
-        assert any(m.definition.id == 'simple_size_mount' for m in railgun.modifiers)
-
-    def test_manager_remove_modifier_static(self, fresh_registries):
-        """ModifierManager.remove_modifier_static should work with modifiers list."""
-        railgun = create_component('railgun', registries=fresh_registries)
-        registries = railgun._registries
-        ModifierManager.add_modifier_static(railgun.modifiers, 'simple_size_mount', 2.0, registries)
-
-        new_list = ModifierManager.remove_modifier_static(railgun.modifiers, 'simple_size_mount')
-
-        assert not any(m.definition.id == 'simple_size_mount' for m in new_list)
-
-    def test_manager_get_modifier_static(self, fresh_registries):
-        """ModifierManager.get_modifier_static should find modifier in list."""
-        railgun = create_component('railgun', registries=fresh_registries)
-        registries = railgun._registries
-        ModifierManager.add_modifier_static(railgun.modifiers, 'simple_size_mount', 2.0, registries)
-
-        mod = ModifierManager.get_modifier_static(railgun.modifiers, 'simple_size_mount')
-
-        assert mod is not None
-        assert mod.definition.id == 'simple_size_mount'
+# NOTE: TestModifierManagerStandalone removed in PROJ-322 Task 1.3
+# (S02-CAT4-001). The deprecated `add_modifier_static` / `remove_modifier_static`
+# / `get_modifier_static` static-method wrappers are already covered by the
+# instance-method tests above.
 
 
 class TestStatefulModifierManagerConstruction:

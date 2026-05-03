@@ -13,8 +13,6 @@ from unittest.mock import MagicMock, patch
 
 import pygame
 
-from game.core.input_actions import InputAction
-
 
 class MockScene:
     """Mock scene for testing input handler."""
@@ -43,63 +41,12 @@ class MockInputMapper:
         return self._action
 
 
-class TestWarpHotkeyModeActivation:
-    """Tests for W key -> WARP_TARGET mode transitions."""
-
-    @pytest.fixture
-    def handler(self):
-        from game.ui.screens.strategy_input_handler import StrategyInputHandler
-        scene = MockScene()
-        handler = StrategyInputHandler(scene, input_mapper=None)
-        return handler
-
-    def test_w_sets_warp_target_mode(self, handler):
-        """FLEET_WARP sets WARP_TARGET mode when fleet is selected."""
-        mapper = MockInputMapper(InputAction.FLEET_WARP)
-        handler._mapper = mapper
-        handler.scene.selected_fleet = MagicMock()
-        # Fleet is warp-capable (default mock behavior - hasattr returns True,
-        # capabilities.can_use_warp() returns truthy MagicMock)
-
-        event = MagicMock()
-        handler._handle_keydown_mapped(event)
-
-        assert handler.input_mode == 'WARP_TARGET'
-
-    def test_w_ignored_without_fleet(self, handler):
-        """FLEET_WARP does nothing when no fleet selected."""
-        mapper = MockInputMapper(InputAction.FLEET_WARP)
-        handler._mapper = mapper
-        handler.scene.selected_fleet = None
-
-        event = MagicMock()
-        handler._handle_keydown_mapped(event)
-
-        assert handler.input_mode == 'SELECT'
-
-    def test_w_ignored_when_fleet_cannot_warp(self, handler):
-        """FLEET_WARP silently ignored when fleet cannot use warp."""
-        mapper = MockInputMapper(InputAction.FLEET_WARP)
-        handler._mapper = mapper
-        fleet = MagicMock()
-        fleet.capabilities.can_use_warp.return_value = False
-        handler.scene.selected_fleet = fleet
-
-        event = MagicMock()
-        handler._handle_keydown_mapped(event)
-
-        assert handler.input_mode == 'SELECT'
-
-    def test_escape_cancels_warp_target_mode(self, handler):
-        """ESC returns to SELECT from WARP_TARGET mode."""
-        mapper = MockInputMapper(InputAction.FLEET_CANCEL_MODE)
-        handler._mapper = mapper
-        handler.input_mode = 'WARP_TARGET'
-
-        event = MagicMock()
-        handler._handle_keydown_mapped(event)
-
-        assert handler.input_mode == 'SELECT'
+# NOTE: TestWarpHotkeyModeActivation moved to
+# `tests/unit/ui/screens/test_strategy_input_handler_hotkeys.py` in
+# PROJ-322 Task 1.18 (S05-CAT4-001). The 4 mode-activation tests now
+# live alongside the existing M/J/C/T mode-activation coverage in
+# `TestFleetActionsViaMapper`. `TestWarpHotkeyViaRealMapper` and
+# `TestWarpClickDispatching` remain in this file.
 
 
 class TestWarpHotkeyViaRealMapper:

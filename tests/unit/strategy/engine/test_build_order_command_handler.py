@@ -178,28 +178,42 @@ class TestRemoveBuildOrderCommand:
 
 
 class TestBuildOrderHandlerRegistration:
-    """Tests for handler registration in create_default_registry()."""
+    """Tests for handler registration in create_default_registry().
+
+    PROJ-322 Task 1.12 (S06-CAT4-003 / APC-003-F06): drives the public
+    `dispatch(command_name, ...)` surface instead of indexing the private
+    `_handlers` dict. A registered handler is one whose dispatch result
+    is NOT the registry's "Unknown command type" failure.
+    """
+
+    def _dispatch_returns_unknown_error(self, registry, command_name: str) -> bool:
+        # An unregistered command yields a ValidationResult error whose
+        # message starts with "Unknown command type:". We pass a no-op
+        # session/command pair: when the handler IS registered the call
+        # may or may not succeed (depends on the session shape) but it
+        # will not return the unknown-command failure.
+        result = registry.dispatch(command_name, session=Mock(), command=Mock())
+        if result.is_valid:
+            return False
+        joined = ' '.join(result.errors or [])
+        return 'Unknown command type' in joined
 
     def test_build_order_handler_registered(self):
-        """BuildOrderCommandHandler should be registered."""
+        """IssueBuildOrderCommand dispatches without `Unknown command type`."""
         from game.strategy.engine.command_handlers import create_default_registry
 
         registry = create_default_registry()
-
-        # Should have handler registered
-        assert 'IssueBuildOrderCommand' in registry._handlers
-        assert isinstance(registry._handlers['IssueBuildOrderCommand'], BuildOrderCommandHandler)
-
-    def test_remove_build_order_handler_registered(self):
-        """RemoveBuildOrderCommandHandler should be registered."""
-        from game.strategy.engine.command_handlers import (
-            create_default_registry,
-            RemoveBuildOrderCommandHandler
+        assert not self._dispatch_returns_unknown_error(
+            registry, 'IssueBuildOrderCommand'
         )
 
-        registry = create_default_registry()
+    def test_remove_build_order_handler_registered(self):
+        """RemoveBuildOrderCommand dispatches without `Unknown command type`."""
+        from game.strategy.engine.command_handlers import create_default_registry
 
-        assert 'RemoveBuildOrderCommand' in registry._handlers
-        assert isinstance(registry._handlers['RemoveBuildOrderCommand'], RemoveBuildOrderCommandHandler)
+        registry = create_default_registry()
+        assert not self._dispatch_returns_unknown_error(
+            registry, 'RemoveBuildOrderCommand'
+        )
 
 

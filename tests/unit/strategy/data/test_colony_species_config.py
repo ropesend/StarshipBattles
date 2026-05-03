@@ -78,29 +78,31 @@ class TestLastFoodRatioAggregation:
     `last_consumption_ratios.values()`."""
 
     def test_single_resource_ratio_passes_through(self):
+        """Edge case: single-resource pass-through (MIN of one element = that element)."""
         from game.strategy.data.colony_species_config import ColonySpeciesConfig
         cfg = ColonySpeciesConfig()
         cfg.last_consumption_ratios = {"organics": 0.7}
         assert cfg.last_food_ratio == pytest.approx(0.7)
 
     def test_multi_resource_uses_minimum(self):
-        """'As well-fed as the worst-supplied resource' — 20% metals
-        dominates 80% organics."""
+        """Edge case: multi-resource MIN aggregation. 'As well-fed as
+        the worst-supplied resource' — 20% metals dominates 80% organics."""
         from game.strategy.data.colony_species_config import ColonySpeciesConfig
         cfg = ColonySpeciesConfig()
         cfg.last_consumption_ratios = {"organics": 0.8, "metals": 0.2}
         assert cfg.last_food_ratio == pytest.approx(0.2)
 
     def test_zero_on_any_resource_collapses_aggregate(self):
-        """One resource at 0% starves the species regardless of the
-        others. This is the gameplay-surprising case documented in
-        design.md (§Dependencies & Risks §4)."""
+        """Edge case: zero-collapses-to-zero. One resource at 0% starves
+        the species regardless of the others. Gameplay-surprising case
+        documented in design.md (§Dependencies & Risks §4)."""
         from game.strategy.data.colony_species_config import ColonySpeciesConfig
         cfg = ColonySpeciesConfig()
         cfg.last_consumption_ratios = {"organics": 1.0, "metals": 0.0}
         assert cfg.last_food_ratio == 0.0
 
     def test_all_ones_aggregate_one(self):
+        """Edge case: all-ones-yields-one (MIN of saturated ratios is 1.0)."""
         from game.strategy.data.colony_species_config import ColonySpeciesConfig
         cfg = ColonySpeciesConfig()
         cfg.last_consumption_ratios = {
@@ -109,8 +111,9 @@ class TestLastFoodRatioAggregation:
         assert cfg.last_food_ratio == 1.0
 
     def test_empty_dict_returns_one(self):
-        """Pre-first-turn / zero-pop / misconfigured: empty dict → 1.0
-        preserves PROJ-284's default-1.0 contract."""
+        """Edge case: empty-dict-defaults-to-1. Pre-first-turn / zero-pop
+        / misconfigured: empty dict → 1.0 preserves PROJ-284's default-1.0
+        contract."""
         from game.strategy.data.colony_species_config import ColonySpeciesConfig
         cfg = ColonySpeciesConfig()
         cfg.last_consumption_ratios = {}

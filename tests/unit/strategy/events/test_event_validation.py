@@ -32,41 +32,26 @@ class TestEventValidation:
         assert event.empire_id == 1
         assert event.message == 'Cruiser completed at Alpha Centauri'
 
-    def test_missing_event_type_raises_persistence_exception(self, valid_event_data):
-        """Missing event_type should raise PersistenceException."""
-        del valid_event_data['event_type']
+    @pytest.mark.parametrize('field', [
+        'event_type',
+        'category',
+        'turn',
+        'empire_id',
+        'message',
+    ])
+    def test_missing_required_field_raises_persistence_exception(
+        self, valid_event_data, field,
+    ):
+        """Each required Event field, when absent, raises a
+        PersistenceException naming the field. Parametrized in PROJ-322
+        Task 1.10 (S08-CAT4-001)."""
+        del valid_event_data[field]
         with pytest.raises(PersistenceException) as exc_info:
             Event.from_dict(valid_event_data)
-        assert 'event_type' in str(exc_info.value)
-        assert 'Event' in str(exc_info.value)
-
-    def test_missing_category_raises_persistence_exception(self, valid_event_data):
-        """Missing category should raise PersistenceException."""
-        del valid_event_data['category']
-        with pytest.raises(PersistenceException) as exc_info:
-            Event.from_dict(valid_event_data)
-        assert 'category' in str(exc_info.value)
-
-    def test_missing_turn_raises_persistence_exception(self, valid_event_data):
-        """Missing turn should raise PersistenceException."""
-        del valid_event_data['turn']
-        with pytest.raises(PersistenceException) as exc_info:
-            Event.from_dict(valid_event_data)
-        assert 'turn' in str(exc_info.value)
-
-    def test_missing_empire_id_raises_persistence_exception(self, valid_event_data):
-        """Missing empire_id should raise PersistenceException."""
-        del valid_event_data['empire_id']
-        with pytest.raises(PersistenceException) as exc_info:
-            Event.from_dict(valid_event_data)
-        assert 'empire_id' in str(exc_info.value)
-
-    def test_missing_message_raises_persistence_exception(self, valid_event_data):
-        """Missing message should raise PersistenceException."""
-        del valid_event_data['message']
-        with pytest.raises(PersistenceException) as exc_info:
-            Event.from_dict(valid_event_data)
-        assert 'message' in str(exc_info.value)
+        assert field in str(exc_info.value)
+        if field == 'event_type':
+            # Original test asserted on the exception's class context label.
+            assert 'Event' in str(exc_info.value)
 
     def test_missing_details_defaults_to_empty_dict(self, valid_event_data):
         """Missing details should default to empty dict."""

@@ -5,7 +5,13 @@ flag. PlanetaryFacility round-trips are covered alongside other facility
 serialization in `test_facility_construction_queue.py`; this file covers
 Planet (base queue) and Fleet (space-yard queue), plus the legacy-save
 compatibility default.
+
+PROJ-322 Task 1.9 (S04-CAT4-001): Planet and Fleet variants collapsed
+into a parametrized fixture-factory; the four method shapes (default,
+set True, set False, legacy save) are now parametrized cases.
 """
+
+import pytest
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
@@ -31,70 +37,58 @@ def _make_planet() -> Planet:
     )
 
 
-class TestPlanetConstructionQueuePausedPersistence:
-    """Planet.construction_queue_paused round-trips."""
+def _make_fleet() -> Fleet:
+    return Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5.0)
 
-    def test_planet_defaults_paused_to_false(self):
-        planet = _make_planet()
-        assert planet.construction_queue_paused is False
 
-    def test_planet_paused_round_trips(self):
-        planet = _make_planet()
-        planet.construction_queue_paused = True
+_ENTITY_FACTORIES = {
+    "planet": (_make_planet, Planet),
+    "fleet": (_make_fleet, Fleet),
+}
 
-        data = planet.to_dict()
+
+@pytest.fixture(params=list(_ENTITY_FACTORIES.keys()))
+def entity_factory(request):
+    """(entity_factory_callable, entity_class) pair for Planet / Fleet."""
+    return _ENTITY_FACTORIES[request.param]
+
+
+class TestConstructionQueuePausedPersistence:
+    """Round-trip coverage for the FEAT-17 `construction_queue_paused`
+    flag on every yard-owning entity. Parametrized over Planet and Fleet
+    in PROJ-322 Task 1.9 (S04-CAT4-001)."""
+
+    def test_defaults_paused_to_false(self, entity_factory):
+        make, _ = entity_factory
+        entity = make()
+        assert entity.construction_queue_paused is False
+
+    def test_paused_round_trips(self, entity_factory):
+        make, cls = entity_factory
+        entity = make()
+        entity.construction_queue_paused = True
+
+        data = entity.to_dict()
         assert data["construction_queue_paused"] is True
 
-        restored = Planet.from_dict(data)
+        restored = cls.from_dict(data)
         assert restored.construction_queue_paused is True
 
-    def test_planet_unpaused_round_trips(self):
-        planet = _make_planet()
-        planet.construction_queue_paused = False
+    def test_unpaused_round_trips(self, entity_factory):
+        make, cls = entity_factory
+        entity = make()
+        entity.construction_queue_paused = False
 
-        data = planet.to_dict()
-        restored = Planet.from_dict(data)
+        data = entity.to_dict()
+        restored = cls.from_dict(data)
         assert restored.construction_queue_paused is False
 
-    def test_legacy_planet_save_defaults_to_false(self):
+    def test_legacy_save_defaults_to_false(self, entity_factory):
         """Save written before FEAT-17 must load with paused=False."""
-        planet = _make_planet()
-        data = planet.to_dict()
+        make, cls = entity_factory
+        entity = make()
+        data = entity.to_dict()
         # Strip the FEAT-17 key to simulate an old save
         data.pop("construction_queue_paused", None)
-        restored = Planet.from_dict(data)
-        assert restored.construction_queue_paused is False
-
-
-class TestFleetConstructionQueuePausedPersistence:
-    """Fleet.construction_queue_paused round-trips."""
-
-    def test_fleet_defaults_paused_to_false(self):
-        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5.0)
-        assert fleet.construction_queue_paused is False
-
-    def test_fleet_paused_round_trips(self):
-        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5.0)
-        fleet.construction_queue_paused = True
-
-        data = fleet.to_dict()
-        assert data["construction_queue_paused"] is True
-
-        restored = Fleet.from_dict(data)
-        assert restored.construction_queue_paused is True
-
-    def test_fleet_unpaused_round_trips(self):
-        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5.0)
-        fleet.construction_queue_paused = False
-
-        data = fleet.to_dict()
-        restored = Fleet.from_dict(data)
-        assert restored.construction_queue_paused is False
-
-    def test_legacy_fleet_save_defaults_to_false(self):
-        """Save written before FEAT-17 must load with paused=False."""
-        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5.0)
-        data = fleet.to_dict()
-        data.pop("construction_queue_paused", None)
-        restored = Fleet.from_dict(data)
+        restored = cls.from_dict(data)
         assert restored.construction_queue_paused is False

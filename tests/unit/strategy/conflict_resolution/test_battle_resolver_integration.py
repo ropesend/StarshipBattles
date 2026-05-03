@@ -69,9 +69,17 @@ class TestBattleResolverIntegration:
 
     def test_mock_resolver_enables_unit_testing(self):
         """BUG-126: when the (mock) resolver wipes the loser's fleet to
-        zero ships, the engine reports the destroyed fleet id. The
-        strategy engine no longer calls `empire.remove_fleet` itself —
-        that is the `PostBattleHook`'s job."""
+        zero ships, the engine reports the destroyed fleet id via the
+        public `resolve_all_conflicts` ConflictResult. The strategy
+        engine no longer calls `empire.remove_fleet` itself — that is
+        the `PostBattleHook`'s job.
+
+        PROJ-322 Task 1.6 (S06-CAT4-001 / APC-003-F05): rewritten to
+        drive the public `resolve_all_conflicts` API and assert on
+        observable `ConflictResult` state instead of touching the
+        private `_empires` / `_combats_resolved` / `_fleets_destroyed`
+        attributes.
+        """
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
@@ -94,18 +102,22 @@ class TestBattleResolverIntegration:
         engine = ConflictResolutionEngine(battle_resolver=AlwaysTeam0WinsResolver())
 
         emp1 = _empire(0); emp2 = _empire(1)
-        f1 = _fleet(1, owner_id=0); f2 = _fleet(2, owner_id=1)
-        emp1.fleets.append(f1); emp2.fleets.append(f2)
-        engine._empires = [emp1, emp2]
-        engine._combats_resolved = 0
-        engine._fleets_destroyed = []
+        # Co-located fleets at the same hex trigger _resolve_combat_at_hex
+        # via the public resolve_all_conflicts entry point.
+        f1 = _fleet(1, owner_id=0, location=HexCoord(3, 3))
+        f2 = _fleet(2, owner_id=1, location=HexCoord(3, 3))
+        emp1.fleets = [f1]; emp2.fleets = [f2]
 
-        engine._resolve_combat_at_hex([(emp1, f1), (emp2, f2)])
+        result = engine.resolve_all_conflicts(
+            [emp1, emp2], tick=20, moved_fleet_ids=set(),
+        )
 
         # Strategy engine no longer prunes — that is the hook's job.
         emp2.remove_fleet.assert_not_called()
-        # But the engine reports the wiped fleet for audit/event payload.
-        assert engine._fleets_destroyed == [2]
+        # But the engine reports the wiped fleet for audit/event payload
+        # via the public ConflictResult contract.
+        assert 2 in set(result.fleets_destroyed)
+        assert result.combats_resolved >= 1
 
     def test_battle_results_not_applied_via_adapter(self):
         """PROJ-269 Phase 6: ConflictResolutionEngine no longer calls
