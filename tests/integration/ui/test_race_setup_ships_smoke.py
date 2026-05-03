@@ -121,14 +121,45 @@ def test_every_skin_is_2048x2048(
                 )
 
 
-def test_every_portrait_is_2048x2048_or_in_allowlist(
+# PROJ-323 Task 5.9: split single test into two: allowlist-drift detection
+# and target-sized portrait verification.
+
+def test_allowlisted_portrait_size_mismatches_remain_non_target(
     initialized_manager: ShipThemeManager,
 ) -> None:
-    """Portrait dimensions must be target-sized unless explicitly allowlisted."""
+    """Allowlisted size-mismatch portraits must still be non-target-sized.
+
+    Drift detection: if an allowlist entry is now target-sized, it should
+    be removed from EXPECTED_PORTRAIT_SIZE_MISMATCHES.
+    """
     for theme_name in initialized_manager.theme_data:
         for ship_class in SHIP_CLASSES_WITH_VISUAL_THEMES:
             pair = (theme_name, ship_class)
             if pair in EXPECTED_PORTRAIT_GAPS:
+                continue
+            if pair not in EXPECTED_PORTRAIT_SIZE_MISMATCHES:
+                continue
+
+            portrait_path = initialized_manager.get_portrait_path(theme_name, ship_class)
+            assert portrait_path is not None
+            with Image.open(portrait_path) as img:
+                assert img.size != TARGET_SIZE, (
+                    f"Theme {theme_name}/{ship_class}: allowlist entry is "
+                    "now target-sized; remove it from EXPECTED_PORTRAIT_SIZE_MISMATCHES"
+                )
+                assert img.mode in {"RGB", "RGBA"}
+
+
+def test_every_non_allowlisted_portrait_is_target_sized(
+    initialized_manager: ShipThemeManager,
+) -> None:
+    """Non-allowlisted portraits must be target-sized and have valid mode."""
+    for theme_name in initialized_manager.theme_data:
+        for ship_class in SHIP_CLASSES_WITH_VISUAL_THEMES:
+            pair = (theme_name, ship_class)
+            if pair in EXPECTED_PORTRAIT_GAPS:
+                continue
+            if pair in EXPECTED_PORTRAIT_SIZE_MISMATCHES:
                 continue
 
             portrait_path = initialized_manager.get_portrait_path(theme_name, ship_class)
@@ -136,18 +167,11 @@ def test_every_portrait_is_2048x2048_or_in_allowlist(
                 f"Theme {theme_name}/{ship_class}: missing portrait path; "
                 "add to EXPECTED_PORTRAIT_GAPS only for known deferred work"
             )
-
             with Image.open(portrait_path) as img:
-                if pair in EXPECTED_PORTRAIT_SIZE_MISMATCHES:
-                    assert img.size != TARGET_SIZE, (
-                        f"Theme {theme_name}/{ship_class}: allowlist entry is "
-                        "now target-sized; remove it from EXPECTED_PORTRAIT_SIZE_MISMATCHES"
-                    )
-                else:
-                    assert img.size == TARGET_SIZE, (
-                        f"Theme {theme_name}/{ship_class}: portrait size {img.size}, "
-                        f"expected {TARGET_SIZE}"
-                    )
+                assert img.size == TARGET_SIZE, (
+                    f"Theme {theme_name}/{ship_class}: portrait size {img.size}, "
+                    f"expected {TARGET_SIZE}"
+                )
                 assert img.mode in {"RGB", "RGBA"}, (
                     f"Theme {theme_name}/{ship_class}: portrait mode {img.mode}, "
                     "expected RGB or RGBA"

@@ -28,35 +28,30 @@ def test_radius_density_consistency(generator):
     # Earth Radius ~ 6.37e6 m
     assert 5e6 < radius < 7.5e6 
 
-def test_atmosphere_retention(generator):
-    """
-    Test that small planets don't hold Hydrogen, 
-    and massive cold ones do.
-    """
-    # 1. Earth-like case (Mass Earth, Escape ~11km/s, Temp 300K)
-    # H2 v_rms ~ 1900 m/s. 6*v_rms ~ 11400 m/s. Borderline? 
-    # Usually Earth loses H2.
-    
-    comp, press, final_temp = generate_atmosphere(
-        mass=MASS_EARTH, 
-        escape_vel=11200, 
-        base_temp=300, 
-        flux_wm2=1360
+# PROJ-323 Task 5.8: split single test_atmosphere_retention into two tests.
+
+def test_earthlike_planet_does_not_retain_h2(generator):
+    """Earth-mass planet (escape ~11 km/s, T=300K) should lose H2."""
+    # H2 v_rms ~ 1900 m/s; 6*v_rms ~ 11400 m/s. Usually Earth loses H2.
+    comp, _press, _temp = generate_atmosphere(
+        mass=MASS_EARTH,
+        escape_vel=11200,
+        base_temp=300,
+        flux_wm2=1360,
     )
-    # Shouldn't have much H2
-    h2 = comp.get('H2', 0)
-    assert h2 < 1.0 # Pascals
-    
-    # 2. Jupiter-like (Mass Jupiter, Escape ~60km/s, Temp 100K)
-    comp, press, final_temp = generate_atmosphere(
-        mass=MASS_JUPITER, 
-        escape_vel=60000, 
-        base_temp=100, 
-        flux_wm2=50
+    assert comp.get('H2', 0) < 1.0  # Pascals
+
+
+def test_jupiterlike_planet_retains_h2(generator):
+    """Jupiter-mass cold planet (escape ~60 km/s, T=100K) should retain H2."""
+    comp, _press, _temp = generate_atmosphere(
+        mass=MASS_JUPITER,
+        escape_vel=60000,
+        base_temp=100,
+        flux_wm2=50,
     )
-    # Should have H2
     assert 'H2' in comp
-    assert comp['H2'] > 1000 # High pressure
+    assert comp['H2'] > 1000  # High pressure
 
 def test_greenhouse_effect(generator):
     """Verify atmosphere increases temperature."""

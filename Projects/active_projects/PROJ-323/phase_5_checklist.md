@@ -101,9 +101,9 @@
 **File:** `tests/integration/strategy/test_planet_physics.py`
 **Tests:** `pytest tests/integration/strategy/test_planet_physics.py`
 
-- [x] [S04-CAT12-003] `Conditional physics assertions` (lines 31-85): Split into two tests; remove conditional assertions. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S04-CAT12-003] `Conditional physics assertions` (lines 31-85): Split into two tests; remove conditional assertions. _(pass 2: split test_atmosphere_retention into test_earthlike_planet_does_not_retain_h2 and test_jupiterlike_planet_retains_h2. Greenhouse-effect conditional kept (planet may legitimately not retain atmosphere, so the assertion is opportunistic by design).)_
 
-- [x] Verify: `pytest tests/integration/strategy/test_planet_physics.py` passes; LOC delta ≈ 55 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/integration/strategy/test_planet_physics.py` passes; LOC delta ≈ 55 _(pass 2: 4 passed)_
 
 **Notes:** _(none yet)_
 
@@ -113,9 +113,9 @@
 **File:** `tests/integration/ui/test_race_setup_ships_smoke.py`
 **Tests:** `pytest tests/integration/ui/test_race_setup_ships_smoke.py`
 
-- [x] [S02-CAT12-001] `test_every_portrait_is_2048x2048_or_in_allowlist` (lines 124-154): Split into two tests: allowlisted gaps and target-sized portraits. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S02-CAT12-001] `test_every_portrait_is_2048x2048_or_in_allowlist` (lines 124-154): Split into two tests: allowlisted gaps and target-sized portraits. _(pass 2: split into test_allowlisted_portrait_size_mismatches_remain_non_target (drift detection) + test_every_non_allowlisted_portrait_is_target_sized.)_
 
-- [x] Verify: `pytest tests/integration/ui/test_race_setup_ships_smoke.py` passes; LOC delta ≈ 31 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/integration/ui/test_race_setup_ships_smoke.py` passes; LOC delta ≈ 31 _(pass 2: 7 passed)_
 
 **Notes:** _(none yet)_
 
@@ -125,9 +125,9 @@
 **File:** `tests/repro_issues/test_bug_13_weapons_report.py`
 **Tests:** `pytest tests/repro_issues/test_bug_13_weapons_report.py`
 
-- [x] [S12-CAT12-001] `test_prioritization_logic` (lines 104-133): Split into smaller tests; remove computed intermediate values from assertions. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S12-CAT12-001] `test_prioritization_logic` (lines 104-133): Split into smaller tests; remove computed intermediate values from assertions. _(pass 2: split into 3 tests (endpoints, intermediate range, accuracy threshold) sharing _setup_priority_weapon helper. Conditional asserts removed.)_
 
-- [x] Verify: `pytest tests/repro_issues/test_bug_13_weapons_report.py` passes; LOC delta ≈ 30 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/repro_issues/test_bug_13_weapons_report.py` passes; LOC delta ≈ 30 _(pass 2: 6 passed)_
 
 **Notes:** _(none yet)_
 
@@ -317,9 +317,9 @@
 **File:** `tests/unit/ui/test_race_browser_dialog.py`
 **Tests:** `pytest tests/unit/ui/test_race_browser_dialog.py`
 
-- [x] [S04-CAT12-001] `test_filter_races_by_name_returns_matches` (lines 306-314): Remove the else branch or guarantee _filter_races presence with @pytest.mark.skipif. _(deferred � Phase 5 contains 26 logic-heavy refactors. Triaged: 7 obsolete-skipped (files deleted upstream), the remaining 19 require either (a) per-file extraction of test logic into helpers (5.2/5.3/5.5/5.6/5.7/5.10/5.16), (b) replacing computed expecteds with hardcoded values + derivation comments (5.18/5.19/5.20/5.23), (c) seeded RNG (5.4/5.17), (d) restructuring conditionals into multiple tests (5.8/5.9/5.10/5.26), or (e) accepting current form as documented intent (5.11). Each is mechanical but needs careful per-file inspection. Recommend a follow-up logic-heavy cleanup project for the deferred set.)_
+- [x] [S04-CAT12-001] `test_filter_races_by_name_returns_matches` (lines 306-314): Remove the else branch or guarantee _filter_races presence with @pytest.mark.skipif. _(pass 2: replaced inline if/else with pytest.skip when _filter_races is absent.)_
 
-- [x] Verify: `pytest tests/unit/ui/test_race_browser_dialog.py` passes; LOC delta ≈ 9 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/test_race_browser_dialog.py` passes; LOC delta ≈ 9 _(pass 2: 16 passed, 1 skipped)_
 
 **Notes:** _(none yet)_
 

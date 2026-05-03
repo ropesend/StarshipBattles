@@ -101,8 +101,11 @@ class TestBug13Fix:
         ranges = [p['range'] for p in points]
         assert ranges == sorted(ranges), "Points should be sorted by range"
 
-    def test_prioritization_logic(self):
-        """Verify that high priority points (0 and Max range) are kept even if crowded."""
+    def _setup_priority_weapon(self):
+        """Build a beam weapon configured for the priority tests.
+
+        PROJ-323 Task 5.10: shared setup for the split prioritization tests.
+        """
         weapon = MagicMock()
         weapon.has_ability.side_effect = lambda a: a in ['BeamWeaponAbility', 'WeaponAbility']
         ab = MagicMock()
@@ -111,23 +114,41 @@ class TestBug13Fix:
         ab.base_accuracy = 2.0
         ab.accuracy_falloff = 0.001
         weapon.get_ability.return_value = ab
-
-        # Mock ship to return baseline sensor score
         self.builder.ship.get_total_sensor_score.return_value = 0.0
+        return weapon
 
-        # Test that ViewModel produces points with correct priorities
+    # PROJ-323 Task 5.10: replaces single test_prioritization_logic with 3
+    # split tests (one per priority class), removing the conditional asserts.
+
+    def test_prioritization_endpoints_are_priority_zero(self):
+        """Endpoints (0 and max range) must have priority 0 (always shown)."""
+        weapon = self._setup_priority_weapon()
         points = self.viewmodel.get_points_of_interest(weapon, self.builder.ship)
-
-        # Endpoints should have priority 0 (must show)
         endpoints = [p for p in points if p['range'] in [0, 100]]
-        assert all(p['priority'] == 0 for p in endpoints), "Endpoints should have priority 0"
+        assert endpoints, "Setup should produce endpoint points"
+        assert all(p['priority'] == 0 for p in endpoints)
 
-        # Intermediate range points should have priority 2
-        intermediate_range = [p for p in points if p['type'] == 'range' and p['range'] not in [0, 100]]
-        if intermediate_range:
-            assert all(p['priority'] == 2 for p in intermediate_range), "Intermediate range points should have priority 2"
+    def test_prioritization_intermediate_range_points_are_priority_two(self):
+        """Intermediate range points have priority 2."""
+        weapon = self._setup_priority_weapon()
+        points = self.viewmodel.get_points_of_interest(weapon, self.builder.ship)
+        intermediate_range = [
+            p for p in points if p['type'] == 'range' and p['range'] not in [0, 100]
+        ]
+        assert intermediate_range, "Setup should produce intermediate range points"
+        assert all(p['priority'] == 2 for p in intermediate_range)
 
-        # Accuracy threshold points should have priority 1
+    def test_prioritization_accuracy_threshold_points_are_priority_one(self):
+        """Accuracy-threshold points (when present) have priority 1.
+
+        The shallow-falloff setup used here (accuracy_falloff=0.001, range=100)
+        may not yield any accuracy threshold points; this test only asserts
+        the priority invariant when they exist (no false negatives if
+        production decides not to emit them).
+        """
+        weapon = self._setup_priority_weapon()
+        points = self.viewmodel.get_points_of_interest(weapon, self.builder.ship)
         accuracy_pts = [p for p in points if p['type'] == 'accuracy']
-        if accuracy_pts:
-            assert all(p['priority'] == 1 for p in accuracy_pts), "Accuracy points should have priority 1"
+        # Don't assert presence — the steep-falloff variant lives in
+        # test_get_points_of_interest_beam.
+        assert all(p['priority'] == 1 for p in accuracy_pts)
