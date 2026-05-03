@@ -98,3 +98,4 @@ assets/Images/Components/Components 64/*
 
 # PROJ-314: ship-portrait regeneration manifest (per-run, ephemeral).
 Tools/regenerate_ship_portraits/last_run.json
+AgentCoordination/generated/skill_usage/summary.json
