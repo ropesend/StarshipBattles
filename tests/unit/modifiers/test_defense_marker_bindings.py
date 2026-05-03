@@ -56,46 +56,38 @@ class TestVehicleLaunchBindings:
 
 
 class TestMarkerAbilitiesHaveEmptyBindings:
-    """Tests for marker abilities that don't consume any stats."""
+    """Tests for marker abilities that don't consume any stats.
 
-    def test_command_control_empty_bindings(self):
-        """CommandAndControl should have empty STAT_BINDINGS."""
-        from game.simulation.components.abilities.markers import CommandAndControl
+    PROJ-323 Task 3.10: 6 individual tests parametrized into one.
+    """
 
-        assert hasattr(CommandAndControl, 'STAT_BINDINGS')
-        assert len(CommandAndControl.STAT_BINDINGS) == 0
-
-    def test_to_hit_attack_empty_bindings(self):
-        """ToHitAttackModifier should have empty STAT_BINDINGS."""
-        from game.simulation.components.abilities.defense import ToHitAttackModifier
-
-        assert hasattr(ToHitAttackModifier, 'STAT_BINDINGS')
-        assert len(ToHitAttackModifier.STAT_BINDINGS) == 0
-
-    def test_to_hit_defense_empty_bindings(self):
-        """ToHitDefenseModifier should have empty STAT_BINDINGS."""
-        from game.simulation.components.abilities.defense import ToHitDefenseModifier
-
-        assert hasattr(ToHitDefenseModifier, 'STAT_BINDINGS')
-        assert len(ToHitDefenseModifier.STAT_BINDINGS) == 0
-
-    def test_emissive_armor_empty_bindings(self):
-        """EmissiveArmor should have empty STAT_BINDINGS."""
-        from game.simulation.components.abilities.defense import EmissiveArmor
-
-        assert hasattr(EmissiveArmor, 'STAT_BINDINGS')
-        assert len(EmissiveArmor.STAT_BINDINGS) == 0
-
-    def test_harvester_empty_bindings(self):
-        """ResourceHarvesterAbility should have empty STAT_BINDINGS."""
-        from game.simulation.components.abilities.harvester import ResourceHarvesterAbility
-
-        assert hasattr(ResourceHarvesterAbility, 'STAT_BINDINGS')
-        assert len(ResourceHarvesterAbility.STAT_BINDINGS) == 0
-
-    def test_shipyard_empty_bindings(self):
-        """SpaceShipyardAbility should have empty STAT_BINDINGS."""
-        from game.simulation.components.abilities.harvester import SpaceShipyardAbility
-
-        assert hasattr(SpaceShipyardAbility, 'STAT_BINDINGS')
-        assert len(SpaceShipyardAbility.STAT_BINDINGS) == 0
+    @pytest.mark.parametrize("ability_class", [
+        pytest.param(
+            __import__('game.simulation.components.abilities.markers', fromlist=['CommandAndControl']).CommandAndControl,
+            id='CommandAndControl',
+        ),
+        pytest.param(
+            __import__('game.simulation.components.abilities.defense', fromlist=['ToHitAttackModifier']).ToHitAttackModifier,
+            id='ToHitAttackModifier',
+        ),
+        pytest.param(
+            __import__('game.simulation.components.abilities.defense', fromlist=['ToHitDefenseModifier']).ToHitDefenseModifier,
+            id='ToHitDefenseModifier',
+        ),
+        pytest.param(
+            __import__('game.simulation.components.abilities.defense', fromlist=['EmissiveArmor']).EmissiveArmor,
+            id='EmissiveArmor',
+        ),
+        pytest.param(
+            __import__('game.simulation.components.abilities.harvester', fromlist=['ResourceHarvesterAbility']).ResourceHarvesterAbility,
+            id='ResourceHarvesterAbility',
+        ),
+        pytest.param(
+            __import__('game.simulation.components.abilities.harvester', fromlist=['SpaceShipyardAbility']).SpaceShipyardAbility,
+            id='SpaceShipyardAbility',
+        ),
+    ])
+    def test_marker_ability_has_empty_bindings(self, ability_class):
+        """Marker abilities should have empty STAT_BINDINGS."""
+        assert hasattr(ability_class, 'STAT_BINDINGS')
+        assert len(ability_class.STAT_BINDINGS) == 0

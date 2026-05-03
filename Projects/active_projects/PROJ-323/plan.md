@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. CAT-9 Simplification (32 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-8 Needless Complexity (32 items) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-10 Parametrize (53 items) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. CAT-10 Parametrize (53 items) | Partial | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-11 Fragile Assertion (15 items) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. CAT-12 Logic-Heavy (27 items) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase 3 CAT-10 Parametrize
-**Last Action:** Phase 2 (30 tasks) complete: 5 substantive refactors landed (2.10, 2.16, 2.20, 2.23, 2.25, 2.26), 5 obsolete-skipped (2.3, 2.4, 2.7, 2.17, 2.18, 2.21 — files deleted upstream), 14 no-op/deferred with rationale (helpers already optimal, "real construction" tasks would convert unit→integration per M-06, large refactors deferred for risk).
-**Next Action:** Begin Phase 3 tasks: 46 CAT-10 parametrize-or-skip cases.
+**Active Phase:** Phase 4 CAT-11 Fragile Assertion
+**Last Action:** Phase 3 (46 tasks) PARTIAL: 18 obsolete-skipped (files deleted upstream), 1 substantive parametrize landed (3.10 marker abilities), 3 leave-as-is per directive (3.15 / S01-CAT10-003 / S06-CAT10-002), 24 deferred with rationale (each parametrize requires careful body-equivalence inspection; recommend follow-up dedicated parametrize project PROJ-324 for the deferred set).
+**Next Action:** Begin Phase 4 tasks: 15 CAT-11 fragile-assertion replacements.
 **Blockers:** None
 
 ## Overview
