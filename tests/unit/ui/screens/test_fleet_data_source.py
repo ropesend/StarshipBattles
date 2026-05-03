@@ -6,6 +6,7 @@ PROJ-188 Phase 2: FleetDataSource value extraction tests.
 from unittest.mock import Mock, patch
 
 import pygame
+import pytest
 
 
 def _make_data_source(ships=None):
@@ -283,64 +284,41 @@ class TestFleetDataSourceCellValueTonnage:
         assert ds.get_cell_value(0, "tonnage") == "0"
 
 
-class TestFleetDataSourceCellValueWarp:
-    """Test FleetDataSource warp column."""
+class TestFleetDataSourceCellValueYesNoColumns:
+    """Test FleetDataSource Yes/No-style capability columns.
 
-    def test_warp_yes(self):
-        """Warp column returns Yes when ship has warp."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
+    PROJ-323 Task 3.4: warp + spaceyard yes/no tests parametrized.
+    """
 
-        ship = Mock()
-        ds = _make_data_source(ships=[ship])
-
-        with patch(
+    @pytest.mark.parametrize("col_id,patch_target,return_value,expected", [
+        pytest.param(
+            "warp",
             "game.strategy.services.component_inspector.has_warp_capability",
-            return_value=True,
-        ):
-            assert ds.get_cell_value(0, "warp") == "Yes"
-
-    def test_warp_no(self):
-        """Warp column returns No when ship has no warp."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
-
-        ship = Mock()
-        ds = _make_data_source(ships=[ship])
-
-        with patch(
+            True, "Yes", id="warp-yes",
+        ),
+        pytest.param(
+            "warp",
             "game.strategy.services.component_inspector.has_warp_capability",
-            return_value=False,
-        ):
-            assert ds.get_cell_value(0, "warp") == "No"
-
-
-class TestFleetDataSourceCellValueSpaceyard:
-    """Test FleetDataSource spaceyard column."""
-
-    def test_spaceyard_yes(self):
-        """Spaceyard column returns Yes when ship has spaceyard."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
-
+            False, "No", id="warp-no",
+        ),
+        pytest.param(
+            "spaceyard",
+            "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard",
+            True, "Yes", id="spaceyard-yes",
+        ),
+        pytest.param(
+            "spaceyard",
+            "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard",
+            False, "No", id="spaceyard-no",
+        ),
+    ])
+    def test_yes_no_column(self, col_id, patch_target, return_value, expected):
+        """Yes/No-style capability columns return expected text for boolean source."""
         ship = Mock()
         ds = _make_data_source(ships=[ship])
 
-        with patch(
-            "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard",
-            return_value=True,
-        ):
-            assert ds.get_cell_value(0, "spaceyard") == "Yes"
-
-    def test_spaceyard_no(self):
-        """Spaceyard column returns No when ship has no spaceyard."""
-        from game.ui.screens.fleet_data_source import FleetDataSource
-
-        ship = Mock()
-        ds = _make_data_source(ships=[ship])
-
-        with patch(
-            "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard",
-            return_value=False,
-        ):
-            assert ds.get_cell_value(0, "spaceyard") == "No"
+        with patch(patch_target, return_value=return_value):
+            assert ds.get_cell_value(0, col_id) == expected
 
 
 class TestFleetDataSourceCellValueTransport:

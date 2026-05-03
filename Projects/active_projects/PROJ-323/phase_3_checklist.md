@@ -56,12 +56,12 @@
 **File:** `tests/unit/ui/screens/test_fleet_data_source.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_data_source.py`
 
-- [x] [S06-CAT10-001] `3 set-filter tests parametrizable` (lines 194-224): Parametrize the 3 truly identical tests; ~6 LOC savings (not 35). _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S06-CAT10-001] `3 set-filter tests parametrizable` (lines 194-224): Parametrize the 3 truly identical tests; ~6 LOC savings (not 35). _(pass 2 obsolete: set-filter tests no longer present in file — deleted by upstream cleanup.)_
       _(verification adjusted from review's "Parametrize all 5 set-filter tests for ~35 LOC savings." — see verification_report.md)_
-- [x] Open `tests/unit/ui/screens/test_fleet_data_source.py` and identify which 3 of the 5 set-filter tests have truly identical test bodies (the verification report says `test_set_filter_to_production`, `test_set_filter_to_colonies`, `test_set_filter_to_fleet_operations` are the 3; `test_set_filter_updates_current` and `test_set_filter_back_to_all` differ). _(deferred)_
-- [x] [S06-CAT10-003] `6 yes/no special-capability tests` (lines 324-538): Parametrize across (capability, return, expected) tuples. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] Open `tests/unit/ui/screens/test_fleet_data_source.py` and identify which 3 of the 5 set-filter tests have truly identical test bodies (the verification report says `test_set_filter_to_production`, `test_set_filter_to_colonies`, `test_set_filter_to_fleet_operations` are the 3; `test_set_filter_updates_current` and `test_set_filter_back_to_all` differ). _(pass 2 obsolete: tests no longer in file.)_
+- [x] [S06-CAT10-003] `6 yes/no special-capability tests` (lines 324-538): Parametrize across (capability, return, expected) tuples. _(pass 2: parametrized warp + spaceyard yes/no across (col_id, patch_target, return_value, expected) tuples. destroy_planet pair left as-is — different patch target and patches the all-special-columns helper.)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_data_source.py` passes; LOC delta ≈ 93 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_data_source.py` passes; LOC delta ≈ 93 _(pass 2: 41 passed, ≈25 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -71,10 +71,10 @@
 **File:** `tests/unit/ui/screens/test_strategy_superweapons.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_superweapons.py`
 
-- [x] [S10-CAT10-004] `6 repeated no_fleet_returns_none tests` (lines 112-397): Parametrize with handler tuples. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
-- [x] [S10-CAT10-005] `5 (of 6) fleet_without_ability tests` (lines 118-406): Parametrize the 5 identical tests; keep SelfDestruct separate. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-004] `6 repeated no_fleet_returns_none tests` (lines 112-397): Parametrize with handler tuples. _(pass 2: 5 identical handler tests collapsed into TestSuperweaponDesignationCommonChecks; SelfDestruct kept separate due to differing signature.)_
+- [x] [S10-CAT10-005] `5 (of 6) fleet_without_ability tests` (lines 118-406): Parametrize the 5 identical tests; keep SelfDestruct separate. _(pass 2: 5 identical fleet_without_ability tests collapsed into same parametrized class above.)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_superweapons.py` passes; LOC delta ≈ 65 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_superweapons.py` passes; LOC delta ≈ 65 _(pass 2: 36 passed, ≈70 LOC saved)_
 
 **Notes:** _(none yet)_
 
