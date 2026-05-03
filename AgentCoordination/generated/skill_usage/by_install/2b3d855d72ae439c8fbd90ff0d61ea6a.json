@@ -1,0 +1,34 @@
+{
+  "install_id": "2b3d855d72ae439c8fbd90ff0d61ea6a",
+  "schema_version": 1,
+  "skills": {
+    "claude-discuss-start": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-03T15:06:51Z"
+    },
+    "codex-discuss-respond": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-03T15:11:21Z"
+    },
+    "ocode-review-request": {
+      "agents": {
+        "ocode": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-03T14:22:22Z"
+    },
+    "skill-creator": {
+      "agents": {
+        "codex": 4
+      },
+      "count": 4,
+      "last_used": "2026-05-03T15:20:35Z"
+    }
+  }
+}

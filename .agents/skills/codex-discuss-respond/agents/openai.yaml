@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Discuss Respond"
+  short_description: "Respond in a focused Claude discussion."
+  default_prompt: "Use $codex-discuss-respond with a shared folder to respond to a Claude-started inter-agent discussion."

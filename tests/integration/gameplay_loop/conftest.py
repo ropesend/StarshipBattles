@@ -78,6 +78,25 @@ def turn_engine(fresh_registries):
 
 
 @pytest.fixture
+def turn_engine_with_mock_movement(fresh_registries):
+    """TurnEngine with MockMovementEngine injected for orchestration tests
+    that should not depend on real path-finding / fuel / component data.
+
+    The mock is attached as `engine._mock_movement` so a single fixture
+    parameter is enough to both drive the engine and read call records.
+    """
+    from tests.unit.strategy.mocks import MockMovementEngine
+    mock = MockMovementEngine()
+    engine = TurnEngine(
+        battle_resolver=InstantBattleResolver(),
+        registries=fresh_registries,
+        movement_engine=mock,
+    )
+    engine._mock_movement = mock
+    return engine
+
+
+@pytest.fixture
 def simple_galaxy():
     """Create a simple galaxy with a few systems."""
     galaxy = Galaxy(radius=500)

@@ -1,0 +1,12 @@
+[
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 223,
+    "call": "random.seed"
+  },
+  {
+    "file": "game/ui/screens/galaxy_test/galaxy_mode.py",
+    "line": 239,
+    "call": "random.seed"
+  }
+]

@@ -8,11 +8,50 @@ import pytest
 
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
+from game.strategy.engine.turn_engine import TurnEngine, TICKS_PER_TURN
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.planet import PlanetaryFacility
 from game.core.hex_math import HexCoord
 from tests.conftest import make_mock_ship_instance
+from tests.unit.strategy.mocks import MockMovementEngine
+
+
+class _StubMovementEngine(MockMovementEngine):
+    """State-tracking stub: steps each MOVE-ordered fleet one hex along the
+    q-axis toward its target, with no path-finding, fuel, or component-data
+    dependencies. Used by `test_fleet_reaches_destination_over_turns` to
+    verify multi-turn movement orchestration without coupling to data files.
+    """
+
+    def collect_movements(self, empires, galaxy, tick):
+        super().collect_movements(empires, galaxy, tick)
+        moves = []
+        for empire in empires:
+            for fleet in empire.fleets:
+                if not fleet.orders:
+                    continue
+                order = fleet.orders[0]
+                if order.type != OrderType.MOVE:
+                    continue
+                tgt = order.target
+                if fleet.location == tgt:
+                    fleet.pop_order()
+                    continue
+                dq = (1 if tgt.q > fleet.location.q
+                      else -1 if tgt.q < fleet.location.q else 0)
+                moves.append(
+                    (fleet, HexCoord(fleet.location.q + dq, fleet.location.r))
+                )
+        return moves
+
+    def apply_movements(self, move_queue, galaxy):
+        super().apply_movements(move_queue, galaxy)
+        for fleet, next_hex in move_queue:
+            fleet.location = next_hex
+            if fleet.orders and fleet.location == fleet.orders[0].target:
+                fleet.pop_order()
+        return []
 
 
 # =============================================================================
@@ -29,48 +68,39 @@ class TestTurnExecutionCycle:
         game_session.process_turn()
         assert game_session.turn_number == initial_turn + 1
 
-    def test_turn_processes_all_empires(self, turn_engine, two_empire_setup):
-        """Turn engine processes all empires in the game."""
+    def test_turn_processes_all_empires(self, turn_engine_with_mock_movement,
+                                        two_empire_setup):
+        """Turn engine forwards every empire to the movement engine each tick.
+
+        Uses MockMovementEngine to verify orchestration directly rather than
+        asserting against real fleet-movement side effects, which depend on
+        data-driven path-finding, fuel costs, and harvest values.
+        """
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
 
-        # Add fleets with orders to both empires
-        fleet1 = Fleet(1, empire1.id, HexCoord(0, 0), speed=10.0)
-        fleet1.add_order(Order(OrderType.MOVE, target=HexCoord(1, 0)))
-        empire1.add_fleet(fleet1)
+        turn_engine_with_mock_movement.process_turn(empires, galaxy)
 
-        fleet2 = Fleet(2, empire2.id, HexCoord(5, 5), speed=10.0)
-        fleet2.add_order(Order(OrderType.MOVE, target=HexCoord(6, 5)))
-        empire2.add_fleet(fleet2)
+        mock = turn_engine_with_mock_movement._mock_movement
+        assert mock.collect_movements_called
+        for call_empires, call_galaxy, _tick in mock.collect_movements_calls:
+            assert list(call_empires) == empires
+            assert call_galaxy is galaxy
 
-        # Process turn
-        turn_engine.process_turn(empires, galaxy)
-
-        # Both fleets should have moved
-        assert fleet1.location != HexCoord(0, 0) or len(fleet1.orders) == 0
-        assert fleet2.location != HexCoord(5, 5) or len(fleet2.orders) == 0
-
-    def test_turn_has_100_subticks(self, turn_engine, two_empire_setup):
-        """Turn engine processes 100 subticks per turn."""
+    def test_turn_has_100_subticks(self, turn_engine_with_mock_movement,
+                                   two_empire_setup):
+        """Turn engine runs exactly TICKS_PER_TURN sub-ticks per turn,
+        numbered 1..TICKS_PER_TURN. Verified via MockMovementEngine call
+        records — independent of fleet/component/harvest data.
+        """
         empire1, empire2, galaxy = two_empire_setup
-        empires = [empire1, empire2]
 
-        # Create a fast fleet (speed 100 = moves every tick)
-        fleet = Fleet(1, empire1.id, HexCoord(0, 0), speed=100.0)
+        turn_engine_with_mock_movement.process_turn([empire1, empire2], galaxy)
 
-        # Create a long path to measure movement
-        path_length = 50
-        fleet.add_order(Order(OrderType.MOVE, target=HexCoord(path_length, 0)))
-        empire1.add_fleet(fleet)
-
-        initial_loc = fleet.location
-        turn_engine.process_turn(empires, galaxy)
-
-        # With speed 100, fleet moves every tick (100 times per turn)
-        # Should have moved a significant distance
-        from game.core.hex_math import hex_distance
-        distance_moved = hex_distance(initial_loc, fleet.location)
-        assert distance_moved > 0
+        mock = turn_engine_with_mock_movement._mock_movement
+        assert len(mock.collect_movements_calls) == TICKS_PER_TURN
+        ticks = [call[2] for call in mock.collect_movements_calls]
+        assert ticks == list(range(1, TICKS_PER_TURN + 1))
 
     def test_turn_executes_phases_in_order(self, turn_engine, two_empire_setup):
         """Turn engine executes phases in correct order: movement, orders, production."""
@@ -117,27 +147,41 @@ class TestMultipleTurns:
 
         assert game_session.turn_number == 11
 
-    def test_fleet_reaches_destination_over_turns(self, turn_engine, two_empire_setup):
-        """Fleet completes long journey over multiple turns."""
+    def test_fleet_reaches_destination_over_turns(self, two_empire_setup,
+                                                  fresh_registries):
+        """Across multiple turns, TurnEngine drives a fleet's MOVE order
+        forward, eventually reaches the destination, and clears the
+        completed order.
+
+        Uses _StubMovementEngine to advance one hex per tick deterministically
+        so the test exercises the multi-turn orchestration loop without
+        depending on path-finding, fuel costs, or harvest values.
+        """
+        from tests.integration.gameplay_loop.conftest import InstantBattleResolver
+
         empire1, empire2, galaxy = two_empire_setup
-        empires = [empire1, empire2]
+        stub = _StubMovementEngine()
+        engine = TurnEngine(
+            battle_resolver=InstantBattleResolver(),
+            registries=fresh_registries,
+            movement_engine=stub,
+        )
 
-        # Create fleet with speed 10 (moves every 10 ticks = 10 hexes per turn)
-        start = HexCoord(0, 0)
-        destination = HexCoord(25, 0)  # ~3 turns away at speed 10
-
+        start, destination = HexCoord(0, 0), HexCoord(25, 0)
         fleet = Fleet(1, empire1.id, start, speed=10.0)
         fleet.add_order(Order(OrderType.MOVE, target=destination))
         empire1.add_fleet(fleet)
 
-        # Process turns until fleet arrives or max 10 turns
-        for turn in range(10):
+        locations = [fleet.location]
+        for _ in range(10):
             if fleet.location == destination:
                 break
-            turn_engine.process_turn(empires, galaxy)
+            engine.process_turn([empire1, empire2], galaxy)
+            locations.append(fleet.location)
 
-        # Fleet should have reached destination
-        assert fleet.location == destination or len(fleet.orders) == 0
+        assert len(set(locations)) > 1
+        assert fleet.location == destination
+        assert len(fleet.orders) == 0
 
     def test_production_completes_across_turns(self, turn_engine, two_empire_setup, test_savegame_dir):
         """Production queue consumes resources and completes over multiple turns."""

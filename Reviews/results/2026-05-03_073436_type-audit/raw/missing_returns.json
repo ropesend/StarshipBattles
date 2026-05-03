@@ -1,0 +1,93 @@
+[
+  {
+    "file": "game/strategy/adapters/simulation_adapter.py",
+    "line": 394,
+    "function": "_lookup",
+    "class": "SimulationBattleResolver",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 130,
+    "function": "_at_hex",
+    "class": "GameInitializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 136,
+    "function": "_in_system",
+    "class": "GameInitializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/facade/strategy_session_facade.py",
+    "line": 454,
+    "function": "_resolve_economy_config",
+    "class": "StrategySessionFacade",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/replay_resolver.py",
+    "line": 115,
+    "function": "_store_replay_dir",
+    "class": "ReplayResolver",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/ability_sources/fleet.py",
+    "line": 128,
+    "function": "_walk_strategic_abilities",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/atmosphere_target_editor.py",
+    "line": 223,
+    "function": "_button_handlers",
+    "class": "AtmosphereTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/gravity_target_editor.py",
+    "line": 164,
+    "function": "_button_handlers",
+    "class": "GravityTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/radiation_shield_editor.py",
+    "line": 176,
+    "function": "_button_handlers",
+    "class": "RadiationShieldEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/water_target_editor.py",
+    "line": 173,
+    "function": "_button_handlers",
+    "class": "WaterTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_viewmodel.py",
+    "line": 129,
+    "function": "_with_ship",
+    "class": "WorkshopViewModel",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/race_setup/screen.py",
+    "line": 182,
+    "function": "_description_controller",
+    "class": "RaceSetupScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/details/validation.py",
+    "line": 39,
+    "function": "_phase_color",
+    "class": null,
+    "layer": "ui"
+  }
+]
