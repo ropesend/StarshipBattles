@@ -856,6 +856,75 @@ class TestVirtualTable:
         })
 
         table.kill()
-        
+
         # Method handles multi buttons, so it might be called multiple times via values()
         assert fake_btn.kill.call_count >= 2
+
+
+# ---------------------------------------------------------------------------
+# Issue #8 — disabled-Replay tooltip helper
+# ---------------------------------------------------------------------------
+
+
+class TestDisabledReplayTooltip:
+    """``_disabled_replay_tooltip`` picks the right tooltip for a disabled
+    Replay button based on the data source's structural reason hint."""
+
+    def test_sole_survivor_reason_returns_helpful_string(self):
+        from game.ui.components.table.virtual_table import (
+            _disabled_replay_tooltip,
+        )
+
+        source = MagicMock()
+        source.get_cell_replay_unavailable_reason.return_value = "sole_survivor"
+        assert _disabled_replay_tooltip(source, 0) == (
+            "No combat — one side had no ships."
+        )
+
+    def test_no_ships_reason_returns_helpful_string(self):
+        from game.ui.components.table.virtual_table import (
+            _disabled_replay_tooltip,
+        )
+
+        source = MagicMock()
+        source.get_cell_replay_unavailable_reason.return_value = "no_ships"
+        assert _disabled_replay_tooltip(source, 0) == (
+            "No combat — neither side had any ships."
+        )
+
+    def test_unknown_reason_falls_back_to_legacy_wording(self):
+        from game.ui.components.table.virtual_table import (
+            _disabled_replay_tooltip,
+        )
+
+        source = MagicMock()
+        source.get_cell_replay_unavailable_reason.return_value = "wat"
+        assert _disabled_replay_tooltip(source, 0) == (
+            "No replay available — older save."
+        )
+
+    def test_none_reason_falls_back_to_legacy_wording(self):
+        """Legacy combat rows return None — fall back to 'older save.'"""
+        from game.ui.components.table.virtual_table import (
+            _disabled_replay_tooltip,
+        )
+
+        source = MagicMock()
+        source.get_cell_replay_unavailable_reason.return_value = None
+        assert _disabled_replay_tooltip(source, 0) == (
+            "No replay available — older save."
+        )
+
+    def test_data_source_without_accessor_falls_back(self):
+        """Data sources that don't implement the new accessor (e.g. older
+        custom tables) still get the legacy wording — no crash."""
+        from game.ui.components.table.virtual_table import (
+            _disabled_replay_tooltip,
+        )
+
+        class _Old:
+            pass
+
+        assert _disabled_replay_tooltip(_Old(), 0) == (
+            "No replay available — older save."
+        )

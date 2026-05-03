@@ -17,7 +17,7 @@ detail.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
@@ -161,14 +161,24 @@ class StrategySessionFacade:
         """
         return self._session.handle_command(command)
 
-    def process_turn(self) -> None:
+    def process_turn(
+        self,
+        *,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> None:
         """Process the current turn.
 
         Advances the game state by one turn, executing all queued orders,
         resolving movement, and processing AI actions. PROJ-254: invalidates
         every per-turn cache after the session advances.
+
+        Args:
+            progress_callback: Issue #7 — optional per-tick callback
+                ``(current_tick, total_ticks)`` forwarded to the underlying
+                ``GameSession.process_turn`` so the strategy screen can
+                repaint the "PROCESSING TURN..." overlay between ticks.
         """
-        self._session.process_turn()
+        self._session.process_turn(progress_callback=progress_callback)
         self._state.invalidate_all()
 
     # --- Command dispatch helpers (forwarders) ---

@@ -199,12 +199,22 @@ class GameSession:
             self._event_log.append(event)
         return handler
 
-    def process_turn(self) -> None:
+    def process_turn(
+        self,
+        *,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> None:
         """Advance the game simulation by one full turn.
 
         PROJ-251: On failure, state is rolled back via snapshot and
         EnginePhaseError is re-raised for UI layer to handle.
         turn_number is only incremented on success.
+
+        Args:
+            progress_callback: Issue #7 — optional per-tick callback
+                ``(current_tick, total_ticks)`` forwarded to
+                ``TurnEngine.process_turn`` so the UI can repaint the
+                "PROCESSING TURN..." overlay between ticks.
 
         Raises:
             EnginePhaseError: If any sub-engine phase fails.
@@ -214,7 +224,9 @@ class GameSession:
         logger.info(f"GameSession: Processing Turn {self.turn_number}...")
         try:
             self.turn_engine.process_turn(
-                self.empires, self.galaxy, self.save_path, session=self
+                self.empires, self.galaxy, self.save_path,
+                session=self,
+                progress_callback=progress_callback,
             )
             self.turn_number += 1
         except EnginePhaseError as e:

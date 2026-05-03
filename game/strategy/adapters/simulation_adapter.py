@@ -99,9 +99,17 @@ class SimulationBattleResolver(IBattleResolver):
             returns.
 
         BUG-126: branch decisions are logged at INFO level
-        (`branch=shortcut_no_capable | shortcut_sole_survivor |
-        simulator`) so operators can grep `battle.log` for which path
-        each strategy battle took.
+        (`branch=shortcut_no_ships | shortcut_sole_survivor |
+        truncated_no_capable | simulator`) so operators can grep
+        `battle.log` for which path each strategy battle took.
+
+        Issue #8: the previous `shortcut_no_capable` branch used to
+        skip the simulator entirely, leaving the Event Log Replay
+        button disabled. Now: when both fleets have ships but no team
+        is combat-capable, we run the simulator at the truncated
+        `_BRIEF_RUN_TICK_BUDGET` so the existing replay-capture
+        pipeline records a real (brief) replay. Only the genuinely
+        empty case (no ships anywhere) keeps the shortcut.
         """
         fleet_list = list(fleets)
         if len(fleet_list) < 2:
@@ -116,18 +124,11 @@ class SimulationBattleResolver(IBattleResolver):
             for tid, fleet in enumerate(fleet_list)
         }
         teams_with_ships = [tid for tid, ships in combat_capable.items() if ships]
+        any_ships_present = any(fleet.ships for fleet in fleet_list)
 
-        # Short-circuits when not enough teams can fight.
-        if len(teams_with_ships) == 0:
-            logger.info(
-                "Strategy battle resolved branch=shortcut_no_capable "
-                "fleets=[%s]: no team has any combat-capable ships",
-                ", ".join(f"Fleet {f.id}" for f in fleet_list),
-            )
-            return BattleResult(
-                winner=None, tick_count=0,
-                team_survivors={tid: [] for tid in combat_capable},
-            )
+        # Sole-survivor: exactly one team has any combat-capable ship.
+        # Keeping the shortcut here is intentional — there is no battle
+        # to replay; the other side starts with zero usable ships.
         if len(teams_with_ships) == 1:
             sole_winner = teams_with_ships[0]
             logger.info(
@@ -144,7 +145,47 @@ class SimulationBattleResolver(IBattleResolver):
                 for tid in combat_capable
             }
             return BattleResult(
-                winner=sole_winner, tick_count=0, team_survivors=survivors
+                winner=sole_winner, tick_count=0, team_survivors=survivors,
+                replay_unavailable_reason="sole_survivor",
+            )
+
+        # Defensive edge case: no team has combat-capable ships AND no
+        # team has any ships at all. The simulator has nothing to
+        # materialize; keep the shortcut and surface an honest reason.
+        if len(teams_with_ships) == 0 and not any_ships_present:
+            logger.info(
+                "Strategy battle resolved branch=shortcut_no_ships "
+                "fleets=[%s]: no team has any ships",
+                ", ".join(f"Fleet {f.id}" for f in fleet_list),
+            )
+            return BattleResult(
+                winner=None, tick_count=0,
+                team_survivors={tid: [] for tid in combat_capable},
+                replay_unavailable_reason="no_ships",
+            )
+
+        # Issue #8: truncated no-capable run. Both fleets have ships
+        # but no team has any working weapons (e.g. civilian transports
+        # vs damaged-out fleet). Run the simulator briefly so the
+        # existing replay-capture pipeline records a real replay.
+        if len(teams_with_ships) == 0:
+            from game.strategy.combat.spec_compiler import _BRIEF_RUN_TICK_BUDGET
+
+            logger.info(
+                "Strategy battle resolved branch=truncated_no_capable "
+                "fleets=[%s]: no team is combat-capable, running simulator "
+                "for %d ticks to capture a replay",
+                ", ".join(f"Fleet {f.id}" for f in fleet_list),
+                _BRIEF_RUN_TICK_BUDGET,
+            )
+            return self._run_simulated_battle(
+                fleet_list,
+                seed=seed,
+                registries=registries,
+                environmental_effects=environmental_effects,
+                modifiers=modifiers,
+                empires=empires,
+                max_ticks=_BRIEF_RUN_TICK_BUDGET,
             )
 
         logger.info(
@@ -154,6 +195,33 @@ class SimulationBattleResolver(IBattleResolver):
             len(fleet_list),
         )
 
+        return self._run_simulated_battle(
+            fleet_list,
+            seed=seed,
+            registries=registries,
+            environmental_effects=environmental_effects,
+            modifiers=modifiers,
+            empires=empires,
+        )
+
+    def _run_simulated_battle(
+        self,
+        fleet_list: List['Fleet'],
+        *,
+        seed: Optional[int],
+        registries: Optional['GameRegistries'],
+        environmental_effects: Any,
+        modifiers: Optional[Mapping[int, Any]],
+        empires: Optional[Mapping[int, Any]],
+        max_ticks: Optional[int] = None,
+    ) -> BattleResult:
+        """Build a spec, run it through ``run_battle``, return the result.
+
+        Shared body for the simulator branch and the issue #8 truncated
+        no-capable branch. ``max_ticks`` (issue #8) caps both
+        ``absolute_max_ticks`` and the end-condition for the truncated
+        case; ``None`` keeps the strategy default.
+        """
         battle_seed = self._resolve_seed(seed)
         spec = self._build_spec(
             fleet_list,
@@ -162,6 +230,7 @@ class SimulationBattleResolver(IBattleResolver):
             environmental_effects=environmental_effects,
             modifiers=modifiers,
             empires=empires,
+            max_ticks=max_ticks,
         )
         # PROJ-274: no ship_builder closure needed. The strategy compiler
         # sets `ShipSpec.instance_ref = ship_instance` on each spec; the
@@ -242,6 +311,7 @@ class SimulationBattleResolver(IBattleResolver):
         environmental_effects: Any,  # PROJ-300: now a sector-effects list
         modifiers: Optional[Mapping[int, Any]],
         empires: Optional[Mapping[int, Any]] = None,
+        max_ticks: Optional[int] = None,
     ) -> BattleSpec:
         from game.strategy.combat.spec_compiler import build_strategy_battle_spec
 
@@ -258,6 +328,7 @@ class SimulationBattleResolver(IBattleResolver):
             seed=seed,
             environmental_effects=environmental_effects,
             team_modifiers=team_modifiers,
+            max_ticks=max_ticks,
         )
 
     def _build_capture_context(

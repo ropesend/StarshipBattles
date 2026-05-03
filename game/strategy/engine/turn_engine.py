@@ -63,7 +63,7 @@ import logging
 from game.core.validation import ValidationResult
 from game.core.registry import GameRegistries
 
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, Callable, List, Optional, TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
@@ -457,7 +457,15 @@ class TurnEngine:
             self._happiness_engine = HappinessEngine(race_registry=self._race_registry)
         return self._happiness_engine
 
-    def process_turn(self, empires: List['Empire'], galaxy: 'Galaxy', save_path: Optional[str] = None, *, session: Optional['GameSession'] = None) -> None:
+    def process_turn(
+        self,
+        empires: List['Empire'],
+        galaxy: 'Galaxy',
+        save_path: Optional[str] = None,
+        *,
+        session: Optional['GameSession'] = None,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> None:
         """
         Execute one full turn (TICKS_PER_TURN sub-ticks).
 
@@ -470,6 +478,13 @@ class TurnEngine:
             save_path: Path to savegame folder for loading designs during production
             session: Optional GameSession for snapshot rollback on failure.
                 If provided, state is restored from snapshot on EnginePhaseError.
+            progress_callback: Optional per-tick callback invoked with
+                ``(current_tick, TICKS_PER_TURN)`` from inside ``_process_tick``.
+                Issue #7: lets the UI repaint the "PROCESSING TURN..." overlay
+                with the current tick number while the otherwise-synchronous
+                100-tick loop runs. Exceptions raised by the callback are
+                logged at WARNING and suppressed so a buggy UI cannot break
+                turn execution.
 
         Raises:
             EnginePhaseError: If any sub-engine phase fails during processing.
@@ -483,6 +498,11 @@ class TurnEngine:
 
         # Store save_path for tick processing (PROJ-79)
         self._current_save_path = save_path
+
+        # Issue #7: stash the per-tick progress callback for _process_tick to
+        # invoke. Cleared in the outer finally so the callback never leaks
+        # into a subsequent process_turn call on the same engine instance.
+        self._progress_callback = progress_callback
 
         # PROJ-189: Initialize environmental event accumulator (cleared each turn)
         self.last_environmental_events = []
@@ -567,6 +587,10 @@ class TurnEngine:
                 snapshot.restore(session)
 
             raise
+        finally:
+            # Issue #7: clear the per-tick callback so it doesn't leak
+            # into a subsequent process_turn call on this engine instance.
+            self._progress_callback = None
 
         total_time = time.perf_counter() - turn_start
         logger.warning(
@@ -636,6 +660,16 @@ class TurnEngine:
 
         # PROJ-251: Track current tick for error context
         self._current_tick = tick
+
+        # Issue #7: notify the UI that a tick has started so the
+        # "PROCESSING TURN..." overlay can repaint with the current tick
+        # number. The callback is optional and may be None.
+        cb = getattr(self, "_progress_callback", None)
+        if cb is not None:
+            try:
+                cb(tick, TICKS_PER_TURN)
+            except Exception:  # Intentional broad catch: UI callback must never break turn processing (PROJ-308)
+                logger.warning("progress_callback raised; suppressing", exc_info=True)
 
         # --- Phase 0: Harvesting (1/100th per tick) ---
         if tick == 1:

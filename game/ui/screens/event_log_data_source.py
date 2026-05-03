@@ -169,6 +169,30 @@ class EventLogDataSource(ITableDataSource):
         replay_id = event.get("details", {}).get("replay_id")
         return replay_id if replay_id else None
 
+    def get_cell_replay_unavailable_reason(
+        self, row_index: int
+    ) -> Optional[str]:
+        """Issue #8: return the reason ``replay_id`` is missing for this row.
+
+        Reserved values mirror those on
+        ``BattleResult.replay_unavailable_reason``:
+          * "sole_survivor" — only one team had any ships at battle start
+          * "no_ships" — neither fleet had any ships to materialize
+
+        Returns ``None`` for combat rows that DO have a replay (the UI
+        ignores this on enabled buttons), for legacy combat rows from
+        saves predating issue #8, and for non-combat rows. The Event
+        Log button uses the returned key to render a more helpful
+        tooltip than the generic "older save" wording.
+        """
+        event = self.get_event_at_index(row_index)
+        if event is None:
+            return None
+        if event.get("category") != "combat":
+            return None
+        reason = event.get("details", {}).get("replay_unavailable_reason")
+        return reason if reason else None
+
     def get_event_at_index(self, row_index: int) -> Optional[Dict[str, Any]]:
         """Get event at given row index in filtered list.
 

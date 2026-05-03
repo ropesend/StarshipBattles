@@ -385,8 +385,11 @@ class TestScreenLifecycle:
     def test_draw_shows_processing_overlay_when_processing(self):
         """draw() should show processing overlay when turn_processing is True.
 
-        FEAT-20: overlay now also receives a `message` argument (default
+        FEAT-20: overlay receives a `message` argument (default
         "PROCESSING TURN...", overridable by run_n_turns for progress text).
+        Issue #7: overlay also receives `current_tick` / `total_ticks`
+        kwargs so the per-tick "Tick N / 100" sub-line can be rendered. They
+        default to None when no turn is mid-flight.
         """
         screen, mocks = _make_strategy_screen()
         screen.turn_processing = True
@@ -396,7 +399,9 @@ class TestScreenLifecycle:
         screen.draw(mock_surface)
 
         mocks['renderer'].draw_processing_overlay.assert_called_once_with(
-            mock_surface, "PROCESSING TURN..."
+            mock_surface, "PROCESSING TURN...",
+            current_tick=None,
+            total_ticks=None,
         )
 
     def test_draw_draws_build_queue_screen_if_open(self):

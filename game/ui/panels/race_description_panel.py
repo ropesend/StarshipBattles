@@ -8,6 +8,12 @@ counterparts, plus `lbl_bio_status` / `lbl_socio_status`). Wire via
 `attach_controller(controller)`; refresh widget visibility via
 `set_state(controller)` from the screen's on_change callback.
 
+Issue #6: in addition to `set_state(controller)` (transition-driven),
+`RaceSetupScreen.update(time_delta)` MUST also call
+`panel.update(time_delta)` every frame so the elapsed-seconds label can
+tick while a generation is RUNNING. Without that wiring the timer label
+sits at the value it had at the IDLE→RUNNING transition.
+
 Provides UI controls for configuring:
 - Biological description (max 500 chars)
 - Sociological description (max 500 chars)
@@ -44,6 +50,14 @@ class RaceDescriptionPanel:
     # path stays intact, so any over-length input is still safely capped.
     MAX_LENGTH = 5000
 
+    # Issue #6: vertical chrome reserved above + between the two text
+    # boxes (two header rows of 28px, two status labels of ~13px, plus
+    # spacing). Used by both `_create_content` and `attach_controller`'s
+    # mirrored y-math, so it MUST be a single constant — drift between
+    # the two y-coordinate calculations was a real bug source. Lower
+    # value = more vertical space for each `UITextEntryBox`.
+    HEADER_OVERHEAD = 90
+
     def __init__(
         self,
         panel: pygame_gui.elements.UIPanel,
@@ -76,8 +90,11 @@ class RaceDescriptionPanel:
         panel_height = self.panel.get_relative_rect().height - 20
         y = 5
 
-        # Calculate height for each text area (split available space)
-        text_area_height = (panel_height - 100) // 2
+        # Calculate height for each text area (split available space).
+        # Issue #6: HEADER_OVERHEAD replaces the prior magic `100` to
+        # give the bio + socio textboxes more vertical room for the
+        # paragraph-length LLM output PROJ-299 introduced.
+        text_area_height = (panel_height - self.HEADER_OVERHEAD) // 2
 
         # Biological Description
         create_section_header("Biological Description:", y, 300, self.ui_manager, self.panel)
@@ -173,7 +190,7 @@ class RaceDescriptionPanel:
 
         panel_width = self.panel.get_relative_rect().width - 20
         panel_height = self.panel.get_relative_rect().height - 20
-        text_area_height = (panel_height - 100) // 2
+        text_area_height = (panel_height - self.HEADER_OVERHEAD) // 2
 
         # Header rows: same y math as _create_content().
         bio_row_y = 5
@@ -286,6 +303,57 @@ class RaceDescriptionPanel:
             race_field_attr="socio_description",
             FieldStatus=FieldStatus,
         )
+
+    def update(self, time_delta: float) -> None:
+        """Per-frame tick — re-render the elapsed-seconds label while a
+        field is RUNNING. Issue #6.
+
+        `set_state(controller)` is wired only as the controller's
+        on_change callback, which fires on FieldStatus transitions. Wall
+        time keeps advancing during RUNNING but nothing repaints the
+        label, so it freezes at "Generating … 0s" until the call
+        completes. `RaceSetupScreen.update()` calls this every frame so
+        the displayed integer second tracks `controller.bio_elapsed_seconds`
+        / `controller.socio_elapsed_seconds`.
+
+        Idempotent: skips `set_text` when the rendered string is
+        unchanged, mirroring the text-box guard in `_apply_field_state`.
+
+        `time_delta` is unused — the elapsed value comes from the
+        controller's wall-clock (`time.monotonic`) via PROJ-296
+        `LLMBackgroundCall`. The parameter is part of the standard
+        per-frame UI update signature so callers don't need to special-case.
+        """
+        del time_delta  # Reserved for future throttling; see docstring.
+        controller = getattr(self, "_controller", None)
+        if controller is None:
+            return  # No-LLM-provider path — attach_controller never ran.
+        # Late import to avoid the strategy → UI cycle at import time.
+        from game.strategy.services.race_description_llm_controller import FieldStatus
+
+        self._tick_field_label(
+            controller.bio_status, controller.bio_elapsed_seconds,
+            "Bio", self.lbl_bio_status, FieldStatus,
+        )
+        self._tick_field_label(
+            controller.socio_status, controller.socio_elapsed_seconds,
+            "Socio", self.lbl_socio_status, FieldStatus,
+        )
+
+    def _tick_field_label(
+        self, status, elapsed: float, label_prefix: str, lbl_status, FieldStatus,
+    ) -> None:
+        """Per-field branch of `update()` — only writes while RUNNING."""
+        if status != FieldStatus.RUNNING:
+            return
+        new_text = f"Generating {label_prefix}… {int(elapsed)}s"
+        # pygame_gui UILabel exposes `.text`; fall back to `.get_text()`
+        # if a future version drops the attribute.
+        current = getattr(lbl_status, "text", None)
+        if current is None and hasattr(lbl_status, "get_text"):
+            current = lbl_status.get_text()
+        if current != new_text:
+            lbl_status.set_text(new_text)
 
     def _apply_field_state(
         self, *, status, elapsed, error, label_prefix,

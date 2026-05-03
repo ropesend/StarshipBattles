@@ -510,8 +510,16 @@ class TestSimulationBattleResolverShortcutPaths:
         f.location = HexCoord(0, 0)
         return f
 
-    def test_no_combat_capable_either_team_returns_no_winner(self):
-        """Shortcut #1: both teams have only derelicts."""
+    def test_no_combat_capable_either_team_runs_truncated_simulator(self):
+        """Issue #8: when both teams have ships but no combat-capable
+        ones, the resolver no longer short-circuits — it runs a brief
+        truncated simulator pass so the replay-capture pipeline records
+        a real (short) replay. ``run_battle`` is patched here because
+        the test fleets carry mock ships that can't be materialized."""
+        from unittest.mock import patch
+
+        from game.simulation.battle_outcome import ShipStatus
+
         resolver = self._make_resolver()
         f1 = self._fleet_with_ships(
             1, 0, [self._ship(alive=False), self._ship(derelict=True)],
@@ -520,11 +528,31 @@ class TestSimulationBattleResolverShortcutPaths:
             2, 1, [self._ship(derelict=True)],
         )
 
-        result = resolver.resolve_battle([f1, f2])
+        # Mock outcome — neither team is eliminable in a no-weapons
+        # battle, so the truncated run terminates at the cap. Both
+        # teams still have ships at end so winner is None.
+        outcome = MagicMock()
+        outcome.duration_ticks = 2000
+        outcome.replay_id = "trunc-replay-uuid"
+        team0 = MagicMock()
+        team0.team_id = 0
+        team0.ships = [MagicMock(status=ShipStatus.SURVIVED)]
+        team1 = MagicMock()
+        team1.team_id = 1
+        team1.ships = [MagicMock(status=ShipStatus.SURVIVED)]
+        outcome.teams = (team0, team1)
 
-        assert result.winner is None
-        assert result.tick_count == 0
-        assert result.team_survivors == {0: [], 1: []}
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            return_value=outcome,
+        ) as mock_run:
+            result = resolver.resolve_battle([f1, f2])
+
+        mock_run.assert_called_once()
+        assert result.winner is None  # Both teams alive at cap
+        assert 0 < result.tick_count <= 2000
+        assert result.replay_id == "trunc-replay-uuid"
+        assert result.replay_unavailable_reason is None
 
     def test_only_one_team_combat_capable_declares_sole_survivor(self):
         """Shortcut #2: only one team has any combat-capable ships."""

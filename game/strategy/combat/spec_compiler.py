@@ -51,7 +51,10 @@ from game.simulation.combat.formation import (
 from game.simulation.combat.ability_stat_registry import emit_entries_for_ability
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
-from game.simulation.systems.battle_end_conditions import TeamEliminatedCondition
+from game.simulation.systems.battle_end_conditions import (
+    TeamEliminatedCondition,
+    TickLimitCondition,
+)
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -61,6 +64,11 @@ if TYPE_CHECKING:
 
 
 _DEFAULT_ABSOLUTE_MAX_TICKS = 20_000
+
+# Issue #8: budget for the truncated `run_battle` call invoked by
+# `SimulationBattleResolver` when both fleets have ships but neither has
+# any combat-capable weapons. 1/10 of the normal strategy ceiling.
+_BRIEF_RUN_TICK_BUDGET = _DEFAULT_ABSOLUTE_MAX_TICKS // 10
 
 
 _MIN_TEAMS = 2
@@ -78,6 +86,7 @@ def build_strategy_battle_spec(
     post_battle_hook: Optional[Any] = None,
     environmental_effects: Any = None,
     team_modifiers: Optional[Mapping[int, Any]] = None,
+    max_ticks: Optional[int] = None,
 ) -> BattleSpec:
     """Compile fleets-on-hex + environment into a `BattleSpec`.
 
@@ -105,6 +114,16 @@ def build_strategy_battle_spec(
             carrying per-team strategic modifiers (shield/damage
             multipliers, flat shield bonus). Translated to per-team
             ModifierStack entries via `_entries_from_fleet_combat_modifiers`.
+        max_ticks: Issue #8 — when supplied, overrides BOTH
+            `absolute_max_ticks` AND replaces the default
+            `TeamEliminatedCondition` end_condition with
+            `TickLimitCondition(max_ticks=max_ticks)`. Both are required:
+            `TeamEliminatedCondition` would never fire in a no-weapons
+            battle (neither team can be eliminated), so without the
+            swap the spec would tick to the safety ceiling. Used by
+            `SimulationBattleResolver` for the truncated run that
+            captures a real (brief) replay when both fleets have ships
+            but no combat-capable weapons.
 
     Returns:
         Populated `BattleSpec`. The caller (`SimulationBattleResolver`)
@@ -150,9 +169,18 @@ def build_strategy_battle_spec(
     if boundary is None:
         boundary = UnboundedRegion()
 
-    effective_end_condition: "IEndCondition" = (
-        end_condition if end_condition is not None else TeamEliminatedCondition()
-    )
+    if max_ticks is not None:
+        # Issue #8: explicit caller cap (e.g. truncated no_capable run).
+        # Force both fields together — see the `max_ticks` argdoc.
+        effective_end_condition: "IEndCondition" = TickLimitCondition(
+            max_ticks=max_ticks
+        )
+        effective_absolute_max_ticks = max_ticks
+    else:
+        effective_end_condition = (
+            end_condition if end_condition is not None else TeamEliminatedCondition()
+        )
+        effective_absolute_max_ticks = _DEFAULT_ABSOLUTE_MAX_TICKS
 
     # PROJ-269 Phase 2: attach a real post-battle hook that closes over
     # this battle's fleets + empires and calls `apply_outcome_to_fleets`
@@ -167,7 +195,7 @@ def build_strategy_battle_spec(
         telemetry_level=TelemetryLevel.NORMAL,
         boundary=boundary,
         end_condition=effective_end_condition,
-        absolute_max_ticks=_DEFAULT_ABSOLUTE_MAX_TICKS,
+        absolute_max_ticks=effective_absolute_max_ticks,
         teams=tuple(teams),
         modifier_stack=modifier_stack,
         post_battle_hook=effective_hook,

@@ -354,6 +354,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         PROJ-299: polls the description LLM controller so its background
         worker results land in the UI on the same frame they complete.
         Also drives the 30s/90s "still working" dialog and error popups.
+
+        Issue #6: also pumps `RaceDescriptionPanel.update(time_delta)`
+        so its elapsed-seconds status label can tick while the LLM call
+        is RUNNING. Without this call the timer freezes at the value it
+        had at the IDLE→RUNNING transition.
         """
         super().update(time_delta)
         controller = self._controller.description_controller
@@ -361,6 +366,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             controller.update()
             self._llm_service.check_dialog_thresholds(controller)
             self._llm_service.check_error_popups(controller)
+        if self._description_panel is not None:
+            self._description_panel.update(time_delta)
 
     def kill(self) -> None:
         """PROJ-299: cancel any in-flight LLM calls so worker threads
