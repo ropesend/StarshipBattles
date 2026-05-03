@@ -3,6 +3,10 @@ Tests for PlanetaryYard ability requirement for base construction queue.
 
 A colony must have an operational facility with PlanetaryYard ability
 for its base construction queue (complexes) to be processed.
+
+PROJ-322 Task 6.6 (HLP-003): the per-file `_make_yard_facility` helper
+is now a thin alias over the shared `make_planetary_yard_facility`
+factory at `tests.fixtures.yard_facility`.
 """
 import pytest
 from unittest.mock import MagicMock
@@ -10,19 +14,12 @@ from unittest.mock import MagicMock
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.build_queue_source import colony_has_planetary_yard as _colony_has_planetary_yard
+from tests.fixtures.yard_facility import make_planetary_yard_facility
 
 
 def _make_yard_facility(is_operational=True):
-    """Create a facility with PlanetaryYard ability."""
-    return PlanetaryFacility(
-        instance_id="yard_1",
-        design_id="colony_hub",
-        name="Colony Hub",
-        design_data={
-            "layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}
-        },
-        is_operational=is_operational,
-    )
+    """Thin alias over the shared `make_planetary_yard_facility` factory."""
+    return make_planetary_yard_facility(is_operational=is_operational)
 
 
 class TestColonyHasPlanetaryYard:

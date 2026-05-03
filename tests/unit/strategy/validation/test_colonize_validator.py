@@ -32,31 +32,20 @@ def _drop_pod_item(design_id="test_pod", name="Test Pod"):
 
 
 def _make_planet(planet_type_name: str, name: str = "Test Planet"):
-    """Create a mock planet of the given type with all IPlanet protocol fields.
+    """Thin alias over the shared `make_mock_planet` factory.
 
-    Promoted from per-class duplicates (PROJ-323 Task 1.21) to dedupe
-    `_make_planet` helpers that were copied across two test classes.
+    Resolves the local `MockPlanetType` enum value before delegating;
+    this preserves the historical `_make_planet("CONTINENTAL")` calling
+    convention while routing through `tests.fixtures.mock_planet`.
+
+    PROJ-322 Task 6.7 / HLP-004 (originally promoted in PROJ-323 Task 1.21).
     """
-    from game.strategy.data.planet import Planet
+    from tests.fixtures.mock_planet import make_mock_planet
 
-    planet = MagicMock(spec=Planet)
-    planet.name = name
-    planet.owner_id = None
-    planet.location = HexCoord(0, 0)
-    planet.planet_type = MockPlanetType[planet_type_name]
-    planet.deposits = {}
-    # PROJ-193: Required IPlanet properties
-    planet.id = 1
-    planet.populations = []
-    planet.max_population = 1000
-    planet.facilities = []
-    planet.atmosphere = {}
-    planet.surface_gravity = 9.8
-    planet.surface_temperature = 300.0
-    planet.orbit_distance = 1
-    planet.radius_hexes = 0
-    planet.image_id = ""
-    return planet
+    return make_mock_planet(
+        name=name,
+        planet_type=MockPlanetType[planet_type_name],
+    )
 
 
 # =============================================================================

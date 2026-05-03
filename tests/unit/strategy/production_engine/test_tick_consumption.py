@@ -12,6 +12,7 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.engine.production_engine import ProductionEngine
+from tests.fixtures.yard_facility import make_planetary_yard_facility as _make_yard
 
 
 def _make_empire(resources: dict = None) -> Empire:
@@ -23,18 +24,12 @@ def _make_empire(resources: dict = None) -> Empire:
 
 
 def _make_planetary_yard_facility():
-    """Create a facility with PlanetaryYard ability for base queue processing."""
-    return PlanetaryFacility(
-        instance_id="yard_base",
-        design_id="colony_hub",
-        name="Colony Hub",
-        design_data={
-            "layers": {
-                "CORE": [{"id": "yard", "abilities": {"PlanetaryYard": True}}]
-            }
-        },
-        is_operational=True,
-    )
+    """Thin alias over the shared `make_planetary_yard_facility` factory.
+
+    PROJ-322 Task 6.6 / HLP-003. Mirrors the original 'yard_base'/'yard'
+    instance/component IDs so any test that asserts on those still passes.
+    """
+    return _make_yard(instance_id="yard_base", yard_id="yard")
 
 
 def _make_colony(construction_queue=None, facilities=None, stockpile=None, max_stockpile=None):
