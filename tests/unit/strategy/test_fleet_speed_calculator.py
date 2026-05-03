@@ -6,10 +6,11 @@ TDD Phase 2, Step 2.3: Tests for fleet speed calculation from strategic movement
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from game.strategy.services.fleet_speed_calculator import (
     BASE_TICKS_PER_MOVEMENT,
     FleetSpeedCalculator,
-    K_STRATEGIC,
     get_tick_interval,
 )
 
@@ -46,22 +47,21 @@ def _make_mock_fleet(ships):
 
 
 class TestFleetSpeedCalculatorShipSpeed:
-    """Tests for calculate_ship_speed() method."""
+    """Tests for calculate_ship_speed() method.
 
-    def test_calculate_ship_speed_formula(self):
-        """Ship speed should follow the formula: floor((mp * K_STRATEGIC) / mass)."""
-        # mass=1000, strategic_movement=100 -> (100 * 25) / 1000 = 2500 / 1000 = 2.5 -> 2
-        ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=100)
-        speed = FleetSpeedCalculator.calculate_ship_speed(ship)
-        expected = int((100 * K_STRATEGIC) / 1000)  # 2
-        assert speed == expected
+    PROJ-323 Task 3.38: parametrized formula and zero-speed cases.
+    """
 
-    def test_calculate_ship_speed_higher_movement(self):
-        """Higher movement points should result in higher speed."""
-        # mass=1000, strategic_movement=300 -> (300 * 25) / 1000 = 7500 / 1000 = 7.5 -> 7
-        ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=300)
+    @pytest.mark.parametrize("mass,strategic_movement,expected", [
+        # mass=1000, mp=100 -> (100*25)/1000 = 2
+        pytest.param(1000, 100, 2, id="formula-mp100"),
+        # mass=1000, mp=300 -> (300*25)/1000 = 7
+        pytest.param(1000, 300, 7, id="formula-mp300"),
+    ])
+    def test_calculate_ship_speed_formula(self, mass, strategic_movement, expected):
+        """Ship speed follows formula: floor((mp * K_STRATEGIC) / mass)."""
+        ship = _make_mock_ship_with_stats(mass=mass, strategic_movement=strategic_movement)
         speed = FleetSpeedCalculator.calculate_ship_speed(ship)
-        expected = int((300 * K_STRATEGIC) / 1000)  # 7
         assert speed == expected
 
     def test_calculate_ship_speed_clamped_to_max(self):
@@ -71,27 +71,21 @@ class TestFleetSpeedCalculatorShipSpeed:
         speed = FleetSpeedCalculator.calculate_ship_speed(ship)
         assert speed == 10  # Capped at maximum
 
-    def test_calculate_ship_speed_zero_for_fighters(self):
-        """Fighters should have 0 strategic movement (carrier-based)."""
+    @pytest.mark.parametrize("mass,strategic_movement,vehicle_type,expected_stats_only", [
+        pytest.param(25, 40, "Fighter", True, id="fighter"),
+        pytest.param(10000, 0, "Planetary Complex", True, id="planetary_complex"),
+        pytest.param(1000, 0, "Ship", False, id="ship_no_movement"),
+    ])
+    def test_calculate_ship_speed_returns_zero(
+        self, mass, strategic_movement, vehicle_type, expected_stats_only
+    ):
+        """Vehicles unable to move strategically (fighter/complex/zero-mp) return 0."""
         ship = _make_mock_ship_with_stats(
-            mass=25, strategic_movement=40,
-            vehicle_type="Fighter", expected_stats_only=True,
+            mass=mass,
+            strategic_movement=strategic_movement,
+            vehicle_type=vehicle_type,
+            expected_stats_only=expected_stats_only,
         )
-        speed = FleetSpeedCalculator.calculate_ship_speed(ship)
-        assert speed == 0
-
-    def test_calculate_ship_speed_zero_for_complexes(self):
-        """Planetary Complexes should have 0 strategic movement."""
-        ship = _make_mock_ship_with_stats(
-            mass=10000, strategic_movement=0,
-            vehicle_type="Planetary Complex", expected_stats_only=True,
-        )
-        speed = FleetSpeedCalculator.calculate_ship_speed(ship)
-        assert speed == 0
-
-    def test_calculate_ship_speed_zero_for_no_movement(self):
-        """Ships with no strategic movement should return 0."""
-        ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=0)
         speed = FleetSpeedCalculator.calculate_ship_speed(ship)
         assert speed == 0
 

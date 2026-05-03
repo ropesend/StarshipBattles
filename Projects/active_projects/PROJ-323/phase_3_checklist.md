@@ -16,11 +16,11 @@
 **File:** `tests/unit/ui/screens/test_fleet_report_filters.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_filters.py`
 
-- [x] [S08-CAT10-002] `TestSpecialCapabilityFilter (7 tests)` (lines 970-1143): Parametrize across (ability, filter_key, expected) tuples. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
-- [x] [S08-CAT10-003] `TestFilterShipsSpaceyard` (lines 587-665): Parametrize. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
-- [x] [S08-CAT10-004] `TestFilterShipsCargo` (lines 668-784): Parametrize. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S08-CAT10-002] `TestSpecialCapabilityFilter (7 tests)` (lines 970-1143): Parametrize across (ability, filter_key, expected) tuples. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S08-CAT10-003] `TestFilterShipsSpaceyard` (lines 587-665): Parametrize. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S08-CAT10-004] `TestFilterShipsCargo` (lines 668-784): Parametrize. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py` passes; LOC delta â‰ˆ 370 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py` passes; LOC delta â‰ˆ 370 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -30,10 +30,10 @@
 **File:** `tests/unit/strategy/engine/test_superweapon_handler_validation.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_superweapon_handler_validation.py`
 
-- [x] [S07-CAT10-001] `5 near-identical direct-handler test classes` (lines 87-192): Parametrize across handlers. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
-- [x] [S07-CAT10-002] `5 near-identical mission-handler test classes` (lines 199-393): Parametrize across mission handlers. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S07-CAT10-001] `5 near-identical direct-handler test classes` (lines 87-192): Parametrize across handlers. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S07-CAT10-002] `5 near-identical mission-handler test classes` (lines 199-393): Parametrize across mission handlers. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_handler_validation.py` passes; LOC delta â‰ˆ 300 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_handler_validation.py` passes; LOC delta â‰ˆ 300 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -56,12 +56,12 @@
 **File:** `tests/unit/ui/screens/test_fleet_data_source.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_data_source.py`
 
-- [x] [S06-CAT10-001] `3 set-filter tests parametrizable` (lines 194-224): Parametrize the 3 truly identical tests; ~6 LOC savings (not 35). _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S06-CAT10-001] `3 set-filter tests parametrizable` (lines 194-224): Parametrize the 3 truly identical tests; ~6 LOC savings (not 35). _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
       _(verification adjusted from review's "Parametrize all 5 set-filter tests for ~35 LOC savings." â€” see verification_report.md)_
 - [x] Open `tests/unit/ui/screens/test_fleet_data_source.py` and identify which 3 of the 5 set-filter tests have truly identical test bodies (the verification report says `test_set_filter_to_production`, `test_set_filter_to_colonies`, `test_set_filter_to_fleet_operations` are the 3; `test_set_filter_updates_current` and `test_set_filter_back_to_all` differ). _(deferred)_
-- [x] [S06-CAT10-003] `6 yes/no special-capability tests` (lines 324-538): Parametrize across (capability, return, expected) tuples. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S06-CAT10-003] `6 yes/no special-capability tests` (lines 324-538): Parametrize across (capability, return, expected) tuples. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_data_source.py` passes; LOC delta â‰ˆ 93 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_data_source.py` passes; LOC delta â‰ˆ 93 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -71,10 +71,10 @@
 **File:** `tests/unit/ui/screens/test_strategy_superweapons.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_superweapons.py`
 
-- [x] [S10-CAT10-004] `6 repeated no_fleet_returns_none tests` (lines 112-397): Parametrize with handler tuples. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
-- [x] [S10-CAT10-005] `5 (of 6) fleet_without_ability tests` (lines 118-406): Parametrize the 5 identical tests; keep SelfDestruct separate. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-004] `6 repeated no_fleet_returns_none tests` (lines 112-397): Parametrize with handler tuples. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-005] `5 (of 6) fleet_without_ability tests` (lines 118-406): Parametrize the 5 identical tests; keep SelfDestruct separate. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_superweapons.py` passes; LOC delta â‰ˆ 65 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_superweapons.py` passes; LOC delta â‰ˆ 65 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -97,9 +97,9 @@
 **File:** `tests/integration/strategy/turn_engine/test_resources.py`
 **Tests:** `pytest tests/integration/strategy/turn_engine/test_resources.py`
 
-- [x] [S10-CAT10-001] `Full-turn duplicate setup` (lines 214-270): Extract setup helper; keep both tests for distinct properties. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-001] `Full-turn duplicate setup` (lines 214-270): Extract setup helper; keep both tests for distinct properties. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/integration/strategy/turn_engine/test_resources.py` passes; LOC delta â‰ˆ 57 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/integration/strategy/turn_engine/test_resources.py` passes; LOC delta â‰ˆ 57 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -109,9 +109,9 @@
 **File:** `tests/unit/core/test_config_edge_cases.py`
 **Tests:** `pytest tests/unit/core/test_config_edge_cases.py`
 
-- [x] [S05-CAT10-002] `Boundary-value test classes` (lines 31-91): Parametrize with (attr_name, predicate) pairs. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S05-CAT10-002] `Boundary-value test classes` (lines 31-91): Parametrize with (attr_name, predicate) pairs. _(pass 2: parametrized AIConfig 3 positive-value tests, AIConfig 2 throttle tests, PhysicsConfig 6 positive-value tests; non-identical tests left as-is.)_
 
-- [x] Verify: `pytest tests/unit/core/test_config_edge_cases.py` passes; LOC delta â‰ˆ 61 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/core/test_config_edge_cases.py` passes; LOC delta â‰ˆ 61 _(pass 2: 16 passed, â‰ˆ19 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -121,9 +121,9 @@
 **File:** `tests/unit/core/test_protocols.py`
 **Tests:** `pytest tests/unit/core/test_protocols.py`
 
-- [x] [S09-CAT10-001] `TypeGuard parametrize opportunity` (lines 101-220): Parametrize. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S09-CAT10-001] `TypeGuard parametrize opportunity` (lines 101-220): Parametrize. _(pass 2: parametrized 6 returns_false TypeGuard tests into one parametrized test with 10 cases.)_
 
-- [x] Verify: `pytest tests/unit/core/test_protocols.py` passes; LOC delta â‰ˆ 120 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/core/test_protocols.py` passes; LOC delta â‰ˆ 120 _(pass 2: 41 passed, â‰ˆ25 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -133,9 +133,9 @@
 **File:** `tests/unit/modifiers/test_defense_marker_bindings.py`
 **Tests:** `pytest tests/unit/modifiers/test_defense_marker_bindings.py`
 
-- [x] [S06-CAT10-004] `6 empty-bindings tests` (lines 58-100): Parametrize into a single test. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S06-CAT10-004] `6 empty-bindings tests` (lines 58-100): Parametrize into a single test. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/modifiers/test_defense_marker_bindings.py` passes; LOC delta â‰ˆ 43 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/modifiers/test_defense_marker_bindings.py` passes; LOC delta â‰ˆ 43 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -159,9 +159,9 @@
 **File:** `tests/unit/research/test_tech_node.py`
 **Tests:** `pytest tests/unit/research/test_tech_node.py`
 
-- [x] [S09-CAT10-003] `TestTechNodePriceCurves` (lines 315-373): Parametrize across price_curve. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S09-CAT10-003] `TestTechNodePriceCurves` (lines 315-373): Parametrize across price_curve. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/research/test_tech_node.py` passes; LOC delta â‰ˆ 59 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/research/test_tech_node.py` passes; LOC delta â‰ˆ 59 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -171,9 +171,9 @@
 **File:** `tests/unit/simulation/components/abilities/test_defense_isolation.py`
 **Tests:** `pytest tests/unit/simulation/components/abilities/test_defense_isolation.py`
 
-- [x] [S05-CAT10-003] `10 paired Attack/Defense tests` (lines 366-527): Parametrize across classes/modifiers. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S05-CAT10-003] `10 paired Attack/Defense tests` (lines 366-527): Parametrize across classes/modifiers. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_defense_isolation.py` passes; LOC delta â‰ˆ 162 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_defense_isolation.py` passes; LOC delta â‰ˆ 162 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -183,9 +183,9 @@
 **File:** `tests/unit/simulation/components/abilities/test_resource_consumption.py`
 **Tests:** `pytest tests/unit/simulation/components/abilities/test_resource_consumption.py`
 
-- [x] [S05-CAT10-004] `3 nearly-identical resource tests` (lines 439-506): Parametrize. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S05-CAT10-004] `3 nearly-identical resource tests` (lines 439-506): Parametrize. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_resource_consumption.py` passes; LOC delta â‰ˆ 68 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_resource_consumption.py` passes; LOC delta â‰ˆ 68 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -207,9 +207,9 @@
 **File:** `tests/unit/simulation/components/abilities/test_system_stabilizers.py`
 **Tests:** `pytest tests/unit/simulation/components/abilities/test_system_stabilizers.py`
 
-- [x] [S10-CAT10-006] `Stellar/Warp Stabilizer near-identical classes` (lines 12-109): Single parametrized class with (AbilityClass, expected_drain, activation, deactivation) tuples. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-006] `Stellar/Warp Stabilizer near-identical classes` (lines 12-109): Single parametrized class with (AbilityClass, expected_drain, activation, deactivation) tuples. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_system_stabilizers.py` passes; LOC delta â‰ˆ 98 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_system_stabilizers.py` passes; LOC delta â‰ˆ 98 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -243,9 +243,9 @@
 **File:** `tests/unit/simulation/services/test_modifier_service.py`
 **Tests:** `pytest tests/unit/simulation/services/test_modifier_service.py`
 
-- [x] [S10-CAT10-003] `5+5 turret_mount duplicate tests` (lines 488-528, 634-664): Parametrize the resolution logic; test both APIs against the same matrix. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-003] `5+5 turret_mount duplicate tests` (lines 488-528, 634-664): Parametrize the resolution logic; test both APIs against the same matrix. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/simulation/services/test_modifier_service.py` passes; LOC delta â‰ˆ 80 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/services/test_modifier_service.py` passes; LOC delta â‰ˆ 80 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -255,9 +255,9 @@
 **File:** `tests/unit/simulation/systems/test_battle_end_conditions.py`
 **Tests:** `pytest tests/unit/simulation/systems/test_battle_end_conditions.py`
 
-- [x] [S05-CAT10-001] `3 duplicate parametrize blocks` (lines 546-588): Collapse into a single parametrized class. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S05-CAT10-001] `3 duplicate parametrize blocks` (lines 546-588): Collapse into a single parametrized class. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_end_conditions.py` passes; LOC delta â‰ˆ 43 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_end_conditions.py` passes; LOC delta â‰ˆ 43 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -267,9 +267,9 @@
 **File:** `tests/unit/simulation/systems/test_battle_engine_end_conditions.py`
 **Tests:** `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py`
 
-- [x] [S08-CAT10-006] `TestEscapeBasedMode 7 tests` (lines 115-239): Optional parametrization of common setup. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S08-CAT10-006] `TestEscapeBasedMode 7 tests` (lines 115-239): Optional parametrization of common setup. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py` passes; LOC delta â‰ˆ 125 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_engine_end_conditions.py` passes; LOC delta â‰ˆ 125 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -279,9 +279,9 @@
 **File:** `tests/unit/simulation/test_battle_runner.py`
 **Tests:** `pytest tests/unit/simulation/test_battle_runner.py`
 
-- [x] [S09-CAT10-005] `5 module-level smoke tests` (lines 254-390): Extract _run_minimal_battle helper and parametrize. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S09-CAT10-005] `5 module-level smoke tests` (lines 254-390): Extract _run_minimal_battle helper and parametrize. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/simulation/test_battle_runner.py` passes; LOC delta â‰ˆ 137 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/simulation/test_battle_runner.py` passes; LOC delta â‰ˆ 137 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -303,9 +303,9 @@
 **File:** `tests/unit/strategy/data/test_design_metadata_validation.py`
 **Tests:** `pytest tests/unit/strategy/data/test_design_metadata_validation.py`
 
-- [x] [S01-CAT10-002] `Missing-field defaults cluster` (lines 49-77): Parametrize: @pytest.mark.parametrize('key,default', [...]). _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S01-CAT10-002] `Missing-field defaults cluster` (lines 49-77): Parametrize: @pytest.mark.parametrize('key,default', [...]). _(pass 2: 5 missing-field default tests collapsed into single parametrized test.)_
 
-- [x] Verify: `pytest tests/unit/strategy/data/test_design_metadata_validation.py` passes; LOC delta â‰ˆ 30 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/data/test_design_metadata_validation.py` passes; LOC delta â‰ˆ 30 _(pass 2: 9 passed, â‰ˆ18 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -339,9 +339,9 @@
 **File:** `tests/unit/strategy/data/test_population_model.py`
 **Tests:** `pytest tests/unit/strategy/data/test_population_model.py`
 
-- [x] [S06-CAT10-002] `2 max-population tests` (lines 102-117): **Leave as-is** or extract a small helper if both tests share >5 lines of setup. _(left as-is per directive — below 3-member parametrize threshold.)_
+- [x] [S06-CAT10-002] `2 max-population tests` (lines 102-117): **Leave as-is** or extract a small helper if both tests share >5 lines of setup. _(left as-is per directive ï¿½ below 3-member parametrize threshold.)_
 
-- [x] Verify: `pytest tests/unit/strategy/data/test_population_model.py` passes; LOC delta â‰ˆ 16 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/data/test_population_model.py` passes; LOC delta â‰ˆ 16 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(Plan-review M-08 (2026-05-03): below â‰¥3-member parametrize threshold. Two-test clusters do not benefit from parametrization.)_
 
@@ -363,9 +363,9 @@
 **File:** `tests/unit/strategy/engine/test_planet_action_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_planet_action_engine.py`
 
-- [x] [S10-CAT10-002] `3 event-logging tests` (lines 336-437): Optional parametrization preserving descriptive names. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S10-CAT10-002] `3 event-logging tests` (lines 336-437): Optional parametrization preserving descriptive names. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/strategy/engine/test_planet_action_engine.py` passes; LOC delta â‰ˆ 102 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/engine/test_planet_action_engine.py` passes; LOC delta â‰ˆ 102 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -375,9 +375,9 @@
 **File:** `tests/unit/strategy/engine/test_superweapon_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py`
 
-- [x] [S03-CAT10-001] `Identical 3-test pattern across 6 handler classes` (lines 73-312): Parametrize across handlers. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S03-CAT10-001] `Identical 3-test pattern across 6 handler classes` (lines 73-312): Parametrize across handlers. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py` passes; LOC delta â‰ˆ 240 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py` passes; LOC delta â‰ˆ 240 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -387,9 +387,9 @@
 **File:** `tests/unit/strategy/facade/test_system_dto.py`
 **Tests:** `pytest tests/unit/strategy/facade/test_system_dto.py`
 
-- [x] [S01-CAT10-001] `DTO creation + frozen tests cluster` (lines 26-38, 44-54, 72-113, 272-306): Consolidate into @pytest.mark.parametrize. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S01-CAT10-001] `DTO creation + frozen tests cluster` (lines 26-38, 44-54, 72-113, 272-306): Consolidate into @pytest.mark.parametrize. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/strategy/facade/test_system_dto.py` passes; LOC delta â‰ˆ 80 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/facade/test_system_dto.py` passes; LOC delta â‰ˆ 80 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -399,9 +399,9 @@
 **File:** `tests/unit/strategy/planet/test_planet_validation.py`
 **Tests:** `pytest tests/unit/strategy/planet/test_planet_validation.py`
 
-- [x] [S01-CAT10-003] `Negative-value validation tests split` (lines 64-78, 94-116): Merge the two parametrize blocks or leave as-is. _(left as-is — the two parametrize blocks test different validation paths (negative values for fields A vs B); merging would conflate distinct concerns.)_
+- [x] [S01-CAT10-003] `Negative-value validation tests split` (lines 64-78, 94-116): Merge the two parametrize blocks or leave as-is. _(left as-is ï¿½ the two parametrize blocks test different validation paths (negative values for fields A vs B); merging would conflate distinct concerns.)_
 
-- [x] Verify: `pytest tests/unit/strategy/planet/test_planet_validation.py` passes; LOC delta â‰ˆ 20 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/planet/test_planet_validation.py` passes; LOC delta â‰ˆ 20 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -411,9 +411,9 @@
 **File:** `tests/unit/strategy/services/test_modifier_resolver.py`
 **Tests:** `pytest tests/unit/strategy/services/test_modifier_resolver.py`
 
-- [x] [S02-CAT10-002] `7 resolve_size_multiplier tests` (lines 15-69): Parametrize. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S02-CAT10-002] `7 resolve_size_multiplier tests` (lines 15-69): Parametrize. _(pass 2: 7 resolve_size_multiplier tests collapsed into single parametrized test.)_
 
-- [x] Verify: `pytest tests/unit/strategy/services/test_modifier_resolver.py` passes; LOC delta â‰ˆ 55 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/services/test_modifier_resolver.py` passes; LOC delta â‰ˆ 55 _(pass 2: 12 passed, â‰ˆ25 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -423,9 +423,9 @@
 **File:** `tests/unit/strategy/test_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/test_command_handlers.py`
 
-- [x] [S12-CAT10-001] `8+ handler error-path test clusters` (lines 90-290): Parametrize across (handler_cls, cmd_kwargs). _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S12-CAT10-001] `8+ handler error-path test clusters` (lines 90-290): Parametrize across (handler_cls, cmd_kwargs). _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta â‰ˆ 200 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta â‰ˆ 200 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -473,9 +473,9 @@
 **File:** `tests/unit/strategy/test_fleet_speed_calculator.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet_speed_calculator.py`
 
-- [x] [S02-CAT10-001] `7 calculate_ship_speed tests` (lines 13-116): Parametrize to one @pytest.mark.parametrize test. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S02-CAT10-001] `7 calculate_ship_speed tests` (lines 13-116): Parametrize to one @pytest.mark.parametrize test. _(pass 2: parametrized 2 formula tests + 3 zero-speed tests; clamp and missing-stats kept as-is due to distinct setup.)_
 
-- [x] Verify: `pytest tests/unit/strategy/test_fleet_speed_calculator.py` passes; LOC delta â‰ˆ 103 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/strategy/test_fleet_speed_calculator.py` passes; LOC delta â‰ˆ 103 _(pass 2: 25 passed, â‰ˆ30 LOC saved)_
 
 **Notes:** _(none yet)_
 
@@ -533,9 +533,9 @@
 **File:** `tests/unit/ui/screens/test_planet_data_source.py`
 **Tests:** `pytest tests/unit/ui/screens/test_planet_data_source.py`
 
-- [x] [S02-CAT10-003] `Attr-value extraction tests` (lines 150-208): Parametrize to single test. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S02-CAT10-003] `Attr-value extraction tests` (lines 150-208): Parametrize to single test. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_planet_data_source.py` passes; LOC delta â‰ˆ 59 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_planet_data_source.py` passes; LOC delta â‰ˆ 59 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 
@@ -545,9 +545,9 @@
 **File:** `tests/unit/ui/screens/test_superweapon_input_modes.py`
 **Tests:** `pytest tests/unit/ui/screens/test_superweapon_input_modes.py`
 
-- [x] [S07-CAT10-004] `Mode-setting and click-routing clusters` (lines 49-102, 159-212): Parametrize each cluster. _(deferred — Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S07-CAT10-004] `Mode-setting and click-routing clusters` (lines 49-102, 159-212): Parametrize each cluster. _(deferred ï¿½ Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
 
-- [x] Verify: `pytest tests/unit/ui/screens/test_superweapon_input_modes.py` passes; LOC delta â‰ˆ 107 _(deferred — see task notes above)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_superweapon_input_modes.py` passes; LOC delta â‰ˆ 107 _(deferred ï¿½ see task notes above)_
 
 **Notes:** _(none yet)_
 

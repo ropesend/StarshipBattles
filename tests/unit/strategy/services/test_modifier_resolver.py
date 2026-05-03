@@ -10,63 +10,58 @@ from game.strategy.services.modifier_resolver import (
 
 
 class TestResolveSizeMultiplier:
-    """Test extracting size_mount value from component entries."""
+    """Test extracting size_mount value from component entries.
 
-    def test_component_with_size_mount_0_2(self, fresh_registries):
-        """Should return 0.2 when size_mount modifier value is 0.2."""
-        comp_entry = {
-            "id": "metal_harvester",
-            "modifiers": [{"id": "simple_size_mount", "value": 0.2}]
-        }
+    PROJ-323 Task 3.33: 7 resolve_size_multiplier tests parametrized.
+    """
+
+    @pytest.mark.parametrize("comp_entry,expected", [
+        pytest.param(
+            {"id": "metal_harvester", "modifiers": [{"id": "simple_size_mount", "value": 0.2}]},
+            0.2,
+            id="size_mount_0_2",
+        ),
+        pytest.param(
+            {"id": "metal_harvester", "modifiers": [{"id": "simple_size_mount", "value": 1.0}]},
+            1.0,
+            id="size_mount_1_0",
+        ),
+        pytest.param(
+            {"id": "metal_harvester"},
+            1.0,
+            id="no_modifiers_key",
+        ),
+        pytest.param(
+            {"id": "metal_harvester", "modifiers": []},
+            1.0,
+            id="empty_modifiers_list",
+        ),
+        pytest.param(
+            {"id": "railgun", "modifiers": [{"id": "hardened_mount", "value": 2.0}]},
+            1.0,
+            id="other_modifiers_only",
+        ),
+        pytest.param(
+            "metal_harvester",
+            1.0,
+            id="string_entry",
+        ),
+        pytest.param(
+            {
+                "id": "metal_harvester",
+                "modifiers": [
+                    {"id": "hardened_mount", "value": 1.5},
+                    {"id": "simple_size_mount", "value": 0.5},
+                ],
+            },
+            0.5,
+            id="multiple_modifiers",
+        ),
+    ])
+    def test_resolve_size_multiplier(self, fresh_registries, comp_entry, expected):
+        """resolve_size_multiplier extracts simple_size_mount value or returns 1.0 default."""
         result = resolve_size_multiplier(comp_entry)
-        assert result == pytest.approx(0.2)
-
-    def test_component_with_size_mount_1_0(self, fresh_registries):
-        """Should return 1.0 when size_mount modifier value is 1.0."""
-        comp_entry = {
-            "id": "metal_harvester",
-            "modifiers": [{"id": "simple_size_mount", "value": 1.0}]
-        }
-        result = resolve_size_multiplier(comp_entry)
-        assert result == pytest.approx(1.0)
-
-    def test_component_without_modifiers(self):
-        """Should return 1.0 when no modifiers present."""
-        comp_entry = {"id": "metal_harvester"}
-        result = resolve_size_multiplier(comp_entry)
-        assert result == pytest.approx(1.0)
-
-    def test_component_with_empty_modifiers(self):
-        """Should return 1.0 when modifiers list is empty."""
-        comp_entry = {"id": "metal_harvester", "modifiers": []}
-        result = resolve_size_multiplier(comp_entry)
-        assert result == pytest.approx(1.0)
-
-    def test_component_with_other_modifiers_only(self):
-        """Should return 1.0 when only non-size modifiers present."""
-        comp_entry = {
-            "id": "railgun",
-            "modifiers": [{"id": "hardened_mount", "value": 2.0}]
-        }
-        result = resolve_size_multiplier(comp_entry)
-        assert result == pytest.approx(1.0)
-
-    def test_string_component_entry(self):
-        """Should return 1.0 for plain string component IDs."""
-        result = resolve_size_multiplier("metal_harvester")
-        assert result == pytest.approx(1.0)
-
-    def test_component_with_multiple_modifiers(self):
-        """Should extract size_mount from among multiple modifiers."""
-        comp_entry = {
-            "id": "metal_harvester",
-            "modifiers": [
-                {"id": "hardened_mount", "value": 1.5},
-                {"id": "simple_size_mount", "value": 0.5},
-            ]
-        }
-        result = resolve_size_multiplier(comp_entry)
-        assert result == pytest.approx(0.5)
+        assert result == pytest.approx(expected)
 
 
 class TestResolveStatFromSizeMount:

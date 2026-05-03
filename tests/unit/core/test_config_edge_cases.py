@@ -29,31 +29,31 @@ class TestDisplayConfigResolutions:
 
 
 class TestAIConfigBoundaryValues:
-    """Tests for AIConfig boundary values."""
+    """Tests for AIConfig boundary values.
 
-    def test_min_spacing_positive(self):
-        """MIN_SPACING is positive."""
-        assert AIConfig.MIN_SPACING > 0
+    PROJ-323 Task 3.8: positive-attr tests parametrized.
+    """
+
+    @pytest.mark.parametrize("attr_name", [
+        "MIN_SPACING",
+        "DEFAULT_ORBIT_DISTANCE",
+        "MAX_CORRECTION_FORCE",
+    ])
+    def test_attr_positive(self, attr_name):
+        """AIConfig positive-value attributes are > 0."""
+        assert getattr(AIConfig, attr_name) > 0
 
     def test_flee_distance_greater_than_orbit(self):
         """FLEE_DISTANCE is greater than DEFAULT_ORBIT_DISTANCE."""
         assert AIConfig.FLEE_DISTANCE > AIConfig.DEFAULT_ORBIT_DISTANCE
 
-    def test_formation_throttle_0_to_1(self):
-        """FORMATION_ENGINE_THROTTLE is in (0, 1] range."""
-        assert 0 < AIConfig.FORMATION_ENGINE_THROTTLE <= 1
-
-    def test_formation_slowdown_throttle_valid(self):
-        """FORMATION_SLOWDOWN_THROTTLE is in valid range."""
-        assert 0 < AIConfig.FORMATION_SLOWDOWN_THROTTLE <= 1
-
-    def test_default_orbit_distance_positive(self):
-        """DEFAULT_ORBIT_DISTANCE is positive."""
-        assert AIConfig.DEFAULT_ORBIT_DISTANCE > 0
-
-    def test_max_correction_force_positive(self):
-        """MAX_CORRECTION_FORCE is positive."""
-        assert AIConfig.MAX_CORRECTION_FORCE > 0
+    @pytest.mark.parametrize("attr_name", [
+        "FORMATION_ENGINE_THROTTLE",
+        "FORMATION_SLOWDOWN_THROTTLE",
+    ])
+    def test_throttle_in_unit_range(self, attr_name):
+        """Throttle values are in (0, 1] range."""
+        assert 0 < getattr(AIConfig, attr_name) <= 1
 
     def test_erratic_turn_interval_range(self):
         """ERRATIC_TURN_INTERVAL_MIN < MAX."""
@@ -62,30 +62,24 @@ class TestAIConfigBoundaryValues:
 
 
 class TestPhysicsConfigConstraints:
-    """Tests for PhysicsConfig constraints."""
+    """Tests for PhysicsConfig constraints.
 
-    def test_tick_rate_positive(self):
-        """TICK_RATE is positive."""
-        assert PhysicsConfig.TICK_RATE > 0
+    PROJ-323 Task 3.8: positive-attr tests parametrized.
+    """
+
+    @pytest.mark.parametrize("attr_name", [
+        "TICK_RATE",
+        "SPATIAL_GRID_CELL_SIZE",
+        "DEFAULT_LINEAR_DRAG",
+        "DEFAULT_ANGULAR_DRAG",
+        "DEFAULT_BASE_RADIUS",
+        "REFERENCE_MASS",
+    ])
+    def test_attr_positive(self, attr_name):
+        """PhysicsConfig positive-value attributes are > 0."""
+        assert getattr(PhysicsConfig, attr_name) > 0
 
     def test_tick_rate_reasonable(self):
         """TICK_RATE is a reasonable small value (not too large)."""
         # Should be less than 1 second per tick for real-time simulation
         assert PhysicsConfig.TICK_RATE < 1.0
-
-    def test_spatial_grid_cell_size_positive(self):
-        """SPATIAL_GRID_CELL_SIZE is positive."""
-        assert PhysicsConfig.SPATIAL_GRID_CELL_SIZE > 0
-
-    def test_default_drag_values_positive(self):
-        """Drag values are positive."""
-        assert PhysicsConfig.DEFAULT_LINEAR_DRAG > 0
-        assert PhysicsConfig.DEFAULT_ANGULAR_DRAG > 0
-
-    def test_default_base_radius_positive(self):
-        """DEFAULT_BASE_RADIUS is positive."""
-        assert PhysicsConfig.DEFAULT_BASE_RADIUS > 0
-
-    def test_reference_mass_positive(self):
-        """REFERENCE_MASS is positive."""
-        assert PhysicsConfig.REFERENCE_MASS > 0

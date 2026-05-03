@@ -114,12 +114,6 @@ class TestTypeGuardFunctions:
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
         assert is_fleet(fleet) is True
 
-    def test_is_fleet_returns_false_for_non_fleet(self):
-        """is_fleet should return False for non-Fleet objects."""
-        assert is_fleet("not a fleet") is False
-        assert is_fleet(123) is False
-        assert is_fleet({"ships": []}) is False
-
     def test_is_planet_returns_true_for_planet(self):
         """is_planet should return True for Planet instances."""
         planet = Planet(
@@ -139,20 +133,10 @@ class TestTypeGuardFunctions:
         )
         assert is_planet(planet) is True
 
-    def test_is_planet_returns_false_for_non_planet(self):
-        """is_planet should return False for non-Planet objects."""
-        assert is_planet("not a planet") is False
-        assert is_planet(None) is False
-
     def test_is_star_system_returns_true_for_system(self):
         """is_star_system should return True for StarSystem instances."""
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         assert is_star_system(system) is True
-
-    def test_is_star_system_returns_false_for_non_system(self):
-        """is_star_system should return False for non-StarSystem objects."""
-        assert is_star_system("Sol") is False
-        assert is_star_system(None) is False
 
     def test_is_star_returns_true_for_star(self):
         """is_star should return True for Star instances."""
@@ -170,18 +154,10 @@ class TestTypeGuardFunctions:
         )
         assert is_star(star) is True
 
-    def test_is_star_returns_false_for_non_star(self):
-        """is_star should return False for non-Star objects."""
-        assert is_star("Sun") is False
-
     def test_is_warp_point_returns_true_for_warppoint(self):
         """is_warp_point should return True for WarpPoint instances."""
         wp = WarpPoint(destination_id="Alpha", location=HexCoord(1, 1))
         assert is_warp_point(wp) is True
-
-    def test_is_warp_point_returns_false_for_non_warppoint(self):
-        """is_warp_point should return False for non-WarpPoint objects."""
-        assert is_warp_point("Alpha") is False
 
     def test_is_sector_environment_returns_true_for_sector(self):
         """is_sector_environment should return True for SectorEnvironment."""
@@ -189,9 +165,22 @@ class TestTypeGuardFunctions:
         sector = SectorEnvironment(local_hex=HexCoord(1, 1), system=system)
         assert is_sector_environment(sector) is True
 
-    def test_is_sector_environment_returns_false_for_non_sector(self):
-        """is_sector_environment should return False for non-SectorEnvironment."""
-        assert is_sector_environment({}) is False
+    # PROJ-323 Task 3.9: 6 returns_false tests parametrized.
+    @pytest.mark.parametrize("guard,bad_value", [
+        pytest.param(is_fleet, "not a fleet", id="is_fleet-str"),
+        pytest.param(is_fleet, 123, id="is_fleet-int"),
+        pytest.param(is_fleet, {"ships": []}, id="is_fleet-dict"),
+        pytest.param(is_planet, "not a planet", id="is_planet-str"),
+        pytest.param(is_planet, None, id="is_planet-none"),
+        pytest.param(is_star_system, "Sol", id="is_star_system-str"),
+        pytest.param(is_star_system, None, id="is_star_system-none"),
+        pytest.param(is_star, "Sun", id="is_star-str"),
+        pytest.param(is_warp_point, "Alpha", id="is_warp_point-str"),
+        pytest.param(is_sector_environment, {}, id="is_sector_environment-dict"),
+    ])
+    def test_typeguard_returns_false_for_non_matching(self, guard, bad_value):
+        """TypeGuards should return False for non-matching objects."""
+        assert guard(bad_value) is False
 
 
 class TestNoneSafety:

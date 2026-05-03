@@ -46,35 +46,19 @@ class TestDesignMetadataValidation:
             DesignMetadata.from_dict(valid_metadata_data)
         assert 'name' in str(exc_info.value)
 
-    def test_missing_ship_class_uses_default(self, valid_metadata_data):
-        """Missing ship_class should use default 'Unknown'."""
-        del valid_metadata_data['ship_class']
+    # PROJ-323 Task 3.24: 5 missing-field default tests parametrized.
+    @pytest.mark.parametrize("field,attr,default", [
+        pytest.param('ship_class', 'ship_class', 'Unknown', id='ship_class'),
+        pytest.param('vehicle_type', 'vehicle_type', 'Ship', id='vehicle_type'),
+        pytest.param('mass', 'mass', 0.0, id='mass'),
+        pytest.param('combat_power', 'combat_power', 0.0, id='combat_power'),
+        pytest.param('construction_cost', 'construction_cost', {}, id='construction_cost'),
+    ])
+    def test_missing_field_uses_default(self, valid_metadata_data, field, attr, default):
+        """Missing optional field should fall back to its documented default."""
+        del valid_metadata_data[field]
         meta = DesignMetadata.from_dict(valid_metadata_data)
-        assert meta.ship_class == 'Unknown'
-
-    def test_missing_vehicle_type_uses_default(self, valid_metadata_data):
-        """Missing vehicle_type should use default 'Ship'."""
-        del valid_metadata_data['vehicle_type']
-        meta = DesignMetadata.from_dict(valid_metadata_data)
-        assert meta.vehicle_type == 'Ship'
-
-    def test_missing_mass_uses_default(self, valid_metadata_data):
-        """Missing mass should use default 0.0."""
-        del valid_metadata_data['mass']
-        meta = DesignMetadata.from_dict(valid_metadata_data)
-        assert meta.mass == 0.0
-
-    def test_missing_combat_power_uses_default(self, valid_metadata_data):
-        """Missing combat_power should use default 0.0."""
-        del valid_metadata_data['combat_power']
-        meta = DesignMetadata.from_dict(valid_metadata_data)
-        assert meta.combat_power == 0.0
-
-    def test_missing_construction_cost_uses_default(self, valid_metadata_data):
-        """Missing construction_cost should use default empty dict."""
-        del valid_metadata_data['construction_cost']
-        meta = DesignMetadata.from_dict(valid_metadata_data)
-        assert meta.construction_cost == {}
+        assert getattr(meta, attr) == default
 
     def test_minimal_required_fields_only(self):
         """Only design_id and name are required."""
