@@ -351,3 +351,88 @@ class TestLeaderNameField:
         panel.set_from_config()
 
         panel.leader_name_input.set_text.assert_called_with("Emperor Zog")
+
+
+# =============================================================================
+# PROJ-339: characterization gap-fillers
+# =============================================================================
+
+
+class TestFactionOverrideHandling:
+    """PROJ-339: pin faction-override semantics surfaced via `handle_event`
+    and `set_from_config`."""
+
+    def test_faction_override_blocks_auto_regen_on_race_name_edit(
+        self, mock_race_config,
+    ):
+        """After a `UI_TEXT_ENTRY_CHANGED` event on the faction input,
+        `_faction_name_overridden` flips True. A subsequent text-entry
+        event on the race-name input does NOT mutate the faction
+        input's text — production code's `if not _overridden:` guard
+        skips `_update_faction_if_not_overridden`.
+        """
+        import pygame_gui
+
+        panel = _bypass_init_panel(race_config=mock_race_config)
+        # Replace the auto-mocked inputs with controlled mocks so we can
+        # assert call-state precisely.
+        panel.faction_name_input = MagicMock()
+        panel.race_name_input = MagicMock()
+        panel.race_name_input.get_text.return_value = "Rossarian"
+        panel.government_type_dropdown = MagicMock()
+        panel.government_type_dropdown.selected_option = ("Empire", "Empire")
+
+        # Step 1 — user manually edits faction. Panel sees the event and
+        # flips the override flag.
+        faction_event = MagicMock(type=pygame_gui.UI_TEXT_ENTRY_CHANGED)
+        faction_event.ui_element = panel.faction_name_input
+        panel.handle_event(faction_event)
+        assert panel._faction_name_overridden is True
+
+        # Step 2 — race-name change event. With override active, the
+        # faction input's set_text MUST NOT be called.
+        panel.faction_name_input.set_text.reset_mock()
+        race_event = MagicMock(type=pygame_gui.UI_TEXT_ENTRY_CHANGED)
+        race_event.ui_element = panel.race_name_input
+        panel.handle_event(race_event)
+        panel.faction_name_input.set_text.assert_not_called()
+
+    def test_set_from_config_does_not_set_override_when_loaded_matches_auto(
+        self, mock_race_config,
+    ):
+        """Loading a config whose `faction_name` equals the auto-generated
+        value (race_name + government_type) does NOT flip
+        `_faction_name_overridden` — production tracks "manually edited"
+        as "different from auto-gen"."""
+        mock_race_config.race_name = "Rossarian"
+        mock_race_config.government_type = "Empire"
+        # Auto-generated value would be "Rossarian Empire".
+        mock_race_config.faction_name = "Rossarian Empire"
+        panel = _bypass_init_panel(race_config=mock_race_config)
+        # Force fresh refs so we don't read auto-mocked widgets from
+        # _create_content.
+        panel._init_empty_refs()
+        panel.faction_name_input = MagicMock()
+
+        panel.set_from_config()
+
+        assert panel._faction_name_overridden is False
+
+
+class TestGetDropdownValueEmptyOption:
+    """PROJ-339: pin `_get_dropdown_value` mapping of EMPTY_OPTION → ''."""
+
+    def test_get_dropdown_value_treats_empty_option_as_blank(self):
+        """When the dropdown's selected_option is EMPTY_OPTION (the
+        '-- Select --' sentinel), `_get_dropdown_value` returns ''."""
+        panel = _bypass_init_panel()
+        dd = MagicMock()
+        # The pygame_gui dropdown reports a string when not in a tuple form.
+        dd.selected_option = panel.EMPTY_OPTION
+
+        assert panel._get_dropdown_value(dd) == ""
+
+        # Tuple form likewise — production unpacks `(display, value)`
+        # and treats EMPTY_OPTION the same.
+        dd.selected_option = (panel.EMPTY_OPTION, panel.EMPTY_OPTION)
+        assert panel._get_dropdown_value(dd) == ""
