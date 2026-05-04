@@ -18,90 +18,115 @@ class TestModifierImpactGrid:
     def teardown_method(self):
         pass  # Don't quit pygame for session isolation
 
-    def test_init_creates_panel(self):
-        """Test that constructor creates a panel."""
+    def test_init_constructs_panel_with_passed_rect_and_container(self):
+        """Pin that __init__ forwards `rect` and `container` to the
+        UIPanel constructor and exposes them as instance attributes used
+        by draw() / handle_event() (rect for hit-testing, panel for
+        get_abs_rect()). Replaces a tautology (`grid.rect == rect`,
+        `grid.panel is not None`) with a real plumbing check."""
+        from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
+
+        rect = pygame.Rect(10, 10, 400, 300)
+        with patch('game.ui.panels.modifier_impact_grid.UIPanel') as mock_panel_cls:
+            ModifierImpactGrid(self.manager, self.container, rect)
+        # UIPanel was called once with the passed rect, manager, container,
+        # and the production-stable object_id used for theming.
+        kwargs = mock_panel_cls.call_args.kwargs
+        assert kwargs['relative_rect'] is rect
+        assert kwargs['manager'] is self.manager
+        assert kwargs['container'] is self.container
+        assert kwargs['object_id'] == '#modifier_impact_grid'
+
+    def test_update_with_no_component_does_not_call_summary_methods(self):
+        """`update(None)` must short-circuit BEFORE calling
+        `get_modifier_stat_summary` or `get_all_modifier_effects` —
+        guarding against the pre-condition that those methods don't
+        exist on a None component. Pins the production guard at
+        modifier_impact_grid.py:112 (`if not component: return`)."""
         from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
 
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
+        # Seed state that update() would otherwise overwrite.
+        grid.stat_columns = ['old_stat']
+        grid.modifier_rows = [{'id': 'old', 'name': 'old', 'stats': {}}]
 
-        assert grid.panel is not None
-        assert grid.rect == rect
-
-    def test_update_with_no_component(self):
-        """Test update with None component shows placeholder."""
-        from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
-
-        rect = pygame.Rect(10, 10, 400, 300)
-        grid = ModifierImpactGrid(self.manager, self.container, rect)
-
-        # Should not raise
         grid.update(None)
-        assert grid.current_component is None
 
-    def test_update_with_component_no_modifiers(self):
-        """Test update with component that has no modifiers."""
+        # The early-return clears state to empty rather than leaving stale.
+        assert grid.current_component is None
+        assert grid.stat_columns == []
+        assert grid.modifier_rows == []
+
+    def test_update_with_no_affected_stats_renders_empty_message_label(self):
+        """When the component has zero affected stats (empty summary),
+        `_build_ui` renders a 'No modifier effects to display' message
+        label. Pin that branch directly via _ui_elements rather than
+        merely checking `current_component == mock`."""
         from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
 
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
         mock_component = MagicMock()
-        mock_component.modifiers = []
+        mock_component.ability_instances = []
         mock_component.get_all_modifier_effects.return_value = []
         mock_component.get_modifier_stat_summary.return_value = {}
 
-        grid.update(mock_component)
+        with patch('game.ui.panels.modifier_impact_grid.UILabel') as mock_label:
+            grid.update(mock_component)
 
-        assert grid.current_component == mock_component
+        # _build_ui took the empty-message branch (one UILabel call with
+        # the no-effects text).
+        mock_label.assert_called_once()
+        assert mock_label.call_args.kwargs['text'] == "No modifier effects to display"
+        assert grid.stat_columns == []  # confirms the empty-affected branch
 
-    def test_update_with_component_with_modifiers(self):
-        """Test update with component that has modifiers."""
+    def test_update_with_modifiers_groups_effects_by_source_modifier_id(self):
+        """When a component returns multiple ModifierEffects from the
+        same source modifier, `update` must coalesce them into a SINGLE
+        modifier_rows entry (keyed by source_modifier_id) whose 'stats'
+        dict carries one entry per stat_key. Pin the grouping logic at
+        modifier_impact_grid.py:130-148 instead of the trivial
+        `current_component == mock_component` check."""
         from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
         from game.simulation.components.modifier_effects import ModifierEffect
 
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
-        # Create mock modifier effects
-        effect1 = ModifierEffect(
-            stat_key='mass_mult',
-            value=2.0,
-            operation='multiply',
-            target_ability=None,
-            source_modifier_id='simple_size_mount',
-            source_modifier_name='Size Mount',
-            formula_str='param',
-            param_value=2.0
+        eff_mass = ModifierEffect(
+            stat_key='mass_mult', value=2.0, operation='multiply',
+            target_ability=None, source_modifier_id='size_mount',
+            source_modifier_name='Size Mount', formula_str='param',
+            param_value=2.0,
         )
-        effect2 = ModifierEffect(
-            stat_key='hp_mult',
-            value=2.0,
-            operation='multiply',
-            target_ability=None,
-            source_modifier_id='simple_size_mount',
-            source_modifier_name='Size Mount',
-            formula_str='param',
-            param_value=2.0
+        eff_hp = ModifierEffect(
+            stat_key='hp_mult', value=2.0, operation='multiply',
+            target_ability=None, source_modifier_id='size_mount',
+            source_modifier_name='Size Mount', formula_str='param',
+            param_value=2.0,
         )
 
         mock_component = MagicMock()
-        mock_mod = MagicMock()
-        mock_mod.definition.id = 'simple_size_mount'
-        mock_mod.definition.name = 'Size Mount'
-        mock_mod.value = 2.0
-        mock_component.modifiers = [mock_mod]
-        mock_component.get_all_modifier_effects.return_value = [effect1, effect2]
+        mock_component.ability_instances = []
+        mock_component.get_all_modifier_effects.return_value = [eff_mass, eff_hp]
         mock_component.get_modifier_stat_summary.return_value = {
             'mass_mult': {'net_value': 2.0, 'operation': 'multiply', 'contributors': []},
-            'hp_mult': {'net_value': 2.0, 'operation': 'multiply', 'contributors': []}
+            'hp_mult': {'net_value': 2.0, 'operation': 'multiply', 'contributors': []},
         }
 
         grid.update(mock_component)
 
-        assert grid.current_component == mock_component
-        # Grid should have identified stats to display
-        assert len(grid.stat_columns) > 0
+        # Both effects came from the same source → exactly one row.
+        assert len(grid.modifier_rows) == 1
+        row = grid.modifier_rows[0]
+        assert row['id'] == 'size_mount'
+        assert row['name'] == 'Size Mount'
+        # Both stat_keys present in the merged stats dict.
+        assert set(row['stats'].keys()) == {'mass_mult', 'hp_mult'}
+        # Both stats are surfaced in the column set.
+        assert set(grid.stat_columns) == {'mass_mult', 'hp_mult'}
 
     def test_get_affected_stats(self):
         """Test that get_affected_stats returns only modified stats."""
@@ -345,3 +370,43 @@ class TestPROJ339Characterization:
             consumed = grid.handle_event(wheel_event)
         assert consumed is True
         assert grid.scroll.offset > 0
+
+    # -- Missing-coverage gap-fillers (review-4 follow-up) --------------
+
+    def test_set_position_updates_panel_origin(self):
+        """`set_position(pos)` mutates `self.rect.topleft` AND calls
+        `panel.set_position(pos)` so subsequent draw() calls render at
+        the new origin. Pin both side effects of the public mutator
+        at modifier_impact_grid.py:511-514."""
+        grid = self._grid()
+        grid.panel = MagicMock()  # capture set_position call
+
+        grid.set_position((250, 175))
+
+        assert grid.rect.topleft == (250, 175)
+        grid.panel.set_position.assert_called_once_with((250, 175))
+
+    def test_handle_event_returns_false_for_non_mousewheel_event(self):
+        """`handle_event` only consumes MOUSEWHEEL; everything else
+        returns False without touching scroll state. Pin the event-type
+        guard at modifier_impact_grid.py:485 so a refactor that drops
+        the `if event.type == pygame.MOUSEWHEEL:` check fails the test."""
+        grid = self._grid()
+        # Seed offset so we can prove non-mousewheel path leaves it alone.
+        grid.scroll.offset = 7
+
+        non_wheel = MagicMock(type=pygame.MOUSEBUTTONDOWN, button=1, pos=(10, 10))
+        consumed = grid.handle_event(non_wheel)
+
+        assert consumed is False
+        assert grid.scroll.offset == 7  # unchanged
+
+    def test_format_value_returns_unknown_op_fallback_for_unrecognized_operation(self):
+        """`_format_value` returns `str(value)` for any operation outside
+        {'multiply', 'add', 'set'} — the fallthrough at
+        modifier_impact_grid.py:271. Pins behavior so a future
+        operation rename doesn't silently break display."""
+        grid = self._grid()
+        # Unknown op falls through the if/elif chain to `return str(value)`.
+        assert grid._format_value(42, 'unknown_op') == '42'
+        assert grid._format_value(3.5, 'fancy_new_op') == '3.5'

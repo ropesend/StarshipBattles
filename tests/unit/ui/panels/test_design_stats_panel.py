@@ -456,3 +456,95 @@ class TestDesignStatsPanelHandleEvent:
         )
         assert panel.handle_event(click_event) is False
         assert set(panel.collapsed_sections) == baseline
+
+
+# =============================================================================
+# Review-4 follow-up: PROJ-339 missing-coverage gap-fillers for design_stats
+# =============================================================================
+
+
+class TestUpdateStatsStatRowPipeline:
+    """Pin StatRow value-population pipeline through update_stats."""
+
+    def test_update_stats_populates_statrow_values_from_pipeline(self):
+        """`update_stats` walks `rows_map`, calls `definition.get_value`,
+        `definition.format_value`, and `definition.get_display_unit` for
+        each row that has a `definition`, then writes the result into
+        the row via `row.update(fmt, unit)`. Pin the dispatch chain so
+        a refactor that drops format_value or get_display_unit fails
+        the test rather than silently rendering blank values."""
+        ship = _StubShip()
+        panel = _make_panel(ship=ship)
+
+        # Build a fake row whose definition records the dispatched calls.
+        fake_row = MagicMock()
+        stat_def = MagicMock()
+        stat_def.get_value.return_value = 1234
+        stat_def.get_status.return_value = (True, "")
+        stat_def.format_value.return_value = "1.2K"
+        stat_def.get_display_unit.return_value = "kg"
+        fake_row.definition = stat_def
+        # Drop the real rows_map so update_stats sees only our fake row.
+        panel.rows_map = {"mass": fake_row}
+        # Drop layers and req boxes so update_stats focuses on rows_map.
+        panel.layer_rows = []
+        panel.show_requirements = False
+
+        panel.update_stats(ship)
+
+        # Pipeline ran in the documented order.
+        stat_def.get_value.assert_called_once_with(ship)
+        stat_def.get_status.assert_called_once_with(ship, 1234)
+        stat_def.format_value.assert_called_once_with(1234)
+        stat_def.get_display_unit.assert_called_once_with(ship, 1234)
+        # The row was updated with the formatted text + unit.
+        fake_row.update.assert_called_once_with("1.2K", "kg")
+
+
+class TestNeedsRebuildLogisticsKeys:
+    """Pin needs_rebuild → True path on logistics-key change."""
+
+    def test_needs_rebuild_returns_true_when_logistics_keys_change(self):
+        """If the new ship's logistics rows produce a key set different
+        from `current_logistics_keys` (e.g., adding a fuel tank surfaces
+        a new resource), `needs_rebuild` returns True. Pin the diff at
+        design_stats_panel.py:481-484."""
+        ship = _StubShip()
+        panel = _make_panel(ship=ship)
+        # Simulate a build where logistics keys had an extra row.
+        # (`get_logistics_rows(ship)` for `_StubShip` returns [] because
+        # the stub has no resources; we seed a non-empty baseline so the
+        # diff to the live-computed set produces inequality.)
+        panel.current_logistics_keys = {"fuel_endurance"}
+
+        # New ship still has no resources → live set is empty → differs.
+        assert panel.needs_rebuild(ship) is True
+
+
+class TestKill:
+    """Pin that kill() destroys the scroll container and clears refs."""
+
+    def test_kill_calls_super_kill_and_destroys_widgets(self):
+        """`kill()` must (a) call .kill() on the scrolling container and
+        (b) null out rows_map / layer_rows / req_box_left / req_box_right
+        so subsequent update_stats() / needs_rebuild() see the cleared
+        state. Pin the contract at design_stats_panel.py:507-516."""
+        ship = _StubShip()
+        panel = _make_panel(ship=ship, show_requirements=True)
+        # Replace stats_scroll with a tracked mock to observe .kill()
+        scroll_mock = MagicMock()
+        panel.stats_scroll = scroll_mock
+        # Seed req-box and rows so we can prove they're cleared.
+        panel.req_box_left = MagicMock()
+        panel.req_box_right = MagicMock()
+        panel.rows_map = {"mass": MagicMock()}
+        panel.layer_rows = [MagicMock()]
+
+        panel.kill()
+
+        scroll_mock.kill.assert_called_once()
+        assert panel.stats_scroll is None
+        assert panel.rows_map == {}
+        assert panel.layer_rows == []
+        assert panel.req_box_left is None
+        assert panel.req_box_right is None
