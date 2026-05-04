@@ -23,9 +23,35 @@ from game.ui.utils.resource_display import RESOURCE_ABBREVIATIONS
 # Fixtures
 # =============================================================================
 
-@pytest.fixture
-def sample_snapshot():
-    """Create a sample EmpireEconomySnapshot with test data."""
+# =============================================================================
+# PROJ-327 Phase 2 Task 2.11: scope-rescope notes
+#
+# `mock_ui_manager`, `mock_panel`, and `mock_resource_icons` are pure inputs:
+# they are passed to `EmpireTreasuryPanel(...)` and the production code only
+# reads from them (`panel.get_relative_rect()`, `ui_manager` as a `manager=`
+# kwarg, `resource_icons[name]` as a lookup). No test in this file mutates
+# any of these three fixtures. Rescoping them to module shaves ~17x the
+# per-test MagicMock-tree construction cost without functional impact.
+#
+# `sample_snapshot` IS mutated by 4 tests in TestPopulationUpkeepRow
+# (`sample_snapshot.total_population_upkeep = ...`). It MUST remain
+# function-scoped, otherwise the mutations leak across tests.
+#
+# Original PROJ-322 Task 2.11 deferral cited "mutable MagicMocks accumulate
+# assert state" (i.e. .assert_called_once_with after a call records state).
+# That is true, but only `mock_panel.get_relative_rect`,
+# `mock_container.assert_called_once`, `old_container.kill.assert_called_once`,
+# and similar call-records are checked — and those are checked on either
+# (a) the inner `mock_container`/`mock_header`/etc that come from `@patch`
+# decorators (not these fixtures), or (b) `panel._scroll_container.kill`
+# /element.kill (also not these fixtures). So accumulated call state on
+# `mock_ui_manager` / `mock_panel` / `mock_resource_icons` is never asserted
+# on in this file. Rescope is safe.
+# =============================================================================
+
+
+def _build_sample_snapshot() -> EmpireEconomySnapshot:
+    """Build a sample EmpireEconomySnapshot with test data (constructor body)."""
     snapshot = EmpireEconomySnapshot()
 
     # Production
@@ -63,22 +89,37 @@ def sample_snapshot():
 
 
 @pytest.fixture
+def sample_snapshot() -> EmpireEconomySnapshot:
+    """Create a sample EmpireEconomySnapshot with test data.
+
+    Function-scoped: 4 tests in TestPopulationUpkeepRow mutate
+    `snapshot.total_population_upkeep` and would otherwise leak across tests.
+    """
+    return _build_sample_snapshot()
+
+
+@pytest.fixture(scope="module")
 def mock_ui_manager():
-    """Create a mock pygame_gui UIManager."""
+    """Mock pygame_gui UIManager. Module-scoped: pure-input MagicMock,
+    never mutated nor asserted-on across the file (PROJ-327 Phase 2 Task 2.11)."""
     return MagicMock()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def mock_panel():
-    """Create a mock UIPanel with realistic dimensions."""
+    """Mock UIPanel with realistic dimensions. Module-scoped: pure-input
+    container, only `.get_relative_rect()` is called (returns the same inner
+    MagicMock) and tests verify identity, not call counts (PROJ-327 Phase 2
+    Task 2.11)."""
     panel = MagicMock()
     panel.get_relative_rect.return_value = MagicMock(width=800, height=600)
     return panel
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def mock_resource_icons():
-    """Create mock resource icons dict."""
+    """Mock resource icons dict. Module-scoped: pure-input lookup table,
+    never mutated nor asserted-on (PROJ-327 Phase 2 Task 2.11)."""
     icons = {}
     for resource in PLANET_RESOURCE_NAMES:
         mock_surface = MagicMock()

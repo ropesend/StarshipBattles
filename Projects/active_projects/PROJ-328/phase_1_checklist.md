@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Ready (PROJ-325 Phase 3 PoC merged 2026-05-04 — pattern proven on RaceSetupScreen with -55% helper LOC).
+**Status:** Complete (2026-05-03) — all 7 tasks landed; all 4 PoC findings applied cleanly; PROJ-322 deferral annotations updated.
 
 **Objective:** Update `StrategyModalWindow` base class so its bypass path leaves a minimal usable shell, then apply the proven two-stage construction pattern from PROJ-325 PoC to `BuildQueueListWindow`, `OrdersWindow`, `FleetReportWindow`. Migrate the corresponding PROJ-322 deferred test files.
 
@@ -107,13 +107,13 @@ def __init__(self, ...):
 
 **File:** [`game/ui/screens/strategy_modal_window.py`](../../../game/ui/screens/strategy_modal_window.py)
 
-- [ ] Move the existing `bypass_init` guard from "first executable statement" to "AFTER cheap state setup, BEFORE `super().__init__`".
-- [ ] Set `self._window_manager`, `self.ui_manager`, `self._window_init_bypassed = True` before returning. **Do NOT set `self.rect`** (pygame_gui descriptor issue — see Pattern-discovery finding 1).
-- [ ] Verify all 23 existing `tests/unit/ui/screens/test_strategy_modal_window.py` tests still pass.
-- [ ] Smoke-test all 4 subclasses still construct in production mode (default constructor, no `bypass_init`): `pytest tests/unit/ui/screens/test_fleet_report_window.py tests/unit/ui/screens/test_orders_window.py tests/unit/ui/screens/test_transfer_dialog.py tests/unit/ui/screens/test_build_queue_list_window.py -x` (should still all PASS — those tests use the existing `__new__` helper, not the new pattern yet).
-- [ ] Commit as a focused single-file change.
+- [x] Move the existing `bypass_init` guard from "first executable statement" to "AFTER cheap state setup, BEFORE `super().__init__`".
+- [x] Set `self._window_manager`, `self.ui_manager`, `self._window_init_bypassed = True` before returning. **Do NOT set `self.rect`** (pygame_gui descriptor issue — see Pattern-discovery finding 1).
+- [x] Verify all 23 existing `tests/unit/ui/screens/test_strategy_modal_window.py` tests still pass.
+- [x] Smoke-test all 4 subclasses still construct in production mode (default constructor, no `bypass_init`): `pytest tests/unit/ui/screens/test_fleet_report_window.py tests/unit/ui/screens/test_orders_window.py tests/unit/ui/screens/test_transfer_dialog.py tests/unit/ui/screens/test_build_queue_list_window.py -x` (should still all PASS — those tests use the existing `__new__` helper, not the new pattern yet).
+- [x] Commit as a focused single-file change.
 
-**Notes:** [Filled during implementation]
+**Notes:** Commit fd388946d. The bypass branch extracts `manager` from kwargs first, falling back to `args[1]` (subclasses call as `super().__init__(rect, manager, ..., window_manager=...)`). Production path now also explicitly sets `_window_init_bypassed = False` so subclass code can branch on `if getattr(self, '_window_init_bypassed', False):` after super().__init__. Production LOC delta: +43 (mostly docstring expansion). Test count: 113 across all 4 subclasses + base → all pass unchanged.
 
 ---
 
@@ -125,17 +125,17 @@ def __init__(self, ...):
 
 Light pattern per consensus plan: row collector/formatter + simple renderer. No full MVVM stack needed.
 
-- [ ] Read existing `BuildQueueListWindow.__init__` + `_build_list()`. Identify cheap state, delegates (if any — small modals may have no delegate layer), widget construction.
-- [ ] Read existing `_make_build_queue_list_window` helper in test file. Note all attributes the helper assigns + all renderer-internal reach-throughs.
-- [ ] Refactor `__init__` to two-stage shape (per refined headline pattern). For this small modal, "delegates" may collapse to a single `BuildQueueListRowCollector` or similar — match what's in production.
-- [ ] Create `BuildQueueListUiBuilder` extracting widget-construction code from `_build_list()` and any inline construction in `__init__`.
-- [ ] Create `NullBuildQueueListUiBuilder` + `MockBuildQueueListUiBuilder` in `tests/fixtures/build_queue_list_ui_builder.py`. MockBuilder reproduces every widget attribute the test helper assigned.
-- [ ] Migrate test helper to direct construction.
-- [ ] Verify all existing tests pass.
-- [ ] Update PROJ-322 Task 5.29 + Task 3.19 annotations from `DEFERRED-OUT-OF-SCOPE` to `RESOLVED IN PROJ-328 Phase A Task A.2 (commit <SHA>)`.
-- [ ] Record helper LOC delta in Notes.
+- [x] Read existing `BuildQueueListWindow.__init__` + `_build_list()`. Identify cheap state, delegates (if any — small modals may have no delegate layer), widget construction.
+- [x] Read existing `_make_build_queue_list_window` helper in test file. Note all attributes the helper assigns + all renderer-internal reach-throughs.
+- [x] Refactor `__init__` to two-stage shape (per refined headline pattern). For this small modal, "delegates" may collapse to a single `BuildQueueListRowCollector` or similar — match what's in production.
+- [x] Create `BuildQueueListUiBuilder` extracting widget-construction code from `_build_list()` and any inline construction in `__init__`.
+- [x] Create `NullBuildQueueListUiBuilder` + `MockBuildQueueListUiBuilder` in `tests/fixtures/build_queue_list_ui_builder.py`. MockBuilder reproduces every widget attribute the test helper assigned.
+- [x] Migrate test helper to direct construction.
+- [x] Verify all existing tests pass.
+- [x] Update PROJ-322 Task 5.29 + Task 3.19 annotations from `DEFERRED-OUT-OF-SCOPE` to `RESOLVED IN PROJ-328 Phase A Task A.2 (commit <SHA>)`.
+- [x] Record helper LOC delta in Notes.
 
-**Notes:** [Filled during implementation. Document helper LOC before/after, test count, any pattern bends.]
+**Notes:** Commit 7859d652c. Production LOC: 142 → 218 (+76, mostly extracted dataclass + collector + builder + docstrings). Test helper went from per-test 30+ LOC mock_window_base/PropertyMock chains to single 12-line _make_window helper. Test count: 14 → 16 (added BuildQueueRowCollector pure-data tests + Null/Mock builder coverage). New file: tests/fixtures/build_queue_list_ui_builder.py. No pattern bend — light pattern fits cleanly. Production caller (strategy_windows/build_queue_windows.py) signature unchanged.
 
 ---
 
@@ -147,11 +147,11 @@ Light pattern per consensus plan: row collector/formatter + simple renderer. No 
 
 Light pattern per consensus plan: pure order-row description model + `OrdersListRenderer`. Full MVVM is ceremony for a 355-line modal.
 
-- [ ] Same shape as Task A.2.
-- [ ] Verify which tests the migration owns — Task 5.16 was a `test_sub_window_hotkeys.py` cluster covering 4 classes (Orders, BuildQueue, TransferDialog, BuildQueueList). Just do the Orders portion here.
-- [ ] Update PROJ-322 Task 5.16 (Orders portion) annotation.
+- [x] Same shape as Task A.2.
+- [x] Verify which tests the migration owns — Task 5.16 was a `test_sub_window_hotkeys.py` cluster covering 4 classes (Orders, BuildQueue, TransferDialog, BuildQueueList). Just do the Orders portion here.
+- [x] Update PROJ-322 Task 5.16 (Orders portion) annotation.
 
-**Notes:** [Filled during implementation]
+**Notes:** Commit 00874c571. Production LOC: 356 → 408 (+52). Extracted OrderRowDescription (frozen dataclass) + OrderDescriber (pure-data describer, branches over OrderType enum) + OrdersListRenderer (per-row layout) + OrdersWindowUiBuilder (scrolling container + clear button + initial rebuild_list). New file: tests/fixtures/orders_ui_builder.py. New test file: tests/unit/ui/screens/test_orders_window.py with 18 tests covering OrderDescriber per-OrderType branches + describe_all index/is_editable + two-stage construction smoke tests. Existing test_sub_window_hotkeys.py (Orders cluster) and test_fleet_orders_refresh.py (live-pygame integration) still pass unchanged. Backwards-compat shim: _get_order_description retained, delegates to OrderDescriber. No pattern bend — same shape as A.2.
 
 ---
 
@@ -165,12 +165,12 @@ Light pattern per consensus plan: pure order-row description model + `OrdersList
 
 Per consensus plan: already mostly decomposed via `FleetListViewModel`, `FleetDataSource`, `VirtualTable`, sidebar. Just extract layout construction into `FleetReportLayoutBuilder`. Avoid grand rewrite.
 
-- [ ] Read `FleetReportWindow.__init__` carefully — identify which collaborators already exist and which need extraction.
-- [ ] Apply the refined two-stage pattern minimally: extract layout-construction into `FleetReportLayoutBuilder`; keep existing `FleetListViewModel`/`FleetDataSource`/`VirtualTable`/sidebar plumbing intact.
-- [ ] Both test files migrate to direct construction. The multi-select file (Task 3.20) may have additional private-method patches to clean up — drive through the public boundary instead per APC-003 guidance in the consensus plan.
-- [ ] Update PROJ-322 Tasks 5.6, 5.7, 3.20 annotations.
+- [x] Read `FleetReportWindow.__init__` carefully — identify which collaborators already exist and which need extraction.
+- [x] Apply the refined two-stage pattern minimally: extract layout-construction into `FleetReportLayoutBuilder`; keep existing `FleetListViewModel`/`FleetDataSource`/`VirtualTable`/sidebar plumbing intact.
+- [x] Both test files migrate to direct construction. The multi-select file (Task 3.20) may have additional private-method patches to clean up — drive through the public boundary instead per APC-003 guidance in the consensus plan.
+- [x] Update PROJ-322 Tasks 5.6, 5.7, 3.20 annotations.
 
-**Notes:** [Filled during implementation]
+**Notes:** Commit 495fa0f39. Production LOC: 383 → 411 (+28, all from layout-builder extraction + Stage-1 placeholder declarations). Extracted FleetReportLayoutBuilder for the three-panel layout. Cheap-state delegates (FleetListViewModel, TableColumnManager, MultiSelect) constructed in Stage-1 — they're pure-Python, no pygame_gui — so test fixtures see real selection/view-model behaviour for free. New file: tests/fixtures/fleet_report_ui_builder.py. test_fleet_report_window.py: helper LOC ~120 → ~20 (-100, -83%); test count 28 → 19 (dropped redundant "test the mock plumbing" tests). test_fleet_report_window_multi_select.py: helper LOC ~150 → ~75; tests now exercise real MultiSelect.handle_click semantics; 23 tests pass. Multi-select test file replaced 3-5 nested patch.object(...,_init_layout) chains (which broke when _init_layout was extracted) with a single bypass_init helper. Production caller signature unchanged. No pattern bend.
 
 ---
 
@@ -180,11 +180,11 @@ Per consensus plan: already mostly decomposed via `FleetListViewModel`, `FleetDa
 
 This is the test file that exercises `StrategyModalWindow` directly (not via subclass). After Task A.1, the bypass shell leaves a minimal usable instance — these tests should now be migratable to direct construction.
 
-- [ ] Audit existing test patterns in the file.
-- [ ] Where private-method patches exist, rewrite to drive the public boundary (APC-003 cleanup per consensus plan).
-- [ ] Update PROJ-322 Task 3.24 annotation.
+- [x] Audit existing test patterns in the file.
+- [x] Where private-method patches exist, rewrite to drive the public boundary (APC-003 cleanup per consensus plan).
+- [x] Update PROJ-322 Task 3.24 annotation.
 
-**Notes:** [Filled during implementation]
+**Notes:** Commit dbc252c23. The legacy `_make_modal_window` used `__new__` + `patch("pygame_gui.elements.UIWindow.__init__", lambda ...)` which was the canonical workaround pre-Task-A.1. Replaced with a real `_ProbeModal` (concrete StrategyModalWindow subclass) constructed under bypass_init, plus a manual `register_modal` call (bypassed instances intentionally skip auto-register). Added `TestBypassShellInvariants` class with 5 new tests pinning the Task A.1 contract: bypass sets _window_init_bypassed/_window_manager/ui_manager; bypass skips auto-register; production path still auto-registers. Test count: 23 → 28.
 
 ---
 
@@ -194,25 +194,45 @@ This is the test file that exercises `StrategyModalWindow` directly (not via sub
 
 Task 5.16 covered 4 classes — Orders (handled in Task A.3), BuildQueueScreen (NOT a UIWindow, not Phase A scope), TransferDialog (deferred to Phase C), BuildQueueListWindow (handled in Task A.2). Sweep the remaining hotkey-cluster tests for any outstanding `__new__` bypass usage.
 
-- [ ] If TransferDialog hotkey tests can be migrated WITHOUT the deep refactor (Phase C scope), do so. Otherwise leave for Phase C.
-- [ ] Update PROJ-322 Task 5.16 final disposition.
+- [x] If TransferDialog hotkey tests can be migrated WITHOUT the deep refactor (Phase C scope), do so. Otherwise leave for Phase C.
+- [x] Update PROJ-322 Task 5.16 final disposition.
 
-**Notes:** [Filled during implementation]
+**Notes:** Commit 2252a6ef3. OrdersWindow + BuildQueueListWindow hotkey clusters in test_sub_window_hotkeys.py migrated to bypass_init + explicit-Mock-builder construction. BuildQueueScreen cluster left unchanged — it's not a UIWindow subclass (it's a StrategyScene), so the bypass_init/Mock-builder machinery doesn't apply; the existing MagicMock(spec=...) shape is canonical for non-UIWindow screens. TransferDialog cluster left as-is for Phase C scope (deep refactor needed). 23 tests still pass.
 
 ---
 
 ### Task A.7: Phase completion verification + handoff [Simple]
 
-- [ ] All Task A.X tests pass: `pytest tests/unit/ui/screens/ -x -q`.
-- [ ] Sharded test suite passes (run from main repo root, NOT worktree — known `\a` bug): `cd c:/Developer/StarshipBattles && python Tools/test_sharded/test_sharded.py`.
-- [ ] All 4 Phase A production class refactors landed. Per-class LOC delta documented.
-- [ ] Test-helper LOC reduction documented per migrated test file.
-- [ ] PROJ-322 deferral annotations updated for: 5.6, 5.7, 5.16, 5.29 + 3.19, 3.20, 3.24, (3.26 if applicable).
-- [ ] Update `plan.md` Quick Status Phase A → Complete.
-- [ ] Update `plan.md` Current State to point to Phase B (or note that B+C may run in parallel if desired).
-- [ ] Signal PROJ-328 Phase B + Phase C are unblocked.
+- [x] All Task A.X tests pass: `pytest tests/unit/ui/screens/ -x -q`. — 2173 passed, 1 skipped in 25.68s.
+- [x] Sharded test suite passes (run from main repo root, NOT worktree — known `\a` bug): `cd c:/Developer/StarshipBattles && python Tools/test_sharded/test_sharded.py`. — Done; 16350/16362 pass, 8 failures pre-existing and unrelated to Phase A (codex discussion skill frontmatter docs).
+- [x] All 4 Phase A production class refactors landed. Per-class LOC delta documented.
+- [x] Test-helper LOC reduction documented per migrated test file.
+- [x] PROJ-322 deferral annotations updated for: 5.6, 5.7, 5.16, 5.29 + 3.19, 3.20, 3.24, (3.26 if applicable).
+- [x] Update `plan.md` Quick Status Phase A → Complete.
+- [x] Update `plan.md` Current State to point to Phase B (or note that B+C may run in parallel if desired).
+- [x] Signal PROJ-328 Phase B + Phase C are unblocked.
 
-**Notes:** [Filled during implementation. Cumulative LOC delta + test pass count.]
+**Notes:** All 7 tasks landed across 6 commits on `feat/03c-phase-aware-execution`:
+
+| Task | Commit | What |
+|------|--------|------|
+| A.1 | fd388946d | StrategyModalWindow bypass shell update |
+| A.2 | 7859d652c | BuildQueueListWindow refactor + tests + fixture |
+| A.3 | 00874c571 | OrdersWindow refactor + tests + fixture |
+| A.4 | 495fa0f39 | FleetReportWindow refactor + 2 test files migrated + fixture |
+| A.5 | dbc252c23 | test_strategy_modal_window.py migration + 5 new bypass-shell tests |
+| A.6 | 2252a6ef3 | sub_window_hotkeys.py Orders + BuildQueueList cluster migration |
+| (A.7) | (this commit) | Plan/checklist update + PROJ-322 annotation pass |
+
+**Cumulative production LOC delta:** +199 across 4 production files (StrategyModalWindow +43, BuildQueueListWindow +76, OrdersWindow +52, FleetReportWindow +28). The +199 is mostly extracted dataclasses + collectors + builders + docstrings — the refactor centralizes per-row widget geometry that was previously inlined and duplicate-prone.
+
+**Cumulative test-helper LOC reduction:** approximately -240 across 4 test files (test_build_queue_list_window.py: per-test ~30-line bypass blocks → 12-line shared helper; test_fleet_report_window.py: ~120 → ~20 = -100; test_fleet_report_window_multi_select.py: ~150 → ~75 = -75; test_strategy_modal_window.py: -15 then +60 from new invariant tests).
+
+**New test fixtures:** 3 files in `tests/fixtures/` — `build_queue_list_ui_builder.py`, `orders_ui_builder.py`, `fleet_report_ui_builder.py` — each providing a Null + Mock builder pair matching the production builder protocol.
+
+**All 4 PoC findings applied cleanly:** No 5th finding emerged. The pattern transferred cleanly across all 3 modal refactors. Both the "light pattern" (Tasks A.2, A.3) and the "layout-builder-only" pattern (Task A.4) shared the same refined headline: cheap state + delegates → super().__init__() → bypass branch invokes explicit ui_builder if supplied → production branch invokes default builder. Backwards-compat shims (e.g., `_get_order_description` on OrdersWindow) added only where existing tests reach into renamed internals.
+
+**Effort:** Comfortably within ~1 LLM session for Phase A. Total run time including final verification under 60 minutes of wall-clock.
 
 ---
 
@@ -220,10 +240,10 @@ Task 5.16 covered 4 classes — Orders (handled in Task A.3), BuildQueueScreen (
 
 When all tasks above are done:
 
-- [ ] All task checkboxes above are checked
-- [ ] All migrated test files pass
-- [ ] PROJ-322 annotations updated (8 task IDs)
-- [ ] Sharded test suite passes from main repo root
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update `plan.md` phase table row to `Complete`
-- [ ] Update `plan.md` Current State to point to Phase B
+- [x] All task checkboxes above are checked
+- [x] All migrated test files pass
+- [x] PROJ-322 annotations updated (8 task IDs)
+- [x] Sharded test suite passes from main repo root — TOTAL: 16362 tests | 16350 passed | 8 failed | 0 errors | 4 skipped | wall time 145.1s (12 shards). The 8 failures are all in `tests/unit/tools/test_codex_interagent_discussion_skills.py` (codex discussion skill markdown frontmatter assertions) — confirmed pre-existing and unrelated to Phase A by re-running on a clean tree (`git stash` → run → `git stash pop`). All 3634 UI + fixtures tests pass.
+- [x] Update status at top of this file to `Complete`
+- [x] Update `plan.md` phase table row to `Complete`
+- [x] Update `plan.md` Current State to point to Phase B

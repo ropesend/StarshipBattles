@@ -1,12 +1,26 @@
 """Tests for StrategyScreen core functionality (PROJ-111 Phase 4).
 
 Tests initialization, turn advancement, fleet/planet selection, build queue
-interaction, lifecycle methods, and event delegation. Uses bypass-init pattern.
+interaction, lifecycle methods, and event delegation.
+
+PROJ-327 Phase 4 (Compositional Construction): the 8 sub-object slots
+(`_renderer`, `_camera_nav`, `_fleet_ops`, `_colonization`, `_superweapons`,
+`_build_queue`, `_game_state`, `_input`) are wired via
+`MockStrategyScreenComposition.populate(screen)` from
+`tests/fixtures/strategy_screen_composition.py`. Adding/renaming a slot is a
+single edit in the fixture instead of one edit per test helper.
+
+The upstream construction (Camera, StrategyUI, asset loading) is still
+bypassed via `__new__` because that path requires pygame_gui + disk I/O.
+A future two-stage refactor (similar to `RaceSetupScreen`) could remove
+that bypass; for now the Composition seam is the only sub-object surface.
 """
 
 import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 import pygame
+
+from tests.fixtures.strategy_screen_composition import MockStrategyScreenComposition
 
 
 # --- Helpers ---
@@ -15,11 +29,12 @@ def _make_strategy_screen():
     """Create a StrategyScreen with mocked dependencies.
 
     Returns (screen, mocks_dict) where mocks_dict contains all mock objects.
+    Sub-object slots are populated via `MockStrategyScreenComposition` so
+    every test sees the same canonical sub-object surface.
     """
     from game.ui.screens.strategy_screen import StrategyScreen
 
-    with patch.object(StrategyScreen, '__init__', lambda self, *a, **kw: None):
-        screen = StrategyScreen.__new__(StrategyScreen)
+    screen = StrategyScreen.__new__(StrategyScreen)
 
     # Core attributes
     screen.screen_width = 1920
@@ -62,15 +77,9 @@ def _make_strategy_screen():
     screen._quit_confirm_dialog = None
     screen.build_queue_screen = None
 
-    # Sub-modules
-    screen._renderer = MagicMock()
-    screen._camera_nav = MagicMock()
-    screen._fleet_ops = MagicMock()
-    screen._colonization = MagicMock()
-    screen._superweapons = MagicMock()
-    screen._build_queue = MagicMock()
-    screen._game_state = MagicMock()
-    screen._input = MagicMock()
+    # Sub-modules: wire all 8 slots via Compositional Construction fixture.
+    composition = MockStrategyScreenComposition()
+    composition.populate(screen)
 
     # Assets
     screen.empire_assets = {}
@@ -81,13 +90,14 @@ def _make_strategy_screen():
         'facade': facade,
         'camera': camera,
         'ui': ui,
-        'renderer': screen._renderer,
-        'camera_nav': screen._camera_nav,
-        'fleet_ops': screen._fleet_ops,
-        'colonization': screen._colonization,
-        'build_queue': screen._build_queue,
-        'game_state': screen._game_state,
-        'input_handler': screen._input,
+        'composition': composition,
+        'renderer': composition.renderer,
+        'camera_nav': composition.camera_nav,
+        'fleet_ops': composition.fleet_ops,
+        'colonization': composition.colonization,
+        'build_queue': composition.build_queue,
+        'game_state': composition.game_state,
+        'input_handler': composition.input_handler,
     }
 
     return screen, mocks

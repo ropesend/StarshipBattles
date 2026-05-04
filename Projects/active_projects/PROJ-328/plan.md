@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| A. StrategyModalWindow shell + low/medium modals (BuildQueueListWindow, OrdersWindow, FleetReportWindow) | Not Started — BLOCKED on PROJ-325 Phase 3 PoC | [phase_1_checklist.md](phase_1_checklist.md) |
-| B. NewGameSetupScreen MVVM split (full ViewModel + Controller + UI builder) | Not Started — sequential after Phase A | [phase_2_checklist.md](phase_2_checklist.md) |
-| C. TransferDialog deep split (ViewModel + Controller + Renderer; tests around pending math + IssueTransferCommand emission first) | Not Started — sequential after Phase B (or parallel if separate agent available) | [phase_3_checklist.md](phase_3_checklist.md) |
+| A. StrategyModalWindow shell + low/medium modals (BuildQueueListWindow, OrdersWindow, FleetReportWindow) | Complete (2026-05-03) | [phase_1_checklist.md](phase_1_checklist.md) |
+| B. NewGameSetupScreen MVVM split (full ViewModel + Controller + UI builder) | Complete (2026-05-03) | [phase_2_checklist.md](phase_2_checklist.md) |
+| C. TransferDialog deep split (ViewModel + Controller + Renderer; tests around pending math + IssueTransferCommand emission first) | Complete (2026-05-03) | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** Planning complete; awaiting PROJ-325 Phase 3 PoC.
-**Last Action:** Project created from Codex–Claude consensus discussion (2026-05-04). Pattern, sequence, and class-by-class application all settled in `AgentCoordination/Scratchpad/Discussion/20260504T041251Z_uiwindow-refactor-mvvm/plans/uiwindow_mvvm_refactor_plan_r002.md`.
-**Next Action:** Wait for PROJ-325 Phase 3 PoC to land. Once `game/ui/screens/race_setup/` has the canonical pattern (delegate factory + UI builder + two-stage `__init__`), Phase A starts with the `StrategyModalWindow` base-class shell update.
-**Blockers:** PROJ-325 Phase 3 PoC must complete before Phase A starts.
+**Last Updated:** 2026-05-03
+**Active Phase:** All phases (A + B + C) complete.
+**Last Action:** Phase C (TransferDialog deep MVVM split) landed on `feat/03c-phase-aware-execution` across 2 commits. c02446bd8 added 37 characterization tests for pending-transfer math + `IssueTransferCommand` emission BEFORE any production change (per consensus plan: "tests-first" for the highest-risk single class). 909bfbecf landed the production refactor: `TransferViewModel` (pure pending-math + row-data + selection state), `TransferController` (facade queries + DesignLibrary pod discovery + command emission), `TransferGridRenderer` + `TransferDialogUiBuilder` (every pygame_gui widget construction), and the dialog reduced from 790 → 380 LOC (-52%). The same commit migrated the `test_sub_window_hotkeys.py` TransferDialog cluster from `MagicMock(spec=...)` to `bypass_init` + `MockTransferUiBuilder`, closing the remaining PROJ-322 Task 5.16 + 3.26 deferral. All 4 PoC findings applied cleanly; no pattern-bend; no surprising coupling that wasn't pinnable as a characterization test.
+**Next Action:** PROJ-328 complete. The UIWindow MVVM blocker is fully resolved across all 6 target subclasses (RaceSetupScreen via PROJ-325 PoC; BuildQueueListWindow + OrdersWindow + FleetReportWindow via Phase A; NewGameSetupScreen via Phase B; TransferDialog via Phase C). Suggest user-verification then archive.
+**Blockers:** None.
 
 ## Overview
 

@@ -15,17 +15,26 @@
 |-------|--------|-----------|
 | 0. Baseline measurement (current sharded suite runtime + per-file profiling) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. PROJ-322 Task 3.14 — `test_virtual_table.py` `@patch` decorator → autouse fixture sweep (~700 LOC, biggest single runtime win expected) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. PROJ-322 mutable-mock fixture rescope (Tasks 2.6 / 2.11 / 2.15 / 2.19 / 3.15) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. PROJ-322 accepted-disposition reconsideration (Tasks 6.1 DUP-001 + 6.4 HLP-001) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. PROJ-322 Task 3.25 — `strategy_screen` 50-test refactor (tech debt reduction; runtime delta is bonus, not gate) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Final measurement + documentation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 2. PROJ-322 mutable-mock fixture rescope (Tasks 2.6 / 2.11 / 2.15 / 2.19 / 3.15) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. PROJ-322 accepted-disposition reconsideration (Tasks 6.1 DUP-001 + 6.4 HLP-001) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. PROJ-322 Task 3.25 — `strategy_screen` 50-test refactor (tech debt reduction; runtime delta is bonus, not gate) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Final measurement + documentation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** Phases 0+1 complete; Phase 2 ready.
-**Last Action:** Phase 1 complete — migrated 80 of 81 `@patch` decorators in `test_virtual_table.py` to a single autouse class-level fixture (`patched_pygame_gui`). Outcome parity confirmed byte-identical (24 PASSED before + after, 0 changes). File-level runtime: 1.03 s → 1.00 s (~30 ms, ~3 % reclaim). Suite-level slowest shard: 127.7 s → 123.8 s (~3.9 s, ~3 % reclaim). Far less than the design.md "~1.4 s in this file alone" prediction. PROJ-322 phase_3_checklist.md Task 3.14 annotation updated from `DEFERRED-OUT-OF-SCOPE` to `RESOLVED IN PROJ-327 Phase 1`.
-**Next Action:** Phase 2 — mutable-mock fixture rescope across 4 confirmed files (PROJ-322 Tasks 2.6 / 2.11+3.15 / 2.15 / 2.19). Phase 4 trigger remains armed: gap to < 90 s target is still ~34 s; Phases 2-3 alone unlikely to close it.
+**Last Updated:** 2026-05-04 (final close-out)
+**Active Phase:** All phases Complete.
+**Last Action:** Phase 4 complete — Compositional Construction pattern landed; PROJ-322 Task 3.25 closed.
+- **Phase 4 (single pass):** New `StrategyScreenComposition` Protocol + `StrategyScreenCompositionFactory` (`game/ui/screens/strategy_screen_composition.py`, 114 LOC). `StrategyScreen.__init__` accepts `composition` kwarg; defaults to the production factory. 8 sub-objects (StrategyRenderer, CameraNavigator, FleetOperations, ColonizationSystem, SuperweaponOperations, StrategyBuildQueueManager, StrategyGameStateManager, StrategyInputHandler) now constructed via `comp.make_*(self)`. New `MockStrategyScreenComposition` test fixture (`tests/fixtures/strategy_screen_composition.py`, 119 LOC) returns one stable MagicMock per slot + `populate(screen)` helper for bypass-init path. 17 smoke tests pin the protocol contract. The bypass-init helpers in `test_strategy_screen.py` (62 tests) and `test_strategy_menu_actions.py` (22 tests) migrated: removed `patch.object(StrategyScreen, '__init__', lambda...)` monkey-patch entirely; `_make_strategy_screen` now uses `MockStrategyScreenComposition().populate(screen)` for sub-objects. **Audit finding:** No `_init_layout`-style private-method patches existed pre-refactor (the OpenCode 322-review's "private-method patching" assumption was inaccurate; the brittleness was the `__init__` monkey-patch + 8 inline MagicMock assignments). **PROJ-322 Task 3.25 RESOLVED** — annotation updated at `Projects/active_projects/PROJ-322/phase_3_checklist.md:235`. **New pattern documented as `docs/02_PATTERNS.md` § 32 "Compositional Construction"** — pattern count incremented 31 → 32. Cross-references PROJ-325 RaceSetup delegate factory, PROJ-322/324 `make_ui_widget`. Production LOC delta: `strategy_screen.py` 694 → 708 (+14). Test LOC delta: `test_strategy_screen.py` 856 → 866 (+10). Net new LOC: +381 across 5 files (production seam + test fixture + smoke tests). Within 1 LLM-paced session — well within the 3-session budget. 101 tests pass (62 + 22 + 17); broader UI-screens directory: 2226 pass + 1 fail in `test_new_game_setup_extended.py` (PROJ-328 Phase B territory, parallel agent's WIP, file-disjoint).
+- **Phase 2 (commit 7b05f610a):** 5 PROJ-322 deferrals dispositioned: Strategy A (rescope to module) for empire_treasury_panel and ship_io fixtures; Strategy D (re-confirm deferred) for component_resource_manager and 3.15 (private-attr read); Task 2.15 subsumed under Phase 3. Per-file runtime deltas: test_ship_io.py 2.41 s → 2.13 s (~12% reclaim, biggest single Phase 2 gain from eliminating per-test `fresh_registries` deepcopy); test_empire_treasury_panel.py 1.69 s → 1.64 s (~3%); other 2 files unchanged (deferred). Cumulative single-process Phase 2 reclaim: ~330 ms.
+- **Phase 2 (commit 7b05f610a):** 5 PROJ-322 deferrals dispositioned: Strategy A (rescope to module) for empire_treasury_panel and ship_io fixtures; Strategy D (re-confirm deferred) for component_resource_manager and 3.15 (private-attr read); Task 2.15 subsumed under Phase 3. Per-file runtime deltas: test_ship_io.py 2.41 s → 2.13 s (~12% reclaim, biggest single Phase 2 gain from eliminating per-test `fresh_registries` deepcopy); test_empire_treasury_panel.py 1.69 s → 1.64 s (~3%); other 2 files unchanged (deferred). Cumulative single-process Phase 2 reclaim: ~330 ms.
+- **Phase 3 (no commit — measurement-only):** DUP-001 (superweapon handler factory) and HLP-001 (`make_mock_ship` consolidation) both **RE-CONFIRMED DEFERRED** with measurement evidence. DUP-001 construction IS dominant but broad mutation surface (orders/path lists + call records on every test) makes shared session unsafe; the 5 handlers × 2 contracts factory still resolves to a switch statement. HLP-001 construction is small (~3.6% of `test_fleet_report_filters.py` runtime, ~72 ms total per ~627 µs/call microbenchmark); the 4 cited files have confirmed-distinct call shapes (cargo/fuel/display/facade) with no shared pattern to memoize. Both PROJ-322 phase_6_checklist.md annotations updated.
+- **All 7 PROJ-322 deferred items dispositioned** (5 from Phase 2: 2.6/2.11/2.15/2.19/3.15 + 2 from Phase 3: 6.1/6.4). 3 RESOLVED (2.11 fixtures, 2.19 fixtures, 2.15 subsumed); 4 RE-CONFIRMED DEFERRED with new rationale (2.6, 3.15, 6.1, 6.4).
+- **Pre-flight surprise from Phase 2:** PROJ-322 Task 2.19 deferral rationale was incorrect — claimed "many tests mutate the mock ship", but a re-audit grep found ZERO attribute writes against the 3 fixtures across 54 tests. Original rationale appears to have been a misread or stale; the runtime reclaim came from a path the deferral didn't anticipate.
+- **Per user priority** (readability > maintainability > functionality > runtime): the primary win is tech-debt reduction — 5 explanatory comment blocks land in test files (3 in Phase 2 + 2 effectively via PROJ-322 annotation captures), 1 dead-code helper (`minimal_ship`) removed, all 7 deferrals now have current measurement-backed dispositions.
+**Next Action:** None — project closed.
 **Blockers:** None.
+
+**Phase 5 close-out (2026-05-04):** Final cumulative measurement landed (3 sharded runs, median wall **123.9 s** vs Phase 0 baseline 127.8 s = **-3.9 s / ~3.0% reclaim**). Slowest shard ~123.8 s vs 127.7 s baseline. Stretch target (< 90 s) NOT hit; ~34 s gap remains. Honest cumulative ≈ Phase 1's `test_virtual_table.py` contribution; Phases 2/3/4 contributions live inside the run-to-run noise floor (single-process per-file deltas total ~330 ms). Full per-phase breakdown + post-state slowest-files leaderboard at `findings/runtime_delta.md`. Lessons-learned table appended to `decisions.md`. `docs/known-issues.md` "Test runtime improvements (PROJ-327)" section added. PROJ-322 Continuation Guide Final disposition summary updated jointly with PROJ-324 Phase 4. Per user priority order (readability > maintainability > functionality > runtime), the disposition + measurement-evidence trail for the 9 PROJ-322 deferrals is the primary deliverable.
 
 ## Overview
 
@@ -127,8 +136,8 @@ The PROJ-322 deferred items are **months stale by the time PROJ-327 starts.** Be
 
 ## Verification
 
-- [ ] All phase checklists complete
-- [ ] All tests passing (`python Tools/test_sharded/test_sharded.py`)
-- [ ] Sharded suite wall-clock measurably reduced (record final delta in Phase 5)
-- [ ] All 9 PROJ-322 deferred items either closed OR re-confirmed as deferred with updated rationale
+- [x] All phase checklists complete
+- [x] All tests passing (`python Tools/test_sharded/test_sharded.py`) — 16456/16468 passed (8 pre-existing Codex-skill failures unrelated to PROJ-327; 4 skipped)
+- [x] Sharded suite wall-clock measurably reduced — **-3.9 s median (127.8 → 123.9 s)**; see `findings/runtime_delta.md`
+- [x] All 9 PROJ-322 deferred items either closed OR re-confirmed as deferred with updated rationale (3 RESOLVED in Phase 2; Task 2.15 subsumed under Phase 3; Task 3.14 RESOLVED in Phase 1; Task 3.25 RESOLVED in Phase 4; 2.6 + 3.15 + 6.1 + 6.4 RE-CONFIRMED DEFERRED with measurement evidence)
 - [ ] User verified

@@ -6,6 +6,12 @@ PROJ-44: Refactored to use FleetListViewModel, ColumnManager, and image scaling 
 PROJ-173 Phase 1: Extracted FleetReportSidebar and FleetListRenderer for god class decomposition.
 PROJ-188 Phase 2: Migrated to VirtualTable + FleetDataSource + MultiSelect.
 PROJ-208 Phase 1: Refactored to use SplitFleetCommand via command pipeline.
+PROJ-328 Phase A Task A.4: Two-stage construction. The existing
+FleetListViewModel / FleetDataSource / VirtualTable / sidebar
+plumbing is preserved verbatim; ``_init_layout`` is extracted into
+``FleetReportLayoutBuilder`` so tests can swap in
+``Mock{...}UiBuilder`` from
+``tests/fixtures/fleet_report_ui_builder.py``.
 """
 from __future__ import annotations
 
@@ -29,6 +35,85 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class FleetReportLayoutBuilder:
+    """Production layout builder. Constructs the three-panel layout
+    (sidebar, center list, right detail) and wires the
+    ``FleetReportSidebar`` + ``VirtualTable`` + ``ShipDetailPanel``.
+
+    The window is the local composition root: it owns the cheap state
+    + delegates (``view_model``, ``column_manager``, ``selection``,
+    ``data_source``) and exposes them to the layout builder. The
+    layout builder reads them and creates panels/widgets.
+    """
+
+    def build(self, screen: "FleetReportWindow") -> None:
+        window_rect = screen.get_container().get_rect()
+        content_height = window_rect.height - 50  # account for title bar
+
+        # 1. Left Sidebar (Summary + Filters)
+        screen.sidebar_panel = UIPanel(
+            relative_rect=pygame.Rect(
+                0, 0, screen.sidebar_width, content_height),
+            manager=screen.ui_manager,
+            container=screen,
+            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
+        )
+        screen.sidebar = FleetReportSidebar(
+            panel=screen.sidebar_panel,
+            manager=screen.ui_manager,
+            view_model=screen.view_model,
+            column_manager=screen.column_manager,
+            empire=screen.empire,
+            on_remove_selected=screen._on_remove_selected_ships,
+        )
+
+        # 2. Center Ship List
+        list_width = (window_rect.width - screen.sidebar_width
+                      - screen.detail_width - 10)
+        screen.list_panel = UIPanel(
+            relative_rect=pygame.Rect(
+                screen.sidebar_width, 0, list_width, content_height),
+            manager=screen.ui_manager,
+            container=screen,
+            anchors={'left': 'left', 'right': 'right',
+                     'top': 'top', 'bottom': 'bottom'},
+        )
+
+        # Data source + VirtualTable.
+        screen.data_source = FleetDataSource(screen.view_model)
+        screen.virtual_table = VirtualTable(
+            panel=screen.list_panel,
+            manager=screen.ui_manager,
+            data_source=screen.data_source,
+            column_manager=screen.column_manager,
+            selection_strategy=screen.selection,
+            row_height=screen.row_height,
+            header_height=screen.header_height,
+        )
+
+        # 3. Right Detail Panel
+        screen.detail_panel = UIPanel(
+            relative_rect=pygame.Rect(
+                -screen.detail_width, 0, screen.detail_width, content_height),
+            manager=screen.ui_manager,
+            container=screen,
+            anchors={'left': 'right', 'right': 'right',
+                     'top': 'top', 'bottom': 'bottom'},
+        )
+
+        panel_rect = screen.detail_panel.get_relative_rect()
+        detail_rect = pygame.Rect(0, 0, panel_rect.width, panel_rect.height)
+        screen.ship_detail_panel = ShipDetailPanel(
+            manager=screen.ui_manager,
+            rect=detail_rect,
+            container=screen.detail_panel,
+            on_remove_ship=screen._on_remove_ship,
+        )
+
+        # Initial data load.
+        screen.refresh_list()
+
+
 class FleetReportWindow(StrategyModalWindow):
     """
     Window to view detailed fleet information including:
@@ -36,7 +121,12 @@ class FleetReportWindow(StrategyModalWindow):
     - Ship list with filtering/sorting (center)
     - Individual ship details with damage (right panel)
 
-    PROJ-313: Migrated to StrategyModalWindow base class.
+    PROJ-313: Migrated to ``StrategyModalWindow`` base class.
+    PROJ-328 Phase A Task A.4: Two-stage construction. Cheap state
+    (view_model, column_manager, selection) constructed before the
+    bypass point so test fixtures see the real delegate graph.
+    Layout/widget construction lives behind
+    ``FleetReportLayoutBuilder``.
     """
 
     def __init__(
@@ -46,9 +136,10 @@ class FleetReportWindow(StrategyModalWindow):
         fleet,
         empire=None,
         *,
-        window_manager: "StrategyWindowManager",
+        window_manager: "StrategyWindowManager | None",
         on_close_callback=None,
-        split_fleet_callback: Optional[Callable[[int, list], None]] = None
+        split_fleet_callback: Optional[Callable[[int, list], None]] = None,
+        ui_builder: Optional[FleetReportLayoutBuilder] = None,
     ):
         """
         Initialize the Fleet Report Window.
@@ -62,7 +153,42 @@ class FleetReportWindow(StrategyModalWindow):
             on_close_callback: Function to call when window is closed
             split_fleet_callback: Callback to dispatch SplitFleetCommand(fleet_id, ship_instance_ids).
                 When provided, ship removal goes through command pipeline.
+            ui_builder: PROJ-328 — UI builder seam. Defaults to
+                ``FleetReportLayoutBuilder``. Tests pass
+                ``NullFleetReportUiBuilder`` /
+                ``MockFleetReportUiBuilder`` from
+                ``tests/fixtures/fleet_report_ui_builder.py``.
         """
+        # ---- Stage 1: cheap state + delegates ----
+        self.fleet = fleet
+        self.empire = empire
+        self.on_close_callback = on_close_callback
+        self._split_fleet_callback = split_fleet_callback
+
+        # Layout constants — pure ints, safe to set before super().__init__.
+        self.sidebar_width = 300
+        self.detail_width = 750
+        self.header_height = UIConfig.HEADER_HEIGHT
+        self.row_height = UIConfig.ROW_HEIGHT_LARGE
+
+        # State managers — cheap collaborators in the PROJ-325 sense:
+        # constructors are pure-Python, no pygame_gui widgets created.
+        self.view_model = FleetListViewModel(fleet.ships)
+        self.column_manager = TableColumnManager(DEFAULT_FLEET_COLUMNS)
+        self.selection = MultiSelect()
+        self.selected_ship = None  # for detail panel (single-ship mode)
+
+        # Widget refs filled in by the layout builder; placeholders so
+        # bypassed instances are honest.
+        self.sidebar_panel = None
+        self.sidebar = None
+        self.list_panel = None
+        self.data_source = None
+        self.virtual_table = None
+        self.detail_panel = None
+        self.ship_detail_panel = None
+
+        # ---- Stage 2: shell ----
         super().__init__(
             rect=rect,
             manager=manager,
@@ -71,91 +197,13 @@ class FleetReportWindow(StrategyModalWindow):
             window_manager=window_manager,
         )
 
-        self.fleet = fleet
-        self.empire = empire
-        self.on_close_callback = on_close_callback
-        self._split_fleet_callback = split_fleet_callback
+        # ---- Stage 3: widgets ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
 
-        # --- Layout Constants ---
-        self.sidebar_width = 300  # Left panel for summary + filters
-        self.detail_width = 750   # Right panel for ship details (ShipDetailPanel)
-        self.header_height = UIConfig.HEADER_HEIGHT
-        self.row_height = UIConfig.ROW_HEIGHT_LARGE
-
-        # --- State Managers ---
-        self.view_model = FleetListViewModel(fleet.ships)
-        self.column_manager = TableColumnManager(DEFAULT_FLEET_COLUMNS)
-        self.selection = MultiSelect()
-        self.selected_ship = None  # For detail panel (single ship when 1 selected)
-
-        # --- Build UI ---
-        self._init_layout()
-
-        # Initial data load
-        self.refresh_list()
-
-    def _init_layout(self) -> None:
-        """Initialize the three-panel layout."""
-        window_rect = self.get_container().get_rect()
-        content_height = window_rect.height - 50  # Account for title bar
-
-        # 1. Left Sidebar (Summary + Filters)
-        self.sidebar_panel = UIPanel(
-            relative_rect=pygame.Rect(0, 0, self.sidebar_width, content_height),
-            manager=self.ui_manager,
-            container=self,
-            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'}
-        )
-        self.sidebar = FleetReportSidebar(
-            panel=self.sidebar_panel,
-            manager=self.ui_manager,
-            view_model=self.view_model,
-            column_manager=self.column_manager,
-            empire=self.empire,
-            on_remove_selected=self._on_remove_selected_ships
-        )
-
-        # 2. Center Ship List
-        list_width = window_rect.width - self.sidebar_width - self.detail_width - 10
-        self.list_panel = UIPanel(
-            relative_rect=pygame.Rect(self.sidebar_width, 0, list_width, content_height),
-            manager=self.ui_manager,
-            container=self,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
-        )
-
-        # Create data source and VirtualTable
-        self.data_source = FleetDataSource(self.view_model)
-        self.virtual_table = VirtualTable(
-            panel=self.list_panel,
-            manager=self.ui_manager,
-            data_source=self.data_source,
-            column_manager=self.column_manager,
-            selection_strategy=self.selection,
-            row_height=self.row_height,
-            header_height=self.header_height
-        )
-
-        # 3. Right Detail Panel
-        self.detail_panel = UIPanel(
-            relative_rect=pygame.Rect(-self.detail_width, 0, self.detail_width, content_height),
-            manager=self.ui_manager,
-            container=self,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
-        )
-        self._init_detail_panel()
-
-    def _init_detail_panel(self) -> None:
-        """Initialize the right detail panel with ShipDetailPanel."""
-        panel_rect = self.detail_panel.get_relative_rect()
-        detail_rect = pygame.Rect(0, 0, panel_rect.width, panel_rect.height)
-
-        self.ship_detail_panel = ShipDetailPanel(
-            manager=self.ui_manager,
-            rect=detail_rect,
-            container=self.detail_panel,
-            on_remove_ship=self._on_remove_ship
-        )
+        (ui_builder or FleetReportLayoutBuilder()).build(self)
 
     def _swap_columns(self, col, direction) -> None:
         """Swap a column with its neighbor in the given direction."""

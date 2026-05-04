@@ -1,31 +1,54 @@
-"""
-New Game Setup Screen - UI for configuring a new game.
+"""New Game Setup Screen - UI for configuring a new game.
 
 Allows users to:
-- Enter a save name
-- Select number of players (1-4)
-- Select or create races for each player
-- Start the game with race-based themes and visuals
+
+* Enter a save name.
+* Select number of players (1-4).
+* Select or create races for each player.
+* Start the game with race-based themes and visuals.
 
 PROJ-40: Moved RaceConfig to TYPE_CHECKING (type-hints only).
+PROJ-328 Phase B: Real MVVM split.
+
+* ``NewGameSetupViewModel`` (``new_game_setup_view_model.py``) owns
+  the user-input state — player count, galaxy type, system count,
+  per-player race selections, modal state. Pure Python; no
+  ``pygame_gui`` imports.
+* ``NewGameSetupController`` (``new_game_setup_controller.py``) owns
+  the mutations + lifecycle — save-name validation, ``GameConfig``
+  building, race-modal callbacks, start/cancel.
+* ``NewGameSetupUiBuilder`` (``new_game_setup_ui_builder.py``) owns
+  the widget tree. Tests can swap in
+  ``MockNewGameSetupUiBuilder`` /
+  ``NullNewGameSetupUiBuilder`` from
+  ``tests/fixtures/new_game_setup_ui_builder.py``.
+
+The screen itself is a thin shell — it composes the three delegates,
+forwards events to the controller, owns the widget refs (because the
+production builder writes them via ``self.get_container()``), and
+keeps property shims so existing tests / callers that read
+``screen.player_count``, ``screen.player_races``, etc. keep working.
+
+Two-stage ``__init__`` per PROJ-325 PoC + PROJ-328 Phase A:
+
+1. Cheap state + delegate construction runs *before* the
+   ``bypass_init`` guard, so test instances built under
+   ``with bypass_init(NewGameSetupScreen):`` still have real
+   delegates (``_view_model``, ``_controller``) populated.
+2. The ``UIWindow`` shell + widget tree run *after* the guard.
+   Bypassed instances skip the heavy ``pygame_gui`` calls.
 """
 from __future__ import annotations
 
-import os
-import re
-from datetime import datetime
+import logging
+from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
+
 import pygame
 import pygame_gui
-from typing import Callable, Optional, Tuple, List, TYPE_CHECKING
 
-import logging
-
-logger = logging.getLogger(__name__)
-from game.core.paths import Paths
 from game.ui.colors import TEXT_ERROR
 from game.strategy.engine.game_config import (
     GameConfig,
-    PlayerConfig,
     THEME_DEFAULTS,
     VALID_GALAXY_TYPES,
     DEFAULT_SYSTEM_COUNT,
@@ -33,17 +56,26 @@ from game.strategy.engine.game_config import (
     MAX_SYSTEM_COUNT,
 )
 from game.strategy.systems.race_library import RaceLibrary
-from game.core.exceptions import ValidationException
-from game.core.error_codes import ErrorCode
+from game.ui.screens.new_game_setup_controller import NewGameSetupController
+from game.ui.screens.new_game_setup_ui_builder import NewGameSetupUiBuilder
+from game.ui.screens.new_game_setup_view_model import (
+    DEFAULT_GALAXY_TYPE,
+    DEFAULT_PLAYER_COUNT,
+    MAX_PLAYER_SLOTS,
+    NewGameSetupViewModel,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
 
 
+logger = logging.getLogger(__name__)
+
+
 # FEAT-27: the underlying pygame_gui slider runs over an integer
 # 0..SLIDER_T_MAX range. The visible system_count is derived from the
 # slider position via a quadratic curve so dragging is fine-grained at
-# the low end (1→2→3 selectable) and coarser at the high end.
+# the low end (1->2->3 selectable) and coarser at the high end.
 SLIDER_T_MAX: int = 1000
 
 
@@ -82,52 +114,203 @@ def system_count_slider_inverse(value: int) -> int:
 
 
 class NewGameSetupScreen(pygame_gui.elements.UIWindow):
-    """Window for configuring a new game."""
+    """Window for configuring a new game.
 
-    def __init__(self, rect, manager, on_start_callback: Callable[[GameConfig], None],
-                 on_cancel_callback: Callable[[], None]):
-        """
-        Create new game setup window.
+    Thin shell over a view model + controller + UI builder; see module
+    docstring for the MVVM split rationale.
+    """
+
+    def __init__(
+        self,
+        rect,
+        manager,
+        on_start_callback: Callable[[GameConfig], None],
+        on_cancel_callback: Callable[[], None],
+        *,
+        ui_builder: Optional[NewGameSetupUiBuilder] = None,
+        view_model: Optional[NewGameSetupViewModel] = None,
+        controller: Optional[NewGameSetupController] = None,
+    ):
+        """Create new game setup window.
 
         Args:
-            rect: Window rectangle
-            manager: pygame_gui UIManager
-            on_start_callback: Callback(GameConfig) when user starts game
-            on_cancel_callback: Callback() when user cancels
+            rect: Window rectangle.
+            manager: ``pygame_gui`` UIManager.
+            on_start_callback: Callback(``GameConfig``) when user
+                starts game.
+            on_cancel_callback: Callback() when user cancels.
+            ui_builder: PROJ-328 Phase B — UI builder seam. Defaults to
+                ``NewGameSetupUiBuilder`` (production widget
+                construction). Tests can pass
+                ``NullNewGameSetupUiBuilder`` /
+                ``MockNewGameSetupUiBuilder`` from
+                ``tests/fixtures/new_game_setup_ui_builder.py``.
+            view_model: PROJ-328 Phase B — view-model seam. Defaults to
+                ``NewGameSetupViewModel(...)`` with the current
+                defaults. Tests typically let the screen build its own
+                and then mutate it.
+            controller: PROJ-328 Phase B — controller seam. Defaults to
+                ``NewGameSetupController(...)`` wired against the
+                view model + race library + the supplied callbacks.
         """
-        # PROJ-324 Phase 1: opt-in test escape hatch — see
-        # StrategyModalWindow.__init__ for full rationale.
+        # ---- Stage 1: cheap state + widget-ref placeholders + delegates ----
+        self._init_state(
+            on_start_callback=on_start_callback,
+            on_cancel_callback=on_cancel_callback,
+        )
+        self._init_widget_refs()
+
+        self._view_model = view_model or NewGameSetupViewModel()
+        self._controller = controller or NewGameSetupController(
+            screen=self,
+            view_model=self._view_model,
+            race_library=self.race_library,
+            on_start_callback=on_start_callback,
+            on_cancel_callback=on_cancel_callback,
+        )
+
+        # ---- Stage 2: UIWindow shell (skipped under bypass_init) ----
+        # PROJ-324 Phase 1 / PROJ-328 Phase B: opt-in test escape
+        # hatch. When a test sets ``Cls.bypass_init = True`` (preferably
+        # via ``tests.fixtures.ui_widget_factory.bypass_init``), skip
+        # the heavy ``UIWindow.__init__`` chain.
         if getattr(type(self), 'bypass_init', False):
+            self.ui_manager = manager
+            self._window_init_bypassed = True
+            # Stage 3 (test branch): give the (test-supplied) builder a
+            # chance to populate widget slots without a real UIWindow
+            # shell. PROJ-325 PoC finding 2 — Mock builders are useless
+            # without this hook.
+            # NOTE: do not assign ``self.rect``. ``pygame_gui``'s
+            # ``GUISprite`` base class makes ``rect`` a descriptor that
+            # mutates ``self.blit_data`` on write, and ``blit_data``
+            # is initialized only by the ``pygame.sprite.Sprite.__init__``
+            # chain that ``bypass_init`` skips. (PROJ-325 PoC finding 1.)
+            if ui_builder is not None:
+                ui_builder.build(self)
             return
+
         super().__init__(
             rect,
             manager,
             window_display_title="New Game Setup",
             object_id="#new_game_setup_window",
-            resizable=False
+            resizable=False,
         )
 
+        # ---- Stage 3 (production): widget tree ----
+        (ui_builder or NewGameSetupUiBuilder()).build(self)
+
+    # ------------------------------------------------------------------
+    # Stage 1 helpers — cheap state
+    # ------------------------------------------------------------------
+
+    def _init_state(
+        self,
+        *,
+        on_start_callback: Callable[[GameConfig], None],
+        on_cancel_callback: Callable[[], None],
+    ) -> None:
+        """Assign cheap state — no ``pygame_gui`` widget construction.
+
+        Called from ``__init__`` *before* the ``bypass_init`` guard so
+        test-mode instances see the same race_library / callback wiring
+        as production.
+        """
+        # Race library is cheap (no pygame imports / file IO at
+        # construction time per PROJ-287; loads lazily on first read).
+        self.race_library = RaceLibrary()
+
+        # Backwards-compat: existing tests / code read these directly.
         self.on_start_callback = on_start_callback
         self.on_cancel_callback = on_cancel_callback
 
-        self.player_count = 2  # Default
-        self.galaxy_type = "spiral"  # Default galaxy type
-        self.empire_name_inputs = []  # List of UITextEntryLine
-        self.theme_labels = []  # List of UILabel showing assigned theme
-        self.num_labels = []  # List of UILabel for player numbers
+    def _init_widget_refs(self) -> None:
+        """Assign every widget slot to ``None`` / empty container.
 
-        # Race selection state
-        self.race_library = RaceLibrary()
-        self.player_races: List[Optional[RaceConfig]] = [None, None, None, None]
-        self.race_preview_labels: List[pygame_gui.elements.UILabel] = []
-        self.load_race_buttons: List[pygame_gui.elements.UIButton] = []
-        self.setup_race_buttons: List[pygame_gui.elements.UIButton] = []
+        Per the consensus refactor plan: prefer explicit placeholder
+        initialization over lazy properties. Bypassed instances are
+        then honest — widget tree absent, cheap delegates present.
+        """
+        # Top-level widgets — populated by the production UI builder.
+        self.save_name_input: Optional[pygame_gui.elements.UITextEntryLine] = None
+        self.player_count_dropdown: Optional[pygame_gui.elements.UIDropDownMenu] = None
+        self.galaxy_type_dropdown: Optional[pygame_gui.elements.UIDropDownMenu] = None
+        self.system_count_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
+        self.system_count_label: Optional[pygame_gui.elements.UILabel] = None
+        self.btn_start: Optional[pygame_gui.elements.UIButton] = None
+        self.btn_cancel: Optional[pygame_gui.elements.UIButton] = None
+        self.error_label: Optional[pygame_gui.elements.UILabel] = None
 
-        # Modal state tracking
-        self.active_race_modal = None
-        self.race_modal_player_index = -1
+        # Per-player row widgets — always allocate ``MAX_PLAYER_SLOTS``,
+        # toggle visibility via ``_update_empire_visibility``.
+        self.empire_name_inputs: List = []
+        self.theme_labels: List = []
+        self.num_labels: List = []
+        self.race_preview_labels: List = []
+        self.load_race_buttons: List = []
+        self.setup_race_buttons: List = []
 
-        self._create_ui()
+        # ``empire_inputs_start_y`` is a layout-state int set by the
+        # production ``_create_ui`` and read by ``_create_empire_inputs``.
+        # Keep a placeholder here for parity with the bypass branch.
+        self.empire_inputs_start_y: int = 0
+
+    # ------------------------------------------------------------------
+    # Backwards-compat property shims — view-model state
+    # ------------------------------------------------------------------
+
+    @property
+    def player_count(self) -> int:
+        return self._view_model.player_count
+
+    @player_count.setter
+    def player_count(self, value: int) -> None:
+        self._view_model.player_count = value
+
+    @property
+    def galaxy_type(self) -> str:
+        return self._view_model.galaxy_type
+
+    @galaxy_type.setter
+    def galaxy_type(self, value: str) -> None:
+        self._view_model.galaxy_type = value
+
+    @property
+    def system_count(self) -> int:
+        return self._view_model.system_count
+
+    @system_count.setter
+    def system_count(self, value: int) -> None:
+        self._view_model.system_count = value
+
+    @property
+    def player_races(self) -> List[Optional["RaceConfig"]]:
+        return self._view_model.player_races
+
+    @player_races.setter
+    def player_races(self, value: List[Optional["RaceConfig"]]) -> None:
+        self._view_model.player_races = value
+
+    @property
+    def active_race_modal(self) -> object | None:
+        return self._view_model.active_race_modal
+
+    @active_race_modal.setter
+    def active_race_modal(self, value: object | None) -> None:
+        self._view_model.active_race_modal = value
+
+    @property
+    def race_modal_player_index(self) -> int:
+        return self._view_model.race_modal_player_index
+
+    @race_modal_player_index.setter
+    def race_modal_player_index(self, value: int) -> None:
+        self._view_model.race_modal_player_index = value
+
+    # ------------------------------------------------------------------
+    # UI construction — invoked by ``NewGameSetupUiBuilder.build``.
+    # ------------------------------------------------------------------
 
     def _create_ui(self) -> None:
         """Create UI elements."""
@@ -135,12 +318,12 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         content_width = container.get_size()[0] - 20
         y_offset = 10
 
-        # Save name label and input
+        # Save name label and input.
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y_offset, 150, 25),
             text="Save Name:",
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         y_offset += 25
 
@@ -148,67 +331,66 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             relative_rect=pygame.Rect(10, y_offset, content_width, 35),
             manager=self.ui_manager,
             container=container,
-            placeholder_text="Enter save name..."
+            placeholder_text="Enter save name...",
         )
         self.save_name_input.set_text(self.generate_default_save_name())
         y_offset += 45
 
-        # Player count label and dropdown
+        # Player count label and dropdown.
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y_offset, 150, 25),
             text="Number of Players:",
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         y_offset += 25
 
         self.player_count_dropdown = pygame_gui.elements.UIDropDownMenu(
-            options_list=["1", "2", "3", "4"],
-            starting_option="2",
+            options_list=[str(n) for n in self.get_player_count_options()],
+            starting_option=str(DEFAULT_PLAYER_COUNT),
             relative_rect=pygame.Rect(10, y_offset, 100, 35),
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         y_offset += 50
 
-        # Galaxy type label and dropdown
+        # Galaxy type label and dropdown.
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y_offset, 150, 25),
             text="Galaxy Type:",
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         y_offset += 25
 
-        # Sort galaxy types for consistent display, with spiral first
+        # Sort galaxy types for consistent display.
         galaxy_types = sorted(list(VALID_GALAXY_TYPES))
         self.galaxy_type_dropdown = pygame_gui.elements.UIDropDownMenu(
             options_list=galaxy_types,
-            starting_option=self.galaxy_type,
+            starting_option=self._view_model.galaxy_type,
             relative_rect=pygame.Rect(10, y_offset, 150, 35),
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         y_offset += 50
 
-        # Star system count label, slider, and value display
+        # Star system count label, slider, and value display.
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y_offset, 150, 25),
             text="Star Systems:",
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         y_offset += 25
 
         # FEAT-27: source the default from GameConfig (single source of
         # truth) and drive the slider over an internal 0..SLIDER_T_MAX
         # range. The visible system_count is derived via the quadratic
-        # `system_count_slider_curve` so dragging is fine-grained at the
-        # low end and coarser at the high end.
-        self.system_count = DEFAULT_SYSTEM_COUNT
+        # ``system_count_slider_curve``.
+        self._view_model.system_count = DEFAULT_SYSTEM_COUNT
         self.system_count_slider = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect(10, y_offset, content_width - 60, 30),
-            start_value=system_count_slider_inverse(self.system_count),
+            start_value=system_count_slider_inverse(self._view_model.system_count),
             value_range=(0, SLIDER_T_MAX),
             manager=self.ui_manager,
             container=container,
@@ -216,26 +398,26 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         )
         self.system_count_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(content_width - 40, y_offset, 50, 30),
-            text=str(self.system_count),
+            text=str(self._view_model.system_count),
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         y_offset += 45
 
-        # Empire/Race section header
+        # Empire/Race section header.
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y_offset, content_width, 25),
             text="Player Species:",
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         y_offset += 30
 
-        # Create empire name inputs with race selection (4 max, hide unused)
+        # Create empire name inputs with race selection.
         self.empire_inputs_start_y = y_offset
         self._create_empire_inputs()
 
-        # Calculate button position at bottom
+        # Calculate button position at bottom.
         button_y = container.get_size()[1] - 60
         button_width = 120
 
@@ -243,32 +425,34 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             relative_rect=pygame.Rect(10, button_y, button_width, 40),
             text="Start Game",
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
 
         self.btn_cancel = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(content_width - button_width + 10, button_y, button_width, 40),
+            relative_rect=pygame.Rect(
+                content_width - button_width + 10, button_y, button_width, 40
+            ),
             text="Cancel",
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
 
-        # Error label (hidden by default)
+        # Error label (hidden by default).
         self.error_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, button_y - 30, content_width, 25),
             text="",
             manager=self.ui_manager,
-            container=container
+            container=container,
         )
         self.error_label.text_colour = pygame.Color(*TEXT_ERROR)
 
     def _create_empire_inputs(self) -> None:
-        """Create empire name input fields with race selection for each player slot."""
+        """Create empire name input fields with race selection for each
+        player slot."""
         container = self.get_container()
-        content_width = container.get_size()[0] - 20
         y_offset = self.empire_inputs_start_y
 
-        # Clear existing elements
+        # Clear existing elements.
         for inp in self.empire_name_inputs:
             inp.kill()
         for lbl in self.theme_labels:
@@ -289,85 +473,84 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self.load_race_buttons = []
         self.setup_race_buttons = []
 
-        # Row height for each player (name row + race row + spacing)
+        # Row height for each player (name row + race row + spacing).
         row_height = 95
 
-        # Create inputs for each potential player
-        for i in range(4):
+        for i in range(MAX_PLAYER_SLOTS):
             row_y = y_offset + (i * row_height)
 
-            # Player number label
             num_label = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect(10, row_y, 80, 30),
                 text=f"Player {i + 1}:",
                 manager=self.ui_manager,
-                container=container
+                container=container,
             )
             self.num_labels.append(num_label)
 
-            # Name input (hidden when race selected - race name becomes empire name)
+            # Name input (hidden when race selected — race name becomes
+            # empire name).
             name_input = pygame_gui.elements.UITextEntryLine(
                 relative_rect=pygame.Rect(90, row_y, 200, 30),
                 manager=self.ui_manager,
                 container=container,
-                placeholder_text=f"Empire {i + 1}"
+                placeholder_text=f"Empire {i + 1}",
             )
             self.empire_name_inputs.append(name_input)
 
-            # Theme label (auto-assigned, shows race theme when selected)
+            # Theme label (auto-assigned, shows race theme when selected).
             theme_name = THEME_DEFAULTS[i][0]
             theme_label = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect(300, row_y, 200, 30),
                 text=f"Theme: {theme_name}",
                 manager=self.ui_manager,
-                container=container
+                container=container,
             )
             self.theme_labels.append(theme_label)
 
-            # Race selection row (below name row)
+            # Race selection row (below name row).
             race_row_y = row_y + 35
 
-            # Race preview label (shows selected race name or instruction)
+            # Race preview label.
             race_preview = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect(90, race_row_y, 280, 30),
                 text="No species selected (using defaults)",
                 manager=self.ui_manager,
-                container=container
+                container=container,
             )
             self.race_preview_labels.append(race_preview)
 
-            # Load Race button
+            # Load Race button.
             load_btn = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(380, race_row_y, 100, 30),
                 text="Load Species",
                 manager=self.ui_manager,
-                container=container
+                container=container,
             )
             self.load_race_buttons.append(load_btn)
 
-            # Setup Race button
+            # Setup Race button.
             setup_btn = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(490, race_row_y, 110, 30),
                 text="Setup Species",
                 manager=self.ui_manager,
-                container=container
+                container=container,
             )
             self.setup_race_buttons.append(setup_btn)
 
-        # Update visibility based on current player count
+        # Update visibility based on current player count.
         self._update_empire_visibility()
 
     def _update_empire_visibility(self) -> None:
         """Show/hide empire inputs based on player count."""
-        for i in range(4):
-            visible = i < self.player_count
+        for i in range(MAX_PLAYER_SLOTS):
+            visible = i < self._view_model.player_count
             elements = [
                 self.empire_name_inputs[i],
                 self.theme_labels[i],
                 self.num_labels[i],
                 self.race_preview_labels[i],
                 self.load_race_buttons[i],
-                self.setup_race_buttons[i]
+                self.setup_race_buttons[i],
             ]
             for elem in elements:
                 if visible:
@@ -375,20 +558,21 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 else:
                     elem.hide()
 
-            # Clear race selection for hidden players
-            if not visible and self.player_races[i] is not None:
-                self.player_races[i] = None
+            # Clear race selection for hidden players.
+            if not visible and self._view_model.get_race(i) is not None:
+                self._view_model.clear_race(i)
                 self._update_race_display(i)
 
     def _update_race_display(self, player_index: int) -> None:
         """Update the race preview display for a player."""
-        race = self.player_races[player_index]
+        race = self._view_model.get_race(player_index)
 
         if race:
-            # Race selected - show faction name (or race name fallback)
+            # Race selected — show faction name (or race name fallback).
             display_name = race.faction_name if race.faction_name else race.name
-            self.race_preview_labels[player_index].set_text(f"Species: {display_name}")
-            # Show government and society type if available
+            self.race_preview_labels[player_index].set_text(
+                f"Species: {display_name}"
+            )
             details = []
             if race.government_type:
                 details.append(race.government_type)
@@ -398,43 +582,55 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 self.theme_labels[player_index].set_text(" • ".join(details))
             else:
                 self.theme_labels[player_index].set_text(f"Theme: {race.theme_id}")
-            # Hide name input - race name will be used
+            # Hide name input — race name will be used.
             self.empire_name_inputs[player_index].hide()
         else:
-            # No race - show default state
-            self.race_preview_labels[player_index].set_text("No species selected (using defaults)")
+            # No race — show default state.
+            self.race_preview_labels[player_index].set_text(
+                "No species selected (using defaults)"
+            )
             default_theme = THEME_DEFAULTS[player_index][0]
             self.theme_labels[player_index].set_text(f"Theme: {default_theme}")
-            # Show name input for manual entry
-            if player_index < self.player_count:
+            # Show name input for manual entry.
+            if player_index < self._view_model.player_count:
                 self.empire_name_inputs[player_index].show()
 
+    # ------------------------------------------------------------------
+    # Event dispatch
+    # ------------------------------------------------------------------
+
     def process_event(self, event: pygame.event.Event) -> bool:
-        """Process pygame events."""
-        # BUG-115: No modal-active early-return guard. pygame_gui z-orders
-        # child windows above the parent and dispatches to them first, so
-        # the modal already gets first crack at events. The previous guard
-        # silently swallowed all parent button events whenever
-        # `active_race_modal` was stale (e.g., the modal was killed via
-        # title-bar [X] without invoking its cancel callback), making
-        # Cancel / Start permanently dead.
+        """Process pygame events.
+
+        BUG-115: No modal-active early-return guard. ``pygame_gui``
+        z-orders child windows above the parent and dispatches to them
+        first, so the modal already gets first crack at events. The
+        previous guard silently swallowed all parent button events
+        whenever ``active_race_modal`` was stale (e.g., the modal was
+        killed via title-bar [X] without invoking its cancel callback),
+        making Cancel / Start permanently dead.
+        """
         handled = super().process_event(event)
 
         if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
             if event.ui_element == self.player_count_dropdown:
-                self.player_count = int(event.text)
+                self._view_model.set_player_count(int(event.text))
                 self._update_empire_visibility()
                 handled = True
             elif event.ui_element == self.galaxy_type_dropdown:
-                self.galaxy_type = event.text
+                self._view_model.galaxy_type = event.text
                 handled = True
 
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
             if event.ui_element == self.system_count_slider:
                 # FEAT-27: slider runs over 0..SLIDER_T_MAX; convert to
                 # a real galaxy size via the quadratic curve.
-                self.system_count = system_count_slider_curve(int(event.value))
-                self.system_count_label.set_text(str(self.system_count))
+                self._view_model.system_count = system_count_slider_curve(
+                    int(event.value)
+                )
+                self.system_count_label.set_text(
+                    str(self._view_model.system_count)
+                )
                 handled = True
 
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -445,7 +641,6 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 self._on_cancel_clicked()
                 handled = True
             else:
-                # Check race buttons
                 for i, btn in enumerate(self.load_race_buttons):
                     if event.ui_element == btn:
                         self._on_load_race_clicked(i)
@@ -460,174 +655,57 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
         return handled
 
+    # ------------------------------------------------------------------
+    # Backwards-compat thin wrappers — delegate to the controller.
+    # Existing tests reach into these private methods directly; keep
+    # them as one-liners on the screen so test reach-throughs survive.
+    # ------------------------------------------------------------------
+
     def _on_load_race_clicked(self, player_index: int) -> None:
-        """Handle Load Race button click - open race browser dialog."""
-        logger.debug(f"Opening race browser for player {player_index + 1}")
-
-        # PROJ-309 Sub-phase 3.1: import directly from the canonical
-        # location instead of through the legacy `race_setup_screen`
-        # leaked re-export.
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
-
-        # Get window position for dialog placement
-        window_rect = self.get_abs_rect()
-        dialog_width = 600
-        dialog_height = 500
-
-        # Center dialog over the main window
-        dialog_x = window_rect.centerx - dialog_width // 2
-        dialog_y = window_rect.centery - dialog_height // 2
-
-        dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width, dialog_height)
-
-        # Create and show the race browser dialog
-        self.active_race_modal = RaceBrowserDialog(
-            rect=dialog_rect,
-            manager=self.ui_manager,
-            race_library=self.race_library,
-            on_select_callback=lambda race: self._on_race_selected(player_index, race),
-            on_cancel_callback=self._on_race_dialog_cancelled
-        )
-        self.race_modal_player_index = player_index
+        self._controller.on_load_race_clicked(player_index)
 
     def _on_setup_race_clicked(self, player_index: int) -> None:
-        """Handle Setup Race button click - open race setup screen."""
-        logger.debug(f"Opening race setup for player {player_index + 1}")
+        self._controller.on_setup_race_clicked(player_index)
 
-        # Import here to avoid circular imports
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
+    def _on_race_selected(
+        self, player_index: int, race_config: "RaceConfig"
+    ) -> None:
+        self._controller.on_race_selected(player_index, race_config)
 
-        # Race setup is larger - center it on screen
-        setup_width = 1800
-        setup_height = 1200
-
-        # Center on screen (use reasonable defaults)
-        screen_width = 1920  # Fallback
-        screen_height = 1080
-        if self.ui_manager:
-            screen_width = self.ui_manager.window_resolution[0]
-            screen_height = self.ui_manager.window_resolution[1]
-
-        setup_x = (screen_width - setup_width) // 2
-        setup_y = (screen_height - setup_height) // 2
-
-        setup_rect = pygame.Rect(setup_x, setup_y, setup_width, setup_height)
-
-        # Create and show the race setup screen
-        # BUG-92: Pass loaded race data so Setup Species edits existing selection
-        self.active_race_modal = RaceSetupScreen(
-            rect=setup_rect,
-            manager=self.ui_manager,
-            on_complete_callback=lambda race: self._on_race_created(player_index, race),
-            on_cancel_callback=self._on_race_dialog_cancelled,
-            race_to_edit=self.player_races[player_index]
-        )
-        self.race_modal_player_index = player_index
-
-    def _on_race_selected(self, player_index: int, race_config: RaceConfig) -> None:
-        """Handle race selection from browser dialog."""
-        logger.info(f"Player {player_index + 1} selected race: {race_config.name}")
-        self.player_races[player_index] = race_config
-        self._update_race_display(player_index)
-        self.active_race_modal = None
-        self.race_modal_player_index = -1
-
-    def _on_race_created(self, player_index: int, race_config: RaceConfig) -> None:
-        """Handle race creation from setup screen."""
-        logger.info(f"Player {player_index + 1} created race: {race_config.name}")
-        self.player_races[player_index] = race_config
-        self._update_race_display(player_index)
-        self.active_race_modal = None
-        self.race_modal_player_index = -1
+    def _on_race_created(
+        self, player_index: int, race_config: "RaceConfig"
+    ) -> None:
+        self._controller.on_race_created(player_index, race_config)
 
     def _on_race_dialog_cancelled(self) -> None:
-        """Handle race dialog cancellation."""
-        logger.debug("Race dialog cancelled")
-        self.active_race_modal = None
-        self.race_modal_player_index = -1
+        self._controller.on_race_dialog_cancelled()
 
     def _on_start_clicked(self) -> None:
-        """Handle Start Game button click."""
-        save_name = self.save_name_input.get_text().strip()
-
-        # Validate save name
-        saves_folder = Paths.SAVES_DIR
-        is_valid, error = self.validate_save_name(save_name, saves_folder)
-
-        if not is_valid:
-            self.error_label.set_text(error)
-            return
-
-        # Collect empire names (from race or manual input)
-        empire_names = []
-        for i in range(self.player_count):
-            if self.player_races[i]:
-                # Use race name as empire name
-                name = self.player_races[i].name
-            else:
-                # Use manual input or default
-                name = self.empire_name_inputs[i].get_text().strip()
-            empire_names.append(name)
-
-        # Build config with race data
-        try:
-            config = self.build_game_config(
-                save_name,
-                self.player_count,
-                empire_names,
-                self.player_races[:self.player_count],
-                self.galaxy_type,
-                self.system_count
-            )
-        except ValueError as e:
-            self.error_label.set_text(str(e))
-            return
-
-        logger.info(f"Starting new game: {save_name} with {self.player_count} players")
-        self.on_start_callback(config)
-        self.kill()
+        self._controller.on_start_clicked()
 
     def _on_cancel_clicked(self) -> None:
-        """Handle Cancel button click."""
-        logger.debug("New game setup cancelled")
-        self.on_cancel_callback()
-        self.kill()
+        self._controller.on_cancel_clicked()
+
+    # ------------------------------------------------------------------
+    # Static methods — kept on the class for back-compat with existing
+    # callers / tests (``NewGameSetupScreen.validate_save_name(...)`` /
+    # ``NewGameSetupScreen.build_game_config(...)``). Delegate to the
+    # controller, where the canonical implementation now lives.
+    # ------------------------------------------------------------------
 
     @staticmethod
-    def validate_save_name(name: str, saves_folder: Optional[str] = None) -> Tuple[bool, str]:
-        """
-        Validate a save name.
-
-        Args:
-            name: Save name to validate
-            saves_folder: Optional path to saves folder for uniqueness check
-
-        Returns:
-            Tuple of (is_valid: bool, error_message: str)
-        """
-        # Check for empty
-        if not name or not name.strip():
-            return False, "Save name cannot be empty"
-
-        name = name.strip()
-
-        # Check for invalid filesystem characters
-        invalid_chars = r'[<>:"/\\|?*]'
-        if re.search(invalid_chars, name):
-            return False, "Save name contains invalid characters"
-
-        # Check for uniqueness if saves_folder provided
-        if saves_folder and os.path.exists(saves_folder):
-            save_path = os.path.join(saves_folder, name)
-            if os.path.exists(save_path):
-                return False, f"Save '{name}' already exists"
-
-        return True, ""
+    def validate_save_name(
+        name: str, saves_folder: Optional[str] = None
+    ) -> Tuple[bool, str]:
+        """Validate a save name. See
+        ``NewGameSetupController.validate_save_name``."""
+        return NewGameSetupController.validate_save_name(name, saves_folder)
 
     @staticmethod
     def generate_default_save_name() -> str:
-        """Generate a default save name with current timestamp."""
-        return f"save game {datetime.now().strftime('%Y-%m-%d %H%M')}"
+        """Generate a default save name with current timestamp. See
+        ``NewGameSetupController.generate_default_save_name``."""
+        return NewGameSetupController.generate_default_save_name()
 
     @staticmethod
     def get_player_count_options() -> List[int]:
@@ -635,80 +713,21 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         return [1, 2, 3, 4]
 
     @staticmethod
-    def build_game_config(save_name: str, player_count: int,
-                          empire_names: List[str],
-                          race_configs: Optional[List[Optional[RaceConfig]]] = None,
-                          galaxy_type: str = "spiral",
-                          system_count: int = DEFAULT_SYSTEM_COUNT) -> GameConfig:
-        """
-        Build a GameConfig from setup screen values.
-
-        Args:
-            save_name: Name for the save folder
-            player_count: Number of players (1-4)
-            empire_names: List of empire names (may include empty strings)
-            race_configs: Optional list of RaceConfig for each player (None = use defaults)
-            galaxy_type: Galaxy layout type (default: "spiral")
-            system_count: Number of star systems
-                (``MIN_SYSTEM_COUNT``-``MAX_SYSTEM_COUNT``, default
-                ``DEFAULT_SYSTEM_COUNT``). FEAT-27: at ``system_count=1``
-                all empires share the lone system on different planets.
-
-        Returns:
-            Configured GameConfig
-
-        Raises:
-            ValidationException: If player_count or system_count is
-                invalid (e.g. more empires than systems at N≥2).
-        """
-        if player_count < 1 or player_count > 4:
-            raise ValidationException(
-                f"Invalid player count: {player_count}",
-                code=ErrorCode.OUT_OF_RANGE.value,
-                context={"player_count": player_count, "valid_range": "1-4"}
-            )
-
-        players = []
-        for i in range(player_count):
-            race = race_configs[i] if race_configs and i < len(race_configs) else None
-
-            # Get name: race name > manual input > default
-            if race and race.name:
-                name = race.name
-            elif i < len(empire_names) and empire_names[i].strip():
-                name = empire_names[i].strip()
-            else:
-                name = f"Empire {i + 1}"
-
-            # Get theme and color: from race if available, otherwise defaults
-            if race and race.theme_id:
-                theme = race.theme_id
-                logger.debug(f"Player {i} using race theme: {theme}")
-            else:
-                theme = THEME_DEFAULTS[i][0]
-                logger.debug(f"Player {i} using default theme: {theme}")
-
-            color = THEME_DEFAULTS[i][1]  # Color still comes from defaults
-
-            # Get race visual identity
-            flag_id = race.flag_id if race else ""
-            portrait_id = race.portrait_id if race else ""
-            race_id = race.race_id if race else None
-
-            players.append(PlayerConfig(
-                name=name,
-                theme=theme,
-                color=color,
-                is_human=True,
-                race_id=race_id,
-                flag_id=flag_id,
-                portrait_id=portrait_id,
-                race_config=race
-            ))
-
-        return GameConfig(
+    def build_game_config(
+        save_name: str,
+        player_count: int,
+        empire_names: List[str],
+        race_configs: Optional[List[Optional["RaceConfig"]]] = None,
+        galaxy_type: str = DEFAULT_GALAXY_TYPE,
+        system_count: int = DEFAULT_SYSTEM_COUNT,
+    ) -> GameConfig:
+        """Build a ``GameConfig`` from setup-screen values. See
+        ``NewGameSetupController.build_game_config``."""
+        return NewGameSetupController.build_game_config(
             save_name=save_name,
-            players=players,
+            player_count=player_count,
+            empire_names=empire_names,
+            race_configs=race_configs,
             galaxy_type=galaxy_type,
-            system_count=system_count
+            system_count=system_count,
         )

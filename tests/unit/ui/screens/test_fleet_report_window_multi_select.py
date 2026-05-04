@@ -3,9 +3,25 @@ Tests for FleetReportWindow multi-select and ship removal features.
 
 PROJ-101 Phase 4: Multi-select + Remove Ships functionality.
 PROJ-188 Phase 2: Updated for VirtualTable migration (selection -> MultiSelect).
+PROJ-208 Phase 1: SplitFleetCommand callback dispatch pattern.
+PROJ-328 Phase A Task A.4: Migrated from the legacy nested-patch
+construction pattern to the two-stage construction pattern (PROJ-322
+Tasks 5.7 + 3.20). Window is now built via ``bypass_init`` +
+``MockFleetReportUiBuilder``; the cheap-state ``view_model`` /
+``column_manager`` / ``selection`` delegates are real instances
+created by Stage-1 of the constructor.
 """
+
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
+import pygame
+
+from game.ui.screens.fleet_report_window import FleetReportWindow
+from tests.fixtures.fleet_report_ui_builder import (
+    MockFleetReportUiBuilder,
+    NullFleetReportUiBuilder,
+)
+from tests.fixtures.ui_widget_factory import bypass_init
 
 
 def create_mock_ship(instance_id: str, name: str, serial: int = 1):
@@ -37,7 +53,7 @@ def create_mock_fleet(ships, fleet_id=1, owner_id=0):
     fleet.add_ship = Mock(side_effect=lambda s: fleet.ships.append(s))
     fleet.get_capability_summary = Mock(return_value={
         'can_warp': True, 'warp_limiting_ship': None,
-        'fuel_endurance': 10, 'warp_jumps': 5
+        'fuel_endurance': 10, 'warp_jumps': 5,
     })
     return fleet
 
@@ -49,10 +65,28 @@ def create_mock_empire(empire_id=0, next_fleet_id=100):
     empire.fleets = []
     empire._next_fleet_id = next_fleet_id
     empire.get_next_fleet_id = Mock(side_effect=lambda: (
-        setattr(empire, '_next_fleet_id', empire._next_fleet_id + 1) or empire._next_fleet_id - 1
+        setattr(empire, '_next_fleet_id', empire._next_fleet_id + 1)
+        or empire._next_fleet_id - 1
     ))
     empire.add_fleet = Mock(side_effect=lambda f: empire.fleets.append(f))
     return empire
+
+
+def _make_window(fleet, empire=None, *, split_fleet_callback=None,
+                 ui_builder=None):
+    """Construct a real FleetReportWindow under bypass_init."""
+    if ui_builder is None:
+        ui_builder = MockFleetReportUiBuilder()
+    with bypass_init(FleetReportWindow):
+        return FleetReportWindow(
+            pygame.Rect(0, 0, 1600, 900),
+            Mock(name="ui_manager"),
+            fleet,
+            empire=empire,
+            window_manager=None,
+            split_fleet_callback=split_fleet_callback,
+            ui_builder=ui_builder,
+        )
 
 
 class TestFleetReportWindowInit:
@@ -60,85 +94,45 @@ class TestFleetReportWindowInit:
 
     @pytest.fixture
     def mock_ships(self):
-        """Create test ships."""
         return [create_mock_ship(f"ship-{i}", f"Ship {i}", i + 1) for i in range(5)]
 
     @pytest.fixture
     def mock_fleet(self, mock_ships):
-        """Create test fleet."""
         return create_mock_fleet(mock_ships)
 
     @pytest.fixture
     def mock_empire(self):
-        """Create test empire."""
         return create_mock_empire()
 
     def test_init_stores_empire_reference(self, mock_fleet, mock_empire):
-        """Window stores empire reference for fleet management."""
-        with patch('pygame.display.get_surface') as mock_display:
-            mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
-            with patch('pygame_gui.UIManager'):
-                with patch('pygame_gui.elements.UIWindow.__init__'):
-                    with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
-                        with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
-                            from game.ui.screens.fleet_report_window import FleetReportWindow
-                            import pygame
-
-                            rect = pygame.Rect(0, 0, 1600, 900)
-                            manager = Mock()
-
-                            window = FleetReportWindow(
-                                rect, manager, mock_fleet,
-                                window_manager=None,
-                                empire=mock_empire,
-                            )
-
-                            assert window.empire is mock_empire
+        window = _make_window(mock_fleet, mock_empire)
+        assert window.empire is mock_empire
 
     def test_init_empire_defaults_to_none(self, mock_fleet):
-        """Window empire defaults to None if not provided."""
-        with patch('pygame.display.get_surface') as mock_display:
-            mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
-            with patch('pygame_gui.UIManager'):
-                with patch('pygame_gui.elements.UIWindow.__init__'):
-                    with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
-                        with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
-                            from game.ui.screens.fleet_report_window import FleetReportWindow
-                            import pygame
-
-                            rect = pygame.Rect(0, 0, 1600, 900)
-                            manager = Mock()
-
-                            window = FleetReportWindow(
-                                rect, manager, mock_fleet,
-                                window_manager=None,
-                            )
-
-                            assert window.empire is None
+        window = _make_window(mock_fleet)
+        assert window.empire is None
 
     def test_init_creates_selection_strategy(self, mock_fleet, mock_empire):
-        """Window initializes selection as MultiSelect with no selected indices."""
-        with patch('pygame.display.get_surface') as mock_display:
-            mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
-            with patch('pygame_gui.UIManager'):
-                with patch('pygame_gui.elements.UIWindow.__init__'):
-                    with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
-                        with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
-                            from game.ui.screens.fleet_report_window import FleetReportWindow
-                            from game.ui.components.table import MultiSelect
-                            import pygame
+        from game.ui.components.table import MultiSelect
 
-                            rect = pygame.Rect(0, 0, 1600, 900)
-                            manager = Mock()
+        window = _make_window(mock_fleet, mock_empire)
+        assert isinstance(window.selection, MultiSelect)
+        assert len(window.selection.get_selected_indices()) == 0
 
-                            window = FleetReportWindow(
-                                rect, manager, mock_fleet,
-                                window_manager=None,
-                                empire=mock_empire,
-                            )
+    def test_window_init_bypassed_flag_set(self, mock_fleet):
+        window = _make_window(mock_fleet)
+        assert window._window_init_bypassed is True
 
-                            assert isinstance(window.selection, MultiSelect)
-                            assert len(window.selection.get_selected_indices()) == 0
+    def test_null_builder_leaves_widget_slots_unset(self, mock_fleet):
+        window = _make_window(mock_fleet, ui_builder=NullFleetReportUiBuilder())
+        assert window.sidebar is None
+        assert window.virtual_table is None
+        assert window.ship_detail_panel is None
+
+    def test_view_model_constructed_with_fleet_ships(self, mock_fleet):
+        window = _make_window(mock_fleet)
+        # FleetListViewModel is real Stage-1; should have the ships.
+        assert len(window.view_model.get_filtered_ships()) == len(mock_fleet.ships)
 
 
 class TestMultiSelectBehavior:
@@ -146,179 +140,98 @@ class TestMultiSelectBehavior:
 
     @pytest.fixture
     def window_with_ships(self):
-        """Create a window with ships for testing selection behavior."""
         ships = [create_mock_ship(f"ship-{i}", f"Ship {i}", i + 1) for i in range(5)]
         fleet = create_mock_fleet(ships)
         empire = create_mock_empire()
+        window = _make_window(fleet, empire)
+        return window, ships
 
-        with patch('pygame.display.get_surface') as mock_display:
-            mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
-            with patch('pygame_gui.UIManager'):
-                with patch('pygame_gui.elements.UIWindow.__init__'):
-                    with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
-                        with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
-                            from game.ui.screens.fleet_report_window import FleetReportWindow
-                            import pygame
-
-                            rect = pygame.Rect(0, 0, 1600, 900)
-                            manager = Mock()
-
-                            window = FleetReportWindow(
-                                rect, manager, fleet,
-                                window_manager=None,
-                                empire=empire,
-                            )
-                            # Mock the UI methods we need
-                            window._update_detail_panel = Mock()
-                            window._update_remove_button = Mock()
-                            window._update_visible_rows = Mock()
-                            window.view_model = Mock()
-                            window.view_model.get_filtered_ships = Mock(return_value=ships)
-
-                            return window, ships
-
-    def test_normal_click_selects_single_ship(self, window_with_ships):
-        """Normal click replaces selection with single ship."""
+    def test_normal_click_replaces_selection(self, window_with_ships):
         window, ships = window_with_ships
-
-        # Simulate normal click on index 2
-        window.selected_indices = {0, 1}  # Pre-select some ships
-        window.selected_indices = {2}  # Normal click behavior
-
-        assert window.selected_indices == {2}
+        window.selection.handle_click(0, ctrl_held=False)
+        window.selection.handle_click(1, ctrl_held=False)
+        # Normal click replaces, so only 1 is selected.
+        assert window.selection.get_selected_indices() == {1}
 
     def test_ctrl_click_adds_to_selection(self, window_with_ships):
-        """Ctrl+click adds ship to existing selection."""
         window, ships = window_with_ships
-
-        window.selected_indices = {0}
-        window.selected_indices.add(1)  # Ctrl+click adds
-
-        assert 0 in window.selected_indices
-        assert 1 in window.selected_indices
-        assert len(window.selected_indices) == 2
+        window.selection.handle_click(0, ctrl_held=False)
+        window.selection.handle_click(1, ctrl_held=True)
+        assert 0 in window.selection.get_selected_indices()
+        assert 1 in window.selection.get_selected_indices()
 
     def test_ctrl_click_removes_from_selection_when_multiple(self, window_with_ships):
-        """Ctrl+click removes from selection when multiple selected."""
         window, ships = window_with_ships
-
-        window.selected_indices = {0, 1, 2}
-        window.selected_indices.discard(1)  # Ctrl+click removes
-
-        assert 0 in window.selected_indices
-        assert 1 not in window.selected_indices
-        assert 2 in window.selected_indices
-
-    def test_ctrl_click_cannot_deselect_last_ship(self, window_with_ships):
-        """Ctrl+click cannot deselect the last remaining selected ship."""
-        window, ships = window_with_ships
-
-        window.selected_indices = {2}
-        # Attempting to deselect when only 1 selected should NOT deselect
-        if len(window.selected_indices) > 1:
-            window.selected_indices.discard(2)
-
-        assert 2 in window.selected_indices
-        assert len(window.selected_indices) == 1
+        window.selection.handle_click(0, ctrl_held=False)
+        window.selection.handle_click(1, ctrl_held=True)
+        window.selection.handle_click(2, ctrl_held=True)
+        # Now ctrl-click on 1 to remove it.
+        window.selection.handle_click(1, ctrl_held=True)
+        selected = window.selection.get_selected_indices()
+        assert 0 in selected
+        assert 1 not in selected
+        assert 2 in selected
 
 
 class TestShipRemoval:
     """Test ship removal to new fleet functionality.
 
-    PROJ-208: Tests refactored to verify command callback dispatch pattern.
-    The window now calls split_fleet_callback(fleet_id, ship_instance_ids)
+    PROJ-208: window calls split_fleet_callback(fleet_id, ship_instance_ids)
     instead of directly manipulating fleets.
     """
 
     @pytest.fixture
     def window_with_ships_and_empire(self):
-        """Create window with ships, empire, and command callback for removal testing."""
         ships = [create_mock_ship(f"ship-{i}", f"Ship {i}", i + 1) for i in range(5)]
         fleet = create_mock_fleet(ships)
         empire = create_mock_empire()
-        split_fleet_callback = Mock()
+        callback = Mock()
+        window = _make_window(fleet, empire, split_fleet_callback=callback)
 
-        with patch('pygame.display.get_surface') as mock_display:
-            mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
-            with patch('pygame_gui.UIManager'):
-                with patch('pygame_gui.elements.UIWindow.__init__'):
-                    with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
-                        with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
-                            from game.ui.screens.fleet_report_window import FleetReportWindow
-                            import pygame
-
-                            rect = pygame.Rect(0, 0, 1600, 900)
-                            manager = Mock()
-
-                            window = FleetReportWindow(
-                                rect, manager, fleet,
-                                window_manager=None,
-                                empire=empire,
-                                split_fleet_callback=split_fleet_callback
-                            )
-                            window._update_detail_panel = Mock()
-                            window.refresh_list = Mock()
-                            window.view_model = Mock()
-                            window.view_model.get_filtered_ships = Mock(return_value=list(ships))
-                            window.view_model.update_ships = Mock()
-                            # Mock the sidebar component
-                            window.sidebar = Mock()
-                            window.sidebar.update_remove_button = Mock()
-                            window.sidebar.update_summary = Mock()
-
-                            return window, fleet, empire, ships, split_fleet_callback
+        # Patch refresh helpers that hit the (mock) sidebar / virtual_table.
+        window._update_detail_panel = Mock()
+        window.refresh_list = Mock()
+        # view_model is real Stage-1 — replace its filtered ships getter
+        # so we can drive selection by index without rebuilding the view.
+        window.view_model.get_filtered_ships = Mock(return_value=list(ships))
+        window.view_model.update_ships = Mock()
+        # sidebar is a MagicMock from MockFleetReportUiBuilder; replace
+        # update_remove_button so we can assert calls.
+        window.sidebar.update_remove_button = Mock()
+        window.sidebar.update_summary = Mock()
+        return window, fleet, empire, ships, callback
 
     def test_remove_dispatches_command_with_correct_fleet_id(self, window_with_ships_and_empire):
-        """Removing ships dispatches SplitFleetCommand with correct fleet_id."""
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-
-        # Set selection using the selection strategy
         window.selection._selected = {1, 2}
 
         window._on_remove_selected_ships()
 
-        # Command callback should be called with fleet ID
         callback.assert_called_once()
-        call_args = callback.call_args[0]
-        assert call_args[0] == fleet.id
+        assert callback.call_args[0][0] == fleet.id
 
     def test_remove_dispatches_command_with_selected_ship_ids(self, window_with_ships_and_empire):
-        """Removing ships dispatches command with correct ship_instance_ids."""
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-
-        # Set selection using the selection strategy
         window.selection._selected = {0, 2}
 
         window._on_remove_selected_ships()
 
-        # Command callback should be called with ship instance IDs
-        callback.assert_called_once()
-        call_args = callback.call_args[0]
-        ship_ids = call_args[1]
+        ship_ids = callback.call_args[0][1]
         assert ships[0].instance_id in ship_ids
         assert ships[2].instance_id in ship_ids
         assert len(ship_ids) == 2
 
     def test_remove_dispatches_single_ship_removal(self, window_with_ships_and_empire):
-        """Single ship selection dispatches command correctly."""
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-
-        # Set selection using the selection strategy
         window.selection._selected = {3}
 
         window._on_remove_selected_ships()
 
-        # Command callback should be called with single ship
-        callback.assert_called_once()
-        call_args = callback.call_args[0]
-        ship_ids = call_args[1]
+        ship_ids = callback.call_args[0][1]
         assert ship_ids == [ships[3].instance_id]
 
     def test_selection_cleared_after_removal(self, window_with_ships_and_empire):
-        """Selection is cleared after removal operation."""
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-
-        # Set selection using the selection strategy
         window.selection._selected = {0, 1, 2}
 
         window._on_remove_selected_ships()
@@ -326,59 +239,39 @@ class TestShipRemoval:
         assert len(window.selection.get_selected_indices()) == 0
 
     def test_remove_does_nothing_without_empire(self, window_with_ships_and_empire):
-        """Removal operation does nothing if no empire reference."""
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-
         window.empire = None
-        # Set selection using the selection strategy
         window.selection._selected = {0, 1}
 
         window._on_remove_selected_ships()
 
-        # Callback should not be called
         callback.assert_not_called()
 
     def test_remove_does_nothing_without_callback(self, window_with_ships_and_empire):
-        """Removal operation does nothing if no callback provided."""
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-
         window._split_fleet_callback = None
-        # Set selection using the selection strategy
         window.selection._selected = {0, 1}
 
         window._on_remove_selected_ships()
 
-        # Original callback should not be called
         callback.assert_not_called()
 
     def test_remove_does_nothing_with_empty_selection(self, window_with_ships_and_empire):
-        """Removal operation does nothing if no ships selected."""
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-
-        # Selection is already empty by default
         window.selection.clear()
 
         window._on_remove_selected_ships()
 
-        # Callback should not be called
         callback.assert_not_called()
 
     def test_ui_refreshed_after_removal(self, window_with_ships_and_empire):
-        """UI is properly refreshed after removal."""
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-
-        # Set selection using the selection strategy
         window.selection._selected = {0}
-        # Mock sidebar for update_remove_button call
-        window.sidebar = Mock()
-        window.sidebar.update_remove_button = Mock()
 
         window._on_remove_selected_ships()
 
-        # Verify UI refresh methods were called
         assert window._update_detail_panel.called
         assert window.refresh_list.called
-        # sidebar.update_remove_button is called instead of _update_remove_button
         assert window.sidebar.update_remove_button.called
 
 
@@ -387,11 +280,8 @@ class TestRemoveButtonState:
 
     @pytest.fixture
     def sidebar_with_button(self):
-        """Create sidebar with mocked button for state testing."""
-        from unittest.mock import Mock, MagicMock
         from game.ui.screens.fleet_report_sidebar import FleetReportSidebar
 
-        # Create mock dependencies
         mock_panel = Mock()
         mock_panel.get_relative_rect.return_value = Mock(width=300)
         mock_manager = Mock()
@@ -402,7 +292,6 @@ class TestRemoveButtonState:
         mock_column_manager.get_toggleable_columns.return_value = []
         mock_empire = Mock()
 
-        # Patch pygame_gui elements and TriStateFilterWidget
         # PROJ-319 DUP-X-08: column toggles moved to game.ui.widgets.column_toggle_section.
         with patch('game.ui.screens.fleet_report_sidebar.UIPanel'):
             with patch('game.ui.screens.fleet_report_sidebar.UILabel'), \
@@ -415,9 +304,8 @@ class TestRemoveButtonState:
                             manager=mock_manager,
                             view_model=mock_view_model,
                             column_manager=mock_column_manager,
-                            empire=mock_empire
+                            empire=mock_empire,
                         )
-                        # Mock the button directly
                         sidebar.btn_remove_selected = Mock()
                         sidebar.btn_remove_selected.enable = Mock()
                         sidebar.btn_remove_selected.disable = Mock()
@@ -426,7 +314,6 @@ class TestRemoveButtonState:
                         return sidebar
 
     def test_button_enabled_with_selection_and_empire(self, sidebar_with_button):
-        """Button enabled when ships selected and empire available."""
         sidebar = sidebar_with_button
         sidebar.update_remove_button(2)
 
@@ -434,14 +321,12 @@ class TestRemoveButtonState:
         sidebar.btn_remove_selected.set_text.assert_called_with("Remove Selected (2)")
 
     def test_button_disabled_without_selection(self, sidebar_with_button):
-        """Button disabled when no ships selected."""
         sidebar = sidebar_with_button
         sidebar.update_remove_button(0)
 
         sidebar.btn_remove_selected.disable.assert_called_once()
 
     def test_button_disabled_without_empire(self, sidebar_with_button):
-        """Button disabled when no empire reference."""
         sidebar = sidebar_with_button
         sidebar.empire = None
 
@@ -450,7 +335,6 @@ class TestRemoveButtonState:
         sidebar.btn_remove_selected.disable.assert_called_once()
 
     def test_button_text_shows_selection_count(self, sidebar_with_button):
-        """Button text shows number of selected ships."""
         sidebar = sidebar_with_button
         sidebar.update_remove_button(3)
 

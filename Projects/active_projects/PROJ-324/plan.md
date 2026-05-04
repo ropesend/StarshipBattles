@@ -15,18 +15,19 @@
 |-------|--------|-----------|
 | 1. UIWindow `bypass_init` flag (production-side) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. LLMBackgroundCall completion Event (production-side) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate 14 unblocked PROJ-322 deferrals (test-side) | **Closed — production foundation only; migrations re-routed to PROJ-325 Phase 3 (PoC) + PROJ-328A/B/C per consensus plan** | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Documentation pass (`make_ui_widget` → `docs/02_PATTERNS.md`, mark blockers resolved) | **Deferred until PROJ-325 Phase 3 PoC validates pattern** | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Migrate 14 unblocked PROJ-322 deferrals (test-side) — closed; migrations re-routed to PROJ-325 Phase 3 PoC + PROJ-328 A/B/C | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Documentation pass (`make_ui_widget` → `docs/02_PATTERNS.md`, mark blockers resolved) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04 (post-Codex consensus)
-**Active Phase:** Phases 1+2 production foundation complete. Phase 3 closed, Phase 4 deferred to post-PoC.
-**Last Action:** Codex–Claude inter-agent discussion (`AgentCoordination/Scratchpad/Discussion/20260504T041251Z_uiwindow-refactor-mvvm/`) reached consensus on a two-stage construction pattern. Phase 3 systemic finding (commit 9e177edb7) confirmed: `bypass_init` returning at first executable statement is insufficient — cheap state + delegates must run BEFORE the bypass point. Test migrations re-routed: PROJ-325 Phase 3 owns the RaceSetupScreen proof-of-concept; PROJ-328A/B/C own the other 6 subclasses.
-**Next Action:** None on this project. PROJ-325 Phase 3 PoC will validate the pattern; PROJ-324 Phase 4 docs are deferred until then (per consensus plan acceptance criterion 7).
-**Blockers:** Phase 4 blocked on PROJ-325 Phase 3 PoC.
+**Last Updated:** 2026-05-04 (final close-out)
+**Active Phase:** All phases Complete.
+**Last Action:** Phase 4 documentation pass landed: `docs/02_PATTERNS.md` §33 ("UI Widget Test Factory") documents the `make_ui_widget` + `bypass_init` retrofit pattern with cross-references to PROJ-325 RaceSetup + PROJ-328 A/B/C delegate-factory + Null/Mock UI-builder convention; `docs/known-issues.md` UIWindow super-init + LLMBackgroundCall blockers marked **[RESOLVED in PROJ-324 + PROJ-325 PoC + PROJ-328]** with resolution-pointer subsections; PROJ-322 plan.md Continuation Guide updated with Final disposition summary covering all 25 PROJ-322 deferrals.
+**Next Action:** None — project closed.
+**Blockers:** None.
 **Phase 1 commit:** 9ae5c4959
 **Phase 2 commit:** af7328281
 **Phase 3 close-out commit:** 9e177edb7
+**Phase 4 close-out commit:** (this commit)
 
 ### Systemic finding (2026-05-04)
 
@@ -152,9 +153,9 @@ See [`manifest.md`](manifest.md) for the full per-task list. Headline targets:
 
 ## Verification
 
-- [ ] All phase checklists complete
-- [ ] All tests passing (`python Tools/test_sharded/test_sharded.py`)
-- [ ] `tests/fixtures/ui_widget_factory.py` documented in `docs/02_PATTERNS.md`
-- [ ] `docs/known-issues.md` UIWindow + LLM blockers marked resolved
-- [ ] PROJ-322 Continuation Guide updated to reflect 14 closed deferrals
+- [x] All phase checklists complete
+- [x] All tests passing (`python Tools/test_sharded/test_sharded.py`) — 16456/16468 passed (8 pre-existing Codex-skill failures + 4 skipped; PROJ-327 Phase 5 Task 5.1 final measurement, median wall 123.9 s of 3 runs)
+- [x] `tests/fixtures/ui_widget_factory.py` documented in `docs/02_PATTERNS.md` (§33)
+- [x] `docs/known-issues.md` UIWindow + LLM blockers marked resolved
+- [x] PROJ-322 Continuation Guide updated to reflect 14 closed deferrals
 - [ ] User verified

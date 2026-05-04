@@ -384,20 +384,40 @@ class TestNewGameSetupPlayerCount:
 class TestSetupRacePassesLoadedData:
     """BUG-92: Verify Setup Species passes loaded race data to RaceSetupScreen."""
 
+    def _make_screen(self):
+        """PROJ-328 Phase B: build via real two-stage construction."""
+        import pygame
+        from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
+        from tests.fixtures.new_game_setup_ui_builder import (
+            MockNewGameSetupUiBuilder,
+        )
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        ui_manager = MagicMock(name="ui_manager")
+        ui_manager.window_resolution = (1920, 1080)
+
+        with bypass_init(NewGameSetupScreen):
+            screen = make_ui_widget(
+                NewGameSetupScreen,
+                rect=pygame.Rect(0, 0, 650, 600),
+                manager=ui_manager,
+                on_start_callback=MagicMock(),
+                on_cancel_callback=MagicMock(),
+                ui_builder=MockNewGameSetupUiBuilder(),
+            )
+        # ``ui_manager`` defaults to a MagicMock with no
+        # ``window_resolution``; replace with the configured one.
+        screen.ui_manager = ui_manager
+        return screen
+
     def test_setup_race_passes_loaded_race(self):
         """When a race is already loaded, Setup Species should pass it as race_to_edit."""
-        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
         from game.strategy.data.race_config import RaceConfig
 
         loaded_race = RaceConfig(race_id="loaded_species", name="Loaded Species")
 
-        with patch('game.ui.screens.new_game_setup_screen.NewGameSetupScreen.__init__', return_value=None):
-            screen = NewGameSetupScreen.__new__(NewGameSetupScreen)
-            screen.player_races = [loaded_race, None, None, None]
-            screen.ui_manager = MagicMock()
-            screen.ui_manager.window_resolution = (1920, 1080)
-            screen.active_race_modal = None
-            screen.race_modal_player_index = -1
+        screen = self._make_screen()
+        screen.player_races[0] = loaded_race
 
         with patch('game.ui.screens.race_setup_screen.RaceSetupScreen') as MockRaceSetup:
             screen._on_setup_race_clicked(0)
@@ -411,15 +431,8 @@ class TestSetupRacePassesLoadedData:
 
     def test_setup_race_no_loaded_race_passes_none(self):
         """When no race is loaded, Setup Species should pass None as race_to_edit."""
-        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
-
-        with patch('game.ui.screens.new_game_setup_screen.NewGameSetupScreen.__init__', return_value=None):
-            screen = NewGameSetupScreen.__new__(NewGameSetupScreen)
-            screen.player_races = [None, None, None, None]
-            screen.ui_manager = MagicMock()
-            screen.ui_manager.window_resolution = (1920, 1080)
-            screen.active_race_modal = None
-            screen.race_modal_player_index = -1
+        screen = self._make_screen()
+        # All player_races already default to None from the view model.
 
         with patch('game.ui.screens.race_setup_screen.RaceSetupScreen') as MockRaceSetup:
             screen._on_setup_race_clicked(0)
