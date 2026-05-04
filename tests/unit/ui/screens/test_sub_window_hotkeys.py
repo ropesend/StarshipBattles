@@ -2,13 +2,21 @@
 
 Verifies that OrdersWindow, BuildQueueScreen, TransferDialog,
 and BuildQueueListWindow accept input_mapper and dispatch hotkey actions.
+
+PROJ-328 Phase A Task A.6 (PROJ-322 Task 5.16 — non-Orders portion):
+The OrdersWindow + BuildQueueListWindow hotkey clusters now use the
+two-stage bypass_init pattern (after Tasks A.2 and A.3 landed those
+classes' refactors). The BuildQueueScreen cluster is unchanged
+(BuildQueueScreen isn't a UIWindow subclass, no bypass_init
+applies). The TransferDialog cluster is left as-is — Phase C scope
+will rewrite it alongside the deep TransferDialog split.
 """
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock, call
+from unittest.mock import MagicMock, patch
 import pygame
 
-from game.core.input_actions import InputAction, KeyBinding
 from game.ui.services.input_mapper import InputMapper
+from tests.fixtures.ui_widget_factory import bypass_init
 
 
 # -----------------------------------------------------------------------
@@ -34,30 +42,35 @@ def _keydown(key, mod=0):
 # =======================================================================
 
 class TestFleetOrdersWindowHotkeys:
-    """OrdersWindow should accept input_mapper and dispatch hotkey actions."""
+    """OrdersWindow should accept input_mapper and dispatch hotkey actions.
 
-    @patch('game.ui.screens.orders_window.pygame_gui')
-    def _make_window(self, mapper, mock_pgui):
-        """Create a OrdersWindow with mocks."""
+    PROJ-328 Phase A Task A.6: Migrated to bypass_init +
+    MockOrdersUiBuilder so the constructed window is a real
+    OrdersWindow with the cheap-state delegates (_mapper,
+    _order_describer) populated honestly. ``btn_clear`` comes from
+    the Mock builder.
+    """
+
+    def _make_window(self, mapper):
+        """Create an OrdersWindow under bypass_init."""
         from game.ui.screens.orders_window import OrdersWindow
+        from tests.fixtures.orders_ui_builder import MockOrdersUiBuilder
 
         mock_fleet = MagicMock()
         mock_fleet.id = 1
+        mock_fleet.name = "Test Fleet"
         mock_fleet.orders = []
         mock_fleet.construction_queue = []
 
-        # Patch UIWindow.__init__ to avoid real pygame_gui
-        with patch.object(OrdersWindow, '__init__', lambda self, *a, **kw: None):
-            win = OrdersWindow.__new__(OrdersWindow)
-
-        # Set up minimal state
-        win.fleet = mock_fleet
-        win.deleted_history = []
-        win._mapper = mapper
-        win.btn_undo = MagicMock()
-        win.btn_clear = MagicMock()
-        win.rows = []
-        win.ui_manager = MagicMock()
+        with bypass_init(OrdersWindow):
+            win = OrdersWindow(
+                pygame.Rect(0, 0, 400, 500),
+                MagicMock(name="ui_manager"),
+                mock_fleet,
+                window_manager=None,
+                input_mapper=mapper,
+                ui_builder=MockOrdersUiBuilder(),
+            )
         return win
 
     def test_accepts_input_mapper_param(self, mapper):
@@ -281,16 +294,35 @@ class TestTransferDialogHotkeys:
 # =======================================================================
 
 class TestBuildQueueListWindowHotkeys:
-    """BuildQueueListWindow should accept input_mapper and handle ESC."""
+    """BuildQueueListWindow should accept input_mapper and handle ESC.
+
+    PROJ-328 Phase A Task A.6: Migrated to bypass_init + null builder
+    so the constructed window is a real BuildQueueListWindow with
+    cheap-state populated; kill() is patched out per-test to avoid
+    the (mock-row-label) cleanup chain.
+    """
 
     def _make_window(self, mapper):
-        """Create a minimal BuildQueueListWindow with mapper."""
+        """Create a real BuildQueueListWindow under bypass_init."""
         from game.ui.screens.build_queue_list_window import BuildQueueListWindow
+        from tests.fixtures.build_queue_list_ui_builder import (
+            NullBuildQueueListUiBuilder,
+        )
 
-        win = MagicMock(spec=BuildQueueListWindow)
-        win._mapper = mapper
+        empire = MagicMock()
+        empire.colonies = []
+        empire.fleets = []
+        with bypass_init(BuildQueueListWindow):
+            win = BuildQueueListWindow(
+                pygame.Rect(0, 0, 400, 300),
+                MagicMock(name="ui_manager"),
+                empire,
+                window_manager=None,
+                input_mapper=mapper,
+                ui_builder=NullBuildQueueListUiBuilder(),
+            )
+        # Spy kill so we can assert without entering the real cleanup.
         win.kill = MagicMock()
-        win._handle_keydown = BuildQueueListWindow._handle_keydown.__get__(win, BuildQueueListWindow)
         return win
 
     def test_escape_closes(self, mapper):
