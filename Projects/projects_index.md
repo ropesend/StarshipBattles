@@ -4,6 +4,10 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-327 | Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope | Planning | 2026-05-03 | 2026-05-03 |
+| PROJ-326 | Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard | Planning | 2026-05-03 | 2026-05-03 |
+| PROJ-325 | PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision | Planning | 2026-05-03 | 2026-05-03 |
+| PROJ-324 | Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals | Planning | 2026-05-03 | 2026-05-03 |
 | PROJ-323 | Test review P2 opportunistic polish 2026-05-02 | Awaiting Verification | 2026-05-03 | 2026-05-03 |
 | PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | Awaiting Verification (Partial — 25 deferred-with-blocker) | 2026-05-03 | 2026-05-03 |
 | PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | Awaiting Verification | 2026-05-03 | 2026-05-03 |

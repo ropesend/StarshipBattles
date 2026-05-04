@@ -39,10 +39,10 @@
     },
     "ocode-review-request": {
       "agents": {
-        "ocode": 18
+        "ocode": 22
       },
-      "count": 18,
-      "last_used": "2026-05-03T05:11:22Z"
+      "count": 22,
+      "last_used": "2026-05-04T02:18:02Z"
     },
     "ocode-test-review": {
       "agents": {

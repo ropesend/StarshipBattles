@@ -1,0 +1,120 @@
+# PROJ-325: Design Document
+
+> **THIS IS A REFERENCE DOCUMENT**
+> Do not modify during implementation. Refer to this for architecture decisions.
+> If you discover something that contradicts this document, add a note to decisions.md.
+
+## Source
+
+- Continuation review of PROJ-321 / 322 / 323 dated 2026-05-04
+- OpenCode 323-review: `Reviews/results/2026-05-04_020005_consistency_proj-323-p2-opportunistic-test-polish-completion-c_req-req_20260504_020003_a5290a/report.md`
+- OpenCode 322-review (RaceSetupScreen analysis): `Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md`
+- Continuation plan: [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md)
+
+## Phase 1 — PROJ-323 Documentation Corrections
+
+The OpenCode 323-review found 1 CRIT and 15 MIN findings, almost all documentation-only. The CRIT-001 is the most important: PROJ-323 `phase_3_checklist.md` Tasks 3.3 and 3.6 are checked `[x]` as completed but their target files were deleted by upstream PROJ-321. Sibling items in the same tasks correctly show `_(skipped — upstream project already deleted target file)_` markers, so the discrepancy is a documentation defect — the worker mis-checked instead of skipping.
+
+**Concrete fixes:**
+
+| Finding | Action |
+|---|---|
+| FND-CC-001 | In `Projects/active_projects/PROJ-323/phase_3_checklist.md`: re-mark Task 3.3 (S11-CAT10-005, target `test_colonization_facade.py`) and Task 3.6 (S11-CAT10-007, target `test_color_helpers.py`) as `_(skipped — upstream project already deleted target file)_`. Combined claimed LOC delta (~314) is fictitious. |
+| FND-CC-002 | In `plan.md` header table: reconcile "items" (CAT-finding counts: 32+32+53+15+27=159) vs "tasks" (Task N.M counts: 149) terminology. Add a footnote explaining the difference. |
+| FND-CC-003 | In phase checklist verify lines: annotate per-task LOC delta numbers as "(estimate from source review)" or replace with actual git-stat deltas. |
+| FND-CC-004 | In `manifest.md`: remove ~42 entries for files PROJ-321 deleted upstream. |
+| FND-CC-005 | In `phase_3_checklist.md` Task 3.10: marked `[x]` but annotated "deferred". Pick one — either un-check and add deferral annotation, or remove the deferral annotation if it's actually done. |
+| FND-CC-006 | Tasks 2.8 and 2.9 LOC deltas (~307, ~250) double-count work done in Phase 1. Re-derive from git stats. |
+| FND-P2-001 | In `tests/unit/simulation/projectile/test_projectile_manager.py` Task 5.19: docstring derivations use ~ approximations (~0.94, ~0.9787) but assertion uses `rel=1e-9` tolerance on `-0.005596103475344202`. Either add intermediate values to docstring at assertion precision, or relax tolerance to `rel=1e-5`. |
+| FND-P2-003 | In `Projects/active_projects/PROJ-323/design.md:41`: references deleted `test_projectile_manager.py` as canonical example. Replace with a surviving example. |
+| FND-P2-004 | Task 4.9 mis-categorized — it's data cleanup, not fragile-assertion replacement. Re-categorize in checklist text. |
+| FND-P2-005 | In `design.md:42`: mischaracterizes Task 4.2 pattern as "advisory soft assertions" when the actual implementation uses hard assertions with soft thresholds. Reword. |
+
+These are all surface-level fixes — no production or test code changes required for FND-CC-001..006 + FND-P2-003..005. Only Task 5.19 requires a touch to `test_projectile_manager.py`.
+
+## Phase 2 — Task 3.34 + Task 3.37 Parametrize
+
+### Task 3.34: 11-handler `fleet_not_found` cluster
+
+PROJ-323 deferred this with rationale "per-class structure aligns with production." The OpenCode 323-review found this rationale **factually weak**: production handlers are split across 5 sub-module files, but the test file is monolithic 1899 LOC. The genuine concern — construction-queue handlers use `entity_id` instead of `fleet_id` — is resolvable with a **two-group parametrization**.
+
+**Approach:**
+- Group A: handlers using `fleet_id` (~9 of 11). Class-level `@pytest.mark.parametrize` over the handler classes, each test asserts the same `fleet_not_found` error.
+- Group B: handlers using `entity_id` (~2 construction-queue handlers). Separate parametrize cluster with the entity_id-shaped fixture.
+- Estimated savings: ~75 LOC.
+
+The Task 3.2 precedent in the same project phase already demonstrated successful class-level parametrize across handler classes — so this is a proven pattern.
+
+### Task 3.37: zero/negative cargo pairs
+
+OpenCode 323-review FND-P1-003: zero/negative cargo amount tests across load/unload are textbook 2-member parametrize candidates that were unnecessarily blocked by the strict ≥3-member threshold rule. Estimated savings: ~10 LOC.
+
+## Phase 3 — RaceSetupScreen Testable Construction
+
+This phase is **conditional on PROJ-324 Phase 3 Task 3.4 outcome.**
+
+### Background
+
+`RaceSetupScreen` ([`game/ui/screens/race_setup/screen.py:60`](game/ui/screens/race_setup/screen.py#L60)) is the highest-touch UIWindow subclass:
+
+- 6 declared `__init__` parameters
+- ~37 instance attributes assigned
+- ~10 major collaborators directly constructed (RaceLibrary, RaceConfig, 4 MVVM delegates: RaceAssetLoader, RaceSetupViewModel, RaceSetupRenderer, RaceSetupController, LLMDialogService, RaceSetupInputHandler)
+- 8 lazy-initialized panels (summary, identity, environment, aptitudes, description, flag, portrait, theme galleries)
+- Test file ~1464 LOC with ~150 tests
+
+### GO path (bypass_init alone is sufficient)
+
+If PROJ-324 Phase 3 Task 3.4 reports GO, this phase is mechanical migration only:
+
+- Replace existing `__new__` bypass-init helper with `bypass_init(RaceSetupScreen)` + `make_ui_widget`.
+- Migrate fixtures.
+- Verify ~150 tests still pass.
+- Document the LOC delta.
+
+This path is consistent with PROJ-324 Tasks 3.1-3.7.
+
+### NO-GO path (bypass_init insufficient)
+
+If PROJ-324 Phase 3 Task 3.4 reports NO-GO, this phase grows into a focused production refactor:
+
+**Refactor approach: extract panel construction to a registry.**
+
+Currently, `RaceSetupScreen.__init__` constructs all 8 panels inline via `_create_ui()` ([`game/ui/screens/race_setup/screen.py:166`](game/ui/screens/race_setup/screen.py#L166)). The refactor:
+
+1. Define a `PanelRegistry` protocol that exposes the 8 panel-creation methods.
+2. Construct panels in a default `RaceSetupPanelFactory` that the production caller passes in.
+3. Tests pass a `MockPanelRegistry` that returns Mock objects — eliminates the need for `bypass_init` entirely for those code paths.
+
+**Effort: ~1-2 sessions LLM-paced.** This is a real production refactor, not just a test rewrite. Land in its own commit with a careful before/after diff.
+
+**Decision criteria for GO vs NO-GO** (set by PROJ-324 Phase 3 Task 3.4):
+
+| Criterion | GO | NO-GO |
+|---|---|---|
+| `make_ui_widget(RaceSetupScreen)` with `bypass_init` succeeds | Yes | Yes (basic construction works) |
+| Test wiring complexity vs existing bypass-init helper | Same or better | Significantly worse — requires manual wiring of the 10+ collaborators that `__init__` would have constructed |
+| Net LOC delta | Negative or neutral | Positive (test files would grow) |
+
+## Architecture
+
+No new architectural patterns introduced. Phase 1 + Phase 2 are mechanical doc + parametrize work. Phase 3 either reuses PROJ-324's `bypass_init` pattern (GO) or introduces a new `PanelRegistry` protocol (NO-GO).
+
+## Risks
+
+1. **Phase 1 cascade.** Updating PROJ-323 `manifest.md` to remove ~42 deleted-file entries is a wide doc edit. If a future agent reads the manifest after this update, they need a way to know it was edited intentionally — leave a comment at the top of the manifest noting the FND-CC-004 cleanup date.
+
+2. **Task 3.34 parametrize scope creep.** The 11-handler cluster lives in a 1899-LOC file. Touching that file for parametrize may surface other latent issues (e.g., other clusters that should also be parametrized). Stay scoped: only the 11 fleet_not_found tests get parametrized this phase. Other cluster discoveries are PROJ-327 territory.
+
+3. **Phase 3 NO-GO underestimate.** The "1-2 sessions" NO-GO estimate is for a clean panel-registry extraction. If RaceSetupScreen's `__init__` has hidden coupling (state mutation across panel construction order, callback registration before/after panel creation), the refactor is larger. **If the NO-GO estimate balloons past 3 sessions, stop and notify the user — defer to a dedicated PROJ-32y rather than ballooning PROJ-325 Phase 3.**
+
+4. **Parallel-work file conflict on `test_race_setup_screen.py` and `screen.py`.** PROJ-324 Phase 3 Task 3.4 will touch the test file (briefly, for the GO/NO-GO probe). PROJ-325 Phase 3 must not start until that probe completes and PROJ-324 has either rolled back its changes (NO-GO) or landed them (GO).
+
+## Patterns Reused
+
+- **`make_ui_widget` factory** + `bypass_init` context manager (PROJ-322 + PROJ-324) — used in Phase 3 GO path
+- **Class-level `@pytest.mark.parametrize` across handler classes** (PROJ-323 Phase 3 Task 3.2 precedent) — used in Phase 2
+
+## Design Decisions
+
+See [decisions.md](decisions.md) for the full log with rationale.
