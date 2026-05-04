@@ -253,6 +253,21 @@ class TestFromDictSimplePath:
         assert order.target == {"q": 1, "r": 2}
         assert not isinstance(order.target, HexCoord)
 
+    def test_from_dict_unknown_order_type_raises_keyerror(self):
+        """MAJ-004 fix (review req_20260504_213455_95a42d): pin
+        ``Order.from_dict`` raises ``KeyError`` for unknown OrderType
+        names. ``OrderType[data['type']]`` at production line ~159
+        is the raise site. Sister classes (SpeciesPopulation,
+        PlanetaryFacility, Squadron) all pin equivalent
+        missing-key/rejection behaviors; Order was the anomaly until
+        this test landed.
+        """
+        payload = {"type": "NOT_A_REAL_ORDER_TYPE", "target": None}
+        with pytest.raises(KeyError) as exc_info:
+            Order.from_dict(payload)
+        # The KeyError carries the unknown name (Python's enum lookup behavior).
+        assert "NOT_A_REAL_ORDER_TYPE" in str(exc_info.value)
+
 
 # ---------------------------------------------------------------------------
 # __repr__

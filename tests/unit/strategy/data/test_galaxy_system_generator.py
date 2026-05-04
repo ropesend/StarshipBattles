@@ -400,10 +400,22 @@ def _canonical_signature(systems) -> list[tuple[str, tuple[int, int]]]:
 
 class TestGenerateSystemsDeterminism:
     def test_generate_systems_with_seed_42_produces_canonical_galaxy(self):
-        # Pin the canonical signature for seed=42, count=5, radius=2000, min_dist=100.
-        # Recorded from the actual implementation on 2026-05-04 — if this
-        # value drifts, generate_systems behavior changed and the user must
-        # confirm it was intentional.
+        # MAJ-001 fix (review req_20260504_213455_95a42d): hardcode the
+        # canonical signature so this test catches behavior drift, not
+        # just count/uniqueness changes. Recorded by running once on
+        # 2026-05-04 against generate_systems(count=5, radius=2000,
+        # min_dist=100, rng=random.Random(42)) with FakeNamingRegistry
+        # iterating Sol/Vega/Lyra/Orion/Cygnus/Draco. To regenerate
+        # after an intentional behavior change: run this test, copy the
+        # printed CANONICAL_SEED_42 line into CANONICAL_SEED_42 below.
+        CANONICAL_SEED_42 = [
+            ("Cygnus", (-1644, 1372)),
+            ("Lyra", (771, 1033)),
+            ("Orion", (1654, 233)),
+            ("Sol", (-1086, -343)),
+            ("Vega", (1016, -1581)),
+        ]
+
         gen = _make_generator(
             naming=_FakeNamingRegistry(["Sol", "Vega", "Lyra", "Orion", "Cygnus", "Draco"]),
         )
@@ -418,21 +430,11 @@ class TestGenerateSystemsDeterminism:
 
         signature = _canonical_signature(result)
 
-        # Determinism contract: a known seed produces a non-empty deterministic galaxy.
-        # The exact tuple is captured here — change-detection only.
-        assert len(signature) == 5
-        # Snapshot pinned: regenerate by running once and copying the printed output.
-        # Failing here means generate_systems output drifted under seed=42.
-        # Recompute the snapshot only if intentional behavior change is confirmed.
-        expected = [
-            (name, (loc.q, loc.r))
-            for (name, loc) in [(s.name, s.global_location) for s in result]
-        ]
-        # We did not hand-pre-compute — instead pin via reproducibility check below.
-        # The actual canonical-tuple test is the reproducibility one; this asserts
-        # that the structure has the expected count and unique coords.
-        coords = [loc for (_n, loc) in signature]
-        assert len(set(coords)) == 5  # all unique
+        assert signature == CANONICAL_SEED_42, (
+            f"Generator output drifted under seed=42. Got {signature}; "
+            f"expected {CANONICAL_SEED_42}. If this change was intentional, "
+            f"update CANONICAL_SEED_42 in this test."
+        )
 
     def test_generate_systems_with_seed_42_is_reproducible_across_two_runs(self):
         def run_once():

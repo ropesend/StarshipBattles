@@ -40,7 +40,15 @@ class TestBattleControllerStateSaveLoad:
             assert result is mock_state
 
     def test_load_state_restores_battle(self, controller, mock_service):
-        """load_state restores battle from BattleState."""
+        """load_state restores battle from BattleState.
+
+        Also pins PROJ-331 OBSERVATION-B: load_state defaults
+        `_retreat_manager.boundary` to `UnboundedRegion()` when the
+        restored config carries no boundary (battle_controller.py:130-131).
+        MAJ-003 fix (review req_20260504_213455_95a42d).
+        """
+        from game.simulation.combat.boundary import UnboundedRegion
+
         # Create a mock BattleState
         mock_state = Mock()
         mock_state.seed = 12345
@@ -60,6 +68,8 @@ class TestBattleControllerStateSaveLoad:
         restored_ship = Mock()
         restored_ship.id = "runtime-ship-id"
         mock_state_manager = Mock()
+        # restore_config_from_state returns a BattleConfig() — its `.boundary`
+        # is None by default, which triggers the UnboundedRegion fallback.
         mock_state_manager.restore_config_from_state.return_value = BattleConfig()
         mock_state_manager.extract_ships_from_state.return_value = (
             [restored_ship],
@@ -77,6 +87,14 @@ class TestBattleControllerStateSaveLoad:
             registries=controller._registries,
         )
         mock_service.add_ship.assert_called_with(restored_ship, 0)
+        # MAJ-003 fix: pin OBSERVATION-B boundary default contract.
+        assert isinstance(
+            controller._retreat_manager.boundary,
+            UnboundedRegion,
+        ), (
+            "PROJ-331 OBSERVATION-B: load_state must default boundary to "
+            "UnboundedRegion when the restored config has no boundary set."
+        )
 
     def test_load_state_handles_error(self, controller):
         """load_state handles errors gracefully.
@@ -260,3 +278,43 @@ class TestRequireRegistriesForStateRestore:
             controller._require_registries_for_state_restore(state_count=3)
         # MISSING_DEPENDENCY = "C003"
         assert exc_info.value.code == "C003"
+
+
+class TestExtractOutcomeOnBattleEndSwallowsCaptureExceptions:
+    """PROJ-331 OBSERVATION-C (MAJ-002 fix from review req_20260504_213455_95a42d).
+
+    Pins the broad-except at battle_controller.py:445 — when
+    `get_default_capture_sink().on_battle_ended` raises, _extract_outcome_on_battle_end
+    must still set self._outcome and complete normally. A refactor that
+    removes the catch (or changes its scope) should fail this test.
+    """
+
+    def test_outcome_is_set_when_capture_sink_raises(self, controller, mock_service):
+        """Capture-sink exception MUST NOT prevent _outcome from being set."""
+        # _spec only needs to be non-None for the early-return guard at
+        # battle_controller.py:432 to fall through. Mock is sufficient —
+        # production reads engine.replay_id, not spec fields, on this path.
+        controller._spec = Mock(name="battle_spec")
+
+        mock_engine = Mock()
+        mock_engine.replay_id = "test-replay-id"
+        mock_service.get_engine.return_value = mock_engine
+
+        sentinel_outcome = Mock(name="extracted_outcome")
+        with patch(
+            "game.simulation.battle_runner.extract_outcome",
+            return_value=sentinel_outcome,
+        ), patch(
+            "game.simulation.replay.get_default_capture_sink",
+        ) as mock_sink_factory:
+            mock_sink = Mock()
+            mock_sink.on_battle_ended.side_effect = RuntimeError("sink broke")
+            mock_sink_factory.return_value = mock_sink
+
+            # Must not raise.
+            controller._extract_outcome_on_battle_end()
+
+        assert controller._outcome is sentinel_outcome, (
+            "PROJ-331 OBSERVATION-C: _extract_outcome_on_battle_end must "
+            "still set self._outcome even when on_battle_ended raises."
+        )
