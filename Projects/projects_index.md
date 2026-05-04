@@ -4,6 +4,17 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-340 | Test coverage - UI services + utility characterization | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-339 | Test coverage - UI panels mid-risk characterization | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-338 | Test coverage - UI panels high-risk characterization (drag handler, build queue, system tree, planet report, battle panels) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-337 | Test coverage - UI research subsystem characterization | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-336 | Test coverage - strategy services characterization | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-335 | Test coverage - strategy data layer batch characterization | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-334 | Test coverage - algorithmic correctness (pathfinding + galaxy generation) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-333 | Test coverage - per-turn processing engines characterization | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-332 | Test coverage - turn engine characterization | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-331 | Test coverage - combat / save-load characterization (battle_state, battle_controller, conflict_resolution) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-329A | UIWindow retrofit fast wins + inventory + deferral docs | In Progress | 2026-05-04 | 2026-05-04 |
 | PROJ-328 | UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on) | Awaiting Verification | 2026-05-03 | 2026-05-04 |
 | PROJ-327 | Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope | Awaiting Verification | 2026-05-03 | 2026-05-04 |
 | PROJ-326 | Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard | Awaiting Verification | 2026-05-03 | 2026-05-04 |
