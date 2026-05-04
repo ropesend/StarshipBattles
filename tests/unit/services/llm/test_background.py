@@ -124,10 +124,8 @@ class TestSuccessPath:
             stub_llm_provider, [Message(role=Role.USER, content="hi")]
         )
         call.start()
-        # Wait up to 2s for completion.
-        deadline = time.monotonic() + 2.0
-        while call.status not in (CallStatus.DONE, CallStatus.ERROR) and time.monotonic() < deadline:
-            time.sleep(0.01)
+        # PROJ-324 Phase 2: deterministic event-based wait.
+        assert call.wait(timeout=2.0), "call did not complete within 2s"
         assert call.status == CallStatus.DONE
         assert call.result is not None
         assert call.result.text == "stub-response"
@@ -144,9 +142,8 @@ class TestSuccessPath:
         mid = call.elapsed_seconds
         assert mid > 0.0
         # Wait for completion.
-        deadline = time.monotonic() + 2.0
-        while call.status != CallStatus.DONE and time.monotonic() < deadline:
-            time.sleep(0.01)
+        assert call.wait(timeout=2.0), "call did not complete within 2s"
+        assert call.status == CallStatus.DONE
         end = call.elapsed_seconds
         # Frozen after completion: another sleep doesn't increase elapsed.
         time.sleep(0.05)
@@ -160,9 +157,7 @@ class TestErrorPath:
         provider = _SlowProvider(delay=0.0, raise_exc=LLMNetworkError("boom", code="L002"))
         call = LLMBackgroundCall(provider, [Message(role=Role.USER, content="hi")])
         call.start()
-        deadline = time.monotonic() + 2.0
-        while call.status not in (CallStatus.DONE, CallStatus.ERROR) and time.monotonic() < deadline:
-            time.sleep(0.01)
+        assert call.wait(timeout=2.0), "call did not complete within 2s"
         assert call.status == CallStatus.ERROR
         assert call.result is None
         assert isinstance(call.error, LLMNetworkError)
@@ -178,10 +173,7 @@ class TestCancellation:
         call.start()
         time.sleep(0.02)  # let worker actually start
         call.cancel()
-        deadline = time.monotonic() + 2.0
-        while call.status not in (CallStatus.DONE, CallStatus.ERROR, CallStatus.CANCELLED) \
-                and time.monotonic() < deadline:
-            time.sleep(0.01)
+        assert call.wait(timeout=2.0), "call did not reach a terminal state within 2s"
         assert call.status == CallStatus.CANCELLED
         assert call.result is None
 
@@ -209,9 +201,7 @@ class TestStartIdempotency:
         call.start()
         call.start()  # second call MUST be a no-op
         # Wait for completion.
-        deadline = time.monotonic() + 2.0
-        while call.status.name not in ("DONE", "ERROR") and time.monotonic() < deadline:
-            time.sleep(0.01)
+        assert call.wait(timeout=2.0), "call did not complete within 2s"
         # The stub was called exactly once.
         assert stub_llm_provider.call_count == 1
 
@@ -267,10 +257,8 @@ class TestConcurrentCallLimit:
             call.start()
             calls.append(call)
         # Wait for them all.
-        deadline = time.monotonic() + 2.0
-        while not all(c.status in (CallStatus.DONE, CallStatus.ERROR, CallStatus.CANCELLED)
-                      for c in calls) and time.monotonic() < deadline:
-            time.sleep(0.01)
+        for c in calls:
+            assert c.wait(timeout=2.0), "call did not complete within 2s"
         # Now we can start another one.
         extra = LLMBackgroundCall(provider, [Message(role=Role.USER, content="x")])
         extra.start()  # MUST NOT raise

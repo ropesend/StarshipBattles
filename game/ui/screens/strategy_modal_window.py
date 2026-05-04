@@ -75,6 +75,18 @@ class StrategyModalWindow(UIWindow):
             **kwargs: Forwarded to ``UIWindow.__init__``. Typically
                 ``window_display_title``, ``resizable``, etc.
         """
+        # PROJ-324 Phase 1: opt-in test escape hatch. When a test sets
+        # ``Cls.bypass_init = True`` (preferably via the
+        # ``tests.fixtures.ui_widget_factory.bypass_init`` context
+        # manager), skip the heavy ``UIWindow.__init__`` chain that
+        # requires a real pygame display. Production code never sets
+        # the flag; ``getattr`` with default ``False`` keeps behavior
+        # unchanged when the flag is absent. ``type(self)`` (not the
+        # defining class) is required so flags set on concrete
+        # subclasses (e.g., ``FleetReportWindow``) are honored when the
+        # subclass calls ``super().__init__()``.
+        if getattr(type(self), 'bypass_init', False):
+            return
         super().__init__(*args, **kwargs)
         self._window_manager = window_manager
         if window_manager is not None:

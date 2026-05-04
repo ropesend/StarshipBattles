@@ -235,6 +235,63 @@ def _resolve_target_modules(cls: Type) -> tuple:
     return tuple(modules)
 
 
+_SENTINEL = object()
+
+
+@contextlib.contextmanager
+def bypass_init(cls: Type):
+    """Temporarily set ``cls.bypass_init = True`` for UIWindow construction.
+
+    This context manager is intended for **UIWindow subclasses only**
+    (see PROJ-324). The base class's ``__init__`` checks
+    ``getattr(type(self), 'bypass_init', False)`` as its first executable
+    statement and returns immediately when the flag is set, skipping the
+    heavy ``pygame_gui.elements.UIWindow.__init__()`` chain that would
+    otherwise require a real pygame display.
+
+    Non-UIWindow widgets (panels, etc.) should use plain
+    ``make_ui_widget(...)`` without this context manager — they have no
+    ``bypass_init`` guard and the factory's element-class patches alone
+    are sufficient.
+
+    The context manager is a CR-required substitute for bare
+    ``Cls.bypass_init = True`` assignment in test bodies. A test that
+    sets the flag and crashes before unsetting it would leak the flag to
+    every subsequent test in the run; the context manager guarantees
+    cleanup even on exception. Nested ``bypass_init(Cls)`` calls restore
+    the previous value, not just ``False``.
+
+    Example
+    -------
+
+    ::
+
+        from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
+        from game.ui.screens.fleet_report_window import FleetReportWindow
+
+        with bypass_init(FleetReportWindow):
+            window = make_ui_widget(
+                FleetReportWindow,
+                fleet=mock_fleet,
+                empire=mock_empire,
+                window_manager=mock_window_manager,
+            )
+    """
+
+    previous = cls.__dict__.get("bypass_init", _SENTINEL)
+    cls.bypass_init = True
+    try:
+        yield
+    finally:
+        if previous is _SENTINEL:
+            try:
+                delattr(cls, "bypass_init")
+            except AttributeError:
+                pass
+        else:
+            cls.bypass_init = previous
+
+
 def make_ui_widget(
     cls: Type[T],
     extra_modules: tuple = (),
@@ -276,4 +333,4 @@ def make_ui_widget(
         return cls(**defaults)
 
 
-__all__ = ["make_ui_widget"]
+__all__ = ["bypass_init", "make_ui_widget"]

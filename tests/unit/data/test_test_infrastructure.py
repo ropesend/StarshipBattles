@@ -2,55 +2,16 @@
 Unit tests for test infrastructure validation.
 
 PROJ-40/Phase 10: Test Infrastructure cleanup validation tests.
+
+The original ``TestNoDuplicateTestScripts`` class held 8 ``test_no_duplicate_*``
+tests that were marked ``@pytest.mark.skip`` with a TODO to migrate them to a
+linter/hook. PROJ-326 Phase 1 closed that TODO debt: the duplicate-script
+problem they guarded against has been resolved (the files no longer exist),
+and broader scan coverage now lives in ``Tools/lint_test_files.py``.
 """
 from pathlib import Path
 
 import pytest
-
-
-class TestNoDuplicateTestScripts:
-    """Tests for duplicate test script removal.
-
-    PROJ-40/NEW-TEST-001: Duplicate test scripts should be consolidated.
-    """
-
-    @pytest.fixture
-    def tests_dir(self):
-        """Get the tests directory path."""
-        return Path(__file__).parent.parent.parent.parent / "tests"
-
-    # TODO(post-P0): convert these scans to a Tools/ linter or pre-commit hook.
-    @pytest.mark.skip(reason="Migrated to scan, see TODO")
-    def test_no_duplicate_profile_simulation(self, tests_dir):
-        pass
-
-    @pytest.mark.skip(reason="Migrated to scan, see TODO")
-    def test_no_duplicate_repro_shield(self, tests_dir):
-        pass
-
-    @pytest.mark.skip(reason="Migrated to scan, see TODO")
-    def test_no_duplicate_repro_energy_stats(self, tests_dir):
-        pass
-
-    @pytest.mark.skip(reason="Migrated to scan, see TODO")
-    def test_no_duplicate_reproduce_scaling(self, tests_dir):
-        pass
-
-    @pytest.mark.skip(reason="Migrated to scan, see TODO")
-    def test_no_duplicate_stress_test(self, tests_dir):
-        pass
-
-    @pytest.mark.skip(reason="Migrated to scan, see TODO")
-    def test_no_duplicate_generate_test_data(self, tests_dir):
-        pass
-
-    @pytest.mark.skip(reason="Migrated to scan, see TODO")
-    def test_no_duplicate_strategy_tournament(self, tests_dir):
-        pass
-
-    @pytest.mark.skip(reason="Migrated to scan, see TODO")
-    def test_no_duplicate_verify_determinism(self, tests_dir):
-        pass
 
 
 class TestUtilityScriptNaming:

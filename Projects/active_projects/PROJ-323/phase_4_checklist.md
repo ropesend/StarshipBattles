@@ -108,15 +108,17 @@
 
 ---
 
-### Task 4.9: test_colonize_mission_handler.py [Simple]
+### Task 4.9: test_colonize_mission_handler.py [Simple] (data cleanup, not fragile-assertion replacement)
 **File:** `tests/unit/strategy/engine/test_colonize_mission_handler.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_colonize_mission_handler.py`
 
-- [x] [S01-CAT11-001] `make_component_registry duplicate key` (lines 107-123): Remove the duplicate 'colony_pod' entry (lines 113-117).
+> **Categorization correction (PROJ-325 Phase 1 Task 1.7, per OpenCode 323-review FND-P2-004):** this task is data cleanup (removing a duplicated dict key), not a CAT-11 fragile-assertion replacement. The S01-CAT11-001 source-review label is retained for traceability, but the work itself is "remove a duplicate `'colony_pod'` entry from a literal dict" — no assertion semantics changed.
+
+- [x] [S01-CAT11-001] `make_component_registry duplicate key` (lines 107-123): Remove the duplicate 'colony_pod' entry (lines 113-117). _(data cleanup, not fragile-assertion replacement.)_
 
 - [x] Verify: `pytest tests/unit/strategy/engine/test_colonize_mission_handler.py` passes; LOC delta ≈ 6
 
-**Notes:** _(none yet)_
+**Notes:** _(PROJ-325 Phase 1 Task 1.7: re-categorized per OpenCode 323-review FND-P2-004 — kept under Phase 4 for source-review traceability but flagged as data cleanup.)_
 
 ---
 

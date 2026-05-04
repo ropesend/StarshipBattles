@@ -43,12 +43,12 @@
 **File:** `tests/unit/strategy/test_colonization_facade.py`
 **Tests:** `pytest tests/unit/strategy/test_colonization_facade.py`
 
-- [x] [S11-CAT10-004] `Success/failure duplicate patterns` (lines 136-258): Parametrize. _(skipped � upstream project already deleted target file)_
-- [x] [S11-CAT10-005] `Pod-filtering tests` (lines 474-551): Parametrize.
+- [x] [S11-CAT10-004] `Success/failure duplicate patterns` (lines 136-258): Parametrize. _(skipped — upstream project already deleted target file)_
+- [x] [S11-CAT10-005] `Pod-filtering tests` (lines 474-551): Parametrize. _(skipped — upstream project already deleted target file)_
 
-- [x] Verify: `pytest tests/unit/strategy/test_colonization_facade.py` passes; LOC delta ≈ 201
+- [x] Verify: `pytest tests/unit/strategy/test_colonization_facade.py` passes; LOC delta ≈ 201 _(skipped — upstream project already deleted target file; ~201 LOC delta is fictitious)_
 
-**Notes:** _(none yet)_
+**Notes:** _(PROJ-325 Phase 1 Task 1.1: corrected false-positive checkmark on S11-CAT10-005 per OpenCode 323-review FND-CC-001. The prior `[x]` claim implied work was done on `test_colonization_facade.py`, but PROJ-321 deleted that file. Combined claimed delta of ~201 LOC for this task is fictitious.)_
 
 ---
 
@@ -84,12 +84,12 @@
 **File:** `tests/unit/ui/utils/test_color_helpers.py`
 **Tests:** `pytest tests/unit/ui/utils/test_color_helpers.py`
 
-- [x] [S11-CAT10-006] `5 get_hp_bar_color tests` (lines 118-171): Parametrize. _(skipped � upstream project already deleted target file)_
-- [x] [S11-CAT10-007] `5 get_component_status_display tests` (lines 178-236): Parametrize.
+- [x] [S11-CAT10-006] `5 get_hp_bar_color tests` (lines 118-171): Parametrize. _(skipped — upstream project already deleted target file)_
+- [x] [S11-CAT10-007] `5 get_component_status_display tests` (lines 178-236): Parametrize. _(skipped — upstream project already deleted target file)_
 
-- [x] Verify: `pytest tests/unit/ui/utils/test_color_helpers.py` passes; LOC delta ≈ 113
+- [x] Verify: `pytest tests/unit/ui/utils/test_color_helpers.py` passes; LOC delta ≈ 113 _(skipped — upstream project already deleted target file; ~113 LOC delta is fictitious)_
 
-**Notes:** _(none yet)_
+**Notes:** _(PROJ-325 Phase 1 Task 1.1: corrected false-positive checkmark on S11-CAT10-007 per OpenCode 323-review FND-CC-001. The prior `[x]` claim implied work was done on `test_color_helpers.py`, but PROJ-321 deleted that file. Combined claimed delta of ~113 LOC for this task is fictitious. Combined fictitious delta across Tasks 3.3 + 3.6 ≈ 314 LOC.)_
 
 ---
 
@@ -133,11 +133,11 @@
 **File:** `tests/unit/modifiers/test_defense_marker_bindings.py`
 **Tests:** `pytest tests/unit/modifiers/test_defense_marker_bindings.py`
 
-- [x] [S06-CAT10-004] `6 empty-bindings tests` (lines 58-100): Parametrize into a single test. _(deferred � Phase 3 has 46 tasks, each requiring 30-90 min of focused parametrize refactoring. Triaged: 18 obsolete-skipped (files deleted upstream), 1 substantive landed (3.10), 3 leave-as-is per directive (3.15, 3.27 / S01-CAT10-003), the remaining ~24 are deferred with rationale below. Each parametrize refactor is mechanical but requires careful test-by-test inspection to confirm bodies are truly identical and to preserve test IDs. Worth a follow-up dedicated parametrize project (e.g., PROJ-324).)_
+- [x] [S06-CAT10-004] `6 empty-bindings tests` (lines 58-100): Parametrize into a single test. _(landed: 6 marker-ability tests collapsed into a single parametrized `test_marker_ability_has_empty_bindings`.)_
 
-- [x] Verify: `pytest tests/unit/modifiers/test_defense_marker_bindings.py` passes; LOC delta ≈ 43 _(deferred � see task notes above)_
+- [x] Verify: `pytest tests/unit/modifiers/test_defense_marker_bindings.py` passes; LOC delta ≈ 43
 
-**Notes:** _(none yet)_
+**Notes:** _(PROJ-325 Phase 1 Task 1.2: removed misplaced "deferred" annotation per OpenCode 323-review FND-CC-005. Task 3.10 is genuinely landed — the file currently has `@pytest.mark.parametrize` on `test_marker_ability_has_empty_bindings` collapsing 6 ability cases. The original Phase 3 batch deferral rationale belongs in plan.md / project-level notes, not here.)_
 
 ---
 
@@ -423,11 +423,11 @@
 **File:** `tests/unit/strategy/test_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/test_command_handlers.py`
 
-- [x] [S12-CAT10-001] `8+ handler error-path test clusters` (lines 90-290): Parametrize across (handler_cls, cmd_kwargs). _(pass 2 deferred — file has 11 test_fleet_not_found tests spread across distinct handler classes (Colonize, Move, Intercept, Join, ColonizeMission, ClearOrders, Transfer, SplitFleet, MergeFleets, RemoveFromConstructionQueue, AddToConstructionQueue) with per-handler mock_cmd kwargs. Pulling all 11 into a single class-level parametrize would (a) require fixture restructuring to expose a per-handler mock_cmd factory, and (b) destroy the per-class organization that aligns with the production code structure. PROJ-322 already addressed the ones aligned with DUP-002. Recommend a follow-up project to consolidate the remaining error-path patterns once DUP-002 lands fully.)_
+- [x] [S12-CAT10-001] `8+ handler error-path test clusters` (lines 90-290): Parametrize across (handler_cls, cmd_kwargs). **RESOLVED IN PROJ-325 Phase 2 Task 2.1 (commit 02c54631c)** — two-group parametrize landed: Group A `fleet_id` handlers (Colonize, Move, Intercept, ColonizeMission, ClearOrders, Transfer, SplitFleet, DeleteOrder, ReorderOrder = 9), Group B `entity_id` construction-queue handlers (AddToConstructionQueue, RemoveFromConstructionQueue = 2). Total 11 handlers. The PROJ-323 deferral cited Join + MergeFleets but the actual file has DeleteOrder + ReorderOrder instead (no Join.test_fleet_not_found, no MergeFleets handler).
 
-- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta ≈ 200 _(deferred per above rationale)_
+- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta ≈ 200 _(actual: net +9 LOC — case factories + per-handler kwargs consumed most of the deduplicated lines. Real benefit is duplication-elimination, not raw LOC. 80 tests pass post-refactor.)_
 
-**Notes:** _(none yet)_
+**Notes:** _(PROJ-325 Phase 2 Task 2.1 — see commit 02c54631c.)_
 
 ---
 
@@ -461,11 +461,11 @@
 **File:** `tests/unit/strategy/test_fleet_consumable_aggregator.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet_consumable_aggregator.py`
 
-- [x] [S07-CAT10-005] `True/False variant pairs` (lines 84-108, 191-207): **Leave as-is**. _(skipped � upstream project already deleted target file)_
+- [x] [S07-CAT10-005] `True/False variant pairs` (lines 84-108, 191-207): **Leave as-is**. _(skipped — upstream project already deleted target file at the original `tests/unit/strategy/test_fleet_consumable_aggregator.py` path; the file moved to `tests/unit/strategy/data/test_fleet_consumable_aggregator.py` during PROJ-322 reorg.)_
 
 - [x] Verify: `pytest tests/unit/strategy/test_fleet_consumable_aggregator.py` passes; LOC delta ≈ 41
 
-**Notes:** _(Plan-review M-08 (2026-05-03): below ≥3-member parametrize threshold. Two-test clusters do not benefit from parametrization.)_
+**Notes:** _(Plan-review M-08 (2026-05-03): below ≥3-member parametrize threshold. Two-test clusters do not benefit from parametrization for the original True/False variant pairs.) **RESOLVED IN PROJ-325 Phase 2 Task 2.2 (commit 02c54631c)** for a different cluster within the same file: the 4 zero/negative cargo amount tests (load+unload × zero+negative) at the new path `tests/unit/strategy/data/test_fleet_consumable_aggregator.py` were parametrized into a single test (-8 LOC, close to OpenCode 323-review FND-P1-003's ~10 LOC estimate). Production guards both with `if amount <= 0: return 0`._
 
 ---
 
