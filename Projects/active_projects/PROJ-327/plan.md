@@ -15,16 +15,21 @@
 |-------|--------|-----------|
 | 0. Baseline measurement (current sharded suite runtime + per-file profiling) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. PROJ-322 Task 3.14 — `test_virtual_table.py` `@patch` decorator → autouse fixture sweep (~700 LOC, biggest single runtime win expected) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. PROJ-322 mutable-mock fixture rescope (Tasks 2.6 / 2.11 / 2.15 / 2.19 / 3.15) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. PROJ-322 accepted-disposition reconsideration (Tasks 6.1 DUP-001 + 6.4 HLP-001) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. PROJ-322 mutable-mock fixture rescope (Tasks 2.6 / 2.11 / 2.15 / 2.19 / 3.15) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. PROJ-322 accepted-disposition reconsideration (Tasks 6.1 DUP-001 + 6.4 HLP-001) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. PROJ-322 Task 3.25 — `strategy_screen` 50-test refactor (tech debt reduction; runtime delta is bonus, not gate) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Final measurement + documentation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Phases 0+1 complete; Phase 2 ready.
-**Last Action:** Phase 1 complete — migrated 80 of 81 `@patch` decorators in `test_virtual_table.py` to a single autouse class-level fixture (`patched_pygame_gui`). Outcome parity confirmed byte-identical (24 PASSED before + after, 0 changes). File-level runtime: 1.03 s → 1.00 s (~30 ms, ~3 % reclaim). Suite-level slowest shard: 127.7 s → 123.8 s (~3.9 s, ~3 % reclaim). Far less than the design.md "~1.4 s in this file alone" prediction. PROJ-322 phase_3_checklist.md Task 3.14 annotation updated from `DEFERRED-OUT-OF-SCOPE` to `RESOLVED IN PROJ-327 Phase 1`.
-**Next Action:** Phase 2 — mutable-mock fixture rescope across 4 confirmed files (PROJ-322 Tasks 2.6 / 2.11+3.15 / 2.15 / 2.19). Phase 4 trigger remains armed: gap to < 90 s target is still ~34 s; Phases 2-3 alone unlikely to close it.
+**Active Phase:** Phases 0+1+2+3 complete; Phase 4 ready.
+**Last Action:** Phases 2 + 3 complete in a single pass.
+- **Phase 2 (commit 7b05f610a):** 5 PROJ-322 deferrals dispositioned: Strategy A (rescope to module) for empire_treasury_panel and ship_io fixtures; Strategy D (re-confirm deferred) for component_resource_manager and 3.15 (private-attr read); Task 2.15 subsumed under Phase 3. Per-file runtime deltas: test_ship_io.py 2.41 s → 2.13 s (~12% reclaim, biggest single Phase 2 gain from eliminating per-test `fresh_registries` deepcopy); test_empire_treasury_panel.py 1.69 s → 1.64 s (~3%); other 2 files unchanged (deferred). Cumulative single-process Phase 2 reclaim: ~330 ms.
+- **Phase 3 (no commit — measurement-only):** DUP-001 (superweapon handler factory) and HLP-001 (`make_mock_ship` consolidation) both **RE-CONFIRMED DEFERRED** with measurement evidence. DUP-001 construction IS dominant but broad mutation surface (orders/path lists + call records on every test) makes shared session unsafe; the 5 handlers × 2 contracts factory still resolves to a switch statement. HLP-001 construction is small (~3.6% of `test_fleet_report_filters.py` runtime, ~72 ms total per ~627 µs/call microbenchmark); the 4 cited files have confirmed-distinct call shapes (cargo/fuel/display/facade) with no shared pattern to memoize. Both PROJ-322 phase_6_checklist.md annotations updated.
+- **All 7 PROJ-322 deferred items dispositioned** (5 from Phase 2: 2.6/2.11/2.15/2.19/3.15 + 2 from Phase 3: 6.1/6.4). 3 RESOLVED (2.11 fixtures, 2.19 fixtures, 2.15 subsumed); 4 RE-CONFIRMED DEFERRED with new rationale (2.6, 3.15, 6.1, 6.4).
+- **Pre-flight surprise from Phase 2:** PROJ-322 Task 2.19 deferral rationale was incorrect — claimed "many tests mutate the mock ship", but a re-audit grep found ZERO attribute writes against the 3 fixtures across 54 tests. Original rationale appears to have been a misread or stale; the runtime reclaim came from a path the deferral didn't anticipate.
+- **Per user priority** (readability > maintainability > functionality > runtime): the primary win is tech-debt reduction — 5 explanatory comment blocks land in test files (3 in Phase 2 + 2 effectively via PROJ-322 annotation captures), 1 dead-code helper (`minimal_ship`) removed, all 7 deferrals now have current measurement-backed dispositions.
+**Next Action:** Phase 4 — `strategy_screen` 50-test refactor (CONDITIONAL but trigger is armed: gap to <90 s target is still ~34 s; Phases 1+2+3 reclaim ~4.2 s sharded so far).
 **Blockers:** None.
 
 ## Overview
