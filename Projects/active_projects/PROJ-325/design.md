@@ -74,6 +74,8 @@ Net LOC delta of a `bypass_init`-only migration: ~0. Net complexity reduction: 0
 
 **Canonical refactor spec:** [`findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md`](findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md). All execution agents for PROJ-325 Phase 3 + PROJ-328 should treat that plan + the discussion's `outcome.md` as the source of truth.
 
+**PoC findings (REQUIRED reading before any UIWindow-subclass refactor):** [`findings/poc_findings.md`](findings/poc_findings.md) captures 4 refinements to the consensus plan headline that were discovered DURING the RaceSetupScreen PoC implementation (commit `92a7490b6`). Applying the consensus plan verbatim without these findings re-discovers all 4 issues from scratch. Originally only documented in [`Projects/active_projects/PROJ-328/phase_1_checklist.md`](../PROJ-328/phase_1_checklist.md); backported here 2026-05-04 (audit-remediation S1.7).
+
 
 
 ### Background

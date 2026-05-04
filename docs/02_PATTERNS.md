@@ -1723,7 +1723,7 @@ Tests substitute via a `Mock<Class>Composition` that returns pre-stored `MagicMo
 
 - **Eliminates the brittle "patch private method" test pattern.** Pre-PROJ-327, the strategy-screen tests used either `patch.object(screen, '_init_layout')`-style private patching or manually reassigned every `_renderer`, `_camera_nav`, etc. attribute. Adding a 9th sub-object meant editing 50+ tests. With Compositional Construction, adding a slot is a single edit in the protocol + factory + `MockStrategyScreenComposition`.
 - **Makes the production wiring readable.** `__init__` reduces from "8 inline constructors with side-channel coupling to `self._facade`" to "8 `comp.make_*(self)` calls". The `Composition` factory is the single source of truth for the sub-object graph.
-- **Same shape across the codebase.** PROJ-325 RaceSetup, PROJ-322 widget factory, and PROJ-327 StrategyScreen all use one Protocol + one default factory + one mock. New classes that adopt the pattern will read identically.
+- **Scope of current adoption.** StrategyScreen is currently the only full production application of this pattern. Related siblings: RaceSetupScreen / NewGameSetupScreen / TransferDialog use the two-stage construction + builder seam variant; Pattern §33 is the legacy UIWindow retrofit path. New classes that adopt §32 in full (Composition Protocol + default factory + `Mock<Class>Composition`) will read identically to StrategyScreen.
 
 ### Migration notes
 
@@ -1768,10 +1768,12 @@ For UIWindow subclasses, the factory's element-class patches alone are insuffici
 # In every UIWindow subclass __init__ (PROJ-324 Phase 1):
 def __init__(self, ...):
     if getattr(type(self), "bypass_init", False):
-        return  # MUST be the first executable statement
+        return  # SHOULD be the first point where UIWindow.__init__ is avoided
     super().__init__(...)
     # ... rest of init
 ```
+
+The guard SHOULD be the first point where `UIWindow.__init__` is avoided. Code above the guard runs in both production and test modes and MUST be pure-Python (no pygame_gui widgets, no `self.get_container()`). The two-stage construction shape documented below explicitly relies on running cheap state + delegate factory wiring above the guard so that bypass-mode tests still receive real, exercise-able delegates.
 
 Tests then wrap construction in the `bypass_init` context manager (NEVER bare assignment — bare assignment leaks the flag if the test crashes mid-construction):
 
@@ -1811,7 +1813,7 @@ def __init__(self, ..., *, ui_builder: RaceSetupUiBuilder | None = None,
 ### When to Use
 
 - **Any unit test that needs a real UI widget instance without a real pygame display.** Panels, gallery widgets, dialogs — `make_ui_widget(Cls, **kwargs)` is the canonical entry point.
-- **For UIWindow subclasses specifically:** add a `bypass_init` guard at the top of `__init__`, then use `with bypass_init(Cls): make_ui_widget(Cls, ...)` in tests.
+- **For UIWindow subclasses specifically:** add a `bypass_init` guard before the `super().__init__(...)` call (after any pure-Python Stage 1 state + delegate wiring), then use `with bypass_init(Cls): make_ui_widget(Cls, ...)` in tests.
 - **For NEW UI classes:** prefer Pattern #32 (Compositional Construction) up front. The `Composition` Protocol + default factory + `Mock<Class>Composition` shape is the long-term canonical pattern. Reach for `bypass_init` only for legacy code where a two-stage refactor isn't yet justified.
 
 ### When NOT to Use
@@ -1828,7 +1830,7 @@ def __init__(self, ..., *, ui_builder: RaceSetupUiBuilder | None = None,
 
 ### Migration notes
 
-- **The guard MUST be the first executable statement in `__init__`.** Anything before the guard runs even when bypass is active — that's almost always a bug (see PROJ-324 systemic finding 2026-05-04). Audit every adopting subclass.
+- **The guard SHOULD be the first point where `UIWindow.__init__` is avoided.** Code above the guard runs in both production and test modes and MUST be pure-Python (no pygame_gui widgets, no `self.get_container()`). The two-stage construction shape (see "Stage 1: cheap state + delegates" snippet above) deliberately runs cheap state + delegate-factory wiring before the guard so that bypass-mode tests still receive real, exercise-able delegates. PROJ-324's earlier "first executable statement" framing was superseded by the PROJ-325 / PROJ-328 A/B/C two-stage refactor; audit adopting subclasses to confirm only pure-Python state lives above the guard, not that the guard is line 1 of `__init__`.
 - **The guard MUST consult `type(self)`, not the class that defines `__init__`.** Setting `FleetReportWindow.bypass_init = True` must be honored by the inherited `StrategyModalWindow.__init__`. `getattr(type(self), "bypass_init", False)` does the right thing.
 - **Some subclasses call `pygame_gui.elements.UIWindow.__init__(self, ...)` explicitly instead of `super()`.** The guard handles `super()` but not explicit ancestor calls. Audit each affected class for explicit parent-class calls.
 - **Legacy `__new__` bypass helpers can be removed once the corresponding subclass adopts the guard.** PROJ-324 / PROJ-325 / PROJ-328 A/B/C did this incrementally — tests migrated as their target class adopted the two-stage `__init__`.
