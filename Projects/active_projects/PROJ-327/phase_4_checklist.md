@@ -1,13 +1,13 @@
-# Phase 4: `strategy_screen` 50-test refactor (PROJ-322 Task 3.25) — CONDITIONAL
+# Phase 4: `strategy_screen` 50-test refactor (PROJ-322 Task 3.25)
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-327 4`
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-> **⚠️ PHASE 4 IS CONDITIONAL.** Skip entirely if Phases 1-3 cumulative runtime delta meets the user's target set in Phase 0 Task 0.6. If skipped, mark this phase Complete with a single Note: "Skipped — Phases 1-3 met target." and update PROJ-322 Task 3.25 annotation to `**RE-CONFIRMED DEFERRED IN PROJ-327 — Phases 1-3 deltas sufficient; refactor not warranted at this time. Audit at <commit SHA>**`.
+> **Phase 4 is in scope.** Original framing was "conditional on runtime delta" — superseded 2026-05-04 per user direction: priority order is readability > maintainability > functionality > runtime. Phase 4 delivers tech-debt reduction (extract sub-object composition factory, replace 50-test private-method patches with public-boundary tests). Runtime improvement is a bonus, not the gate.
 
-**Status:** Not Started (CONDITIONAL on Phases 1-3 outcome + user target)
+**Status:** Not Started
 **Objective:** Production-side refactor of `strategy_screen.py` to extract sub-object construction to a `StrategyScreenComposition` factory, then migrate 50 tests to use a `MockComposition`. Closes PROJ-322 Task 3.25.
 
 **Required reading:**
@@ -25,14 +25,15 @@
 
 ## Tasks
 
-### Task 4.0: Confirm Phase 4 trigger [Simple]
+### Task 4.0: Pre-flight verification [Simple]
 
-- [ ] Read Phase 0 Task 0.6 outcome (user-set target).
-- [ ] Compute Phases 1-3 cumulative delta against baseline.
-- [ ] If cumulative delta meets target: skip Phase 4 (mark Complete with note above). Done.
-- [ ] If cumulative delta does NOT meet target: proceed to Task 4.1.
+(Was "Confirm Phase 4 trigger" — superseded; Phase 4 is unconditionally in scope per user priority order.)
 
-**Notes:** [Filled during implementation. Record cumulative delta + decision.]
+- [ ] Verify `tests/unit/ui/screens/test_strategy_screen.py` (or equivalent path) still exists. If moved, update references.
+- [ ] Confirm 50-test count (or note actual). Read PROJ-322 Task 3.25 annotation for original deferral context.
+- [ ] Note current cumulative runtime delta from Phases 1-3 for Phase 5 measurement context (NOT a gate).
+
+**Notes:** [Filled during implementation]
 
 ---
 

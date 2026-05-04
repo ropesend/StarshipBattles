@@ -9,6 +9,13 @@
       "count": 2,
       "last_used": "2026-05-03T04:19:42Z"
     },
+    "claude-discuss-start": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-04T04:12:27Z"
+    },
     "claude-proj-continue": {
       "agents": {
         "claude": 1
@@ -29,6 +36,13 @@
       },
       "count": 1,
       "last_used": "2026-04-29T13:47:16Z"
+    },
+    "codex-discuss-respond": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-04T04:13:31Z"
     },
     "codex-starship-analysis-review": {
       "agents": {

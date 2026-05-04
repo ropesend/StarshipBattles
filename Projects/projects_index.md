@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-328 | UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on) | Planning | 2026-05-03 | 2026-05-03 |
 | PROJ-327 | Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope | Planning | 2026-05-03 | 2026-05-03 |
 | PROJ-326 | Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard | Planning | 2026-05-03 | 2026-05-03 |
 | PROJ-325 | PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision | Planning | 2026-05-03 | 2026-05-03 |

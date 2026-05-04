@@ -70,15 +70,9 @@ Net LOC delta of a `bypass_init`-only migration: ~0. Net complexity reduction: 0
 - Production `__init__` builds: `RaceConfig` (or uses `race_to_edit`), `RaceLibrary()` (no-arg), `RaceAssetLoader()` (no-arg), `RaceSetupViewModel(is_editing=...)`, `RaceSetupRenderer(screen=self)`, `RaceSetupController(screen=..., view_model=..., renderer=..., race_config=..., race_library=..., race_registry=..., on_complete_callback=..., on_cancel_callback=...)`, `LLMDialogService(view_model=..., renderer=...)`, `RaceSetupInputHandler(screen=self)`. None of these are pygame_gui-touching.
 - Then `_create_ui()` builds tab buttons (one `pygame_gui.elements.UIButton` per tab name), 7 panels via `panel_factory.create_*_panel(self, panel)` (each panel calls `pygame_gui.elements.UIPanel`), 4 navigation buttons, and the `error_label`. **This is the sole pygame_gui-heavy block.**
 
-**Recommended panel-registry refactor seam:** extract `_create_ui()` into a dependency that defaults to a `_PygameGuiUIBuilder` for production callers and accepts a `MockUIBuilder` (or `lambda screen: None` no-op) for tests. Then a test could do:
+**Recommended refactor approach (SUPERSEDED 2026-05-04):** The original "panel-registry seam alone is sufficient" framing in this section was incorrect — see Codex–Claude consensus. `pygame_gui.elements.UIWindow.__init__` is MRO-bound and heavy regardless of any panel-registry abstraction, so `bypass_init` must stay as the shell-bypass mechanism. The refactor is about (a) what runs *before* the bypass point (cheap state + delegate factory/bundle) and (b) what runs *after* the bypass point (per-class UI builder with paired Null/Mock variants), not replacing `bypass_init`.
 
-```python
-with bypass_init(RaceSetupScreen):
-    screen = make_ui_widget(RaceSetupScreen, rect=..., manager=Mock(), ..., ui_builder=lambda s: None)
-# Then individually mock the small set of widget attrs tests actually touch.
-```
-
-This gets test wiring down to ~5-10 lines per test (vs the current ~30) and unlocks a real LOC delta on `test_race_setup_screen.py`.
+**Canonical refactor spec:** [`findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md`](findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md). All execution agents for PROJ-325 Phase 3 + PROJ-328 should treat that plan + the discussion's `outcome.md` as the source of truth.
 
 
 
@@ -103,27 +97,35 @@ If PROJ-324 Phase 3 Task 3.4 reports GO, this phase is mechanical migration only
 
 This path is consistent with PROJ-324 Tasks 3.1-3.7.
 
-### NO-GO path (bypass_init insufficient)
+### NO-GO path (active per consensus 2026-05-04)
 
-If PROJ-324 Phase 3 Task 3.4 reports NO-GO, this phase grows into a focused production refactor:
+PROJ-324 Phase 3 Task 3.4 reported NO-GO. PROJ-325 Phase 3 is the **canonical proof-of-concept** for the two-stage construction pattern that PROJ-328A/B/C will then apply to the other 6 UIWindow subclasses.
 
-**Refactor approach: extract panel construction to a registry.**
+**Canonical refactor spec:** [`findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md`](findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md) (Codex–Claude consensus, agreed 2026-05-04).
 
-Currently, `RaceSetupScreen.__init__` constructs all 8 panels inline via `_create_ui()` ([`game/ui/screens/race_setup/screen.py:166`](game/ui/screens/race_setup/screen.py#L166)). The refactor:
+**Headline pattern:**
 
-1. Define a `PanelRegistry` protocol that exposes the 8 panel-creation methods.
-2. Construct panels in a default `RaceSetupPanelFactory` that the production caller passes in.
-3. Tests pass a `MockPanelRegistry` that returns Mock objects — eliminates the need for `bypass_init` entirely for those code paths.
+```python
+def __init__(self, rect, manager, ..., *, ui_builder=None, delegate_factory=None):
+    self._init_state(...)
+    self._init_widget_refs()
+    self._delegates = (delegate_factory or DefaultRaceSetupDelegateFactory()).build(self)
 
-**Effort: ~1-2 sessions LLM-paced.** This is a real production refactor, not just a test rewrite. Land in its own commit with a careful before/after diff.
+    if getattr(type(self), "bypass_init", False):
+        self.ui_manager = manager
+        self.rect = rect
+        self._window_init_bypassed = True
+        return
 
-**Decision criteria for GO vs NO-GO** (set by PROJ-324 Phase 3 Task 3.4):
+    super().__init__(rect, manager, ...)
+    (ui_builder or RaceSetupUiBuilder()).build(self)
+```
 
-| Criterion | GO | NO-GO |
-|---|---|---|
-| `make_ui_widget(RaceSetupScreen)` with `bypass_init` succeeds | Yes | Yes (basic construction works) |
-| Test wiring complexity vs existing bypass-init helper | Same or better | Significantly worse — requires manual wiring of the 10+ collaborators that `__init__` would have constructed |
-| Net LOC delta | Negative or neutral | Positive (test files would grow) |
+**Acceptance criteria:** see consensus plan section "PROJ-325 Phase 3 Acceptance Criteria" (8 items). Phase 3 checklist mirrors them.
+
+**Stop condition:** if PoC grows beyond what's scoped here, stop and spin out the remainder. Do NOT balloon PROJ-325 with PROJ-328 work.
+
+**Structural target:** `RaceSetupScreen.__init__` should structurally resemble [`game/ui/screens/battle_setup/screen.py`](../../../game/ui/screens/battle_setup/screen.py) `__init__` (the cleanest in-repo MVVM exemplar).
 
 ## Architecture
 
