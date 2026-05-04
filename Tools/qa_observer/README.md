@@ -5,15 +5,14 @@ The QA Session Observer is a set of background Python scripts designed to passiv
 ## Setup Instructions
 
 1. **Install Dependencies**
-   From the project root, create the repo venv and install the dev requirements:
+   From the project root, install the dev requirements into your system Python 3.14:
    ```bash
-   py -3.14 -m venv .venv
-   .venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+   pip install -r requirements-dev.txt
    ```
 
-   `qa_launcher.py` requires Python 3.14 and prefers `.venv` automatically
-   when it exists. For standalone observer-only work, this smaller dependency
-   set is also valid from this directory:
+   `qa_launcher.py` requires Python 3.14 and uses whichever interpreter
+   invokes it (`sys.executable`). For standalone observer-only work, this
+   smaller dependency set is also valid from this directory:
    ```bash
    pip install -r requirements.txt
    ```

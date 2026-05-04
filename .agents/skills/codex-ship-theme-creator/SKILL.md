@@ -144,4 +144,4 @@ Theme consistency: reuse the same Theme Lock block used for the skins so portrai
 
 All scripts expect to run from any working directory and accept explicit paths. Prefer preserving model output originals under `Production/*_sources/`; never leave project-referenced assets only in `$CODEX_HOME/generated_images`.
 
-`process_theme_images.py` and `validate_theme.py` require Pillow. On this Windows project, prefer the repo `.venv` Python when it has Pillow installed.
+`process_theme_images.py` and `validate_theme.py` require Pillow. On this Windows project, use the system Python 3.14 (`pip install -r requirements-dev.txt` installs Pillow).

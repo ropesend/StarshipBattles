@@ -13,7 +13,6 @@ No production code imports this tool. It is a developer workflow wrapper around 
 Install development dependencies first:
 
 ```powershell
-.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
 ```
 
