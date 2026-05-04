@@ -29,6 +29,7 @@ from game.core.exceptions import (
     LLMRateLimited,
     LLMTimeoutError,
     LLMCancelled,
+    LLMUnexpectedError,
 )
 
 
@@ -348,6 +349,7 @@ class TestExceptionAll:
             LLMRateLimited,
             LLMTimeoutError,
             LLMCancelled,
+            LLMUnexpectedError,
         ]
         for exc_class in exceptions:
             assert issubclass(exc_class, Exception)
@@ -364,7 +366,8 @@ class TestLLMExceptions:
     def test_llm_subclasses_inherit_from_llm_exception(self):
         """All LLM sub-classes inherit from LLMException."""
         for cls in (LLMConfigError, LLMNetworkError, LLMResponseError,
-                    LLMRateLimited, LLMTimeoutError, LLMCancelled):
+                    LLMRateLimited, LLMTimeoutError, LLMCancelled,
+                    LLMUnexpectedError):
             assert issubclass(cls, LLMException), f"{cls.__name__} should subclass LLMException"
 
     def test_llm_exceptions_accept_code_and_context(self):
@@ -393,9 +396,35 @@ class TestLLMExceptions:
     def test_llm_exceptions_are_catchable_as_llm_exception(self):
         """Catching LLMException catches all sub-classes."""
         for cls in (LLMConfigError, LLMNetworkError, LLMResponseError,
-                    LLMRateLimited, LLMTimeoutError, LLMCancelled):
+                    LLMRateLimited, LLMTimeoutError, LLMCancelled,
+                    LLMUnexpectedError):
             with pytest.raises(LLMException):
                 raise cls("test")
+
+    def test_llm_unexpected_error_wraps_non_llm_exception(self):
+        """LLMUnexpectedError preserves the original via __cause__ + context.
+
+        PROJ-321..328 audit S1.1: this subclass exists so
+        `LLMBackgroundCall._run()` can catch a non-LLMException raised by
+        a provider and still keep `_error: LLMException` (the documented
+        type contract) without re-raising. The wrap MUST preserve the
+        original via `__cause__` and record `original_exception_type` in
+        `context` for safe logging. `code` is intentionally `None`.
+        """
+        original = RuntimeError("provider blew up")
+        wrapped = LLMUnexpectedError(
+            f"Provider raised unexpected {type(original).__name__}: {original}",
+            context={"original_exception_type": type(original).__name__},
+        )
+        wrapped.__cause__ = original
+        # Type contract preserved:
+        assert isinstance(wrapped, LLMException)
+        # Safe-to-log context populated:
+        assert wrapped.context["original_exception_type"] == "RuntimeError"
+        # Original exception still recoverable:
+        assert wrapped.__cause__ is original
+        # Code intentionally omitted (no taxonomy slot for "unexpected"):
+        assert wrapped.code is None
 
     def test_llm_exceptions_are_catchable_as_game_exception(self):
         """LLM exceptions propagate through the GameException umbrella."""

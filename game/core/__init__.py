@@ -12,7 +12,8 @@ Exceptions (game.core.exceptions):
     ResourceException, MissingResourceException, PersistenceException,
     SimulationException, ComponentException, FormulaException,
     LLMException, LLMConfigError, LLMNetworkError, LLMResponseError,
-    LLMRateLimited, LLMTimeoutError, LLMCancelled (PROJ-296)
+    LLMRateLimited, LLMTimeoutError, LLMCancelled,
+    LLMUnexpectedError (PROJ-296 + PROJ-321..328 audit S1.1)
 
 Error Codes (game.core.error_codes):
     ErrorCode
@@ -71,6 +72,7 @@ from game.core.exceptions import (
     LLMRateLimited,
     LLMTimeoutError,
     LLMCancelled,
+    LLMUnexpectedError,
 )
 
 # Error Codes (PROJ-45)
@@ -148,6 +150,8 @@ __all__ = [
     # LLM Service Exceptions (PROJ-296)
     'LLMException', 'LLMConfigError', 'LLMNetworkError', 'LLMResponseError',
     'LLMRateLimited', 'LLMTimeoutError', 'LLMCancelled',
+    # PROJ-321..328 audit S1.1: wraps non-LLM provider exceptions in LLMBackgroundCall
+    'LLMUnexpectedError',
     # Error Codes (PROJ-45)
     'ErrorCode',
     # Math

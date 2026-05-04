@@ -92,7 +92,7 @@ care which provider is in use.
 | `Role`, `FinishReason` | str-Enums for message role / completion termination reason. |
 | `Message`, `TokenUsage`, `CompletionResult` | Frozen DTOs. |
 | `LLMBackgroundCall` | Worker-thread wrapper for non-blocking `complete()` calls — see Pattern #28 in `docs/02_PATTERNS.md`. Exposes `status`, `result`, `error`, `elapsed_seconds`, `cancel()`. |
-| `CallStatus` | PENDING / RUNNING / DONE / ERROR / CANCELLED. |
+| `CallStatus` | PENDING / RUNNING / DONE / ERROR / CANCELLED. `wait(timeout)` returns True only when one of DONE/ERROR/CANCELLED is reached. ERROR may carry an `LLMUnexpectedError` if the provider raised a non-LLMException (PROJ-321..328 audit S1.1). |
 | `shutdown_all_calls(timeout=5.0)` | Joins in-flight workers; called from `game/app.py` before `pygame.quit()`. |
 | `get_default_llm_provider()` | Returns the application-wide default provider, or `None` when unconfigured. Consumer pattern: `if provider is not None: show_button()`. |
 | `set_default_llm_provider(p)` | Set the slot. Called by `ApplicationContext.create_production()` and by tests. |
@@ -115,7 +115,9 @@ timeout, retry policy (5xx only, never 429), `MAX_CONCURRENT_CALLS=3`,
 **Error model (`game/core/exceptions.py` `LLMException` branch):**
 `LLMConfigError` (L001), `LLMNetworkError` (L002), `LLMResponseError`
 (L003), `LLMRateLimited` (L004), `LLMTimeoutError` (L005),
-`LLMCancelled` (L006). All inherit from `LLMException` → `GameException`.
+`LLMCancelled` (L006), `LLMUnexpectedError` (no code — wraps any non-LLM
+exception escaping a provider; PROJ-321..328 audit S1.1). All inherit
+from `LLMException` → `GameException`.
 
 **Consumers (PROJ-299 onwards):**
 - `RaceDescriptionLLMController` (`game/strategy/services/race_description_llm_controller.py`) —

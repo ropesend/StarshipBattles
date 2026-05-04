@@ -31,6 +31,7 @@ from game.core.exceptions import (
     LLMCancelled,
     LLMConfigError,
     LLMException,
+    LLMUnexpectedError,
     ValidationException,
 )
 from game.services.llm.provider import LLMProvider
@@ -251,6 +252,29 @@ class LLMBackgroundCall:
                         if self._status != CallStatus.CANCELLED:
                             self._status = CallStatus.ERROR
                             self._error = e
+                        self._finished_at = time.monotonic()
+                    return
+                except Exception as e:  # PROJ-321..328 audit S1.1: catch unexpected non-LLM provider exceptions; preserves wait() contract
+                    # Wrap as LLMUnexpectedError so `_error` stays typed as
+                    # LLMException; the original exception is preserved on
+                    # `__cause__` and its type name in `context` for safe
+                    # logging. Without this branch the exception escaped past
+                    # the inner finally with `_status=RUNNING`, causing
+                    # `wait()` to return True on a non-terminal state.
+                    logger.exception(
+                        "LLMBackgroundCall worker raised non-LLM exception: %r",
+                        e,
+                    )
+                    wrapped = LLMUnexpectedError(
+                        f"Provider raised unexpected {type(e).__name__}: {e}",
+                        context={"original_exception_type": type(e).__name__},
+                    )
+                    wrapped.__cause__ = e
+                    with self._state_lock:
+                        # Cancel wins — if user cancelled mid-call, keep CANCELLED.
+                        if self._status != CallStatus.CANCELLED:
+                            self._status = CallStatus.ERROR
+                            self._error = wrapped
                         self._finished_at = time.monotonic()
                     return
 

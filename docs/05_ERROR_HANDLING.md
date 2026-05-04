@@ -53,6 +53,9 @@ GameException (base - don't raise directly)
             +-- LLMRateLimited         (429 from provider)
             +-- LLMTimeoutError        (request exceeded timeout)
             +-- LLMCancelled           (cancelled via cancel_token)
+            +-- LLMUnexpectedError     (PROJ-321..328 audit S1.1 — wraps any
+                                        non-LLM exception escaping a provider;
+                                        original on __cause__, code is None)
 ```
 
 ### When to Use Each Exception Type
@@ -77,6 +80,7 @@ GameException (base - don't raise directly)
 | **LLMResponseError** | LLM response malformed or non-2xx (other than 429) |
 | **LLMRateLimited** | LLM provider returned 429 — never auto-retried |
 | **LLMTimeoutError** | LLM request exceeded its configured timeout |
+| **LLMUnexpectedError** (PROJ-321..328 audit S1.1) | Provider raised a non-LLMException (e.g., raw `RuntimeError`, third-party HTTP exception not yet mapped). Caught by `LLMBackgroundCall._run()` so `wait()`'s contract holds; original on `__cause__`, type name in `context['original_exception_type']`, `code=None` |
 | **LLMCancelled** | LLM call was cancelled via `cancel_token` |
 
 ### Exception Attributes
@@ -154,6 +158,7 @@ Error codes are defined in `game/core/error_codes.py` using the `ErrorCode` enum
 | L004 | `LLM_RATE_LIMITED` | Provider returned 429 — never auto-retried |
 | L005 | `LLM_TIMEOUT` | Request exceeded its configured timeout |
 | L006 | `LLM_CANCELLED` | Request cancelled via `cancel_token` |
+| _(none)_ | `LLMUnexpectedError` | Provider raised a non-LLMException (`RuntimeError`, third-party HTTP exception, etc.). Caught by `LLMBackgroundCall._run()` and wrapped so `wait()`'s terminal-state contract holds. Original on `__cause__`; `code` intentionally `None` (outside the categorized taxonomy). PROJ-321..328 audit S1.1. |
 
 **Logging hygiene rule:** LLM exception `context` dicts must NEVER include
 the API key, the `Authorization` header, the request body, the response

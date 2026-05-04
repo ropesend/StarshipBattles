@@ -163,6 +163,33 @@ class TestErrorPath:
         assert isinstance(call.error, LLMNetworkError)
         assert call.error.code == "L002"
 
+    def test_unexpected_exception_is_wrapped_to_terminal_error(self):
+        # PROJ-321..328 audit S1.1: a non-LLMException raised by the
+        # provider used to escape `_run()` past the inner finally with
+        # `_status=RUNNING`, so `wait()` returned True on a non-terminal
+        # state. The fix wraps it in `LLMUnexpectedError` and transitions
+        # to ERROR before signaling completion. Reproduces what Codex
+        # demonstrated independently with a `RuntimeError`-raising provider.
+        from game.core.exceptions import LLMException, LLMUnexpectedError
+        from game.services.llm.background import CallStatus, LLMBackgroundCall
+
+        original = RuntimeError("dispatch boom")
+        provider = _SlowProvider(delay=0.0, raise_exc=original)
+        call = LLMBackgroundCall(provider, [Message(role=Role.USER, content="hi")])
+        call.start()
+        assert call.wait(timeout=2.0), "call did not reach terminal state within 2s"
+        assert call.status == CallStatus.ERROR, (
+            "wait() must only return True for terminal state DONE/ERROR/CANCELLED"
+        )
+        assert call.result is None
+        # Wrapped, type-narrowed:
+        assert isinstance(call.error, LLMException)
+        assert isinstance(call.error, LLMUnexpectedError)
+        # Original exception preserved on __cause__:
+        assert call.error.__cause__ is original
+        # Original type recorded in safe-to-log context:
+        assert call.error.context.get("original_exception_type") == "RuntimeError"
+
 
 class TestCancellation:
     def test_cancel_marks_status_cancelled(self):

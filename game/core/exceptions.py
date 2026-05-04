@@ -306,6 +306,31 @@ class LLMCancelled(LLMException):
     pass
 
 
+class LLMUnexpectedError(LLMException):
+    """LLM provider raised a non-LLMException exception (PROJ-321..328 audit S1.1).
+
+    Wraps any unexpected, non-LLM exception that escapes from a
+    provider's `complete()` call (`RuntimeError`, `KeyError`,
+    third-party HTTP-library exceptions not yet mapped to
+    `LLMNetworkError`, etc.). The underlying exception is preserved
+    via `__cause__`; the original exception type is also stored in
+    `context['original_exception_type']` for safe logging.
+
+    `code` is intentionally `None` — the wrapped exception is, by
+    definition, outside the categorized LLM-error taxonomy. Callers
+    that need to distinguish "something unexpected happened" from a
+    specific known LLM failure should use `isinstance(err,
+    LLMUnexpectedError)`.
+
+    Introduced because `LLMBackgroundCall._run()` previously only
+    caught `LLMException` and `LLMCancelled`; any other exception
+    propagated past the inner try/finally with `_status` still
+    `RUNNING`, violating the `wait()` API contract that returns
+    True only for terminal state (DONE/ERROR/CANCELLED).
+    """
+    pass
+
+
 # =============================================================================
 # Image Service Exceptions (PROJ-314)
 # =============================================================================
@@ -400,6 +425,7 @@ __all__ = [
     'LLMRateLimited',
     'LLMTimeoutError',
     'LLMCancelled',
+    'LLMUnexpectedError',
     # Image Service (PROJ-314)
     'ImageException',
     'ImageConfigError',
