@@ -196,8 +196,8 @@
 **File:** `tests/unit/ui/screens/test_new_game_setup_extended.py`
 **Tests:** `pytest tests/unit/ui/screens/test_new_game_setup_extended.py`
 
-- [ ] S08-CAT6-003: rewrite `_make_screen` (lines 16-49) to construct via real `__init__` with mocked pygame_gui dependencies; eliminate the manual 16+ attribute wiring. Coordinate with APC-001-F12 in Phase 5. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** `NewGameSetupScreen` inherits `pygame_gui.elements.UIWindow`; the make_ui_widget factory cannot patch through the `super().__init__()` chain (same root cause as Phase 5 Task 5.12). Tracked alongside the UIWindow inheritance cluster.
-- [ ] Verify: `pytest tests/unit/ui/screens/test_new_game_setup_extended.py` passes; LOC delta approximately -20 _(deferred-out-of-scope — see above.)_
+- [x] S08-CAT6-003: rewrite `_make_screen` (lines 16-49) to construct via real `__init__` with mocked pygame_gui dependencies; eliminate the manual 16+ attribute wiring. Coordinate with APC-001-F12 in Phase 5. **RESOLVED IN PROJ-328 Phase B (commit pending):** NewGameSetupScreen refactored to two-stage construction (ViewModel + Controller + UI builder split). `_make_screen` now uses `bypass_init(NewGameSetupScreen)` + `make_ui_widget(...)` + `MockNewGameSetupUiBuilder()` — manual per-attribute wiring eliminated.
+- [x] Verify: `pytest tests/unit/ui/screens/test_new_game_setup_extended.py` passes; LOC delta approximately -20 _(actual: 15 tests pass; helper went from ~34 LOC of `__new__` + per-attribute wiring to ~25 LOC bypass_init + make_ui_widget + MockBuilder.)_
 
 ---
 
@@ -241,8 +241,8 @@
 **File:** `tests/unit/ui/screens/test_sub_window_hotkeys.py`
 **Tests:** `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py`
 
-- [x] S12-CAT6-001: rewrite the constructor-bypass pattern (lines 36-294) for `OrdersWindow`/`BuildQueueScreen`/`TransferDialog`/`BuildQueueListWindow` to use real construction with mocked pygame_gui; or refactor windows so hotkey logic lives in a separately testable module. Coordinate with APC-001-F16 in Phase 5. **PARTIAL RESOLVED IN PROJ-328 Phase A Task A.6 (commit 2252a6ef3)** — OrdersWindow + BuildQueueListWindow clusters migrated to bypass_init + explicit-Mock-builder construction. BuildQueueScreen cluster unchanged (not a UIWindow subclass — bypass_init machinery doesn't apply; current shape is canonical). TransferDialog cluster left as-is — Phase C scope will rewrite it alongside the deep TransferDialog split. _(original deferral: all four classes inherit from pygame_gui.elements.UIWindow / StrategyModalWindow; PROJ-325 PoC + PROJ-328 Phase A unblocked the UIWindow path for OrdersWindow + BuildQueueListWindow.)_
-- [x] Verify: `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py` passes; LOC delta approximately -150 — actual: 23 tests pass; OrdersWindow + BuildQueueListWindow helpers ~10 LOC each (was ~25 LOC of inline mock wiring per).
+- [x] S12-CAT6-001: rewrite the constructor-bypass pattern (lines 36-294) for `OrdersWindow`/`BuildQueueScreen`/`TransferDialog`/`BuildQueueListWindow` to use real construction with mocked pygame_gui; or refactor windows so hotkey logic lives in a separately testable module. Coordinate with APC-001-F16 in Phase 5. **FULLY RESOLVED IN PROJ-328 Phase A Task A.6 (commit 2252a6ef3) + Phase C (commit 909bfbecf)** — OrdersWindow + BuildQueueListWindow clusters migrated to bypass_init + explicit-Mock-builder construction in Phase A; TransferDialog cluster migrated to bypass_init + `MockTransferUiBuilder` in Phase C alongside the deep TransferDialog MVVM split. BuildQueueScreen cluster unchanged (not a UIWindow subclass — bypass_init machinery doesn't apply; current MagicMock(spec=...) shape is canonical for non-UIWindow screens). _(original deferral: all four classes inherit from pygame_gui.elements.UIWindow / StrategyModalWindow; PROJ-325 PoC + PROJ-328 Phase A unblocked the UIWindow path for OrdersWindow + BuildQueueListWindow; PROJ-328 Phase C closed the TransferDialog portion.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py` passes; LOC delta approximately -150 — actual: 23 tests pass; OrdersWindow + BuildQueueListWindow + TransferDialog helpers all use bypass_init + Mock builder (~10-25 LOC each, replacing per-class inline wiring).
 
 ---
 
