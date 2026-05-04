@@ -1,6 +1,6 @@
 # Combat Simulation System
 
-> **Last verified:** 2026-05-04 — Applied doc-audit fixes (1 item: stale `planetary.py` ability list, see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier verification (2026-05-02): PROJ-320 rewrote § 9 "Performance follow-up (out of BUG-126 scope)" as "PROJ-320 (closed)". Per-fleet movement-opportunity combat triggering replaces the legacy per-tick scan; ~10× fewer dispatches at typical contested sectors. Performance regression gate at `tests/performance/test_contested_hex_round_budget.py`. Earlier same-day pass — issue #8: `SimulationBattleResolver` shortcut branches differentiated. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10` = 2 000 ticks) so the existing replay-capture pipeline records a real (brief) replay; `BattleResult.replay_id` is populated. `sole_survivor` (one team has ≥1 capable ship, the other has 0 ships at start) keeps its shortcut and stays non-replayable, but now ships `BattleResult.replay_unavailable_reason="sole_survivor"` so the Event Log button shows an honest tooltip ("No combat — one side had no ships.") instead of the legacy "older save." wording. Defensive `no_ships` (both fleets empty) keeps the shortcut with `replay_unavailable_reason="no_ships"`. New `max_ticks` kwarg on `build_strategy_battle_spec` swaps BOTH `absolute_max_ticks` AND `end_condition` (to `TickLimitCondition`) — required because the strategy default `TeamEliminatedCondition` cannot fire in a no-weapons battle. Earlier verification (2026-04-29): FEAT-26 documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`); empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract still current.
+> **Last verified:** 2026-05-04 — Coverage backfill (T2-18 / T3-23 / T3-26 / T3-27): added § 11 "Replay Capture & Playback" (PROJ-312); added "Retreat Manager" subsection in § 1 (PROJ-29 SIM-03; clarifies visual-mode wiring vs headless `BoundaryEnforcementPhase`); added "Ship Component Manager" subsection in § 3 (PROJ-240 list-structure owner, distinct from `ModifierManager` / `AbilityManager` / health / resource peers). Earlier same-day pass: doc-audit fix to stale `planetary.py` ability list. 2026-05-02 — PROJ-320 rewrote § 9 "Performance follow-up (out of BUG-126 scope)" as "PROJ-320 (closed)". Per-fleet movement-opportunity combat triggering replaces the legacy per-tick scan; ~10× fewer dispatches at typical contested sectors. Performance regression gate at `tests/performance/test_contested_hex_round_budget.py`. Earlier same-day pass — issue #8: `SimulationBattleResolver` shortcut branches differentiated. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10` = 2 000 ticks) so the existing replay-capture pipeline records a real (brief) replay; `BattleResult.replay_id` is populated. `sole_survivor` (one team has ≥1 capable ship, the other has 0 ships at start) keeps its shortcut and stays non-replayable, but now ships `BattleResult.replay_unavailable_reason="sole_survivor"` so the Event Log button shows an honest tooltip ("No combat — one side had no ships.") instead of the legacy "older save." wording. Defensive `no_ships` (both fleets empty) keeps the shortcut with `replay_unavailable_reason="no_ships"`. New `max_ticks` kwarg on `build_strategy_battle_spec` swaps BOTH `absolute_max_ticks` AND `end_condition` (to `TickLimitCondition`) — required because the strategy default `TeamEliminatedCondition` cannot fire in a no-weapons battle. Earlier verification (2026-04-29): FEAT-26 documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`); empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract still current.
 
 System documentation for the real-time combat simulation layer.
 
@@ -546,6 +546,51 @@ display fields (`name`, `ship_class`, `hp`, `max_hp`,
 at battle end. Two-column layout with per-ship HP bars, weapon
 accuracy tables, and team summaries.
 
+### Retreat Manager (PROJ-29 SIM-03)
+
+**File:** `game/simulation/managers/retreat_manager.py`
+
+`RetreatManager` (line 47) owns per-ship retreat state during visual-mode
+battles. It was extracted from `BattleController` by PROJ-29 SIM-03 to
+isolate retreat lifecycle from the controller god-class.
+
+**Public API:**
+
+| Method | Purpose |
+|--------|---------|
+| `request_retreat(ship, ship_id_map, method=EDGE\|WARP) → (ok, error)` | Begin retreat. EDGE navigates the ship to the boundary edge; WARP charges a warp drive over `WARP_CHARGE_TICKS` (interruptible by damage if the ship's component config says so). |
+| `cancel_retreat(ship, ship_id_map) → (ok, error)` | Abort an active retreat. |
+| `update(get_ship_by_id) → None` | Per-tick state machine: advances charge counters, detects edge arrival, fires the escape callback. |
+| `is_retreating(ship, ship_id_map) → bool` | Status query. |
+| `get_retreat_state(ship, ship_id_map) → RetreatState \| None` | Detailed progress (method, target, charge ticks, interruptible flag). |
+| `set_on_ship_escaped(callback) → None` | Hook fired when a ship completes retreat. `BattleController` uses this to remove the ship from the engine and append it to `retreated_ships`. |
+
+`RetreatMethod` (line 31, `Enum`) and `RetreatState` (line 38, frozen
+dataclass) are the supporting types.
+
+**Wiring (visual mode only).** `BattleController.__init__` constructs the
+manager when the spec is configured (`battle_controller.py:132`); the
+controller's tick loop calls `_update_retreats()` (line 558) which
+delegates to `RetreatManager.update()`, gated on `_retreat_allowed()`
+(returns `True` only when `BattleConfig.allow_retreat=True`).
+
+**Headless path uses a different mechanism.** `run_battle()` does not
+construct a `BattleController` — strategy battles bypass it entirely.
+Boundary handling there is the `BoundaryEnforcementPhase`
+(`game/simulation/systems/tick_phase.py:117`, slot 250 in the tick-phase
+registry; PROJ-269 Phase 3 Task 3.1). That phase consults
+`BattleSpec.boundary` (a `BoundaryRegion` ADT — `RectBoundary`,
+`CircleBoundary`, or `UnboundedRegion`) and applies the spec's
+`exit_policy` (e.g. `BoundaryExitPolicy.RETREAT` substitutes for the
+removed `BattleMode.can_retreat` flag — see § 2). `RetreatManager` is
+not part of that path.
+
+**Tests:**
+- `tests/unit/simulation/managers/test_retreat_manager.py` — state
+  machine + callback wiring.
+- `tests/integration/simulation/test_boundary_retreat.py` — bounded vs
+  `UnboundedRegion` behaviour through the headless boundary phase.
+
 ---
 
 ## 2. Battle Modes — REMOVED in PROJ-269 Phase 6
@@ -616,6 +661,50 @@ Ship
 
 All subsystems are lazy-initialized. `ShipCombatEngine` subsystems (TargetingSystem,
 DamageCalculator, WeaponFiringSystem) are class-level shared instances since they are stateless.
+
+### Ship Component Manager (PROJ-240)
+
+**File:** `game/simulation/entities/ship_component_manager.py`
+
+`ShipComponentManager` (line 18) owns the **list structure** for a ship's
+components: per-layer storage, the all-components cache, and the
+weapon-only cache. It was extracted from the `Ship` god-class by PROJ-240
+Phase 1 to make component-list management testable in isolation and to
+fix a stale-cache bug (the older invalidation was tick-coupled; PROJ-240
+replaced it with the dirty-flag pattern below).
+
+**Public API:**
+
+| Method | Purpose |
+|--------|---------|
+| `add_component(component, layer_type) → bool` | Validate via `Ship`'s data-driven layer rules; attach; recalculate stats; invalidate caches. |
+| `add_components_bulk(component, layer_type, count) → int` | Batch add — single stat recalc + cache invalidation at the end. Returns the number successfully added. |
+| `remove_component(layer_type, index) → Component \| None` | Pop by index, recalculate, invalidate. |
+| `get_all_components() → List[Component]` | Cached, defensive copy. |
+| `get_weapon_components_cached() → List[Component]` | Weapon-only cache for the AI targeting hot path. |
+| `get_components_by_layer(layer_type) → List[Component]` | Filtered live view. |
+| `iter_components() → Iterator[(LayerType, Component)]` | Lazy iteration over every component with its layer. |
+| `get_components_by_ability(predicate) → List[Component]` | Filter by ability presence; used by stat aggregators. |
+| `find_component_with_index(predicate) → (LayerType, int, Component) \| None` | First match search; returns the layer + index so callers can `remove_component`. |
+| `has_components() → bool` | Empty check. |
+| `clear_non_hull_components() → None` | Reinforcement helper — strip everything except HULL components. |
+
+**Cache invalidation.** Two dirty flags (`_components_cache_dirty`,
+`_weapon_cache_dirty`) are set on every mutation; the next reader rebuilds
+the cache lazily. Callers should use `get_all_components()` /
+`get_weapon_components_cached()` rather than reaching into the underlying
+layer dict — those accessors honour the dirty flag.
+
+**Distinct from peer managers.** `ShipComponentManager` owns the **list**;
+behaviour on components lives in:
+
+- `ModifierManager` — modifier application and queries.
+- `AbilityManager` — ability lookup and aggregation.
+- `ComponentHealthManager` — HP / destroyed-status tracking.
+- `ComponentResourceManager` — per-component resource generation/consumption.
+
+`Ship` delegates to all of these; see the Pattern #5 (Facade/Delegate)
+quick reference in [`02_PATTERNS.md`](../02_PATTERNS.md).
 
 ### Component Caching (PROJ-49)
 
@@ -1185,3 +1274,104 @@ manoeuvre but no shots fire. The truncated path uses
 `absolute_max_ticks=N` AND `end_condition=TickLimitCondition(max_ticks=N)`
 — required because the strategy default `TeamEliminatedCondition`
 cannot fire when neither team has any way to destroy the other.
+
+---
+
+## 11. Replay Capture & Playback (PROJ-312)
+
+The replay system is **not a separate engine.** A replayed battle is the
+same `run_battle(spec)` running with a frozen RNG seed and ship state
+reconstructed from a captured snapshot. The pieces in `game/simulation/replay/`
+package the inputs/outputs of a battle into a JSON-safe record that can be
+re-fed into `run_battle()` later.
+
+**Files:** `game/simulation/replay/`
+- `replay_serialization.py` — free-function `to_dict`/`from_dict` pairs for
+  every simulation DTO (boundary, modifier entry, modifier stack,
+  `BattleSpec`, `BattleOutcome`). Defines `REPLAY_SCHEMA_VERSION = "1.0.0"`.
+  Free functions (not methods) so DTOs stay frozen/hashable.
+- `replay_spec.py` — `ReplaySpec`, `ReplayShipSpec`. JSON-safe mirror of
+  `BattleSpec`. Each `ReplayShipSpec` carries a per-ship `ShipInstance`
+  snapshot so playback is decoupled from current strategy state.
+- `replay_outcome.py` — `ReplayOutcome`. Tags a serialized `BattleOutcome`
+  with the schema version (symmetric to `ReplaySpec`).
+- `replay_record.py` — `ReplayRecord`. Frozen dataclass bundling spec +
+  outcome + capture metadata (id, timestamp, sector, turn, empires,
+  components-registry hash). The exact disk format written by
+  `ReplayStore` (strategy-side; see [strategy_layer.md](strategy_layer.md)).
+- `replay_capture.py` — `IReplayCaptureSink` protocol + `NullCaptureSink`
+  + `ReplayCaptureContext` DTO. Module-level DI: `get_default_capture_sink()`
+  / `set_default_capture_sink()` / `reset_default_capture_sink()`.
+- `replay_player.py` — playback entry: `build_replay_ship_builder(record)`,
+  `replay_record_to_spec(record)`, `run_replay_headless(record, ai_factory, ship_builder)`.
+
+### Capture Lifecycle
+
+```
+start_engine_from_spec(spec, ...)         # battle_runner.py
+   │  (1) sink = get_default_capture_sink()
+   │  (2) replay_id = sink.on_battle_started(replay_spec, context=ctx)
+   │  (3) engine.replay_id = replay_id
+   ▼
+run_battle ticks the engine to completion
+   │
+   ▼
+extract_outcome(engine)                   # battle_runner.py
+   │  reads engine.replay_id; "" → None coercion
+   │  sink.on_battle_ended(replay_id, outcome)
+   ▼
+BattleOutcome.replay_id : Optional[str]   # plumbed onward (see § 10)
+```
+
+`ReplayCaptureContext` is built by the **caller** (`build_strategy_battle_spec`
+adds sector/turn/empires; the components-registry hash is computed via
+`compute_components_registry_hash()`). The simulation layer never knows
+strategy-shaped metadata — the sink owns it.
+
+`NullCaptureSink.on_battle_started` returns `""`, which `extract_outcome`
+coerces to `None`. This is the single-signal canonicalisation documented
+in § 10 ("Empty-string canonicalisation").
+
+### Playback Lifecycle
+
+1. UI resolves a `replay_id` to a `ReplayRecord` via the strategy-side
+   `ReplayResolver` (see [strategy_layer.md](strategy_layer.md) §
+   "Replay Persistence"). Resolver gates on schema version and registry
+   hash; mismatches surface as `version_drift` / `registry_drift`.
+2. `replay_record_to_spec(record)` rebuilds a `BattleSpec` from the
+   serialized graph (boundary, fleets, modifier stack, AI specs).
+3. `build_replay_ship_builder(record)` returns a closure that, for each
+   `ShipSpec.instance_id`, looks up the snapshot blob, calls
+   `ShipInstanceSerializer.from_dict()` (cross-layer late import — see
+   [01_ARCHITECTURE.md](../01_ARCHITECTURE.md) § Late Imports), then
+   `ShipInstance.to_ship(pos, team_id, registries)` to materialise an
+   in-engine `Ship`.
+4. **Headless playback:** `run_replay_headless(record, ai_factory, ship_builder)`
+   calls `run_battle(spec, ship_builder=..., capture_context=None)`. The
+   `None` capture context is critical — it suppresses the sink so the
+   replay does not itself produce a replay (no infinite loop).
+5. **Visual playback:** the UI dispatches to
+   `BattleController.start_from_spec(spec, replay_mode=True, ship_builder=...)`.
+   `BattleScreen` renders a "REPLAY MODE" badge, hides order buttons, and
+   skips the post-battle results transition.
+
+### Determinism Contract
+
+Replays are byte-stable because the RNG is fully seeded per battle. See
+[`02_PATTERNS.md`](../02_PATTERNS.md) Pattern #18 (Per-Battle RNG, PROJ-252,
+extended by PROJ-312): an AST guard test forbids unseeded `random.*` /
+`time.time()` calls inside `simulation/`, `engine/`, and `ai/` layers. New
+abilities that need randomness must accept an injected `Random` instance
+or `seed` parameter. Adding a non-deterministic source anywhere in the
+hot path will fail CI.
+
+### Test Coverage
+
+| Test | Purpose |
+|------|---------|
+| `tests/integration/simulation/test_replay_playback.py` | Round-trip determinism: capture → serialize → deserialize → re-run → outcome equality. |
+| `tests/integration/simulation/test_replay_capture_e2e.py` | `SimulationBattleResolver` wiring of the capture sink across the simulator + truncated branches. |
+| `tests/integration/strategy/test_event_log_replay_e2e.py` | UI-side button click → resolver → playback dispatch. |
+| `tests/unit/simulation/replay/test_replay_serialization.py` | `to_dict`/`from_dict` round-trips per DTO. |
+| `tests/unit/strategy/test_replay_resolver.py` | Graceful degradation for missing / corrupt / version-drift / registry-drift. |
+| `tests/unit/strategy/test_replay_store.py` | Persistence (atomic write, ring-buffer eviction, settings fallback). |
