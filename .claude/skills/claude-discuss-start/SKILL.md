@@ -1,25 +1,36 @@
 ---
 name: claude-discuss-start
-description: Open a v2.4 inter-agent discussion with Codex and/or OpenCode. The user supplies a parent folder; this skill creates a timestamped child sub-folder for the discussion, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party Claude+Codex discussion; pass `--with codex,opencode` for 3-party or `--with opencode` for Claude+OpenCode.
-argument-hint: <parent-folder> [--slug <slug>] [--with <agents>] [context...]
+description: Open a v2.5 inter-agent discussion with Codex and/or OpenCode. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party Claude+Codex discussion; pass `--with codex,opencode` for 3-party or `--with opencode` for Claude+OpenCode.
+argument-hint: [--folder <parent>] [--slug <slug>] [--with <agents>] [context...]
 ---
 
-# Inter-Agent Discussion — Claude Starts (v2.4)
+# Inter-Agent Discussion — Claude Starts (v2.5)
 
 You are opening a multi-turn discussion with one or two other agents.
 Participants are drawn from `{claude, codex, opencode}` per the canonical
-ring. The user supplies a **parent** folder; you create a timestamped child
-sub-folder. The user invokes the matching `*-discuss-respond` skill on each
-other participant; those skills find the leaf via parent scan.
+ring. The parent folder defaults to
+`<repo-root>/AgentCoordination/Scratchpad/Discussion`; `--folder` overrides it.
+You create a timestamped child sub-folder. The user invokes the matching
+`*-discuss-respond` skill on each other participant; those skills find the leaf
+via parent scan.
+
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
 
 This is a peer-to-peer dialogue, not a delegation. Other agents are your
-equals. Push back, propose alternatives, agree where you actually agree.
+equals. Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
 
-## Protocol — interagent-discussion/v1 (v2.4 spec)
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
+
+## Protocol — interagent-discussion/v1 (v2.5 spec)
 
 | Field | Value |
 |-------|-------|
-| Parent | `$args[0]`; absolute or repo-relative; quote if it contains spaces |
+| Parent | optional `--folder <parent>`; default `<repo-root>/AgentCoordination/Scratchpad/Discussion` |
 | Discussion leaf | child of parent: `YYYYMMDDTHHMMSSZ[_<slug>]/` |
 | Slug flag | optional `--slug <kebab-case>` (separate flag arg) |
 | Participants flag | optional `--with <comma-separated agents>`; default `codex` |
@@ -35,17 +46,33 @@ equals. Push back, propose alternatives, agree where you actually agree.
 ## Step 1 — Parse arguments
 
 ```powershell
-$Parent = $args[0]
-if (-not [System.IO.Path]::IsPathRooted($Parent)) {
-  $Parent = Join-Path 'c:\Dev\Starship Battles' $Parent
+function Get-RepoRoot {
+  $root = (git rev-parse --show-toplevel 2>$null)
+  if ($LASTEXITCODE -eq 0 -and $root) { return $root.Trim() }
+  $dir = Get-Location
+  while ($dir) {
+    if ((Test-Path -LiteralPath (Join-Path $dir 'AGENTS.md')) -and
+        (Test-Path -LiteralPath (Join-Path $dir 'game')) -and
+        (Test-Path -LiteralPath (Join-Path $dir 'data'))) {
+      return $dir.FullName
+    }
+    $dir = $dir.Parent
+  }
+  throw 'Unable to discover repository root.'
 }
 
-# Optional flags after parent: --slug <slug> and/or --with <agents>
+$RepoRoot = Get-RepoRoot
+$Parent = Join-Path $RepoRoot 'AgentCoordination\Scratchpad\Discussion'
+
+# Optional flags: --folder <parent>, --slug <slug>, and/or --with <agents>
 $Slug = ''
 $WithList = 'codex'  # default: 2-party Claude+Codex
-$Idx = 1
+$Idx = 0
 while ($Idx -lt $args.Length) {
-  if ($args[$Idx] -eq '--slug' -and $Idx + 1 -lt $args.Length) {
+  if ($args[$Idx] -eq '--folder' -and $Idx + 1 -lt $args.Length) {
+    $Parent = $args[$Idx + 1]
+    $Idx += 2
+  } elseif ($args[$Idx] -eq '--slug' -and $Idx + 1 -lt $args.Length) {
     $Slug = $args[$Idx + 1]
     if ($Slug -match '\s' -or $Slug -notmatch '^[a-z0-9][a-z0-9-]*$') {
       Write-Output "ABORT: --slug must be lowercase kebab-case (a-z, 0-9, '-'), got '$Slug'"
@@ -58,6 +85,9 @@ while ($Idx -lt $args.Length) {
   } else {
     break
   }
+}
+if (-not [System.IO.Path]::IsPathRooted($Parent)) {
+  $Parent = Join-Path $RepoRoot $Parent
 }
 $InlineContext = if ($args.Length -gt $Idx) {
   ($args[$Idx..($args.Length - 1)] -join ' ')
@@ -122,8 +152,8 @@ New-Item -ItemType Directory -Force -Path (Join-Path $Folder 'plans') | Out-Null
 Write-Output "Discussion leaf: $Folder"
 ```
 
-Recommended (not enforced) parent location:
-`AgentCoordination/Scratchpad/Discussion/` per CLAUDE.md scratchpad rule.
+Default parent location:
+`<repo-root>/AgentCoordination/Scratchpad/Discussion/` per AGENTS.md scratchpad rule.
 
 ## Step 5 — Read optional `<leaf>/topic.md`
 
@@ -159,7 +189,7 @@ Body must include, in order:
    - Relevant files/constraints/conventions other agents need to know.
    - What you want from each other agent.
 
-### Message file format (v2.4 — adds `participants` and `turn_order` to arc-starter frontmatter)
+### Message file format (v2.5)
 
 Frontmatter is the **first thing in the file** (line 1 = `---`). Heading goes
 inside the body. Use the actual current UTC time.
@@ -311,6 +341,12 @@ Extension takes it to `10 × n`.
    ---
    ```
    If you edit, include `## Plans touched` listing each new revision file.
+
+### Protocol self-improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
 
 9. **Compute outgoing write target**: `j_out = i_in + 1`. Verify
    `participants[(j_out-1) mod n] == 'claude'`. Recipient is
@@ -465,6 +501,6 @@ user-facing agent. Tell the user:
 - **v2.3 readback** (for old Claude+Codex transcripts without `participants`):
   derive `participants = [arc01_001.from, arc01_001.to]`,
   `turn_order = round-robin`. Legacy `implementation_owner: both` accepted
-  for v2.3 outcome readback only; v2.4 writers never emit it.
-- **No legacy compatibility for new discussions.** v2.4 writers always emit
+  for v2.3 outcome readback only; v2.5 writers never emit it.
+- **No legacy compatibility for new discussions.** v2.5 writers always emit
   `participants` and `turn_order` on arc starters.

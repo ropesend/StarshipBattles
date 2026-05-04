@@ -1,24 +1,34 @@
 ---
 name: ocode-discuss-respond
-description: Join a v2.4 inter-agent discussion that Claude or Codex opened. The argument may be either the exact discussion leaf or a parent folder containing one or more leaves; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to OpenCode. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion — it just takes the next turn whenever it is OpenCode's turn. Use after the user has invoked the matching `*-discuss-start` skill on the originating agent.
-argument-hint: <folder-or-parent>
+description: Join a v2.5 inter-agent discussion that Claude or Codex opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to OpenCode. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.
+argument-hint: [--folder <folder-or-parent>]
 ---
 
-# Inter-Agent Discussion — OpenCode Responds (v2.4)
+# Inter-Agent Discussion — OpenCode Responds (v2.5)
 
-You are joining a multi-turn discussion. The user may pass the exact
-discussion leaf OR a parent folder containing one or more discussion leaves;
-this skill resolves the leaf via parent-folder discovery (latest-state
+You are joining a multi-turn discussion. The folder defaults to
+`<repo_root>/AgentCoordination/Scratchpad/Discussion`; `--folder` may point to
+the exact discussion leaf OR a parent folder containing one or more discussion
+leaves. This skill resolves the leaf via parent-folder discovery (latest-state
 based, NOT pair-specific).
 
-This is a peer-to-peer dialogue, not a delegation. Other agents are your
-equals. Push back, propose alternatives, agree where you actually agree.
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
 
-## Protocol — interagent-discussion/v1 (v2.4 spec)
+This is a peer-to-peer dialogue, not a delegation. Other agents are your
+equals. Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
+
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
+
+## Protocol — interagent-discussion/v1 (v2.5 spec)
 
 | Field | Value |
 |-------|-------|
-| Argument | first positional arg — leaf or parent; resolution algorithm below |
+| Argument | optional `--folder <folder-or-parent>`; defaults to `<repo_root>/AgentCoordination/Scratchpad/Discussion` |
 | Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md`, where from/to ∈ `{claude,codex,opencode}` |
 | Turn formula | `from = P[(i-1) mod n]`, `to = P[i mod n]` where `P = participants`, `n = len(P)` |
 | Default per-arc cap | `5 × n` messages (one in-band extension to `10 × n` per arc) |
@@ -31,9 +41,10 @@ arc-starter message.
 
 ## Step 1 — Resolve the folder
 
-Take the first positional argument. Resolve relative to the repository
-root (discovered at runtime — do not hardcode a checkout path) if not
-absolute. Abort if the path does not exist.
+Use `<repo_root>/AgentCoordination/Scratchpad/Discussion` unless
+`--folder <folder-or-parent>` is supplied. Resolve relative overrides against
+the repository root (discovered at runtime; do not hardcode a checkout path).
+Abort if the path does not exist. Positional folders are not part of v2.5.
 
 ## Step 2 — Whitespace warning (informational)
 
@@ -46,7 +57,7 @@ The argument may be the leaf or a parent.
 
 **Resolution algorithm:**
 
-1. **Try as leaf.** If the path directly contains v2.4 protocol files
+1. **Try as leaf.** If the path directly contains v2.5 protocol files
    matching `^arc[0-9]{2}_[0-9]{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\.md$`,
    `^outcome\.md$`, or `^outcome_arc[0-9]{2}\.md$`, treat it as a leaf and
    skip to Step 4.
@@ -154,7 +165,7 @@ poll_for_message() {
 
 ## Step 8 — Read incoming and validate
 
-Required validation per v2.4:
+Required validation per v2.5:
 
 1. **Schema**: required fields present; `from != to`; `from`/`to` ∈
    `{claude,codex,opencode}`.
@@ -198,6 +209,12 @@ Repeat until terminal:
 5. **Edit shared plans this turn (if appropriate).** Plan files at
    `<leaf>/plans/<name>_r<NNN>.md`. Never overwrite.
 
+### Protocol self-improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
+
 6. **Compute outgoing write target.** `j_out = i_in + 1`. Verify
    `participants[(j_out-1) mod n] == 'opencode'`. Recipient is
    `participants[j_out mod n]`. Filename:
@@ -220,8 +237,8 @@ Repeat until terminal:
    (read and validate). If it does not exist, write a heartbeat and
    **retry the glob every 15-30 seconds** until the file appears or a
    5-minute timeout elapses. On timeout, retry once. On second timeout,
-   write outcome.md with status `needs-user` and report "no response from
-   {sender} within polling window."
+   surface "no response from {sender} within polling window" to the user.
+   Do not write `outcome.md` on timeout.
 
 9. Read the incoming message, validate per Step 8, then **loop back to
    Step 10.1** (re-read plans, compose reply). Do NOT skip to Step 12.
@@ -300,8 +317,7 @@ continuation_starter: <agent>       # optional; default = original starter
 
 **PRE-GATE:** This step runs ONLY if:
 - An `outcome.md` was just written (Step 11), OR
-- The polling loop (Step 10) timed out and outcome.md was written with
-  `status: needs-user`, OR
+- The polling loop (Step 10) timed out and you are surfacing that timeout, OR
 - You are the original arc-1 starter AND a terminal condition exists.
 
 If none of these conditions are met, DO NOT proceed to this step. You are

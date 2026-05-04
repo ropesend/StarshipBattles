@@ -2,6 +2,13 @@
   "install_id": "d9797b649b724199879d59be61d9e432",
   "schema_version": 1,
   "skills": {
+    "claude-discuss-start": {
+      "agents": {
+        "claude": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-04T14:23:18Z"
+    },
     "codex-discuss-continue": {
       "agents": {
         "codex": 2
@@ -11,10 +18,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 3
+        "codex": 5
       },
-      "count": 3,
-      "last_used": "2026-05-04T12:25:14Z"
+      "count": 5,
+      "last_used": "2026-05-04T14:23:51Z"
     },
     "codex-discuss-start": {
       "agents": {
@@ -25,10 +32,10 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 8
+        "codex": 9
       },
-      "count": 8,
-      "last_used": "2026-05-04T12:13:34Z"
+      "count": 9,
+      "last_used": "2026-05-04T13:24:35Z"
     },
     "codex-starship-qa-observer": {
       "agents": {
@@ -36,6 +43,13 @@
       },
       "count": 2,
       "last_used": "2026-05-02T20:35:44Z"
+    },
+    "ocode-discuss-respond": {
+      "agents": {
+        "ocode": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-04T14:24:03Z"
     },
     "skill-creator": {
       "agents": {

@@ -1,6 +1,6 @@
 ---
 name: codex-discuss-continue
-description: Continue an ended v2.4 inter-agent discussion when Codex is the authorized continuation starter, archiving the prior outcome and opening the next round-robin arc.
+description: Continue an ended v2.5 inter-agent discussion when Codex is the authorized continuation starter, archiving the prior outcome and opening the next round-robin arc.
 ---
 
 # Codex Discuss Continue
@@ -8,9 +8,19 @@ description: Continue an ended v2.4 inter-agent discussion when Codex is the aut
 Continue an ended `interagent-discussion/v1` discussion by selecting a prior
 discussion leaf, verifying Codex is authorized to open the next arc, archiving
 the previous `outcome.md`, writing `arc<N+1>_001_codex_to_<next>.md`, and then
-entering the normal v2.4 loop.
+entering the normal v2.5 loop.
 
-Reference: `AgentCoordination/Scratchpad/Discussion/20260504T031013Z/plans/v2.4_three_party_spec_r002.md`.
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
+
+This is a peer-to-peer dialogue, not a delegation. Other agents are equals.
+Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
+
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
 
 ## Inputs
 
@@ -57,7 +67,7 @@ Message files match:
 ## Participants And Turn Computation
 
 Read `participants` and `turn_order` from arc 1. Continuation arcs inherit both
-unchanged. The only legal `turn_order` value in v2.4 is `round-robin`.
+unchanged. The only legal `turn_order` value in v2.5 is `round-robin`.
 
 For v2.3 readback, if `arc01_001_*` lacks `participants`, derive
 `participants = [from, to]` from the arc-1 starter and set
@@ -145,6 +155,12 @@ fenced blocks. Do not summarize, paraphrase, or modify those blocks.
   `last_edited_by`, `last_edited_at_utc`, and `revision: <int>`.
 - `## Plans touched` references the specific new revision file.
 
+## Protocol Self-Improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
+
 ## Validation
 
 Validate all consumed and produced protocol files:
@@ -162,7 +178,7 @@ surface the diagnostic.
 
 ## Loop And Extension
 
-After writing the new arc starter, use the normal v2.4 loop:
+After writing the new arc starter, use the normal v2.5 loop:
 
 - Incoming wait target for Codex: smallest missing `i_in` where `P[i_in mod n] == codex`; glob `arc<NN>_<i_in:03d>_*_to_codex.md`.
 - Outgoing target after reading `i_in`: `j_out = i_in + 1`; require `P[(j_out - 1) mod n] == codex`; write `arc<NN>_<j_out:03d>_codex_to_<P[j_out mod n]>.md`.
@@ -228,5 +244,5 @@ If present, it must be in `participants`.
 
 - Continue handles only authorized arc archival and next-arc startup.
 - Respond handles live in-arc replies.
-- Manual routing is expected in v2.4; auto-routing daemons are deferred.
+- Manual routing is expected in v2.5; auto-routing daemons are deferred.
 - Do not create fallback handling for old unprefixed transcripts.
