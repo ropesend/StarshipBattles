@@ -33,7 +33,6 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
 
 # Extracted modules
-from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 from game.ui.screens.strategy_screen_composition import (
@@ -503,16 +502,8 @@ class StrategyScreen:
 
     def on_design_click(self) -> None:
         """Handle 'Design' button click - opens Design Workshop."""
-        logger.debug("Design button clicked - opening Design Workshop")
-
-        # Gather context data for integrated mode
-        context_data = {
-            'empire': self.session.active_empire,
-            'game_session': self.session
-        }
-
-        if self.scene_callback:
-            self.scene_callback("open_builder", context_data=context_data)
+        from game.ui.screens import strategy_screen_lifecycle as _lifecycle
+        _lifecycle.on_design_click(self)
 
     def on_menu_option(self, option: str) -> None:
         """Dispatch menu option from the strategy menu panel.
@@ -520,111 +511,38 @@ class StrategyScreen:
         Args:
             option: Option identifier string from StrategyMenuPanel.
         """
-        if option == "save_game":
-            self.on_save_game_click()
-        elif option == "load_game":
-            self._show_load_game_dialog()
-        elif option == "settings":
-            self.ui.window_manager.open_settings()
-        elif option == "controls":
-            if self.scene_callback:
-                self.scene_callback("open_keybindings")
-        elif option == "quit_to_menu":
-            self._confirm_quit_to_menu()
-        elif option == "quit_game":
-            if self.scene_callback:
-                self.scene_callback("quit_game")
+        from game.ui.screens import strategy_screen_lifecycle as _lifecycle
+        _lifecycle.on_menu_option(self, option)
 
     def _show_load_game_dialog(self) -> None:
         """Open the save selection window for loading a game."""
-        from game.ui.screens.save_selection_window import SaveSelectionWindow
-        from game.ui.utils import create_centered_rect
-
-        window_rect = create_centered_rect(600, 500, self.screen_width, self.screen_height)
-        SaveSelectionWindow(
-            window_rect,
-            self.ui.manager,
-            on_load_callback=self._on_load_selected,
-            on_cancel_callback=lambda: None
-        )
+        from game.ui.screens import strategy_screen_lifecycle as _lifecycle
+        _lifecycle.show_load_game_dialog(self)
 
     def _on_load_selected(self, save_path, turn_number=None) -> None:
-        """Handle save selection from load dialog.
-
-        Args:
-            save_path: Path to the selected save file.
-            turn_number: Optional turn number to load.
-        """
-        if self.scene_callback:
-            self.scene_callback("load_game", save_path=save_path, turn_number=turn_number)
+        """Handle save selection from load dialog."""
+        from game.ui.screens import strategy_screen_lifecycle as _lifecycle
+        _lifecycle.on_load_selected(self, save_path, turn_number)
 
     def _confirm_quit_to_menu(self) -> None:
         """Show confirmation dialog before quitting to main menu."""
-        import pygame_gui.windows
-
-        dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
-        dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
-        self._quit_confirm_dialog = pygame_gui.windows.UIConfirmationDialog(
-            rect=dialog_rect,
-            action_long_desc="Unsaved progress will be lost. Return to main menu?",
-            manager=self.ui.manager,
-            window_title="Quit to Menu"
-        )
+        from game.ui.screens import strategy_screen_lifecycle as _lifecycle
+        _lifecycle.confirm_quit_to_menu(self)
 
     def _handle_quit_confirmed(self) -> None:
         """Handle quit-to-menu confirmation dialog result."""
-        self._quit_confirm_dialog = None
-        if self.scene_callback:
-            self.scene_callback("quit_to_menu")
+        from game.ui.screens import strategy_screen_lifecycle as _lifecycle
+        _lifecycle.handle_quit_confirmed(self)
 
     def _show_coming_soon(self, feature_name: str) -> None:
-        """Show a 'Coming Soon' placeholder dialog.
-
-        Args:
-            feature_name: Name of the feature to show in the dialog.
-        """
-        import pygame_gui.windows
-
-        dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
-        dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
-        pygame_gui.windows.UIMessageWindow(
-            rect=dialog_rect,
-            html_message=f"<b>{feature_name}</b><br><br>Coming Soon!",
-            manager=self.ui.manager,
-            window_title=feature_name
-        )
+        """Show a 'Coming Soon' placeholder dialog."""
+        from game.ui.screens import strategy_screen_lifecycle as _lifecycle
+        _lifecycle.show_coming_soon(self, feature_name)
 
     def on_save_game_click(self) -> None:
         """Handle 'Save Game' button click."""
-        from game.strategy.systems.save_game_service import SaveGameService
-        import pygame_gui.windows
-
-        logger.info("Saving game...")
-
-        # Save the game
-        success, message, save_path = SaveGameService.save_game(self.session)
-
-        # Show confirmation dialog
-        if success:
-            dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
-            dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
-            pygame_gui.windows.UIMessageWindow(
-                rect=dialog_rect,
-                html_message=f"<b>Game Saved Successfully!</b><br><br>{message}",
-                manager=self.ui.manager,
-                window_title="Save Game"
-            )
-            logger.info(f"Game saved: {message}")
-        else:
-            dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
-            dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
-            pygame_gui.windows.UIMessageWindow(
-                rect=dialog_rect,
-                html_message=f"<b>Save Failed</b><br><br>{message}",
-                manager=self.ui.manager,
-                window_title="Save Game Error"
-            )
-            logger.warning(f"Save failed: {message}")
+        from game.ui.screens import strategy_screen_lifecycle as _lifecycle
+        _lifecycle.on_save_game_click(self)
 
     # =========================================================================
     # Pathfinding (for external access)
