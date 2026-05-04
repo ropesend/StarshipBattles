@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. PROJ-323 documentation corrections (CRIT-001 false-positive checkmarks + MIN cleanups) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. PROJ-323 Task 3.34 + 3.37 parametrize | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. PROJ-323 documentation corrections (CRIT-001 false-positive checkmarks + MIN cleanups) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. PROJ-323 Task 3.34 + 3.37 parametrize | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. RaceSetupScreen testable construction (BLOCKS on PROJ-324 Phase 3 Task 3.4 outcome) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** Planning complete — Phases 1-2 ready for parallel execution; Phase 3 BLOCKED on PROJ-324 Phase 3 Task 3.4.
-**Last Action:** Project created from continuation review of PROJ-321/322/323
-**Next Action:** Begin Phase 1 (PROJ-323 documentation corrections) and Phase 2 (Task 3.34 parametrize) — file-disjoint, parallelizable.
+**Last Updated:** 2026-05-04 (post-Phase-2)
+**Active Phase:** Phase 1+2 complete; Phase 3 awaiting PROJ-324 Phase 3 Task 3.4 outcome.
+**Last Action:** Phase 2 commits landed — Task 2.1 (commit 02c54631c, fleet_not_found 11-handler two-group parametrize, +9 LOC actual vs -75 LOC estimate; case-factory overhead consumed dedupe gains, but real benefit is single assertion path covering all 11 handlers) and Task 2.2 (same commit, zero/negative cargo 4-case parametrize, -8 LOC). Phase 1 commit: b8ce4fa35 (8 documentation correction findings addressed). 159 targeted tests pass.
+**Next Action:** Phase 3 — wait on PROJ-324 Phase 3 Task 3.4 GO/NO-GO signal before starting.
 **Blockers:** Phase 3 only — waits on PROJ-324 Phase 3 Task 3.4 GO/NO-GO outcome for RaceSetupScreen.
 
 ## Overview

@@ -423,11 +423,11 @@
 **File:** `tests/unit/strategy/test_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/test_command_handlers.py`
 
-- [x] [S12-CAT10-001] `8+ handler error-path test clusters` (lines 90-290): Parametrize across (handler_cls, cmd_kwargs). _(pass 2 deferred — file has 11 test_fleet_not_found tests spread across distinct handler classes (Colonize, Move, Intercept, Join, ColonizeMission, ClearOrders, Transfer, SplitFleet, MergeFleets, RemoveFromConstructionQueue, AddToConstructionQueue) with per-handler mock_cmd kwargs. Pulling all 11 into a single class-level parametrize would (a) require fixture restructuring to expose a per-handler mock_cmd factory, and (b) destroy the per-class organization that aligns with the production code structure. PROJ-322 already addressed the ones aligned with DUP-002. Recommend a follow-up project to consolidate the remaining error-path patterns once DUP-002 lands fully.)_
+- [x] [S12-CAT10-001] `8+ handler error-path test clusters` (lines 90-290): Parametrize across (handler_cls, cmd_kwargs). **RESOLVED IN PROJ-325 Phase 2 Task 2.1 (commit 02c54631c)** — two-group parametrize landed: Group A `fleet_id` handlers (Colonize, Move, Intercept, ColonizeMission, ClearOrders, Transfer, SplitFleet, DeleteOrder, ReorderOrder = 9), Group B `entity_id` construction-queue handlers (AddToConstructionQueue, RemoveFromConstructionQueue = 2). Total 11 handlers. The PROJ-323 deferral cited Join + MergeFleets but the actual file has DeleteOrder + ReorderOrder instead (no Join.test_fleet_not_found, no MergeFleets handler).
 
-- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta ≈ 200 _(deferred per above rationale)_
+- [x] Verify: `pytest tests/unit/strategy/test_command_handlers.py` passes; LOC delta ≈ 200 _(actual: net +9 LOC — case factories + per-handler kwargs consumed most of the deduplicated lines. Real benefit is duplication-elimination, not raw LOC. 80 tests pass post-refactor.)_
 
-**Notes:** _(none yet)_
+**Notes:** _(PROJ-325 Phase 2 Task 2.1 — see commit 02c54631c.)_
 
 ---
 
@@ -461,11 +461,11 @@
 **File:** `tests/unit/strategy/test_fleet_consumable_aggregator.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet_consumable_aggregator.py`
 
-- [x] [S07-CAT10-005] `True/False variant pairs` (lines 84-108, 191-207): **Leave as-is**. _(skipped � upstream project already deleted target file)_
+- [x] [S07-CAT10-005] `True/False variant pairs` (lines 84-108, 191-207): **Leave as-is**. _(skipped — upstream project already deleted target file at the original `tests/unit/strategy/test_fleet_consumable_aggregator.py` path; the file moved to `tests/unit/strategy/data/test_fleet_consumable_aggregator.py` during PROJ-322 reorg.)_
 
 - [x] Verify: `pytest tests/unit/strategy/test_fleet_consumable_aggregator.py` passes; LOC delta ≈ 41
 
-**Notes:** _(Plan-review M-08 (2026-05-03): below ≥3-member parametrize threshold. Two-test clusters do not benefit from parametrization.)_
+**Notes:** _(Plan-review M-08 (2026-05-03): below ≥3-member parametrize threshold. Two-test clusters do not benefit from parametrization for the original True/False variant pairs.) **RESOLVED IN PROJ-325 Phase 2 Task 2.2 (commit 02c54631c)** for a different cluster within the same file: the 4 zero/negative cargo amount tests (load+unload × zero+negative) at the new path `tests/unit/strategy/data/test_fleet_consumable_aggregator.py` were parametrized into a single test (-8 LOC, close to OpenCode 323-review FND-P1-003's ~10 LOC estimate). Production guards both with `if amount <= 0: return 0`._
 
 ---
 
