@@ -43,10 +43,10 @@
 **File:** `tests/unit/strategy/test_colonization_facade.py`
 **Tests:** `pytest tests/unit/strategy/test_colonization_facade.py`
 
-- [x] [S11-CAT10-004] `Success/failure duplicate patterns` (lines 136-258): Parametrize. _(skipped — upstream project already deleted target file)_
-- [x] [S11-CAT10-005] `Pod-filtering tests` (lines 474-551): Parametrize. _(skipped — upstream project already deleted target file)_
+- [~] [S11-CAT10-004] `Success/failure duplicate patterns` (lines 136-258): Parametrize. _(skipped — upstream project already deleted target file; marker `[x]` → `[~]` per audit-remediation S2.5 to stop falsely claiming completion)_
+- [~] [S11-CAT10-005] `Pod-filtering tests` (lines 474-551): Parametrize. _(skipped — upstream project already deleted target file; marker `[x]` → `[~]` per audit-remediation S2.5)_
 
-- [x] Verify: `pytest tests/unit/strategy/test_colonization_facade.py` passes; LOC delta ≈ 201 _(skipped — upstream project already deleted target file; ~201 LOC delta is fictitious)_
+- [~] Verify: `pytest tests/unit/strategy/test_colonization_facade.py` passes; LOC delta ≈ 201 _(skipped — upstream project already deleted target file; ~201 LOC delta is fictitious)_
 
 **Notes:** _(PROJ-325 Phase 1 Task 1.1: corrected false-positive checkmark on S11-CAT10-005 per OpenCode 323-review FND-CC-001. The prior `[x]` claim implied work was done on `test_colonization_facade.py`, but PROJ-321 deleted that file. Combined claimed delta of ~201 LOC for this task is fictitious.)_
 
@@ -84,10 +84,10 @@
 **File:** `tests/unit/ui/utils/test_color_helpers.py`
 **Tests:** `pytest tests/unit/ui/utils/test_color_helpers.py`
 
-- [x] [S11-CAT10-006] `5 get_hp_bar_color tests` (lines 118-171): Parametrize. _(skipped — upstream project already deleted target file)_
-- [x] [S11-CAT10-007] `5 get_component_status_display tests` (lines 178-236): Parametrize. _(skipped — upstream project already deleted target file)_
+- [~] [S11-CAT10-006] `5 get_hp_bar_color tests` (lines 118-171): Parametrize. _(skipped — upstream project already deleted target file; marker `[x]` → `[~]` per audit-remediation S2.5)_
+- [~] [S11-CAT10-007] `5 get_component_status_display tests` (lines 178-236): Parametrize. _(skipped — upstream project already deleted target file; marker `[x]` → `[~]` per audit-remediation S2.5)_
 
-- [x] Verify: `pytest tests/unit/ui/utils/test_color_helpers.py` passes; LOC delta ≈ 113 _(skipped — upstream project already deleted target file; ~113 LOC delta is fictitious)_
+- [~] Verify: `pytest tests/unit/ui/utils/test_color_helpers.py` passes; LOC delta ≈ 113 _(skipped — upstream project already deleted target file; ~113 LOC delta is fictitious)_
 
 **Notes:** _(PROJ-325 Phase 1 Task 1.1: corrected false-positive checkmark on S11-CAT10-007 per OpenCode 323-review FND-CC-001. The prior `[x]` claim implied work was done on `test_color_helpers.py`, but PROJ-321 deleted that file. Combined claimed delta of ~113 LOC for this task is fictitious. Combined fictitious delta across Tasks 3.3 + 3.6 ≈ 314 LOC.)_
 

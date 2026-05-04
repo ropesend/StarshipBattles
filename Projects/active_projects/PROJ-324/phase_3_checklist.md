@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Complete (2026-05-04 — closed as production foundation only; 14 test migrations re-routed to PROJ-325 Phase 3 PoC + PROJ-328 A/B/C per Codex–Claude consensus plan and the Phase 3 systemic finding in commit 9e177edb7)
+**Status:** Complete-as-CLOSED (2026-05-04). This phase did NOT execute as task-by-task migration. After Task 3.4's GO/NO-GO probe surfaced the systemic `bypass_init`-alone-is-insufficient finding (commit 9e177edb7), the 14 test migrations were re-routed to PROJ-325 Phase 3 PoC + PROJ-328 A/B/C per the Codex–Claude consensus plan. Tasks below remain `[ ]` because they were CLOSED-by-reroute, not EXECUTED. Each `[ ]` item's reroute target is recorded in PROJ-322's Final disposition summary at `Projects/active_projects/PROJ-322/plan.md`. Audit-remediation S2.6 (2026-05-04) clarified this status framing — original "Complete" header was ambiguous about whether the unchecked items were skipped, deferred, or simply not done.
 **Objective:** Migrate the 14 PROJ-322 deferrals unblocked by Phases 1-2 — 7 APC-001 cluster files + 5 Phase 3 boundary-patching tasks + Task 4.3 (already done in Phase 2) + Task 5.10/5.10a (workshop screen). Each migration replaces the `__new__` bypass-init pattern with `make_ui_widget` + `bypass_init` context manager, OR drives the test through the public boundary instead of patching private methods.
 
 **Required reading before starting:**

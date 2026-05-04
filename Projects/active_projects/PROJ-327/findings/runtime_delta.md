@@ -6,13 +6,28 @@
 **Machine:** AMD Ryzen 9 5900X (12 physical cores / 24 SMT) · Windows 11 (10.0.26200) · Python 3.11.9 · pytest 9.0.2. Identical to Phase 0 baseline.
 **Sharded runner:** `Tools/test_sharded/test_sharded.py` — 12 shards, greedy bin-packing by `.test_durations.json`.
 
-## Headline result
+## Headline result — RETRACTED 2026-05-04 (audit-remediation S2.7)
 
-| Metric | Phase 0 baseline | Final (post-Phase-4) | Delta |
-|---|---:|---:|---:|
-| Median sharded wall-clock (3 runs) | **127.8 s** | **123.9 s** | **-3.9 s (~3.0%)** |
-| Median slowest shard (3 runs) | **127.7 s** | **~123.8 s** (extrapolated; the runner reports wall ≈ slowest shard for these balanced runs) | **~-3.9 s (~3.0%)** |
-| Stretch target (per Phase 0 Task 0.6) | < **90 s** slowest shard | 123.9 s | gap of **~34 s** remains |
+> **PROJ-327 did not establish a causal suite-level runtime reduction.** The
+> observed 127.8 s → 123.9 s sharded median is within the run-to-run noise
+> envelope (3-run range 15.3 s pre-baseline; 2.7 s post) and **should not be
+> cited as reclaimed time**. Verified runtime facts are limited to
+> file-level / single-process measurements: Phase 1 improved
+> `test_virtual_table.py` by about **30 ms**, Phase 2 reclaimed about
+> **330 ms** across audited files, Phases 3 and 4 produced **no measurable
+> runtime change**. The durable deliverable was the measurement-backed
+> disposition trail (9 PROJ-322 items dispositioned with evidence) and the
+> `StrategyScreen` construction seam (`docs/02_PATTERNS.md` §32). The
+> OpenCode-327 audit (2026-05-04) demonstrated the 30 ms-vs-3.9 s
+> mismatch — a 30 ms file-level delta cannot mechanistically produce a
+> 3.9 s suite-level delta (130× amplification with no causal explanation).
+> See "OpenCode-327 retraction analysis" below for the full math.
+
+| Metric | Phase 0 baseline | Final (post-Phase-4) | Observed delta | Reliable? |
+|---|---:|---:|---:|---|
+| Median sharded wall-clock (3 runs) | **127.8 s** | **123.9 s** | -3.9 s observed | **NO** — within 15.3 s pre-baseline + 2.7 s post-baseline noise envelope |
+| Median slowest shard (3 runs) | **127.7 s** | **~123.8 s** | -3.9 s observed | **NO** — same noise envelope |
+| Stretch target (per Phase 0 Task 0.6) | < **90 s** slowest shard | 123.9 s | gap of **~34 s** | The 90 s gap is real; PROJ-327 did not close it. |
 
 ## Per-phase breakdown
 
@@ -38,7 +53,29 @@
 |---|---:|---:|---:|
 | Median wall-clock | 127.8 s | **123.9 s** | **-3.9 s (~3.0%)** |
 
-**Honest read:** the suite-level wall-clock moved by ~3.9 s median across the four phases — almost exactly the magnitude Phase 1's `test_virtual_table.py` migration measured at the suite level on its own. Phase 2's 330 ms of single-process reclaim and Phase 4's pattern landing did not show up in the median wall-clock — they're inside the noise floor (run-to-run variance was 2.7 s between this round's fastest and slowest runs of identical code).
+**Honest read (RETRACTED 2026-05-04 audit-remediation S2.7):** the original framing here claimed Phase 1 produced a ~3.9 s suite-level reclaim "on its own." OpenCode-327 audit demonstrated that's not mechanistically possible. See "OpenCode-327 retraction analysis" section below.
+
+## OpenCode-327 retraction analysis (added 2026-05-04 audit-remediation S2.7)
+
+The OpenCode-327 review applied skeptical math to the headline -3.9 s claim and found it does not survive scrutiny:
+
+1. **30 ms file-level delta cannot produce 3.9 s suite-level delta.** `test_virtual_table.py` runs on exactly one shard and finishes in 1.03 s (0.8 % of a shard's budget). Saving 30 ms from one file saves 30 ms from its shard's wall-clock — not 3.9 s. The remaining ~126 s of other tests in the shard are unaffected.
+
+2. **Measurement noise dwarfs the claimed delta.** The 3-run measurement protocol produced a 15.3 s range across pre-baseline runs (124.6 / 139.9 / 127.8) and 2.7 s range across post runs (123.3 / 123.9 / 126.0). The claimed -3.9 s delta is **25 % of the pre-baseline range** and **74 % of the post-baseline range** — well within noise.
+
+3. **Pre Run 2 (139.9 s) was an anomalous outlier.** It accounts for ~1.6 s of the observed median delta on its own. The best clean-to-clean comparison (both Run 3, full test counts) is **0.2 s — indistinguishable from zero**.
+
+**What's actually verifiable:**
+
+| Phase | Measurement | Verifiable? |
+|---|---|---|
+| Phase 1 file-level | `test_virtual_table.py` 1.03 s → 1.00 s, ~30 ms reclaim | YES (median of 3 single-process runs) |
+| Phase 2 file-level | `test_ship_io.py` -280 ms; `test_empire_treasury_panel.py` -50 ms; ~330 ms total | YES (median of 3 single-process runs each) |
+| Phase 3 | 0 runtime change (re-confirmed deferred) | YES (no code change) |
+| Phase 4 | 0 measurable change in 101-test cluster | YES (within noise floor) |
+| **Cumulative suite-level** | **NOT verifiable** above the noise floor | The observed -3.9 s sharded median is inside the pre-baseline 15.3 s noise envelope |
+
+**Implication for future projects:** A project scoped only to the PROJ-322 deferral list cannot move the suite-level wall-clock by an amount measurable above noise. The runtime cost is bimodal — the deferral cluster contributes ~5–8 s to the slowest shard; the rest is heavy integration tests + parametrized validation clusters that need their own Phase 0 scoping pass (per the Lessons Learned in `decisions.md`).
 
 **The 90 s stretch target was not approached.** Phase 0 already noted the slowest-files cluster lives in integration tests (`build_queue_screen` 44.9 s for 44 tests; `race_setup_ships_smoke` 13.8 s for one test), the 912-test `test_component_definitions.py` validation cluster, and `test_main_integration::test_game_instantiation` at 13 s alone. None of those are PROJ-322 deferrals. PROJ-327's scope was the deferral list, not "anything slow" — the gap to 90 s is real and lives outside this project's mandate.
 

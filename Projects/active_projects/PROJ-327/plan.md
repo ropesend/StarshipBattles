@@ -34,7 +34,7 @@
 **Next Action:** None — project closed.
 **Blockers:** None.
 
-**Phase 5 close-out (2026-05-04):** Final cumulative measurement landed (3 sharded runs, median wall **123.9 s** vs Phase 0 baseline 127.8 s = **-3.9 s / ~3.0% reclaim**). Slowest shard ~123.8 s vs 127.7 s baseline. Stretch target (< 90 s) NOT hit; ~34 s gap remains. Honest cumulative ≈ Phase 1's `test_virtual_table.py` contribution; Phases 2/3/4 contributions live inside the run-to-run noise floor (single-process per-file deltas total ~330 ms). Full per-phase breakdown + post-state slowest-files leaderboard at `findings/runtime_delta.md`. Lessons-learned table appended to `decisions.md`. `docs/known-issues.md` "Test runtime improvements (PROJ-327)" section added. PROJ-322 Continuation Guide Final disposition summary updated jointly with PROJ-324 Phase 4. Per user priority order (readability > maintainability > functionality > runtime), the disposition + measurement-evidence trail for the 9 PROJ-322 deferrals is the primary deliverable.
+**Phase 5 close-out (2026-05-04, retraction-corrected per audit-remediation S2.7):** PROJ-327 did not establish a causal suite-level runtime reduction. The observed 127.8 s → 123.9 s sharded median is within the run-to-run noise envelope (15.3 s pre-baseline range, 2.7 s post) and **should not be cited as reclaimed time**. Verified runtime facts are limited to file-level / single-process measurements: Phase 1 improved `test_virtual_table.py` by about **30 ms**, Phase 2 reclaimed about **330 ms** across audited files, Phases 3 and 4 produced **no measurable runtime change**. The durable deliverable was the measurement-backed disposition trail (9 PROJ-322 items dispositioned with evidence) and the `StrategyScreen` construction seam (`docs/02_PATTERNS.md` §32). The OpenCode-327 audit (2026-05-04) demonstrated the 30 ms-vs-3.9 s mismatch — see `findings/runtime_delta.md` "OpenCode-327 retraction analysis" section. Per user priority order (readability > maintainability > functionality > runtime), the tech-debt-reduction + disposition trail was always the primary deliverable; runtime improvement was a hopeful side benefit that did not materialize at the suite level.
 
 ## Overview
 
@@ -138,6 +138,6 @@ The PROJ-322 deferred items are **months stale by the time PROJ-327 starts.** Be
 
 - [x] All phase checklists complete
 - [x] All tests passing (`python Tools/test_sharded/test_sharded.py`) — 16456/16468 passed (8 pre-existing Codex-skill failures unrelated to PROJ-327; 4 skipped)
-- [x] Sharded suite wall-clock measurably reduced — **-3.9 s median (127.8 → 123.9 s)**; see `findings/runtime_delta.md`
+- [~] Sharded suite wall-clock measurably reduced — **observed -3.9 s median (127.8 → 123.9 s) but inside the noise envelope (15.3 s pre-baseline range); not citable as reclaimed time per audit-remediation S2.7**; see `findings/runtime_delta.md` "OpenCode-327 retraction analysis"
 - [x] All 9 PROJ-322 deferred items either closed OR re-confirmed as deferred with updated rationale (3 RESOLVED in Phase 2; Task 2.15 subsumed under Phase 3; Task 3.14 RESOLVED in Phase 1; Task 3.25 RESOLVED in Phase 4; 2.6 + 3.15 + 6.1 + 6.4 RE-CONFIRMED DEFERRED with measurement evidence)
 - [ ] User verified

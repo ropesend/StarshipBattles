@@ -30,7 +30,7 @@
 - **Phase 5 (APC):** 13 done + 4 satisfied via earlier phases + 10 obsolete + 7 deferred (UIWindow blocker cluster)
 - **Phase 6 (DUP/HLP):** 5 done + 2 satisfied via Phase 1 + 2 deferred (shape-mismatch shared-factory)
 
-**Final tally:** 71 substantive done, 17 obsolete-skipped, 25 formally deferred-out-of-scope.
+**Final tally:** see `### Final disposition summary` below for the canonical 25-deferral state. The phase-level "done / obsolete / deferred" breakdowns above are the closing counts for each phase as it shipped — they sum to the deferral total used at close-out (Phase 2: 7 + Phase 3: 7 + Phase 4: 1 + Phase 5: 7 + Phase 6: 2 + Phase 2 dependents 2.8/2.9 captured in Phase 2's 7 = 25 deferrals total). Phase 1 had no deferrals. Original tally line "71 substantive done / 17 obsolete-skipped / 25 deferred" was a close-out estimate; per-phase numbers above are authoritative when they disagree (audit-remediation S2.4, 2026-05-04).
 
 ## Current State
 **Last Updated:** 2026-05-04 (final close-out)
@@ -47,10 +47,13 @@
 
 | Origin (PROJ-322 phase / task) | Disposition | Closed by |
 |---|---|---|
-| 14 UIWindow / LLM-blocked deferrals (Phase 3 + 4 + 5 boundary-patching cluster) | **RESOLVED** | PROJ-324 Phases 1+2 production foundation (`bypass_init` guard + `LLMBackgroundCall.wait()`) → PROJ-325 Phase 3 PoC (RaceSetupScreen two-stage `__init__` + delegate factory) → PROJ-328 A/B/C (`BuildQueueListWindow`, `OrdersWindow`, `FleetReportWindow`, `NewGameSetupScreen`, `TransferDialog` rolled out the same recipe). |
+| 13 UIWindow / LLM-blocked deferrals (Phase 3 + 4 + 5 boundary-patching cluster, EXCLUDING Task 5.10) | **RESOLVED** | PROJ-324 Phases 1+2 production foundation (`bypass_init` guard + `LLMBackgroundCall.wait()`) → PROJ-325 Phase 3 PoC (RaceSetupScreen two-stage `__init__` + delegate factory) → PROJ-328 A/B/C (`BuildQueueListWindow`, `OrdersWindow`, `FleetReportWindow`, `NewGameSetupScreen`, `TransferDialog` rolled out the same recipe). |
+| Task 5.10 (workshop_screen) | **ACCEPTED-DEFERRED** | WorkshopScreen is NOT a UIWindow subclass; the two-stage construction recipe from PROJ-325 PoC + PROJ-328 A/B/C does not apply. Test migration would require a separate `make_workshop_screen` factory + integration tests. Originally lumped into the "14 UIWindow / LLM" RESOLVED row but does not actually belong there — sub-items in `phase_5_checklist.md` Task 5.10 remain `[ ]`. Rolled to a future PROJ-329 inventory pass (see audit-remediation S2.3, 2026-05-04). |
 | Task 3.25 (`strategy_screen` 50-test refactor) | **RESOLVED** | PROJ-327 Phase 4 (Compositional Construction pattern: `StrategyScreenComposition` Protocol + `MockStrategyScreenComposition` fixture). |
-| Tasks 2.11 + 2.19 + 2.15 (mutable-mock fixture rescopes) | **RESOLVED** | PROJ-327 Phase 2 (rescoped to module after audit confirmed zero attribute writes; 2.15 subsumed under HLP-001 re-judgment). |
+| Tasks 2.11 + 2.19 (mutable-mock fixture rescopes) | **RESOLVED** | PROJ-327 Phase 2 (rescoped to module after audit confirmed zero attribute writes). |
+| Task 2.15 (`make_mock_ship` consolidation, originally classed under fixture rescope) | **RE-CONFIRMED DEFERRED** with measurement evidence | PROJ-327 Phase 2 audit found `make_mock_ship` is a plain function (not a fixture) called 115×; subsumed under Phase 3 Task 3.2 (HLP-001 re-judgment), which RE-CONFIRMED DEFERRED with measurement (~627 µs/call ≈ 72 ms ≈ 3.6% of `test_fleet_report_filters.py`; the 4 cited files have distinct call shapes). Audit-remediation S2.1 (2026-05-04) corrected the original "RESOLVED" lump into 2.11 + 2.19's row. |
 | Tasks 2.6 + 3.15 (private-attr read + component_resource_manager) | **RE-CONFIRMED DEFERRED** with measurement evidence | PROJ-327 Phase 2 — runtime is import-bound, not fixture-bound; `reset_mock` cannot restore re-bound attributes. |
+| Tasks 2.8 + 2.9 (gated by HLP-001 / Task 6.4) | **RE-CONFIRMED DEFERRED** | Originally deferred contingent on HLP-001. HLP-001 itself is now RE-CONFIRMED DEFERRED (Tasks 6.1 / 6.4 row below), so 2.8 / 2.9 inherit that disposition. Added to summary 2026-05-04 per audit-remediation S2.2 (previously omitted). |
 | Tasks 6.1 (DUP-001) + 6.4 (HLP-001) | **RE-CONFIRMED DEFERRED** with measurement evidence | PROJ-327 Phase 3 — measurement confirms construction is dominant but disparate shapes still resolve to a switch-statement factory; readability cost > LOC win. See `Projects/active_projects/PROJ-327/findings/phase_3_runtime_delta.md`. |
 | PROJ-323 leftovers (Tasks 3.34 + 3.37, doc corrections, Task 5.19 precision mismatch) | **RESOLVED** | PROJ-325 Phases 1 + 2. |
 | Linter for zero-game-import test files | **RESOLVED** | PROJ-326 (preventive linter + allowlist). |
