@@ -63,25 +63,73 @@ class TestConstructionLayout:
     code paths via attribute injection rather than running full __init__.
     """
 
+    def _construct_with_pygame_gui_patched(self, *, show_complexes: bool):
+        """Run the real __init__ with all pygame_gui widgets patched out.
+
+        Returns a tuple of (panel, ui_textbox_mock, ui_scrolling_container_mock)
+        so callers can inspect what production code passed to each.
+        """
+        manager = MagicMock()
+        rect = pygame.Rect(0, 0, 800, 600)
+        planet = _mock_planet()
+
+        with patch("game.ui.panels.planet_report_panel.UIPanel"), \
+             patch("game.ui.panels.planet_report_panel.UIImage"), \
+             patch("game.ui.panels.planet_report_panel.UITextBox") as utextbox, \
+             patch("game.ui.panels.planet_report_panel.UIScrollingContainer") as uscroll, \
+             patch("game.ui.panels.planet_report_panel.UILabel"), \
+             patch("game.ui.panels.planet_report_panel.AtmosphereGraph"), \
+             patch.object(PlanetReportPanel, "_update_graph", lambda self: None), \
+             patch.object(PlanetReportPanel, "_build_resource_grid", lambda self: None), \
+             patch.object(PlanetReportPanel, "_update_complexes_list", lambda self: None), \
+             patch("game.ui.panels.planet_report_panel.format_planet_info", return_value=""):
+            panel = PlanetReportPanel(
+                manager=manager,
+                rect=rect,
+                planet=planet,
+                container=MagicMock(),
+                show_complexes=show_complexes,
+            )
+        return panel, utextbox, uscroll
+
     def test_construction_with_show_complexes_creates_complexes_container(self):
-        """Patched __init__ contract: show_complexes=True → complexes_container set + complex_items list."""
-        panel = _bypass_panel()
-        # Simulate post-init state for show_complexes=True path
-        panel.complexes_container = MagicMock()
-        panel.complex_items = []
-        # The contract (verified by inspection of __init__): when show_complexes
-        # is truthy, complexes_container is non-None.
+        """Real __init__ contract: show_complexes=True calls UIScrollingContainer
+        for the complexes list AND narrows the detail_text rect to leave room
+        for the 200px complexes column + 10px gap. Pins both side-effects of
+        the show_complexes=True branch."""
+        panel, utextbox, uscroll = self._construct_with_pygame_gui_patched(
+            show_complexes=True,
+        )
+        # complexes_container is the UIScrollingContainer just created
         assert panel.complexes_container is not None
-        assert isinstance(panel.complex_items, list)
+        assert panel.complex_items == []
+        # detail_text was constructed with the narrowed width:
+        # text_w = 800 - 180 - 200 - 10 = 410
+        text_rect = utextbox.call_args.kwargs["relative_rect"]
+        assert text_rect.width == 410
+        # UIScrollingContainer was called for complexes (resource_panel build is
+        # patched out, so the only call is the complexes container).
+        rects = [c.kwargs["relative_rect"] for c in uscroll.call_args_list]
+        assert any(r.width == 200 for r in rects), (
+            "show_complexes=True must construct a 200px-wide UIScrollingContainer"
+        )
 
     def test_construction_without_show_complexes_text_panel_takes_full_width(self):
-        """show_complexes=False → complexes_container is None, complex_items is empty list."""
-        panel = _bypass_panel()
-        panel.complexes_container = None
-        panel.complex_items = []
+        """Real __init__ contract: show_complexes=False suppresses the
+        complexes UIScrollingContainer call and widens detail_text to rect.width - 180."""
+        panel, utextbox, uscroll = self._construct_with_pygame_gui_patched(
+            show_complexes=False,
+        )
         assert panel.complexes_container is None
-        # The text width formula in __init__ branches on this; pinning the
-        # nullable state is what protects downstream code from regressions.
+        assert panel.complex_items == []
+        # detail_text widened: text_w = 800 - 180 = 620
+        text_rect = utextbox.call_args.kwargs["relative_rect"]
+        assert text_rect.width == 620
+        # No UIScrollingContainer of the complexes-list shape (200px wide).
+        rects = [c.kwargs["relative_rect"] for c in uscroll.call_args_list]
+        assert not any(r.width == 200 for r in rects), (
+            "show_complexes=False must NOT construct a 200px-wide UIScrollingContainer"
+        )
 
     def test_construction_loads_resource_icons_for_each_displayed_resource(self):
         """_load_resource_icons populates _resource_icons with one entry per displayed resource."""
@@ -303,29 +351,54 @@ class TestNetCellColor:
 
 class TestBuildResourceGridAttributeSwallow:
     def test_resource_grid_text_colour_setter_attribute_error_swallowed_silently(self):
-        """The catch on AttributeError when setting text_colour must not propagate."""
-        # Direct verification: instantiate a class whose .text_colour setter
-        # raises AttributeError to prove the broad-catch shape.
-        class _DummyCell:
-            @property
-            def text_colour(self):
-                return None
+        """Pin production's broad-catch around `cell.text_colour = ...` in
+        `_build_resource_grid`: when the patched UILabel class returns a Mock
+        whose `text_colour` setter raises AttributeError, _build_resource_grid
+        must complete without propagating the error.
 
-            @text_colour.setter
-            def text_colour(self, _val):
-                raise AttributeError("setter not supported")
+        This exercises the actual try/except on planet_report_panel.py:588-597
+        rather than a synthetic _DummyCell that lives only in the test file.
+        """
+        # Build a Mock UILabel class whose instances raise AttributeError
+        # when .text_colour is set.
+        def _failing_label_factory(*args, **kwargs):
+            cell = MagicMock()
+            type(cell).text_colour = property(
+                lambda self: None,
+                lambda self, _v: (_ for _ in ()).throw(
+                    AttributeError("setter not supported"),
+                ),
+            )
+            return cell
 
-            def rebuild(self):
-                pass
+        panel = _bypass_panel()
+        panel.manager = MagicMock()
+        panel.resource_panel = MagicMock()
+        panel._displayed_resources = ["metals"]
+        panel._resource_grid_items = []
+        panel._resource_icons = {"metals": pygame.Surface((20, 20))}
+        # Set up the planet so the Net row produces a real projection
+        # (only Net cells go down the text_colour-setting branch).
+        panel.planet = _mock_planet()
+        view = MagicMock()
+        proj = MagicMock()
+        proj.resource_id = "metals"
+        proj.harvest = 1.0
+        proj.upkeep = 0.0
+        proj.yard = 0.0
+        proj.net = 1.0
+        view.resource_projections = [proj]
+        panel.view = view
 
-        cell = _DummyCell()
-        try:
-            cell.text_colour = (1, 2, 3)
-            cell.rebuild()
-        except AttributeError:
-            # Mimic production catch path
-            pass
-        # Reaches here without raising = behavior matches production
+        with patch(
+            "game.ui.panels.planet_report_panel.UILabel",
+            side_effect=_failing_label_factory,
+        ), patch(
+            "game.ui.panels.planet_report_panel.UIImage",
+            side_effect=lambda *a, **kw: MagicMock(),
+        ):
+            # If production didn't swallow AttributeError, this would raise.
+            panel._build_resource_grid()
 
     def test_resource_grid_scrollable_area_dimensions_match_layout_constants(self):
         """The set_scrollable_area_dimensions arg uses the layout constants
