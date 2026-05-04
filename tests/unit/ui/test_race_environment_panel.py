@@ -358,3 +358,74 @@ class TestUpdateLabels:
 
         for row in panel.preference_rows.values():
             assert row.refresh_from_sliders.call_count == 3
+
+
+# ---------------------------------------------------------------------------
+# PROJ-339: characterization gap-fillers
+# ---------------------------------------------------------------------------
+
+
+class TestApplyHomeworldPresetEdgeCases:
+    """PROJ-339: pin observable behavior for the unhappy paths in
+    `apply_homeworld_preset` — unknown id and the explicit "(Custom)"
+    no-op."""
+
+    def test_apply_homeworld_preset_unknown_id_is_silent_noop(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """Passing a planet-type name not in the preset registry returns
+        without raising and without mutating race_config.
+
+        `get_preset_for_planet_type` returns `None` when the name is not
+        a registered preset, and `apply_homeworld_preset` short-circuits
+        on that None.
+        """
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        original_gravity = race_config.preferences["gravity"].setpoint
+        original_homeworld = race_config.homeworld_type
+
+        # Should not raise
+        panel.apply_homeworld_preset("DEFINITELY_NOT_A_REAL_PRESET_ID")
+
+        # No mutation
+        assert race_config.preferences["gravity"].setpoint == original_gravity
+        assert race_config.homeworld_type == original_homeworld
+
+    def test_apply_homeworld_preset_custom_is_noop(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """The literal string "(Custom)" short-circuits before the
+        preset-lookup branch — no mutation to race_config."""
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        original_gravity = race_config.preferences["gravity"].setpoint
+        original_homeworld = race_config.homeworld_type
+
+        panel.apply_homeworld_preset("(Custom)")
+
+        assert race_config.preferences["gravity"].setpoint == original_gravity
+        assert race_config.homeworld_type == original_homeworld
+
+
+class TestUpdatePointsDisplayExceptionSwallow:
+    """PROJ-339: `_update_points_display` wraps `RacePointBudget` in a
+    broad except (intentional, see the BLE001 noqa). Pin the observed
+    behavior: exception is logged at warning level and label set to ``""``.
+    """
+
+    def test_update_points_display_swallows_exceptions(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """If `RacePointBudget` raises during construction, the panel
+        catches the exception and sets the points label to empty string."""
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        panel.points_label.set_text.reset_mock()
+
+        with patch(
+            "game.strategy.data.race_point_budget.RacePointBudget",
+            side_effect=RuntimeError("simulated failure"),
+        ):
+            # Should not raise
+            panel._update_points_display()
+
+        # Label was set to "" as the exception-swallow path
+        panel.points_label.set_text.assert_called_with("")
