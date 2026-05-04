@@ -87,10 +87,15 @@ class TestMovementCalculation:
         assert result == HexCoord(5, 0)
 
     def test_recalculates_path_if_destination_changed(self, mock_fleet, mock_galaxy):
-        """Recalculates path if destination differs from path endpoint."""
+        """Recalculates path if destination differs from path endpoint.
+
+        PROJ-322 Tasks 3.12 / 5.33: inject a fake nav-service via DI rather
+        than monkey-patching the module-level ``find_hybrid_path``. This
+        keeps the test focused on the public ``calculate_next_hex`` contract
+        and avoids the brittle private-attribute reach.
+        """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
-        engine = FleetMovementEngine()
         new_target = HexCoord(20, 0)  # Different destination
         order = Order(OrderType.MOVE, new_target)
         mock_fleet.get_current_order.return_value = order
@@ -98,14 +103,17 @@ class TestMovementCalculation:
         mock_fleet.path = [HexCoord(5, 0), HexCoord(10, 0)]  # Old path to (10,0)
         mock_fleet.location = HexCoord(0, 0)
 
-        # PROJ-35: Patch where the import is used (in the service that engine delegates to)
-        with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
-            mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0)]
+        fake_nav_service = MagicMock()
+        fake_nav_service.calculate_fleet_next_hex.return_value = HexCoord(1, 0)
 
-            engine.calculate_next_hex(mock_fleet, mock_galaxy)
+        engine = FleetMovementEngine(nav_service=fake_nav_service)
+        result = engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
-            # Path should be recalculated
-            mock_path.assert_called()
+        # Engine delegates to the injected nav service for fresh-path logic.
+        fake_nav_service.calculate_fleet_next_hex.assert_called_once_with(
+            mock_fleet, mock_galaxy
+        )
+        assert result == HexCoord(1, 0)
 
 
 # =============================================================================

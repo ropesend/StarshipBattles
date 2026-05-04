@@ -1,113 +1,136 @@
+from dataclasses import dataclass
+from typing import List
+
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.components.component import Component
 
 
+@dataclass
+class _MultiSelectionFixture:
+    """Value-returning bundle replacing the old `setup(self.X = ...)` autouse.
+
+    Avoids parallel-run fragility from mutating `self.<attr>` in an autouse
+    fixture. Each test receives a fresh bundle and operates on it directly.
+    """
+
+    builder: DesignWorkshopScreen
+    comp_a1: Component
+    comp_a2: Component
+    comp_a3: Component
+    comp_a4: Component
+
+
+@pytest.fixture
+def selection_setup(fresh_registries) -> _MultiSelectionFixture:
+    # Display already initialized by enforce_headless / conftest pygame_display_reset
+
+    # PROJ-211: registries is now required
+    context = WorkshopContext.standalone(
+        tech_preset_name="default", registries=fresh_registries
+    )
+    builder = DesignWorkshopScreen(800, 600, context)
+    builder.viewmodel._ship = MagicMock()
+    builder.viewmodel._ship.layers = {}
+
+    # Mocks for panels to avoid errors during event handling/updates
+    builder.left_panel = MagicMock()
+    builder.right_panel = MagicMock()
+    builder.layer_panel = MagicMock()
+    builder.modifier_panel = MagicMock()
+    builder.weapons_panel = MagicMock()
+    if hasattr(builder, "weapons_report_panel"):
+        builder.weapons_report_panel = MagicMock()
+
+    comp_data_a = {
+        "id": "type_a",
+        "name": "Type A",
+        "type": "Weapon",
+        "mass": 10,
+        "hp": 100,
+        "modifiers": [],
+    }
+
+    comp_a1 = Component(comp_data_a, registries=fresh_registries)
+    comp_a2 = Component(comp_data_a, registries=fresh_registries)
+    comp_a3 = Component(comp_data_a, registries=fresh_registries)
+    comp_a4 = Component(comp_data_a, registries=fresh_registries)
+
+    builder.selected_components = []
+
+    return _MultiSelectionFixture(
+        builder=builder,
+        comp_a1=comp_a1,
+        comp_a2=comp_a2,
+        comp_a3=comp_a3,
+        comp_a4=comp_a4,
+    )
+
+
 class TestMultiSelectionLogic:
-    @pytest.fixture(autouse=True)
-    def setup(self, fresh_registries):
-        # Display already initialized by enforce_headless / conftest pygame_display_reset
-
-        # Mocking Builder with minimal dependencies
-        # PROJ-211: registries is now required
-        context = WorkshopContext.standalone(tech_preset_name="default", registries=fresh_registries)
-        self.builder = DesignWorkshopScreen(800, 600, context)
-        self.builder.viewmodel._ship = MagicMock()
-        self.builder.viewmodel._ship.layers = {}
-
-        # Mocks for panels to avoid errors during event handling/updates
-        self.builder.left_panel = MagicMock()
-        self.builder.right_panel = MagicMock()
-        self.builder.layer_panel = MagicMock()
-        self.builder.modifier_panel = MagicMock()
-        self.builder.weapons_panel = MagicMock()
-        if hasattr(self.builder, 'weapons_report_panel'):
-            self.builder.weapons_report_panel = MagicMock()
-
-        # Create test components
-        self.comp_data_a = {
-            "id": "type_a",
-            "name": "Type A",
-            "type": "Weapon",
-            "mass": 10,
-            "hp": 100,
-            "modifiers": []
-        }
-
-        self.comp_a1 = Component(self.comp_data_a, registries=fresh_registries)
-        self.comp_a2 = Component(self.comp_data_a, registries=fresh_registries)
-        self.comp_a3 = Component(self.comp_data_a, registries=fresh_registries)
-        self.comp_a4 = Component(self.comp_data_a, registries=fresh_registries)
-
-        self.builder.selected_components = []
-
-        yield
-
-        # Cleanup
-        patch.stopall()
-
-    def test_toggle_behavior(self):
+    def test_toggle_behavior(self, selection_setup):
         """Test that Ctrl+Click toggles items in selection."""
+        builder = selection_setup.builder
+
         # 1. Select A1
-        self.builder.on_selection_changed(self.comp_a1, append=False)
-        assert len(self.builder.selected_components) == 1
-        assert self.builder.selected_components[0][2] == self.comp_a1
+        builder.on_selection_changed(selection_setup.comp_a1, append=False)
+        assert len(builder.selected_components) == 1
+        assert builder.selected_components[0][2] == selection_setup.comp_a1
 
         # 2. Ctrl+Click A2 (Append)
-        self.builder.on_selection_changed(self.comp_a2, append=True, toggle=True)
-        assert len(self.builder.selected_components) == 2
+        builder.on_selection_changed(selection_setup.comp_a2, append=True, toggle=True)
+        assert len(builder.selected_components) == 2
 
         # 3. Ctrl+Click A1 (Toggle OFF)
-        self.builder.on_selection_changed(self.comp_a1, append=True, toggle=True)
-        assert len(self.builder.selected_components) == 1
-        assert self.builder.selected_components[0][2] == self.comp_a2
+        builder.on_selection_changed(selection_setup.comp_a1, append=True, toggle=True)
+        assert len(builder.selected_components) == 1
+        assert builder.selected_components[0][2] == selection_setup.comp_a2
 
         # 4. Ctrl+Click A2 (Toggle OFF) -> Empty
-        self.builder.on_selection_changed(self.comp_a2, append=True, toggle=True)
-        assert len(self.builder.selected_components) == 0
+        builder.on_selection_changed(selection_setup.comp_a2, append=True, toggle=True)
+        assert len(builder.selected_components) == 0
 
-    def test_range_selection_integration(self):
+    def test_range_selection_integration(self, selection_setup):
         """Test usage of get_range_selection via on_selection_changed."""
-        # Note: We are testing the integration in on_selection_changed handling of lists
-        # The actual get_range_selection logic is mocked here because it depends on UI list state
+        builder = selection_setup.builder
 
         # Setup: A1 is selected
-        self.builder.on_selection_changed(self.comp_a1, append=False)
+        builder.on_selection_changed(selection_setup.comp_a1, append=False)
 
         # Simulating Shift Click A4 -> Returns [A1, A2, A3, A4]
-        range_selection = [self.comp_a1, self.comp_a2, self.comp_a3, self.comp_a4]
+        range_selection: List[Component] = [
+            selection_setup.comp_a1,
+            selection_setup.comp_a2,
+            selection_setup.comp_a3,
+            selection_setup.comp_a4,
+        ]
 
-        # Case 1: Shift Click (append=False implies Replace, but usually Shift Range replaces existing selection with Range)
-        # But if we treat it as "Add Range", we use append=True?
-        # In my logic: is_shift -> self.on_selection_changed(range_comps, append=is_ctrl, toggle=False)
-        # If just Shift (no Ctrl), append=False.
+        # Execute (Shift only -> Replace existing selection with Range)
+        builder.on_selection_changed(range_selection, append=False, toggle=False)
 
-        # Execute (Shift only)
-        self.builder.on_selection_changed(range_selection, append=False, toggle=False)
+        assert len(builder.selected_components) == 4
+        # Validate order preservation
+        assert builder.selected_components[0][2] == selection_setup.comp_a1
+        assert builder.selected_components[3][2] == selection_setup.comp_a4
 
-        assert len(self.builder.selected_components) == 4
-
-        # Validate order preservation (implementation dependent but sets usually order by insertion)
-        assert self.builder.selected_components[0][2] == self.comp_a1
-        assert self.builder.selected_components[3][2] == self.comp_a4
-
-    def test_range_append_integration(self):
+    def test_range_append_integration(self, selection_setup):
         """Test Ctrl+Shift Append Range."""
-        # Setup A1 Selected
-        self.builder.on_selection_changed(self.comp_a1, append=False)
+        builder = selection_setup.builder
 
-        # Range is A3-A4 (User anchor shifted? Or just adding distinct range?)
-        # Let's say we have A1, and we add range [A3, A4]
-        range_selection = [self.comp_a3, self.comp_a4]
+        # Setup A1 Selected
+        builder.on_selection_changed(selection_setup.comp_a1, append=False)
+
+        # Range is A3-A4
+        range_selection = [selection_setup.comp_a3, selection_setup.comp_a4]
 
         # Execute (Ctrl+Shift)
-        self.builder.on_selection_changed(range_selection, append=True, toggle=False)
+        builder.on_selection_changed(range_selection, append=True, toggle=False)
 
-        assert len(self.builder.selected_components) == 3  # A1 + A3 + A4
-        selected_objs = {c[2] for c in self.builder.selected_components}
-        assert self.comp_a1 in selected_objs
-        assert self.comp_a3 in selected_objs
-        assert self.comp_a4 in selected_objs
+        assert len(builder.selected_components) == 3  # A1 + A3 + A4
+        selected_objs = {c[2] for c in builder.selected_components}
+        assert selection_setup.comp_a1 in selected_objs
+        assert selection_setup.comp_a3 in selected_objs
+        assert selection_setup.comp_a4 in selected_objs

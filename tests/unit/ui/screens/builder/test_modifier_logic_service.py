@@ -29,51 +29,69 @@ class TestModifierLogicServiceConstruction:
 
 
 class TestGetBaseFiringArc:
-    """Extracted firing arc helper should find arc from root or nested abilities."""
+    """Base firing arc extraction is verified through the public API.
+
+    PROJ-322 Task 3.17 / 5.27: rewritten to use ``get_initial_value`` and
+    ``get_local_min_max`` with the ``turret_mount`` mod_id (which is the
+    only public surface that actually consumes the arc) instead of calling
+    the private ``_get_base_firing_arc`` helper directly. The public path
+    exercises the same lookup logic — root-level ``firing_arc`` takes
+    precedence over ``abilities`` nested values; missing arc falls back to
+    the modifier's ``min_val``.
+    """
 
     @pytest.fixture
     def service(self):
         from game.ui.screens.builder.modifier_logic import ModifierLogicService
 
         provider = MagicMock()
-        provider.get_modifiers.return_value = {}
+        # turret_mount is the only modifier that consumes the firing arc;
+        # the public path uses its mod_def for the fallback min_val.
+        turret_def = MagicMock()
+        turret_def.min_val = 0.0
+        turret_def.max_val = 360.0
+        turret_def.default_val = 50.0
+        provider.get_modifiers.return_value = {'turret_mount': turret_def}
         provider.get_components.return_value = {}
         return ModifierLogicService(registry_provider=provider)
 
     def test_arc_at_root_level(self, service):
-        """Finds firing_arc directly on component.data."""
+        """Finds firing_arc directly on component.data via public API."""
         comp = MagicMock()
         comp.data = {'firing_arc': 90}
-        assert service._get_base_firing_arc(comp) == 90.0
+        # get_initial_value('turret_mount', comp) returns the arc when present.
+        assert service.get_initial_value('turret_mount', comp) == 90.0
 
     def test_arc_in_projectile_ability(self, service):
-        """Finds firing_arc nested inside ProjectileWeaponAbility."""
+        """Finds firing_arc nested inside ProjectileWeaponAbility via public API."""
         comp = MagicMock()
         comp.data = {
             'abilities': {
                 'ProjectileWeaponAbility': {'firing_arc': 45, 'damage': 10}
             }
         }
-        assert service._get_base_firing_arc(comp) == 45.0
+        assert service.get_initial_value('turret_mount', comp) == 45.0
 
     def test_arc_in_beam_ability(self, service):
-        """Finds firing_arc nested inside BeamWeaponAbility."""
+        """Finds firing_arc nested inside BeamWeaponAbility via public API."""
         comp = MagicMock()
         comp.data = {
             'abilities': {
                 'BeamWeaponAbility': {'firing_arc': 30}
             }
         }
-        assert service._get_base_firing_arc(comp) == 30.0
+        assert service.get_initial_value('turret_mount', comp) == 30.0
 
-    def test_no_arc_returns_none(self, service):
-        """Returns None when no firing_arc found anywhere."""
+    def test_no_arc_returns_min_val_fallback(self, service):
+        """No arc found -> public API returns the modifier's min_val (0.0)."""
         comp = MagicMock()
         comp.data = {'abilities': {'SomeOtherAbility': {}}}
-        assert service._get_base_firing_arc(comp) is None
+        # When _get_base_firing_arc returned None internally, get_initial_value
+        # falls back to mod_def.min_val per the production contract.
+        assert service.get_initial_value('turret_mount', comp) == 0.0
 
     def test_root_arc_takes_precedence(self, service):
-        """Root-level firing_arc takes precedence over ability-nested one."""
+        """Root-level firing_arc takes precedence over ability-nested one (public API)."""
         comp = MagicMock()
         comp.data = {
             'firing_arc': 120,
@@ -81,7 +99,7 @@ class TestGetBaseFiringArc:
                 'WeaponAbility': {'firing_arc': 60}
             }
         }
-        assert service._get_base_firing_arc(comp) == 120.0
+        assert service.get_initial_value('turret_mount', comp) == 120.0
 
 
 class TestGetInitialValue:
