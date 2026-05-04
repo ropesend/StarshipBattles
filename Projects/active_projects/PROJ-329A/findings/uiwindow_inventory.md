@@ -1,10 +1,26 @@
 # UIWindow / StrategyModalWindow Subclass Inventory
 
-**Date:** 2026-05-04
+**Date:** 2026-05-04 (updated 2026-05-04 after Phase 2 pre-flight)
 **Author:** PROJ-329A Phase 1 (canonical artefact for PROJ-329A/B/C + PROJ-330)
-**Source data:** `grep -lE "class.*\(.*UIWindow\)|class.*\(.*StrategyModalWindow\)" game/ui/screens/ -r` + Explore agent inventory (PROJ-329 planning).
+**Source data:** `grep -lE "class.*\(.*UIWindow\)|class.*\(.*StrategyModalWindow\)|class.*\(.*PlanetTargetEditor\)" game/ui/ -r` + Explore agent inventory (PROJ-329 planning).
 
-24 classes total: **6 done** (PROJ-325/328), **16 in-scope** across PROJ-329A/B/C, **2 deferred** with rationale in `docs/known-issues.md`.
+**28 classes total** after adding the 4 PlanetTargetEditor concrete subclasses (atmosphere/gravity/water/radiation editors) that the original grep missed because they extend `PlanetTargetEditor` transitively, not `UIWindow`/`StrategyModalWindow` directly.
+
+Distribution:
+- **7 done** (PROJ-324/325/328 — including StrategyModalWindow base shell)
+- **3 in-scope PROJ-329A** (was 5; PlanetTargetEditor + MoveChoiceWindow turned out to need no retrofit — see Phase 2 pre-flight findings below)
+- **8 in-scope PROJ-329B**, **3 in-scope PROJ-329C** (unchanged)
+- **7 deferred / no-retrofit-needed** (was 2; +4 PlanetTargetEditor concrete subclasses with no UI tests, +1 MoveChoiceWindow needs no retrofit)
+- **1 not-a-UIWindow** (DesignWorkshopScreen, factory pattern; documented in `docs/known-issues.md`)
+
+## Phase 2 pre-flight findings (2026-05-04)
+
+Two 329A targets evaporated on inspection:
+
+1. **`MoveChoiceWindow`** (`game/ui/screens/strategy_windows/move_choice_dialog.py:26`) — has NO `__init__` of its own; inherits everything from `StrategyModalWindow`. Widget construction happens INSIDE a sibling `MoveChoiceDialog.show()` AFTER the window is built (UILabel/UIButton with `container=win`). The bypass shell from `StrategyModalWindow` (PROJ-324 Phase 1) already makes it trivially testable. **No retrofit needed.**
+2. **`PlanetTargetEditor`** (`game/ui/screens/planet_target_editor_base.py:29`) — is a BASE class with NO `__init__` of its own. It owns only `process_event` and a `_button_handlers` template-method. **No retrofit needed at the base level.**
+
+The 4 concrete subclasses of `PlanetTargetEditor` (atmosphere/gravity/water/radiation editors, ~951 LOC total) DO have `__init__` work and matching widget construction. They have no UI tests in the `tests/` tree. Deferred for the same reason as `SettingsWindow` (audit S1.7's deferral rubric: retrofit value is proportional to existing test coverage; refactoring untested production code adds risk without locking behavior).
 
 ## Reading the matrix
 
@@ -27,8 +43,12 @@
 | 7 | `FoodAllocationEditor` | `game/ui/screens/food_allocation_editor.py` | 360 | `test_food_allocation_editor.py` | `__new__` bypass | No | Yes — `gather_rows()` pure-Python, no I/O | LOW | **329A** |
 | 8 | `FleetSelectionWindow` | `game/ui/screens/fleet_selection_window.py` | 123 | none | none | No | No | LOW | **329A** (TDD-first) |
 | 9 | `PlanetSelectionWindow` | `game/ui/screens/planet_selection_window.py` | 189 | none | none | No | No | LOW | **329A** (TDD-first) |
-| 10 | `MoveChoiceWindow` | `game/ui/screens/strategy_windows/move_choice_dialog.py` | 94 | none | none | No | No | LOW | **329A** (TDD-first) |
-| 11 | `PlanetTargetEditor` | `game/ui/screens/planet_target_editor_base.py` | 63 | none | none | No | No | LOW | **329A** (TDD-first) |
+| 10 | `MoveChoiceWindow` | `game/ui/screens/strategy_windows/move_choice_dialog.py` | 94 | none | inherits | No | No (no `__init__`) | — | **no-retrofit-needed** (no `__init__`; bypass shell from `StrategyModalWindow` already covers) |
+| 11 | `PlanetTargetEditor` (base) | `game/ui/screens/planet_target_editor_base.py` | 63 | none | inherits | No | No (no `__init__`) | — | **no-retrofit-needed** (base class; no `__init__`) |
+| 11a | `AtmosphereTargetEditor` | `game/ui/screens/atmosphere_target_editor.py` | 273 | none | none | No | Unknown — has `__init__`, not yet inspected | MED | **deferred** (no UI tests; same rubric as SettingsWindow) |
+| 11b | `GravityTargetEditor` | `game/ui/screens/gravity_target_editor.py` | 220 | none | none | No | Unknown | MED | **deferred** (no UI tests) |
+| 11c | `WaterTargetEditor` | `game/ui/screens/water_target_editor.py` | 227 | none | none | No | Unknown | MED | **deferred** (no UI tests) |
+| 11d | `RadiationShieldEditor` | `game/ui/screens/radiation_shield_editor.py` | 231 | none | none | No | Unknown | MED | **deferred** (no UI tests) |
 | 12 | `EmpireBuildQueueWindow` | `game/ui/screens/empire_build_queue_window.py` | 569 | `test_empire_build_queue_window.py` + 7 helpers | `__new__` bypass | No | No — state init only | MED | **329B** |
 | 13 | `EmpirePanelWindow` | `game/ui/screens/empire_panel_window.py` | 539 | none | none | No | No — state init only | MED | **329B** (TDD-first) |
 | 14 | `EventLogWindow` | `game/ui/screens/event_log_window.py` | 515 | `test_event_log_window.py` + integration (3 files) | `__new__` bypass (×3) | No | No — list + callbacks only | MED | **329B** |
@@ -53,12 +73,14 @@
 
 | Status | Count | Classes |
 |---|---:|---|
-| Done (PROJ-325/PROJ-328 + PROJ-324 base shell) | 7 | rows 1–6, 23 |
-| PROJ-329A (fast wins) | 5 | rows 7–11 |
+| Done (PROJ-324/325/328 + base shell) | 7 | rows 1–6, 23 |
+| PROJ-329A (fast wins, post-pre-flight) | 3 | rows 7–9 (FoodAllocationEditor, FleetSelectionWindow, PlanetSelectionWindow) |
 | PROJ-329B (mid-tier modals + bundled-test suites) | 8 | rows 12–19 |
 | PROJ-329C (facade-coupled, higher risk) | 3 | rows 20–22 |
-| Deferred (documented in `docs/known-issues.md`) | 2 | rows 24, 25 |
-| **In-scope total (PROJ-329A + B + C)** | **16** | — |
+| No-retrofit-needed (no `__init__` to guard) | 2 | rows 10–11 (MoveChoiceWindow, PlanetTargetEditor base) |
+| Deferred — no UI tests (same rubric as SettingsWindow) | 5 | rows 11a–11d, 24 (4 PlanetTargetEditor concrete subclasses + SettingsWindow) |
+| Deferred — not a UIWindow | 1 | row 25 (DesignWorkshopScreen) |
+| **In-scope total (PROJ-329A + B + C)** | **14** | — |
 
 ## Cross-project file-overlap verification
 
@@ -88,7 +110,11 @@ the rubric, and assign it to a project (or document deferral in
 
 The grep that produced the row set:
 ```
-grep -lE "class.*\(.*UIWindow\)|class.*\(.*StrategyModalWindow\)" game/ui/screens/ -r | sort
+grep -lE "class.*\(.*UIWindow\)|class.*\(.*StrategyModalWindow\)|class.*\(.*PlanetTargetEditor\)" game/ui/ -r | sort
 ```
-Re-run this when auditing — if the count of paths changes and this matrix
-isn't updated, the inventory is stale.
+Re-run this when auditing. The third disjunct (`PlanetTargetEditor`) catches
+the 4 concrete editor subclasses that extend `PlanetTargetEditor`
+transitively rather than `UIWindow`/`StrategyModalWindow` directly. If the
+codebase grows additional intermediate base classes, extend the regex
+similarly. If the count of paths changes and this matrix isn't updated, the
+inventory is stale.
