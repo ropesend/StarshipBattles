@@ -1,7 +1,7 @@
 ---
 name: ocode-discuss-continue
 description: Continue a previously concluded v2.4 inter-agent discussion with new user-supplied focus context. No-args by default — resolves to the most-recent v2.4 discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 × len(participants)` messages (extendable once to `10 × n`).
-argument-hint: [--folder <path>] [context...]
+argument-hint: "[--folder <path>] [context...]"
 ---
 
 # Inter-Agent Discussion — OpenCode Continues (v2.4)
