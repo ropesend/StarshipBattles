@@ -367,23 +367,6 @@ class TestCargoMethods:
         assert result == 75
         mock_ship.load_cargo.assert_called_with("passengers", 100)
 
-    def test_load_cargo_zero_amount_returns_zero(self, resource_aggregator, mock_fleet, mock_ship):
-        """Loading 0 cargo returns 0."""
-        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
-
-        result = resource_aggregator.load_cargo_to_fleet("passengers", 0)
-
-        assert result == 0
-        mock_ship.load_cargo.assert_not_called()
-
-    def test_load_cargo_negative_amount_returns_zero(self, resource_aggregator, mock_fleet, mock_ship):
-        """Loading negative cargo returns 0."""
-        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
-
-        result = resource_aggregator.load_cargo_to_fleet("passengers", -50)
-
-        assert result == 0
-
     def test_unload_cargo_from_fleet(self, resource_aggregator, mock_fleet, mock_ship):
         """Cargo is unloaded from ships."""
         mock_ship.unload_cargo.return_value = 50
@@ -394,23 +377,32 @@ class TestCargoMethods:
         assert result == 50
         mock_ship.unload_cargo.assert_called_with("passengers", 100)
 
-    def test_unload_cargo_zero_amount_returns_zero(self, resource_aggregator, mock_fleet, mock_ship):
-        """Unloading 0 cargo returns 0."""
+    # PROJ-325 Phase 2 Task 2.2 (resolves PROJ-323 Task 3.37): zero/negative
+    # cargo amount tests across load/unload collapsed into one parametrized
+    # test. Production guards both with `if amount <= 0: return 0` so the
+    # per-ship method should never be called for any of these cases.
+    @pytest.mark.parametrize(
+        "amount,operation,ship_method",
+        [
+            pytest.param(0, "load_cargo_to_fleet", "load_cargo", id="zero_load"),
+            pytest.param(-50, "load_cargo_to_fleet", "load_cargo", id="negative_load"),
+            pytest.param(0, "unload_cargo_from_fleet", "unload_cargo", id="zero_unload"),
+            pytest.param(-50, "unload_cargo_from_fleet", "unload_cargo", id="negative_unload"),
+        ],
+    )
+    def test_zero_or_negative_cargo_amount_returns_zero(
+        self, resource_aggregator, mock_fleet, mock_ship,
+        amount, operation, ship_method,
+    ):
+        """Zero or negative cargo amounts short-circuit to 0 without
+        invoking the per-ship cargo method."""
+        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
         mock_fleet.ships = [mock_ship]
 
-        result = resource_aggregator.unload_cargo_from_fleet("passengers", 0)
+        result = getattr(resource_aggregator, operation)("passengers", amount)
 
         assert result == 0
-        mock_ship.unload_cargo.assert_not_called()
-
-    def test_unload_cargo_negative_amount_returns_zero(self, resource_aggregator, mock_fleet, mock_ship):
-        """Unloading negative cargo returns 0."""
-        mock_fleet.ships = [mock_ship]
-
-        result = resource_aggregator.unload_cargo_from_fleet("passengers", -50)
-
-        assert result == 0
-        mock_ship.unload_cargo.assert_not_called()
+        getattr(mock_ship, ship_method).assert_not_called()
 
 
 # =============================================================================
