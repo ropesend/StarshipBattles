@@ -478,3 +478,63 @@ class TestRefresh:
             elem.kill.assert_called()
 
 
+# =============================================================================
+# PROJ-339: Characterization gap-fill tests
+# =============================================================================
+
+class TestFormatValueRoundingBoundary:
+    """PROJ-339: pin observed rounding boundaries in `_format_value`.
+
+    `_format_value` uses `int(round(value))` (banker's rounding) and then
+    formats with comma separators. This pins the observed behavior.
+    """
+
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
+    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
+    @patch('game.ui.panels.empire_treasury_panel.UILabel')
+    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    def test_format_value_zero_thousands_and_rounding(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """`0` -> "0"; `1234` -> "1,234"; `10000.5` rounds via banker's
+        rounding to 10000 -> "10,000".
+
+        Python's `round()` uses banker's rounding (round-half-to-even):
+        `round(10000.5)` -> 10000, not 10001. We pin this behavior.
+        """
+        panel = EmpireTreasuryPanel(
+            mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+        )
+        assert panel._format_value(0) == "0"
+        assert panel._format_value(1234) == "1,234"
+        # Banker's rounding: round(10000.5) -> 10000 (even)
+        assert panel._format_value(10000.5) == "10,000"
+
+
+class TestBuildResourceHeaderMissingIcon:
+    """PROJ-339: `_build_resource_header` skips the UIImage construction
+    when a resource id is absent from `resource_icons`. The label is still
+    rendered."""
+
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
+    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
+    @patch('game.ui.panels.empire_treasury_panel.UILabel')
+    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    def test_build_resource_header_skips_missing_icon(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot,
+    ):
+        """If resource_icons dict is empty, panel constructs without
+        attempting any UIImage; UILabels are still rendered."""
+        empty_icons = {}
+        panel = EmpireTreasuryPanel(
+            mock_panel, mock_ui_manager, sample_snapshot, empty_icons,
+        )
+        # No UIImage constructed because no resource is present in icons dict
+        mock_image.assert_not_called()
+        # Labels were still constructed (panel built without raising)
+        assert panel._scroll_container is not None
+        assert mock_label.call_count > 0
+
+
