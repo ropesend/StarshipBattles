@@ -534,3 +534,45 @@ class TestDrawDragPreview:
         # Should not raise; falls back to TEXT_DIM color
         h.draw_drag_preview(screen)
         assert screen.blit.call_count == 1
+
+
+# ===========================================================================
+# Review-4 follow-up: design-button drag motion suppression (missing transition)
+# ===========================================================================
+
+
+class TestMouseMotionDesignButtonDragSuppressed:
+    def test_handle_mouse_motion_returns_false_during_design_button_drag_due_to_drag_start_pos_none(self):
+        """State-machine gap pinned: design-button drags set
+        `dragged_item` directly in `handle_mouse_down` (no
+        `drag_start_pos` is recorded), so any subsequent MOUSEMOTION
+        events return False without entering the threshold-check path.
+        Queue-row drags, by contrast, set both `drag_start_pos` AND
+        `_pending_queue_index` and DO process motion.
+
+        This pins the production guard at build_queue_drag_handler.py:176:
+            `if not (event.buttons[0] and self.drag_start_pos and ...)`
+        which silently skips the design-button drag path.
+        """
+        h = _make_handler()
+        # Simulate the post-mousedown state from the design-button path:
+        # dragged_item populated, but drag_start_pos / _pending_queue_index
+        # remain at their constructor defaults (None).
+        h.dragged_item = {
+            'design_id': 'frigate', 'name': 'Frigate',
+            'category': 'ship', 'portrait': pygame.Surface((48, 48)),
+        }
+        assert h.drag_start_pos is None
+        assert h._pending_queue_index is None
+
+        # Motion well past the threshold — would normally start a drag if
+        # this were the queue-row path.
+        result = h.handle_mouse_motion(
+            _mm_event(pos=(500, 500), buttons=(1, 0, 0)),
+            construction_queue=[],
+        )
+
+        assert result is False
+        # Critically: dragged_item is NOT re-built or modified by motion.
+        assert h.dragged_item['design_id'] == 'frigate'
+

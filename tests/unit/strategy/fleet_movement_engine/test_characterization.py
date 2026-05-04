@@ -181,6 +181,41 @@ def test_apply_movement_warp_blocked_when_no_capability_pops_one_order(mock_flee
     mock_fleet.clear_orders.assert_not_called()  # PROJ-207: pop, not clear
 
 
+def test_warp_no_resources_returns_warp_blocked_false(mock_fleet, mock_galaxy):
+    """design.md surprise #3: warp distance > 1 with the warp CAPABILITY
+    present but insufficient WARP RESOURCES returns
+    `MovementResult(moved=False, warp_blocked=False)` — i.e. the
+    `warp_blocked` flag is identical to the successful non-warp move
+    case at the result level, even though one is a failure and the
+    other is success. The only observable difference is that
+    `pop_order` is called and `consume_warp_resources` is NOT.
+
+    Pin the surprise so a future refactor that flips this flag (to
+    distinguish the two cases at the result type) fails this test
+    rather than silently changing call-site behavior.
+
+    Pinned production at fleet_movement_engine.py:169-172.
+    """
+    engine = FleetMovementEngine()
+    mock_fleet.location = HexCoord(0, 0)
+    mock_fleet.capabilities.can_use_warp.return_value = True
+    # Resources for general movement OK, but no warp resources.
+    mock_fleet.resources.has_resources_for_movement.return_value = True
+    mock_fleet.resources.has_resources_for_warp.return_value = False
+
+    result = engine.apply_movement(mock_fleet, HexCoord(10, 0), mock_galaxy)
+
+    # No move happened but warp_blocked is False (the surprising bit).
+    assert result.moved is False
+    assert result.warp_blocked is False
+    # The fleet did pop its order (failure path side-effect).
+    mock_fleet.pop_order.assert_called_once()
+    # And critically did NOT consume warp resources.
+    mock_fleet.resources.consume_warp_resources.assert_not_called()
+    # And did NOT clear all orders (PROJ-207: pop, not clear).
+    mock_fleet.clear_orders.assert_not_called()
+
+
 def test_apply_movement_consumes_warp_resources_when_distance_gt_1(mock_fleet, mock_galaxy):
     """Successful warp jump (distance > 1) calls `consume_warp_resources`."""
     engine = FleetMovementEngine()

@@ -211,6 +211,55 @@ def test_spawn_to_staging_yard_uses_design_data_from_item_when_present():
     assert staged["name"] == "InlinePod"
 
 
+def test_spawn_to_staging_yard_reaches_into_simulation_for_mass_calculation():
+    """design.md surprise #2: `_spawn_to_staging_yard` performs an
+    in-method import of `game.simulation.entities.ship_design_stats`
+    and calls `calculate_design_stats` to compute the staging item's
+    mass. This pins the cross-layer reach-in (strategy → simulation)
+    so a future layering refactor that breaks the import path fails
+    the test rather than silently shipping mass=0.0 staging items.
+
+    Pins production at production_spawner.py:251-254.
+    """
+    spawner = ProductionSpawner(registries=MagicMock())
+    item = {"design_id": "pod", "type": "drop_pod",
+            "design_data": {"name": "TestPod"}}
+    planet = _planet()
+
+    with patch(
+        "game.simulation.entities.ship_design_stats.calculate_design_stats",
+        return_value={"mass": 4200.0},
+    ) as mock_calc:
+        spawner._spawn_to_staging_yard(planet, "pod", item, _empire(), "/tmp")
+
+    # Cross-layer reach-in actually happened with the design data + registries.
+    mock_calc.assert_called_once()
+    args = mock_calc.call_args.args
+    assert args[0] == {"name": "TestPod"}  # design_data flowed through
+    # The mass landed on the staging item.
+    staged = planet.add_to_staging_yard.call_args[0][0]
+    assert staged["mass"] == 4200.0
+
+
+def test_spawn_to_staging_yard_skips_mass_calculation_when_no_registries():
+    """When `_registries` is None, the simulation reach-in is skipped
+    and the staged item gets mass=0.0. Pins the guard at
+    production_spawner.py:251 (`if self._registries:`)."""
+    spawner = ProductionSpawner()  # registries default = None
+    item = {"design_id": "pod", "type": "drop_pod",
+            "design_data": {"name": "NoRegPod"}}
+    planet = _planet()
+
+    with patch(
+        "game.simulation.entities.ship_design_stats.calculate_design_stats",
+    ) as mock_calc:
+        spawner._spawn_to_staging_yard(planet, "pod", item, _empire(), "/tmp")
+
+    mock_calc.assert_not_called()
+    staged = planet.add_to_staging_yard.call_args[0][0]
+    assert staged["mass"] == 0.0
+
+
 def test_spawn_to_staging_yard_logs_warning_when_full(caplog):
     """`add_to_staging_yard` returning False emits a 'Staging yard full' warning."""
     spawner = ProductionSpawner()
