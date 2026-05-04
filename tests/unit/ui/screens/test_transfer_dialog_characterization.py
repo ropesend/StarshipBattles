@@ -522,3 +522,131 @@ class TestResourceTypesConstant:
             "metals", "organics", "vapors", "radioactives", "exotics",
             "fuel", "energy", "ammo",
         ]
+
+
+# ---------------------------------------------------------------------------
+# Two-stage construction (PROJ-328 Phase C) — bypass + Mock builder.
+# These exercise the new fixtures at tests/fixtures/transfer_ui_builder.py.
+# ---------------------------------------------------------------------------
+
+
+class TestTwoStageConstruction:
+    """Verify Stage-1 cheap state survives ``bypass_init`` and the
+    Mock builder populates widget slots without a live display."""
+
+    def _build(self, *, ui_builder=None, scene=None, source_fleet=None):
+        from tests.fixtures.ui_widget_factory import bypass_init
+
+        scene = scene or _make_scene()
+        source_fleet = source_fleet or _make_source_fleet()
+
+        with bypass_init(TransferDialog):
+            return TransferDialog(
+                pygame.Rect(0, 0, 900, 700),
+                MagicMock(name="ui_manager"),
+                source_fleet,
+                (0, 0),
+                scene,
+                window_manager=None,
+                ui_builder=ui_builder,
+            )
+
+    def test_bypass_with_null_builder_leaves_widget_slots_empty(self):
+        from tests.fixtures.transfer_ui_builder import NullTransferUiBuilder
+
+        dialog = self._build(ui_builder=NullTransferUiBuilder())
+        # Cheap state is present.
+        assert dialog.view_model is not None
+        assert dialog._controller is not None
+        assert dialog._renderer is not None
+        # Widget slots are placeholders.
+        assert dialog.drop_source is None
+        assert dialog.btn_confirm is None
+        assert dialog.grid_container is None
+        assert dialog._arrow_buttons == {}
+
+    def test_bypass_without_builder_leaves_widget_slots_empty(self):
+        # No ui_builder supplied → bypass branch returns without
+        # invoking any builder (production builder would crash on a
+        # mock manager).
+        dialog = self._build(ui_builder=None)
+        assert dialog.drop_source is None
+        assert dialog.btn_confirm is None
+
+    def test_bypass_with_mock_builder_populates_widgets(self):
+        from tests.fixtures.transfer_ui_builder import MockTransferUiBuilder
+
+        scene = _make_scene()
+        # Seed the facade so populate_initial_data finds a fleet at
+        # the hex.
+        f1 = MagicMock(fleet_id=1, owner_id=0)
+        f1.configure_mock(name="Fleet 1")
+        scene.facade.get_fleets_at_hex.return_value = [f1]
+        scene.facade.get_planets_at_hex.return_value = []
+        scene.facade.get_fleet.return_value = _empty_fleet_info()
+        scene.facade.get_planet.return_value = _empty_planet_info()
+
+        dialog = self._build(
+            ui_builder=MockTransferUiBuilder(),
+            scene=scene,
+        )
+
+        assert dialog.drop_source is not None
+        assert dialog.drop_target is not None
+        assert dialog.btn_confirm is not None
+        assert dialog.btn_cancel is not None
+        assert dialog.btn_clear_all is not None
+        assert dialog.btn_filter is not None
+        assert dialog.grid_container is not None
+        # populate_initial_data ran → row_data has the canonical
+        # 8 resource rows.
+        resource_keys = [r["cargo_key"] for r in dialog._row_data
+                         if r["cargo_key"] in RESOURCE_TYPES]
+        assert len(resource_keys) == 8
+
+    def test_bypassed_dialog_pending_math_works_end_to_end(self):
+        """ViewModel-driven math + label refresh works under bypass
+        with the Mock builder (renderer's update_pending_label path
+        does not crash on Mock labels)."""
+        from tests.fixtures.transfer_ui_builder import MockTransferUiBuilder
+
+        scene = _make_scene()
+        f1 = MagicMock(fleet_id=1, owner_id=0)
+        f1.configure_mock(name="Fleet 1")
+        p1 = MagicMock(planet_id=10, owner_id=0)
+        p1.name = "Alpha"
+        scene.facade.get_fleets_at_hex.return_value = [f1]
+        scene.facade.get_planets_at_hex.return_value = [p1]
+        scene.facade.get_fleet.return_value = _empty_fleet_info()
+        scene.facade.get_planet.return_value = _empty_planet_info()
+
+        dialog = self._build(
+            ui_builder=MockTransferUiBuilder(),
+            scene=scene,
+        )
+
+        # Manually wire a pending label for "metals" (the Mock
+        # builder skipped the per-row construction).
+        dialog._pending_labels["metals"] = MagicMock(name="metals_label")
+
+        dialog._on_arrow_click("metals", 100)
+        dialog._on_arrow_click("metals", 1000)
+        assert dialog.pending_transfers["metals"] == 1100
+        # Label.set_text was called twice (once per arrow click).
+        assert dialog._pending_labels["metals"].set_text.call_count == 2
+
+
+def _make_scene() -> Any:
+    scene = MagicMock()
+    scene._facade = MagicMock()
+    scene.facade = scene._facade
+    return scene
+
+
+def _make_source_fleet() -> Any:
+    fleet = MagicMock()
+    fleet.id = 1
+    fleet.fleet_id = 1
+    fleet.configure_mock(name="Fleet 1")
+    fleet.location = (0, 0)
+    return fleet
