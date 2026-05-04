@@ -84,6 +84,7 @@ tests/unit/engine/collision_edge_cases/test_ccd.py
 tests/unit/engine/collision_edge_cases/test_damage_tracking.py
 # research-controls fixtures arrive via tests/unit/research/research_controls/conftest.py
 tests/unit/research/research_controls/test_reset_state.py
+tests/unit/research/research_controls/test_event_routing_and_updates.py
 # research-renderer fixtures arrive via tests/unit/research/conftest.py
 tests/unit/research/test_research_renderer.py
 # research-renderer drawing tests load module via importlib (PROJ-337)
