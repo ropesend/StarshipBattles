@@ -233,24 +233,50 @@ class TestBuildQueueScreenHotkeys:
 # =======================================================================
 
 class TestTransferDialogHotkeys:
-    """TransferDialog should accept input_mapper and dispatch hotkey actions."""
+    """TransferDialog should accept input_mapper and dispatch hotkey actions.
+
+    PROJ-328 Phase C: migrated to bypass_init + MockTransferUiBuilder
+    so the constructed dialog is a real TransferDialog with cheap-state
+    delegates (view_model, _controller, _renderer, _mapper) populated
+    honestly. Widget slots come from the Mock builder.
+    """
 
     def _make_dialog(self, mapper):
-        """Create a minimal TransferDialog with mapper."""
+        """Create a real TransferDialog under bypass_init."""
         from game.ui.screens.transfer_dialog import TransferDialog
+        from tests.fixtures.transfer_ui_builder import MockTransferUiBuilder
 
-        dialog = MagicMock(spec=TransferDialog)
-        dialog._mapper = mapper
-        dialog.btn_confirm = MagicMock()
-        dialog.btn_cancel = MagicMock()
-        dialog._on_confirm = MagicMock()
-        dialog.kill = MagicMock()
-        dialog._handle_keydown = TransferDialog._handle_keydown.__get__(dialog, TransferDialog)
+        scene = MagicMock(name="scene")
+        scene.facade = MagicMock(name="facade")
+        # Empty hex — populate_initial_data invoked by Mock builder
+        # finds nothing.
+        scene.facade.get_fleets_at_hex.return_value = []
+        scene.facade.get_planets_at_hex.return_value = []
+        scene.facade.get_fleet.return_value = None
+        scene.facade.get_planet.return_value = None
+
+        source_fleet = MagicMock(name="source_fleet")
+        source_fleet.id = 1
+        source_fleet.fleet_id = 1
+        source_fleet.configure_mock(name="Source Fleet")
+
+        with bypass_init(TransferDialog):
+            dialog = TransferDialog(
+                pygame.Rect(0, 0, 600, 500),
+                MagicMock(name="ui_manager"),
+                source_fleet,
+                (0, 0),
+                scene,
+                window_manager=None,
+                input_mapper=mapper,
+                ui_builder=MockTransferUiBuilder(),
+            )
         return dialog
 
     def test_enter_confirms(self, mapper):
-        """Enter triggers _issue_order via InputMapper."""
+        """Enter triggers _on_confirm via InputMapper."""
         dialog = self._make_dialog(mapper)
+        dialog._on_confirm = MagicMock()
         event = _keydown(pygame.K_RETURN)
         dialog._handle_keydown(event)
         dialog._on_confirm.assert_called_once()
@@ -258,6 +284,7 @@ class TestTransferDialogHotkeys:
     def test_escape_cancels(self, mapper):
         """ESC triggers kill() via InputMapper."""
         dialog = self._make_dialog(mapper)
+        dialog.kill = MagicMock()
         event = _keydown(pygame.K_ESCAPE)
         dialog._handle_keydown(event)
         dialog.kill.assert_called_once()
@@ -265,6 +292,7 @@ class TestTransferDialogHotkeys:
     def test_no_mapper_ignores_hotkeys(self):
         """Without mapper, _handle_keydown does nothing."""
         dialog = self._make_dialog(None)
+        dialog._on_confirm = MagicMock()
         event = _keydown(pygame.K_RETURN)
         dialog._handle_keydown(event)
         dialog._on_confirm.assert_not_called()
@@ -272,9 +300,6 @@ class TestTransferDialogHotkeys:
     def test_confirm_button_tooltip(self, mapper):
         """Confirm button shows Enter tooltip."""
         dialog = self._make_dialog(mapper)
-        dialog._apply_tooltips = MagicMock()
-        from game.ui.screens.transfer_dialog import TransferDialog
-        dialog._apply_tooltips = TransferDialog._apply_tooltips.__get__(dialog, TransferDialog)
         dialog._apply_tooltips()
         tooltip_text = dialog.btn_confirm.set_tooltip.call_args[0][0]
         assert "Enter" in tooltip_text
@@ -282,8 +307,6 @@ class TestTransferDialogHotkeys:
     def test_cancel_button_tooltip(self, mapper):
         """Cancel button shows Esc tooltip."""
         dialog = self._make_dialog(mapper)
-        from game.ui.screens.transfer_dialog import TransferDialog
-        dialog._apply_tooltips = TransferDialog._apply_tooltips.__get__(dialog, TransferDialog)
         dialog._apply_tooltips()
         tooltip_text = dialog.btn_cancel.set_tooltip.call_args[0][0]
         assert "Esc" in tooltip_text

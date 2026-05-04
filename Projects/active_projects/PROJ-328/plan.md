@@ -15,13 +15,13 @@
 |-------|--------|-----------|
 | A. StrategyModalWindow shell + low/medium modals (BuildQueueListWindow, OrdersWindow, FleetReportWindow) | Complete (2026-05-03) | [phase_1_checklist.md](phase_1_checklist.md) |
 | B. NewGameSetupScreen MVVM split (full ViewModel + Controller + UI builder) | Complete (2026-05-03) | [phase_2_checklist.md](phase_2_checklist.md) |
-| C. TransferDialog deep split (ViewModel + Controller + Renderer; tests around pending math + IssueTransferCommand emission first) | Not Started — Phase A + B complete; Phase C unblocked | [phase_3_checklist.md](phase_3_checklist.md) |
+| C. TransferDialog deep split (ViewModel + Controller + Renderer; tests around pending math + IssueTransferCommand emission first) | Complete (2026-05-03) | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-03
-**Active Phase:** Phase A + Phase B complete; Phase C unblocked.
-**Last Action:** Phase B (NewGameSetupScreen MVVM split) landed on `feat/03c-phase-aware-execution`. Full split: `NewGameSetupViewModel` + `NewGameSetupController` + `NewGameSetupUiBuilder` extracted; screen reduced to a thin shell with property shims for back-compat. 48 new tests for the VM + Controller (pure-Python; fast). Existing `test_new_game_setup_extended.py` 15 tests migrated to `bypass_init` + `MockNewGameSetupUiBuilder` and pass. `test_new_game_setup.py` BUG-92 cluster (2 legacy `__new__` tests) also migrated. PROJ-322 Tasks 5.12 + 3.21 annotations updated to RESOLVED. Confirmed Phase A agent's caveat: 3.21 DOES target NewGame.
-**Next Action:** Phase C (TransferDialog deep split) — file-disjoint with Phase B; the highest-risk single class per the consensus plan, and the last UIWindow blocker.
+**Active Phase:** All phases (A + B + C) complete.
+**Last Action:** Phase C (TransferDialog deep MVVM split) landed on `feat/03c-phase-aware-execution` across 2 commits. c02446bd8 added 37 characterization tests for pending-transfer math + `IssueTransferCommand` emission BEFORE any production change (per consensus plan: "tests-first" for the highest-risk single class). 909bfbecf landed the production refactor: `TransferViewModel` (pure pending-math + row-data + selection state), `TransferController` (facade queries + DesignLibrary pod discovery + command emission), `TransferGridRenderer` + `TransferDialogUiBuilder` (every pygame_gui widget construction), and the dialog reduced from 790 → 380 LOC (-52%). The same commit migrated the `test_sub_window_hotkeys.py` TransferDialog cluster from `MagicMock(spec=...)` to `bypass_init` + `MockTransferUiBuilder`, closing the remaining PROJ-322 Task 5.16 + 3.26 deferral. All 4 PoC findings applied cleanly; no pattern-bend; no surprising coupling that wasn't pinnable as a characterization test.
+**Next Action:** PROJ-328 complete. The UIWindow MVVM blocker is fully resolved across all 6 target subclasses (RaceSetupScreen via PROJ-325 PoC; BuildQueueListWindow + OrdersWindow + FleetReportWindow via Phase A; NewGameSetupScreen via Phase B; TransferDialog via Phase C). Suggest user-verification then archive.
 **Blockers:** None.
 
 ## Overview
