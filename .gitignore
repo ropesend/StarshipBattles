@@ -26,6 +26,7 @@ collect_log*.txt
 
 # Sharded test runner timing data
 .test_durations.json
+.test_file_duration_history.json
 
 # Personal development tools
 VibeCodingHotkeys.ahk
