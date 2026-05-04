@@ -19,6 +19,7 @@ import os
 import subprocess
 import sys
 import time
+import uuid
 import xml.etree.ElementTree as ET
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -38,8 +39,12 @@ PROJECT_ROOT = _find_project_root()
 DURATIONS_FILE = PROJECT_ROOT / ".test_durations.json"
 SHARD_RESULTS_DIR = PROJECT_ROOT / ".pytest_cache" / "shard_results"
 TEST_BASELINE_FILE = PROJECT_ROOT / "AgentCoordination" / "generated" / "test_baseline.json"
+TEST_BASELINE_BY_INSTALL_DIR = PROJECT_ROOT / "AgentCoordination" / "generated" / "test_baseline" / "by_install"
+LOCAL_INSTALL_ID_FILE = PROJECT_ROOT / "AgentCoordination" / "local" / "install_id.json"
 BASELINE_COMMAND = "python Tools/test_sharded/test_sharded.py"
 BASELINE_COUNT_KEYS = ("total", "passed", "failed", "errors", "skipped")
+TEST_BASELINE_SCHEMA_VERSION = 2
+TEST_BASELINE_VERIFICATION_SCHEMA_VERSION = 1
 
 
 def _physical_core_count():
@@ -380,6 +385,58 @@ def _write_test_baseline(payload: dict[str, object]) -> None:
     )
 
 
+def _ensure_install_id() -> str:
+    if LOCAL_INSTALL_ID_FILE.exists():
+        try:
+            data = json.loads(LOCAL_INSTALL_ID_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            data = {}
+        if isinstance(data, dict):
+            install_id = data.get("install_id")
+            if isinstance(install_id, str) and install_id:
+                return install_id
+
+    install_id = uuid.uuid4().hex
+    LOCAL_INSTALL_ID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    LOCAL_INSTALL_ID_FILE.write_text(
+        json.dumps({"install_id": install_id, "created_at": _utc_timestamp()}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return install_id
+
+
+def _write_test_baseline_verification(
+    counts: dict[str, int],
+    *,
+    verified_at: str,
+    git_sha: str,
+) -> Path:
+    install_id = _ensure_install_id()
+    TEST_BASELINE_BY_INSTALL_DIR.mkdir(parents=True, exist_ok=True)
+    file_path = TEST_BASELINE_BY_INSTALL_DIR / f"{install_id}.json"
+    payload: dict[str, object] = {
+        "schema_version": TEST_BASELINE_VERIFICATION_SCHEMA_VERSION,
+        "install_id": install_id,
+        "command": BASELINE_COMMAND,
+        **counts,
+        "verified_at": verified_at,
+        "git_sha": git_sha,
+    }
+    file_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return file_path
+
+
+def _canonical_baseline_needs_rewrite(
+    existing: dict[str, object] | None,
+    counts_changed: bool,
+) -> bool:
+    if existing is None or counts_changed:
+        return True
+    if existing.get("schema_version") != TEST_BASELINE_SCHEMA_VERSION:
+        return True
+    return "verified_at" in existing or "git_sha" in existing
+
+
 def _write_test_baseline_if_needed(
     summary: dict[str, int],
     *,
@@ -392,26 +449,29 @@ def _write_test_baseline_if_needed(
     counts = {key: int(summary[key]) for key in BASELINE_COUNT_KEYS}
     existing = _load_test_baseline()
     counts_changed = _baseline_counts_changed(existing, counts)
+    canonical_needs_rewrite = _canonical_baseline_needs_rewrite(existing, counts_changed)
 
-    if not counts_changed and not refresh_baseline_timestamp:
-        return "unchanged"
-
+    # Kept for CLI compatibility; verification is now per-install and refreshed
+    # after every green whole-suite run.
+    del refresh_baseline_timestamp
     now = _utc_timestamp()
-    baseline_changed_at = now
-    status = "created" if existing is None else "updated"
-    if not counts_changed and existing is not None:
-        baseline_changed_at = str(existing.get("baseline_changed_at", ""))
-        status = "refreshed"
+    git_sha = _git_sha()
+    status = "verified"
 
-    payload: dict[str, object] = {
-        "schema_version": 1,
-        "command": BASELINE_COMMAND,
-        **counts,
-        "baseline_changed_at": baseline_changed_at,
-        "verified_at": now,
-        "git_sha": _git_sha(),
-    }
-    _write_test_baseline(payload)
+    if canonical_needs_rewrite:
+        baseline_changed_at = now if counts_changed else str(existing.get("baseline_changed_at", ""))
+        status = "created" if existing is None else "updated"
+        if existing is not None and not counts_changed:
+            status = "migrated"
+        payload: dict[str, object] = {
+            "schema_version": TEST_BASELINE_SCHEMA_VERSION,
+            "command": BASELINE_COMMAND,
+            **counts,
+            "baseline_changed_at": baseline_changed_at,
+        }
+        _write_test_baseline(payload)
+
+    _write_test_baseline_verification(counts, verified_at=now, git_sha=git_sha)
     return status
 
 
@@ -427,7 +487,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--refresh-baseline-timestamp",
         action="store_true",
-        help="Refresh test_baseline.json verified_at after a successful whole-suite run",
+        help="Compatibility flag; green whole-suite runs always refresh per-install verification",
     )
     args = parser.parse_args(argv)
 
@@ -574,8 +634,10 @@ def main(argv: list[str] | None = None) -> None:
         full_suite_success=full_suite_success,
         refresh_baseline_timestamp=args.refresh_baseline_timestamp,
     )
-    if baseline_status in {"created", "updated", "refreshed"}:
+    if baseline_status in {"created", "updated", "migrated"}:
         print(f"Test baseline {baseline_status}: {TEST_BASELINE_FILE}")
+    elif baseline_status == "verified":
+        print(f"Test baseline verification recorded: {TEST_BASELINE_BY_INSTALL_DIR}")
 
     # Exit with failure if any shard failed
     if any(rc != 0 for rc, _, _, _ in shard_results.values()):

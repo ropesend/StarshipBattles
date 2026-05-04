@@ -1,25 +1,10 @@
 {
-<<<<<<< HEAD
   "baseline_changed_at": "2026-05-04T12:41:36Z",
   "command": "python Tools/test_sharded/test_sharded.py",
   "errors": 0,
   "failed": 0,
-  "git_sha": "adc605689cc09812816958015fb54b5a06ded894",
   "passed": 16338,
-  "schema_version": 1,
+  "schema_version": 2,
   "skipped": 4,
-  "total": 16342,
-  "verified_at": "2026-05-04T12:41:36Z"
-=======
-  "baseline_changed_at": "2026-05-04T04:55:09Z",
-  "command": "python Tools/test_sharded/test_sharded.py",
-  "errors": 0,
-  "failed": 0,
-  "git_sha": "92a7490b6f8f74351a4b67fe8e38b8a7d03bddd3",
-  "passed": 16341,
-  "schema_version": 1,
-  "skipped": 4,
-  "total": 16345,
-  "verified_at": "2026-05-04T04:55:09Z"
->>>>>>> 2c04fdbec2c9ceb161f204bb78353196889915b6
+  "total": 16342
 }

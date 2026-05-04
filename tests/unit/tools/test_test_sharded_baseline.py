@@ -31,10 +31,9 @@ def _baseline_payload(
     errors: int = 0,
     skipped: int = 0,
     changed_at: str = "2026-04-28T00:00:00Z",
-    verified_at: str = "2026-04-28T00:00:00Z",
 ) -> dict[str, object]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "command": "python Tools/test_sharded/test_sharded.py",
         "total": total,
         "passed": passed,
@@ -42,9 +41,24 @@ def _baseline_payload(
         "errors": errors,
         "skipped": skipped,
         "baseline_changed_at": changed_at,
-        "verified_at": verified_at,
-        "git_sha": "old-sha",
     }
+
+
+def _configure_baseline_paths(
+    tmp_path: Path,
+    monkeypatch,
+    *,
+    install_id: str = "local-install",
+) -> tuple[Path, Path]:
+    baseline = tmp_path / "test_baseline.json"
+    by_install = tmp_path / "test_baseline" / "by_install"
+    local_install_id = tmp_path / "local" / "install_id.json"
+    local_install_id.parent.mkdir(parents=True)
+    local_install_id.write_text(json.dumps({"install_id": install_id}), encoding="utf-8")
+    monkeypatch.setattr(runner, "TEST_BASELINE_FILE", baseline)
+    monkeypatch.setattr(runner, "TEST_BASELINE_BY_INSTALL_DIR", by_install)
+    monkeypatch.setattr(runner, "LOCAL_INSTALL_ID_FILE", local_install_id)
+    return baseline, by_install / f"{install_id}.json"
 
 
 def test_parse_shard_xml_includes_skipped_count(
@@ -80,8 +94,7 @@ def test_baseline_created_after_successful_whole_suite(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    baseline = tmp_path / "test_baseline.json"
-    monkeypatch.setattr(runner, "TEST_BASELINE_FILE", baseline)
+    baseline, verification = _configure_baseline_paths(tmp_path, monkeypatch)
     monkeypatch.setattr(runner, "_utc_timestamp", lambda: "2026-04-29T00:00:00Z")
     monkeypatch.setattr(runner, "_git_sha", lambda: "new-sha")
 
@@ -97,21 +110,26 @@ def test_baseline_created_after_successful_whole_suite(
     assert data["passed"] == 11
     assert data["skipped"] == 1
     assert data["baseline_changed_at"] == "2026-04-29T00:00:00Z"
-    assert data["verified_at"] == "2026-04-29T00:00:00Z"
-    assert data["git_sha"] == "new-sha"
+    assert "verified_at" not in data
+    assert "git_sha" not in data
+
+    verification_data = json.loads(verification.read_text(encoding="utf-8"))
+    assert verification_data["install_id"] == "local-install"
+    assert verification_data["total"] == 12
+    assert verification_data["verified_at"] == "2026-04-29T00:00:00Z"
+    assert verification_data["git_sha"] == "new-sha"
 
 
-def test_baseline_unchanged_counts_do_not_rewrite_without_refresh(
+def test_baseline_unchanged_counts_do_not_rewrite_canonical_but_record_verification(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    baseline = tmp_path / "test_baseline.json"
+    baseline, verification = _configure_baseline_paths(tmp_path, monkeypatch)
     baseline.write_text(
         json.dumps(_baseline_payload(), indent=2),
         encoding="utf-8",
     )
     before = baseline.read_text(encoding="utf-8")
-    monkeypatch.setattr(runner, "TEST_BASELINE_FILE", baseline)
     monkeypatch.setattr(runner, "_utc_timestamp", lambda: "2026-04-29T00:00:00Z")
     monkeypatch.setattr(runner, "_git_sha", lambda: "new-sha")
 
@@ -121,20 +139,23 @@ def test_baseline_unchanged_counts_do_not_rewrite_without_refresh(
         refresh_baseline_timestamp=False,
     )
 
-    assert status == "unchanged"
+    assert status == "verified"
     assert baseline.read_text(encoding="utf-8") == before
+    data = json.loads(verification.read_text(encoding="utf-8"))
+    assert data["verified_at"] == "2026-04-29T00:00:00Z"
+    assert data["git_sha"] == "new-sha"
 
 
-def test_refresh_baseline_timestamp_updates_verified_at_only(
+def test_refresh_baseline_timestamp_flag_keeps_canonical_counts_unchanged(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    baseline = tmp_path / "test_baseline.json"
+    baseline, verification = _configure_baseline_paths(tmp_path, monkeypatch)
     baseline.write_text(
         json.dumps(_baseline_payload(), indent=2),
         encoding="utf-8",
     )
-    monkeypatch.setattr(runner, "TEST_BASELINE_FILE", baseline)
+    before = baseline.read_text(encoding="utf-8")
     monkeypatch.setattr(runner, "_utc_timestamp", lambda: "2026-04-29T00:00:00Z")
     monkeypatch.setattr(runner, "_git_sha", lambda: "new-sha")
 
@@ -145,22 +166,23 @@ def test_refresh_baseline_timestamp_updates_verified_at_only(
     )
 
     data = json.loads(baseline.read_text(encoding="utf-8"))
-    assert status == "refreshed"
+    assert status == "verified"
+    assert baseline.read_text(encoding="utf-8") == before
     assert data["baseline_changed_at"] == "2026-04-28T00:00:00Z"
-    assert data["verified_at"] == "2026-04-29T00:00:00Z"
-    assert data["git_sha"] == "new-sha"
+    verification_data = json.loads(verification.read_text(encoding="utf-8"))
+    assert verification_data["verified_at"] == "2026-04-29T00:00:00Z"
+    assert verification_data["git_sha"] == "new-sha"
 
 
 def test_count_change_updates_baseline_changed_at(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    baseline = tmp_path / "test_baseline.json"
+    baseline, verification = _configure_baseline_paths(tmp_path, monkeypatch)
     baseline.write_text(
         json.dumps(_baseline_payload(), indent=2),
         encoding="utf-8",
     )
-    monkeypatch.setattr(runner, "TEST_BASELINE_FILE", baseline)
     monkeypatch.setattr(runner, "_utc_timestamp", lambda: "2026-04-29T00:00:00Z")
     monkeypatch.setattr(runner, "_git_sha", lambda: "new-sha")
 
@@ -174,15 +196,17 @@ def test_count_change_updates_baseline_changed_at(
     assert status == "updated"
     assert data["total"] == 11
     assert data["baseline_changed_at"] == "2026-04-29T00:00:00Z"
-    assert data["verified_at"] == "2026-04-29T00:00:00Z"
+    assert "verified_at" not in data
+    verification_data = json.loads(verification.read_text(encoding="utf-8"))
+    assert verification_data["total"] == 11
+    assert verification_data["verified_at"] == "2026-04-29T00:00:00Z"
 
 
 def test_failed_or_partial_run_never_updates_baseline(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    baseline = tmp_path / "test_baseline.json"
-    monkeypatch.setattr(runner, "TEST_BASELINE_FILE", baseline)
+    baseline, verification = _configure_baseline_paths(tmp_path, monkeypatch)
 
     status = runner._write_test_baseline_if_needed(
         _summary(total=10, passed=9, failed=1),
@@ -192,3 +216,4 @@ def test_failed_or_partial_run_never_updates_baseline(
 
     assert status == "skipped"
     assert not baseline.exists()
+    assert not verification.exists()
