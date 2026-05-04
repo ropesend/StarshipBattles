@@ -171,6 +171,49 @@ constrained AND the project owner wants to invest in factory-pattern
 retrofitting (a different recipe than UIWindow's two-stage). Cross-ref
 PROJ-322 `plan.md` Task 5.10 ACCEPTED-DEFERRED entry.
 
+### `PlanetTargetEditor` concrete subclasses — no UI tests
+
+**Files (4 classes, ~951 LOC total):**
+- `game/ui/screens/atmosphere_target_editor.py` (273 LOC) → `class AtmosphereTargetEditor(PlanetTargetEditor)`
+- `game/ui/screens/gravity_target_editor.py` (220 LOC) → `class GravityTargetEditor(PlanetTargetEditor)`
+- `game/ui/screens/water_target_editor.py` (227 LOC) → `class WaterTargetEditor(PlanetTargetEditor)`
+- `game/ui/screens/radiation_shield_editor.py` (231 LOC) → `class RadiationShieldEditor(PlanetTargetEditor)`
+
+**Why they're deferred:** No UI/widget tests exist for any of the four
+editors in the `tests/` tree (verified — only physics/engine-level tests
+of the underlying systems exist). Same rubric as SettingsWindow: refactoring
+untested production code adds risk without locking behavior.
+
+**Discovery context:** PROJ-329A's original `grep` for `UIWindow` /
+`StrategyModalWindow` subclasses missed these because they extend
+`PlanetTargetEditor` (intermediate base) which itself extends
+`StrategyModalWindow`. The Phase 1 inventory uses an extended grep
+disjunct to catch this. Per-class shape per the base class docstring is
+similar (slider geometry + button handlers + apply/cancel/auto buttons),
+so a future retrofit could batch all four with a shared characterization
+test pattern.
+
+**Reassess if:** any of the four editors gain characterization tests OR
+all four become tagged for a "planet-targets editor batch" project (pulls
+the same recipe across all 4 + the base shell change in one pass).
+
+### `MoveChoiceWindow` and `PlanetTargetEditor` (base) — no `__init__` to retrofit
+
+**Discovery context:** Both classes were originally listed as PROJ-329A
+fast-win retrofit targets. Phase 2 pre-flight inspection found:
+
+- **`MoveChoiceWindow`** (`game/ui/screens/strategy_windows/move_choice_dialog.py:26`)
+  — has NO `__init__` of its own. Widget construction happens in a sibling
+  `MoveChoiceDialog.show()` method AFTER the window is built. The bypass
+  shell from `StrategyModalWindow` (PROJ-324 Phase 1) already covers it.
+
+- **`PlanetTargetEditor`** (`game/ui/screens/planet_target_editor_base.py:29`)
+  — base class with NO `__init__`; owns only `process_event` dispatch and a
+  `_button_handlers` template-method.
+
+Neither needs the two-stage retrofit; `bypass_init` flag inherited from
+`StrategyModalWindow` is sufficient. Status in inventory: `no-retrofit-needed`.
+
 ### `SettingsWindow` — raw `UIWindow`, no tests found
 
 **File:** `game/ui/screens/settings_window.py` (109 LOC)
