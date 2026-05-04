@@ -93,6 +93,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                 entry for the saved race so the next ``get_race`` call
                 re-reads from disk. Pre-game launches pass None.
         """
+        # PROJ-324 Phase 1: opt-in test escape hatch — see
+        # StrategyModalWindow.__init__ for full rationale.
+        if getattr(type(self), 'bypass_init', False):
+            return
         super().__init__(
             rect,
             manager,

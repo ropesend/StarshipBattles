@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. UIWindow `bypass_init` flag (production-side) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. UIWindow `bypass_init` flag (production-side) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. LLMBackgroundCall completion Event (production-side) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate 14 unblocked PROJ-322 deferrals (test-side) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Documentation pass (`make_ui_widget` → `docs/02_PATTERNS.md`, mark blockers resolved) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning complete — ready for Phase 1
-**Last Action:** Project created from continuation review of PROJ-321/322/323
-**Next Action:** Begin Phase 1 — add `bypass_init` flag to `StrategyModalWindow.__init__` first (most subclasses route through it), then to direct-UIWindow subclasses
+**Active Phase:** Phase 1 complete — Phase 2 in progress
+**Last Action:** Phase 1 complete — `bypass_init` context manager + 3 production-class guards (StrategyModalWindow, RaceSetupScreen, NewGameSetupScreen) landed; all 4 StrategyModalWindow subclasses verified to inherit transitively (no per-class guards needed)
+**Next Action:** Begin Phase 2 Task 2.1 — add `_done_event` to `LLMBackgroundCall.__init__`
 **Blockers:** None
 
 ## Overview

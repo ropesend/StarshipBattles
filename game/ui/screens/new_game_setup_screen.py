@@ -95,6 +95,10 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             on_start_callback: Callback(GameConfig) when user starts game
             on_cancel_callback: Callback() when user cancels
         """
+        # PROJ-324 Phase 1: opt-in test escape hatch — see
+        # StrategyModalWindow.__init__ for full rationale.
+        if getattr(type(self), 'bypass_init', False):
+            return
         super().__init__(
             rect,
             manager,

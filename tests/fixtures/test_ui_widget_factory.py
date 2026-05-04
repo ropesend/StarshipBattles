@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tests.fixtures.ui_widget_factory import make_ui_widget
+from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
 
 
 def test_make_ui_widget_constructs_race_identity_panel():
@@ -125,3 +125,65 @@ def test_make_ui_widget_supplies_default_when_kwarg_omitted(kwarg_name):
         assert panel.panel is not None
     else:
         assert panel.ui_manager is not None
+
+
+# ---------------------------------------------------------------------------
+# bypass_init context manager (PROJ-324 Task 1.1)
+# ---------------------------------------------------------------------------
+
+
+class _BypassInitTarget:
+    """Disposable class for bypass_init lifecycle testing.
+
+    A fresh class is constructed per test (via subclassing) so flag
+    leakage from a buggy implementation is impossible to mask.
+    """
+
+
+def test_bypass_init_sets_and_clears_flag_normally():
+    Cls = type("Target1", (_BypassInitTarget,), {})
+    assert "bypass_init" not in Cls.__dict__
+
+    with bypass_init(Cls):
+        assert Cls.bypass_init is True
+
+    assert "bypass_init" not in Cls.__dict__
+
+
+def test_bypass_init_clears_flag_on_exception():
+    Cls = type("Target2", (_BypassInitTarget,), {})
+
+    with pytest.raises(RuntimeError, match="boom"):
+        with bypass_init(Cls):
+            assert Cls.bypass_init is True
+            raise RuntimeError("boom")
+
+    assert "bypass_init" not in Cls.__dict__
+
+
+def test_bypass_init_nested_restores_previous_value():
+    """Nested ``bypass_init`` on the same class restores the previous
+    value (False / True), not just the absence of the attribute."""
+
+    Cls = type("Target3", (_BypassInitTarget,), {})
+    Cls.bypass_init = False  # pre-existing falsy value
+
+    with bypass_init(Cls):
+        assert Cls.bypass_init is True
+        with bypass_init(Cls):
+            assert Cls.bypass_init is True
+        # Inner exit must restore to True (set by outer), not False.
+        assert Cls.bypass_init is True
+
+    # Outer exit restores to the original False.
+    assert Cls.bypass_init is False
+
+
+def test_bypass_init_preserves_pre_existing_truthy_value():
+    Cls = type("Target4", (_BypassInitTarget,), {})
+    Cls.bypass_init = "custom"
+
+    with bypass_init(Cls):
+        assert Cls.bypass_init is True
+
+    assert Cls.bypass_init == "custom"
