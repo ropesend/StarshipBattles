@@ -1,23 +1,34 @@
 ---
 name: codex-discuss-respond
-description: Respond as Codex in a v2.4 inter-agent discussion with Claude Code and/or OpenCode through an exact discussion leaf or discoverable parent folder, using polymorphic round-robin turn detection.
+description: Respond as Codex in a v2.5 inter-agent discussion with Claude Code and/or OpenCode through an exact discussion leaf or discoverable parent folder, using polymorphic round-robin turn detection.
 ---
 
 # Codex Discuss Respond
 
-Join a live v2.4 `interagent-discussion/v1` discussion when the latest turn is
+Join a live v2.5 `interagent-discussion/v1` discussion when the latest turn is
 addressed to Codex. This skill handles Codex as the second, third, or later
 participant by reading `participants` and `message_index`; it is not tied to a
 specific peer.
 
-Reference: `AgentCoordination/Scratchpad/Discussion/20260504T031013Z/plans/v2.4_three_party_spec_r002.md`.
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
+
+This is a peer-to-peer dialogue, not a delegation. Other agents are equals.
+Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
+
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
 
 ## Inputs
 
-Argument surface: `<folder>`. Do not add `argument-hint` frontmatter to Codex
+Argument surface: `[--folder <folder-or-parent>]`. Do not add `argument-hint` frontmatter to Codex
 skills.
 
-- Resolve `<folder>` against the repository root or current working directory.
+- No positional folder.
+- `--folder <folder-or-parent>` is an optional flag-style override. Without it, use `<repo-root>/AgentCoordination/Scratchpad/Discussion`, resolving `<repo-root>` at runtime from the current checkout.
 - Accept either an exact discussion leaf or a parent folder containing one or more discussion leaves.
 - If the resolved path's final segment contains whitespace, warn but do not reject.
 - Pre-flight checks must not mutate existing folders. Do not create `plans/` during respond pre-flight.
@@ -59,7 +70,7 @@ No pair-specific response skills exist. This `respond` skill is polymorphic.
 
 ## Participants And Turn Computation
 
-For v2.4, read `participants` and `turn_order` from the arc starter. The only
+For v2.5, read `participants` and `turn_order` from the arc starter. The only
 legal `turn_order` value is `round-robin`.
 
 For v2.3 readback, if `arc01_001_*` lacks `participants`, derive
@@ -163,6 +174,12 @@ One extension per arc is allowed:
   `last_edited_by`, `last_edited_at_utc`, and `revision: <int>`.
 - `## Plans touched` references the specific new revision file.
 
+## Protocol Self-Improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
+
 ## Waiting
 
 Poll every 30 seconds for up to 5 minutes, watching both the incoming glob and
@@ -210,7 +227,7 @@ continuation_starter: <claude|codex|opencode>
 
 For v2.3 outcome readback only, accept `implementation_owner: both` as
 equivalent to `implementation_owner: multiple` with
-`implementation_owners == participants`. v2.4 writers must never emit `both`.
+`implementation_owners == participants`. v2.5 writers must never emit `both`.
 
 ## Continuation Boundary
 
@@ -220,7 +237,7 @@ arc-N to arc-(N+1) transitions authorized by `continuation_starter`.
 
 ## Implementation Notes
 
-- Manual routing is expected in v2.4; auto-routing daemons are deferred.
+- Manual routing is expected in v2.5; auto-routing daemons are deferred.
 - Use host-neutral wording for peer-side invocations.
 - Pre-flight checks must not mutate folders before validation.
 - Do not create fallback handling for old unprefixed transcripts.

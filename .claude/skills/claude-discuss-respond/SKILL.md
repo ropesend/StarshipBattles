@@ -1,24 +1,34 @@
 ---
 name: claude-discuss-respond
-description: Join a v2.4 inter-agent discussion that Codex or OpenCode opened. The argument may be either the exact discussion leaf or a parent folder containing one or more leaves; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion — it just takes the next turn whenever it is Claude's turn. Use after the user has invoked the matching `*-discuss-start` skill on the originating agent.
-argument-hint: <folder-or-parent>
+description: Join a v2.5 inter-agent discussion that Codex or OpenCode opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.
+argument-hint: [--folder <folder-or-parent>]
 ---
 
-# Inter-Agent Discussion — Claude Responds (v2.4)
+# Inter-Agent Discussion — Claude Responds (v2.5)
 
-You are joining a multi-turn discussion. The user may pass the exact
-discussion leaf OR a parent folder containing one or more discussion leaves;
-this skill resolves the leaf via parent-folder discovery (latest-state
+You are joining a multi-turn discussion. The folder defaults to
+`<repo-root>/AgentCoordination/Scratchpad/Discussion`; `--folder` may point to
+the exact discussion leaf OR a parent folder containing one or more discussion
+leaves. This skill resolves the leaf via parent-folder discovery (latest-state
 based, NOT pair-specific).
 
-This is a peer-to-peer dialogue, not a delegation. Other agents are your
-equals. Push back, propose alternatives, agree where you actually agree.
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
 
-## Protocol — interagent-discussion/v1 (v2.4 spec)
+This is a peer-to-peer dialogue, not a delegation. Other agents are your
+equals. Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
+
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
+
+## Protocol — interagent-discussion/v1 (v2.5 spec)
 
 | Field | Value |
 |-------|-------|
-| Argument | `$args[0]` — leaf or parent; resolution algorithm below |
+| Argument | optional `--folder <folder-or-parent>`; defaults to `<repo-root>/AgentCoordination/Scratchpad/Discussion` |
 | Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md`, where from/to ∈ `{claude,codex,opencode}` |
 | Turn formula | `from = P[(i-1) mod n]`, `to = P[i mod n]` where `P = participants`, `n = len(P)` |
 | Default per-arc cap | `5 × n` messages (one in-band extension to `10 × n` per arc) |
@@ -32,9 +42,31 @@ arc-starter message.
 ## Step 1 — Resolve the folder
 
 ```powershell
-$Path = $args[0]
+function Get-RepoRoot {
+  $root = (git rev-parse --show-toplevel 2>$null)
+  if ($LASTEXITCODE -eq 0 -and $root) { return $root.Trim() }
+  $dir = Get-Location
+  while ($dir) {
+    if ((Test-Path -LiteralPath (Join-Path $dir 'AGENTS.md')) -and
+        (Test-Path -LiteralPath (Join-Path $dir 'game')) -and
+        (Test-Path -LiteralPath (Join-Path $dir 'data'))) {
+      return $dir.FullName
+    }
+    $dir = $dir.Parent
+  }
+  throw 'Unable to discover repository root.'
+}
+
+$RepoRoot = Get-RepoRoot
+$Path = Join-Path $RepoRoot 'AgentCoordination\Scratchpad\Discussion'
+if ($args.Length -ge 2 -and $args[0] -eq '--folder') {
+  $Path = $args[1]
+} elseif ($args.Length -gt 0) {
+  Write-Output 'ABORT: use --folder <folder-or-parent>; positional folders are not part of v2.5.'
+  exit 1
+}
 if (-not [System.IO.Path]::IsPathRooted($Path)) {
-  $Path = Join-Path 'c:\Dev\Starship Battles' $Path
+  $Path = Join-Path $RepoRoot $Path
 }
 if (-not (Test-Path -LiteralPath $Path)) {
   Write-Output "ABORT: path does not exist: $Path"
@@ -58,7 +90,7 @@ The argument may be the leaf or a parent.
 
 **Resolution algorithm:**
 
-1. **Try as leaf.** If `$Path` directly contains v2.4 protocol files
+1. **Try as leaf.** If `$Path` directly contains v2.5 protocol files
    matching `^arc\d{2}_\d{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\.md$`,
    `^outcome\.md$`, or `^outcome_arc\d{2}\.md$`, treat it as a leaf and
    skip to Step 4.
@@ -256,7 +288,7 @@ body. Otherwise abort.
 
 ## Step 8 — Read incoming and validate
 
-Required validation per v2.4:
+Required validation per v2.5:
 
 1. **Schema**: required fields present; `from != to`; `from`/`to` ∈ `{claude,codex,opencode}`.
 2. **Turn alignment**: `from == participants[(message_index-1) mod n]` AND
@@ -306,6 +338,12 @@ Repeat until terminal:
 
 5. **Edit shared plans this turn (if appropriate).** Plan files at
    `<leaf>/plans/<name>_r<NNN>.md`. Never overwrite. Use `Write-PlanRevision`.
+
+### Protocol self-improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
 
 6. **Compute outgoing write target.** `j_out = i_in + 1`. Verify
    `participants[(j_out-1) mod n] == 'claude'`. Recipient is

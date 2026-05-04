@@ -1,29 +1,40 @@
 ---
 name: codex-discuss-start
-description: Start an inter-agent discussion with Claude Code and/or OpenCode through a generated discussion leaf, using the v2.4 round-robin shared-folder protocol with immutable plans, continuation arcs, and explicit ownership.
+description: Start an inter-agent discussion with Claude Code and/or OpenCode through a generated discussion leaf, using the v2.5 round-robin shared-folder protocol with immutable plans, continuation arcs, and explicit ownership.
 ---
 
 # Codex Discuss Start
 
-Start a v2.4 `interagent-discussion/v1` shared-folder discussion by creating a
+Start a v2.5 `interagent-discussion/v1` shared-folder discussion by creating a
 child discussion leaf, writing Codex message 001, and then following the
 round-robin loop until `consensus`, `needs-user`, timeout, or the per-arc cap.
 
-Reference: `AgentCoordination/Scratchpad/Discussion/20260504T031013Z/plans/v2.4_three_party_spec_r002.md`.
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
+
+This is a peer-to-peer dialogue, not a delegation. Other agents are equals.
+Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
+
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
 
 ## Inputs
 
-Argument surface: `<parent> [--participants <agents>] [--slug <slug>] [context...]`. Do not add `argument-hint` frontmatter to Codex skills.
+Argument surface: `[--folder <parent>] [--slug <slug>] [--with <agents>] [context...]`. Do not add `argument-hint` frontmatter to Codex skills.
 
-- Resolve `<parent>` against the repository root or current working directory.
-- Treat the user-supplied path as a parent folder, not the discussion leaf.
+- No positional folder.
+- `--folder <parent>` is an optional flag-style override. Without it, use `<repo-root>/AgentCoordination/Scratchpad/Discussion`, resolving `<repo-root>` at runtime from the current checkout.
+- Treat the resolved path as a parent folder, not the discussion leaf.
 - If the resolved parent folder's final segment contains whitespace, warn but do not reject. Remind the user to quote paths with spaces.
 - Create a child leaf named `YYYYMMDDTHHMMSSZ` by default.
 - If `--slug <kebab-case-slug>` is present, create `YYYYMMDDTHHMMSSZ_<slug>`. Validate the slug as lowercase kebab-case. Do not infer a slug from positional context tokens.
-- `--participants <agents>` chooses the participant set. Accepted values are `claude`, `opencode`, `claude,opencode`, `codex,claude`, `codex,opencode`, `codex,claude,opencode`, and `all`.
-- If `--participants` is absent, default to the current two-party behavior: `[codex, claude]`.
+- `--with <agents>` chooses peer participants. Accepted values are `claude`, `opencode`, and `claude,opencode` in either order.
+- If `--with` is absent, default to the current two-party behavior: `[codex, claude]`.
 - Codex is always the starter and must be in the participant set. Abort if fewer than two or more than three protocol agents would participate.
-- All remaining tokens after flags become inline user context.
+- All remaining tokens after flags become inline user context; positional tokens are never treated as folder paths.
 - Read `<leaf>/topic.md` if it exists and forward it as additional user context.
 - Pre-flight checks must not mutate an existing discussion folder before deciding it is valid to use. Create `<leaf>/plans/` only after the leaf is accepted for a live discussion, or immediately before an actual plan write.
 - Abort before writing if the generated leaf already contains protocol files or `outcome.md`.
@@ -54,7 +65,7 @@ For `participants = P` and `n = len(P)`:
 
 ## Filenames
 
-v2.4 requires arc-prefixed filenames everywhere. Message files match:
+v2.5 requires arc-prefixed filenames everywhere. Message files match:
 
 ```text
 ^arc\d{2}_\d{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\.md$
@@ -127,6 +138,12 @@ contains the default fence marker, use a longer fence.
 - Plan frontmatter includes `protocol: interagent-discussion/v1`, `last_edited_by`, `last_edited_at_utc`, and `revision: <int>`.
 - `## Plans touched` names the specific new revision file.
 
+## Protocol Self-Improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
+
 ## Validation
 
 Validate every message consumed or produced:
@@ -145,7 +162,7 @@ exists, abort and surface the diagnostic.
 ## Loop
 
 1. Atomic-write `arc01_001_codex_to_<P[1]>.md` with `status: continue`.
-2. Manual routing is expected in v2.4. Tell the user which peer-side skill should be invoked next.
+2. Manual routing is expected in v2.5. Tell the user which peer-side skill should be invoked next.
 3. If remaining in the loop, wait for the incoming message addressed to Codex.
 4. Incoming wait target: smallest missing `i_in` where `P[i_in mod n] == codex`; glob `arc<NN>_<i_in:03d>_*_to_codex.md`.
 5. The incoming glob must resolve to exactly one file. Zero means keep waiting; more than one is a fork.
@@ -213,7 +230,7 @@ the arc-1 starter.
 
 For v2.3 outcome readback only, accept `implementation_owner: both` as
 equivalent to `implementation_owner: multiple` with
-`implementation_owners == participants`. v2.4 writers must never emit `both`.
+`implementation_owners == participants`. v2.5 writers must never emit `both`.
 
 ## Continuation
 
@@ -226,4 +243,4 @@ authorized continuation starter. Prior latest outcomes are archived as
 - Use host-neutral wording such as "invoke the OpenCode-side discussion skill" or "invoke the Claude-side discussion skill".
 - Pre-flight checks must not mutate existing folders before validation.
 - Read v2.3 transcripts by deriving `participants = [from, to]` from `arc01_001_*`; do not rewrite them.
-- Auto-routing daemons, `cc:`, and non-`round-robin` turn modes are out of scope for v2.4.
+- Auto-routing daemons, `cc:`, and non-`round-robin` turn modes are out of scope for v2.5.

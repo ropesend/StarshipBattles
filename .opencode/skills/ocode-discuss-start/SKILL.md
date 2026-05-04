@@ -1,25 +1,36 @@
 ---
 name: ocode-discuss-start
-description: Open a v2.4 inter-agent discussion with Claude and/or Codex. The user supplies a parent folder; this skill creates a timestamped child sub-folder for the discussion, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party OpenCode+Claude discussion; pass `--with claude,codex` for 3-party or `--with codex` for OpenCode+Codex.
-argument-hint: <parent-folder> [--slug <slug>] [--with <agents>] [context...]
+description: Open a v2.5 inter-agent discussion with Claude and/or Codex. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party OpenCode+Claude discussion; pass `--with claude,codex` for 3-party or `--with codex` for OpenCode+Codex.
+argument-hint: [--folder <parent>] [--slug <slug>] [--with <agents>] [context...]
 ---
 
-# Inter-Agent Discussion — OpenCode Starts (v2.4)
+# Inter-Agent Discussion — OpenCode Starts (v2.5)
 
 You are opening a multi-turn discussion with one or two other agents.
 Participants are drawn from `{claude, codex, opencode}` per the canonical
-ring. The user supplies a **parent** folder; you create a timestamped child
-sub-folder. The user invokes the matching `*-discuss-respond` skill on each
-other participant; those skills find the leaf via parent scan.
+ring. The parent folder defaults to
+`<repo_root>/AgentCoordination/Scratchpad/Discussion`; `--folder` overrides it.
+You create a timestamped child sub-folder. The user invokes the matching
+`*-discuss-respond` skill on each other participant; those skills find the leaf
+via parent scan.
+
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
 
 This is a peer-to-peer dialogue, not a delegation. Other agents are your
-equals. Push back, propose alternatives, agree where you actually agree.
+equals. Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
 
-## Protocol — interagent-discussion/v1 (v2.4 spec)
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
+
+## Protocol — interagent-discussion/v1 (v2.5 spec)
 
 | Field | Value |
 |-------|-------|
-| Parent | first positional arg; absolute or repo-relative |
+| Parent | optional `--folder <parent>`; default `<repo_root>/AgentCoordination/Scratchpad/Discussion` |
 | Discussion leaf | child of parent: `YYYYMMDDTHHMMSSZ[_<slug>]/` |
 | Slug flag | optional `--slug <kebab-case>` |
 | Participants flag | optional `--with <comma-separated agents>`; default `claude` |
@@ -34,16 +45,17 @@ equals. Push back, propose alternatives, agree where you actually agree.
 
 ## Step 1 — Parse arguments
 
-Treat the first positional argument as the **parent folder**. Resolve
-relative to the repository root (discovered at runtime — do not hardcode
-a checkout path). Then accept any
-combination of `--slug <kebab-case>` and `--with <comma-list>` flags before
-the inline context.
+Use `<repo_root>/AgentCoordination/Scratchpad/Discussion` as the parent unless
+`--folder <parent>` is supplied. Resolve relative folder overrides against the
+repository root (discovered at runtime; do not hardcode a checkout path). Accept
+any combination of `--folder <parent>`, `--slug <kebab-case>`, and
+`--with <comma-list>` flags before the inline context.
 
 - `--slug` value: lowercase kebab-case (`a-z`, `0-9`, `-`). Reject otherwise.
 - `--with` value: comma-separated agents from `{claude, codex}` (opencode
   is implicit). Default if absent: `claude` (2-party OpenCode+Claude).
-- Everything after the last recognized flag is **inline context**.
+- Everything after the last recognized flag is **inline context**. Positional
+  tokens are never treated as folder paths.
 
 Build participants per spec §1.1: canonical ring `[claude, codex, opencode]`
 rotated so the starter (`opencode`) is at index 0, then filtered to
@@ -61,20 +73,21 @@ to opencode-at-0 is `[opencode, claude, codex]`.)
 Bash skeleton:
 
 ```bash
-PARENT="$1"; shift
-case "$PARENT" in
-  /*|[a-zA-Z]:[/\\]*) ;;  # absolute
-  *) PARENT="<repo_root>/$PARENT" ;;
-esac
+PARENT="<repo_root>/AgentCoordination/Scratchpad/Discussion"
 SLUG=""
 WITH_LIST="claude"
 while [ $# -gt 0 ]; do
   case "$1" in
+    --folder) PARENT="$2"; shift 2 ;;
     --slug) SLUG="$2"; shift 2 ;;
     --with) WITH_LIST="$2"; shift 2 ;;
     *) break ;;
   esac
 done
+case "$PARENT" in
+  /*|[a-zA-Z]:[/\\]*) ;;  # absolute
+  *) PARENT="<repo_root>/$PARENT" ;;
+esac
 INLINE_CONTEXT="$*"
 ```
 
@@ -86,7 +99,7 @@ spaces.
 
 ## Step 3 — Pre-flight: refuse to clobber a leaf-shaped path
 
-If the parent folder already contains files matching the v2.4 message
+If the parent folder already contains files matching the v2.5 message
 regex `^arc[0-9]{2}_[0-9]{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\.md$`,
 or `outcome.md`, or `outcome_arc[0-9]{2}\.md`, abort: it's a leaf, not a parent.
 
@@ -101,7 +114,7 @@ Compute `TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)`. The child leaf is
 - the child leaf folder
 - `<leaf>/plans/`
 
-Recommended (not enforced) parent: `AgentCoordination/Scratchpad/Discussion/`
+Default parent: `<repo_root>/AgentCoordination/Scratchpad/Discussion/`
 per AGENTS.md scratchpad rule.
 
 ## Step 5 — Read optional `<leaf>/topic.md`
@@ -136,7 +149,7 @@ Body must include, in order:
    - Relevant files/constraints/conventions other agents need to know.
    - What you want from each other agent.
 
-### Message file format (v2.4 — adds `participants` and `turn_order` to arc-starter frontmatter)
+### Message file format (v2.5)
 
 Frontmatter is the **first thing in the file** (line 1 = `---`). Use the
 actual current UTC time.
@@ -282,6 +295,12 @@ takes it to `10 × n`.
    ```
    If you edit, include `## Plans touched` listing each new revision file.
 
+### Protocol self-improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
+
 9. **Compute outgoing write target**: `j_out = i_in + 1`. Verify
    `participants[(j_out-1) mod n] == 'opencode'`. Recipient is
    `participants[j_out mod n]`. Filename:
@@ -424,7 +443,7 @@ user-facing agent. Tell the user:
 - **v2.3 readback** (for old Claude+Codex transcripts without `participants`):
   derive `participants = [arc01_001.from, arc01_001.to]`,
   `turn_order = round-robin`. Legacy `implementation_owner: both` accepted
-  for v2.3 outcome readback only; v2.4 writers never emit it.
+  for v2.3 outcome readback only; v2.5 writers never emit it.
 
 ## Step — Log Skill Usage
 

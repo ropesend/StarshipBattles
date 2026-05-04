@@ -1,17 +1,29 @@
 ---
 name: claude-discuss-continue
-description: Continue a previously concluded v2.4 inter-agent discussion with new user-supplied focus context. No-args by default — resolves to the most-recent v2.4 discussion leaf under the default parent. Role-aware self-dispatch: if Claude is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 × len(participants)` messages (extendable once to `10 × n`).
+description: Continue a previously concluded v2.5 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if Claude is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).
 argument-hint: [--folder <path>] [context...]
 ---
 
-# Inter-Agent Discussion — Claude Continues (v2.4)
+# Inter-Agent Discussion — Claude Continues (v2.5)
 
 You are re-opening a previously concluded discussion with new user input.
 The skill is **no-args by default**: it resolves to the most-recent
-v2.4 discussion leaf under
-`c:\Dev\Starship Battles\AgentCoordination\Scratchpad\Discussion\`. The
+discussion leaf under
+`<repo-root>/AgentCoordination/Scratchpad/Discussion/`. The
 optional `--folder <path>` flag overrides the target (path may be a parent
 or an exact leaf).
+
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
+
+This is a peer-to-peer dialogue, not a delegation. Other agents are equals.
+Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
+
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
 
 The skill is **role-aware** and self-dispatches based on
 `outcome.md.continuation_starter` (defaulting to the original arc-1 starter):
@@ -25,12 +37,12 @@ The user's mental model: invoke `claude-discuss-continue` on the Claude
 side and the matching skill on the other agent(s) with the same new
 context; the right thing happens regardless of who started.
 
-## Protocol — interagent-discussion/v1 (v2.4 spec)
+## Protocol — interagent-discussion/v1 (v2.5 spec)
 
 | Field | Value |
 |-------|-------|
 | Argument surface | `[--folder <path>] [context...]` |
-| Default parent | `c:\Dev\Starship Battles\AgentCoordination\Scratchpad\Discussion\` |
+| Default parent | `<repo-root>/AgentCoordination/Scratchpad/Discussion/` |
 | Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md` |
 | Per-arc cap | `5 × n` messages (one in-band extension to `10 × n` per arc) |
 | Outcome archiving | move latest `outcome.md` → `outcome_arc<NN>.md` before writing new arc |
@@ -38,7 +50,23 @@ context; the right thing happens regardless of who started.
 ## Step 1 — Parse arguments
 
 ```powershell
-$DefaultParent = 'c:\Dev\Starship Battles\AgentCoordination\Scratchpad\Discussion'
+function Get-RepoRoot {
+  $root = (git rev-parse --show-toplevel 2>$null)
+  if ($LASTEXITCODE -eq 0 -and $root) { return $root.Trim() }
+  $dir = Get-Location
+  while ($dir) {
+    if ((Test-Path -LiteralPath (Join-Path $dir 'AGENTS.md')) -and
+        (Test-Path -LiteralPath (Join-Path $dir 'game')) -and
+        (Test-Path -LiteralPath (Join-Path $dir 'data'))) {
+      return $dir.FullName
+    }
+    $dir = $dir.Parent
+  }
+  throw 'Unable to discover repository root.'
+}
+
+$RepoRoot = Get-RepoRoot
+$DefaultParent = Join-Path $RepoRoot 'AgentCoordination\Scratchpad\Discussion'
 
 $FolderArg = ''
 $ContextStartIdx = 0
@@ -88,7 +116,7 @@ function Find-MostRecentLeaf {
 
 if ($FolderArg) {
   if (-not [System.IO.Path]::IsPathRooted($FolderArg)) {
-    $FolderArg = Join-Path 'c:\Dev\Starship Battles' $FolderArg
+    $FolderArg = Join-Path $RepoRoot $FolderArg
   }
   if (-not (Test-Path -LiteralPath $FolderArg)) {
     Write-Output "ABORT: --folder path does not exist: $FolderArg"
@@ -99,7 +127,7 @@ if ($FolderArg) {
   } else {
     $Folder = Find-MostRecentLeaf -Parent $FolderArg
     if (-not $Folder) {
-      Write-Output "ABORT: no v2.4 discussion leaf found in $FolderArg"
+      Write-Output "ABORT: no discussion leaf found in $FolderArg"
       exit 1
     }
     Write-Output "Resolved discussion leaf: $Folder"
@@ -111,7 +139,7 @@ if ($FolderArg) {
   }
   $Folder = Find-MostRecentLeaf -Parent $DefaultParent
   if (-not $Folder) {
-    Write-Output "ABORT: no prior v2.4 discussion found in $DefaultParent. Use claude-discuss-start to open a new one, or pass --folder to target a specific path."
+    Write-Output "ABORT: no prior discussion found in $DefaultParent. Use claude-discuss-start to open a new one, or pass --folder to target a specific path."
     exit 1
   }
   Write-Output "Resolved most-recent discussion leaf: $Folder"
@@ -383,6 +411,12 @@ function Write-PlanRevision {
 Same shape as start/respond: 30s sleep, 5-min wait, watches both target
 glob and `outcome.md` (during the loop). Retry once on TIMEOUT, no
 `outcome.md` on timeout.
+
+## Protocol self-improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
 
 ## Step 10 — Write outcome.md at end of arc
 

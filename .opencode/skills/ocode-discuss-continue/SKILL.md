@@ -1,17 +1,29 @@
 ---
 name: ocode-discuss-continue
-description: Continue a previously concluded v2.4 inter-agent discussion with new user-supplied focus context. No-args by default — resolves to the most-recent v2.4 discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 × len(participants)` messages (extendable once to `10 × n`).
+description: Continue a previously concluded v2.5 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).
 argument-hint: "[--folder <path>] [context...]"
 ---
 
-# Inter-Agent Discussion — OpenCode Continues (v2.4)
+# Inter-Agent Discussion — OpenCode Continues (v2.5)
 
 You are re-opening a previously concluded discussion with new user input.
 The skill is **no-args by default**: it resolves to the most-recent
-v2.4 discussion leaf under the default parent
+discussion leaf under the default parent
 `<repo_root>/AgentCoordination/Scratchpad/Discussion/`. The
 optional `--folder <path>` flag overrides the target (path may be a parent
 or an exact leaf).
+
+Reference: `AgentCoordination/protocols/interagent_discussion.md`.
+
+This is a peer-to-peer dialogue, not a delegation. Other agents are equals.
+Push back, propose alternatives, agree only where you have independently
+verified or have clearly marked uncertainty.
+
+Evidence rule: Material claims about the codebase, protocol, file contents,
+prior transcript, or another agent's behavior must cite `file:line`, a specific
+transcript message, or a command/result summary. Label unchecked claims
+`[unverified]`. Consensus is blocked while an unverified claim is load-bearing
+for the conclusion, plan, or implementation assignment.
 
 The skill is **role-aware** and self-dispatches based on
 `outcome.md.continuation_starter` (defaulting to the original arc-1 starter):
@@ -25,7 +37,7 @@ The user's mental model: invoke `ocode-discuss-continue` on the OpenCode
 side and the matching skill on the other agent(s) with the same new
 context; the right thing happens regardless of who started.
 
-## Protocol — interagent-discussion/v1 (v2.4 spec)
+## Protocol — interagent-discussion/v1 (v2.5 spec)
 
 | Field | Value |
 |-------|-------|
@@ -218,6 +230,12 @@ Or use the OpenCode `write` tool directly.
 Same shape as start/respond: 30s sleep, 5-min wait, watches both target
 glob and `outcome.md` (during the loop). Retry once on TIMEOUT, no
 `outcome.md` on timeout.
+
+## Protocol self-improvement
+
+- Use `## Protocol limitation observed` in a `status: continue` message for non-blocking protocol friction.
+- Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
+- Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
 
 ## Step 10 — Write outcome.md at end of arc
 
