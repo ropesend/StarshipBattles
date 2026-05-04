@@ -1106,3 +1106,238 @@ class TestControllerRoleFiltering:
         assert "Any" in roles
         assert len(roles) == 2
         assert len(filtered_designs) == 1
+
+
+# ===========================================================================
+# PROJ-338 — Characterization Coverage Gaps
+#
+# These tests pin observable behavior in helper methods that the existing
+# coverage skips: category-to-vehicle-type mapping defaults, _validate_designs
+# branches, _calculate_build_turns formula corners, _get_design_cost error
+# handling, refresh_design_report happy/error paths.
+# ===========================================================================
+
+
+class TestCharacterizationCoverageGaps:
+    """PROJ-338: pin behavior in helper paths that the legacy tests skip."""
+
+    @staticmethod
+    def _make_controller(scan_designs=None, registries=None) -> BuildQueueController:
+        build_context = MagicMock()
+        build_context.context_type = "planet"
+        build_context.has_space_shipyard = True
+        build_context.can_build_type.return_value = True
+        build_context.id = 1
+
+        mock_library = MagicMock()
+        mock_library.scan_designs.return_value = scan_designs or []
+
+        return BuildQueueController(
+            build_context=build_context,
+            design_library=mock_library,
+            design_loader=MagicMock(),
+            design_report=MagicMock(),
+            on_queue_changed=MagicMock(),
+            registries=registries,
+        )
+
+    # --- B.1 — category / role filtering -----------------------------------
+
+    def test_load_designs_filters_by_vehicle_type_complex(self):
+        d1 = MagicMock()
+        d1.vehicle_type = "Planetary Complex"
+        d1.design_role = None
+        d2 = MagicMock()
+        d2.vehicle_type = "Ship"
+        d2.design_role = None
+        controller = self._make_controller([d1, d2])
+        filtered, _roles = controller.load_designs_by_category("complex")
+        assert filtered == [d1]
+
+    def test_load_designs_unknown_category_defaults_to_ship(self):
+        d_ship = MagicMock()
+        d_ship.vehicle_type = "Ship"
+        d_ship.design_role = None
+        d_complex = MagicMock()
+        d_complex.vehicle_type = "Planetary Complex"
+        d_complex.design_role = None
+        controller = self._make_controller([d_ship, d_complex])
+        filtered, _ = controller.load_designs_by_category("not-a-real-category")
+        # Type map fallback: unknown → "Ship"
+        assert filtered == [d_ship]
+
+    def test_load_designs_filters_by_role_when_not_any(self):
+        d1 = MagicMock()
+        d1.vehicle_type = "Ship"
+        d1.design_role = "Capital"
+        d2 = MagicMock()
+        d2.vehicle_type = "Ship"
+        d2.design_role = "Escort"
+        controller = self._make_controller([d1, d2])
+        controller.selected_role = "Capital"
+        filtered, _ = controller.load_designs_by_category("ship")
+        assert filtered == [d1]
+
+    def test_load_designs_role_none_string_matches_designs_with_no_role(self):
+        d_role = MagicMock()
+        d_role.vehicle_type = "Ship"
+        d_role.design_role = "Capital"
+        d_no_role = MagicMock()
+        d_no_role.vehicle_type = "Ship"
+        d_no_role.design_role = None
+        controller = self._make_controller([d_role, d_no_role])
+        controller.selected_role = "None"
+        filtered, _ = controller.load_designs_by_category("ship")
+        # Special "None" path matches designs with no role
+        assert filtered == [d_no_role]
+
+    def test_set_category_resets_role_to_any_and_fires_callback(self):
+        controller = self._make_controller([])
+        controller.selected_role = "Capital"
+        controller.set_category("complex")
+        assert controller.selected_category == "complex"
+        assert controller.selected_role == "Any"
+        controller.on_queue_changed.assert_called()
+
+    def test_set_role_fires_callback_does_not_reset_category(self):
+        controller = self._make_controller([])
+        controller.selected_category = "complex"
+        controller.set_role("Capital")
+        assert controller.selected_role == "Capital"
+        # Category is preserved
+        assert controller.selected_category == "complex"
+        controller.on_queue_changed.assert_called()
+
+    # --- B.2 — _validate_designs paths -------------------------------------
+
+    def test_validate_designs_without_registries_marks_all_valid(self):
+        controller = self._make_controller([], registries=None)
+        d = MagicMock()
+        controller._validate_designs([d])
+        assert d.design_valid is True
+
+    def test_validate_designs_with_load_failure_marks_invalid(self):
+        registries = MagicMock()
+        controller = self._make_controller([], registries=registries)
+        d = MagicMock()
+        d.design_id = "DSN-X"
+        load_result = MagicMock()
+        load_result.success = False
+        controller.design_library.load_design_data.return_value = load_result
+        # Patch DesignValidator so __init__ succeeds; validate is never reached
+        # because load_result.success is False.
+        from unittest.mock import patch
+        with patch("game.strategy.services.design_validator.DesignValidator"):
+            controller._validate_designs([d])
+        assert d.design_valid is False
+
+    def test_validate_designs_with_validator_exception_assumes_valid(self):
+        """Broad-catch path: exception during validation falls back to True."""
+        registries = MagicMock()
+        controller = self._make_controller([], registries=registries)
+        d = MagicMock()
+        d.design_id = "DSN-X"
+        # load_design_data raises → broad-catch sets design_valid=True
+        controller.design_library.load_design_data.side_effect = RuntimeError("boom")
+        from unittest.mock import patch
+        with patch("game.strategy.services.design_validator.DesignValidator"):
+            controller._validate_designs([d])
+        assert d.design_valid is True
+
+    # --- B.3 — _calculate_build_turns / _get_design_cost -------------------
+
+    def test_calculate_build_turns_no_cost_returns_one(self):
+        controller = self._make_controller([])
+        # Make _get_design_cost return empty
+        controller.design_library.load_design_data.return_value = MagicMock(success=False)
+        turns = controller._calculate_build_turns("DSN-X", {"metals": 100.0})
+        assert turns == 1.0
+
+    def test_calculate_build_turns_no_rate_returns_one(self):
+        controller = self._make_controller([])
+        # Cost present but build_rate empty
+        load_result = MagicMock()
+        load_result.success = True
+        load_result.data = {}
+        controller.design_library.load_design_data.return_value = load_result
+        ship = MagicMock()
+        ship.construction_cost = {"metals": 100}
+        controller.design_loader.load_ship_from_design_data.return_value = ship
+        turns = controller._calculate_build_turns("DSN-X", {})
+        assert turns == 1.0
+
+    def test_calculate_build_turns_max_across_resources(self):
+        """The bottleneck resource determines total turns."""
+        controller = self._make_controller([])
+        load_result = MagicMock()
+        load_result.success = True
+        load_result.data = {}
+        controller.design_library.load_design_data.return_value = load_result
+        ship = MagicMock()
+        ship.construction_cost = {"metals": 100, "exotics": 50}
+        controller.design_loader.load_ship_from_design_data.return_value = ship
+        # metals: 100/10=10 turns, exotics: 50/100=0.5 turns → max=10
+        turns = controller._calculate_build_turns("DSN-X", {"metals": 10.0, "exotics": 100.0})
+        assert turns == 10.0
+
+    def test_calculate_build_turns_zero_floor_at_001(self):
+        """Tiny but >0 turns are floored at 0.01 by the max(0.01, ...) clamp."""
+        controller = self._make_controller([])
+        load_result = MagicMock()
+        load_result.success = True
+        load_result.data = {}
+        controller.design_library.load_design_data.return_value = load_result
+        ship = MagicMock()
+        ship.construction_cost = {"metals": 1}
+        controller.design_loader.load_ship_from_design_data.return_value = ship
+        # cost=1, rate=10000 → 0.0001 turns → clamped to 0.01
+        turns = controller._calculate_build_turns("DSN-X", {"metals": 10000.0})
+        assert turns == 0.01
+
+    def test_get_design_cost_load_failure_returns_empty_dict(self):
+        controller = self._make_controller([])
+        controller.design_library.load_design_data.return_value = MagicMock(success=False)
+        cost = controller._get_design_cost("DSN-X")
+        assert cost == {}
+
+    def test_get_design_cost_oserror_caught_returns_empty_dict(self):
+        """Broad-catch path on (OSError, ValueError, KeyError)."""
+        controller = self._make_controller([])
+        controller.design_library.load_design_data.side_effect = OSError("disk")
+        cost = controller._get_design_cost("DSN-X")
+        assert cost == {}
+
+    # --- B.4 — refresh_design_report ---------------------------------------
+
+    def test_refresh_design_report_load_failure_shows_placeholder(self):
+        controller = self._make_controller([])
+        controller.design_library.load_design_data.return_value = MagicMock(
+            success=False, error="not found"
+        )
+        controller.refresh_design_report("DSN-X")
+        controller.design_report.show_placeholder.assert_called_once()
+        controller.design_report.update_design.assert_not_called()
+
+    def test_refresh_design_report_ship_load_returns_none_shows_placeholder(self):
+        controller = self._make_controller([])
+        controller.design_library.load_design_data.return_value = MagicMock(success=True, data={})
+        controller.design_loader.load_ship_from_design_data.return_value = None
+        controller.refresh_design_report("DSN-X")
+        controller.design_report.show_placeholder.assert_called_once()
+
+    def test_refresh_design_report_success_calls_update_design(self):
+        controller = self._make_controller([])
+        controller.design_library.load_design_data.return_value = MagicMock(success=True, data={})
+        ship = MagicMock()
+        ship.name = "Frigate"
+        controller.design_loader.load_ship_from_design_data.return_value = ship
+        controller.refresh_design_report("DSN-X")
+        controller.design_report.update_design.assert_called_once_with(ship)
+        controller.design_report.show_placeholder.assert_not_called()
+
+    def test_refresh_design_report_exception_shows_placeholder(self):
+        """OSError/ValueError/KeyError inside the try-block triggers placeholder."""
+        controller = self._make_controller([])
+        controller.design_library.load_design_data.side_effect = ValueError("bad data")
+        controller.refresh_design_report("DSN-X")
+        controller.design_report.show_placeholder.assert_called_once()
