@@ -29,8 +29,8 @@ def _contains_unprefixed_message_filename(text: str) -> bool:
 def test_codex_discussion_skills_exist_with_matching_frontmatter() -> None:
     expected = {
         "codex-discuss-start": "Start an inter-agent discussion with Claude Code and/or OpenCode",
-        "codex-discuss-respond": "Respond as Codex in a v2.4 inter-agent discussion with Claude Code and/or OpenCode",
-        "codex-discuss-continue": "Continue an ended v2.4 inter-agent discussion",
+        "codex-discuss-respond": "Respond as Codex in a v2.6 inter-agent discussion with Claude Code and/or OpenCode",
+        "codex-discuss-continue": "Continue an ended v2.6 inter-agent discussion",
     }
 
     for skill_name, description_fragment in expected.items():
@@ -46,6 +46,7 @@ def test_codex_discussion_skills_document_shared_protocol() -> None:
         text = _read_skill(skill_name)
 
         assert "interagent-discussion/v1" in text
+        assert "AgentCoordination/protocols/interagent_discussion.md" in text
         assert "claude" in text
         assert "codex" in text
         assert "opencode" in text
@@ -58,7 +59,11 @@ def test_codex_discussion_skills_document_shared_protocol() -> None:
         assert "continue | consensus | needs-user" in text
         assert "outcome.md" in text
         assert "temporary file" in text
+        assert "same-directory" in text
+        assert "complete: true" in text
+        assert "ack_arc<NN>_<MMM>_<from>_to_<to>_<acker>.md" in text
         assert "heartbeat" in text.lower()
+        assert "last_seen_message" in text
 
 
 def test_codex_discussion_skills_drop_unprefixed_message_compatibility() -> None:
@@ -121,11 +126,12 @@ def test_codex_discussion_skills_document_v21_implementation_notes() -> None:
         assert "host-neutral" in text or "<repo-root>" in text
 
 
-def test_codex_discussion_skills_document_v24_protocol() -> None:
+def test_codex_discussion_skills_document_v26_protocol() -> None:
     for skill_name in DISCUSSION_SKILLS:
         text = _read_skill(skill_name)
 
-        assert "v2.4_three_party_spec_r002.md" in text
+        assert "v2.4_three_party_spec_r002.md" not in text
+        assert "protocol_version: 2.6" in text
         assert "v2.2_spec_r002.md" not in text
         assert "arc01_001" in text
         assert "v2.3" in text
@@ -136,12 +142,15 @@ def test_codex_discussion_skills_document_v24_protocol() -> None:
         assert "plans/<name>_r001.md" in text
         assert "Never overwrite" in text
         assert "parent folder" in text
+        assert "mandatory observer" in text.lower()
+        assert "warn" in text.lower()
+        assert "halt" in text.lower()
 
 
 def test_codex_discussion_start_documents_parent_and_slug() -> None:
     text = _read_skill("codex-discuss-start")
 
-    assert "<parent> [--participants <agents>] [--slug <slug>] [context...]" in text
+    assert "[--folder <parent>] [--slug <slug>] [--with <agents>] [context...]" in text
     assert "YYYYMMDDTHHMMSSZ_<slug>" in text
     assert "Do not infer a slug" in text
     assert "Accepted values are `claude`, `opencode`" in text
@@ -158,7 +167,7 @@ def test_codex_discussion_respond_documents_parent_discovery() -> None:
     assert "candidate child folder names" in text
 
     assert "polls briefly" in prompt
-    assert "v2.4" in prompt
+    assert "v2.6" in prompt
 
 
 def test_codex_discussion_continue_documents_no_args_role_aware_flow() -> None:
@@ -176,4 +185,4 @@ def test_codex_discussion_continue_documents_no_args_role_aware_flow() -> None:
 
     assert "[--folder <path>] [context...]" in prompt
     assert "authorized continuation starter" in prompt
-    assert "v2.4" in prompt
+    assert "v2.6" in prompt

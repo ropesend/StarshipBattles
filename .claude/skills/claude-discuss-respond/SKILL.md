@@ -1,10 +1,10 @@
 ---
 name: claude-discuss-respond
-description: Join a v2.5 inter-agent discussion that Codex or OpenCode opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.
+description: Join a v2.6 inter-agent discussion that Codex or OpenCode opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude or awaits Claude's mandatory observer ack. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.
 argument-hint: [--folder <folder-or-parent>]
 ---
 
-# Inter-Agent Discussion — Claude Responds (v2.5)
+# Inter-Agent Discussion â€” Claude Responds (v2.6)
 
 You are joining a multi-turn discussion. The folder defaults to
 `<repo-root>/AgentCoordination/Scratchpad/Discussion`; `--folder` may point to
@@ -24,22 +24,34 @@ transcript message, or a command/result summary. Label unchecked claims
 `[unverified]`. Consensus is blocked while an unverified claim is load-bearing
 for the conclusion, plan, or implementation assignment.
 
-## Protocol — interagent-discussion/v1 (v2.5 spec)
+## v2.6 Reliability Rules
+
+Canonical shared spec: `AgentCoordination/protocols/interagent_discussion.md`.
+Canonical spec frontmatter includes `protocol_version: 2.6`.
+
+- Publish final protocol artifacts through same-directory `.tmp_*` files and a final rename/move. This applies to message files, plan revisions, outcome files, and ack sidecar files. Direct writes to final protocol filenames are invalid; single-writer safety does not imply reader safety.
+- Include `complete: true` in newly written message, plan, outcome, and ack files. If a consumed final file is otherwise valid but lacks `complete: true`, warn and proceed; record it under `## Protocol limitation observed` instead of halting.
+- Ack sidecars use `ack_arc<NN>_<MMM>_<from>_to_<to>_<acker>.md`. They are excluded from `message_index`, `reply_to`, cap, consensus, and outcome termination.
+- Mandatory observer acks: every participant other than the message author must ack each message before the recipient writes the next substantive reply. The recipient writes its own ack before drafting. If this agent is an observer for the latest message and its ack is missing, write only the observer ack sidecar and stop without writing a protocol message.
+- If this agent is the recipient and mandatory observer ack files are missing for the incoming message, write this agent's recipient ack, report the missing observer ack(s), and wait instead of drafting the substantive reply.
+- During polling, keep heartbeats as liveness hints with `state: polling | reading | drafting | idle`, `waiting_for`, `last_seen_message`, and `updated_at_utc` when practical.
+
+## Protocol â€” interagent-discussion/v1 (v2.6 spec)
 
 | Field | Value |
 |-------|-------|
 | Argument | optional `--folder <folder-or-parent>`; defaults to `<repo-root>/AgentCoordination/Scratchpad/Discussion` |
-| Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md`, where from/to ∈ `{claude,codex,opencode}` |
+| Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md`, where from/to âˆˆ `{claude,codex,opencode}` |
 | Turn formula | `from = P[(i-1) mod n]`, `to = P[i mod n]` where `P = participants`, `n = len(P)` |
-| Default per-arc cap | `5 × n` messages (one in-band extension to `10 × n` per arc) |
+| Default per-arc cap | `5 Ã— n` messages (one in-band extension to `10 Ã— n` per arc) |
 | Termination | Last `n` messages all uniform terminal status, OR cap reached, OR pre-existing `outcome.md` |
 | Atomicity | `.tmp_<guid>.md` then `Move-Item` to final name |
-| Shared plans | `<leaf>/plans/<name>_r<NNN>.md` — versioned siblings, never overwrite |
+| Shared plans | `<leaf>/plans/<name>_r<NNN>.md` â€” versioned siblings, never overwrite |
 
-Responder does not take inline context — context arrives forwarded in the
+Responder does not take inline context â€” context arrives forwarded in the
 arc-starter message.
 
-## Step 1 — Resolve the folder
+## Step 1 â€” Resolve the folder
 
 ```powershell
 function Get-RepoRoot {
@@ -62,7 +74,7 @@ $Path = Join-Path $RepoRoot 'AgentCoordination\Scratchpad\Discussion'
 if ($args.Length -ge 2 -and $args[0] -eq '--folder') {
   $Path = $args[1]
 } elseif ($args.Length -gt 0) {
-  Write-Output 'ABORT: use --folder <folder-or-parent>; positional folders are not part of v2.5.'
+  Write-Output 'ABORT: use --folder <folder-or-parent>; positional folders are not part of v2.6.'
   exit 1
 }
 if (-not [System.IO.Path]::IsPathRooted($Path)) {
@@ -74,7 +86,7 @@ if (-not (Test-Path -LiteralPath $Path)) {
 }
 ```
 
-## Step 2 — Whitespace warning (informational)
+## Step 2 â€” Whitespace warning (informational)
 
 ```powershell
 $leaf = Split-Path -Path $Path -Leaf
@@ -84,13 +96,13 @@ if ($leaf -match '\s') {
 }
 ```
 
-## Step 3 — Latest-state parent-folder discovery
+## Step 3 â€” Latest-state parent-folder discovery
 
 The argument may be the leaf or a parent.
 
 **Resolution algorithm:**
 
-1. **Try as leaf.** If `$Path` directly contains v2.5 protocol files
+1. **Try as leaf.** If `$Path` directly contains v2.6 protocol files
    matching `^arc\d{2}_\d{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\.md$`,
    `^outcome\.md$`, or `^outcome_arc\d{2}\.md$`, treat it as a leaf and
    skip to Step 4.
@@ -102,15 +114,15 @@ The argument may be the leaf or a parent.
    1. Find the highest-numbered arc with at least one message.
    2. Find the highest-indexed message in that arc (excluding `.tmp_*`).
    3. Parse its frontmatter.
-   4. The leaf is a candidate iff `to == claude`.
+   4. The leaf is a candidate iff `to == claude`, or iff Claude is a participant-observer for the latest message and Claude's mandatory observer ack sidecar is missing.
 
 3. Apply the count rule:
-   - **Zero candidates** → keep polling for ~5 minutes (the starter may
+   - **Zero candidates** â†’ keep polling for ~5 minutes (the starter may
      still be writing message 1). After timeout, retry once. If still
      nothing: "no pending discussion found in `<parent>`. Make sure the
      starter's `*-discuss-start` skill has been invoked."
-   - **Exactly one candidate** → use it; log the resolved leaf for the user.
-   - **Multiple candidates** → abort with an ambiguity message listing
+   - **Exactly one candidate** â†’ use it; log the resolved leaf for the user.
+   - **Multiple candidates** â†’ abort with an ambiguity message listing
      candidate child folder names. User must re-invoke with an explicit leaf.
 
 ```powershell
@@ -179,18 +191,18 @@ if (Test-IsLeaf -P $Path) {
 }
 ```
 
-## Step 4 — Pre-flight non-mutation
+## Step 4 â€” Pre-flight non-mutation
 
 The responder never creates `<leaf>/plans/`. Plan writers create it
 immediately before their first plan write.
 
-If `outcome.md` exists at the leaf, the latest arc is concluded — `respond`
+If `outcome.md` exists at the leaf, the latest arc is concluded â€” `respond`
 is the wrong skill. Surface and exit.
 
 ```powershell
 $outcomePath = Join-Path $Folder 'outcome.md'
 if (Test-Path -LiteralPath $outcomePath) {
-  Write-Output "EXISTING_OUTCOME — latest arc is concluded."
+  Write-Output "EXISTING_OUTCOME â€” latest arc is concluded."
   Get-Content -LiteralPath $outcomePath
   Write-Output ""
   Write-Output "If you want to continue this discussion with new context, use claude-discuss-continue (when authorized by continuation_starter or as the original arc-1 starter)."
@@ -198,7 +210,7 @@ if (Test-Path -LiteralPath $outcomePath) {
 }
 ```
 
-## Step 5 — Determine active arc and parse `participants`
+## Step 5 â€” Determine active arc and parse `participants`
 
 The active arc is the highest arc-prefix found in the leaf's filenames.
 The `participants` and `turn_order` come from the arc-1 starter message.
@@ -242,7 +254,7 @@ if ('claude' -notin $Participants) {
 }
 ```
 
-## Step 6 — Compute incoming wait target
+## Step 6 â€” Compute incoming wait target
 
 `i_in` = smallest unused index in active arc where
 `participants[i_in mod n] == 'claude'`.
@@ -261,7 +273,7 @@ while ($true) {
 Write-Output "Incoming wait target: arc$($activeArc.ToString('D2'))_$($i_in.ToString('D3'))_*_to_claude.md"
 ```
 
-## Step 7 — Wait for the incoming message (poll)
+## Step 7 â€” Wait for the incoming message (poll)
 
 ```powershell
 $pattern = "arc{0:D2}_{1:D3}_*_to_claude.md" -f $activeArc, $i_in
@@ -286,11 +298,15 @@ On `FORK`: write your scheduled message at index `j_out = i_in + 1`
 (if turn-aligned) with `status: needs-user` and `## Validation failure`
 body. Otherwise abort.
 
-## Step 8 — Read incoming and validate
+## Step 8 â€” Read incoming and validate
 
-Required validation per v2.5:
+If the latest message in the leaf is neither authored by Claude nor addressed
+to Claude, and Claude's ack sidecar is missing, write the mandatory observer
+ack sidecar and stop without writing a protocol message.
 
-1. **Schema**: required fields present; `from != to`; `from`/`to` ∈ `{claude,codex,opencode}`.
+Required validation per v2.6:
+
+1. **Schema**: required fields present; `from != to`; `from`/`to` âˆˆ `{claude,codex,opencode}`.
 2. **Turn alignment**: `from == participants[(message_index-1) mod n]` AND
    `to == participants[message_index mod n]` AND `to == claude`.
 3. **Index continuity**: `reply_to == message_index - 1` for `i > 1`.
@@ -298,18 +314,23 @@ Required validation per v2.5:
 If validation fails, write your scheduled message with `status: needs-user`
 and a `## Validation failure` body.
 
+After reading a Claude-addressed incoming message, atomic-write Claude's
+recipient ack sidecar if it does not already exist. If any mandatory observer
+ack sidecars for that incoming message are missing, report the missing
+acker(s) and wait instead of drafting the substantive reply.
+
 If the message is the arc-1 starter (i.e. you're responding immediately
-without anyone else having spoken — only possible if `claude` is at
+without anyone else having spoken â€” only possible if `claude` is at
 index 1 in a 2-party where someone else started): also confirm
 `participants` matches the arc01_001 you parsed in Step 5.
 
 If the incoming message has `## User-supplied context`, the verbatim fenced
 blocks are authoritative user intent. Do not paraphrase.
 
-## Step 9 — Apply termination rules (re-read last `n` messages)
+## Step 9 â€” Apply termination rules (re-read last `n` messages)
 
 - **Unanimous terminal**: last `n` messages all carry the same terminal
-  status (uniform `consensus` xor `needs-user`) → write `outcome.md`,
+  status (uniform `consensus` xor `needs-user`) â†’ write `outcome.md`,
   summarize, exit. (Note: if you arrived to find the last `n` messages
   already terminal and `outcome.md` not yet written, you write it.)
 - **Cap reached**: if the just-read message has `message_index == active_cap`,
@@ -318,7 +339,7 @@ blocks are authoritative user intent. Do not paraphrase.
 
 If neither terminates, proceed to Step 10.
 
-## Step 10 — Discussion loop
+## Step 10 â€” Discussion loop
 
 You are alternating with the other agents per the round-robin formula.
 
@@ -327,14 +348,14 @@ Repeat until terminal:
 1. **Re-read any plans listed in `## Plans touched`** before composing
    your reply.
 
-2. **Handle extension request**, if any. Active cap starts at `5×n`. Accept
-   by setting `message_cap: <10×n>` and `extension_accepted: true`. After
-   acceptance, every subsequent message must include `message_cap: <10×n>`.
+2. **Handle extension request**, if any. Active cap starts at `5Ã—n`. Accept
+   by setting `message_cap: <10Ã—n>` and `extension_accepted: true`. After
+   acceptance, every subsequent message must include `message_cap: <10Ã—n>`.
 
 3. **Handle handover proposal**, if any.
 
-4. **Compose your reply.** Status: `continue` / `consensus` / `needs-user`.
-   At cap: must use `needs-user` (per spec §5.3).
+4. **Compose your reply only after all mandatory ack sidecars exist for the incoming message.** Status: `continue` / `consensus` / `needs-user`.
+   At cap: must use `needs-user` (per spec Â§5.3).
 
 5. **Edit shared plans this turn (if appropriate).** Plan files at
    `<leaf>/plans/<name>_r<NNN>.md`. Never overwrite. Use `Write-PlanRevision`.
@@ -375,7 +396,7 @@ reply_to: <M-1>
 created_at_utc: <ISO 8601 UTC>
 ---
 
-# Claude → <recipient>, message arc<NN>-<MMM>
+# Claude â†’ <recipient>, message arc<NN>-<MMM>
 
 [reply / counterpoint / agreement]
 
@@ -409,7 +430,7 @@ function Write-PlanRevision {
 }
 ```
 
-## Step 11 — Write outcome.md (exactly once, race-safe)
+## Step 11 â€” Write outcome.md (exactly once, race-safe)
 
 Before writing:
 
@@ -433,17 +454,17 @@ continuation_starter: <agent>                # optional; default = original star
 
 ## Summary
 
-[2–4 paragraphs.]
+[2â€“4 paragraphs.]
 
 ## Handover (only if applicable)
 ## Implementation responsibility (only if non-default)
 ```
 
-## Step 12 — Report to the user (only if you are the user-facing agent)
+## Step 12 â€” Report to the user (only if you are the user-facing agent)
 
 Default: `user_facing_agent` = original arc-1 starter (whoever wrote
 `arc01_001_*.md`). If that's not Claude, deliver a one-line acknowledgement
-(discussion closed, leaf path) and stop — the starter delivers the substantive
+(discussion closed, leaf path) and stop â€” the starter delivers the substantive
 summary.
 
 If a handover to Claude was accepted, deliver the full report (folder,

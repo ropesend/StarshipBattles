@@ -1,10 +1,10 @@
 ---
 name: ocode-discuss-continue
-description: Continue a previously concluded v2.5 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).
+description: Continue a previously concluded v2.6 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).
 argument-hint: "[--folder <path>] [context...]"
 ---
 
-# Inter-Agent Discussion — OpenCode Continues (v2.5)
+# Inter-Agent Discussion â€” OpenCode Continues (v2.6)
 
 You are re-opening a previously concluded discussion with new user input.
 The skill is **no-args by default**: it resolves to the most-recent
@@ -28,26 +28,38 @@ for the conclusion, plan, or implementation assignment.
 The skill is **role-aware** and self-dispatches based on
 `outcome.md.continuation_starter` (defaulting to the original arc-1 starter):
 
-- **OpenCode is the continuation starter** → start arc N+1 (archive outcome,
+- **OpenCode is the continuation starter** â†’ start arc N+1 (archive outcome,
   write `arc(N+1)_001_opencode_to_<P[1]>.md`, enter discussion loop).
-- **Another agent is the continuation starter** → wait for the authorized
+- **Another agent is the continuation starter** â†’ wait for the authorized
   agent to write `arc(N+1)_001_*_to_*.md`, then enter the respond loop.
 
 The user's mental model: invoke `ocode-discuss-continue` on the OpenCode
 side and the matching skill on the other agent(s) with the same new
 context; the right thing happens regardless of who started.
 
-## Protocol — interagent-discussion/v1 (v2.5 spec)
+## v2.6 Reliability Rules
+
+Canonical shared spec: `AgentCoordination/protocols/interagent_discussion.md`.
+Canonical spec frontmatter includes `protocol_version: 2.6`.
+
+- Publish final protocol artifacts through same-directory `.tmp_*` files and a final rename/move. This applies to message files, plan revisions, outcome files, and ack sidecar files. Direct writes to final protocol filenames are invalid; single-writer safety does not imply reader safety.
+- Include `complete: true` in newly written message, plan, outcome, and ack files. If a consumed final file is otherwise valid but lacks `complete: true`, warn and proceed; record it under `## Protocol limitation observed` instead of halting.
+- Ack sidecars use `ack_arc<NN>_<MMM>_<from>_to_<to>_<acker>.md`. They are excluded from `message_index`, `reply_to`, cap, consensus, and outcome termination.
+- Mandatory observer acks: every participant other than the message author must ack each message before the recipient writes the next substantive reply. The recipient writes its own ack before drafting. If this agent is an observer for the latest message and its ack is missing, write only the observer ack sidecar and stop without writing a protocol message.
+- If this agent is the recipient and mandatory observer ack files are missing for the incoming message, write this agent's recipient ack, report the missing observer ack(s), and wait instead of drafting the substantive reply.
+- During polling, keep heartbeats as liveness hints with `state: polling | reading | drafting | idle`, `waiting_for`, `last_seen_message`, and `updated_at_utc` when practical.
+
+## Protocol â€” interagent-discussion/v1 (v2.6 spec)
 
 | Field | Value |
 |-------|-------|
 | Argument surface | `[--folder <path>] [context...]` |
 | Default parent | `<repo_root>/AgentCoordination/Scratchpad/Discussion/` |
 | Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md` |
-| Per-arc cap | `5 × n` messages (one in-band extension to `10 × n` per arc) |
-| Outcome archiving | move latest `outcome.md` → `outcome_arc<NN>.md` before writing new arc |
+| Per-arc cap | `5 Ã— n` messages (one in-band extension to `10 Ã— n` per arc) |
+| Outcome archiving | move latest `outcome.md` â†’ `outcome_arc<NN>.md` before writing new arc |
 
-## Step 1 — Parse arguments
+## Step 1 â€” Parse arguments
 
 ```bash
 DEFAULT_PARENT="<repo_root>/AgentCoordination/Scratchpad/Discussion"
@@ -59,7 +71,7 @@ fi
 INLINE_CONTEXT="$*"
 ```
 
-## Step 2 — Resolve the discussion leaf
+## Step 2 â€” Resolve the discussion leaf
 
 If `--folder <path>` was given: the path may be a parent or an exact leaf.
 If no `--folder`: scan the default parent for the most-recent leaf.
@@ -76,7 +88,7 @@ folder name descending.
 Folders without any arc-prefixed message file are **not** leaves
 (pre-v2.3 transcripts are not continuation targets).
 
-## Step 3 — Read original starter and `participants` from arc 1
+## Step 3 â€” Read original starter and `participants` from arc 1
 
 Find `arc01_001_*.md`. Parse:
 
@@ -85,7 +97,7 @@ Find `arc01_001_*.md`. Parse:
   `[arc01_001.from, arc01_001.to]`.
 - `n = len(participants)`.
 
-## Step 4 — Determine next arc number and read continuation_starter
+## Step 4 â€” Determine next arc number and read continuation_starter
 
 Compute `maxArc` = highest arc-prefix in any message filename. Set
 `newArc = maxArc + 1`, `priorArc = maxArc`.
@@ -93,7 +105,7 @@ Compute `maxArc` = highest arc-prefix in any message filename. Set
 Read `continuation_starter` from `outcome.md` frontmatter. If the field
 is absent, default to `originalStarter`.
 
-## Step 5 — Apply the dispatch table
+## Step 5 â€” Apply the dispatch table
 
 | Caller role | `outcome.md` exists? | Next-arc starter file exists? | Action |
 |---|---|---|---|
@@ -104,23 +116,23 @@ is absent, default to `originalStarter`.
 | responder | no | yes | **Mode B-join**: validate `arc<newArc>_001`, enter respond loop |
 | responder | no | no | ABORT: live/inconsistent state |
 
-## Step 6 — Mode A: opencode is the continuation starter
+## Step 6 â€” Mode A: opencode is the continuation starter
 
-### A.1 — Compose new arc message in memory
+### A.1 â€” Compose new arc message in memory
 
 Per the compose-before-archive ordering: compose first, archive second,
 write third. If composition fails, the previous outcome stays in place.
 
 Body must include:
 
-1. **`## User-supplied context`** — verbatim fenced block of the inline
+1. **`## User-supplied context`** â€” verbatim fenced block of the inline
    context (longer fence if content has `~~~`). Do not paraphrase.
-2. **`## Turn topology`** — required for arc starters.
-3. **Prior arc summary** — read `outcome.md` (about to be archived) and
+2. **`## Turn topology`** â€” required for arc starters.
+3. **Prior arc summary** â€” read `outcome.md` (about to be archived) and
    summarize. Reference relevant prior plan revisions by versioned filename.
-4. **What's new in this arc** — the user's new direction.
+4. **What's new in this arc** â€” the user's new direction.
 
-### A.2 — Compute rotated participants
+### A.2 â€” Compute rotated participants
 
 Continuation arc rotates `participants` so that `continuation_starter`
 (opencode) is at index 0 for that arc. The set is preserved; the order
@@ -139,7 +151,7 @@ done
 RECIPIENT="${ROTATED[1]}"
 ```
 
-### A.3 — Archive previous outcome.md
+### A.3 â€” Archive previous outcome.md
 
 ```bash
 ARCHIVE=$(printf "outcome_arc%02d.md" "$priorArc")
@@ -150,7 +162,7 @@ fi
 mv "${FOLDER}/outcome.md" "${FOLDER}/${ARCHIVE}"
 ```
 
-### A.4 — Atomic-write the new arc's message 001
+### A.4 â€” Atomic-write the new arc's message 001
 
 ```bash
 NEW_NAME=$(printf "arc%02d_001_opencode_to_%s.md" "$newArc" "$RECIPIENT")
@@ -160,7 +172,7 @@ NEW_NAME=$(printf "arc%02d_001_opencode_to_%s.md" "$newArc" "$RECIPIENT")
 The frontmatter MUST include `participants: [<rotated>]` and
 `turn_order: round-robin`.
 
-### A.5 — Enter the standard discussion loop
+### A.5 â€” Enter the standard discussion loop
 
 Identical to `ocode-discuss-respond`'s loop (Step 10), with `activeArc =
 newArc` and the rotated `PARTICIPANTS`.
@@ -168,21 +180,21 @@ newArc` and the rotated `PARTICIPANTS`.
 At terminal: write fresh `outcome.md` (latest is always at `outcome.md`;
 archives are historical).
 
-## Step 7 — Mode B: opencode is responder for this continuation
+## Step 7 â€” Mode B: opencode is responder for this continuation
 
-### B.0 — Locally-typed context: warn-and-ignore
+### B.0 â€” Locally-typed context: warn-and-ignore
 
 If the user provided inline context but opencode is NOT the continuation
 starter, warn that the starter's forwarded context is canonical and the
 locally-typed context will not be propagated.
 
-### B.1 — Wait for next-arc starter message (if Mode B-wait)
+### B.1 â€” Wait for next-arc starter message (if Mode B-wait)
 
 If `mode == B-wait`: poll for
 `arc<newArc:02d>_001_<continuationStarter>_to_*.md`. Use the polling helper
 (30s sleep, 5-min wait, retry once).
 
-### B.2 — Read and validate the new arc's message 001
+### B.2 â€” Read and validate the new arc's message 001
 
 Required: `protocol == interagent-discussion/v1`, `arc == newArc`,
 `message_index == 1`, `from == continuationStarter`,
@@ -192,18 +204,19 @@ Required: `protocol == interagent-discussion/v1`, `arc == newArc`,
 If validation fails, write your scheduled message with `status: needs-user`
 and a `## Validation failure` body. If no safe write target exists, abort.
 
-### B.3 — Compute opencode's incoming wait target on the new arc
+### B.3 â€” Compute opencode's incoming wait target on the new arc
 
 Use the rotated `participants` from arc N+1's frontmatter. Apply Step 6
 of `ocode-discuss-respond`'s logic to compute `i_in` and enter the
 respond loop.
 
-## Step 8 — Atomic write helpers
+## Step 8 â€” Atomic write helpers
 
 ```bash
 write_message_atomic() {
   local folder="$1" final="$2"
-  local tmp="${folder}/.tmp_$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n').md"
+  local tmp
+  tmp=$(mktemp "${folder}/.tmp_XXXXXX.md")
   cat > "$tmp"
   mv "$tmp" "${folder}/${final}"
 }
@@ -217,15 +230,18 @@ write_plan_revision() {
     echo "ABORT: plan revision '${final}' already exists. Bump to revision $((rev+1))." >&2
     return 1
   fi
-  local tmp="${plansdir}/.tmp_$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n').md"
+  local tmp
+  tmp=$(mktemp "${plansdir}/.tmp_XXXXXX.md")
   cat > "$tmp"
   mv "$tmp" "${plansdir}/${final}"
 }
 ```
 
-Or use the OpenCode `write` tool directly.
+On PowerShell-only hosts, use a GUID temp name with `Set-Content`, then
+`Move-Item` to the final filename. Always write the temp file first and rename
+it into place; do not write directly to the final protocol filename.
 
-## Step 9 — Polling helper
+## Step 9 â€” Polling helper
 
 Same shape as start/respond: 30s sleep, 5-min wait, watches both target
 glob and `outcome.md` (during the loop). Retry once on TIMEOUT, no
@@ -237,9 +253,9 @@ glob and `outcome.md` (during the loop). Retry once on TIMEOUT, no
 - Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
 - Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
 
-## Step 10 — Write outcome.md at end of arc
+## Step 10 â€” Write outcome.md at end of arc
 
-When the arc terminates, write fresh `outcome.md` per the spec §7 schema.
+When the arc terminates, write fresh `outcome.md` per the spec Â§7 schema.
 
 ```markdown
 ---
@@ -259,11 +275,11 @@ continuation_starter: <agent>       # optional; default = original starter
 ## Implementation responsibility (only if non-default)
 ```
 
-`user_facing_agent` defaults to the **original arc-1 starter** —
+`user_facing_agent` defaults to the **original arc-1 starter** â€”
 continuation does not change that identity unless a handover is accepted.
 Same for `implementation_owner`.
 
-## Step 11 — Report to the user
+## Step 11 â€” Report to the user
 
 You only deliver the substantive user-facing report if you are the
 user-facing agent (default = original arc-1 starter):
@@ -285,7 +301,7 @@ user-facing agent (default = original arc-1 starter):
 - **Per-arc reset.** `message_index` resets to 1 each arc. Cap state
   does NOT carry from arc N to arc N+1.
 - **Latest outcome is always `outcome.md`.** Historical outcomes are
-  `outcome_arc<NN>.md`. Don't write `outcome_arc<newArc>.md` yourself —
+  `outcome_arc<NN>.md`. Don't write `outcome_arc<newArc>.md` yourself â€”
   reserved for archive of THIS arc's outcome by a future continuation.
 - **Plan revisions persist across arcs.** Revisions accumulate in
   `plans/`. References use `<name>_r<NNN>.md`.
@@ -303,7 +319,7 @@ user-facing agent (default = original arc-1 starter):
 - **Most-recent leaf scan ignores folders without arc-prefixed files.**
   Pre-v2.3 unprefixed transcripts are not continuation targets.
 
-## Step — Log Skill Usage
+## Step â€” Log Skill Usage
 
 ```bash
 python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-discuss-continue

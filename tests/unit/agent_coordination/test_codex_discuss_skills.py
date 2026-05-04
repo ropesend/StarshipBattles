@@ -5,17 +5,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SKILL_ROOT = REPO_ROOT / ".agents" / "skills"
-SPEC_REF = (
-    "AgentCoordination/Scratchpad/Discussion/20260504T031013Z/"
-    "plans/v2.4_three_party_spec_r002.md"
-)
+SPEC_REF = "AgentCoordination/protocols/interagent_discussion.md"
 
 
 def _skill_text(skill_name: str) -> str:
     return (SKILL_ROOT / skill_name / "SKILL.md").read_text(encoding="utf-8")
 
 
-def test_codex_discussion_skills_reference_v24_contract() -> None:
+def test_codex_discussion_skills_reference_v26_contract() -> None:
     for skill_name in (
         "codex-discuss-start",
         "codex-discuss-respond",
@@ -33,16 +30,20 @@ def test_codex_discussion_skills_reference_v24_contract() -> None:
         assert "continuation_starter" in text
         assert "5 * n" in text
         assert "10 * n" in text
+        assert "protocol_version: 2.6" in text
+        assert "same-directory" in text
+        assert "complete: true" in text
+        assert "mandatory observer" in text.lower()
 
 
-def test_codex_discussion_skill_modes_cover_v24_control_flow() -> None:
+def test_codex_discussion_skill_modes_cover_v26_control_flow() -> None:
     start = _skill_text("codex-discuss-start")
     respond = _skill_text("codex-discuss-respond")
     continue_skill = _skill_text("codex-discuss-continue")
 
     assert (
-        "Argument surface: `<parent> [--participants <agents>] [--slug <slug>] "
-        "[context...]`"
+        "Argument surface: `[--folder <parent>] [--slug <slug>] "
+        "[--with <agents>] [context...]`"
     ) in start
     assert "## Turn topology" in start
     assert "Turn order: codex ->" in start

@@ -1,4 +1,4 @@
 interface:
   display_name: "Codex Discuss Start"
-  short_description: "Start a v2.4 inter-agent discussion."
-  default_prompt: "Use $codex-discuss-start with a parent folder, optional --participants and --slug values, and optional focus context to start a v2.4 inter-agent discussion."
+  short_description: "Start a v2.6 inter-agent discussion."
+  default_prompt: "Use $codex-discuss-start with a parent folder, optional --with and --slug values, and optional focus context to start a v2.6 inter-agent discussion."

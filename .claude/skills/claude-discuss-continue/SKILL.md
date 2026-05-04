@@ -1,10 +1,10 @@
 ---
 name: claude-discuss-continue
-description: Continue a previously concluded v2.5 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if Claude is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).
+description: Continue a previously concluded v2.6 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if Claude is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).
 argument-hint: [--folder <path>] [context...]
 ---
 
-# Inter-Agent Discussion — Claude Continues (v2.5)
+# Inter-Agent Discussion â€” Claude Continues (v2.6)
 
 You are re-opening a previously concluded discussion with new user input.
 The skill is **no-args by default**: it resolves to the most-recent
@@ -28,26 +28,38 @@ for the conclusion, plan, or implementation assignment.
 The skill is **role-aware** and self-dispatches based on
 `outcome.md.continuation_starter` (defaulting to the original arc-1 starter):
 
-- **Claude is the continuation starter** → start arc N+1 (archive outcome,
+- **Claude is the continuation starter** â†’ start arc N+1 (archive outcome,
   write `arc(N+1)_001_claude_to_<P[1]>.md`, enter discussion loop).
-- **Another agent is the continuation starter** → wait for the authorized
+- **Another agent is the continuation starter** â†’ wait for the authorized
   agent to write `arc(N+1)_001_*_to_*.md`, then enter the respond loop.
 
 The user's mental model: invoke `claude-discuss-continue` on the Claude
 side and the matching skill on the other agent(s) with the same new
 context; the right thing happens regardless of who started.
 
-## Protocol — interagent-discussion/v1 (v2.5 spec)
+## v2.6 Reliability Rules
+
+Canonical shared spec: `AgentCoordination/protocols/interagent_discussion.md`.
+Canonical spec frontmatter includes `protocol_version: 2.6`.
+
+- Publish final protocol artifacts through same-directory `.tmp_*` files and a final rename/move. This applies to message files, plan revisions, outcome files, and ack sidecar files. Direct writes to final protocol filenames are invalid; single-writer safety does not imply reader safety.
+- Include `complete: true` in newly written message, plan, outcome, and ack files. If a consumed final file is otherwise valid but lacks `complete: true`, warn and proceed; record it under `## Protocol limitation observed` instead of halting.
+- Ack sidecars use `ack_arc<NN>_<MMM>_<from>_to_<to>_<acker>.md`. They are excluded from `message_index`, `reply_to`, cap, consensus, and outcome termination.
+- Mandatory observer acks: every participant other than the message author must ack each message before the recipient writes the next substantive reply. The recipient writes its own ack before drafting. If this agent is an observer for the latest message and its ack is missing, write only the observer ack sidecar and stop without writing a protocol message.
+- If this agent is the recipient and mandatory observer ack files are missing for the incoming message, write this agent's recipient ack, report the missing observer ack(s), and wait instead of drafting the substantive reply.
+- During polling, keep heartbeats as liveness hints with `state: polling | reading | drafting | idle`, `waiting_for`, `last_seen_message`, and `updated_at_utc` when practical.
+
+## Protocol â€” interagent-discussion/v1 (v2.6 spec)
 
 | Field | Value |
 |-------|-------|
 | Argument surface | `[--folder <path>] [context...]` |
 | Default parent | `<repo-root>/AgentCoordination/Scratchpad/Discussion/` |
 | Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md` |
-| Per-arc cap | `5 × n` messages (one in-band extension to `10 × n` per arc) |
-| Outcome archiving | move latest `outcome.md` → `outcome_arc<NN>.md` before writing new arc |
+| Per-arc cap | `5 Ã— n` messages (one in-band extension to `10 Ã— n` per arc) |
+| Outcome archiving | move latest `outcome.md` â†’ `outcome_arc<NN>.md` before writing new arc |
 
-## Step 1 — Parse arguments
+## Step 1 â€” Parse arguments
 
 ```powershell
 function Get-RepoRoot {
@@ -79,7 +91,7 @@ $InlineContext = if ($args.Length -gt $ContextStartIdx) {
 } else { '' }
 ```
 
-## Step 2 — Resolve the discussion leaf
+## Step 2 â€” Resolve the discussion leaf
 
 If `--folder <path>` was given: the path may be a parent or an exact leaf.
 If no `--folder`: scan the default parent for the most-recent leaf.
@@ -146,7 +158,7 @@ if ($FolderArg) {
 }
 ```
 
-## Step 3 — Read original starter and `participants` from arc 1
+## Step 3 â€” Read original starter and `participants` from arc 1
 
 ```powershell
 $arc1Files = Get-ChildItem -LiteralPath $Folder -File -ErrorAction SilentlyContinue |
@@ -180,7 +192,7 @@ if (-not $Participants) {
 $N = $Participants.Count
 ```
 
-## Step 4 — Determine next arc number and read continuation_starter
+## Step 4 â€” Determine next arc number and read continuation_starter
 
 ```powershell
 $prefixedFiles = Get-ChildItem -LiteralPath $Folder -File -ErrorAction SilentlyContinue |
@@ -209,7 +221,7 @@ if (Test-Path -LiteralPath $outcomePath) {
 Write-Output "Continuation starter (per outcome): $continuationStarter"
 ```
 
-## Step 5 — Apply the dispatch table
+## Step 5 â€” Apply the dispatch table
 
 | Caller role | `outcome.md` exists? | Next-arc starter file exists? | Action |
 |---|---|---|---|
@@ -242,42 +254,42 @@ if ($claudeRole -eq 'starter') {
   } elseif ($nextStarterExists) {
     $mode = 'B-join'
   } else {
-    Write-Output "ABORT: live/inconsistent state — no outcome.md and no next-arc starter."
+    Write-Output "ABORT: live/inconsistent state â€” no outcome.md and no next-arc starter."
     exit 1
   }
 }
 Write-Output "Continue mode: $mode"
 ```
 
-## Step 6 — Mode A: claude is the continuation starter
+## Step 6 â€” Mode A: claude is the continuation starter
 
-### A.1 — Compose new arc message in memory
+### A.1 â€” Compose new arc message in memory
 
 Per v2.3 ordering: compose first, archive second, write third. If composition
 fails, the previous outcome stays in place.
 
 Body must include:
 
-1. **`## User-supplied context`** — verbatim fenced block of `$InlineContext`
+1. **`## User-supplied context`** â€” verbatim fenced block of `$InlineContext`
    (longer fence if content has `~~~`). Do not paraphrase.
-2. **`## Turn topology`** — per spec §3.4, required for arc starters.
-3. **Prior arc summary** — read `outcome.md` (about to be archived) and
+2. **`## Turn topology`** â€” per spec Â§3.4, required for arc starters.
+3. **Prior arc summary** â€” read `outcome.md` (about to be archived) and
    summarize. Reference relevant prior plan revisions by versioned filename
    (`plans/<name>_r<NNN>.md`).
-4. **What's new in this arc** — the user's new direction.
+4. **What's new in this arc** â€” the user's new direction.
 
 Recipient: `participants[1 mod n]` = `participants[1]` (since claude is at
 index 0 only when claude was the original arc-1 starter; otherwise claude's
 index in participants was set by arc 1 and the recipient is the next agent
 in turn order from claude's index).
 
-Wait — for continuation, claude is **not necessarily** at index 0 of
+Wait â€” for continuation, claude is **not necessarily** at index 0 of
 `participants`. The participants order was fixed at arc 1. The continuation
 arc's message 1 still has `from = participants[(1-1) mod n] = participants[0]`.
 But `continuation_starter` may have authorized claude (not at index 0) to
 start arc N+1.
 
-**This is a real conflict.** §1.2's turn formula says msg-1 author is
+**This is a real conflict.** Â§1.2's turn formula says msg-1 author is
 `participants[0]`. If `continuation_starter == claude` but claude isn't
 `participants[0]`, the formula and the authorization disagree.
 
@@ -290,7 +302,7 @@ uses the rotated order.
 (This is the cleanest interpretation of "continuation_starter authorizes
 the next arc.")
 
-### A.2 — Compute rotated participants
+### A.2 â€” Compute rotated participants
 
 ```powershell
 $claudeIdx = [Array]::IndexOf($Participants, 'claude')
@@ -301,7 +313,7 @@ Write-Output "Rotated participants for new arc: [$($rotated -join ', ')]"
 Write-Output "Recipient of arc${newArc}_001: $recipient"
 ```
 
-### A.3 — Archive previous outcome.md
+### A.3 â€” Archive previous outcome.md
 
 ```powershell
 $archiveName = "outcome_arc{0:D2}.md" -f $priorArc
@@ -311,10 +323,10 @@ if (Test-Path -LiteralPath $archivePath) {
   exit 1
 }
 Move-Item -LiteralPath $outcomePath -Destination $archivePath
-Write-Output "Archived previous outcome → $archiveName"
+Write-Output "Archived previous outcome â†’ $archiveName"
 ```
 
-### A.4 — Atomic-write the new arc's message 001
+### A.4 â€” Atomic-write the new arc's message 001
 
 ```powershell
 $newName = "arc{0:D2}_001_claude_to_{1}.md" -f $newArc, $recipient
@@ -325,7 +337,7 @@ Write-Output "Wrote $newName (arc $newArc message 001)"
 The message frontmatter MUST include `participants: [<rotated>]` and
 `turn_order: round-robin`.
 
-### A.5 — Enter the standard discussion loop
+### A.5 â€” Enter the standard discussion loop
 
 Identical to `claude-discuss-respond`'s loop (Step 10), with `$activeArc =
 $newArc` and the rotated `$Participants`. Use the polling helper, atomic
@@ -334,9 +346,9 @@ write helpers, and plan revision helper from this skill.
 At terminal: write fresh `outcome.md` (latest is always at `outcome.md`;
 archives are historical).
 
-## Step 7 — Mode B: claude is responder for this continuation
+## Step 7 â€” Mode B: claude is responder for this continuation
 
-### B.0 — Locally-typed context: warn-and-ignore
+### B.0 â€” Locally-typed context: warn-and-ignore
 
 ```powershell
 if ($InlineContext) {
@@ -345,7 +357,7 @@ if ($InlineContext) {
 }
 ```
 
-### B.1 — Wait for next-arc starter message (if Mode B-wait)
+### B.1 â€” Wait for next-arc starter message (if Mode B-wait)
 
 If `mode == 'B-wait'`: poll for `arc<newArc>_001_<continuationStarter>_to_*.md`.
 
@@ -365,7 +377,7 @@ if ($matches.Count -eq 0) { Write-Output 'TIMEOUT' } else { Write-Output 'READY'
 
 Run with `timeout: 320000`. Retry once.
 
-### B.2 — Read and validate the new arc's message 001
+### B.2 â€” Read and validate the new arc's message 001
 
 Required: `protocol == interagent-discussion/v1`, `arc == newArc`,
 `message_index == 1`, `from == continuationStarter`,
@@ -375,13 +387,13 @@ Required: `protocol == interagent-discussion/v1`, `arc == newArc`,
 If validation fails, write your scheduled message with `status: needs-user`
 and a `## Validation failure` body. If no safe write target exists, abort.
 
-### B.3 — Compute claude's incoming wait target on the new arc
+### B.3 â€” Compute claude's incoming wait target on the new arc
 
 Use the rotated `$Participants` from arc N+1's frontmatter. Apply Step 6
 of `claude-discuss-respond`'s loop logic to compute `i_in` and enter the
 respond loop.
 
-## Step 8 — Atomic write helpers
+## Step 8 â€” Atomic write helpers
 
 ```powershell
 function Write-MessageAtomic {
@@ -406,7 +418,7 @@ function Write-PlanRevision {
 }
 ```
 
-## Step 9 — Polling helper
+## Step 9 â€” Polling helper
 
 Same shape as start/respond: 30s sleep, 5-min wait, watches both target
 glob and `outcome.md` (during the loop). Retry once on TIMEOUT, no
@@ -418,9 +430,9 @@ glob and `outcome.md` (during the loop). Retry once on TIMEOUT, no
 - Use `## Protocol amendment proposal` in a `status: needs-user` message when a protocol limitation blocks progress, risks invalid consensus, or needs user approval.
 - Blocking amendments use normal immutable plan revisions under `plans/`; do not create new frontmatter fields or a separate amendment directory.
 
-## Step 10 — Write outcome.md at end of arc
+## Step 10 â€” Write outcome.md at end of arc
 
-When the arc terminates, write fresh `outcome.md` per the spec §7 schema.
+When the arc terminates, write fresh `outcome.md` per the spec Â§7 schema.
 
 ```markdown
 ---
@@ -440,11 +452,11 @@ continuation_starter: <agent>       # optional; default = original starter
 ## Implementation responsibility (only if non-default)
 ```
 
-`user_facing_agent` defaults to the **original arc-1 starter** —
+`user_facing_agent` defaults to the **original arc-1 starter** â€”
 continuation does not change that identity unless a handover is accepted.
 Same for `implementation_owner`.
 
-## Step 11 — Report to the user
+## Step 11 â€” Report to the user
 
 You only deliver the substantive user-facing report if you are the
 user-facing agent (default = original arc-1 starter):
@@ -462,13 +474,13 @@ user-facing agent (default = original arc-1 starter):
 - **Continuation arc rotates participants.** The set is preserved, but
   the order rotates so `continuation_starter` is at index 0 for the new
   arc. The new arc's `arc<NN>_001` frontmatter records the rotated
-  `participants` explicitly. Per spec §1, the original arc-1
+  `participants` explicitly. Per spec Â§1, the original arc-1
   `participants` order is the canonical order for the discussion as a
-  whole — but each arc's local turn formula uses its own rotation.
+  whole â€” but each arc's local turn formula uses its own rotation.
 - **Per-arc reset.** `message_index` resets to 1 each arc. Cap state
   does NOT carry from arc N to arc N+1.
 - **Latest outcome is always `outcome.md`.** Historical outcomes are
-  `outcome_arc<NN>.md`. Don't write `outcome_arc<newArc>.md` yourself —
+  `outcome_arc<NN>.md`. Don't write `outcome_arc<newArc>.md` yourself â€”
   reserved for archive of THIS arc's outcome by a future continuation.
 - **Plan revisions persist across arcs.** Revisions accumulate in
   `plans/`. References use `<name>_r<NNN>.md`.

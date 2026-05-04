@@ -1,11 +1,11 @@
 ---
 name: codex-discuss-start
-description: Start an inter-agent discussion with Claude Code and/or OpenCode through a generated discussion leaf, using the v2.5 round-robin shared-folder protocol with immutable plans, continuation arcs, and explicit ownership.
+description: Start an inter-agent discussion with Claude Code and/or OpenCode through a generated discussion leaf, using the v2.6 round-robin shared-folder protocol with immutable plans, continuation arcs, and explicit ownership.
 ---
 
 # Codex Discuss Start
 
-Start a v2.5 `interagent-discussion/v1` shared-folder discussion by creating a
+Start a v2.6 `interagent-discussion/v1` shared-folder discussion by creating a
 child discussion leaf, writing Codex message 001, and then following the
 round-robin loop until `consensus`, `needs-user`, timeout, or the per-arc cap.
 
@@ -20,6 +20,18 @@ prior transcript, or another agent's behavior must cite `file:line`, a specific
 transcript message, or a command/result summary. Label unchecked claims
 `[unverified]`. Consensus is blocked while an unverified claim is load-bearing
 for the conclusion, plan, or implementation assignment.
+
+## v2.6 Reliability Rules
+
+Canonical shared spec: `AgentCoordination/protocols/interagent_discussion.md`.
+Canonical spec frontmatter includes `protocol_version: 2.6`.
+
+- Publish final protocol artifacts through same-directory `.tmp_*` files and a final rename/move. This applies to message files, plan revisions, outcome files, and ack sidecar files. Direct writes to final protocol filenames are invalid; single-writer safety does not imply reader safety.
+- Include `complete: true` in newly written message, plan, outcome, and ack files. If a consumed final file is otherwise valid but lacks `complete: true`, warn and proceed; record it under `## Protocol limitation observed` instead of halting.
+- Ack sidecars use `ack_arc<NN>_<MMM>_<from>_to_<to>_<acker>.md`. They are excluded from `message_index`, `reply_to`, cap, consensus, and outcome termination.
+- Mandatory observer acks: every participant other than the message author must ack each message before the recipient writes the next substantive reply. The recipient writes its own ack before drafting. If this agent is an observer for the latest message and its ack is missing, write only the observer ack sidecar and stop without writing a protocol message.
+- If this agent is the recipient and mandatory observer ack files are missing for the incoming message, write this agent's recipient ack, report the missing observer ack(s), and wait instead of drafting the substantive reply.
+- During polling, keep heartbeats as liveness hints with `state: polling | reading | drafting | idle`, `waiting_for`, `last_seen_message`, and `updated_at_utc` when practical.
 
 ## Inputs
 
@@ -65,7 +77,7 @@ For `participants = P` and `n = len(P)`:
 
 ## Filenames
 
-v2.5 requires arc-prefixed filenames everywhere. Message files match:
+v2.6 requires arc-prefixed filenames everywhere. Message files match:
 
 ```text
 ^arc\d{2}_\d{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\.md$
@@ -105,6 +117,7 @@ to: <P[1]>
 status: continue
 reply_to: null
 created_at_utc: YYYY-MM-DDTHH:MM:SSZ
+complete: true
 participants: [codex, opencode, claude]
 turn_order: round-robin
 ---
@@ -162,7 +175,7 @@ exists, abort and surface the diagnostic.
 ## Loop
 
 1. Atomic-write `arc01_001_codex_to_<P[1]>.md` with `status: continue`.
-2. Manual routing is expected in v2.5. Tell the user which peer-side skill should be invoked next.
+2. Manual routing is expected in v2.6. Tell the user which peer-side skill should be invoked for the recipient ack and which observer-side skill(s) must be invoked for mandatory observer acks before the recipient writes a substantive reply.
 3. If remaining in the loop, wait for the incoming message addressed to Codex.
 4. Incoming wait target: smallest missing `i_in` where `P[i_in mod n] == codex`; glob `arc<NN>_<i_in:03d>_*_to_codex.md`.
 5. The incoming glob must resolve to exactly one file. Zero means keep waiting; more than one is a fork.
@@ -188,14 +201,16 @@ One extension per arc is allowed:
 
 ## Waiting
 
-Poll every 30 seconds for up to 5 minutes, watching both the incoming glob and
-`outcome.md`; retry once before surfacing timeout. Never write `outcome.md` on
-timeout. Heartbeat files such as `heartbeat_codex.txt` are liveness hints only.
+Poll every 30 seconds for up to 5 minutes, watching the incoming glob,
+mandatory observer-ack duty for Codex, and `outcome.md`; retry once before
+surfacing timeout. Never write `outcome.md` on timeout. Heartbeat files such
+as `heartbeat_codex.txt` are liveness hints only; include `state`,
+`waiting_for`, `last_seen_message`, and `updated_at_utc` when practical.
 
 ## Atomic Writes
 
-Use `.tmp_<guid>.md` temporary file names for messages, outcomes, and plans;
-readers ignore `.tmp_*`.
+Use same-directory `.tmp_<guid>.md` temporary file names for messages,
+outcomes, plans, and ack sidecars; readers ignore `.tmp_*`.
 
 ```powershell
 $tmp = Join-Path $folder ('.tmp_' + [guid]::NewGuid().ToString('N') + '.md')
@@ -230,7 +245,7 @@ the arc-1 starter.
 
 For v2.3 outcome readback only, accept `implementation_owner: both` as
 equivalent to `implementation_owner: multiple` with
-`implementation_owners == participants`. v2.5 writers must never emit `both`.
+`implementation_owners == participants`. v2.6 writers must never emit `both`.
 
 ## Continuation
 
@@ -243,4 +258,4 @@ authorized continuation starter. Prior latest outcomes are archived as
 - Use host-neutral wording such as "invoke the OpenCode-side discussion skill" or "invoke the Claude-side discussion skill".
 - Pre-flight checks must not mutate existing folders before validation.
 - Read v2.3 transcripts by deriving `participants = [from, to]` from `arc01_001_*`; do not rewrite them.
-- Auto-routing daemons, `cc:`, and non-`round-robin` turn modes are out of scope for v2.5.
+- Auto-routing daemons, `cc:`, and non-`round-robin` turn modes are out of scope for v2.6.

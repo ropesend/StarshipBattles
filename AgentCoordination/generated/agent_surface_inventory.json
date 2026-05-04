@@ -123,10 +123,10 @@
           "directory": "codex-discuss-continue",
           "expected_prefix": "codex-",
           "frontmatter": {
-            "description": "Continue an ended v2.5 inter-agent discussion when Codex is the authorized continuation starter, archiving the prior outcome and opening the next round-robin arc.",
+            "description": "Continue an ended v2.6 inter-agent discussion when Codex is the authorized continuation starter, archiving the prior outcome and opening the next round-robin arc.",
             "name": "codex-discuss-continue"
           },
-          "frontmatter_description": "Continue an ended v2.5 inter-agent discussion when Codex is the authorized continuation starter, archiving the prior outcome and opening the next round-robin arc.",
+          "frontmatter_description": "Continue an ended v2.6 inter-agent discussion when Codex is the authorized continuation starter, archiving the prior outcome and opening the next round-robin arc.",
           "frontmatter_fields": [
             "description",
             "name"
@@ -146,10 +146,10 @@
           "directory": "codex-discuss-respond",
           "expected_prefix": "codex-",
           "frontmatter": {
-            "description": "Respond as Codex in a v2.5 inter-agent discussion with Claude Code and/or OpenCode through an exact discussion leaf or discoverable parent folder, using polymorphic round-robin turn detection.",
+            "description": "Respond as Codex in a v2.6 inter-agent discussion with Claude Code and/or OpenCode through an exact discussion leaf or discoverable parent folder, using polymorphic round-robin turn detection and mandatory ack sidecars.",
             "name": "codex-discuss-respond"
           },
-          "frontmatter_description": "Respond as Codex in a v2.5 inter-agent discussion with Claude Code and/or OpenCode through an exact discussion leaf or discoverable parent folder, using polymorphic round-robin turn detection.",
+          "frontmatter_description": "Respond as Codex in a v2.6 inter-agent discussion with Claude Code and/or OpenCode through an exact discussion leaf or discoverable parent folder, using polymorphic round-robin turn detection and mandatory ack sidecars.",
           "frontmatter_fields": [
             "description",
             "name"
@@ -169,10 +169,10 @@
           "directory": "codex-discuss-start",
           "expected_prefix": "codex-",
           "frontmatter": {
-            "description": "Start an inter-agent discussion with Claude Code and/or OpenCode through a generated discussion leaf, using the v2.5 round-robin shared-folder protocol with immutable plans, continuation arcs, and explicit ownership.",
+            "description": "Start an inter-agent discussion with Claude Code and/or OpenCode through a generated discussion leaf, using the v2.6 round-robin shared-folder protocol with immutable plans, continuation arcs, and explicit ownership.",
             "name": "codex-discuss-start"
           },
-          "frontmatter_description": "Start an inter-agent discussion with Claude Code and/or OpenCode through a generated discussion leaf, using the v2.5 round-robin shared-folder protocol with immutable plans, continuation arcs, and explicit ownership.",
+          "frontmatter_description": "Start an inter-agent discussion with Claude Code and/or OpenCode through a generated discussion leaf, using the v2.6 round-robin shared-folder protocol with immutable plans, continuation arcs, and explicit ownership.",
           "frontmatter_fields": [
             "description",
             "name"
@@ -607,10 +607,10 @@
           "directory": "claude-discuss-continue",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Continue a previously concluded v2.5 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if Claude is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).",
+            "description": "Continue a previously concluded v2.6 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if Claude is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).",
             "name": "claude-discuss-continue"
           },
-          "frontmatter_description": "Continue a previously concluded v2.5 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if Claude is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).",
+          "frontmatter_description": "Continue a previously concluded v2.6 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if Claude is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -633,10 +633,10 @@
           "directory": "claude-discuss-respond",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Join a v2.5 inter-agent discussion that Codex or OpenCode opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.",
+            "description": "Join a v2.6 inter-agent discussion that Codex or OpenCode opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude or awaits Claude's mandatory observer ack. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.",
             "name": "claude-discuss-respond"
           },
-          "frontmatter_description": "Join a v2.5 inter-agent discussion that Codex or OpenCode opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.",
+          "frontmatter_description": "Join a v2.6 inter-agent discussion that Codex or OpenCode opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude or awaits Claude's mandatory observer ack. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -659,10 +659,10 @@
           "directory": "claude-discuss-start",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Open a v2.5 inter-agent discussion with Codex and/or OpenCode. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party Claude+Codex discussion; pass `--with codex,opencode` for 3-party or `--with opencode` for Claude+OpenCode.",
+            "description": "Open a v2.6 inter-agent discussion with Codex and/or OpenCode. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party Claude+Codex discussion; pass `--with codex,opencode` for 3-party or `--with opencode` for Claude+OpenCode.",
             "name": "claude-discuss-start"
           },
-          "frontmatter_description": "Open a v2.5 inter-agent discussion with Codex and/or OpenCode. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party Claude+Codex discussion; pass `--with codex,opencode` for 3-party or `--with opencode` for Claude+OpenCode.",
+          "frontmatter_description": "Open a v2.6 inter-agent discussion with Codex and/or OpenCode. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party Claude+Codex discussion; pass `--with codex,opencode` for 3-party or `--with opencode` for Claude+OpenCode.",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1876,10 +1876,10 @@
           "directory": "ocode-discuss-continue",
           "expected_prefix": "ocode-",
           "frontmatter": {
-            "description": "Continue a previously concluded v2.5 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).",
+            "description": "Continue a previously concluded v2.6 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).",
             "name": "ocode-discuss-continue"
           },
-          "frontmatter_description": "Continue a previously concluded v2.5 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).",
+          "frontmatter_description": "Continue a previously concluded v2.6 inter-agent discussion with new user-supplied focus context. No-args by default resolves to the most-recent discussion leaf under the default parent. Role-aware self-dispatch: if OpenCode is the authorized continuation starter (per `outcome.md.continuation_starter`, defaulting to the original arc-1 starter), archives the latest outcome and opens arc N+1; otherwise waits for the authorized agent to write the new arc's first message and joins the respond loop. Use after a discussion has reached a terminal `outcome.md`. Per-arc cap is `5 * len(participants)` messages (extendable once to `10 * n`).",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1902,10 +1902,10 @@
           "directory": "ocode-discuss-respond",
           "expected_prefix": "ocode-",
           "frontmatter": {
-            "description": "Join a v2.5 inter-agent discussion that Claude or Codex opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to OpenCode. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.",
+            "description": "Join a v2.6 inter-agent discussion that Claude or Codex opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to OpenCode or awaits OpenCode's mandatory observer ack. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.",
             "name": "ocode-discuss-respond"
           },
-          "frontmatter_description": "Join a v2.5 inter-agent discussion that Claude or Codex opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to OpenCode. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.",
+          "frontmatter_description": "Join a v2.6 inter-agent discussion that Claude or Codex opened. Defaults to the shared discussion parent unless `--folder` is supplied; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to OpenCode or awaits OpenCode's mandatory observer ack. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion.",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1928,10 +1928,10 @@
           "directory": "ocode-discuss-start",
           "expected_prefix": "ocode-",
           "frontmatter": {
-            "description": "Open a v2.5 inter-agent discussion with Claude and/or Codex. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party OpenCode+Claude discussion; pass `--with claude,codex` for 3-party or `--with codex` for OpenCode+Codex.",
+            "description": "Open a v2.6 inter-agent discussion with Claude and/or Codex. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party OpenCode+Claude discussion; pass `--with claude,codex` for 3-party or `--with codex` for OpenCode+Codex.",
             "name": "ocode-discuss-start"
           },
-          "frontmatter_description": "Open a v2.5 inter-agent discussion with Claude and/or Codex. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party OpenCode+Claude discussion; pass `--with claude,codex` for 3-party or `--with codex` for OpenCode+Codex.",
+          "frontmatter_description": "Open a v2.6 inter-agent discussion with Claude and/or Codex. Defaults to the shared discussion parent unless `--folder` is supplied; creates a timestamped child leaf, writes message arc01_001 with optional inline focus context, declares the participant set + canonical-ring turn order, and alternates per the round-robin formula until consensus, needs-user, the per-arc cap, or a pre-existing outcome.md. Defaults to a 2-party OpenCode+Claude discussion; pass `--with claude,codex` for 3-party or `--with codex` for OpenCode+Codex.",
           "frontmatter_fields": [
             "argument-hint",
             "description",

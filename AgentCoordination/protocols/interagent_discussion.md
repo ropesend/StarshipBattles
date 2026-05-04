@@ -1,7 +1,7 @@
 ---
 protocol: interagent-discussion/v1
-protocol_version: 2.5
-last_updated_at_utc: 2026-05-04T14:17:28Z
+protocol_version: 2.6
+last_updated_at_utc: 2026-05-04T15:00:00Z
 ---
 
 # Inter-Agent Discussion Protocol
@@ -45,7 +45,7 @@ YYYYMMDDTHHMMSSZ[_<slug>]/
 ```
 
 Each leaf may contain message files, `plans/`, heartbeat files, outcome files,
-and temporary `.tmp_*` files.
+ack sidecar files, and temporary `.tmp_*` files.
 
 ## Argument Surface
 
@@ -108,6 +108,84 @@ Message files match:
 
 Temporary files match `.tmp_*` and are ignored by readers.
 
+Ack sidecar files match:
+
+```text
+^ack_arc\d{2}_\d{3}_(claude|codex|opencode)_to_(claude|codex|opencode)_(claude|codex|opencode)\.md$
+```
+
+## Atomic Publication
+
+Final protocol artifacts must be materialized through same-directory `.tmp_*`
+files and a final rename/move into place. This rule applies to message files,
+plan revisions, outcome files, and ack sidecar files.
+
+Rules:
+
+- Write complete content to a same-directory `.tmp_*` file first.
+- Rename/move that temp file to the final filename only after all content is
+  present.
+- Readers ignore `.tmp_*` files and must not treat them as protocol artifacts.
+- Direct writes to final protocol filenames are invalid. Single-writer safety
+  does not imply reader safety.
+- If rename/move fails, leave the `.tmp_*` file and surface the failure; never
+  create a partially populated final file as a fallback.
+
+## Completion Marker
+
+Writers include `complete: true` in final message files, plan revisions, and
+`outcome.md`. This marker is a diagnostic guard for accidental direct-write
+bypasses; same-directory temp+rename is still the load-bearing guarantee.
+
+Reader behavior:
+
+- If `complete: true` is present, proceed normally.
+- If `complete: true` is absent but the file is otherwise valid and readable,
+  warn and proceed. Record the missing marker in the next substantive message
+  under `## Protocol limitation observed`.
+- If other validation fails, use the normal validation-failure path.
+
+## Ack Sidecars
+
+Ack sidecars are mandatory receipt signals. Observer acks are mandatory for
+all participants other than the message author. For every final message file,
+all participants other than the message author must write an ack sidecar:
+
+- The recipient writes a recipient ack before drafting the substantive reply.
+- Every non-recipient participant writes a mandatory observer ack through the
+  same sidecar schema before the recipient writes the substantive reply.
+
+Ack sidecars do not participate in `message_index`, `reply_to`, per-arc cap,
+consensus, or outcome termination.
+
+Minimum ack frontmatter:
+
+```yaml
+---
+protocol: interagent-discussion/v1
+ack_for: arc<NN>_<MMM>_<from>_to_<to>
+from: <acker>
+status: received
+created_at_utc: <timestamp>
+complete: true
+---
+```
+
+The expected ack filename is:
+
+```text
+ack_arc<NN>_<MMM>_<from>_to_<to>_<acker>.md
+```
+
+If a recipient sees that mandatory observer acks for its incoming message are
+missing, it writes its own recipient ack, surfaces the missing observer ack(s),
+and waits for the observer ack-only invocation instead of writing the next
+substantive message.
+
+If an observer is invoked while the latest message is neither authored by nor
+addressed to that observer and the observer's ack is missing, it writes the
+observer ack sidecar and stops without writing a protocol message.
+
 ## Message Frontmatter
 
 Every message starts with frontmatter on line 1.
@@ -122,6 +200,7 @@ Required fields on every message:
 - `status`
 - `reply_to`
 - `created_at_utc`
+- `complete`
 
 Arc starters also require:
 
@@ -134,6 +213,10 @@ Optional fields:
 - `message_cap`
 - `extension_requested_cap`
 - `extension_accepted`
+
+`complete` must be `true` for newly written v2.6 messages. Missing
+`complete: true` is a warn-and-proceed protocol limitation, not a halt, when
+all other validation passes.
 
 Status values:
 
@@ -203,6 +286,8 @@ Validate consumed and produced messages:
 - `reply_to` equals the previous `message_index`, or `null` for arc starters.
 - Later `participants` and `turn_order` occurrences match the arc starter for
   the active arc.
+- Missing `complete: true` on an otherwise valid final file is recorded as a
+  protocol limitation and does not by itself force `needs-user`.
 
 Do not auto-repair protocol failures. If a safe outgoing target exists, write
 `status: needs-user` with `## Validation failure`. If no safe target exists,
@@ -214,7 +299,18 @@ Poll every 30 seconds for up to 5 minutes, watching both the expected incoming
 glob and `outcome.md`. Retry once before surfacing timeout. Do not write
 `outcome.md` on timeout.
 
-Heartbeat files are liveness hints only.
+Heartbeat files are liveness hints only. During polling, write structured
+heartbeat content with these fields when practical:
+
+```yaml
+agent: <claude|codex|opencode>
+state: polling | reading | drafting | idle
+waiting_for: <expected filename or null>
+last_seen_message: <latest message filename or null>
+updated_at_utc: <timestamp>
+```
+
+Missing or stale heartbeat data is not a protocol violation by itself.
 
 ## Outcome
 
@@ -235,6 +331,7 @@ user_facing_agent: <claude|codex|opencode>
 implementation_owner: <claude|codex|opencode|multiple>
 implementation_owners: [<agent>, <agent>]
 continuation_starter: <claude|codex|opencode>
+complete: true
 ---
 ```
 

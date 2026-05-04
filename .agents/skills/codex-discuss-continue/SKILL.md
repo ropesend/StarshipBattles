@@ -1,6 +1,6 @@
 ---
 name: codex-discuss-continue
-description: Continue an ended v2.5 inter-agent discussion when Codex is the authorized continuation starter, archiving the prior outcome and opening the next round-robin arc.
+description: Continue an ended v2.6 inter-agent discussion when Codex is the authorized continuation starter, archiving the prior outcome and opening the next round-robin arc.
 ---
 
 # Codex Discuss Continue
@@ -8,7 +8,7 @@ description: Continue an ended v2.5 inter-agent discussion when Codex is the aut
 Continue an ended `interagent-discussion/v1` discussion by selecting a prior
 discussion leaf, verifying Codex is authorized to open the next arc, archiving
 the previous `outcome.md`, writing `arc<N+1>_001_codex_to_<next>.md`, and then
-entering the normal v2.5 loop.
+entering the normal v2.6 loop.
 
 Reference: `AgentCoordination/protocols/interagent_discussion.md`.
 
@@ -21,6 +21,18 @@ prior transcript, or another agent's behavior must cite `file:line`, a specific
 transcript message, or a command/result summary. Label unchecked claims
 `[unverified]`. Consensus is blocked while an unverified claim is load-bearing
 for the conclusion, plan, or implementation assignment.
+
+## v2.6 Reliability Rules
+
+Canonical shared spec: `AgentCoordination/protocols/interagent_discussion.md`.
+Canonical spec frontmatter includes `protocol_version: 2.6`.
+
+- Publish final protocol artifacts through same-directory `.tmp_*` files and a final rename/move. This applies to message files, plan revisions, outcome files, and ack sidecar files. Direct writes to final protocol filenames are invalid; single-writer safety does not imply reader safety.
+- Include `complete: true` in newly written message, plan, outcome, and ack files. If a consumed final file is otherwise valid but lacks `complete: true`, warn and proceed; record it under `## Protocol limitation observed` instead of halting.
+- Ack sidecars use `ack_arc<NN>_<MMM>_<from>_to_<to>_<acker>.md`. They are excluded from `message_index`, `reply_to`, cap, consensus, and outcome termination.
+- Mandatory observer acks: every participant other than the message author must ack each message before the recipient writes the next substantive reply. The recipient writes its own ack before drafting. If this agent is an observer for the latest message and its ack is missing, write only the observer ack sidecar and stop without writing a protocol message.
+- If this agent is the recipient and mandatory observer ack files are missing for the incoming message, write this agent's recipient ack, report the missing observer ack(s), and wait instead of drafting the substantive reply.
+- During polling, keep heartbeats as liveness hints with `state: polling | reading | drafting | idle`, `waiting_for`, `last_seen_message`, and `updated_at_utc` when practical.
 
 ## Inputs
 
@@ -67,7 +79,7 @@ Message files match:
 ## Participants And Turn Computation
 
 Read `participants` and `turn_order` from arc 1. Continuation arcs inherit both
-unchanged. The only legal `turn_order` value in v2.5 is `round-robin`.
+unchanged. The only legal `turn_order` value in v2.6 is `round-robin`.
 
 For v2.3 readback, if `arc01_001_*` lacks `participants`, derive
 `participants = [from, to]` from the arc-1 starter and set
@@ -124,6 +136,7 @@ to: opencode
 status: continue
 reply_to: null
 created_at_utc: YYYY-MM-DDTHH:MM:SSZ
+complete: true
 participants: [codex, opencode, claude]
 turn_order: round-robin
 ---
@@ -178,9 +191,11 @@ surface the diagnostic.
 
 ## Loop And Extension
 
-After writing the new arc starter, use the normal v2.5 loop:
+After writing the new arc starter, use the normal v2.6 loop:
 
+- If the latest message is neither authored by Codex nor addressed to Codex and Codex's ack sidecar is missing, write the mandatory observer ack sidecar and stop without writing a protocol message.
 - Incoming wait target for Codex: smallest missing `i_in` where `P[i_in mod n] == codex`; glob `arc<NN>_<i_in:03d>_*_to_codex.md`.
+- After reading an incoming Codex-addressed message, write Codex's recipient ack sidecar. If any mandatory observer ack sidecars for that incoming message are missing, report the missing acker(s) and wait instead of drafting.
 - Outgoing target after reading `i_in`: `j_out = i_in + 1`; require `P[(j_out - 1) mod n] == codex`; write `arc<NN>_<j_out:03d>_codex_to_<P[j_out mod n]>.md`.
 - The incoming glob must resolve to exactly one file. Zero means wait; more than one is a fork.
 - Re-read plans named in `## Plans touched`.
@@ -199,14 +214,16 @@ then write `outcome.md`.
 
 ## Waiting
 
-Poll every 30 seconds for up to 5 minutes, watching both the incoming glob and
-`outcome.md`; retry once before surfacing timeout. Never write `outcome.md` on
-timeout. Heartbeat files are liveness hints only.
+Poll every 30 seconds for up to 5 minutes, watching the incoming glob,
+mandatory observer-ack duty for Codex, and `outcome.md`; retry once before
+surfacing timeout. Never write `outcome.md` on timeout. Heartbeat files are
+liveness hints only; include `state`, `waiting_for`, `last_seen_message`, and
+`updated_at_utc` when practical.
 
 ## Atomic Writes
 
-Use `.tmp_<guid>.md` temporary file names for messages, outcomes, and plans;
-readers ignore `.tmp_*`.
+Use same-directory `.tmp_<guid>.md` temporary file names for messages,
+outcomes, plans, and ack sidecars; readers ignore `.tmp_*`.
 
 ```powershell
 $tmp = Join-Path $folder ('.tmp_' + [guid]::NewGuid().ToString('N') + '.md')
@@ -244,5 +261,5 @@ If present, it must be in `participants`.
 
 - Continue handles only authorized arc archival and next-arc startup.
 - Respond handles live in-arc replies.
-- Manual routing is expected in v2.5; auto-routing daemons are deferred.
+- Manual routing is expected in v2.6; auto-routing daemons are deferred.
 - Do not create fallback handling for old unprefixed transcripts.

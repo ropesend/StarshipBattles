@@ -11,7 +11,7 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 
 - `codex_agent_coordination_plan_final.md` — authoritative historical policy.
 - `agent_surface_policy.json` — current mutable policy manifest for validator-enforced agent surface rules.
-- `protocols/` — durable shared protocol specifications for agent coordination workflows, including `protocols/interagent_discussion.md`.
+- `protocols/` — durable shared protocol specifications for agent coordination workflows, including `protocols/interagent_discussion.md` (v2.6: mandatory atomic publication, completion markers, mandatory ack sidecars, and enriched heartbeats).
 - `generated/test_baseline.json` — repo-wide test count baseline; counts-only canonical artifact auto-updated by the sharded runner on green whole-suite runs when counts change. Tracked.
 - `generated/test_baseline/by_install/<install_id>.json` — per-checkout full-suite verification receipts. Tracked. Each checkout writes only its own UUID-keyed file, mirroring skill-usage ownership.
 - `generated/test_baseline/summary.json` — aggregated test baseline verification summary. **Gitignored.** Purely derived from the canonical baseline plus `by_install/*.json`; regenerate with `summarize_test_baseline.py`.
