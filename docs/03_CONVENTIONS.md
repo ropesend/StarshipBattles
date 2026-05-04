@@ -86,10 +86,15 @@ Complex screens use Model-View-ViewModel:
 
 | Suffix | Purpose | Example |
 |--------|---------|---------|
-| `*_viewmodel.py` | Screen state, events, business logic (no Pygame) | `workshop_viewmodel.py`, `build_queue_viewmodel.py` |
+| `*_viewmodel.py` / `*_view_model.py` | Screen state, events, business logic (no Pygame) | `workshop_viewmodel.py`, `build_queue_viewmodel.py`, `transfer_view_model.py` |
+| `*_controller.py` | Facade queries + command emission boundary | `transfer_controller.py`, `new_game_setup_controller.py` |
+| `*_renderer.py` | Pygame_gui widget construction (build/destroy/update) | `transfer_grid_renderer.py` |
+| `*_ui_builder.py` | Per-class UI builder protocol; paired with `Null{Foo}UiBuilder` + `Mock{Foo}UiBuilder` test fixtures | `transfer_ui_builder.py`, `fleet_report_ui_builder.py` |
 | `*_context.py` | Shared data context between panels | `workshop_context.py` |
 | `*_event_router.py` | Event dispatch between UI components | `workshop_event_router.py`, `strategy_event_router.py` |
 | `*_data_loader.py` | Data loading coordination | `workshop_data_loader.py` |
+
+The `controller`/`renderer`/`ui_builder` triple is the canonical decomposition produced by [docs/02_PATTERNS.md §32 (Compositional Construction)](02_PATTERNS.md) and the retrofit recipe in [§33 (Two-stage UIWindow Construction)](02_PATTERNS.md). Test fixtures for the `*_ui_builder.py` files live under `tests/fixtures/` with the same base name (e.g., `tests/fixtures/transfer_ui_builder.py`).
 
 ### 1.7 Ability Module Names
 

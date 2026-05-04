@@ -130,9 +130,9 @@ The PROJ-322 deferred items are **months stale by the time PROJ-327 starts.** Be
 - [decisions.md](decisions.md) — full decisions log
 - [manifest.md](manifest.md) — per-task file manifest
 - [`Projects/active_projects/PROJ-322/plan.md`](Projects/active_projects/PROJ-322/plan.md) — Continuation Guide section (which PROJ-324 will have updated by the time PROJ-327 starts)
-- [`Projects/active_projects/PROJ-322/phase_2_checklist.md`](Projects/active_projects/PROJ-322/phase_2_checklist.md), [`phase_3_checklist.md`](Projects/active_projects/PROJ-322/phase_3_checklist.md), [`phase_5_checklist.md`](Projects/active_projects/PROJ-322/phase_5_checklist.md), [`phase_6_checklist.md`](Projects/active_projects/PROJ-322/phase_6_checklist.md) — original deferral annotations
-- [`Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md`](Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md) — OpenCode 322-review per-deferral analysis (DUP-001 / HLP-001 / Task 3.14 / Task 3.25 specifically discussed)
-- [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md) — original continuation plan
+- [`Projects/active_projects/PROJ-322/phase_2_checklist.md`](../PROJ-322/phase_2_checklist.md), [`phase_3_checklist.md`](../PROJ-322/phase_3_checklist.md), [`phase_5_checklist.md`](../PROJ-322/phase_5_checklist.md), [`phase_6_checklist.md`](../PROJ-322/phase_6_checklist.md) — original deferral annotations
+- [`Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md`](../../../Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md) — OpenCode 322-review per-deferral analysis (DUP-001 / HLP-001 / Task 3.14 / Task 3.25 specifically discussed)
+- [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](../../../AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md) — original continuation plan
 
 ## Verification
 

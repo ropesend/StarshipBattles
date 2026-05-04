@@ -67,7 +67,7 @@ Per consensus plan: TransferDialog is "command-heavy. Add focused tests around p
 - [x] Add `TestTwoStageConstruction` class (4 tests) to characterization test file: bypass with NullBuilder leaves widget slots empty; bypass without builder leaves widget slots empty; bypass with MockBuilder populates widgets and runs `populate_initial_data` (verifies the canonical 8 resource rows in `_row_data`); end-to-end pending math through bypassed dialog.
 - [x] Verify all existing tests pass: `test_transfer_dialog.py` (4), `test_transfer_dialog_enhanced.py` (2), characterization (41), `test_sub_window_hotkeys.py` TransferDialog cluster (5).
 
-**Notes:** Commit 909bfbecf. Production LOC: 790 → 380 (-52% on the dialog file; +860 across the 3 new module files = net +449 LOC across the production surface, but the new files are single-responsibility and pure where possible). Test fixture: 95 LOC (Null + Mock builders). Characterization tests grew from 37 → 41 to cover the new bypass-construction surface. All 2279 UI-screen tests + 1 skipped pass; no test broke.
+**Notes:** Commit 909bfbecf. Production LOC: 790 → 471 (-40% on the dialog file at commit time; now 475 after audit S1.2 added a 4-line try/finally guard). +860 across the 3 new module files = net +541 LOC across the production surface at commit time, but the new files are single-responsibility and pure where possible. Test fixture: 95 LOC (Null + Mock builders). Characterization tests grew from 37 → 41 to cover the new bypass-construction surface. All 2279 UI-screen tests + 1 skipped pass; no test broke. **(LOC corrected 2026-05-04 audit S3 — original Notes claimed `790 → 380 (-52%)` but actual was 471 at commit; original was off.)**
 
 **Pattern bend vs Phase A:** None substantive. The dialog uses 3 delegates directly rather than a wrapped `DelegateBundle`/`Factory` — that ceremony is unjustified for a single screen with a fixed shape, matching the consensus plan's "screen can remain the local composition root" guidance. The `_all_pod_names` discovery query runs as a side-effect in Stage 1 (preserving the legacy ordering that characterization tests pin); this is the only Stage-1 boundary write that touches the scene-level facade.
 
@@ -98,7 +98,7 @@ Phase A.6 left the TransferDialog cluster as-is (`MagicMock(spec=TransferDialog)
 
 - [x] All Phase C tests pass: `pytest tests/unit/ui/screens/test_transfer_dialog.py tests/unit/ui/screens/test_transfer_dialog_enhanced.py tests/unit/ui/screens/test_transfer_dialog_characterization.py tests/unit/ui/screens/test_sub_window_hotkeys.py -x -q`. — 71 pass.
 - [x] All UI screen tests pass: `pytest tests/unit/ui/screens/ -x -q`. — 2279 pass, 1 skipped.
-- [x] Production LOC delta documented: dialog 790 → 380 (-52%); +290 view_model + ~260 controller + ~285 renderer = +835 across new files; net +445 across the production surface but with single-responsibility split.
+- [~] Production LOC delta documented: dialog 790 → 471 at commit 909bfbecf (-40%); now 475 after audit S1.2 +4 LOC try/finally guard. +290 view_model + ~260 controller + ~285 renderer = +835 across new files; net +516 across the production surface at commit time, single-responsibility split. _(Original line claimed 790 → 380 which was off; corrected 2026-05-04 audit S3.)_
 - [x] Test fixture: 95 LOC (Null + Mock TransferUiBuilder).
 - [x] Characterization-test count: 41 (37 math/emission/extraction + 4 bypass-construction).
 - [x] PROJ-322 Task 5.16 + Task 3.26 TransferDialog-portion annotations updated to FULLY RESOLVED with Phase C commit SHA.
@@ -113,7 +113,7 @@ Phase A.6 left the TransferDialog cluster as-is (`MagicMock(spec=TransferDialog)
 | C.2 + C.3 | 909bfbecf | Production refactor (VM + controller + renderer + UI builder; dialog -52% LOC), Mock/Null builder fixtures, +4 bypass-construction characterization tests, sub_window_hotkeys TransferDialog cluster migration, PROJ-322 annotation closures |
 | (C.4) | (this commit) | Plan/checklist update + final annotation pass |
 
-**Cumulative production LOC delta:** dialog -410 LOC (790 → 380); +835 across 3 new module files (290 + 260 + 285). Net production surface +425 LOC, traded for: pure Python ViewModel that's reusable + cheap-to-test, controller boundary for facade/command edges, renderer boundary for pygame_gui. The dialog file itself is now 380 LOC (under the 500-LOC ceiling) — back-compat property shims account for ~80 of those LOC.
+**Cumulative production LOC delta:** dialog -319 LOC at commit 909bfbecf (790 → 471); +835 across 3 new module files (290 + 260 + 285). Net production surface +516 LOC, traded for: pure Python ViewModel that's reusable + cheap-to-test, controller boundary for facade/command edges, renderer boundary for pygame_gui. The dialog file is 471 LOC at commit time (475 after audit S1.2's +4-line try/finally guard) — under the 500-LOC ceiling; back-compat property shims account for ~80 of those LOC. _(Original cumulative line cited 790 → 380 / -410 / net +425; corrected 2026-05-04 audit S3 — actual deltas are 790 → 471 / -319 / net +516.)_
 
 **Cumulative test-helper LOC reduction:** test_sub_window_hotkeys.py TransferDialog cluster: ~50 LOC of `MagicMock(spec=...)` + `__get__(...)` bind dance → ~25 LOC of `bypass_init` + `MockTransferUiBuilder`. Net -25 LOC in the hotkey test cluster.
 

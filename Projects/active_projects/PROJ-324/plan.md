@@ -147,9 +147,9 @@ See [`manifest.md`](manifest.md) for the full per-task list. Headline targets:
 - [design.md](design.md) — architecture analysis, MRO root-cause explanation, factory pattern reuse
 - [decisions.md](decisions.md) — full decisions log with rationale and parallelism map
 - [manifest.md](manifest.md) — per-task file manifest used for `/proj-parallel` conflict detection
-- [`docs/known-issues.md`](docs/known-issues.md) — systemic blocker context (READ FIRST)
-- [`Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md`](Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md) — OpenCode source review that recommended Option (a)
-- [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md) — original continuation plan that scoped these 4 projects
+- [`docs/known-issues.md`](../../../docs/known-issues.md) — systemic blocker context (READ FIRST)
+- [`Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md`](../../../Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md) — OpenCode source review that recommended Option (a)
+- [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](../../../AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md) — original continuation plan that scoped these 4 projects
 
 ## Verification
 

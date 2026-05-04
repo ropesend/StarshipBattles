@@ -9,7 +9,7 @@
 - User direction: full unit test suite takes >2 minutes on a 12-core machine; this is a measured problem worth opportunistic-scope work.
 - All 9 deferred PROJ-322 items not closed by PROJ-324
 - OpenCode 322-review: `Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md` — per-deferral analysis
-- Continuation plan: [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md)
+- Continuation plan: [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](../../../AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md)
 
 ## Why this project exists
 

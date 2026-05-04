@@ -66,12 +66,27 @@ tests/unit/data/test_data_validation.py
 tests/repro_issues/test_bug_11_dialog_size.py
 
 # Tests that depend on game.* through a sibling conftest.py (the linter
-# does not trace through fixtures). Allowlisted with explicit notes.
+# does not trace through fixtures). Each entry is allowlisted because the
+# real game.* coverage arrives via a fixture in the directory's conftest.py
+# rather than via a top-level `import game.*` in the test file. Audit S3
+# (2026-05-04) verified each entry's nearest conftest.py imports game.*; if
+# you remove a conftest.py here, the corresponding test must also leave the
+# allowlist or the lint regression will not catch a real coverage loss.
+# (Inline `#` after a path is NOT supported by the parser — keep rationale
+# comments on their own lines, prefixed with `#`.)
+
+# save/load fixtures arrive via tests/integration/save_load/conftest.py
 tests/integration/save_load/test_live_verification.py
+# profiling recorder fixtures arrive via tests/unit/core/profiling/conftest.py
 tests/unit/core/profiling/test_recording.py
+# collision-engine fixtures arrive via tests/unit/engine/collision_edge_cases/conftest.py (shared by both files)
 tests/unit/engine/collision_edge_cases/test_ccd.py
 tests/unit/engine/collision_edge_cases/test_damage_tracking.py
+# research-controls fixtures arrive via tests/unit/research/research_controls/conftest.py
 tests/unit/research/research_controls/test_reset_state.py
+# research-renderer fixtures arrive via tests/unit/research/conftest.py
 tests/unit/research/test_research_renderer.py
+# LLM service fixtures arrive via tests/unit/services/llm/conftest.py
 tests/unit/services/llm/test_http_block.py
+# battle-controller fixtures arrive via tests/unit/simulation/battle_controller/conftest.py
 tests/unit/simulation/battle_controller/test_utilities.py

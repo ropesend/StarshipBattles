@@ -9,7 +9,7 @@
 - OpenCode 321-review: `Reviews/results/2026-05-04_015902_consistency_proj-321-p0-dead-trivial-test-cleanup-completion-c_req-req_20260504_015901_0ba42a/report.md` (recommendation #1, MAJ-001, MIN-002)
 - PROJ-321 design.md "Opportunities Discovered" — linter to prevent zero-game-import test files
 - Existing tests/unit/data/test_test_infrastructure.py (8 skipped TODOs that the linter will absorb)
-- Continuation plan: [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md)
+- Continuation plan: [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](../../../AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md)
 
 ## Phase 1 — Linter Design
 
