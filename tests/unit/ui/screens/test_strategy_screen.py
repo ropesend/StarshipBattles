@@ -165,8 +165,8 @@ class TestOnUiSelection:
         screen.session.human_player_ids = [0]
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=True), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=True), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(mock_fleet)
 
         assert screen.selected_fleet is mock_fleet
@@ -178,8 +178,8 @@ class TestOnUiSelection:
         mock_planet = MagicMock()
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(mock_planet)
 
         assert screen.selected_fleet is None
@@ -190,8 +190,8 @@ class TestOnUiSelection:
         mock_obj = MagicMock()
         screen._get_object_asset = MagicMock(return_value=MagicMock())
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(mock_obj)
 
         mocks['ui'].show_detailed_report.assert_called_once()
@@ -202,8 +202,8 @@ class TestOnUiSelection:
         screen.selected_object = MagicMock()
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(None)
 
         assert screen.selected_object is None
@@ -603,8 +603,8 @@ class TestErrorHandlingPaths:
         screen.selected_fleet = MagicMock()
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(None)
 
         assert screen.selected_object is None

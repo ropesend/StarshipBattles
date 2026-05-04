@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from game.ui.screens import strategy_screen_lifecycle as lifecycle
 
 
@@ -45,17 +43,19 @@ class TestOnDesignClick:
 
 
 class TestOnMenuOption:
+    """``on_menu_option`` routes through the screen's bound methods so that
+    tests/code monkey-patching the screen still observe the call. Each
+    branch is verified by inspecting the screen mock."""
+
     def test_save_game_dispatches(self):
         screen = _make_screen()
-        with patch.object(lifecycle, "on_save_game_click") as mock_save:
-            lifecycle.on_menu_option(screen, "save_game")
-            mock_save.assert_called_once_with(screen)
+        lifecycle.on_menu_option(screen, "save_game")
+        screen.on_save_game_click.assert_called_once()
 
     def test_load_game_dispatches(self):
         screen = _make_screen()
-        with patch.object(lifecycle, "show_load_game_dialog") as mock_load:
-            lifecycle.on_menu_option(screen, "load_game")
-            mock_load.assert_called_once_with(screen)
+        lifecycle.on_menu_option(screen, "load_game")
+        screen._show_load_game_dialog.assert_called_once()
 
     def test_settings_opens_settings_window(self):
         screen = _make_screen()
@@ -69,9 +69,8 @@ class TestOnMenuOption:
 
     def test_quit_to_menu_dispatches(self):
         screen = _make_screen()
-        with patch.object(lifecycle, "confirm_quit_to_menu") as mock_confirm:
-            lifecycle.on_menu_option(screen, "quit_to_menu")
-            mock_confirm.assert_called_once_with(screen)
+        lifecycle.on_menu_option(screen, "quit_to_menu")
+        screen._confirm_quit_to_menu.assert_called_once()
 
     def test_quit_game_calls_callback(self):
         screen = _make_screen()

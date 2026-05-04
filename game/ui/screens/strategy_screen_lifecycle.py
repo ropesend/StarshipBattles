@@ -38,18 +38,24 @@ def on_design_click(screen: "StrategyScreen") -> None:
 
 
 def on_menu_option(screen: "StrategyScreen", option: str) -> None:
-    """Dispatch menu option from the strategy menu panel."""
+    """Dispatch menu option from the strategy menu panel.
+
+    Calls back through the screen's bound methods (rather than this module's
+    free functions) so tests that monkey-patch ``screen.on_save_game_click``,
+    ``screen._show_load_game_dialog``, or ``screen._confirm_quit_to_menu``
+    continue to observe the call.
+    """
     if option == "save_game":
-        on_save_game_click(screen)
+        screen.on_save_game_click()
     elif option == "load_game":
-        show_load_game_dialog(screen)
+        screen._show_load_game_dialog()
     elif option == "settings":
         screen.ui.window_manager.open_settings()
     elif option == "controls":
         if screen.scene_callback:
             screen.scene_callback("open_keybindings")
     elif option == "quit_to_menu":
-        confirm_quit_to_menu(screen)
+        screen._confirm_quit_to_menu()
     elif option == "quit_game":
         if screen.scene_callback:
             screen.scene_callback("quit_game")

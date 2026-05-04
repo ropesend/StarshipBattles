@@ -16,16 +16,13 @@ PROJ-40: Use protocol type guards instead of isinstance for cross-layer checks.
 from __future__ import annotations
 
 import logging
-
-import pygame
 from typing import Any
-from game.ui.config import UIConfig
-from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point, is_star_system
 
-logger = logging.getLogger(__name__)
-from game.core.hex_math import hex_to_pixel
+from game.ui.config import UIConfig
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_ui import StrategyUI
+
+logger = logging.getLogger(__name__)
 
 # Extracted modules
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
@@ -286,56 +283,19 @@ class StrategyScreen:
     # =========================================================================
 
     def on_colonize_click(self) -> None:
-        """Handle colonize action — always opens load transfer dialog first.
-
-        Flow:
-        1. Open transfer dialog to load cargo/population (queues TRANSFER orders)
-        2. After dialog closes, input mode enters COLONIZE_TARGET (handled by fleet_command_router)
-        3. Player clicks destination → drop dialog opens → colonize + TRANSFER(unload) queued
-
-        The transfer will execute at whatever location the fleet is at when
-        the order reaches the front of the queue. If the fleet is not at a
-        colony when the transfer executes, the transfer will fail gracefully
-        and the fleet continues with remaining orders.
-        """
-        fleet = self.selected_fleet
-        if not fleet:
-            return
-
-        # Always open load dialog — player manages logistics
-        self.ui.open_transfer_dialog(fleet, fleet.location)
-        # Input mode is set to COLONIZE_TARGET by the fleet_command_router
-        # regardless of whether the load dialog was opened
+        """Handle colonize action — opens load transfer dialog first."""
+        from game.ui.screens import strategy_screen_selection as _sel
+        _sel.on_colonize_click(self)
 
     def _on_colonize_planet_selected(self, planet) -> None:
-        """Handle planet selection — issue colonize command, then open drop dialog.
-
-        Orders queued: MOVE + COLONIZE, then TRANSFER(unload) from drop dialog.
-        """
-        fleet = self.selected_fleet
-        result = self._colonization.issue_colonize_order(fleet, planet)
-        if result and result.get('type') == 'success':
-            # Find planet's global hex for the drop transfer dialog
-            planet_global_hex = None
-            for sys in self.systems:
-                if planet in sys.planets:
-                    planet_global_hex = sys.global_location + planet.location
-                    break
-            if planet_global_hex:
-                self.ui.open_transfer_dialog(fleet, planet_global_hex)
-            self.on_ui_selection(fleet)
+        """Handle planet selection — issue colonize command, then open drop dialog."""
+        from game.ui.screens import strategy_screen_selection as _sel
+        _sel.on_colonize_planet_selected(self, planet)
 
     def request_colonize_order(self, fleet, planet=None) -> None:
         """Handle colonize request from UI."""
-        # BUG-125: gate against active empire — never select an opponent's
-        # fleet for command issuance.
-        active = self.session.active_empire
-        if active is not None and fleet.owner_id != active.id:
-            return
-        self.selected_fleet = fleet
-        result = self._colonization.request_colonize_order(fleet, planet)
-        if result and result.get('type') == 'success':
-            self.on_ui_selection(fleet)
+        from game.ui.screens import strategy_screen_selection as _sel
+        _sel.request_colonize_order(self, fleet, planet)
 
     # =========================================================================
     # Order Editing
@@ -396,32 +356,8 @@ class StrategyScreen:
 
     def on_ui_selection(self, obj) -> None:
         """Called when user selects an item in the UI list."""
-        self.selected_object = obj
-
-        # Track last selected system - PROJ-40: Use protocol type guard
-        if is_star_system(obj):
-            self.last_selected_system = obj
-        elif is_planet(obj) or is_warp_point(obj):
-            # Planets and warp points have location - find their containing system
-            parent_sys = next((s for s in self.systems if obj in s.planets or obj in s.warp_points), None)
-            if parent_sys:
-                self.last_selected_system = parent_sys
-
-        # Update fleet selection - PROJ-40: Use protocol type guard
-        current_player_id = self.human_player_ids[self.current_player_index]
-        if is_fleet(obj) and obj.owner_id == current_player_id:
-            self.selected_fleet = obj
-        else:
-            if not is_fleet(obj):
-                self.selected_fleet = None
-
-        # Update UI
-        img = self._get_object_asset(obj)
-        self.ui.show_detailed_report(obj, img)
-        
-        # PROJ-NEW: If TransferDialog is open, update its selection
-        if self.ui.window_manager.transfer_dialog:
-            self.ui.window_manager.transfer_dialog.handle_external_selection(obj)
+        from game.ui.screens import strategy_screen_selection as _sel
+        _sel.on_ui_selection(self, obj)
 
     # =========================================================================
     # Actions
@@ -508,58 +444,15 @@ class StrategyScreen:
 
     def _focus_on_player_home(self) -> None:
         """Focus camera on player's home colony at startup."""
-        if self.active_empire.colonies:
-            home_colony = self.active_empire.colonies[0]
-            home_sys = next((s for s in self.systems if home_colony in s.planets), None)
-            if home_sys:
-                target_hex = home_sys.global_location + home_colony.location
-                fx, fy = hex_to_pixel(target_hex, 10)
-                self.camera.position = pygame.math.Vector2(fx, fy)
+        from game.ui.screens import strategy_screen_assets as _assets
+        _assets.focus_on_player_home(self)
 
     def _load_assets(self) -> None:
         """Load visual assets using AssetManager and RaceAssetLoader."""
-        from game.assets.asset_manager import get_asset_manager
-
-        am = get_asset_manager()
-        am.load_manifest()
-
-        for emp in self.empires:
-            self.empire_assets[emp.id] = self._race_loader.load_all_empire_assets(emp)
+        from game.ui.screens import strategy_screen_assets as _assets
+        _assets.load_assets(self)
 
     def _get_object_asset(self, obj) -> Any:
         """Resolve the visual asset for a data object."""
-        from game.assets.asset_manager import get_asset_manager
-        am = get_asset_manager()
-
-        if is_star(obj):
-            if obj.image_id:
-                img = am.load_star_image(obj.image_id, requested_size=512)
-                if img and img != am.get_missing_texture():
-                    return img
-            return None
-
-        elif is_planet(obj):
-            if obj.image_id:
-                try:
-                    # Load planet image at 512px resolution (optimal for portraits)
-                    # AssetManager handles fallback chain and caching (PROJ-54 Phase 10)
-                    img = am.load_planet_image(obj.image_id, requested_size=512)
-                    if img and img != am.get_missing_texture():
-                        # Apply rotation for visual variety
-                        if obj.image_rotation and obj.image_rotation != 0.0:
-                            img = pygame.transform.rotate(img, obj.image_rotation)
-                        return img
-                except (FileNotFoundError, OSError, pygame.error, AttributeError) as e:
-                    # Log error and fall through to None
-                    logger.warning(f"Could not load planet image {obj.image_id}: {e}")
-            return None  # PlanetReportPanel will create gradient placeholder
-
-        elif is_warp_point(obj):
-            return am.get_random_from_group('warp_points', 'default', seed_id=id(obj))
-
-        elif is_fleet(obj):
-            emp_assets = self.empire_assets.get(obj.owner_id)
-            if emp_assets and 'fleet' in emp_assets:
-                return emp_assets['fleet']
-
-        return None
+        from game.ui.screens import strategy_screen_assets as _assets
+        return _assets.get_object_asset(self, obj)
