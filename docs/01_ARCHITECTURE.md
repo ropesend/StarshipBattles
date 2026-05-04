@@ -1,6 +1,6 @@
 # Starship Battles - Architecture Reference
 
-> **Last verified:** 2026-04-28 — PROJ-314 added `game/ui/services/image/` for AI portrait generation (gpt-image-2) and unified the ship-theme loader on a canonical `assets:` schema; PROJ-313 added structural modal-window tracking via `StrategyModalWindow` base class (see `docs/02_PATTERNS.md` Pattern #31). Confirmed no Simulation-layer `get_default_registry_provider()` calls, documented the current UI dependencies on Research and Assets, and kept PROJ-297/298 removals reflected.
+> **Last verified:** 2026-05-04 — Applied doc-audit fixes (5 items: protocols.py → protocols/ refs ×3, exception count 10→26, core exports 46→53, missing core modules added, replay_player.py late-import added; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier 2026-04-28 pass: PROJ-314 added `game/ui/services/image/` for AI portrait generation (gpt-image-2) and unified the ship-theme loader on a canonical `assets:` schema; PROJ-313 added structural modal-window tracking via `StrategyModalWindow` base class (see `docs/02_PATTERNS.md` Pattern #31).
 
 Primary architecture document for the Starship Battles codebase. All claims verified against source code.
 
@@ -121,9 +121,9 @@ Current services:
 | `combat_types.py`     | DamageContext frozen dataclass (attacker identity DTO) |
 | `config.py`           | DisplayConfig, AIConfig, PhysicsConfig, BattleTuning |
 | `constants.py`        | GameState, LayerType, AttackType, LayerDefaults, CombatConstants |
-| `protocols.py`        | All cross-layer Protocol definitions (see Protocols section) |
+| `protocols/`          | All cross-layer Protocol definitions, decomposed into 9 sub-modules (PROJ-309): `boundary.py`, `combat.py`, `common.py`, `persistence.py`, `registry.py`, `strategy_domain.py`, `strategy_entities.py`, `ui.py` (see Protocols section) |
 | `registry.py`         | GameRegistries container, RegistryManager (via ApplicationContext), DI providers |
-| `exceptions.py`       | GameException hierarchy (10 exception classes) |
+| `exceptions.py`       | GameException hierarchy (26 exception classes including LLM and Image hierarchies from PROJ-296 and PROJ-314) |
 | `error_codes.py`      | ErrorCode enum |
 | `event_logging.py`    | log_event, set_event_handler, get_event_handler |
 | `formula_evaluator.py`| FormulaEvaluator, FormulaContext, AST-based formula evaluation |
@@ -132,6 +132,10 @@ Current services:
 | `resources.py`        | ResourceCatalog (unified resource definitions), ResourceDefinition |
 | `roles.py`            | Role frozen dataclass + RoleRegistry (PROJ-278). Shared schema/machinery for both gameplay design_role and Combat Lab scenario_role. Two registry instances live in the running app — one with `allow_runtime_add=True` for design_role (layered base + mods + user overlay, fires invalidation callbacks), one with `allow_runtime_add=False` for Combat Lab (static, file-driven). |
 | `input_actions.py`    | InputAction enum for key bindings |
+| `ship_classes.py`     | Ship class enumeration / categorization |
+| `component_state.py`  | Per-component runtime state container |
+| `state_machine.py`    | `ScreenStateMachine` (PROJ-259) — generic state transitions |
+| `return_destination.py`| Battle-flow return-destination data type |
 | `json_utils.py`       | JSON serialization helpers |
 | `profiling.py`        | Profiler, profile_action for performance |
 | `string_utils.py`     | String utility functions |
@@ -224,7 +228,7 @@ Current services:
 
 Exports defined in each package's `__init__.py` via `__all__`.
 
-### `game.core` (46 exports)
+### `game.core` (53 exports)
 
 - **Exceptions:** GameException, StateException, FrozenStateException, ValidationException, ResourceException, MissingResourceException, PersistenceException, SimulationException, ComponentException, FormulaException
 - **Error Codes:** ErrorCode
@@ -273,7 +277,7 @@ No public API exports (sandbox/experimental system). Contains TechNode, TechTree
 
 ## Key Protocols
 
-All defined in `game/core/protocols.py`. Uses `@runtime_checkable` Protocol classes with TypeGuard functions for duck typing.
+All defined in `game/core/protocols/` (9-module package; PROJ-309). Uses `@runtime_checkable` Protocol classes with TypeGuard functions for duck typing. The package's `__init__.py` re-exports every symbol so `from game.core.protocols import X` continues to work.
 
 ### Cross-Layer Boundary Protocols
 
@@ -343,7 +347,7 @@ Ability: IAbility, IWeaponAbility, IBeamWeaponAbility, ISeekerWeaponAbility, IPr
 
 ### 1. Protocols (Primary Mechanism)
 
-Layers communicate through Protocol definitions in `game/core/protocols.py`. Upper layers depend on protocol interfaces, not concrete classes. Example: Strategy layer uses `IPostBattleShip` to read post-battle ship state without importing `game.simulation.entities.ship.Ship`.
+Layers communicate through Protocol definitions in `game/core/protocols/`. Upper layers depend on protocol interfaces, not concrete classes. Example: Strategy layer uses `IPostBattleShip` to read post-battle ship state without importing `game.simulation.entities.ship.Ship`.
 
 ### 2. Dependency Injection
 
@@ -366,6 +370,7 @@ Intentional late imports exist at specific cross-layer boundaries:
 - `ShipInstanceBridge.to_ship()` imports ShipSerializer (cross-layer boundary)
 - `ShipInstance.get_calculated_stats()` imports `calculate_design_stats` (lazy init)
 - `Fleet.trigger_speed_recalculation()` imports FleetSpeedCalculator (edge operation)
+- `ReplayPlayer._materialize_ship_state()` imports ShipInstanceSerializer from `game/strategy/data/` (`game/simulation/replay/replay_player.py:72`; cross-layer boundary required for replay reconstruction)
 
 ---
 

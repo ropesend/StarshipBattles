@@ -1,6 +1,6 @@
 # Ability Reference
 
-> **Last verified:** 2026-04-28 — Documented the `chance` field on intrinsic ability rolls (FEAT-15). Earlier 2026-04-27 pass: PROJ-300..305 added the §"Strategic-Layer Sector/System Abilities" section (EnvironmentalDamage, FuelDrain, StrategicSpeedModifier, ThrustModifier) and the IAbilitySource sources-by-kind summary.
+> **Last verified:** 2026-05-04 — Applied doc-audit fixes (2 items: PodStorageAbility class corrected to "no class — raw dict"; 4 PROJ-300..305 strategic abilities added to quick-reference table; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier 2026-04-28 pass documented the `chance` field on intrinsic ability rolls (FEAT-15); 2026-04-27 pass added the §"Strategic-Layer Sector/System Abilities" section.
 
 > Comprehensive catalog of all component abilities available in the game.
 > Source: `game/simulation/components/abilities/`
@@ -770,8 +770,8 @@ Scalar format: `5000` is interpreted as generic cargo with capacity 5000.
 | Field | Value |
 |-------|-------|
 | Registry Key | `PodStorage` |
-| Class | `PodStorageAbility` |
-| Source | `cargo.py` |
+| Class | _none — `PodStorage` has no Python class; data is read directly from the raw `comp.abilities['PodStorage']` dict in `game/simulation/entities/ship_stats.py`_ |
+| Source | `game/simulation/entities/ship_stats.py` (raw dict access; no `cargo.py` ability class) |
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
@@ -1552,7 +1552,7 @@ Self-Destruct Device. Schedules ship for destruction.
 | `LifeSupportCapacity` | LifeSupportCapacity | Crew |
 | `CrewRequired` | CrewRequired | Crew |
 | `CargoStorage` | CargoStorage | Cargo |
-| `PodStorage` | PodStorageAbility | Cargo |
+| `PodStorage` | _no ability class — raw dict access in `ship_stats.py`_ | Cargo |
 | `VehicleLaunch` | VehicleLaunchAbility | Markers |
 | `CommandAndControl` | CommandAndControl | Markers |
 | `RequiresCommandAndControl` | RequiresCommandAndControl | Markers |
@@ -1578,6 +1578,10 @@ Self-Destruct Device. Schedules ship for destruction.
 | `GravityModifier` | GravityModifierAbility | Planet Modifiers |
 | `WaterModifier` | WaterModifierAbility | Planet Modifiers |
 | `RadiationShield` | RadiationShieldAbility | Planet Modifiers |
+| `EnvironmentalDamage` | EnvironmentalDamageAbility | Strategic Sector/System (PROJ-300..305) |
+| `FuelDrain` | FuelDrainAbility | Strategic Sector/System (PROJ-300..305) |
+| `StrategicSpeedModifier` | StrategicSpeedModifierAbility | Strategic Sector/System (PROJ-300..305) |
+| `ThrustModifier` | ThrustModifierAbility | Strategic Sector/System (PROJ-300..305) |
 | `DestroyPlanet` | DestroyPlanet | Superweapons |
 | `DestroyStar` | DestroyStar | Superweapons |
 | `OpenWarpPoint` | OpenWarpPoint | Superweapons |

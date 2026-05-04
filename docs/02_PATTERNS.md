@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-05-04 — PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory): `make_ui_widget` + `bypass_init` retrofit pattern for legacy UIWindow subclasses, paired with the per-class `Default{Foo}DelegateFactory` + `Null{Foo}UiBuilder` / `Mock{Foo}UiBuilder` testing convention from PROJ-325 + PROJ-328 A/B/C. Earlier (2026-05-04): PROJ-327 Phase 4 added Pattern #32 (Compositional Construction): the StrategyScreenComposition factory closes the PROJ-322 Task 3.25 deferral. Earlier (2026-04-28): FEAT-22 added Bootstrap Phase Timing subsection under Profiler entry; PROJ-318 verified `ApplicationContext` manages 10 services; PROJ-316 corrected PROJ-313 Pattern #31 claims against live code. Pattern count is 33.
+> **Last verified:** 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
 
 Agent-optimized reference for every core pattern in the codebase (33 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -147,7 +147,7 @@ or the documented module-level `get_default_*` / `set_default_*` accessor pair.
 
 ### Where
 
-`game/core/protocols.py` -- all protocol definitions and TypeGuard functions.
+`game/core/protocols/` -- 9-module package (PROJ-309) holding every protocol definition and TypeGuard function. Sub-modules: `boundary.py`, `combat.py`, `common.py`, `persistence.py`, `registry.py`, `strategy_domain.py`, `strategy_entities.py`, `ui.py`. The package's `__init__.py` re-exports all symbols, so `from game.core.protocols import IFleet` continues to work.
 
 ### How It Works
 
@@ -155,7 +155,7 @@ The codebase uses `@runtime_checkable` Protocol classes to define structural int
 paired with TypeGuard functions that use duck typing (hasattr checks) for safe narrowing.
 
 ```python
-# game/core/protocols.py (actual code)
+# game/core/protocols/strategy_entities.py (actual code)
 @runtime_checkable
 class IFleet(Protocol):
     @property
@@ -180,7 +180,7 @@ def is_fleet(obj: Any) -> TypeGuard[IFleet]:
 compliance, which breaks with test mocks. Duck typing checks only the minimal
 distinguishing attributes.
 
-Protocol families (representative subset — see `game/core/protocols.py` for the full list of 23+ protocols):
+Protocol families (representative subset — see `game/core/protocols/` for the full list of 23+ protocols):
 
 | Protocol | Distinguishing Attrs | Layer |
 |----------|---------------------|-------|
@@ -204,7 +204,7 @@ Protocol families (representative subset — see `game/core/protocols.py` for th
 
 ### Where
 
-`game/core/registry.py` -- `IRegistryProvider` (protocol in `protocols.py`),
+`game/core/registry.py` -- `IRegistryProvider` (protocol in `game/core/protocols/registry.py`),
 `DefaultRegistryProvider`, `TestRegistryProvider`, `get_default_registry_provider()`.
 
 ### How It Works
@@ -1182,7 +1182,7 @@ Works with both pixel-based scrolling (default) and line-based scrolling (set co
 
 ### Where
 
-- Protocol: `game/core/protocols.py` -- `ISerializable`
+- Protocol: `game/core/protocols/persistence.py` -- `ISerializable`
 - Tests: `tests/unit/core/test_serializable_protocol.py`
 - Implementors: `ComponentState`, `ShipState`, `ProjectileState`, `BattleState`, `BattleResults` in `game/simulation/battle_state.py`; `ShipInstance` via `ShipInstanceSerializer` in `game/strategy/data/ship_instance_serializer.py`
 
@@ -1523,7 +1523,7 @@ exposes per-domain status, and is polled by the UI.
 | Pattern | Primary File | Key Class/Function |
 |---------|-------------|-------------------|
 | ApplicationContext (DI) | `game/context.py` | `ApplicationContext` |
-| Protocol+TypeGuard | `game/core/protocols.py` | `IFleet`, `is_fleet()` |
+| Protocol+TypeGuard | `game/core/protocols/strategy_entities.py` | `IFleet`, `is_fleet()` |
 | DI (Registry) | `game/core/registry.py` | `DefaultRegistryProvider`, `TestRegistryProvider` |
 | Registry | `game/core/registry.py` | `RegistryManager`, `GameRegistries` |
 | Facade | `game/strategy/facade/strategy_session_facade.py` | `StrategySessionFacade` |
@@ -1543,7 +1543,7 @@ exposes per-domain status, and is polled by the UI.
 | Ability Aggregation | `game/simulation/entities/ability_aggregator.py` | `calculate_ability_totals()` |
 | Factory | `game/ai/ai_factory.py`, `game/ui/services/ship_factory.py` | `AIControllerFactory`, `ShipFactory`, `PanelFactory` |
 | ScrollState | `game/ui/widgets/scroll_state.py` | `ScrollState` |
-| Serializable | `game/core/protocols.py` | `ISerializable` |
+| Serializable | `game/core/protocols/persistence.py` | `ISerializable` |
 | Error Boundary | `game/strategy/engine/turn_state_snapshot.py` | `TurnStateSnapshot`, `EnginePhaseError` |
 | Precondition Validation | `game/strategy/engine/*.py` | `_validate_tick_inputs()` |
 | Screen State Machine | `game/core/state_machine.py` | `ScreenStateMachine` |

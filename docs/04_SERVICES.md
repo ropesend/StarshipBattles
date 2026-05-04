@@ -1,6 +1,6 @@
 # Service Layer Architecture
 
-> **Last verified:** 2026-04-28 — HappinessEngine now documents its FEAT-19 surplus-food bonus + `economy_config` kwarg. Earlier same-day pass: updated vehicle-design examples for current armor layer restrictions, corrected retired `population_food_resource` wording, aligned module-accessor references.
+> **Last verified:** 2026-05-04 — Applied doc-audit fixes (1 item: `IRaceRegistry` protocol path → `game/core/protocols/strategy_domain.py`, see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier 2026-04-28 pass: HappinessEngine documents its FEAT-19 surplus-food bonus + `economy_config` kwarg.
 
 ## Overview
 
@@ -1111,7 +1111,7 @@ See [docs/systems/production_system.md § Habitability Multiplier](systems/produ
 
 Session-scoped in-memory lookup of `race_id -> RaceConfig`, so UI panels and formulas can resolve species data without hitting the filesystem per call.
 
-**Protocol** — `IRaceRegistry` in `game/core/protocols.py`:
+**Protocol** — `IRaceRegistry` in `game/core/protocols/strategy_domain.py`:
 - `get_race(race_id: str) -> Optional[RaceConfig]` — one method, narrow on purpose. Iteration/list-all can be added when a concrete consumer needs them.
 
 **Implementation** — `CachedRaceRegistry` in `game/strategy/systems/race_library.py`:

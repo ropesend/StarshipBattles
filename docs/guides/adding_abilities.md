@@ -1,6 +1,6 @@
 # Adding New Abilities
 
-> **Last verified:** 2026-04-28 — Updated ship-layer guidance for current data-driven armor placement restrictions.
+> **Last verified:** 2026-05-04 — Applied doc-audit fixes (1 item, see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md).
 
 > Step-by-step guide for adding new abilities to the game.
 > For a complete catalog of all existing abilities, see [ability_reference.md](../systems/ability_reference.md).
@@ -132,7 +132,7 @@ Add to `game/simulation/components/abilities/__init__.py`:
 
 ```python
 # Import at the top with the other imports
-from .movement import ThrusterAbility
+from .propulsion import ThrusterAbility
 
 # Add to ABILITY_REGISTRY dict
 ABILITY_REGISTRY = {
@@ -401,7 +401,7 @@ Access supports polymorphism: `get_ability('WeaponAbility')` returns `Projectile
 ```python
 def test_thruster_ability_stat_bindings():
     """ThrusterAbility should have correct STAT_BINDINGS."""
-    from game.simulation.components.abilities.movement import ThrusterAbility
+    from game.simulation.components.abilities.propulsion import ThrusterAbility
     from game.simulation.components.abilities.stat_keys import StatKey
 
     assert ThrusterAbility.STAT_BINDINGS is not None
