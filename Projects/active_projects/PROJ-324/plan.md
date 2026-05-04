@@ -15,17 +15,18 @@
 |-------|--------|-----------|
 | 1. UIWindow `bypass_init` flag (production-side) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. LLMBackgroundCall completion Event (production-side) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate 14 unblocked PROJ-322 deferrals (test-side) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Documentation pass (`make_ui_widget` → `docs/02_PATTERNS.md`, mark blockers resolved) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Migrate 14 unblocked PROJ-322 deferrals (test-side) | **Closed — production foundation only; migrations re-routed to PROJ-325 Phase 3 (PoC) + PROJ-328A/B/C per consensus plan** | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Documentation pass (`make_ui_widget` → `docs/02_PATTERNS.md`, mark blockers resolved) | **Deferred until PROJ-325 Phase 3 PoC validates pattern** | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04 (afternoon update — Phase 3 systemic-issue finding)
-**Active Phase:** Phase 3 STOPPED at GO/NO-GO probe — systemic blocker discovered. Awaiting user decision.
-**Last Action:** Task 3.4 GO/NO-GO probe completed → NO-GO. Subsequent probes of Tasks 3.1 (FleetReportWindow), 3.7 (BuildQueueListWindow) confirmed the SAME systemic issue across all 7 UIWindow subclasses targeted by Phase 3. See "Systemic finding" below.
-**Next Action:** USER DECISION REQUIRED — see "Decision needed" below.
-**Blockers:** Systemic — Phase 1's `bypass_init` flag does not actually unblock test-side LOC reduction.
+**Last Updated:** 2026-05-04 (post-Codex consensus)
+**Active Phase:** Phases 1+2 production foundation complete. Phase 3 closed, Phase 4 deferred to post-PoC.
+**Last Action:** Codex–Claude inter-agent discussion (`AgentCoordination/Scratchpad/Discussion/20260504T041251Z_uiwindow-refactor-mvvm/`) reached consensus on a two-stage construction pattern. Phase 3 systemic finding (commit 9e177edb7) confirmed: `bypass_init` returning at first executable statement is insufficient — cheap state + delegates must run BEFORE the bypass point. Test migrations re-routed: PROJ-325 Phase 3 owns the RaceSetupScreen proof-of-concept; PROJ-328A/B/C own the other 6 subclasses.
+**Next Action:** None on this project. PROJ-325 Phase 3 PoC will validate the pattern; PROJ-324 Phase 4 docs are deferred until then (per consensus plan acceptance criterion 7).
+**Blockers:** Phase 4 blocked on PROJ-325 Phase 3 PoC.
 **Phase 1 commit:** 9ae5c4959
 **Phase 2 commit:** af7328281
+**Phase 3 close-out commit:** 9e177edb7
 
 ### Systemic finding (2026-05-04)
 
