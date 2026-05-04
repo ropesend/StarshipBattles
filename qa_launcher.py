@@ -20,15 +20,6 @@ QA_TARGET_PYTHON_VERSION = (3, 14)
 
 
 def resolve_python_executable(root_dir: str | os.PathLike[str]) -> str:
-    """Prefer the project venv so QA child processes get dev-tool deps."""
-    root = Path(root_dir)
-    if os.name == "nt":
-        venv_python = root / ".venv" / "Scripts" / "python.exe"
-    else:
-        venv_python = root / ".venv" / "bin" / "python"
-
-    if venv_python.exists():
-        return str(venv_python)
     return sys.executable
 
 
@@ -81,9 +72,8 @@ def print_python_version_error(python_exe: str, version: tuple[int, int] | None)
     print("\nError: QA launcher requires Python 3.14.")
     print(f"Selected Python: {python_exe}")
     print(f"Selected version: {actual}")
-    print("\nRebuild the project environment from the repo root:")
-    print(r"  py -3.14 -m venv .venv")
-    print(r"  .venv\Scripts\python.exe -m pip install -r requirements-dev.txt")
+    print("\nInstall dependencies:")
+    print(r"  pip install -r requirements-dev.txt")
     print(f"\nExpected QA runtime: Python {expected}.")
 
 
@@ -92,10 +82,8 @@ def print_dependency_error(python_exe: str, missing_packages: Sequence[str]) -> 
     print("\nError: QA launcher dependencies are missing.")
     print(f"Selected Python: {python_exe}")
     print(f"Missing packages: {', '.join(missing_packages)}")
-    print("\nSet up the project environment from the repo root:")
-    print(r"  py -3.14 -m venv .venv")
-    print(r"  .venv\Scripts\python.exe -m pip install -r requirements-dev.txt")
-    print("\nThe launcher will use .venv automatically once it exists.")
+    print("\nInstall dependencies:")
+    print(r"  pip install -r requirements-dev.txt")
 
 
 def main() -> None:
