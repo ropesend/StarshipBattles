@@ -4,35 +4,61 @@ The base class auto-registers subclasses with a StrategyWindowManager on
 construction and auto-deregisters in kill(). These tests pin the
 structural invariant that replaces the removed (Phase 8) source-string
 matching ``TestModalSlotCleanupContract``.
+
+PROJ-328 Phase A Task A.5 (PROJ-322 Task 3.24): Migrated from the
+legacy ``__new__`` + ``patch("pygame_gui.elements.UIWindow.__init__")``
+helper to the two-stage bypass_init pattern. After Task A.1, the
+StrategyModalWindow bypass branch leaves a usable minimal shell
+(_window_manager, ui_manager, _window_init_bypassed all set), so
+direct construction under bypass_init is the canonical test path.
 """
 from __future__ import annotations
 
 import inspect
 from unittest.mock import MagicMock, patch
 
+import pygame
 import pytest
 
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
+from tests.fixtures.ui_widget_factory import bypass_init
 
-def _make_modal_window(window_manager, cls=None):
-    """Construct a StrategyModalWindow instance without booting pygame_gui.
 
-    Uses the ``__new__`` + patched-pygame_gui-init technique so the test
-    does not need a live display. The base class's own ``__init__`` is
-    invoked manually so registration runs and ``self._window_manager``
-    is populated.
+class _ProbeModal(StrategyModalWindow):
+    """Concrete StrategyModalWindow subclass for tests that need a
+    constructible instance.
+
+    The base class accepts ``window_manager`` as a keyword-only
+    argument; this subclass narrows the signature so tests can
+    construct it as ``_ProbeModal(rect, manager, window_manager=...)``.
     """
-    from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
-    if cls is None:
-        cls = StrategyModalWindow
+    def __init__(self, rect, manager, *, window_manager):
+        super().__init__(
+            rect, manager,
+            window_manager=window_manager,
+            window_display_title="Probe",
+            resizable=False,
+        )
 
-    with patch("pygame_gui.elements.UIWindow.__init__",
-               lambda self, *a, **kw: None):
-        win = cls.__new__(cls)
-        # Invoke the base class __init__ explicitly. The first positional
-        # arg is empty (UIWindow.__init__ is patched to accept anything).
-        StrategyModalWindow.__init__(win, window_manager=window_manager)
-    # alive() is exercised in some tests; default to True
+
+def _make_modal_window(window_manager):
+    """Construct a real ``_ProbeModal`` under ``bypass_init``.
+
+    PROJ-328 Phase A: the base bypass branch now sets
+    ``_window_manager``, ``ui_manager``, and ``_window_init_bypassed``
+    so the returned instance is usable. Manual registration is needed
+    because the base intentionally skips ``register_modal`` under
+    bypass (bypassed instances are test fixtures, not live windows).
+    """
+    with bypass_init(_ProbeModal):
+        win = _ProbeModal(
+            pygame.Rect(0, 0, 100, 100),
+            MagicMock(name="ui_manager"),
+            window_manager=window_manager,
+        )
+    if window_manager is not None:
+        window_manager.register_modal(win)
     win.alive = MagicMock(return_value=True)
     return win
 
@@ -136,16 +162,68 @@ class TestSubclassRegistry:
     """__init_subclass__ populates StrategyModalWindow._registered_subclasses."""
 
     def test_init_subclass_populates_registry(self) -> None:
-        from game.ui.screens.strategy_modal_window import StrategyModalWindow
-
         # Define a fresh subclass mid-test
-        class _ProbeWindow(StrategyModalWindow):
+        class _RegistryProbeWindow(StrategyModalWindow):
             pass
 
         try:
-            assert _ProbeWindow in StrategyModalWindow._registered_subclasses
+            assert _RegistryProbeWindow in StrategyModalWindow._registered_subclasses
         finally:
-            StrategyModalWindow._registered_subclasses.discard(_ProbeWindow)
+            StrategyModalWindow._registered_subclasses.discard(_RegistryProbeWindow)
+
+
+class TestBypassShellInvariants:
+    """PROJ-328 Phase A Task A.1: the bypass branch leaves a usable
+    minimal shell — exercises the new contract directly."""
+
+    def test_bypass_sets_window_init_bypassed_flag(self):
+        win = _make_modal_window(_make_manager())
+        assert win._window_init_bypassed is True
+
+    def test_bypass_sets_window_manager_attribute(self):
+        mgr = _make_manager()
+        win = _make_modal_window(mgr)
+        assert win._window_manager is mgr
+
+    def test_bypass_sets_ui_manager_attribute(self):
+        win = _make_modal_window(_make_manager())
+        # ui_manager is the MagicMock we passed as the manager arg.
+        assert win.ui_manager is not None
+
+    def test_bypass_skips_window_manager_register_call(self):
+        """Per Task A.1 contract: the bypass branch does not call
+        register_modal — bypassed instances are test fixtures, not
+        live windows. (The _make_modal_window helper does the manual
+        register so the legacy registration tests still work.)"""
+        mgr = _make_manager()
+        with bypass_init(_ProbeModal):
+            _ProbeModal(
+                pygame.Rect(0, 0, 100, 100),
+                MagicMock(name="ui_manager"),
+                window_manager=mgr,
+            )
+        # No automatic registration under bypass.
+        assert mgr._modals == []
+
+    def test_production_path_still_registers(self):
+        """Without bypass_init, the base goes through super().__init__
+        and register_modal — verified at the base-class level by
+        leaving bypass_init off and stubbing the heavy UIWindow init."""
+        mgr = _make_manager()
+        with patch("pygame_gui.elements.UIWindow.__init__",
+                   lambda self, *a, **kw: None):
+            win = _ProbeModal.__new__(_ProbeModal)
+            StrategyModalWindow.__init__(
+                win,
+                pygame.Rect(0, 0, 100, 100),
+                MagicMock(),
+                window_manager=mgr,
+                window_display_title="Probe",
+                resizable=False,
+            )
+
+        assert win in mgr._modals
+        assert win._window_init_bypassed is False
 
 
 class TestWindowManagerSignature:
