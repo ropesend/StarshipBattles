@@ -17,6 +17,29 @@ from game.simulation.components.component_resource_manager import ComponentResou
 
 # =============================================================================
 # Fixtures
+#
+# PROJ-327 Phase 2 Task 2.6 — RE-CONFIRMED DEFERRED:
+# These three fixtures must remain function-scoped. Every test in this file
+# reassigns one or more of `mock_component.{get_abilities,data,stats,
+# evaluated_resource_cost,ship}` and `mock_*_consumption_ability.{trigger,
+# check_available.return_value}` (~70 reassignments across 43 tests).
+#
+# Rescoping options considered + rejected:
+#   (A) Module/class scope: would leak per-test reassignments across tests.
+#       NO test relies on the fixture's pristine state matching the fixture
+#       body; every test rewrites attributes before exercising the SUT.
+#   (B) Copy-on-write deepcopy: MagicMock instances aren't safe to deepcopy
+#       (their `_mock_methods`/`_mock_children` references hold parent refs;
+#       deepcopy produces broken auto-spec wrappers that re-fail
+#       `assert_called_*` assertions).
+#   (C) `reset_mock()` autouse companion: doesn't help — the per-test
+#       mutations are ATTRIBUTE REASSIGNMENTS (`mock_component.data = {...}`),
+#       not call records. `reset_mock()` only clears call history; it can't
+#       restore a re-bound attribute back to its fixture-body MagicMock.
+#
+# Construction cost is 3 MagicMock() calls per test = sub-millisecond. The
+# 43-test file completes in ~1.7 s, dominated by collection/import, not
+# fixture setup. Original PROJ-322 deferral rationale stands.
 # =============================================================================
 
 @pytest.fixture

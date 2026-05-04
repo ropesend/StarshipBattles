@@ -24,35 +24,50 @@ from tests.fixtures.ships import create_test_ship
 # Fixtures
 # =============================================================================
 
-@pytest.fixture
-def mock_ship(fresh_registries):
-    """Create a basic ship for testing."""
+# =============================================================================
+# PROJ-327 Phase 2 Task 2.19: scope-rescope notes
+#
+# Original PROJ-322 deferral cited: "many tests mutate the mock ship
+# (set_modifier, change attributes) before asserting on round-trip identity."
+# That rationale was incorrect at re-audit time: a grep across this file
+# finds ZERO attribute writes against `mock_ship`, `mock_ship_with_special_chars`,
+# or `minimal_ship`. Tests only call `mock_ship.to_dict()` (read-only) and
+# read `.name`, `.ship_class`, `.layers`, etc. Round-trip tests construct
+# a NEW ship via `Ship.from_dict(...)` from the dict, which doesn't touch
+# the fixture instance.
+#
+# `minimal_ship` was never used (zero references). Deleted as dead code.
+#
+# `mock_ship` and `mock_ship_with_special_chars` rescoped to module. The
+# underlying `fresh_registries` is replaced with `session_registries` (which
+# is read-only and shared) so that the module-scoped fixtures can construct
+# without re-loading the registry catalog 54 times.
+# =============================================================================
+
+
+@pytest.fixture(scope="module")
+def mock_ship(session_registries):
+    """Basic ship for testing. Module-scoped: every test in this file calls
+    `mock_ship.to_dict()` (read-only); none mutate the ship (PROJ-327 Phase 2
+    Task 2.19)."""
     return create_test_ship(
         name="TestShip",
         add_bridge=True,
         add_engine=True,
         add_weapons=1,
-        registries=fresh_registries
+        registries=session_registries
     )
 
 
-@pytest.fixture
-def mock_ship_with_special_chars(fresh_registries):
-    """Create a ship with special characters in name."""
+@pytest.fixture(scope="module")
+def mock_ship_with_special_chars(session_registries):
+    """Ship with special characters in name. Module-scoped: only
+    `test_save_ship_sanitizes_filename` consumes it, read-only
+    (PROJ-327 Phase 2 Task 2.19)."""
     return create_test_ship(
         name="Test Ship @#$%^&*()!",
         add_bridge=True,
-        registries=fresh_registries
-    )
-
-
-@pytest.fixture
-def minimal_ship(fresh_registries):
-    """Create a minimal ship with only hull."""
-    return create_test_ship(
-        name="MinimalShip",
-        add_crew=False,  # No crew components
-        registries=fresh_registries
+        registries=session_registries
     )
 
 
