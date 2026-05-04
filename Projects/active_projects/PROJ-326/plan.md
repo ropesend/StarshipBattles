@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Linter for zero-game-import test files (preventive) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. SystemTreePanel coverage check + StrategySessionFacade contract guard | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Audit zero-game-import survivors flagged by the linter | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Linter for zero-game-import test files (preventive) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. SystemTreePanel coverage check + StrategySessionFacade contract guard | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Audit zero-game-import survivors flagged by the linter | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** Planning complete — ready for Phase 1 (parallel-safe with PROJ-324 + PROJ-325)
-**Last Action:** Project created from continuation review of PROJ-321/322/323
-**Next Action:** Begin Phase 1 (linter implementation) — file-disjoint from PROJ-324 + PROJ-325, no blockers.
+**Last Updated:** 2026-05-03
+**Active Phase:** All phases Complete
+**Last Action:** Phase 3 complete — allowlist comprehensive (32 audited survivors, 0 SUSPECT), CI hook installed in agent_coordination.yml, local pre-commit hook installed per docs/guides/pre_commit_hooks.md.
+**Next Action:** None — awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -101,10 +101,10 @@ PROJ-321 deleted `tests/unit/test_modifier_logic.py` (103 LOC) because it had **
 
 ## Verification
 
-- [ ] All phase checklists complete
-- [ ] All tests passing (`python Tools/test_sharded/test_sharded.py`)
-- [ ] Linter installed and runs cleanly against the current tree (with allowlist)
-- [ ] `tests/unit/data/test_test_infrastructure.py` 8 TODO tests removed
-- [ ] SystemTreePanel coverage gap closed (if any was found)
-- [ ] StrategySessionFacade public-API contract guard restored
+- [x] All phase checklists complete
+- [~] All tests passing (`python Tools/test_sharded/test_sharded.py`) — sharded suite not run from this worktree per agent-instruction (worktree-path bug); targeted suites for Phases 1/2/3 all pass.
+- [x] Linter installed and runs cleanly against the current tree (with allowlist)
+- [x] `tests/unit/data/test_test_infrastructure.py` 8 TODO tests removed
+- [x] SystemTreePanel coverage gap closed (4-test smoke at `tests/integration/ui/test_system_tree_panel_smoke.py`)
+- [x] StrategySessionFacade public-API contract guard restored (9 tests at `tests/unit/strategy/facade/test_strategy_session_facade_contract.py`)
 - [ ] User verified

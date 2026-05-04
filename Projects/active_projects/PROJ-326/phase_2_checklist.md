@@ -74,7 +74,7 @@ When all tasks above are done:
 - [x] All task checkboxes above are checked
 - [x] SystemTreePanel coverage gap closed (either confirmed adequate OR new smoke test added)
 - [x] StrategySessionFacade contract guard restored
-- [x] Sharded test suite passes: `python Tools/test_sharded/test_sharded.py`
+- [~] Sharded test suite passes: `python Tools/test_sharded/test_sharded.py` — not run from this worktree per agent-instruction (worktree-path bug). Targeted: `pytest tests/integration/ui/test_system_tree_panel_smoke.py tests/unit/strategy/facade/test_strategy_session_facade_contract.py` 13/13 pass.
 - [x] Update status at top of this file to `Complete`
 - [x] Update `plan.md` phase table row to `Complete`
 - [x] Update `plan.md` Current State accordingly

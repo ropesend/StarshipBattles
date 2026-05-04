@@ -131,7 +131,7 @@ When all tasks above are done:
 - [x] Linter exists at `Tools/lint_test_files.py` with passing smoke tests
 - [x] `tests/unit/data/test_test_infrastructure.py` 8 TODO tests migrated
 - [x] Hook integration documented (but NOT installed — Phase 3 dependency)
-- [x] Sharded test suite passes: `python Tools/test_sharded/test_sharded.py`
+- [~] Sharded test suite passes: `python Tools/test_sharded/test_sharded.py` — not run from this worktree per agent-instruction (worktree-path bug). Targeted: `pytest tests/unit/tools/test_lint_test_files.py` 14/14 pass.
 - [x] Update status at top of this file to `Complete`
 - [x] Update `plan.md` phase table row to `Complete`
 - [x] Update `plan.md` Current State to point to Phase 2 + Phase 3 (parallel)

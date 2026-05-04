@@ -180,7 +180,13 @@ def lint(
     parse_errors: list[tuple[Path, str]] = []
 
     for path in iter_test_files(root):
-        rel = path.relative_to(PROJECT_ROOT)
+        try:
+            rel = path.relative_to(PROJECT_ROOT)
+        except ValueError:
+            # Scan root is outside PROJECT_ROOT (e.g. a temp tree in tests).
+            # Allowlist patterns are repo-relative, so fall back to the
+            # path-relative-to-scan-root form for matching.
+            rel = path.relative_to(root)
         if not strict and matches_allowlist(rel, allowlist_patterns):
             continue
         try:
