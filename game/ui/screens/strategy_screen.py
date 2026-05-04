@@ -33,17 +33,13 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
 
 # Extracted modules
-from game.ui.screens.strategy_renderer import StrategyRenderer
-from game.ui.screens.strategy_camera_nav import CameraNavigator
-from game.ui.screens.strategy_fleet_ops import FleetOperations
-from game.ui.screens.strategy_colonization import ColonizationSystem
-from game.ui.screens.strategy_superweapons import SuperweaponOperations
-from game.ui.screens.strategy_input_handler import StrategyInputHandler
-from game.ui.screens.strategy_build_queue_manager import StrategyBuildQueueManager
-from game.ui.screens.strategy_game_state_manager import StrategyGameStateManager
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 from game.ui.screens.race_asset_loader import RaceAssetLoader
+from game.ui.screens.strategy_screen_composition import (
+    StrategyScreenComposition,
+    StrategyScreenCompositionFactory,
+)
 from game.ui.colors import BG_BATTLE
 
 
@@ -55,7 +51,16 @@ class StrategyScreen:
 
     TOP_BAR_HEIGHT = 50
 
-    def __init__(self, screen_width: int, screen_height: int, session=None, scene_callback=None, input_mapper=None):
+    def __init__(
+        self,
+        screen_width: int,
+        screen_height: int,
+        session=None,
+        scene_callback=None,
+        input_mapper=None,
+        *,
+        composition: StrategyScreenComposition | None = None,
+    ):
         """Initialize strategy screen.
 
         Args:
@@ -66,6 +71,12 @@ class StrategyScreen:
                            Called with (action, **kwargs) where action is:
                            - "open_builder": Open design workshop with context kwarg
             input_mapper: Optional InputMapper for centralized keybinding resolution.
+            composition: PROJ-327 Phase 4 — Compositional Construction seam.
+                Defaults to ``StrategyScreenCompositionFactory()`` (production
+                wiring). Tests pass ``MockStrategyScreenComposition`` from
+                ``tests/fixtures/strategy_screen_composition.py`` to substitute
+                any sub-object without bypass-init monkey-patching. See
+                ``docs/02_PATTERNS.md`` § "Compositional Construction".
         """
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -130,15 +141,18 @@ class StrategyScreen:
         self._race_loader = RaceAssetLoader()
         self._load_assets()
 
-        # Initialize sub-modules
-        self._renderer = StrategyRenderer(self)
-        self._camera_nav = CameraNavigator(self)
-        self._fleet_ops = FleetOperations(self, self._facade)
-        self._colonization = ColonizationSystem(self, self._facade)
-        self._superweapons = SuperweaponOperations(self, self._facade)
-        self._build_queue = StrategyBuildQueueManager(self)
-        self._game_state = StrategyGameStateManager(self)
-        self._input = StrategyInputHandler(self, input_mapper=input_mapper)
+        # Initialize sub-modules via Composition factory (PROJ-327 Phase 4).
+        # Default factory constructs the production graph verbatim; tests
+        # substitute via MockStrategyScreenComposition.
+        comp = composition or StrategyScreenCompositionFactory()
+        self._renderer = comp.make_renderer(self)
+        self._camera_nav = comp.make_camera_navigator(self)
+        self._fleet_ops = comp.make_fleet_ops(self)
+        self._colonization = comp.make_colonization(self)
+        self._superweapons = comp.make_superweapons(self)
+        self._build_queue = comp.make_build_queue_manager(self)
+        self._game_state = comp.make_game_state_manager(self)
+        self._input = comp.make_input_handler(self)
 
     # =========================================================================
     # Properties (delegate to session for internal convenience)

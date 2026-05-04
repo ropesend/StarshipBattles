@@ -1,8 +1,8 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-04-28 — FEAT-22 added Bootstrap Phase Timing subsection under Profiler entry (14 sub-phases via `_timed_phase` helper, `[startup]` log prefix, eager `save_history()`). Earlier same-day pass: PROJ-318 verified `ApplicationContext` manages 10 services including the PROJ-314 `ImageProvider`; PROJ-316 corrected PROJ-313 Pattern #31 claims against live code. Pattern count is 31.
+> **Last verified:** 2026-05-04 — PROJ-327 Phase 4 added Pattern #32 (Compositional Construction): the StrategyScreenComposition factory closes the PROJ-322 Task 3.25 deferral. Earlier (2026-04-28): FEAT-22 added Bootstrap Phase Timing subsection under Profiler entry; PROJ-318 verified `ApplicationContext` manages 10 services; PROJ-316 corrected PROJ-313 Pattern #31 claims against live code. Pattern count is 32.
 
-Agent-optimized reference for every core pattern in the codebase (31 patterns).
+Agent-optimized reference for every core pattern in the codebase (32 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -40,6 +40,7 @@ Each section: **Where**, **How It Works**, **When to Use**.
 29. [Universal Ability Source (PROJ-300..305)](#29-universal-ability-source-proj-300305)
 30. [Registrar Close-Callback (BUG-121) — SUPERSEDED](#30-registrar-close-callback-bug-121)
 31. [Strategy Modal Window Base Class (PROJ-313)](#31-strategy-modal-window-base-class-proj-313)
+32. [Compositional Construction (PROJ-327)](#32-compositional-construction-proj-327)
 
 ---
 
@@ -1668,3 +1669,62 @@ For windows opened **outside** the strategy screen (e.g., `BuildQueueScreen` ope
 
 ### Migration notes (legacy slot fields)
 The legacy slot fields on `StrategyWindowManager` are KEPT post-migration as caller-convenience pointers (used by `strategy_screen.rebuild_list()`, `handle_global_event` forwarding, "kill before re-open" idioms). They no longer provide the modal-tracking contract; strategy-modal tracking is via `iter_live_modals()`. The legacy `_handle_window_close` event listener is also kept; it clears these slots when pygame_gui posts `UI_WINDOW_CLOSE`, so callers see `None` after close. Pattern #30's "registrar callback to clear the slot" mechanism remains active where present, but the contract for **modal tracking** is now Pattern #31.
+
+---
+
+## 32. Compositional Construction (PROJ-327)
+
+### Where
+
+- **Production seam:** [`game/ui/screens/strategy_screen_composition.py`](../game/ui/screens/strategy_screen_composition.py) — `StrategyScreenComposition` Protocol + `StrategyScreenCompositionFactory` (default).
+- **Production consumer:** [`game/ui/screens/strategy_screen.py`](../game/ui/screens/strategy_screen.py) — `StrategyScreen.__init__` accepts `composition: StrategyScreenComposition | None = None` and calls `comp.make_<thing>(self)` for each of its 8 sub-objects.
+- **Test fixture:** [`tests/fixtures/strategy_screen_composition.py`](../tests/fixtures/strategy_screen_composition.py) — `MockStrategyScreenComposition` returns a stable `MagicMock` per slot and exposes `populate(screen)` for the bypass-init path.
+- **Smoke tests:** [`tests/unit/ui/screens/test_strategy_screen_composition.py`](../tests/unit/ui/screens/test_strategy_screen_composition.py) — pins protocol contract and per-slot wiring.
+- **Sibling instances of the same shape:**
+  - PROJ-325 RaceSetup delegate factory: [`game/ui/screens/race_setup/delegate_factory.py`](../game/ui/screens/race_setup/delegate_factory.py) — `DefaultRaceSetupDelegateFactory.build(screen) -> RaceSetupDelegates`.
+  - PROJ-325 RaceSetup UI builder: [`game/ui/screens/race_setup/ui_builder.py`](../game/ui/screens/race_setup/ui_builder.py) + [`tests/fixtures/race_setup_ui_builders.py`](../tests/fixtures/race_setup_ui_builders.py) (`MockRaceSetupUiBuilder` / `NullRaceSetupUiBuilder`).
+  - PROJ-322 / PROJ-324 widget factory: [`tests/fixtures/ui_widget_factory.py`](../tests/fixtures/ui_widget_factory.py) — `make_ui_widget(...)` centralizes per-widget MagicMock wiring.
+
+### How It Works
+
+A class with N collaborator sub-objects exposes a `Composition` Protocol with one `make_<thing>(self_ref)` method per slot. The class accepts `composition: Composition | None = None` in `__init__`; defaults to a `DefaultCompositionFactory` that constructs the production graph verbatim.
+
+```python
+class StrategyScreenComposition(Protocol):
+    def make_renderer(self, screen) -> StrategyRenderer: ...
+    def make_camera_navigator(self, screen) -> CameraNavigator: ...
+    # ... one per sub-object
+
+class StrategyScreenCompositionFactory:
+    def make_renderer(self, screen) -> StrategyRenderer:
+        return StrategyRenderer(screen)
+    # ...
+
+class StrategyScreen:
+    def __init__(self, ..., *, composition: StrategyScreenComposition | None = None):
+        # ... cheap state + facade + camera + ui ...
+        comp = composition or StrategyScreenCompositionFactory()
+        self._renderer = comp.make_renderer(self)
+        self._camera_nav = comp.make_camera_navigator(self)
+        # ...
+```
+
+Tests substitute via a `Mock<Class>Composition` that returns pre-stored `MagicMock` instances per slot. Adding/renaming a slot is a single edit in the protocol + factory + mock; tests do not repeat the wiring.
+
+### When to Use
+
+- **A class constructs N (≥3) collaborator sub-objects in `__init__` whose own constructors are heavy or pull in a real display / disk / network.** Tests need to swap them.
+- **The collaborators have stable, easily-named roles** (renderer, controller, view-model, …). If the wiring is one-off or driven by data, prefer Pattern #15 (Factory) or Pattern #4 (Registry).
+- **Preferred over `bypass_init` + manual attribute population for new code.** `bypass_init` (Pattern from PROJ-325 / PROJ-328) is the *retrofit* pattern for code not built compositionally. Compositional Construction is the canonical pattern for new classes.
+- **Test boundary:** the seam runs *before* the heavy widget tree, so tests can exercise real delegate behaviour without standing up a live `pygame_gui` window. If the heavy tree is also part of `__init__` (as with `StrategyScreen`'s `StrategyUI` + asset loading), pair Compositional Construction with `bypass_init` or a two-stage `__init__` (cheap state then heavy shell — see `RaceSetupScreen`).
+
+### Why
+
+- **Eliminates the brittle "patch private method" test pattern.** Pre-PROJ-327, the strategy-screen tests used either `patch.object(screen, '_init_layout')`-style private patching or manually reassigned every `_renderer`, `_camera_nav`, etc. attribute. Adding a 9th sub-object meant editing 50+ tests. With Compositional Construction, adding a slot is a single edit in the protocol + factory + `MockStrategyScreenComposition`.
+- **Makes the production wiring readable.** `__init__` reduces from "8 inline constructors with side-channel coupling to `self._facade`" to "8 `comp.make_*(self)` calls". The `Composition` factory is the single source of truth for the sub-object graph.
+- **Same shape across the codebase.** PROJ-325 RaceSetup, PROJ-322 widget factory, and PROJ-327 StrategyScreen all use one Protocol + one default factory + one mock. New classes that adopt the pattern will read identically.
+
+### Migration notes
+
+- The `StrategyScreen` upstream construction (`Camera`, `StrategyUI`, asset loading) still runs inline — only the 8 sub-object slots are behind the composition seam. A future two-stage `__init__` refactor (cheap state, then heavy shell — same shape as `RaceSetupScreen`) could remove the remaining bypass-init helper. PROJ-327 Phase 4 stopped at the sub-object boundary because that was the PROJ-322 deferral scope.
+- The `MockStrategyScreenComposition.populate(screen)` helper exists specifically for the bypass-init path. Tests that go through real `StrategyScreen(...)` construction can pass `MockStrategyScreenComposition()` as a kwarg directly — no `populate` call needed.

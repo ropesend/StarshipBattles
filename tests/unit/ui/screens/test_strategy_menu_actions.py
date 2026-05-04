@@ -19,8 +19,11 @@ def _make_strategy_screen():
     """
     from game.ui.screens.strategy_screen import StrategyScreen
 
-    with patch.object(StrategyScreen, '__init__', lambda self, *a, **kw: None):
-        screen = StrategyScreen.__new__(StrategyScreen)
+    # PROJ-327 Phase 4: bypass-init via __new__ only (no need to patch
+    # __init__ to a no-op — __new__ skips it entirely). This file's tests
+    # only exercise menu-action routing and do not touch the 8 sub-object
+    # slots, so MockStrategyScreenComposition is not needed here.
+    screen = StrategyScreen.__new__(StrategyScreen)
 
     scene_callback = MagicMock()
     ui_mock = MagicMock()
