@@ -510,6 +510,23 @@ class TestConfirmCommandEmission:
             dialog._on_confirm()
         assert mock_scene._facade.handle_command.call_count == 3
 
+    def test_confirm_kills_dialog_even_when_controller_raises(
+            self, mock_manager, mock_scene, mock_fleet):
+        # Regression (PROJ-321..328 audit, S1.2): if confirm_pending raises
+        # — command dispatch failure, validation error, etc. — the dialog
+        # MUST still be torn down via self.kill() so we don't leave an
+        # orphaned window the user can re-click. The original exception
+        # MUST propagate; we only guarantee cleanup, never swallow.
+        dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
+        dialog._controller = MagicMock()
+        dialog._controller.confirm_pending = MagicMock(
+            side_effect=RuntimeError("dispatch boom")
+        )
+        with patch.object(dialog, "kill") as mock_kill:
+            with pytest.raises(RuntimeError, match="dispatch boom"):
+                dialog._on_confirm()
+            mock_kill.assert_called_once()
+
 
 # ---------------------------------------------------------------------------
 # RESOURCE_TYPES constant pin

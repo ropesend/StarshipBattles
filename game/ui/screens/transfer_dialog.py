@@ -370,8 +370,12 @@ class TransferDialog(StrategyModalWindow):
         logger.info("TransferDialog: Cleared all pending transfers")
 
     def _on_confirm(self) -> None:
-        self._controller.confirm_pending()
-        self.kill()
+        # PROJ-321..328 audit S1.2: guarantee window teardown even on dispatch
+        # failure. Original exception propagates; we only ensure cleanup.
+        try:
+            self._controller.confirm_pending()
+        finally:
+            self.kill()
 
     # ------------------------------------------------------------------
     # Tooltips + keyboard
