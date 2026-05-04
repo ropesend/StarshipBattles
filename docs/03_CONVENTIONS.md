@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-05-03 — Added §11 Git Branch Conventions for 03c phase-aware execution (`proj/{PROJ-ID}/main`, `proj/{PROJ-ID}/{phase-id}`, `tmp/{PROJ-ID}/integrate-...`). §10 Ship Theme Asset Conventions (PROJ-314) unchanged.
+> **Last verified:** 2026-05-04 — Added agent/tool repo-root discovery guidance to prevent hardcoded checkout paths in skills, protocols, prompts, and coordination scripts.
 
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
@@ -302,6 +302,30 @@ def load_data(file_path=None):
 The filename prefix matches the actual resolution of the images in that directory. Use `Paths.COMPONENTS_64_DIR` through `Paths.COMPONENTS_2048_DIR` for path constants.
 
 `Components 1024/` is the tracked source-of-truth set. The `2048`, `512`, `256`, `128`, and `64` directories are generated derivatives and must not be committed. Runtime startup calls `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load; it creates missing derivatives and refreshes stale derivatives when a 1024 source hash changes. The hash manifest lives at `assets/Images/Components/.component_derivatives_manifest.json` and is intentionally ignored.
+
+---
+
+### 3.3 Agent and Tool Path Resolution
+
+Agent-facing files must not embed developer-machine checkout roots. This applies
+to `.claude/skills/`, `.agents/skills/`, `.opencode/skills/`, `AGENTS.md`,
+adapter docs, review/project protocols, daemon prompts, and coordination tools.
+
+Do not hardcode absolute paths such as `c:\Dev\Starship Battles`,
+`C:\Dev2\StarshipBattles`, `/home/name/StarshipBattles`, or
+`/Users/name/StarshipBattles` in reusable agent instructions or scripts.
+
+Use one of these instead:
+
+- Repo-relative paths when the command is documented to run from the repository root.
+- Runtime repo-root discovery by walking upward until sentinel paths like `game/`, `data/`, and `AGENTS.md` are found.
+- Script-relative root discovery from `Path(__file__).resolve()` for repo-local tools.
+- Placeholders such as `<repo-root>` in documentation examples where an absolute path is only illustrative.
+
+Hardcoded checkout paths are allowed only in ignored, machine-local files or in
+historical examples explicitly marked as non-reusable. When touching any agent
+skill or protocol that currently contains an absolute checkout path, replace it
+with repo-root discovery in the same change.
 
 ---
 

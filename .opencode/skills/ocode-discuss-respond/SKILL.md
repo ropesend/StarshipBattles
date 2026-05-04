@@ -31,9 +31,9 @@ arc-starter message.
 
 ## Step 1 — Resolve the folder
 
-Take the first positional argument. Resolve relative to the repo root
-(`c:\Dev\Starship Battles`) if not absolute. Abort if the path does not
-exist.
+Take the first positional argument. Resolve relative to the repository
+root (discovered at runtime — do not hardcode a checkout path) if not
+absolute. Abort if the path does not exist.
 
 ## Step 2 — Whitespace warning (informational)
 
@@ -207,10 +207,30 @@ Repeat until terminal:
    If unanimous terminal, write `outcome.md` race-safely (Step 11) and
    exit. Do NOT loop.
 
+   **HARD GATE — DO NOT SKIP:** If the last message's status is `continue`
+   (not `consensus`, not `needs-user`), you MUST proceed to Step 8. Do NOT
+   report to the user. Do NOT exit the skill. You are mid-conversation.
+   The only path past this gate is polling for the next incoming message.
+
 8. **Wait for next incoming**. New `i_in` = next unused index where
    `participants[i_in mod n] == 'opencode'`. Use the polling helper.
 
-9. Loop.
+   **Polling rule:** Use `glob` to check for the expected incoming file
+   (e.g. `arc01_005_*_to_opencode.md`). If it exists, proceed to Step 8
+   (read and validate). If it does not exist, write a heartbeat and
+   **retry the glob every 15-30 seconds** until the file appears or a
+   5-minute timeout elapses. On timeout, retry once. On second timeout,
+   write outcome.md with status `needs-user` and report "no response from
+   {sender} within polling window."
+
+9. Read the incoming message, validate per Step 8, then **loop back to
+   Step 10.1** (re-read plans, compose reply). Do NOT skip to Step 12.
+
+10. **This loop (Steps 10.1–10.9) runs until terminal.** You are a
+    participant in an ongoing conversation. Every non-terminal message you
+    write must be followed by polling for the next incoming. Only when the
+    loop terminates (unanimous terminal + outcome.md written) should you
+    proceed to Step 12.
 
 ### Message file format
 
@@ -276,7 +296,16 @@ continuation_starter: <agent>       # optional; default = original starter
 ## Implementation responsibility (only if non-default)
 ```
 
-## Step 12 — Report to the user (only if you are the user-facing agent)
+## Step 12 — Report to the user (ONLY after termination or when user-facing agent)
+
+**PRE-GATE:** This step runs ONLY if:
+- An `outcome.md` was just written (Step 11), OR
+- The polling loop (Step 10) timed out and outcome.md was written with
+  `status: needs-user`, OR
+- You are the original arc-1 starter AND a terminal condition exists.
+
+If none of these conditions are met, DO NOT proceed to this step. You are
+still mid-conversation — go back to polling (Step 10.8).
 
 Default: `user_facing_agent` = original arc-1 starter (whoever wrote
 `arc01_001_*.md`). If that's not OpenCode, deliver a one-line acknowledgement
@@ -304,3 +333,9 @@ message count, terminal status, summary, file listing).
 - **v2.3 readback.** When `participants` is missing from `arc01_001`,
   derive it from `[arc01_001.from, arc01_001.to]`. Legacy
   `implementation_owner: both` accepted for v2.3 outcome readback only.
+
+## Step — Log Skill Usage
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-discuss-respond
+```

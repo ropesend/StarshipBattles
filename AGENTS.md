@@ -53,6 +53,7 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 - **500 LOC ceiling on production files.** When a file approaches 500 lines, split into single-responsibility sub-modules. Test files exempt.
 - **Specific exceptions required.** Broad catches (`except Exception`) must carry `# Intentional broad catch: <reason>` on the same line.
 - **No save-file migration.** Old saves are disposable. Never write compatibility shims for old save formats.
+- **Repo-root discovery for agent tooling.** Agent skills, protocols, daemon prompts, and coordination scripts must resolve the repository root at runtime. Never hardcode machine-specific checkout paths like `c:\Dev\Starship Battles`.
 - **Spatial terminology:** A "System" (star system) is ~8000 hexes around a star (radius 50). A "Sector" is a single hex. "System scope" = star-system-wide; "Sector scope" = single-hex. Don't confuse them.
 - **Minimum resolution:** 2560x1600. Optimized for 4K (3840x2160).
 

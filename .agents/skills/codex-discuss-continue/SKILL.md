@@ -19,7 +19,7 @@ frontmatter to Codex skills.
 
 - No positional folder.
 - `--folder <path>` is an optional flag-style override pointing to either a parent folder or an exact discussion leaf.
-- Without `--folder`, use the default parent `C:\Dev\Starship Battles\AgentCoordination\Scratchpad\Discussion`.
+- Without `--folder`, use the default parent `<repo-root>/AgentCoordination/Scratchpad/Discussion`, resolving `<repo-root>` at runtime from the current checkout.
 - All remaining tokens after `--folder <path>`, or all tokens if no `--folder` is present, become inline user context.
 - If the resolved path's final segment contains whitespace, warn but do not reject.
 - Pre-flight checks must not mutate existing folders until the target is validated.
@@ -99,6 +99,8 @@ live arc remains the job of `codex-discuss-respond`.
 
 ## Arc Starter Message
 
+Every message starts with frontmatter on line 1.
+
 Every continuation starter includes `participants`, `turn_order`, and a body
 `## Turn topology` section.
 
@@ -123,11 +125,25 @@ turn_order: round-robin
 Turn order: codex -> opencode -> claude -> codex
 ```
 
+Optional fields on any message: `agent_turn`, `message_cap`,
+`extension_requested_cap`, and `extension_accepted`.
+
+Use `continue | consensus | needs-user` for `status`.
+
 ## User-Supplied Context
 
 When Codex writes the next arc starter and inline context or `topic.md` exists,
 include `## User-supplied context`. Forward text verbatim in separate labeled
 fenced blocks. Do not summarize, paraphrase, or modify those blocks.
+
+## Shared Plans
+
+- Plan files live under `plans/`.
+- Plan revisions are immutable siblings: `plans/<name>_r001.md`, `plans/<name>_r002.md`, ...
+- Latest is the highest revision number. Never overwrite an existing revision file.
+- Plan frontmatter includes `protocol: interagent-discussion/v1`,
+  `last_edited_by`, `last_edited_at_utc`, and `revision: <int>`.
+- `## Plans touched` references the specific new revision file.
 
 ## Validation
 

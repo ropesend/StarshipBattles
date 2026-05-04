@@ -44,7 +44,7 @@ sys.path.insert(0, PROJECT_ROOT)
 
 MYPIQ_CONFIG = """
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 warn_return_any = true
 warn_unused_ignores = true
 show_error_codes = true
@@ -126,10 +126,17 @@ class _TypeScanner(ast.NodeVisitor):
             return "TYPE_CHECKING" in parts
         return False
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        is_method = self._current_class is not None
+    def _is_any_type(self, node: ast.expr) -> bool:
+        if isinstance(node, ast.Name) and node.id == "Any":
+            return True
+        if isinstance(node, ast.Attribute) and node.attr == "Any":
+            return True
+        if isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name) and node.value.id == "Any":
+            return True
+        return False
+
+    def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
         is_dunder = node.name.startswith("__") and node.name.endswith("__")
-        is_private = node.name.startswith("_")
 
         if node.returns is None:
             if not is_dunder:
@@ -140,7 +147,7 @@ class _TypeScanner(ast.NodeVisitor):
                     "class": self._current_class,
                     "layer": self.layer,
                 })
-        elif isinstance(node.returns, ast.Name) and node.returns.id == "Any":
+        elif self._is_any_type(node.returns):
             self.any_returns.append({
                 "file": _rel(self.filepath),
                 "line": node.lineno,
@@ -150,7 +157,7 @@ class _TypeScanner(ast.NodeVisitor):
             })
 
         for arg in node.args.args:
-            if arg.annotation and isinstance(arg.annotation, ast.Name) and arg.annotation.id == "Any":
+            if arg.annotation and self._is_any_type(arg.annotation):
                 self.any_annotations.append({
                     "file": _rel(self.filepath),
                     "line": node.lineno,
@@ -160,6 +167,12 @@ class _TypeScanner(ast.NodeVisitor):
                 })
 
         self.generic_visit(node)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_function(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_function(node)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         prev = self._current_class

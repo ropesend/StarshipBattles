@@ -10,6 +10,15 @@ Run a comprehensive audit of state management patterns across the production cod
 
 Does NOT change any code. Targets `game/` only (not tests).
 
+## Pre-Flight Safeguards
+
+Before starting any work:
+1. **Run from repo root.** All paths are relative to the repository root.
+2. **Check `git status --short`** and do NOT revert unrelated changes.
+3. **Never read `docs/_ignore/`.** It is not documentation.
+4. **Write only under `Reviews/results/`** and explicitly named `AgentCoordination/` paths.
+5. **This is a read-only audit.** Do not edit source code, test code, or docs.
+
 ## Execution
 
 This skill is a single-command workflow. The user loads it and you handle everything.
@@ -139,10 +148,17 @@ For EACH file in your shard:
    - Flag files where both patterns coexist (divergence risk)
 
 ## What NOT to Report
-- Module-level constants (ALL_CAPS convention) — these are intentional
+- Module-level constants (ALL_CAPS convention) — these are intentional and immutable
+- Module-level registries that are populated once at import and never mutated — these are infrastructure, not state bugs
 - Function-scoped mutable defaults that are clearly never mutated
 - TYPE_CHECKING blocks
 - Lazy-loaded caches with proper invalidation (documented pattern)
+- `random.Random(seed)` — this is the preferred per-instance pattern (Pattern #18). Only flag `random.seed()` on the global `random` module as suspect.
+
+## State Classification Guide
+- **Approved module-level defaults**: Singletons with `set_/get_` accessor pairs AND wired in `create_production()` — these are documented application bridges, not findings. Flag them only if the wiring is broken or diverging.
+- **Unmanaged singleton**: Module-level mutable state with no setter, no ctx wiring, or divergent access patterns — this is a finding.
+- **Cache safety**: For any cache, check: invalidation mechanism, lifetime owner, mutation path, and thread-safety. A cache with no invalidation is a finding. A cache with documented TTL or explicit `invalidate()` is fine.
 
 ## Severity Guide
 - CRITICAL: Singleton with NO setter but MULTIPLE getters (will diverge);
@@ -211,9 +227,11 @@ Read docs/01_ARCHITECTURE.md and game/context.py.
 ## Context
 PROJ-258 exists as a bridge: ApplicationContext.create_production() calls
 every set_default_xxx() to keep module-level singletons in sync with ctx.
-But the UI layer still overwhelmingly uses get_default_xxx() (314 call
-sites). If any code path sets ctx.xxx without also calling set_default_xxx(),
-or calls set_default_xxx() without updating ctx, the instances diverge.
+But the UI layer still overwhelmingly uses get_default_xxx(). If any code
+path sets ctx.xxx without also calling set_default_xxx(), or calls
+set_default_xxx() without updating ctx, the instances diverge. The exact
+call-site counts are derived from `ctx_usage_ratio.json` at runtime — do
+not use hardcoded numbers from this skill text.
 
 ## Scope
 All files under game/.

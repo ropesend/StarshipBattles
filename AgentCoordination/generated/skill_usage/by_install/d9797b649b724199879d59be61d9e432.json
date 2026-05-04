@@ -2,12 +2,33 @@
   "install_id": "d9797b649b724199879d59be61d9e432",
   "schema_version": 1,
   "skills": {
+    "codex-discuss-continue": {
+      "agents": {
+        "codex": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-04T12:25:14Z"
+    },
+    "codex-discuss-respond": {
+      "agents": {
+        "codex": 3
+      },
+      "count": 3,
+      "last_used": "2026-05-04T12:25:14Z"
+    },
+    "codex-discuss-start": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-04T05:22:57Z"
+    },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 6
+        "codex": 8
       },
-      "count": 6,
-      "last_used": "2026-05-04T02:37:22Z"
+      "count": 8,
+      "last_used": "2026-05-04T12:13:34Z"
     },
     "codex-starship-qa-observer": {
       "agents": {
@@ -15,6 +36,13 @@
       },
       "count": 2,
       "last_used": "2026-05-02T20:35:44Z"
+    },
+    "skill-creator": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-04T12:45:02Z"
     }
   }
 }

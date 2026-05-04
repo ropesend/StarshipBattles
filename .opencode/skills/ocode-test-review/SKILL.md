@@ -11,8 +11,18 @@ Run an exhaustive review of the test suite (`tests/`) for 12 categories of quali
 **Four-phase workflow**: Phase 1 (shard reviewers) → Phase 2 (cross-shard dedup) → Phase 3 (skeptical verification) → Phase 4 (final summary, verified claims only).
 
 Does NOT change any code. Produces per-shard findings reports, verification reports, and a unified summary.
-Excludes: `tests/unit/combat_lab/`, `conftest.py`, `__init__.py`, `__pycache__/`, `tests/infrastructure/`.
-All other test directories are in scope.
+Excludes: `tests/unit/combat_lab/`, `__init__.py`, `__pycache__/`, `tests/infrastructure/`.
+All other test directories are in scope. `conftest.py` files are NOT excluded — they must be read by shard reviewers because CAT-5 fixture bloat and test isolation issues often originate there.
+Regression/snapshot tests in `tests/regression/` are in scope but CAT-11 does not apply to them (snapshot assertions are intentional).
+
+## Pre-Flight Safeguards
+
+Before starting any work:
+1. **Run from repo root.** All paths are relative to the repository root.
+2. **Check `git status --short`** and do NOT revert unrelated changes.
+3. **Never read `docs/_ignore/`.** It is not documentation.
+4. **Write only under `Reviews/results/`** and explicitly named `AgentCoordination/` paths.
+5. **This is a read-only audit.** Do not edit source code, test code, or docs.
 
 ## Execution
 
@@ -34,10 +44,10 @@ mkdir -p Reviews/results
 
 ### Step 1: Generate Shards
 
-Run the shard generator. Use `--seed` if the user provided one, otherwise let it default (current date). Use `--max-loc-per-shard` to auto-adjust shard count as the test suite grows.
+Run the shard generator. Use `--seed` if the user provided one, otherwise let it default (current date). Prefer `--max-loc-per-shard N` (recommended starting value: 25k) to auto-adjust shard count as the test suite grows; fall back to `--shards 12` only when you need a fixed shard count.
 
 ```bash
-python Tools/test_review/generate_shards.py --seed {seed} --shards 12
+python Tools/test_review/generate_shards.py --seed {seed} --max-loc-per-shard {max_loc_per_shard}
 ```
 
 If the user passed `--skip-generate`, find the most recent existing `SHARD_CONFIG.json` instead:
@@ -402,9 +412,27 @@ Check that all verified shard report files exist and are non-empty (one per shar
 
 ### Step 8: Compile Phase 4 — Final Summary (verified claims only)
 
-Read all VERIFIED shard reports (CONFIRMED claims only) plus the cross-shard report. Produce `SUMMARY.md`.
+Read all VERIFIED shard reports (CONFIRMED claims only) plus the cross-shard report. Produce `SUMMARY.md` and a `SUMMARY.json` sidecar.
 
 Only include CONFIRMED claims from `VERIFIED_SHARD_*.md`. Do NOT include DISPUTED or INCONCLUSIVE claims.
+
+Write `SUMMARY.json` with a structured findings array so downstream consumers do not need to parse loose prose:
+
+```json
+{
+  "run_info": { "date": "...", "seed": "...", "shard_count": 0, "total_files": 0, "total_loc": 0 },
+  "phase1_claims": 0, "verified": 0, "disputed": 0, "inconclusive": 0,
+  "findings": [
+    {
+      "id": "...", "category": "CAT-1",
+      "severity": "CRITICAL", "file": "tests/path/test.py",
+      "line": 42, "title": "test_name",
+      "suggestion": "concrete action",
+      "loc_affected": 5
+    }
+  ]
+}
+```
 
 **SUMMARY.md structure:**
 

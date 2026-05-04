@@ -6,9 +6,18 @@ argument-hint: "[--skip-phase1] [--skip-mypy]"
 
 # Type Safety & Annotation Quality Audit
 
-Run a comprehensive audit of type annotation quality across the production codebase. Two-pass analysis: mypy strict-mode + AST-based annotation scanner. Produces an Any-density heatmap by layer, mypy readiness score, and a prioritized narrowing plan.
+Run a comprehensive audit of type annotation quality across the production codebase. Two-pass analysis: mypy strict-mode + AST-based annotation scanner. Produces an Any-density heatmap by layer, mypy readiness score, and a prioritized narrowing plan. Measures progress against baseline — the main value is reducing new type debt and picking safe first layers, not fixing every mypy error at once.
 
 Does NOT change any code. Targets `game/` only (not tests).
+
+## Pre-Flight Safeguards
+
+Before starting any work:
+1. **Run from repo root.** All paths are relative to the repository root.
+2. **Check `git status --short`** and do NOT revert unrelated changes.
+3. **Never read `docs/_ignore/`.** It is not documentation.
+4. **Write only under `Reviews/results/`** and explicitly named `AgentCoordination/` paths.
+5. **This is a read-only audit.** Do not edit source code, test code, or docs.
 
 ## Execution
 
@@ -144,16 +153,31 @@ For EACH file in your shard:
 - Dunder methods without return types (exempt)
 - UI property accessors returning Any from dict lookups (unavoidable)
 - pygame interface callbacks (library conventions)
-- Private methods (starting with _) without annotations
+- Private methods (starting with _) without annotations — unless they cross
+  layer boundaries or are widely called (10+ call sites); then note as MINOR
+- Any from dynamic JSON/pygame/registry boundaries — these are unavoidable
+  Any and should be flagged as INFO at most
+
+## Narrowable vs Unavoidable Any
+- **Unavoidable Any**: dynamic JSON deserialization, pygame event/mouse APIs,
+  registry string-key dispatch, external library callbacks, TYPE_CHECKING
+  protocol casts. These are architectural boundaries — note them as INFO.
+- **Narrowable Any**: stable app-owned APIs where the return type is always
+  one concrete class or a known union. These are MAJOR or CRITICAL.
+- **Suggested concrete type**: only propose a specific type when you have
+  verified ALL return paths in the function body. If unsure, mark as
+  INCONCLUSIVE and request developer review.
 
 ## Severity Guide
-- CRITICAL: Missing return type on a public API method used across layers;
+- CRITICAL: Missing return type on a public API method used across layers
+  (AGENTS.md requires return annotations on public functions);
   TYPE_CHECKING import used at runtime
 - MAJOR: -> Any that can clearly be narrowed (always returns one type);
   cast() that could be eliminated with better typing; unjustified
   # type: ignore
 - MINOR: -> Any in internal helper; cast() that is purely cosmetic;
-  TYPE_CHECKING import unused or redundant
+  TYPE_CHECKING import unused or redundant; private method missing
+  return type when crossing layer boundaries
 
 ## Output
 You MUST use the Write tool to save your report to:
@@ -225,8 +249,8 @@ All files under game/.
    that mypy would catch in strict mode.
 
 4. **Propose a mypy strict-mode migration path:**
-   Which layer could adopt strict mode first? (Recommendation: Core,
-   then Services, then Engine, etc.)
+   Which layer could adopt strict mode first? Recommended adoption order:
+   Core → Services → Engine → Research → Simulation → Strategy/AI → Assets → UI.
    Estimate error count reduction if each layer went strict.
 
 ## Output

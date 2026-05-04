@@ -35,6 +35,7 @@ Use the skill that matches the user request. If no skill matches, follow `AGENTS
 
 - Prefer repo-local scripts and protocols over ad hoc workflows.
 - Use `apply_patch` for manual edits.
+- Resolve the repo root at runtime in agent skills, protocols, prompts, and coordination scripts. Do not hardcode checkout-specific absolute paths such as `c:\Dev\Starship Battles`.
 - Do not spawn subagents unless the current Codex client supports them and the user has explicitly asked for parallel or delegated work. If a protocol expects parallel agents but that is not available, run the review sequentially and state the limitation.
 - For OpenAI API, Codex, or model questions, use the `openaiDeveloperDocs` MCP server configured in `.codex/config.toml` when available.
 - After changing Codex skills or config, run the skill validator on changed skill folders.

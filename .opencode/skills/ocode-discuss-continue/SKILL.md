@@ -8,8 +8,8 @@ argument-hint: "[--folder <path>] [context...]"
 
 You are re-opening a previously concluded discussion with new user input.
 The skill is **no-args by default**: it resolves to the most-recent
-v2.4 discussion leaf under
-`c:\Dev\Starship Battles\AgentCoordination\Scratchpad\Discussion\`. The
+v2.4 discussion leaf under the default parent
+`<repo_root>/AgentCoordination/Scratchpad/Discussion/`. The
 optional `--folder <path>` flag overrides the target (path may be a parent
 or an exact leaf).
 
@@ -30,7 +30,7 @@ context; the right thing happens regardless of who started.
 | Field | Value |
 |-------|-------|
 | Argument surface | `[--folder <path>] [context...]` |
-| Default parent | `c:\Dev\Starship Battles\AgentCoordination\Scratchpad\Discussion\` |
+| Default parent | `<repo_root>/AgentCoordination/Scratchpad/Discussion/` |
 | Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md` |
 | Per-arc cap | `5 × n` messages (one in-band extension to `10 × n` per arc) |
 | Outcome archiving | move latest `outcome.md` → `outcome_arc<NN>.md` before writing new arc |
@@ -38,7 +38,7 @@ context; the right thing happens regardless of who started.
 ## Step 1 — Parse arguments
 
 ```bash
-DEFAULT_PARENT="c:/Dev/Starship Battles/AgentCoordination/Scratchpad/Discussion"
+DEFAULT_PARENT="<repo_root>/AgentCoordination/Scratchpad/Discussion"
 FOLDER_ARG=""
 if [ "$1" = "--folder" ]; then
   FOLDER_ARG="$2"
@@ -284,3 +284,9 @@ user-facing agent (default = original arc-1 starter):
   readback.
 - **Most-recent leaf scan ignores folders without arc-prefixed files.**
   Pre-v2.3 unprefixed transcripts are not continuation targets.
+
+## Step — Log Skill Usage
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-discuss-continue
+```

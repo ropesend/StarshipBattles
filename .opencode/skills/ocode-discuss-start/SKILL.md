@@ -35,7 +35,8 @@ equals. Push back, propose alternatives, agree where you actually agree.
 ## Step 1 — Parse arguments
 
 Treat the first positional argument as the **parent folder**. Resolve
-relative to the repo root (`c:\Dev\Starship Battles`). Then accept any
+relative to the repository root (discovered at runtime — do not hardcode
+a checkout path). Then accept any
 combination of `--slug <kebab-case>` and `--with <comma-list>` flags before
 the inline context.
 
@@ -63,7 +64,7 @@ Bash skeleton:
 PARENT="$1"; shift
 case "$PARENT" in
   /*|[a-zA-Z]:[/\\]*) ;;  # absolute
-  *) PARENT="c:/Dev/Starship Battles/$PARENT" ;;
+  *) PARENT="<repo_root>/$PARENT" ;;
 esac
 SLUG=""
 WITH_LIST="claude"
@@ -424,3 +425,9 @@ user-facing agent. Tell the user:
   derive `participants = [arc01_001.from, arc01_001.to]`,
   `turn_order = round-robin`. Legacy `implementation_owner: both` accepted
   for v2.3 outcome readback only; v2.4 writers never emit it.
+
+## Step — Log Skill Usage
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-discuss-start
+```

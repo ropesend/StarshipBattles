@@ -108,6 +108,9 @@ Turn order: codex -> opencode -> claude -> codex
 Use `continue | consensus | needs-user` for `status`. Later messages may repeat
 `participants` and `turn_order`, but must not change them.
 
+Optional fields on any message: `agent_turn`, `message_cap`,
+`extension_requested_cap`, and `extension_accepted`.
+
 ## User-Supplied Context
 
 If inline context or `topic.md` exists, message 001 must include

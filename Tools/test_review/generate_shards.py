@@ -6,7 +6,7 @@ then distributes into balanced shards using greedy load-balancing (by LOC).
 
 Exclusions:
   - tests/unit/combat_lab/ (all files)
-  - conftest.py, __init__.py
+  - __init__.py
   - __pycache__/
   - tests/infrastructure/
 
@@ -46,7 +46,7 @@ EXCLUDE_PREFIXES: list[str] = [
     "tests" + os.sep + "unit" + os.sep + "combat_lab",
 ]
 
-EXCLUDE_NAMES: set[str] = {"conftest.py", "__init__.py"}
+EXCLUDE_NAMES: set[str] = {"__init__.py"}
 EXCLUDE_DIR_PATTERNS: set[str] = {"__pycache__", "infrastructure"}
 
 
@@ -63,9 +63,11 @@ def _is_excluded(rel_path: str, filename: str) -> bool:
     """Check if a file or directory should be excluded from sharding."""
     if filename in EXCLUDE_NAMES:
         return True
-    if not (filename.startswith("test_") or filename.startswith("repro_")):
-        return True
     if not filename.endswith(".py"):
+        return True
+    if filename == "conftest.py":
+        return False
+    if not (filename.startswith("test_") or filename.startswith("repro_")):
         return True
     norm = rel_path.replace("\\", "/")
     for prefix in [p.replace("\\", "/") for p in EXCLUDE_PREFIXES]:
