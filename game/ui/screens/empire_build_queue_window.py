@@ -60,6 +60,76 @@ class BatchAddResult:
     skipped: int
 
 
+class EmpireBuildQueueUiBuilder:
+    """Production widget builder. Constructs sidebar_panel, sidebar
+    component, main_panel, virtual_table, wires event-bus subscribers,
+    and triggers the initial _refresh_list. Reads Stage-1 MVVM state.
+    """
+
+    def build(self, screen: "EmpireBuildQueueWindow") -> None:
+        rect = screen.rect
+        manager = screen.ui_manager
+
+        # --- UI Containers ---
+        # Sidebar panel
+        screen.sidebar_panel = UIPanel(
+            relative_rect=pygame.Rect(0, 0, screen.sidebar_width, rect.height - 50),
+            manager=manager,
+            container=screen,
+            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
+        )
+
+        # Sidebar component (owns filter UI)
+        screen._sidebar = EmpireBuildQueueSidebar(
+            ui_manager=manager,
+            parent_container=screen.sidebar_panel,
+            viewmodel=screen._viewmodel,
+            event_bus=screen._event_bus,
+            columns=screen._filter_mgr.columns,
+        )
+
+        # Main content area
+        main_w = rect.width - screen.sidebar_width - 10
+        screen.main_panel = UIPanel(
+            relative_rect=pygame.Rect(screen.sidebar_width, 0, main_w, rect.height - 50),
+            manager=manager,
+            container=screen,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
+        )
+
+        # --- VirtualTable components ---
+        screen._data_source = BuildQueueDataSource(
+            screen._viewmodel, screen._filter_mgr, screen.galaxy
+        )
+        screen._column_manager = TableColumnManager(screen._filter_mgr.columns)
+        screen._selection = MultiSelect()
+        screen._virtual_table = VirtualTable(
+            screen.main_panel,
+            manager,
+            screen._data_source,
+            screen._column_manager,
+            screen._selection,
+            row_height=screen.row_height,
+            header_height=screen.header_height,
+        )
+
+        # Store reference for scroll wheel handling
+        screen.scroll_bar = screen._virtual_table.scroll_bar
+
+        # Subscribe to ViewModel events
+        screen._event_bus.subscribe(
+            BuildQueueWindowEvents.FILTERS_APPLIED,
+            lambda _: screen._on_filters_applied(),
+        )
+        screen._event_bus.subscribe(
+            BuildQueueWindowEvents.SELECTION_CHANGED,
+            lambda _: screen._on_selection_changed(),
+        )
+
+        # Initial population
+        screen._refresh_list()
+
+
 class EmpireBuildQueueWindow(StrategyModalWindow):
     """Window showing all empire build queues in a scrollable list.
 
@@ -92,19 +162,15 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         on_navigate_to_hex: Optional[Callable] = None,
         session: Any = None,
         facade: Any = None,
+        ui_builder: Optional["EmpireBuildQueueUiBuilder"] = None,
     ) -> None:
         """Initialize the empire build queue window.
 
         PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
         PROJ-313: Migrated to StrategyModalWindow base class.
+        PROJ-329B Phase 2: two-stage construction with ``ui_builder`` test seam.
         """
-        super().__init__(
-            rect, manager,
-            window_display_title="Empire Build Yards",
-            resizable=True,
-            window_manager=window_manager,
-        )
-
+        # ---- Stage 1: cheap state ----
         self.empire = empire
         self.galaxy = galaxy
         self.on_close_callback = on_close_callback
@@ -118,72 +184,31 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
-        # --- MVVM components ---
+        # --- MVVM components --- (cheap; pure-python, no pygame_gui)
         self._event_bus = EventBus()
-        sources = collect_all_build_queues_for_empire(empire, registries=session.registries)
+        sources = collect_all_build_queues_for_empire(
+            empire, registries=session.registries
+        )
         self._viewmodel = EmpireBuildQueueViewModel(self._event_bus, sources)
 
         # --- Filter Manager (for column definitions) ---
         self._filter_mgr = BuildQueueFilterManager()
 
-        # --- UI Containers ---
-        # Sidebar panel
-        self.sidebar_panel = UIPanel(
-            relative_rect=pygame.Rect(0, 0, self.sidebar_width, rect.height - 50),
-            manager=manager,
-            container=self,
-            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
+        # ---- Stage 2: shell ----
+        super().__init__(
+            rect, manager,
+            window_display_title="Empire Build Yards",
+            resizable=True,
+            window_manager=window_manager,
         )
 
-        # Sidebar component (owns filter UI)
-        self._sidebar = EmpireBuildQueueSidebar(
-            ui_manager=manager,
-            parent_container=self.sidebar_panel,
-            viewmodel=self._viewmodel,
-            event_bus=self._event_bus,
-            columns=self._filter_mgr.columns,
-        )
+        # ---- Stage 3: widgets ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
 
-        # Main content area
-        main_w = rect.width - self.sidebar_width - 10
-        self.main_panel = UIPanel(
-            relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 50),
-            manager=manager,
-            container=self,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
-        )
-
-        # --- VirtualTable components ---
-        self._data_source = BuildQueueDataSource(
-            self._viewmodel, self._filter_mgr, self.galaxy
-        )
-        self._column_manager = TableColumnManager(self._filter_mgr.columns)
-        self._selection = MultiSelect()
-        self._virtual_table = VirtualTable(
-            self.main_panel,
-            manager,
-            self._data_source,
-            self._column_manager,
-            self._selection,
-            row_height=self.row_height,
-            header_height=self.header_height,
-        )
-
-        # Store reference for scroll wheel handling
-        self.scroll_bar = self._virtual_table.scroll_bar
-
-        # Subscribe to ViewModel events
-        self._event_bus.subscribe(
-            BuildQueueWindowEvents.FILTERS_APPLIED,
-            lambda _: self._on_filters_applied()
-        )
-        self._event_bus.subscribe(
-            BuildQueueWindowEvents.SELECTION_CHANGED,
-            lambda _: self._on_selection_changed()
-        )
-
-        # Initial population
-        self._refresh_list()
+        (ui_builder or EmpireBuildQueueUiBuilder()).build(self)
 
     # -----------------------------------------------------------------------
     # Public API facade (delegates to ViewModel)
