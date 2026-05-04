@@ -15,14 +15,14 @@
 |-------|--------|-----------|
 | 1. PROJ-323 documentation corrections (CRIT-001 false-positive checkmarks + MIN cleanups) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. PROJ-323 Task 3.34 + 3.37 parametrize | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. RaceSetupScreen testable construction (BLOCKS on PROJ-324 Phase 3 Task 3.4 outcome) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. RaceSetupScreen testable construction (BLOCKS on PROJ-324 Phase 3 Task 3.4 outcome) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04 (post-Phase-2)
-**Active Phase:** Phase 1+2 complete; Phase 3 awaiting PROJ-324 Phase 3 Task 3.4 outcome.
-**Last Action:** Phase 2 commits landed — Task 2.1 (commit 02c54631c, fleet_not_found 11-handler two-group parametrize, +9 LOC actual vs -75 LOC estimate; case-factory overhead consumed dedupe gains, but real benefit is single assertion path covering all 11 handlers) and Task 2.2 (same commit, zero/negative cargo 4-case parametrize, -8 LOC). Phase 1 commit: b8ce4fa35 (8 documentation correction findings addressed). 159 targeted tests pass.
-**Next Action:** Phase 3 — wait on PROJ-324 Phase 3 Task 3.4 GO/NO-GO signal before starting.
-**Blockers:** Phase 3 only — waits on PROJ-324 Phase 3 Task 3.4 GO/NO-GO outcome for RaceSetupScreen.
+**Last Updated:** 2026-05-04 (post-Phase-3)
+**Active Phase:** All phases Complete.
+**Last Action:** Phase 3 PoC landed — two-stage UIWindow construction pattern proven on `RaceSetupScreen`. Helper LOC delta -65 (-55%, 118 → 53). 63/63 race_setup tests pass. New production modules: `game/ui/screens/race_setup/delegate_factory.py` + `ui_builder.py`. New test fixture: `tests/fixtures/race_setup_ui_builders.py` (`Null` + `Mock` builders + smoke tests). PROJ-322 Tasks 5.11 + 2.17 annotations updated to `RESOLVED IN PROJ-325 Phase 3`.
+**Next Action:** PROJ-328 unblocked — apply the same two-stage pattern to the remaining 6 UIWindow subclasses (StrategyModalWindow shell, NewGameSetupScreen MVVM split, TransferDialog deep split, BuildQueueListWindow / OrdersWindow / FleetReportWindow light builders).
+**Blockers:** None.
 
 ## Overview
 
@@ -101,10 +101,10 @@ The parallelism map contains the per-file conflict matrix; consult it before sta
 
 ## Verification
 
-- [ ] All phase checklists complete
+- [x] All phase checklists complete
 - [ ] All tests passing (`python Tools/test_sharded/test_sharded.py`)
 - [ ] PROJ-323 `phase_3_checklist.md` no longer contains incorrect `[x]` marks for deleted files
 - [ ] PROJ-323 documentation findings (CRIT-001 + MIN-001..006) addressed
 - [ ] Task 3.34 parametrize landed; ~75 LOC saved
-- [ ] RaceSetupScreen testable construction resolved (either GO migration or NO-GO production refactor)
+- [x] RaceSetupScreen testable construction resolved (either GO migration or NO-GO production refactor) — NO-GO path via two-stage pattern (PROJ-325 Phase 3 PoC)
 - [ ] User verified

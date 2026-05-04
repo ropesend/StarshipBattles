@@ -8,6 +8,12 @@ import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 import pygame
 
+from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
+from tests.fixtures.race_setup_ui_builders import (
+    MockRaceSetupUiBuilder,
+    NullRaceSetupUiBuilder,
+)
+
 
 # --- Helpers ---
 
@@ -33,107 +39,40 @@ def _make_race_setup_screen():
 
     Returns (screen, mocks_dict) where mocks_dict contains all mock objects.
 
-    PROJ-309 Sub-phase 3.1 — bypass-init helper updated to wire the
-    MVVM delegates (`_view_model`, `_renderer`, `_controller`,
-    `_input_handler`, `_llm_service`). Most legacy assertions still
-    address the screen object directly because the screen mirrors
-    `race_config`, `is_editing`, panel refs, etc. as plain instance
-    attributes for backwards-compat. Property shims (`current_step`,
-    `_description_controller`) route to the view_model / controller.
+    PROJ-325 Phase 3 — rewritten to use the two-stage UIWindow
+    construction pattern (cheap state + delegates BEFORE the
+    ``bypass_init`` guard, widget tree behind a ``ui_builder``). Was
+    ~118 LOC of manual ``__new__`` + per-attribute wiring; now goes
+    through ``RaceSetupScreen``'s real constructor under
+    ``with bypass_init(...)`` plus ``MockRaceSetupUiBuilder``. See
+    ``Projects/active_projects/PROJ-325/findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md``.
     """
     from game.ui.screens.race_setup_screen import RaceSetupScreen
-    from game.ui.screens.race_setup.controller import RaceSetupController
-    from game.ui.screens.race_setup.renderer import RaceSetupRenderer
-    from game.ui.screens.race_setup.view_model import RaceSetupViewModel
 
-    with patch.object(RaceSetupScreen, '__init__', lambda self, *a, **kw: None):
-        screen = RaceSetupScreen.__new__(RaceSetupScreen)
-
-    # Core attributes
-    screen.ui_manager = MagicMock()
-    screen.on_complete_callback = MagicMock()
-    screen.on_cancel_callback = MagicMock()
-
-    # Race config
     race_config = _make_race_config_mock()
+    race_library = MagicMock(name="race_library")
+
+    with bypass_init(RaceSetupScreen):
+        screen = make_ui_widget(
+            RaceSetupScreen,
+            rect=pygame.Rect(0, 0, 800, 600),
+            manager=MagicMock(),
+            on_complete_callback=MagicMock(),
+            on_cancel_callback=MagicMock(),
+            ui_builder=MockRaceSetupUiBuilder(),
+        )
+    # The screen built its own real RaceConfig + RaceLibrary in
+    # ``_init_state``. Override with the test mocks so existing
+    # assertions keep working (the controller mirrors the screen ref).
     screen.race_config = race_config
-    screen.is_editing = False
-
-    # Race library
-    screen.race_library = MagicMock()
-    # PROJ-287: Session-scoped race registry (None when editor runs pre-game).
-    screen.race_registry = None
-    screen._asset_loader = MagicMock()
-
-    # Panels (extracted components)
-    screen._summary_panel = MagicMock()
-    screen._identity_panel = MagicMock()
-    screen._environment_panel = MagicMock()
-    screen._aptitudes_panel = MagicMock()
-    screen._description_panel = MagicMock()
-    screen._flag_gallery = MagicMock()
-    screen._portrait_gallery = MagicMock()
-    screen._theme_gallery = MagicMock()
-
-    # UI elements
-    screen.step_panels = [MagicMock() for _ in range(7)]
-    screen.tab_buttons = [MagicMock() for _ in range(7)]
-    for i, btn in enumerate(screen.tab_buttons):
-        btn.tab_index = i
-
-    screen.btn_cancel = MagicMock()
-    screen.btn_save = MagicMock()
-    screen.btn_load = MagicMock()
-    screen.btn_randomize = MagicMock()
-    screen.btn_randomize_all = MagicMock()
-    screen.error_label = MagicMock()
-    screen.name_input = MagicMock()
-    screen.ship_preview_scroll = MagicMock()
-
-    # PROJ-309 Sub-phase 3.1: MVVM delegates. ViewModel + Controller +
-    # Renderer wired with the mocks above; the renderer is bypass-init
-    # so its dialog widget refs default to None.
-    screen._view_model = RaceSetupViewModel(is_editing=False)
-    screen._renderer = RaceSetupRenderer.__new__(RaceSetupRenderer)
-    screen._renderer._screen = screen
-    screen._renderer.save_update_dialog = None
-    screen._renderer.btn_overwrite = None
-    screen._renderer.btn_save_new = None
-    screen._renderer.btn_save_cancel = None
-    screen._renderer.llm_dialog_window = None
-    screen._renderer.llm_dialog_btn_keep = None
-    screen._renderer.llm_dialog_btn_stop = None
-    screen._renderer.llm_dialog_field = ""
-    screen._renderer.llm_error_popup = None
-    screen._renderer.llm_error_popup_btn_ok = None
-    screen._renderer._ship_preview = MagicMock()
-    screen._controller = RaceSetupController.__new__(RaceSetupController)
-    screen._controller._screen = screen
-    screen._controller._vm = screen._view_model
-    screen._controller._renderer = screen._renderer
+    screen.race_library = race_library
     screen._controller.race_config = race_config
-    screen._controller.race_library = screen.race_library
-    screen._controller.race_registry = None
-    screen._controller.on_complete_callback = screen.on_complete_callback
-    screen._controller.on_cancel_callback = screen.on_cancel_callback
-    screen._controller._description_controller = None
-
-    # InputHandler — used by tests that call screen.process_event() to
-    # exercise event routing (e.g. slider dispatch).
-    from game.ui.screens.race_setup.input_handler import RaceSetupInputHandler
-    screen._input_handler = RaceSetupInputHandler(screen=screen)
-
-    # LLMDialogService stub — used by `update()` callers; no test
-    # currently invokes it via the helper, but wire it for consistency.
-    from game.ui.screens.race_setup.llm_dialog_service import LLMDialogService
-    screen._llm_service = LLMDialogService(
-        view_model=screen._view_model, renderer=screen._renderer
-    )
+    screen._controller.race_library = race_library
 
     mocks = {
         'ui_manager': screen.ui_manager,
         'race_config': race_config,
-        'race_library': screen.race_library,
+        'race_library': race_library,
         'summary_panel': screen._summary_panel,
         'identity_panel': screen._identity_panel,
         'environment_panel': screen._environment_panel,
@@ -146,6 +85,54 @@ def _make_race_setup_screen():
     }
 
     return screen, mocks
+
+
+# ===========================================================================
+# PROJ-325 Phase 3: two-stage construction PoC
+# ===========================================================================
+
+
+class TestPROJ325TwoStageConstruction:
+    """PROJ-325 Phase 3 PoC — verifying that the two-stage UIWindow
+    construction pattern (cheap state + delegates BEFORE the bypass
+    point, widget tree behind a builder) yields a useful instance under
+    `bypass_init` + `NullRaceSetupUiBuilder`.
+
+    See `Projects/active_projects/PROJ-325/findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md`.
+    """
+
+    def test_bypass_init_with_null_builder_yields_useful_instance(self):
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        with bypass_init(RaceSetupScreen):
+            screen = make_ui_widget(
+                RaceSetupScreen,
+                rect=pygame.Rect(0, 0, 800, 600),
+                manager=MagicMock(),
+                on_complete_callback=MagicMock(),
+                on_cancel_callback=MagicMock(),
+                ui_builder=NullRaceSetupUiBuilder(),
+            )
+
+        # Cheap state populated:
+        assert screen.race_config is not None
+        assert screen.is_editing is False
+        assert screen.race_library is not None
+        assert screen.race_registry is None  # default when not provided
+        assert screen._asset_loader is not None
+        # Delegates populated:
+        assert screen._view_model is not None
+        assert screen._renderer is not None
+        assert screen._controller is not None
+        assert screen._input_handler is not None
+        assert screen._llm_service is not None
+        # Widget slots are explicit placeholders (None / empty containers):
+        assert screen.btn_save is None
+        assert screen.btn_cancel is None
+        assert screen.btn_randomize is None
+        assert screen.error_label is None
+        assert screen.step_panels == []
+        assert screen.tab_buttons == []
 
 
 # ===========================================================================
