@@ -1,0 +1,18 @@
+{
+  "request_id": "req_20260504_231829_dfce54",
+  "review_dir": "Reviews/results/2026-05-04_233020_tests_full-review-batch-6-6-proj-337-proj-338-proj-339-p_req-req_20260504_231829_dfce54",
+  "report_path": "Reviews/results/2026-05-04_233020_tests_full-review-batch-6-6-proj-337-proj-338-proj-339-p_req-req_20260504_231829_dfce54/report.md",
+  "findings": {
+    "critical": 14,
+    "major": 12,
+    "minor": 0,
+    "info": 0
+  },
+  "completed_at": "2026-05-04T23:50:00Z",
+  "per_project": {
+    "PROJ-337": {"verdict": "PASS_WITH_FINDINGS", "critical": 0, "major": 3},
+    "PROJ-338": {"verdict": "CONDITIONAL_PASS", "critical": 4, "major": 6},
+    "PROJ-339": {"verdict": "FAIL", "critical": 7, "major": 0},
+    "PROJ-340": {"verdict": "FAIL", "critical": 3, "major": 3}
+  }
+}
