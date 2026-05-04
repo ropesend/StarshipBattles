@@ -95,6 +95,12 @@ class LLMBackgroundCall:
         self._messages = list(messages)
         self._kwargs = dict(complete_kwargs)
         self._cancel_event = threading.Event()
+        # PROJ-324 Phase 2: terminal-state completion signal. Set in
+        # `_run()` (and `cancel()` for the cancel-before-start path)
+        # OUTSIDE `_state_lock` to avoid waiter-starvation. Allows
+        # `wait(timeout)` to block deterministically instead of
+        # polling `status` with `time.sleep`.
+        self._done_event = threading.Event()
         # Inject our cancel_event into the kwargs the provider receives.
         self._kwargs["cancel_token"] = self._cancel_event
 
@@ -161,6 +167,14 @@ class LLMBackgroundCall:
                 self._status = CallStatus.CANCELLED
                 if self._finished_at is None:
                     self._finished_at = time.monotonic()
+        # PROJ-324 Phase 2: signal completion outside the lock.
+        # `Event.set()` is internally thread-safe; releasing the lock
+        # first prevents a `wait()`-er from racing into a re-acquire
+        # while we still hold it. Idempotent on a re-call (double-set is
+        # a no-op). For the cancel-before-start path the worker never
+        # runs, so this is the only set; for cancel-mid-run, `_run()`
+        # also sets it on its terminal transition (no-op duplicate).
+        self._done_event.set()
 
     @property
     def status(self) -> CallStatus:
@@ -179,6 +193,21 @@ class LLMBackgroundCall:
         with self._state_lock:
             return self._error
 
+    def wait(self, timeout: float | None = None) -> bool:
+        """Block until the call reaches a terminal state, or until ``timeout`` seconds elapse.
+
+        Returns ``True`` if a terminal state (DONE, ERROR, or CANCELLED)
+        was reached, ``False`` if the timeout expired first. Returns
+        immediately if already in a terminal state. ``timeout=None``
+        blocks indefinitely.
+
+        PROJ-324 Phase 2: deterministic alternative to polling
+        ``status`` with ``time.sleep`` from the test thread. The done
+        event is set by ``_run()``'s terminal branches and by
+        ``cancel()`` (for the cancel-before-start path).
+        """
+        return self._done_event.wait(timeout)
+
     @property
     def elapsed_seconds(self) -> float:
         """Wall time since start(). 0 before start; frozen after terminal state."""
@@ -191,39 +220,51 @@ class LLMBackgroundCall:
     # -- Worker --------------------------------------------------------------
 
     def _run(self) -> None:
+        # PROJ-324 Phase 2: every code path through `_run()` must signal
+        # completion via `self._done_event.set()` so callers blocked on
+        # `wait(timeout)` unblock deterministically. The `try/finally`
+        # below sets the event regardless of which terminal branch we
+        # took (CANCELLED, ERROR, DONE — including the early-cancelled
+        # return at the top). `Event.set()` is idempotent and internally
+        # thread-safe; we set it OUTSIDE `_state_lock` to prevent
+        # waiter-starvation if a `wait()`-er re-acquires immediately.
         try:
-            with self._state_lock:
-                # Don't transition to RUNNING if already cancelled.
-                if self._status == CallStatus.CANCELLED:
-                    return
-                self._status = CallStatus.RUNNING
-
             try:
-                result = self._provider.complete(self._messages, **self._kwargs)
-            except LLMCancelled as e:
                 with self._state_lock:
-                    if self._status != CallStatus.CANCELLED:
-                        self._status = CallStatus.CANCELLED
-                    self._error = e
-                    self._finished_at = time.monotonic()
-                return
-            except LLMException as e:
-                with self._state_lock:
-                    # Cancel wins — if user cancelled mid-call, keep CANCELLED.
-                    if self._status != CallStatus.CANCELLED:
-                        self._status = CallStatus.ERROR
+                    # Don't transition to RUNNING if already cancelled.
+                    if self._status == CallStatus.CANCELLED:
+                        return
+                    self._status = CallStatus.RUNNING
+
+                try:
+                    result = self._provider.complete(self._messages, **self._kwargs)
+                except LLMCancelled as e:
+                    with self._state_lock:
+                        if self._status != CallStatus.CANCELLED:
+                            self._status = CallStatus.CANCELLED
                         self._error = e
+                        self._finished_at = time.monotonic()
+                    return
+                except LLMException as e:
+                    with self._state_lock:
+                        # Cancel wins — if user cancelled mid-call, keep CANCELLED.
+                        if self._status != CallStatus.CANCELLED:
+                            self._status = CallStatus.ERROR
+                            self._error = e
+                        self._finished_at = time.monotonic()
+                    return
+
+                # Success.
+                with self._state_lock:
+                    # Cancel wins.
+                    if self._status != CallStatus.CANCELLED:
+                        self._result = result
+                        self._status = CallStatus.DONE
                     self._finished_at = time.monotonic()
-                return
 
-            # Success.
-            with self._state_lock:
-                # Cancel wins.
-                if self._status != CallStatus.CANCELLED:
-                    self._result = result
-                    self._status = CallStatus.DONE
-                self._finished_at = time.monotonic()
-
+            finally:
+                # Signal terminal-state completion outside any state-lock.
+                self._done_event.set()
         finally:
             global _in_flight_calls
             with _in_flight_lock:
