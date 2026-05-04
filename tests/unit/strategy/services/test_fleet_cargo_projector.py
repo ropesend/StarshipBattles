@@ -118,3 +118,39 @@ class TestComposition:
             ],
         )
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 150
+
+
+class TestNegativeAmountIsolation:
+    """MIN-001 fix from PROJ-336 review (req_20260504_213624_1361ce):
+    pin actual production behavior on negative `amount` for transfer
+    orders. Production at `fleet_cargo_projector.py:56,60` treats any
+    non-positive amount as the auto-fill/auto-drain sentinel:
+        load:   delta = amount if amount > 0 else (capacity - projected)
+        unload: delta = amount if amount > 0 else projected
+    So negative load FILLS to capacity (not reduces); negative unload
+    DRAINS to zero (not adds). D-008 in the project's decisions.md
+    documented this as 'negative load reduces projected', which was
+    INCORRECT — these tests pin the actual behavior. (D-008 should be
+    revised in a follow-up; the production behavior is what production
+    does.)
+    """
+
+    def test_load_with_negative_amount_fills_to_capacity_like_zero(self):
+        # Negative `amount` on load is treated as auto-fill (same as
+        # amount=0). Production ignores the sign and the magnitude.
+        fleet = _make_fleet(
+            current=100, capacity=2000,
+            orders=[_transfer("load", -50)],
+        )
+        # delta = capacity - projected = 1900; projected = min(100+1900, 2000) = 2000.
+        assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 2000
+
+    def test_unload_with_negative_amount_drains_to_zero_like_zero(self):
+        # Negative `amount` on unload is treated as auto-drain (same as
+        # amount=0).
+        fleet = _make_fleet(
+            current=100, capacity=2000,
+            orders=[_transfer("unload", -500)],
+        )
+        # delta = projected = 100; projected = max(100-100, 0) = 0.
+        assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 0

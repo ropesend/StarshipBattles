@@ -75,8 +75,15 @@ class TestStartFromSpecBuilderGating:
                 spec, ai_factory=Mock(),
                 ship_builder=None, registry_provider=None,
             )
-        # PROJ-252 message fragment.
-        assert "PROJ-252" in str(exc_info.value) or "registry_provider" in str(exc_info.value)
+        # MIN-001 fix (review req_20260504_213455_95a42d): use semantic
+        # signal (`registry_provider`) — not the ticket reference. The
+        # original `or` allowed a refactor that drops the semantic word
+        # to silently keep the test passing.
+        assert "registry_provider" in str(exc_info.value), (
+            f"start_from_spec error message must mention 'registry_provider' "
+            f"as the semantic signal of the missing dependency. Got: "
+            f"{exc_info.value}"
+        )
 
     def test_start_from_spec_uses_explicit_ship_builder_when_provided(
         self, controller,
