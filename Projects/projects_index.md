@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-340 | Test coverage - UI services + utility characterization | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-339 | Test coverage - UI panels mid-risk characterization | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-338 | Test coverage - UI panels high-risk characterization (drag handler, build queue, system tree, planet report, battle panels) | Planning | 2026-05-04 | 2026-05-04 |

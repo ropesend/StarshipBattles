@@ -89,6 +89,25 @@ python Tools/test_sharded/test_sharded.py
 
 ## Estimated Sessions
 
-3 (matches master arc estimate). Drag handler ~1 session, system tree +
-planet report + battle panels ~1.5 sessions, controller extension ~0.5
-session.
+**4 sessions** (revised up from 3 per delegate-review CRIT-002). The
+112-test target across 6 test files for 5 high-risk panels (drag handler
+state machine + system tree expand/collapse + build queue controller's
+PROJ-69/79/208 callback chains + planet report panel's facade-coupled
+data aggregation + battle panels' rendering orchestration) implies
+~28 tests/session at 4 sessions, in line with PROJ-337's measured ~27
+tests/session rate. The original 3-session estimate implied ~37
+tests/session — aggressive given the existing
+`test_build_queue_controller.py` is already 1108 LOC for a single panel.
+
+Breakdown:
+- Session 1: Drag handler (pure state machine, ~28 tests).
+- Session 2: System tree panel (719 LOC, ~22 tests).
+- Session 3: Planet report panel + battle panels (~42 tests combined).
+- Session 4: Build queue controller extension (~15 tests) + buffer for
+  fixture-discovery surprises across the 5 panels.
+
+If de-scoping is preferred over the +1 session, drop the
+`test_system_tree_panel_hazard.py` extension and lower the drag-handler
+target from ~28 → ~20 to land in 3 sessions / ~85 tests. The 4-session
+budget here assumes full coverage is preferred per user priority order
+(readability > maintainability > functionality > runtime).

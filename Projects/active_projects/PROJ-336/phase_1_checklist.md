@@ -83,7 +83,8 @@ Behaviors to pin (estimate 9-11 tests):
 - [ ] `test_returns_stellar_spec_for_stellerate_star_when_active`
 - [ ] `test_returns_stellar_spec_for_create_dyson_sphere_when_active`
 - [ ] `test_returns_warpfield_spec_for_open_warp_point_when_active`
-- [ ] `test_first_empire_with_match_wins_over_later_empire` (pin empire-iteration order)
+- [ ] `test_first_empire_with_match_wins_over_later_empire` (pin empire-iteration order — concern #2 of two ordering concerns)
+- [ ] `test_geologic_spec_matched_before_stellar_when_both_block_order_type` (MAJ-005 — pins STABILIZERS outer-loop iteration order, concern #1 of two ordering concerns. Use a synthetic order type listed in BOTH the Geologic spec's `blocks` set AND the Stellar spec's `blocks` set, with matching active stabilizers for both empires/scopes; assert the returned `StabilizerSpec` is the Geologic one. Pins the `for spec in STABILIZERS: ...` outer-loop ordering — would catch a regression that reorders the `STABILIZERS` tuple.)
 - [ ] `test_calls_find_abilities_in_scope_with_require_active_true` (capture kwargs)
 - [ ] `test_passes_component_registry_through_to_scanner_unchanged` (None and a sentinel)
 - [ ] `test_geologic_scope_iteration_order_planet_then_sector_then_system` (assert call order on the mock — pins the spec.scopes contract)

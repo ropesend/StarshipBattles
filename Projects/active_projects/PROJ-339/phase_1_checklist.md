@@ -95,8 +95,17 @@ Each item maps to a specific behavior surfaced in the per-file analysis.
 - [ ] `test_format_value_prefixes_per_operation` — `(1.5, "multiply")` →
       `"x1.500"`; `(50, "add")` → `"+50.00"`; `(-1, "add")` → `"-1.000"`;
       assignment operation uses `"="` prefix.
-- [ ] `test_format_sig_digits_precision_tiers` — `≥1000` no decimals;
-      `100-999` one dp; `10-99` two dp; `<10` three dp; `0` → `"0"`.
+- [ ] `test_format_sig_digits_precision_tiers_for_positive_values` —
+      tier boundaries on positive values: `1000` → no decimals;
+      `100`-`999` → 1 dp; `10`-`99` → 2 dp; `0`<`v`<`10` → 3 dp; `0` → `"0"`.
+- [ ] `test_format_sig_digits_negative_values_use_same_tier_boundaries`
+      (MIN-004 — pin whether `-999.5` formats with 1 dp or 3 dp). Read
+      production source: if the tier check uses `abs(value)` the negative
+      tier matches the positive tier; if it uses raw `value`, all
+      negatives may fall into the `<10` tier (3 dp). The test pins WHATEVER
+      production currently does — don't change production. Suggested
+      cases: `-1000` (boundary), `-500` (mid-range), `-5` (low),
+      `-0.001` (near zero).
 
 ### Gap-fillers
 

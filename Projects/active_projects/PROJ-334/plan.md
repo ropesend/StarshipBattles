@@ -16,6 +16,18 @@
 **Active Phase:** Phase 0 (audit existing coverage before writing)
 **Next Action:** Enumerate behaviors per file, intersect with existing tests, produce gap-list.
 **Blockers:** PROJ-329A/B/C + PROJ-330 sequencing.
+**Estimated sessions:** **2.5 sessions** (revised up from 2 per delegate-review MIN-001).
+Phase 0 (enumerate symbols, map existing tests at 1209 LOC, write
+findings doc) costs ~0.3-0.5 sessions before any test gets written.
+Phase 1 (~24-30 gap-fill tests across 2 files) is ~2 sessions. The
+revised total is honest about the audit-first approach.
+
+If session budget tightens, an alternative is to absorb Phase 0 into
+the first part of Phase 1 (read existing tests as you write new ones,
+filling the gap-list inline). That trades the formal `findings/coverage_gap_audit.md`
+artefact for ~0.3 sessions of speed; the resulting tests are equivalent
+either way. Keeping Phase 0 as a separate produced artefact is preferred
+because it documents the gap-list reasoning for future audits.
 
 ## Overview
 

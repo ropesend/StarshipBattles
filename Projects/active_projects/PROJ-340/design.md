@@ -41,6 +41,68 @@ instance accessed via `get_default_ship_theme_manager()` /
 **Test seam:** Monkeypatch the path constant + patch `pygame.image.load`.
 See `decisions.md` D-003 / D-004.
 
+**Minimum valid `theme.json` schema (MAJ-004 — pinned from `_discover_theme`
+at `game/ui/assets/ship_theme_manager.py:128-218`):**
+
+```json
+{
+  "schema_version": 1,
+  "name": "TestTheme",
+  "description": "(optional)",
+  "image_sizes": {
+    "skin": [w, h],
+    "portrait": [w, h]
+  },
+  "assets": {
+    "frigate": {
+      "skin": "skin_frigate.png",
+      "portrait": "portrait_frigate.png",
+      "scale": 1.0
+    }
+  }
+}
+```
+
+**Required keys for a non-rejected theme:**
+- `assets:` — must be a dict (otherwise `_discover_theme` returns early
+  with an error log naming PROJ-314 schema). Legacy `images:` schema is
+  no longer supported.
+- Each entry under `assets.<ship_class>:` — must be a dict (otherwise the
+  entry is skipped with an error log).
+- For each ship class entry: `skin:` is the only attribute that gates
+  registration. Without a working `skin:`, the entry is dropped (no skin
+  = nothing to register; portrait alone is not useful — see line 207-209).
+
+**Optional fields with documented defaults:**
+- `name`: defaults to `os.path.basename(theme_dir)` if missing.
+- `schema_version`: warns on non-1 values but proceeds with current
+  loader (forward-compat). Missing `schema_version` is silently accepted.
+- `description`: defaults to `''`.
+- `image_sizes`: defaults to `{}`. Per-kind size validation only runs
+  when this dict is populated.
+- Per-entry `scale`: defaults to `1.0`.
+- Per-entry `portrait`: optional; missing portrait yields a warning log
+  and the synthetic-placeholder fallback at lookup time.
+
+**Tests should construct synthetic `theme.json` files matching the
+shape above.** Cover at minimum:
+
+1. Valid theme with one ship class — `_discover_theme` registers it.
+2. Missing `assets:` block — early return + error log.
+3. Non-dict `assets[ship_class]` — skipped with error log.
+4. Missing `skin:` in entry — entry dropped (no `theme_data[name][class]`).
+5. Missing `portrait:` — entry registered with `portrait_path=None`.
+6. Unknown `schema_version` — warning logged, theme still registered.
+7. Extra ship classes not in `SHIP_CLASSES_WITH_VISUAL_THEMES` — warning
+   logged via `_validate_declared_keys` but not rejected.
+8. Missing canonical ship classes — warning logged.
+
+**Where to find the canonical ship class set:** `SHIP_CLASSES_WITH_VISUAL_THEMES`
+in the same module (line 223 of `_validate_declared_keys`). Use a small
+synthetic subset (1-2 classes) for fixtures rather than reproducing the
+full canonical set; tests should not depend on the canonical set's
+membership beyond pinning the warning behavior.
+
 ### `game/ui/widgets/scrollable_json_panel.py`
 
 **Role:** Battle-state-viewer composite widget. Renders a JSON document

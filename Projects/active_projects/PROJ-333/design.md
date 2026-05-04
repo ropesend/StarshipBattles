@@ -141,3 +141,31 @@ Per-engine architecture context: callers, callees (with module paths), state mut
 **None.** All 5 engines are constructor-injected with explicit dependencies (registries, event_bus, nav_service). `Galaxy`, `Empire`, `Fleet`, `Planet` are all duck-typed in the engine bodies (no `isinstance` checks except for `Fleet` and `Planet`), so `MagicMock` with the right attribute set works.
 
 The only shape gotcha is `production_engine`'s `colony_or_fleet.context_type` discrimination — fixtures must set `context_type='planet'` or `'fleet'` explicitly, since `MagicMock` would otherwise auto-attribute and break the empire-pool fallback path.
+
+---
+
+## production_engine test-file split boundary (MAJ-002 clarification)
+
+The two `test_production_engine_*.py` files split coverage of the same
+production class along a usage-axis line — NOT along a method boundary.
+Both files exercise overlapping methods; the split is which BEHAVIORS each
+file pins, not which methods each file calls.
+
+| Test file | Pins behaviors related to | Methods exercised (overlap allowed) |
+|---|---|---|
+| `test_production_engine_queue.py` | Queue iteration semantics: `MAX_QUEUE_ITERATIONS=10` cap, `is_complex_only` STOP-not-SKIP behavior, multi-item tick processing, completion-and-spawn handoff | `process_production`, `_process_queue_item`, `_calculate_tick_expenditure` (called as supporting), `_complete_item` |
+| `test_production_engine_consumption.py` | Resource math + affordability routing: `context_type` planet-vs-fleet branch, zero-rate-required-resource-halts-item, shortage logging, partial-affordability arithmetic | `_calculate_tick_expenditure` (focal), `_route_consumption_by_context`, `_consume_resources`, `_log_shortage` |
+
+`_calculate_tick_expenditure` is exercised in BOTH files: the `_queue.py`
+file pins what happens when it returns `None` (item halts, queue continues
+to next item), and the `_consumption.py` file pins WHEN it returns `None`
+(zero-rate required resource) and the math of its return value when it
+returns a non-empty dict. Tests in both files use a real
+`production_engine` instance — no shared fixture mocks the method out.
+Each file writes its own narrow expenditure scenarios; the test cases do
+not overlap even though the method coverage does.
+
+If a future refactor moves `_calculate_tick_expenditure` to a sibling
+module (per a separate ticket), update this section's method column and
+both test files; the behavioral split (queue iteration vs. resource math)
+stays valid regardless of where the method physically lives.
