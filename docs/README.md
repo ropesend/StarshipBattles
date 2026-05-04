@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-05-04 — PROJ-321..328 audit remediation pass: pattern count is 33 (added §32 Compositional Construction and §33 UI Widget Test Factory), `ApplicationContext` manages 10 services including `ImageProvider`, broken archive links remain corrected, and current layer/dependency guidance was reconciled with source.
+> **Last verified:** 2026-05-04 — Coverage backfill (T3-25): added `systems/save_load.md` to the Step 3 domain table and the directory tree. Earlier same-day pass — PROJ-321..328 audit remediation: pattern count is 33 (added §32 Compositional Construction and §33 UI Widget Test Factory), `ApplicationContext` manages 10 services including `ImageProvider`, broken archive links remain corrected, layer/dependency guidance reconciled with source.
 
 ---
 
@@ -43,6 +43,7 @@
 | Orders | [orders_system.md](systems/orders_system.md) | Order lifecycle, types, execution engines |
 | Production | [production_system.md](systems/production_system.md) | Build queues, tick-based production, spawning, rate resolution |
 | Resources | [resource_system.md](systems/resource_system.md) | Unified resource catalog (materials + consumables), resource definitions, component-driven behavior |
+| Save / Load | [save_load.md](systems/save_load.md) | `SaveGameService` (v3.0.0): turn-based on-disk format, atomic writes, no-migration policy, PROJ-312 replay-store coupling |
 
 ### Step 4: How-to guides (read when performing specific tasks)
 
@@ -90,7 +91,8 @@ docs/
     ├── research_system.md         Tech tree, research tracker
     ├── orders_system.md           Order lifecycle and execution
     ├── production_system.md       Build queues, production model, spawning
-    └── resource_system.md         Unified resource catalog (materials + consumables)
+    ├── resource_system.md         Unified resource catalog (materials + consumables)
+    └── save_load.md               SaveGameService: on-disk format, atomic writes, no-migration policy
 ```
 
 ## Quick Reference

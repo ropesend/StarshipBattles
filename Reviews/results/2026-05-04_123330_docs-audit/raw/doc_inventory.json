@@ -1,0 +1,472 @@
+{
+  "total_docs": 28,
+  "docs": [
+    {
+      "doc": "docs/README.md",
+      "group": "architecture",
+      "headings": [
+        "Starship Battles Documentation",
+        "Reading Order for Agents",
+        "Step 1: Foundation (read for ALL tasks)",
+        "Step 2: Task-specific (read based on what you're doing)",
+        "Step 3: Domain-specific (read when working in that system)",
+        "Step 4: How-to guides (read when performing specific tasks)",
+        "Directory Structure",
+        "Quick Reference"
+      ],
+      "loc": 105
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "group": "architecture",
+      "headings": [
+        "Starship Battles - Architecture Reference",
+        "Layer Structure",
+        "Dependency Rules",
+        "Forbidden Dependencies",
+        "What belongs in `game/services/`? (PROJ-296)",
+        "Package Directory Map",
+        "`game/context.py` -- DI Container (outside layer hierarchy)",
+        "`game/services/` -- Cross-cutting infrastructure (PROJ-296)",
+        "`game/assets/` -- Asset infrastructure",
+        "`game/core/` -- Foundation layer, no game-layer dependencies"
+      ],
+      "loc": 512
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "group": "architecture",
+      "headings": [
+        "Design Patterns Reference",
+        "Table of Contents",
+        "1. ApplicationContext (DI Container) \u2014 PROJ-258",
+        "Where",
+        "How It Works",
+        "game/context.py",
+        "Services Managed (10 total)",
+        "How Services Are Accessed",
+        "Production code \u2014 via ApplicationContext (preferred)",
+        "Production code \u2014 via module-level accessor (for decorators, convenience functions)"
+      ],
+      "loc": 1836
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "group": "architecture",
+      "headings": [
+        "Conventions",
+        "1. Naming Conventions",
+        "1.1 Battle vs Combat",
+        "1.2 Screen vs Scene",
+        "1.3 Builder vs Workshop",
+        "1.4 Star System vs Sector",
+        "1.5 Handler Naming",
+        "1.6 MVVM Pattern Files",
+        "1.7 Ability Module Names",
+        "1.8 Order System Names (PROJ-238)"
+      ],
+      "loc": 689
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "group": "architecture",
+      "headings": [
+        "Service Layer Architecture",
+        "Overview",
+        "Service Directory",
+        "Cross-Cutting Services (`game/services/`, PROJ-296)",
+        "LLM Service",
+        "Simulation Layer Services",
+        "ShipMaterializer (PROJ-274)",
+        "Production default (lazy-init): InstanceBackedMaterializer.",
+        "Combat Lab swaps at TestRunner.__init__:",
+        "BattleService"
+      ],
+      "loc": 1339
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "group": "architecture",
+      "headings": [
+        "Error Handling Guidelines",
+        "Table of Contents",
+        "Exception Hierarchy",
+        "Hierarchy Diagram",
+        "When to Use Each Exception Type",
+        "Exception Attributes",
+        "Error Codes",
+        "Validation Codes (V001-V099)",
+        "State Codes (S001-S099)",
+        "Resource Codes (R001-R099)"
+      ],
+      "loc": 662
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "group": "architecture",
+      "headings": [
+        "UI Style Guide",
+        "0. Window Management (PROJ-313)",
+        "Cross-screen reuse",
+        "1. Core Color Palette (`COLORS` dict)",
+        "Backgrounds (dark to light)",
+        "Borders",
+        "Text",
+        "Accents",
+        "2. Domain Color Constants",
+        "Ship Layer Rendering"
+      ],
+      "loc": 807
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "group": "systems",
+      "headings": [
+        "Ability Reference",
+        "How to Read This Document",
+        "Formula-Driven Abilities (`_parse_attrs` requirement)",
+        "Abilities with formula-driven data in production components",
+        "Stacking Rules",
+        "Phase 1: Intra-Group MAX",
+        "Phase 2: Inter-Group SUM  ",
+        "No Stack Group",
+        "Validation",
+        "Scope Reference"
+      ],
+      "loc": 1701
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "group": "systems",
+      "headings": [
+        "AI System Architecture",
+        "Architecture Overview",
+        "AIController",
+        "Update Cycle (`update()`)",
+        "Behavior Selection Flowchart",
+        "Targeting Pipeline",
+        "Movement Behavior System",
+        "Combat Behaviors (5)",
+        "Utility/Test Behaviors (5)",
+        "Strategy Parameters Read by Behaviors"
+      ],
+      "loc": 311
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "group": "systems",
+      "headings": [
+        "Combat Simulation System",
+        "0. Unified Entry (PROJ-269 + PROJ-270 \u2014 complete)",
+        "Telemetry (Phase 5)",
+        "Boundary Region (Phase 3)",
+        "Formation System (Phase 4)",
+        "N-Team Support (Phase 3)",
+        "Combat Lab Scenario Role Tagging (PROJ-278 Phase 4)",
+        "Component HP Persistence (Phase 2)",
+        "1. Battle Orchestration (post-PROJ-269 unified flow)",
+        "`run_battle(spec) -> BattleOutcome` is the only sanctioned entry"
+      ],
+      "loc": 1377
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "group": "systems",
+      "headings": [
+        "Strategy Orders System Architecture",
+        "Order Lifecycle",
+        "Order Data Structure",
+        "Turn Loop & Tick Mechanics",
+        "Engine Responsibilities",
+        "Order Type Categories",
+        "Movement Orders (`MOVEMENT_ORDER_TYPES`)",
+        "Action Orders (`ACTION_ORDER_TYPES`)",
+        "Instant Orders",
+        "Planet Action Orders (`PLANET_ACTION_ORDER_TYPES`)"
+      ],
+      "loc": 502
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "group": "systems",
+      "headings": [
+        "Production System",
+        "Overview",
+        "Build Contexts",
+        "User Workflow",
+        "Architecture",
+        "Layer Separation",
+        "Key Design Principles",
+        "Data Models",
+        "PlanetaryFacility",
+        "Planet Integration"
+      ],
+      "loc": 377
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "group": "systems",
+      "headings": [
+        "Research System Architecture",
+        "Overview",
+        "TechTree",
+        "TechNode",
+        "Requirements (Fuzzy)",
+        "Node Status",
+        "Price Curves",
+        "Validation",
+        "Depth Calculation",
+        "ResearchTracker"
+      ],
+      "loc": 214
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "group": "systems",
+      "headings": [
+        "Resource System",
+        "Core Concepts",
+        "Data Schema",
+        "`data/resources.json`",
+        "Current Resources",
+        "Code Architecture",
+        "ResourceCatalog (`game/core/resources.py`)",
+        "Access via DI",
+        "Via GameRegistries (preferred)",
+        "Via DefaultRegistryProvider"
+      ],
+      "loc": 242
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "group": "systems",
+      "headings": [
+        "Save / Load System",
+        "1. Overview",
+        "2. Public API",
+        "3. On-Disk Format",
+        "4. Atomic Write Guarantee",
+        "5. Versioning Policy \u2014 No Migration",
+        "6. PROJ-312 Replay Integration",
+        "7. Test Coverage"
+      ],
+      "loc": 181
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "group": "systems",
+      "headings": [
+        "Strategy Layer System",
+        "1. StrategySessionFacade",
+        "Write Path (Commands)",
+        "Read Path (Queries)",
+        "Query Categories",
+        "Facade Slice Architecture (PROJ-309)",
+        "2. Command Dispatch",
+        "Architecture",
+        "ICommandHandler Protocol",
+        "Command Ownership Validation (BUG-125)"
+      ],
+      "loc": 1883
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "group": "guides",
+      "headings": [
+        "Adding New Abilities",
+        "Overview",
+        "Quick Start",
+        "Choosing a Base Class",
+        "Step 1: Create the Ability Class (SimpleMultiplierAbility)",
+        "Step 1 (Alternative): Create from Raw Ability Base Class",
+        "Step 2: Register the Ability",
+        "Import at the top with the other imports",
+        "Add to ABILITY_REGISTRY dict",
+        "Add to __all__ list"
+      ],
+      "loc": 565
+    },
+    {
+      "doc": "docs/guides/adding_modifiers.md",
+      "group": "guides",
+      "headings": [
+        "Adding New Modifiers",
+        "Quick Start",
+        "Step 1: Define the Modifier",
+        "Step 2: Choose the Right Stats",
+        "Available Stat Keys",
+        "Operations",
+        "Step 3: Write Formulas",
+        "Example Formulas",
+        "Step 4: Add Restrictions",
+        "Allow Specific Abilities"
+      ],
+      "loc": 229
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "group": "guides",
+      "headings": [
+        "Component System",
+        "Overview",
+        "Component Lifecycle",
+        "Key Lifecycle Methods",
+        "Ability System",
+        "Ability Hierarchy",
+        "Key Ability Classes",
+        "Strategic-Layer Abilities (PROJ-237/238)",
+        "Ability Stat Bindings",
+        "SimpleMultiplierAbility Pattern"
+      ],
+      "loc": 353
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "group": "guides",
+      "headings": [
+        "Modifier System Architecture",
+        "Core Concepts",
+        "Modifiers vs Abilities",
+        "Data Flow",
+        "Architecture Components",
+        "1. Modifier Definition (JSON)",
+        "2. ModifierEffect (dataclass)",
+        "3. ModifierEffectEvaluator",
+        "Returns list of ModifierEffect with evaluated values",
+        "4. STAT_BINDINGS (Ability System)"
+      ],
+      "loc": 533
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "group": "guides",
+      "headings": [
+        "Performance Profiling",
+        "Policy",
+        "Tooling",
+        "How Scalene Helps",
+        "Standard Pass",
+        "Scenario Selection",
+        "Interpreting Results",
+        "Relationship To Internal Profiling",
+        "References"
+      ],
+      "loc": 99
+    },
+    {
+      "doc": "docs/guides/pre_commit_hooks.md",
+      "group": "guides",
+      "headings": [
+        "Pre-commit hooks",
+        "Available hooks",
+        "`lint_test_files`",
+        "Installing the test-file linter as a pre-commit hook",
+        "Bash / Git Bash / WSL",
+        "PROJ-326 zero-game-import test-file linter.",
+        "Skip on merge / rebase / cherry-pick states where partial trees are normal.",
+        "PowerShell",
+        "CI integration",
+        "Notes"
+      ],
+      "loc": 74
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "group": "guides",
+      "headings": [
+        "QS Complex Design Guide",
+        "What Is a QS Complex?",
+        "Required Components",
+        "JSON Design Structure",
+        "Field Reference",
+        "Component Entry Format",
+        "Tier System",
+        "Existing QS Complexes",
+        "Initial Complexes (spawned on game start)",
+        "Additional Complexes (player-built)"
+      ],
+      "loc": 293
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "group": "guides",
+      "headings": [
+        "Simulation Testing Guide",
+        "1. Overview & Test Architecture",
+        "Purpose",
+        "Directory Structure",
+        "2. Running Simulation Tests",
+        "CLI Runner",
+        "Run all simulation tests",
+        "Filter by ID prefix",
+        "Run a specific test",
+        "List all discovered tests"
+      ],
+      "loc": 914
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "group": "guides",
+      "headings": [
+        "Testing Infrastructure Guide",
+        "Conftest Hierarchy",
+        "`conftest.py` (root)",
+        "`tests/conftest.py`",
+        "`tests/unit/conftest.py`",
+        "`tests/integration/conftest.py`",
+        "DI Registry Fixtures",
+        "Usage Pattern",
+        "SessionRegistryCache",
+        "How It Works"
+      ],
+      "loc": 258
+    },
+    {
+      "doc": "AGENTS.md",
+      "group": "root",
+      "headings": [
+        "AGENTS.md \u2014 Starship Battles",
+        "Non-Negotiable Rules",
+        "Commands",
+        "Full test suite (primary)",
+        "Incremental tests (changed files only)",
+        "Single test",
+        "Combat Lab tests",
+        "Code shrinkage audit (read-only analysis)",
+        "Then /ocode-audit-shrink                         # Phase 2: agents + report",
+        "Architecture (Quick Reference)"
+      ],
+      "loc": 110
+    },
+    {
+      "doc": "CLAUDE.md",
+      "group": "root",
+      "headings": [
+        "Claude Code Adapter",
+        "Your Role: Technical Consultant",
+        "Estimate in LLM time, not human time",
+        "Reinforcement of `AGENTS.md` rules",
+        "1. Strict TDD",
+        "2. Documentation First",
+        "3. Root Cause Fixes",
+        "Project Facts",
+        "Key Conventions",
+        "Claude Skills"
+      ],
+      "loc": 215
+    },
+    {
+      "doc": ".agents/CODEX.md",
+      "group": "root",
+      "headings": [
+        "Codex Adapter",
+        "Scope",
+        "Startup Checklist",
+        "Skill Routing",
+        "Codex Operating Notes",
+        "Skill Usage Logging"
+      ],
+      "loc": 51
+    }
+  ]
+}

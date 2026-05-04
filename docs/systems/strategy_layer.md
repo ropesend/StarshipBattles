@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-05-04 — Applied doc-audit fixes (1 item: `IOrderable` protocol path → `game/core/protocols/strategy_entities.py`, see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier 2026-05-02 — PROJ-320: documented per-fleet movement-opportunity combat dispatch in §3 Per-Tick Phase Execution Order Phase 4 row. Replaces the legacy per-tick contested-hex scan with per-fleet `tick % get_tick_interval(fleet.speed) == 0` triggering, gated by whether the fleet left its hex this tick (TurnEngine derives `moved_fleet_ids` from a pre/post Phase-3 location diff). Multi-fleet-per-empire encounters: spec compiler groups by `owner_id` so allied fleets share a team. ~10× reduction in combat invocations at typical contested sectors. Earlier same-day pass — Issue #7: documented `TurnEngine.process_turn`'s new `progress_callback: Optional[Callable[[int, int], None]]` keyword-only parameter (see §3 "Per-Tick Progress Callback"). Plumbed identically through `GameSession.process_turn` and `StrategySessionFacade.process_turn`. The strategy screen wires a closure that runs `pygame.event.pump()` + redraw + `display.flip()` every tick so the "PROCESSING TURN..." overlay can show a live "Tick N / 100" sub-line. Engine-side guard: callback exceptions are caught with `# Intentional broad catch:` (PROJ-308 convention) and logged at WARNING; a buggy UI callback never breaks turn execution. Per-call state cleared via `try/finally` in `process_turn`. Mid-turn Esc cancellation is NOT supported (event.pump() flushes the OS queue but does not consume Esc) — only inter-turn Esc cancel still works during `run_n_turns`. Earlier same-day pass — Issue #8: Updated §5 "Replay Wiring (FEAT-26)" to reflect the differentiated `SimulationBattleResolver` shortcut branches. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` so a real (brief) replay is captured; only `sole_survivor` and the defensive `no_ships` keep the shortcut, both shipping `BattleResult.replay_unavailable_reason` so the Event Log button shows an honest disabled-tooltip instead of "older save." Earlier verification (2026-04-29): FEAT-28: Added "Mutual-Pursuit Rendezvous Routing" subsection under FleetPursuerTracker. Two mutually-pursuing fleets (each head order is `MOVE_TO_FLEET`/`JOIN_FLEET` targeting the other) now bypass `calculate_intercept_point` and pathfind directly to the target's current hex; both move toward each other along the shortest line at their own speeds. `FleetMovementEngine.collect_movements` adds a `_filter_jump_past_collisions` post-processor that drops the larger fleet's queue entry on swap-hex parity (mirrors BUG-122 `_elect_canonical_merges` tiebreak). Earlier same-day pass: Added §6 "Galaxy Size Contract" subsection documenting FEAT-27: `DEFAULT_SYSTEM_COUNT = 2` single-source-of-truth in `game_config.py`, `1 ≤ system_count ≤ 150` validation, N=1 shared-system mode (multiple empires on distinct planets, no warp lanes, planet-shortage retry loop), N≥2 distinct-system invariant with hard error on E>N, hand-rolled linspace home-index distribution, per-system planet counter, and the continuous quadratic slider curve `value = 1 + 149 * (t / SLIDER_T_MAX) ** 2`. Concurrently backfilled BUG-123 + FEAT-26 deferred sections in §5 Event System. BUG-123: `EventLog.get_events_for_empire(empire_id, *, include_global=True)` + the `current_empire.id` UI scoping convention + the `empire_id == -1` broadcast sentinel + the optional `empire_id` kwarg added to `get_events_for_turn` / `get_events_by_category` + the empire-name window-title threading on `StrategyUI` / `StrategyWindowManager`. FEAT-26: strategy-side replay wiring (Replay button column, `EventLogWindow` click flow, `ReplayResolver` graceful-degradation states, `Game.start_replay` forwarder, `BattleConfig.replay_mode` with `screen_router.start_battle(config=...)` widening, `BattleScreen` REPLAY MODE label). BUG-125 fix from same-day verification still current: `Command.empire_id` field removed (Q5=DROP); `session.player_empire` renamed to `session.active_empire` and now rotated by `StrategyGameStateManager.advance_turn` on each hot-seat turn change. Fleet command handlers gate on `session.active_empire.id` via the new `BaseCommandHandler._resolve_player_fleet` helper; planet handlers continue to gate on `session.active_empire.id` (now correct in hot-seat). Earlier verification (2026-04-28): BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
+> **Last verified:** 2026-05-04 — Coverage backfill (T3-23 / T3-24): added § 1 "Facade Slice Architecture" subsection (PROJ-309 sub-phase 3.7, 9 internal slices behind the public facade with delegation pattern + cache-invalidation timing); added § 5 "Replay Persistence — `ReplayStore` + `ReplayResolver`" subsection (PROJ-312 strategy-side persistence + UI graceful-degradation contract). Earlier same-day pass: doc-audit fix (`IOrderable` protocol path → `game/core/protocols/strategy_entities.py`). 2026-05-02 — PROJ-320: documented per-fleet movement-opportunity combat dispatch in §3 Per-Tick Phase Execution Order Phase 4 row. Replaces the legacy per-tick contested-hex scan with per-fleet `tick % get_tick_interval(fleet.speed) == 0` triggering, gated by whether the fleet left its hex this tick (TurnEngine derives `moved_fleet_ids` from a pre/post Phase-3 location diff). Multi-fleet-per-empire encounters: spec compiler groups by `owner_id` so allied fleets share a team. ~10× reduction in combat invocations at typical contested sectors. Earlier same-day pass — Issue #7: documented `TurnEngine.process_turn`'s new `progress_callback: Optional[Callable[[int, int], None]]` keyword-only parameter (see §3 "Per-Tick Progress Callback"). Plumbed identically through `GameSession.process_turn` and `StrategySessionFacade.process_turn`. The strategy screen wires a closure that runs `pygame.event.pump()` + redraw + `display.flip()` every tick so the "PROCESSING TURN..." overlay can show a live "Tick N / 100" sub-line. Engine-side guard: callback exceptions are caught with `# Intentional broad catch:` (PROJ-308 convention) and logged at WARNING; a buggy UI callback never breaks turn execution. Per-call state cleared via `try/finally` in `process_turn`. Mid-turn Esc cancellation is NOT supported (event.pump() flushes the OS queue but does not consume Esc) — only inter-turn Esc cancel still works during `run_n_turns`. Earlier same-day pass — Issue #8: Updated §5 "Replay Wiring (FEAT-26)" to reflect the differentiated `SimulationBattleResolver` shortcut branches. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` so a real (brief) replay is captured; only `sole_survivor` and the defensive `no_ships` keep the shortcut, both shipping `BattleResult.replay_unavailable_reason` so the Event Log button shows an honest disabled-tooltip instead of "older save." Earlier verification (2026-04-29): FEAT-28: Added "Mutual-Pursuit Rendezvous Routing" subsection under FleetPursuerTracker. Two mutually-pursuing fleets (each head order is `MOVE_TO_FLEET`/`JOIN_FLEET` targeting the other) now bypass `calculate_intercept_point` and pathfind directly to the target's current hex; both move toward each other along the shortest line at their own speeds. `FleetMovementEngine.collect_movements` adds a `_filter_jump_past_collisions` post-processor that drops the larger fleet's queue entry on swap-hex parity (mirrors BUG-122 `_elect_canonical_merges` tiebreak). Earlier same-day pass: Added §6 "Galaxy Size Contract" subsection documenting FEAT-27: `DEFAULT_SYSTEM_COUNT = 2` single-source-of-truth in `game_config.py`, `1 ≤ system_count ≤ 150` validation, N=1 shared-system mode (multiple empires on distinct planets, no warp lanes, planet-shortage retry loop), N≥2 distinct-system invariant with hard error on E>N, hand-rolled linspace home-index distribution, per-system planet counter, and the continuous quadratic slider curve `value = 1 + 149 * (t / SLIDER_T_MAX) ** 2`. Concurrently backfilled BUG-123 + FEAT-26 deferred sections in §5 Event System. BUG-123: `EventLog.get_events_for_empire(empire_id, *, include_global=True)` + the `current_empire.id` UI scoping convention + the `empire_id == -1` broadcast sentinel + the optional `empire_id` kwarg added to `get_events_for_turn` / `get_events_by_category` + the empire-name window-title threading on `StrategyUI` / `StrategyWindowManager`. FEAT-26: strategy-side replay wiring (Replay button column, `EventLogWindow` click flow, `ReplayResolver` graceful-degradation states, `Game.start_replay` forwarder, `BattleConfig.replay_mode` with `screen_router.start_battle(config=...)` widening, `BattleScreen` REPLAY MODE label). BUG-125 fix from same-day verification still current: `Command.empire_id` field removed (Q5=DROP); `session.player_empire` renamed to `session.active_empire` and now rotated by `StrategyGameStateManager.advance_turn` on each hot-seat turn change. Fleet command handlers gate on `session.active_empire.id` via the new `BaseCommandHandler._resolve_player_fleet` helper; planet handlers continue to gate on `session.active_empire.id` (now correct in hot-seat). Earlier verification (2026-04-28): BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
 
 System documentation for the turn-based strategy layer.
 
@@ -56,6 +56,45 @@ Each DTO has a `from_<domain_object>()` class method for conversion.
 | Environment | `get_storm_names_at_hex()` |
 | Race Registry (PROJ-287) | `get_race_registry()` -- returns the session-scoped `IRaceRegistry` (a `CachedRaceRegistry` over `RaceLibrary`) for resolving `race_id -> RaceConfig` without per-call filesystem reads. Lazy-init; one instance per facade. See [04_SERVICES.md § Race Registry](../04_SERVICES.md#race-registry-proj-287). |
 | Colony Demographics (PROJ-288) | `get_colony_demographic_view(planet_id) -> Optional[ColonyDemographicView]` -- one-shot snapshot of per-species (race_id, count, habitability, happiness, projected growth rate, food ratio, food allocation) + per-resource (`ResourceProjection` from `PlanetEconomyProjector`) + summed `total_upkeep` for one colony. Species ordered largest count first; unresolvable race_ids dropped. Returns `None` for unowned/missing planets. See [04_SERVICES.md § Planet Economy Projector](../04_SERVICES.md#planet-economy-projector-proj-288). |
+
+### Facade Slice Architecture (PROJ-309)
+
+`StrategySessionFacade` is the public entry point (53 query/dispatch
+methods total), but its body is intentionally thin: each method is a
+one-line forwarder to one of **9 internal slices** under
+`game/strategy/facade/slices/`. PROJ-309 sub-phase 3.7 split the original
+922-line facade for the explicit reason that "splitting into per-domain
+slices makes the facade hard to grow back into a single god-class."
+
+| Slice | File | Responsibility |
+|-------|------|----------------|
+| `FacadeSessionState` | `_facade_state.py` | Shared per-turn caches: planet index dict (PROJ-254), fleets-by-hex cache, all-stars cache, lazy `IRaceRegistry`. Constructed once by the facade and passed by reference into every other slice. |
+| `CommandDispatchSlice` | `command_dispatch_slice.py` | The 28 `dispatch_*` typed-command helpers + the universal `handle_command()` entry point. Owns write-path delegation. |
+| `FleetSlice` | `fleet_slice.py` | Fleet queries (`get_fleet`, `get_fleets_at_hex`), path-preview helpers, `can_move_to`, colony-pod state. |
+| `PlanetSlice` | `planet_slice.py` | Planet queries (`get_planet`, `get_planets_at_hex`) and planet-shaped validation (`can_colonize`). |
+| `SystemSlice` | `system_slice.py` | Star-system / map queries (`get_all_systems`, `get_all_stars`, `get_system_at_hex`, `get_storm_names_at_hex`). |
+| `EmpireSlice` | `empire_slice.py` | Empire-scoped queries (`get_all_empires`, `get_empire`, `get_empire_colonies`, `get_empire_fleets`) and build-queue aggregation. |
+| `EconomySlice` | `economy_slice.py` | Heavy demographic snapshot (`get_colony_demographic_view`), lazy race-registry resolution, economy-config wiring. |
+| `EventSlice` | `event_slice.py` | Event-log queries (`get_turn_events`, `get_all_events`, `get_events_by_category`) with per-empire scoping (BUG-123), plus plain session state (`get_turn_number`, `get_save_path`, `get_human_player_ids`). |
+
+**Composition pattern — delegation, not inheritance.** The facade
+constructs every slice in `__init__`, passing the shared
+`FacadeSessionState` to each. Slices never reach into each other; any
+cross-domain lookup goes through the shared state object. Public-facing
+methods on `StrategySessionFacade` are thin: `get_fleet(id)` is literally
+`return self._fleet_slice.get_fleet(id)`.
+
+**Authoring rule — callers use facade methods, not slices directly.**
+Reaching into a slice from outside the facade is a layer violation. The
+`_planet_index`, `_fleets_by_hex_cache`, `_all_stars_cache`, and
+`_race_registry` `@property` forwarders on the facade exist purely to
+keep legacy tests working and should not be added to in new code.
+
+**Cache invalidation timing.** `FacadeSessionState` caches are scoped to
+the active turn; per-turn invalidation happens inside `process_turn()`
+before the new turn's commands run. Slices that materialise expensive
+DTOs (notably `EconomySlice.get_colony_demographic_view`) recompute on
+each call — those callers are expected to be UI-driven and infrequent.
 
 ---
 
@@ -1200,6 +1239,56 @@ debug views that want strict per-empire isolation.
   is active. Forwarders on `StrategyUI.open_event_log_with_events`
   and `StrategyWindowManager.open_event_log_with_events` thread the
   kwarg through.
+
+### Replay Persistence — `ReplayStore` + `ReplayResolver` (PROJ-312)
+
+The strategy layer owns the persistence and lookup half of the replay
+system; the simulation half (capture sink protocol, JSON-safe DTOs,
+playback engine) lives under `game/simulation/replay/` and is documented
+in [combat_simulation.md § 11 Replay Capture & Playback](combat_simulation.md).
+
+**`ReplayStore`** — `game/strategy/services/replay_store.py`
+
+Implements the simulation-side `IReplayCaptureSink` protocol so it can
+receive `on_battle_started(replay_spec, context) → replay_id` and
+`on_battle_ended(replay_id, outcome)` callbacks during a battle. Persists
+each completed battle as a JSON sidecar at
+`output/saves/<save>/replays/replay_<uuid>.json`.
+
+| Concern | Behaviour |
+|---------|-----------|
+| Storage layout | One sidecar JSON per battle, named by replay UUID, scoped to the active save folder. |
+| Atomic writes | Uses `save_json()` (`game/core/json_utils.py`) — temp-file + `os.replace`. Same atomic guarantee as the rest of the project. |
+| Capacity policy | Ring-buffer eviction: write-then-evict (the new replay is always persisted; oldest sidecars are pruned afterwards). Cap is loaded from `output/replay_settings.json` via `load_replay_settings()`; default 50 replays per save. |
+| Active-save coupling | `set_save_root(path)` / `clear_save_root()` move the store's persistence target. `SaveGameService.save_game()` and `.load_game()` notify the store via `_notify_replay_store_save_or_load()` so the replay folder always pairs with the active save. |
+| Settings | `ReplaySettings` (`replay_store.py:57`) captures the replay cap; missing settings file → defaults silently. |
+| Pending-capture bookkeeping | `_PendingCapture` (line 94) tracks in-flight battles between `on_battle_started` and `on_battle_ended` so a battle that never ends does not leak a half-written sidecar. |
+
+**`ReplayResolver`** — `game/strategy/services/replay_resolver.py`
+
+Read-side wrapper around `ReplayStore.load(replay_id)` that gives the UI
+a single call (`resolve(replay_id) → ReplayLookup`) and absorbs every
+failure mode without raising. Five outcomes:
+
+| `ReplayLookup` shape | Meaning | UI action |
+|----------------------|---------|-----------|
+| `found=False, reason="missing"` | Sidecar not on disk. | Disabled button + tooltip. |
+| `found=False, reason="corrupt"` | JSON parse failed. | Disabled button + tooltip; resolver does **not** delete the file. |
+| `found=False, reason="version_drift"` | `REPLAY_SCHEMA_VERSION` mismatch. | Disabled button + tooltip. |
+| `found=True, registry_drift=True` | Components-registry hash mismatch (data files moved since capture). | Confirmation dialog warning the player that components have changed; on Continue, launch. |
+| `found=True, registry_drift=False` | Healthy. | Direct launch. |
+
+The resolver never raises on bad input — every error path returns a
+`ReplayLookup`. This is the contract that lets the Event Log button
+state be a pure function of resolver result without try/except in the
+UI.
+
+**Tests:**
+- `tests/unit/strategy/test_replay_store.py` — round-trip persistence,
+  ring-buffer eviction, settings fallback, atomic-write semantics.
+- `tests/unit/strategy/test_replay_resolver.py` — every degradation
+  state.
+- Integration end-to-end through `tests/integration/strategy/test_event_log_replay_e2e.py`.
 
 ### Replay Wiring (FEAT-26)
 
