@@ -96,8 +96,8 @@ PROJ-321 deleted `tests/unit/test_modifier_logic.py` (103 LOC) because it had **
 - [design.md](design.md) — linter design + allowlist strategy + SystemTreePanel audit approach
 - [decisions.md](decisions.md) — full decisions log
 - [manifest.md](manifest.md) — per-task file manifest
-- [`Reviews/results/2026-05-04_015902_consistency_proj-321-p0-dead-trivial-test-cleanup-completion-c_req-req_20260504_015901_0ba42a/report.md`](Reviews/results/2026-05-04_015902_consistency_proj-321-p0-dead-trivial-test-cleanup-completion-c_req-req_20260504_015901_0ba42a/report.md) — OpenCode review with MAJ-001 (SystemTreePanel) + MIN-002 (Facade contract) + linter recommendation
-- [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md) — original continuation plan
+- [`Reviews/results/2026-05-04_015902_consistency_proj-321-p0-dead-trivial-test-cleanup-completion-c_req-req_20260504_015901_0ba42a/report.md`](../../../Reviews/results/2026-05-04_015902_consistency_proj-321-p0-dead-trivial-test-cleanup-completion-c_req-req_20260504_015901_0ba42a/report.md) — OpenCode review with MAJ-001 (SystemTreePanel) + MIN-002 (Facade contract) + linter recommendation
+- [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](../../../AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md) — original continuation plan
 
 ## Verification
 

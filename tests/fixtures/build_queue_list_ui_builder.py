@@ -50,6 +50,18 @@ class MockBuildQueueListUiBuilder:
     """
 
     def build(self, screen: "BuildQueueListWindow") -> None:
+        # Defensive: fail loud if Stage-1 wiring didn't run. Reading
+        # screen.row_labels / screen._row_collector / screen.empire below
+        # would AttributeError mid-build with a confusing message; this
+        # check tells the test exactly what's missing.
+        for required in ("row_labels", "_row_collector", "empire"):
+            if not hasattr(screen, required):
+                raise AssertionError(
+                    f"MockBuildQueueListUiBuilder.build: screen has no "
+                    f"`{required}` attribute. Build the screen via "
+                    f"make_ui_widget(...) or with bypass_init AFTER "
+                    f"Stage-1 delegate construction has run."
+                )
         # Mirror the production builder's "clear then rebuild" contract.
         for lbl in screen.row_labels:
             lbl.kill()

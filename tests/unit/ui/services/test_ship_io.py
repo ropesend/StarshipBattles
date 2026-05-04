@@ -71,6 +71,41 @@ def mock_ship_with_special_chars(session_registries):
     )
 
 
+@pytest.fixture(autouse=True)
+def _assert_module_ships_unmutated(request):
+    """Mutation guard for the module-scoped `mock_ship` and
+    `mock_ship_with_special_chars` fixtures.
+
+    The module-scope rescope (PROJ-327 Phase 2 Task 2.19) relies on every
+    test treating these ships as read-only. If a future test mutates a
+    shared ship, later tests in the same module see corrupted state.
+    This fixture snapshots the `to_dict()` of any module-scoped ship the
+    current test consumes, runs the test, then asserts the snapshot is
+    byte-identical post-test.
+
+    The check is fixture-name-driven (not deep-recursive on every Ship in
+    the module) so it adds ~0 overhead to tests that don't request the
+    module-scoped fixtures.
+    """
+    snapshots: dict[str, dict] = {}
+    for fixture_name in ("mock_ship", "mock_ship_with_special_chars"):
+        if fixture_name in request.fixturenames:
+            ship = request.getfixturevalue(fixture_name)
+            snapshots[fixture_name] = ship.to_dict()
+
+    yield
+
+    for fixture_name, before in snapshots.items():
+        after = request.getfixturevalue(fixture_name).to_dict()
+        assert before == after, (
+            f"Module-scoped fixture `{fixture_name}` was mutated during "
+            f"test `{request.node.nodeid}`. Module-scope sharing requires "
+            f"strictly read-only access — see PROJ-327 Phase 2 Task 2.19 "
+            f"and the file header note. Either treat the ship as immutable "
+            f"or re-scope this fixture back to function-scope."
+        )
+
+
 @pytest.fixture
 def ship_io_with_tkroot():
     """Patch tkinter_utils to appear initialized for testing."""

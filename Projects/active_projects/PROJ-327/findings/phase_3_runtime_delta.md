@@ -14,11 +14,11 @@
 
 **Files:** `tests/unit/strategy/engine/test_superweapon_command_handlers.py` (633 LOC, 24 tests) + `tests/unit/strategy/engine/test_superweapon_handler_validation.py` (251 LOC, 15 tests).
 
-**Combined runtime:** 1.73 s for 39 tests (1 run). Per `pytest --durations=10`:
+**Combined runtime:** 1.73 s wall-clock for 39 tests in one process (amortized import). Per `pytest --durations=10`:
 - First-import setup costs: 4 tests at ~0.42 s each (~1.68 s) — one-time `superweapon_command_handlers` import + Mock construction.
 - Steady-state setup: ~0.05 s per subsequent test (mostly Mock fixture construction across `mock_fleet`, `mock_planet`, `mock_galaxy`, `mock_session`).
 
-**Construction-vs-body split:** Setup time is ~3.6 s of `_get_setup_time(test) for test in tests` (sum), test-body time is sub-millisecond. Construction IS dominant.
+**Construction-vs-body split:** ~3.6 s is the **sum** of individually-measured per-test setup times (each measurement includes the redundant import cost — not additive in a single run). The 39 tests share ~1.73 s combined wall-clock when run in one process (import amortized). Test-body time is sub-millisecond per test, so within that 1.73 s, fixture construction still dominates over body execution. The decision to re-confirm DUP-001 as deferred remains valid — it rests on the mutation-surface reasoning in Task 3.1's "Why a shared session fixture STILL doesn't help" section, not on the misstated 3.6 s magnitude.
 
 **Why a shared session fixture STILL doesn't help:**
 - Every test calls `handler.execute(mock_session, cmd)` which mutates `mock_fleet.orders` (appends an Order) and records calls on `mock_session._get_fleet_by_id`/`_get_planet_by_id`. Sharing the session between tests requires resetting `mock_fleet.orders = []`, `mock_fleet.path = []`, AND clearing call records on every test — equivalent cost to constructing a fresh fixture, with added risk that one missed reset leaks into later tests.

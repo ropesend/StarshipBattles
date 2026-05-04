@@ -74,6 +74,12 @@ class MockStrategyScreenComposition:
         self.build_queue = MagicMock(name="build_queue")
         self.game_state = MagicMock(name="game_state")
         self.input_handler = MagicMock(name="input_handler")
+        # Idempotency tracker: populate() may be called multiple times by
+        # accident (e.g. helper composes one composition then a test calls
+        # populate() again with a different one). The first call wins; the
+        # second is a programming error because the screen now references a
+        # different mock than the one tests built assertions against.
+        self._populated_screen_id: int | None = None
 
     def make_renderer(self, screen: "StrategyScreen") -> Any:
         return self.renderer
@@ -105,7 +111,28 @@ class MockStrategyScreenComposition:
         Used by the bypass-init helper ``_make_strategy_screen`` — fills
         the slots ``__init__`` would have filled via the composition seam,
         without running ``__init__``.
+
+        **Not idempotent.** Calling populate() twice on the same instance
+        for the same screen is fine (re-assigns the same mocks). Calling
+        populate() on the same screen with a *different* MockStrategyScreenComposition
+        instance is a programming error: tests usually hold references to
+        the first instance's mocks for assertions, but the screen now
+        points at the second instance's mocks. Detect that case and fail
+        loudly.
         """
+        screen_id = id(screen)
+        if (
+            self._populated_screen_id is not None
+            and self._populated_screen_id != screen_id
+        ):
+            raise AssertionError(
+                "MockStrategyScreenComposition.populate(): this composition "
+                "already populated a different screen (id="
+                f"{self._populated_screen_id}); reusing one composition for "
+                "two screens leaks mock identity across tests. Construct a "
+                "fresh MockStrategyScreenComposition() per screen."
+            )
+        self._populated_screen_id = screen_id
         screen._renderer = self.renderer
         screen._camera_nav = self.camera_nav
         screen._fleet_ops = self.fleet_ops

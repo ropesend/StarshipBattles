@@ -95,8 +95,8 @@ The parallelism map contains the per-file conflict matrix; consult it before sta
 - [design.md](design.md) — analysis of the 3 work streams + GO/NO-GO criteria for Phase 3
 - [decisions.md](decisions.md) — full decisions log
 - [manifest.md](manifest.md) — per-task file manifest
-- [`Reviews/results/2026-05-04_020005_consistency_proj-323-p2-opportunistic-test-polish-completion-c_req-req_20260504_020003_a5290a/report.md`](Reviews/results/2026-05-04_020005_consistency_proj-323-p2-opportunistic-test-polish-completion-c_req-req_20260504_020003_a5290a/report.md) — OpenCode review with the 1 CRIT + per-finding rationale
-- [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md) — original continuation plan
+- [`Reviews/results/2026-05-04_020005_consistency_proj-323-p2-opportunistic-test-polish-completion-c_req-req_20260504_020003_a5290a/report.md`](../../../Reviews/results/2026-05-04_020005_consistency_proj-323-p2-opportunistic-test-polish-completion-c_req-req_20260504_020003_a5290a/report.md) — OpenCode review with the 1 CRIT + per-finding rationale
+- [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](../../../AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md) — original continuation plan
 - [`Projects/active_projects/PROJ-324/`](Projects/active_projects/PROJ-324/) — sibling project; PROJ-324 Phase 3 Task 3.4 outcome scopes this project's Phase 3
 
 ## Verification

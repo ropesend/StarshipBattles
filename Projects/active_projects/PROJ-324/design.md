@@ -8,8 +8,8 @@
 
 - Continuation review of PROJ-321 / 322 / 323 dated 2026-05-04
 - Independent OpenCode delegate review of PROJ-322: `Reviews/results/2026-05-04_015938_consistency_proj-322-p1-brittle-bloated-test-remediation-compl_req-req_20260504_015935_7d4449/report.md`
-- Continuation plan: [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md)
-- Required reading: [`docs/known-issues.md`](docs/known-issues.md) — UIWindow + LLM blocker context
+- Continuation plan: [`AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md`](../../../AgentCoordination/Scratchpad/plans/proj_321_322_323_continuation_plan.md)
+- Required reading: [`docs/known-issues.md`](../../../docs/known-issues.md) — UIWindow + LLM blocker context
 
 ## Initial Analysis
 

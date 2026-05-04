@@ -86,6 +86,18 @@ class MockRaceSetupUiBuilder:
 
         # Renderer-internal widget refs that legacy tests reach into via
         # ``screen._renderer.<attr>``. Mirror the legacy helper.
+        # Defensive: fail loud if the screen wasn't constructed with a
+        # _renderer attribute. Setting attributes on a missing/None _renderer
+        # would AttributeError mid-build with a confusing message; this
+        # assertion gives the test a clear signal that bypass-init wiring
+        # skipped Stage-1 (where _renderer is normally assigned).
+        if not hasattr(screen, "_renderer") or screen._renderer is None:
+            raise AssertionError(
+                "MockRaceSetupUiBuilder.build: screen has no _renderer "
+                "attribute (or it is None). Build the screen via "
+                "make_ui_widget(...) or with bypass_init AFTER Stage-1 "
+                "delegate construction has run."
+            )
         screen._renderer.save_update_dialog = None
         screen._renderer.btn_overwrite = None
         screen._renderer.btn_save_new = None
