@@ -139,8 +139,63 @@ PROJ-327 picked up the 9 PROJ-322 deferrals that touched test runtime. Final cum
 
 ---
 
+## UIWindow retrofit deferrals (PROJ-329A)
+
+The PROJ-321..328 audit identified two classes that were swept into the
+"un-refactored UIWindow subclass" tally but turned out to be out-of-scope
+for the two-stage construction recipe (`docs/02_PATTERNS.md` §33). Both
+are **deferred** with concrete rationale below so future audits don't
+re-litigate them.
+
+The full inventory of UIWindow / StrategyModalWindow subclasses (24
+classes — 6 done, 16 in-scope across PROJ-329A/B/C, 2 deferred) lives at
+`Projects/active_projects/PROJ-329A/findings/uiwindow_inventory.md`.
+
+### `DesignWorkshopScreen` — NOT a UIWindow subclass (factory pattern)
+
+**File:** `game/ui/screens/workshop_screen.py` (648 LOC)
+**Class signature:** `class DesignWorkshopScreen:` — bare class, no parent.
+
+**Why it was flagged:** PROJ-322 Task 5.10 listed `test_workshop_screen.py`
+in the APC-001 cluster (`__new__` bypass-init pattern). The PROJ-321..328
+audit grouped it with the UIWindow retrofit batch by name similarity.
+
+**Why it's deferred:** `DesignWorkshopScreen` is not a `UIWindow` and not a
+`StrategyModalWindow` — it's an `app.py`-managed screen constructed via
+factory function (`get_workshop_screen()`). The two-stage `__init__`
+recipe (cheap state → bypass guard → builder) doesn't apply. A retrofit
+would need a separate factory-pattern project with its own design phase.
+
+**Reassess if:** the workshop screen's failure mode becomes testability-
+constrained AND the project owner wants to invest in factory-pattern
+retrofitting (a different recipe than UIWindow's two-stage). Cross-ref
+PROJ-322 `plan.md` Task 5.10 ACCEPTED-DEFERRED entry.
+
+### `SettingsWindow` — raw `UIWindow`, no tests found
+
+**File:** `game/ui/screens/settings_window.py` (109 LOC)
+**Class signature:** `class SettingsWindow(UIWindow):` — raw
+`pygame_gui.elements.UIWindow` subclass (does not extend
+`StrategyModalWindow`).
+
+**Why it's deferred:** No tests exist for `SettingsWindow` in the
+`tests/` tree (verified via `find tests -name "*settings_window*"`,
+empty result). The retrofit value of the two-stage pattern is
+proportional to existing test coverage — refactoring untested
+production code adds risk (no characterization tests to detect a
+behavior change) without locking any behavior in place.
+
+**Reassess if:** SettingsWindow gains characterization tests OR is shown
+to be live-wired in production with active failure modes. The retrofit
+itself is small (109 LOC, raw UIWindow — closer to the BuildQueueListWindow
+shape than the FleetReportWindow shape) and would land in a follow-up
+PROJ-329 batch alongside the new tests.
+
+---
+
 ## See Also
 
 - `Projects/active_projects/PROJ-322/plan.md` — Continuation Guide section for the active deferred work
 - `Projects/active_projects/PROJ-322/phase_*.md` — per-task `**DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):**` annotations with concrete blocker rationale
+- `Projects/active_projects/PROJ-329A/findings/uiwindow_inventory.md` — full UIWindow / StrategyModalWindow subclass inventory (status: 6 done, 16 in-scope, 2 deferred)
 - `tests/fixtures/README.md` — usage of the new `make_ui_widget`, `cargo_mock_ship`, `yard_facility`, `mock_planet` factories
