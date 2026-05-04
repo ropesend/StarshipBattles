@@ -1,0 +1,34 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0 -- C:\Program Files\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Developer\StarshipBattles
+configfile: pytest.ini
+plugins: anyio-4.12.1, xdist-3.8.0
+collecting ... collected 24 items
+
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_constructor_creates_components PASSED [  4%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_rebuild_row_pool_creates_correct_count PASSED [  8%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_update_scroll_bar_sets_visible_percentage PASSED [ 12%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_force_update_resets_dirty_tracking PASSED [ 16%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_kill_cleans_up_all_widgets PASSED [ 20%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_handle_click_delegates_to_selection_strategy PASSED [ 25%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_check_header_presses_delegates_to_header PASSED [ 29%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_selected_row_highlight_color PASSED [ 33%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_initial_dirty_tracking_state PASSED [ 37%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_handle_click_returns_minus_one_on_miss PASSED [ 41%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_rebuild_headers_delegates_to_header PASSED [ 45%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_rebuild_row_pool_handles_actions_column PASSED [ 50%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_update_visible_rows_handles_actions_column PASSED [ 54%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_update_visible_rows_disables_edge_action_buttons[first] PASSED [ 58%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_update_visible_rows_disables_edge_action_buttons[middle] PASSED [ 62%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_update_visible_rows_disables_edge_action_buttons[last] PASSED [ 66%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_update_visible_rows_disables_edge_action_buttons[single] PASSED [ 70%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_check_action_button_press PASSED [ 75%]
+tests/unit/ui/components/table/test_virtual_table.py::TestVirtualTable::test_kill_cleans_up_actions PASSED [ 79%]
+tests/unit/ui/components/table/test_virtual_table.py::TestDisabledReplayTooltip::test_sole_survivor_reason_returns_helpful_string PASSED [ 83%]
+tests/unit/ui/components/table/test_virtual_table.py::TestDisabledReplayTooltip::test_no_ships_reason_returns_helpful_string PASSED [ 87%]
+tests/unit/ui/components/table/test_virtual_table.py::TestDisabledReplayTooltip::test_unknown_reason_falls_back_to_legacy_wording PASSED [ 91%]
+tests/unit/ui/components/table/test_virtual_table.py::TestDisabledReplayTooltip::test_none_reason_falls_back_to_legacy_wording PASSED [ 95%]
+tests/unit/ui/components/table/test_virtual_table.py::TestDisabledReplayTooltip::test_data_source_without_accessor_falls_back PASSED [100%]
+
+============================= 24 passed in 1.38s ==============================

@@ -13,8 +13,8 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Baseline measurement (current sharded suite runtime + per-file profiling) | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. PROJ-322 Task 3.14 — `test_virtual_table.py` `@patch` decorator → autouse fixture sweep (~700 LOC, biggest single runtime win expected) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 0. Baseline measurement (current sharded suite runtime + per-file profiling) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. PROJ-322 Task 3.14 — `test_virtual_table.py` `@patch` decorator → autouse fixture sweep (~700 LOC, biggest single runtime win expected) | In Progress | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. PROJ-322 mutable-mock fixture rescope (Tasks 2.6 / 2.11 / 2.15 / 2.19 / 3.15) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. PROJ-322 accepted-disposition reconsideration (Tasks 6.1 DUP-001 + 6.4 HLP-001) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. PROJ-322 Task 3.25 — `strategy_screen` 50-test refactor (multi-day, low ROI — only if Phases 1-3 deltas insufficient) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -22,10 +22,10 @@
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** **BLOCKED** — do not start until PROJ-326 reports Complete.
-**Last Action:** Project created from continuation review of PROJ-321/322/323
-**Next Action:** Wait for PROJ-326 completion. Then begin Phase 0 (baseline measurement).
-**Blockers:** PROJ-326 must complete before this project starts (per user direction).
+**Active Phase:** Phase 1 in progress — `test_virtual_table.py` @patch sweep.
+**Last Action:** Phase 0 baseline measurement complete. 3 sharded runs captured (median wall 127.8 s, median slowest shard 127.7 s — vs user-reported 137 s and stretch target < 90 s). Pre-flight: `test_virtual_table.py` confirmed at `tests/unit/ui/components/table/test_virtual_table.py` (path drifted) with exactly 81 `@patch` decorators. `test_ship_io.py` for Phase 2 also moved to `tests/unit/ui/services/`.
+**Next Action:** Phase 1 — migrate 5 universal `@patch` decorators in `TestVirtualTable` class to a single autouse class-scoped fixture; leave the 6th UIButton patch on the one test that needs it.
+**Blockers:** None.
 
 ## Overview
 
