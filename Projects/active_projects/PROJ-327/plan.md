@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Baseline measurement (current sharded suite runtime + per-file profiling) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. PROJ-322 Task 3.14 — `test_virtual_table.py` `@patch` decorator → autouse fixture sweep (~700 LOC, biggest single runtime win expected) | In Progress | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. PROJ-322 Task 3.14 — `test_virtual_table.py` `@patch` decorator → autouse fixture sweep (~700 LOC, biggest single runtime win expected) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. PROJ-322 mutable-mock fixture rescope (Tasks 2.6 / 2.11 / 2.15 / 2.19 / 3.15) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. PROJ-322 accepted-disposition reconsideration (Tasks 6.1 DUP-001 + 6.4 HLP-001) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. PROJ-322 Task 3.25 — `strategy_screen` 50-test refactor (multi-day, low ROI — only if Phases 1-3 deltas insufficient) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -22,9 +22,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Phase 1 in progress — `test_virtual_table.py` @patch sweep.
-**Last Action:** Phase 0 baseline measurement complete. 3 sharded runs captured (median wall 127.8 s, median slowest shard 127.7 s — vs user-reported 137 s and stretch target < 90 s). Pre-flight: `test_virtual_table.py` confirmed at `tests/unit/ui/components/table/test_virtual_table.py` (path drifted) with exactly 81 `@patch` decorators. `test_ship_io.py` for Phase 2 also moved to `tests/unit/ui/services/`.
-**Next Action:** Phase 1 — migrate 5 universal `@patch` decorators in `TestVirtualTable` class to a single autouse class-scoped fixture; leave the 6th UIButton patch on the one test that needs it.
+**Active Phase:** Phases 0+1 complete; Phase 2 ready.
+**Last Action:** Phase 1 complete — migrated 80 of 81 `@patch` decorators in `test_virtual_table.py` to a single autouse class-level fixture (`patched_pygame_gui`). Outcome parity confirmed byte-identical (24 PASSED before + after, 0 changes). File-level runtime: 1.03 s → 1.00 s (~30 ms, ~3 % reclaim). Suite-level slowest shard: 127.7 s → 123.8 s (~3.9 s, ~3 % reclaim). Far less than the design.md "~1.4 s in this file alone" prediction. PROJ-322 phase_3_checklist.md Task 3.14 annotation updated from `DEFERRED-OUT-OF-SCOPE` to `RESOLVED IN PROJ-327 Phase 1`.
+**Next Action:** Phase 2 — mutable-mock fixture rescope across 4 confirmed files (PROJ-322 Tasks 2.6 / 2.11+3.15 / 2.15 / 2.19). Phase 4 trigger remains armed: gap to < 90 s target is still ~34 s; Phases 2-3 alone unlikely to close it.
 **Blockers:** None.
 
 ## Overview
