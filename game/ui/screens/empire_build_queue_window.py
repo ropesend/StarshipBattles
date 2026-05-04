@@ -194,6 +194,20 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         # --- Filter Manager (for column definitions) ---
         self._filter_mgr = BuildQueueFilterManager()
 
+        # MAJ-001 fix (review req_20260504_220257_d0b194): Pattern §33
+        # widget-ref placeholders. Initialized to None here so that a
+        # NullEmpireBuildQueueWindowUiBuilder test can safely call kill()
+        # without AttributeError on `self._virtual_table.kill()` etc.
+        # The production builder overwrites these in Stage 3.
+        self.sidebar_panel = None
+        self.main_panel = None
+        self._sidebar = None
+        self._virtual_table = None
+        self.scroll_bar = None
+        self._data_source = None
+        self._column_manager = None
+        self._selection = None
+
         # ---- Stage 2: shell ----
         super().__init__(
             rect, manager,
@@ -587,8 +601,14 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
     # -----------------------------------------------------------------------
 
     def kill(self) -> None:
-        """Clean up and invoke close callback."""
-        self._virtual_table.kill()
+        """Clean up and invoke close callback.
+
+        MAJ-001 fix (review req_20260504_220257_d0b194): guard against
+        None _virtual_table to support Null-builder tests that bypass
+        Stage 3 widget construction.
+        """
+        if self._virtual_table is not None:
+            self._virtual_table.kill()
         if self.on_close_callback:
             self.on_close_callback()
         super().kill()
