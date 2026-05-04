@@ -168,3 +168,137 @@ class TestPathfindingWithHexMath:
             curr_dist = hex_distance(point, end)
             assert curr_dist <= prev_dist
             prev_dist = curr_dist
+
+
+# =============================================================================
+# PROJ-334: Intercept Fallback / Early-Exit (gap-fill)
+# =============================================================================
+
+
+class TestInterceptFallbackBehaviors:
+    """PROJ-334: pin no-intercept-possible fallback and early-exit branches."""
+
+    def test_calculate_intercept_point_returns_target_path_endpoint_when_no_intercept_possible(
+        self, mock_galaxy
+    ):
+        """When the chaser can never catch up in any candidate window, the
+        result is the LAST hex of the target's projected path."""
+        from unittest.mock import patch
+
+        galaxy, _, _, _ = mock_galaxy
+
+        chaser = MagicMock()
+        chaser.id = 1
+        chaser.location = HexCoord(0, 0)
+        chaser.speed = 0.5  # extremely slow
+
+        target = MagicMock()
+        target.id = 2
+        target.location = HexCoord(10, 0)
+
+        # Target's path projects far away across many turns; chaser cannot
+        # arrive in time at any of them.
+        target_path = [
+            {"hex": HexCoord(100, 0), "turn": 0},
+            {"hex": HexCoord(200, 0), "turn": 1},
+            {"hex": HexCoord(300, 0), "turn": 2},
+        ]
+        endpoint_hex = target_path[-1]["hex"]
+
+        with patch("game.strategy.data.pathfinding.project_fleet_path") as mock_project:
+            mock_project.return_value = target_path
+            result = calculate_intercept_point(chaser, target, galaxy)
+
+        # No intercept is reachable → falls back to the last hex of target's path.
+        assert result == endpoint_hex
+
+    def test_calculate_intercept_point_early_exits_on_perfect_synchronization(
+        self, mock_galaxy
+    ):
+        """When chaser_turns == target_turn (within 0.1), the loop breaks
+        immediately and we get that hex — even when later candidates would
+        also satisfy the cheaper-time criterion."""
+        from unittest.mock import patch
+
+        galaxy, _, _, _ = mock_galaxy
+
+        chaser = MagicMock()
+        chaser.id = 1
+        chaser.location = HexCoord(0, 0)
+        chaser.speed = 1.0
+        chaser.capabilities = MagicMock()
+        chaser.capabilities.can_use_warp = MagicMock(return_value=False)
+
+        target = MagicMock()
+        target.id = 2
+        target.location = HexCoord(0, 0)
+
+        target_path = [
+            {"hex": HexCoord(1, 0), "turn": 1},
+            {"hex": HexCoord(2, 0), "turn": 2},
+            {"hex": HexCoord(3, 0), "turn": 3},
+        ]
+
+        # Force find_hybrid_path to return paths whose length yields
+        # chaser_turns exactly matching target_turn for the FIRST candidate.
+        # path_length = len(path) - 1; chaser_turns = path_length / chaser_speed.
+        # With chaser_speed=1.0, we need path_length=1 → exactly 1.0 turns
+        # which equals first candidate's target_turn=1 (perfect sync).
+        canned_paths = {
+            HexCoord(1, 0): [HexCoord(0, 0), HexCoord(1, 0)],   # length 1 → 1.0 turn
+            HexCoord(2, 0): [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)],  # 2.0
+            HexCoord(3, 0): [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)],  # 3.0
+        }
+
+        def fake_hybrid(galaxy, start, end, fleet=None):
+            return canned_paths.get(end, [])
+
+        with patch("game.strategy.data.pathfinding.project_fleet_path") as mock_project, \
+             patch("game.strategy.data.pathfinding.find_hybrid_path", side_effect=fake_hybrid) as mock_hybrid:
+            mock_project.return_value = target_path
+            result = calculate_intercept_point(chaser, target, galaxy)
+
+        # Early exit fires on first candidate (turn=1, hex=(1,0)).
+        assert result == HexCoord(1, 0)
+        # And the loop broke before evaluating the third candidate.
+        assert mock_hybrid.call_count < len(target_path)
+
+    def test_calculate_intercept_point_uses_id_minus_one_for_navigationstate_chaser(
+        self, mock_galaxy
+    ):
+        """PROJ-334 D-Observation O-003: NavigationState chasers leak id=-1
+        into the proxy used for find_hybrid_path. This test pins the current
+        behavior; if the id-leak is later fixed, this test will need updating."""
+        from unittest.mock import patch
+        from game.strategy.services.fleet_navigation_service import NavigationState
+
+        galaxy, _, _, _ = mock_galaxy
+
+        chaser_state = NavigationState(
+            location=HexCoord(0, 0),
+            path=(),
+            orders=(),
+            speed=10.0,
+            can_warp=True,
+        )
+
+        target = MagicMock()
+        target.id = 2
+        target.location = HexCoord(50, 0)
+
+        target_path = [{"hex": HexCoord(50, 0), "turn": 0}]
+
+        captured_fleets = []
+
+        def fake_hybrid(galaxy, start, end, fleet=None):
+            captured_fleets.append(fleet)
+            return [HexCoord(0, 0), HexCoord(50, 0)]
+
+        with patch("game.strategy.data.pathfinding.project_fleet_path") as mock_project, \
+             patch("game.strategy.data.pathfinding.find_hybrid_path", side_effect=fake_hybrid):
+            mock_project.return_value = target_path
+            calculate_intercept_point(chaser_state, target, galaxy)
+
+        assert captured_fleets, "find_hybrid_path was never called"
+        # The proxy adapter wraps the NavigationState and assigns id=-1.
+        assert captured_fleets[0].id == -1

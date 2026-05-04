@@ -269,3 +269,78 @@ class TestHexDistanceIntegration:
         # In hex grid, diagonal movement is more expensive
         dist = hex_distance(h1, h2)
         assert dist == 6  # max(|3|, |3|, |-6|) = 6
+
+
+# =============================================================================
+# PROJ-334: Deep Space Path Symmetry (gap-fill)
+# =============================================================================
+
+
+class TestDeepSpacePathSymmetry:
+    """PROJ-334: pin reversed-endpoint symmetry for find_path_deep_space."""
+
+    def test_find_path_deep_space_path_is_symmetric_for_reversed_endpoints(self):
+        """Reversing the endpoints reverses the path; lengths are identical."""
+        a = HexCoord(0, 0)
+        b = HexCoord(7, 4)
+
+        forward = find_path_deep_space(a, b)
+        backward = find_path_deep_space(b, a)
+
+        assert len(forward) == len(backward)
+        assert forward[0] == a and forward[-1] == b
+        assert backward[0] == b and backward[-1] == a
+
+
+# =============================================================================
+# PROJ-334: Interstellar A* Cost Optimality (gap-fill)
+# =============================================================================
+
+
+class TestInterstellarPathCostOptimality:
+    """PROJ-334: pin lower-distance route choice in a diamond warp graph."""
+
+    def test_find_path_interstellar_chooses_lower_distance_route_when_two_paths_exist(self):
+        """Diamond graph: A->B->D (short) vs A->C->D (long). A* picks the short route."""
+        sys_a = MagicMock()
+        sys_a.name = "A"
+        sys_a.global_location = HexCoord(0, 0)
+
+        sys_b = MagicMock()
+        sys_b.name = "B"
+        sys_b.global_location = HexCoord(10, 0)  # 10 from A
+
+        sys_c = MagicMock()
+        sys_c.name = "C"
+        sys_c.global_location = HexCoord(0, 50)  # 50 from A — long detour
+
+        sys_d = MagicMock()
+        sys_d.name = "D"
+        sys_d.global_location = HexCoord(20, 0)  # 10 from B
+
+        def _wp(dest):
+            wp = MagicMock()
+            wp.destination_id = dest
+            wp.location = HexCoord(0, 0)
+            return wp
+
+        sys_a.warp_points = [_wp("B"), _wp("C")]
+        sys_b.warp_points = [_wp("A"), _wp("D")]
+        sys_c.warp_points = [_wp("D")]
+        sys_d.warp_points = [_wp("B"), _wp("C")]
+
+        galaxy = MagicMock()
+        galaxy.systems = {
+            sys_a.global_location: sys_a,
+            sys_b.global_location: sys_b,
+            sys_c.global_location: sys_c,
+            sys_d.global_location: sys_d,
+        }
+        name_map = {"A": sys_a, "B": sys_b, "C": sys_c, "D": sys_d}
+        galaxy.get_system_by_name = lambda n: name_map.get(n)
+
+        path = find_path_interstellar(sys_a, sys_d, galaxy)
+
+        assert path is not None
+        names = [s.name for s in path]
+        assert names == ["A", "B", "D"]

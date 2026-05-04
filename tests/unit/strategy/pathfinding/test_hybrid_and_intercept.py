@@ -464,3 +464,170 @@ class TestInterceptCalculation:
 
             # Should return target's current location (backward compat)
             assert result == target.location
+
+
+# =============================================================================
+# PROJ-334: Hybrid Path Gap-Fill — branches not covered by existing tests
+# =============================================================================
+
+
+class TestHybridPathGapFillBranches:
+    """PROJ-334: pin specific branches in find_hybrid_path that prior tests
+    only touched indirectly (or not at all):
+      - fleet-cannot-warp branch produces a path with NO warp arrivals
+      - can_warp parameter overrides fleet capability
+      - same-system-deep-space branch when both endpoints are within one system
+      - missing reciprocal warp point falls back to system global location
+      - disconnected systems with warp-capable fleet falls back to deep space
+    """
+
+    def test_find_hybrid_path_falls_back_to_deep_space_when_fleet_cannot_warp(
+        self, mock_galaxy
+    ):
+        """A non-warp-capable fleet between two systems gets a contiguous
+        hex-adjacent path with no jumps (warp arrivals would be discontiguous)."""
+        from game.core.hex_math import hex_distance as _hd
+
+        galaxy, _, _, _ = mock_galaxy
+
+        fleet = MagicMock()
+        fleet.capabilities = MagicMock()
+        fleet.capabilities.can_use_warp = MagicMock(return_value=False)
+
+        start = HexCoord(0, 0)
+        end = HexCoord(100, 0)
+
+        path = find_hybrid_path(galaxy, start, end, fleet=fleet)
+
+        assert path is not None
+        # Deep-space path: every consecutive pair is adjacent (hex_distance == 1).
+        # A warp-using path would have a non-adjacent jump segment.
+        for i in range(len(path) - 1):
+            assert _hd(path[i], path[i + 1]) == 1
+        assert path[0] == start
+        assert path[-1] == end
+
+    def test_find_hybrid_path_can_warp_param_overrides_fleet_capability(
+        self, mock_galaxy
+    ):
+        """can_warp=False overrides a warp-capable fleet → deep space path."""
+        from game.core.hex_math import hex_distance as _hd
+
+        galaxy, _, _, _ = mock_galaxy
+
+        fleet = MagicMock()
+        fleet.capabilities = MagicMock()
+        fleet.capabilities.can_use_warp = MagicMock(return_value=True)  # would warp
+
+        start = HexCoord(0, 0)
+        end = HexCoord(100, 0)
+
+        path_no_warp = find_hybrid_path(
+            galaxy, start, end, fleet=fleet, can_warp=False
+        )
+
+        # Pure hex-adjacent path despite the fleet being warp-capable.
+        for i in range(len(path_no_warp) - 1):
+            assert _hd(path_no_warp[i], path_no_warp[i + 1]) == 1
+
+    def test_find_hybrid_path_uses_deep_space_when_start_and_end_in_same_system(
+        self, mock_galaxy
+    ):
+        """Both endpoints inside the same system's radius → straight deep-space path."""
+        from game.core.hex_math import hex_distance as _hd
+
+        galaxy, sys_a, _, _ = mock_galaxy
+
+        # Both points within radius=50 of sys_a (at (0,0)).
+        start = HexCoord(2, 1)
+        end = HexCoord(10, 5)
+
+        path = find_hybrid_path(galaxy, start, end)
+
+        assert path[0] == start
+        assert path[-1] == end
+        # Length matches a deep-space hex_linedraw exactly.
+        assert len(path) == _hd(start, end) + 1
+
+    def test_find_hybrid_path_appends_system_global_location_when_reciprocal_warp_point_missing(
+        self,
+    ):
+        """When next_sys lacks a reciprocal warp point, the data-error fallback
+        appends next_sys.global_location (lines 280-285 of pathfinding.py)."""
+        # Build a galaxy where sys_a → sys_b is one-way: sys_a has a wp to B,
+        # but sys_b has NO reciprocal wp to A.
+        sys_a = MagicMock()
+        sys_a.name = "A"
+        sys_a.global_location = HexCoord(0, 0)
+        wp_a_b = MagicMock()
+        wp_a_b.destination_id = "B"
+        wp_a_b.location = HexCoord(5, 0)  # local
+        sys_a.warp_points = [wp_a_b]
+
+        sys_b = MagicMock()
+        sys_b.name = "B"
+        sys_b.global_location = HexCoord(200, 0)
+        sys_b.warp_points = []  # NO reciprocal — data-error condition
+
+        galaxy = MagicMock()
+        galaxy.systems = {
+            sys_a.global_location: sys_a,
+            sys_b.global_location: sys_b,
+        }
+        name_map = {"A": sys_a, "B": sys_b}
+        galaxy.get_system_by_name = lambda n: name_map.get(n)
+
+        # Force warp-capable to take the warp branch.
+        fleet = MagicMock()
+        fleet.capabilities = MagicMock()
+        fleet.capabilities.can_use_warp = MagicMock(return_value=True)
+
+        path = find_hybrid_path(
+            galaxy, HexCoord(0, 0), HexCoord(200, 0), fleet=fleet
+        )
+
+        assert path is not None
+        # The fallback path must include sys_b.global_location at SOME point
+        # (the "jump to system center" replacement when reciprocal WP is missing).
+        assert sys_b.global_location in path
+
+    def test_find_hybrid_path_falls_back_to_deep_space_when_systems_are_disconnected(
+        self,
+    ):
+        """When find_path_interstellar returns None, hybrid path falls back to
+        a deep-space (hex-adjacent) line."""
+        from game.core.hex_math import hex_distance as _hd
+
+        # Two systems with NO warp connections at all → disconnected graph.
+        sys_a = MagicMock()
+        sys_a.name = "A"
+        sys_a.global_location = HexCoord(0, 0)
+        sys_a.warp_points = []
+
+        sys_b = MagicMock()
+        sys_b.name = "B"
+        sys_b.global_location = HexCoord(150, 0)
+        sys_b.warp_points = []
+
+        galaxy = MagicMock()
+        galaxy.systems = {
+            sys_a.global_location: sys_a,
+            sys_b.global_location: sys_b,
+        }
+        name_map = {"A": sys_a, "B": sys_b}
+        galaxy.get_system_by_name = lambda n: name_map.get(n)
+
+        fleet = MagicMock()
+        fleet.capabilities = MagicMock()
+        fleet.capabilities.can_use_warp = MagicMock(return_value=True)
+
+        start = HexCoord(0, 0)
+        end = HexCoord(150, 0)
+
+        path = find_hybrid_path(galaxy, start, end, fleet=fleet)
+
+        # Every step is hex-adjacent → deep-space fallback (no warp jumps).
+        assert path[0] == start
+        assert path[-1] == end
+        for i in range(len(path) - 1):
+            assert _hd(path[i], path[i + 1]) == 1
