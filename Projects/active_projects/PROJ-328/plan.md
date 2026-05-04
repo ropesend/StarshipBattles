@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| A. StrategyModalWindow shell + low/medium modals (BuildQueueListWindow, OrdersWindow, FleetReportWindow) | Not Started — BLOCKED on PROJ-325 Phase 3 PoC | [phase_1_checklist.md](phase_1_checklist.md) |
-| B. NewGameSetupScreen MVVM split (full ViewModel + Controller + UI builder) | Not Started — sequential after Phase A | [phase_2_checklist.md](phase_2_checklist.md) |
-| C. TransferDialog deep split (ViewModel + Controller + Renderer; tests around pending math + IssueTransferCommand emission first) | Not Started — sequential after Phase B (or parallel if separate agent available) | [phase_3_checklist.md](phase_3_checklist.md) |
+| A. StrategyModalWindow shell + low/medium modals (BuildQueueListWindow, OrdersWindow, FleetReportWindow) | Complete (2026-05-03) | [phase_1_checklist.md](phase_1_checklist.md) |
+| B. NewGameSetupScreen MVVM split (full ViewModel + Controller + UI builder) | Not Started — Phase A complete; Phase B + Phase C unblocked | [phase_2_checklist.md](phase_2_checklist.md) |
+| C. TransferDialog deep split (ViewModel + Controller + Renderer; tests around pending math + IssueTransferCommand emission first) | Not Started — Phase A complete; may run in parallel with Phase B | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** Planning complete; awaiting PROJ-325 Phase 3 PoC.
-**Last Action:** Project created from Codex–Claude consensus discussion (2026-05-04). Pattern, sequence, and class-by-class application all settled in `AgentCoordination/Scratchpad/Discussion/20260504T041251Z_uiwindow-refactor-mvvm/plans/uiwindow_mvvm_refactor_plan_r002.md`.
-**Next Action:** Wait for PROJ-325 Phase 3 PoC to land. Once `game/ui/screens/race_setup/` has the canonical pattern (delegate factory + UI builder + two-stage `__init__`), Phase A starts with the `StrategyModalWindow` base-class shell update.
-**Blockers:** PROJ-325 Phase 3 PoC must complete before Phase A starts.
+**Last Updated:** 2026-05-03
+**Active Phase:** Phase A complete; Phase B + Phase C unblocked.
+**Last Action:** Phase A completed across 7 commits on `feat/03c-phase-aware-execution` (fd388946d, 7859d652c, 00874c571, 495fa0f39, dbc252c23, 2252a6ef3 + this plan/annotation pass). All 4 PoC findings from PROJ-325 Phase 3 applied cleanly. PROJ-322 deferral annotations updated for Tasks 5.6, 5.7, 5.16, 5.29 + 3.19, 3.20, 3.24, 3.26.
+**Next Action:** Phase B (NewGameSetupScreen MVVM split — full ViewModel + Controller + UI builder) or Phase C (TransferDialog deep split). Both unblocked; file-disjoint with each other so they may run in parallel if a second agent is available.
+**Blockers:** None.
 
 ## Overview
 

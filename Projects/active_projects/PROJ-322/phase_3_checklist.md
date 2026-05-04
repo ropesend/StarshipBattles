@@ -178,8 +178,8 @@
 **File:** `tests/unit/ui/screens/test_build_queue_list_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_build_queue_list_window.py`
 
-- [ ] S05-CAT6-002: stop patching `BuildQueueListWindow._build_list` in `mock_window_base` (lines 10-13, 28); patch at the pygame_gui boundary, or promote `_build_list` to public if independently testable. 11 tests depend on this fixture. Coordinate with APC-003-F03 in Phase 5. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** `BuildQueueListWindow` inherits from `pygame_gui.elements.UIWindow`; the `mock_window_base` fixture patches both UIWindow.__init__ AND _build_list because the make_ui_widget factory cannot bypass the super-init chain (same blocker as Phase 5 Tasks 5.6/5.7/5.10/5.11/5.12/5.16). Promoting `_build_list` is a production change out of P1 scope.
-- [ ] Verify: `pytest tests/unit/ui/screens/test_build_queue_list_window.py` passes; LOC delta approximately -5 _(deferred-out-of-scope — see above.)_
+- [x] S05-CAT6-002: stop patching `BuildQueueListWindow._build_list` in `mock_window_base` (lines 10-13, 28); patch at the pygame_gui boundary, or promote `_build_list` to public if independently testable. 11 tests depend on this fixture. Coordinate with APC-003-F03 in Phase 5. **RESOLVED IN PROJ-328 Phase A Task A.2 (commit 7859d652c)** — `_build_list` was decomposed into a pure-data row collector (`BuildQueueRowCollector`) + a production widget builder (`BuildQueueListUiBuilder`); tests use bypass_init + `MockBuildQueueListUiBuilder` (which routes through the real collector). Zero `patch.object(BuildQueueListWindow, '_build_list')` and zero `mock_window_base` fixture remain. _(original deferral: BuildQueueListWindow inherits from pygame_gui.elements.UIWindow; PROJ-325 PoC + PROJ-328 Phase A unblocked this.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_build_queue_list_window.py` passes; LOC delta approximately -5 — actual: 16 tests pass (was 14), helper LOC delta substantially negative (per-test 30-line bypass blocks → single 12-line _make_window helper).
 
 ---
 
@@ -187,8 +187,8 @@
 **File:** `tests/unit/ui/screens/test_fleet_report_window_multi_select.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py`
 
-- [ ] S03-CAT6-001b: extract the 3-5 nested `with patch()` blocks (lines 76-117, 148-178, 234-268, 389-427) into a single helper; prefer patching at service boundary instead of `_init_layout`/`refresh_list` private methods. Coordinate with APC-001-F07 in Phase 5. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** depends on Task 5.7 unblocking. `FleetReportWindow` inherits `StrategyModalWindow → UIWindow`; the make_ui_widget factory cannot bypass the super-init chain. The boundary-patching half (replacing `_init_layout`/`refresh_list` private patches with service-boundary patches) requires coordinating with the production service-interface refactor that's out of P1 scope.
-- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py` passes; LOC delta approximately -50 _(deferred-out-of-scope — see above.)_
+- [x] S03-CAT6-001b: extract the 3-5 nested `with patch()` blocks (lines 76-117, 148-178, 234-268, 389-427) into a single helper; prefer patching at service boundary instead of `_init_layout`/`refresh_list` private methods. Coordinate with APC-001-F07 in Phase 5. **RESOLVED IN PROJ-328 Phase A Task A.4 (commit 495fa0f39)** — the 3-5 nested patch blocks collapsed to a single `_make_window` helper using bypass_init + `MockFleetReportUiBuilder`. Zero `patch.object(FleetReportWindow, '_init_layout')` patches remain (the production `_init_layout` was extracted to `FleetReportLayoutBuilder` so the patch is no longer applicable). _(original deferral: FleetReportWindow inherits StrategyModalWindow → UIWindow; PROJ-325 PoC + PROJ-328 Phase A unblocked this.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py` passes; LOC delta approximately -50 — actual: 23 tests pass; helper LOC delta -50.
 
 ---
 
@@ -223,8 +223,8 @@
 **File:** `tests/unit/ui/screens/test_strategy_modal_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_modal_window.py`
 
-- [ ] S08-CAT6-004: rewrite `_make_modal_window` (lines 16-37) to use a real headless pygame_gui session; remove the `pygame_gui.elements.UIWindow.__init__` lambda patch and the manual base-init call. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** `StrategyModalWindow` IS the UIWindow subclass that's the root cause of the Phase 5 cluster of deferrals. The "real headless pygame_gui session" approach requires either an integration-test harness (out of unit-test scope) OR factory enhancement to patch the super-init chain. The current shape is the canonical workaround.
-- [ ] Verify: `pytest tests/unit/ui/screens/test_strategy_modal_window.py` passes; LOC delta approximately -15 _(deferred-out-of-scope — see above.)_
+- [x] S08-CAT6-004: rewrite `_make_modal_window` (lines 16-37) to use a real headless pygame_gui session; remove the `pygame_gui.elements.UIWindow.__init__` lambda patch and the manual base-init call. **RESOLVED IN PROJ-328 Phase A Task A.5 (commit dbc252c23)** — `_make_modal_window` now constructs a real `_ProbeModal` (concrete StrategyModalWindow subclass) under bypass_init. The base bypass branch (Task A.1, commit fd388946d) leaves `_window_manager`, `ui_manager`, `_window_init_bypassed` populated, so the helper just calls the constructor and manually registers the window with the manager (bypassed instances intentionally skip auto-register). Added 5 new TestBypassShellInvariants tests pinning the Task A.1 contract. _(original deferral: StrategyModalWindow IS the UIWindow subclass that was the root cause; PROJ-325 PoC + PROJ-328 Phase A unblocked this via the bypass-shell update rather than the integration-harness approach.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_modal_window.py` passes; LOC delta approximately -15 — actual: 28 tests pass (was 23, +5 new bypass-shell-invariant tests).
 
 ---
 
@@ -241,8 +241,8 @@
 **File:** `tests/unit/ui/screens/test_sub_window_hotkeys.py`
 **Tests:** `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py`
 
-- [ ] S12-CAT6-001: rewrite the constructor-bypass pattern (lines 36-294) for `OrdersWindow`/`BuildQueueScreen`/`TransferDialog`/`BuildQueueListWindow` to use real construction with mocked pygame_gui; or refactor windows so hotkey logic lives in a separately testable module. Coordinate with APC-001-F16 in Phase 5. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** all four target classes inherit from `pygame_gui.elements.UIWindow` (or `StrategyModalWindow`); the make_ui_widget factory cannot bypass the super-init chain (same root cause as Task 5.16 and the entire Phase 5 deferred cluster). The alternative — extracting hotkey logic into a separate module — is a production refactor out of P1 scope.
-- [ ] Verify: `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py` passes; LOC delta approximately -150 _(deferred-out-of-scope — see above.)_
+- [x] S12-CAT6-001: rewrite the constructor-bypass pattern (lines 36-294) for `OrdersWindow`/`BuildQueueScreen`/`TransferDialog`/`BuildQueueListWindow` to use real construction with mocked pygame_gui; or refactor windows so hotkey logic lives in a separately testable module. Coordinate with APC-001-F16 in Phase 5. **PARTIAL RESOLVED IN PROJ-328 Phase A Task A.6 (commit 2252a6ef3)** — OrdersWindow + BuildQueueListWindow clusters migrated to bypass_init + explicit-Mock-builder construction. BuildQueueScreen cluster unchanged (not a UIWindow subclass — bypass_init machinery doesn't apply; current shape is canonical). TransferDialog cluster left as-is — Phase C scope will rewrite it alongside the deep TransferDialog split. _(original deferral: all four classes inherit from pygame_gui.elements.UIWindow / StrategyModalWindow; PROJ-325 PoC + PROJ-328 Phase A unblocked the UIWindow path for OrdersWindow + BuildQueueListWindow.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py` passes; LOC delta approximately -150 — actual: 23 tests pass; OrdersWindow + BuildQueueListWindow helpers ~10 LOC each (was ~25 LOC of inline mock wiring per).
 
 ---
 
