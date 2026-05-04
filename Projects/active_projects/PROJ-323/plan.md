@@ -19,6 +19,13 @@
 | 4. CAT-11 Fragile Assertion (15 items) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. CAT-12 Logic-Heavy (27 items) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
+> **Terminology note (added 2026-05-04 by PROJ-325 Phase 1 Task 1.3, per OpenCode 323-review FND-CC-002):**
+> "Items" in the table above counts source-review CAT-finding entries (32+32+53+15+27 = **159 items**).
+> "Tasks" in Current State counts checklist Task N.M entries (**149 tasks**).
+> The 10-item gap reflects multi-finding tasks: e.g., Phase 2 has 30 tasks for 32 items, Phase 3 has 46 tasks for 53 items. Some tasks bundle multiple sibling findings on the same target file.
+>
+> **LOC delta annotation (FND-CC-003):** per-task `LOC delta ≈ N` numbers in verify lines are **pre-work estimates from the source review**, not measured deltas. Naive sum of all estimates approaches 7,700+ LOC, while the actual measured PROJ-323 net delta is approximately **-1,418 LOC** (per Current State below). Treat individual estimates as ceiling targets, not actuals; obsolete-skipped tasks retain their original estimate but contributed zero to the actual delta.
+
 ## Current State
 **Last Updated:** 2026-05-03 (post-push)
 **Active Phase:** All 5 phases Complete (149/149 tasks); merged to `feat/03c-phase-aware-execution`; pushed to GitHub

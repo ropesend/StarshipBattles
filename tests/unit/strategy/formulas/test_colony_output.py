@@ -389,13 +389,22 @@ class TestProjectedGrowthRate:
         hardcoded reference value (validated against projected_growth_rate
         2026-05-03).
 
-        Derivation (do not recompute in test body):
+        Derivation (do not recompute in test body — these are approximate
+        decompositions; the assertion compares against the exact value
+        produced by the production helper, captured below):
           - habitability ~ 0.94 for default-prefs human on Earth-like
           - K_eff ≈ 9_400. logistic_factor = 1 - 200/9_400 ≈ 0.9787.
           - effective_r = 0.03 * 0.5 = 0.015.
           - logistic = 0.015 * 0.9787 * 0.3 ≈ 0.004404.
           - decline  = -0.02 * (1-0.5) = -0.01.
           - net      ≈ -0.005596.
+
+        PROJ-325 Phase 1 Task 1.6: tolerance relaxed from `rel=1e-9` to
+        `rel=1e-5` per OpenCode 323-review FND-P2-001 — the docstring
+        intermediate values are quoted at 4-decimal precision and a
+        maintainer cannot re-derive 1e-9 precision from them. 1e-5
+        tolerance still catches any meaningful drift in the production
+        formula while matching the precision actually documented.
         """
         from game.strategy.formulas.colony_output import projected_growth_rate
         pop = SpeciesPopulation(race_id="human", count=200, happiness=0.3)
@@ -406,7 +415,7 @@ class TestProjectedGrowthRate:
         rate = projected_growth_rate(planet, pop, race, cfg)
 
         # Hardcoded reference value; see docstring derivation.
-        assert rate == pytest.approx(-0.005596103475344202, rel=1e-9)
+        assert rate == pytest.approx(-0.005596103475344202, rel=1e-5)
 
     def test_overpopulation_drives_logistic_negative(self):
         """P > K_eff → logistic_factor < 0 → rate goes negative even with

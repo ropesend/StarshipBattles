@@ -106,9 +106,9 @@
 
 - [x] [S03-CAT8-002] `5-7 nested patch blocks` (lines 17-323): Promote shared patches to class-level autouse fixture. _(addressed by PROJ-323 Phase 1 Task 1.4 — patches already deduped via the `_patched_research_scene()` context manager helper. Class-level autouse promotion would be a stylistic change without further LOC reduction; per the phase header caveat, autouse risks breaking tests with per-method customization (e.g., `test_on_next_turn_processes_turn` overrides Service patches that other tests do not need).)_
 
-- [x] Verify: `pytest tests/unit/research/research_scene/test_callbacks.py` passes; LOC delta ≈ 307 _(addressed in Phase 1 Task 1.4)_
+- [x] Verify: `pytest tests/unit/research/research_scene/test_callbacks.py` passes; LOC delta ≈ 307 _(estimate; actual Phase 2 incremental delta ≈ 0 because the dedupe work landed under Phase 1 Task 1.4 — the ~307 LOC estimate originally counted the same lines that Phase 1 already removed. Per PROJ-325 Phase 1 Task 1.8 / OpenCode 323-review FND-CC-006: do not include this estimate in any Phase 2 net-delta sum.)_
 
-**Notes:** _(Plan-review M-02 (2026-05-03): apply class-level autouse caveat from phase header — scan test methods for per-method patch customization before promoting.)_
+**Notes:** _(Plan-review M-02 (2026-05-03): apply class-level autouse caveat from phase header — scan test methods for per-method patch customization before promoting. PROJ-325 Phase 1 Task 1.8: LOC estimate flagged as Phase 1 double-count.)_
 
 ---
 
@@ -118,9 +118,9 @@
 
 - [x] [S03-CAT8-003] `5-6 nested patch blocks` (lines 13-262): Promote shared patches to class-level fixture. _(addressed by PROJ-323 Phase 1 Task 1.6 — patches already deduped via the `_patched_research_scene()` context manager helper.)_
 
-- [x] Verify: `pytest tests/unit/research/research_scene/test_initialization.py` passes; LOC delta ≈ 250 _(addressed in Phase 1 Task 1.6)_
+- [x] Verify: `pytest tests/unit/research/research_scene/test_initialization.py` passes; LOC delta ≈ 250 _(estimate; actual Phase 2 incremental delta ≈ 0 because the dedupe work landed under Phase 1 Task 1.6 — the ~250 LOC estimate originally counted the same lines that Phase 1 already removed. Per PROJ-325 Phase 1 Task 1.8 / OpenCode 323-review FND-CC-006: do not include this estimate in any Phase 2 net-delta sum.)_
 
-**Notes:** _(Plan-review M-02 (2026-05-03): apply class-level autouse caveat from phase header — scan test methods for per-method patch customization before promoting.)_
+**Notes:** _(Plan-review M-02 (2026-05-03): apply class-level autouse caveat from phase header — scan test methods for per-method patch customization before promoting. PROJ-325 Phase 1 Task 1.8: LOC estimate flagged as Phase 1 double-count.)_
 
 ---
 
