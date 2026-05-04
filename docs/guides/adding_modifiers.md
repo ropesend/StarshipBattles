@@ -1,6 +1,6 @@
 # Adding New Modifiers
 
-> **Last verified:** 2026-03-14
+> **Last verified:** 2026-05-04 — Applied doc-audit fixes (1 item, see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md).
 
 > Step-by-step guide for adding new modifiers to the game.
 
@@ -163,7 +163,7 @@ Apply different effects to different abilities:
 
 ## Step 6: Write Tests
 
-Add regression test in `tests/regression/test_modifier_ability_snapshots.py`:
+Add regression test in the appropriate file under `tests/regression/modifier_ability_snapshots/` (e.g. `test_weapon_modifiers.py` for weapon modifiers, `test_utility_modifiers.py` for utility modifiers):
 
 ```python
 def test_your_modifier_effects():

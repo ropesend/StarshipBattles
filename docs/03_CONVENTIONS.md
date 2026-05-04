@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-05-04 — Added agent/tool repo-root discovery guidance to prevent hardcoded checkout paths in skills, protocols, prompts, and coordination scripts.
+> **Last verified:** 2026-05-04 — Applied doc-audit fixes (3 items: test_lab handler filename, §10.2 PNG section ref, duplicate §6.5 → §6.6, see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day pass added agent/tool repo-root discovery guidance to prevent hardcoded checkout paths in skills, protocols, prompts, and coordination scripts.
 
 This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
 
@@ -74,7 +74,7 @@ Input handlers are prefixed with their screen/context name:
 | Class | File |
 |-------|------|
 | `StrategyInputHandler` | `game/ui/screens/strategy_input_handler.py` |
-| `TestLabInputHandler` | `game/ui/screens/test_lab/test_lab_input_handler.py` |
+| `TestLabInputHandler` | `game/ui/screens/test_lab/screen_input_handler.py` |
 | `WeaponsInputHandler` | `game/ui/screens/builder/weapons_input_handler.py` |
 
 - **DON'T:** Reference `InputHandler` at `game/core/input_handler.py` -- it does not exist.
@@ -509,7 +509,7 @@ for ab_data in abilities.values():
 
 If code needs to distinguish types, use a shared property or protocol — not a list of class name strings.
 
-### 6.5 System Migration
+### 6.6 System Migration
 
 When a new system replaces an old one, **eradicate the old system completely**. Delete old code, update all call sites, remove old data files. No fallback paths, no backward compatibility layers. Save files are disposable -- never write migration code for save data.
 
@@ -613,8 +613,8 @@ convention have both been retired.
 
 ### 10.2 Image format and resolution
 
-- All ship-theme assets are PNG only (per §5 / `docs/03_CONVENTIONS.md`
-  §285–288). JPG is not supported.
+- All ship-theme assets are PNG only (per §3.2 "Image Asset Format
+  Convention"). JPG is not supported.
 - Standard resolution is **2048×2048 square**, exposed as
   `Paths.SHIP_THEMES_TARGET_SIZE` (PROJ-314 Phase 1).
 
