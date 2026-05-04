@@ -1,41 +1,40 @@
 ---
 name: claude-discuss-respond
-description: Join an inter-agent discussion that Codex opened. The argument may be either the exact discussion leaf or a parent folder containing one or more leaves; if a parent is given, this skill scans for exactly one pending discussion matching Claude's responder role. Claude waits for Codex's first message of the current arc, then alternates writing even-indexed replies up to 10 messages per arc (extendable once to 20). Use after the user has invoked the Codex-side `codex-discuss-start` skill.
+description: Join a v2.4 inter-agent discussion that Codex or OpenCode opened. The argument may be either the exact discussion leaf or a parent folder containing one or more leaves; if a parent is given, this skill scans for exactly one pending discussion where the latest message is addressed to Claude. The skill is polymorphic across 2-party and 3-party discussions and does not care which agent opened the discussion — it just takes the next turn whenever it is Claude's turn. Use after the user has invoked the matching `*-discuss-start` skill on the originating agent.
 argument-hint: <folder-or-parent>
 ---
 
-# Inter-Agent Discussion — Claude Responds (v2.3)
+# Inter-Agent Discussion — Claude Responds (v2.4)
 
-You are joining a multi-turn discussion that Codex opened. The user may pass
-the exact discussion leaf OR a parent folder containing one or more
-discussion leaves; this skill resolves the leaf via parent-folder discovery.
-Codex's opening message for the current arc lives at
-`<leaf>/arc<NN>_001_codex_to_claude.md`.
+You are joining a multi-turn discussion. The user may pass the exact
+discussion leaf OR a parent folder containing one or more discussion leaves;
+this skill resolves the leaf via parent-folder discovery (latest-state
+based, NOT pair-specific).
 
-This is a peer-to-peer dialogue, not a delegation. Codex is your equal here.
-Push back, propose alternatives, agree where you actually agree.
+This is a peer-to-peer dialogue, not a delegation. Other agents are your
+equals. Push back, propose alternatives, agree where you actually agree.
 
-## Protocol — interagent-discussion/v1 (v2.3 spec)
+## Protocol — interagent-discussion/v1 (v2.4 spec)
 
 | Field | Value |
 |-------|-------|
 | Argument | `$args[0]` — leaf or parent; resolution algorithm below |
-| Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md` (sole pattern; no legacy fallback) |
-| Default per-arc cap | 10 messages (one in-band extension to 20 allowed per arc) |
-| Message format | YAML frontmatter (line 1 = `---`) + markdown body |
-| Termination | Two consecutive matching terminal statuses, OR cap reached, OR pre-existing `outcome.md` |
+| Filename pattern | `arc<NN>_<MMM>_<from>_to_<to>.md`, where from/to ∈ `{claude,codex,opencode}` |
+| Turn formula | `from = P[(i-1) mod n]`, `to = P[i mod n]` where `P = participants`, `n = len(P)` |
+| Default per-arc cap | `5 × n` messages (one in-band extension to `10 × n` per arc) |
+| Termination | Last `n` messages all uniform terminal status, OR cap reached, OR pre-existing `outcome.md` |
 | Atomicity | `.tmp_<guid>.md` then `Move-Item` to final name |
 | Shared plans | `<leaf>/plans/<name>_r<NNN>.md` — versioned siblings, never overwrite |
 
-Responder does not take inline context — context arrives forwarded in
-Codex's first message of the arc.
+Responder does not take inline context — context arrives forwarded in the
+arc-starter message.
 
 ## Step 1 — Resolve the folder
 
 ```powershell
 $Path = $args[0]
 if (-not [System.IO.Path]::IsPathRooted($Path)) {
-  $Path = Join-Path 'c:\Dev\StarshipBattles' $Path
+  $Path = Join-Path 'c:\Dev\Starship Battles' $Path
 }
 if (-not (Test-Path -LiteralPath $Path)) {
   Write-Output "ABORT: path does not exist: $Path"
@@ -53,27 +52,31 @@ if ($leaf -match '\s') {
 }
 ```
 
-## Step 3 — Parent-folder discovery (find the discussion leaf)
+## Step 3 — Latest-state parent-folder discovery
 
 The argument may be the leaf or a parent.
 
 **Resolution algorithm:**
 
-1. **Try as leaf.** If `$Path` directly contains v2.3 protocol files
-   matching `^arc\d{2}_\d{3}_(claude|codex)_to_(claude|codex)\.md$`,
+1. **Try as leaf.** If `$Path` directly contains v2.4 protocol files
+   matching `^arc\d{2}_\d{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\.md$`,
    `^outcome\.md$`, or `^outcome_arc\d{2}\.md$`, treat it as a leaf and
    skip to Step 4.
 
-2. **Otherwise scan children.** Look at immediate sub-folders of `$Path`.
-   For each, check whether it is a **pending live discussion matching
-   responder role:**
-   - Has an arc-prefixed starter message from Codex
-     (`^arc\d{2}_001_codex_to_claude\.md$`).
-   - Does NOT have `outcome.md` (the latest arc is live).
+2. **Otherwise scan children.** For each immediate sub-folder of `$Path`
+   that is a leaf, skip those with `outcome.md` present (they are
+   handled by `claude-discuss-continue`, not `respond`). For each
+   remaining leaf:
+   1. Find the highest-numbered arc with at least one message.
+   2. Find the highest-indexed message in that arc (excluding `.tmp_*`).
+   3. Parse its frontmatter.
+   4. The leaf is a candidate iff `to == claude`.
 
 3. Apply the count rule:
-   - **Zero candidates** → "no pending discussion found in `<parent>`. Make
-     sure the Codex-side `codex-discuss-start` skill has been invoked."
+   - **Zero candidates** → keep polling for ~5 minutes (the starter may
+     still be writing message 1). After timeout, retry once. If still
+     nothing: "no pending discussion found in `<parent>`. Make sure the
+     starter's `*-discuss-start` skill has been invoked."
    - **Exactly one candidate** → use it; log the resolved leaf for the user.
    - **Multiple candidates** → abort with an ambiguity message listing
      candidate child folder names. User must re-invoke with an explicit leaf.
@@ -83,47 +86,74 @@ function Test-IsLeaf {
   param([string]$P)
   $files = Get-ChildItem -LiteralPath $P -File -ErrorAction SilentlyContinue
   return [bool]($files | Where-Object {
-    $_.Name -match '^arc\d{2}_\d{3}_(claude|codex)_to_(claude|codex)\.md$' -or
+    $_.Name -match '^arc\d{2}_\d{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\.md$' -or
     $_.Name -eq 'outcome.md' -or
     $_.Name -match '^outcome_arc\d{2}\.md$'
   })
+}
+
+function Get-LatestMessageMeta {
+  param([string]$P)
+  $msgs = Get-ChildItem -LiteralPath $P -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -match '^arc(\d{2})_(\d{3})_(\w+)_to_(\w+)\.md$' }
+  if (-not $msgs) { return $null }
+  $best = $msgs | ForEach-Object {
+    if ($_.Name -match '^arc(\d{2})_(\d{3})_(\w+)_to_(\w+)\.md$') {
+      [PSCustomObject]@{
+        Path = $_.FullName
+        Arc = [int]$matches[1]
+        Idx = [int]$matches[2]
+        From = $matches[3]
+        To = $matches[4]
+      }
+    }
+  } | Sort-Object @{Expression='Arc';Descending=$true},@{Expression='Idx';Descending=$true} | Select-Object -First 1
+  return $best
 }
 
 function Test-IsPendingForClaudeResponder {
   param([string]$P)
   if (-not (Test-IsLeaf -P $P)) { return $false }
   if (Test-Path -LiteralPath (Join-Path $P 'outcome.md')) { return $false }
-  $hasIncomingStarter = Get-ChildItem -LiteralPath $P -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match '^arc\d{2}_001_codex_to_claude\.md$' }
-  return [bool]$hasIncomingStarter
+  $meta = Get-LatestMessageMeta -P $P
+  if (-not $meta) { return $false }
+  return ($meta.To -eq 'claude')
 }
 
 if (Test-IsLeaf -P $Path) {
   $Folder = $Path
 } else {
-  $candidates = Get-ChildItem -LiteralPath $Path -Directory -ErrorAction SilentlyContinue |
-    Where-Object { Test-IsPendingForClaudeResponder -P $_.FullName }
-  if (-not $candidates) {
-    Write-Output "ABORT: no pending discussion found in $Path."
-    exit 1
-  } elseif ($candidates.Count -gt 1) {
-    Write-Output "ABORT: multiple candidate discussions in $Path. Re-invoke with the explicit leaf."
-    $candidates | ForEach-Object { Write-Output "  - $($_.Name)" }
-    exit 1
-  } else {
-    $Folder = $candidates[0].FullName
-    Write-Output "Resolved discussion leaf: $Folder"
+  $Folder = $null
+  $start = Get-Date
+  $deadline = $start.AddMinutes(5)
+  while (-not $Folder -and (Get-Date) -lt $deadline) {
+    $candidates = Get-ChildItem -LiteralPath $Path -Directory -ErrorAction SilentlyContinue |
+      Where-Object { Test-IsPendingForClaudeResponder -P $_.FullName }
+    if ($candidates -and $candidates.Count -eq 1) {
+      $Folder = $candidates[0].FullName
+      break
+    } elseif ($candidates -and $candidates.Count -gt 1) {
+      Write-Output "ABORT: multiple candidate discussions in $Path. Re-invoke with the explicit leaf."
+      $candidates | ForEach-Object { Write-Output "  - $($_.Name)" }
+      exit 1
+    }
+    Start-Sleep -Seconds 30
   }
+  if (-not $Folder) {
+    Write-Output "ABORT: no pending discussion found in $Path after 5 min."
+    exit 1
+  }
+  Write-Output "Resolved discussion leaf: $Folder"
 }
 ```
 
 ## Step 4 — Pre-flight non-mutation
 
 The responder never creates `<leaf>/plans/`. Plan writers create it
-immediately before their first plan write (handled by `Write-PlanRevision`).
+immediately before their first plan write.
 
 If `outcome.md` exists at the leaf, the latest arc is concluded — `respond`
-is the wrong skill. Surface and exit:
+is the wrong skill. Surface and exit.
 
 ```powershell
 $outcomePath = Join-Path $Folder 'outcome.md'
@@ -131,138 +161,169 @@ if (Test-Path -LiteralPath $outcomePath) {
   Write-Output "EXISTING_OUTCOME — latest arc is concluded."
   Get-Content -LiteralPath $outcomePath
   Write-Output ""
-  Write-Output "If you want to continue this discussion with new context, use claude-discuss-continue (if Claude was the original starter) or the Codex-side codex-discuss-continue (if Codex was)."
+  Write-Output "If you want to continue this discussion with new context, use claude-discuss-continue (when authorized by continuation_starter or as the original arc-1 starter)."
   exit 0
 }
 ```
 
-Wrong-parity check:
-
-```powershell
-$hasClaudeStarted = Get-ChildItem -LiteralPath $Folder -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -match '^arc\d{2}_001_claude_to_codex\.md$' }
-$hasCodexStarted = Get-ChildItem -LiteralPath $Folder -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -match '^arc\d{2}_001_codex_to_claude\.md$' }
-if ($hasClaudeStarted -and -not $hasCodexStarted) {
-  Write-Output "ABORT: leaf has claude_to_codex starter but no codex_to_claude. claude-discuss-respond is for joining a Codex-started discussion. Use claude-discuss-start instead."
-  exit 1
-}
-```
-
-## Step 5 — Determine the active arc
+## Step 5 — Determine active arc and parse `participants`
 
 The active arc is the highest arc-prefix found in the leaf's filenames.
+The `participants` and `turn_order` come from the arc-1 starter message.
 
 ```powershell
-$activeArc = (Get-ChildItem -LiteralPath $Folder -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -match '^arc(\d{2})_' } |
-  ForEach-Object { if ($_.Name -match '^arc(\d{2})_') { [int]$matches[1] } else { 0 } } |
-  Measure-Object -Maximum).Maximum
-if (-not $activeArc) {
-  Write-Output "ABORT: leaf has no arc-prefixed protocol files. Not a v2.3 discussion."
+$arcFiles = Get-ChildItem -LiteralPath $Folder -File -ErrorAction SilentlyContinue |
+  Where-Object { $_.Name -match '^arc(\d{2})_' }
+if (-not $arcFiles) {
+  Write-Output "ABORT: leaf has no arc-prefixed protocol files."
+  exit 1
+}
+$activeArc = ($arcFiles | ForEach-Object { if ($_.Name -match '^arc(\d{2})_') { [int]$matches[1] } else { 0 } } | Measure-Object -Maximum).Maximum
+
+# Read arc01 starter for participants
+$arc1Starter = $arcFiles | Where-Object { $_.Name -match '^arc01_001_' } | Select-Object -First 1
+if (-not $arc1Starter) {
+  Write-Output "ABORT: leaf missing arc01_001_*.md"
+  exit 1
+}
+$arc1Body = Get-Content -LiteralPath $arc1Starter.FullName -Raw
+# Extract participants from frontmatter (parse YAML-ish first --- block)
+if ($arc1Body -match '(?s)^---\s*\n(.*?)\n---') {
+  $fm = $matches[1]
+  if ($fm -match '(?m)^participants:\s*\[([^\]]*)\]') {
+    $Participants = @($matches[1] -split ',' | ForEach-Object { $_.Trim() })
+  } else {
+    # v2.3 readback: derive from arc01_001 from/to
+    if ($arc1Starter.Name -match '^arc01_001_(\w+)_to_(\w+)\.md$') {
+      $Participants = @($matches[1], $matches[2])
+      Write-Output "v2.3 readback: derived participants = [$($Participants -join ', ')]"
+    }
+  }
+} else {
+  Write-Output "ABORT: arc01_001 has no parseable frontmatter."
+  exit 1
+}
+$N = $Participants.Count
+if ('claude' -notin $Participants) {
+  Write-Output "ABORT: claude is not in participants ($($Participants -join ', '))"
   exit 1
 }
 ```
 
-## Step 6 — Wait for Codex's first message of the active arc
+## Step 6 — Compute incoming wait target
+
+`i_in` = smallest unused index in active arc where
+`participants[i_in mod n] == 'claude'`.
 
 ```powershell
-$expectedFromCodex = Join-Path $Folder ("arc{0:D2}_001_codex_to_claude.md" -f $activeArc)
+$existingIdxs = @($arcFiles | Where-Object { $_.Name -match ("^arc{0:D2}_(\d{3})_" -f $activeArc) } |
+  ForEach-Object { if ($_.Name -match ("^arc{0:D2}_(\d{3})_" -f $activeArc)) { [int]$matches[1] } })
+$i = 1
+while ($true) {
+  if ($i -notin $existingIdxs) {
+    if ($Participants[$i % $N] -eq 'claude') { $i_in = $i; break }
+  }
+  $i++
+  if ($i -gt 100) { Write-Output "ABORT: could not find next claude turn"; exit 1 }
+}
+Write-Output "Incoming wait target: arc$($activeArc.ToString('D2'))_$($i_in.ToString('D3'))_*_to_claude.md"
+```
+
+## Step 7 — Wait for the incoming message (poll)
+
+```powershell
+$pattern = "arc{0:D2}_{1:D3}_*_to_claude.md" -f $activeArc, $i_in
 $start = Get-Date
 $deadline = $start.AddMinutes(5)
-while (-not (Test-Path -LiteralPath $expectedFromCodex) -and -not (Test-Path -LiteralPath $outcomePath) -and (Get-Date) -lt $deadline) {
+while ((@(Get-ChildItem -LiteralPath $Folder -File -Filter $pattern -ErrorAction SilentlyContinue)).Count -eq 0 -and -not (Test-Path -LiteralPath $outcomePath) -and (Get-Date) -lt $deadline) {
   $elapsed = [int]((Get-Date) - $start).TotalSeconds
-  Write-Output "waiting... ${elapsed}s elapsed"
+  Write-Output "waiting for $pattern... ${elapsed}s elapsed"
   Set-Content -LiteralPath (Join-Path $Folder 'heartbeat_claude.txt') -Value (Get-Date -Format o) -Encoding utf8
   Start-Sleep -Seconds 30
 }
+$matches = @(Get-ChildItem -LiteralPath $Folder -File -Filter $pattern -ErrorAction SilentlyContinue)
 if (Test-Path -LiteralPath $outcomePath) { Write-Output 'OUTCOME' }
-elseif (Test-Path -LiteralPath $expectedFromCodex) { Write-Output 'READY' }
+elseif ($matches.Count -eq 1) { Write-Output 'READY'; Write-Output $matches[0].Name }
+elseif ($matches.Count -gt 1) { Write-Output 'FORK'; $matches | ForEach-Object { Write-Output $_.Name } }
 else { Write-Output 'TIMEOUT' }
 ```
 
-Run with `timeout: 320000`. Retry once on TIMEOUT (~10 min total).
+Run with `timeout: 320000`. Retry once on TIMEOUT.
 
-## Step 7 — Read message 001 of the arc and validate
+On `FORK`: write your scheduled message at index `j_out = i_in + 1`
+(if turn-aligned) with `status: needs-user` and `## Validation failure`
+body. Otherwise abort.
 
-Required frontmatter fields:
+## Step 8 — Read incoming and validate
 
-- `protocol: interagent-discussion/v1`
-- `arc: <activeArc>`
-- `message_index: 1`
-- `from: codex`, `to: claude`
+Required validation per v2.4:
 
-If frontmatter is wrong, surface to the user.
+1. **Schema**: required fields present; `from != to`; `from`/`to` ∈ `{claude,codex,opencode}`.
+2. **Turn alignment**: `from == participants[(message_index-1) mod n]` AND
+   `to == participants[message_index mod n]` AND `to == claude`.
+3. **Index continuity**: `reply_to == message_index - 1` for `i > 1`.
 
-Codex's message will include a `## User-supplied context` section if the
-user provided inline context or `topic.md` to Codex. **Treat the verbatim
-fenced blocks as authoritative user intent.** Do not paraphrase.
+If validation fails, write your scheduled message with `status: needs-user`
+and a `## Validation failure` body.
 
-## Step 8 — Discussion loop
+If the message is the arc-1 starter (i.e. you're responding immediately
+without anyone else having spoken — only possible if `claude` is at
+index 1 in a 2-party where someone else started): also confirm
+`participants` matches the arc01_001 you parsed in Step 5.
 
-You are alternating with Codex. **Claude writes even per-arc indexes**
-(`002`, `004`, ..., `010`; post-extension `012`, ..., `020`). Codex writes
-odd indexes.
+If the incoming message has `## User-supplied context`, the verbatim fenced
+blocks are authoritative user intent. Do not paraphrase.
 
-Per-arc cap starts at 10; if extension is accepted, becomes 20.
+## Step 9 — Apply termination rules (re-read last `n` messages)
+
+- **Unanimous terminal**: last `n` messages all carry the same terminal
+  status (uniform `consensus` xor `needs-user`) → write `outcome.md`,
+  summarize, exit. (Note: if you arrived to find the last `n` messages
+  already terminal and `outcome.md` not yet written, you write it.)
+- **Cap reached**: if the just-read message has `message_index == active_cap`,
+  it should be the cap message. Read its `status` (must be `needs-user`),
+  write `outcome.md`, summarize, exit.
+
+If neither terminates, proceed to Step 10.
+
+## Step 10 — Discussion loop
+
+You are alternating with the other agents per the round-robin formula.
 
 Repeat until terminal:
 
-1. **Apply termination rules** against the just-read incoming message:
-   - `outcome.md` already exists → done; read, summarize, exit.
-   - Incoming `status: consensus` AND your previous outgoing was
-     `consensus` → write `outcome.md`, summarize, exit.
-   - Same for `needs-user`.
-   - Incoming `message_index == active_cap` → cap reached. Write
-     `outcome.md`, summarize, exit.
+1. **Re-read any plans listed in `## Plans touched`** before composing
+   your reply.
 
-2. **Re-read any plans listed in `## Plans touched`** before composing
-   your reply. References point to specific revision files like
-   `plans/<name>_r<NNN>.md`.
+2. **Handle extension request**, if any. Active cap starts at `5×n`. Accept
+   by setting `message_cap: <10×n>` and `extension_accepted: true`. After
+   acceptance, every subsequent message must include `message_cap: <10×n>`.
 
-3. **Handle extension request, if any.**
-   - **Accept**: set `message_cap: 20` and `extension_accepted: true`,
-     plus one-line body ack. Every subsequent message in this arc must
-     include `message_cap: 20`.
-   - **Decline**: omit fields, explain in body.
-   - At most one extension per arc.
+3. **Handle handover proposal**, if any.
 
-4. **Handle handover proposal, if any.** Body markdown only. If accepted,
-   `outcome.md.user_facing_agent` = `claude`.
+4. **Compose your reply.** Status: `continue` / `consensus` / `needs-user`.
+   At cap: must use `needs-user` (per spec §5.3).
 
-5. **Compose your reply.** Status: `continue` / `consensus` / `needs-user`.
-   At cap: must use `consensus` or `needs-user`.
+5. **Edit shared plans this turn (if appropriate).** Plan files at
+   `<leaf>/plans/<name>_r<NNN>.md`. Never overwrite. Use `Write-PlanRevision`.
 
-6. **Edit shared plans this turn (if appropriate).** Plan files at
-   `<leaf>/plans/<name>_r<NNN>.md`. **Never overwrite an existing
-   revision.** Each edit is a new file with bumped revision number. Plan
-   frontmatter:
-   ```yaml
-   ---
-   protocol: interagent-discussion/v1
-   last_edited_by: claude
-   last_edited_at_utc: <UTC ISO 8601>
-   revision: <int matching filename suffix>
-   ---
-   ```
-   If you edit, include `## Plans touched` listing each new revision file.
-   Use `Write-PlanRevision`.
+6. **Compute outgoing write target.** `j_out = i_in + 1`. Verify
+   `participants[(j_out-1) mod n] == 'claude'`. Recipient is
+   `participants[j_out mod n]`. Filename:
+   `arc<activeArc:D2>_<j_out:D3>_claude_to_<recipient>.md`. Atomic-write
+   via `Write-MessageAtomic`.
 
-7. **Atomic-write the message** via `Write-MessageAtomic` to
-   `arc<NN>_<MMM>_claude_to_codex.md` (even per-arc index).
+7. **Writer-detects-match.** After writing, re-read last `n` messages.
+   If unanimous terminal, write `outcome.md` race-safely (Step 11) and
+   exit. Do NOT loop.
 
-8. **Writer-detects-match termination rule.** After writing, check if your
-   outgoing status matches incoming AND is terminal. If yes → write
-   `outcome.md` race-safely and exit. Do NOT loop back.
+8. **Wait for next incoming**. New `i_in` = `j_out + (n-1)` if the next
+   round-robin lands on you again right away (false in 3-party);
+   otherwise the next claude index. Use the polling helper.
 
-9. **Wait for Codex's next message** at
-   `arc<NN>_<MMM+1>_codex_to_claude.md` using the polling helper.
-   Validate. Loop.
+9. Loop.
 
 ### Message file format
-
-Frontmatter is the **first thing in the file**. Use longer fences for
-verbatim content containing `~~~`.
 
 ```markdown
 ---
@@ -270,13 +331,13 @@ protocol: interagent-discussion/v1
 arc: <N>
 message_index: <M>
 from: claude
-to: codex
+to: <P[M mod n]>
 status: continue
-reply_to: <previous incoming message_index>
+reply_to: <M-1>
 created_at_utc: <ISO 8601 UTC>
 ---
 
-# Claude → Codex, message arc<NN>-<MMM>
+# Claude → <recipient>, message arc<NN>-<MMM>
 
 [reply / counterpoint / agreement]
 
@@ -284,16 +345,6 @@ created_at_utc: <ISO 8601 UTC>
 
 (Only if you created a new plan revision file this turn.)
 ```
-
-### Frontmatter schema
-
-**Required:** `protocol`, `arc`, `message_index`, `from`, `to`, `status`, `reply_to`, `created_at_utc`.
-
-**Optional:**
-- `agent_turn: <int>` — informational only.
-- `message_cap: <int>` — omit unless extension accepted (then `20`).
-- `extension_requested_cap: 20` — set to propose an extension.
-- `extension_accepted: true` — set when accepting a proposed extension.
 
 ### Atomic write helpers
 
@@ -312,7 +363,7 @@ function Write-PlanRevision {
   $finalName = "{0}_r{1:D3}.md" -f $PlanBaseName, $Revision
   $finalPath = Join-Path $plansDir $finalName
   if (Test-Path -LiteralPath $finalPath) {
-    throw "Plan revision file '$finalName' already exists. Plan revisions are immutable; bump to revision $($Revision + 1)."
+    throw "Plan revision '$finalName' already exists. Bump to revision $($Revision + 1)."
   }
   $tmp = Join-Path $plansDir ('.tmp_' + [guid]::NewGuid().ToString('N') + '.md')
   Set-Content -LiteralPath $tmp -Value $Content -Encoding utf8
@@ -320,15 +371,14 @@ function Write-PlanRevision {
 }
 ```
 
-### Polling helper
+## Step 11 — Write outcome.md (exactly once, race-safe)
 
-Same shape as in `claude-discuss-start`: 30s sleep, 5-min wait, watches
-both target and `outcome.md`, retry once on TIMEOUT, no `outcome.md` on
-timeout.
+Before writing:
 
-## Step 9 — Write outcome.md (exactly once, race-safe)
-
-`outcome.md` requires all seven fields below.
+1. Re-read the last `n` messages to confirm termination still holds.
+2. Re-check `outcome.md` does not exist.
+3. Atomic-write via temp+rename.
+4. If the rename target already exists, read it and stop. Do not retry.
 
 ```markdown
 ---
@@ -337,8 +387,10 @@ ended_at_message: <int>
 ended_at_arc: <N>
 ended_by: claude
 status: consensus               # consensus | needs-user
-user_facing_agent: codex        # default = starter (codex when Claude is responding)
-implementation_owner: codex     # default = starter; can be claude or both via discussion
+user_facing_agent: <claude|codex|opencode>   # default = original arc-1 starter
+implementation_owner: <claude|codex|opencode|multiple>   # default = original starter
+implementation_owners: [<agent>, <agent>]   # required iff owner == multiple
+continuation_starter: <agent>                # optional; default = original starter
 ---
 
 ## Summary
@@ -346,51 +398,39 @@ implementation_owner: codex     # default = starter; can be claude or both via d
 [2–4 paragraphs.]
 
 ## Handover (only if applicable)
-
-[1-line rationale for `user_facing_agent` if handover was proposed and accepted.]
-
 ## Implementation responsibility (only if non-default)
-
-[1-line rationale if `implementation_owner` is not the starter.]
 ```
 
-`user_facing_agent` defaults to **the starter** (so `codex` when Claude is
-responding). `implementation_owner` defaults to the starter likewise. Both
-change only via accepted proposal during the discussion.
+## Step 12 — Report to the user (only if you are the user-facing agent)
 
-## Step 10 — Report to the user (only if you are the user-facing agent)
+Default: `user_facing_agent` = original arc-1 starter (whoever wrote
+`arc01_001_*.md`). If that's not Claude, deliver a one-line acknowledgement
+(discussion closed, leaf path) and stop — the starter delivers the substantive
+summary.
 
-Per default: **the starter is the user-facing agent** unless a handover
-was accepted. As `claude-discuss-respond`, the starter is Codex. **You
-are NOT the default user-facing agent.**
-
-- If `outcome.md.user_facing_agent == codex`: minimal acknowledgement to
-  the user (one line: discussion closed, leaf path) and stop. Codex
-  delivers the substantive summary.
-- If a handover to `claude` was accepted: deliver the full report (folder,
-  message count, terminal status, summary, file listing).
+If a handover to Claude was accepted, deliver the full report (folder,
+message count, terminal status, summary, file listing).
 
 ## Notes & gotchas
 
-- **Filename parity (responder, per arc).** Codex writes odd; Claude
-  writes even. Resets each arc.
-- **Frontmatter on line 1.** No prefix above `---`.
+- **Latest-state discovery, not pair-specific.** The v2.3 heuristic of
+  "Codex started, no Claude reply" is gone. Any leaf where the latest
+  message is `to: claude` is a candidate.
+- **Polymorphic across topology.** Same skill handles 2-party and 3-party,
+  and works regardless of which agent opened the discussion.
+- **Frontmatter on line 1.**
 - **Heartbeat files** are best-effort liveness hints.
 - **Temp files** matching `.tmp_*` are ignored by readers.
-- **Parent-folder discovery.** Try-as-leaf-first; otherwise scan children
-  for one pending discussion matching role. Zero/multiple → surface
-  cleanly.
-- **Pre-flight non-mutation.** Responder never creates `plans/`.
-- **Plans never overwrite.** Each edit is a new revision file
-  (`<name>_r<NNN>.md`).
+- **Plans never overwrite.** Each edit is a new revision file.
 - **Use `-LiteralPath`** for safety with special characters.
 - **Don't paraphrase** verbatim user-supplied context.
 - **Fence-collision rule:** longer fence if content contains `~~~`.
-- **Default user-facing agent is the starter** (Codex when responding).
+- **Default user-facing agent is the original arc-1 starter.**
 - **Cross-host invocation wording.** "Invoke the Codex-side
-  `codex-discuss-start` skill" rather than slash-prefixed examples.
-- **`argument-hint` asymmetry.** Claude exposes argument surface via
-  `argument-hint`; Codex documents in body and `agents/openai.yaml` only.
-- **No legacy compatibility.** v2.3 active skills require arc-prefixed
-  filenames everywhere. Pre-v2.3 unprefixed transcripts are historical
-  artifacts and not continuation/respond targets.
+  `codex-discuss-start` skill" or "Invoke the OpenCode-side
+  `ocode-discuss-start` skill" rather than slash-prefixed examples.
+- **`argument-hint` asymmetry.** Claude/OpenCode skills expose argument
+  surface via `argument-hint`; Codex documents in body and `agents/openai.yaml`.
+- **v2.3 readback.** When `participants` is missing from `arc01_001`,
+  derive it from `[arc01_001.from, arc01_001.to]`. Legacy
+  `implementation_owner: both` accepted for v2.3 outcome readback only.
