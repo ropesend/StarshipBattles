@@ -374,9 +374,14 @@ class Component:
         ComponentStatsCalculator.recalculate(self, context)
 
     def clone(self) -> "Component":
-        # Create a new instance with the same data
-        # PROJ-38: Pass registries to the clone for DI consistency
-        return self.__class__(self.data, registries=self._registries)
+        # Propagate self.ship so clones of attached components evaluate
+        # ship_class_mass formulas without callers having to set .ship
+        # manually after every clone+recalc. Detached sources (ship is None,
+        # e.g. registry templates and palette items) still produce detached
+        # clones. See docs/guides/component_system.md.
+        cloned = self.__class__(self.data, registries=self._registries)
+        cloned.ship = self.ship
+        return cloned
 
 
 # All component types use Component directly via the ability system.
