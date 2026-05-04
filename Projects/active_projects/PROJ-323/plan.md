@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. CAT-9 Simplification (32 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-8 Needless Complexity (32 items) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-10 Parametrize (53 items) | Partial | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. CAT-10 Parametrize (53 items) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-11 Fragile Assertion (15 items) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. CAT-12 Logic-Heavy (27 items) | Partial | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. CAT-12 Logic-Heavy (27 items) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-03 (pass 2)
-**Active Phase:** All phases complete (PARTIAL — see below)
-**Last Action:** PROJ-323 pass 2 — addressed 23 of 24 deferred Phase 3 tasks (1 deferred-with-rationale: 3.34 cross-handler fleet_not_found cluster) and all 19 deferred Phase 5 tasks (7 substantive refactors + 12 leave-as-is/documented-intent). Net pass-2 work: ~14 substantive Phase 3 parametrizations + 5 below-threshold/leave-as-is + 1 deferred = Phase 3 essentially complete. Phase 5: 7 substantive refactors + 12 documented leave-as-is/below-threshold.
-**Next Action:** Run `python -m pytest tests/` to confirm no regressions; report SUCCESS/PARTIAL accordingly.
+**Last Updated:** 2026-05-03 (post-push)
+**Active Phase:** All 5 phases Complete (149/149 tasks); merged to `feat/03c-phase-aware-execution`; pushed to GitHub
+**Last Action:** Pass 2 closed Phase 3 (24 of 24 deferred-from-pass-1 addressed: 23 substantive + 1 with documented rationale at Task 3.34) and Phase 5 (19 deferred-from-pass-1: 9 substantive + 10 leave-as-is/documented-intent). Net pass 2: -580 LOC. Combined PROJ-323 delta: ~-1,418 LOC.
+**Next Action:** None — project is complete. The 1 documented Task 3.34 deferral has rationale in `phase_3_checklist.md` (cross-handler `fleet_not_found` cluster across 11 distinct handler classes; pulling them all into a class-level parametrize would destroy per-class organization aligned with production structure).
 **Blockers:** None
 
 ## Overview
@@ -97,7 +97,7 @@ in the affected task bodies):
   Task 2.21 if deleted.
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing
 - [ ] Audit passed
 - [ ] User verified

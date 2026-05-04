@@ -4,9 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-323 | Test review P2 opportunistic polish 2026-05-02 | Planning | 2026-05-03 | 2026-05-03 |
-| PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | Planning | 2026-05-03 | 2026-05-03 |
-| PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | Planning | 2026-05-03 | 2026-05-03 |
+| PROJ-323 | Test review P2 opportunistic polish 2026-05-02 | Awaiting Verification | 2026-05-03 | 2026-05-03 |
+| PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | Awaiting Verification (Partial — 25 deferred-with-blocker) | 2026-05-03 | 2026-05-03 |
+| PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | Awaiting Verification | 2026-05-03 | 2026-05-03 |
 | PROJ-320 | Strategic Combat Round Budget | Planning | 2026-05-02 | 2026-05-02 |
 | PROJ-319 | Audit-shrink cleanup 2026-05-02 | Planning | 2026-05-02 | 2026-05-02 |
 | PROJ-318 | PROJ-314 Closeout Remediations | Complete | 2026-04-28 | 2026-04-28 |

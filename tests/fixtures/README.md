@@ -8,20 +8,92 @@ This directory contains reusable test fixtures organized by domain. Fixtures eli
 
 ```
 tests/fixtures/
-    __init__.py           # Package initialization
-    README.md             # This file
-    ai.py                 # AI behavior fixtures
-    battle.py             # Battle engine fixtures
-    common.py             # Data initialization fixtures
-    components.py         # Component fixtures
-    paths.py              # Path utilities
-    ships.py              # Ship fixtures
-    test_scenarios.py     # Combat Lab scenario mocks
+    __init__.py             # Package initialization
+    README.md               # This file
+    ai.py                   # AI behavior fixtures
+    battle.py               # Battle engine fixtures
+    cargo_mock_ship.py      # Cargo-mock ship factory (PROJ-322 DUP-003)
+    common.py               # Data initialization fixtures
+    components.py           # Component fixtures
+    mock_planet.py          # Mock planet factory (PROJ-322 HLP-004)
+    paths.py                # Path utilities
+    ships.py                # Ship fixtures
+    test_scenarios.py       # Combat Lab scenario mocks
+    ui_widget_factory.py    # Non-UIWindow widget factory (PROJ-322 APC-001)
+    yard_facility.py        # Yard facility factories (PROJ-322 HLP-003)
 ```
+
+> **Note:** `tests/unit/simulation/conftest.py` was extended in PROJ-322 with shared
+> `BattleRunner` fixtures (`_make_ship_spec`, `_make_team`, `ship_builder`). Those
+> live in the conftest (not in `tests/fixtures/`) so pytest auto-injects them into
+> every test under `tests/unit/simulation/` without explicit imports.
 
 ---
 
 ## Module Documentation
+
+### cargo_mock_ship.py
+
+**Purpose:** Mock-ship factory for cargo/transfer tests (PROJ-322 DUP-003).
+
+Replaces the per-file ad-hoc `MagicMock(spec=Ship)` setup in cargo, transfer, and
+fleet-cargo tests. Uses a closure-based capacity/contents lambda pattern so the
+mock's `cargo_capacity()` and `cargo_contents()` methods reflect mutations applied
+during the test.
+
+**Factory Function:**
+```python
+from tests.fixtures.cargo_mock_ship import make_cargo_mock_ship
+
+ship = make_cargo_mock_ship(
+    capacity=100,                                # Total cargo capacity
+    contents={"ore": 25, "alloys": 10},          # Initial contents dict
+    name="Freighter",                            # Optional ship.name
+)
+
+# capacity / contents are read via closures — mutate `contents` then call
+# ship.cargo_contents() to see the updated values.
+```
+
+**Usage example:**
+```python
+def test_transfer_moves_resources():
+    src = make_cargo_mock_ship(capacity=100, contents={"ore": 30})
+    dst = make_cargo_mock_ship(capacity=200, contents={})
+    transfer_resources(src, dst, "ore", 15)
+    assert dst.cargo_contents()["ore"] == 15
+```
+
+---
+
+### mock_planet.py
+
+**Purpose:** Mock planet factory for strategic-layer tests (PROJ-322 HLP-004).
+
+Replaces the per-file `MagicMock(spec=Planet)` setup in fleet-cargo, colony, and
+planet-report tests with a single shared factory.
+
+**Factory Function:**
+```python
+from tests.fixtures.mock_planet import make_mock_planet
+
+planet = make_mock_planet(
+    name="Earth",
+    population=1_000_000,
+    habitability=0.85,
+    resources={"organics": 50, "alloys": 20},
+)
+```
+
+**Usage example:**
+```python
+def test_colony_growth_scales_with_habitability():
+    planet = make_mock_planet(name="Mars", habitability=0.4, population=10_000)
+    growth = compute_growth(planet)
+    assert growth < baseline_growth_for(habitability=1.0)
+```
+
+---
 
 ### paths.py
 
@@ -233,6 +305,82 @@ def test_ai_targeting(policy_manager_with_test_data):
 
 ---
 
+### ui_widget_factory.py
+
+**Purpose:** Construct non-UIWindow pygame_gui widgets for unit tests without
+running the full pygame display stack (PROJ-322 APC-001).
+
+**Factory Function:**
+```python
+from tests.fixtures.ui_widget_factory import make_ui_widget
+
+widget = make_ui_widget(
+    SomeWidgetClass,                            # Widget class to instantiate
+    extra_modules=("game.ui.module_to_patch",), # Modules where pygame_gui
+                                                # element classes should be
+                                                # patched in addition to the
+                                                # widget's own module
+    some_kwarg="value",                         # Forwarded to Cls(**kwargs)
+)
+```
+
+**Limitation — UIWindow super-init chain:** the factory **cannot** construct
+subclasses of `pygame_gui.elements.UIWindow` (including the project's
+`StrategyModalWindow`). The factory's element-class patches do not intercept
+`super().__init__()` calls because the MRO is resolved at class-definition time.
+For UIWindow subclasses, fall back to the legacy `__new__` bypass-init helper or
+write an integration test against a headless pygame_gui session. See
+[docs/known-issues.md — UIWindow super-init chain blocker](../../docs/known-issues.md#uiwindow-super-init-chain-blocker)
+for the affected classes and unblocking paths.
+
+**Usage example** (from `tests/fixtures/test_ui_widget_factory.py`):
+```python
+def test_factory_constructs_basic_widget():
+    widget = make_ui_widget(MyPanel, label_text="Hello")
+    assert widget.label_text == "Hello"
+    # No pygame display was initialized; element classes were patched into
+    # MyPanel's module so the constructor can run on a stub event/UI manager.
+```
+
+---
+
+### yard_facility.py
+
+**Purpose:** Yard / build-facility factories for shipyard, refit, and
+build-queue tests (PROJ-322 HLP-003).
+
+**Factory Functions:**
+```python
+from tests.fixtures.yard_facility import (
+    make_shipyard_facility,    # Yard with a build queue + capacity
+    make_refit_facility,       # Refit-capable facility
+    make_repair_facility,      # Repair-capable facility
+)
+
+yard = make_shipyard_facility(
+    name="Sol Yards",
+    capacity=3,
+    queue=[],
+    # Any additional kwarg is set as an attribute on the returned mock —
+    # use this to override defaults per-test.
+    owner_empire_id=42,
+)
+```
+
+The kwargs override pattern means callers add only the attributes the test
+exercises, keeping each test focused.
+
+**Usage example:**
+```python
+def test_yard_accepts_build_order():
+    yard = make_shipyard_facility(capacity=2)
+    accepted = yard.enqueue(build_order_for("Escort"))
+    assert accepted is True
+    assert len(yard.queue) == 1
+```
+
+---
+
 ### test_scenarios.py
 
 **Purpose:** Mock fixtures for Combat Lab service tests.
@@ -436,4 +584,4 @@ For detailed mock patterns and guidelines, see [tests/README.md](../README.md#mo
 
 ---
 
-*Last Updated: 2026-04-18 (PROJ-281 Phase 4 — documented `make_minimal_spec` + `start_battle_screen_with_minimal_spec` as canonical test-battle helpers after deleting `BattleScreen.start(team0, team1)` shim)*
+*Last Updated: 2026-05-03 (PROJ-322 — added make_ui_widget factory + cargo_mock_ship/yard_facility/mock_planet shared factories)*

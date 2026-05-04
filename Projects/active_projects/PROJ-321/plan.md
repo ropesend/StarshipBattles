@@ -18,10 +18,10 @@
 | 3. CAT-3 Dead Test Code (8 items, 1 relocate + 7 delete) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-03
-**Active Phase:** All phases complete; awaiting coordinator merge
-**Last Action:** All 3 phases complete. 58 file changes, 3723 LOC deleted across 3 commits (361aafedd, 4cef74d19, e75c57a41) on branch `worktree-agent-a01e09bf4892304e1`. Full pytest run: 16239 passed, 3 skipped (excluding the pre-existing-broken `tests/unit/data/test_test_infrastructure.py`); 8 explicit pytest.skip from Phase 2 Task 2.3. The 3 failures in `test_test_infrastructure.py` (file-rename guards for unrelated `_test_formation_*` files) are pre-existing — verified via `git stash` test, not caused by PROJ-321 changes.
-**Next Action:** Coordinator merge to main
+**Last Updated:** 2026-05-03 (post-push)
+**Active Phase:** All phases Complete; merged to `feat/03c-phase-aware-execution`; pushed to GitHub
+**Last Action:** 4 commits cherry-picked to parent branch (148170d2f Phase 1, 96f63d026 Phase 2, deed107b8 Phase 3, 06b4beffc final). Net -3,723 LOC. Sharded test suite green (16306 passed).
+**Next Action:** None — project is complete. See decisions.md for the full execution log and findings/verification_report.md for the rejected/out-of-scope items not acted on.
 **Blockers:** None
 
 ## Overview
@@ -74,7 +74,7 @@ Each phase in PROJ-322 and PROJ-323 should re-check whether its target files
 still exist and contain the cited tests before starting.
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing
 - [ ] Audit passed
 - [ ] User verified
