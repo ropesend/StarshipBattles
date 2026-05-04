@@ -13,10 +13,9 @@ Use this guide when investigating Starship Battles performance with Scalene. Pro
 
 ## Tooling
 
-Scalene is a dev dependency in `requirements-dev.txt`. Install it through the project venv:
+Scalene is a dev dependency in `requirements-dev.txt`. Install it into your system Python 3.14:
 
 ```powershell
-.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
 ```
 

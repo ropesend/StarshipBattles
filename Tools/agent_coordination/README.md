@@ -173,7 +173,7 @@ State lives at `AgentCoordination/opencodereview/`; helpers live here:
 | `review_daemon.py` | Watches `pending_review_requests/`, spawns one OpenCode subprocess per request via a worker pool, writes a `## Results` section to the completed request file. |
 | `create_review_request.py` | Atomic, collision-resistant request creation from a JSON payload file. The single supported interface is `--payload-file`. |
 | `parse_results.py` | Reads the `## Results` section from a completed request file and prints fields as JSON. Used by the OpenCode skill to load parent context for follow-up reviews. |
-| `Start-ReviewDaemon.ps1` | Windows launcher. Activates `.venv` if present, otherwise runs against system Python. |
+| `Start-ReviewDaemon.ps1` | Windows launcher. Runs against system Python (falls back to `.venv` if one is present). |
 
 Operating doc with full lifecycle, schema, lock-file semantics, and the
 trust boundary: [`AgentCoordination/opencodereview/DELEGATION.md`](../../AgentCoordination/opencodereview/DELEGATION.md).
