@@ -53,6 +53,35 @@ OpenCode 323-review FND-P1-003: zero/negative cargo amount tests across load/unl
 
 This phase is **conditional on PROJ-324 Phase 3 Task 3.4 outcome.**
 
+> **PROJ-324 Phase 3 Task 3.4 outcome (2026-05-04): NO-GO confirmed.** PROJ-325 Phase 3 is now ON: NO-GO path applies. Head-start data captured below in "NO-GO findings from PROJ-324 Phase 3 Task 3.4 probe".
+
+### NO-GO findings from PROJ-324 Phase 3 Task 3.4 probe (2026-05-04)
+
+`make_ui_widget(RaceSetupScreen, ...)` inside `with bypass_init(RaceSetupScreen):` constructs cleanly (no exceptions, no real pygame display required). The `bypass_init` production guard at `screen.py:98-99` works as designed. **However**, because the guard early-returns *before* `super().__init__()` and *before* all the production attribute-mirror assignments, the resulting instance is bare — no `race_config`, no `_controller`, no `_view_model`, no `step_panels`, no buttons. Tests would still need to manually wire ~30 attributes (real `RaceSetupController`/`RaceSetupRenderer`/`RaceSetupViewModel`/`LLMDialogService`/`RaceSetupInputHandler` delegates plus 8 panel + 8 button MagicMock slots). The 62 tests in `test_race_setup_screen.py` routinely call `screen._controller.on_save()`, `screen._controller.on_race_selected(...)`, etc. — they exercise REAL delegate behaviour, so the delegates cannot be MagicMock substitutes.
+
+Net LOC delta of a `bypass_init`-only migration: ~0. Net complexity reduction: 0. The existing `__new__`-based helper is unchanged in shape; only the bypass mechanism would be substituted.
+
+**Implication for the panel-registry refactor:** the refactor must address `_create_ui()` specifically (the `_create_tab_buttons` + `_create_step_panels` + `_create_navigation_buttons` + `error_label` block on `screen.py:199-219`). That is the sole heavy chunk. The 5 delegate constructions (RaceSetupViewModel, RaceSetupRenderer, RaceSetupController, LLMDialogService, RaceSetupInputHandler) are CHEAP in the headless-test sense — they don't touch pygame_gui directly; they're plain Python classes. So a successful refactor only needs to factor out `_create_ui()` (or its three sub-methods), not the full `__init__`.
+
+**Concrete construction wiring needed by tests** (extracted from existing helper at `tests/unit/ui/screens/test_race_setup_screen.py:31-148`):
+
+- 4 mandatory `__init__` params: `rect: pygame.Rect`, `manager: UIManager` (Mock OK), `on_complete_callback: Callable` (Mock OK), `on_cancel_callback: Callable` (Mock OK).
+- 2 optional `__init__` params: `race_to_edit: Optional[RaceConfig]`, `race_registry: Optional[IRaceRegistry]`. Both default-None.
+- Production `__init__` builds: `RaceConfig` (or uses `race_to_edit`), `RaceLibrary()` (no-arg), `RaceAssetLoader()` (no-arg), `RaceSetupViewModel(is_editing=...)`, `RaceSetupRenderer(screen=self)`, `RaceSetupController(screen=..., view_model=..., renderer=..., race_config=..., race_library=..., race_registry=..., on_complete_callback=..., on_cancel_callback=...)`, `LLMDialogService(view_model=..., renderer=...)`, `RaceSetupInputHandler(screen=self)`. None of these are pygame_gui-touching.
+- Then `_create_ui()` builds tab buttons (one `pygame_gui.elements.UIButton` per tab name), 7 panels via `panel_factory.create_*_panel(self, panel)` (each panel calls `pygame_gui.elements.UIPanel`), 4 navigation buttons, and the `error_label`. **This is the sole pygame_gui-heavy block.**
+
+**Recommended panel-registry refactor seam:** extract `_create_ui()` into a dependency that defaults to a `_PygameGuiUIBuilder` for production callers and accepts a `MockUIBuilder` (or `lambda screen: None` no-op) for tests. Then a test could do:
+
+```python
+with bypass_init(RaceSetupScreen):
+    screen = make_ui_widget(RaceSetupScreen, rect=..., manager=Mock(), ..., ui_builder=lambda s: None)
+# Then individually mock the small set of widget attrs tests actually touch.
+```
+
+This gets test wiring down to ~5-10 lines per test (vs the current ~30) and unlocks a real LOC delta on `test_race_setup_screen.py`.
+
+
+
 ### Background
 
 `RaceSetupScreen` ([`game/ui/screens/race_setup/screen.py:60`](game/ui/screens/race_setup/screen.py#L60)) is the highest-touch UIWindow subclass:

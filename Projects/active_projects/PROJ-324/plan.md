@@ -19,18 +19,57 @@
 | 4. Documentation pass (`make_ui_widget` → `docs/02_PATTERNS.md`, mark blockers resolved) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** Phase 1+2 complete; ready for Phase 3
-**Last Action:** Phase 2 complete — `LLMBackgroundCall._done_event` + `wait(timeout)` public method landed (commit af7328281); 6 polling loops in `test_background.py` migrated to `wait()`. PROJ-322 Phase 4 Task 4.3 annotation updated to RESOLVED. Production unblockers all in place.
-**Next Action:** Begin Phase 3 — migrate the 14 PROJ-322 deferred test files. Recommended starting point: Task 3.4 (RaceSetupScreen reality-check per Decision D-005) since downstream PROJ-325 Phase 3 BLOCKS on its GO/NO-GO outcome.
-**Blockers:** None
+**Last Updated:** 2026-05-04 (afternoon update — Phase 3 systemic-issue finding)
+**Active Phase:** Phase 3 STOPPED at GO/NO-GO probe — systemic blocker discovered. Awaiting user decision.
+**Last Action:** Task 3.4 GO/NO-GO probe completed → NO-GO. Subsequent probes of Tasks 3.1 (FleetReportWindow), 3.7 (BuildQueueListWindow) confirmed the SAME systemic issue across all 7 UIWindow subclasses targeted by Phase 3. See "Systemic finding" below.
+**Next Action:** USER DECISION REQUIRED — see "Decision needed" below.
+**Blockers:** Systemic — Phase 1's `bypass_init` flag does not actually unblock test-side LOC reduction.
 **Phase 1 commit:** 9ae5c4959
 **Phase 2 commit:** af7328281
-**Handoff context for Phase 3 agent:**
-- `bypass_init(Cls)` context manager is at `tests/fixtures/ui_widget_factory.py`. Import as `from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget`.
-- Guard fires correctly for the StrategyModalWindow subclass chain — verified manually that construction proceeds past `super().__init__()` without a real pygame display. However, subclass post-super work that calls UIWindow methods (e.g., `self.get_container()`, `self.window_element_container`) will fail unless the test explicitly mocks those methods on the instance. Pattern: `make_ui_widget(Cls, ...)` followed by `obj.get_container = MagicMock()` etc. as needed by the production class's post-super work.
-- The 4 StrategyModalWindow subclasses (FleetReportWindow, OrdersWindow, TransferDialog, BuildQueueListWindow) inherit the guard transitively — no per-class guards needed.
+
+### Systemic finding (2026-05-04)
+
+Phase 1's `bypass_init` flag, installed only on `StrategyModalWindow` (and `RaceSetupScreen`, `NewGameSetupScreen`), causes the inherited `super().__init__()` call to early-return cleanly. **However**, every concrete UIWindow subclass targeted by Phase 3 does non-trivial post-super work in its OWN `__init__` that immediately calls UIWindow methods which depend on attributes set by `UIWindow.__init__()`:
+
+| Subclass | Post-super work that crashes | Method called |
+|---|---|---|
+| `FleetReportWindow` | `self._init_layout()` | `self.get_container()` → needs `window_element_container` |
+| `OrdersWindow` | (similar layout work) | `self.get_container()` etc. |
+| `TransferDialog` | (similar) | `self.get_container()` etc. |
+| `BuildQueueListWindow` | `self._build_list()` | `self.get_container()` → needs `window_element_container` |
+| `RaceSetupScreen` | `self._create_ui()` | builds 8 panels via pygame_gui |
+| `NewGameSetupScreen` | (similar layout work) | similar |
+| `DesignWorkshopScreen` | (NOT a UIWindow at all) | builds real `pygame_gui.UIManager`, real `WorkshopViewModel`, etc. |
+
+Verified probes (all from the main `feat/03c-phase-aware-execution` branch on 2026-05-04):
+
+- `make_ui_widget(RaceSetupScreen, ...)` inside `bypass_init`: constructs cleanly because RaceSetupScreen has its OWN `bypass_init` guard (Phase 1 Task 1.3) at the TOP of `__init__`, so `_create_ui()` is also skipped. Returns a bare instance with NO attributes set. Tests would need to manually wire all ~30 attributes including REAL delegates (62 tests in `test_race_setup_screen.py` exercise real `_controller`/`_view_model`/`_renderer` behaviour). NET LOC DELTA: ~0.
+- `make_ui_widget(FleetReportWindow, ...)` inside `bypass_init`: CRASHES on `_init_layout()` because FleetReportWindow has NO own guard — only the inherited `StrategyModalWindow` guard. The transitive guard skips `super().__init__()`, but FleetReportWindow's own `__init__` body continues into `_init_layout()` which fails on `self.get_container()`. Same for `OrdersWindow`, `TransferDialog`, `BuildQueueListWindow`.
+- `make_ui_widget(NewGameSetupScreen, ...)`: NewGameSetupScreen DOES have its own guard (Phase 1 Task 1.4), so construction returns a bare instance with no attributes — same NO-GO as RaceSetupScreen.
+- `DesignWorkshopScreen`: not a UIWindow, but `__init__` builds a real `pygame_gui.UIManager` + theme files. Existing helper bypasses with `__new__`. Migration to real init is impossible without a real pygame display. Workshop integration tests at `tests/integration/ui/workshop_screen/` DO NOT EXIST (PROJ-322 manifest claim is stale).
+
+**Bottom-line technical fact:** the `bypass_init` flag delivers ZERO test-side LOC reduction on any of the 7 PROJ-322 deferral target classes:
+- For classes WITH their own guard (`RaceSetupScreen`, `NewGameSetupScreen`): construction returns a bare instance → tests still need manual wiring identical to the existing `__new__` helper. Net delta: 0.
+- For StrategyModalWindow subclasses WITHOUT their own guard (`FleetReportWindow`, `OrdersWindow`, `TransferDialog`, `BuildQueueListWindow`): construction CRASHES mid-init. Workaround would be to add a per-class `bypass_init` guard at the TOP of each subclass's own `__init__` — but then construction returns a bare instance (same as the WITH-guard case). Net delta: 0.
+
+The handoff note from the previous Phase 1+2 agent — "subclass post-super work that calls UIWindow methods will fail unless tests explicitly mock those methods on the instance after construction" — is impossible to apply because construction doesn't *return* an instance when it crashes mid-`__init__`. The only way to make construction succeed is to skip the post-super work entirely, which means adding a per-class `bypass_init` guard, which produces a bare instance — same shape as the `__new__` helper.
+
+### Decision needed
+
+Three options for the user:
+
+**Option A. Accept Phase 3 as a no-op and close PROJ-324 as "Phase 1+2 production-side complete; Phase 3 NOT migrating because the production guard alone is insufficient."** Roll all 14 PROJ-322 deferrals to PROJ-325 (which is already structured for the production refactor needed). Phase 4 documentation pass adjusts to record that `bypass_init` is a foundation (works at the technical level) but does not yet deliver test-side LOC reduction without an `__init__` split refactor.
+
+**Option B. Expand Phase 3 scope to do the PROJ-325-style production refactor here.** For each of the 7 target classes, split `__init__` into a cheap-state-setup phase and a heavy-widget-construction phase (`_create_ui()` / `_init_layout()` / `_build_list()`); guard ONLY the heavy phase. Tests then construct via real `__init__` (cheap phase runs, sets `self.fleet`, `self.view_model`, etc.) and just need to mock the few widget refs they touch. Real LOC reduction. Estimated effort: ~1-2 sessions per subclass × 7 subclasses (or maybe combined ~3 sessions if they share a pattern). This is well outside the original Phase 3 scope.
+
+**Option C. Roll back Phase 1's `bypass_init` flag entirely** as not delivering value, and re-scope PROJ-324 to ONLY the LLMBackgroundCall work (Phase 2). This is the minimal-disruption answer if the user wants to clean up.
+
+I have NOT made any irreversible changes. Documentation updates for Task 3.4 NO-GO and the systemic finding are in `phase_3_checklist.md` (Task 3.4 Notes), `PROJ-322/phase_2_checklist.md` (Task 2.17), `PROJ-322/phase_5_checklist.md` (Task 5.11), and `PROJ-325/design.md` (Phase 3 NO-GO findings). No production code touched. No test files touched.
+
+**Handoff context for Phase 3 agent (still valid):**
+- `bypass_init(Cls)` context manager is at `tests/fixtures/ui_widget_factory.py`.
 - `LLMBackgroundCall.wait(timeout)` returns `True` on terminal-state, `False` on timeout. Idempotent. Safe to call before `start()`.
+- The 4 StrategyModalWindow subclasses (FleetReportWindow, OrdersWindow, TransferDialog, BuildQueueListWindow) inherit the guard transitively — but the transitive guard is ONLY effective for skipping `super().__init__()`; it does NOT prevent the subclasses' own post-super work from running (and crashing on UIWindow methods).
 
 ## Overview
 

@@ -96,14 +96,45 @@ This is a 2-in-1: APC-001 (`__new__` bypass-init) AND APC-003 (private-method pa
 
 This is the high-risk task. See Decision D-005.
 
-- [ ] Smoke-test: with `bypass_init(RaceSetupScreen)`, can the test factory construct an instance without errors?
-- [ ] **GO criterion:** Construction succeeds AND test wiring (mocking the 10+ collaborators) is no worse than the existing bypass-init helper.
-- [ ] **NO-GO criterion:** Construction works but test wiring is more complex than the existing bypass-init helper. In this case, stop work, update PROJ-322 Tasks 5.11/2.17/3.21 annotations to point at PROJ-325 Phase 3, and notify the user.
-- [ ] **If GO:** Migrate. Replace bypass-init helper with `bypass_init` + `make_ui_widget`. Refactor fixtures.
-- [ ] **If NO-GO:** Document the construction wiring requirements in this Notes section, the PROJ-322 task annotations, and PROJ-325 design.md (so PROJ-325 has a head start).
-- [ ] Verify: tests pass under whichever path was taken.
+- [x] Smoke-test: with `bypass_init(RaceSetupScreen)`, can the test factory construct an instance without errors?
+- [x] **GO criterion:** Construction succeeds AND test wiring (mocking the 10+ collaborators) is no worse than the existing bypass-init helper.
+- [x] **NO-GO criterion:** Construction works but test wiring is more complex than the existing bypass-init helper. In this case, stop work, update PROJ-322 Tasks 5.11/2.17/3.21 annotations to point at PROJ-325 Phase 3, and notify the user.
+- [ ] ~~If GO: Migrate. Replace bypass-init helper with `bypass_init` + `make_ui_widget`. Refactor fixtures.~~ N/A — NO-GO
+- [x] **If NO-GO:** Document the construction wiring requirements in this Notes section, the PROJ-322 task annotations, and PROJ-325 design.md (so PROJ-325 has a head start).
+- [x] Verify: tests pass under whichever path was taken. (No code change; existing tests continue to pass.)
 
-**Notes:** [Filled during implementation. Document GO/NO-GO and rationale clearly.]
+**Notes — Outcome: NO-GO (documented 2026-05-04 by PROJ-324 Phase 3 agent)**
+
+**Probe result.** `make_ui_widget(RaceSetupScreen, rect=..., manager=MagicMock(), on_complete_callback=MagicMock(), on_cancel_callback=MagicMock())` inside a `with bypass_init(RaceSetupScreen):` block constructs cleanly and returns a `RaceSetupScreen` instance. No exceptions; no real pygame display required. So Phase 1's production guard works as designed for this class.
+
+**Why this is still NO-GO.** The existing bypass-init helper at `tests/unit/ui/screens/test_race_setup_screen.py:31-148` does NOT just bypass `super().__init__()` — it also uses `__new__` so that *no* `__init__` body runs at all, then manually wires ~30 attributes including:
+
+1. `race_config`, `is_editing`, `race_library`, `race_registry`, `_asset_loader` — domain state.
+2. Eight panel slots (`_summary_panel` ... `_theme_gallery`) — all `MagicMock()`.
+3. Two element lists (`step_panels`, `tab_buttons`) — lists of `MagicMock()`.
+4. Eight button refs (`btn_cancel`, `btn_save`, ...) and `error_label`, `name_input`, `ship_preview_scroll` — all `MagicMock()`.
+5. **REAL** delegate instances: `RaceSetupViewModel(...)`, `RaceSetupRenderer.__new__(...)` with manually-set dialog widget refs, `RaceSetupController.__new__(...)` with manually-set `_screen`/`_vm`/`_renderer`/`race_config`/etc., `RaceSetupInputHandler(screen=screen)`, `LLMDialogService(view_model=..., renderer=...)`. The 62 tests in this file routinely call `screen._controller.on_race_selected(...)`, `screen._controller.on_save()`, etc. — they exercise REAL controller/renderer/view_model behaviour, not mock side-effects.
+
+`bypass_init` early-returns on `screen.py:99` BEFORE the production `__init__` does any of (1)-(5). So a `make_ui_widget`-built instance has none of those attributes, and the test code would still need to manually wire all ~30 of them just like the existing `__new__`-based helper does.
+
+**LOC delta if migrated:** ~0. The only change would be swapping the 3-line `with patch.object(...)` + `__new__` preamble for a 3-line `with bypass_init(...): make_ui_widget(...)` preamble. The remaining ~110 lines of manual wiring are unchanged.
+
+**Wiring complexity:** identical. Neither path is simpler than the other. `bypass_init` doesn't reduce the surface that needs mocking.
+
+**Why this is genuinely NO-GO (vs. just "no-op"):** the formal criterion is "test wiring no worse than the existing helper". With zero LOC delta and zero complexity reduction, migration would be churn for its own sake — touching 1464 lines of test code with ~150 callsites of `_make_race_setup_screen()` to swap one bypass mechanism for another that produces the same instance state. No runtime improvement, no readability win, no failure-mode improvement. The existing pattern is already self-contained, well-commented, and works.
+
+**What would unblock value here.** PROJ-325 Phase 3's RaceSetupScreen work needs to refactor the production class so that `__init__` either (a) runs to completion under headless test conditions (so `make_ui_widget` builds a real instance with real delegates), or (b) extracts the delegate-construction block into a single seam that tests can call independently of `__init__`. Until that production refactor lands, no test-side migration here adds value. Forwarded to PROJ-325 Phase 3.
+
+**Construction wiring requirements for PROJ-325 Phase 3 head start (per the criterion):**
+- 4 mandatory params: `rect: pygame.Rect`, `manager: UIManager`, `on_complete_callback: Callable`, `on_cancel_callback: Callable`.
+- 2 optional params: `race_to_edit: Optional[RaceConfig]`, `race_registry: Optional[IRaceRegistry]`.
+- Production `__init__` builds: `RaceConfig` (or uses race_to_edit), `RaceLibrary()` (no-arg), `RaceAssetLoader()` (no-arg), `RaceSetupViewModel(is_editing=...)`, `RaceSetupRenderer(screen=self)`, `RaceSetupController(screen=..., view_model=..., renderer=..., race_config=..., race_library=..., race_registry=..., on_complete_callback=..., on_cancel_callback=...)`, `LLMDialogService(view_model=..., renderer=...)`, `RaceSetupInputHandler(screen=self)`.
+- Then calls `self._create_ui()` which builds tab buttons, 7 panels via `panel_factory.create_*_panel(self, panel)` calls, 4 navigation buttons, and the `error_label`. Each panel factory probably does its own pygame_gui widget construction.
+- The `_create_ui()` chain is what makes `__init__` heavy. A production seam would split this so tests can construct the screen without running `_create_ui()`.
+
+**PROJ-322 task annotation update** (Tasks 5.11, 2.17, 3.21): forwarded to PROJ-325 Phase 3 with this rationale.
+
+**PROJ-325 design.md update:** documented in the same edit as the PROJ-322 annotations.
 
 ---
 
