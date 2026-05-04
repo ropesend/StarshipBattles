@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -8,21 +7,7 @@ from pathlib import Path
 import qa_launcher
 
 
-def _venv_python_path(root: Path) -> Path:
-    if os.name == "nt":
-        return root / ".venv" / "Scripts" / "python.exe"
-    return root / ".venv" / "bin" / "python"
-
-
-def test_resolve_python_executable_prefers_project_venv(tmp_path: Path) -> None:
-    venv_python = _venv_python_path(tmp_path)
-    venv_python.parent.mkdir(parents=True)
-    venv_python.write_text("", encoding="utf-8")
-
-    assert qa_launcher.resolve_python_executable(tmp_path) == str(venv_python)
-
-
-def test_resolve_python_executable_falls_back_to_current_interpreter(tmp_path: Path) -> None:
+def test_resolve_python_executable_uses_current_interpreter(tmp_path: Path) -> None:
     assert qa_launcher.resolve_python_executable(tmp_path) == sys.executable
 
 
@@ -68,4 +53,4 @@ def test_dependency_error_recommends_python_314(capsys) -> None:
 
     captured = capsys.readouterr()
 
-    assert "py -3.14 -m venv .venv" in captured.out
+    assert "pip install -r requirements-dev.txt" in captured.out

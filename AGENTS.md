@@ -14,9 +14,6 @@ Compact reference for AI coding agents. See `docs/` for full architecture, patte
 ## Commands
 
 ```bash
-# Activate venv first
-.venv\Scripts\Activate.ps1
-
 # Full test suite (primary)
 python Tools/test_sharded/test_sharded.py
 
@@ -52,7 +49,7 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 
 ## Critical Conventions
 
-- **Python 3.13+**. Use `.venv`. Return-type annotations required on every public function/method (PEP 604 syntax: `int | None`). Dunders exempt.
+- **Python 3.14**. Return-type annotations required on every public function/method (PEP 604 syntax: `int | None`). Dunders exempt.
 - **500 LOC ceiling on production files.** When a file approaches 500 lines, split into single-responsibility sub-modules. Test files exempt.
 - **Specific exceptions required.** Broad catches (`except Exception`) must carry `# Intentional broad catch: <reason>` on the same line.
 - **No save-file migration.** Old saves are disposable. Never write compatibility shims for old save formats.
