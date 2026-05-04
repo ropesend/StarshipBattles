@@ -156,3 +156,205 @@ class TestHandleButtonClick:
         result = gallery.handle_button_click(unrelated_button)
 
         assert result is False
+
+
+# ----------------------------------------------------------------------------
+# on_asset_selected: full routing (set, preview, highlight, callback)
+# ----------------------------------------------------------------------------
+
+
+class TestOnAssetSelected:
+    def test_on_asset_selected_calls_set_and_preview_and_fires_callback(
+        self, manager, panel, race_config,
+    ):
+        assets = [("alpha", _surface()), ("beta", _surface())]
+        callback = MagicMock()
+
+        with _patched_widgets():
+            gallery = _FakeGallery(
+                panel, manager, race_config,
+                x=0, y=0, width=300, height=400,
+                assets=assets,
+                on_select_callback=callback,
+            )
+
+        # Reset capture lists so we only see the second selection.
+        gallery.set_calls.clear()
+        gallery.preview_calls.clear()
+        callback.reset_mock()
+
+        gallery.on_asset_selected("alpha")
+
+        assert gallery.set_calls == ["alpha"]
+        assert gallery.preview_calls == ["alpha"]
+        callback.assert_called_once_with("alpha")
+
+    def test_on_asset_selected_toggles_highlight_select_on_match_unselect_on_others(
+        self, manager, panel, race_config,
+    ):
+        assets = [("alpha", _surface()), ("beta", _surface())]
+
+        with _patched_widgets():
+            gallery = _FakeGallery(
+                panel, manager, race_config,
+                x=0, y=0, width=300, height=400,
+                assets=assets,
+            )
+
+        # Replace stored buttons with distinct sentinels so we can
+        # observe per-button select/unselect routing without relying
+        # on the shared MagicMock UIButton return value.
+        replaced = []
+        for _btn, aid in gallery.asset_buttons:
+            replaced.append((MagicMock(), aid))
+        gallery.asset_buttons = replaced
+
+        gallery.on_asset_selected("beta")
+
+        by_id = {aid: btn for btn, aid in gallery.asset_buttons}
+        by_id["beta"].select.assert_called_once()
+        by_id["beta"].unselect.assert_not_called()
+        by_id["alpha"].unselect.assert_called_once()
+        by_id["alpha"].select.assert_not_called()
+
+    def test_on_asset_selected_does_not_invoke_callback_when_none_provided(
+        self, manager, panel, race_config,
+    ):
+        # Smoke test: with no on_select_callback, call still routes
+        # through set/preview/highlight without raising.
+        assets = [("alpha", _surface())]
+
+        with _patched_widgets():
+            gallery = _FakeGallery(
+                panel, manager, race_config,
+                x=0, y=0, width=300, height=400,
+                assets=assets,
+                # on_select_callback omitted -> defaults to None
+            )
+
+        # No callback attribute or it is None.
+        assert gallery.on_select_callback is None
+
+        gallery.set_calls.clear()
+        gallery.preview_calls.clear()
+
+        gallery.on_asset_selected("alpha")
+
+        assert gallery.set_calls == ["alpha"]
+        assert gallery.preview_calls == ["alpha"]
+
+
+# ----------------------------------------------------------------------------
+# _populate_gallery: edge cases
+# ----------------------------------------------------------------------------
+
+
+class TestPopulateGallery:
+    def test_populate_gallery_with_zero_assets_creates_no_buttons(
+        self, manager, panel, race_config,
+    ):
+        with _patched_widgets():
+            gallery = _FakeGallery(
+                panel, manager, race_config,
+                x=0, y=0, width=300, height=400,
+                assets=[],
+            )
+
+        assert gallery.asset_buttons == []
+        # Scroll container is still constructed even with zero assets.
+        assert gallery.scroll_container is not None
+        # set_scrollable_area_dimensions is called once during populate.
+        gallery.scroll_container.set_scrollable_area_dimensions.assert_called_once()
+
+    def test_populate_gallery_clamps_columns_to_one_when_width_too_small(
+        self, manager, panel, race_config,
+    ):
+        # thumb_size is 50 (subclass), spacing is 10. With width=20:
+        # cols = max(1, (20 - 20) // 60) = max(1, 0) = 1
+        # All 3 assets should stack in a single column => row 0,1,2.
+        assets = [("a", _surface()), ("b", _surface()), ("c", _surface())]
+
+        with _patched_widgets():
+            gallery = _FakeGallery(
+                panel, manager, race_config,
+                x=0, y=0, width=20, height=400,
+                assets=assets,
+            )
+
+        # All three buttons should be created despite the impossibly small width.
+        assert len(gallery.asset_buttons) == 3
+        assert [aid for _btn, aid in gallery.asset_buttons] == ["a", "b", "c"]
+
+
+# ----------------------------------------------------------------------------
+# set_from_config
+# ----------------------------------------------------------------------------
+
+
+class TestSetFromConfig:
+    def test_set_from_config_routes_through_on_asset_selected_when_selection_exists(
+        self, manager, panel, race_config,
+    ):
+        assets = [("alpha", _surface()), ("beta", _surface())]
+
+        with _patched_widgets():
+            gallery = _FakeGallery(
+                panel, manager, race_config,
+                x=0, y=0, width=300, height=400,
+                assets=assets,
+            )
+
+        # Now set the selection that _get_current_selection returns and call
+        # set_from_config — it should route through on_asset_selected.
+        gallery._current_selection = "alpha"
+        gallery.set_calls.clear()
+        gallery.preview_calls.clear()
+
+        gallery.set_from_config()
+
+        assert gallery.set_calls == ["alpha"]
+        assert gallery.preview_calls == ["alpha"]
+
+    def test_set_from_config_is_noop_when_no_current_selection(
+        self, manager, panel, race_config,
+    ):
+        with _patched_widgets():
+            gallery = _FakeGallery(
+                panel, manager, race_config,
+                x=0, y=0, width=300, height=400,
+                assets=[("alpha", _surface())],
+                current_selection=None,
+            )
+
+        gallery.set_calls.clear()
+        gallery.preview_calls.clear()
+
+        gallery.set_from_config()
+
+        assert gallery.set_calls == []
+        assert gallery.preview_calls == []
+
+
+# ----------------------------------------------------------------------------
+# _sanitize_object_id
+# ----------------------------------------------------------------------------
+
+
+class TestSanitizeObjectId:
+    def test_sanitize_object_id_replaces_dots_and_spaces_with_underscores(
+        self, manager, panel, race_config,
+    ):
+        with _patched_widgets():
+            gallery = _FakeGallery(
+                panel, manager, race_config,
+                x=0, y=0, width=300, height=400,
+                assets=[],
+            )
+
+        # Pin observed: only '.' and ' ' replaced; case + other punctuation preserved.
+        assert gallery._sanitize_object_id("foo.bar") == "foo_bar"
+        assert gallery._sanitize_object_id("foo bar") == "foo_bar"
+        assert gallery._sanitize_object_id("foo bar.baz.png") == "foo_bar_baz_png"
+        assert gallery._sanitize_object_id("AlreadyClean") == "AlreadyClean"
+        # Other special chars are left alone.
+        assert gallery._sanitize_object_id("foo-bar") == "foo-bar"
