@@ -1,11 +1,11 @@
 # Known Issues
 
-> Last Updated: 2026-05-03
-> Sources: PROJ-321/322/323 execution logs (2026-05-03), worker pass-3 PROJ-322 disposition
+> Last Updated: 2026-05-04
+> Sources: PROJ-321/322/323 execution logs (2026-05-03), worker pass-3 PROJ-322 disposition; PROJ-324/325/327/328 closeout (2026-05-04).
 
 ## Systemic Test Infrastructure Blockers
 
-### UIWindow super-init chain blocker
+### **[RESOLVED in PROJ-324 + PROJ-325 PoC + PROJ-328]** UIWindow super-init chain blocker (historical)
 
 **Affects:** ~7 APC-001 file rewrites in PROJ-322 Phase 5 (Tasks 5.6, 5.7, 5.10, 5.11, 5.12, 5.16, 5.29) plus several boundary-patching tasks in PROJ-322 Phase 3 (e.g., Task 3.x for `BuildQueueListWindow`).
 
@@ -28,9 +28,20 @@
 
 **Effort estimate:** ~1 focused project (PROJ-32x) to either implement the bypass flag or enhance the factory.
 
+#### Resolution (2026-05-04)
+
+Option (a) — production-side `bypass_init` flag — was selected and implemented across three projects:
+
+- **PROJ-324 Phase 1** (commit `9ae5c4959`): added the `bypass_init=True` early-return guard to `StrategyModalWindow.__init__` (covers `FleetReportWindow`, `OrdersWindow`, `TransferDialog`, `BuildQueueListWindow` transitively), plus `RaceSetupScreen` and `NewGameSetupScreen`. Added the `bypass_init(cls)` context manager to `tests/fixtures/ui_widget_factory.py` for safe per-test scoping.
+- **PROJ-324 Phase 3 systemic finding** (commit `9e177edb7`): documented that the bypass guard alone does NOT deliver test-side LOC reduction — concrete subclasses do non-trivial post-`super()` work that crashes on `self.get_container()` etc. The fix is a two-stage `__init__` split.
+- **PROJ-325 Phase 3 PoC** (RaceSetupScreen): proved the two-stage pattern. Cheap state + `DefaultRaceSetupDelegateFactory` + `RaceSetupUiBuilder` seam set BEFORE the bypass guard; heavy widget tree built AFTER. Tests substitute `NullRaceSetupUiBuilder` / `MockRaceSetupUiBuilder`.
+- **PROJ-328 A/B/C** (2026-05-03): rolled the same recipe across `BuildQueueListWindow`, `OrdersWindow`, `FleetReportWindow`, `NewGameSetupScreen`, `TransferDialog`. Each subclass got a `Default{Foo}DelegateFactory` + `{Foo}Delegates` bundle and matching `Null{Foo}UiBuilder` / `Mock{Foo}UiBuilder` test fixtures.
+
+**Canonical pattern** is now documented at `docs/02_PATTERNS.md` §33 ("UI Widget Test Factory") with a cross-reference to §32 ("Compositional Construction") which is the preferred pattern for new code.
+
 ---
 
-### LLMBackgroundCall real-thread polling blocker
+### **[RESOLVED in PROJ-324 + PROJ-325 PoC + PROJ-328]** LLMBackgroundCall real-thread polling blocker (historical)
 
 **Affects:** PROJ-322 Phase 4 Task 4.3 (`tests/unit/services/llm/test_background.py` polling sleep loops).
 
@@ -44,6 +55,14 @@
 3. **Replace polling with `result()` blocking call** (if the LLMBackgroundCall API exposes one).
 
 **Effort estimate:** small production refactor (~1 day) or a substantial test-only patching workaround.
+
+#### Resolution (2026-05-04)
+
+Option 1 — production-side change with `threading.Event` — was implemented in **PROJ-324 Phase 2** (commit `af7328281`). `LLMBackgroundCall.__init__` now creates `self._done_event: threading.Event`; `_run()` sets the event after every terminal-state transition (DONE / ERROR / CANCELLED); a new public method `wait(timeout: float | None = None) -> bool` blocks until the event fires (returns `True` on terminal-state, `False` on timeout). The method is idempotent and safe to call before `start()`.
+
+`tests/unit/services/llm/test_background.py` migrated 5–6 polling sleep loops to `assert call.wait(timeout=2.0)` — deterministic, no real-time deadlines, no `time.sleep(0.01)` polling.
+
+The legacy `time.sleep(0.01)` polling-window flake on `test_elapsed_seconds_is_monotonic_then_frozen` (Windows ~1-in-3 flake — see project MEMORY notes) is unrelated to the polling-loop pattern; it is a timer-resolution issue in a separate test that the new `wait()` API does not touch.
 
 ---
 
@@ -62,6 +81,15 @@
 **Unblocking paths:**
 1. Builder-with-fluent-API pattern. Cost vs. benefit unclear without a focused exploration.
 2. Accept the per-file expressiveness as a feature, not a bug. (Current disposition.)
+
+#### Re-confirmation (PROJ-327 Phase 3, 2026-05-04)
+
+PROJ-327 Phase 3 re-judged both items with fresh measurement evidence and **RE-CONFIRMED DEFERRED** under the new context:
+
+- **DUP-001 (superweapon factory):** measured 1.73 s for 39 tests across 2 files; setup time IS dominant (~3.6 s sum) but the 5 handlers × 2 contracts still resolve to a switch-statement factory. Sharing the session between tests requires resetting `mock_fleet.orders`, `mock_fleet.path`, and call records on every test — equivalent cost to constructing a fresh fixture, with added cross-isolation risk. See `Projects/active_projects/PROJ-327/findings/phase_3_runtime_delta.md`.
+- **HLP-001 (`make_mock_ship` 4-shape consolidation):** microbenchmarked at ~627 µs/call. Per-file overhead in `test_fleet_report_filters.py` is ~72 ms (~3.6% of file runtime). The 4 cited files have confirmed-distinct call shapes (cargo / fuel / display / facade) with no shared pattern to memoize. A blanket `make_mock_ship` would still be the kitchen-sink builder rejected by PROJ-322.
+
+Future re-audits should check the runtime-delta document before re-litigating these — the disposition is closed with measurement evidence.
 
 ---
 
@@ -92,6 +120,22 @@ open(fp, 'wb').write(fixed)
 ```
 
 **Fix needed:** `Projects/scripts/utils/markdown_parser.py` could call `read_text(encoding='utf-8', errors='replace')` for graceful handling, OR a pre-commit hook could normalize encoding.
+
+---
+
+## Test runtime improvements (PROJ-327)
+
+PROJ-327 picked up the 9 PROJ-322 deferrals that touched test runtime. Final cumulative reclaim: **-3.9 s median wall-clock** (127.8 s → 123.9 s, median of 3 sharded runs; see `Projects/active_projects/PROJ-327/findings/runtime_delta.md` for the full per-phase breakdown). The 90 s stretch target was NOT hit; ~34 s of gap remains. The runtime lives in integration tests + the `test_component_definitions.py` 912-test validation cluster + `test_main_integration::test_game_instantiation` (~13 s alone), not in the PROJ-322 deferrals. PROJ-327's primary deliverable per user priority order (readability > maintainability > functionality > runtime) was disposition + rationale capture for the 9 deferrals, not raw runtime reduction.
+
+**Techniques that yielded measurable wall-clock wins:**
+
+- **`@patch` decorator → autouse fixture sweep (Phase 1, `test_virtual_table.py`):** 80 of 81 `@patch` decorators collapsed into one autouse class-scoped fixture. ~3.9 s suite-level reclaim (~3.0%). Lowest-risk technique — no production change, no cross-isolation surface. **Best ROI per LOC touched** for files with many universally-applied `@patch` decorators.
+- **Mutable-mock fixture rescope (Phase 2, `test_ship_io.py` + `test_empire_treasury_panel.py`):** 2 of 5 candidates rescoped from function to module after re-audit confirmed zero attribute writes. ~330 ms single-process reclaim. Required careful manual mutation audit — wrong on the original PROJ-322 deferral rationale ("many tests mutate the mock ship" was inaccurate).
+- **Compositional Construction (Phase 4, `StrategyScreen` + `test_strategy_screen.py`):** new `StrategyScreenComposition` Protocol + `MockStrategyScreenComposition` test fixture replaces an in-test `patch.object(StrategyScreen, '__init__', lambda...)` monkey-patch and 8 inline MagicMock assignments. ~no measurable runtime change (101 tests in cluster), but **eliminates the brittle private-method-patching pattern wholesale**. Highest tech-debt-per-LOC win; the new pattern is now `docs/02_PATTERNS.md` §32.
+
+**Techniques re-confirmed deferred with measurement (Phase 3):**
+
+- DUP-001 + HLP-001 — see "Shape-mismatch shared-factory blockers" above. Both have measurement evidence in the runtime delta document; future re-audits should not re-litigate without new context.
 
 ---
 

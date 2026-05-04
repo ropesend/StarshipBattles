@@ -1,8 +1,8 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-05-04 — PROJ-327 Phase 4 added Pattern #32 (Compositional Construction): the StrategyScreenComposition factory closes the PROJ-322 Task 3.25 deferral. Earlier (2026-04-28): FEAT-22 added Bootstrap Phase Timing subsection under Profiler entry; PROJ-318 verified `ApplicationContext` manages 10 services; PROJ-316 corrected PROJ-313 Pattern #31 claims against live code. Pattern count is 32.
+> **Last verified:** 2026-05-04 — PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory): `make_ui_widget` + `bypass_init` retrofit pattern for legacy UIWindow subclasses, paired with the per-class `Default{Foo}DelegateFactory` + `Null{Foo}UiBuilder` / `Mock{Foo}UiBuilder` testing convention from PROJ-325 + PROJ-328 A/B/C. Earlier (2026-05-04): PROJ-327 Phase 4 added Pattern #32 (Compositional Construction): the StrategyScreenComposition factory closes the PROJ-322 Task 3.25 deferral. Earlier (2026-04-28): FEAT-22 added Bootstrap Phase Timing subsection under Profiler entry; PROJ-318 verified `ApplicationContext` manages 10 services; PROJ-316 corrected PROJ-313 Pattern #31 claims against live code. Pattern count is 33.
 
-Agent-optimized reference for every core pattern in the codebase (32 patterns).
+Agent-optimized reference for every core pattern in the codebase (33 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
 
 ---
@@ -41,6 +41,7 @@ Each section: **Where**, **How It Works**, **When to Use**.
 30. [Registrar Close-Callback (BUG-121) — SUPERSEDED](#30-registrar-close-callback-bug-121)
 31. [Strategy Modal Window Base Class (PROJ-313)](#31-strategy-modal-window-base-class-proj-313)
 32. [Compositional Construction (PROJ-327)](#32-compositional-construction-proj-327)
+33. [UI Widget Test Factory (PROJ-322 / PROJ-324 / PROJ-325 / PROJ-328)](#33-ui-widget-test-factory-proj-322--proj-324--proj-325--proj-328)
 
 ---
 
@@ -1728,3 +1729,106 @@ Tests substitute via a `Mock<Class>Composition` that returns pre-stored `MagicMo
 
 - The `StrategyScreen` upstream construction (`Camera`, `StrategyUI`, asset loading) still runs inline — only the 8 sub-object slots are behind the composition seam. A future two-stage `__init__` refactor (cheap state, then heavy shell — same shape as `RaceSetupScreen`) could remove the remaining bypass-init helper. PROJ-327 Phase 4 stopped at the sub-object boundary because that was the PROJ-322 deferral scope.
 - The `MockStrategyScreenComposition.populate(screen)` helper exists specifically for the bypass-init path. Tests that go through real `StrategyScreen(...)` construction can pass `MockStrategyScreenComposition()` as a kwarg directly — no `populate` call needed.
+
+---
+
+## 33. UI Widget Test Factory (PROJ-322 / PROJ-324 / PROJ-325 / PROJ-328)
+
+> **Relationship to Pattern #32 (Compositional Construction).** Compositional Construction is the **preferred** pattern for **new** classes — the production seam (a `Composition` Protocol + default factory) is designed in, and tests substitute the factory wholesale. **This pattern (#33) is the retrofit pattern for legacy UIWindow subclasses** that do not yet have a composition seam. Use #32 first; reach for `bypass_init` only when retrofitting code whose `__init__` cannot be cleanly split.
+
+### Where
+
+- **Factory:** [`tests/fixtures/ui_widget_factory.py`](../tests/fixtures/ui_widget_factory.py) — `make_ui_widget(cls, extra_modules=(), **kwargs)` and the `bypass_init(cls)` context manager.
+- **Factory tests:** [`tests/fixtures/test_ui_widget_factory.py`](../tests/fixtures/test_ui_widget_factory.py).
+- **`bypass_init` production guard adopters (PROJ-324 Phase 1):**
+  - [`game/ui/screens/strategy_modal_window.py`](../game/ui/screens/strategy_modal_window.py) — covers `FleetReportWindow`, `OrdersWindow`, `TransferDialog`, `BuildQueueListWindow`, and the other 16 strategy-modal subclasses transitively.
+  - [`game/ui/screens/race_setup/screen.py`](../game/ui/screens/race_setup/screen.py) — direct `UIWindow` subclass with two-stage `__init__`.
+  - [`game/ui/screens/new_game_setup_screen.py`](../game/ui/screens/new_game_setup_screen.py) — direct `UIWindow` subclass.
+- **Reference two-stage `__init__` refactor (PROJ-325 Phase 3):** [`game/ui/screens/race_setup/screen.py`](../game/ui/screens/race_setup/screen.py) — cheap state + delegates set BEFORE the `bypass_init` early-return; heavy widget tree built AFTER.
+- **Per-class delegate factory pattern (PROJ-325 + PROJ-328 A/B/C):**
+  - [`game/ui/screens/race_setup/delegate_factory.py`](../game/ui/screens/race_setup/delegate_factory.py) — `DefaultRaceSetupDelegateFactory.build(screen) -> RaceSetupDelegates`.
+  - [`game/ui/screens/race_setup/ui_builder.py`](../game/ui/screens/race_setup/ui_builder.py) — pairs with the test fixtures below.
+- **Per-class Null/Mock UI-builder fixtures (canonical naming convention):**
+  - [`tests/fixtures/race_setup_ui_builders.py`](../tests/fixtures/race_setup_ui_builders.py) — `NullRaceSetupUiBuilder` (silent stub for "this test doesn't care about UI") + `MockRaceSetupUiBuilder` (MagicMock-instrumented, for "this test asserts on UI calls").
+  - PROJ-328 A: `tests/fixtures/build_queue_list_ui_builder.py`, `tests/fixtures/orders_ui_builder.py`, `tests/fixtures/fleet_report_ui_builder.py`.
+  - PROJ-328 B: `tests/fixtures/new_game_setup_ui_builder.py`.
+  - PROJ-328 C: `tests/fixtures/transfer_dialog_ui_builder.py`.
+
+### How It Works
+
+`make_ui_widget(cls, **kwargs)` constructs a real instance via the real `__init__`, but every `pygame_gui.elements.UI*` class is patched with a `MagicMock` for the duration of construction. The factory:
+
+- Patches the canonical `pygame_gui.elements` namespace AND every module-bound import along `cls.__mro__` (handles `from pygame_gui.elements import UILabel` style).
+- Introspects `cls.__init__` for default kwargs (`panel`, `manager` / `ui_manager`, `container`, `rect`) and supplies sensible mocks; caller kwargs override.
+- Accepts `extra_modules=(...)` for transitively-imported helpers the MRO walk misses.
+
+For UIWindow subclasses, the factory's element-class patches alone are insufficient — Python resolves `super().__init__()` against the MRO at class-definition time, so the patches don't intercept the chain. The fix is the `bypass_init` flag:
+
+```python
+# In every UIWindow subclass __init__ (PROJ-324 Phase 1):
+def __init__(self, ...):
+    if getattr(type(self), "bypass_init", False):
+        return  # MUST be the first executable statement
+    super().__init__(...)
+    # ... rest of init
+```
+
+Tests then wrap construction in the `bypass_init` context manager (NEVER bare assignment — bare assignment leaks the flag if the test crashes mid-construction):
+
+```python
+from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
+from game.ui.screens.fleet_report_window import FleetReportWindow
+
+with bypass_init(FleetReportWindow):
+    window = make_ui_widget(
+        FleetReportWindow,
+        fleet=mock_fleet,
+        empire=mock_empire,
+        window_manager=mock_window_manager,
+    )
+```
+
+The PROJ-324 systemic finding (commit `9e177edb7`) showed `bypass_init` returning at the first executable statement is **insufficient on its own** when the subclass needs cheap state + delegates wired before the early-return. PROJ-325 / PROJ-328 A/B/C resolved this by **refactoring `__init__` into two stages**: cheap state + `Default{Foo}DelegateFactory` + UI-builder seam set BEFORE the bypass guard; heavy widget tree built AFTER. Tests substitute a `Null{Foo}UiBuilder` / `Mock{Foo}UiBuilder` to skip the heavy tree without bypass:
+
+```python
+# RaceSetupScreen pattern (PROJ-325):
+def __init__(self, ..., *, ui_builder: RaceSetupUiBuilder | None = None,
+             delegate_factory: RaceSetupDelegateFactory | None = None):
+    # Stage 1: cheap state + delegates (always runs)
+    self._race_config = ...
+    delegates = (delegate_factory or DefaultRaceSetupDelegateFactory()).build(self)
+    self._controller = delegates.controller
+    self._view_model = delegates.view_model
+    self._renderer = delegates.renderer
+    if getattr(type(self), "bypass_init", False):
+        return  # Stage 2 skipped; delegates are real and exercise-able
+    super().__init__(...)
+    # Stage 2: heavy widget tree
+    builder = ui_builder or DefaultRaceSetupUiBuilder()
+    builder.build(self)
+```
+
+### When to Use
+
+- **Any unit test that needs a real UI widget instance without a real pygame display.** Panels, gallery widgets, dialogs — `make_ui_widget(Cls, **kwargs)` is the canonical entry point.
+- **For UIWindow subclasses specifically:** add a `bypass_init` guard at the top of `__init__`, then use `with bypass_init(Cls): make_ui_widget(Cls, ...)` in tests.
+- **For NEW UI classes:** prefer Pattern #32 (Compositional Construction) up front. The `Composition` Protocol + default factory + `Mock<Class>Composition` shape is the long-term canonical pattern. Reach for `bypass_init` only for legacy code where a two-stage refactor isn't yet justified.
+
+### When NOT to Use
+
+- **Integration testing of widget interactions** — use `tests/integration/ui/build_queue_screen/` patterns with a headless pygame_gui session instead. The widget-factory pattern tests `__init__` wiring + isolated public-API behaviour, not multi-widget event flow.
+- **Production code.** `bypass_init` is a test-only escape hatch. The guard is `if getattr(type(self), "bypass_init", False): return`; production never sets the flag, so the guard is a no-op at runtime.
+- **Bare `Cls.bypass_init = True` in a test body** — always use the `bypass_init(cls)` context manager. A test that sets the flag and crashes leaks it to every subsequent test in the run.
+
+### Why
+
+- **Eradicates the legacy `__new__` bypass-init pattern.** Pre-PROJ-322, ~16 UI test files used `Cls.__new__(Cls)` and then manually wired ~50 attributes per test. Adding a UI element to production silently broke unrelated test files because they never re-ran `__init__`. The factory tests an instance the production code can actually produce.
+- **Closes the systemic UIWindow super-init blocker** documented in `docs/known-issues.md`. The 14 PROJ-322 deferrals across 7 production classes (`FleetReportWindow`, `OrdersWindow`, `TransferDialog`, `BuildQueueListWindow`, `RaceSetupScreen`, `NewGameSetupScreen`, `StrategyModalWindow`) all unblock once their `__init__` carries the guard + (when needed) a two-stage split.
+- **Same shape across the codebase.** The `Default{Foo}DelegateFactory` + `Foo{Delegates}` bundle (PROJ-325 + PROJ-328 A/B/C) and the per-class `Null{Foo}UiBuilder` / `Mock{Foo}UiBuilder` test-fixture pair give every UIWindow subclass an identical retrofit recipe. New maintainers see the same naming + the same seams everywhere.
+
+### Migration notes
+
+- **The guard MUST be the first executable statement in `__init__`.** Anything before the guard runs even when bypass is active — that's almost always a bug (see PROJ-324 systemic finding 2026-05-04). Audit every adopting subclass.
+- **The guard MUST consult `type(self)`, not the class that defines `__init__`.** Setting `FleetReportWindow.bypass_init = True` must be honored by the inherited `StrategyModalWindow.__init__`. `getattr(type(self), "bypass_init", False)` does the right thing.
+- **Some subclasses call `pygame_gui.elements.UIWindow.__init__(self, ...)` explicitly instead of `super()`.** The guard handles `super()` but not explicit ancestor calls. Audit each affected class for explicit parent-class calls.
+- **Legacy `__new__` bypass helpers can be removed once the corresponding subclass adopts the guard.** PROJ-324 / PROJ-325 / PROJ-328 A/B/C did this incrementally — tests migrated as their target class adopted the two-stage `__init__`.

@@ -17,3 +17,39 @@
 | 2026-05-04 | **D-008:** Use `pytest-randomly` for Phase 2 cross-isolation testing if available | The `reset_mock()` autouse pattern (rejected by PROJ-322) is the obvious unblock for class-scoped fixtures with mutation. If used, surface the cross-isolation risk with `pytest-randomly` ordering tests. |
 | 2026-05-04 | **D-009:** Run baseline measurement 3x and take the median | Sharded test runtime varies ±10% between runs. Single measurements are noise-dominated for the kinds of deltas this project will produce. |
 | 2026-05-04 | **D-010:** Branch strategy: same as PROJ-324/325/326 unless those have merged to main first | If the 3 prior projects merge to main before PROJ-327 starts, branch off main. Otherwise continue on `feat/03c-phase-aware-execution`. |
+
+## Lessons Learned (PROJ-327 Phase 5 close-out, 2026-05-04)
+
+Future test-quality / test-runtime projects should reference this table when prioritizing techniques. Numbers are measured on this branch, this machine; treat magnitudes as ballpark rather than universal.
+
+### Per-technique scorecard
+
+| Technique | Where applied | Wall-clock delta | LOC touched | Risk | Rework | Verdict |
+|---|---|---:|---:|---|---|---|
+| **`@patch` decorator → autouse fixture sweep** | Phase 1 `test_virtual_table.py` (80 of 81 patches collapsed) | **~3.9 s** suite-level (~30 ms file-level) | ~700 LOC of test (mechanical) | **LOW** — no production change, mocks identical | None — outcome parity verified byte-identical | **BEST ROI per LOC.** Prefer this when ≥10 universally-applied `@patch` decorators sit on one class. |
+| **Mutable-mock fixture rescope (function → module)** | Phase 2 `test_ship_io.py`, `test_empire_treasury_panel.py` | **~330 ms** single-process (lost in shard balancing at suite level) | ~+50 LOC scope-justification comments; -10 LOC dead helper | **MEDIUM** — requires manual mutation audit; original deferral rationale was wrong (PROJ-322 claimed mutation existed; re-audit found zero attribute writes) | Significant pre-flight: every fixture re-audited grep-by-grep | **Worth it when audit confirms no mutation.** Skip when the audit finds writes — `reset_mock()` autouse companion adds cross-isolation surface that's worse than the runtime cost. |
+| **Re-confirmation of deferral with measurement** | Phase 3 DUP-001 + HLP-001 | **0 s** | 0 production / ~80 LOC of measurement annotation in PROJ-322 checklists | **LOWEST** | None | **Always cheap, always valuable.** Future re-audits don't re-litigate; the disposition trail closes the loop. Per Decision D-006, this is a valid project outcome. |
+| **Compositional Construction (Protocol + factory + Mock fixture)** | Phase 4 `StrategyScreen` + 101-test cluster | **~no measurable change** at runtime | +14 LOC production (`strategy_screen.py`); +119 LOC test fixture; +17 smoke tests; -18 LOC monkey-patch + 8 inline MagicMock assignments removed | **MEDIUM** — production seam needs careful thought (Protocol surface, default factory) | Needed audit of every `__init__` line to identify the sub-object boundary | **Highest tech-debt-per-LOC win.** Eliminates the brittle `patch.object(..., '__init__', lambda...)` pattern wholesale. Prefer this for new code (canonical) over `bypass_init` retrofit. |
+| **Two-stage `__init__` + `Default{Foo}DelegateFactory` + `Null/Mock UiBuilder`** | (PROJ-325 + PROJ-328 A/B/C — sibling projects, applies same lesson) | (variable — measured per-class) | per-class: ~+50–80 LOC production + ~+100 LOC test fixtures, -200 LOC of `__new__` bypass + manual wiring | **LOW** — production change is additive (factory default preserves behaviour) | None for the recipe; high for first application (PROJ-325 PoC) | **Canonical retrofit recipe.** Once PoC landed, rolling to other UIWindow subclasses was mechanical. Use this when a UIWindow subclass cannot easily move to Compositional Construction up front. |
+| **Production `bypass_init` flag alone** | PROJ-324 Phase 1 (no test migration on its own) | 0 | 1 line per class (5 classes) | LOW | Major — the systemic finding (commit 9e177edb7) showed the flag alone delivers 0 LOC test reduction unless paired with a two-stage refactor | **Necessary but not sufficient.** A foundation; never deploy without immediately following with the two-stage `__init__` refactor in the same project (or accept the flag as production-only with no test-side payoff). |
+
+### Key insight: runtime is bimodal
+
+The runtime cost of the test suite is **bimodal**:
+
+- **The "many small tests" mode** (PROJ-322's deferral targets — fixture overhead, `@patch` decorator overhead, mock construction): contributes ~5–8 s total to the slowest shard. PROJ-327 attacked this mode and reclaimed most of it.
+- **The "few heavy tests" mode** (integration tests, parametrized validation clusters, `test_game_instantiation`): contributes the rest of the runtime — and dwarfs the deferral cluster by an order of magnitude.
+
+A project scoped only to the deferral list (PROJ-327) cannot hit a < 90 s target. Future projects targeting the heavy cluster need their own Phase 0 scoping pass and should NOT inherit PROJ-322's deferral list as their input.
+
+### Process lesson: always measure before re-scoping
+
+PROJ-322 Task 2.19's deferral rationale ("many tests mutate the mock ship") was wrong on re-audit — zero attribute writes existed across 54 tests. The runtime reclaim came from a path the deferral didn't anticipate. Future deferral re-audits should:
+
+1. Grep for the cited problem before believing the deferral note.
+2. Microbenchmark the cited cost before believing the cited magnitude.
+3. Treat any deferral note older than 6 months as a hypothesis to test, not a fact.
+
+### Anti-pattern surfaced
+
+The `patch.object(Cls, '__init__', lambda *args, **kwargs: None)` monkey-patch (used in `test_strategy_screen.py` pre-Phase-4) is **strictly worse than `__new__` bypass-init**: it leaks across tests in the same module if the patch is module-scoped, and it papers over real `__init__` bugs because the test never runs the real constructor. Compositional Construction (Pattern #32) is the canonical replacement; `__new__` bypass-init via the `make_ui_widget` factory (Pattern #33) is the retrofit replacement.

@@ -33,23 +33,45 @@
 **Final tally:** 71 substantive done, 17 obsolete-skipped, 25 formally deferred-out-of-scope.
 
 ## Current State
-**Last Updated:** 2026-05-03 (post-push)
-**Active Phase:** All phases Complete (or formally deferred-out-of-scope with documented blockers)
-**Last Action:** `git push origin feat/03c-phase-aware-execution` (a3cbb2cfb..b6937c6b1, 41 commits, net -5,292 LOC across all 3 sibling projects)
-**Next Action:** See `## Continuation Guide` below for how to address remaining 25 deferred items
-**Blockers:** See `## Continuation Guide` below
+**Last Updated:** 2026-05-04 (final close-out)
+**Active Phase:** All phases Complete; ALL 25 formally deferred items now have current dispositions via PROJ-324 / PROJ-325 / PROJ-327 / PROJ-328.
+**Last Action:** PROJ-324 Phase 4 + PROJ-327 Phase 5 closeout — Continuation Guide updated with Final disposition summary; `docs/known-issues.md` UIWindow + LLM blockers marked RESOLVED; `docs/02_PATTERNS.md` §33 documents the `make_ui_widget` + `bypass_init` retrofit pattern.
+**Next Action:** None — project is closed. All sibling continuation projects (324, 325, 326, 327, 328) Complete.
+**Blockers:** None — both systemic blockers resolved. See `## Continuation Guide` Final disposition summary.
 
 ## Continuation Guide
 
+> **Status as of 2026-05-04 (final close-out): ALL 25 PROJ-322 deferrals now have current dispositions.** PROJ-324 + PROJ-325 + PROJ-327 + PROJ-328 collectively closed every deferred item, either as RESOLVED (via production refactor + test migration) or as RE-CONFIRMED DEFERRED (with measurement evidence). The original deferral analysis is preserved below for audit-trail context; the **Final disposition summary** at the top is the current state.
+
+### Final disposition summary (2026-05-04)
+
+| Origin (PROJ-322 phase / task) | Disposition | Closed by |
+|---|---|---|
+| 14 UIWindow / LLM-blocked deferrals (Phase 3 + 4 + 5 boundary-patching cluster) | **RESOLVED** | PROJ-324 Phases 1+2 production foundation (`bypass_init` guard + `LLMBackgroundCall.wait()`) → PROJ-325 Phase 3 PoC (RaceSetupScreen two-stage `__init__` + delegate factory) → PROJ-328 A/B/C (`BuildQueueListWindow`, `OrdersWindow`, `FleetReportWindow`, `NewGameSetupScreen`, `TransferDialog` rolled out the same recipe). |
+| Task 3.25 (`strategy_screen` 50-test refactor) | **RESOLVED** | PROJ-327 Phase 4 (Compositional Construction pattern: `StrategyScreenComposition` Protocol + `MockStrategyScreenComposition` fixture). |
+| Tasks 2.11 + 2.19 + 2.15 (mutable-mock fixture rescopes) | **RESOLVED** | PROJ-327 Phase 2 (rescoped to module after audit confirmed zero attribute writes; 2.15 subsumed under HLP-001 re-judgment). |
+| Tasks 2.6 + 3.15 (private-attr read + component_resource_manager) | **RE-CONFIRMED DEFERRED** with measurement evidence | PROJ-327 Phase 2 — runtime is import-bound, not fixture-bound; `reset_mock` cannot restore re-bound attributes. |
+| Tasks 6.1 (DUP-001) + 6.4 (HLP-001) | **RE-CONFIRMED DEFERRED** with measurement evidence | PROJ-327 Phase 3 — measurement confirms construction is dominant but disparate shapes still resolve to a switch-statement factory; readability cost > LOC win. See `Projects/active_projects/PROJ-327/findings/phase_3_runtime_delta.md`. |
+| PROJ-323 leftovers (Tasks 3.34 + 3.37, doc corrections, Task 5.19 precision mismatch) | **RESOLVED** | PROJ-325 Phases 1 + 2. |
+| Linter for zero-game-import test files | **RESOLVED** | PROJ-326 (preventive linter + allowlist). |
+
+**Net result:**
+- All ~7 APC-001 UIWindow deferrals closed via production-side refactor (no longer blocked).
+- All 9 PROJ-327-scoped deferrals dispositioned (3 RESOLVED + 4 RE-CONFIRMED DEFERRED with measurement; Task 2.15 subsumed; Task 3.25 RESOLVED).
+- Both systemic blockers (UIWindow super-init chain, LLMBackgroundCall polling) are now marked **RESOLVED** in `docs/known-issues.md`.
+- `tests/fixtures/ui_widget_factory.py` and the new Compositional Construction pattern are documented at `docs/02_PATTERNS.md` §32 + §33.
+
+### Original deferral analysis (preserved for historical context)
+
 This section is the entry point for a fresh agent picking up the remaining 25 deferred items. The work breaks into two systemic blockers that gate most of the deferrals, plus a small set of items that are independent and actionable now.
 
-### Systemic blockers
+#### Systemic blockers
 
-1. **UIWindow super-init chain.** The shared `make_ui_widget` factory cannot patch through `super().__init__()` calls because Python's MRO is resolved at class-definition time — the factory's element-class patches don't intercept the chain. This blocks ~7 APC-001 file rewrites (Tasks 5.6, 5.7, 5.10, 5.11, 5.12, 5.16, 5.29) and several Phase 3 boundary-patching tasks that need to drive UIWindow subclasses without a real pygame surface. **Where the unblocking work would happen:** either (a) production-side change to UIWindow subclasses (e.g., a class-level `bypass_init=True` flag honored by `__init__`), or (b) factory enhancement that intercepts the `super().__init__()` call site (likely via metaclass or `__init_subclass__`).
+1. **UIWindow super-init chain.** *(Now RESOLVED — see Final disposition summary above.)* The shared `make_ui_widget` factory cannot patch through `super().__init__()` calls because Python's MRO is resolved at class-definition time — the factory's element-class patches don't intercept the chain. This blocks ~7 APC-001 file rewrites (Tasks 5.6, 5.7, 5.10, 5.11, 5.12, 5.16, 5.29) and several Phase 3 boundary-patching tasks that need to drive UIWindow subclasses without a real pygame surface. **Where the unblocking work would happen:** either (a) production-side change to UIWindow subclasses (e.g., a class-level `bypass_init=True` flag honored by `__init__`), or (b) factory enhancement that intercepts the `super().__init__()` call site (likely via metaclass or `__init_subclass__`).
 
-2. **LLMBackgroundCall real-thread polling.** Task 4.3 needs production-thread coordination to be refactored before a mocked clock can replace the `time.sleep()`-based polling loops. **Where the unblocking work would happen:** the production `LLMBackgroundCall` class itself — replace the polling loop with an `Event`/`Future`-based wait, then the test can drive completion deterministically without real threads.
+2. **LLMBackgroundCall real-thread polling.** *(Now RESOLVED — see Final disposition summary above.)* Task 4.3 needs production-thread coordination to be refactored before a mocked clock can replace the `time.sleep()`-based polling loops. **Where the unblocking work would happen:** the production `LLMBackgroundCall` class itself — replace the polling loop with an `Event`/`Future`-based wait, then the test can drive completion deterministically without real threads.
 
-### What's actionable now (does NOT depend on systemic blockers)
+#### What's actionable now (does NOT depend on systemic blockers)
 
 These deferred items have rationale captured in the phase checklists but may be addressable with cycle time even though the cost-benefit was unfavorable in the P1 polish scope:
 
@@ -58,7 +80,7 @@ These deferred items have rationale captured in the phase checklists but may be 
 
 For per-task blocker rationale, see the inline `**DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** ...` annotations in each `phase_N_checklist.md` file.
 
-### What requires a new project
+#### What requires a new project
 
 These are not single-task items — they are scoped efforts that need their own project plan:
 
@@ -66,10 +88,11 @@ These are not single-task items — they are scoped efforts that need their own 
 - **LLMBackgroundCall thread refactor** — replace polling with event/future coordination. Unblocks Task 4.3.
 - **RaceSetupScreen testable construction** — the lone non-UIWindow APC-001 deferral that is high-touch in its own right (large constructor surface, many collaborators).
 
-### Pointers
+#### Pointers
 
 - **Per-task blocker rationale:** inline `**DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** ...` annotations in each `phase_N_checklist.md`.
 - **Systemic context** (UIWindow chain analysis, freezegun/thread incompatibility, tool bugs encountered): `docs/known-issues.md`.
+- **Resolution context** (post-2026-05-04): the `bypass_init` retrofit pattern is documented at `docs/02_PATTERNS.md` §33; the Compositional Construction long-term pattern is documented at `docs/02_PATTERNS.md` §32. Per-task RESOLVED / RE-CONFIRMED DEFERRED annotations live inline in each `phase_N_checklist.md` next to the original deferral text.
 
 ## Overview
 This project remediates the P1 (brittle/bloated) findings from the OpenCode test-review at `Reviews/results/2026-05-02_204633_test-review/`. After an independent third skeptical pass, 115 P1 items survived (111 VERIFIED + 4 NEEDS_REWORK) across CAT-4/5/6/7 and the APC/DUP/HLP cross-shard clusters, with claimed reclaimable churn of approximately 9,629 LOC of test-side rewrites and consolidations.
