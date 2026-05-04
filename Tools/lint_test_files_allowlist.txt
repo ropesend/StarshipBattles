@@ -1,0 +1,29 @@
+# lint_test_files allowlist
+#
+# Format:
+#   - One path or glob per line, relative to the repo root.
+#   - Glob patterns use `pathlib.PurePosixPath.match` semantics.
+#       e.g. `tests/unit/tools/**/*.py` matches every Python file under
+#       tests/unit/tools/ at any depth.
+#   - Blank lines and `#` comments are ignored.
+#
+# Rule of thumb: only allowlist a file if it legitimately should NOT import
+# `game.*` — typically because it tests repo tooling, the test infrastructure
+# itself, or test data fixtures. If a test file is here because it
+# reimplements production logic locally, it should be deleted instead.
+#
+# See `Tools/lint_test_files.py` and `Projects/active_projects/PROJ-326/` for
+# the full audit history.
+
+# --- Tools tests (test repo tooling, not game internals) -----------------
+tests/unit/tools/**/*.py
+
+# --- Combat lab service tests --------------------------------------------
+tests/unit/combat_lab/**/*.py
+
+# --- Test data fixtures --------------------------------------------------
+tests/data/**/*.py
+
+# --- Test infrastructure (PROJ-326 Phase 1 Task 1.4) ---------------------
+# This file's logic was migrated into Tools/lint_test_files.py.
+tests/unit/data/test_test_infrastructure.py
