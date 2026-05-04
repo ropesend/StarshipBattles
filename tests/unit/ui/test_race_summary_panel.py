@@ -535,3 +535,205 @@ class TestFeat14RegistryDrivenSummary:
             f"Adding a factor to FACTOR_REGISTRY did not surface it on the "
             f"Summary tab. Rendered text: {joined!r}"
         )
+
+
+# =============================================================================
+# PROJ-339: characterization tests
+# =============================================================================
+
+
+class TestPROJ339GovernmentFormatting:
+    """PROJ-339: pin `_format_government_summary` 3-state behavior."""
+
+    def test_refresh_updates_government_when_org_set(self, mock_race_config):
+        """`_format_government_summary` renders type alone when org is unset,
+        type + org when both set, and the placeholder when neither set."""
+        panel = _make_summary_panel(race_config=mock_race_config)
+
+        # Both type and org set
+        mock_race_config.government_type = "Empire"
+        mock_race_config.government_organization = "Centralized"
+        assert panel._format_government_summary() == "Government: Empire (Centralized)"
+
+        # Type only
+        mock_race_config.government_organization = ""
+        assert panel._format_government_summary() == "Government: Empire"
+
+        # Neither
+        mock_race_config.government_type = ""
+        assert panel._format_government_summary() == "Government: --"
+
+
+class TestPROJ339ShipPreviewSkips:
+    """PROJ-339: pin the early-return paths in `_refresh_ship_preview`."""
+
+    def test_refresh_ship_preview_skips_when_theme_unset(
+        self, mock_race_config_empty,
+    ):
+        """A falsy `theme_id` short-circuits before any
+        `ShipThemeManager` lookup — no images attached."""
+        from game.ui.panels import race_summary_panel as rsp_module
+
+        panel = _make_summary_panel(race_config=mock_race_config_empty)
+        # theme_id is "" in the empty fixture
+        assert mock_race_config_empty.theme_id == ""
+        # Force ship_panel non-None so the OTHER short-circuit (no panel)
+        # is not the reason we exit.
+        panel.summary_ship_panel = MagicMock()
+        panel.summary_ship_images = []
+        panel.summary_ship_labels = []
+
+        with patch.object(
+            rsp_module, "get_default_ship_theme_manager",
+        ) as mock_get_mgr:
+            panel._refresh_ship_preview()
+
+        # Theme manager NEVER consulted — early return triggered first.
+        mock_get_mgr.assert_not_called()
+        assert panel.summary_ship_images == []
+        assert panel.summary_ship_labels == []
+
+    def test_refresh_ship_preview_skips_category_when_surface_missing(
+        self, mock_race_config,
+    ):
+        """When `ShipThemeManager.load_image`/`get_portrait_image` returns
+        `None` for a category, that slot's images are skipped (not
+        appended) but other categories with surfaces still render."""
+        from game.ui.panels import race_summary_panel as rsp_module
+
+        panel = _make_summary_panel(race_config=mock_race_config)
+        panel.summary_ship_panel = MagicMock()
+        panel.summary_ship_images = []
+        panel.summary_ship_labels = []
+
+        # Theme manager: returns None for every skin/portrait, so no
+        # UIImage should be appended. Labels still get appended (one per
+        # category, regardless of surface presence).
+        mock_mgr = MagicMock()
+        mock_mgr.load_image.return_value = None
+        mock_mgr.get_portrait_image.return_value = None
+
+        with patch.object(
+            rsp_module, "get_default_ship_theme_manager", return_value=mock_mgr,
+        ), patch.object(
+            rsp_module.pygame_gui.elements, "UIImage",
+        ) as mock_ui_image, patch.object(
+            rsp_module.pygame_gui.elements, "UILabel",
+            side_effect=lambda *a, **kw: MagicMock(),
+        ):
+            panel._refresh_ship_preview()
+
+        # No UIImage was instantiated for any category (all surfaces None).
+        mock_ui_image.assert_not_called()
+        # Three category labels were still appended.
+        assert len(panel.summary_ship_labels) == 3
+
+
+class TestPROJ339EnvScrollMissingPreference:
+    """PROJ-339: pin the defensive '--' rendering in
+    `_render_factor_rows` for a missing preference id."""
+
+    def test_rebuild_env_scroll_content_renders_dash_for_missing_preference(
+        self, mock_race_config,
+    ):
+        """If a scalar factor's id is absent from `race_config.preferences`,
+        the row text falls back to '<display_name>: --' rather than
+        raising a KeyError."""
+        from game.ui.panels import race_summary_panel as rsp_module
+        from game.strategy.data.habitability_factors import iter_scalar_factors
+
+        # Drop one scalar factor's preference so the panel hits the
+        # missing-preference branch.
+        scalar_ids = [f.id for f in iter_scalar_factors()]
+        dropped_id = scalar_ids[0]
+        dropped_display_name = next(
+            f.display_name for f in iter_scalar_factors() if f.id == dropped_id
+        )
+        del mock_race_config.preferences[dropped_id]
+
+        # Re-use the same UILabel-capture pattern as
+        # TestFeat14RegistryDrivenSummary.
+        ui_label_mock = MagicMock()
+        ui_label_mock.side_effect = lambda *a, **kw: MagicMock()
+        ui_panel_mock = MagicMock()
+        ui_panel_mock.side_effect = lambda *a, **kw: MagicMock()
+        ui_scroll_mock = MagicMock()
+        ui_scroll_mock.side_effect = lambda *a, **kw: MagicMock()
+
+        with patch.object(rsp_module.pygame_gui.elements, "UILabel", ui_label_mock), \
+             patch.object(rsp_module.pygame_gui.elements, "UIPanel", ui_panel_mock), \
+             patch.object(
+                 rsp_module.pygame_gui.elements,
+                 "UIScrollingContainer",
+                 ui_scroll_mock,
+             ), \
+             patch.object(rsp_module, "create_section_header", MagicMock()):
+            panel = rsp_module.RaceSummaryPanel.__new__(rsp_module.RaceSummaryPanel)
+            panel.race_config = mock_race_config
+            panel.summary_labels = {}
+            panel.summary_flag_images = []
+            panel.summary_portrait_image = None
+            panel.summary_ship_images = []
+            panel.summary_ship_labels = []
+            panel._asset_loader = MagicMock()
+            panel.summary_flag_panel = None
+            panel.summary_portrait_panel = None
+            panel.summary_ship_panel = None
+            panel.ui_manager = MagicMock()
+            panel.panel = MagicMock()
+            panel._env_scroll_container = MagicMock()
+            panel._env_scroll_container.get_relative_rect.return_value = pygame.Rect(
+                0, 0, 800, 400,
+            )
+            panel._dynamic_env_labels = []
+
+            panel.refresh()
+
+        # The dropped factor must render with the '--' fallback.
+        texts = [
+            call.kwargs["text"]
+            for call in ui_label_mock.call_args_list
+            if "text" in call.kwargs
+        ]
+        joined = "\n".join(texts)
+        assert f"{dropped_display_name}: --" in joined, (
+            f"Missing-preference fallback not rendered. "
+            f"Expected '{dropped_display_name}: --' in: {joined!r}"
+        )
+
+
+class TestPROJ339HandleButtonClick:
+    """PROJ-339: pin `handle_button_click` callback gating."""
+
+    def test_handle_button_click_invokes_load_callback_only_when_btn_load(
+        self, mock_race_config,
+    ):
+        """The Load Race callback fires ONLY when the clicked element is
+        `btn_load` AND `on_load_race_callback` is bound. Other elements
+        (or no callback) → no-op returning False."""
+        load_cb = MagicMock()
+        panel = _make_summary_panel(
+            race_config=mock_race_config,
+            on_load_race_callback=load_cb,
+        )
+        # btn_load was created during _create_content as a Mock; we
+        # control it explicitly so identity comparisons work.
+        btn_load_marker = MagicMock()
+        panel.btn_load = btn_load_marker
+
+        # Clicked element IS btn_load AND callback bound → fires once.
+        result = panel.handle_button_click(btn_load_marker)
+        assert result is True
+        load_cb.assert_called_once()
+
+        # Some other element → no fire, return False.
+        load_cb.reset_mock()
+        other_btn = MagicMock()
+        result = panel.handle_button_click(other_btn)
+        assert result is False
+        load_cb.assert_not_called()
+
+        # btn_load clicked but callback unbound → no fire, return False.
+        panel.on_load_race_callback = None
+        result = panel.handle_button_click(btn_load_marker)
+        assert result is False
