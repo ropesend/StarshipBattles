@@ -147,3 +147,116 @@ class TestBattleControllerGetResults:
             results = controller.get_results()
 
             assert mock_escaped_state in results.escaped_ships
+
+
+class TestBattleControllerLoadStateProjectiles:
+    """PROJ-331 Phase 2a: pin load_state projectile-restore path.
+
+    Characterization tests — they describe what current production does
+    when restoring projectiles via `BattleState.projectiles` -> engine.
+    """
+
+    def _build_load_state_setup(self, controller, mock_service, *,
+                                 projectiles, ship_id="runtime-ship",
+                                 save_id="state-ship-id"):
+        """Wire a controller for load_state with `projectiles` attached."""
+        mock_state = Mock()
+        mock_state.seed = 12345
+        mock_state.end_condition_data = {"type": "team_eliminated"}
+        mock_state.allow_retreat = False
+        mock_state.allow_reinforcements = False
+        mock_state.ships = {save_id: Mock(team_id=0)}
+        mock_state.tick_count = 0
+        mock_state.projectiles = projectiles
+        controller._registries = Mock(name="registries")
+
+        engine_ship = Mock()
+        engine_ship.id = ship_id
+
+        mock_engine = Mock()
+        mock_engine.ships = [engine_ship]
+        mock_engine.projectiles = []
+        mock_service.get_engine.return_value = mock_engine
+
+        restored_ship = Mock()
+        restored_ship.id = ship_id
+        mock_state_manager = Mock()
+        mock_state_manager.restore_config_from_state.return_value = BattleConfig()
+        mock_state_manager.extract_ships_from_state.return_value = (
+            [restored_ship],
+            {restored_ship.id: save_id},
+        )
+        controller._state_manager = mock_state_manager
+        return mock_state, mock_engine, engine_ship
+
+    def test_load_state_restores_alive_projectiles_only(self, controller, mock_service):
+        """Only `proj_state.is_alive == True` entries get restored."""
+        alive_a = Mock()
+        alive_a.is_alive = True
+        alive_a.to_projectile = Mock(return_value=Mock(name="proj_a"))
+        alive_b = Mock()
+        alive_b.is_alive = True
+        alive_b.to_projectile = Mock(return_value=Mock(name="proj_b"))
+        dead = Mock()
+        dead.is_alive = False
+        dead.to_projectile = Mock(return_value=Mock(name="proj_dead"))
+
+        mock_state, mock_engine, _ = self._build_load_state_setup(
+            controller, mock_service,
+            projectiles=[alive_a, alive_b, dead],
+        )
+
+        result = controller.load_state(mock_state)
+
+        assert result.success is True
+        assert len(mock_engine.projectiles) == 2
+        # Dead projectile's to_projectile is never invoked.
+        dead.to_projectile.assert_not_called()
+        alive_a.to_projectile.assert_called_once()
+        alive_b.to_projectile.assert_called_once()
+
+    def test_load_state_resolves_projectile_owner_via_ship_id_map(
+        self, controller, mock_service,
+    ):
+        """`to_projectile` receives `ship_lookup={save_id: engine_ship}`."""
+        alive = Mock()
+        alive.is_alive = True
+        alive.to_projectile = Mock(return_value=Mock())
+
+        mock_state, _, engine_ship = self._build_load_state_setup(
+            controller, mock_service,
+            projectiles=[alive], ship_id="runtime-ship",
+            save_id="save_id_1",
+        )
+
+        result = controller.load_state(mock_state)
+
+        assert result.success is True
+        # to_projectile called with a single dict arg containing
+        # save_id -> engine_ship.
+        call_args = alive.to_projectile.call_args
+        ship_lookup = call_args.args[0]
+        assert ship_lookup == {"save_id_1": engine_ship}
+
+
+class TestRequireRegistriesForStateRestore:
+    """PROJ-331 Phase 2a: pin `_require_registries_for_state_restore` gate."""
+
+    def test_require_registries_returns_none_for_empty_state_when_registries_unset(
+        self, controller,
+    ):
+        """state_count=0 + registries=None: returns None, no raise."""
+        controller._registries = None
+        result = controller._require_registries_for_state_restore(state_count=0)
+        assert result is None
+
+    def test_require_registries_raises_validation_exception_for_nonempty_state_when_registries_unset(
+        self, controller,
+    ):
+        """state_count>0 + registries=None: raises ValidationException(MISSING_DEPENDENCY)."""
+        from game.core.exceptions import ValidationException
+        controller._registries = None
+        with pytest.raises(ValidationException) as exc_info:
+            controller._require_registries_for_state_restore(state_count=3)
+        # MISSING_DEPENDENCY = "C003"
+        assert exc_info.value.code == "C003"
