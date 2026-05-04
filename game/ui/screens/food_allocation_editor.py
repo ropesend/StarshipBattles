@@ -17,6 +17,12 @@ Design parallels `gravity_target_editor.py` (single-slider + ideal/
 match/clear/apply) adapted for multi-row layout. UI-construction helpers
 are separated from row-data gathering and apply logic so the business
 logic is testable without pygame_gui.
+
+PROJ-329A Phase 2 Task 2.1: Migrated to two-stage construction. Cheap
+state and row gathering happen before ``super().__init__``; widget
+construction lives behind ``FoodAllocationEditorUiBuilder`` so tests can
+swap in ``Null{...}UiBuilder`` / ``Mock{...}UiBuilder`` from
+``tests/fixtures/food_allocation_editor_ui_builder.py``.
 """
 from __future__ import annotations
 
@@ -155,12 +161,105 @@ def apply_allocations(
         cfg.food_allocation = safe_value
 
 
+class FoodAllocationEditorUiBuilder:
+    """Production widget builder. Constructs row widgets + bottom buttons.
+
+    Invoked from ``FoodAllocationEditor.__init__`` after the shell is
+    constructed. Reads ``screen._rows`` (built in Stage 1) and writes
+    ``screen._row_widgets``, ``screen.btn_apply``, ``screen.btn_cancel``.
+    """
+
+    def build(self, screen: "FoodAllocationEditor") -> None:
+        container = screen.get_container()
+        container_w = container.get_rect().width
+        container_h = container.get_rect().height
+        y = WINDOW_PADDING
+
+        if not screen._rows:
+            UILabel(
+                relative_rect=pygame.Rect(WINDOW_PADDING, y, container_w - 2 * WINDOW_PADDING, 25),
+                text="No populations on this colony.",
+                manager=screen.ui_manager,
+                container=container,
+            )
+        else:
+            for row in screen._rows:
+                self._build_row(screen, row, y, container_w, container)
+                y += ROW_HEIGHT
+
+        # Bottom buttons
+        btn_y = container_h - 45
+        btn_w = 120
+
+        screen.btn_cancel = UIButton(
+            relative_rect=pygame.Rect(WINDOW_PADDING, btn_y, btn_w, 35),
+            text="Cancel",
+            manager=screen.ui_manager,
+            container=container,
+        )
+        screen.btn_apply = UIButton(
+            relative_rect=pygame.Rect(container_w - btn_w - WINDOW_PADDING, btn_y, btn_w, 35),
+            text="Apply",
+            manager=screen.ui_manager,
+            container=container,
+        )
+
+    def _build_row(
+        self,
+        screen: "FoodAllocationEditor",
+        row: FoodAllocationRowData,
+        y: int,
+        container_w: int,
+        container: Any,
+    ) -> None:
+        # Line 1: race name label + text entry + preview label
+        name_w = 180
+        entry_w = 80
+        preview_w = container_w - name_w - entry_w - 3 * WINDOW_PADDING
+        UILabel(
+            relative_rect=pygame.Rect(WINDOW_PADDING, y, name_w, 25),
+            text=f"{row.race_name}  (pop {row.population_count})",
+            manager=screen.ui_manager,
+            container=container,
+        )
+        entry = UITextEntryLine(
+            relative_rect=pygame.Rect(WINDOW_PADDING + name_w, y, entry_w, 25),
+            manager=screen.ui_manager,
+            container=container,
+            initial_text=f"{row.current_allocation:.2f}",
+        )
+        preview = UILabel(
+            relative_rect=pygame.Rect(
+                WINDOW_PADDING + name_w + entry_w + WINDOW_PADDING, y, preview_w, 25,
+            ),
+            text=screen._preview_text(row.population_count, row.current_allocation),
+            manager=screen.ui_manager,
+            container=container,
+        )
+        # Line 2: slider
+        slider_w = container_w - 2 * WINDOW_PADDING
+        slider = UIHorizontalSlider(
+            relative_rect=pygame.Rect(WINDOW_PADDING, y + 30, slider_w, 25),
+            start_value=min(MAX_SLIDER, max(MIN_SLIDER, row.current_allocation)),
+            value_range=(MIN_SLIDER, MAX_SLIDER),
+            manager=screen.ui_manager,
+            container=container,
+            click_increment=SLIDER_STEP,
+        )
+        screen._row_widgets[row.race_id] = (slider, entry, preview)
+
+
 class FoodAllocationEditor(StrategyModalWindow):
     """pygame_gui window with one row per species on a colony.
 
     PROJ-313: Migrated to StrategyModalWindow base class. Auto-registers
     with the window manager for modal tracking — clicks inside the editor
     no longer leak through to the strategy map.
+
+    PROJ-329A Phase 2 Task 2.1: Two-stage construction. Stage 1 stores
+    cheap state (planet, callbacks, gathered rows). Stage 2 opens the
+    shell. Stage 3 invokes the UI builder (production default, or a
+    test-supplied Mock under bypass_init).
     """
 
     def __init__(
@@ -175,15 +274,10 @@ class FoodAllocationEditor(StrategyModalWindow):
         window_manager: "StrategyWindowManager",
         on_apply_callback: Optional[Callable[[int, Dict[str, float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
+        ui_builder: Optional[FoodAllocationEditorUiBuilder] = None,
     ) -> None:
+        # ---- Stage 1: cheap state ----
         self._resource_display_name = resolve_food_resource_name(economy_config, resource_catalog)
-        super().__init__(
-            rect, manager,
-            window_display_title=f"{self._resource_display_name} Allocation — {planet.name}",
-            resizable=False,
-            window_manager=window_manager,
-        )
-
         self.planet = planet
         self._economy = economy_config
         self._race_resolver = race_resolver
@@ -195,85 +289,25 @@ class FoodAllocationEditor(StrategyModalWindow):
         self._row_widgets: Dict[str, tuple] = {}
         self._widgets: List[Any] = []
 
-        self._build_ui()
-
-    def _build_ui(self) -> None:
-        container = self.get_container()
-        container_w = container.get_rect().width
-        container_h = container.get_rect().height
-        y = WINDOW_PADDING
-
-        if not self._rows:
-            UILabel(
-                relative_rect=pygame.Rect(WINDOW_PADDING, y, container_w - 2 * WINDOW_PADDING, 25),
-                text="No populations on this colony.",
-                manager=self.ui_manager,
-                container=container,
-            )
-        else:
-            for row in self._rows:
-                self._build_row(row, y, container_w, container)
-                y += ROW_HEIGHT
-
-        # Bottom buttons
-        btn_y = container_h - 45
-        btn_w = 120
-
-        self.btn_cancel = UIButton(
-            relative_rect=pygame.Rect(WINDOW_PADDING, btn_y, btn_w, 35),
-            text="Cancel",
-            manager=self.ui_manager,
-            container=container,
-        )
-        self.btn_apply = UIButton(
-            relative_rect=pygame.Rect(container_w - btn_w - WINDOW_PADDING, btn_y, btn_w, 35),
-            text="Apply",
-            manager=self.ui_manager,
-            container=container,
+        # ---- Stage 2: shell ----
+        super().__init__(
+            rect, manager,
+            window_display_title=f"{self._resource_display_name} Allocation — {planet.name}",
+            resizable=False,
+            window_manager=window_manager,
         )
 
-    def _build_row(
-        self,
-        row: FoodAllocationRowData,
-        y: int,
-        container_w: int,
-        container: Any,
-    ) -> None:
-        # Line 1: race name label + text entry + preview label
-        name_w = 180
-        entry_w = 80
-        preview_w = container_w - name_w - entry_w - 3 * WINDOW_PADDING
-        UILabel(
-            relative_rect=pygame.Rect(WINDOW_PADDING, y, name_w, 25),
-            text=f"{row.race_name}  (pop {row.population_count})",
-            manager=self.ui_manager,
-            container=container,
-        )
-        entry = UITextEntryLine(
-            relative_rect=pygame.Rect(WINDOW_PADDING + name_w, y, entry_w, 25),
-            manager=self.ui_manager,
-            container=container,
-            initial_text=f"{row.current_allocation:.2f}",
-        )
-        preview = UILabel(
-            relative_rect=pygame.Rect(
-                WINDOW_PADDING + name_w + entry_w + WINDOW_PADDING, y, preview_w, 25,
-            ),
-            text=self._preview_text(row.population_count, row.current_allocation),
-            manager=self.ui_manager,
-            container=container,
-        )
-        # Line 2: slider
-        slider_w = container_w - 2 * WINDOW_PADDING
-        slider = UIHorizontalSlider(
-            relative_rect=pygame.Rect(WINDOW_PADDING, y + 30, slider_w, 25),
-            start_value=min(MAX_SLIDER, max(MIN_SLIDER, row.current_allocation)),
-            value_range=(MIN_SLIDER, MAX_SLIDER),
-            manager=self.ui_manager,
-            container=container,
-            click_increment=SLIDER_STEP,
-        )
-        self._row_widgets[row.race_id] = (slider, entry, preview)
+        # ---- Stage 3: widgets ----
+        # Bypass branch (test): only invoke an *explicitly supplied*
+        # ui_builder so MockFoodAllocationEditorUiBuilder can populate
+        # widget slots; tests that don't supply one leave the widget
+        # state empty. (PROJ-325 PoC finding 2.)
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
+
+        (ui_builder or FoodAllocationEditorUiBuilder()).build(self)
 
     def _preview_text(self, pop: int, allocation: float) -> str:
         """PROJ-291 C2: render one preview segment per resource in

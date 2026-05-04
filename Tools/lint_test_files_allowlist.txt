@@ -86,6 +86,8 @@ tests/unit/engine/collision_edge_cases/test_damage_tracking.py
 tests/unit/research/research_controls/test_reset_state.py
 # research-renderer fixtures arrive via tests/unit/research/conftest.py
 tests/unit/research/test_research_renderer.py
+# research-renderer drawing tests load module via importlib (PROJ-337)
+tests/unit/research/test_research_renderer_drawing.py
 # LLM service fixtures arrive via tests/unit/services/llm/conftest.py
 tests/unit/services/llm/test_http_block.py
 # battle-controller fixtures arrive via tests/unit/simulation/battle_controller/conftest.py

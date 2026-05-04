@@ -3,9 +3,10 @@
 Tests split into:
 - Pure-function tests (no pygame): `gather_rows`, `resolve_food_resource_name`,
   `compute_consumption_preview`, `apply_allocations`.
-- Class-construction tests: `FoodAllocationEditor` with UI internals
-  patched out, following the testing pattern used by other UIWindow
-  classes (`test_build_queue_list_window.py`, etc).
+- Class-construction tests: `FoodAllocationEditor` constructed under
+  ``bypass_init`` with an explicit ``MockFoodAllocationEditorUiBuilder``
+  (PROJ-329A Phase 2 Task 2.1 migration from the legacy ``__new__`` /
+  ``patch.object(...,_build_ui)`` bypass pattern).
 
 Manual smoke testing (Task 4.6) is the authoritative sign-off for
 integration with live pygame_gui; the unit layer guards the business
@@ -23,6 +24,11 @@ from game.strategy.config.economy_config import EconomyConfig
 from game.strategy.data.colony_species_config import ColonySpeciesConfig
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.species_population import SpeciesPopulation
+from tests.fixtures.food_allocation_editor_ui_builder import (
+    MockFoodAllocationEditorUiBuilder,
+    NullFoodAllocationEditorUiBuilder,
+)
+from tests.fixtures.ui_widget_factory import bypass_init
 
 
 def _planet_with(
@@ -199,17 +205,10 @@ class TestMultiResourcePreview:
     def test_editor_preview_text_lists_every_resource(self, mock_editor_internals):
         """With a 2-resource economy, `_preview_text` must mention both
         resources so a player tuning allocation sees the full drain."""
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=1000, happiness=0.5)])
         economy = EconomyConfig(population_consumption={"organics": 0.001, "metals": 0.0001})
 
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            window_manager=None,
-        )
+        editor = _make_editor(planet, economy)
 
         preview = editor._preview_text(1000, 1.0)
         # Preview must mention BOTH resources by display name. Case is
@@ -252,58 +251,72 @@ class TestApplyAllocations:
 # FoodAllocationEditor class construction (UI internals mocked out)
 # ---------------------------------------------------------------------------
 
-@pytest.fixture
-def mock_editor_internals():
-    """Patch the UIWindow base + `_build_ui` so we can instantiate the
-    editor without a live pygame display. Tests then exercise the
-    non-UI methods (`collect_allocations`, title-derivation)."""
-    with patch('pygame_gui.elements.UIWindow.__init__', return_value=None):
-        with patch.object(
-            # patch `_build_ui` so the constructor doesn't touch widgets.
-            # The tests access `._rows` + `._row_widgets` directly.
-            __import__('game.ui.screens.food_allocation_editor', fromlist=['FoodAllocationEditor']).FoodAllocationEditor,
-            '_build_ui'
-        ):
-            yield
+def _make_editor(
+    planet,
+    economy,
+    *,
+    resource_catalog=None,
+    on_apply_callback=None,
+    on_close_callback=None,
+    ui_builder=None,
+):
+    """Construct a real ``FoodAllocationEditor`` under ``bypass_init``.
 
-
-class TestFoodAllocationEditorConstruction:
-    def test_constructs_for_planet_with_one_species(self, mock_editor_internals):
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
-        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
-        planet = _planet_with([pop])
-        economy = EconomyConfig(population_consumption={"organics": 0.001})
-
-        editor = FoodAllocationEditor(
+    PROJ-329A Phase 2 Task 2.1: Replaces the legacy ``__new__`` /
+    ``patch.object(...,_build_ui)`` helper. Stage-1 cheap state runs;
+    Stage-2 shell is bypassed; Stage-3 invokes the supplied ``ui_builder``
+    if any (default Mock variant populates row widgets + buttons).
+    """
+    from game.ui.screens.food_allocation_editor import FoodAllocationEditor
+    if ui_builder is None:
+        ui_builder = MockFoodAllocationEditorUiBuilder()
+    with bypass_init(FoodAllocationEditor):
+        return FoodAllocationEditor(
             rect=pygame.Rect(0, 0, 600, 400),
             manager=MagicMock(),
             planet=planet,
             economy_config=economy,
+            resource_catalog=resource_catalog,
             window_manager=None,
+            on_apply_callback=on_apply_callback,
+            on_close_callback=on_close_callback,
+            ui_builder=ui_builder,
         )
+
+
+@pytest.fixture
+def mock_editor_internals():
+    """Backwards-compat fixture: now a no-op. The legacy
+    ``patch('pygame_gui.elements.UIWindow.__init__')`` +
+    ``patch.object(...,_build_ui)`` pair is replaced by the
+    ``bypass_init`` + ``MockFoodAllocationEditorUiBuilder`` pattern in
+    ``_make_editor``. Retained as a fixture so existing test signatures
+    still work."""
+    yield
+
+
+class TestFoodAllocationEditorConstruction:
+    def test_constructs_for_planet_with_one_species(self, mock_editor_internals):
+        pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
+        planet = _planet_with([pop])
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
+
+        editor = _make_editor(planet, economy)
         assert len(editor._rows) == 1
         assert editor._rows[0].race_id == "human"
 
     def test_constructs_for_planet_with_multiple_species(self, mock_editor_internals):
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([
             SpeciesPopulation(race_id="human", count=100, happiness=0.5),
             SpeciesPopulation(race_id="alien", count=50, happiness=0.5),
         ])
         economy = EconomyConfig(population_consumption={"organics": 0.001})
 
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            window_manager=None,
-        )
+        editor = _make_editor(planet, economy)
         assert len(editor._rows) == 2
 
     def test_title_uses_resource_catalog_display_name(self, mock_editor_internals):
         """Title = '{ResourceName} Allocation — {planet.name}'."""
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
         economy = EconomyConfig(population_consumption={"organics": 0.001})
         catalog = MagicMock()
@@ -311,20 +324,12 @@ class TestFoodAllocationEditorConstruction:
         definition.name = "Organics"
         catalog.get.return_value = definition
 
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            resource_catalog=catalog,
-            window_manager=None,
-        )
+        editor = _make_editor(planet, economy, resource_catalog=catalog)
         assert editor._resource_display_name == "Organics"
 
     def test_title_relabels_when_food_resource_swapped(self, mock_editor_internals):
         """Swap to 'metals' -> title shows 'Metals'. This is the whole
         point of PROJ-284's data-driven food-resource config."""
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
         economy = EconomyConfig(population_consumption={"metals": 0.001})
         catalog = MagicMock()
@@ -332,31 +337,36 @@ class TestFoodAllocationEditorConstruction:
         definition.name = "Metals"
         catalog.get.return_value = definition
 
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            resource_catalog=catalog,
-            window_manager=None,
-        )
+        editor = _make_editor(planet, economy, resource_catalog=catalog)
         assert editor._resource_display_name == "Metals"
+
+    def test_window_init_bypassed_flag_set(self, mock_editor_internals):
+        """Bypass branch sets the flag so subclass code can short-circuit
+        widget construction."""
+        planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
+        editor = _make_editor(planet, economy)
+        assert editor._window_init_bypassed is True
+
+    def test_null_builder_leaves_widget_state_empty(self, mock_editor_internals):
+        """``NullFoodAllocationEditorUiBuilder`` is a no-op; row widgets
+        stay empty."""
+        planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
+        economy = EconomyConfig(population_consumption={"organics": 0.001})
+        editor = _make_editor(
+            planet, economy,
+            ui_builder=NullFoodAllocationEditorUiBuilder(),
+        )
+        assert editor._row_widgets == {}
 
 
 class TestFoodAllocationEditorCollectAndApply:
     def test_collect_allocations_reads_typed_input_over_slider(self, mock_editor_internals):
         """Typed input wins when parseable; slider is the fallback."""
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
         economy = EconomyConfig(population_consumption={"organics": 0.001})
 
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            window_manager=None,
-        )
+        editor = _make_editor(planet, economy)
 
         slider = MagicMock(); slider.get_current_value.return_value = 1.0
         entry = MagicMock(); entry.get_text.return_value = "2.5"
@@ -368,17 +378,10 @@ class TestFoodAllocationEditorCollectAndApply:
 
     def test_collect_allocations_accepts_values_over_five(self, mock_editor_internals):
         """Typed input can exceed the slider's 5.0 cap."""
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
         economy = EconomyConfig(population_consumption={"organics": 0.001})
 
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            window_manager=None,
-        )
+        editor = _make_editor(planet, economy)
         slider = MagicMock(); slider.get_current_value.return_value = 5.0
         entry = MagicMock(); entry.get_text.return_value = "12.0"
         editor._row_widgets["human"] = (slider, entry, MagicMock())
@@ -387,17 +390,10 @@ class TestFoodAllocationEditorCollectAndApply:
 
     def test_collect_allocations_falls_back_to_slider_on_bad_input(self, mock_editor_internals):
         """Non-numeric text -> use slider value."""
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
         economy = EconomyConfig(population_consumption={"organics": 0.001})
 
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            window_manager=None,
-        )
+        editor = _make_editor(planet, economy)
         slider = MagicMock(); slider.get_current_value.return_value = 3.0
         entry = MagicMock(); entry.get_text.return_value = "not-a-number"
         editor._row_widgets["human"] = (slider, entry, MagicMock())
@@ -406,7 +402,6 @@ class TestFoodAllocationEditorCollectAndApply:
 
     def test_apply_button_writes_all_rows_and_fires_callback(self, mock_editor_internals):
         """Simulate Apply: `_on_apply` writes via callback and kills self."""
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([
             SpeciesPopulation(race_id="human", count=100, happiness=0.5),
             SpeciesPopulation(race_id="alien", count=50, happiness=0.5),
@@ -414,14 +409,7 @@ class TestFoodAllocationEditorCollectAndApply:
         economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         on_apply = MagicMock()
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            window_manager=None,
-            on_apply_callback=on_apply,
-        )
+        editor = _make_editor(planet, economy, on_apply_callback=on_apply)
         # Seed widget mocks.
         for rid, value in (("human", 2.0), ("alien", 0.5)):
             slider = MagicMock(); slider.get_current_value.return_value = value
@@ -438,19 +426,11 @@ class TestFoodAllocationEditorCollectAndApply:
         assert allocations == {"human": 2.0, "alien": 0.5}
 
     def test_cancel_does_not_fire_apply_callback(self, mock_editor_internals):
-        from game.ui.screens.food_allocation_editor import FoodAllocationEditor
         planet = _planet_with([SpeciesPopulation(race_id="human", count=100, happiness=0.5)])
         economy = EconomyConfig(population_consumption={"organics": 0.001})
 
         on_apply = MagicMock()
-        editor = FoodAllocationEditor(
-            rect=pygame.Rect(0, 0, 600, 400),
-            manager=MagicMock(),
-            planet=planet,
-            economy_config=economy,
-            window_manager=None,
-            on_apply_callback=on_apply,
-        )
+        editor = _make_editor(planet, economy, on_apply_callback=on_apply)
         with patch.object(editor, 'kill'):
             editor._on_cancel()
         on_apply.assert_not_called()
