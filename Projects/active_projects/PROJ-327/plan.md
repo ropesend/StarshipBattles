@@ -17,7 +17,7 @@
 | 1. PROJ-322 Task 3.14 — `test_virtual_table.py` `@patch` decorator → autouse fixture sweep (~700 LOC, biggest single runtime win expected) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. PROJ-322 mutable-mock fixture rescope (Tasks 2.6 / 2.11 / 2.15 / 2.19 / 3.15) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. PROJ-322 accepted-disposition reconsideration (Tasks 6.1 DUP-001 + 6.4 HLP-001) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. PROJ-322 Task 3.25 — `strategy_screen` 50-test refactor (multi-day, low ROI — only if Phases 1-3 deltas insufficient) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. PROJ-322 Task 3.25 — `strategy_screen` 50-test refactor (tech debt reduction; runtime delta is bonus, not gate) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Final measurement + documentation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State

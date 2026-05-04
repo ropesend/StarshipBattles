@@ -33,6 +33,10 @@ tests/unit/data/test_test_infrastructure.py
 # Project-management tooling tests (Projects/scripts/phase_workflow/, etc.)
 tests/projects/**/*.py
 
+# Agent-coordination skill / discussion-protocol tests (test repo tooling
+# under .agents/skills/ and AgentCoordination/, not game internals).
+tests/unit/agent_coordination/**/*.py
+
 # Shared test fixtures + factories — not tests themselves.
 tests/fixtures/**/*.py
 tests/unit/fixtures/**/*.py
