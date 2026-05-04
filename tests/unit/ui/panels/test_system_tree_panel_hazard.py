@@ -107,3 +107,60 @@ def test_multiple_hazards_all_rendered():
     assert len(hints) == 2
     assert any('Pulsar' in h for h in hints)
     assert any('Neutron' in h for h in hints)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-338 — Characterization corner cases for the hazard formatter
+# ---------------------------------------------------------------------------
+
+
+def test_thrust_modifier_at_one_no_hint():
+    """Thrust modifier exactly == 1.0 is benign (no hazard)."""
+    effects = [_effect('ThrustModifier', [
+        _star_provider('Neutral Star', {'multiplier': 1.0, 'scope': 'system'}),
+    ])]
+    assert _format_star_hazard_hints(effects) == []
+
+
+def test_multiple_star_providers_each_yield_a_hint():
+    """Two stars both projecting ShieldModifier each get their own hint."""
+    effects = [_effect('ShieldModifier', [
+        _star_provider('Star A', {'multiplier': 0.5, 'scope': 'system'}),
+        _star_provider('Star B', {'multiplier': 0.8, 'scope': 'system'}),
+    ])]
+    hints = _format_star_hazard_hints(effects)
+    assert len(hints) == 2
+    assert any('Star A' in h and '-50%' in h for h in hints)
+    assert any('Star B' in h and '-20%' in h for h in hints)
+
+
+def test_non_star_provider_ignored_even_if_shield_modifier_low():
+    """Source-kind != star → never a hazard, even with very low multiplier."""
+    facility_provider = {
+        'source_kind': 'facility',
+        'source_label': 'Old Generator',
+        'is_active': True,
+        'ability_data': {'multiplier': 0.1, 'scope': 'system'},
+    }
+    effects = [_effect('ShieldModifier', [facility_provider])]
+    assert _format_star_hazard_hints(effects) == []
+
+
+def test_missing_ability_data_dict_treated_as_empty_no_hint():
+    """ability_data=None falls through to {} → multiplier defaults to 1.0 → no hint."""
+    provider = {
+        'source_kind': 'star',
+        'source_label': 'Mystery Star',
+        'is_active': True,
+        'ability_data': None,
+    }
+    effects = [_effect('ShieldModifier', [provider])]
+    assert _format_star_hazard_hints(effects) == []
+
+
+def test_environmental_damage_zero_rate_no_hint():
+    """rate <= 0 produces no hint (the > 0 gate)."""
+    effects = [_effect('EnvironmentalDamage', [
+        _star_provider('Calm Star', {'rate': 0.0, 'damage_type': 'radiation', 'scope': 'system'}),
+    ])]
+    assert _format_star_hazard_hints(effects) == []
