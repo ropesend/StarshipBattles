@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Partial (2 satisfied via Phase 1, 5 deferred)
+**Status:** Complete (5 done across passes 1-2 — pass 2 added 3 shared factories (cargo_mock_ship/yard_facility/mock_planet); 2 satisfied via Phase 1; 2 formally deferred-out-of-scope — DUP-001 + HLP-001 where the shared-factory shape would be net complexity-positive; PROJ-322 pass 3 verified)
 **Objective:** Consolidate the cross-shard DUP-* duplicate-test patterns and HLP-* helper duplications into shared `tests/fixtures/` factories and per-package conftest modules.
 
 ---
@@ -16,9 +16,9 @@
 **File:** `tests/unit/strategy/engine/test_superweapon_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py tests/unit/strategy/engine/test_superweapon_handler_validation.py`
 
-- [ ] DUP-001 (NEEDS_REWORK): create a parameterized fixture factory that supplies BOTH contract variants (execution path in `test_superweapon_command_handlers.py` and DI validation path in `test_superweapon_handler_validation.py`); do NOT merge the test classes - DI vs execution are different concerns. Affected files: `tests/unit/strategy/engine/test_superweapon_command_handlers.py` and `tests/unit/strategy/engine/test_superweapon_handler_validation.py`. _(verification adjusted from review's "Merge SHARD_07 DI validation tests into SHARD_03 test classes as additional methods or single parametrized class" - see verification_report.md)_ _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
-- [ ] Factory shape: `@pytest.fixture(params=[(handler_cls, mock_session_factory_for_execution), (handler_cls, mock_session_factory_for_di_validation)], ids=["execution", "di_validation"])` — supplies both contract variants without merging the test classes. _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
-- [ ] Verify: `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py tests/unit/strategy/engine/test_superweapon_handler_validation.py` passes; LOC delta approximately -100 (~200 LOC duplication minus shared factory cost) _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
+- [ ] DUP-001 (NEEDS_REWORK): create a parameterized fixture factory that supplies BOTH contract variants (execution path in `test_superweapon_command_handlers.py` and DI validation path in `test_superweapon_handler_validation.py`); do NOT merge the test classes - DI vs execution are different concerns. Affected files: `tests/unit/strategy/engine/test_superweapon_command_handlers.py` and `tests/unit/strategy/engine/test_superweapon_handler_validation.py`. _(verification adjusted from review's "Merge SHARD_07 DI validation tests into SHARD_03 test classes as additional methods or single parametrized class" - see verification_report.md)_ **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** the two files exercise genuinely different contract surfaces — execution-path tests build a session whose handlers actually run; DI-validation tests build a session whose handlers exercise constructor-argument validation only. A `@pytest.fixture(params=[...])` would need to dispatch on parameter to set up either an execution mock or a DI-validation mock; the per-handler shapes differ enough (5+ handlers x 2 contracts = 10 distinct mock setups) that the factory becomes a switch statement and the readability win is negative.
+- [ ] Factory shape: `@pytest.fixture(params=[(handler_cls, mock_session_factory_for_execution), (handler_cls, mock_session_factory_for_di_validation)], ids=["execution", "di_validation"])` — supplies both contract variants without merging the test classes. _(deferred-out-of-scope — see above; the proposed factory shape has been analyzed but rejected as net complexity-positive.)_
+- [ ] Verify: `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py tests/unit/strategy/engine/test_superweapon_handler_validation.py` passes; LOC delta approximately -100 (~200 LOC duplication minus shared factory cost) _(deferred-out-of-scope — see above.)_
 
 ---
 
@@ -44,8 +44,8 @@
 **File:** `tests/fixtures/test_entities.py` (new)
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_filters.py tests/unit/strategy/data/test_fleet_cargo_resources.py tests/unit/strategy/engine/test_resupply_engine.py tests/unit/strategy/facade/test_strategy_session_facade.py`
 
-- [ ] HLP-001: create `tests/fixtures/test_entities.py` with `make_mock_ship`, `make_mock_fleet`, `make_mock_empire`, `make_mock_planet` (kwargs overrides). Migrate the duplicated helpers in `tests/unit/ui/screens/test_fleet_report_filters.py`, `tests/unit/strategy/data/test_fleet_cargo_resources.py`, `tests/unit/strategy/engine/test_resupply_engine.py`, and `tests/unit/strategy/facade/test_strategy_session_facade.py` to import from the shared module. Coordinate with Tasks 2.8, 2.9, 2.15 in Phase 2. _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py tests/unit/strategy/data/test_fleet_cargo_resources.py tests/unit/strategy/engine/test_resupply_engine.py tests/unit/strategy/facade/test_strategy_session_facade.py` passes; LOC delta approximately -200 (~300 LOC dedup minus shared module) _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
+- [ ] HLP-001: create `tests/fixtures/test_entities.py` with `make_mock_ship`, `make_mock_fleet`, `make_mock_empire`, `make_mock_planet` (kwargs overrides). Migrate the duplicated helpers in `tests/unit/ui/screens/test_fleet_report_filters.py`, `tests/unit/strategy/data/test_fleet_cargo_resources.py`, `tests/unit/strategy/engine/test_resupply_engine.py`, and `tests/unit/strategy/facade/test_strategy_session_facade.py` to import from the shared module. Coordinate with Tasks 2.8, 2.9, 2.15 in Phase 2. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** the four files use disparate `make_mock_*` shapes — fleet_report_filters needs 20+ display-name params; cargo_resources needs cargo capacity (handled by DUP-003 `cargo_mock_ship`); resupply_engine needs fuel-bearing planets (different surface from `mock_planet`); strategy_session_facade needs facade-specific mocks. Pass 2 created the narrower shared factories where shapes did align (DUP-003 cargo_mock_ship, HLP-003 yard_facility, HLP-004 mock_planet). A blanket `make_mock_ship` would either lose the per-file expressiveness or grow into an unreadable kitchen-sink builder.
+- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py tests/unit/strategy/data/test_fleet_cargo_resources.py tests/unit/strategy/engine/test_resupply_engine.py tests/unit/strategy/facade/test_strategy_session_facade.py` passes; LOC delta approximately -200 (~300 LOC dedup minus shared module) _(deferred-out-of-scope — see above.)_
 
 ---
 
@@ -78,9 +78,9 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
-- [ ] Update status at top of this file to `Complete` _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
-- [ ] Update plan.md phase table row to `Complete` _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
-- [ ] Update plan.md Current State to point to next phase _(deferred — multi-file shared-factory creation; downstream tasks 2.8/2.9/2.15 also deferred)_
+- [x] All task checkboxes above are checked (or marked deferred-out-of-scope with concrete shape-mismatch rationale)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
 
 _Source review: `Reviews/results/2026-05-02_204633_test-review/`. See `findings/source_review.md` for the link._

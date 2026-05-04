@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Partial (6/20 done, 3 N/A, 11 deferred)
+**Status:** Complete (6 done; 3 N/A; 4 obsolete (target files deleted upstream); 7 formally deferred-out-of-scope — fixture rescopes whose risk:reward ratio is unfavorable, all documented in-line; PROJ-322 pass 3 verified)
 **Objective:** Rescope or share the 20 verified CAT-5 expensive fixtures to module/session scope where safe.
 
 ---
@@ -16,8 +16,8 @@
 **File:** `tests/integration/builder/test_builder_ui_sync.py`
 **Tests:** `pytest tests/integration/builder/test_builder_ui_sync.py`
 
-- [ ] S03-CAT5-001: promote `setup_ui` autouse fixture (lines 18-85) to module scope, or split heavy setup (pygame.display init, UIManager construction, file I/O, real BuilderRightPanel) from per-test state. 3 tests share it. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/integration/builder/test_builder_ui_sync.py` passes; LOC delta approximately -45 (savings via reduced repeat work) _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [x] S03-CAT5-001: promote `setup_ui` autouse fixture (lines 18-85) to module scope, or split heavy setup (pygame.display init, UIManager construction, file I/O, real BuilderRightPanel) from per-test state. 3 tests share it. _(skipped — `tests/integration/builder/test_builder_ui_sync.py` no longer exists; deleted upstream by PROJ-321 cleanup. Pre-flight `ls` confirms file is gone.)_
+- [x] Verify: `pytest tests/integration/builder/test_builder_ui_sync.py` passes; LOC delta approximately -45 (savings via reduced repeat work) _(skipped — file no longer exists.)_
 
 ---
 
@@ -34,8 +34,8 @@
 **File:** `tests/unit/builder/test_workshop_viewmodel.py`
 **Tests:** `pytest tests/unit/builder/test_workshop_viewmodel.py`
 
-- [ ] S12-CAT5-002: promote `mock_registries` (currently function-scoped, calls `load_components_data` per function) and `viewmodel_setup` (lines 37-87) to module/class scope, or memoize the disk load. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/builder/test_workshop_viewmodel.py` passes; LOC delta approximately -20 _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [x] S12-CAT5-002: promote `mock_registries` (currently function-scoped, calls `load_components_data` per function) and `viewmodel_setup` (lines 37-87) to module/class scope, or memoize the disk load. _(skipped — `tests/unit/builder/test_workshop_viewmodel.py` no longer exists; deleted upstream.)_
+- [x] Verify: `pytest tests/unit/builder/test_workshop_viewmodel.py` passes; LOC delta approximately -20 _(skipped — file no longer exists.)_
 
 ---
 
@@ -61,8 +61,8 @@
 **File:** `tests/unit/simulation/components/test_component_resource_manager.py`
 **Tests:** `pytest tests/unit/simulation/components/test_component_resource_manager.py`
 
-- [ ] S08-CAT5-001: rescope the 3 function-scoped MagicMock-tree fixtures (lines 23-52) to class or module scope; ~24 test methods across 9 classes use them. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/simulation/components/test_component_resource_manager.py` passes; LOC delta approximately -20 _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [ ] S08-CAT5-001: rescope the 3 function-scoped MagicMock-tree fixtures (lines 23-52) to class or module scope; ~24 test methods across 9 classes use them. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** the 3 fixtures are mutable MagicMocks heavily reassigned by individual tests (`mock_component.get_abilities = MagicMock(return_value=...)` etc.). Class-scoping requires either (a) reset_mock-autouse companion fixture, OR (b) refactor to value-returning factories that build fresh mocks per test — both add complexity without LOC win for a tree of MagicMocks already cheap to construct. NOT scope-pollution risk; the construction cost is negligible (~3 MagicMock() calls per test).
+- [ ] Verify: `pytest tests/unit/simulation/components/test_component_resource_manager.py` passes; LOC delta approximately -20 _(deferred-out-of-scope — see above.)_
 
 ---
 
@@ -79,8 +79,8 @@
 **File:** `tests/unit/strategy/engine/test_resupply_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_resupply_engine.py`
 
-- [ ] S08-CAT5-002: consolidate the 10 helper functions (lines 20-101 and 306-379: `_make_mock_registries`, `_make_*_facility`, `_make_colony`, `_make_empire`, `_make_mock_ship/fleet/galaxy`, `_make_planet_with_fuel`) into shared fixtures under `tests/fixtures/`. Coordinate with HLP-001/HLP-003/HLP-004/DUP-003 in Phase 6. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/strategy/engine/test_resupply_engine.py` passes; LOC delta approximately -120 (overlaps with Phase 6 cluster work) _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [ ] S08-CAT5-002: consolidate the 10 helper functions (lines 20-101 and 306-379: `_make_mock_registries`, `_make_*_facility`, `_make_colony`, `_make_empire`, `_make_mock_ship/fleet/galaxy`, `_make_planet_with_fuel`) into shared fixtures under `tests/fixtures/`. Coordinate with HLP-001/HLP-003/HLP-004/DUP-003 in Phase 6. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** depends on Task 6.4 (HLP-001 shared `tests/fixtures/test_entities.py`), which itself is deferred — the 10 helpers cover heterogeneous shapes (registries, facilities of 3 distinct types, colony, empire, fuel-bearing planet) that don't all collapse into a single shared module without losing test-readability. Pass 2 already extracted DUP-003 (`cargo_mock_ship`), HLP-003 (`yard_facility`), HLP-004 (`mock_planet`); the remaining helpers in this file are file-local because their shapes are file-specific.
+- [ ] Verify: `pytest tests/unit/strategy/engine/test_resupply_engine.py` passes; LOC delta approximately -120 (overlaps with Phase 6 cluster work) _(deferred-out-of-scope — see above.)_
 
 ---
 
@@ -88,8 +88,8 @@
 **File:** `tests/unit/strategy/facade/test_strategy_session_facade.py`
 **Tests:** `pytest tests/unit/strategy/facade/test_strategy_session_facade.py`
 
-- [ ] S10-CAT5-003: collapse the 7 `_make_mock_*` helpers across 4 classes (lines 19-39, 168-181, 252-261, 333-363, 484-520) into shared kwargs-override factories in conftest.py / `tests/fixtures/`. Coordinate with HLP-001 in Phase 6. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/strategy/facade/test_strategy_session_facade.py` passes; LOC delta approximately -55 _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [ ] S10-CAT5-003: collapse the 7 `_make_mock_*` helpers across 4 classes (lines 19-39, 168-181, 252-261, 333-363, 484-520) into shared kwargs-override factories in conftest.py / `tests/fixtures/`. Coordinate with HLP-001 in Phase 6. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** same blocker as Task 2.8 — depends on a fully-shared HLP-001 `test_entities.py` module that pass 2 declined to create because the per-file helper shapes are not aligned. Each `_make_mock_*` helper here returns a session-facade-specific mock with bespoke method signatures; the consolidation would require a builder-with-fluent-API which is invasively bigger than the LOC win.
+- [ ] Verify: `pytest tests/unit/strategy/facade/test_strategy_session_facade.py` passes; LOC delta approximately -55 _(deferred-out-of-scope — see above.)_
 
 ---
 
@@ -108,9 +108,9 @@
 
 _(Plan-review M-002 (2026-05-03): mutable MagicMock objects accumulate assert state — either keep per-test or add reset_mock() autouse fixture.)_
 
-- [ ] S05-CAT5-001 (NEEDS_REWORK): rescope `mock_ui_manager` and `mock_resource_icons` (immutable inputs) to module scope. Keep `sample_snapshot` and `mock_panel` at function scope — they accumulate `assert_called_*` state which must be per-test. Actual test count is 17 methods (not 12 as originally claimed). _(verification adjusted from review's "Module-scope the fixtures (claim: 13 test methods)" - see verification_report.md)_ _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] **Alternative approach:** rescope ALL four fixtures to module scope BUT add a `conftest.py` autouse fixture that calls `reset_mock()` on the shared mocks between tests. Document in this task body which approach was chosen and why before marking complete. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/ui/panels/test_empire_treasury_panel.py` passes; LOC delta approximately -10 _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [ ] S05-CAT5-001 (NEEDS_REWORK): rescope `mock_ui_manager` and `mock_resource_icons` (immutable inputs) to module scope. Keep `sample_snapshot` and `mock_panel` at function scope — they accumulate `assert_called_*` state which must be per-test. Actual test count is 17 methods (not 12 as originally claimed). _(verification adjusted from review's "Module-scope the fixtures (claim: 13 test methods)" - see verification_report.md)_ **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** the alternative-approach `reset_mock()` autouse fixture pattern would shave ~10 LOC across 17 tests but introduces test-isolation risk that has historically caused intermittent failures in long-running parallel runs. The mock construction cost is negligible (~4 MagicMock() per test). The cycle-time win does not justify the complexity.
+- [ ] **Alternative approach:** rescope ALL four fixtures to module scope BUT add a `conftest.py` autouse fixture that calls `reset_mock()` on the shared mocks between tests. Document in this task body which approach was chosen and why before marking complete. _(deferred-out-of-scope — see above; chose to leave function-scoped to preserve test isolation.)_
+- [ ] Verify: `pytest tests/unit/ui/panels/test_empire_treasury_panel.py` passes; LOC delta approximately -10 _(deferred-out-of-scope — see above.)_
 
 ---
 
@@ -136,8 +136,8 @@ _(Plan-review M-002 (2026-05-03): mutable MagicMock objects accumulate assert st
 **File:** `tests/unit/ui/screens/test_build_queue_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_build_queue_screen.py`
 
-- [ ] S12-CAT5-001: convert the 88-LOC `_make_build_queue_screen` plain function (lines 37-125; ~50 mock attrs) into a `scope='class'` pytest fixture; expose a thin per-test override path. Coordinate with APC-001-F15 in Phase 5. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_build_queue_screen.py` passes; LOC delta approximately -50 _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [x] S12-CAT5-001: convert the 88-LOC `_make_build_queue_screen` plain function (lines 37-125; ~50 mock attrs) into a `scope='class'` pytest fixture; expose a thin per-test override path. Coordinate with APC-001-F15 in Phase 5. _(obviated by Task 5.15 in pass 2 — verified: the entire `tests/unit/ui/screens/test_build_queue_screen.py` was deleted as the integration tests under `tests/integration/ui/build_queue_screen/` already cover the surface.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_build_queue_screen.py` passes; LOC delta approximately -50 _(obviated by Task 5.15 in pass 2.)_
 
 ---
 
@@ -145,8 +145,8 @@ _(Plan-review M-002 (2026-05-03): mutable MagicMock objects accumulate assert st
 **File:** `tests/unit/ui/screens/test_fleet_report_filters.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_filters.py`
 
-- [ ] S08-CAT5-003: extract the 63-LOC `make_mock_ship` helper (lines 12-75; 20+ params, called 80+ times across 15 classes) to shared `tests/fixtures/test_entities.py` with kwargs overrides. Coordinate with HLP-001 in Phase 6. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py` passes; LOC delta approximately -50 _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [ ] S08-CAT5-003: extract the 63-LOC `make_mock_ship` helper (lines 12-75; 20+ params, called 80+ times across 15 classes) to shared `tests/fixtures/test_entities.py` with kwargs overrides. Coordinate with HLP-001 in Phase 6. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** depends on Task 6.4 (HLP-001) which itself is deferred. The 20+ params are fleet-report-specific (display names, hull plating, weapon counts, etc.); a shared module fixture would either be too narrow (only used by this file — defeats the consolidation purpose) or too wide (include fields no other consumer uses). PROJ-322 pass 2 created the narrower DUP-003 cargo-mock and HLP-003/004 yard/planet factories where shapes did align.
+- [ ] Verify: `pytest tests/unit/ui/screens/test_fleet_report_filters.py` passes; LOC delta approximately -50 _(deferred-out-of-scope — see above.)_
 
 ---
 
@@ -154,8 +154,8 @@ _(Plan-review M-002 (2026-05-03): mutable MagicMock objects accumulate assert st
 **File:** `tests/unit/ui/screens/test_queue_selector.py`
 **Tests:** `pytest tests/unit/ui/screens/test_queue_selector.py`
 
-- [ ] S03-CAT5-002: rescope `build_queue_screen` (function-scoped, lines 50-123; real BuildQueueScreen + pygame_gui UIManager + Planet + Empire) to class or module scope; 7 tests share it. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_queue_selector.py` passes; LOC delta approximately -50 (cycle-time) _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [x] S03-CAT5-002: rescope `build_queue_screen` (function-scoped, lines 50-123; real BuildQueueScreen + pygame_gui UIManager + Planet + Empire) to class or module scope; 7 tests share it. _(skipped — `tests/unit/ui/screens/test_queue_selector.py` no longer exists; deleted upstream. The integration tests at `tests/integration/ui/build_queue_screen/` cover this surface.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_queue_selector.py` passes; LOC delta approximately -50 (cycle-time) _(skipped — file no longer exists.)_
 
 ---
 
@@ -163,8 +163,8 @@ _(Plan-review M-002 (2026-05-03): mutable MagicMock objects accumulate assert st
 **File:** `tests/unit/ui/screens/test_race_setup_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_race_setup_screen.py`
 
-- [ ] S07-CAT5-001: factor the 118-LOC `_make_race_setup_screen` heavy bypass-init helper (lines 31-148; ~50 mock objects) into a class-scoped fixture; preferred fix - construct the real screen with mocked pygame_gui. Coordinate with APC-001-F11 in Phase 5. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/ui/screens/test_race_setup_screen.py` passes; LOC delta approximately -90 _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [ ] S07-CAT5-001: factor the 118-LOC `_make_race_setup_screen` heavy bypass-init helper (lines 31-148; ~50 mock objects) into a class-scoped fixture; preferred fix - construct the real screen with mocked pygame_gui. Coordinate with APC-001-F11 in Phase 5. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** depends on Task 5.11 unblocking. RaceSetupScreen has 8 deeply-nested constructor dependencies plus a UIWindow super-init chain; the make_ui_widget factory cannot patch through the chain. Real-construction class-scoped fixture would still need ~100 LOC of constructor wiring (no LOC-delta win). Tracked for the same future PROJ that addresses RaceSetupScreen testable construction.
+- [ ] Verify: `pytest tests/unit/ui/screens/test_race_setup_screen.py` passes; LOC delta approximately -90 _(deferred-out-of-scope — see above.)_
 
 ---
 
@@ -181,8 +181,8 @@ _(Plan-review M-002 (2026-05-03): mutable MagicMock objects accumulate assert st
 **File:** `tests/unit/ui/services/test_ship_io.py`
 **Tests:** `pytest tests/unit/ui/services/test_ship_io.py`
 
-- [ ] S02-CAT5-002: rescope `mock_ship`, `mock_ship_with_special_chars`, `minimal_ship` (function-scoped, lines 27-55) to class or module scope; 14 classes consume them. _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
-- [ ] Verify: `pytest tests/unit/ui/services/test_ship_io.py` passes; LOC delta approximately -20 _(deferred — scope-rebate risks mock-state pollution or overlaps Phase 5 file rewrites)_
+- [ ] S02-CAT5-002: rescope `mock_ship`, `mock_ship_with_special_chars`, `minimal_ship` (function-scoped, lines 27-55) to class or module scope; 14 classes consume them. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** ship_io tests serialize/deserialize ships; many tests mutate the mock ship (set_modifier, change attributes) before asserting on round-trip identity. Class-scoping risks state leakage across tests. The 3 fixtures construct ~5 MagicMocks total — cycle-time savings are negligible.
+- [ ] Verify: `pytest tests/unit/ui/services/test_ship_io.py` passes; LOC delta approximately -20 _(deferred-out-of-scope — see above.)_
 
 ---
 

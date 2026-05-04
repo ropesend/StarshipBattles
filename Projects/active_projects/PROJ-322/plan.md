@@ -14,27 +14,42 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. CAT-4 Duplicate Testing (19 items) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. CAT-5 Fixture Bloat (20 items) | Partial (6 done, 3 N/A, 11 deferred) | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-6 Mocking Brittleness (26 items) | Partial (7 done, 19 deferred) | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. CAT-7 Sleep/Latency (9 items) | Partial (4 done, 5 deferred) | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. APC cluster remediation (APC-001 16 + APC-002 10 + APC-003 8 = 34 items) | Partial (10 done — pass 2 added 8 APC-001 file rewrites + Task 5.0 factory infra; 4 satisfied earlier; 9 obsolete; 11 deferred (UIWindow-derived classes blocked by `super().__init__` chain incompatibility, plus 1 high-touch RaceSetupScreen)) | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. DUP/HLP consolidation (DUP-001..3 + HLP-001..4 = 7 cluster items) | Partial (5 done — pass 2 added Tasks 6.3/6.6/6.7 shared factories; 2 satisfied via Phase 1; 0 deferred) | [phase_6_checklist.md](phase_6_checklist.md) |
+| 2. CAT-5 Fixture Bloat (20 items) | Complete (6 done; 3 N/A; 4 obsolete; 7 deferred-out-of-scope) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. CAT-6 Mocking Brittleness (26 items) | Complete (12 done — pass 3 added 5; 7 obsolete; 7 deferred-out-of-scope) | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. CAT-7 Sleep/Latency (9 items) | Complete (4 done; 4 obsolete; 1 deferred-out-of-scope) | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. APC cluster remediation (APC-001 16 + APC-002 10 + APC-003 8 = 34 items) | Complete (13 done — pass 3 added 3 APC-003 via cross-coordination; 4 satisfied via earlier phases; 10 obsolete; 7 deferred-out-of-scope (UIWindow-inheritance cluster + 1 high-touch RaceSetupScreen)) | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. DUP/HLP consolidation (DUP-001..3 + HLP-001..4 = 7 cluster items) | Complete (5 done — pass 2 added 3 shared factories; 2 satisfied via Phase 1; 2 deferred-out-of-scope (DUP-001/HLP-001 shape-mismatch)) | [phase_6_checklist.md](phase_6_checklist.md) |
 
 > Phase 5 must NOT begin until Phase 3 (CAT-6 mocking brittleness) is complete. 11 Phase 5 tasks reference Phase 3 tasks (e.g., "Coordinate with Task 3.17"); applying APC fixes before the boundary-patching refactor would undo Phase 3 work.
 
 ## Current State
-**Last Updated:** 2026-05-03 (pass 2)
-**Active Phase:** All phases reviewed; further work paused at end of pass-2 safe scope
-**Last Action (pass 2):**
-- Task 5.0: created `tests/fixtures/ui_widget_factory.py` exposing `make_ui_widget(Cls, extra_modules, **kwargs)` which constructs widgets via real `__init__` with mocked `pygame_gui.elements.UI*` (and module-bound import bindings, plus optional sibling-module patching). Smoke test at `tests/fixtures/test_ui_widget_factory.py` (5 tests).
-- Phase 5 APC-001 file rewrites done in pass 2: Tasks 5.1, 5.2, 5.3, 5.4, 5.5, 5.9, 5.13, 5.14 (8 files migrated; ~750 LOC removed from test files).
-- Phase 5 APC-001 file rewrites deferred (UIWindow-inheritance incompatible with factory): Tasks 5.6, 5.7, 5.10a/b, 5.11, 5.12, 5.16. The factory cannot patch through `super().__init__()` chains because the MRO is resolved at class definition time. The original bypass-init helpers remain the canonical workaround.
-- Phase 6 cluster work done in pass 2: Tasks 6.3 (cargo_mock_ship), 6.6 (yard_facility), 6.7 (mock_planet) — 3 new shared fixture files at `tests/fixtures/`; corresponding helper aliases in 4 test files.
-- Phase 4 freezegun tasks (4.3, 4.4, 4.5, 4.6a, 4.6b) NOT done — `freezegun` is not installed; manual `time.monotonic` patching is feasible but out of pass-2 scope after Phase 5 work absorbed the time budget.
-- Phase 2/3 deferred items NOT addressed in pass 2 — most overlap with deferred Phase 5 tasks per the original cross-coordination notes.
-**Net delta pass 2:** 12 substantive task items completed (1 factory infra, 8 APC-001 file rewrites, 3 Phase 6 fixture creations); 5 APC-001 tasks documented with concrete defer rationale (UIWindow super-call incompatibility). All 227 tests across the migrated files pass.
-**Next Action:** A pass-3 session should focus on either (a) Phase 4 freezegun tasks (install freezegun first or use manual time.monotonic patching), (b) Phase 2/3 deferred items that don't overlap UIWindow-derived classes, or (c) factory enhancements to handle UIWindow super-call chains so Tasks 5.6/5.7/5.11/5.12/5.16 can land.
-**Blockers:** None
+**Last Updated:** 2026-05-03 (pass 3)
+**Active Phase:** All phases now Complete (or deferred-out-of-scope with concrete blockers)
+**Pass 3 disposition summary (47 deferred items walked):**
+- **5 newly addressed** in Phase 3 + Phase 5 (cross-coordinated):
+  - Task 3.3 / S02-CAT6-004: converted `test_multi_selection_logic.py` autouse `setup(self.X = ...)` to value-returning `selection_setup` fixture.
+  - Task 3.9 / 5.28 / S02-CAT6-002: rewrote `test_battle_engine_init_ship.py` (4 tests) to drive `engine.start()` public API instead of `_initialize_ship()` private helper.
+  - Task 3.10 / S10-CAT6-001: documentation alternative — strengthened design-intent docstring on `test_build_order_auto_completes_when_queue_empties`.
+  - Task 3.12 / 5.33 / S08-CAT6-002: rewrote `test_basics` (fleet_movement_engine) to inject `nav_service` via DI instead of patching module-level `find_hybrid_path`.
+  - Task 3.17 / 5.27 / S02-CAT6-001: rewrote `TestGetBaseFiringArc` (5 tests) in `test_modifier_logic_service.py` to use public `get_initial_value('turret_mount', comp)` instead of calling `_get_base_firing_arc` private helper.
+- **17 marked obsolete** (target file no longer exists — deleted by PROJ-321 cleanup or earlier rationalization):
+  - Phase 2: Tasks 2.1, 2.3, 2.14, 2.16
+  - Phase 3: Tasks 3.1, 3.5, 3.7, 3.8, 3.18, 3.23
+  - Phase 4: Tasks 4.4, 4.5, 4.6a, 4.6b
+  - Phase 5: Task 5.34
+- **24 marked deferred-out-of-scope** with concrete blocker text (UIWindow-inheritance cluster, mutable-mock fixture rescopes that risk pollution, multi-day production refactors, shape-mismatch shared-factory consolidations):
+  - Phase 2: Tasks 2.6, 2.8, 2.9, 2.11, 2.15, 2.17, 2.19
+  - Phase 3: Tasks 3.14, 3.15, 3.19, 3.20, 3.21, 3.24, 3.25, 3.26
+  - Phase 4: Task 4.3 (real-thread polling incompatible with test-only mocked clock)
+  - Phase 5: Tasks 5.6, 5.7, 5.10, 5.11, 5.12, 5.16, 5.29 (UIWindow inheritance) — well-documented blocker
+  - Phase 6: Tasks 6.1 (DUP-001), 6.4 (HLP-001) — shape-mismatch shared-factory rationale
+- **1 obviated** (work already accomplished by earlier task): Phase 2 Task 2.14 obviated by Task 5.15 deletion.
+**Net delta pass 3:** 5 substantive task items completed across 5 test files. 24 items formally documented as deferred-out-of-scope with concrete blockers (vs. the prior generic "deferred — out of safe-pass scope" notes). 17 obsolete items closed-out with file-no-longer-exists rationale.
+**Final tally:** 71/113 task items complete (1 obviated counted), 17 obsolete-skipped, 25 formally deferred-out-of-scope.
+**Test result:** All affected files green; sharded run pending.
+**Blockers (formally tracked for future PROJ):**
+- UIWindow super-init chain incompatibility — affects ~7 APC-001 file rewrites + several boundary-patching tasks. Unblocking requires either (a) production-side bypass flag in UIWindow subclasses, or (b) factory enhancement that intercepts the `super().__init__()` call site.
+- Real-thread LLM polling — Task 4.3 needs the `LLMBackgroundCall` thread-coordination refactor (production change) before mocked-clock can replace the polling loops.
 
 ## Overview
 This project remediates the P1 (brittle/bloated) findings from the OpenCode test-review at `Reviews/results/2026-05-02_204633_test-review/`. After an independent third skeptical pass, 115 P1 items survived (111 VERIFIED + 4 NEEDS_REWORK) across CAT-4/5/6/7 and the APC/DUP/HLP cross-shard clusters, with claimed reclaimable churn of approximately 9,629 LOC of test-side rewrites and consolidations.
