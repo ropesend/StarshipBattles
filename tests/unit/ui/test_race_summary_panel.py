@@ -156,16 +156,27 @@ def _make_summary_panel(race_config=None, **overrides):
 class TestRaceSummaryPanelCreation:
     """Tests for RaceSummaryPanel initialization."""
 
-    def test_race_summary_panel_has_expected_attributes(self, mock_race_config):
-        """RaceSummaryPanel has expected UI element attributes."""
+    def test_race_summary_panel_init_seeds_label_dict_with_value_keys(self, mock_race_config):
+        """RaceSummaryPanel.__init__ → _create_content populates
+        summary_labels with the data-row entries used by refresh()
+        (faction_value, race_value, gov_value, physical_value,
+        society_value). Pinning these specific keys means deletion of
+        a row in _create_content fails the test, rather than a
+        toothless hasattr() check that can't notice the regression.
+        See race_summary_panel.py:386-... refresh() for the read sites."""
         panel = _make_summary_panel(race_config=mock_race_config)
 
-        # Real __init__ ran (with mocked pygame_gui elements) — every UI
-        # collection attribute is initialized.
-        assert hasattr(panel, 'summary_labels')
-        assert hasattr(panel, 'summary_flag_images')
-        assert hasattr(panel, 'summary_portrait_image')
-        assert hasattr(panel, 'summary_ship_images')
+        # The refresh()-consumed value keys must all be present.
+        for key in (
+            'faction_value', 'race_value', 'gov_value',
+            'physical_value', 'society_value',
+        ):
+            assert key in panel.summary_labels, (
+                f"summary_labels missing '{key}' — refresh() reads this key"
+            )
+        # Image collections are populated to lists/None at construction.
+        assert isinstance(panel.summary_flag_images, list)
+        assert isinstance(panel.summary_ship_images, list)
 
 # =============================================================================
 # Test: Summary Data Formatting

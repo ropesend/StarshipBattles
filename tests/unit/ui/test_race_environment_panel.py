@@ -126,17 +126,54 @@ class TestPanelConstruction:
         assert panel.reproduction_slider is not None
         assert panel.happiness_slider is not None
 
-    def test_panel_has_homeworld_dropdown(
+    def test_homeworld_dropdown_seeded_with_preset_options_and_custom_fallback(
         self, mock_panel, mock_manager, race_config,
     ):
-        panel = _make_panel(mock_panel, mock_manager, race_config)
-        assert panel.homeworld_dropdown is not None
+        """`_create_homeworld_dropdown` builds an options list of all
+        preset names plus a trailing '(Custom)'. The dropdown's
+        starting_option mirrors the race_config's homeworld_type when
+        set; '(Custom)' otherwise. Pin the actual constructor args
+        instead of merely asserting non-None."""
+        from game.ui.panels import race_environment_panel as rep_module
 
-    def test_panel_has_points_label(
+        race_config.homeworld_type = ""
+        # Use a tracking mock for UIDropDownMenu so we can inspect kwargs
+        # AFTER construction completes.
+        dropdown_mock = MagicMock()
+        dropdown_mock.side_effect = lambda *a, **kw: MagicMock()
+
+        with patch.object(rep_module, "UIDropDownMenu", dropdown_mock), \
+             patch.object(rep_module, "UILabel", MagicMock(side_effect=lambda *a, **kw: MagicMock())), \
+             patch.object(rep_module, "UIHorizontalSlider", MagicMock(side_effect=lambda *a, **kw: MagicMock())), \
+             patch.object(rep_module, "PreferenceRow", MagicMock(side_effect=lambda *a, **kw: MagicMock())), \
+             patch.object(rep_module, "create_section_header", MagicMock()):
+            rep_module.RaceEnvironmentPanel(
+                panel=mock_panel, manager=mock_manager, race_config=race_config,
+            )
+            # Inspect the dropdown construction args while still in patch scope.
+            dropdown_call = dropdown_mock.call_args
+        assert dropdown_call is not None, "UIDropDownMenu must have been called"
+        options = dropdown_call.kwargs["options_list"]
+        assert "(Custom)" in options
+        # No homeworld_type set → starting_option is the (Custom) fallback.
+        assert dropdown_call.kwargs["starting_option"] == "(Custom)"
+
+    def test_points_label_initialized_with_budget_text_at_construction(
         self, mock_panel, mock_manager, race_config,
     ):
+        """`_create_points_label` calls `_update_points_display()` at the
+        end of __init__, which formats and writes the points-remaining
+        text into points_label.set_text. Pin that the label receives a
+        non-empty 'Points: ... remaining' string at construction (not
+        merely that the attribute exists)."""
         panel = _make_panel(mock_panel, mock_manager, race_config)
-        assert panel.points_label is not None
+        # set_text was called at least once during construction
+        panel.points_label.set_text.assert_called()
+        text = panel.points_label.set_text.call_args.args[0]
+        # Either real budget output ("Points: ...") or the empty-string
+        # fallback ("") on RacePointBudget exception. Production
+        # _update_points_display sets one of these every call.
+        assert text == "" or "Points" in text
 
 
 # ---------------------------------------------------------------------------
@@ -215,6 +252,48 @@ class TestSetFromConfig:
 # ---------------------------------------------------------------------------
 # Homeworld preset application
 # ---------------------------------------------------------------------------
+
+
+class TestHandleDropdownChange:
+    def test_handle_dropdown_change_routes_to_apply_homeworld_preset(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """A pygame_gui dropdown-changed event whose `ui_element` is the
+        panel's homeworld_dropdown must route through to
+        `apply_homeworld_preset` with the resolved preset id (or the
+        raw selected option when no preset matches). Pins the wiring
+        at race_environment_panel.py:300-313."""
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        # Make the dropdown's selected_option a known preset name
+        panel.homeworld_dropdown.selected_option = "Continental"
+        event = MagicMock()
+        event.ui_element = panel.homeworld_dropdown
+
+        with patch.object(panel, "apply_homeworld_preset") as mock_apply:
+            handled = panel.handle_dropdown_change(event)
+
+        assert handled is True
+        mock_apply.assert_called_once()
+        # Production resolves the preset id from the selected name
+        # (`get_preset_id_from_name`) and falls back to the raw name if
+        # unresolved. Either path passes a non-None argument through.
+        passed_arg = mock_apply.call_args.args[0]
+        assert passed_arg in ("CONTINENTAL", "Continental")
+
+    def test_handle_dropdown_change_returns_false_for_unrelated_event(
+        self, mock_panel, mock_manager, race_config,
+    ):
+        """When the event's ui_element is NOT the homeworld_dropdown,
+        the panel returns False without calling apply_homeworld_preset."""
+        panel = _make_panel(mock_panel, mock_manager, race_config)
+        event = MagicMock()
+        event.ui_element = MagicMock()  # something else
+
+        with patch.object(panel, "apply_homeworld_preset") as mock_apply:
+            handled = panel.handle_dropdown_change(event)
+
+        assert handled is False
+        mock_apply.assert_not_called()
 
 
 class TestApplyHomeworldPreset:

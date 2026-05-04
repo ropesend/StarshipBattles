@@ -15,6 +15,8 @@ from game.ui.panels.empire_treasury_panel import (
     RESOURCE_COL_WIDTH,
     ICON_SIZE,
     ROW_HEIGHT,
+    LEFT_MARGIN,
+    TOP_MARGIN,
 )
 from game.ui.utils.resource_display import RESOURCE_ABBREVIATIONS
 
@@ -409,27 +411,45 @@ class TestPanelConstruction:
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_panel_stores_references(self, mock_image, mock_label, mock_container, mock_header,
-                                      mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
-        """Panel should store all constructor arguments."""
-        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
-
-        assert panel.panel is mock_panel
-        assert panel.ui_manager is mock_ui_manager
-        assert panel.snapshot is sample_snapshot
-        assert panel.resource_icons is mock_resource_icons
+    def test_panel_passes_constructor_args_to_ui_widgets(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Panel forwards `manager` to UIScrollingContainer and `panel` as the
+        scrolling container's parent (i.e., constructor args are not just
+        stored but actually plumbed into the UI tree). Pinning this means
+        a refactor that drops a kwarg fails the test rather than silently
+        breaking layout."""
+        EmpireTreasuryPanel(
+            mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+        )
+        # The scrolling container MUST have been constructed with the
+        # passed-in manager and parent panel as its container.
+        kwargs = mock_container.call_args.kwargs
+        assert kwargs["manager"] is mock_ui_manager
+        assert kwargs["container"] is mock_panel
 
     @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_scroll_container_created(self, mock_image, mock_label, mock_container, mock_header,
-                                       mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
-        """Panel should create a scroll container."""
-        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
-
-        mock_container.assert_called_once()
-        assert panel._scroll_container is not None
+    def test_scroll_container_sized_from_panel_relative_rect_minus_margin(
+        self, mock_image, mock_label, mock_container, mock_header,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Scroll-container rect is derived from the parent panel's
+        get_relative_rect(): width-20, height-20, offset (LEFT_MARGIN, TOP_MARGIN).
+        Pins production's actual layout formula at empire_treasury_panel.py:78-88
+        instead of merely asserting the container is non-None."""
+        # mock_panel fixture sets get_relative_rect -> width=800, height=600.
+        EmpireTreasuryPanel(
+            mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+        )
+        rect = mock_container.call_args.kwargs["relative_rect"]
+        assert rect.x == LEFT_MARGIN
+        assert rect.y == TOP_MARGIN
+        assert rect.width == 800 - 20
+        assert rect.height == 600 - 20
 
 
 # =============================================================================

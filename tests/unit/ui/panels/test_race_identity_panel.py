@@ -304,14 +304,39 @@ class TestFactionAutoGeneration:
 # =============================================================================
 
 class TestUpdateLabels:
-    """Tests for update_labels method (should be no-op for this panel)."""
+    """Tests for update_labels method (should be no-op for this panel).
 
-    def test_update_labels_is_no_op(self):
-        """update_labels does nothing for identity panel (labels are static)."""
+    BUG-NOTE: update_labels exists as a no-op so the cross-panel API contract
+    holds — race_setup_screen/input_handler.py:150,154 calls
+    `_environment_panel.update_labels()` and `_aptitudes_panel.update_labels()`
+    on a per-frame slider-drag basis, and RaceIdentityPanel exposes the same
+    method even though it has no live-updating numeric labels. Removing the
+    method silently would crash the input handler the first time it dispatches
+    a slider-drag event with the identity tab focused.
+    """
+
+    def test_update_labels_is_no_op_returns_none_without_mutating_inputs(self):
+        """update_labels exists, returns None, doesn't raise, and doesn't
+        mutate any text inputs. Pin all three contract obligations rather
+        than just calling the `pass` body."""
         panel = _bypass_init_panel()
+        # Capture pre-call set_text counts for every input.
+        pre_call_counts = {
+            name: getattr(panel, name).set_text.call_count
+            for name in ("race_name_input", "race_name_plural_input",
+                         "leader_name_input", "faction_name_input")
+            if getattr(panel, name, None) is not None
+        }
 
-        # Should not raise
-        panel.update_labels()
+        result = panel.update_labels()
+
+        # Returns None (the explicit `pass` body has no return).
+        assert result is None
+        # No text input was touched (no-op contract).
+        for name, before in pre_call_counts.items():
+            assert getattr(panel, name).set_text.call_count == before, (
+                f"update_labels must not mutate {name}.set_text"
+            )
 
 
 # =============================================================================
