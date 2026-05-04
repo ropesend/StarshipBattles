@@ -14,16 +14,23 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. UIWindow `bypass_init` flag (production-side) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. LLMBackgroundCall completion Event (production-side) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. LLMBackgroundCall completion Event (production-side) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate 14 unblocked PROJ-322 deferrals (test-side) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Documentation pass (`make_ui_widget` → `docs/02_PATTERNS.md`, mark blockers resolved) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Phase 1 complete — Phase 2 in progress
-**Last Action:** Phase 1 complete — `bypass_init` context manager + 3 production-class guards (StrategyModalWindow, RaceSetupScreen, NewGameSetupScreen) landed; all 4 StrategyModalWindow subclasses verified to inherit transitively (no per-class guards needed)
-**Next Action:** Begin Phase 2 Task 2.1 — add `_done_event` to `LLMBackgroundCall.__init__`
+**Active Phase:** Phase 1+2 complete; ready for Phase 3
+**Last Action:** Phase 2 complete — `LLMBackgroundCall._done_event` + `wait(timeout)` public method landed (commit af7328281); 6 polling loops in `test_background.py` migrated to `wait()`. PROJ-322 Phase 4 Task 4.3 annotation updated to RESOLVED. Production unblockers all in place.
+**Next Action:** Begin Phase 3 — migrate the 14 PROJ-322 deferred test files. Recommended starting point: Task 3.4 (RaceSetupScreen reality-check per Decision D-005) since downstream PROJ-325 Phase 3 BLOCKS on its GO/NO-GO outcome.
 **Blockers:** None
+**Phase 1 commit:** 9ae5c4959
+**Phase 2 commit:** af7328281
+**Handoff context for Phase 3 agent:**
+- `bypass_init(Cls)` context manager is at `tests/fixtures/ui_widget_factory.py`. Import as `from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget`.
+- Guard fires correctly for the StrategyModalWindow subclass chain — verified manually that construction proceeds past `super().__init__()` without a real pygame display. However, subclass post-super work that calls UIWindow methods (e.g., `self.get_container()`, `self.window_element_container`) will fail unless the test explicitly mocks those methods on the instance. Pattern: `make_ui_widget(Cls, ...)` followed by `obj.get_container = MagicMock()` etc. as needed by the production class's post-super work.
+- The 4 StrategyModalWindow subclasses (FleetReportWindow, OrdersWindow, TransferDialog, BuildQueueListWindow) inherit the guard transitively — no per-class guards needed.
+- `LLMBackgroundCall.wait(timeout)` returns `True` on terminal-state, `False` on timeout. Idempotent. Safe to call before `start()`.
 
 ## Overview
 
