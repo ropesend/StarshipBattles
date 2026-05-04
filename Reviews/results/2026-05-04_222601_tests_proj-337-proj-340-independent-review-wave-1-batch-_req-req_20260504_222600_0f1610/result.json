@@ -1,0 +1,15 @@
+{
+  "request_id": "req_20260504_222600_0f1610",
+  "review_dir": "Reviews/results/2026-05-04_222601_tests_proj-337-proj-340-independent-review-wave-1-batch-_req-req_20260504_222600_0f1610",
+  "report_path": "Reviews/results/2026-05-04_222601_tests_proj-337-proj-340-independent-review-wave-1-batch-_req-req_20260504_222600_0f1610/report.md",
+  "findings": {
+    "critical": 0,
+    "major": 3,
+    "minor": 3,
+    "info": 0,
+    "observation": 3
+  },
+  "completed_at": "2026-05-04T22:46:00Z",
+  "parent_request_id": null,
+  "verification": {}
+}

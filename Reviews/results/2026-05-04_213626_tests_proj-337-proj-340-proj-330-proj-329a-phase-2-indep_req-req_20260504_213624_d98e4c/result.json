@@ -1,0 +1,5 @@
+{
+  "request_id": "req_20260504_213624_d98e4c",
+  "error": "cannot reach C:\\Users\\rossr\\.claude\\plans\\noble-stirring-galaxy.md: it resolves outside the project root (cwd=C:\\Developer\\StarshipBattles). The OpenCode worker can only review files inside the repository. Ask the requester to copy the file into the repo and resubmit.",
+  "completed_at": "2026-05-04T21:37:49Z"
+}
