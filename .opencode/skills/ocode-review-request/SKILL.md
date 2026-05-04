@@ -54,7 +54,9 @@ paths in the scope resolve against that worktree, not against `main`.
   `focus_phase`, `review_mode`, `coverage_set`. Mention the focus_phase
   and coverage_set in your report. If `review_mode` is `lightweight`,
   scope your scrutiny down per the request's instructions (small phase,
-  correctness + regression risk only; skip stylistic findings).
+  correctness + regression risk only; explicitly ban style-only or
+  cosmetic findings — only report items that create a correctness or
+  integration risk).
 
 When these blocks are present, the report's findings MUST be emitted with
 **stable IDs and fingerprints** so 03c's findings ledger can dedupe
@@ -183,6 +185,11 @@ Full code review using the review swarm protocol:
    **Context:** {from request file}
    ```
 
+   The final `report.md` MUST state: review mode, scope, checkout SHA
+   (when present in Coverage block), parent request ID (if present),
+   and any limitations of the review (e.g., files partially read due to
+   context constraints, agents that failed). This is required for every report.
+
 4. **Determine agent configuration** based on scope size:
    - 1-10 files → 3-4 agents (Code Quality, Architecture, Test Coverage)
    - 10-50 files → 5-7 agents (add Security, Error Handling, Dead Code)
@@ -295,7 +302,8 @@ directory. If a specific path was provided by the daemon, use that exact path:
 
 When the request has a Coverage block, also emit a `findings_by_id`
 section so the project's findings ledger can dedupe and track each
-finding's lifecycle across cumulative reviews:
+finding's lifecycle across cumulative reviews. `findings_by_id` is
+REQUIRED (emit as `{}` even for zero-finding reviews — never omit it):
 
 ```json
 {
@@ -355,6 +363,16 @@ If the review fails at any point:
 3. **Never write Status directly** — the daemon owns the lifecycle. The
    skill always communicates failure through the `error` key in
    `result.json`, never through the request file's frontmatter.
+
+## Failure-Mode Checklist
+
+When something goes wrong, check these before reporting:
+- Missing parent request → exit with error JSON
+- Invalid scope path (outside repo) → exit with out-of-repo error JSON (Step 1.25)
+- Missing result path → create directory structure, proceed
+- Partial agent failure → retry once with fewer agents, write partial findings
+- Malformed result JSON → validate against schema, report parse error
+- Parent not in completed/ → exit with "parent request not yet completed" error
 
 If `create_review.py` fails (interactive mode only):
 - Fall back to creating the directory structure manually

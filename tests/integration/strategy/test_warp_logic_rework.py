@@ -1,5 +1,7 @@
 import pytest
 import math
+from unittest.mock import patch
+
 from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.stars import Star
@@ -39,9 +41,11 @@ class TestWarpLogicRework:
         dummy_1 = StarSystem("Dummy1", HexCoord(0, 50)) # 50 hexes away from small
         dummy_2 = StarSystem("Dummy2", HexCoord(100, 50)) # 50 hexes away from large
         
-        # Link 
-        galaxy.create_vars_link(small_sys, dummy_1)
-        galaxy.create_vars_link(large_sys, dummy_2)
+        # Link with deterministic jitter so the scaling assertion is about
+        # star radius, not the process-wide RNG state inherited from prior tests.
+        with patch("game.strategy.data.galaxy_warp_generator.random.uniform", return_value=0.0):
+            galaxy.create_vars_link(small_sys, dummy_1)
+            galaxy.create_vars_link(large_sys, dummy_2)
         
         # Measure Small Star Warp Dist
         assert len(small_sys.warp_points) == 1

@@ -1,14 +1,23 @@
 ---
 name: ocode-audit-shrink
-description: Run a comprehensive code shrinkage audit. Combines deterministic tools (vulture, radon, clone detector, orphans, dependency graph, LOC tracking) with 6 agents for deep review of all 4 shards, cross-shard duplication, and dead code validation. Produces a unified report with shrinkage estimates. Production code only.
+description: Run a comprehensive code shrinkage audit. Combines deterministic tools (vulture, radon, clone detector, orphans, dependency graph, LOC tracking) with 3 agents for cross-shard duplication, rotating in-shard deep review (1 shard per run, 100% coverage every 4 runs), and dead code validation. Produces a unified report with shrinkage estimates. Production code only.
 argument-hint: [optional: --skip-phase1 to reuse existing raw results]
 ---
 
 # Code Shrinkage Audit
 
-Run a two-phase audit of the production codebase to find dead code, near-duplicate code, and complexity hotspots. Produces a unified report with estimated LOC savings and a prioritized cleanup order.
+Run a two-phase audit of the production codebase to find dead code, near-duplicate code, and complexity hotspots. Combines deterministic tools (vulture, radon, clone detector) with 3 LLM agents: cross-shard duplication hunter, in-shard deep reviewer (1 shard per run, rotating), and dead code validator. Produces a unified report with estimated LOC savings and a prioritized cleanup order.
 
 Does NOT change any code. Targets `game/` only (not tests).
+
+## Pre-Flight Safeguards
+
+Before starting any work:
+1. **Run from repo root.** All paths are relative to the repository root.
+2. **Check `git status --short`** and do NOT revert unrelated changes.
+3. **Never read `docs/_ignore/`.** It is not documentation.
+4. **Write only under `Reviews/results/`** and explicitly named `AgentCoordination/` paths.
+5. **This is a read-only audit.** Do not edit source code, test code, or docs.
 
 ## Execution
 
@@ -55,7 +64,7 @@ The script creates `REVIEW_DIR/raw/` with these outputs against `game/`:
 
 Read these files into memory for use in agent prompts:
 
-1. Read `REVIEW_DIR/raw/manifest.json` — extract ALL 4 shard file lists from `shards.01.files`, `shards.02.files`, `shards.03.files`, `shards.04.files` (all 4 shards are deep-reviewed every cycle)
+1. Read `REVIEW_DIR/raw/manifest.json` — extract the 4 shard file lists from `shards.01.files`, `shards.02.files`, `shards.03.files`, `shards.04.files` (the in-shard deep review agent rotates through shards across runs, reviewing 1 shard per cycle for 100% LLM coverage every 4 runs)
 2. Read `REVIEW_DIR/raw/clones.json` — clone detector clusters (get the full JSON content)
 3. Read `REVIEW_DIR/raw/vulture_100.txt` — dead code candidates (get the full text)
 4. Read `REVIEW_DIR/raw/vulture_80.txt` — high-likelihood dead code (get the full text)
@@ -64,17 +73,17 @@ Read these files into memory for use in agent prompts:
 
 **Do NOT use orphans.txt or dead_deps.txt.** These tools are misconfigured/noisy (orphan detection uses wrong base path; dead_deps includes Projects/ and .agents/ which are not production code). Vulture output is the only reliable deterministic dead-code signal. All other dead code discovery must come from manual grep verification by agents.
 
-### Step 3: Launch 6 Agents in Parallel
+### Step 3: Launch 3 Agents in Parallel
 
 Create the findings directory:
 ```bash
 mkdir -p REVIEW_DIR/findings
 ```
 
-Launch **6 agents** in parallel using the Task tool with `subagent_type: general`:
+Launch **3 agents** in parallel using the Task tool with `subagent_type: general`:
 - **1 cross-shard duplication agent** (scans all of game/)
-- **4 in-shard deep review agents** (one per shard: 01, 02, 03, 04)
-- **1 dead code validator agent** (validates vulture/dead_deps/orphans)
+- **1 in-shard deep review agent** (reviews 1 shard per run; rotates through manifest shard IDs `01 → 02 → 03 → 04` across runs for 100% LLM coverage every 4 runs)
+- **1 dead code validator agent** (validates vulture findings against tests/docs/data)
 
 Each agent receives EXACTLY the prompt template below with placeholder text replaced by actual data.
 
@@ -167,9 +176,9 @@ Use EXACTLY this structure:
 [Ordered by impact/effort ratio]
 ```
 
-#### Agents 2a–2d: In-Shard Deep Review (4 agents — one per shard)
+#### Agent 2: In-Shard Deep Review (1 agent — rotating shard per run)
 
-Launch **4 agents** using the template below — one for each shard: 01, 02, 03, 04. Replace `{shard_id}`, `{shard_label}`, and `{shard_files}` with the values from manifest.json for each shard. All 4 agents write to different output files: `deep_review_01.md`, `deep_review_02.md`, `deep_review_03.md`, `deep_review_04.md`.
+Launch **1 agent** for deep review. The manifest randomly shuffles all `game/*.py` files into 4 balanced shards (`Shard 01` through `Shard 04`). Rotate through shard IDs `01 → 02 → 03 → 04` across runs (check `shrink_tracker.json` history to pick the next shard in rotation). All 4 shards get LLM deep review over a 4-run cycle.
 
 ```
 # In-Shard Deep Review Agent
@@ -221,16 +230,34 @@ For EACH file in your shard:
 - Test fixtures or test-only code
 - Code already marked for deprecation
 
+## Safe Deletion Standard
+A symbol is safe to delete only when ALL of these are clear:
+- No production code refs in `game/`
+- No test code refs in `tests/`
+- No doc refs in `docs/`
+- No data-file refs in `data/*.json`
+- No registry/string-dispatch refs (symbol name appears in code strings or registry dicts)
+
+## Vulture Blind Spots (do NOT trust vulture on these)
+- Protocol/ABC classes used in isinstance() or type annotations
+- pygame callbacks and event handlers
+- Registry-dispatched classes (string-keyed in dicts/JSON)
+- `__all__` exports
+- Data-driven ability/modifier names in JSON configs
+- `__init__.py` re-exports
+- Command handler classes registered via `create_default_registry()`
+Always manually grep for the symbol name in `game/` before confirming vulture.
+
 ## Severity Guide
 - CRITICAL: True dead code — no references in production, tests, OR docs. Safe to delete.
-- PRODUCT_DECISION: Appears dead in production, but tests, docs, or data files reference it. Needs product decision: wire it or remove all references.
+- PRODUCT_DECISION: Appears dead in production, but tests, docs, or data files reference it. Default to this status for any code that is unwired but referenced — do NOT mark as CRITICAL. Needs product decision: wire it or remove all references.
 - MAJOR: Significant internal duplication or fragmentation (>30 lines)
 - MINOR: Small dead code (individual imports, short dead functions)
 - INFO: Style suggestions that would reduce LOC without changing behavior
 
 ## Output
 You MUST use the Write tool to save your report to:
-{REVIEW_DIR}/findings/deep_review_{shard_id}.md
+{REVIEW_DIR}/findings/deep_review.md
 
 # Deep Review: {shard_label}
 ## Summary
@@ -375,13 +402,10 @@ Items with zero production callers but referenced by tests or docs:
 
 ### Step 4: Verify Agent Outputs
 
-After all 6 agents complete, check that these 6 files exist and are non-empty:
+After all 3 agents complete, check that these 3 files exist and are non-empty:
 
 - `REVIEW_DIR/findings/duplication_cross_shard.md`
-- `REVIEW_DIR/findings/deep_review_01.md`
-- `REVIEW_DIR/findings/deep_review_02.md`
-- `REVIEW_DIR/findings/deep_review_03.md`
-- `REVIEW_DIR/findings/deep_review_04.md`
+- `REVIEW_DIR/findings/deep_review.md`
 - `REVIEW_DIR/findings/dead_code_validation.md`
 
 If any agent failed, note it in the report but continue with available data.
@@ -394,11 +418,8 @@ Launch **1 verification agent** to cross-check all CRITICAL dead-code findings a
 # Dead Code Cross-Verifier
 
 Read these files:
-1. REVIEW_DIR/findings/deep_review_01.md
-2. REVIEW_DIR/findings/deep_review_02.md
-3. REVIEW_DIR/findings/deep_review_03.md
-4. REVIEW_DIR/findings/deep_review_04.md
-5. REVIEW_DIR/findings/dead_code_validation.md
+1. REVIEW_DIR/findings/deep_review.md
+2. REVIEW_DIR/findings/dead_code_validation.md
 
 For EVERY finding marked CRITICAL (should delete code):
 
@@ -440,15 +461,15 @@ Read all agent reports and the verification report. Write `REVIEW_DIR/report.md`
 - Date, review directory
 - Total findings across all sources
 - Trend comparison to previous run (use shrink_tracker.py)
-- All 4 shards deep-reviewed every cycle
+- Deterministic coverage: all production files, every run. LLM deep review: 1 rotating shard per run (100% every 4 runs).
 
 **2. Coverage Status**
 | Shard | Files | LOC | Deep Review File | Status |
 |-------|-------|-----|-----------------|--------|
-| 01 | [N] | [N] | `deep_review_01.md` | ✓ |
-| 02 | [N] | [N] | `deep_review_02.md` | ✓ |
-| 03 | [N] | [N] | `deep_review_03.md` | ✓ |
-| 04 | [N] | [N] | `deep_review_04.md` | ✓ |
+| Reviewed this run | [N] | [N] | `deep_review.md` | ✓ |
+| Next run | [label] | — | — | pending in rotation |
+
+100% LLM deep-review coverage is achieved every 4 runs via manifest shard rotation (01 → 02 → 03 → 04).
 
 **3. Dead Code Inventory**
 Aggregate Agent 3's confirmed dead code by tier with LOC estimates.
@@ -466,8 +487,7 @@ Aggregate Agent 1's findings, grouped by severity.
 From raw/radon.json, all functions with CC >= 20.
 
 **6. In-Shard Deep Review Summary**
-From all 4 deep review agent reports, summarize findings per shard + coverage verification.
-Separate dead-code from product-decision findings.
+From the deep review agent report, summarize findings for the shard reviewed this run + note which shards are pending in the rotation cycle.
 
 **7. Shrinkage Scorecard**
 | Category | Estimated Reclaimable LOC | Effort | Risk |
@@ -477,12 +497,15 @@ Separate dead-code from product-decision findings.
 | Dead imports | [N] | Simple | Safe |
 | Duplicate consolidation | [N] | Medium-High | Needs design |
 | Complexity reduction | [N] | Medium-High | Needs care |
-| In-shard cleanup (Shard 01) | [N] | Low-Medium | Safe |
-| In-shard cleanup (Shard 02) | [N] | Low-Medium | Safe |
-| In-shard cleanup (Shard 03) | [N] | Low-Medium | Safe |
-| In-shard cleanup (Shard 04) | [N] | Low-Medium | Safe |
-| Product decision items (not counted yet) | [N] | — | Needs decision |
+| In-shard cleanup (shard reviewed this run) | [N] | Low-Medium | Safe |
 | **Total (safe items only)** | **[N]** | | |
+
+**7b. Product Decision Required (do not count toward safe totals)**
+Items that appear dead in production but are referenced by tests, docs, or data files:
+| Item | File | LOC | Ref Type | Source | Recommendation |
+|------|------|-----|----------|--------|----------------|
+
+These items must NOT be counted in the safe-shrinkage total. They inflate shrinkage estimates until a product decision is made. Separate them clearly so the shrinkage scorecard is actionable without waiting for decisions.
 
 **8. Prioritized Cleanup Plan**
 Top 10 items ordered by impact/effort. Only include verified-safe items here.
@@ -507,7 +530,7 @@ with open("{REVIEW_DIR}/raw/manifest.json") as f:
 run_data = {
     "date": "{REVIEW_DIR}".split("/")[1].split("_")[0],
     "review_dir": "{REVIEW_DIR}",
-    "deep_review_shards": ["01", "02", "03", "04"],
+    "deep_review_shard": "{shard_id}",  # shard reviewed this run (rotates 01→02→03→04)
     "seed": manifest["seed"],
     "production_loc": ...,  # from loc_baseline.txt
     "dead_code_files": ...,  # count from Agent 3 Tier 1
@@ -521,11 +544,17 @@ run_data = {
 shrink_tracker.add_run("Reviews/results", run_data)
 ```
 
-### Step 7: Present to User
+### Step 7: Log Skill Usage
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-audit-shrink
+```
+
+### Step 8: Present to User
 
 Show the user:
 1. Executive summary (3-4 sentences)
-2. Shrinkage scorecard totals (all 4 shards covered)
+2. Shrinkage scorecard totals (deterministic: full coverage; LLM deep review: 1 rotating shard this run)
 3. Trend arrow (improving / worsening / stable / first run)
 4. Top 3 priority cleanup items
 5. Path to the full report

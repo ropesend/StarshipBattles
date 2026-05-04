@@ -35,6 +35,8 @@ from Tools.agent_coordination.inventory_agent_surfaces import (  # noqa: E402
 from Tools.agent_coordination import sanitize_claude_settings as sanitizer  # noqa: E402
 
 VALIDATOR_SCHEMA_VERSION = 1
+TEST_BASELINE_SCHEMA_VERSION = 2
+TEST_BASELINE_VERIFICATION_SCHEMA_VERSION = 1
 
 ALLOWED_REINFORCEMENT_TAGS = frozenset({
     "tdd",
@@ -276,7 +278,7 @@ def check_test_baseline_validity(repo_root: Path) -> list[Finding]:
             message="`schema_version` field missing from test_baseline.json.",
             path="AgentCoordination/generated/test_baseline.json",
         ))
-    elif data.get("schema_version") != 1:
+    elif data.get("schema_version") != TEST_BASELINE_SCHEMA_VERSION:
         findings.append(Finding(
             rule="baseline.schema_version_unknown", severity="fail",
             message=f"Unknown baseline schema_version: {data.get('schema_version')!r}.",
@@ -284,12 +286,25 @@ def check_test_baseline_validity(repo_root: Path) -> list[Finding]:
         ))
 
     required_fields = ("command", "total", "passed", "failed", "errors", "skipped",
-                       "baseline_changed_at", "verified_at", "git_sha")
+                       "baseline_changed_at")
     for field_name in required_fields:
         if field_name not in data:
             findings.append(Finding(
                 rule="baseline.required_field_missing", severity="fail",
                 message=f"Required field {field_name!r} missing from test_baseline.json.",
+                path="AgentCoordination/generated/test_baseline.json",
+            ))
+
+    for field_name in ("verified_at", "git_sha"):
+        if field_name in data:
+            findings.append(Finding(
+                rule="baseline.volatile_field_in_canonical",
+                severity="fail",
+                message=(
+                    f"{field_name!r} belongs in "
+                    "AgentCoordination/generated/test_baseline/by_install/<install_id>.json, "
+                    "not in the canonical baseline."
+                ),
                 path="AgentCoordination/generated/test_baseline.json",
             ))
 
@@ -323,6 +338,140 @@ def check_test_baseline_validity(repo_root: Path) -> list[Finding]:
             path="AgentCoordination/generated/test_baseline.json",
         ))
 
+    return findings
+
+
+def check_test_baseline_verification_shape(repo_root: Path) -> list[Finding]:
+    by_install_dir = repo_root / "AgentCoordination" / "generated" / "test_baseline" / "by_install"
+    if not by_install_dir.is_dir():
+        return []
+
+    findings: list[Finding] = []
+    required_fields = (
+        "schema_version", "install_id", "command", "total", "passed",
+        "failed", "errors", "skipped", "verified_at", "git_sha",
+    )
+    for path in sorted(by_install_dir.glob("*.json")):
+        rel = path.relative_to(repo_root).as_posix()
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as exc:
+            findings.append(Finding(
+                rule="baseline_verification.unparsable",
+                severity="fail",
+                message=f"Could not parse test baseline verification file: {exc}",
+                path=rel,
+            ))
+            continue
+        if not isinstance(data, dict):
+            findings.append(Finding(
+                rule="baseline_verification.invalid_shape",
+                severity="fail",
+                message="Test baseline verification file must contain a JSON object.",
+                path=rel,
+            ))
+            continue
+        for field_name in required_fields:
+            if field_name not in data:
+                findings.append(Finding(
+                    rule="baseline_verification.required_field_missing",
+                    severity="fail",
+                    message=f"Required field {field_name!r} missing from test baseline verification.",
+                    path=rel,
+                ))
+        if data.get("schema_version") != TEST_BASELINE_VERIFICATION_SCHEMA_VERSION:
+            findings.append(Finding(
+                rule="baseline_verification.schema_version_unknown",
+                severity="fail",
+                message=f"Unknown verification schema_version: {data.get('schema_version')!r}.",
+                path=rel,
+            ))
+        install_id = data.get("install_id")
+        if not isinstance(install_id, str) or not install_id:
+            findings.append(Finding(
+                rule="baseline_verification.missing_install_id_field",
+                severity="fail",
+                message="`install_id` field is missing or empty.",
+                path=rel,
+            ))
+
+        total = data.get("total", 0)
+        passed = data.get("passed", 0)
+        failed = data.get("failed", 0)
+        errors = data.get("errors", 0)
+        skipped = data.get("skipped", 0)
+        try:
+            if int(passed) + int(failed) + int(errors) + int(skipped) != int(total):
+                findings.append(Finding(
+                    rule="baseline_verification.counts_do_not_sum",
+                    severity="fail",
+                    message=(
+                        f"passed+failed+errors+skipped ({passed}+{failed}+{errors}+{skipped}) "
+                        f"!= total ({total})."
+                    ),
+                    path=rel,
+                ))
+        except (TypeError, ValueError):
+            findings.append(Finding(
+                rule="baseline_verification.invalid_count_types",
+                severity="fail",
+                message="One or more count fields in test baseline verification is not an integer.",
+                path=rel,
+            ))
+    return findings
+
+
+TEST_BASELINE_BY_INSTALL_PREFIX = "AgentCoordination/generated/test_baseline/by_install/"
+
+
+def check_test_baseline_verification_ownership(repo_root: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    by_install_dir = repo_root / "AgentCoordination" / "generated" / "test_baseline" / "by_install"
+
+    if by_install_dir.is_dir():
+        for path in sorted(by_install_dir.glob("*.json")):
+            rel = path.relative_to(repo_root).as_posix()
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            if not isinstance(data, dict):
+                continue
+            content_id = data.get("install_id")
+            filename_id = path.stem
+            if isinstance(content_id, str) and content_id and content_id != filename_id:
+                findings.append(Finding(
+                    rule="baseline_verification.filename_install_id_mismatch",
+                    severity="fail",
+                    message=(
+                        f"Verification file {rel} has filename install_id "
+                        f"{filename_id!r} but content install_id {content_id!r}."
+                    ),
+                    path=rel,
+                ))
+
+    local_id = _local_install_id(repo_root)
+    if local_id is None:
+        return findings
+    staged = _staged_files_from_git(repo_root)
+    if staged is None:
+        return findings
+    for rel in sorted(staged):
+        if not rel.startswith(TEST_BASELINE_BY_INSTALL_PREFIX):
+            continue
+        filename_id = Path(rel).stem
+        if filename_id == local_id:
+            continue
+        findings.append(Finding(
+            rule="baseline_verification.foreign_install_modified",
+            severity="fail",
+            message=(
+                f"Refusing staged change to {rel}: this verification file belongs "
+                f"to install {filename_id!r}, but this machine's install_id "
+                f"is {local_id!r}."
+            ),
+            path=rel,
+        ))
     return findings
 
 
@@ -1490,6 +1639,8 @@ CHECKS = (
     ("agent_surface_policy", check_agent_surface_policy),
     ("inventory_freshness", check_inventory_freshness),
     ("test_baseline_validity", check_test_baseline_validity),
+    ("test_baseline_verification_shape", check_test_baseline_verification_shape),
+    ("test_baseline_verification_ownership", check_test_baseline_verification_ownership),
     ("prefix_compliance", check_prefix_compliance),
     ("agent_skills_spec", check_agent_skills_spec),
     ("cross_agent_references", check_cross_agent_references),

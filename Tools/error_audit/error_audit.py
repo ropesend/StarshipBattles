@@ -222,10 +222,6 @@ def _discover_py_files(root: str) -> list[str]:
 
 def _generate_manifest(files: list[str], output_dir: str) -> dict:
     seed = f"error-{datetime.now().strftime('%Y-%m-%d')}"
-    try:
-        from Tools.audit_shrink.manifest import _shuffle_files, _greedy_balance
-    except ImportError:
-        return {"error": "manifest module not importable"}
 
     rng = __import__("random").Random(seed)
     shuffled = list(files)

@@ -271,7 +271,7 @@ class TestFullTurnIntegration:
             assert call == pytest.approx(0.25, rel=1e-6)
         assert sum(consume_calls) == pytest.approx(25.0, rel=1e-6)
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_per_turn_and_movement_resources_both_consumed(self, mock_path, fresh_registries):
         """Verify both per-turn and movement resources are consumed during a turn."""
         engine = TurnEngine(registries=fresh_registries)
@@ -315,7 +315,7 @@ class TestFullTurnIntegration:
 class TestMovementGating:
     """Group 5.5: Movement Gating Tests"""
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_movement_requires_generic_resources(self, mock_path, fresh_registries):
         """Verify movement is blocked when has_resources_for_movement returns False."""
         engine = TurnEngine(registries=fresh_registries)
@@ -342,7 +342,7 @@ class TestMovementGating:
         # Orders should be cleared (stranded)
         assert len(fleet.orders) == 0
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_generic_movement_resource_consumption(self, mock_path, fresh_registries):
         """Verify consume_movement_resources is called for each hex moved."""
         engine = TurnEngine(registries=fresh_registries)
@@ -367,7 +367,7 @@ class TestMovementGating:
         for call in fleet.resources.consume_movement_resources.call_args_list:
             assert call[0] == (1,)
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_warp_uses_generic_methods(self, mock_path, fresh_registries):
         """Verify warp uses has_resources_for_warp and consume_warp_resources."""
         engine = TurnEngine(registries=fresh_registries)

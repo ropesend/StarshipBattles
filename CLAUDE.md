@@ -112,6 +112,9 @@ source of truth. Do not copy architecture summaries into this adapter.
   the same line or immediately above.
 - Prefer existing registries, services, protocols, and helpers over new local
   mechanisms.
+- Agent skills, protocols, prompts, and coordination scripts must discover the
+  repo root at runtime. Do not hardcode checkout-specific absolute paths such as
+  `c:\Dev\Starship Battles`; use repo-relative paths or runtime root discovery.
 - Keep code and docs consistent. If code and docs disagree, stop and surface
   the discrepancy instead of silently choosing one.
 

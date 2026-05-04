@@ -10,6 +10,15 @@ Run a comprehensive audit of pattern adherence across the production codebase. V
 
 Does NOT change any code. Targets `game/` only (not tests).
 
+## Pre-Flight Safeguards
+
+Before starting any work:
+1. **Run from repo root.** All paths are relative to the repository root.
+2. **Check `git status --short`** and do NOT revert unrelated changes.
+3. **Never read `docs/_ignore/`.** It is not documentation.
+4. **Write only under `Reviews/results/`** and explicitly named `AgentCoordination/` paths.
+5. **This is a read-only audit.** Do not edit source code, test code, or docs.
+
 ## Execution
 
 This skill is a single-command workflow. The user loads it and you handle everything.
@@ -60,18 +69,7 @@ Read these files into memory:
 4. Read `REVIEW_DIR/raw/protocol_registry.json`
 5. Read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
 
-The docs document **31 patterns**. These are your reference for evaluating adherence:
-- #1 ApplicationContext (DI), #2 Protocol+TypeGuard, #3 Registry DI
-- #4 Registry Pattern, #5 Facade/Delegate, #6 CQRS-lite
-- #7 Strategy Pattern, #8 MVVM, #9 Template Method
-- #10 Event Bus, #11 Observer, #12 Configuration Classes
-- #13 Command Pattern, #14 Factory Method, #15 Abstract Factory
-- #16 Builder, #17 Serializable Protocol, #18 Per-Battle RNG
-- #19 Error Boundary, #20 State Machine, #21 Screen State Machine
-- #22 Adapter, #23 Composite, #24 Decorator
-- #25 Chain of Responsibility, #26 Mediator, #27 Memento
-- #28 Visitor, #29 Universal Ability Source, #30 Registrar Close-Callback
-- #31 Strategy Modal Window
+The docs document **31 patterns**. Read the Table of Contents in `docs/02_PATTERNS.md` to get the current pattern list at runtime — do NOT use a manually copied enumeration. The canonical ToC headings (as of the doc's last-verified date) define the active pattern set. When evaluating pattern adherence, reference patterns by their doc heading number and name verbatim.
 
 ### Step 3: Launch 6 Agents in Parallel
 
@@ -121,12 +119,30 @@ For EACH file in your shard:
      returning data?
    - **Protocol bypass (#2):** Is code using isinstance() checks against
      concrete implementations instead of Protocol TypeGuard functions?
+   - **CommandHandlerRegistry bypass (#7):** Are strategy commands dispatched
+     via if/elif chains instead of the registry's `dispatch()`? Use the live
+     pattern doc's named API surface; current example: `CommandHandlerRegistry.dispatch()`.
+   - **Ability aggregation bypass (#14):** Is two-phase aggregation reimplemented
+     locally? Use the pattern doc's shared function; current example: `_aggregate_ability_groups()`.
+   - **Scope-Driven Team Routing bypass (#25):** Is scope routing duplicated
+     locally instead of using the registry? Use the pattern doc's constants
+     and helpers; current examples: `OPPONENT_SCOPES`, `_route_team_ids`.
+   - **Ability-Stat Registry bypass (#26):** Are `ModifierEntry` objects
+     constructed by hand? Use the pattern doc's entry point; current example:
+     `emit_entries_for_ability()`.
+   - **Strategy Modal Window (#31) vs superseded #30:** New strategy-modal
+     windows must subclass `StrategyModalWindow`. Flag windows implementing
+     manual close-callback tracking when #31 is the current contract.
+   - For ALL bypass checks: the pattern doc's named helpers/APIs are the
+     single source of truth. The examples above are current as of the docs'
+     last-verified date; always verify against the live doc.
 4. **Check naming collisions:**
    - Two distinct classes/functions with the same name in different layers
    - Example: EventBus appears in both game/ui/screens/builder/ and game/core/
 5. **Check Configuration class conformance (#12):**
    - Config classes using direct json.load instead of json_utils
-   - Config classes that should be frozen dataclasses but aren't
+   - Config classes incorrectly using @dataclass — core config classes in `game/core/config.py` are plain classes per Pattern #12, not dataclasses
+   - JSON-backed strategy configs using the documented `DEFAULT_*` dict + `_load_from_json()` pattern
 6. **Check new patterns not yet documented:**
    - If you observe a recurring pattern that isn't in docs/02_PATTERNS.md,
      flag it as "undocumented pattern" so docs can be updated

@@ -161,7 +161,7 @@ def test_agent_surface_policy_passes_on_valid_minimal_policy(tmp_path: Path) -> 
 
 def _good_baseline() -> dict:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "command": "python Tools/test_sharded/test_sharded.py",
         "total": 16063,
         "passed": 16060,
@@ -169,8 +169,6 @@ def _good_baseline() -> dict:
         "errors": 0,
         "skipped": 3,
         "baseline_changed_at": "2026-04-29T00:00:00Z",
-        "verified_at": "2026-04-29T00:00:00Z",
-        "git_sha": "abc1234",
     }
 
 
@@ -210,6 +208,15 @@ def test_baseline_validity_fails_on_implausibly_low_total(tmp_path: Path) -> Non
     _make_repo(tmp_path, baseline=bad)
     findings = validator.check_test_baseline_validity(tmp_path)
     assert any(f.rule == "baseline.implausible_count" for f in findings)
+
+
+def test_baseline_validity_fails_when_canonical_contains_volatile_fields(tmp_path: Path) -> None:
+    bad = _good_baseline()
+    bad["verified_at"] = "2026-04-29T00:00:00Z"
+    bad["git_sha"] = "abc1234"
+    _make_repo(tmp_path, baseline=bad)
+    findings = validator.check_test_baseline_validity(tmp_path)
+    assert any(f.rule == "baseline.volatile_field_in_canonical" for f in findings)
 
 
 # ---------------------------------------------------------------------------
@@ -1076,6 +1083,106 @@ def test_usage_counter_ownership_ignores_unstaged_foreign_file(tmp_path: Path) -
 
     findings = validator.check_usage_counter_ownership(tmp_path)
     assert not any(f.rule == "usage.foreign_install_modified" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Per-install test baseline verification
+# ---------------------------------------------------------------------------
+
+
+def _write_baseline_verification(
+    repo_root: Path,
+    filename_id: str,
+    content_id: str,
+    *,
+    total: int = 16063,
+    passed: int = 16060,
+    failed: int = 0,
+    errors: int = 0,
+    skipped: int = 3,
+) -> Path:
+    by_install = repo_root / "AgentCoordination" / "generated" / "test_baseline" / "by_install"
+    by_install.mkdir(parents=True, exist_ok=True)
+    file_path = by_install / f"{filename_id}.json"
+    file_path.write_text(
+        json.dumps({
+            "schema_version": 1,
+            "install_id": content_id,
+            "command": "python Tools/test_sharded/test_sharded.py",
+            "total": total,
+            "passed": passed,
+            "failed": failed,
+            "errors": errors,
+            "skipped": skipped,
+            "verified_at": "2026-05-02T00:00:00Z",
+            "git_sha": "abc1234",
+        }),
+        encoding="utf-8",
+    )
+    return file_path
+
+
+def test_baseline_verification_shape_passes_when_no_files(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    findings = validator.check_test_baseline_verification_shape(tmp_path)
+    assert findings == []
+
+
+def test_baseline_verification_shape_passes_on_valid_file(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _write_baseline_verification(tmp_path, filename_id="abc123", content_id="abc123")
+    findings = validator.check_test_baseline_verification_shape(tmp_path)
+    assert findings == []
+
+
+def test_baseline_verification_shape_fails_when_counts_do_not_add_up(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _write_baseline_verification(tmp_path, filename_id="abc123", content_id="abc123", passed=1)
+    findings = validator.check_test_baseline_verification_shape(tmp_path)
+    assert any(f.rule == "baseline_verification.counts_do_not_sum" for f in findings)
+
+
+def test_baseline_verification_ownership_fails_on_filename_content_mismatch(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _write_baseline_verification(tmp_path, filename_id="abc123", content_id="xyz789")
+    findings = validator.check_test_baseline_verification_ownership(tmp_path)
+    assert any(
+        f.rule == "baseline_verification.filename_install_id_mismatch"
+        and f.severity == "fail"
+        for f in findings
+    )
+
+
+def test_baseline_verification_ownership_fails_on_foreign_install_modification(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _git_init(tmp_path)
+    _write_local_install_id(tmp_path, "self-install")
+    _write_baseline_verification(tmp_path, filename_id="other-install", content_id="other-install")
+    subprocess.run(
+        ["git", "add", "AgentCoordination/generated/test_baseline/by_install/other-install.json"],
+        cwd=tmp_path, check=True, capture_output=True,
+    )
+
+    findings = validator.check_test_baseline_verification_ownership(tmp_path)
+    assert any(
+        f.rule == "baseline_verification.foreign_install_modified"
+        and f.severity == "fail"
+        for f in findings
+    )
+
+
+def test_baseline_verification_ownership_allows_local_install_modification(tmp_path: Path) -> None:
+    _make_repo(tmp_path)
+    _git_init(tmp_path)
+    _write_local_install_id(tmp_path, "self-install")
+    _write_baseline_verification(tmp_path, filename_id="self-install", content_id="self-install")
+    subprocess.run(
+        ["git", "add", "AgentCoordination/generated/test_baseline/by_install/self-install.json"],
+        cwd=tmp_path, check=True, capture_output=True,
+    )
+
+    findings = validator.check_test_baseline_verification_ownership(tmp_path)
+    assert not any(f.rule == "baseline_verification.foreign_install_modified" for f in findings)
 
 
 def test_unmarked_duplication_blank_lines_do_not_break_run(tmp_path: Path) -> None:

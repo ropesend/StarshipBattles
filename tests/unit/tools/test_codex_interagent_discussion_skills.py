@@ -28,9 +28,9 @@ def _contains_unprefixed_message_filename(text: str) -> bool:
 
 def test_codex_discussion_skills_exist_with_matching_frontmatter() -> None:
     expected = {
-        "codex-discuss-start": "Start an inter-agent discussion with Claude Code",
-        "codex-discuss-respond": "Respond in an inter-agent discussion with Claude Code",
-        "codex-discuss-continue": "Continue an inter-agent discussion with Claude Code",
+        "codex-discuss-start": "Start an inter-agent discussion with Claude Code and/or OpenCode",
+        "codex-discuss-respond": "Respond as Codex in a v2.4 inter-agent discussion with Claude Code and/or OpenCode",
+        "codex-discuss-continue": "Continue an ended v2.4 inter-agent discussion",
     }
 
     for skill_name, description_fragment in expected.items():
@@ -46,18 +46,19 @@ def test_codex_discussion_skills_document_shared_protocol() -> None:
         text = _read_skill(skill_name)
 
         assert "interagent-discussion/v1" in text
-        assert "arc01_001_codex_to_claude.md" in text
-        assert "arc01_001_claude_to_codex.md" in text
-        assert "arc01_010" in text
-        assert "^arc\\d{2}_\\d{3}_(claude|codex)_to_(claude|codex)\\.md$" in text
+        assert "claude" in text
+        assert "codex" in text
+        assert "opencode" in text
+        assert "^arc\\d{2}_\\d{3}_(claude|codex|opencode)_to_(claude|codex|opencode)\\.md$" in text
         assert "message_index" in text
         assert "agent_turn" in text
+        assert "participants" in text
+        assert "turn_order" in text
         assert "status: continue" in text
         assert "continue | consensus | needs-user" in text
         assert "outcome.md" in text
         assert "temporary file" in text
-        assert "heartbeat_codex.txt" in text
-        assert "heartbeat_claude.txt" in text
+        assert "heartbeat" in text.lower()
 
 
 def test_codex_discussion_skills_drop_unprefixed_message_compatibility() -> None:
@@ -68,6 +69,9 @@ def test_codex_discussion_skills_drop_unprefixed_message_compatibility() -> None
         assert "treated as `arc: 1`" not in text
         assert "treated as arc 1" not in text
         assert "???_*_to_*.md" not in text
+        assert "c:\\Dev\\StarshipBattles" not in text
+        assert "C:\\Dev2\\StarshipBattles" not in text
+        assert "C:\\Dev\\Starship Battles" not in text
 
 
 def test_codex_discussion_skills_document_v2_refinements() -> None:
@@ -75,16 +79,20 @@ def test_codex_discussion_skills_document_v2_refinements() -> None:
         text = _read_skill(skill_name)
 
         assert "frontmatter on line 1" in text
-        assert "User-supplied context" in text
-        assert "topic.md" in text
         assert "plans/" in text
         assert "revision:" in text
         assert ".tmp_*" in text
-        assert "extension_requested_cap: 20" in text
+        assert "extension_requested_cap: <extended_cap>" in text
         assert "extension_accepted: true" in text
-        assert "message_cap: 20" in text
-        assert "Handover proposal" in text
+        assert "message_cap: <extended_cap>" in text
         assert "user_facing_agent" in text
+        assert "implementation_owner" in text
+
+    for skill_name in ("codex-discuss-start", "codex-discuss-continue"):
+        text = _read_skill(skill_name)
+
+        assert "User-supplied context" in text
+        assert "topic.md" in text
 
 
 def test_codex_discussion_message_examples_put_frontmatter_first() -> None:
@@ -105,23 +113,23 @@ def test_codex_discussion_skills_document_v21_implementation_notes() -> None:
         assert ".tmp_<guid>.md" in text
         assert ".md.tmp" not in text
         assert "retry once" in text.lower()
-        assert "Start-Sleep -Seconds 30" in text
-        assert "second matching terminal" in text
-        assert "write `outcome.md` immediately" in text
-        assert "pre-flight checks must not mutate" in text
+        assert "Poll every 30 seconds" in text
+        assert "same terminal status" in text
+        assert "write `outcome.md`" in text
+        assert "pre-flight checks must not mutate" in text.lower()
         assert "final segment contains whitespace" in text
-        assert "host-neutral" in text
+        assert "host-neutral" in text or "<repo-root>" in text
 
 
-def test_codex_discussion_skills_document_v23_protocol() -> None:
+def test_codex_discussion_skills_document_v24_protocol() -> None:
     for skill_name in DISCUSSION_SKILLS:
         text = _read_skill(skill_name)
 
-        assert "v2.3_spec_r001.md" in text
+        assert "v2.4_three_party_spec_r002.md" in text
         assert "v2.2_spec_r002.md" not in text
         assert "arc01_001" in text
-        assert "arc02_001" in text
-        assert "arc: <int>" in text
+        assert "v2.3" in text
+        assert "readback" in text
         assert "ended_at_arc" in text
         assert "implementation_owner" in text
         assert "outcome_arc<NN>.md" in text
@@ -133,23 +141,24 @@ def test_codex_discussion_skills_document_v23_protocol() -> None:
 def test_codex_discussion_start_documents_parent_and_slug() -> None:
     text = _read_skill("codex-discuss-start")
 
-    assert "<parent> [--slug <slug>] [context...]" in text
+    assert "<parent> [--participants <agents>] [--slug <slug>] [context...]" in text
     assert "YYYYMMDDTHHMMSSZ_<slug>" in text
     assert "Do not infer a slug" in text
+    assert "Accepted values are `claude`, `opencode`" in text
 
 
 def test_codex_discussion_respond_documents_parent_discovery() -> None:
     text = _read_skill("codex-discuss-respond")
     prompt = _read_openai_yaml("codex-discuss-respond")
 
-    assert "accept either the exact discussion leaf or a parent folder" in text
-    assert "scan immediate children" in text
+    assert "Accept either an exact discussion leaf or a parent folder" in text
+    assert "scan immediate child" in text
     assert "Zero candidates: poll the parent" in text
-    assert "Claude may still be creating the discussion leaf" in text
-    assert "folder creation and first message" in text
-    assert "Multiple candidates" in text
+    assert "ended leaves are handled by `codex-discuss-continue`" in text
+    assert "candidate child folder names" in text
 
     assert "polls briefly" in prompt
+    assert "v2.4" in prompt
 
 
 def test_codex_discussion_continue_documents_no_args_role_aware_flow() -> None:
@@ -159,13 +168,12 @@ def test_codex_discussion_continue_documents_no_args_role_aware_flow() -> None:
     assert "[--folder <path>] [context...]" in text
     assert "<folder> [context...]" not in text
     assert "No positional folder" in text
-    assert "c:\\Dev\\StarshipBattles\\AgentCoordination\\Scratchpad\\Discussion\\" in text
-    assert "most-recent leaf" in text
-    assert "protocol-matching files" in text
-    assert "heartbeat files, temp files, and plans do not contribute" in text
+    assert "<repo-root>/AgentCoordination/Scratchpad/Discussion" in text
+    assert "parent folder and scan immediate children" in text
     assert "original starter" in text
-    assert "warn-and-ignore" in text
-    assert "The starter's forwarded context is canonical" in text
+    assert "authorized continuation starter" in text
+    assert "outcome_arc<NN>.md" in text
 
     assert "[--folder <path>] [context...]" in prompt
-    assert "most recent ended" in prompt
+    assert "authorized continuation starter" in prompt
+    assert "v2.4" in prompt

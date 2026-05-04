@@ -6,9 +6,18 @@ argument-hint: "[--skip-phase1 to reuse existing raw results]"
 
 # Documentation Freshness & Accuracy Audit
 
-Run a comprehensive audit of documentation quality across the entire `docs/` tree plus `AGENTS.md` and `CLAUDE.md`. Cross-references file paths, PROJ identifiers, and API mentions against live code to find stale references, dead documentation, and undocumented code. Produces a doc health scorecard with prioritized update plan.
+Run a comprehensive audit of documentation quality across the entire `docs/` tree plus `AGENTS.md`, `CLAUDE.md`, and `.agents/CODEX.md`. Cross-references file paths, PROJ identifiers, and API mentions against live code to find stale references, dead documentation, and undocumented code. Produces a doc health scorecard with prioritized update plan.
 
 Does NOT change any code or docs. Read-only audit.
+
+## Pre-Flight Safeguards
+
+Before starting any work:
+1. **Run from repo root.** All paths are relative to the repository root.
+2. **Check `git status --short`** and do NOT revert unrelated changes.
+3. **Never read `docs/_ignore/`.** It is not documentation.
+4. **Write only under `Reviews/results/`** and explicitly named `AgentCoordination/` paths.
+5. **This is a read-only audit.** Do not edit source code, test code, or docs.
 
 ## Execution
 
@@ -58,13 +67,12 @@ Read these files into memory:
 4. Read `REVIEW_DIR/raw/undocumented_modules.json`
 5. Read `REVIEW_DIR/raw/doc_inventory.json`
 
-### Step 3: Launch 8 Agents in Parallel
+### Step 3: Launch 7 Agents in Parallel
 
-Launch **8 agents**:
+Launch **7 agents**:
 - **5 doc-group reviewers** (architecture docs, system docs, guides, root docs, reviews/protocols)
 - **1 cross-doc consistency validator**
 - **1 code-base accuracy validator**
-- **1 verification agent**
 
 **Doc-group assignments:**
 
@@ -73,7 +81,7 @@ Launch **8 agents**:
 | G1 | Reviewer | `docs/README.md`, `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`, `docs/04_SERVICES.md`, `docs/05_ERROR_HANDLING.md`, `docs/06_UI_STYLE_GUIDE.md` |
 | G2 | Reviewer | `docs/systems/` (all 8 files: ability, ai, combat, orders, production, research, resource, strategy) |
 | G3 | Reviewer | `docs/guides/` (all 8 files: adding abilities, modifiers, component system, testing, performance, etc.) |
-| G4 | Reviewer | `AGENTS.md`, `CLAUDE.md`, `Projects/protocols/` |
+| G4 | Reviewer | `AGENTS.md`, `CLAUDE.md`, `.agents/CODEX.md`, `Projects/protocols/` |
 | G5 | Reviewer | `Reviews/protocols/` (all 11 protocol files) |
 
 **Replace placeholders for each agent:**
@@ -135,11 +143,29 @@ For EACH doc file in your group:
      classes, and imports exist.
 6. **Check for missing documentation:**
    - From the undocumented_modules list, identify which modules genuinely
-     need documentation (public API surface > 50 LOC).
+     need documentation (public API surface > 50 LOC, or architectural
+     surface modules that cross layer boundaries).
+   - Focus on public API modules and architectural surface — do NOT flag
+     every >50 LOC implementation detail.
 7. **Assess scope gaps:**
    - Are there major game subsystems with no corresponding doc file?
    - Are there features added after the last doc update that never got
      documented?
+8. **Validate `Last verified` line:**
+   - Every doc file with an H1 should have a `> **Last verified:**` line
+     under it per `docs/03_CONVENTIONS.md`. Flag missing or unparseable
+     dates.
+9. **Widen reference extraction beyond `game/*`:**
+   - Also check references to `Tools/*`, `Projects/protocols/*`,
+     `Reviews/protocols/*`, and root-level agent docs.
+   - NOTE: The Phase 1 deterministic scanner only extracts `game/*` file
+     references. Wider reference checks (`Tools/*`, `Projects/*`, `Reviews/*`)
+     are manual Phase 2 agent checks — do not expect them in raw outputs.
+   - For PROJ references: completed or archived PROJ refs are NOT stale if
+     the surrounding text clearly states the feature is already implemented
+     or the reference is historical context. Only flag PROJ refs that
+     describe the feature as "planned" or "in progress" when the PROJ is
+     already completed or archived.
 
 ## What NOT to Report
 - Minor typos or grammar issues (unless they cause factual confusion)

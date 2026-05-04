@@ -50,7 +50,7 @@ DOC_DIRS: list[tuple[str, str]] = [
     ("systems", "docs/systems"),
     ("guides", "docs/guides"),
 ]
-EXTRA_DOCS = ["AGENTS.md", "CLAUDE.md"]
+EXTRA_DOCS = ["AGENTS.md", "CLAUDE.md", ".agents/CODEX.md"]
 
 
 def _rel(path: str) -> str:
@@ -141,6 +141,8 @@ def extract_staleness(doc_path: str) -> dict | None:
 def find_undocumented_modules() -> list[dict]:
     all_doc_content = ""
     for root, _, filenames in os.walk(DOCS_DIR):
+        if "_ignore" in Path(root).parts:
+            continue
         for fname in filenames:
             if fname.endswith(".md"):
                 content = _read_file(os.path.join(root, fname))

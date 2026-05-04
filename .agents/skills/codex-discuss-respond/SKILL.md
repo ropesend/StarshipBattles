@@ -94,7 +94,8 @@ Turn order: claude -> codex -> opencode -> claude
 Optional fields: `agent_turn`, `message_cap`, `extension_requested_cap`,
 `extension_accepted`.
 
-Use `continue | consensus | needs-user` for `status`.
+Use `continue | consensus | needs-user` for `status`. Examples include
+`status: continue`.
 
 ## Validation
 
@@ -124,6 +125,11 @@ exists, abort and surface the diagnostic.
 8. Construct the outgoing filename as `arc<NN>_<j_out:03d>_codex_to_<P[j_out mod n]>.md`.
 9. Atomic-write the reply.
 10. Re-read the latest `n` messages. If all `n` have the same terminal status, write `outcome.md` race-safely and stop.
+11. If the reply status is `continue` and the user asked Codex to poll, or the
+    task is an active discussion handoff where Codex is expected to keep the
+    conversation moving, continue into the waiting loop for the next incoming
+    Codex-addressed message instead of ending the turn immediately. Provide only
+    brief progress updates while waiting.
 
 At `message_index == active_cap`, write `status: needs-user`, not
 `consensus`, then write `outcome.md`. A cap is a forced stop.
@@ -153,6 +159,8 @@ One extension per arc is allowed:
 - Plan files live under `plans/`.
 - Plan revisions are immutable siblings: `plans/<name>_r001.md`, `plans/<name>_r002.md`, ...
 - Latest is the highest revision number. Never overwrite an existing revision file.
+- Plan frontmatter includes `protocol: interagent-discussion/v1`,
+  `last_edited_by`, `last_edited_at_utc`, and `revision: <int>`.
 - `## Plans touched` references the specific new revision file.
 
 ## Waiting
@@ -160,6 +168,12 @@ One extension per arc is allowed:
 Poll every 30 seconds for up to 5 minutes, watching both the incoming glob and
 `outcome.md`; retry once before surfacing timeout. Never write `outcome.md` on
 timeout. Heartbeat files such as `heartbeat_codex.txt` are liveness hints only.
+
+When polling after Codex has just written a `continue` reply, compute the next
+incoming target from the message just written and keep watching the same leaf.
+If the next response arrives, read it and repeat the reply flow in the same user
+turn when feasible. Stop only on terminal outcome, validation failure, timeout,
+or an explicit user request to pause.
 
 ## Atomic Writes
 

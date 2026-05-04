@@ -58,12 +58,14 @@ The `audit-shrink` skill launches 3 agents:
 
 ### Shard Rotation
 
+The manifest randomly shuffles all `game/*.py` files into 4 balanced shards (`Shard 01` through `Shard 04`). Agent 2 rotates through manifest shard IDs across runs:
+
 | Run | Agent 2 Deep Reviews |
 |-----|---------------------|
-| 1 | UI (`game/ui/`) |
-| 2 | Simulation (`game/simulation/`) |
-| 3 | Strategy (`game/strategy/`) |
-| 4 | Foundation (`game/core/`, `game/engine/`, `game/ai/`, `game/research/`) |
+| 1 | Shard 01 |
+| 2 | Shard 02 |
+| 3 | Shard 03 |
+| 4 | Shard 04 |
 
 ## Usage
 
