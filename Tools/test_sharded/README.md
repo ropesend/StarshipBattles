@@ -39,18 +39,21 @@ There is also a PowerShell convenience wrapper:
 2. **Group** -- Groups tests by source file (tests in the same file always stay together).
 3. **Assign** -- Distributes file groups across shards:
    - **First run**: Round-robin by file, largest files assigned first.
-   - **Subsequent runs**: Greedy least-loaded-bin using per-test durations from `.test_durations.json` (requires >= 50% coverage).
+   - **Subsequent runs**: Greedy least-loaded-bin using rolling per-file medians from `.test_file_duration_history.json` when available, with per-test durations from `.test_durations.json` filling gaps (requires >= 50% per-test coverage).
 4. **Execute** -- Runs each shard as an independent `pytest.main()` subprocess with JUnit XML output.
 5. **Aggregate** -- Parses JUnit XML results, merges timing data, and prints a combined report.
-6. **Baseline** -- After a successful whole-suite run, updates `AgentCoordination/generated/test_baseline.json` only when canonical counts change or the schema is migrated. It also records the local green-run receipt in `AgentCoordination/generated/test_baseline/by_install/<install_id>.json`.
+6. **Diagnose** -- Prints shard-level estimate/actual timing columns, per-shard file min/median/max timing, slowest files, and file timing variability when history is available.
+7. **Baseline** -- After a successful whole-suite run, updates `AgentCoordination/generated/test_baseline.json` only when canonical counts change or the schema is migrated. It also records the local green-run receipt in `AgentCoordination/generated/test_baseline/by_install/<install_id>.json`.
 
 ## Output
 
 - Per-shard pass/fail status with test counts and elapsed time.
-- Shard timing balance report (bar chart with balance ratio).
+- Shard timing balance report with wall time, estimated time, actual testcase time, estimate error, test/file counts, known-duration coverage, per-shard file min/median/max time, and historical file variability.
+- File timing diagnostics listing the slowest files in the current run, the largest file-level estimate errors, and the most variable files once at least two runs of history exist.
 - Aggregated failure details and deduplicated warnings.
 - Final summary: total tests, passed, failed, errors, and wall-clock time.
-- Saves per-test timing data to `.test_durations.json` for future runs.
+- Saves exact pytest node-id timing data to `.test_durations.json` for future runs. Each shard writes a local `shard_<N>_durations.json` sidecar from pytest's `report.nodeid`; JUnit XML timing remains a fallback for older or interrupted shard results.
+- Saves rolling per-file timing samples to `.test_file_duration_history.json` for local variability diagnostics. The file is ignored because it is machine- and shard-configuration-specific.
 - Updates `AgentCoordination/generated/test_baseline.json` only after successful whole-suite runs when canonical counts change. Failed, partial, or interrupted runs leave the baseline and verification receipts unchanged.
 - Updates `AgentCoordination/generated/test_baseline/by_install/<install_id>.json` after every successful whole-suite run. The install ID comes from `AgentCoordination/local/install_id.json`, shared with skill-usage tracking.
 
