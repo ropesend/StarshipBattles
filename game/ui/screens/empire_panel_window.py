@@ -3,6 +3,11 @@ EmpirePanelWindow - Multi-tab empire information panel.
 
 PROJ-99 Phase 3: Main window with Treasury, Population, and placeholder tabs.
 Provides empire-wide overview of economy, species data, and future features.
+PROJ-329B Phase 1: two-stage construction. Cheap state (empire,
+callbacks, registries, asset loader, tab/panel containers, current_tab)
+lives before ``super().__init__``; widget construction is behind
+``EmpirePanelUiBuilder`` so tests can swap in a Mock under
+``bypass_init``.
 """
 from __future__ import annotations
 
@@ -41,6 +46,17 @@ SECTION_GAP = 15
 APTITUDE_COL_WIDTH = 200
 
 
+class EmpirePanelUiBuilder:
+    """Production widget builder. Delegates to ``screen._create_ui()``
+    and ``screen._show_tab(TAB_TREASURY)`` to build the tab buttons,
+    tab panels, and select the initial tab.
+    """
+
+    def build(self, screen: "EmpirePanelWindow") -> None:
+        screen._create_ui()
+        screen._show_tab(TAB_TREASURY)
+
+
 class EmpirePanelWindow(StrategyModalWindow):
     """
     Multi-tab window displaying empire-wide information.
@@ -63,6 +79,7 @@ class EmpirePanelWindow(StrategyModalWindow):
         on_close_callback: Optional[Callable[[], None]] = None,
         registries: 'GameRegistries' = None,
         race_registry: Optional[Any] = None,
+        ui_builder: Optional[EmpirePanelUiBuilder] = None,
     ):
         """
         Create empire panel window.
@@ -78,15 +95,9 @@ class EmpirePanelWindow(StrategyModalWindow):
                 through to `EmpireEconomyCalculator` so the Treasury tab
                 renders the multi-resource Population Upkeep row. When
                 None, the row stays hidden.
+            ui_builder: Optional UI builder override (test seam).
         """
-        super().__init__(
-            rect,
-            manager,
-            window_display_title="Empire Overview",
-            resizable=False,
-            window_manager=window_manager,
-        )
-
+        # ---- Stage 1: cheap state ----
         self.empire: 'IEmpire' = empire
         self.on_close_callback = on_close_callback
         self._registries = registries  # PROJ-211: Injected registries
@@ -100,15 +111,29 @@ class EmpirePanelWindow(StrategyModalWindow):
         # Asset loader
         self._asset_loader = RaceAssetLoader()
 
-        # Load resource icons
+        # Load resource icons (cheap I/O cached at module level via
+        # load_resource_icons → AssetManager).
         self._resource_icons = load_resource_icons()
 
         # Panel references
         self._treasury_panel: Optional[EmpireTreasuryPanel] = None
 
-        # Create UI
-        self._create_ui()
-        self._show_tab(TAB_TREASURY)
+        # ---- Stage 2: shell ----
+        super().__init__(
+            rect,
+            manager,
+            window_display_title="Empire Overview",
+            resizable=False,
+            window_manager=window_manager,
+        )
+
+        # ---- Stage 3: widgets ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
+
+        (ui_builder or EmpirePanelUiBuilder()).build(self)
 
     def _create_ui(self) -> None:
         """Create all UI elements."""
