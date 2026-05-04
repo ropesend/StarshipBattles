@@ -69,8 +69,11 @@ from __future__ import annotations
 
 import contextlib
 import inspect
+import logging
 from typing import Any, Type, TypeVar
 from unittest.mock import MagicMock, patch
+
+logger = logging.getLogger(__name__)
 
 
 T = TypeVar("T")
@@ -139,8 +142,17 @@ def _build_default_kwargs(cls: Type[T]) -> dict[str, Any]:
 
     try:
         sig = inspect.signature(cls.__init__)
-    except (TypeError, ValueError):
-        # ``__init__`` is built-in or unintrospectable; nothing we can do.
+    except (TypeError, ValueError) as exc:
+        # __init__ is built-in or unintrospectable; warn so tests using
+        # make_ui_widget against such a class get a signal rather than a
+        # silent {} that surfaces as a confusing missing-arg failure later.
+        logger.warning(
+            "make_ui_widget: cannot introspect %s.__init__ (%s: %s); "
+            "no default kwargs will be supplied",
+            cls.__name__,
+            type(exc).__name__,
+            exc,
+        )
         return {}
 
     defaults: dict[str, Any] = {}

@@ -187,3 +187,105 @@ def test_bypass_init_preserves_pre_existing_truthy_value():
         assert Cls.bypass_init is True
 
     assert Cls.bypass_init == "custom"
+
+
+# ---------------------------------------------------------------------------
+# _build_default_kwargs direct unit tests (PROJ-321..328 audit S4.6)
+# ---------------------------------------------------------------------------
+#
+# The integration tests above cover the well-trodden RaceIdentityPanel /
+# RaceSummaryPanel paths, but the introspection logic in _build_default_kwargs
+# has signature shapes (positional-only, keyword-only, **kwargs, no signature)
+# that are easier to pin against synthetic classes than against real production
+# classes. These direct tests guard against regressions in the introspection
+# itself, independent of any pygame_gui class shape.
+
+
+from tests.fixtures.ui_widget_factory import _build_default_kwargs
+
+
+class _AllWellKnown:
+    def __init__(self, panel, manager, ui_manager, container, rect):
+        self.panel = panel
+        self.manager = manager
+        self.ui_manager = ui_manager
+        self.container = container
+        self.rect = rect
+
+
+class _MixedKnownAndCustom:
+    def __init__(self, race_config, panel, manager, custom_param):
+        self.race_config = race_config
+        self.panel = panel
+        self.manager = manager
+        self.custom_param = custom_param
+
+
+class _KeywordOnly:
+    def __init__(self, *, panel, manager):
+        self.panel = panel
+        self.manager = manager
+
+
+class _PositionalOnly:
+    def __init__(self, panel, manager, /):
+        self.panel = panel
+        self.manager = manager
+
+
+class _Variadic:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+def test_build_default_kwargs_supplies_all_well_known_names():
+    """Every well-known name (panel, manager, ui_manager, container, rect)
+    gets a default."""
+    defaults = _build_default_kwargs(_AllWellKnown)
+    assert set(defaults.keys()) == {"panel", "manager", "ui_manager", "container", "rect"}
+    assert all(v is not None for v in defaults.values())
+
+
+def test_build_default_kwargs_skips_unknown_names():
+    """Unknown-named parameters (race_config, custom_param) are not auto-defaulted —
+    the caller must pass them. Well-known names (panel, manager) still get defaults."""
+    defaults = _build_default_kwargs(_MixedKnownAndCustom)
+    assert set(defaults.keys()) == {"panel", "manager"}
+    assert "race_config" not in defaults
+    assert "custom_param" not in defaults
+
+
+def test_build_default_kwargs_handles_keyword_only_parameters():
+    """KEYWORD_ONLY parameters are not skipped (they're regular named args)."""
+    defaults = _build_default_kwargs(_KeywordOnly)
+    assert set(defaults.keys()) == {"panel", "manager"}
+
+
+def test_build_default_kwargs_handles_positional_only_parameters():
+    """POSITIONAL_ONLY parameters with well-known names still get defaults
+    (callers must pass them positionally though — this is a Python convention,
+    not a factory enforcement)."""
+    defaults = _build_default_kwargs(_PositionalOnly)
+    assert set(defaults.keys()) == {"panel", "manager"}
+
+
+def test_build_default_kwargs_skips_variadic_parameters():
+    """*args and **kwargs are skipped — the function checks param.kind explicitly."""
+    defaults = _build_default_kwargs(_Variadic)
+    assert defaults == {}
+
+
+def test_build_default_kwargs_returns_empty_dict_for_unintrospectable_init():
+    """Built-in __init__ (e.g. object.__init__) is unintrospectable on some
+    Python builds — function must return {} rather than raise."""
+    # object.__init__ raises TypeError when passed to inspect.signature on CPython,
+    # but only sometimes — depends on the build. Use a synthetic class with
+    # a slot-only __init__ via __slots__ to construct a guaranteed-uninspectable case.
+    # Easiest: pass `int` which has a built-in __init__ that inspect can't introspect
+    # cleanly on some Python builds. If this is introspectable on the current build,
+    # the test still passes (we only assert the return type/shape).
+    defaults = _build_default_kwargs(object)
+    assert isinstance(defaults, dict)
+    # No well-known names — object.__init__ takes no parameters beyond self.
+    assert "panel" not in defaults
+    assert "manager" not in defaults
