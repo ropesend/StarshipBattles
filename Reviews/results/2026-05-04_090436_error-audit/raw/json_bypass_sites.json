@@ -1,0 +1,127 @@
+[
+  {
+    "file": "game/assets/component_derivatives.py",
+    "line": 100,
+    "call": "json.loads"
+  },
+  {
+    "file": "game/assets/component_derivatives.py",
+    "line": 109,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 104,
+    "call": "json.load"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 145,
+    "call": "json.load"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 186,
+    "call": "json.dump"
+  },
+  {
+    "file": "game/simulation/battle_state.py",
+    "line": 629,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/simulation/battle_state.py",
+    "line": 657,
+    "call": "json.loads"
+  },
+  {
+    "file": "game/simulation/battle_state.py",
+    "line": 775,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/simulation/replay/replay_serialization.py",
+    "line": 623,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 106,
+    "call": "json.load"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 229,
+    "call": "json.load"
+  },
+  {
+    "file": "game/strategy/data/galaxy_warp_generator.py",
+    "line": 391,
+    "call": "json.load"
+  },
+  {
+    "file": "game/strategy/data/ship_instance_serializer.py",
+    "line": 145,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/strategy/data/ship_instance_serializer.py",
+    "line": 150,
+    "call": "json.loads"
+  },
+  {
+    "file": "game/strategy/engine/turn_state_snapshot.py",
+    "line": 131,
+    "call": "json.dump"
+  },
+  {
+    "file": "game/strategy/services/race_description_prompt_builder.py",
+    "line": 200,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/ui/screens/battle_state_viewer.py",
+    "line": 122,
+    "call": "json.loads"
+  },
+  {
+    "file": "game/ui/screens/battle_state_viewer.py",
+    "line": 123,
+    "call": "json.loads"
+  },
+  {
+    "file": "game/ui/screens/builder/detail_panel.py",
+    "line": 197,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/ui/screens/test_lab/dialogs.py",
+    "line": 32,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/ui/screens/test_lab/ship_panels.py",
+    "line": 44,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/ui/screens/test_lab/ship_panels.py",
+    "line": 108,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/ui/screens/test_lab/ship_panels.py",
+    "line": 233,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/ui/screens/test_lab/ship_panels.py",
+    "line": 244,
+    "call": "json.dumps"
+  },
+  {
+    "file": "game/ui/widgets/scrollable_json_panel.py",
+    "line": 122,
+    "call": "json.loads"
+  }
+]
