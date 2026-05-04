@@ -2,6 +2,11 @@
 Race Browser Dialog - In-game dialog for browsing and selecting saved races.
 
 PROJ-12 Phase 4: Extracted from RaceSetupScreen to decompose the god class.
+PROJ-329B Phase 1: two-stage construction. Cheap state (race_library,
+callbacks, asset loader, selection trackers) lives before the
+``UIWindow`` shell; widget construction is behind
+``RaceBrowserDialogUiBuilder`` so tests can swap in a Mock under
+``bypass_init``.
 
 Shows a scrollable list of races with small previews:
 - Portrait (60px)
@@ -25,6 +30,55 @@ if TYPE_CHECKING:
     from game.strategy.systems.race_library import RaceLibrary
 
 
+class RaceBrowserDialogUiBuilder:
+    """Production widget builder. Constructs scroll_container, btn_cancel,
+    btn_load, and the "no races" label. Disables btn_load by default to
+    mirror the previous inline behavior.
+    """
+
+    def build(self, screen: "RaceBrowserDialog") -> None:
+        container = screen.get_container()
+        content_width = container.get_size()[0] - 20
+        content_height = container.get_size()[1]
+
+        # Scrolling container for race list
+        scroll_height = content_height - 80  # Leave room for buttons
+        screen.scroll_container = pygame_gui.elements.UIScrollingContainer(
+            relative_rect=pygame.Rect(10, 10, content_width, scroll_height),
+            manager=screen.ui_manager,
+            container=container,
+        )
+
+        # Bottom buttons
+        btn_width = 120
+        btn_height = 40
+        btn_y = content_height - 55
+
+        screen.btn_cancel = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(10, btn_y, btn_width, btn_height),
+            text="Cancel",
+            manager=screen.ui_manager,
+            container=container,
+        )
+
+        screen.btn_load = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(content_width - btn_width, btn_y, btn_width, btn_height),
+            text="Load",
+            manager=screen.ui_manager,
+            container=container,
+        )
+        screen.btn_load.disable()  # Disabled until a race is selected
+
+        # "No races" label (hidden by default)
+        screen.no_races_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, scroll_height // 2, content_width, 30),
+            text="No saved species found. Create one first!",
+            manager=screen.ui_manager,
+            container=container,
+        )
+        screen.no_races_label.hide()
+
+
 class RaceBrowserDialog(pygame_gui.elements.UIWindow):
     """
     In-game dialog for browsing and selecting saved races.
@@ -43,7 +97,9 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
     def __init__(self, rect: pygame.Rect, manager: pygame_gui.UIManager,
                  race_library: 'RaceLibrary',
                  on_select_callback: Callable[['RaceConfig'], None],
-                 on_cancel_callback: Callable[[], None]):
+                 on_cancel_callback: Callable[[], None],
+                 *,
+                 ui_builder: Optional[RaceBrowserDialogUiBuilder] = None):
         """
         Create race browser dialog.
 
@@ -53,15 +109,9 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
             race_library: RaceLibrary instance for loading races
             on_select_callback: Callback(RaceConfig) when user selects a race
             on_cancel_callback: Callback() when user cancels
+            ui_builder: Optional UI builder override (test seam).
         """
-        super().__init__(
-            rect,
-            manager,
-            window_display_title="Load Species",
-            object_id="#race_browser_dialog",
-            resizable=False
-        )
-
+        # ---- Stage 1: cheap state ----
         self.race_library = race_library
         self.on_select_callback = on_select_callback
         self.on_cancel_callback = on_cancel_callback
@@ -74,51 +124,25 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         self.selected_race = None
         self.selected_row_index = -1
 
-        self._create_ui()
+        # ---- Stage 2: UIWindow shell (skipped under bypass_init) ----
+        if getattr(type(self), 'bypass_init', False):
+            self.ui_manager = manager
+            self._window_init_bypassed = True
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
+
+        super().__init__(
+            rect,
+            manager,
+            window_display_title="Load Species",
+            object_id="#race_browser_dialog",
+            resizable=False,
+        )
+
+        # ---- Stage 3: widgets + initial race load ----
+        (ui_builder or RaceBrowserDialogUiBuilder()).build(self)
         self._load_races()
-
-    def _create_ui(self) -> None:
-        """Create the dialog UI elements."""
-        container = self.get_container()
-        content_width = container.get_size()[0] - 20
-        content_height = container.get_size()[1]
-
-        # Scrolling container for race list
-        scroll_height = content_height - 80  # Leave room for buttons
-        self.scroll_container = pygame_gui.elements.UIScrollingContainer(
-            relative_rect=pygame.Rect(10, 10, content_width, scroll_height),
-            manager=self.ui_manager,
-            container=container
-        )
-
-        # Bottom buttons
-        btn_width = 120
-        btn_height = 40
-        btn_y = content_height - 55
-
-        self.btn_cancel = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10, btn_y, btn_width, btn_height),
-            text="Cancel",
-            manager=self.ui_manager,
-            container=container
-        )
-
-        self.btn_load = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(content_width - btn_width, btn_y, btn_width, btn_height),
-            text="Load",
-            manager=self.ui_manager,
-            container=container
-        )
-        self.btn_load.disable()  # Disabled until a race is selected
-
-        # "No races" label (hidden by default)
-        self.no_races_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, scroll_height // 2, content_width, 30),
-            text="No saved species found. Create one first!",
-            manager=self.ui_manager,
-            container=container
-        )
-        self.no_races_label.hide()
 
     def _load_races(self) -> None:
         """Load all races and populate the list."""
