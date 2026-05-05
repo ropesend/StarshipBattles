@@ -230,3 +230,54 @@ class TestSystemSelectionWindow:
         texts = {item["text"] for item in item_list}
         assert any("Near (dist: 4)" in t for t in texts)
         assert any("Far (dist: 10)" in t for t in texts)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-347 T4.2: Pattern §33 widget-ref placeholders
+# ---------------------------------------------------------------------------
+
+class TestSystemSelectionWindowWidgetPlaceholders:
+    """PROJ-347 T4.2 — Pattern §33 widget-ref placeholders.
+
+    ``update()`` accesses ``self.btn_confirm.check_pressed()`` and
+    ``self.btn_cancel.check_pressed()``. Stage 1 must set these to
+    ``None`` before ``super().__init__`` so a Null builder test can
+    construct via ``bypass_init`` without subsequent AttributeError on
+    those slots.
+    """
+
+    def _make_window(self, *, ui_builder):
+        from game.core.hex_math import HexCoord
+        from game.ui.screens.system_selection_window import SystemSelectionWindow
+        from tests.fixtures.ui_widget_factory import bypass_init
+
+        current_system = MagicMock(name="current_system")
+        current_system.name = "Current"
+        current_system.global_location = HexCoord(0, 0)
+        sys_a = MagicMock(name="Alpha")
+        sys_a.name = "Alpha"
+        sys_a.global_location = HexCoord(1, 1)
+        rect = pygame.Rect(0, 0, 400, 400)
+        with bypass_init(SystemSelectionWindow):
+            return SystemSelectionWindow(
+                rect,
+                MagicMock(name="ui_manager"),
+                [sys_a],
+                current_system,
+                MagicMock(name="callback"),
+                window_manager=None,
+                ui_builder=ui_builder,
+            )
+
+    def test_null_builder_leaves_widget_placeholders_as_none(self):
+        from tests.fixtures.system_selection_window_ui_builder import (
+            NullSystemSelectionWindowUiBuilder,
+        )
+        window = self._make_window(
+            ui_builder=NullSystemSelectionWindowUiBuilder()
+        )
+        # PROJ-347 T4.2: Pattern §33 placeholders set in Stage 1.
+        assert window.label is None
+        assert window.selection_list is None
+        assert window.btn_confirm is None
+        assert window.btn_cancel is None
