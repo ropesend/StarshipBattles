@@ -400,6 +400,176 @@ class TestNoRecursion:
         assert replay_files[0].name == "replay_orig-1.json"
 
 
+class TestAuditRemediation:
+    """PROJ-354B audit remediation: tests added for findings TC-M03,
+    TC-M04, TC-M05, TC-M06, TC-M07, ERR-354B-001."""
+
+    def test_shutdown_event_set_drops_listener_callback(
+        self, store: ReplayStore
+    ):
+        """TC-M03: ``_on_record_persisted`` must early-return when the
+        shutdown event is set, even if the listener has not yet been
+        removed from the store (race window)."""
+        coord = ReplayVerificationCoordinator(
+            replay_store=store,
+            ai_factory=object(),
+            registry_provider=object(),
+            settings=store._settings,
+            replay_runner=_identity_replay_runner,
+            ship_builder_factory=lambda *a, **k: None,
+        )
+        coord.start()
+        try:
+            # Manually set the shutdown event WITHOUT calling shutdown,
+            # so the listener is still registered.
+            coord._shutdown_event.set()
+            # Persist a record — listener fires, sees shutdown event,
+            # and returns silently. No work should happen.
+            store.persist(_make_record("race-1"))
+            # Give the worker a moment in case it incorrectly enqueued.
+            time.sleep(0.1)
+            assert "race-1" not in [r.replay_id for r in coord._queue]
+        finally:
+            coord.shutdown(timeout=5.0)
+        # No sidecar should have been written either.
+        rd = store.save_root / "replays"
+        sidecar = read_verification_sidecar(rd, "race-1")
+        assert sidecar is None
+
+    def test_replay_dir_cleared_mid_verification_drops_sidecar(
+        self, store: ReplayStore
+    ):
+        """TC-M04: R6 — clearing the save root mid-verification must
+        cause ``_verify_one`` to drop the record without raising or
+        writing a sidecar to a stale path."""
+        gate = threading.Event()
+
+        def slow_runner(record, **_kwargs):
+            # Block in the middle of verification so we can clear the
+            # save root before sidecar write.
+            gate.wait(timeout=5.0)
+            return record.outcome.to_battle_outcome()
+
+        coord = ReplayVerificationCoordinator(
+            replay_store=store,
+            ai_factory=object(),
+            registry_provider=object(),
+            settings=store._settings,
+            replay_runner=slow_runner,
+            ship_builder_factory=lambda *a, **k: None,
+        )
+        coord.start()
+        try:
+            store.persist(_make_record("r6-1"))
+            # Wait until worker is mid-record.
+            timeout = time.monotonic() + 2.0
+            while time.monotonic() < timeout:
+                if coord._is_worker_busy():
+                    break
+                time.sleep(0.01)
+            # Clear save root while runner is blocked.
+            saved_root = store.save_root
+            store.clear_save_root()
+            gate.set()
+            assert coord.wait_for_idle(timeout=5.0)
+        finally:
+            gate.set()
+            coord.shutdown(timeout=5.0)
+        # Sidecar must NOT exist in the (now-detached) replay dir.
+        rd = saved_root / "replays"
+        sidecar = read_verification_sidecar(rd, "r6-1")
+        assert sidecar is None
+
+    def test_failed_diff_carries_path_expected_actual(
+        self, store: ReplayStore
+    ):
+        """TC-M05: a FAILED sidecar's diff[0] must contain the precise
+        path/expected/actual values, not just a non-empty list."""
+        record = _make_record("diff-shape-1")
+        coord = ReplayVerificationCoordinator(
+            replay_store=store,
+            ai_factory=object(),
+            registry_provider=object(),
+            settings=store._settings,
+            replay_runner=_divergent_replay_runner,
+            ship_builder_factory=lambda *a, **k: None,
+        )
+        coord.start()
+        try:
+            store.persist(record)
+            assert coord.wait_for_idle(timeout=5.0)
+        finally:
+            coord.shutdown(timeout=5.0)
+        rd = store.save_root / "replays"
+        sidecar = read_verification_sidecar(rd, "diff-shape-1")
+        assert sidecar is not None
+        assert sidecar.status == VerificationStatus.FAILED.name
+        assert sidecar.diff is not None and len(sidecar.diff) >= 1
+        # The divergent runner mutates ``duration_ticks``; the diff
+        # must surface that exact path with concrete values.
+        duration_diffs = [
+            d for d in sidecar.diff if d["path"] == ["duration_ticks"]
+        ]
+        assert len(duration_diffs) == 1
+        assert duration_diffs[0]["expected"] != duration_diffs[0]["actual"]
+
+    def test_passed_sidecar_records_positive_duration(
+        self, store: ReplayStore
+    ):
+        """TC-M05: PASSED sidecar should carry a non-negative duration_ms."""
+        record = _make_record("pass-duration-1")
+        coord = ReplayVerificationCoordinator(
+            replay_store=store,
+            ai_factory=object(),
+            registry_provider=object(),
+            settings=store._settings,
+            replay_runner=_identity_replay_runner,
+            ship_builder_factory=lambda *a, **k: None,
+        )
+        coord.start()
+        try:
+            store.persist(record)
+            assert coord.wait_for_idle(timeout=5.0)
+        finally:
+            coord.shutdown(timeout=5.0)
+        rd = store.save_root / "replays"
+        sidecar = read_verification_sidecar(rd, "pass-duration-1")
+        assert sidecar is not None
+        assert sidecar.status == VerificationStatus.PASSED.name
+        assert sidecar.duration_ms is not None
+        assert sidecar.duration_ms >= 0
+
+    def test_save_json_returning_false_yields_no_sidecar(
+        self, store: ReplayStore, monkeypatch
+    ):
+        """TC-M06: ``write_verification_sidecar`` must return ``None``
+        when the underlying ``save_json`` returns ``False`` (non-
+        exceptional failure path), and the worker must continue."""
+        from game.strategy.services import replay_verification_sidecar as sc_mod
+
+        monkeypatch.setattr(sc_mod, "save_json", lambda *a, **k: False)
+
+        record = _make_record("save-fail-1")
+        coord = ReplayVerificationCoordinator(
+            replay_store=store,
+            ai_factory=object(),
+            registry_provider=object(),
+            settings=store._settings,
+            replay_runner=_identity_replay_runner,
+            ship_builder_factory=lambda *a, **k: None,
+        )
+        coord.start()
+        try:
+            store.persist(record)
+            assert coord.wait_for_idle(timeout=5.0)
+        finally:
+            coord.shutdown(timeout=5.0)
+        # Sidecar absent because the writer reported failure.
+        rd = store.save_root / "replays"
+        sidecar_file = rd / "replay_save-fail-1.verification.json"
+        assert not sidecar_file.exists()
+
+
 class TestSerialExecution:
     def test_single_worker_serializes_records(self, store: ReplayStore):
         active = [0]

@@ -29,6 +29,7 @@ and only then — the oldest replays beyond the cap are deleted.
 from __future__ import annotations
 
 import logging
+import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -155,6 +156,11 @@ class ReplayStore:
         # a ``Callable[[ReplayRecord, Path], None]``; failures are
         # caught so one bad subscriber cannot block the others or the
         # persist itself.
+        # PROJ-354B audit ERR-354B-002: ``add``/``remove``/``persist``
+        # may run on different threads (composition root, shutdown
+        # thread, simulation thread). Guard the registry with a lock
+        # so check-then-mutate sequences are atomic.
+        self._listener_lock = threading.Lock()
         self._on_record_persisted_listeners: List[
             Callable[[ReplayRecord, Path], None]
         ] = []
@@ -187,21 +193,38 @@ class ReplayStore:
         Listeners receive ``(record, path)`` AFTER the atomic write
         succeeds and BEFORE ring-buffer eviction runs.
         """
-        if callback not in self._on_record_persisted_listeners:
-            self._on_record_persisted_listeners.append(callback)
+        with self._listener_lock:
+            if callback not in self._on_record_persisted_listeners:
+                self._on_record_persisted_listeners.append(callback)
 
     def remove_on_record_persisted_listener(
         self,
         callback: Callable[[ReplayRecord, Path], None],
     ) -> None:
         """Unregister ``callback``. Tolerant to unknown callables."""
-        if callback in self._on_record_persisted_listeners:
-            self._on_record_persisted_listeners.remove(callback)
+        with self._listener_lock:
+            if callback in self._on_record_persisted_listeners:
+                self._on_record_persisted_listeners.remove(callback)
 
-    def _replay_dir(self) -> Optional[Path]:
+    @property
+    def replay_dir(self) -> Optional[Path]:
+        """Return the ``replays/`` directory under the save root, or
+        ``None`` when no save is active.
+
+        PROJ-354B audit AR-002: promoted from a private helper so
+        sibling services (``ReplayResolver``,
+        ``ReplayVerificationCoordinator``) can ask for the path through
+        the public surface instead of reaching into ``_replay_dir``.
+        """
         if self._save_root is None:
             return None
         return self._save_root / self.REPLAY_SUBDIR
+
+    def _replay_dir(self) -> Optional[Path]:
+        # Backwards-compatible private alias kept so existing callers
+        # don't break across the audit-remediation commit. Prefer the
+        # ``replay_dir`` public property in new code.
+        return self.replay_dir
 
     def _ensure_replay_dir(self) -> Optional[Path]:
         rd = self._replay_dir()
@@ -269,7 +292,12 @@ class ReplayStore:
             return None
         # Notify listeners (snapshot the list so a listener that
         # mutates the registry mid-iteration cannot break the loop).
-        for listener in list(self._on_record_persisted_listeners):
+        # PROJ-354B audit ERR-354B-002: snapshot under the listener
+        # lock so a concurrent ``add``/``remove`` cannot interleave
+        # with the read.
+        with self._listener_lock:
+            listeners_snapshot = list(self._on_record_persisted_listeners)
+        for listener in listeners_snapshot:
             try:
                 listener(record, path)
             except Exception:  # Intentional broad catch: bad subscriber must not block persist
@@ -303,7 +331,7 @@ class ReplayStore:
         return records
 
     def load(self, replay_id: str) -> Optional[ReplayRecord]:
-        rd = self._replay_dir()
+        rd = self.replay_dir
         if rd is None:
             return None
         path = rd / f"{self.REPLAY_FILE_PREFIX}{replay_id}{self.REPLAY_FILE_SUFFIX}"
@@ -313,6 +341,31 @@ class ReplayStore:
         if rec is None or rec.schema_version != REPLAY_SCHEMA_VERSION:
             return None
         return rec
+
+    def load_or_error(
+        self, replay_id: str
+    ) -> Tuple[Optional[ReplayRecord], Optional[str]]:
+        """Load a replay and surface the failure reason for the UI.
+
+        PROJ-354B audit AR-002: gives ``ReplayResolver`` the
+        granularity it needs (missing / corrupt / version_drift)
+        without reaching into ``_safe_load``. Returns
+        ``(record, None)`` on success or ``(None, reason)`` on
+        failure. ``reason`` is one of ``"missing"``, ``"corrupt"``,
+        ``"version_drift"``.
+        """
+        rd = self.replay_dir
+        if rd is None:
+            return None, "missing"
+        path = rd / f"{self.REPLAY_FILE_PREFIX}{replay_id}{self.REPLAY_FILE_SUFFIX}"
+        if not path.exists():
+            return None, "missing"
+        rec = self._safe_load(path)
+        if rec is None:
+            return None, "corrupt"
+        if rec.schema_version != REPLAY_SCHEMA_VERSION:
+            return None, "version_drift"
+        return rec, None
 
     def delete(self, replay_id: str) -> bool:
         rd = self._replay_dir()

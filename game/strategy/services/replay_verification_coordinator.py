@@ -37,15 +37,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, List, Optional, Set
 
-from game.simulation.replay.replay_player import (
-    build_replay_ship_builder,
-    run_replay_headless,
-)
+from game.simulation.replay.replay_player import run_replay_headless
 from game.simulation.replay.replay_record import ReplayRecord
 from game.simulation.replay.replay_verifier import (
     Difference,
     verify_replay_outcome,
 )
+from game.strategy.services.replay_ship_builder import build_replay_ship_builder
 from game.strategy.services.replay_store import ReplaySettings, ReplayStore
 from game.strategy.services.replay_verification_sidecar import (
     REPLAY_VERIFICATION_SCHEMA_VERSION,
@@ -103,11 +101,43 @@ def shutdown_all_coordinators(timeout: float = 5.0) -> None:
 _WORKER_IDLE_POLL_SECONDS = 0.05
 
 
+def _json_safe(value: Any) -> Any:
+    """PROJ-354B audit (CJ-04) — coerce diff payloads to JSON-safe types.
+
+    The verifier's :class:`Difference` carries ``expected`` and
+    ``actual`` values copied directly from the captured/replayed
+    outcome dicts. Both sides currently derive from
+    ``battle_outcome_to_dict`` (JSON-primitive only), but the verifier
+    has no type-level guarantee. A future leaked ``Vector2``, ``Enum``,
+    or ``datetime`` would cause ``save_json`` to silently fail with
+    ``False`` at sidecar-write time. This helper applies a defensive
+    pass that:
+
+      * Recursively walks dicts, lists, and tuples (tuples → lists).
+      * Converts ``Enum`` to its ``.value``.
+      * Falls back to ``repr(value)`` for unknown types so the diff
+        still records *something* visible in the sidecar instead of
+        being silently dropped.
+    """
+    from enum import Enum
+
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, Enum):
+        return _json_safe(value.value)
+    if isinstance(value, dict):
+        return {str(k): _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    # Last resort — never let a non-JSON value reach ``save_json``.
+    return repr(value)
+
+
 def _difference_to_dict(d: Difference) -> dict:
     return {
-        "path": list(d.path),
-        "expected": d.expected,
-        "actual": d.actual,
+        "path": _json_safe(list(d.path)),
+        "expected": _json_safe(d.expected),
+        "actual": _json_safe(d.actual),
     }
 
 
@@ -169,23 +199,31 @@ class ReplayVerificationCoordinator:
             if self._worker is not None:
                 return
             self._shutdown_event.clear()
+            # PROJ-354B audit AR-003: register the listener BEFORE
+            # spawning the worker so a record persisted between
+            # ``start()`` lines cannot be silently dropped (the worker
+            # starts with an empty queue, so registration-first is
+            # safe).
+            self._store.add_on_record_persisted_listener(self._on_record_persisted)
+            self._listener_registered = True
             self._worker = threading.Thread(
                 target=self._worker_loop,
                 name=f"ReplayVerifier-{id(self):x}",
                 daemon=False,
             )
             self._worker.start()
-        self._store.add_on_record_persisted_listener(self._on_record_persisted)
-        self._listener_registered = True
         with _coordinator_lock:
             _active_coordinators.add(self)
 
     def shutdown(self, timeout: float = 5.0) -> None:
         """Signal shutdown, deregister, and join the worker.
 
-        Idempotent. Records still in the queue at shutdown time are
-        dropped — the worker terminates on the next iteration once the
-        shutdown event is observed.
+        Idempotent. The worker drains any remaining records in the
+        queue before terminating, so verification sidecars are written
+        for queued-but-unprocessed replays. The worker exits once
+        ``_shutdown_event`` is set AND the queue is empty.
+        (PROJ-354B audit AR-004: the previous docstring described a
+        drop-on-shutdown behavior the implementation never had.)
         """
         # Deregister first so a race between persist and shutdown
         # cannot enqueue a new record after we've stopped servicing.
@@ -248,23 +286,42 @@ class ReplayVerificationCoordinator:
     # -- Worker -------------------------------------------------------------
 
     def _worker_loop(self) -> None:
-        while True:
-            with self._queue_signal:
-                while not self._queue and not self._shutdown_event.is_set():
-                    self._queue_signal.wait(timeout=_WORKER_IDLE_POLL_SECONDS)
-                if self._shutdown_event.is_set() and not self._queue:
-                    return
-                if not self._queue:
-                    continue
-                record = self._queue.pop(0)
-                self._busy = True
-            try:
-                self._verify_one(record)
-            finally:
+        # PROJ-354B audit ERR-354B-001: outer try/except guards against
+        # an unexpected exception from the lock-guarded section (e.g.,
+        # ``_idle_event.set`` raising) silently killing the worker. If
+        # the loop body raises, log and exit cleanly so callers waiting
+        # on ``shutdown()`` aren't deadlocked on a dead thread, and
+        # ensure ``_idle_event`` is set so ``wait_for_idle`` cannot
+        # hang forever.
+        try:
+            while True:
                 with self._queue_signal:
-                    self._busy = False
+                    while not self._queue and not self._shutdown_event.is_set():
+                        self._queue_signal.wait(timeout=_WORKER_IDLE_POLL_SECONDS)
+                    if self._shutdown_event.is_set() and not self._queue:
+                        return
                     if not self._queue:
-                        self._idle_event.set()
+                        continue
+                    record = self._queue.pop(0)
+                    self._busy = True
+                try:
+                    self._verify_one(record)
+                finally:
+                    with self._queue_signal:
+                        self._busy = False
+                        if not self._queue:
+                            self._idle_event.set()
+        except Exception:  # Intentional broad catch: worker death must be visible and not deadlock waiters
+            logger.exception(
+                "PROJ-354B verification worker terminated by unexpected exception"
+            )
+        finally:
+            # Defensive: regardless of how the loop exits, ensure
+            # idle/busy invariants are sane so ``wait_for_idle`` and
+            # ``shutdown`` cannot hang on a dead worker.
+            with self._queue_signal:
+                self._busy = False
+                self._idle_event.set()
 
     def _verify_one(self, record: ReplayRecord) -> None:
         """Run the headless replay, verify, and persist the sidecar.
@@ -273,7 +330,7 @@ class ReplayVerificationCoordinator:
         (R6): we re-check the replay dir before writing the sidecar so
         a deleted save doesn't leak a sidecar into a stale folder.
         """
-        rd = self._store._replay_dir()  # noqa: SLF001 — package-internal
+        rd = self._store.replay_dir
         if rd is None:
             logger.debug(
                 "PROJ-354B verification dropped — save root cleared "
@@ -336,7 +393,7 @@ class ReplayVerificationCoordinator:
         diff: Optional[List[dict]] = None,
         error: Optional[dict] = None,
     ) -> None:
-        rd = self._store._replay_dir()  # noqa: SLF001 — package-internal
+        rd = self._store.replay_dir
         if rd is None:
             return
         sidecar = VerificationSidecar(

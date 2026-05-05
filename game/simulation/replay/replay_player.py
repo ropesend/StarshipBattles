@@ -7,6 +7,14 @@ The launcher returns a ``BattleOutcome`` (for headless determinism
 verification) or a ``BattleController`` (for visual playback through
 ``BattleScreen``). Visual integration belongs to the UI layer and is wired
 in Phase 6 — this module supplies the headless launcher used by tests.
+
+PROJ-354B audit remediation (AR-001): the previous
+``build_replay_ship_builder`` factory imported
+``ShipInstanceSerializer`` from the Strategy layer (a forbidden
+upward dependency). It now lives at
+``game.strategy.services.replay_ship_builder.build_replay_ship_builder``.
+The Simulation-side launcher receives the builder via DI from the
+Strategy composition root.
 """
 from __future__ import annotations
 
@@ -34,56 +42,9 @@ def replay_record_to_spec(record: ReplayRecord) -> BattleSpec:
         mutations; the original capture's hook is intentionally dropped.
       - ``ShipSpec.instance_ref = None`` — replays re-materialize ships
         from the captured ``ShipInstance`` snapshot via a custom
-        ``ship_builder`` (see ``build_replay_ship_builder``).
+        ``ship_builder`` (supplied by the Strategy layer).
     """
     return record.spec.to_battle_spec()
-
-
-def build_replay_ship_builder(
-    record: ReplayRecord,
-    *,
-    registry_provider: "IRegistryProvider",
-    fallback_builder: Optional[Callable[[ShipSpec, int], "Ship"]] = None,
-) -> Callable[[ShipSpec, int], "Ship"]:
-    """Build a ``ship_builder`` closure that materializes ships from the
-    captured ``ShipInstance`` snapshots in the record.
-
-    For each ``ShipSpec`` (matched by ``instance_id``), looks up the
-    corresponding ``instance_snapshot`` blob in the record and rebuilds a
-    live ``ShipInstance`` via ``ShipInstanceSerializer.from_dict``, then
-    converts it to a ``Ship`` via the strategy bridge.
-
-    ``registry_provider`` is REQUIRED (PROJ-306 / PROJ-252: simulation
-    code never resolves the registry provider via global lookup —
-    callers in the strategy / UI / Combat Lab layers supply it).
-
-    When a snapshot is unavailable (Combat Lab / synthetic captures) and a
-    ``fallback_builder`` is supplied, the fallback is used. If neither
-    is available, a ``ValueError`` is raised.
-    """
-    snapshots = dict(record.spec.iter_ship_snapshots())
-    registries = registry_provider.get_registries()
-
-    def _builder(ship_spec: ShipSpec, team_id: int) -> "Ship":
-        snapshot = snapshots.get(ship_spec.instance_id)
-        if snapshot is not None:
-            # Strategy → simulation bridge: rebuild the ShipInstance, then
-            # delegate to its `.to_ship(...)` for a live Ship.
-            from game.strategy.data.ship_instance_serializer import (
-                ShipInstanceSerializer,
-            )
-            instance = ShipInstanceSerializer.from_dict(snapshot)
-            from game.core.math import Vector2
-            position = Vector2(ship_spec.position.x, ship_spec.position.y)
-            return instance.to_ship(position, team_id, registries)
-        if fallback_builder is not None:
-            return fallback_builder(ship_spec, team_id)
-        raise ValueError(
-            f"replay ship_builder: no instance snapshot for {ship_spec.instance_id} "
-            "and no fallback_builder supplied"
-        )
-
-    return _builder
 
 
 def run_replay_headless(
@@ -116,7 +77,6 @@ def run_replay_headless(
 
 
 __all__ = [
-    "build_replay_ship_builder",
     "replay_record_to_spec",
     "run_replay_headless",
 ]
