@@ -173,10 +173,60 @@ pytest tests/unit/core/test_protocols.py tests/unit/simulation/combat/test_fleet
 | `game/ui/services/image/openai_provider.py` | `OpenAIImageProvider` now catches `requests.exceptions.SSLError` before broader connection errors, preserving the SSL-specific `ImageNetworkError`; response parsing now uses validated base64 decoding so invalid payloads raise `ImageResponseError` instead of silently decoding empty bytes. |
 | `game/strategy/data/fleet.py` | `Fleet.remove_orders_by_type_and_target()` now removes matching orders before unregistering pursuers, so the target tracker observes the true remaining queue; it also clears `fleet.path` when the active order is removed. |
 
+## Pass 5 Results
+
+Fifth pass continued 2026-05-05 with five worker slices plus one local advisory slice.
+
+| Slice | Result | Notes |
+|---|---|---|
+| Local / Test Lab dialog advisory | Completed | Added focused state-transition tests for `JSONPopup.close()` and `ConfirmationDialog` confirm/cancel/Escape paths. No production changes needed. |
+| A / battle setup compiler + schematic | Completed | Added branch coverage for `_load_complex_design()` OSError handling, `_iter_components()` malformed layer entries, `_ship_spec_from_instance(..., pose=None)`, and schematic cube-root radius scaling. Found and fixed schematic radius truncation. |
+| B / builder/rendering helper gaps | Completed | Added focused tests for weapons panel no-weapons/target-info/tooltip dispatch, weapons renderer no-weapons/target-info/verbose-tooltip text generation, and battle state viewer event/draw dispatch. No production changes needed. |
+| C / UI services leftovers | Completed | Added OpenAI edit-image/mask file-read failure tests and `ModifierIconService.clear_cache()` coverage. Found and fixed raw `FileNotFoundError` leakage from OpenAI edit file reads. |
+| D / app/UI screen edge cases | Completed | Added `StrategyScreen.current_empire` empty-human-ID coverage, workshop data-loader policy/layer path coverage, and direct `UIActionRouter` mapping tests. Found and fixed `current_empire` empty-list indexing. |
+| E / non-UI minor/advisory | Completed | Added battle-line wedge/echelon geometry tests, direct habitability sigma-guard coverage, and atmosphere malformed-data/list-form edge coverage. `_flee_direction` zero-length vector was disputed because an existing direct test already covers it. |
+
+Pass 5 targeted receipts:
+
+| Slice | Command Result |
+|---|---|
+| Local probe | `pytest tests/unit/ui/screens/test_lab -k confirmation_dialog_state_transitions -q -n 0` -> `55 deselected` |
+| Local targeted suite | `pytest tests/unit/ui/screens/test_lab/test_dialogs.py -q -n 0` -> `5 passed` |
+| Worker A targeted suite | `46 passed`; `git diff --check` passed |
+| Worker B targeted suite | `19 passed`; scoped diff check passed |
+| Worker C targeted suite | Initial new tests exposed 2 failures; final targeted suite `23 passed`; `git diff --check` passed |
+| Worker D targeted suite | Initial new `current_empire` test failed with `IndexError`; final targeted suite `80 passed`; `git diff --check` passed |
+| Worker E targeted suite | `102 passed`; `git diff --check` passed |
+| Combined Pass 5 targeted suite | `275 passed` |
+| `git diff --check` | Passed |
+
+Combined Pass 5 command:
+
+```powershell
+pytest tests/unit/ui/screens/battle_setup/test_spec_compiler.py tests/unit/ui/screens/builder/test_schematic_view.py tests/unit/builder/test_schematic_cache_key.py tests/unit/ui/screens/builder/test_weapons_panel.py tests/unit/ui/screens/builder/test_weapons_renderer.py tests/unit/ui/screens/test_battle_state_viewer.py tests/unit/ui/services/image/test_openai_provider.py tests/unit/ui/services/test_modifier_icon_service.py tests/unit/ui/screens/test_strategy_screen.py tests/unit/ui/screens/test_workshop_data_loader.py tests/unit/ui/screens/test_strategy_ui_action_router.py tests/unit/ai/test_behavior_units.py tests/unit/ai/spatial_behaviors/test_spatial_behaviors.py tests/unit/strategy/formulas/test_habitability.py tests/unit/strategy/engine/test_atmosphere_engine.py tests/unit/ui/screens/test_lab/test_dialogs.py -q -n 0
+```
+
+## Pass 5 Production Fixes
+
+| File | Fix |
+|---|---|
+| `game/ui/screens/builder/schematic_view.py` | `_calculate_max_r()` now rounds the cube-root mass radius calculation instead of truncating it, matching the documented Escort/Dreadnought scaling. |
+| `game/ui/services/image/openai_provider.py` | OpenAI edit image/mask file-read failures now raise `ImageConfigError` with field/path/error context before any network call. |
+| `game/ui/screens/strategy_screen.py` | `current_empire` now handles empty `human_player_ids` by returning `active_empire` or the first available empire instead of indexing an empty list. |
+
+## Pass 5 Disputed / Already Covered
+
+| Claim | Result | Notes |
+|---|---|---|
+| `game/ai/behaviors.py` `_flee_direction` zero-length vector | Disputed | Existing `TestFleeBehavior::test_flee_zero_distance_uses_default_vector` directly covers the branch. |
+| Broad `WeaponsReportPanel` event/scroll/viewport gaps | Disputed/partial | Pass 4 already covered event, scrollbar, and viewport clipping behavior; Pass 5 added only the remaining no-weapons, target-info, and tooltip dispatch branches. |
+| OpenAI parse/SSL/PIL and ModifierIconService cache/missing/load-error paths | Disputed/partial | Pass 4 already covered these; Pass 5 added edit file-read failure and clear-cache coverage only. |
+| Builder helper leftovers (`modifier_utils`, grouping, stat definitions/getters) | Disputed | Passes 1, 2, and 4 already added direct tests for these suggested local candidates, so Pass 5 did not duplicate them. |
+
 ## Deferred High-Risk/High-Effort Claims
 
-These remain good follow-up candidates if they are not completed by workers:
+These remain good follow-up candidates after Pass 5:
 
-- Remaining UI opportunities are now mostly deeper rendering/integration branches: `WeaponsReportPanel` target-info/no-weapons/tooltip draw paths, full `StrategyScreen` construction paths, real `pygame_gui` layout integration for windows/widgets, and remaining `game/ui/screens/battle_setup/spec_compiler.py` / `game/ui/screens/builder/schematic_view.py` P2 branches.
-- Remaining UI service opportunities include OpenAI edit-image file-read failures and `ModifierIconService.clear_cache()`.
-- Remaining non-UI opportunistic items include AI behavior/spatial behavior branch variants, `game/ui/screens/workshop_data_loader.py` loader branch coverage, and any advisory builder/filter utility items not selected in Pass 4.
+- Remaining UI opportunities are now mostly deeper rendering/integration branches: full `StrategyScreen` construction paths, real `pygame_gui` layout integration for windows/widgets, and broad pixel/rendering paths where mocks are not representative.
+- Remaining Test Lab/UI advisory gaps include deeper dialog drawing, tag filter rendering, virtual table/slider widget construction, and other low-risk visual-only helpers.
+- Remaining non-UI opportunities are lower priority after Pass 5; another pass may still be worthwhile only if it targets a small curated set of verified leftover P2/advisory items rather than re-scanning broad audit claims.

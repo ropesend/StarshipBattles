@@ -657,6 +657,15 @@ class TestErrorHandlingPaths:
         # Delegation should occur regardless of state
         mocks['game_state'].advance_turn.assert_called_once()
 
+    def test_current_empire_with_empty_human_player_ids_returns_active_empire(self):
+        """current_empire should not index into an empty human player list."""
+        screen, _ = _make_strategy_screen()
+        active_empire = screen.session.empires[1]
+        screen.session.active_empire = active_empire
+        screen.session.human_player_ids = []
+
+        assert screen.current_empire is active_empire
+
     def test_on_build_yard_click_no_selected_object(self):
         """on_build_yard_click() should delegate to build_queue manager."""
         screen, mocks = _make_strategy_screen()

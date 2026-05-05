@@ -298,11 +298,46 @@ class OpenAIImageProvider:
         }
         data.update(opts)
         files: dict[str, Any] = {
-            "image": ("image.png", edit_image.read_bytes(), "image/png"),
+            "image": (
+                "image.png",
+                self._read_edit_file(edit_image, field_name="image", endpoint=endpoint),
+                "image/png",
+            ),
         }
         if mask is not None:
-            files["mask"] = ("mask.png", mask.read_bytes(), "image/png")
+            files["mask"] = (
+                "mask.png",
+                self._read_edit_file(mask, field_name="mask", endpoint=endpoint),
+                "image/png",
+            )
         return requests.post(endpoint, data=data, files=files, headers=headers, timeout=timeout)
+
+    def _read_edit_file(
+        self,
+        path: pathlib.Path,
+        *,
+        field_name: str,
+        endpoint: str,
+    ) -> bytes:
+        try:
+            return path.read_bytes()
+        except OSError as e:
+            logger.error(
+                "OpenAI image edit file read failed: field=%s path=%s error_type=%s",
+                field_name,
+                path,
+                type(e).__name__,
+            )
+            raise ImageConfigError(
+                "OpenAI image edit file could not be read",
+                code=ErrorCode.IMAGE_CONFIG_MISSING.value,
+                context={
+                    "endpoint": endpoint,
+                    "field": field_name,
+                    "path": str(path),
+                    "error_type": type(e).__name__,
+                },
+            ) from e
 
     def _parse_response(
         self,

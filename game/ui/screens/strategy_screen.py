@@ -184,8 +184,16 @@ class StrategyScreen:
     @property
     def current_empire(self) -> Any:
         """Get the empire for the current player (supports N players)."""
-        current_player_id = self.human_player_ids[self.current_player_index]
-        return next((e for e in self.empires if e.id == current_player_id), self.empires[0])
+        empires = self.empires
+        if not empires:
+            return self.active_empire
+
+        human_player_ids = self.human_player_ids
+        if not human_player_ids:
+            return self.active_empire or empires[0]
+
+        current_player_id = human_player_ids[self.current_player_index]
+        return next((e for e in empires if e.id == current_player_id), empires[0])
 
     @property
     def facade(self) -> Any:
