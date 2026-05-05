@@ -111,6 +111,113 @@ class TestComputeOutcomeDiff:
         diff, truncated, total = compute_outcome_diff(a, b)
         assert total >= 1
 
+    # ----- PROJ-354B audit remediation tests ------------------------------
+
+    def test_missing_key_emits_expected_value_actual_none(self):
+        """TC-C01: key in expected but missing from actual."""
+        a = {"a": 1, "b": 99}
+        b = {"a": 1}
+        diff, _, total = compute_outcome_diff(a, b)
+        assert total == 1
+        assert len(diff) == 1
+        assert diff[0].path == ("b",)
+        assert diff[0].expected == 99
+        assert diff[0].actual is None
+
+    def test_extra_key_emits_expected_none_actual_value(self):
+        """TC-C01: key in actual but missing from expected."""
+        a = {"a": 1}
+        b = {"a": 1, "c": 7}
+        diff, _, total = compute_outcome_diff(a, b)
+        assert total == 1
+        assert len(diff) == 1
+        assert diff[0].path == ("c",)
+        assert diff[0].expected is None
+        assert diff[0].actual == 7
+
+    def test_type_mismatch_emits_diff(self):
+        """TC-C02: same key but value types differ."""
+        a = {"x": 1}
+        b = {"x": [1]}
+        diff, _, total = compute_outcome_diff(a, b)
+        assert total == 1
+        assert diff[0].path == ("x",)
+        assert diff[0].expected == 1
+        assert diff[0].actual == [1]
+
+    def test_int_float_scalar_not_diffed(self):
+        """0 and 0.0 are JSON-equivalent and should not flag as a diff."""
+        diff, _, total = compute_outcome_diff({"x": 0}, {"x": 0.0})
+        assert total == 0
+        assert diff == ()
+
+    def test_tuple_path_walks_like_list(self):
+        """TC-C03: tuples must be walked structurally identically to lists."""
+        # Tuple equal to list: no diff (CJ-01 normalization).
+        diff, _, total = compute_outcome_diff({"xs": (1, 2, 3)}, {"xs": [1, 2, 3]})
+        assert total == 0
+        assert diff == ()
+
+    def test_tuple_index_diff(self):
+        """TC-C03: tuple element mismatch surfaces with index path."""
+        a = {"xs": (1, 2, 3)}
+        b = {"xs": [1, 9, 3]}
+        diff, _, total = compute_outcome_diff(a, b)
+        assert total == 1
+        assert diff[0].path == ("xs", 1)
+        assert diff[0].expected == 2
+        assert diff[0].actual == 9
+
+    def test_tuple_length_mismatch(self):
+        """TC-C03: tuple-vs-list length difference produces synthetic diff."""
+        a = {"xs": (1, 2, 3)}
+        b = {"xs": [1, 2]}
+        diff, _, total = compute_outcome_diff(a, b)
+        assert total >= 1
+        # The length-mismatch diff uses synthetic ``__len__`` payload (CJ-03).
+        len_diffs = [d for d in diff if d.path == ("xs",)]
+        assert len(len_diffs) == 1
+        assert len_diffs[0].expected == {"__len__": 3}
+        assert len_diffs[0].actual == {"__len__": 2}
+
+    def test_float_drift_within_tolerance_passes(self):
+        """CJ-02: sub-ULP float drift must not flag as a diff."""
+        a = {"hp": 100.0}
+        b = {"hp": 100.0 + 1e-12}  # well below the 1e-9 tolerance
+        diff, _, total = compute_outcome_diff(a, b)
+        assert total == 0
+        assert diff == ()
+
+    def test_float_drift_outside_tolerance_fails(self):
+        """CJ-02: drift larger than tolerance still produces a diff."""
+        a = {"hp": 100.0}
+        b = {"hp": 100.5}
+        diff, _, total = compute_outcome_diff(a, b)
+        assert total == 1
+        assert diff[0].path == ("hp",)
+
+    def test_exactly_at_cap_diff_count(self):
+        """TC-M01: 25 diffs at cap=25 must NOT trigger truncation."""
+        a = {f"k{i}": i for i in range(25)}
+        b = {f"k{i}": i + 1 for i in range(25)}
+        diff, truncated, total = compute_outcome_diff(a, b, max_diffs=25)
+        assert truncated is False
+        assert total == 25
+        assert len(diff) == 25
+
+    def test_length_mismatch_does_not_carry_full_lists(self):
+        """CJ-03: length-mismatch diff must use synthetic payload, not raw blobs."""
+        a = {"xs": list(range(1000))}
+        b = {"xs": list(range(500))}
+        diff, _, total = compute_outcome_diff(a, b)
+        assert total >= 1
+        # The path-level diff should be the synthetic length payload,
+        # not the full 1000-element list.
+        len_diffs = [d for d in diff if d.path == ("xs",)]
+        assert len(len_diffs) == 1
+        assert len_diffs[0].expected == {"__len__": 1000}
+        assert len_diffs[0].actual == {"__len__": 500}
+
 
 # ---------------------------------------------------------------------------
 # verify_replay_outcome (high-level)
@@ -186,3 +293,15 @@ class TestVerifyReplayOutcome:
         d = Difference(path=("a",), expected=1, actual=2)
         with pytest.raises((AttributeError, Exception)):
             d.path = ("b",)  # type: ignore[misc]
+
+    def test_replay_verification_result_is_frozen(self):
+        """TC-M02: ReplayVerificationResult is also @dataclass(frozen=True)."""
+        r = ReplayVerificationResult(
+            replay_id="r1",
+            passed=True,
+            diff=(),
+            diff_truncated=False,
+            total_diff_count=0,
+        )
+        with pytest.raises((AttributeError, Exception)):
+            r.passed = False  # type: ignore[misc]

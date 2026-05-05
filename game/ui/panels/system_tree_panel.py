@@ -6,20 +6,6 @@ from pygame_gui.elements import UIPanel, UIButton, UIImage, UILabel, UIScrolling
 from game.core.protocols import is_star_system, is_star, is_planet, is_warp_point
 
 
-def _legacy_provider_label(provider: dict) -> str:
-    """Fallback provider label when a source omits source_label.
-
-    Pre-PROJ-300 the panel concatenated facility_name + planet_name.
-    Universal sources (storms, future planets/stars/etc.) carry a single
-    `source_label` — preferred. This fallback exists for safety.
-    """
-    facility = provider.get('facility_name')
-    planet = provider.get('planet_name')
-    if facility and planet:
-        return f"{facility} ({planet})"
-    return facility or planet or "(unknown)"
-
-
 def _format_star_hazard_hints(effects) -> list:
     """PROJ-302 D8: derive hazard messages from system-effects providers.
 
@@ -547,9 +533,12 @@ class SystemTreePanel:
 
             if len(providers) == 1:
                 p = providers[0]
-                # PROJ-300: prefer the universal source_label; fall back to
-                # legacy planet_name/facility_name combo only when missing.
-                location_str = p.get('source_label') or _legacy_provider_label(p)
+                # PROJ-300: every IAbilitySource adapter sets source_label;
+                # the "(unknown)" fallback is a defensive safety net only.
+                # PROJ-362 Phase 4: legacy facility_name/planet_name combo
+                # removed; the upstream `_legacy_provider_fields` shim was
+                # also deleted.
+                location_str = p.get('source_label') or "(unknown)"
                 location_label = f"{effect_label} ({location_str})"
                 leaf = SystemTreeItem(
                     None, location_label, None,
@@ -579,7 +568,10 @@ class SystemTreePanel:
 
                 for p in providers:
                     p_value = self._format_provider_value(effect, p)
-                    label = p.get('source_label') or _legacy_provider_label(p)
+                    # PROJ-362 Phase 4: source_label is guaranteed by
+                    # IAbilitySource adapters; "(unknown)" guards a missing
+                    # value defensively.
+                    label = p.get('source_label') or "(unknown)"
                     p_label = f"{label} — {p['status']}"
                     if p_value:
                         p_label = f"{label} {p_value} — {p['status']}"

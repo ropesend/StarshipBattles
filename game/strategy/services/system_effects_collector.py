@@ -20,10 +20,12 @@ Effect dict shape:
 - aggregate_value: float           # 1.0 if multiplier+empty, 0.0 if rate+empty
 - providers: list of provider dicts
 
-Each provider carries both the universal PROJ-300 fields (source_kind,
-source_label, source_id, owner_id) AND legacy back-compat fields
-(planet_name, planet_id, facility_name, facility_id, component_key) so
-existing consumers keep working until Phase 8 retires them.
+Each provider carries the universal PROJ-300 fields (source_kind,
+source_label, source_id, owner_id). The pre-PROJ-300 legacy back-compat
+fields (planet_name, planet_id, facility_name, facility_id,
+component_key) were retired in PROJ-362 Phase 4 along with the
+``_legacy_provider_fields`` shim — UI consumers read ``source_label`` /
+``source_kind`` / ``source_id`` directly.
 """
 import logging
 from typing import Any, Dict, List, TYPE_CHECKING
@@ -42,7 +44,6 @@ from game.strategy.services.effect_ability_metadata import (
     is_known_effect_ability,
 )
 from game.strategy.services.effect_ability_display import (
-    _ability_kind,
     _format_status,
     _is_activatable,
     format_intrinsic_ability_magnitude,
@@ -161,7 +162,8 @@ def _build_provider(source, entry, ability_name, metadata, owner_id) -> Dict[str
     """Build a single provider dict for one (source, ability_entry) pair.
 
     Reads activation state, computes is_active, extracts the value, and
-    layers PROJ-300 universal fields with `_legacy_provider_fields`.
+    emits the PROJ-300 universal fields (``source_kind``, ``source_label``,
+    ``source_id``, ``owner_id``).
     """
     state = None
     if _is_activatable(entry):
@@ -190,9 +192,6 @@ def _build_provider(source, entry, ability_name, metadata, owner_id) -> Dict[str
         'is_active': is_active,
         'value': value,
         'ability_data': entry,
-        # Legacy back-compat fields — populated for facility sources so
-        # existing UI consumers keep working until Phase 4 (deferred).
-        **_legacy_provider_fields(source),
     }
 
 
@@ -412,31 +411,3 @@ def _aggregate(
     return _format_rows(raw_providers, status_per_group, value_per_group)
 
 
-def _legacy_provider_fields(source) -> Dict[str, Any]:
-    """Build legacy provider fields (`planet_name`, `facility_name`, etc.).
-
-    Populated for facility sources so existing UI/tests keep working. For
-    other source kinds (storms, future PROJ-301..305), these fields default
-    to None / the source label. Phase 8 will retire the legacy fields.
-    """
-    if getattr(source, 'source_kind', None) != 'facility':
-        # Best-effort fill for non-facility sources so renderers that always
-        # read legacy fields don't crash.
-        label = getattr(source, 'source_label', '')
-        return {
-            'planet_name': None,
-            'planet_id': None,
-            'facility_name': label,
-            'facility_id': getattr(source, 'source_id', None),
-            'component_key': None,
-        }
-
-    facility = getattr(source, 'facility', None)
-    planet = getattr(source, 'planet', None)
-    return {
-        'planet_name': getattr(planet, 'name', None),
-        'planet_id': getattr(planet, 'id', None),
-        'facility_name': getattr(facility, 'name', None),
-        'facility_id': getattr(facility, 'instance_id', None),
-        'component_key': None,  # Adapter no longer tracks per-component key.
-    }

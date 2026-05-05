@@ -368,7 +368,7 @@ class SimulationBattleResolver(IBattleResolver):
         self,
         fleets: List['Fleet'],
         *,
-        registries: Optional['GameRegistries'],
+        registries: 'GameRegistries',
     ) -> Any:
         """Build a ``ReplayCaptureContext`` for this strategy battle.
 
@@ -381,6 +381,12 @@ class SimulationBattleResolver(IBattleResolver):
         from the fleet inputs; missing values are left as ``None`` /
         empty tuples (Phase 4 enriches further when integrating with the
         save lifecycle).
+
+        PROJ-361 follow-up: ``registries`` is required (non-Optional). The
+        sole caller (``_run_simulated_battle``) is reached only after
+        ``resolve_battle`` has resolved the registries fallback via
+        ``_resolve_registries``, so a guaranteed non-None value is always
+        passed.
         """
         from datetime import datetime, timezone
 
@@ -415,11 +421,7 @@ class SimulationBattleResolver(IBattleResolver):
                     sector_name = f"({q}, {r})"
 
         # Components-registry hash — fed by Phase 6 drift-warning UI.
-        components_hash = (
-            compute_components_registry_hash(registries)
-            if registries is not None
-            else "sha256:unknown"
-        )
+        components_hash = compute_components_registry_hash(registries)
 
         # ship_instance_lookup serializes the strategy ShipInstance referenced
         # by ShipSpec.instance_ref. Returns None when no instance is attached

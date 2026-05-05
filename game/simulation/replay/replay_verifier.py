@@ -8,12 +8,27 @@ on simulation/replay DTOs — never on Strategy, UI, or AI. The
 threading, queueing, and sidecar IO; this module owns only the equality
 oracle.
 
-Equality is strict and structural:
-    * Walks dicts/lists/tuples recursively.
-    * Emits one :class:`Difference` per leaf mismatch.
-    * Caps the returned diff at ``max_diffs`` (default 25); the
-      ``diff_truncated`` flag and ``total_diff_count`` field record any
-      overflow.
+Equality is structural with two intentional relaxations rooted in the
+JSON-only data contract carried by ``ReplayOutcome.data``:
+
+    * ``list`` and ``tuple`` are treated as the same sequence type. The
+      capture-side serializer (``battle_outcome_to_dict``) emits all
+      tuple fields as lists because JSON has no tuple type, while
+      replayed outcomes still carry the original tuples until they are
+      dict-ified. Distinguishing them would produce false-positive
+      diffs on every replay (PROJ-354B audit CJ-01).
+    * Float scalars compare via ``math.isclose`` with tight
+      tolerances. FPU nondeterminism (operation reordering, FMA
+      differences) yields sub-ULP drift between two semantically
+      identical battles even on the same seed; strict ``!=`` would
+      flag those as failures (PROJ-354B audit CJ-02).
+
+Each leaf mismatch produces one :class:`Difference`. List-length
+mismatches emit a synthetic ``{"__len__": ...}`` payload rather than
+the full lists, so the cap-25 budget isn't consumed by large blobs
+(PROJ-354B audit CJ-03). The returned diff is capped at ``max_diffs``
+(default 25); the ``diff_truncated`` flag and ``total_diff_count``
+field record any overflow.
 
 ``verify_replay_outcome`` accepts a :class:`ReplayRecord` (whose
 ``outcome.data`` is the captured dict) and a freshly-replayed
@@ -22,6 +37,7 @@ Equality is strict and structural:
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
@@ -31,6 +47,12 @@ from game.simulation.replay.replay_serialization import battle_outcome_to_dict
 
 
 _DEFAULT_MAX_DIFFS = 25
+
+# Float comparison tolerances (PROJ-354B audit CJ-02). Calibrated tight
+# enough to surface real divergence but loose enough to absorb FPU
+# nondeterminism on simulation outputs (HP, modifier values, damage).
+_FLOAT_REL_TOL = 1e-9
+_FLOAT_ABS_TOL = 1e-9
 
 
 @dataclass(frozen=True)
@@ -109,12 +131,21 @@ def compute_outcome_diff(
             for k in sorted(exp_keys & act_keys, key=str):
                 _walk(path + (k,), exp[k], act[k])
             return
-        # Both list/tuple: compare lengths, then walk shared indices.
+        # Both sequences (list or tuple): compare lengths, walk shared
+        # indices. List/tuple are structurally equivalent here per the
+        # JSON data contract (CJ-01).
         if isinstance(exp, (list, tuple)) and isinstance(act, (list, tuple)):
             if len(exp) != len(act):
-                # Length mismatch as a single diff at this level.
-                _record(path, exp, act)
-                # Also walk shared prefix to surface any leaf diffs.
+                # CJ-03: emit a compact length-mismatch payload rather
+                # than the full lists. Otherwise a single deep mismatch
+                # can carry tens of KB and consume one of only 25 diff
+                # slots with low-signal data.
+                _record(
+                    path,
+                    {"__len__": len(exp)},
+                    {"__len__": len(act)},
+                )
+                # Walk shared prefix to surface any leaf diffs.
                 shared = min(len(exp), len(act))
                 for i in range(shared):
                     _walk(path + (i,), exp[i], act[i])
@@ -122,8 +153,33 @@ def compute_outcome_diff(
             for i in range(len(exp)):
                 _walk(path + (i,), exp[i], act[i])
             return
-        # Type mismatch or scalar comparison.
-        if type(exp) is not type(act) or exp != act:
+        # CJ-01: do not flag list-vs-tuple as a type mismatch (handled
+        # by the sequence branch above; this guard is belt-and-braces
+        # for nested edge cases reached when one side is a sequence
+        # and the other is not).
+        # Type mismatch — but treat float vs int as comparable scalars
+        # so e.g. ``0`` and ``0.0`` don't diverge spuriously.
+        if type(exp) is not type(act):
+            if not (isinstance(exp, (int, float)) and isinstance(act, (int, float))
+                    and not isinstance(exp, bool) and not isinstance(act, bool)):
+                _record(path, exp, act)
+                return
+        # Scalar comparison. CJ-02: floats compare via math.isclose;
+        # bool/int and other scalars use strict ``!=``.
+        if isinstance(exp, float) or isinstance(act, float):
+            # bool is an int subclass; keep it on the strict path.
+            if isinstance(exp, bool) or isinstance(act, bool):
+                if exp != act:
+                    _record(path, exp, act)
+                return
+            if not math.isclose(
+                float(exp), float(act),
+                rel_tol=_FLOAT_REL_TOL,
+                abs_tol=_FLOAT_ABS_TOL,
+            ):
+                _record(path, exp, act)
+            return
+        if exp != act:
             _record(path, exp, act)
 
     _walk((), expected, actual)

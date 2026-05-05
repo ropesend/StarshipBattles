@@ -133,3 +133,58 @@ class TestReadSidecar:
         # Implementation must be tolerant: return None on schema mismatch.
         result = read_verification_sidecar(tmp_path, "incomplete")
         assert result is None
+
+
+class TestSidecarSchemaEdgeCases:
+    """PROJ-354B audit remediation TC-M07: ``duration_ms`` is
+    ``Optional[int]``; round-trip ``None`` and ``0`` cleanly."""
+
+    def test_duration_ms_none_round_trip(self, tmp_path: Path):
+        sidecar = VerificationSidecar(
+            replay_id="dur-none",
+            schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+            status=VerificationStatus.SKIPPED_DISABLED.name,
+            source=VerificationSource.BACKGROUND.name,
+            verified_at="2026-05-04T12:00:00+00:00",
+            duration_ms=None,
+            diff=None,
+            error=None,
+        )
+        path = write_verification_sidecar(tmp_path, sidecar)
+        assert path is not None
+        loaded = read_verification_sidecar(tmp_path, "dur-none")
+        assert loaded is not None
+        assert loaded.duration_ms is None
+
+    def test_duration_ms_zero_round_trip(self, tmp_path: Path):
+        sidecar = VerificationSidecar(
+            replay_id="dur-zero",
+            schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+            status=VerificationStatus.SKIPPED_QUEUE_FULL.name,
+            source=VerificationSource.BACKGROUND.name,
+            verified_at="2026-05-04T12:00:00+00:00",
+            duration_ms=0,
+            diff=None,
+            error=None,
+        )
+        path = write_verification_sidecar(tmp_path, sidecar)
+        assert path is not None
+        loaded = read_verification_sidecar(tmp_path, "dur-zero")
+        assert loaded is not None
+        assert loaded.duration_ms == 0
+
+    def test_to_dict_from_dict_direct_round_trip(self):
+        """Direct dataclass-method round trip catches schema drift
+        (e.g., a new field added but forgotten in ``to_dict``)."""
+        original = VerificationSidecar(
+            replay_id="round-1",
+            schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+            status=VerificationStatus.PASSED.name,
+            source=VerificationSource.BACKGROUND.name,
+            verified_at="2026-05-04T12:00:00+00:00",
+            duration_ms=99,
+            diff=None,
+            error=None,
+        )
+        rebuilt = VerificationSidecar.from_dict(original.to_dict())
+        assert rebuilt == original

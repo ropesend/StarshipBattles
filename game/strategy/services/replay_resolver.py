@@ -20,7 +20,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from game.simulation.replay import ReplayRecord, compute_components_registry_hash
+from game.simulation.replay import (
+    REPLAY_SCHEMA_VERSION,
+    ReplayRecord,
+    compute_components_registry_hash,
+)
 from game.strategy.services.replay_store import ReplayStore
 from game.strategy.services.replay_verification_sidecar import (
     read_verification_sidecar,
@@ -92,26 +96,16 @@ class ReplayResolver:
         if not replay_id:
             return ReplayLookup(found=False, reason="missing")
 
-        # Probe the file system directly for "missing": ``store.load``
-        # collapses missing/corrupt/version-drift into None, but we want
-        # to distinguish them for the UI tooltip.
-        rd = self._store_replay_dir()
+        # PROJ-354B audit AR-002: use the public ``load_or_error`` API
+        # instead of reaching into ``_safe_load``. ``replay_dir`` is
+        # the public property the sidecar reader still needs.
+        rd = self._store.replay_dir
         if rd is None:
             return ReplayLookup(found=False, reason="missing")
-        replay_path = rd / f"{ReplayStore.REPLAY_FILE_PREFIX}{replay_id}{ReplayStore.REPLAY_FILE_SUFFIX}"
-        if not replay_path.exists():
-            return ReplayLookup(found=False, reason="missing")
 
-        # File exists — use _safe_load to distinguish corrupt vs valid.
-        record = self._store._safe_load(replay_path)  # noqa: SLF001 — internal helper, intentional
+        record, reason = self._store.load_or_error(replay_id)
         if record is None:
-            return ReplayLookup(found=False, reason="corrupt")
-
-        # Schema-version drift = unloadable (treated like corrupt for the
-        # UI: skip, no replay).
-        from game.simulation.replay import REPLAY_SCHEMA_VERSION
-        if record.schema_version != REPLAY_SCHEMA_VERSION:
-            return ReplayLookup(found=False, reason="version_drift")
+            return ReplayLookup(found=False, reason=reason or "missing")
 
         # Components-registry drift: still loadable, but UI surfaces a
         # confirmation dialog.
@@ -131,9 +125,6 @@ class ReplayResolver:
             registry_drift=registry_drift,
             verification_status=verification_status,
         )
-
-    def _store_replay_dir(self):
-        return self._store._replay_dir()  # noqa: SLF001 — package-internal
 
 
 __all__ = ["ReplayLookup", "ReplayResolver"]
