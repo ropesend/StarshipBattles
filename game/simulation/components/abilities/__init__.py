@@ -55,6 +55,10 @@ from .markers import (
     RequiresCommandAndControl,
     RequiresCombatMovement,
     StructuralIntegrity,
+    # PROJ-367 Phase 1: typed classes for previously-untyped abilities.
+    MultiplexTrackingAbility,
+    VehicleStorageAbility,
+    PodStorageAbility,
 )
 
 # Weapon abilities
@@ -95,6 +99,10 @@ ABILITY_REGISTRY = {
     "ShieldProjection": ShieldProjection,
     "ShieldRegeneration": ShieldRegeneration,
     "VehicleLaunch": VehicleLaunchAbility,
+    # PROJ-367 Phase 1: typed classes for previously-untyped abilities.
+    "MultiplexTracking": MultiplexTrackingAbility,
+    "VehicleStorage": VehicleStorageAbility,
+    "PodStorage": PodStorageAbility,
     "WeaponAbility": WeaponAbility,
     "ProjectileWeaponAbility": ProjectileWeaponAbility,
     "BeamWeaponAbility": BeamWeaponAbility,
@@ -257,6 +265,10 @@ __all__ = [
     'RequiresCommandAndControl',
     'RequiresCombatMovement',
     'StructuralIntegrity',
+    # PROJ-367 Phase 1
+    'MultiplexTrackingAbility',
+    'VehicleStorageAbility',
+    'PodStorageAbility',
     # Weapons
     'WeaponAbility',
     'ProjectileWeaponAbility',

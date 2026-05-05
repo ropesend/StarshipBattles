@@ -74,17 +74,19 @@ def _make_component(
 
 
 class TestArmorPoolAggregation:
+    """PROJ-367 Phase 1 (closes EXT-07): Armor consumed via ``has_ability``."""
+
     def test_armor_component_adds_max_hp_to_pool(self):
         ship = _make_ship_with_armor_layer()
         acc = _empty_acc()
-        comp = _make_component(abilities_dict={"Armor": True}, max_hp=250.0)
+        comp = _make_component(has_ability_set={"Armor"}, max_hp=250.0)
         defense.aggregate_defense(ship, comp, acc)
         assert ship.layers[LayerType.ARMOR].max_hp_pool == 250.0
 
     def test_no_armor_layer_does_not_crash(self):
         ship = _make_ship_with_armor_layer(armor_present=False)
         acc = _empty_acc()
-        comp = _make_component(abilities_dict={"Armor": True}, max_hp=250.0)
+        comp = _make_component(has_ability_set={"Armor"}, max_hp=250.0)
         defense.aggregate_defense(ship, comp, acc)
         # No layers entry — no crash
         assert acc["max_shields"] == 0

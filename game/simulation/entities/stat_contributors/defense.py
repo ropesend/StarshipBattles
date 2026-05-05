@@ -49,7 +49,9 @@ def aggregate_defense(ship: "Ship", comp: "Component", acc: Dict[str, Any]) -> N
       ``comp.ability_instances``.
     """
     # Armor HP pool (using ability-based detection)
-    if comp.abilities.get("Armor", False):
+    # PROJ-367 Phase 1 (closes EXT-07): Armor stays exclusively `has_ability`-based
+    # (marker idiom — no typed class needed).
+    if comp.has_ability("Armor"):
         if LayerType.ARMOR in ship.layers:
             ship.layers[LayerType.ARMOR].max_hp_pool += comp.max_hp
 

@@ -46,8 +46,10 @@ def priority_sort_key(c: "Component") -> int:
 def track_multiplex(ship: "Ship", comp: "Component") -> None:
     """Bump ``ship.max_targets`` if this component's MultiplexTracking exceeds it.
 
-    Uses the raw ``abilities`` dict (legacy semantics) — a 0 value means no
-    contribution and is filtered out.
+    PROJ-367 Phase 1 (closes EXT-07): reads slots via the typed
+    ``MultiplexTrackingAbility.slots`` attribute (sums across instances on
+    the same component, then takes the max against ``ship.max_targets`` —
+    legacy semantics: 0 means no contribution).
 
     PROJ-360 audit EXT-02: respects ``is_builtin_suppressed_for`` so a
     registered contributor for ``MultiplexTracking`` fully replaces the
@@ -55,7 +57,7 @@ def track_multiplex(ship: "Ship", comp: "Component") -> None:
     """
     if is_builtin_suppressed_for("MultiplexTracking"):
         return
-    mt = comp.abilities.get("MultiplexTracking", 0)
+    mt = sum(getattr(ab, "slots", 0) for ab in comp.get_abilities("MultiplexTracking"))
     if mt > 0 and mt > ship.max_targets:
         ship.max_targets = mt
 

@@ -48,32 +48,42 @@ class TestPrioritySortKey:
 
 
 class TestTrackMultiplex:
+    """PROJ-367 Phase 1 (closes EXT-07): typed MultiplexTrackingAbility access."""
+
+    @staticmethod
+    def _multiplex_comp(slots: int | None):
+        """Component whose ``get_abilities("MultiplexTracking")`` returns a list of fakes."""
+        comp = MagicMock()
+        from types import SimpleNamespace
+        if slots is None:
+            comp.get_abilities = lambda name: []
+        else:
+            comp.get_abilities = lambda name: (
+                [SimpleNamespace(slots=slots)] if name == "MultiplexTracking" else []
+            )
+        return comp
+
     def test_multiplex_zero_or_missing_is_noop(self):
         ship = MagicMock()
         ship.max_targets = 1
-        comp = MagicMock()
-        comp.abilities = {}
-        command.track_multiplex(ship, comp)
+        # No ability at all
+        command.track_multiplex(ship, self._multiplex_comp(None))
         assert ship.max_targets == 1
 
-        comp.abilities = {"MultiplexTracking": 0}
-        command.track_multiplex(ship, comp)
+        # Ability with slots=0
+        command.track_multiplex(ship, self._multiplex_comp(0))
         assert ship.max_targets == 1
 
     def test_higher_multiplex_replaces_lower(self):
         ship = MagicMock()
         ship.max_targets = 2
-        comp = MagicMock()
-        comp.abilities = {"MultiplexTracking": 5}
-        command.track_multiplex(ship, comp)
+        command.track_multiplex(ship, self._multiplex_comp(5))
         assert ship.max_targets == 5
 
     def test_lower_multiplex_does_not_overwrite_higher(self):
         ship = MagicMock()
         ship.max_targets = 5
-        comp = MagicMock()
-        comp.abilities = {"MultiplexTracking": 2}
-        command.track_multiplex(ship, comp)
+        command.track_multiplex(ship, self._multiplex_comp(2))
         assert ship.max_targets == 5
 
 

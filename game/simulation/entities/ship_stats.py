@@ -198,13 +198,15 @@ class ShipStatsCalculator:
             comp.mark_hp_cache_dirty()  # PROJ-49
 
             # Damage threshold (armor uses HP pool, not per-component threshold)
-            if not comp.abilities.get("Armor", False):
+            # PROJ-367 Phase 1 (closes EXT-07): Armor is consumed via
+            # `has_ability` (marker idiom) — no typed class needed.
+            if not comp.has_ability("Armor"):
                 if comp.hp_ratio <= comp.damage_threshold:
                     comp.is_active = False
                     comp.status = ComponentStatus.DAMAGED
 
             # Dead armor (0 hp) is inactive
-            if comp.abilities.get("Armor", False) and comp.current_hp <= 0:
+            if comp.has_ability("Armor") and comp.current_hp <= 0:
                 comp.is_active = False
                 comp.status = ComponentStatus.DAMAGED
 
@@ -311,10 +313,11 @@ class ShipStatsCalculator:
                     acc["cargo_storage"].get(cargo_type, 0) + capacity
                 )
 
-        # PodStorage has no ability class — read from raw abilities dict
-        pod_data = comp.abilities.get("PodStorage")
-        if isinstance(pod_data, dict):
-            capacity = pod_data.get("capacity_mass", 0.0)
+        # PROJ-367 Phase 1 (closes EXT-07): PodStorage is now a typed class
+        # (`PodStorageAbility.capacity_mass: float`). Sum across instances
+        # on the same component (legacy semantics ignored 0/empty entries).
+        for ab in comp.get_abilities("PodStorage"):
+            capacity = getattr(ab, "capacity_mass", 0.0)
             if capacity > 0:
                 acc["pod_storage_mass"] += capacity
 
