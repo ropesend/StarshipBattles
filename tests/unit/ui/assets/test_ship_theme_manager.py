@@ -317,3 +317,320 @@ class TestModuleSingleton:
         finally:
             # Restore for downstream tests.
             set_default_ship_theme_manager(original)
+
+
+# ----------------------------------------------------------------------------
+# PROJ-346 / PROJ-340: characterization for previously zero-coverage paths
+# ----------------------------------------------------------------------------
+
+
+class TestValidateDeclaredKeys:
+    """Pin ``_validate_declared_keys`` (ship_theme_manager.py:220-236).
+
+    Two log paths:
+      * ``extras = declared - canonical`` -> WARNING
+      * ``missing = canonical - declared`` -> INFO
+    Empty diffs on either side log nothing on that side.
+    """
+
+    def test_unknown_class_in_assets_logs_warning_naming_extras(
+        self, fake_themes_dir: Path, caplog,
+    ):
+        # Real canonical class plus an alien one to trigger the extras branch.
+        payload = _minimal_theme_json("ExtrasTheme")
+        payload["assets"]["NotARealClass"] = {
+            "skin": "skin_frigate.png", "scale": 1.0,
+        }
+        _write_theme(fake_themes_dir, "ExtrasTheme", payload)
+
+        mgr = ShipThemeManager()
+        with caplog.at_level("WARNING", logger=stm_module.logger.name):
+            mgr.initialize()
+
+        warnings = [
+            r for r in caplog.records
+            if r.levelname == "WARNING"
+            and "unknown ship classes" in r.message
+        ]
+        assert warnings, (
+            "extras branch must emit WARNING naming the unknown class"
+        )
+        # The warning lists the offending class.
+        assert any("NotARealClass" in r.message for r in warnings)
+
+    def test_missing_canonical_class_logs_info_naming_count_and_classes(
+        self, fake_themes_dir: Path, caplog,
+    ):
+        # _minimal_theme_json declares ONLY 'Frigate'. SHIP_CLASSES_WITH_VISUAL_THEMES
+        # has many more, so missing != empty -> INFO branch fires.
+        from game.core.ship_classes import SHIP_CLASSES_WITH_VISUAL_THEMES
+
+        _write_theme(
+            fake_themes_dir, "MissingTheme", _minimal_theme_json("MissingTheme"),
+        )
+
+        mgr = ShipThemeManager()
+        with caplog.at_level("INFO", logger=stm_module.logger.name):
+            mgr.initialize()
+
+        infos = [
+            r for r in caplog.records
+            if r.levelname == "INFO"
+            and "missing" in r.message
+            and "canonical ship class" in r.message
+        ]
+        assert infos, (
+            "missing branch must emit INFO naming the count and classes; "
+            f"records={[r.message for r in caplog.records]}"
+        )
+        # The numeric count appears: |canonical - {Frigate}|.
+        expected_missing = len(SHIP_CLASSES_WITH_VISUAL_THEMES - {"Frigate"})
+        assert any(str(expected_missing) in r.message for r in infos)
+
+    def test_extras_and_missing_paths_are_independent(
+        self, fake_themes_dir: Path, caplog,
+    ):
+        """Both branches fire when the theme has both extras and missing."""
+        payload = _minimal_theme_json("MixedTheme")
+        payload["assets"]["NotARealClass"] = {
+            "skin": "skin_frigate.png", "scale": 1.0,
+        }
+        _write_theme(fake_themes_dir, "MixedTheme", payload)
+
+        mgr = ShipThemeManager()
+        with caplog.at_level("INFO", logger=stm_module.logger.name):
+            mgr.initialize()
+
+        has_extras_warn = any(
+            r.levelname == "WARNING" and "unknown ship classes" in r.message
+            for r in caplog.records
+        )
+        has_missing_info = any(
+            r.levelname == "INFO" and "canonical ship class" in r.message
+            for r in caplog.records
+        )
+        assert has_extras_warn
+        assert has_missing_info
+
+
+class TestMissingAssetsBlockRejection:
+    """Pin the rejection at ship_theme_manager.py:139-145.
+
+    ``_discover_theme`` requires ``assets`` to be a dict; missing key,
+    None, or wrong-type all log ERROR and skip the theme so it does NOT
+    register in ``theme_data``.
+    """
+
+    def test_missing_assets_key_logs_error_and_skips_theme(
+        self, fake_themes_dir: Path, caplog,
+    ):
+        # Theme.json with NO 'assets' key at all.
+        payload = {
+            "schema_version": 1,
+            "name": "NoAssets",
+            "description": "missing assets block",
+            "image_sizes": {},
+        }
+        _write_theme(fake_themes_dir, "NoAssets", payload, write_skin=False)
+
+        mgr = ShipThemeManager()
+        with caplog.at_level("ERROR", logger=stm_module.logger.name):
+            mgr.initialize()
+
+        # Theme NOT registered.
+        assert "NoAssets" not in mgr.theme_data
+        # Error log fired naming the offense.
+        assert any(
+            "missing or invalid 'assets:' block" in r.message
+            for r in caplog.records if r.levelname == "ERROR"
+        )
+
+    def test_assets_as_list_is_rejected(
+        self, fake_themes_dir: Path, caplog,
+    ):
+        """``assets: []`` -> not a dict -> logged + skipped."""
+        payload = _minimal_theme_json("ListAssets")
+        payload["assets"] = []  # Wrong type.
+        _write_theme(fake_themes_dir, "ListAssets", payload, write_skin=False)
+
+        mgr = ShipThemeManager()
+        with caplog.at_level("ERROR", logger=stm_module.logger.name):
+            mgr.initialize()
+
+        assert "ListAssets" not in mgr.theme_data
+        assert any(
+            "missing or invalid 'assets:' block" in r.message
+            for r in caplog.records if r.levelname == "ERROR"
+        )
+
+
+class TestNonDictAssetsEntryRejection:
+    """Pin the per-entry rejection at ship_theme_manager.py:166-171.
+
+    ``assets[<class>]`` that isn't a dict (string, list, etc.) is logged
+    and skipped. The theme itself still registers; only the offending
+    class is dropped.
+    """
+
+    def test_string_entry_is_skipped_with_error_log(
+        self, fake_themes_dir: Path, caplog,
+    ):
+        payload = _minimal_theme_json("StringEntry")
+        # Override the Frigate entry with a string instead of a dict.
+        payload["assets"]["Frigate"] = "skin_frigate.png"
+        _write_theme(
+            fake_themes_dir, "StringEntry", payload, write_skin=True,
+        )
+
+        mgr = ShipThemeManager()
+        with caplog.at_level("ERROR", logger=stm_module.logger.name):
+            mgr.initialize()
+
+        # Theme registered (per-entry skip, not whole-theme skip).
+        assert "StringEntry" in mgr.theme_data
+        # Frigate dropped because the entry wasn't a dict.
+        assert "Frigate" not in mgr.theme_data["StringEntry"]
+        # Error log fired naming the offense.
+        assert any(
+            "is not an object" in r.message
+            for r in caplog.records if r.levelname == "ERROR"
+        )
+
+    def test_list_entry_is_skipped_with_error_log(
+        self, fake_themes_dir: Path, caplog,
+    ):
+        payload = _minimal_theme_json("ListEntry")
+        payload["assets"]["Frigate"] = ["skin_frigate.png"]
+        _write_theme(
+            fake_themes_dir, "ListEntry", payload, write_skin=True,
+        )
+
+        mgr = ShipThemeManager()
+        with caplog.at_level("ERROR", logger=stm_module.logger.name):
+            mgr.initialize()
+
+        assert "ListEntry" in mgr.theme_data
+        assert "Frigate" not in mgr.theme_data["ListEntry"]
+        assert any(
+            "is not an object" in r.message
+            for r in caplog.records if r.levelname == "ERROR"
+        )
+
+
+class TestGetManualScale:
+    """Pin ``get_manual_scale`` (ship_theme_manager.py:345-353)."""
+
+    def test_returns_one_before_initialize(self):
+        mgr = ShipThemeManager()
+        # discovery_complete is False on a fresh instance.
+        assert mgr.get_manual_scale("Federation", "Frigate") == 1.0
+
+    def test_returns_declared_scale_for_known_theme_and_class(
+        self, fake_themes_dir: Path,
+    ):
+        payload = _minimal_theme_json("ScaleTheme")
+        payload["assets"]["Frigate"]["scale"] = 2.5
+        _write_theme(fake_themes_dir, "ScaleTheme", payload)
+
+        mgr = ShipThemeManager()
+        mgr.initialize()
+
+        assert mgr.get_manual_scale("ScaleTheme", "Frigate") == 2.5
+
+    def test_falls_back_to_default_theme_for_unknown_theme(
+        self, fake_themes_dir: Path,
+    ):
+        # Build the default ("Federation") theme with scale 0.75.
+        payload = _minimal_theme_json("Federation")
+        payload["assets"]["Frigate"]["scale"] = 0.75
+        _write_theme(fake_themes_dir, "Federation", payload)
+
+        mgr = ShipThemeManager()
+        mgr.initialize()
+
+        # Unknown theme falls back to default_theme="Federation".
+        assert mgr.get_manual_scale("UnknownTheme", "Frigate") == 0.75
+
+    def test_returns_one_for_unknown_ship_class(self, fake_themes_dir: Path):
+        _write_theme(
+            fake_themes_dir, "Federation", _minimal_theme_json("Federation"),
+        )
+        mgr = ShipThemeManager()
+        mgr.initialize()
+        # Federation has Frigate but not 'NotAClass' -> default 1.0.
+        assert mgr.get_manual_scale("Federation", "NotAClass") == 1.0
+
+
+class TestGetSkinPath:
+    """Pin ``get_skin_path`` (ship_theme_manager.py:428-431)."""
+
+    def test_returns_absolute_path_for_known_theme_and_class(
+        self, fake_themes_dir: Path,
+    ):
+        _write_theme(fake_themes_dir, "PathTheme", _minimal_theme_json("PathTheme"))
+        mgr = ShipThemeManager()
+        mgr.initialize()
+
+        skin_path = mgr.get_skin_path("PathTheme", "Frigate")
+        assert skin_path is not None
+        # Path resolves under the fake themes dir.
+        assert "skin_frigate.png" in skin_path
+        assert "PathTheme" in skin_path
+
+    def test_returns_none_for_unknown_theme(self, fake_themes_dir: Path):
+        # fake_themes_dir is empty -> no themes registered.
+        assert fake_themes_dir.exists()
+        mgr = ShipThemeManager()
+        mgr.initialize()
+        # No themes registered -> None (note: get_skin_path does NOT
+        # fall back to default_theme; it returns None).
+        assert mgr.get_skin_path("DoesNotExist", "Frigate") is None
+
+    def test_returns_none_for_unknown_ship_class(self, fake_themes_dir: Path):
+        _write_theme(fake_themes_dir, "PathTheme", _minimal_theme_json("PathTheme"))
+        mgr = ShipThemeManager()
+        mgr.initialize()
+        assert mgr.get_skin_path("PathTheme", "NotAClass") is None
+
+
+class TestGetPortraitPath:
+    """Pin ``get_portrait_path`` (ship_theme_manager.py:433-439)."""
+
+    def test_returns_absolute_path_when_portrait_declared(
+        self, fake_themes_dir: Path,
+    ):
+        _write_theme(
+            fake_themes_dir, "PortraitTheme",
+            _minimal_theme_json("PortraitTheme"),
+        )
+        mgr = ShipThemeManager()
+        mgr.initialize()
+
+        portrait_path = mgr.get_portrait_path("PortraitTheme", "Frigate")
+        assert portrait_path is not None
+        assert "portrait_frigate.png" in portrait_path
+
+    def test_returns_none_when_portrait_omitted(self, fake_themes_dir: Path):
+        # No portrait key on the entry, no portrait file on disk.
+        payload = _minimal_theme_json("NoPortrait", with_portrait=False)
+        _write_theme(
+            fake_themes_dir, "NoPortrait", payload, write_portrait=False,
+        )
+        mgr = ShipThemeManager()
+        mgr.initialize()
+
+        assert mgr.get_portrait_path("NoPortrait", "Frigate") is None
+
+    def test_returns_none_for_unknown_theme(self):
+        mgr = ShipThemeManager()
+        # Pre-initialize: theme_data is empty.
+        assert mgr.get_portrait_path("Anything", "Frigate") is None
+
+    def test_returns_none_for_unknown_ship_class(self, fake_themes_dir: Path):
+        _write_theme(
+            fake_themes_dir, "PortraitTheme",
+            _minimal_theme_json("PortraitTheme"),
+        )
+        mgr = ShipThemeManager()
+        mgr.initialize()
+        assert mgr.get_portrait_path("PortraitTheme", "NotAClass") is None
