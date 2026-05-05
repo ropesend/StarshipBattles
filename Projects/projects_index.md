@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-367 | Unified Stat Contributor Extension Surface (typed abilities + registry-as-pipeline) | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-366 | Production replay sink wiring + verification coordinator bootstrap (PROJ-354B Phases 5-6 unblock) | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-365 | TurnEngine phase descriptor registry (review finding #3) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-364 | Superweapon spec table refactor (review finding #5; depends on PROJ-363) | Planning | 2026-05-04 | 2026-05-04 |
