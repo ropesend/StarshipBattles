@@ -22,7 +22,12 @@ class TestShipInstanceDamageInfo:
 
     @pytest.fixture
     def design_data(self):
-        """Create design data with components for testing."""
+        """Create design data with components for testing.
+
+        PROJ-358 audit (CQ-01/CQ-05): IDs must be real registry components;
+        ShipSerializer.from_dict now raises on unknown ids rather than
+        silently skipping them.
+        """
         return {
             'name': 'Destroyer',
             'ship_class': 'Destroyer',
@@ -33,16 +38,17 @@ class TestShipInstanceDamageInfo:
                 'max_energy': 50,
             },
             'layers': {
+                # CORE blocks Weapons/Engines/Armor — keep crewsupport+infrastructure here.
                 'CORE': [
-                    {'id': 'reactor_standard'},
-                    {'id': 'engine_basic'},
+                    {'id': 'bridge'},
+                    {'id': 'generator'},
                 ],
                 'INNER': [
-                    {'id': 'bridge_standard'},
+                    {'id': 'fuel_tank'},
                 ],
                 'OUTER': [
-                    {'id': 'weapon_laser'},
-                    {'id': 'weapon_missile'},
+                    {'id': 'laser_cannon'},
+                    {'id': 'standard_engine'},
                 ],
                 'ARMOR': [
                     {'id': 'armor_plate'},
@@ -71,8 +77,8 @@ class TestShipInstanceDamageInfo:
             else:
                 cs.current_hp = current
 
-        _damage('reactor_standard', 0, 50)
-        _damage('weapon_laser', 0, 25)
+        _damage('bridge', 0, 50)
+        _damage('laser_cannon', 0, 25)
         _damage('armor_plate', 0, 10)
 
         assert instance.get_damaged_component_count() == 3
@@ -238,20 +244,24 @@ class TestShipInstanceLayerInfo:
 
     @pytest.fixture
     def design_data_with_layers(self):
-        """Design data with explicit layer structure."""
+        """Design data with explicit layer structure.
+
+        PROJ-358 audit (CQ-01/CQ-05): use real registry component ids.
+        """
         return {
             'name': 'TestShip',
             'expected_stats': {'max_hp': 100},
             'layers': {
+                # CORE blocks Weapons/Engines/Armor.
                 'CORE': [
-                    {'id': 'reactor_standard'},
-                    {'id': 'engine_basic'},
+                    {'id': 'bridge'},
+                    {'id': 'generator'},
                 ],
                 'INNER': [
-                    {'id': 'bridge_standard'},
+                    {'id': 'fuel_tank'},
                 ],
                 'OUTER': [
-                    {'id': 'weapon_laser'},
+                    {'id': 'laser_cannon'},
                 ],
                 'ARMOR': [
                     {'id': 'armor_plate'},
@@ -267,7 +277,7 @@ class TestShipInstanceLayerInfo:
 
         assert 'CORE' in by_layer
         assert len(by_layer['CORE']) == 2
-        assert by_layer['CORE'][0]['id'] == 'reactor_standard'
+        assert by_layer['CORE'][0]['id'] == 'bridge'
         assert 'INNER' in by_layer
         assert len(by_layer['INNER']) == 1
         assert 'OUTER' in by_layer
@@ -289,12 +299,12 @@ class TestShipInstanceLayerInfo:
         """Should extract only damaged components grouped by layer."""
         instance = ship_factory(design_data_with_layers, owner_id=0)
         # Seed per-instance state for the two components we want to damage.
-        instance.components[component_state_key('reactor_standard', 0)] = ComponentState(
-            component_id='reactor_standard', instance_index=0,
+        instance.components[component_state_key('bridge', 0)] = ComponentState(
+            component_id='bridge', instance_index=0,
             current_hp=50.0, max_hp=100.0,
         )
-        instance.components[component_state_key('weapon_laser', 0)] = ComponentState(
-            component_id='weapon_laser', instance_index=0,
+        instance.components[component_state_key('laser_cannon', 0)] = ComponentState(
+            component_id='laser_cannon', instance_index=0,
             current_hp=25.0, max_hp=100.0,
         )
 
@@ -302,10 +312,10 @@ class TestShipInstanceLayerInfo:
 
         assert 'CORE' in damaged_by_layer
         assert len(damaged_by_layer['CORE']) == 1
-        assert damaged_by_layer['CORE'][0] == ('reactor_standard#0', 50)
+        assert damaged_by_layer['CORE'][0] == ('bridge#0', 50)
         assert 'OUTER' in damaged_by_layer
         assert len(damaged_by_layer['OUTER']) == 1
-        assert damaged_by_layer['OUTER'][0] == ('weapon_laser#0', 25)
+        assert damaged_by_layer['OUTER'][0] == ('laser_cannon#0', 25)
         assert 'INNER' not in damaged_by_layer  # No damaged components
         assert 'ARMOR' not in damaged_by_layer
 
@@ -315,20 +325,28 @@ class TestIterAllComponentsByLayer:
 
     @pytest.fixture
     def design_data_with_layers(self):
+        """PROJ-358 audit (CQ-01/CQ-05): use real registry component ids.
+
+        Pristine test asserts every view is is_active=True; pick components
+        whose abilities are dependency-free (no crew / no CnC requirement)
+        so they're operational without an extensive crew-supply setup.
+        """
         return {
             'name': 'TestShip',
             'expected_stats': {'max_hp': 100},
             'layers': {
+                # CORE blocks Weapons/Engines/Armor; crew_quarters and
+                # crewsupport-class components are dependency-free here.
                 'CORE': [
-                    {'id': 'reactor_standard'},
-                    {'id': 'engine_basic'},
-                    {'id': 'engine_basic'},
+                    {'id': 'crew_quarters'},
+                    {'id': 'life_support'},
+                    {'id': 'fuel_tank'},
                 ],
                 'INNER': [
-                    {'id': 'bridge_standard'},
+                    {'id': 'battery'},
                 ],
                 'OUTER': [
-                    {'id': 'weapon_laser'},
+                    {'id': 'mini_battery'},
                 ],
                 'ARMOR': [
                     {'id': 'armor_plate'},
@@ -354,8 +372,8 @@ class TestIterAllComponentsByLayer:
         self, design_data_with_layers, ship_factory
     ):
         instance = ship_factory(design_data_with_layers, owner_id=0)
-        instance.components[component_state_key('reactor_standard', 0)] = ComponentState(
-            component_id='reactor_standard',
+        instance.components[component_state_key('crew_quarters', 0)] = ComponentState(
+            component_id='crew_quarters',
             instance_index=0,
             current_hp=30.0,
             max_hp=100.0,
@@ -365,18 +383,22 @@ class TestIterAllComponentsByLayer:
         result = instance.iter_all_components_by_layer()
 
         core_views = result['CORE']
-        reactor_view = next(v for v in core_views if v.component_id == 'reactor_standard')
-        assert reactor_view.current_hp == 30
-        assert reactor_view.max_hp == 100
-        assert reactor_view.is_active is False
+        target_view = next(v for v in core_views if v.component_id == 'crew_quarters')
+        assert target_view.current_hp == 30
+        assert target_view.max_hp == 100
+        assert target_view.is_active is False
 
     def test_hull_layer_filtered_out(self, ship_factory):
+        # PROJ-358 audit (CQ-01/CQ-05): real registry ids.
+        # The HULL layer entry uses a real hull component; from_dict skips
+        # the HULL layer entirely (see _load_components), so any valid hull id
+        # would do — `hull_escort` matches the default Escort class.
         design = {
             'name': 'WithHull',
             'expected_stats': {'max_hp': 100},
             'layers': {
-                'HULL': [{'id': 'hull_plating'}],
-                'CORE': [{'id': 'reactor_standard'}],
+                'HULL': [{'id': 'hull_escort'}],
+                'CORE': [{'id': 'bridge'}],
             },
         }
         instance = ship_factory(design, owner_id=0)

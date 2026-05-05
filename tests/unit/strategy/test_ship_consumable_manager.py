@@ -234,10 +234,11 @@ class TestShipConsumableManagerIntegration:
             design_data={
                 'name': 'Test Frigate',
                 'hull_type': 'frigate',
+                # PROJ-358 audit (CQ-01): real registry component ids only.
                 'layers': {
                     'CORE': [
                         {'id': 'fuel_tank', 'type': 'fuel_tank'},
-                        {'id': 'reactor', 'type': 'reactor'},
+                        {'id': 'generator', 'type': 'generator'},
                     ]
                 }
             },
