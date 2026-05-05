@@ -107,6 +107,129 @@ def _make_strategy_screen():
 # Task 4.1: Initialization Tests
 # ===========================================================================
 
+
+class TestInitialization:
+    """Test cheap StrategyScreen construction edges."""
+
+    def test_init_with_injected_composition_wires_slots(self):
+        """Real __init__ should wire all collaborator slots from composition."""
+        from game.ui.screens.strategy_screen import StrategyScreen
+
+        session = MagicMock(name="session")
+        session.empires = [MagicMock(id=0)]
+        session.active_empire = session.empires[0]
+        session.human_player_ids = [0]
+        facade = MagicMock(name="facade")
+        camera = MagicMock(name="camera")
+        ui = MagicMock(name="ui")
+        race_loader = MagicMock(name="race_loader")
+        scene_callback = MagicMock(name="scene_callback")
+        input_mapper = MagicMock(name="input_mapper")
+
+        class RecordingComposition:
+            def __init__(self):
+                self.calls = []
+                self.renderer = MagicMock(name="renderer")
+                self.camera_nav = MagicMock(name="camera_nav")
+                self.fleet_ops = MagicMock(name="fleet_ops")
+                self.colonization = MagicMock(name="colonization")
+                self.superweapons = MagicMock(name="superweapons")
+                self.build_queue = MagicMock(name="build_queue")
+                self.game_state = MagicMock(name="game_state")
+                self.input_handler = MagicMock(name="input_handler")
+
+            def _record(self, name, screen, result):
+                assert screen._facade is facade
+                assert screen.camera is camera
+                assert screen.ui is ui
+                assert screen._race_loader is race_loader
+                assert screen.input_mapper is input_mapper
+                assert screen.current_player_index == 0
+                assert screen.build_queue_screen is None
+                self.calls.append(name)
+                return result
+
+            def make_renderer(self, screen):
+                return self._record("renderer", screen, self.renderer)
+
+            def make_camera_navigator(self, screen):
+                return self._record("camera_nav", screen, self.camera_nav)
+
+            def make_fleet_ops(self, screen):
+                return self._record("fleet_ops", screen, self.fleet_ops)
+
+            def make_colonization(self, screen):
+                return self._record("colonization", screen, self.colonization)
+
+            def make_superweapons(self, screen):
+                return self._record("superweapons", screen, self.superweapons)
+
+            def make_build_queue_manager(self, screen):
+                return self._record("build_queue", screen, self.build_queue)
+
+            def make_game_state_manager(self, screen):
+                return self._record("game_state", screen, self.game_state)
+
+            def make_input_handler(self, screen):
+                return self._record("input", screen, self.input_handler)
+
+        composition = RecordingComposition()
+
+        with patch(
+            "game.ui.screens.strategy_screen.StrategySessionFacade",
+            return_value=facade,
+        ) as facade_cls, patch(
+            "game.ui.screens.strategy_screen.Camera",
+            return_value=camera,
+        ) as camera_cls, patch(
+            "game.ui.screens.strategy_screen.StrategyUI",
+            return_value=ui,
+        ) as ui_cls, patch(
+            "game.ui.screens.strategy_screen.RaceAssetLoader",
+            return_value=race_loader,
+        ) as race_loader_cls, patch(
+            "game.ui.screens.strategy_screen.StrategyScreenCompositionFactory"
+        ) as default_factory_cls, patch.object(
+            StrategyScreen, "_focus_on_player_home"
+        ) as focus_home, patch.object(
+            StrategyScreen, "_load_assets"
+        ) as load_assets:
+            screen = StrategyScreen(
+                1600,
+                900,
+                session=session,
+                scene_callback=scene_callback,
+                input_mapper=input_mapper,
+                composition=composition,
+            )
+
+        facade_cls.assert_called_once_with(session)
+        camera_cls.assert_called_once()
+        ui_cls.assert_called_once_with(screen, 1600, 900, input_mapper=input_mapper)
+        race_loader_cls.assert_called_once_with()
+        default_factory_cls.assert_not_called()
+        focus_home.assert_called_once_with()
+        load_assets.assert_called_once_with()
+
+        assert screen._renderer is composition.renderer
+        assert screen._camera_nav is composition.camera_nav
+        assert screen._fleet_ops is composition.fleet_ops
+        assert screen._colonization is composition.colonization
+        assert screen._superweapons is composition.superweapons
+        assert screen._build_queue is composition.build_queue
+        assert screen._game_state is composition.game_state
+        assert screen._input is composition.input_handler
+        assert composition.calls == [
+            "renderer",
+            "camera_nav",
+            "fleet_ops",
+            "colonization",
+            "superweapons",
+            "build_queue",
+            "game_state",
+            "input",
+        ]
+
 # ===========================================================================
 # Task 4.1: Turn Advancement Tests
 # ===========================================================================
@@ -656,6 +779,15 @@ class TestErrorHandlingPaths:
 
         # Delegation should occur regardless of state
         mocks['game_state'].advance_turn.assert_called_once()
+
+    def test_current_empire_with_empty_human_player_ids_returns_active_empire(self):
+        """current_empire should not index into an empty human player list."""
+        screen, _ = _make_strategy_screen()
+        active_empire = screen.session.empires[1]
+        screen.session.active_empire = active_empire
+        screen.session.human_player_ids = []
+
+        assert screen.current_empire is active_empire
 
     def test_on_build_yard_click_no_selected_object(self):
         """on_build_yard_click() should delegate to build_queue manager."""

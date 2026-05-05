@@ -89,3 +89,12 @@ def test_get_icon_returns_none_when_pygame_load_fails(
     assert result is None
     assert "Error loading modifier icon" in caplog.text
     assert "hardened_mount" not in service._cache
+
+
+def test_clear_cache_removes_cached_icons() -> None:
+    service = ModifierIconService(icon_size=26)
+    service._cache["hardened_mount"] = pygame.Surface((26, 26), pygame.SRCALPHA)
+
+    service.clear_cache()
+
+    assert service._cache == {}

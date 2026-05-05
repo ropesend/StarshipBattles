@@ -3,6 +3,7 @@ import pytest
 from dataclasses import dataclass, field
 from typing import Dict, List, Any
 
+from game.core.exceptions import ValidationException
 from game.strategy.engine.atmosphere_engine import AtmosphereEngine
 
 
@@ -36,6 +37,17 @@ def _make_atmo_facility(rate=1e12):
              "abilities": {"AtmosphereModifier": {
                  "modification_rate": rate
              }}}
+        ]}
+    })
+
+
+def _make_atmo_facility_list(*rates):
+    return MockFacility(design_data={
+        "layers": {"CORE": [
+            {"id": "atmosphere_modifier",
+             "abilities": {"AtmosphereModifier": [
+                 {"modification_rate": rate} for rate in rates
+             ]}}
         ]}
     })
 
@@ -227,3 +239,76 @@ class TestAtmosphereEngine:
         # At this rate, ~1000 turns to reach 150,000 Pa
         estimated_turns = 150000.0 / pa_per_turn
         assert 900 < estimated_turns < 1100
+
+    def test_non_dict_target_is_ignored(self):
+        """Malformed atmosphere_target values do not mutate atmosphere."""
+        planet = MockPlanet(
+            atmosphere={"O2": 10000.0},
+            atmosphere_target=["O2"],
+            facilities=[_make_atmo_facility(1e15)],
+        )
+        engine = AtmosphereEngine()
+
+        engine.process_atmosphere([MockEmpire(colonies=[planet])])
+
+        assert planet.atmosphere == {"O2": 10000.0}
+
+    def test_non_dict_atmosphere_is_ignored(self):
+        """Malformed atmosphere values do not get replaced implicitly."""
+        planet = MockPlanet(
+            atmosphere=["O2"],
+            atmosphere_target={"O2": 20000.0},
+            facilities=[_make_atmo_facility(1e15)],
+        )
+        engine = AtmosphereEngine()
+
+        engine.process_atmosphere([MockEmpire(colonies=[planet])])
+
+        assert planet.atmosphere == ["O2"]
+
+    @pytest.mark.parametrize(
+        "surface_area,surface_gravity",
+        [
+            (0.0, 9.8),
+            (5.1e14, 0.0),
+        ],
+    )
+    def test_non_positive_physical_properties_are_ignored(
+        self, surface_area, surface_gravity,
+    ):
+        """Pa conversion needs positive surface area and gravity."""
+        planet = MockPlanet(
+            atmosphere={"O2": 10000.0},
+            atmosphere_target={"O2": 20000.0},
+            surface_area=surface_area,
+            surface_gravity=surface_gravity,
+            facilities=[_make_atmo_facility(1e15)],
+        )
+        engine = AtmosphereEngine()
+
+        engine.process_atmosphere([MockEmpire(colonies=[planet])])
+
+        assert planet.atmosphere["O2"] == pytest.approx(10000.0)
+
+    def test_list_form_atmosphere_modifier_rates_stack(self):
+        """List-form AtmosphereModifier entries contribute all rates."""
+        planet = MockPlanet(
+            atmosphere={},
+            atmosphere_target={"O2": 100.0},
+            surface_area=1000.0,
+            surface_gravity=10.0,
+            facilities=[_make_atmo_facility_list(100.0, 200.0)],
+        )
+        engine = AtmosphereEngine()
+
+        engine.process_atmosphere([MockEmpire(colonies=[planet])])
+
+        assert planet.atmosphere["O2"] == pytest.approx(3.0)
+        assert planet.surface_pressure == pytest.approx(3.0)
+
+    def test_none_colony_fails_validation_before_mutation(self):
+        """Precondition validation rejects corrupt empire colony lists."""
+        engine = AtmosphereEngine()
+
+        with pytest.raises(ValidationException):
+            engine.process_atmosphere([MockEmpire(id=7, colonies=[None])])

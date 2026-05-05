@@ -53,10 +53,10 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 15
+        "codex": 24
       },
-      "count": 15,
-      "last_used": "2026-05-05T15:21:04Z"
+      "count": 24,
+      "last_used": "2026-05-05T16:30:06Z"
     },
     "codex-starship-combat-lab": {
       "agents": {

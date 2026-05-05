@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pygame
 import pygame_gui
@@ -31,12 +31,14 @@ class _Weapon:
 class _Screen:
     def __init__(self) -> None:
         self.old_clip = pygame.Rect(0, 0, 800, 600)
+        self.current_clip = self.old_clip
         self.set_clips: list[pygame.Rect] = []
 
     def get_clip(self) -> pygame.Rect:
         return self.old_clip
 
     def set_clip(self, rect: pygame.Rect) -> None:
+        self.current_clip = rect
         self.set_clips.append(rect)
 
 
@@ -182,3 +184,42 @@ def test_weapons_report_panel_draw_clips_viewport_and_skips_offscreen_rows(
         panel._viewmodel.weapon_groups[3]["weapon"]
     )
 
+
+def test_weapons_report_panel_draw_no_weapons_target_info_dispatch() -> None:
+    panel = _make_panel(weapon_count=0)
+    screen = _Screen()
+    panel._viewmodel.target_name = "Target Dummy"
+    panel._viewmodel.target_defense_mod = 1.25
+
+    panel.draw(screen)
+
+    assert panel._renderer.method_calls == [
+        call.draw_target_info(screen, panel.rect, "Target Dummy", 1.25),
+        call.draw_no_weapons_message(screen, panel.rect),
+    ]
+    assert screen.set_clips == []
+
+
+def test_weapons_report_panel_draw_tooltip_dispatch_after_clip_restore(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    panel = _make_panel(weapon_count=1)
+    screen = _Screen()
+    tooltip_data = {
+        "pos": (20, 70),
+        "range": 50,
+        "accuracy": "80%",
+        "damage": 12,
+    }
+    panel._viewmodel.verbose_tooltip = True
+    panel._input_handler.detect_tooltip_hover.return_value = tooltip_data
+    monkeypatch.setattr(pygame.mouse, "get_pos", lambda: (20, 70))
+
+    def assert_tooltip_after_clip_restore(*args) -> None:
+        assert screen.current_clip == screen.old_clip
+
+    panel._renderer.draw_tooltip.side_effect = assert_tooltip_after_clip_restore
+
+    panel.draw(screen)
+
+    panel._renderer.draw_tooltip.assert_called_once_with(screen, tooltip_data, True)

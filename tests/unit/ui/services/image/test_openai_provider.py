@@ -113,6 +113,45 @@ class TestOpenAIImageProviderHappyPath:
         assert kwargs["files"]["mask"] == ("mask.png", b"mask-bytes", "image/png")
         assert "Content-Type" not in kwargs["headers"]
 
+    def test_generate_image_with_unreadable_edit_image_raises_config_error(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path,
+    ) -> None:
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        edit_image = tmp_path / "missing-source.png"
+
+        provider = OpenAIImageProvider()
+        with patch("requests.post") as mock_post:
+            with pytest.raises(ImageConfigError) as exc_info:
+                provider.generate_image(
+                    "paint a cruiser",
+                    edit_image=edit_image,
+                )
+
+        assert mock_post.call_count == 0
+        assert exc_info.value.context["field"] == "image"
+        assert exc_info.value.context["error_type"] == "FileNotFoundError"
+
+    def test_generate_image_with_unreadable_mask_raises_config_error(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path,
+    ) -> None:
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        edit_image = tmp_path / "source.png"
+        mask = tmp_path / "missing-mask.png"
+        edit_image.write_bytes(b"source-bytes")
+
+        provider = OpenAIImageProvider()
+        with patch("requests.post") as mock_post:
+            with pytest.raises(ImageConfigError) as exc_info:
+                provider.generate_image(
+                    "paint a cruiser",
+                    edit_image=edit_image,
+                    mask=mask,
+                )
+
+        assert mock_post.call_count == 0
+        assert exc_info.value.context["field"] == "mask"
+        assert exc_info.value.context["error_type"] == "FileNotFoundError"
+
 
 class TestOpenAIImageProviderErrors:
     def test_no_api_key_raises_image_config_error(

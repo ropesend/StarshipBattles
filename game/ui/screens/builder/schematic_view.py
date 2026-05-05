@@ -55,7 +55,7 @@ class SchematicView:
         ref_mass = class_def.get('max_mass', 1000)
         # Scale: Dreadnought(64000)->40->280px. Escort(1000)->10->70px.
         PIXELS_PER_MASS_ROOT = 7.0 
-        return int((ref_mass ** (1/3.0)) * PIXELS_PER_MASS_ROOT)
+        return int(round((ref_mass ** (1/3.0)) * PIXELS_PER_MASS_ROOT))
 
     def draw(self, screen, ship, show_firing_arcs, selected_component, hovered_component) -> None:
         # Draw Background

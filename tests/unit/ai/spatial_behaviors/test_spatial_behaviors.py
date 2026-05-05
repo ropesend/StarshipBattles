@@ -148,6 +148,58 @@ class TestBattleLineBehavior:
         dist = (p1 - p0).length()
         assert abs(dist - spacing) < 1.0  # within 1 unit
 
+    def test_wedge_shape_offsets_wings_back_from_center(self):
+        """Wedge keeps the center forward and sets both wings back."""
+        from game.ai.spatial_behaviors.battle_line import BattleLineBehavior
+
+        behavior = BattleLineBehavior(spacing=1000, shape="wedge")
+        leader = _make_ship(0, 0, angle=0)
+        ships = [_make_ship(0, 0) for _ in range(3)]
+
+        left = behavior.compute_target_position(
+            ships[0], ships, leader=leader, slot_index=0,
+        )
+        center = behavior.compute_target_position(
+            ships[1], ships, leader=leader, slot_index=1,
+        )
+        right = behavior.compute_target_position(
+            ships[2], ships, leader=leader, slot_index=2,
+        )
+
+        assert center.x == 0
+        assert left.x == right.x == -500
+        assert left.y == -1000
+        assert center.y == 0
+        assert right.y == 1000
+
+    def test_echelon_shapes_offset_opposite_wings(self):
+        """Left and right echelon mirror which end trails the leader."""
+        from game.ai.spatial_behaviors.battle_line import BattleLineBehavior
+
+        leader = _make_ship(0, 0, angle=0)
+        ships = [_make_ship(0, 0) for _ in range(3)]
+
+        left_echelon = BattleLineBehavior(spacing=1000, shape="echelon_left")
+        left_positions = [
+            left_echelon.compute_target_position(
+                ship, ships, leader=leader, slot_index=i,
+            )
+            for i, ship in enumerate(ships)
+        ]
+
+        right_echelon = BattleLineBehavior(spacing=1000, shape="echelon_right")
+        right_positions = [
+            right_echelon.compute_target_position(
+                ship, ships, leader=leader, slot_index=i,
+            )
+            for i, ship in enumerate(ships)
+        ]
+
+        assert [p.x for p in left_positions] == [0, -300, -600]
+        assert [p.x for p in right_positions] == [-600, -300, 0]
+        assert [p.y for p in left_positions] == [-1000, 0, 1000]
+        assert [p.y for p in right_positions] == [-1000, 0, 1000]
+
 
 # =============================================================================
 # Screen Behavior (Loose)
