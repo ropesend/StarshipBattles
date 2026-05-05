@@ -125,6 +125,39 @@ parallel agent activity makes such rewrites particularly risky.
    successfully (PROJ-340 explicitly noted using this pattern); others
    didn't.
 
+### Update 2026-05-04 — PROJ-343..348 closeout arc parallel run (3 more contaminations)
+
+A second parallel-agent run executed PROJ-344..347 simultaneously after PROJ-343 closed. Three more cross-project commits resulted, even with explicit anti-contamination guidance in every agent prompt (`git status --short` before each `git add`, explicit file-name staging, `git reset HEAD <file>` if other agents' work appears staged):
+
+#### Commit `a1025dd32` — labeled "fix(planet-list-window): add virtual_table placeholder for Pattern §33 bypass safety (PROJ-347 T4.1b)"
+
+Actually contains:
+- `tests/unit/ui/panels/test_race_identity_panel.py` (PROJ-346 vacuous-test rewrite — wrong project)
+- ZERO PROJ-347 production changes — the intended `planet_list_window.py` placeholder was missed entirely and re-committed at `c4c228954` ("retry").
+
+#### Commit `5ace65b24` — labeled "fix(empire-panel-window): keep Stage 1 pure under bypass — defer icon loading (PROJ-347 T4.4)"
+
+Actually contains:
+- `game/ui/screens/empire_panel_window.py` (PROJ-347 T4.4) ✓
+- `tests/unit/ui/screens/test_empire_panel_window.py` (PROJ-347 T4.4 test) ✓
+- **`tests/unit/ui/effects/test_hit_effects.py` (PROJ-346 PROJ-331 work — contamination)**
+
+#### Commit `085136515` — labeled "test(PROJ-346): replace pygame_gui-only kill assertion with grid-state pin"
+
+Per agent PROJ-344's self-report this commit absorbed PROJ-344's `Projects/projects_index.md` chore-update. `git show --stat` shows only `test_modifier_impact_grid.py` — the index update landed via a different commit. Attribution functional but tracing-unclear.
+
+### Disposition (unchanged)
+
+Per original disposition: contaminations not rebased. Work itself correct; commit attribution off. Updated count: **5 contaminated commits total** across two parallel runs (`cd7f84b59`, `2bbb260f6` from Wave 1; `a1025dd32`, `5ace65b24`, `085136515` from PROJ-343..348 closeout).
+
+### Recommendation reinforcement (2026-05-04)
+
+The 2026-05-04 closeout parallel run included explicit anti-contamination guidance in every agent prompt. Three contaminations occurred anyway. Conclusion: **agent-side discipline alone is insufficient** to prevent the race between `git add` and `git commit -m` when multiple processes share the same index. Stronger mechanisms required:
+
+1. **Worktree isolation** — needs the harness fix from the original 2026-05-04 disposition; status unknown.
+2. **Process-wide commit lock** — flock on a shared coordination file.
+3. **Sequential execution** — slower but guarantees attribution.
+
 ## See also
 
 - `Projects/active_projects/PROJ-329A/decisions.md` D-007 (per-class commit discipline)

@@ -328,7 +328,7 @@ class RaceEnvironmentPanel:
             self.points_label.set_text(
                 f"Points: {remaining} / {total} remaining  |  Environment cost: {env_cost}"
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:  # Intentional broad catch: the points label is non-critical UI; any failure (missing race attribute, bad budget config, etc.) blanks the label rather than crashing the panel.
             logger.warning("Failed to update points display: %s", e)
             self.points_label.set_text("")
 
