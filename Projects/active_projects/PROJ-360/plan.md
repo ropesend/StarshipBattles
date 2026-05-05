@@ -15,15 +15,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Golden output tests for representative ships | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Golden output tests for representative ships | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract domain contributors behind current API | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Replace hardcoded ability-name checks with registered contributors | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** 1
-**Last Action:** Project scaffolded from realtime-combat tech-debt review finding #5.
-**Next Action:** Run /claude-proj-start PROJ-360 to expand design + per-phase checklists.
+**Last Updated:** 2026-05-05
+**Active Phase:** 2
+**Last Action:** Phase 1 complete — golden snapshot for 7 designs locked in `tests/unit/simulation/entities/test_ship_stats_golden.py` + sibling `*_snapshot.json`. Sharded baseline 17665/17661 passed.
+**Next Action:** Phase 2 — extract domain contributors behind unchanged `ShipStatsCalculator.calculate()` API.
 **Blockers:** None
 
 ## Overview
