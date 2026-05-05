@@ -265,7 +265,22 @@ class WeaponFiringSystem:
             if comp.has_ability('SeekerWeaponAbility'):
                 projectile = self._create_seeker_projectile(ship, comp, target, weapon_ab, aim_vec)
             else:
-                projectile = self._create_standard_projectile(ship, comp, target, aim_vec)
+                # PROJ-359 Phase 3.2: Projectile family routes through registry
+                if WEAPON_REGISTRY.has(WeaponFamily.PROJECTILE):
+                    request = AttackRequest(
+                        source=ship,
+                        component=comp,
+                        weapon_ability=weapon_ab,
+                        target=target,
+                        aim_pos=aim_pos,
+                        aim_vec=aim_vec,
+                        family=WeaponFamily.PROJECTILE,
+                    )
+                    resolution = WEAPON_REGISTRY.dispatch(request)
+                    assert isinstance(resolution, ProjectileResolution)
+                    projectile = resolution.projectile
+                else:
+                    projectile = self._create_standard_projectile(ship, comp, target, aim_vec)
 
             attacks.append(projectile)
 

@@ -8,3 +8,4 @@ all family registrations. Adding a new family is one new module + an import
 here.
 """
 from game.simulation.combat.families import beam  # noqa: F401  (registers BEAM)
+from game.simulation.combat.families import projectile  # noqa: F401  (registers PROJECTILE)

@@ -235,7 +235,11 @@ class TestProjectileGolden:
         )
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        # PROJ-359 Phase 3.2: Projectile family is now in families/projectile.py.
+        # Patch both possible call sites so this test stays valid before & after
+        # the migration (the test pins the constructor kwargs, which are
+        # unchanged regardless of which module instantiates the projectile).
+        with patch('game.simulation.combat.families.projectile.Projectile') as mock_proj:
             sentinel = MagicMock()
             mock_proj.return_value = sentinel
             attacks = firing.fire_weapons(ship)

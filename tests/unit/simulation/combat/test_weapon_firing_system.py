@@ -196,7 +196,9 @@ class TestProjectileWeaponFiring:
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        # PROJ-359 Phase 3.2: Projectile family handler now lives in
+        # families/projectile.py — patch its Projectile import.
+        with patch('game.simulation.combat.families.projectile.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             attacks = system.fire_weapons(ship)
 
@@ -527,7 +529,8 @@ class TestMultipleWeaponsFiring:
         ]
         ship.iter_components = MagicMock(return_value=weapons)
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        # PROJ-359 Phase 3.2: Projectile family in families/projectile.py
+        with patch('game.simulation.combat.families.projectile.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             attacks = system.fire_weapons(ship)
 
@@ -606,7 +609,8 @@ class TestMultipleWeaponsFiring:
         ]
         ship.iter_components = MagicMock(return_value=weapons)
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        # PROJ-359 Phase 3.2: Projectile family in families/projectile.py
+        with patch('game.simulation.combat.families.projectile.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             attacks = system.fire_weapons(ship)
 
