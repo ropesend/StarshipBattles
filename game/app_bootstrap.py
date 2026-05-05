@@ -94,6 +94,11 @@ class BootstrapResult:
     font_small: Any
     font_med: Any
     font_large: Any
+    # PROJ-366 Phase 2: replay sink + verification coordinator. Forward-string
+    # types so module-level imports stay minimal — concrete imports live
+    # inside `bootstrap()` per the existing late-import pattern.
+    replay_store: "ReplayStore"
+    replay_verification_coordinator: "ReplayVerificationCoordinator"
 
 
 def _detect_resolution(args: argparse.Namespace,
@@ -281,6 +286,37 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
         set_default_capture_sink(replay_store)
         set_replay_store(replay_store)
 
+    # PROJ-366 Phase 2: construct the verification coordinator with the
+    # Combat Lab fallback adapter and start its worker thread.
+    #
+    # The coordinator's `fallback_ship_builder` parameter expects shape
+    # `(ShipSpec, int) -> Ship`. `combat_lab.design_loader.load_combat_lab_design`
+    # has shape `(design_id: str) -> Dict` — we wrap it via
+    # `DesignOnlyMaterializer` (which Combat Lab itself uses for tests) to
+    # bridge the signatures. Per Codex r001 (CRIT 2): the import path is
+    # `combat_lab.design_loader`, not `game.combat_lab.design_loader`.
+    with _timed_phase("replay.start_coordinator", ctx.profiler):
+        from combat_lab.design_loader import load_combat_lab_design
+        from game.ai.ai_factory import AIControllerFactory
+        from game.simulation.services.ship_materializer import DesignOnlyMaterializer
+        from game.strategy.services.replay_verification_coordinator import (
+            ReplayVerificationCoordinator,
+        )
+
+        _cl_materializer = DesignOnlyMaterializer(design_loader=load_combat_lab_design)
+
+        def _replay_combat_lab_fallback(ship_spec, team_id):
+            return _cl_materializer.materialize(ship_spec, team_id, registries)
+
+        replay_verification_coordinator = ReplayVerificationCoordinator(
+            replay_store=replay_store,
+            ai_factory=AIControllerFactory(),
+            registry_provider=provider,
+            settings=replay_settings,
+            fallback_ship_builder=_replay_combat_lab_fallback,
+        )
+        replay_verification_coordinator.start()
+
     dt_total = time.perf_counter() - t_total_start
     logger.info(f"[startup] total bootstrap: {dt_total:.2f}s")
 
@@ -298,6 +334,8 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
         font_small=font_small,
         font_med=font_med,
         font_large=font_large,
+        replay_store=replay_store,
+        replay_verification_coordinator=replay_verification_coordinator,
     )
 
 

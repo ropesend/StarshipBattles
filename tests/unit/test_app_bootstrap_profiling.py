@@ -32,8 +32,9 @@ EXPECTED_PHASE_NAMES = [
     "startup: assets.ensure_component_derivatives",
     "startup: assets.load_sprites",
     "startup: input.load_keybindings",
-    # PROJ-366 Phase 1: replay sink construction.
+    # PROJ-366 Phase 1+2: replay sink + coordinator construction.
     "startup: replay.construct_store",
+    "startup: replay.start_coordinator",
 ]
 
 
