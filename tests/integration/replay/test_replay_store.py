@@ -106,6 +106,51 @@ class TestReplaySettings:
         settings = load_replay_settings(path=path)
         assert settings.max_replays_per_save == 50
 
+    # PROJ-354B Phase 1.1: verification settings
+    def test_verification_defaults_when_missing(self, tmp_path: Path):
+        path = tmp_path / "missing.json"
+        settings = load_replay_settings(path=path)
+        assert settings.verification_enabled is True
+        assert settings.verification_queue_cap == 16
+
+    def test_verification_overrides_via_json(self, tmp_path: Path):
+        path = tmp_path / "replay_settings.json"
+        path.write_text(json.dumps({
+            "max_replays_per_save": 12,
+            "verification_enabled": False,
+            "verification_queue_cap": 4,
+        }))
+        settings = load_replay_settings(path=path)
+        assert settings.verification_enabled is False
+        assert settings.verification_queue_cap == 4
+
+    def test_verification_queue_cap_clamped_to_minimum_one(self, tmp_path: Path):
+        path = tmp_path / "replay_settings.json"
+        path.write_text(json.dumps({"verification_queue_cap": 0}))
+        settings = load_replay_settings(path=path)
+        assert settings.verification_queue_cap == 1
+
+    def test_verification_queue_cap_invalid_falls_back_to_default(
+        self, tmp_path: Path
+    ):
+        path = tmp_path / "replay_settings.json"
+        path.write_text(json.dumps({"verification_queue_cap": "not-an-int"}))
+        settings = load_replay_settings(path=path)
+        assert settings.verification_queue_cap == 16
+
+    def test_verification_enabled_falsy_value_coerced(self, tmp_path: Path):
+        path = tmp_path / "replay_settings.json"
+        path.write_text(json.dumps({"verification_enabled": 0}))
+        settings = load_replay_settings(path=path)
+        assert settings.verification_enabled is False
+
+    def test_malformed_json_keeps_verification_defaults(self, tmp_path: Path):
+        path = tmp_path / "replay_settings.json"
+        path.write_text("{not valid json")
+        settings = load_replay_settings(path=path)
+        assert settings.verification_enabled is True
+        assert settings.verification_queue_cap == 16
+
 
 # ---------------------------------------------------------------------------
 # ReplayStore — persistence + ring buffer

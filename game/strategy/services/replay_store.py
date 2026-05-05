@@ -59,9 +59,16 @@ class ReplaySettings:
 
     Loaded from ``output/settings/replay_settings.json``. Missing file
     or malformed JSON → defaults silently with a debug log.
+
+    PROJ-354B Phase 1: ``verification_enabled`` and
+    ``verification_queue_cap`` control the background end-state
+    verification coordinator. Both default to safe values that turn the
+    feature on with a small bounded queue.
     """
 
     max_replays_per_save: int = 50
+    verification_enabled: bool = True
+    verification_queue_cap: int = 16
 
 
 def load_replay_settings(path: Optional[Path] = None) -> ReplaySettings:
@@ -82,7 +89,18 @@ def load_replay_settings(path: Optional[Path] = None) -> ReplaySettings:
         cap = int(cap_raw)
     except (TypeError, ValueError):
         cap = 50
-    return ReplaySettings(max_replays_per_save=max(1, cap))
+    # PROJ-354B Phase 1.1: verification settings.
+    verification_enabled = bool(data.get("verification_enabled", True))
+    queue_cap_raw = data.get("verification_queue_cap", 16)
+    try:
+        queue_cap = int(queue_cap_raw)
+    except (TypeError, ValueError):
+        queue_cap = 16
+    return ReplaySettings(
+        max_replays_per_save=max(1, cap),
+        verification_enabled=verification_enabled,
+        verification_queue_cap=max(1, queue_cap),
+    )
 
 
 # ---------------------------------------------------------------------------
