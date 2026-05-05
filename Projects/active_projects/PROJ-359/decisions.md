@@ -14,3 +14,5 @@
 | 2026-05-04 | Sequence AFTER PROJ-356 / 357 / 358 | Smaller correctness fixes first; this is the only structural refactor in the batch and benefits from the test infrastructure those projects build out. |
 | 2026-05-04 | Sequence BEFORE PROJ-360 | ShipStatsCalculator decomposition (PROJ-360) may want to consume the typed contract once it lands. |
 | 2026-05-04 | Defer specific contract shape | `AttackRequest` / `AttackResolution` field set is best decided in Phase 2 against the actual call sites; do not over-specify in plan.md. |
+| 2026-05-04 | Phase 1 baseline locked: 17621 tests (17617 passed, 4 skipped) | After adding 10 golden dispatch tests in `tests/unit/simulation/combat/test_weapon_dispatch_golden.py`. This is the reference count Phases 2-4 must preserve. |
+| 2026-05-04 | Phase 1 inventory of existing combat tests | `test_weapon_firing_system.py` (1298 LOC) and `test_targeting_system.py` (1110 LOC) lock per-method behavior with MagicMock-driven scenarios; gaps were end-to-end family-shape contracts (dict vs Projectile constructor kwargs) and beam→collision telemetry chain. Golden tests added to fill those gaps. |

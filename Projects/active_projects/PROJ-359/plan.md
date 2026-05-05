@@ -15,16 +15,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Characterization (golden) tests for current dispatch | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Characterization (golden) tests for current dispatch | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. AttackRequest / AttackResolution + registry skeleton | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate weapon families one at a time | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Delete string-class branches + dict carriers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** 1
-**Last Action:** Project scaffolded from realtime-combat tech-debt review finding #4 — largest of the 5 derived projects, intentionally phased.
-**Next Action:** Run /claude-proj-start PROJ-359 to expand design + per-phase checklists.
+**Active Phase:** 2
+**Last Action:** Phase 1 complete — 10 golden dispatch tests added (Beam dict shape, Beam→collision telemetry, Projectile constructor kwargs, Projectile→ProjectileManager.\_apply\_hit telemetry, Seeker constructor kwargs, PDC-vs-missile dispatch, PDC beam→missile.take\_damage, non-PDC cannot target missiles, PDC valid-targets gate, Seeker endurance range gate). Sharded suite green at 17621 tests / 17617 passed.
+**Next Action:** Phase 2 — define `AttackRequest` / `AttackResolution` typed dataclasses and `WeaponRegistry` skeleton behind existing dispatch.
 **Blockers:** None
 
 ## Overview
