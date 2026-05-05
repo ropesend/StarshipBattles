@@ -71,6 +71,56 @@ class TestWarpGenerationSmallN:
         # one warp point per system, total 2.
         assert _total_warp_points(galaxy) == 2
 
+    def test_n2_far_apart_systems_still_link(self):
+        """Regression: two N=2 systems many cell-widths apart must link.
+
+        Reproduces the seed-2 isolation: at galaxy_radius=4000 the random
+        placement strategy can drop two systems at hex-distance ~4101 with
+        no other points in between. The warp MST must still produce exactly
+        one bidirectional link.
+        """
+        from game.strategy.data.galaxy import Galaxy, StarSystem
+        from game.core.hex_math import HexCoord
+
+        galaxy = Galaxy(radius=4000)
+        sys_a = StarSystem(
+            "Alpha",
+            HexCoord(2844, -2615),
+            stars=[SimpleNamespace(radius_hexes=1)],
+        )
+        sys_b = StarSystem(
+            "Beta",
+            HexCoord(2029, 1486),
+            stars=[SimpleNamespace(radius_hexes=1)],
+        )
+        galaxy.add_system(sys_a)
+        galaxy.add_system(sys_b)
+
+        galaxy.generate_warp_lanes()
+
+        assert len(sys_a.warp_points) == 1
+        assert len(sys_b.warp_points) == 1
+        assert sys_a.warp_points[0].destination_id == sys_b.name
+        assert sys_b.warp_points[0].destination_id == sys_a.name
+        assert _total_warp_points(galaxy) == 2
+
+    def test_n2_initialize_seed_2_far_apart_links(self):
+        """End-to-end: GameInitializer with the known-bad seed=2 reproducer
+        must still produce a connected N=2 galaxy with one warp link.
+        """
+        config = GameConfig(
+            system_count=2,
+            galaxy_radius=4000,
+            galaxy_seed=2,
+        )
+        galaxy, _empires = GameInitializer.initialize(config)
+        assert len(galaxy.systems) == 2
+        assert _total_warp_points(galaxy) == 2
+        for sys in galaxy.systems.values():
+            assert len(sys.warp_points) >= 1, (
+                f"System {sys.name} at {sys.global_location} is isolated"
+            )
+
 
 class TestWarpGeneratorHelpers:
     def test_angle_clear_rejects_existing_warp_line_within_threshold(self):

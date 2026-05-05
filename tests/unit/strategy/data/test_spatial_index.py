@@ -136,6 +136,28 @@ class TestSpatialIndexNeighborQuery:
         assert "self" not in data_values
         assert len(nearest) == 2
 
+    def test_get_k_nearest_finds_far_only_neighbor_in_sparse_index(self):
+        """In sparse layouts, k-nearest must still find a far-away only neighbor.
+
+        Regression: SpatialIndex.get_k_nearest() previously stopped expanding
+        the search radius once the candidate count stopped changing. With two
+        points many cell-widths apart and no points in between, a starting
+        empty-cell scan could lock the candidate count at 0 and return [].
+        Reproduces the seed-2 N=2 galaxy isolation: two systems at
+        HexCoord(2844, -2615) and HexCoord(2029, 1486) — distance 4101 with
+        cell_size=500 — must still see each other.
+        """
+        index = SpatialIndex(cell_size=500)
+        a = HexCoord(2844, -2615)
+        b = HexCoord(2029, 1486)
+        index.add(a, "a")
+        index.add(b, "b")
+
+        nearest = index.get_k_nearest(a, k=1, exclude_coord=a)
+
+        assert len(nearest) == 1
+        assert nearest[0][1] == "b"
+
 
 class TestSpatialIndexPerformance:
     """Tests for spatial index performance characteristics."""
