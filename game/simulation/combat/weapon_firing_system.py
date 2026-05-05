@@ -17,6 +17,16 @@ from game.core.math import Vector2, angle_from_vector
 from game.core.constants import AttackType, CombatConstants, SimulationConstants
 from game.simulation.entities.projectile import Projectile
 
+# PROJ-359 Phase 3: importing `families` triggers WEAPON_REGISTRY registrations
+from game.simulation.combat import families  # noqa: F401
+from game.simulation.combat.attack_contract import (
+    AttackRequest,
+    BeamResolution,
+    ProjectileResolution,
+    WeaponFamily,
+)
+from game.simulation.combat.weapon_registry import WEAPON_REGISTRY, detect_family
+
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.simulation.components.component import Component
@@ -218,19 +228,38 @@ class WeaponFiringSystem:
 
         aim_pos, aim_vec = self._targeting.calculate_firing_solution(ship, comp, target)
 
+        # PROJ-359 Phase 3.1: Beam (non-PDC) routes through the registry.
+        # PDC (also a Beam-role weapon) keeps the legacy path in this task —
+        # Phase 3.4 migrates PDC. Legacy collision.py still consumes a dict;
+        # adapt at the boundary. Phase 4 deletes the adapter.
         if comp.has_ability('BeamWeaponAbility'):
-            # Beam attack — shots_hit tracked in collision.py after accuracy roll
-            attacks.append({
-                'type': AttackType.BEAM,
-                'source': ship,
-                'target': target,
-                'damage': weapon_ab.damage,
-                'range': weapon_ab.range,
-                'origin': ship.position,
-                'component': comp,
-                'direction': aim_vec.normalize() if aim_vec.length() > 0 else Vector2(1, 0),
-                'hit': True
-            })
+            family = detect_family(comp)
+            if family is WeaponFamily.BEAM and WEAPON_REGISTRY.has(WeaponFamily.BEAM):
+                request = AttackRequest(
+                    source=ship,
+                    component=comp,
+                    weapon_ability=weapon_ab,
+                    target=target,
+                    aim_pos=aim_pos,
+                    aim_vec=aim_vec,
+                    family=family,
+                )
+                resolution = WEAPON_REGISTRY.dispatch(request)
+                assert isinstance(resolution, BeamResolution)
+                attacks.append(_beam_resolution_to_legacy_dict(resolution))
+            else:
+                # PDC path (and any unmigrated case) — legacy dict
+                attacks.append({
+                    'type': AttackType.BEAM,
+                    'source': ship,
+                    'target': target,
+                    'damage': weapon_ab.damage,
+                    'range': weapon_ab.range,
+                    'origin': ship.position,
+                    'component': comp,
+                    'direction': aim_vec.normalize() if aim_vec.length() > 0 else Vector2(1, 0),
+                    'hit': True,
+                })
         else:
             # Projectile attack
             if comp.has_ability('SeekerWeaponAbility'):
@@ -311,3 +340,23 @@ class WeaponFiringSystem:
             source_weapon=comp,
             target=target
         )
+
+
+def _beam_resolution_to_legacy_dict(resolution: BeamResolution) -> Dict[str, Any]:
+    """PROJ-359 Phase 3 adapter: BeamResolution -> legacy dict shape.
+
+    Exists only to bridge `process_beam_attack(attack: dict)` until
+    Phase 4 migrates the engine consumer. After Phase 4 this function and
+    its caller are deleted.
+    """
+    return {
+        'type': AttackType.BEAM,
+        'source': resolution.source,
+        'target': resolution.target,
+        'damage': resolution.damage,
+        'range': resolution.range,
+        'origin': resolution.origin,
+        'component': resolution.component,
+        'direction': resolution.direction,
+        'hit': resolution.hit,
+    }
