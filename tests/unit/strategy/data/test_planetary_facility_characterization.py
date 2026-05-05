@@ -91,35 +91,12 @@ class TestRoundTripPreservesTopLevelFields:
         }
 
 
-class TestLegacyResourceLevelsKey:
-    """Pin the legacy fallback: resource_levels is accepted as
-    consumable_levels."""
-
-    def test_resource_levels_used_when_consumable_levels_absent(self):
-        data = {
-            "instance_id": "fac-1",
-            "design_id": "d",
-            "name": "n",
-            "design_data": {},
-            "resource_levels": {"fuel": 7.0},
-        }
-        restored = PlanetaryFacility.from_dict(data)
-
-        assert restored.consumable_levels == {"fuel": 7.0}
-
-    def test_consumable_levels_wins_over_resource_levels(self):
-        """When both are present, consumable_levels takes precedence."""
-        data = {
-            "instance_id": "fac-1",
-            "design_id": "d",
-            "name": "n",
-            "design_data": {},
-            "consumable_levels": {"fuel": 1.0},
-            "resource_levels": {"fuel": 99.0},
-        }
-        restored = PlanetaryFacility.from_dict(data)
-
-        assert restored.consumable_levels == {"fuel": 1.0}
+# PROJ-349 T6.1: TestLegacyResourceLevelsKey deleted. The
+# `resource_levels` save-format alias was a save-migration shim that
+# violated the repo rule "old saves are disposable" (CLAUDE.md). Both
+# the alias and the tests pinning it have been removed; saves written
+# under the legacy schema will no longer load (this is the documented
+# behavior — saves are disposable across major refactors).
 
 
 class TestIsShipyard:
