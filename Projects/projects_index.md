@@ -29,19 +29,19 @@
 | PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | Awaiting Verification (Partial — 25 deferred-with-blocker) | 2026-05-03 | 2026-05-03 |
 | PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | Awaiting Verification | 2026-05-03 | 2026-05-03 |
 | PROJ-320 | Strategic Combat Round Budget | Planning | 2026-05-02 | 2026-05-02 |
-| PROJ-319 | Audit-shrink cleanup 2026-05-02 | Planning | 2026-05-02 | 2026-05-02 |
-| PROJ-318 | PROJ-314 Closeout Remediations | Complete | 2026-04-28 | 2026-04-28 |
-| PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | Awaiting User Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-315 | Fleet Report Component Damage Panel | Awaiting User Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-314 | Unify Ship Theme Loader Schema | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-313 | Strategy Modal Window Base Class Refactor | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-312 | Add Battle Replay System | Plan Approved | 2026-04-27 | 2026-04-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-319 | Audit-shrink cleanup 2026-05-02 | Archived | 2026-05-02 | 2026-05-04 |
+| PROJ-318 | PROJ-314 Closeout Remediations | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-315 | Fleet Report Component Damage Panel | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-314 | Unify Ship Theme Loader Schema | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-313 | Strategy Modal Window Base Class Refactor | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-312 | Add Battle Replay System | Archived | 2026-04-27 | 2026-05-04 |
 | PROJ-310 | Deep Nesting Investigative Review | Archived | 2026-04-26 | 2026-05-04 |
 | PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | Archived | 2026-04-26 | 2026-05-04 |
 | PROJ-305 | Fleet Strategic-Layer Ability Sources | Archived | 2026-04-26 | 2026-05-04 |
@@ -54,14 +54,6 @@
 | PROJ-308 | Broad Exception Handler Justifications | Archived | 2026-04-26 | 2026-04-27 |
 | PROJ-307 | Documentation Freshness Timestamps | Archived | 2026-04-26 | 2026-04-27 |
 | PROJ-306 | Battle Simulation DI Cleanup (PROJ-274 closure) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-298 | FleetOrder Rename Cleanup | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-297 | Code Review Cleanup - Quick Wins | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-299 | Race Description Generator (LLM) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-296 | LLM Service Foundation | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-292 | Audit High + Major Cleanup (PROJ-283..290 Closeout) | Archived | 2026-04-18 | 2026-04-26 |
 
 ---
 

@@ -289,3 +289,11 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-289 | Planet Report Panel Per-Species + Per-Resource UI | 2026-04-26 | PROJ-251-300 |
 | PROJ-290 | Empire Treasury + Uncolonized Habitability UI | 2026-04-26 | PROJ-251-300 |
 | PROJ-291 | Audit Critical Fixes (PROJ-283..290 Sign-off Blocker) | 2026-04-26 | PROJ-251-300 |
+| PROJ-292 | Audit High + Major Cleanup (PROJ-283..290 Closeout) | 2026-04-26 | PROJ-251-300 |
+| PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | 2026-04-27 | PROJ-251-300 |
+| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | 2026-04-27 | PROJ-251-300 |
+| PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | 2026-04-27 | PROJ-251-300 |
+| PROJ-296 | LLM Service Foundation | 2026-04-27 | PROJ-251-300 |
+| PROJ-297 | Code Review Cleanup - Quick Wins | 2026-04-27 | PROJ-251-300 |
+| PROJ-298 | FleetOrder Rename Cleanup | 2026-04-27 | PROJ-251-300 |
+| PROJ-299 | Race Description Generator (LLM) | 2026-04-27 | PROJ-251-300 |
