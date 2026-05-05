@@ -4,6 +4,11 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-360 | ShipStatsCalculator Decompose by Stat Domain (review 2026-05-04 finding #5) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-359 | Typed Weapon Execution Contract — Replace String/Class Dispatch (review 2026-05-04 finding #4) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-358 | Battle Runner — Validate Spec Components, No Silent Drift (review 2026-05-04 finding #7) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-357 | Fleet Aura Provider Identity — Bind to Component, Not Class (review 2026-05-04 finding #2) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-356 | AI PDC Capability Cache — Replace Non-Existent Class Check (review 2026-05-04 finding #9) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-353A | Closeout follow-up - Tooling and test-quality polish (T6.8 + Tier-7 + Codex audit-remediation R1/R2/R3 per 20260505T034007Z) | Awaiting Verification | 2026-05-04 | 2026-05-05 |
 | PROJ-352A | Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-351A | Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan) | Awaiting Verification | 2026-05-04 | 2026-05-04 |

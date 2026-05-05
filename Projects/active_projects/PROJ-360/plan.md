@@ -10,12 +10,14 @@
 > - Run `python Projects/scripts/validate_phase.py PROJ-360 [phase]` before stopping
 > - Update Current State with specific handoff context
 
+**Execution Protocol:** 03c-phase-aware-execution
+
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Golden output tests for representative ships | Not started | (to be created at /proj-start) |
-| 2. Extract domain contributors behind current API | Not started | (to be created at /proj-start) |
-| 3. Replace hardcoded ability-name checks with registered contributors | Not started | (to be created at /proj-start) |
+| 1. Golden output tests for representative ships | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Extract domain contributors behind current API | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Replace hardcoded ability-name checks with registered contributors | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04

@@ -10,11 +10,13 @@
 > - Run `python Projects/scripts/validate_phase.py PROJ-357 [phase]` before stopping
 > - Update Current State with specific handoff context
 
+**Execution Protocol:** 03c-phase-aware-execution
+
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Characterization tests | Not started | (to be created at /proj-start) |
-| 2. Provider identity rework | Not started | (to be created at /proj-start) |
+| 1. Characterization tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Provider identity rework | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04

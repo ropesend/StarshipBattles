@@ -10,10 +10,12 @@
 > - Run `python Projects/scripts/validate_phase.py PROJ-356 [phase]` before stopping
 > - Update Current State with specific handoff context
 
+**Execution Protocol:** 03c-phase-aware-execution
+
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Failing test + one-line fix | Not started | (to be created at /proj-start) |
+| 1. Failing test + one-line fix | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04

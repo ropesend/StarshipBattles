@@ -10,13 +10,15 @@
 > - Run `python Projects/scripts/validate_phase.py PROJ-359 [phase]` before stopping
 > - Update Current State with specific handoff context
 
+**Execution Protocol:** 03c-phase-aware-execution
+
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Characterization (golden) tests for current dispatch | Not started | (to be created at /proj-start) |
-| 2. AttackRequest / AttackResolution + registry skeleton | Not started | (to be created at /proj-start) |
-| 3. Migrate weapon families one at a time | Not started | (to be created at /proj-start) |
-| 4. Delete string-class branches + dict carriers | Not started | (to be created at /proj-start) |
+| 1. Characterization (golden) tests for current dispatch | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. AttackRequest / AttackResolution + registry skeleton | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate weapon families one at a time | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Delete string-class branches + dict carriers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
