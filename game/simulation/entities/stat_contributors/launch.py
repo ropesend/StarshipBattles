@@ -14,6 +14,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from game.simulation.entities.stat_contributors.registry import (
+    is_builtin_suppressed_for,
+)
+
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
     from game.simulation.entities.ship import Ship
@@ -28,7 +32,13 @@ def aggregate_hangar(ship: "Ship", comp: "Component") -> None:
     - ``fighters_per_wave`` (sum)
     - ``fighter_size_cap`` (max)
     - ``launch_cycle`` (max)
+
+    PROJ-360 audit EXT-02: respects ``is_builtin_suppressed_for`` so a
+    registered contributor for ``VehicleLaunch`` fully replaces the
+    built-in handler.
     """
+    if is_builtin_suppressed_for("VehicleLaunch"):
+        return
     if not (comp.has_ability("VehicleLaunch") or "VehicleLaunch" in comp.abilities):
         return
 

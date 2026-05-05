@@ -21,7 +21,10 @@ from typing import List, TYPE_CHECKING
 
 from game.core.constants import CombatConstants
 from game.simulation.components.component_constants import ComponentStatus
-from game.simulation.entities.stat_contributors.registry import lookup_crew_priority
+from game.simulation.entities.stat_contributors.registry import (
+    is_builtin_suppressed_for,
+    lookup_crew_priority,
+)
 from game.simulation.physics_constants import DEFAULT_MAX_MASS
 
 if TYPE_CHECKING:
@@ -45,7 +48,13 @@ def track_multiplex(ship: "Ship", comp: "Component") -> None:
 
     Uses the raw ``abilities`` dict (legacy semantics) — a 0 value means no
     contribution and is filtered out.
+
+    PROJ-360 audit EXT-02: respects ``is_builtin_suppressed_for`` so a
+    registered contributor for ``MultiplexTracking`` fully replaces the
+    built-in handler.
     """
+    if is_builtin_suppressed_for("MultiplexTracking"):
+        return
     mt = comp.abilities.get("MultiplexTracking", 0)
     if mt > 0 and mt > ship.max_targets:
         ship.max_targets = mt

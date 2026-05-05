@@ -91,6 +91,25 @@ def _round_for_snapshot(value):
     return value
 
 
+def _normalize_infinity(value):
+    """Convert `float('inf')` to a JSON-safe sentinel for snapshot storage.
+
+    `combat_endurance` writes `float('inf')` for endurance fields when the
+    relevant resource has zero consumption. JSON cannot encode `inf`; we
+    normalize to the string "inf" so the snapshot round-trips losslessly.
+    """
+    if isinstance(value, float) and math.isinf(value):
+        return "inf"
+    return value
+
+
+def _normalize_summary(summary):
+    """Pass through the cached_summary dict, normalizing inf values."""
+    if not isinstance(summary, dict):
+        return summary
+    return {k: _normalize_infinity(v) for k, v in summary.items()}
+
+
 def _capture_stats(ship: "Ship") -> dict:
     """Snapshot every calculator-written field on the ship.
 
@@ -145,6 +164,23 @@ def _capture_stats(ship: "Ship") -> dict:
         "cargo_storage": dict(ship.cargo_storage),
         "pod_storage_mass": ship.pod_storage_mass,
         "ammo_gen_rate": ship.ammo_gen_rate,
+        # Combat endurance (PROJ-360 audit FIND-002).
+        # These 12 fields are written by `combat_endurance.calculate_combat_endurance`
+        # and complete the calculator's observable surface. `float('inf')`
+        # is normalized to the JSON-safe sentinel string "inf" — endurance
+        # values are unbounded when consumption is zero.
+        "fuel_consumption": ship.fuel_consumption,
+        "ammo_consumption": ship.ammo_consumption,
+        "energy_consumption": ship.energy_consumption,
+        "potential_fuel_consumption": ship.potential_fuel_consumption,
+        "potential_ammo_consumption": ship.potential_ammo_consumption,
+        "potential_energy_consumption": ship.potential_energy_consumption,
+        "fuel_endurance": _normalize_infinity(ship.fuel_endurance),
+        "ammo_endurance": _normalize_infinity(ship.ammo_endurance),
+        "energy_endurance": _normalize_infinity(ship.energy_endurance),
+        "energy_recharge": _normalize_infinity(ship.energy_recharge),
+        "energy_net": ship.energy_net,
+        "cached_summary": _normalize_summary(ship._cached_summary),
     }
 
     # Layer status (ship.layer_status is keyed by LayerType enum)

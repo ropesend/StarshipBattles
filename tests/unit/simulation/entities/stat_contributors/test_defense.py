@@ -122,13 +122,20 @@ class TestShieldAggregation:
         assert acc["shield_regen"] == 3.5
 
     def test_shield_energy_cost_only_counts_once_first_match_wins(self):
-        """Legacy behavior: first energy ResourceConsumption breaks the loop."""
+        """Legacy behavior: first energy ResourceConsumption breaks the loop.
+
+        PROJ-360 audit EXT-05: defense now uses
+        ``get_abilities("ResourceConsumption")`` instead of scanning all
+        ``ability_instances``. The "first match wins" semantics is
+        preserved — the consumption list is consumed in order and the
+        loop breaks on the first energy match.
+        """
         ship = _make_ship_with_armor_layer()
         acc = _empty_acc()
         first = _make_resource_consumption("energy", 5.0)
         second = _make_resource_consumption("energy", 7.0)
         comp = _make_component(
-            ability_instances=[first, second],
+            abilities_by_name={"ResourceConsumption": [first, second]},
             has_ability_set={"ShieldRegeneration"},
         )
         defense.aggregate_defense(ship, comp, acc)
@@ -138,11 +145,29 @@ class TestShieldAggregation:
         ship = _make_ship_with_armor_layer()
         acc = _empty_acc()
         comp = _make_component(
-            ability_instances=[_make_resource_consumption("energy", 5.0)],
+            abilities_by_name={
+                "ResourceConsumption": [_make_resource_consumption("energy", 5.0)],
+            },
             has_ability_set=set(),  # no ShieldRegeneration -> skip
         )
         defense.aggregate_defense(ship, comp, acc)
         assert acc["shield_cost"] == 0
+
+    def test_shield_energy_cost_filters_by_resource_type(self):
+        """EXT-05: only ResourceConsumption(energy) is summed; fuel etc.
+        are skipped even though the gate (ShieldRegeneration) is present."""
+        ship = _make_ship_with_armor_layer()
+        acc = _empty_acc()
+        fuel_cost = _make_resource_consumption("fuel", 9.0)
+        energy_cost = _make_resource_consumption("energy", 4.0)
+        comp = _make_component(
+            abilities_by_name={
+                "ResourceConsumption": [fuel_cost, energy_cost],
+            },
+            has_ability_set={"ShieldRegeneration"},
+        )
+        defense.aggregate_defense(ship, comp, acc)
+        assert acc["shield_cost"] == 4.0
 
 
 class TestArmorAndRepairPostAggregation:

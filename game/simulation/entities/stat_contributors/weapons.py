@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
 
 
-def aggregate_targeting_scores(ship: "Ship", component_pool: List["Component"]) -> None:
+def aggregate_targeting_scores(ship: "Ship", component_pool: List["Component"]) -> float:
     """Compute and store ECM defense + baseline-to-hit offense.
 
     Mirrors legacy ``_phase_sensor_defense_scores`` for the two ability-total
@@ -53,4 +53,4 @@ def aggregate_targeting_scores(ship: "Ship", component_pool: List["Component"]) 
         attack_mods = 0.0
 
     ship.baseline_to_hit_offense = attack_mods
-    return ecm_score
+    return float(ecm_score)

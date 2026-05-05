@@ -263,8 +263,11 @@ class ShipStatsCalculator:
             # Extension point: any contributor registered via
             # `stat_contributors.registry.register_stat_contributor`
             # runs here, with the same `is_operational` gating as
-            # the built-in domain contributors above.
-            apply_registered_contributors(ship, comp)
+            # the built-in domain contributors above. PROJ-360 audit
+            # EXT-12: registered contributors receive the same `acc`
+            # dict the built-ins mutate so accumulate-then-commit is
+            # consistent across both tiers.
+            apply_registered_contributors(ship, comp, acc)
 
         self._apply_aggregated_stats(ship, acc)
 

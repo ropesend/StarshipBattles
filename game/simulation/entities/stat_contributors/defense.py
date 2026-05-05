@@ -21,7 +21,9 @@ from typing import Any, Dict, List, TYPE_CHECKING
 
 from game.core.constants import LayerType
 from game.simulation.entities.ability_aggregator import get_ability_total
-from game.simulation.interfaces import is_resource_consumption
+from game.simulation.entities.stat_contributors.registry import (
+    is_builtin_suppressed_for,
+)
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -35,6 +37,16 @@ def aggregate_defense(ship: "Ship", comp: "Component", acc: Dict[str, Any]) -> N
 
     - ``ship.layers[LayerType.ARMOR].max_hp_pool`` (direct, bypasses ``acc``)
     - ``acc['max_shields']``, ``acc['shield_regen']``, ``acc['shield_cost']``
+
+    PROJ-360 audit:
+
+    - EXT-02: ``ShieldProjection`` and ``ShieldRegeneration`` blocks respect
+      ``is_builtin_suppressed_for`` so a registered contributor can fully
+      replace the built-in handling for either ability without double-counting.
+    - EXT-05: shield energy cost is read via the typed
+      ``get_abilities("ResourceConsumption")`` path filtered on
+      ``resource_type == "energy"`` instead of scanning all
+      ``comp.ability_instances``.
     """
     # Armor HP pool (using ability-based detection)
     if comp.abilities.get("Armor", False):
@@ -42,19 +54,30 @@ def aggregate_defense(ship: "Ship", comp: "Component", acc: Dict[str, Any]) -> N
             ship.layers[LayerType.ARMOR].max_hp_pool += comp.max_hp
 
     # Shields from ShieldProjection abilities
-    for ab in comp.get_abilities("ShieldProjection"):
-        acc["max_shields"] += ab.capacity
+    if not is_builtin_suppressed_for("ShieldProjection"):
+        for ab in comp.get_abilities("ShieldProjection"):
+            acc["max_shields"] += ab.capacity
 
-    # Shield regen from ShieldRegeneration abilities
-    for ab in comp.get_abilities("ShieldRegeneration"):
-        acc["shield_regen"] += ab.rate
+    # Shield regen from ShieldRegeneration abilities + energy cost.
+    # Note: shield-energy-cost extraction is colocated with the
+    # ShieldRegeneration handling because both are tied to the same
+    # underlying component role. Suppressing ShieldRegeneration takes
+    # over both legacy responsibilities — extension contributors that
+    # need only one half should still register their own substitute.
+    if not is_builtin_suppressed_for("ShieldRegeneration"):
+        for ab in comp.get_abilities("ShieldRegeneration"):
+            acc["shield_regen"] += ab.rate
 
-    # Shield energy cost from ResourceConsumption(energy) on shield-regen comps
-    if comp.has_ability("ShieldRegeneration"):
-        for ab in comp.ability_instances:
-            if is_resource_consumption(ab) and ab.resource_type == "energy":
-                acc["shield_cost"] += ab.amount
-                break
+        # Shield energy cost from ResourceConsumption(energy) on shield-regen
+        # components. EXT-05 fix: typed `get_abilities("ResourceConsumption")`
+        # iterates only the resource-consumption instances, not the entire
+        # ability list. Legacy "first match wins" + `has_ability` gate
+        # semantics preserved.
+        if comp.has_ability("ShieldRegeneration"):
+            for ab in comp.get_abilities("ResourceConsumption"):
+                if getattr(ab, "resource_type", None) == "energy":
+                    acc["shield_cost"] += ab.amount
+                    break
 
 
 def apply_armor_and_repair_scores(
