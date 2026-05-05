@@ -6,7 +6,7 @@
 |----|-------|--------|---------|--------------|
 | PROJ-350 | Combat Lab Registry Class Identity Fix | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-349 | Closeout Sprint 7 - Documentation drift and convention violations from review | Planning | 2026-05-04 | 2026-05-04 |
-| PROJ-348 | Closeout Sprint 6 - Controller boundary cleanup from PROJ-329C review | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-348 | Closeout Sprint 6 - Controller boundary cleanup from PROJ-329C review (T5.1/T5.3/T5.4 fixed; T5.2 declined as not-a-defect) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-347 | Closeout Sprint 5 - Pattern 33 placeholder gaps and Stage-1 purity from review (T4.7 deferred for user decision) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-346 | Closeout Sprint 4 - Vacuous test purges from PROJ-331/338/339/340 review | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-345 | Closeout Sprint 3 - PROJ-333 critical coverage gaps from review | Awaiting Verification | 2026-05-04 | 2026-05-04 |
