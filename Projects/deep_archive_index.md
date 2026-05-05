@@ -297,3 +297,12 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-297 | Code Review Cleanup - Quick Wins | 2026-04-27 | PROJ-251-300 |
 | PROJ-298 | FleetOrder Rename Cleanup | 2026-04-27 | PROJ-251-300 |
 | PROJ-299 | Race Description Generator (LLM) | 2026-04-27 | PROJ-251-300 |
+| PROJ-300 | Universal IAbilitySource Framework + Storm/Facility Migration | 2026-05-04 | PROJ-251-300 |
+| PROJ-301 | Planet Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-302 | Star Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-303 | Warp Point Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-304 | Star System Archetype Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-305 | Fleet Strategic-Layer Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-306 | Battle Simulation DI Cleanup (PROJ-274 closure) | 2026-04-27 | PROJ-301-350 |
+| PROJ-307 | Documentation Freshness Timestamps | 2026-04-27 | PROJ-301-350 |
+| PROJ-308 | Broad Exception Handler Justifications | 2026-04-27 | PROJ-301-350 |
