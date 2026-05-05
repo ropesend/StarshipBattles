@@ -265,7 +265,7 @@ class TestSeekerWeaponFiring:
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        with patch('game.simulation.combat.families.seeker.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             attacks = system.fire_weapons(ship)
 
@@ -1229,7 +1229,7 @@ class TestSeekerProjectileCreation:
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        with patch('game.simulation.combat.families.seeker.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             system.fire_weapons(ship)
 
@@ -1294,7 +1294,7 @@ class TestSeekerProjectileCreation:
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        with patch('game.simulation.combat.families.seeker.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             system.fire_weapons(ship)
 

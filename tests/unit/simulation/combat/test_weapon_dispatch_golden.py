@@ -337,7 +337,8 @@ class TestSeekerGolden:
         )
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        # PROJ-359 Phase 3.3: Seeker family in families/seeker.py
+        with patch('game.simulation.combat.families.seeker.Projectile') as mock_proj:
             sentinel = MagicMock()
             mock_proj.return_value = sentinel
             attacks = firing.fire_weapons(ship)

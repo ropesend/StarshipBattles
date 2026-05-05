@@ -261,26 +261,29 @@ class WeaponFiringSystem:
                     'hit': True,
                 })
         else:
-            # Projectile attack
+            # Projectile / Seeker attack — both route through the registry.
             if comp.has_ability('SeekerWeaponAbility'):
+                family = WeaponFamily.SEEKER
+            else:
+                family = WeaponFamily.PROJECTILE
+
+            if WEAPON_REGISTRY.has(family):
+                request = AttackRequest(
+                    source=ship,
+                    component=comp,
+                    weapon_ability=weapon_ab,
+                    target=target,
+                    aim_pos=aim_pos,
+                    aim_vec=aim_vec,
+                    family=family,
+                )
+                resolution = WEAPON_REGISTRY.dispatch(request)
+                assert isinstance(resolution, ProjectileResolution)
+                projectile = resolution.projectile
+            elif comp.has_ability('SeekerWeaponAbility'):
                 projectile = self._create_seeker_projectile(ship, comp, target, weapon_ab, aim_vec)
             else:
-                # PROJ-359 Phase 3.2: Projectile family routes through registry
-                if WEAPON_REGISTRY.has(WeaponFamily.PROJECTILE):
-                    request = AttackRequest(
-                        source=ship,
-                        component=comp,
-                        weapon_ability=weapon_ab,
-                        target=target,
-                        aim_pos=aim_pos,
-                        aim_vec=aim_vec,
-                        family=WeaponFamily.PROJECTILE,
-                    )
-                    resolution = WEAPON_REGISTRY.dispatch(request)
-                    assert isinstance(resolution, ProjectileResolution)
-                    projectile = resolution.projectile
-                else:
-                    projectile = self._create_standard_projectile(ship, comp, target, aim_vec)
+                projectile = self._create_standard_projectile(ship, comp, target, aim_vec)
 
             attacks.append(projectile)
 
