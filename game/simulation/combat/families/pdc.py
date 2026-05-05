@@ -19,39 +19,27 @@ policy).
 """
 from __future__ import annotations
 
-from game.core.math import Vector2
 from game.simulation.combat.attack_contract import (
     AttackRequest,
     AttackResolution,
-    BeamResolution,
     WeaponFamily,
 )
+from game.simulation.combat.families._beam_common import build_beam_resolution
 from game.simulation.combat.weapon_registry import WEAPON_REGISTRY
 
 
 class PDCHandler:
     """PDC family handler — emits a BeamResolution identical in shape to the
     Beam family. The firing-time logic is the same; targeting-time filters
-    diverge per `FAMILY_METADATA`."""
+    diverge per `FAMILY_METADATA`.
+
+    PROJ-359 audit (MAJ-002): construction is delegated to
+    `_beam_common.build_beam_resolution` so this handler and `BeamHandler`
+    cannot drift apart.
+    """
 
     def fire(self, request: AttackRequest) -> AttackResolution:
-        ship = request.source
-        comp = request.component
-        weapon_ab = request.weapon_ability
-        target = request.target
-        aim_vec = request.aim_vec
-
-        direction = aim_vec.normalize() if aim_vec.length() > 0 else Vector2(1, 0)
-        return BeamResolution(
-            source=ship,
-            component=comp,
-            target=target,
-            damage=weapon_ab.damage,
-            range=weapon_ab.range,
-            origin=ship.position,
-            direction=direction,
-            hit=True,
-        )
+        return build_beam_resolution(request)
 
 
 WEAPON_REGISTRY.register(WeaponFamily.PDC, PDCHandler())

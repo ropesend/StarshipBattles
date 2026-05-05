@@ -179,8 +179,14 @@ class TargetingSystem:
                 # Determine candidate's target type for PDC matching
                 candidate_type = self._get_pdc_target_type(candidate, is_missile)
 
-                # Get valid targets from the beam ability on the component
-                pdc_valid_targets = self._get_pdc_valid_targets(comp, weapon_ab)
+                # PROJ-359 audit (MAJ-001): family is already known to be PDC,
+                # so there is no need to re-query `comp.has_ability(...)` —
+                # PDC weapons are Beam-role weapons, so `BeamWeaponAbility`
+                # is the canonical place to read `pdc_valid_targets`. Fetch
+                # it once via `get_ability` (returns None if absent) and pass
+                # the resolved ability to the helper.
+                beam_ab = comp.get_ability('BeamWeaponAbility')
+                pdc_valid_targets = self._get_pdc_valid_targets(beam_ab, weapon_ab)
 
                 if candidate_type not in pdc_valid_targets:
                     continue  # PDC can only target types in its valid targets list
@@ -201,25 +207,25 @@ class TargetingSystem:
         return None
 
     @staticmethod
-    def _get_pdc_valid_targets(comp: 'Component', weapon_ab: Any) -> list:
+    def _get_pdc_valid_targets(beam_ab: Any, weapon_ab: Any) -> list:
         """
         Get the list of valid PDC target types from the weapon's beam ability.
 
-        Checks the component's BeamWeaponAbility for pdc_valid_targets first,
-        then falls back to the passed weapon_ab, and finally to the default
-        ["MISSILE", "FIGHTER"].
+        PROJ-359 audit (MAJ-001): the caller already knows the family is PDC,
+        so it has resolved the BeamWeaponAbility instance directly via
+        `comp.get_ability('BeamWeaponAbility')` (which returns None if absent).
+        This helper no longer performs its own `has_ability` lookup — it
+        simply consults the supplied ability, then `weapon_ab`, then a default.
 
         Args:
-            comp: The weapon component
-            weapon_ab: The weapon ability instance passed to find_valid_target
+            beam_ab: The component's `BeamWeaponAbility` instance, or None.
+            weapon_ab: The weapon ability instance passed to find_valid_target.
 
         Returns:
             List of uppercase target type strings (e.g. ["MISSILE", "FIGHTER"])
         """
         _DEFAULT = ["MISSILE", "FIGHTER"]
 
-        # Try to get from the component's BeamWeaponAbility
-        beam_ab = comp.get_ability('BeamWeaponAbility') if comp.has_ability('BeamWeaponAbility') else None
         if beam_ab is not None:
             targets = getattr(beam_ab, 'pdc_valid_targets', None)
             if isinstance(targets, list):

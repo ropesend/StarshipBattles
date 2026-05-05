@@ -7,13 +7,12 @@ firing/targeting semantics diverge — even though both use a
 """
 from __future__ import annotations
 
-from game.core.math import Vector2
 from game.simulation.combat.attack_contract import (
     AttackRequest,
     AttackResolution,
-    BeamResolution,
     WeaponFamily,
 )
+from game.simulation.combat.families._beam_common import build_beam_resolution
 from game.simulation.combat.weapon_registry import WEAPON_REGISTRY
 
 
@@ -21,29 +20,13 @@ class BeamHandler:
     """Beam weapon family handler.
 
     Constructs a `BeamResolution` whose field set mirrors the legacy beam
-    dict 1:1. The engine layer (`game/engine/collision.py`) still consumes
-    a dict in Phase 3; the firing system adapts the resolution to the dict
-    shape at the dispatch boundary. Phase 4 collapses that adapter.
+    dict 1:1. PROJ-359 audit (MAJ-002): construction is delegated to
+    `_beam_common.build_beam_resolution` so this handler and `PDCHandler`
+    cannot drift apart.
     """
 
     def fire(self, request: AttackRequest) -> AttackResolution:
-        ship = request.source
-        comp = request.component
-        weapon_ab = request.weapon_ability
-        target = request.target
-        aim_vec = request.aim_vec
-
-        direction = aim_vec.normalize() if aim_vec.length() > 0 else Vector2(1, 0)
-        return BeamResolution(
-            source=ship,
-            component=comp,
-            target=target,
-            damage=weapon_ab.damage,
-            range=weapon_ab.range,
-            origin=ship.position,
-            direction=direction,
-            hit=True,
-        )
+        return build_beam_resolution(request)
 
 
 WEAPON_REGISTRY.register(WeaponFamily.BEAM, BeamHandler())

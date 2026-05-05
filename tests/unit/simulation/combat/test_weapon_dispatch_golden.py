@@ -536,6 +536,48 @@ class TestTargetingGolden:
         result = targeting.find_valid_target(ship, None, [ship_target], weapon, weapon_ab)
         assert result is None  # destroyer not in pdc_valid_targets
 
+    def test_unrecognized_weapon_family_no_attack_emitted(self):
+        """PROJ-359 audit (MAJ-003): a weapon component that has
+        `WeaponAbility` (so it passes the firing gate) but no recognized
+        family ability — `detect_family` returns None — must produce no
+        attack and not raise.
+
+        This pins the graceful-no-op contract for the boundary case where
+        a future weapon component is added with `WeaponAbility` but its
+        family handler hasn't been registered yet (or `detect_family`
+        hasn't been extended). The previous behavior is silent skip; this
+        test guarantees that stays silent rather than tripping the
+        registry's `UnregisteredWeaponFamilyError`.
+        """
+        targeting = TargetingSystem()
+        firing = WeaponFiringSystem(targeting)
+
+        ship = _make_ship()
+        target = _make_ship(team_id=1, position=(50.0, 0.0))
+        target.type = 'ship'
+        ship.current_target = target
+
+        weapon_ab = MagicMock()
+        weapon_ab.can_fire = MagicMock(return_value=True)
+        weapon_ab.fire = MagicMock(return_value=True)
+        weapon_ab.damage = 10
+        weapon_ab.range = 200
+        weapon_ab.check_firing_solution = MagicMock(return_value=True)
+
+        # Component reports only `WeaponAbility` — no Beam/Projectile/Seeker
+        # family ability, and no PDC tag. `detect_family` returns None.
+        weapon = _make_weapon_component(
+            family_abilities=[],  # no family ability
+            weapon_ab=weapon_ab,
+            family_ab=None,
+            is_pdc=False,
+        )
+        ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
+
+        # Must not raise; must yield no attacks.
+        attacks = firing.fire_weapons(ship)
+        assert attacks == []
+
     def test_seeker_uses_endurance_range_gate(self):
         """Seeker targeting checks `projectile_speed * endurance * SEEKER_MAX_RANGE_MULTIPLIER`
         rather than `weapon_ab.check_firing_solution`."""

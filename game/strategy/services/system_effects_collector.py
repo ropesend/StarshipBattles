@@ -26,12 +26,9 @@ source_label, source_id, owner_id) AND legacy back-compat fields
 existing consumers keep working until Phase 8 retires them.
 """
 import logging
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, TYPE_CHECKING
 
-from game.strategy.data.component_activation_state import (
-    ActivationPhase,
-    ComponentActivationState,
-)
+from game.strategy.data.component_activation_state import ActivationPhase
 from game.strategy.services.strategic_ability_scanner import (
     aggregate_multipliers,
     aggregate_rates,
@@ -44,11 +41,35 @@ from game.strategy.services.effect_ability_metadata import (
     find_metadata,
     is_known_effect_ability,
 )
+from game.strategy.services.effect_ability_display import (
+    _ability_kind,
+    _format_status,
+    _is_activatable,
+    format_intrinsic_ability_magnitude,
+    make_display_name,
+    make_group_key,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.galaxy import StarSystem
 
 logger = logging.getLogger(__name__)
+
+
+# Re-exports — the display/grouping/format helpers were moved to
+# `effect_ability_display` (PROJ-362 audit remediation). Import from here is
+# preserved so existing UI callers (planet_list_filters, planet_list_window,
+# system_tree_panel) keep working without churn.
+__all__ = [
+    'collect_system_effects',
+    'collect_sector_effects',
+    'find_sector_effect',
+    'aggregate_value_or',
+    'make_group_key',
+    'make_display_name',
+    'format_intrinsic_ability_magnitude',
+    'is_known_effect_ability',
+]
 
 
 # Scope sets for filtering effects into the correct UI panel.
@@ -67,154 +88,6 @@ _SECTOR_SCOPES = frozenset({
 # scopes, value field selection) lives in `effect_ability_metadata.
 # EFFECT_ABILITY_METADATA`. Adding a new strategic effect is a single-entry
 # edit there — no changes needed here.
-
-
-def _ability_kind(ability_name: str) -> str:
-    """Return 'rate' or 'multiplier' based on the metadata registry.
-
-    Falls back to 'multiplier' for unknown ability names (matches the
-    legacy `_RATE_ABILITIES` membership-check behavior).
-    """
-    m = find_metadata(ability_name)
-    return m.kind if m is not None else 'multiplier'
-
-
-# ---------------------------------------------------------------------------
-# Status helpers (unchanged from the pre-PROJ-300 collector). These work on
-# any object exposing `get_activation_state(comp_key) -> ComponentActivationState`.
-# ---------------------------------------------------------------------------
-
-
-def _format_status(state: Optional[ComponentActivationState]) -> str:
-    """Render an activation state as a human-readable status string."""
-    if state is None:
-        return "Active"  # Sources without activation tracking are always-on.
-    if state.phase == ActivationPhase.ACTIVE:
-        return "Active"
-    if state.phase == ActivationPhase.ACTIVATING:
-        remaining = state.required_ticks - state.progress_ticks
-        return f"Activating ({remaining})"
-    if state.phase == ActivationPhase.DEACTIVATING:
-        remaining = state.required_ticks - state.progress_ticks
-        return f"Deactivating ({remaining})"
-    return "Inactive"
-
-
-def _is_activatable(ability_data: dict) -> bool:
-    """Activatable abilities have an `activation_time` field."""
-    return isinstance(ability_data, dict) and 'activation_time' in ability_data
-
-
-# ---------------------------------------------------------------------------
-# Grouping + display name (unchanged).
-# ---------------------------------------------------------------------------
-
-
-def make_group_key(ability_name: str, ability_data) -> str:
-    """Group key for an ability instance.
-
-    Driven by `EffectAbilityMetadata.grouping_key_field` from the registry.
-    When set (e.g. 'resource_type' for ResourceHarvestBooster, 'damage_type'
-    for EnvironmentalDamage), the key is `f"{ability_name}:{value}"`. When
-    absent (or the ability is unknown), the key is the ability_name alone.
-
-    Public since FEAT-16 — also consumed by the Planet List effects filter
-    and per-effect column generators.
-    """
-    metadata = find_metadata(ability_name)
-    if metadata is None or metadata.grouping_key_field is None:
-        return ability_name
-    if not isinstance(ability_data, dict):
-        return ability_name
-    field_value = ability_data.get(metadata.grouping_key_field)
-    # Per-resource grouping for QualityImprovement preserves the legacy
-    # behavior of falling back to the bare ability_name when the field is
-    # missing/empty (e.g. tests with sparse fixtures).
-    if not field_value:
-        # EnvironmentalDamage's legacy fallback was the literal string
-        # 'environmental' when damage_type was missing — keep that exact
-        # behavior so callers see the same group keys.
-        if ability_name == 'EnvironmentalDamage':
-            return f"{ability_name}:environmental"
-        return ability_name
-    return f"{ability_name}:{field_value}"
-
-
-def make_display_name(ability_name: str, ability_data) -> str:
-    """Human-readable label for an ability instance.
-
-    Driven by `EffectAbilityMetadata.display_name`. When the registry entry
-    has an explicit display_name, it is returned verbatim. When display_name
-    is None, the label is derived from the `grouping_key_field` value in
-    `ability_data` ("Metals Harvest Boost", "Plasma Damage").
-
-    Public since FEAT-16 — used as Planet List per-effect column titles and
-    Effects filter chip labels.
-    """
-    metadata = find_metadata(ability_name)
-    if metadata is None:
-        return ability_name
-    if metadata.display_name is not None:
-        return metadata.display_name
-    # Derived display name from the data field. Pick the right suffix
-    # per grouping family — resource boosters get "Harvest Boost",
-    # environmental damage gets "Damage".
-    if isinstance(ability_data, dict) and metadata.grouping_key_field:
-        value = ability_data.get(metadata.grouping_key_field)
-        if metadata.grouping_key_field == 'resource_type':
-            label_value = value if value else 'unknown'
-            return f"{label_value.capitalize()} Harvest Boost"
-        if metadata.grouping_key_field == 'damage_type':
-            label_value = value if value else 'environmental'
-            return f"{label_value.capitalize()} Damage"
-    return ability_name
-
-
-def format_intrinsic_ability_magnitude(ability_name: str, ability_data) -> str:
-    """Render the magnitude of a single ability instance for UI display.
-
-    Used by the Planet List per-effect columns (FEAT-16) and by the System
-    Tree panel's per-effect rendering. The aggregate-effect formatter in
-    `system_tree_panel._format_effect_value` delegates to this for the
-    shared multiplier/rate paths.
-
-    Returns "" when the value is the additive/multiplicative identity (so
-    cells stay blank rather than rendering noise like "x1.00").
-    """
-    if not isinstance(ability_data, dict):
-        return ""
-
-    metadata = find_metadata(ability_name)
-    if metadata is None:
-        # Unknown ability — render nothing rather than fabricating "x..."
-        # for arbitrary input.
-        return ""
-
-    if metadata.kind == 'rate':
-        rate = ability_data.get('rate')
-        if not rate:
-            return ""
-        try:
-            r = float(rate)
-        except (TypeError, ValueError):
-            return ""
-        if ability_name == 'EnvironmentalDamage':
-            return f"-{r:.2f} hull/turn"
-        if ability_name == 'FuelDrain':
-            return f"-{r:.2f} fuel/turn"
-        return f"{r:+.2f}/turn"
-
-    # Multiplier-style.
-    mult = ability_data.get('multiplier')
-    if mult is None:
-        return ""
-    try:
-        m = float(mult)
-    except (TypeError, ValueError):
-        return ""
-    if m == 1.0:
-        return ""
-    return f"x{m:.2f}"
 
 
 # ---------------------------------------------------------------------------
@@ -255,7 +128,7 @@ def find_sector_effect(
     effects: List[Dict[str, Any]],
     ability_name: str,
     **filters,
-) -> Optional[Dict[str, Any]]:
+) -> Dict[str, Any] | None:
     """Find the first effect matching `ability_name` and any extra filters.
 
     Filters are matched against effect-dict keys (e.g. damage_type='radiation').
