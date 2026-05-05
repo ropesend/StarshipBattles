@@ -32,8 +32,15 @@ def _make_planet_mock(*, planet_id: int, owner_id: int = None):
 
 def _make_planet_list_window():
     """Construct a `PlanetListWindow` via bypass-init. Callers then set
-    the attributes `_on_planet_selected` touches."""
+    the attributes `_on_planet_selected` touches.
+
+    PROJ-348 T5.4: now installs a real `PlanetListController` wired to the
+    mocked facade so `_resolve_demographic_view` exercises the documented
+    controller-mediated path. The legacy `__new__`-bypass fallback in
+    production was deleted; tests must provide a controller.
+    """
     from game.ui.screens.planet_list_window import PlanetListWindow
+    from game.ui.screens.planet_list_controller import PlanetListController
 
     window = PlanetListWindow.__new__(PlanetListWindow)
     window.ui_manager = MagicMock()
@@ -45,9 +52,10 @@ def _make_planet_list_window():
     window._registries = MagicMock()
     window._race_registry = MagicMock()
     # PROJ-292 H1: facade provides `get_colony_demographic_view(planet.id)`
-    # for colonized planets.
+    # for colonized planets. Wired through the controller per PROJ-329C.
     window._facade = MagicMock()
     window._facade.get_colony_demographic_view = MagicMock(return_value=None)
+    window.controller = PlanetListController(facade=window._facade)
     # Empire reference used by the detail panel.
     window.empire = MagicMock()
     window.empire.id = 1

@@ -708,18 +708,11 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
     def _resolve_demographic_view(self, planet) -> Optional[Any]:
         """PROJ-292 H1: resolve per-species view for colonized planets.
 
-        Bypass-init tests construct the window via ``__new__`` and set
-        ``self._facade`` directly without going through ``__init__``, so
-        the controller may not exist. In that case fall back to the
-        original inline check that those tests pin.
+        PROJ-348 T5.4: the legacy ``__new__``-bypass fallback was deleted.
+        Bypass-init tests must wire a real ``PlanetListController`` (see
+        ``tests/unit/ui/screens/test_planet_list_window.py:_make_planet_list_window``).
         """
-        controller = getattr(self, 'controller', None)
-        if controller is not None:
-            return controller.resolve_demographic_view(planet)
-        # Legacy bypass-init test fallback
-        if planet.owner_id is None or self._facade is None:
-            return None
-        return self._facade.get_colony_demographic_view(planet.id)
+        return self.controller.resolve_demographic_view(planet)
 
     def _detail_panel_geometry(self) -> tuple:
         """Calculate detail panel position and size relative to window."""
