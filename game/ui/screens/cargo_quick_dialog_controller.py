@@ -66,16 +66,33 @@ class CargoQuickDialogController:
 
     # ---- Command emission ----
 
-    def issue_orders(self, cargo_items: List[Dict[str, Any]]) -> int:
-        """Issue transfer commands for all items with non-zero slider
-        values. Returns the count of dispatched orders."""
+    def issue_orders(self, resolved_items: List[Dict[str, Any]]) -> int:
+        """Issue transfer commands for all items with positive ``amount``.
+
+        Returns the count of dispatched orders.
+
+        PROJ-348 T5.1: ``resolved_items`` is the dialog's cargo_items list
+        with each entry's ``amount`` field already populated from the
+        slider. The controller no longer touches pygame_gui widgets — that
+        boundary used to be violated by reading ``item['slider'].get_current_value()``
+        here, contradicting the controller's "does NOT touch pygame_gui
+        widgets" contract documented in this module's docstring.
+
+        Each ``resolved_items`` entry must include:
+            'amount': int (already resolved from slider)
+            'type': str (cargo type)
+            'max': int
+            'species_id': Optional[str]
+            'label': str (logging only)
+            'planet_id': Optional[int] (load direction)
+        """
         target_planet_id = None
         if self.direction == 'unload':
             target_planet_id = self.get_target_planet_id()
 
         orders_issued = 0
-        for item in cargo_items:
-            amount = int(item['slider'].get_current_value())
+        for item in resolved_items:
+            amount = int(item['amount'])
             if amount <= 0:
                 continue
 
