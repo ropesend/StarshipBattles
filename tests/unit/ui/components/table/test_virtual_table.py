@@ -799,6 +799,230 @@ class TestVirtualTable:
         # Method handles multi buttons, so it might be called multiple times via values()
         assert fake_btn.kill.call_count >= 2
 
+    @patch("game.ui.components.table.virtual_table.UIButton", create=True)
+    def test_rebuild_row_pool_handles_replay_action_column(
+        self,
+        mock_button_class,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """rebuild_row_pool creates the single-button replay action widgets."""
+        from game.ui.components.table.column_manager import TableColumnManager
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+        columns = [{
+            "id": "replay",
+            "label": "Replay",
+            "width": 90,
+            "visible": True,
+            "type": "replay_action",
+            "action": "view_replay",
+        }]
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            TableColumnManager(columns),
+            selection_strategy,
+            row_height=40,
+        )
+
+        assert mock_button_class.call_count == len(table._row_pool)
+        widget = table._row_pool[0]["widgets"][0]
+        assert widget["type"] == "replay_action"
+        assert widget["action"] == "view_replay"
+        assert widget["button"] is mock_button_class.return_value
+
+    def test_replay_action_button_updates_when_replay_id_present(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """Rows with replay ids enable the replay button and set its tooltip."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
+        mock_scrollbar = MagicMock()
+        mock_scrollbar.start_percentage = 0.0
+        mock_scrollbar_class.return_value = mock_scrollbar
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+
+        source = MagicMock()
+        source.get_row_count.return_value = 1
+        source.get_row_highlight.return_value = None
+        source.get_cell_replay_id.return_value = "replay-1"
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+        button = MagicMock()
+        table.data_source = source
+        table._row_pool = [{
+            "bg": MagicMock(),
+            "row_index": -1,
+            "_last_color": None,
+            "widgets": [{
+                "type": "replay_action",
+                "col": {"id": "replay", "type": "replay_action"},
+                "button": button,
+                "action": "replay",
+            }],
+        }]
+
+        table.update_visible_rows()
+
+        button.enable.assert_called_once()
+        button.disable.assert_not_called()
+        assert button.tool_tip_text == "Replay this battle"
+
+    def test_replay_action_button_disabled_uses_reason_tooltip(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """Rows without replay ids disable the button with structural reason text."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
+        mock_scrollbar = MagicMock()
+        mock_scrollbar.start_percentage = 0.0
+        mock_scrollbar_class.return_value = mock_scrollbar
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+
+        source = MagicMock()
+        source.get_row_count.return_value = 1
+        source.get_row_highlight.return_value = None
+        source.get_cell_replay_id.return_value = None
+        source.get_cell_replay_unavailable_reason.return_value = "no_ships"
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+        button = MagicMock()
+        table.data_source = source
+        table._row_pool = [{
+            "bg": MagicMock(),
+            "row_index": -1,
+            "_last_color": None,
+            "widgets": [{
+                "type": "replay_action",
+                "col": {"id": "replay", "type": "replay_action"},
+                "button": button,
+                "action": "replay",
+            }],
+        }]
+
+        table.update_visible_rows()
+
+        button.disable.assert_called_once()
+        button.enable.assert_not_called()
+        assert button.tool_tip_text.startswith("No combat")
+        assert "neither side had any ships" in button.tool_tip_text
+
+    def test_check_action_button_press_maps_replay_action(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """check_action_button_press maps replay-action buttons to row actions."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+        replay_button = MagicMock()
+        bg = MagicMock()
+        bg.visible = True
+        table._row_pool = [{
+            "bg": bg,
+            "row_index": 7,
+            "widgets": [{
+                "type": "replay_action",
+                "button": replay_button,
+                "action": "view_replay",
+            }],
+        }]
+
+        assert table.check_action_button_press(replay_button) == ("view_replay", 7)
+
+    def test_kill_cleans_up_replay_action_button(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """kill destroys the single-button replay action widget."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+        replay_button = MagicMock()
+        table._row_pool.append({
+            "bg": MagicMock(),
+            "widgets": [{
+                "type": "replay_action",
+                "button": replay_button,
+            }],
+        })
+
+        table.kill()
+
+        replay_button.kill.assert_called_once()
+
 
 # ---------------------------------------------------------------------------
 # Issue #8 — disabled-Replay tooltip helper
