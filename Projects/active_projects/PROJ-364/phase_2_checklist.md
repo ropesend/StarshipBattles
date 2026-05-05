@@ -1,6 +1,6 @@
 # Phase 2: Define SuperweaponSpec + SUPERWEAPONS table
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Land the `SuperweaponSpec` dataclass, the `SUPERWEAPONS` tuple, and a contract test. Production code dispatch is unchanged in this phase — Phase 3 wires it in.
 
 ---
@@ -45,31 +45,31 @@
       return next((s for s in SUPERWEAPONS if s.order_type == order_type), None)
   ```
 
-**Notes:** _(filled during implementation)_
+**Notes:** Landed exactly the spec from the plan; ability_name=None only for STELLERATE_STAR. Imports clean — no cycles.
 
 ### Task 2.2: Contract test [Simple]
 **File:** `tests/unit/strategy/services/test_superweapon_registry_contract.py` (new)
 
-- [ ] `test_all_specs_have_valid_order_type` — every `spec.order_type` is an OrderType member.
-- [ ] `test_all_specs_have_valid_event_type` — every `spec.event_type` is an EventType member.
-- [ ] `test_all_specs_consume_ship_is_bool` — sanity.
-- [ ] `test_all_specs_with_ability_name_match_component_registry` — for each spec where `ability_name is not None`, assert that ability is registered in the component registry (use `fresh_registries`). Excludes STELLERATE_STAR which has None.
-- [ ] `test_all_specs_have_matching_stabilizer_or_documented_exception` — every entry's `stabilizer_blocks` member is a known OrderType.
-- [ ] All tests pass.
+- [x] `test_all_specs_have_valid_order_type` — every `spec.order_type` is an OrderType member.
+- [x] `test_all_specs_have_valid_event_type` — every `spec.event_type` is an EventType member.
+- [x] `test_all_specs_consume_ship_is_bool` — sanity.
+- [x] `TestAbilityRegistryConsistency.test_ability_names_registered` — for each spec where `ability_name is not None`, assert that ability is registered in the component registry (uses `fresh_registries`). Excludes STELLERATE_STAR which has None.
+- [x] `test_all_specs_stabilizer_blocks_are_order_types` — every entry's `stabilizer_blocks` member is a known OrderType.
+- [x] All 15 tests pass.
 
-**Notes:** _(filled during implementation)_
+**Notes:** Component registry stores ``Component`` instances (not raw dicts); test reads ``comp.abilities`` attribute directly.
 
 ### Task 2.3: Optional cross-link to PROJ-363 CommandSpec [Simple]
-**File:** Same registry test file or extend test_command_registry_contract.py
+**File:** Same registry test file
 
-- [ ] If PROJ-363 has landed: assert `{spec.order_type for spec in SUPERWEAPONS}` is a subset of `{cmd.order_type for cmd in COMMAND_SPECS if cmd.category == 'superweapon'}`. Skip with `pytest.skip` if PROJ-363 hasn't landed yet.
+- [x] PROJ-363 has landed: ``TestProj363CommandSpecCrossLink`` asserts the SUPERWEAPONS order types match the 'superweapon' CommandSpecs (excluding SELF_DESTRUCT) AND that ability_name fields agree with action_ability_name.
 
-**Notes:** _(filled during implementation)_
+**Notes:** Cross-link landed and asserts both order-type subset and ability-name parity.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] superweapon_registry.py exists with 5 specs
-- [ ] Contract test green
-- [ ] No production code outside the new module changed
-- [ ] Update plan.md phase table to `Complete`; Current State → Phase 3
+- [x] superweapon_registry.py exists with 5 specs
+- [x] Contract test green (15 tests)
+- [x] No production code outside the new module changed
+- [x] Update plan.md phase table to `Complete`; Current State → Phase 3

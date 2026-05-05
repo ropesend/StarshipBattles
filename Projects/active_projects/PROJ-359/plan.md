@@ -16,15 +16,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Characterization (golden) tests for current dispatch | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. AttackRequest / AttackResolution + registry skeleton | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. AttackRequest / AttackResolution + registry skeleton | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate weapon families one at a time | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Delete string-class branches + dict carriers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** 2
-**Last Action:** Phase 1 complete — 10 golden dispatch tests added (Beam dict shape, Beam→collision telemetry, Projectile constructor kwargs, Projectile→ProjectileManager.\_apply\_hit telemetry, Seeker constructor kwargs, PDC-vs-missile dispatch, PDC beam→missile.take\_damage, non-PDC cannot target missiles, PDC valid-targets gate, Seeker endurance range gate). Sharded suite green at 17621 tests / 17617 passed.
-**Next Action:** Phase 2 — define `AttackRequest` / `AttackResolution` typed dataclasses and `WeaponRegistry` skeleton behind existing dispatch.
+**Active Phase:** 3
+**Last Action:** Phase 2 complete — `attack_contract.py` (AttackRequest, BeamResolution, ProjectileResolution, NoAttack, WeaponHandler protocol, WeaponFamily enum, UnregisteredWeaponFamilyError) and `weapon_registry.py` (WeaponRegistry, WEAPON_REGISTRY singleton, detect_family helper) added. 13 registry tests added; all golden + registry tests green. Production dispatch unchanged.
+**Next Action:** Phase 3 — migrate Beam family first behind the registry, then Projectile, Seeker, PDC.
 **Blockers:** None
 
 ## Overview
