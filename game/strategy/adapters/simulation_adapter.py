@@ -239,9 +239,12 @@ class SimulationBattleResolver(IBattleResolver):
         # `run_battle` invokes the compiler's `PostBattleHook` which
         # writes outcome data back into the ShipInstances and prunes
         # destroyed/retreated ships from the fleets.
-        # PROJ-306: pass `registry_provider` explicitly — the Strategy
-        # layer is allowed to call `get_default_registry_provider()`;
-        # the Simulation layer cannot.
+        # PROJ-306: the Strategy layer is allowed to call
+        # `get_default_registry_provider()`; the Simulation layer cannot.
+        # PROJ-361: when `registries` is supplied, forward it to
+        # `run_battle.registry_provider` so ship materialization uses the
+        # same registries that built the spec. Fall back to the default
+        # provider per PROJ-306 only when the caller did not inject one.
         from game.core.registry import get_default_registry_provider
 
         # PROJ-312: build the replay capture context. ship_instance_lookup
@@ -252,10 +255,13 @@ class SimulationBattleResolver(IBattleResolver):
         capture_context = self._build_capture_context(
             fleet_list, registries=registries
         )
+        registry_provider = (
+            registries if registries is not None else get_default_registry_provider()
+        )
         outcome = run_battle(
             spec,
             ai_factory=self._ai_factory,
-            registry_provider=get_default_registry_provider(),
+            registry_provider=registry_provider,
             capture_context=capture_context,
         )
 

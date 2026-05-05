@@ -1,6 +1,6 @@
 # Phase 2: Define TickPhase + TickContext + DEFAULT_TICK_PHASE_LIST
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Land the descriptor types and the default phase list. No production behavior change yet — Phase 3 wires them in.
 
 ---
@@ -11,8 +11,8 @@
 **File:** `game/strategy/engine/turn_phase_registry.py` (new)
 **Tests:** `pytest tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py -v`
 
-- [ ] Module docstring referencing PROJ-365 Phase 2.
-- [ ] Define `TickContext` (mutable):
+- [x] Module docstring referencing PROJ-365 Phase 2.
+- [x] Define `TickContext` (mutable):
   ```python
   @dataclass
   class TickContext:
@@ -26,7 +26,7 @@
       last_environmental_events: list = field(default_factory=list)
       progress_callback: Callable | None = None
   ```
-- [ ] Define `TickPhase` (frozen):
+- [x] Define `TickPhase` (frozen):
   ```python
   @dataclass(frozen=True)
   class TickPhase:
@@ -44,7 +44,7 @@
 ### Task 2.2: Define DEFAULT_TICK_PHASE_LIST [Complex]
 **File:** Same
 
-- [ ] One TickPhase per current tick phase, in order. Examples:
+- [x] One TickPhase per current tick phase, in order. Examples:
   ```python
   TickPhase(
       phase_key='harvesting',
@@ -72,29 +72,29 @@
       # — design: args_resolver returns (positional, kwargs) tuple, OR a single callable that wraps the kwargs
   ),
   ```
-- [ ] Decide args_resolver shape — leaning toward returning `(args, kwargs)` tuple to handle phases like combat which uses kwargs.
-- [ ] Add `move_queue` to TickContext — phase 2 (movement_calc) sets it via post_exec_hook, phase 3 (movement_apply) reads it via args_resolver.
-- [ ] For phase 2 (movement_calc): post_exec_hook captures the return value of `collect_movements` into `ctx.move_queue`.
-- [ ] For phase 0e (production): args includes `save_path` from ctx.
-- [ ] Pre-movement-locations snapshot: phase 2's post_exec_hook OR a "barrier" virtual phase — design choice. Recommendation: put it as a one-line `post_exec_hook` on movement_calc that snapshots `pre_movement_locations`.
+- [x] Decide args_resolver shape — leaning toward returning `(args, kwargs)` tuple to handle phases like combat which uses kwargs.
+- [x] Add `move_queue` to TickContext — phase 2 (movement_calc) sets it via post_exec_hook, phase 3 (movement_apply) reads it via args_resolver.
+- [x] For phase 2 (movement_calc): post_exec_hook captures the return value of `collect_movements` into `ctx.move_queue`.
+- [x] For phase 0e (production): args includes `save_path` from ctx.
+- [x] Pre-movement-locations snapshot: phase 2's post_exec_hook OR a "barrier" virtual phase — design choice. Recommendation: put it as a one-line `post_exec_hook` on movement_calc that snapshots `pre_movement_locations`.
 
 **Notes:** _(filled during implementation)_
 
 ### Task 2.3: Unit tests for TickPhase and TickContext [Simple]
 **File:** `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py` (new)
 
-- [ ] `test_tick_phase_is_frozen` — assignment raises FrozenInstanceError.
-- [ ] `test_tick_context_mutable` — assignment succeeds; default factory for `last_environmental_events` is independent per instance.
-- [ ] `test_default_phase_list_count` — `len(DEFAULT_TICK_PHASE_LIST) == 14` (or whatever count after final design).
-- [ ] `test_default_phase_list_order_matches_golden` — assert `[p.phase_key for p in DEFAULT_TICK_PHASE_LIST] == GOLDEN_PHASE_ORDER` (reuse Phase 1 constant).
-- [ ] `test_phase_keys_unique` — no duplicates.
+- [x] `test_tick_phase_is_frozen` — assignment raises FrozenInstanceError.
+- [x] `test_tick_context_mutable` — assignment succeeds; default factory for `last_environmental_events` is independent per instance.
+- [x] `test_default_phase_list_count` — `len(DEFAULT_TICK_PHASE_LIST) == 14` (or whatever count after final design).
+- [x] `test_default_phase_list_order_matches_golden` — assert `[p.phase_key for p in DEFAULT_TICK_PHASE_LIST] == GOLDEN_PHASE_ORDER` (reuse Phase 1 constant).
+- [x] `test_phase_keys_unique` — no duplicates.
 
 **Notes:** _(filled during implementation)_
 
 ---
 
 ## Phase Completion Checklist
-- [ ] turn_phase_registry.py exists with TickPhase, TickContext, DEFAULT_TICK_PHASE_LIST
-- [ ] All Phase 2 unit tests green
-- [ ] Phase 1 golden-list test still green (production unchanged)
-- [ ] Update plan.md phase table to `Complete`; Current State → Phase 3
+- [x] turn_phase_registry.py exists with TickPhase, TickContext, DEFAULT_TICK_PHASE_LIST
+- [x] All Phase 2 unit tests green
+- [x] Phase 1 golden-list test still green (production unchanged)
+- [x] Update plan.md phase table to `Complete`; Current State → Phase 3

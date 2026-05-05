@@ -33,14 +33,17 @@ class TestResetPhaseTimes:
     def test_reset_phase_times_returns_dict_with_canonical_keys(
         self, fresh_registries
     ):
-        """`_reset_phase_times` populates `_phase_times` with exactly 20
-        canonical keys (14 tick-loop + 6 end-of-turn), all zero floats.
+        """`_reset_phase_times` populates `_phase_times` with exactly 21
+        canonical keys (15 tick-loop + 6 end-of-turn), all zero floats.
 
         OBSERVATION: production uses key 'harvesting' (not 'harvest').
         The 6 end-of-turn keys (organics_consumption, happiness,
         population_growth, quality_improvement, atmosphere,
         water_modification) were added by PROJ-343 T1.2-engines so the
         end-of-turn block routes through `_time_phase` for rollback safety.
+        PROJ-365 added `planet_modifier_effects` to the tick-loop bucket
+        (the descriptor registry routes every per-tick phase through
+        `_time_phase` uniformly).
         """
         engine = TurnEngine(registries=fresh_registries)
 
@@ -61,6 +64,8 @@ class TestResetPhaseTimes:
             'actions',
             'planet_actions',
             'activation_timers',
+            # PROJ-365: descriptor registry routes this through `_time_phase`.
+            'planet_modifier_effects',
             'movement_calc',
             'movement_apply',
             'combat',
@@ -73,7 +78,7 @@ class TestResetPhaseTimes:
             'water_modification',
         }
         assert set(engine._phase_times.keys()) == expected_keys
-        assert len(engine._phase_times) == 20
+        assert len(engine._phase_times) == 21
         assert all(v == 0.0 for v in engine._phase_times.values())
         assert all(isinstance(v, float) for v in engine._phase_times.values())
 
