@@ -44,6 +44,10 @@ from game.simulation.replay import (
     ReplayRecord,
     ReplaySpec,
 )
+from game.strategy.services.replay_verification_sidecar import (
+    SIDECAR_FILE_SUFFIX,
+    sidecar_path_for_replay,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +243,7 @@ class ReplayStore:
         if rd is None or not rd.exists():
             return []
         records: List[ReplayRecord] = []
-        for p in sorted(rd.glob(f"{self.REPLAY_FILE_PREFIX}*{self.REPLAY_FILE_SUFFIX}")):
+        for p in sorted(self._iter_replay_files(rd)):
             rec = self._safe_load(p)
             if rec is None:
                 continue
@@ -273,10 +277,13 @@ class ReplayStore:
         if path.exists():
             try:
                 path.unlink()
-                return True
             except OSError:
                 logger.exception("PROJ-312 failed to delete replay: %s", path)
                 return False
+            # PROJ-354B Phase 2.2: also unlink the verification sidecar so
+            # it can never outlive its replay record.
+            self._unlink_sidecar(rd, replay_id)
+            return True
         return False
 
     # ---- helpers ----
@@ -297,12 +304,17 @@ class ReplayStore:
 
     def _evict_excess(self) -> int:
         """Delete the oldest replays beyond ``max_replays_per_save``.
-        Returns the count deleted."""
+        Returns the count deleted.
+
+        PROJ-354B Phase 2.3: each evicted record's verification sidecar
+        is unlinked alongside it so the sidecar lifecycle is bounded by
+        the replay it describes.
+        """
         rd = self._replay_dir()
         if rd is None or not rd.exists():
             return 0
         files = sorted(
-            rd.glob(f"{self.REPLAY_FILE_PREFIX}*{self.REPLAY_FILE_SUFFIX}"),
+            self._iter_replay_files(rd),
             key=lambda p: p.stat().st_mtime,
         )
         cap = self._settings.max_replays_per_save
@@ -314,7 +326,51 @@ class ReplayStore:
                 deleted += 1
             except OSError:
                 logger.exception("PROJ-312 ring buffer eviction failed: %s", p)
+                continue
+            replay_id = self._replay_id_from_path(p)
+            if replay_id is not None:
+                self._unlink_sidecar(rd, replay_id)
         return deleted
+
+    @staticmethod
+    def _iter_replay_files(rd: Path):
+        """Yield only true replay-record files, excluding sidecars.
+
+        Sidecars are named ``replay_<id>.verification.json`` and so
+        match the same ``replay_*.json`` glob; without the suffix
+        filter the eviction logic would count them toward the cap and
+        evict real records prematurely.
+        """
+        for p in rd.glob(f"{ReplayStore.REPLAY_FILE_PREFIX}*{ReplayStore.REPLAY_FILE_SUFFIX}"):
+            if p.name.endswith(SIDECAR_FILE_SUFFIX):
+                continue
+            yield p
+
+    @staticmethod
+    def _replay_id_from_path(path: Path) -> Optional[str]:
+        """Extract the replay_id from a ``replay_<id>.json`` filename."""
+        name = path.name
+        if not name.startswith(ReplayStore.REPLAY_FILE_PREFIX):
+            return None
+        if not name.endswith(ReplayStore.REPLAY_FILE_SUFFIX):
+            return None
+        stem = name[len(ReplayStore.REPLAY_FILE_PREFIX): -len(ReplayStore.REPLAY_FILE_SUFFIX)]
+        return stem or None
+
+    @staticmethod
+    def _unlink_sidecar(rd: Path, replay_id: str) -> None:
+        """Best-effort unlink of the sidecar for ``replay_id``. Errors
+        are logged but never raised — a failed sidecar unlink must not
+        break replay deletion or eviction."""
+        sidecar_path = sidecar_path_for_replay(rd, replay_id)
+        if not sidecar_path.exists():
+            return
+        try:
+            sidecar_path.unlink()
+        except OSError:
+            logger.exception(
+                "PROJ-354B failed to delete verification sidecar: %s", sidecar_path
+            )
 
     def _build_record(
         self,

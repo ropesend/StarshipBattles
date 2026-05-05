@@ -188,6 +188,44 @@ class TestReplayStorePersistence:
     def test_delete_returns_false_for_missing(self, store: ReplayStore):
         assert store.delete("never-existed") is False
 
+    # PROJ-354B Phase 2.2: sidecar lifecycle on delete
+    def test_delete_removes_sidecar(self, store: ReplayStore):
+        from game.strategy.services.replay_verification_sidecar import (
+            REPLAY_VERIFICATION_SCHEMA_VERSION,
+            VerificationSidecar,
+            VerificationSource,
+            VerificationStatus,
+            sidecar_path_for_replay,
+            write_verification_sidecar,
+        )
+        store.persist(_make_record("with-sidecar"))
+        rd = store.save_root / "replays"  # type: ignore[union-attr]
+        sidecar = VerificationSidecar(
+            replay_id="with-sidecar",
+            schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+            status=VerificationStatus.PASSED.name,
+            source=VerificationSource.BACKGROUND.name,
+            verified_at="2026-05-04T00:00:00+00:00",
+            duration_ms=10,
+            diff=None,
+            error=None,
+        )
+        write_verification_sidecar(rd, sidecar)
+        assert sidecar_path_for_replay(rd, "with-sidecar").exists()
+
+        assert store.delete("with-sidecar") is True
+        assert not sidecar_path_for_replay(rd, "with-sidecar").exists()
+        # Original replay file gone too.
+        assert store.load("with-sidecar") is None
+
+    def test_delete_returns_true_when_only_record_exists(
+        self, store: ReplayStore
+    ):
+        # No sidecar present — delete still succeeds and is a no-op for
+        # the missing sidecar.
+        store.persist(_make_record("no-sidecar"))
+        assert store.delete("no-sidecar") is True
+
 
 class TestReplayStoreRingBuffer:
     def test_evicts_excess_after_write(self, store: ReplayStore):
@@ -196,6 +234,50 @@ class TestReplayStoreRingBuffer:
             store.persist(_make_record(f"r{i}", captured_at=f"2026-04-27T00:00:0{i}Z"))
         kept = {r.replay_id for r in store.list()}
         assert len(kept) == 3
+
+    # PROJ-354B Phase 2.3: sidecars are evicted alongside their replays.
+    def test_evicts_sidecars_alongside_records(self, store: ReplayStore):
+        from game.strategy.services.replay_verification_sidecar import (
+            REPLAY_VERIFICATION_SCHEMA_VERSION,
+            VerificationSidecar,
+            VerificationSource,
+            VerificationStatus,
+            sidecar_path_for_replay,
+            write_verification_sidecar,
+        )
+        rd = store.save_root / "replays"  # type: ignore[union-attr]
+        rd.mkdir(parents=True, exist_ok=True)
+
+        ids = ["r0", "r1", "r2", "r3", "r4"]
+        for i, rid in enumerate(ids):
+            store.persist(_make_record(rid, captured_at=f"2026-04-27T00:00:0{i}Z"))
+            sidecar = VerificationSidecar(
+                replay_id=rid,
+                schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+                status=VerificationStatus.PASSED.name,
+                source=VerificationSource.BACKGROUND.name,
+                verified_at=f"2026-04-27T00:00:0{i}+00:00",
+                duration_ms=1,
+                diff=None,
+                error=None,
+            )
+            write_verification_sidecar(rd, sidecar)
+
+        # Eviction during the loop above should have already kicked in;
+        # cap=3 so we expect 3 records + 3 sidecars.
+        remaining_ids = {r.replay_id for r in store.list()}
+        assert len(remaining_ids) == 3
+
+        # Sidecars for kept records still exist; sidecars for evicted
+        # records are gone.
+        for rid in ids:
+            sidecar_present = sidecar_path_for_replay(rd, rid).exists()
+            if rid in remaining_ids:
+                assert sidecar_present, f"sidecar for kept {rid} should exist"
+            else:
+                assert not sidecar_present, (
+                    f"sidecar for evicted {rid} should be gone"
+                )
 
     def test_writes_before_evicting(self, tmp_path: Path):
         """If the eviction step ran first and the new write then failed,
