@@ -118,30 +118,45 @@ class EventLogRegistrar:
             return None
 
     def _on_launch_replay(self, record: "ReplayRecord") -> None:
-        """FEAT-26: launch a captured replay in the BattleScreen.
+        """FEAT-26 / PROJ-368: launch a captured replay in the BattleScreen.
 
-        Closes the Event Log modal first (mirrors the navigate path),
-        then dispatches into the scene router's replay-mode entry.
+        Routes through ``scene.scene_callback("launch_replay", record=...)``
+        — the same dispatch pattern other strategy actions use. ``Game``
+        handles the action by calling ``Game.start_replay(record)``.
+
+        On failure (no callback wired, or the callback raises), the Event
+        Log modal stays open and a ``UIMessageWindow`` surfaces the error
+        so the user gets feedback rather than a silent close.
         """
         c = self._composer
-        if c.event_log_window:
-            c.event_log_window.kill()
-
         scene = c.scene
-        # The router sits behind `scene.game` for production; tests using
-        # the registrar in isolation may not wire it. Stay defensive.
-        game = getattr(scene, "game", None)
-        if game is None:
-            logger.debug(
-                "FEAT-26 launch_replay_callback skipped — scene has no game ref."
+        callback = getattr(scene, "scene_callback", None)
+        modal = c.event_log_window
+
+        if callback is None:
+            logger.warning(
+                "PROJ-368 launch_replay aborted — scene has no scene_callback wired."
             )
+            if modal is not None:
+                modal._show_replay_message(
+                    "Replay error",
+                    "Replay could not be launched (scene callback not wired).",
+                )
             return
+
         try:
-            game.start_replay(record)
-        except AttributeError:
-            logger.debug(
-                "FEAT-26 launch_replay_callback skipped — game has no start_replay()."
-            )
+            callback("launch_replay", record=record)
+        except Exception:  # Intentional broad catch: replay launch failures must not crash the Event Log
+            logger.exception("PROJ-368 launch_replay failed")
+            if modal is not None:
+                modal._show_replay_message(
+                    "Replay error",
+                    "Replay failed to start. See log for details.",
+                )
+            return
+
+        if modal is not None:
+            modal.kill()
 
     def _on_navigate(self, location_hex: list) -> None:
         from game.core.hex_math import HexCoord

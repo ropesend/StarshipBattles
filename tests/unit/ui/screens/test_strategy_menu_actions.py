@@ -325,3 +325,22 @@ class TestAppStrategyActionHandler:
         game._handle_strategy_action("open_builder", context_data={"empire": MagicMock()})
 
         game.start_builder.assert_called_once()
+
+    def test_launch_replay_handler_calls_start_replay(self):
+        """'launch_replay' action should delegate to Game.start_replay (PROJ-368)."""
+        game = self._make_game()
+        game.start_replay = MagicMock()
+        record = MagicMock()
+
+        game._handle_strategy_action("launch_replay", record=record)
+
+        game.start_replay.assert_called_once_with(record)
+
+    def test_launch_replay_handler_no_record_is_noop(self):
+        """'launch_replay' without a record kwarg should be a no-op (PROJ-368)."""
+        game = self._make_game()
+        game.start_replay = MagicMock()
+
+        game._handle_strategy_action("launch_replay")
+
+        game.start_replay.assert_not_called()

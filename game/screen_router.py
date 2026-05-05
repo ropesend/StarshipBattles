@@ -465,6 +465,7 @@ class ScreenRouter:
         *,
         headless: bool = False,
         config: Optional[Any] = None,
+        ship_builder: Optional[Any] = None,
     ) -> None:
         """Start a battle from a compiled `BattleSpec` (PROJ-270 Phase 3).
 
@@ -475,6 +476,12 @@ class ScreenRouter:
         ignored (the caller has already set the right operational
         flags). When omitted, the original default-config build path
         runs unchanged.
+
+        PROJ-368: ``ship_builder`` (optional) lets the replay-launch path
+        supply a snapshot-backed materializer for replay specs whose
+        ``ShipSpec.instance_ref`` is ``None``. When omitted, the
+        controller falls back to the context materializer (the live
+        path used by manual battles and quickstart).
         """
         from game.ai.ai_factory import AIControllerFactory
         from game.simulation.battle_config import BattleConfig
@@ -502,6 +509,7 @@ class ScreenRouter:
         controller.start_from_spec(
             spec,
             ai_factory=AIControllerFactory(),
+            ship_builder=ship_builder,
             registry_provider=get_default_registry_provider(),
             config=config,
         )

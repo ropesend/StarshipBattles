@@ -730,3 +730,52 @@ class TestMultipleWindows:
         assert window_manager.planet_list_window is not None
         assert window_manager.fleet_report_window is not None
         assert window_manager.event_log_window is not None
+
+
+# =============================================================================
+# Event Log Replay Launch Tests
+# =============================================================================
+
+class TestEventLogReplayLaunch:
+    """Tests for EventLogRegistrar._on_launch_replay (PROJ-368)."""
+
+    def test_launch_replay_dispatches_via_scene_callback(self, window_manager):
+        """Replay click routes through scene.scene_callback('launch_replay', ...)
+        and closes the modal on success."""
+        record = Mock()
+        callback = Mock()
+        window_manager.scene.scene_callback = callback
+        window_manager.event_log_window = Mock()
+
+        window_manager._event_log._on_launch_replay(record)
+
+        callback.assert_called_once_with("launch_replay", record=record)
+        window_manager.event_log_window.kill.assert_called_once()
+
+    def test_launch_replay_no_callback_keeps_modal_open(self, window_manager):
+        """When scene.scene_callback is None, modal stays open and an
+        error message is shown — never silently closes."""
+        record = Mock()
+        window_manager.scene.scene_callback = None
+        modal = Mock()
+        window_manager.event_log_window = modal
+
+        window_manager._event_log._on_launch_replay(record)
+
+        modal.kill.assert_not_called()
+        modal._show_replay_message.assert_called_once()
+
+    def test_launch_replay_callback_raises_keeps_modal_open(self, window_manager):
+        """When the scene callback raises, modal stays open and an error
+        message is shown."""
+        record = Mock()
+        callback = Mock(side_effect=RuntimeError("boom"))
+        window_manager.scene.scene_callback = callback
+        modal = Mock()
+        window_manager.event_log_window = modal
+
+        window_manager._event_log._on_launch_replay(record)
+
+        callback.assert_called_once_with("launch_replay", record=record)
+        modal.kill.assert_not_called()
+        modal._show_replay_message.assert_called_once()
