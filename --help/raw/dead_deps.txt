@@ -1,0 +1,26 @@
+Building dependency graph...
+Reachable files: 628
+Total source files (excluding tests): 856
+Potentially Dead Files: 248
+
+--- Top 20 Potentially Dead Files ---
+.agents\skills\codex-ship-theme-creator\scripts\create_manifest.py
+.agents\skills\codex-ship-theme-creator\scripts\process_theme_images.py
+.agents\skills\codex-ship-theme-creator\scripts\theme_common.py
+.agents\skills\codex-ship-theme-creator\scripts\validate_theme.py
+AgentCoordination\Scratchpad\tmp\extract_shard02_coverage.py
+AgentCoordination\Scratchpad\tmp\extract_shard04.py
+AgentCoordination\Scratchpad\tmp\extract_shard05.py
+Projects\archived_projects\PROJ-310\findings\build_rankings.py
+Projects\archived_projects\PROJ-310\findings\extract_radon_top.py
+Projects\archived_projects\PROJ-310\findings\nesting_analysis.py
+Projects\archived_projects\PROJ-311\findings\_breakdown.py
+Projects\archived_projects\PROJ-311\findings\annotation_audit.py
+Projects\scripts\__init__.py
+Projects\scripts\archive_project.py
+Projects\scripts\batch_archive_projects.py
+Projects\scripts\check_completion.py
+Projects\scripts\check_project_status.py
+Projects\scripts\cleanup_phase_worktrees.py
+Projects\scripts\commit_phase.py
+Projects\scripts\create_project.py
