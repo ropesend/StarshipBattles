@@ -37,17 +37,33 @@ class OrderType(Enum):
     DEACTIVATE_ABILITY = auto()
 
 
-# PROJ-187: Order type categorization for ActionExecutionEngine
-# Movement orders are handled by FleetMovementEngine
+# PROJ-187: Order type categorization for ActionExecutionEngine.
+#
+# PROJ-363 Phase 3: ``COMMAND_SPECS`` in
+# ``game.strategy.engine.commands.specs`` is the canonical declaration
+# of which OrderType belongs to which category. These three frozensets
+# are *kept here* as plain module-level constants (rather than runtime-
+# derived) so that the ``game.strategy.data`` layer remains a leaf in
+# the import graph — specs.py imports ``OrderType`` from here, and
+# specs.py also transitively imports handler classes that import these
+# constants, so a runtime derivation would create a cycle.
+#
+# The equality of these constants with ``specs.{movement,action,
+# planet_action}_order_types()`` is pinned by the contract test
+# ``test_command_specs_contract.py`` — adding/changing a CommandSpec
+# without updating these constants (or vice versa) is caught by that
+# test before merge.
+
+# Movement orders are handled by FleetMovementEngine.
 MOVEMENT_ORDER_TYPES: frozenset = frozenset({
     OrderType.MOVE,
     OrderType.MOVE_TO_FLEET,
     OrderType.WARP,
 })
 
-# Action orders are handled by ActionExecutionEngine (tick-based execution)
-# Excludes BUILD (persistent, handled by ProductionEngine)
-# PROJ-207: JOIN_FLEET removed - handled by instant path (process_instant_orders) only
+# Action orders are handled by ActionExecutionEngine (tick-based execution).
+# Excludes BUILD (persistent, handled by ProductionEngine).
+# PROJ-207: JOIN_FLEET removed - handled by instant path (process_instant_orders) only.
 ACTION_ORDER_TYPES: frozenset = frozenset({
     OrderType.COLONIZE,
     OrderType.TRANSFER,
@@ -63,7 +79,7 @@ ACTION_ORDER_TYPES: frozenset = frozenset({
     OrderType.DEACTIVATE_ABILITY,
 })
 
-# Planet-specific action orders (subset of ACTION_ORDER_TYPES)
+# Planet-specific action orders (subset of ACTION_ORDER_TYPES).
 PLANET_ACTION_ORDER_TYPES: frozenset = frozenset({
     OrderType.ACTIVATE_ABILITY,
     OrderType.DEACTIVATE_ABILITY,

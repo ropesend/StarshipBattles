@@ -28,17 +28,16 @@ if TYPE_CHECKING:
     from game.strategy.data.order_types import Order
 
 
-# PROJ-212: Module-level constants replacing wrapper functions
-# Mapping from OrderType to the ability name that provides action_time
-ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = {
-    OrderType.COLONIZE: 'ColonizePlanet',
-    OrderType.IMPLODE_PLANET: 'DestroyPlanet',
-    OrderType.STELLERATE_STAR: 'DestroyStar',
-    OrderType.OPEN_WARP_POINT: 'OpenWarpPoint',
-    OrderType.CLOSE_WARP_POINT: 'CloseWarpPoint',
-    OrderType.CREATE_DYSON_SPHERE: 'CreateDysonSphere',
-    OrderType.SELF_DESTRUCT: 'SelfDestruct',
-}
+# PROJ-363 Phase 3: ``ORDER_TO_ABILITY_MAP`` is derived from
+# ``COMMAND_SPECS`` (single source of truth). The deferred import keeps
+# this module loadable even before specs.py is on the import path
+# (e.g. by tools that import the resolver in isolation).
+def _build_order_to_ability_map() -> Dict[OrderType, str]:
+    from game.strategy.engine.commands.specs import order_to_ability_map
+    return order_to_ability_map()
+
+
+ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = _build_order_to_ability_map()
 
 # PROJ-238: Order types that use a non-standard time field name.
 # If not listed here, 'action_time' is used (the default).

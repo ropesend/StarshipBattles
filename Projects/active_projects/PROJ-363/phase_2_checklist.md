@@ -1,6 +1,6 @@
 # Phase 2: Define CommandSpec + spec table
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Land `CommandSpec` dataclass and `COMMAND_SPECS` tuple covering all 31 commands. The Phase 1 spec→handler and OrderType-coverage tests should turn green at the end of this phase. Other contract tests (category-sets, action-time, facade-helper) require Phase 3.
 
 ---
@@ -83,8 +83,13 @@
 ---
 
 ## Phase Completion Checklist
-- [ ] 31 specs in COMMAND_SPECS
-- [ ] Spec→handler contract test green
-- [ ] OrderType-coverage contract test green
-- [ ] No production code outside specs.py changed
-- [ ] Update plan.md phase table to `Complete`; Current State → Phase 3
+- [x] 35 specs in COMMAND_SPECS (covers every Command DTO in `commands.py` — initial scoping said 31; the actual count is 35 because Set{Gravity,Water,RadiationShield,BuildQueuePaused} also need entries)
+- [x] Spec→handler contract test green (`test_spec_table_handler_set_matches_registry`)
+- [x] OrderType-coverage contract test green (`test_every_order_type_is_reachable_via_command`)
+- [x] No production code outside `commands/` package changed (the only structural change is `commands.py` -> `commands/__init__.py` + `commands/specs.py`)
+- [x] Update plan.md phase table to `Complete`; Current State → Phase 3
+
+## Phase Outcome
+- `game/strategy/engine/commands/specs.py` defines `CommandSpec` (frozen dataclass with light validation) and `COMMAND_SPECS` tuple of 35 entries.
+- `game/strategy/engine/commands/__init__.py` is now the package init holding the original DTO definitions (from the renamed `commands.py`).
+- 17 distinct + parametrized contract tests in `test_command_specs_contract.py` pin self-consistency and parity with existing surfaces (registry, frozensets, ORDER_TO_ABILITY_MAP).

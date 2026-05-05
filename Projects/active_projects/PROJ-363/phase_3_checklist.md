@@ -1,6 +1,8 @@
 # Phase 3: Generate registry / category sets / ORDER_TO_ABILITY_MAP from specs
 
-**Status:** Not Started
+**Status:** Complete
+
+**Deviation from original plan:** Category frozensets (`MOVEMENT_ORDER_TYPES`, `ACTION_ORDER_TYPES`, `PLANET_ACTION_ORDER_TYPES`) are NOT runtime-derived from the spec table. Reason: making them runtime-derived created an unbreakable import cycle — `specs.py` imports `OrderType` from `order_types.py`, and `order_types.py` is imported (eagerly, at top of module) by `cargo_transfer_service.py` and `fleet.py` before `specs.py` is on the import path. A `__getattr__` lazy-resolver on `order_types.py` recursed through specs → handlers → services → cargo_transfer_service → order_types.MOVEMENT_ORDER_TYPES → recursion. The frozensets stay as plain constants in `order_types.py`, but their equality with `specs.{movement,action,planet_action}_order_types()` is **pinned by the contract test** in `test_command_specs_contract.py`. The spec table remains the **declarative** source of truth; updating a CommandSpec without updating the constant (or vice versa) is caught by the test before merge.
 **Objective:** Make `CommandHandlerRegistry`, `MOVEMENT_ORDER_TYPES`/`ACTION_ORDER_TYPES`/`PLANET_ACTION_ORDER_TYPES`, and `ORDER_TO_ABILITY_MAP` derived from `COMMAND_SPECS` instead of hand-maintained.
 
 ---
@@ -82,6 +84,13 @@
 ---
 
 ## Phase Completion Checklist
-- [ ] Registry, category sets, action-time map all spec-derived
-- [ ] Spec/handler/category/action-time contract tests green
-- [ ] Update plan.md phase table to `Complete`; Current State → Phase 4
+- [x] Registry: spec-derived (loops `COMMAND_SPECS` in `create_default_registry`)
+- [x] ORDER_TO_ABILITY_MAP: spec-derived (`_build_order_to_ability_map()` in `action_time_resolver.py`)
+- [x] Category frozensets: kept as plain constants (see deviation note above); pinned to spec derivations by contract test
+- [x] Spec/handler/category/action-time contract tests green
+- [x] Update plan.md phase table to `Complete`; Current State → Phase 4
+
+## Phase Outcome
+- `registry_factory.py` shrank from ~125 LOC to ~35 LOC.
+- `action_time_resolver.py` ORDER_TO_ABILITY_MAP entry shrank from a 9-line literal to a 3-line derivation.
+- All existing strategy + integration tests green (4262 passed).

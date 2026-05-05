@@ -1,11 +1,13 @@
-"""Command dispatch slice (PROJ-309 sub-phase 3.7).
+"""Command dispatch slice (PROJ-309 sub-phase 3.7; PROJ-363 Phase 4).
 
-Holds the 28 `dispatch_*` helpers and the `handle_command` entry point.
-
-Each `dispatch_*` is the same one-line shape: import the command, instantiate
-it from kwargs, and forward to `handle_command`. The slice routes through a
-caller-supplied `handle_command` callable so tests that monkey-patch
-`facade.handle_command = MagicMock(...)` (see `test_facade_dispatch.py`) still
+Holds the universal ``handle_command`` entry point and the
+``dispatch_*`` resolver. Each ``dispatch_*_command`` helper has the
+same one-line shape: import the command, instantiate it from kwargs,
+and forward to ``handle_command``. PROJ-363 collapsed the 31 hand-
+written helpers into a single ``__getattr__`` resolver that consults
+``COMMAND_SPECS`` for the command class to instantiate. The slice
+routes through a caller-supplied ``handle_command`` callable so tests
+that monkey-patch ``facade.handle_command = MagicMock(...)`` still
 intercept the call.
 """
 
@@ -30,9 +32,9 @@ class CommandDispatchSlice:
         handle_command: Callable[["Command"], "ValidationResult"],
     ) -> None:
         self._state = state
-        # `handle_command` is supplied as a callable so dispatchers go through
-        # whatever the facade currently exposes (including monkey-patched
-        # MagicMocks in tests).
+        # ``handle_command`` is supplied as a callable so dispatchers go
+        # through whatever the facade currently exposes (including
+        # monkey-patched MagicMocks in tests).
         self._handle_command = handle_command
 
     # ------------------------------------------------------------------
@@ -44,176 +46,55 @@ class CommandDispatchSlice:
         return self._state.session.handle_command(command)
 
     # ------------------------------------------------------------------
-    # Fleet-order dispatchers
+    # Dispatch resolver (PROJ-363 Phase 4)
     # ------------------------------------------------------------------
+    #
+    # Every legacy ``dispatch_*_command(...)`` helper is now resolved
+    # against ``COMMAND_SPECS``. The 31 hand-written one-liners
+    # (~200 LOC of pure boilerplate) collapse to this single resolver
+    # plus the ``handle_command`` entry point above.
+    #
+    # ``__getattr__`` is only consulted when normal attribute lookup
+    # fails. ``__slots__`` does NOT block ``__getattr__`` resolution; it
+    # only blocks setting *instance* attributes whose names aren't in the
+    # slots tuple. The resolver returns a fresh closure on every call —
+    # there's no caching needed because the closure is cheap and the
+    # call sites resolve once per UI action.
+    #
+    # Naming scheme: ``dispatch_<helper_name>`` where ``<helper_name>``
+    # matches the ``facade_helper_name`` field on the relevant
+    # ``CommandSpec``. Specs without a ``facade_helper_name`` (currently:
+    # SetGravity/Water/RadiationShieldTargetCommand and
+    # SetBuildQueuePausedCommand) intentionally have no UI dispatch
+    # path; calling those names raises ``AttributeError`` like any
+    # missing method.
 
-    def dispatch_issue_colonize(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueColonizeCommand."""
-        from game.strategy.engine.commands import IssueColonizeCommand
-        return self._handle_command(IssueColonizeCommand(**kwargs))
+    def __getattr__(self, name: str):  # noqa: D401 — Python protocol method
+        if not name.startswith("dispatch_"):
+            raise AttributeError(
+                f"{type(self).__name__!r} object has no attribute {name!r}"
+            )
+        # Deferred import: ``specs.py`` lives downstream in the engine
+        # graph; importing it at module load would couple the facade to
+        # engine internals at import time.
+        from game.strategy.engine.commands.specs import specs_by_facade_helper
 
-    def dispatch_issue_move(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueMoveCommand."""
-        from game.strategy.engine.commands import IssueMoveCommand
-        return self._handle_command(IssueMoveCommand(**kwargs))
+        spec = specs_by_facade_helper().get(name)
+        if spec is None:
+            raise AttributeError(
+                f"{type(self).__name__!r} object has no attribute {name!r}: "
+                f"no CommandSpec entry has facade_helper_name={name!r}."
+            )
+        command_class = spec.command_class
+        handle_command = self._handle_command
 
-    def dispatch_issue_intercept(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueInterceptCommand."""
-        from game.strategy.engine.commands import IssueInterceptCommand
-        return self._handle_command(IssueInterceptCommand(**kwargs))
+        def _dispatch(**kwargs):
+            return handle_command(command_class(**kwargs))
 
-    def dispatch_issue_join_fleet(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueJoinFleetCommand."""
-        from game.strategy.engine.commands import IssueJoinFleetCommand
-        return self._handle_command(IssueJoinFleetCommand(**kwargs))
-
-    def dispatch_clear_orders(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch ClearOrdersCommand."""
-        from game.strategy.engine.commands import ClearOrdersCommand
-        return self._handle_command(ClearOrdersCommand(**kwargs))
-
-    def dispatch_issue_transfer(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueTransferCommand."""
-        from game.strategy.engine.commands import IssueTransferCommand
-        return self._handle_command(IssueTransferCommand(**kwargs))
-
-    def dispatch_issue_warp(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueWarpCommand."""
-        from game.strategy.engine.commands import IssueWarpCommand
-        return self._handle_command(IssueWarpCommand(**kwargs))
-
-    def dispatch_split_fleet(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch SplitFleetCommand."""
-        from game.strategy.engine.commands import SplitFleetCommand
-        return self._handle_command(SplitFleetCommand(**kwargs))
-
-    def dispatch_delete_order(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch DeleteOrderCommand."""
-        from game.strategy.engine.commands import DeleteOrderCommand
-        return self._handle_command(DeleteOrderCommand(**kwargs))
-
-    def dispatch_reorder_order(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch ReorderOrderCommand."""
-        from game.strategy.engine.commands import ReorderOrderCommand
-        return self._handle_command(ReorderOrderCommand(**kwargs))
-
-    def dispatch_issue_self_destruct(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueSelfDestructCommand."""
-        from game.strategy.engine.commands import IssueSelfDestructCommand
-        return self._handle_command(IssueSelfDestructCommand(**kwargs))
-
-    # ------------------------------------------------------------------
-    # Mission queueing dispatchers
-    # ------------------------------------------------------------------
-
-    def dispatch_queue_colonize_mission(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch QueueColonizeMissionCommand."""
-        from game.strategy.engine.commands import QueueColonizeMissionCommand
-        return self._handle_command(QueueColonizeMissionCommand(**kwargs))
-
-    def dispatch_queue_implode_planet_mission(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch QueueImplodePlanetMissionCommand."""
-        from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
-        return self._handle_command(QueueImplodePlanetMissionCommand(**kwargs))
-
-    def dispatch_queue_stellerate_star_mission(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch QueueStellerateStarMissionCommand."""
-        from game.strategy.engine.commands import QueueStellerateStarMissionCommand
-        return self._handle_command(QueueStellerateStarMissionCommand(**kwargs))
-
-    def dispatch_queue_open_warp_point_mission(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch QueueOpenWarpPointMissionCommand."""
-        from game.strategy.engine.commands import QueueOpenWarpPointMissionCommand
-        return self._handle_command(QueueOpenWarpPointMissionCommand(**kwargs))
-
-    def dispatch_queue_close_warp_point_mission(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch QueueCloseWarpPointMissionCommand."""
-        from game.strategy.engine.commands import QueueCloseWarpPointMissionCommand
-        return self._handle_command(QueueCloseWarpPointMissionCommand(**kwargs))
-
-    def dispatch_queue_create_dyson_sphere_mission(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch QueueCreateDysonSphereMissionCommand."""
-        from game.strategy.engine.commands import QueueCreateDysonSphereMissionCommand
-        return self._handle_command(QueueCreateDysonSphereMissionCommand(**kwargs))
-
-    # ------------------------------------------------------------------
-    # Superweapon (immediate) dispatchers
-    # ------------------------------------------------------------------
-
-    def dispatch_issue_implode_planet(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueImplodePlanetCommand."""
-        from game.strategy.engine.commands import IssueImplodePlanetCommand
-        return self._handle_command(IssueImplodePlanetCommand(**kwargs))
-
-    def dispatch_issue_stellerate_star(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueStellerateStarCommand."""
-        from game.strategy.engine.commands import IssueStellerateStarCommand
-        return self._handle_command(IssueStellerateStarCommand(**kwargs))
-
-    def dispatch_issue_open_warp_point(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueOpenWarpPointCommand."""
-        from game.strategy.engine.commands import IssueOpenWarpPointCommand
-        return self._handle_command(IssueOpenWarpPointCommand(**kwargs))
-
-    def dispatch_issue_close_warp_point(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueCloseWarpPointCommand."""
-        from game.strategy.engine.commands import IssueCloseWarpPointCommand
-        return self._handle_command(IssueCloseWarpPointCommand(**kwargs))
-
-    def dispatch_issue_create_dyson_sphere(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueCreateDysonSphereCommand."""
-        from game.strategy.engine.commands import IssueCreateDysonSphereCommand
-        return self._handle_command(IssueCreateDysonSphereCommand(**kwargs))
-
-    # ------------------------------------------------------------------
-    # Build / construction dispatchers
-    # ------------------------------------------------------------------
-
-    def dispatch_issue_build_order(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssueBuildOrderCommand."""
-        from game.strategy.engine.commands import IssueBuildOrderCommand
-        return self._handle_command(IssueBuildOrderCommand(**kwargs))
-
-    def dispatch_remove_build_order(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch RemoveBuildOrderCommand."""
-        from game.strategy.engine.commands import RemoveBuildOrderCommand
-        return self._handle_command(RemoveBuildOrderCommand(**kwargs))
-
-    def dispatch_add_to_construction_queue(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch AddToConstructionQueueCommand."""
-        from game.strategy.engine.commands import AddToConstructionQueueCommand
-        return self._handle_command(AddToConstructionQueueCommand(**kwargs))
-
-    def dispatch_remove_from_construction_queue(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch RemoveFromConstructionQueueCommand."""
-        from game.strategy.engine.commands import RemoveFromConstructionQueueCommand
-        return self._handle_command(RemoveFromConstructionQueueCommand(**kwargs))
-
-    def dispatch_reorder_construction_queue(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch ReorderConstructionQueueCommand."""
-        from game.strategy.engine.commands import ReorderConstructionQueueCommand
-        return self._handle_command(ReorderConstructionQueueCommand(**kwargs))
-
-    # ------------------------------------------------------------------
-    # Planet-order dispatchers
-    # ------------------------------------------------------------------
-
-    def dispatch_issue_planet_order(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch IssuePlanetOrderCommand."""
-        from game.strategy.engine.commands import IssuePlanetOrderCommand
-        return self._handle_command(IssuePlanetOrderCommand(**kwargs))
-
-    def dispatch_clear_planet_orders(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch ClearPlanetOrdersCommand."""
-        from game.strategy.engine.commands import ClearPlanetOrdersCommand
-        return self._handle_command(ClearPlanetOrdersCommand(**kwargs))
-
-    def dispatch_delete_planet_order(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch DeletePlanetOrderCommand."""
-        from game.strategy.engine.commands import DeletePlanetOrderCommand
-        return self._handle_command(DeletePlanetOrderCommand(**kwargs))
-
-    def dispatch_set_atmosphere_target(self, **kwargs) -> "ValidationResult":
-        """Helper to dispatch SetAtmosphereTargetCommand."""
-        from game.strategy.engine.commands import SetAtmosphereTargetCommand
-        return self._handle_command(SetAtmosphereTargetCommand(**kwargs))
+        _dispatch.__name__ = name
+        _dispatch.__qualname__ = f"{type(self).__name__}.{name}"
+        _dispatch.__doc__ = (
+            f"Dispatch {command_class.__name__} via the spec-driven resolver "
+            f"(PROJ-363)."
+        )
+        return _dispatch

@@ -1,125 +1,37 @@
 """`create_default_registry()` — composes the default command-handler registry.
 
-Wires together every handler from the `handlers/` package plus the two
-sibling modules (`superweapon_command_handlers`, `planet_command_handlers`)
-that remain at their original locations for this PROJ. Splitting them into
-the package is out of scope for PROJ-309.
+PROJ-363 Phase 3: registry contents are now derived from the
+``COMMAND_SPECS`` table in ``game.strategy.engine.commands.specs``. The
+factory is one loop over the spec table; adding a command requires
+appending one row to ``COMMAND_SPECS``, not editing this file.
 
-Imports of the sibling modules are kept function-scoped — that pattern from
-the original monolith is preserved here. Whether it remains necessary
-post-decomposition (now that `BaseCommandHandler` lives at leaf-level
-`handlers/base.py`) is flagged in `findings/command_handlers_decomposition.md`
-risk #4 for a follow-up audit; not changing it here per the design spec.
+Historical note (PROJ-309 sub-phase 3.5): the original 1076-line
+``command_handlers.py`` monolith was decomposed into a package of
+sibling modules under ``handlers/``. The two ``*_command_handlers.py``
+siblings (superweapon, planet) remain at their original locations
+pending a follow-up move that's out of scope for PROJ-309.
 """
 from __future__ import annotations
 
 from game.strategy.engine.handlers.base import CommandHandlerRegistry
-from game.strategy.engine.handlers.build import (
-    BuildOrderCommandHandler,
-    RemoveBuildOrderCommandHandler,
-)
-from game.strategy.engine.handlers.construction_queue import (
-    AddToConstructionQueueCommandHandler,
-    RemoveFromConstructionQueueCommandHandler,
-    ReorderConstructionQueueCommandHandler,
-    SetBuildQueuePausedCommandHandler,
-)
-from game.strategy.engine.handlers.movement import (
-    ColonizeCommandHandler,
-    InterceptCommandHandler,
-    JoinCommandHandler,
-    MoveCommandHandler,
-    WarpCommandHandler,
-)
-from game.strategy.engine.handlers.order_queue import (
-    ClearOrdersCommandHandler,
-    ColonizeMissionCommandHandler,
-    DeleteOrderCommandHandler,
-    ReorderOrderCommandHandler,
-    SplitFleetCommandHandler,
-)
-from game.strategy.engine.handlers.transfer import TransferCommandHandler
 
 
 def create_default_registry() -> CommandHandlerRegistry:
     """Create a registry with all standard command handlers registered.
 
+    Builds the registry by iterating over ``COMMAND_SPECS``: for each
+    spec, instantiate the handler class and register it under the
+    Command class name. The spec table is the single source of truth.
+
     Returns:
         CommandHandlerRegistry with all handlers registered.
     """
-    from game.strategy.engine.superweapon_command_handlers import (
-        ImplodePlanetCommandHandler,
-        StellerateStarCommandHandler,
-        OpenWarpPointCommandHandler,
-        CloseWarpPointCommandHandler,
-        CreateDysonSphereCommandHandler,
-        SelfDestructCommandHandler,
-        ImplodePlanetMissionCommandHandler,
-        StellerateStarMissionCommandHandler,
-        OpenWarpPointMissionCommandHandler,
-        CloseWarpPointMissionCommandHandler,
-        CreateDysonSphereMissionCommandHandler,
-    )
+    # Deferred import: ``specs.py`` imports the handler classes at
+    # module-load time, so we can't import it at the top of this module
+    # (it sits below us in the import graph).
+    from game.strategy.engine.commands.specs import COMMAND_SPECS
 
     registry = CommandHandlerRegistry()
-
-    # Core handlers
-    registry.register('IssueColonizeCommand', ColonizeCommandHandler())
-    registry.register('IssueMoveCommand', MoveCommandHandler())
-    # NOTE: IssueBuildShipCommand removed (PROJ-208) - use AddToConstructionQueueCommand
-    registry.register('IssueInterceptCommand', InterceptCommandHandler())
-    registry.register('IssueJoinFleetCommand', JoinCommandHandler())
-    registry.register('QueueColonizeMissionCommand', ColonizeMissionCommandHandler())
-    registry.register('ClearOrdersCommand', ClearOrdersCommandHandler())
-    registry.register('IssueTransferCommand', TransferCommandHandler())
-    registry.register('IssueWarpCommand', WarpCommandHandler())  # PROJ-187
-
-    # Build order handlers (PROJ-207 Phase 4)
-    registry.register('IssueBuildOrderCommand', BuildOrderCommandHandler())
-    registry.register('RemoveBuildOrderCommand', RemoveBuildOrderCommandHandler())
-
-    # Fleet management handlers (PROJ-208 Phase 1)
-    registry.register('SplitFleetCommand', SplitFleetCommandHandler())
-    registry.register('DeleteOrderCommand', DeleteOrderCommandHandler())
-    registry.register('ReorderOrderCommand', ReorderOrderCommandHandler())
-
-    # Construction queue handlers (PROJ-208 Phase 2; FEAT-17 added pause toggle)
-    registry.register('AddToConstructionQueueCommand', AddToConstructionQueueCommandHandler())
-    registry.register('RemoveFromConstructionQueueCommand', RemoveFromConstructionQueueCommandHandler())
-    registry.register('ReorderConstructionQueueCommand', ReorderConstructionQueueCommandHandler())
-    registry.register('SetBuildQueuePausedCommand', SetBuildQueuePausedCommandHandler())
-
-    # Superweapon direct handlers (PROJ-102)
-    registry.register('IssueImplodePlanetCommand', ImplodePlanetCommandHandler())
-    registry.register('IssueStellerateStarCommand', StellerateStarCommandHandler())
-    registry.register('IssueOpenWarpPointCommand', OpenWarpPointCommandHandler())
-    registry.register('IssueCloseWarpPointCommand', CloseWarpPointCommandHandler())
-    registry.register('IssueCreateDysonSphereCommand', CreateDysonSphereCommandHandler())
-    registry.register('IssueSelfDestructCommand', SelfDestructCommandHandler())
-
-    # Superweapon mission handlers (PROJ-102)
-    registry.register('QueueImplodePlanetMissionCommand', ImplodePlanetMissionCommandHandler())
-    registry.register('QueueStellerateStarMissionCommand', StellerateStarMissionCommandHandler())
-    registry.register('QueueOpenWarpPointMissionCommand', OpenWarpPointMissionCommandHandler())
-    registry.register('QueueCloseWarpPointMissionCommand', CloseWarpPointMissionCommandHandler())
-    registry.register('QueueCreateDysonSphereMissionCommand', CreateDysonSphereMissionCommandHandler())
-
-    # PROJ-237: Planet order command handlers
-    from game.strategy.engine.planet_command_handlers import (
-        IssuePlanetOrderCommandHandler,
-        ClearPlanetOrdersCommandHandler,
-        DeletePlanetOrderCommandHandler,
-        SetAtmosphereTargetCommandHandler,
-        SetGravityTargetCommandHandler,
-        SetWaterTargetCommandHandler,
-        SetRadiationShieldTargetCommandHandler,
-    )
-    registry.register('IssuePlanetOrderCommand', IssuePlanetOrderCommandHandler())
-    registry.register('ClearPlanetOrdersCommand', ClearPlanetOrdersCommandHandler())
-    registry.register('DeletePlanetOrderCommand', DeletePlanetOrderCommandHandler())
-    registry.register('SetAtmosphereTargetCommand', SetAtmosphereTargetCommandHandler())
-    registry.register('SetGravityTargetCommand', SetGravityTargetCommandHandler())
-    registry.register('SetWaterTargetCommand', SetWaterTargetCommandHandler())
-    registry.register('SetRadiationShieldTargetCommand', SetRadiationShieldTargetCommandHandler())
-
+    for spec in COMMAND_SPECS:
+        registry.register(spec.command_class.__name__, spec.handler_class())
     return registry
