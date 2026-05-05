@@ -16,11 +16,11 @@
 | 1. Characterization tests (TDD baseline) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. EffectAbilityMetadata registry | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Decompose `_aggregate` | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Retire `_legacy_provider_fields` (deferred) | Deferred | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Retire `_legacy_provider_fields` | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** Phases 1-3 complete; Phase 4 deferred per plan.
+**Last Updated:** 2026-05-05
+**Active Phase:** All phases complete. Phase 4 reactivated and closed in a single pass; see `decisions.md` "Phase 4 Closure".
 **Last Action:** Phases 1-3 implemented end-to-end. (1) 10 characterization tests
 landed in `test_system_effects_collector_aggregate_characterization.py` and
 passed against pre-refactor code. (2) New
@@ -33,14 +33,16 @@ in `test_effect_ability_metadata.py`. (3) `_aggregate` decomposed into
 orchestrator body is 4 statements. 13 direct decomposition tests in
 `test_system_effects_collector_decomposition.py`.
 
-Phase 4 (`_legacy_provider_fields` retirement) **deferred** as documented in
-`phase_4_checklist.md`: 5 UI consumers still read the legacy keys
-(`planet_name`, `facility_name`, etc.), and removing the shim requires a
-separate UI-consumer audit and lockstep migration. Out of original PROJ-362
-scope.
+Phase 4 closed 2026-05-05. Re-audit (`findings/04_ui_migration_map.md`)
+showed only 1 of the 5 candidate sites was a real consumer
+(`system_tree_panel.py`); the other 4 were string-grep false positives.
+Migrated the single real consumer, deleted the `_legacy_provider_fields`
+function + its dict-spread, updated docstrings + test fixture comment,
+and added a regression test class
+(`TestProviderLegacyFieldsRetired`) pinning that the 5 legacy keys are
+no longer emitted and the shim function is gone.
 
-**Next Action:** User verification of Phases 1-3. Phase 4 awaits explicit
-user approval and a dedicated UI audit.
+**Next Action:** User verification of Phase 4 closure.
 **Blockers:** None
 
 ## Overview

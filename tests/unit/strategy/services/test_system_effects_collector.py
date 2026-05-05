@@ -536,6 +536,63 @@ class TestProviderUniversalFields:
                 f"contain legacy key {legacy_key!r}"
             )
 
+
+class TestProviderLegacyFieldsRetired:
+    """PROJ-362 Phase 4 regression pin: the ``_legacy_provider_fields`` shim
+    is gone, and provider DTOs emit only PROJ-300 universal fields.
+
+    The 5 legacy keys (``planet_name``, ``planet_id``, ``facility_name``,
+    ``facility_id``, ``component_key``) must NOT appear in any provider dict
+    returned by ``collect_system_effects`` / ``collect_sector_effects``.
+    """
+
+    _LEGACY_KEYS = (
+        'planet_name',
+        'planet_id',
+        'facility_name',
+        'facility_id',
+        'component_key',
+    )
+
+    def test_facility_source_provider_does_not_emit_legacy_keys(self):
+        """Facility source — historically the primary emitter of legacy keys
+        — must produce a DTO carrying only PROJ-300 universal fields after
+        Phase 4 removal of ``_legacy_provider_fields``.
+        """
+        fac = _make_facility(
+            "f-1", _stabilizer_design("geo", "GeologicStabilizer"),
+            component_states={"OUTER:0:geo": ComponentActivationState(
+                phase=ActivationPhase.ACTIVE,
+                ability_name="GeologicStabilizer",
+                energy_drain_rate=50.0,
+            ).to_dict()},
+        )
+        planet = _make_planet("Tarsis IV", 1, facilities=[fac])
+        system = _make_system("S", [planet])
+
+        result = collect_system_effects(system, empire_id=1)
+
+        assert len(result) == 1
+        provider = result[0]['providers'][0]
+        for legacy_key in self._LEGACY_KEYS:
+            assert legacy_key not in provider, (
+                f"Provider DTO contains retired legacy key {legacy_key!r}; "
+                f"PROJ-362 Phase 4 removed the ``_legacy_provider_fields`` shim."
+            )
+
+    def test_legacy_helper_function_is_gone_from_collector_module(self):
+        """The ``_legacy_provider_fields`` function was deleted in PROJ-362
+        Phase 4. Re-importing it must fail.
+        """
+        from game.strategy.services import system_effects_collector
+        assert not hasattr(
+            system_effects_collector, '_legacy_provider_fields'
+        ), (
+            "system_effects_collector._legacy_provider_fields should have "
+            "been deleted by PROJ-362 Phase 4."
+        )
+
+
 class TestD17OwnerlessScopeValidation:
     """PROJ-300 D17: ownerless sources may only declare ownership-neutral scopes."""
 
