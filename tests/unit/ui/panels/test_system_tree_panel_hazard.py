@@ -21,8 +21,23 @@ def test_no_effects_yields_empty_hints():
 
 
 def test_benign_main_sequence_star_yields_no_hint():
-    """Sun-like star with no abilities should produce no hazard hint."""
-    assert _format_star_hazard_hints([]) == []
+    """A main-sequence star that DOES project an ability but whose
+    multiplier is benign (>= 1.0) yields no hazard hint.
+
+    PROJ-346 strengthening: previously had a body identical to
+    ``test_no_effects_yields_empty_hints`` — both passed an empty list.
+    Rewrite to a distinct variant: a star provider that survives
+    both the source_kind=='star' filter AND the scope=='system' filter
+    but is ruled out by the hostility-threshold check (multiplier == 1.0
+    is the boundary, see test_thrust_modifier_at_one_no_hint for the
+    matching ThrustModifier case). This pins the formatter's combined
+    hostility-test rather than just its empty-list short-circuit.
+    """
+    effects = [_effect('ShieldModifier', [
+        _star_provider('Sol (G2V Main Sequence)',
+                       {'multiplier': 1.0, 'scope': 'system'}),
+    ])]
+    assert _format_star_hazard_hints(effects) == []
 
 
 def test_pulsar_shield_modifier_renders_hazard():
