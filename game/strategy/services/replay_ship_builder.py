@@ -23,6 +23,7 @@ from __future__ import annotations
 from typing import Callable, Optional, TYPE_CHECKING
 
 from game.core.math import Vector2
+from game.core.registry import GameRegistries
 from game.simulation.battle_spec import ShipSpec
 from game.simulation.replay.replay_record import ReplayRecord
 from game.strategy.data.ship_instance_serializer import ShipInstanceSerializer
@@ -55,7 +56,17 @@ def build_replay_ship_builder(
     is available, a ``ValueError`` is raised.
     """
     snapshots = dict(record.spec.iter_ship_snapshots())
-    registries = registry_provider.get_registries()
+    # PROJ-366 Phase 0 (CRIT, Codex r001): the IRegistryProvider protocol
+    # has no `get_registries()` method — only individual getters. Mirror
+    # `build_context_ship_builder` (battle_runner.py:240-247) and construct
+    # the GameRegistries DTO from the protocol's individual getters.
+    registries = GameRegistries(
+        components=registry_provider.get_components(),
+        modifiers=registry_provider.get_modifiers(),
+        vehicle_classes=registry_provider.get_vehicle_classes(),
+        resources=registry_provider.get_resources(),
+        resource_catalog=registry_provider.get_resource_catalog(),
+    )
 
     def _builder(ship_spec: ShipSpec, team_id: int) -> "Ship":
         snapshot = snapshots.get(ship_spec.instance_id)
