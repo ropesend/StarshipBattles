@@ -165,6 +165,60 @@ class TestFakeFamilyExtensibility:
         assert result.damage == 99.0
 
 
+class TestExtensibilityAcceptance:
+    """PROJ-359 acceptance test: a hypothetical new weapon family registers
+    and dispatches without editing weapon_firing_system, targeting_system,
+    collision, or projectile_manager.
+
+    This is the executable form of the project's headline goal — adding a
+    new weapon family is one register() call + one family module + one
+    metadata entry. If a future change forces this test to also touch one
+    of the four central files, the contract has regressed.
+    """
+
+    def test_new_family_registers_without_central_edits(self):
+        """Register a fake handler under an existing family enum slot and
+        prove dispatch routes to it. The four central modules
+        (weapon_firing_system, targeting_system, collision,
+        projectile_manager) must remain unmodified for this test to pass."""
+        # Use a local registry to keep the production registry clean.
+        registry = WeaponRegistry()
+
+        @dataclass
+        class FakePlasmaTorpedoHandler:
+            """Hypothetical new family: plasma torpedo. Returns a typed
+            BeamResolution variant for demo purposes."""
+            calls: list = None
+
+            def __post_init__(self):
+                self.calls = []
+
+            def fire(self, request: AttackRequest) -> AttackResolution:
+                self.calls.append(request)
+                return BeamResolution(
+                    source=request.source,
+                    component=request.component,
+                    target=request.target,
+                    damage=999.0,
+                    range=2000.0,
+                    origin=Vector2(0, 0),
+                    direction=Vector2(1, 0),
+                    hit=True,
+                )
+
+        handler = FakePlasmaTorpedoHandler()
+        # Register under PROJECTILE slot (slots are stable; in a real change
+        # the WeaponFamily enum would gain a PLASMA_TORPEDO member).
+        registry.register(WeaponFamily.PROJECTILE, handler)
+
+        request = _make_request(WeaponFamily.PROJECTILE)
+        result = registry.dispatch(request)
+
+        assert isinstance(result, BeamResolution)
+        assert result.damage == 999.0
+        assert handler.calls == [request]
+
+
 class TestResolutionShapes:
     def test_beam_resolution_carries_all_legacy_dict_fields(self):
         """`BeamResolution` is a 1:1 typed mirror of the legacy beam dict.

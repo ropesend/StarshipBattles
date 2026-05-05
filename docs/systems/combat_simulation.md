@@ -661,6 +661,38 @@ Ship
 All subsystems are lazy-initialized. `ShipCombatEngine` subsystems (TargetingSystem,
 DamageCalculator, WeaponFiringSystem) are class-level shared instances since they are stateless.
 
+#### Weapon Family Registry (PROJ-359)
+
+`WeaponFiringSystem` no longer dispatches on `comp.has_ability('BeamWeaponAbility')` /
+`'SeekerWeaponAbility'` / `'ProjectileWeaponAbility'` string branches. Instead:
+
+- `game/simulation/combat/attack_contract.py` defines `WeaponFamily` (enum: `BEAM`,
+  `PROJECTILE`, `SEEKER`, `PDC`), the typed `AttackRequest` / `AttackResolution`
+  contract (`BeamResolution`, `ProjectileResolution`, `NoAttack`), the
+  `WeaponHandler` protocol, and `FAMILY_METADATA` (per-family policy: `targets_missiles`,
+  `consumes_pdc_missile_context`).
+- `game/simulation/combat/weapon_registry.py` provides `WEAPON_REGISTRY` (singleton)
+  and `detect_family(component)` (the single point that owns the legacy
+  `comp.has_ability(...)` lookup; PDC is detected before BEAM because a PDC
+  weapon is a Beam weapon with the `pdc` tag).
+- `game/simulation/combat/families/{beam,projectile,seeker,pdc}.py` each
+  implement one `WeaponHandler` and register on import.
+
+`WeaponFiringSystem._create_attack` is now a thin family-dispatcher: build
+`AttackRequest` → `WEAPON_REGISTRY.dispatch(request)` → return resolution.
+`game/engine/collision.py::process_beam_attack` consumes the typed
+`BeamResolution` directly, removing the dict-carrier leak from the engine layer.
+
+**Adding a new weapon family** is one new module under `families/<name>.py`,
+one entry in `FAMILY_METADATA` if it has special targeting behavior, and one
+import in `families/__init__.py` to trigger the registration. **No edits to
+weapon_firing_system, targeting_system, collision, or projectile_manager.**
+The acceptance test
+(`tests/unit/simulation/combat/test_weapon_registry.py::TestExtensibilityAcceptance`)
+codifies this contract.
+
+See `docs/02_PATTERNS.md` § 34 for the full pattern entry.
+
 ### Ship Component Manager (PROJ-240)
 
 **File:** `game/simulation/entities/ship_component_manager.py`

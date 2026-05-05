@@ -94,8 +94,15 @@ def _make_weapon_component(
 class TestBeamGolden:
     """Golden snapshot for the Beam dispatch path."""
 
-    def test_beam_attack_has_exact_dict_shape(self):
-        """Beam dispatch returns a dict with these exact keys and values."""
+    def test_beam_attack_has_exact_resolution_shape(self):
+        """Beam dispatch returns a BeamResolution with these exact field values.
+
+        PROJ-359 Phase 4: original Phase 1 golden test asserted on a dict
+        shape. Phase 4 deleted the dict carrier; this test now asserts on
+        the typed BeamResolution attributes (same field names and values
+        since the resolution was designed as a 1:1 typed mirror)."""
+        from game.simulation.combat.attack_contract import BeamResolution
+
         targeting = TargetingSystem()
         firing = WeaponFiringSystem(targeting)
 
@@ -125,26 +132,26 @@ class TestBeamGolden:
 
         assert len(attacks) == 1
         attack = attacks[0]
-        # Exact key set (golden)
-        assert set(attack.keys()) == {
-            'type', 'source', 'target', 'damage', 'range',
-            'origin', 'component', 'direction', 'hit',
-        }
-        assert attack['type'] is AttackType.BEAM
-        assert attack['source'] is ship
-        assert attack['target'] is target
-        assert attack['damage'] == 50
-        assert attack['range'] == 500
-        assert attack['origin'] == ship.position
-        assert attack['component'] is weapon
-        assert attack['hit'] is True
+        assert isinstance(attack, BeamResolution)
+        assert attack.type is AttackType.BEAM
+        assert attack.source is ship
+        assert attack.target is target
+        assert attack.damage == 50
+        assert attack.range == 500
+        assert attack.origin == ship.position
+        assert attack.component is weapon
+        assert attack.hit is True
         # Direction is unit vector toward target (target is at +x of source)
-        assert attack['direction'].x == pytest.approx(1.0)
-        assert attack['direction'].y == pytest.approx(0.0)
+        assert attack.direction.x == pytest.approx(1.0)
+        assert attack.direction.y == pytest.approx(0.0)
 
     def test_beam_collision_telemetry_chain(self):
         """End-to-end: beam attack -> collision -> damage applied with
-        DamageContext(damage_type='beam'). Locks the engine-layer contract."""
+        DamageContext(damage_type='beam'). Locks the engine-layer contract.
+
+        PROJ-359 Phase 4: input is now BeamResolution, not dict."""
+        from game.simulation.combat.attack_contract import BeamResolution
+
         rng = random.Random(0)
         # Force rng.random() to return 0.0 so any non-zero hit chance hits
         rng.random = lambda: 0.0
@@ -170,17 +177,16 @@ class TestBeamGolden:
         source.get_total_sensor_score = MagicMock(return_value=0.0)
         source.fleet_attack_bonus = None
 
-        attack = {
-            'type': AttackType.BEAM,
-            'source': source,
-            'target': target,
-            'damage': 42.0,
-            'range': 500.0,
-            'origin': Vector2(0.0, 0.0),
-            'component': beam_comp,
-            'direction': Vector2(1.0, 0.0),
-            'hit': True,
-        }
+        attack = BeamResolution(
+            source=source,
+            component=beam_comp,
+            target=target,
+            damage=42.0,
+            range=500.0,
+            origin=Vector2(0.0, 0.0),
+            direction=Vector2(1.0, 0.0),
+            hit=True,
+        )
         recent: list[dict] = []
         cs.process_beam_attack(attack, recent)
 
@@ -410,10 +416,14 @@ class TestPDCGolden:
 
         assert len(attacks) == 1
         attack = attacks[0]
-        assert attack['type'] is AttackType.BEAM
-        assert attack['target'] is enemy_missile
-        assert attack['component'] is weapon
-        assert attack['hit'] is True
+        # PROJ-359 Phase 4: PDC dispatch now produces a BeamResolution (typed)
+        # rather than a dict.
+        from game.simulation.combat.attack_contract import BeamResolution
+        assert isinstance(attack, BeamResolution)
+        assert attack.type is AttackType.BEAM
+        assert attack.target is enemy_missile
+        assert attack.component is weapon
+        assert attack.hit is True
 
     def test_pdc_collision_against_missile_uses_take_damage(self):
         """Beam against a Projectile (missile) target uses target.take_damage
@@ -443,17 +453,17 @@ class TestPDCGolden:
         source.get_total_sensor_score = MagicMock(return_value=0.0)
         source.fleet_attack_bonus = None
 
-        attack = {
-            'type': AttackType.BEAM,
-            'source': source,
-            'target': missile,
-            'damage': 5.0,
-            'range': 200.0,
-            'origin': Vector2(0.0, 0.0),
-            'component': beam_comp,
-            'direction': Vector2(1.0, 0.0),
-            'hit': True,
-        }
+        from game.simulation.combat.attack_contract import BeamResolution
+        attack = BeamResolution(
+            source=source,
+            component=beam_comp,
+            target=missile,
+            damage=5.0,
+            range=200.0,
+            origin=Vector2(0.0, 0.0),
+            direction=Vector2(1.0, 0.0),
+            hit=True,
+        )
         cs.process_beam_attack(attack, [])
 
         # Missile path: target.take_damage(damage), NOT combat_engine.take_damage

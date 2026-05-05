@@ -137,11 +137,12 @@ class TestBeamWeaponFiring:
 
         attacks = system.fire_weapons(ship)
 
+        # PROJ-359 Phase 4: beam dispatch returns BeamResolution (typed)
         assert len(attacks) == 1
-        assert attacks[0]['type'] == AttackType.BEAM
-        assert attacks[0]['source'] is ship
-        assert attacks[0]['target'] is target
-        assert attacks[0]['damage'] == 50
+        assert attacks[0].type == AttackType.BEAM
+        assert attacks[0].source is ship
+        assert attacks[0].target is target
+        assert attacks[0].damage == 50
 
 
 class TestProjectileWeaponFiring:
@@ -470,9 +471,9 @@ class TestMultipleWeaponsFiring:
 
         attacks = system.fire_weapons(ship)
 
-        # All 3 weapons should fire
+        # All 3 weapons should fire (PROJ-359 Phase 4: BeamResolution typed)
         assert len(attacks) == 3
-        assert all(a['type'] == AttackType.BEAM for a in attacks)
+        assert all(a.type == AttackType.BEAM for a in attacks)
 
     def test_multiple_projectile_weapons_all_fire(self):
         """Ship with multiple projectile weapons fires all of them."""
@@ -616,8 +617,9 @@ class TestMultipleWeaponsFiring:
 
             # Both should fire
             assert len(attacks) == 2
-            # One beam, one projectile
-            beam_attacks = [a for a in attacks if isinstance(a, dict) and a.get('type') == AttackType.BEAM]
+            # PROJ-359 Phase 4: beam attacks are BeamResolution objects
+            from game.simulation.combat.attack_contract import BeamResolution
+            beam_attacks = [a for a in attacks if isinstance(a, BeamResolution)]
             assert len(beam_attacks) == 1
 
 

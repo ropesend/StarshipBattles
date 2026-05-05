@@ -33,10 +33,11 @@ described in `docs/01_ARCHITECTURE.md`.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Protocol, Union, runtime_checkable
 
+from game.core.constants import AttackType
 from game.core.math import Vector2
 
 if TYPE_CHECKING:
@@ -89,9 +90,9 @@ class AttackRequest:
 class BeamResolution:
     """Resolution emitted by the Beam (and PDC) family.
 
-    Mirrors the legacy beam-attack dict 1:1 so the engine layer can consume
-    it via attribute access (`resolution.origin` instead of `attack['origin']`).
-    The legacy dict path remains during Phase 3 migration; Phase 4 deletes it.
+    Replaces the legacy beam-attack dict. The engine layer
+    (`game/engine/collision.py`) consumes this via attribute access; the
+    `battle_engine._process_attacks` discriminator uses `.type`.
     """
 
     source: Any
@@ -102,6 +103,10 @@ class BeamResolution:
     origin: Vector2
     direction: Vector2
     hit: bool = True
+    # Discriminator field — equal to AttackType.BEAM for both Beam and PDC
+    # families because both produce beam-shaped resolutions. The engine
+    # discriminates by `type`, not by family.
+    type: AttackType = field(default=AttackType.BEAM)
 
 
 @dataclass(frozen=True)

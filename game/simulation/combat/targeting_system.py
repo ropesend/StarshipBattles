@@ -185,8 +185,9 @@ class TargetingSystem:
                 if candidate_type not in pdc_valid_targets:
                     continue  # PDC can only target types in its valid targets list
 
-            # Validate firing solution
-            if comp.has_ability('SeekerWeaponAbility'):
+            # Validate firing solution. PROJ-359 Phase 4: branch on family,
+            # not string-class lookup.
+            if family is WeaponFamily.SEEKER:
                 seeker_ab = comp.get_ability('SeekerWeaponAbility')
                 dist = ship.position.distance_to(candidate.position)
                 max_range = seeker_ab.projectile_speed * seeker_ab.endurance * SimulationConstants.SEEKER_MAX_RANGE_MULTIPLIER
@@ -284,9 +285,12 @@ class TargetingSystem:
         # Determine target velocity (ICombatShip and IProjectile both have velocity)
         t_vel = target.velocity
 
-        if comp.has_ability('ProjectileWeaponAbility') or comp.has_ability('SeekerWeaponAbility'):
-            # Get projectile speed from the appropriate ability
-            if comp.has_ability('SeekerWeaponAbility'):
+        # PROJ-359 Phase 4: family-driven lead calculation. Beam family aims
+        # directly; Projectile and Seeker families lead the target based on
+        # their projectile_speed.
+        family = detect_family(comp)
+        if family in (WeaponFamily.PROJECTILE, WeaponFamily.SEEKER):
+            if family is WeaponFamily.SEEKER:
                 proj_ab = comp.get_ability('SeekerWeaponAbility')
             else:
                 proj_ab = comp.get_ability('ProjectileWeaponAbility')
