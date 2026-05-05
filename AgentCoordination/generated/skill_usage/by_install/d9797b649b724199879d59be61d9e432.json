@@ -25,10 +25,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 6
+        "codex": 8
       },
-      "count": 6,
-      "last_used": "2026-05-05T00:06:46Z"
+      "count": 8,
+      "last_used": "2026-05-05T01:35:39Z"
     },
     "codex-discuss-start": {
       "agents": {
@@ -39,10 +39,10 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 10
+        "codex": 11
       },
-      "count": 10,
-      "last_used": "2026-05-04T19:51:07Z"
+      "count": 11,
+      "last_used": "2026-05-05T01:19:36Z"
     },
     "codex-starship-qa-observer": {
       "agents": {
