@@ -231,6 +231,18 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.btn_build_queue = None
         self.btn_navigate = None
         self.last_preset_selection = None  # PROJ-199: lazy init elimination
+
+        # PROJ-347 T4.1b (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullPlanetListWindowUiBuilder test can safely call kill() without
+        # AttributeError on `self.virtual_table.kill()`. The production
+        # builder overwrites these in Stage 3.
+        self.virtual_table = None
+        self.sidebar_panel = None
+        self.main_panel = None
+        self.data_source = None
+        self.column_manager = None
+        self.selection = None
         self._registries = registries  # PROJ-211: injected registries (DI)
         self._race_registry = race_registry  # PROJ-290
         # PROJ-292 H1: facade enables per-species sub-block rendering on

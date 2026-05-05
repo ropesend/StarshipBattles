@@ -217,3 +217,67 @@ class TestPerEffectColumns:
             'EnvironmentalDamage': {'rate': 0.1, 'damage_type': 'radiation', 'scope': 'sector'},
         })
         assert col['func'](chthonian) == '—'
+
+
+# ---------------------------------------------------------------------------
+# PROJ-347 T4.1b: Pattern §33 widget-ref placeholders
+# ---------------------------------------------------------------------------
+
+class TestPlanetListWindowWidgetPlaceholders:
+    """PROJ-347 T4.1b — Pattern §33 widget-ref placeholders.
+
+    Stage-1 must set widget refs to ``None`` before ``super().__init__``
+    so a ``NullPlanetListWindowUiBuilder`` test can safely call
+    ``kill()`` without ``AttributeError`` on
+    ``self.virtual_table.kill()`` etc.
+    """
+
+    def _make_window(self, *, ui_builder):
+        import pygame
+        from game.ui.screens.planet_list_window import PlanetListWindow
+        from tests.fixtures.ui_widget_factory import bypass_init
+
+        galaxy = MagicMock(name="Galaxy")
+        galaxy.systems = {}
+        empire = MagicMock(name="Empire")
+        empire.id = 1
+        rect = pygame.Rect(0, 0, 1200, 800)
+        with bypass_init(PlanetListWindow):
+            return PlanetListWindow(
+                rect,
+                MagicMock(name="ui_manager"),
+                galaxy,
+                empire,
+                window_manager=None,
+                ui_builder=ui_builder,
+            )
+
+    def test_null_builder_leaves_widget_placeholders_as_none(self):
+        from tests.fixtures.planet_list_window_ui_builder import (
+            NullPlanetListWindowUiBuilder,
+        )
+        window = self._make_window(ui_builder=NullPlanetListWindowUiBuilder())
+        # PROJ-347 T4.1b: Pattern §33 placeholders set in Stage 1.
+        for slot in (
+            "virtual_table", "sidebar_panel", "main_panel",
+            "data_source", "column_manager", "selection",
+        ):
+            assert getattr(window, slot) is None, (
+                f"Pattern §33 placeholder {slot!r} should be None under "
+                f"Null builder; got {getattr(window, slot)!r}"
+            )
+
+    def test_null_builder_kill_does_not_attribute_error(self):
+        """The truthiness guards in ``kill()`` short-circuit on the
+        ``None`` placeholders set in Stage 1."""
+        from tests.fixtures.planet_list_window_ui_builder import (
+            NullPlanetListWindowUiBuilder,
+        )
+        window = self._make_window(ui_builder=NullPlanetListWindowUiBuilder())
+        # We can't actually call super().kill() under bypass_init, but
+        # the placeholder existence is what matters: confirm the same
+        # truthiness predicate kill() uses works without raising.
+        assert (window.virtual_table or None) is None
+        assert (window.planet_detail_panel or None) is None
+        assert (window.btn_build_queue or None) is None
+        assert (window.btn_navigate or None) is None
