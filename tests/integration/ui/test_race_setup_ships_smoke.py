@@ -29,25 +29,9 @@ EXPECTED_PORTRAIT_GAPS: frozenset[tuple[str, str]] = frozenset({
     ("Atlantians", "Light Cruiser"),
 })
 
-# Current tracked portraits predate the 2048x2048 target size in these
-# themes. This is intentionally exact: if any allowlisted portrait is
-# regenerated to the target size, the test fails until the allowlist shrinks.
-EXPECTED_PORTRAIT_SIZE_MISMATCH_THEMES: frozenset[str] = frozenset({
-    "Atlantians",
-    "Federation",
-    "Klingons",
-    "Ossivine",
-    "Prismsteel",
-    "Romulans",
-    "Thoraliens",
-    "Voidforged",
-})
-EXPECTED_PORTRAIT_SIZE_MISMATCHES: frozenset[tuple[str, str]] = frozenset(
-    (theme, cls)
-    for theme in EXPECTED_PORTRAIT_SIZE_MISMATCH_THEMES
-    for cls in SHIP_CLASSES_WITH_VISUAL_THEMES
-    if (theme, cls) not in EXPECTED_PORTRAIT_GAPS
-)
+# Current tracked portraits all match the 2048x2048 target size except for
+# explicit missing portrait gaps above.
+EXPECTED_PORTRAIT_SIZE_MISMATCHES: frozenset[tuple[str, str]] = frozenset()
 
 
 @pytest.fixture(scope="module")

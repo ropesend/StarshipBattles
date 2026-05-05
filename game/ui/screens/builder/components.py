@@ -140,7 +140,7 @@ class ComponentListItem:
             
         if c.has_ability('ResourceGeneration'):
             ab = c.get_ability('ResourceGeneration')
-            lines.append(f"Power: +{ab.generation_rate}/s")
+            lines.append(f"Power: +{ab.rate}/s")
             
         # Generic Ability Listing (Fallback for others)
         shown_abilities = {'WeaponAbility', 'CombatPropulsion', 'ManeuveringThruster', 'ShieldProjection', 'ResourceGeneration', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility'}

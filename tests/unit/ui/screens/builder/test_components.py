@@ -134,7 +134,7 @@ def test_tooltip_uses_resource_generation_for_power_branch() -> None:
     from game.ui.screens.builder.components import ComponentListItem
 
     component = FakeComponent(
-        abilities={"ResourceGeneration": SimpleNamespace(generation_rate=7)}
+        abilities={"ResourceGeneration": SimpleNamespace(rate=7)}
     )
 
     tooltip = ComponentListItem.__new__(ComponentListItem)._generate_tooltip(component)
