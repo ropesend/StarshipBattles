@@ -10,7 +10,7 @@
 | PROJ-347 | Closeout Sprint 5 - Pattern 33 placeholder gaps and Stage-1 purity from review | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-346 | Closeout Sprint 4 - Vacuous test purges from PROJ-331/338/339/340 review | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-345 | Closeout Sprint 3 - PROJ-333 critical coverage gaps from review | Planning | 2026-05-04 | 2026-05-04 |
-| PROJ-344 | Closeout Sprint 2 - Doc and test misalignments from PROJ-321..341 review | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-344 | Closeout Sprint 2 - Doc and test misalignments from PROJ-321..341 review | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-343 | Closeout Sprint 1 - Production behavior bug fixes from PROJ-321..341 review (5 Tier-1 defects fixed; conflict_resolution leak deferred) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-342 | Drop self.game handle from TestLab UI | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
