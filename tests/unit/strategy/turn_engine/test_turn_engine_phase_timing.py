@@ -127,6 +127,51 @@ class TestTimePhase:
         assert exc_info.value.context["original_type"] == "RuntimeError"
         assert exc_info.value.context["original_error"] == "inner failure"
 
+    def test_turn_perf_log_format_string_includes_all_phase_keys(
+        self, fresh_registries
+    ):
+        """PROJ-365 audit MAJ-001/MAJ-002 regression guard.
+
+        The TURN PERF `logger.warning` format string in `process_turn`
+        must include a labeled token for every key in `_phase_times` so
+        that performance regressions in any phase are visible in logs.
+
+        Pre-remediation, the format string omitted `planet_modifier_effects`
+        (PROJ-365 newly-routed phase) and the five PROJ-343 end-of-turn
+        engines: organics_consumption, happiness, quality_improvement,
+        atmosphere, water_modification. Their timings were accumulated but
+        silently dropped.
+
+        We assert by inspecting the source of `process_turn` for the
+        labeled `<phase>=%.3fs` tokens. The single legacy alias is
+        `population_growth` -> `population=` (kept for log-grep
+        compatibility); we accept either label form for that key.
+        """
+        import inspect
+        from game.strategy.engine.turn_engine import TurnEngine
+
+        src = inspect.getsource(TurnEngine.process_turn)
+        engine = TurnEngine(registries=fresh_registries)
+
+        # Legacy log-label aliases retained for backward log-grep
+        # compatibility — these dict keys are written under shorter
+        # labels in the format string. All other keys must appear
+        # verbatim.
+        legacy_label_aliases = {
+            'population_growth': 'population',
+            'movement_calc': 'move_calc',
+            'movement_apply': 'move_apply',
+        }
+
+        for key in engine._phase_times:
+            label = legacy_label_aliases.get(key, key)
+            token = f"{label}=%.3fs"
+            assert token in src, (
+                f"TURN PERF format string missing '{token}' for "
+                f"_phase_times key '{key}'. Phase timings without a log "
+                f"token are silently dropped from observability."
+            )
+
     def test_time_phase_reraises_preexisting_engine_phase_error_without_double_wrapping(
         self, fresh_registries
     ):

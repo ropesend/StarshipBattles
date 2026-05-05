@@ -640,12 +640,18 @@ class TurnEngine:
             self._progress_callback = None
 
         total_time = time.perf_counter() - turn_start
+        # PROJ-365 audit remediation (MAJ-001/MAJ-002): include
+        # planet_modifier_effects and the five end-of-turn engines that
+        # PROJ-343 routed through `_time_phase` so their timings are
+        # visible in TURN PERF logs alongside the other phases.
         logger.warning(
             "TURN PERF: total=%.3fs | harvesting=%.3fs "
             "resources=%.3fs fuel_gen=%.3fs planet_energy=%.3fs resupply=%.3fs production=%.3fs "
-            "environmental=%.3fs orders=%.3fs actions=%.3fs planet_actions=%.3fs "
-            "activation_timers=%.3fs "
-            "move_calc=%.3fs move_apply=%.3fs combat=%.3fs population=%.3fs",
+            "environmental=%.3fs instant_orders=%.3fs actions=%.3fs planet_actions=%.3fs "
+            "activation_timers=%.3fs planet_modifier_effects=%.3fs "
+            "move_calc=%.3fs move_apply=%.3fs combat=%.3fs "
+            "organics_consumption=%.3fs happiness=%.3fs quality_improvement=%.3fs "
+            "atmosphere=%.3fs water_modification=%.3fs population=%.3fs",
             total_time, self._phase_times['harvesting'],
             self._phase_times['resources'], self._phase_times['fuel_gen'],
             self._phase_times['planet_energy'], self._phase_times['resupply'],
@@ -653,8 +659,12 @@ class TurnEngine:
             self._phase_times['environmental'], self._phase_times['instant_orders'],
             self._phase_times['actions'], self._phase_times['planet_actions'],
             self._phase_times['activation_timers'],
+            self._phase_times['planet_modifier_effects'],
             self._phase_times['movement_calc'],
             self._phase_times['movement_apply'], self._phase_times['combat'],
+            self._phase_times['organics_consumption'], self._phase_times['happiness'],
+            self._phase_times['quality_improvement'], self._phase_times['atmosphere'],
+            self._phase_times['water_modification'],
             self._phase_times['population_growth'],
         )
         
