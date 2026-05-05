@@ -310,6 +310,84 @@ class TestReplayStoreRingBuffer:
         assert len(seen_files_during_write[-1]) == 2
 
 
+# PROJ-354B Phase 3.1: post-persist listener API
+class TestReplayStoreListenerAPI:
+    def test_listener_called_on_persist(self, store: ReplayStore):
+        calls = []
+
+        def listener(record, path):
+            calls.append((record.replay_id, path))
+
+        store.add_on_record_persisted_listener(listener)
+        store.persist(_make_record("listened"))
+        assert len(calls) == 1
+        assert calls[0][0] == "listened"
+        assert calls[0][1].name == "replay_listened.json"
+
+    def test_listener_unsubscribe(self, store: ReplayStore):
+        calls = []
+
+        def listener(record, path):
+            calls.append(record.replay_id)
+
+        store.add_on_record_persisted_listener(listener)
+        store.remove_on_record_persisted_listener(listener)
+        store.persist(_make_record("a"))
+        assert calls == []
+
+    def test_multiple_listeners_called_in_order(self, store: ReplayStore):
+        order = []
+
+        def first(record, path):
+            order.append("first")
+
+        def second(record, path):
+            order.append("second")
+
+        store.add_on_record_persisted_listener(first)
+        store.add_on_record_persisted_listener(second)
+        store.persist(_make_record("multi"))
+        assert order == ["first", "second"]
+
+    def test_listener_exception_does_not_block_persist(
+        self, store: ReplayStore
+    ):
+        calls = []
+
+        def bad(record, path):
+            raise RuntimeError("boom")
+
+        def good(record, path):
+            calls.append(record.replay_id)
+
+        store.add_on_record_persisted_listener(bad)
+        store.add_on_record_persisted_listener(good)
+        path = store.persist(_make_record("x"))
+        # Persist still succeeded, returning the path.
+        assert path is not None
+        assert path.exists()
+        # Subsequent listener still called.
+        assert calls == ["x"]
+
+    def test_no_listener_path_unaffected(self, store: ReplayStore):
+        # Sanity: existing behavior preserved when no listeners are
+        # registered.
+        path = store.persist(_make_record("y"))
+        assert path is not None
+        assert path.exists()
+
+    def test_duplicate_subscribe_idempotent(self, store: ReplayStore):
+        calls = []
+
+        def listener(record, path):
+            calls.append(record.replay_id)
+
+        store.add_on_record_persisted_listener(listener)
+        store.add_on_record_persisted_listener(listener)  # duplicate
+        store.persist(_make_record("dup"))
+        assert calls == ["dup"]
+
+
 class TestReplayStoreGracefulDegradation:
     def test_corrupt_file_skipped_in_list(self, store: ReplayStore):
         store.persist(_make_record("ok"))

@@ -151,6 +151,13 @@ class ReplayStore:
         self._json_writer = json_writer
         self._clock = clock
         self._pending: Dict[str, _PendingCapture] = {}
+        # PROJ-354B Phase 3.1: post-persist listeners. Each listener is
+        # a ``Callable[[ReplayRecord, Path], None]``; failures are
+        # caught so one bad subscriber cannot block the others or the
+        # persist itself.
+        self._on_record_persisted_listeners: List[
+            Callable[[ReplayRecord, Path], None]
+        ] = []
 
     # ---- save lifecycle ----
 
@@ -167,6 +174,29 @@ class ReplayStore:
     @property
     def save_root(self) -> Optional[Path]:
         return self._save_root
+
+    # ---- PROJ-354B Phase 3.1: post-persist listener API ----
+
+    def add_on_record_persisted_listener(
+        self,
+        callback: Callable[[ReplayRecord, Path], None],
+    ) -> None:
+        """Register ``callback`` to fire after each successful persist.
+
+        Idempotent — registering the same callable twice is a no-op.
+        Listeners receive ``(record, path)`` AFTER the atomic write
+        succeeds and BEFORE ring-buffer eviction runs.
+        """
+        if callback not in self._on_record_persisted_listeners:
+            self._on_record_persisted_listeners.append(callback)
+
+    def remove_on_record_persisted_listener(
+        self,
+        callback: Callable[[ReplayRecord, Path], None],
+    ) -> None:
+        """Unregister ``callback``. Tolerant to unknown callables."""
+        if callback in self._on_record_persisted_listeners:
+            self._on_record_persisted_listeners.remove(callback)
 
     def _replay_dir(self) -> Optional[Path]:
         if self._save_root is None:
@@ -221,7 +251,13 @@ class ReplayStore:
 
     def persist(self, record: ReplayRecord) -> Optional[Path]:
         """Atomic-write the record then evict excess. Returns the file path
-        on success, ``None`` if no save root is set."""
+        on success, ``None`` if no save root is set.
+
+        PROJ-354B Phase 3.1: listeners fire AFTER the successful write
+        and BEFORE eviction. Each listener runs in its own
+        ``try/except`` so one bad subscriber cannot block others or
+        cause persist to return ``None``.
+        """
         rd = self._ensure_replay_dir()
         if rd is None:
             return None
@@ -231,6 +267,15 @@ class ReplayStore:
         except Exception:  # Intentional broad catch: capture must not crash
             logger.exception("PROJ-312 replay persist failed: %s", path)
             return None
+        # Notify listeners (snapshot the list so a listener that
+        # mutates the registry mid-iteration cannot break the loop).
+        for listener in list(self._on_record_persisted_listeners):
+            try:
+                listener(record, path)
+            except Exception:  # Intentional broad catch: bad subscriber must not block persist
+                logger.exception(
+                    "PROJ-354B on_record_persisted listener raised; ignoring"
+                )
         # Write-then-evict: never delete before the new file is on disk.
         self._evict_excess()
         return path
