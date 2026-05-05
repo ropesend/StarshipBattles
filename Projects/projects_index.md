@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-354B | Replay Background Verification Coordinator (Phase B of replay verification consensus plan r003 - pure verifier + queue + sidecar; depends on PROJ-354A and on production sink wiring) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-354A | Replay Component End-State Fidelity (Phase A of replay verification consensus plan r003 - capture-side; max_hp + status fields; schema bump) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-360 | ShipStatsCalculator Decompose by Stat Domain (review 2026-05-04 finding #5) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-359 | Typed Weapon Execution Contract — Replace String/Class Dispatch (review 2026-05-04 finding #4) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-358 | Battle Runner — Validate Spec Components, No Silent Drift (review 2026-05-04 finding #7) | Planning | 2026-05-04 | 2026-05-04 |

@@ -81,10 +81,10 @@
     },
     "ocode-testcoverage-audit": {
       "agents": {
-        "ocode": 9
+        "ocode": 10
       },
-      "count": 9,
-      "last_used": "2026-05-05T04:58:29Z"
+      "count": 10,
+      "last_used": "2026-05-05T04:59:33Z"
     }
   }
 }

@@ -1,0 +1,26 @@
+# PROJ-354B: Decisions Log
+
+> **LOG ALL DECISIONS HERE**
+> When you make a design choice or the user specifies a preference, add it to this table.
+> Future agents will reference this to understand why things were done a certain way.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-05-04 | Project initialized | Phase B of replay verification — coordinator + verifier + sidecar. Implements C4–C9 of consensus plan r003 from Claude+Codex inter-agent discussion. |
+| 2026-05-04 | Verification triggers post-persist of LIVE battles, NOT user-clicks-Replay | Codex correction (r002). Matches user requirement: "background process that occurs when the simulator ends combat". The user-replay verification path is reserved as a future opt-in (sidecar `source: VISUAL_REPLAY` field reserved). |
+| 2026-05-04 | Single FIFO worker, queue cap 16 | r003 §C6. Bounded mitigation against hostile/runaway mods. Single worker = deterministic + bounded CPU + no race-condition complexity. |
+| 2026-05-04 | NO thread-level hard timeout in first pass | Codex pushback (r004). A thread cannot terminate CPU-burning code; only a process boundary can. Process-boundary worker is out of scope for first pass. Cap + drop-on-full + user-toggle-off provides bounded escape hatch. Deferred follow-up. |
+| 2026-05-04 | Sidecar file `replay_<id>.verification.json` with separate `REPLAY_VERIFICATION_SCHEMA_VERSION` | r003 §C7. Sidecar avoids mutating immutable replay JSON (which would break atomic-write semantics). Separate version constant because verification schema lifecycle is independent of replay schema. |
+| 2026-05-04 | Always write a sidecar for every captured replay (including SKIPPED_QUEUE_FULL, SKIPPED_DISABLED, PENDING) | r003 §C7. Replay Browser / event log can read one consistent source for status. No "missing sidecar" implies "?". |
+| 2026-05-04 | List-based listener API on `ReplayStore` | Swarm finding: future-proofs for additional subscribers (telemetry, debug). Minimal API overhead vs. single-callback. Each listener exception caught individually so one bad subscriber doesn't break others. |
+| 2026-05-04 | Verifier in `game/simulation/replay/`; coordinator in `game/strategy/services/` | r003 §C5. Verifier is layer-agnostic and depends only on simulation DTOs (works for Combat Lab too). Coordinator depends on Strategy + ApplicationContext-injected services. AST lint test (Phase 6 Task 6.2) prevents future imports from crossing the boundary. |
+| 2026-05-04 | Strict dict-equality oracle (no tolerance) | r003 §C5. Existing test `tests/integration/replay/test_replay_playback.py:120-136` does strict `==` and passes — determinism holds. Ship strict; if flake appears, add comparator policy in a separate change. Don't pre-weaken. |
+| 2026-05-04 | Diff capped at first 25 entries with truncation flag + total count | r003 open-question response. 100-ship battle could produce massive diff; cap keeps sidecar JSON manageable. Trunc flag + total_count preserve the "and N more" footer signal. |
+| 2026-05-04 | Test boundary at `BattleController.start_from_spec`, NOT `BattleScreen` | Codex correction (r004). Both paths route through `start_engine_from_spec` → `run_battle`; equivalence at this boundary proves equivalence at every downstream point WITHOUT coupling tests to Pygame UI. |
+| 2026-05-04 | Combat Lab uses EXPLICIT synthetic-builder fallback | r003 Combat Lab Position. Composition root passes `combat_lab.design_loader.load_combat_lab_design` as `fallback_builder=` argument to `build_replay_ship_builder`. NEVER silent fall-back to global registry lookup — silent fallback would hide configuration bugs. |
+| 2026-05-04 | Coordinator uses DI for `ai_factory`, `registry_provider`, `replay_store`, `settings`, `fallback_ship_builder`, `clock`, `logger` | Pattern #1 ApplicationContext. No module-level globals. Construction is explicit at the composition root. |
+| 2026-05-04 | Module-level `_active_coordinators` + `shutdown_all_coordinators(timeout)` mirror `_in_flight_calls` + `shutdown_all_calls` | Pattern #28. Allows shutdown sequence to drain background work without each consumer registering individually. Mirrors existing pattern at `game/services/llm/background.py:56-62, 345-368`. |
+| 2026-05-04 | `run_replay_headless` is the verification engine entry point (NOT `BattleController.start_from_spec`) | r003 §C6. Headless run passes `capture_context=None`, which avoids the recursion path (`battle_runner.py:180` checks `if capture_context is not None`). Phase 4 Task 4.5 has explicit no-recursion regression test. |
+| 2026-05-04 | Save deletion mid-verification: drop sidecar silently (logged at debug) | R6 mitigation. Coordinator checks `replay_store._replay_dir()` before writing sidecar; if save was deleted, `replay_dir` is None → drop. User has explicitly invalidated the data; no action needed. |
+| 2026-05-04 | Listener fires AFTER successful write but BEFORE `_evict_excess` | Subscribers see the path before any eviction churn. Important for the coordinator: ensures the record is on disk when we enqueue it (so worker can re-read if needed). |
+| 2026-05-04 | Phases 1-4 are independent of sink wiring; Phase 5 blocks on it | Allows substantial implementation progress + test coverage in isolation while user finalizes the prereq with codex. |
