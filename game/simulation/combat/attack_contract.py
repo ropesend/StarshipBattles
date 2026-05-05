@@ -146,6 +146,45 @@ class WeaponHandler(Protocol):
         ...
 
 
+@dataclass(frozen=True)
+class WeaponFamilyMetadata:
+    """Static metadata about a weapon family used by firing/targeting systems
+    *outside* the dispatch path.
+
+    Carries the per-family policy decisions that previously lived as `if
+    is_pdc:` and `comp.has_ability(...)` branches across firing and targeting.
+
+    Fields:
+      - `targets_missiles`: True when this family is allowed to target enemy
+        missile-type projectiles. Only PDC is True today; non-PDC weapons
+        cannot target missiles.
+      - `valid_target_types`: Set of uppercase target-type strings this family
+        is restricted to. Empty set means "no type restriction" (default).
+        PDC reads `pdc_valid_targets` from its BeamWeaponAbility, but that
+        per-component data is consulted at filter time, not metadata time.
+      - `consumes_pdc_missile_context`: True when the firing system should
+        scan `context['projectiles']` for enemy missiles to add as candidate
+        targets. Currently equivalent to `targets_missiles` but kept as a
+        separate flag for future flexibility (e.g., a hypothetical missile-
+        only sensor weapon that doesn't intercept).
+    """
+
+    targets_missiles: bool = False
+    consumes_pdc_missile_context: bool = False
+
+
+# Family metadata lookup. Mirrors ABILITY_STAT_REGISTRY shape.
+FAMILY_METADATA: dict[WeaponFamily, WeaponFamilyMetadata] = {
+    WeaponFamily.BEAM: WeaponFamilyMetadata(),
+    WeaponFamily.PROJECTILE: WeaponFamilyMetadata(),
+    WeaponFamily.SEEKER: WeaponFamilyMetadata(),
+    WeaponFamily.PDC: WeaponFamilyMetadata(
+        targets_missiles=True,
+        consumes_pdc_missile_context=True,
+    ),
+}
+
+
 class UnregisteredWeaponFamilyError(KeyError):
     """Raised when `WeaponRegistry.dispatch` is called with a request whose
     family has no registered handler. Prefer this over silent fallback —

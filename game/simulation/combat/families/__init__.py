@@ -10,3 +10,4 @@ here.
 from game.simulation.combat.families import beam  # noqa: F401  (registers BEAM)
 from game.simulation.combat.families import projectile  # noqa: F401  (registers PROJECTILE)
 from game.simulation.combat.families import seeker  # noqa: F401  (registers SEEKER)
+from game.simulation.combat.families import pdc  # noqa: F401  (registers PDC)

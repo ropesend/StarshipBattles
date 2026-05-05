@@ -20,6 +20,7 @@ from game.simulation.entities.projectile import Projectile
 # PROJ-359 Phase 3: importing `families` triggers WEAPON_REGISTRY registrations
 from game.simulation.combat import families  # noqa: F401
 from game.simulation.combat.attack_contract import (
+    FAMILY_METADATA,
     AttackRequest,
     BeamResolution,
     ProjectileResolution,
@@ -190,8 +191,14 @@ class WeaponFiringSystem:
         if ship.max_targets > CombatConstants.DEFAULT_MAX_TARGETS:
             secondary_targets = list(ship.secondary_targets)
 
-        # PDC weapons: inject enemy missiles into candidate list
-        if comp.has_pdc_ability() and context:
+        # PROJ-359 Phase 3.4: Family-metadata-driven missile injection.
+        # Previously: `if comp.has_pdc_ability() and context:` — string lookup.
+        # Now: family metadata declares whether this family consumes the
+        # PDC missile context. Adding a new family with this behavior is a
+        # FAMILY_METADATA edit, not a firing-system edit.
+        family = detect_family(comp)
+        meta = FAMILY_METADATA.get(family) if family else None
+        if meta is not None and meta.consumes_pdc_missile_context and context:
             projectiles = context.get('projectiles', [])
             for p in projectiles:
                 if p.is_alive and p.team_id != ship.team_id and p.type == AttackType.MISSILE:
@@ -228,38 +235,24 @@ class WeaponFiringSystem:
 
         aim_pos, aim_vec = self._targeting.calculate_firing_solution(ship, comp, target)
 
-        # PROJ-359 Phase 3.1: Beam (non-PDC) routes through the registry.
-        # PDC (also a Beam-role weapon) keeps the legacy path in this task —
-        # Phase 3.4 migrates PDC. Legacy collision.py still consumes a dict;
-        # adapt at the boundary. Phase 4 deletes the adapter.
+        # PROJ-359 Phase 3.4: Both Beam and PDC route through the registry.
+        # Legacy collision.py still consumes a dict; adapt at the boundary.
+        # Phase 4 deletes the adapter.
         if comp.has_ability('BeamWeaponAbility'):
             family = detect_family(comp)
-            if family is WeaponFamily.BEAM and WEAPON_REGISTRY.has(WeaponFamily.BEAM):
-                request = AttackRequest(
-                    source=ship,
-                    component=comp,
-                    weapon_ability=weapon_ab,
-                    target=target,
-                    aim_pos=aim_pos,
-                    aim_vec=aim_vec,
-                    family=family,
-                )
-                resolution = WEAPON_REGISTRY.dispatch(request)
-                assert isinstance(resolution, BeamResolution)
-                attacks.append(_beam_resolution_to_legacy_dict(resolution))
-            else:
-                # PDC path (and any unmigrated case) — legacy dict
-                attacks.append({
-                    'type': AttackType.BEAM,
-                    'source': ship,
-                    'target': target,
-                    'damage': weapon_ab.damage,
-                    'range': weapon_ab.range,
-                    'origin': ship.position,
-                    'component': comp,
-                    'direction': aim_vec.normalize() if aim_vec.length() > 0 else Vector2(1, 0),
-                    'hit': True,
-                })
+            assert family in (WeaponFamily.BEAM, WeaponFamily.PDC)
+            request = AttackRequest(
+                source=ship,
+                component=comp,
+                weapon_ability=weapon_ab,
+                target=target,
+                aim_pos=aim_pos,
+                aim_vec=aim_vec,
+                family=family,
+            )
+            resolution = WEAPON_REGISTRY.dispatch(request)
+            assert isinstance(resolution, BeamResolution)
+            attacks.append(_beam_resolution_to_legacy_dict(resolution))
         else:
             # Projectile / Seeker attack — both route through the registry.
             if comp.has_ability('SeekerWeaponAbility'):

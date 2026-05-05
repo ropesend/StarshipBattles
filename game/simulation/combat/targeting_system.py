@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Any, Union
 
 from game.core.math import Vector2
 from game.core.constants import AttackType, SimulationConstants
+from game.simulation.combat.attack_contract import FAMILY_METADATA, WeaponFamily
+from game.simulation.combat.weapon_registry import detect_family
 from game.simulation.interfaces import (
     ICombatShip,
     IProjectile,
@@ -160,16 +162,20 @@ class TargetingSystem:
             if candidate.team_id == ship.team_id:
                 continue
 
-            # PDC targeting restrictions:
-            # - Non-PDC weapons cannot fire at missiles
-            # - PDC weapons can only fire at target types listed in pdc_valid_targets
-            is_pdc = comp.has_pdc_ability()
+            # PROJ-359 Phase 3.4: Family-metadata-driven targeting restrictions.
+            # Previously: `is_pdc = comp.has_pdc_ability()` — string lookup.
+            # Now: family metadata declares whether this family is allowed to
+            # target enemy missiles. Adding a new family with this behavior is
+            # a FAMILY_METADATA edit, not a targeting-system edit.
+            family = detect_family(comp)
+            meta = FAMILY_METADATA.get(family) if family else None
+            targets_missiles = meta.targets_missiles if meta is not None else False
             is_missile = is_projectile(candidate) and candidate.type == AttackType.MISSILE
 
-            if is_missile and not is_pdc:
-                continue  # Non-PDC cannot target missiles
+            if is_missile and not targets_missiles:
+                continue  # Family cannot target missiles
 
-            if is_pdc:
+            if family is WeaponFamily.PDC:
                 # Determine candidate's target type for PDC matching
                 candidate_type = self._get_pdc_target_type(candidate, is_missile)
 
