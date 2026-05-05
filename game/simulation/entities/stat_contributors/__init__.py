@@ -15,6 +15,7 @@ Public surface for downstream consumers should still go through
 decomposition; they are not a stable API.
 """
 from game.simulation.entities.stat_contributors import (
+    accumulator,
     command,
     defense,
     launch,
@@ -22,12 +23,21 @@ from game.simulation.entities.stat_contributors import (
     registry,
     weapons,
 )
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
+
+# PROJ-367 Phase 2: seed built-in Phase-3 contributors AFTER the four domain
+# modules finish loading. Doing this from within registry.py would trigger
+# a circular import — command/defense/launch/movement all import names
+# from registry.py.
+registry._seed_builtin_contributors()
 
 __all__ = [
+    "accumulator",
     "command",
     "defense",
     "launch",
     "movement",
     "registry",
     "weapons",
+    "StatAccumulator",
 ]

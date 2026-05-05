@@ -28,7 +28,7 @@ import os
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 import pygame
 
@@ -43,6 +43,12 @@ from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.fonts import get_font
 from game.ui.renderer.sprites import get_default_sprite_manager
 from game.ui.services.input_mapper import InputMapper
+
+if TYPE_CHECKING:
+    from game.strategy.services.replay_store import ReplayStore
+    from game.strategy.services.replay_verification_coordinator import (
+        ReplayVerificationCoordinator,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +94,11 @@ class BootstrapResult:
     font_small: Any
     font_med: Any
     font_large: Any
+    # PROJ-366 Phase 2: replay sink + verification coordinator. Forward-string
+    # types so module-level imports stay minimal — concrete imports live
+    # inside `bootstrap()` per the existing late-import pattern.
+    replay_store: "ReplayStore"
+    replay_verification_coordinator: "ReplayVerificationCoordinator"
 
 
 def _detect_resolution(args: argparse.Namespace,
@@ -259,6 +270,53 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
         input_mapper = InputMapper()
         input_mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE, Paths.USER_KEYBINDINGS_FILE)
 
+    # PROJ-366 Phase 1: construct the replay store and register it as the
+    # process-wide capture sink + save-lifecycle store. The same
+    # `replay_settings` instance is reused by Phase 2's coordinator so a
+    # single file read serves both consumers (per r001 shared-settings
+    # delta). Lazy imports match the existing late-import pattern in this
+    # module.
+    with _timed_phase("replay.construct_store", ctx.profiler):
+        from game.simulation.replay.replay_capture import set_default_capture_sink
+        from game.strategy.services.replay_store import ReplayStore, load_replay_settings
+        from game.strategy.systems.save_game_service import set_replay_store
+
+        replay_settings = load_replay_settings()
+        replay_store = ReplayStore(settings=replay_settings)
+        set_default_capture_sink(replay_store)
+        set_replay_store(replay_store)
+
+    # PROJ-366 Phase 2: construct the verification coordinator with the
+    # Combat Lab fallback adapter and start its worker thread.
+    #
+    # The coordinator's `fallback_ship_builder` parameter expects shape
+    # `(ShipSpec, int) -> Ship`. `combat_lab.design_loader.load_combat_lab_design`
+    # has shape `(design_id: str) -> Dict` — we wrap it via
+    # `DesignOnlyMaterializer` (which Combat Lab itself uses for tests) to
+    # bridge the signatures. Per Codex r001 (CRIT 2): the import path is
+    # `combat_lab.design_loader`, not `game.combat_lab.design_loader`.
+    with _timed_phase("replay.start_coordinator", ctx.profiler):
+        from combat_lab.design_loader import load_combat_lab_design
+        from game.ai.ai_factory import AIControllerFactory
+        from game.simulation.services.ship_materializer import DesignOnlyMaterializer
+        from game.strategy.services.replay_verification_coordinator import (
+            ReplayVerificationCoordinator,
+        )
+
+        _cl_materializer = DesignOnlyMaterializer(design_loader=load_combat_lab_design)
+
+        def _replay_combat_lab_fallback(ship_spec, team_id):
+            return _cl_materializer.materialize(ship_spec, team_id, registries)
+
+        replay_verification_coordinator = ReplayVerificationCoordinator(
+            replay_store=replay_store,
+            ai_factory=AIControllerFactory(),
+            registry_provider=provider,
+            settings=replay_settings,
+            fallback_ship_builder=_replay_combat_lab_fallback,
+        )
+        replay_verification_coordinator.start()
+
     dt_total = time.perf_counter() - t_total_start
     logger.info(f"[startup] total bootstrap: {dt_total:.2f}s")
 
@@ -276,6 +334,8 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
         font_small=font_small,
         font_med=font_med,
         font_large=font_large,
+        replay_store=replay_store,
+        replay_verification_coordinator=replay_verification_coordinator,
     )
 
 

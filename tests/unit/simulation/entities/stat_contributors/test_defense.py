@@ -14,6 +14,7 @@ import pytest
 
 from game.core.constants import LayerType
 from game.simulation.entities.stat_contributors import defense
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
 
 
 def _make_shield_projection(capacity: float):
@@ -40,8 +41,8 @@ def _make_resource_consumption(resource_type: str, amount: float):
     return ab
 
 
-def _empty_acc() -> dict:
-    return {"max_shields": 0, "shield_regen": 0, "shield_cost": 0}
+def _empty_acc() -> StatAccumulator:
+    return StatAccumulator()
 
 
 def _make_ship_with_armor_layer(armor_present: bool = True):
@@ -74,20 +75,30 @@ def _make_component(
 
 
 class TestArmorPoolAggregation:
+    """PROJ-367 Phase 1 (closes EXT-07): Armor consumed via ``has_ability``."""
+
     def test_armor_component_adds_max_hp_to_pool(self):
         ship = _make_ship_with_armor_layer()
         acc = _empty_acc()
-        comp = _make_component(abilities_dict={"Armor": True}, max_hp=250.0)
-        defense.aggregate_defense(ship, comp, acc)
+        comp = _make_component(has_ability_set={"Armor"}, max_hp=250.0)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         assert ship.layers[LayerType.ARMOR].max_hp_pool == 250.0
 
     def test_no_armor_layer_does_not_crash(self):
         ship = _make_ship_with_armor_layer(armor_present=False)
         acc = _empty_acc()
-        comp = _make_component(abilities_dict={"Armor": True}, max_hp=250.0)
-        defense.aggregate_defense(ship, comp, acc)
+        comp = _make_component(has_ability_set={"Armor"}, max_hp=250.0)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         # No layers entry — no crash
-        assert acc["max_shields"] == 0
+        assert acc.max_shields == 0
 
 
 class TestShieldAggregation:
@@ -102,8 +113,12 @@ class TestShieldAggregation:
                 ]
             }
         )
-        defense.aggregate_defense(ship, comp, acc)
-        assert acc["max_shields"] == 800.0
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
+        assert acc.max_shields == 800.0
 
     def test_shield_regeneration_sums_rate(self):
         ship = _make_ship_with_armor_layer()
@@ -118,8 +133,12 @@ class TestShieldAggregation:
             has_ability_set={"ShieldRegeneration"},
             ability_instances=[],
         )
-        defense.aggregate_defense(ship, comp, acc)
-        assert acc["shield_regen"] == 3.5
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
+        assert acc.shield_regen == 3.5
 
     def test_shield_energy_cost_only_counts_once_first_match_wins(self):
         """Legacy behavior: first energy ResourceConsumption breaks the loop.
@@ -138,8 +157,12 @@ class TestShieldAggregation:
             abilities_by_name={"ResourceConsumption": [first, second]},
             has_ability_set={"ShieldRegeneration"},
         )
-        defense.aggregate_defense(ship, comp, acc)
-        assert acc["shield_cost"] == 5.0  # not 12.0
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
+        assert acc.shield_cost == 5.0  # not 12.0
 
     def test_shield_energy_cost_skipped_without_shield_regen(self):
         ship = _make_ship_with_armor_layer()
@@ -150,8 +173,12 @@ class TestShieldAggregation:
             },
             has_ability_set=set(),  # no ShieldRegeneration -> skip
         )
-        defense.aggregate_defense(ship, comp, acc)
-        assert acc["shield_cost"] == 0
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
+        assert acc.shield_cost == 0
 
     def test_shield_energy_cost_filters_by_resource_type(self):
         """EXT-05: only ResourceConsumption(energy) is summed; fuel etc.
@@ -166,8 +193,12 @@ class TestShieldAggregation:
             },
             has_ability_set={"ShieldRegeneration"},
         )
-        defense.aggregate_defense(ship, comp, acc)
-        assert acc["shield_cost"] == 4.0
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
+        assert acc.shield_cost == 4.0
 
 
 class TestArmorAndRepairPostAggregation:

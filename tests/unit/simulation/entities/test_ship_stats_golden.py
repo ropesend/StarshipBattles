@@ -20,6 +20,9 @@ Design selection (covers diverse contributor domains):
 - ``qs_battleship``     full capital w/ shields, armor, weapons, PDC
 - ``qs_missile_cruiser`` cruiser exercising capital-missile path
 - ``qs_warp_gate_opener`` superweapon-class with warp drive
+- ``qs_carrier``         PROJ-367 Phase 1: VehicleLaunchAbility + VehicleStorageAbility coverage
+                          (also closes PROJ-360 review FIND-001 / FIND-005)
+- ``qs_recon_picket``    PROJ-367 Phase 1: MultiplexTrackingAbility coverage
 """
 from __future__ import annotations
 
@@ -51,6 +54,9 @@ GOLDEN_DESIGNS: list[str] = [
     "qs_battleship",
     "qs_missile_cruiser",
     "qs_warp_gate_opener",
+    # PROJ-367 Phase 1: typed-ability coverage (closes EXT-07 + PROJ-360 FIND-001/005).
+    "qs_carrier",
+    "qs_recon_picket",
 ]
 
 # Float comparison tolerance — tests are intended to be bit-identical across
@@ -315,6 +321,33 @@ def test_ship_stats_match_golden(design_name, fresh_registries, golden_snapshot)
     got = _capture_stats(ship)
     want = golden_snapshot[design_name]
     _assert_equal(got, want, path=design_name)
+
+
+def test_carrier_design_exercises_typed_vehicle_abilities(fresh_registries):
+    """PROJ-367 Phase 1: ``qs_carrier`` exercises VehicleLaunchAbility +
+    VehicleStorageAbility (closes EXT-07 + PROJ-360 FIND-001).
+
+    If the typed-ability access broke, ``fighter_capacity``,
+    ``fighters_per_wave``, ``fighter_size_cap``, and ``launch_cycle``
+    would all be 0. The non-zero check pins the typed-ability path.
+    """
+    ship = _build_and_calculate("qs_carrier", fresh_registries)
+    assert ship.fighter_capacity > 0
+    assert ship.fighters_per_wave > 0
+    assert ship.fighter_size_cap > 0
+    assert ship.launch_cycle > 0
+
+
+def test_recon_picket_design_exercises_typed_multiplex(fresh_registries):
+    """PROJ-367 Phase 1: ``qs_recon_picket`` exercises MultiplexTrackingAbility
+    (closes EXT-07 + PROJ-360 FIND-005).
+
+    If the typed-ability access broke, ``max_targets`` would stay at the
+    ``CombatConstants.DEFAULT_MAX_TARGETS`` value (1). The strict-greater
+    check pins the typed-ability path.
+    """
+    ship = _build_and_calculate("qs_recon_picket", fresh_registries)
+    assert ship.max_targets > 1
 
 
 def test_construction_cost_is_deterministic(fresh_registries):

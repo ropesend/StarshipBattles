@@ -13,17 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Sink wiring + ReplayStore construction in bootstrap | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Coordinator construction + start + run-loop shutdown | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Integration tests (live battle → sidecar; headless-vs-visual; production materializer) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Combat Lab fallback + docs + verifier-import lint | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 0. replay_ship_builder registry-provider contract repair (CRIT) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Sink wiring + ReplayStore + bootstrap-test cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Coordinator + start + run-loop shutdown + Combat Lab fallback adapter | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Integration tests (live battle → sidecar; headless-vs-visual; production materializer; no-recursion) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Combat Lab fallback test + verifier-import lint + docs | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-05
-**Active Phase:** Planning (just scaffolded)
-**Last Action:** Project created from PROJ-354B Phases 5-6 unblock, after confirming codex is not handling the prereq sink wiring.
-**Next Action:** Begin Phase 1: construct `ReplayStore` and call `set_default_capture_sink(store)` + `set_replay_store(store)` from `app_bootstrap.py`.
-**Blockers:** None. PROJ-354A and PROJ-354B Phases 1-4 have all landed.
+**Active Phase:** Awaiting verification
+**Last Action:** All five phases (0–4) implemented end-to-end and committed. Sharded suite green pre-implementation (18287 passed) and post-implementation (zero regressions; new tests count up).
+**Next Action:** User verification + close-out.
+**Blockers:** None.
 
 **Context for Next Agent:**
 PROJ-354B's plan.md asserted that "the user is handling the production sink wiring with codex separately." The user clarified on 2026-05-05 that codex is NOT handling this. PROJ-366 picks up exactly the work that PROJ-354B Phases 5-6 had marked BLOCKED. Phases 1-4 of PROJ-354B are complete (commits `9dabe9042`, `ad42e4d78`, `93608a438`, `ef20ea35d`) and the audit-remediation commit `27e297815` resolved 5 CRIT + 13 MAJ findings against the verifier/sidecar/coordinator. Sharded suite is currently at 17797 passed, 0 failed.
@@ -39,7 +40,7 @@ Once wired, the existing PROJ-354B `ReplayVerificationCoordinator` can subscribe
 
 ## Goals
 
-- Production calls `set_default_capture_sink(replay_store)` and `set_replay_store(replay_store)` exactly once during `bootstrap()` immediately after `ApplicationContext.create_production()`.
+- Production calls `set_default_capture_sink(replay_store)` and `set_replay_store(replay_store)` exactly once during `bootstrap()` after `InputMapper.load(...)`, before profiler total/save_history/return.
 - Production constructs `ReplayVerificationCoordinator` with real `AIControllerFactory` and `get_default_registry_provider()` injection, calls `coordinator.start()`, and exposes both objects on `BootstrapResult` (alongside the existing `ctx`, `screen`, etc.).
 - `RunLoop.run()` calls `shutdown_all_coordinators(timeout=5.0)` immediately after `shutdown_all_calls(timeout=5.0)`, before `pygame.quit()`.
 - Combat Lab replays use the explicit synthetic-builder fallback (`combat_lab/design_loader.py::load_combat_lab_design`) — no silent global-registry fallback.
@@ -121,26 +122,35 @@ See [decisions.md](decisions.md) for the full table. Highlights:
 
 ## Phases
 
-### Phase 1: Sink wiring + ReplayStore construction [Medium]
-**Objective:** `ReplayStore` constructed in `bootstrap()`; sink + store registered globally; existing `SaveGameService._notify_replay_store_*` hooks now route to a real store.
+### Phase 0: replay_ship_builder registry-provider contract repair [Critical]
+**Objective:** Repair `IRegistryProvider` contract usage in
+`game/strategy/services/replay_ship_builder.py` (calls non-existent
+`get_registries()`). Without this fix, every coordinator verification call
+raises `AttributeError` and writes ERROR sidecars.
+**Status:** Not Started
+
+See `phase_0_checklist.md` for tasks.
+
+### Phase 1: Sink wiring + ReplayStore + bootstrap-test cleanup [Medium]
+**Objective:** `ReplayStore` constructed in `bootstrap()`; sink + store registered globally; existing `SaveGameService._notify_replay_store_*` hooks now route to a real store. Bootstrap test modules grow autouse cleanup so the new coordinator threads don't leak into the next test.
 **Status:** Not Started
 
 See `phase_1_checklist.md` for tasks.
 
-### Phase 2: Coordinator construction + start + run-loop shutdown [Medium]
-**Objective:** `ReplayVerificationCoordinator` constructed and started in `bootstrap()`; exposed on `BootstrapResult`; `shutdown_all_coordinators` wired into `run_loop.py`.
+### Phase 2: Coordinator + start + run-loop shutdown + Combat Lab fallback adapter [Medium]
+**Objective:** `ReplayVerificationCoordinator` constructed and started in `bootstrap()`; exposed on `BootstrapResult`; `shutdown_all_coordinators` wired into `run_loop.py`. Combat Lab fallback adapter (DesignOnlyMaterializer wrapper) wired at construction time.
 **Status:** Not Started
 
 See `phase_2_checklist.md` for tasks.
 
 ### Phase 3: Integration tests [Complex]
-**Objective:** End-to-end coverage proves sink + coordinator + verifier produce sidecars in production-equivalent fixtures.
+**Objective:** End-to-end coverage proves sink + coordinator + verifier produce sidecars in production-equivalent fixtures via the strategy adapter (production `ship_instance_lookup`); equivalence test pins headless ≡ controller. Includes no-recursion assertion.
 **Status:** Not Started
 
 See `phase_3_checklist.md` for tasks.
 
-### Phase 4: Combat Lab fallback + docs + verifier-import lint [Medium]
-**Objective:** Combat Lab synthetic builder wired as the explicit fallback; verifier dependency direction locked in by lint test; docs updated.
+### Phase 4: Combat Lab fallback test + docs + verifier-import lint [Medium]
+**Objective:** Test the Combat Lab fallback path end-to-end; verifier dependency direction locked in by lint test; docs updated.
 **Status:** Not Started
 
 See `phase_4_checklist.md` for tasks.

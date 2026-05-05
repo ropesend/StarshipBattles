@@ -18,7 +18,7 @@ See `plan.md` Phase 4 for context. Inherits PROJ-354B Phase 6 Tasks 6.1, 6.2, 6.
 **File:** `tests/integration/replay/test_combat_lab_verification.py` (NEW)
 **Tests:** Same file
 
-- [ ] **Pass case:** construct a Combat Lab synthetic record (use `combat_lab/design_loader.py::load_combat_lab_design` or the existing test fixture) where every ship's `instance_snapshot` is `None`. Construct `ReplayVerificationCoordinator` with `fallback_ship_builder=load_combat_lab_design`. Trigger verification (call `coordinator._on_record_persisted(record, path)` directly OR persist via store + listener path). Wait for sidecar. Assert `status=="PASSED"`.
+- [ ] **Pass case:** construct a Combat Lab synthetic record (use `combat_lab/design_loader.py::load_combat_lab_design` or the existing test fixture) where every ship's `instance_snapshot` is `None`. Construct `ReplayVerificationCoordinator` with `fallback_ship_builder=<DesignOnlyMaterializer-wrapping closure>` (mirrors Phase 2's adapter shape from `app_bootstrap.py`). Trigger verification (call `coordinator._on_record_persisted(record, path)` directly OR persist via store + listener path). Use `coordinator.wait_for_idle(timeout=30)` THEN file-existence check. Assert `status=="PASSED"`.
 - [ ] **Error case:** same record, but coordinator wired with `fallback_ship_builder=None`. Trigger verification. Assert sidecar `status=="ERROR"`. Assert error message contains a diagnostic substring like "no fallback builder" or "instance_snapshot" (verify the actual production message in `replay_ship_builder.py` and pin it).
 - [ ] Cleanup: `coordinator.shutdown(timeout=5.0)`.
 - [ ] **Verify:** both paths green.

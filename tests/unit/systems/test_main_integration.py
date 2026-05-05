@@ -16,6 +16,27 @@ def cleanup():
     patch.stopall()
 
 
+@pytest.fixture(autouse=True)
+def _drain_replay_globals():
+    """PROJ-366 Phase 2: drain coordinator threads + reset module globals
+    after every Game-instantiation test.
+
+    `Game.__init__` calls `bootstrap()` which now constructs and starts
+    a non-daemon `ReplayVerificationCoordinator` worker thread. Without
+    cleanup, this thread leaks across tests and blocks pytest exit.
+    """
+    yield
+    from game.simulation.replay.replay_capture import reset_default_capture_sink
+    from game.strategy.services.replay_verification_coordinator import (
+        shutdown_all_coordinators,
+    )
+    from game.strategy.systems.save_game_service import set_replay_store
+
+    shutdown_all_coordinators(timeout=5.0)
+    reset_default_capture_sink()
+    set_replay_store(None)
+
+
 class TestMainIntegration:
     """
     Smoke tests to verify that the main application entry point and key modules

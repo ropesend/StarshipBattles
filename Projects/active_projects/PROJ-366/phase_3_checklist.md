@@ -1,4 +1,4 @@
-# Phase 3: Integration tests (live battle → sidecar; headless-vs-visual; production materializer)
+# Phase 3: Integration tests (live battle → sidecar; headless-vs-visual; production materializer; no-recursion)
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-366 3`
@@ -6,9 +6,9 @@
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Objective:** End-to-end coverage proves the wired-up production composition produces correct sidecars; an equivalence test pins headless and `BattleController.start_from_spec` outcomes; a materializer test proves the production builder is the path the coordinator uses. Phase 2 must be complete before this phase starts.
+**Objective:** End-to-end coverage proves the wired-up production composition produces correct sidecars; an equivalence test pins headless and `BattleController.start_from_spec` outcomes; a materializer test proves the production builder is the path the coordinator uses; a no-recursion assertion pins the guarantee through the wired caller. Phase 2 must be complete before this phase starts.
 
-See `plan.md` Phase 3 for context. Inherits PROJ-354B Phase 5 Tasks 5.3, 5.4, 5.5.
+See `plan.md` Phase 3 for context. r001 deltas: drive production `ship_instance_lookup` snapshots (not no-snapshot path); use `wait_for_idle()` BEFORE file-existence checks; SOURCE-module monkeypatch for the materializer spy; per-PROJ-366 no-recursion assertion.
 
 ---
 
@@ -18,15 +18,16 @@ See `plan.md` Phase 3 for context. Inherits PROJ-354B Phase 5 Tasks 5.3, 5.4, 5.
 **File:** `tests/integration/replay/test_verification_queue_integration.py` (NEW)
 **Tests:** Same file
 
-- [ ] Create the file. Setup fixture:
+- [ ] Create the file. Setup:
   - `tmp_path` for the save dir (use pytest's `tmp_path` fixture).
-  - Construct `ReplayStore(save_root=tmp_path)`.
-  - `set_default_capture_sink(store)` and `set_replay_store(store)`. (Register in `addfinalizer` cleanup: `reset_default_capture_sink()`; `set_replay_store(None)`.)
-  - Construct `ReplayVerificationCoordinator(replay_store=store, ai_factory=..., registry_provider=..., settings=...)`.
+  - Construct `ReplayStore(settings=...)` and call `store.set_save_root(tmp_path / "save")`.
+  - `set_default_capture_sink(store)` and `set_replay_store(store)`. Cleanup via `addfinalizer` or `try/finally`: `reset_default_capture_sink()`; `set_replay_store(None)`.
+  - Construct `ReplayVerificationCoordinator(replay_store=store, ai_factory=AIControllerFactory(), registry_provider=provider, settings=settings, fallback_ship_builder=...)`.
   - `coordinator.start()`. Cleanup: `coordinator.shutdown(timeout=5.0)`.
-- [ ] **Pass case:** run a small deterministic battle via `run_battle` with a `ReplayCaptureContext` that yields a captured record. Use `tests/integration/replay/test_replay_playback.py` for the canonical battle-setup pattern. Wait for the sidecar with bounded timeout (poll for `Path(tmp_path / "replays" / f"replay_{replay_id}.verification.json").exists()` up to 30s). Assert sidecar exists; load and assert `status=="PASSED"`.
+- [ ] **Pass case:** drive the strategy adapter at `game/strategy/adapters/simulation_adapter.py:426-445` so the `ReplayCaptureContext` is built with a real `ship_instance_lookup` (production materializer path — `ShipInstanceSerializer.to_dict` against pre-built `ShipInstance` objects). DO NOT copy-paste from `tests/integration/replay/test_replay_playback.py:99-106` (that omits `ship_instance_lookup`, validating the fallback path). Run a small deterministic battle. Use `coordinator.wait_for_idle(timeout=30)` THEN poll for `Path(tmp_path / "save" / "replays" / f"replay_{replay_id}.verification.json").exists()` up to 30s. Assert sidecar exists; load and assert `status=="PASSED"`.
 - [ ] **Skip case:** rebuild coordinator with `settings=ReplaySettings(verification_enabled=False, ...)`. Run battle. Wait for sidecar. Assert `status=="SKIPPED_DISABLED"`.
-- [ ] **Verify:** both paths green.
+- [ ] **No-recursion assertion (per-PROJ-366):** after `coordinator.wait_for_idle()` returns in the PASSED case, assert `len(store.list()) == 1` — the verification headless replay must NOT have produced a second record.
+- [ ] **Verify:** all paths green.
 
 **Notes:**
 
@@ -35,8 +36,8 @@ See `plan.md` Phase 3 for context. Inherits PROJ-354B Phase 5 Tasks 5.3, 5.4, 5.
 **Tests:** Same file
 
 - [ ] Setup: build a deterministic battle via `run_battle`; capture replay record; obtain `replay_record_to_spec(record)`.
-- [ ] Path A: `outcome_a = run_replay_headless(record, ai_factory=AIControllerFactory(), ship_builder=build_replay_ship_builder(record, registry_provider=...), registry_provider=...)`.
-- [ ] Path B: `controller = BattleController(ai_factory=AIControllerFactory()); controller.start_from_spec(replay_record_to_spec(record), config=BattleConfig(replay_mode=True), ship_builder=the_same_builder, registry_provider=...)`. Drive with `controller.update(0.016)` until `controller.is_battle_over()`. `outcome_b = controller.get_outcome()`.
+- [ ] Path A: `outcome_a = run_replay_headless(record, ai_factory=AIControllerFactory(), ship_builder=builder, registry_provider=provider)`.
+- [ ] Path B: `controller = BattleController(ai_factory=AIControllerFactory()); controller.start_from_spec(replay_record_to_spec(record), config=BattleConfig(replay_mode=True), ship_builder=the_same_builder, registry_provider=provider)`. Drive with `controller.update(0.016)` until `controller.is_battle_over()`. `outcome_b = controller.get_outcome()`.
 - [ ] Assert: `battle_outcome_to_dict(outcome_a) == battle_outcome_to_dict(outcome_b)`.
 - [ ] Boundary: `BattleController` only — no `BattleScreen`, no Pygame UI dependency.
 - [ ] **Verify:** Test passes.
@@ -47,8 +48,8 @@ See `plan.md` Phase 3 for context. Inherits PROJ-354B Phase 5 Tasks 5.3, 5.4, 5.
 **File:** `tests/integration/replay/test_verification_uses_production_materializer.py` (NEW)
 **Tests:** Same file
 
-- [ ] Setup as in Task 3.1 BUT spy on `build_replay_ship_builder` via `monkeypatch` against the coordinator module: replace `game.strategy.services.replay_verification_coordinator.build_replay_ship_builder` with a wrapper that increments a counter then delegates to the real function.
-- [ ] Run a small deterministic battle; wait for sidecar.
+- [ ] Setup as in Task 3.1 BUT spy on `build_replay_ship_builder` via SOURCE-module monkeypatch: replace `game.strategy.services.replay_verification_coordinator.build_replay_ship_builder` (NOT a local-import shadow) with a wrapper that increments a counter then delegates to the real function.
+- [ ] Run a small deterministic battle; `coordinator.wait_for_idle(timeout=30)`; check sidecar.
 - [ ] Assert: spy counter ≥ 1 (the coordinator used the production materializer); sidecar `status=="PASSED"`.
 - [ ] **Verify:** Test passes.
 
@@ -67,8 +68,8 @@ See `plan.md` Phase 3 for context. Inherits PROJ-354B Phase 5 Tasks 5.3, 5.4, 5.
 - [ ] In `plan.md` Current State:
   - **Last Updated:** today's date
   - **Active Phase:** 4
-  - **Last Action:** Phase 3 complete; integration tests for live-battle sidecar, headless-vs-visual equivalence, and production materializer all green.
-  - **Next Action:** Phase 4 — Combat Lab fallback + docs + verifier-import lint.
+  - **Last Action:** Phase 3 complete; integration tests for live-battle sidecar (with no-recursion assertion), headless-vs-visual equivalence, and production materializer all green.
+  - **Next Action:** Phase 4 — Combat Lab fallback test + docs + verifier-import lint.
 
 **Notes:**
 
@@ -79,4 +80,4 @@ See `plan.md` Phase 3 for context. Inherits PROJ-354B Phase 5 Tasks 5.3, 5.4, 5.
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
 - [ ] Update plan.md Current State to point to Phase 4
-- [ ] Run `python Tools/test_sharded/test_sharded.py` — confirm baseline + 3 new tests
+- [ ] Run `python Tools/test_sharded/test_sharded.py` — confirm baseline + new tests

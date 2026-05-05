@@ -10,10 +10,11 @@ Command-and-control concerns:
 - Crew + life-support allocation across components (deactivates components
   that can't be staffed).
 
-PROJ-360 Phase 2: extracted verbatim from ``ShipStatsCalculator
-._priority_sort_key``, the inline multiplex block in
-``_phase_stats_aggregation``, and ``_phase_resource_allocation``. No
-semantic change — golden snapshot guards bit-equality.
+PROJ-360 Phase 2: extracted from ``ShipStatsCalculator
+._priority_sort_key`` + ``_phase_resource_allocation`` + the inline
+multiplex block. PROJ-367 Phase 1: typed MultiplexTrackingAbility access.
+PROJ-367 Phase 2: ``contribute_multiplex_tracking`` registered as a
+default Phase-3 contributor at module import.
 """
 from __future__ import annotations
 
@@ -21,8 +22,8 @@ from typing import List, TYPE_CHECKING
 
 from game.core.constants import CombatConstants
 from game.simulation.components.component_constants import ComponentStatus
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
 from game.simulation.entities.stat_contributors.registry import (
-    is_builtin_suppressed_for,
     lookup_crew_priority,
 )
 from game.simulation.physics_constants import DEFAULT_MAX_MASS
@@ -33,29 +34,21 @@ if TYPE_CHECKING:
 
 
 def priority_sort_key(c: "Component") -> int:
-    """Sort key for the resource-allocation phase.
-
-    Lower = higher priority. The mapping (Command < Movement < Weapons <
-    Other) lives in
-    ``game.simulation.entities.stat_contributors.registry.CREW_PRIORITY_REGISTRY``
-    — adding a new priority class is a registry edit, not a code edit.
-    """
+    """Sort key for the resource-allocation phase (lower = higher priority)."""
     return lookup_crew_priority(c)
 
 
-def track_multiplex(ship: "Ship", comp: "Component") -> None:
+def contribute_multiplex_tracking(
+    ship: "Ship", comp: "Component", acc: StatAccumulator
+) -> None:
     """Bump ``ship.max_targets`` if this component's MultiplexTracking exceeds it.
 
-    Uses the raw ``abilities`` dict (legacy semantics) — a 0 value means no
-    contribution and is filtered out.
-
-    PROJ-360 audit EXT-02: respects ``is_builtin_suppressed_for`` so a
-    registered contributor for ``MultiplexTracking`` fully replaces the
-    built-in handler.
+    PROJ-367 Phase 1: reads slots via the typed
+    ``MultiplexTrackingAbility.slots`` attribute (sums across instances on
+    the same component, then takes the max against ``ship.max_targets`` —
+    legacy semantics: 0 means no contribution).
     """
-    if is_builtin_suppressed_for("MultiplexTracking"):
-        return
-    mt = comp.abilities.get("MultiplexTracking", 0)
+    mt = sum(getattr(ab, "slots", 0) for ab in comp.get_abilities("MultiplexTracking"))
     if mt > 0 and mt > ship.max_targets:
         ship.max_targets = mt
 
@@ -79,24 +72,20 @@ def allocate_crew_and_life_support(
     """
     ship.crew_onboard = available_crew
     ship.crew_required = 0
-    ship.max_targets = CombatConstants.DEFAULT_MAX_TARGETS  # Reset to default
+    ship.max_targets = CombatConstants.DEFAULT_MAX_TARGETS
 
-    # Centralize mass budget lookup
     ship.max_mass_budget = vehicle_classes.get(ship.ship_class, {}).get(
         "max_mass", DEFAULT_MAX_MASS
     )
 
-    # Effective Crew is limited by Life Support
     effective_crew = min(available_crew, available_life_support)
 
-    # Priority sort using helper
     component_pool.sort(key=priority_sort_key)
 
     for comp in component_pool:
         if not comp.is_active:
-            continue  # Already damaged
+            continue
 
-        # Check Crew Requirement
         req_crew = 0
         for ab in comp.get_abilities("CrewRequired"):
             req_crew += ab.amount
