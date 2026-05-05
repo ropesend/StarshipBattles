@@ -1,0 +1,112 @@
+{
+  "run_info": {
+    "date": "2026-05-05",
+    "seed": "testcoverage-2026-05-05_094606",
+    "shard_count": 18,
+    "total_prod_files": 723,
+    "total_prod_loc": 157844,
+    "total_symbols": 7087
+  },
+  "phase1_coverage": {
+    "overall_pct": 60.7,
+    "by_layer": {
+      "game_root": 42.2,
+      "ai": 89.6,
+      "assets": 53.6,
+      "core": 49.8,
+      "engine": 85.0,
+      "research": 93.5,
+      "services": 75.8,
+      "simulation": 70.0,
+      "strategy": 70.7,
+      "ui": 51.2
+    }
+  },
+  "phase1_tiers": {
+    "tier_0_no_tests": 163,
+    "tier_1_no_symbols": 48,
+    "tier_2_partial": 370,
+    "tier_3_covered": 142
+  },
+  "phase2_claims_estimated": 452,
+  "phase3_verified": {
+    "confirmed_critical": 12,
+    "confirmed_major": 42,
+    "confirmed_minor": 38,
+    "confirmed_advisory": 13,
+    "total_confirmed": 105,
+    "disputed": 188,
+    "inconclusive": 8
+  },
+  "phase2_accuracy_pct": 23,
+  "phase1_false_negative_rate_estimated": 35,
+  "top_critical_gaps": [
+    {
+      "file": "game/simulation/battle_runner.py",
+      "layer": "simulation",
+      "loc": 730,
+      "issue": "Unified battle entry point — zero tests"
+    },
+    {
+      "file": "game/simulation/combat/families/pdc.py",
+      "layer": "simulation",
+      "loc": 40,
+      "issue": "PDC weapon family handler — zero dedicated tests"
+    },
+    {
+      "file": "game/simulation/combat/families/_beam_common.py",
+      "layer": "simulation",
+      "loc": 50,
+      "issue": "Beam resolution builder — zero tests"
+    },
+    {
+      "file": "game/simulation/combat/families/seeker.py",
+      "layer": "simulation",
+      "loc": 60,
+      "issue": "Seeker/missile weapon family — zero tests, 4 code paths"
+    },
+    {
+      "file": "game/strategy/facade/slices/event_slice.py",
+      "layer": "strategy",
+      "loc": 96,
+      "issue": "Facade event query slice — all 8 methods untested"
+    },
+    {
+      "file": "game/strategy/validation/superweapon_validator.py",
+      "layer": "strategy",
+      "loc": 270,
+      "issue": "Superweapon validation — 11 methods untested"
+    },
+    {
+      "file": "game/strategy/services/ability_sources/fleet.py",
+      "layer": "strategy",
+      "loc": 148,
+      "issue": "Fleet ability source adapter — zero behavioral tests"
+    },
+    {
+      "file": "game/strategy/services/effect_ability_display.py",
+      "layer": "strategy",
+      "loc": 168,
+      "issue": "Strategic ability display — all 6 functions untested"
+    },
+    {
+      "file": "game/strategy/engine/handlers/base.py",
+      "layer": "strategy",
+      "loc": 120,
+      "issue": "Base command handler — foundation for 20+ handlers"
+    },
+    {
+      "file": "game/ai/group_target_coordinator.py",
+      "layer": "ai",
+      "loc": 300,
+      "issue": "Group target coordination AI — zero unit tests"
+    }
+  ],
+  "layer_with_worst_verified_coverage": "simulation",
+  "test_effort_estimate": {
+    "critical_new_tests": 60,
+    "major_new_tests": 120,
+    "minor_new_tests": 80,
+    "advisory_items": 13
+  }
+}
