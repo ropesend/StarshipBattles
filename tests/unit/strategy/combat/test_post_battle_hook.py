@@ -372,3 +372,143 @@ def test_strategy_spec_post_battle_hook_applies_outcome(
     assert fleet_a.ships[0].components[bridge_key].current_hp == pytest.approx(
         42.0, abs=0.5
     )
+
+
+# ---------------------------------------------------------------------------
+# PROJ-354A audit remediation (MAJ-001/002/003): outcome.max_hp is preferred
+# over the pre-battle snapshot, so modifier-shaped caps survive write-back.
+# ---------------------------------------------------------------------------
+
+
+def test_apply_survivor_outcome_uses_outcome_max_hp_over_pre_battle(two_fleets):
+    """`_apply_survivor_outcome` should source `max_hp` from the outcome's
+    `ComponentStateSpec`, not the pre-battle ShipInstance snapshot, so that
+    modifier-reshaped caps captured by `_extract_component_states` are
+    preserved on the persistent strategy-side `ComponentState`. Per
+    MAJ-001/MAJ-003 of the PROJ-354A OpenCode review.
+    """
+    fleet_a, fleet_b = two_fleets
+    survivor = fleet_a.ships[0]
+    bridge_key = component_state_key("bridge", 0)
+    pre_max = survivor.components[bridge_key].max_hp
+    assert pre_max > 0.0
+
+    # Outcome reports a different (modifier-shaped) max_hp than the
+    # pre-battle snapshot. The hook must adopt the outcome value.
+    reshaped_max = pre_max + 25.0
+    ship_outcome = ShipOutcome(
+        instance_id=survivor.instance_id,
+        status=ShipStatus.SURVIVED,
+        final_position=Vector2(0, 0),
+        final_angle=0.0,
+        final_velocity=Vector2(0, 0),
+        components=(
+            ComponentStateSpec(
+                component_id="bridge",
+                instance_index=0,
+                current_hp=42.0,
+                max_hp=reshaped_max,
+                status="DAMAGED",
+                is_active=True,
+            ),
+            ComponentStateSpec(
+                component_id="laser_cannon",
+                instance_index=0,
+                current_hp=100.0,
+                max_hp=100.0,
+                status="ACTIVE",
+                is_active=True,
+            ),
+        ),
+        weapons=(),
+        hits_taken=(),
+        stats=ShipStats(
+            total_damage_taken=0.0,
+            peak_speed=0.0,
+            ticks_derelict=0,
+            ticks_alive=0,
+        ),
+    )
+    outcome = _make_outcome({
+        0: [ship_outcome],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    assert survivor.components[bridge_key].max_hp == pytest.approx(
+        reshaped_max
+    ), "max_hp must come from outcome.cs.max_hp, not pre-battle snapshot"
+    assert survivor.components[bridge_key].current_hp == pytest.approx(42.0)
+
+
+def test_apply_survivor_outcome_falls_back_to_prior_max_hp_when_outcome_zero(
+    two_fleets,
+):
+    """When the outcome reports `max_hp == 0.0` (treated as missing), fall
+    back to the pre-battle snapshot. Defensive guard against any code path
+    that produces a zero/missing max_hp on the outcome side.
+    """
+    fleet_a, fleet_b = two_fleets
+    survivor = fleet_a.ships[0]
+    bridge_key = component_state_key("bridge", 0)
+    pre_max = survivor.components[bridge_key].max_hp
+    assert pre_max > 0.0
+
+    ship_outcome = ShipOutcome(
+        instance_id=survivor.instance_id,
+        status=ShipStatus.SURVIVED,
+        final_position=Vector2(0, 0),
+        final_angle=0.0,
+        final_velocity=Vector2(0, 0),
+        components=(
+            ComponentStateSpec(
+                component_id="bridge",
+                instance_index=0,
+                current_hp=30.0,
+                max_hp=0.0,  # missing/unknown
+                status="ACTIVE",
+                is_active=True,
+            ),
+            ComponentStateSpec(
+                component_id="laser_cannon",
+                instance_index=0,
+                current_hp=100.0,
+                max_hp=0.0,
+                status="ACTIVE",
+                is_active=True,
+            ),
+        ),
+        weapons=(),
+        hits_taken=(),
+        stats=ShipStats(
+            total_damage_taken=0.0,
+            peak_speed=0.0,
+            ticks_derelict=0,
+            ticks_alive=0,
+        ),
+    )
+    outcome = _make_outcome({
+        0: [ship_outcome],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    assert survivor.components[bridge_key].max_hp == pytest.approx(pre_max), (
+        "Zero max_hp on the outcome should fall back to the pre-battle "
+        "snapshot rather than zeroing out the persistent ComponentState."
+    )
+    assert survivor.components[bridge_key].current_hp == pytest.approx(30.0)
