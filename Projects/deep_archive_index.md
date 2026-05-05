@@ -306,3 +306,13 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-306 | Battle Simulation DI Cleanup (PROJ-274 closure) | 2026-04-27 | PROJ-301-350 |
 | PROJ-307 | Documentation Freshness Timestamps | 2026-04-27 | PROJ-301-350 |
 | PROJ-308 | Broad Exception Handler Justifications | 2026-04-27 | PROJ-301-350 |
+| PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | 2026-05-04 | PROJ-301-350 |
+| PROJ-310 | Deep Nesting Investigative Review | 2026-05-04 | PROJ-301-350 |
+| PROJ-311 | Return Type Annotation Backfill and Convention | 2026-04-27 | PROJ-301-350 |
+| PROJ-312 | Add Battle Replay System | 2026-05-04 | PROJ-301-350 |
+| PROJ-313 | Strategy Modal Window Base Class Refactor | 2026-05-04 | PROJ-301-350 |
+| PROJ-314 | Unify Ship Theme Loader Schema | 2026-05-04 | PROJ-301-350 |
+| PROJ-315 | Fleet Report Component Damage Panel | 2026-05-04 | PROJ-301-350 |
+| PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | 2026-05-04 | PROJ-301-350 |
+| PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | 2026-05-04 | PROJ-301-350 |
+| PROJ-318 | PROJ-314 Closeout Remediations | 2026-05-04 | PROJ-301-350 |
