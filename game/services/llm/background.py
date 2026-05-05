@@ -55,6 +55,10 @@ class CallStatus(str, Enum):
 
 _in_flight_calls: int = 0
 _in_flight_lock: threading.Lock = threading.Lock()
+# PROJ-353 Tier-7 (T2.1): mutations of `_active_workers` are serialized via
+# `_in_flight_lock`. The set is read via `list(_active_workers)` in
+# `shutdown_all_calls`, which is also taken under the lock so the snapshot
+# is consistent with the in-flight counter.
 _active_workers: Set[threading.Thread] = set()
 
 
@@ -150,8 +154,11 @@ class LLMBackgroundCall:
             )
 
         # Track for shutdown_all_calls(); add before .start() so the
-        # worker can never finish before we register it.
-        _active_workers.add(self._thread)
+        # worker can never finish before we register it. PROJ-353 T2.1:
+        # serialized via `_in_flight_lock` to keep the worker set
+        # consistent with the in-flight counter.
+        with _in_flight_lock:
+            _active_workers.add(self._thread)
         self._thread.start()
 
     def cancel(self) -> None:
@@ -221,13 +228,16 @@ class LLMBackgroundCall:
     # -- Worker --------------------------------------------------------------
 
     def _run(self) -> None:
-        # PROJ-324 Phase 2: every code path through `_run()` must signal
-        # completion via `self._done_event.set()` so callers blocked on
-        # `wait(timeout)` unblock deterministically. The `try/finally`
-        # below sets the event regardless of which terminal branch we
-        # took (CANCELLED, ERROR, DONE — including the early-cancelled
-        # return at the top). `Event.set()` is idempotent and internally
-        # thread-safe; we set it OUTSIDE `_state_lock` to prevent
+        # PROJ-324 Phase 2 / PROJ-353 Tier-7 T2.1: every code path through
+        # `_run()` must signal completion via `self._done_event.set()` so
+        # callers blocked on `wait(timeout)` unblock deterministically.
+        # The OUTER `try/finally` below sets the event regardless of which
+        # terminal branch we took (CANCELLED, ERROR, DONE) and only AFTER
+        # the inner finally has released the in-flight slot and removed
+        # the worker from `_active_workers`. That ordering guarantees a
+        # `wait()`-er observing the terminal state also sees the slot
+        # released. `Event.set()` is idempotent and internally
+        # thread-safe; we set it OUTSIDE all locks to prevent
         # waiter-starvation if a `wait()`-er re-acquires immediately.
         try:
             try:
@@ -287,14 +297,26 @@ class LLMBackgroundCall:
                     self._finished_at = time.monotonic()
 
             finally:
-                # Signal terminal-state completion outside any state-lock.
-                self._done_event.set()
+                # PROJ-353 Tier-7 T2.1: release the in-flight slot and
+                # de-register the worker BEFORE signalling completion.
+                # Previously `_done_event.set()` ran first (in the inner
+                # `finally`), so a `wait()`-er observing the terminal
+                # state could race ahead while `_active_workers` still
+                # contained the worker and `_in_flight_calls` was still
+                # incremented. Tests asserting "after wait() returns, a
+                # new call can be started without exceeding the cap"
+                # were therefore flake-prone. Cleaning up first makes
+                # observed terminal state and resource accounting
+                # consistent.
+                global _in_flight_calls
+                current = threading.current_thread()
+                with _in_flight_lock:
+                    _in_flight_calls = max(0, _in_flight_calls - 1)
+                    _active_workers.discard(current)
         finally:
-            global _in_flight_calls
-            with _in_flight_lock:
-                _in_flight_calls = max(0, _in_flight_calls - 1)
-            current = threading.current_thread()
-            _active_workers.discard(current)
+            # Signal terminal-state completion outside any lock so a
+            # `wait()`-er never re-enters a held lock. Idempotent.
+            self._done_event.set()
 
 
 # ---------------------------------------------------------------------------
@@ -310,7 +332,10 @@ def shutdown_all_calls(timeout: float = 5.0) -> None:
     logged as a warning and the function returns — better than hanging
     the game forever on shutdown.
     """
-    workers = list(_active_workers)
+    # PROJ-353 T2.1: snapshot under the lock so we don't iterate a set
+    # being mutated by a concurrently-finishing worker.
+    with _in_flight_lock:
+        workers = list(_active_workers)
     if not workers:
         return
 

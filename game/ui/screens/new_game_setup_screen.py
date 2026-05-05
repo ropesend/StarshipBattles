@@ -17,16 +17,23 @@ PROJ-328 Phase B: Real MVVM split.
 * ``NewGameSetupController`` (``new_game_setup_controller.py``) owns
   the mutations + lifecycle — save-name validation, ``GameConfig``
   building, race-modal callbacks, start/cancel.
-* ``NewGameSetupUiBuilder`` (``new_game_setup_ui_builder.py``) owns
-  the widget tree. Tests can swap in
-  ``MockNewGameSetupUiBuilder`` /
-  ``NullNewGameSetupUiBuilder`` from
-  ``tests/fixtures/new_game_setup_ui_builder.py``.
+* ``NewGameSetupUiBuilder`` (``new_game_setup_ui_builder.py``) is a
+  Pattern §33 (``docs/02_PATTERNS.md``) test-substitution seam. The
+  production builder's ``build()`` is currently a one-line passthrough
+  that delegates to ``screen._create_ui()``; the actual ``pygame_gui``
+  widget construction still lives on the screen because it reaches
+  into a number of screen helpers (``_create_empire_inputs`` /
+  ``_update_empire_visibility``) and reads ``self.get_container()``
+  on the live ``UIWindow``. Tests swap in
+  ``MockNewGameSetupUiBuilder`` / ``NullNewGameSetupUiBuilder`` from
+  ``tests/fixtures/new_game_setup_ui_builder.py`` to bypass widget
+  construction under ``bypass_init``. Incrementally moving widget
+  construction into the builder is a low-priority follow-up and is
+  explicitly out of scope here.
 
-The screen itself is a thin shell — it composes the three delegates,
-forwards events to the controller, owns the widget refs (because the
-production builder writes them via ``self.get_container()``), and
-keeps property shims so existing tests / callers that read
+The screen itself composes the three delegates, forwards events to
+the controller, owns the widget refs populated by ``_create_ui()``,
+and keeps property shims so existing tests / callers that read
 ``screen.player_count``, ``screen.player_races``, etc. keep working.
 
 Two-stage ``__init__`` per PROJ-325 PoC + PROJ-328 Phase A:

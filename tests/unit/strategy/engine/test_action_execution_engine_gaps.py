@@ -2,8 +2,9 @@
 
 Pins behaviors the existing `test_action_execution_engine.py` does NOT cover:
 - `_validate_tick_inputs` happy + unhappy paths (PROJ-251).
-- `ActionTimeResolver`-injection constructor wiring (and its currently
-  unused state — engine reads from the static class regardless: OBS unused-DI).
+- `ActionTimeResolver`-injection constructor wiring — PROJ-351 T6.3:
+  the engine now consumes the injected resolver instance when one is
+  supplied, and falls back to the static class method otherwise.
 - Order-popping responsibility belongs to the processor (OBS-007).
 - `_execute_action` kwarg threading.
 - Iteration safety with multiple consumed fleets per empire.
@@ -125,20 +126,55 @@ class TestValidateTickInputs:
 
 class TestActionTimeResolverInjection:
 
-    def test_engine_accepts_injected_action_time_resolver(self):
-        """Constructor stores the injected resolver on `_action_time_resolver`.
-
-        Note: implementation always reads from the static
-        `ActionTimeResolver.resolve_action_time` even when an instance is
-        injected — pin THAT behavior. (Documented as a follow-up observation
-        in PROJ-341 execution; the injected instance is unused today.)"""
+    def test_engine_consults_injected_action_time_resolver(self):
+        """PROJ-351 T6.3: when an `ActionTimeResolver` is injected, the engine
+        consumes it via `self._action_time_resolver.resolve_action_time(...)`
+        rather than calling the static class method.
+        """
         proc = _make_processor()
         custom_resolver = MagicMock()
+        custom_resolver.resolve_action_time.return_value = 2
         engine = ActionExecutionEngine(proc, action_time_resolver=custom_resolver)
 
         assert engine._action_time_resolver is custom_resolver
 
-        # Verify the static path is what gets called, not the instance.
+        empire = _make_empire()
+        fleet = _make_fleet(speed=5.0)
+        order = Order(OrderType.COLONIZE, None)
+        fleet.add_order(order)
+        empire.fleets.append(fleet)
+
+        with patch(
+            "game.strategy.engine.action_execution_engine."
+            "ActionTimeResolver.resolve_action_time",
+            return_value=99,
+        ) as mock_static:
+            engine.process_action_ticks([empire], _make_galaxy(), 20)
+
+        # Injected instance IS consulted, with the engine's call signature.
+        custom_resolver.resolve_action_time.assert_called_once_with(
+            fleet, order, None
+        )
+        # Static path is NOT used when an instance is injected.
+        mock_static.assert_not_called()
+
+    def test_engine_falls_back_to_static_resolver_when_no_resolver_injected(self):
+        """PROJ-351 T6.3: with `action_time_resolver=None` (the default), the
+        engine falls back to the static `ActionTimeResolver.resolve_action_time`.
+
+        ANNOTATION (PROJ-353 Tier-7 T2.5): this test pins the dual-path
+        backwards-compatibility behavior introduced in PROJ-351 T6.3.
+        Production callers that have NOT yet adopted DI continue to work
+        because the engine falls back to the static class method when no
+        resolver is injected. If a future PROJ removes the static
+        fallback (mandatory DI), this test should fail and be deleted in
+        the same change — do not silently relax the assertion.
+        """
+        proc = _make_processor()
+        engine = ActionExecutionEngine(proc)
+
+        assert engine._action_time_resolver is None
+
         empire = _make_empire()
         fleet = _make_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.COLONIZE, None))
@@ -152,8 +188,6 @@ class TestActionTimeResolverInjection:
             engine.process_action_ticks([empire], _make_galaxy(), 20)
 
         mock_static.assert_called_once()
-        # The injected instance was never consulted.
-        custom_resolver.resolve_action_time.assert_not_called()
 
     def test_engine_defaults_to_none_action_time_resolver_when_omitted(self):
         proc = _make_processor()

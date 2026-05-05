@@ -70,7 +70,7 @@ class PlanetaryFacility:
             is_operational=data.get('is_operational', True),
             construction_queue=data.get('construction_queue', []),
             construction_queue_paused=data.get('construction_queue_paused', False),
-            consumable_levels=data.get('consumable_levels', data.get('resource_levels', {})),
+            consumable_levels=data.get('consumable_levels', {}),
             component_states=data.get('component_states', {}),
         )
 

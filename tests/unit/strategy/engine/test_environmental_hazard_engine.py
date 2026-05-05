@@ -374,9 +374,22 @@ class TestApplyDamageToShip:
         assert ship.is_alive is False
 
     def test_apply_damage_to_ship_resets_current_hp_to_none_when_damage_is_zero_at_full_hp(self):
-        """OBS-001: pin the dead `else` branch at line 195. With damage=0
-        and current_hp == max_hp, the helper falls into the "Reset to full"
-        branch and overwrites current_hp with None."""
+        """OBS-001 (PROJ-341 decisions.md): pin the dead `else` branch at
+        line 195. With damage=0 and current_hp == max_hp, the helper falls
+        into the "Reset to full" branch and overwrites current_hp with None.
+
+        ANNOTATION (PROJ-353 Tier-7 T2.4): this branch is unreachable
+        through the production caller because `_apply_damage_to_ship` is
+        only invoked with `damage > 0` (see
+        `environmental_hazard_engine.py:141`, where damage is computed
+        from a positive `damage_per_ship`). The test exists as a
+        characterization pin so a future cleanup that removes the dead
+        branch surfaces here as an intentional change rather than as a
+        silent regression. If you arrive here debugging a "test broke"
+        signal, see `Projects/active_projects/PROJ-341/decisions.md`
+        under OBS-001 — the right move is usually to delete this test
+        and the dead `else` branch together.
+        """
         engine = EnvironmentalHazardEngine()
         # current_hp=None means "full HP" per the engine's own coalesce
         # at line 185. Combined with damage=0, new_hp == max_hp, so the

@@ -24,7 +24,6 @@ from game.ui.screens.planet_abilities_controller import (
     FOOD_EDITOR_LABEL as _FOOD_EDITOR_LABEL,
     FOOD_EDITOR_TYPE as _FOOD_EDITOR_TYPE,
     PlanetAbilitiesController,
-    TOGGLEABLE_ABILITIES,
 )
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
@@ -276,5 +275,4 @@ class PlanetAbilitiesWindow(StrategyModalWindow):
 __all__ = [
     "PlanetAbilitiesWindow",
     "PlanetAbilitiesUiBuilder",
-    "TOGGLEABLE_ABILITIES",
 ]

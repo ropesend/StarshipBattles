@@ -162,10 +162,16 @@ class ActionExecutionEngine(IActionExecutionEngine):
         # Increment execution progress
         order.execution_progress += 1
 
-        # Resolve action_time
-        action_time = ActionTimeResolver.resolve_action_time(
-            fleet, order, component_registry
-        )
+        # Resolve action_time. Prefer the injected resolver instance (PROJ-351 T6.3);
+        # fall back to the static method when no resolver was injected.
+        if self._action_time_resolver is not None:
+            action_time = self._action_time_resolver.resolve_action_time(
+                fleet, order, component_registry
+            )
+        else:
+            action_time = ActionTimeResolver.resolve_action_time(
+                fleet, order, component_registry
+            )
 
         # Check if action completes
         if order.execution_progress >= action_time:

@@ -114,6 +114,67 @@ def test_lookalike_module_name_is_flagged(linter, tmp_tree, monkeypatch):
     assert violations[0].as_posix() == "tests/test_lookalike.py"
 
 
+def test_importlib_import_module_with_game_string_is_not_flagged(
+    linter, tmp_tree, monkeypatch,
+):
+    """PROJ-353 Tier-7 (T2.10): `importlib.import_module("game.foo")`
+    is detected as a `game.*` dependency. The previous AST-based check
+    only inspected `Import` / `ImportFrom` nodes, so a file using only
+    dynamic imports would be flagged as zero-game-import."""
+    monkeypatch.setattr(linter, "PROJECT_ROOT", tmp_tree)
+    _write(
+        tmp_tree,
+        "tests/test_dynamic_import.py",
+        "import importlib\n\n"
+        "def test_one():\n"
+        "    mod = importlib.import_module('game.core.hex_math')\n"
+        "    assert mod\n",
+    )
+
+    violations, _ = linter.lint(tmp_tree / "tests", [])
+    assert violations == []
+
+
+def test_bare_import_module_with_game_string_is_not_flagged(
+    linter, tmp_tree, monkeypatch,
+):
+    """PROJ-353 Tier-7 (T2.10): the `from importlib import import_module`
+    form is also recognized."""
+    monkeypatch.setattr(linter, "PROJECT_ROOT", tmp_tree)
+    _write(
+        tmp_tree,
+        "tests/test_bare_dynamic_import.py",
+        "from importlib import import_module\n\n"
+        "def test_one():\n"
+        "    mod = import_module('game.core.hex_math')\n"
+        "    assert mod\n",
+    )
+
+    violations, _ = linter.lint(tmp_tree / "tests", [])
+    assert violations == []
+
+
+def test_runtime_built_module_name_is_still_flagged(
+    linter, tmp_tree, monkeypatch,
+):
+    """PROJ-353 Tier-7 (T2.10): non-constant arguments to `import_module`
+    (f-strings, variables) MUST NOT satisfy the check — that pattern
+    hides the dependency from static analysis."""
+    monkeypatch.setattr(linter, "PROJECT_ROOT", tmp_tree)
+    _write(
+        tmp_tree,
+        "tests/test_dynamic_runtime.py",
+        "import importlib\n\n"
+        "def test_one():\n"
+        "    name = 'core.hex_math'\n"
+        "    mod = importlib.import_module(f'game.{name}')\n"
+        "    assert mod\n",
+    )
+
+    violations, _ = linter.lint(tmp_tree / "tests", [])
+    assert len(violations) == 1
+
+
 def test_docstring_mentioning_game_is_still_flagged(linter, tmp_tree, monkeypatch):
     """AST-based, not regex: a docstring mentioning `import game` does NOT satisfy the check."""
     monkeypatch.setattr(linter, "PROJECT_ROOT", tmp_tree)

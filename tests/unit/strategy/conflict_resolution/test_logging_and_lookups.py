@@ -264,9 +264,23 @@ class TestCollectTeamModifiersExceptionSwallow:
         fleets_by_empire = {0: [f1], 1: [f2]}
         empire_order = [0, 1]
 
+        # PROJ-353 Tier-7 (T2.3): patch BOTH the source module AND the engine
+        # module's namespace so the test is stable regardless of whether
+        # production keeps the deferred `from ... import collect_combat_modifiers`
+        # inside `_collect_team_modifiers` or hoists it to a module-level
+        # import. The current production code uses a deferred import, so
+        # patching only the source module would also work today, but a
+        # future refactor lifting the import would silently make the source-
+        # module patch a no-op (the engine's local binding would shadow it).
+        # `create=True` on the engine-module patch tolerates the binding not
+        # yet existing.
         with patch(
             "game.strategy.services.combat_modifier_collector.collect_combat_modifiers",
             side_effect=RuntimeError("boom"),
+        ), patch(
+            "game.strategy.engine.conflict_resolution_engine.collect_combat_modifiers",
+            side_effect=RuntimeError("boom"),
+            create=True,
         ):
             with caplog.at_level(logging.WARNING):
                 result = engine._collect_team_modifiers(fleets_by_empire, empire_order)

@@ -62,6 +62,41 @@ class TestFromDictRequiredKeys:
                 "name": "n",
             })
 
+    # PROJ-353 Tier-7 (T2.7): coverage gap — only `instance_id` and
+    # `design_data` missing-key paths were pinned previously. Add the
+    # other two required keys plus an extra-key tolerance pin.
+
+    def test_missing_design_id_raises(self):
+        with pytest.raises(PersistenceException):
+            PlanetaryFacility.from_dict({
+                "instance_id": "i",
+                "name": "n",
+                "design_data": {},
+            })
+
+    def test_missing_name_raises(self):
+        with pytest.raises(PersistenceException):
+            PlanetaryFacility.from_dict({
+                "instance_id": "i",
+                "design_id": "d",
+                "design_data": {},
+            })
+
+    def test_extra_keys_are_tolerated(self):
+        """`from_dict` must ignore unknown top-level keys so adding new
+        save-format fields in a future release doesn't break the loader
+        when an older version reads a newer save."""
+        facility = PlanetaryFacility.from_dict({
+            "instance_id": "i",
+            "design_id": "d",
+            "name": "n",
+            "design_data": {"layers": {}},
+            "_unknown_future_key": "should-be-ignored",
+            "another_extra": 42,
+        })
+        assert facility.instance_id == "i"
+        assert facility.design_id == "d"
+
 
 class TestRoundTripPreservesTopLevelFields:
     """to_dict -> from_dict preserves all top-level fields."""
@@ -91,35 +126,12 @@ class TestRoundTripPreservesTopLevelFields:
         }
 
 
-class TestLegacyResourceLevelsKey:
-    """Pin the legacy fallback: resource_levels is accepted as
-    consumable_levels."""
-
-    def test_resource_levels_used_when_consumable_levels_absent(self):
-        data = {
-            "instance_id": "fac-1",
-            "design_id": "d",
-            "name": "n",
-            "design_data": {},
-            "resource_levels": {"fuel": 7.0},
-        }
-        restored = PlanetaryFacility.from_dict(data)
-
-        assert restored.consumable_levels == {"fuel": 7.0}
-
-    def test_consumable_levels_wins_over_resource_levels(self):
-        """When both are present, consumable_levels takes precedence."""
-        data = {
-            "instance_id": "fac-1",
-            "design_id": "d",
-            "name": "n",
-            "design_data": {},
-            "consumable_levels": {"fuel": 1.0},
-            "resource_levels": {"fuel": 99.0},
-        }
-        restored = PlanetaryFacility.from_dict(data)
-
-        assert restored.consumable_levels == {"fuel": 1.0}
+# PROJ-349 T6.1: TestLegacyResourceLevelsKey deleted. The
+# `resource_levels` save-format alias was a save-migration shim that
+# violated the repo rule "old saves are disposable" (CLAUDE.md). Both
+# the alias and the tests pinning it have been removed; saves written
+# under the legacy schema will no longer load (this is the documented
+# behavior — saves are disposable across major refactors).
 
 
 class TestIsShipyard:

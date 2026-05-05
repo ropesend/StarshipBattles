@@ -103,10 +103,14 @@ def test_spawn_dispatches_drop_pod_to_staging_yard_for_colony():
     """
     spawner = ProductionSpawner()
     item = {"design_id": "pod1", "type": "drop_pod"}
+    empire = _empire()
+    planet = _planet()
+    galaxy = MagicMock()
 
     with patch.object(spawner, "_spawn_to_staging_yard") as mock_stage:
-        spawner.spawn_completed_item(item, _empire(), _planet(), MagicMock(), None, 1)
-    mock_stage.assert_called_once()
+        spawner.spawn_completed_item(item, empire, planet, galaxy, None, 1)
+    # PROJ-353 Tier-7 (T2.2): pin concrete dispatch args, not just call count.
+    mock_stage.assert_called_once_with(planet, "pod1", item, empire, None)
 
 
 def test_spawn_dispatches_default_ship_path_for_colony_default_type():
@@ -149,8 +153,17 @@ def test_spawn_dispatches_default_ship_path_for_colony_default_type():
     # galaxy fleet_id, ship added to fleet, fleet added to empire.
     library.load_design_data.assert_called_once_with("frig")
     library.increment_built_count.assert_called_once_with("frig")
-    mock_create.assert_called_once()
-    galaxy.get_next_fleet_id.assert_called_once()
+    # PROJ-353 Tier-7 (T2.2): pin concrete kwargs flowing into
+    # ShipInstance.create — design_id/owner_id/name routing.
+    mock_create.assert_called_once_with(
+        design_id="frig",
+        design_data={"name": "Frigate"},
+        owner_id=empire.id,
+        name="Frigate",
+        empire=empire,
+        registries=spawner._registries,
+    )
+    galaxy.get_next_fleet_id.assert_called_once_with()
     empire.add_fleet.assert_called_once()
     new_fleet = empire.add_fleet.call_args[0][0]
     assert isinstance(new_fleet, Fleet)
@@ -193,7 +206,15 @@ def test_spawn_dispatches_to_fleet_ship_when_owner_is_fleet():
     # Real `_spawn_fleet_ship` ran: ship added to the building fleet,
     # built count incremented, NO new fleet allocated on the empire.
     library.load_design_data.assert_called_once_with("frig")
-    mock_create.assert_called_once()
+    # PROJ-353 Tier-7 (T2.2): pin ShipInstance.create kwargs.
+    mock_create.assert_called_once_with(
+        design_id="frig",
+        design_data={"name": "Frigate"},
+        owner_id=empire.id,
+        name="Frigate",
+        empire=empire,
+        registries=spawner._registries,
+    )
     library.increment_built_count.assert_called_once_with("frig")
     fleet.add_ship.assert_called_once_with(fake_ship)
     empire.add_fleet.assert_not_called()
@@ -288,7 +309,8 @@ def test_spawn_ship_creates_new_fleet_with_unique_id_from_galaxy():
             patch("game.strategy.engine.production_spawner.Fleet", fake_fleet_cls):
         spawner._spawn_ship(planet, "frig", empire, galaxy, save_path="/tmp")
 
-    galaxy.get_next_fleet_id.assert_called_once()
+    # PROJ-353 Tier-7 (T2.2): pin no-arg shape of get_next_fleet_id().
+    galaxy.get_next_fleet_id.assert_called_once_with()
     # Fleet constructor received the fleet_id from galaxy
     assert fake_fleet_cls.call_args[0][0] == 77
     empire.add_fleet.assert_called_once_with(constructed_fleet)
@@ -363,10 +385,10 @@ def test_spawn_to_staging_yard_reaches_into_simulation_for_mass_calculation():
     ) as mock_calc:
         spawner._spawn_to_staging_yard(planet, "pod", item, _empire(), "/tmp")
 
-    # Cross-layer reach-in actually happened with the design data + registries.
-    mock_calc.assert_called_once()
-    args = mock_calc.call_args.args
-    assert args[0] == {"name": "TestPod"}  # design_data flowed through
+    # PROJ-353 Tier-7 (T2.2): pin the cross-layer call with concrete args
+    # — design_data dict + registries instance — so a future signature
+    # change registers as a test failure.
+    mock_calc.assert_called_once_with({"name": "TestPod"}, spawner._registries)
     # The mass landed on the staging item.
     staged = planet.add_to_staging_yard.call_args[0][0]
     assert staged["mass"] == 4200.0

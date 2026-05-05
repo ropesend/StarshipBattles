@@ -26,11 +26,24 @@ produces false positives on docstrings, comments, and strings.
 
 Allowlist format (Tools/lint_test_files_allowlist.txt):
     - One path per line, relative to the repo root.
-    - Glob patterns supported via ``pathlib.PurePosixPath.match`` semantics
-      (e.g. ``tests/unit/tools/**/*.py``).
+    - Glob patterns are matched by an internal POSIX-style glob translator
+      (``_glob_to_regex``) — NOT ``pathlib.PurePosixPath.match`` (which
+      doesn't recurse on ``**``). The translator supports ``**`` recursion
+      and works under any supported Python version.
     - Blank lines and lines starting with ``#`` are ignored.
 
+Known blind spots (tracked, not fixed because the false-positive cost
+exceeds the marginal value):
+    - ``importlib.import_module("game.foo")`` is a string literal, not
+      an AST ``Import``/``ImportFrom`` node, so a test that ONLY uses
+      string-based imports would be flagged as having "no game imports".
+      Fix: use a real ``import game.foo`` (or ``from game.foo import ...``)
+      somewhere in the file. If a deferred-import pattern is genuinely
+      required, allowlist the specific test file.
+
 Created by PROJ-326 Phase 1.
+PROJ-353 Tier-7 (T2.10): docstring corrections + blind-spot
+documentation; Python version comment updated to reflect 3.13+ baseline.
 """
 
 from __future__ import annotations
@@ -118,9 +131,10 @@ def matches_allowlist(rel_path: Path, patterns: list[str]) -> bool:
     """Return True if ``rel_path`` (relative to repo root) matches any pattern.
 
     Uses a custom POSIX-style glob matcher that supports ``**`` recursion.
-    ``pathlib.Path.match`` does NOT recurse on ``**`` until Python 3.13's
-    ``full_match``, and we need 3.11 compatibility — hence the custom
-    translator.
+    ``pathlib.Path.match`` does NOT recurse on ``**`` (Python 3.13 added
+    ``full_match`` for full-path matching, but its ``**`` semantics still
+    differ from typical CI-glob expectations). The custom translator
+    keeps behavior portable across Python versions.
     """
     posix = PurePosixPath(rel_path.as_posix()).as_posix()
     for pattern in patterns:
@@ -132,7 +146,16 @@ def matches_allowlist(rel_path: Path, patterns: list[str]) -> bool:
 def imports_game(tree: ast.AST) -> bool:
     """Return True if the AST contains any ``import game`` or
     ``from game...`` statement (the top-level package must be exactly
-    ``game`` — ``somethinglikegame`` does NOT count)."""
+    ``game`` — ``somethinglikegame`` does NOT count).
+
+    PROJ-353 Tier-7 (T2.10): also detects the dynamic-import pattern
+    ``importlib.import_module("game.foo")`` so files using deferred
+    imports as their primary surface are not flagged. The detection is
+    deliberately limited to constant string arguments — a runtime-built
+    module name (``import_module(f"game.{x}")``) is NOT detected, which
+    is correct: that pattern hides the dependency from static analysis
+    and the lint should treat it as missing.
+    """
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -146,6 +169,20 @@ def imports_game(tree: ast.AST) -> bool:
             root = node.module.split(".", 1)[0]
             if root == "game":
                 return True
+        elif isinstance(node, ast.Call):
+            # Detect importlib.import_module("game.foo") / import_module("game.foo").
+            func = node.func
+            is_import_module = (
+                isinstance(func, ast.Attribute) and func.attr == "import_module"
+            ) or (
+                isinstance(func, ast.Name) and func.id == "import_module"
+            )
+            if is_import_module and node.args:
+                first = node.args[0]
+                if isinstance(first, ast.Constant) and isinstance(first.value, str):
+                    root = first.value.split(".", 1)[0]
+                    if root == "game":
+                        return True
     return False
 
 

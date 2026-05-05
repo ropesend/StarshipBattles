@@ -253,6 +253,27 @@ class TestFromDictSimplePath:
         assert order.target == {"q": 1, "r": 2}
         assert not isinstance(order.target, HexCoord)
 
+    def test_from_dict_missing_type_raises_keyerror(self):
+        """PROJ-353 Tier-7 (T2.7): coverage gap. `Order.from_dict` accesses
+        `data['type']` without a default; an empty dict (or any payload
+        omitting 'type') raises KeyError. Pinning this completes the
+        sister-class symmetry alongside the unknown-type test below."""
+        with pytest.raises(KeyError) as exc_info:
+            Order.from_dict({})
+        assert "type" in str(exc_info.value)
+
+    def test_from_dict_extra_keys_are_tolerated(self):
+        """PROJ-353 Tier-7 (T2.7): forward compatibility — unknown
+        top-level keys must be ignored by the loader so newer save fields
+        don't break the loader when a prior version reads a later save."""
+        order = Order.from_dict({
+            "type": "MOVE",
+            "target": None,
+            "_future_field": "ignored",
+        })
+        assert order.type == OrderType.MOVE
+        assert order.execution_progress == 0
+
     def test_from_dict_unknown_order_type_raises_keyerror(self):
         """MAJ-004 fix (review req_20260504_213455_95a42d): pin
         ``Order.from_dict`` raises ``KeyError`` for unknown OrderType
