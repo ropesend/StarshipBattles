@@ -182,6 +182,24 @@ class TestTypeGuardFunctions:
         """TypeGuards should return False for non-matching objects."""
         assert guard(bad_value) is False
 
+    def test_combat_protocol_typeguards_reject_incomplete_objects(self):
+        """Combat TypeGuards require the distinguishing attribute set."""
+        from game.core.protocols import is_combatant
+
+        truthy_incomplete_combatant = type(
+            "TruthyIncompleteCombatant",
+            (),
+            {"team_id": 1},
+        )()
+        truthy_incomplete_ship = type(
+            "TruthyIncompleteCombatShip",
+            (),
+            {"team_id": 1, "hp": 10},
+        )()
+
+        assert is_combatant(truthy_incomplete_combatant) is False
+        assert is_combat_ship(truthy_incomplete_ship) is False
+
 
 class TestNoneSafety:
     """Test that Protocols and TypeGuards handle None safely."""

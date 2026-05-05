@@ -4,6 +4,8 @@ Unit tests for Projectile entity.
 Tests projectile initialization, validation, movement, damage, and guidance.
 Covers all edge cases and validation exceptions.
 """
+import math
+
 import pytest
 from unittest.mock import MagicMock, patch
 from game.core.math import Vector2
@@ -660,6 +662,133 @@ class TestMissileGuidance:
         # Velocity direction unchanged (no guidance)
         assert proj.velocity.x == pytest.approx(initial_vel.x, abs=1)
         assert proj.velocity.y == pytest.approx(initial_vel.y, abs=1)
+
+
+class TestMissileGuidanceMathBranches:
+    """Direct branch coverage for missile guidance math."""
+
+    @staticmethod
+    def _target(position: Vector2, velocity: Vector2 | None = None):
+        target = MagicMock()
+        target.is_alive = True
+        target.position = position
+        target.velocity = velocity or Vector2(0, 0)
+        return target
+
+    @staticmethod
+    def _owner_with_lead(lead_time: float):
+        owner = MagicMock()
+        owner.team_id = 1
+        owner.combat_engine = MagicMock()
+        owner.combat_engine.solve_lead.return_value = lead_time
+        return owner
+
+    @staticmethod
+    def _velocity_angle(velocity: Vector2) -> float:
+        return math.degrees(math.atan2(velocity.y, velocity.x))
+
+    def test_owner_none_guidance_uses_direct_pursuit(self):
+        target = self._target(Vector2(0, 1000))
+        proj = Projectile(
+            owner=None,
+            position=Vector2(0, 0),
+            velocity=Vector2(100, 0),
+            damage=10,
+            range_val=5000,
+            endurance=10.0,
+            proj_type="missile",
+            turn_rate=90,
+            max_speed=100,
+            target=target,
+        )
+
+        proj._update_guidance(0.01)
+
+        assert proj.team_id == -1
+        assert proj.velocity.y > 0
+        assert proj.velocity.length() == pytest.approx(100)
+
+    def test_predictive_lead_aims_at_future_target_position(self):
+        owner = self._owner_with_lead(lead_time=5.0)
+        target = self._target(Vector2(1000, 0), velocity=Vector2(0, 100))
+        proj = Projectile(
+            owner=owner,
+            position=Vector2(0, 0),
+            velocity=Vector2(100, 0),
+            damage=10,
+            range_val=5000,
+            endurance=10.0,
+            proj_type="missile",
+            turn_rate=9000,
+            max_speed=100,
+            target=target,
+        )
+
+        proj._update_guidance(0.01)
+
+        owner.combat_engine.solve_lead.assert_called_once()
+        assert self._velocity_angle(proj.velocity) == pytest.approx(26.565, abs=0.001)
+
+    def test_same_position_guidance_leaves_velocity_unchanged(self):
+        owner = self._owner_with_lead(lead_time=5.0)
+        target = self._target(Vector2(0, 0), velocity=Vector2(50, 0))
+        proj = Projectile(
+            owner=owner,
+            position=Vector2(0, 0),
+            velocity=Vector2(0, 100),
+            damage=10,
+            range_val=5000,
+            endurance=10.0,
+            proj_type="missile",
+            turn_rate=9000,
+            max_speed=100,
+            target=target,
+        )
+        initial_velocity = Vector2(proj.velocity)
+
+        proj._update_guidance(0.01)
+
+        owner.combat_engine.solve_lead.assert_not_called()
+        assert proj.velocity == initial_velocity
+
+    def test_turn_rate_clamps_rotation_per_tick(self):
+        target = self._target(Vector2(0, 1000))
+        proj = Projectile(
+            owner=None,
+            position=Vector2(0, 0),
+            velocity=Vector2(100, 0),
+            damage=10,
+            range_val=5000,
+            endurance=10.0,
+            proj_type="missile",
+            turn_rate=90,
+            max_speed=100,
+            target=target,
+        )
+
+        proj._update_guidance(0.01)
+
+        assert self._velocity_angle(proj.velocity) == pytest.approx(0.9, abs=0.001)
+
+    def test_turn_commitment_reuses_last_direction_near_180_degrees(self):
+        target = self._target(Vector2(-1000, 0))
+        proj = Projectile(
+            owner=None,
+            position=Vector2(0, 0),
+            velocity=Vector2(100, 0),
+            damage=10,
+            range_val=5000,
+            endurance=10.0,
+            proj_type="missile",
+            turn_rate=90,
+            max_speed=100,
+            target=target,
+        )
+        proj.last_turn_direction = -1
+
+        proj._update_guidance(0.01)
+
+        assert self._velocity_angle(proj.velocity) == pytest.approx(-0.9, abs=0.001)
 
 
 class TestProjectileFlags:

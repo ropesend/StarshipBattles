@@ -392,3 +392,77 @@ class TestStormGeneratorOutputFormat:
 
         storm = storms[0]
         assert isinstance(storm.location, HexCoord)
+
+
+class TestStormGeneratorPlacementHelpers:
+    """Tests for private storm placement helper edge cases."""
+
+    def test_collect_occupied_hexes_includes_existing_storms(
+        self, storm_defs, mock_star_system
+    ):
+        """Existing storm occupied hexes are blocked for later placements."""
+        from game.strategy.generation.storm_generator import StormGenerator
+
+        generator = StormGenerator(storm_defs)
+        existing = Storm(
+            name="Existing",
+            storm_type="ion_storm",
+            location=HexCoord(8, -2),
+            hex_offsets=frozenset({HexCoord(0, 0), HexCoord(1, 0)}),
+        )
+
+        occupied = generator._collect_occupied_hexes(mock_star_system, [existing])
+
+        assert existing.occupied_hexes <= occupied
+
+    def test_find_valid_center_returns_none_after_attempt_exhaustion(
+        self, storm_defs, mock_star_system
+    ):
+        """Placement returns None when every sampled candidate is occupied."""
+        from game.strategy.generation.storm_generator import StormGenerator
+
+        class FixedRng:
+            def __init__(self):
+                self.calls = 0
+
+            def randint(self, low, high):
+                self.calls += 1
+                return 0
+
+        generator = StormGenerator(storm_defs)
+        rng = FixedRng()
+
+        result = generator._find_valid_center(
+            mock_star_system,
+            {HexCoord(0, 0)},
+            rng,
+            max_attempts=3,
+        )
+
+        assert result is None
+        assert rng.calls == 6
+
+    def test_find_valid_center_clamps_search_radius_to_thirty(
+        self, storm_defs, mock_star_system
+    ):
+        """Large systems clamp random placement bounds to radius 30."""
+        from game.strategy.generation.storm_generator import StormGenerator
+
+        class BoundsRng:
+            def __init__(self):
+                self.bounds = []
+
+            def randint(self, low, high):
+                self.bounds.append((low, high))
+                return 0
+
+        mock_star_system.planets = [
+            type("PlanetStub", (), {"location": HexCoord(100, 0)})()
+        ]
+        generator = StormGenerator(storm_defs)
+        rng = BoundsRng()
+
+        result = generator._find_valid_center(mock_star_system, set(), rng)
+
+        assert result == HexCoord(0, 0)
+        assert rng.bounds[:2] == [(-30, 30), (-30, 30)]

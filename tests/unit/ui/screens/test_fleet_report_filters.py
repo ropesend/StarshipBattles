@@ -736,6 +736,103 @@ class TestFilterShipsCargo:
         assert len(result) == 2
 
 
+class TestFilterPredicateIsolation:
+    def test_worker_i_fleet_filter_predicate_isolation_warp(self):
+        from game.ui.screens import fleet_report_filters as filters
+        from unittest.mock import patch
+
+        ship = make_mock_ship()
+
+        with patch.object(filters, "has_warp_capability", return_value=False) as has_warp:
+            assert filters._should_exclude_by_warp(
+                ship,
+                {"warp_capable": FilterState.YES},
+            ) is True
+
+        has_warp.assert_called_once_with(ship)
+
+        with patch.object(filters, "has_warp_capability", return_value=False) as has_warp:
+            assert filters._should_exclude_by_warp(
+                ship,
+                {"warp_capable": FilterState.IGNORE},
+            ) is False
+
+        has_warp.assert_not_called()
+
+    def test_worker_i_fleet_filter_predicate_isolation_spaceyard(self):
+        from game.ui.screens import fleet_report_filters as filters
+        from unittest.mock import patch
+
+        ship = make_mock_ship(design_name="Tender")
+
+        with patch(
+            "game.strategy.data.fleet_capability_calculator."
+            "FleetCapabilityCalculator.ship_has_spaceyard",
+            return_value=True,
+        ) as has_spaceyard:
+            assert filters._should_exclude_by_spaceyard(
+                ship,
+                {"has_spaceyard": FilterState.NO},
+            ) is True
+
+        has_spaceyard.assert_called_once_with(ship)
+
+    def test_worker_i_fleet_filter_predicate_isolation_cargo(self):
+        from game.ui.screens import fleet_report_filters as filters
+
+        loaded = make_mock_ship(design_name="Loaded")
+        loaded.cargo_contents = {"metals": 3, "fuel": 0}
+        empty = make_mock_ship(design_name="Empty")
+        empty.cargo_contents = {"metals": 0}
+
+        assert filters._should_exclude_by_cargo(
+            loaded,
+            {"has_cargo": FilterState.NO},
+        ) is True
+        assert filters._should_exclude_by_cargo(
+            empty,
+            {"has_cargo": FilterState.YES},
+        ) is True
+        assert filters._should_exclude_by_cargo(
+            loaded,
+            {"has_cargo": FilterState.IGNORE},
+        ) is False
+
+    def test_worker_i_fleet_filter_predicate_isolation_status(self):
+        from game.ui.screens import fleet_report_filters as filters
+
+        destroyed = make_mock_ship(is_alive=False)
+        derelict = make_mock_ship(is_derelict=True, is_damaged=True)
+        damaged = make_mock_ship(is_damaged=True)
+        healthy = make_mock_ship(is_damaged=False)
+
+        assert filters._should_exclude_by_status(destroyed, {"show_destroyed": False}) is True
+        assert filters._should_exclude_by_status(derelict, {"show_derelict": False}) is True
+        assert filters._should_exclude_by_status(damaged, {"show_damaged": False}) is True
+        assert filters._should_exclude_by_status(healthy, {"show_undamaged": False}) is True
+
+    def test_worker_i_fleet_filter_predicate_isolation_special_capability(self):
+        from game.ui.screens import fleet_report_filters as filters
+        from unittest.mock import patch
+
+        ship = make_mock_ship(serial=7)
+        ship._registries = None
+
+        def has_ability(candidate, ability_name, registry):
+            return candidate is ship and ability_name == "OpenWarpPoint" and registry == {}
+
+        with patch(
+            "game.strategy.services.component_inspector.ship_has_ability",
+            side_effect=has_ability,
+        ) as ship_has_ability:
+            assert filters._should_exclude_by_special_capabilities(
+                ship,
+                {"open_warp": FilterState.NO},
+            ) is True
+
+        ship_has_ability.assert_called_once()
+
+
 class TestFilterStatusPrecedence:
     """Test cases for status filter precedence (PROJ-200)."""
 

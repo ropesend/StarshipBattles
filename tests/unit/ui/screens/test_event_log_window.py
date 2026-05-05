@@ -435,6 +435,29 @@ class TestEventLogNavigation:
 
         cb.assert_not_called()
 
+    def test_handle_row_navigate_without_data_source_is_noop(self):
+        """A window without a data source should not navigate."""
+        cb = MagicMock()
+        win = _make_window(events=_sample_events())
+        win.on_navigate_callback = cb
+        win.data_source = None
+
+        win._handle_row_navigate(0)
+
+        cb.assert_not_called()
+
+    def test_handle_row_navigate_missing_event_is_noop(self):
+        """Out-of-range or missing rows should not call the callback."""
+        cb = MagicMock()
+        win = _make_window(events=_sample_events())
+        win.on_navigate_callback = cb
+        win.data_source = MagicMock()
+        win.data_source.get_event_at_index.return_value = None
+
+        win._handle_row_navigate(99)
+
+        cb.assert_not_called()
+
 
 # ---------------------------------------------------------------------------
 # PROJ-215 Phase 3: Sidebar Integration

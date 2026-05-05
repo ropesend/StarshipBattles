@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import os
 from dataclasses import fields
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pygame
 import pytest
 
 
@@ -60,3 +62,132 @@ class TestRun10TurnsButtonVisibility:
     def test_button_always_present(self):
         widgets = _create_panels()
         assert widgets.btn_run_10_turns is not None
+
+
+class _Widget:
+    def __init__(self, width: int = 100, height: int = 100) -> None:
+        self.rect = pygame.Rect(0, 0, width, height)
+        self.dimensions: list[tuple[float, float]] = []
+        self.positions: list[tuple[float, float]] = []
+        self.tooltips: list[str] = []
+
+    def set_dimensions(self, dimensions: tuple[float, float]) -> None:
+        self.dimensions.append(dimensions)
+        self.rect.size = (int(dimensions[0]), int(dimensions[1]))
+
+    def set_relative_position(self, position: tuple[float, float]) -> None:
+        self.positions.append(position)
+        self.rect.topleft = (int(position[0]), int(position[1]))
+
+    def set_tooltip(self, text: str) -> None:
+        self.tooltips.append(text)
+
+
+def _fake_resizable_ui() -> SimpleNamespace:
+    return SimpleNamespace(
+        system_panel=_Widget(),
+        system_tree=_Widget(),
+        sector_panel=_Widget(),
+        sector_tree=_Widget(),
+        detail_panel=_Widget(),
+        detail_text=_Widget(),
+        graph_image=_Widget(),
+        graph_rect=pygame.Rect(10, 170, 150, 100),
+        spectrum_graph=None,
+        atmosphere_graph=None,
+        btn_raw_data=_Widget(20, 20),
+    )
+
+
+class TestResizeStrategyPanels:
+    def test_panel_resize_rebuilds_graphs_and_moves_raw_data_button(self, monkeypatch):
+        from game.ui.screens import strategy_panel_manager as panel_manager
+
+        ui = _fake_resizable_ui()
+        monkeypatch.setattr(
+            panel_manager,
+            "SpectrumGraph",
+            lambda width, height: ("spectrum", width, height),
+        )
+        monkeypatch.setattr(
+            panel_manager,
+            "AtmosphereGraph",
+            lambda width, height: ("atmosphere", width, height),
+        )
+
+        panel_manager.resize_strategy_panels(
+            ui, MagicMock(), width=1200, height=900, sidebar_width=300
+        )
+
+        assert ui.system_panel.dimensions[-1] == pytest.approx((280, (900 - 20) / 3 - 5))
+        assert ui.system_panel.positions[-1] == (-290, 10)
+        assert ui.detail_text.dimensions[-1][0] == 120
+        assert ui.graph_image.dimensions[-1] == (150, ui.graph_rect.height)
+        assert ui.spectrum_graph == ("spectrum", int(ui.graph_rect.height), int(ui.graph_rect.width))
+        assert ui.atmosphere_graph == ("atmosphere", int(ui.graph_rect.height), int(ui.graph_rect.width))
+        assert ui.btn_raw_data.positions[-1] == (ui.graph_rect.right - 22, ui.graph_rect.top + 2)
+
+    def test_resize_strategy_panels_clamps_graph_height_to_minimum(self, monkeypatch):
+        from game.ui.screens import strategy_panel_manager as panel_manager
+
+        ui = _fake_resizable_ui()
+        monkeypatch.setattr(panel_manager, "SpectrumGraph", lambda width, height: None)
+        monkeypatch.setattr(panel_manager, "AtmosphereGraph", lambda width, height: None)
+
+        panel_manager.resize_strategy_panels(
+            ui, MagicMock(), width=1200, height=320, sidebar_width=300
+        )
+
+        assert ui.graph_rect.height == 50
+        assert ui.graph_image.dimensions[-1] == (150, 50)
+
+
+def _fake_tooltip_ui() -> SimpleNamespace:
+    button_names = [
+        "btn_next_turn",
+        "btn_planets",
+        "btn_empire",
+        "btn_research",
+        "btn_design",
+        "btn_build_queues",
+        "btn_prev_colony",
+        "btn_next_colony",
+        "btn_prev_fleet",
+        "btn_next_fleet",
+        "btn_colonize",
+        "btn_orders",
+        "btn_fleet_report",
+        "btn_build_fleet",
+    ]
+    return SimpleNamespace(**{name: _Widget(20, 20) for name in button_names})
+
+
+class TestApplyHotkeyTooltips:
+    def test_apply_hotkey_tooltips_returns_without_mapper(self):
+        from game.ui.screens.strategy_panel_manager import apply_hotkey_tooltips
+
+        ui = _fake_tooltip_ui()
+
+        apply_hotkey_tooltips(ui, None)
+
+        assert all(not button.tooltips for button in vars(ui).values())
+
+    def test_apply_hotkey_tooltips_sets_only_bound_actions(self):
+        from game.core.input_actions import InputAction
+        from game.ui.screens.strategy_panel_manager import apply_hotkey_tooltips
+
+        ui = _fake_tooltip_ui()
+        hints = {
+            InputAction.STRATEGY_NEXT_TURN: "Enter",
+            InputAction.STRATEGY_PREV_FLEET: "Shift+F",
+            InputAction.FLEET_COLONIZE: "C",
+        }
+        mapper = MagicMock()
+        mapper.get_display_text.side_effect = lambda action: hints.get(action, "")
+
+        apply_hotkey_tooltips(ui, mapper)
+
+        assert ui.btn_next_turn.tooltips == ["Enter"]
+        assert ui.btn_prev_fleet.tooltips == ["Shift+F"]
+        assert ui.btn_colonize.tooltips == ["C"]
+        assert ui.btn_planets.tooltips == []

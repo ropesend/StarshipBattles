@@ -5,8 +5,12 @@ from game.simulation.components.abilities.planetary import (
     GeologicStabilizerAbility,
     ResourceHarvestBoosterAbility,
     BuildRateBoosterAbility,
+    EnvironmentalDamageAbility,
+    FuelDrainAbility,
+    StrategicSpeedModifierAbility,
+    ThrustModifierAbility,
 )
-from game.simulation.components.abilities.base import AbilityScope
+from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
 from game.core.exceptions import ValidationException
 
 
@@ -168,3 +172,91 @@ class TestBuildRateBoosterAbility:
         labels = [r['label'] for r in rows]
         assert 'Build Rate' in labels
         assert 'Scope' in labels
+
+
+class TestProj300SectorSystemAbilities:
+    """Tests for PROJ-300 strategic sector/system effect abilities."""
+
+    @pytest.mark.parametrize(
+        "ability_cls,data,attr,expected,label,value_fragment",
+        [
+            (
+                ThrustModifierAbility,
+                {"multiplier": 0.6, "scope": "system"},
+                "multiplier",
+                0.6,
+                "Thrust Modifier",
+                "0.60x",
+            ),
+            (
+                StrategicSpeedModifierAbility,
+                {"multiplier": 0.4, "scope": "enemy_sector"},
+                "multiplier",
+                0.4,
+                "Strategic Speed",
+                "0.40x",
+            ),
+            (
+                EnvironmentalDamageAbility,
+                {"rate": 1.25, "damage_type": "radiation", "scope": "sector"},
+                "rate",
+                1.25,
+                "Damage (radiation)",
+                "-1.25 hull/turn",
+            ),
+            (
+                FuelDrainAbility,
+                {"rate": 0.75, "scope": "allied_system"},
+                "rate",
+                0.75,
+                "Fuel Drain",
+                "-0.75/turn",
+            ),
+        ],
+    )
+    def test_parse_dict_primary_value_and_ui_rows(
+        self,
+        ability_cls,
+        data,
+        attr,
+        expected,
+        label,
+        value_fragment,
+    ):
+        comp = MagicMock()
+
+        ability = ability_cls(comp, data)
+        rows = ability.get_ui_rows()
+
+        assert ability.layer == AbilityLayer.STRATEGIC
+        assert getattr(ability, attr) == expected
+        assert ability.get_primary_value() == expected
+        assert any(
+            row["label"] == label and value_fragment in row["value"]
+            for row in rows
+        )
+        assert any(row["label"] == "Scope" for row in rows)
+
+    @pytest.mark.parametrize(
+        "ability_cls,attr,default_value",
+        [
+            (ThrustModifierAbility, "multiplier", 1.0),
+            (StrategicSpeedModifierAbility, "multiplier", 1.0),
+            (EnvironmentalDamageAbility, "rate", 0.0),
+            (FuelDrainAbility, "rate", 0.0),
+        ],
+    )
+    def test_non_dict_data_uses_defaults(self, ability_cls, attr, default_value):
+        comp = MagicMock()
+
+        ability = ability_cls(comp, True)
+
+        assert getattr(ability, attr) == default_value
+        assert ability.scope == AbilityScope.SECTOR
+
+    def test_environmental_damage_non_dict_defaults_damage_type(self):
+        comp = MagicMock()
+
+        ability = EnvironmentalDamageAbility(comp, True)
+
+        assert ability.damage_type == "environmental"
