@@ -128,6 +128,19 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         # Track list items for mapping back to saves/turns
         self.list_item_mapping = []  # tuples: ('save', save_idx) or ('turn', save_idx, turn_num)
 
+        # PROJ-347 T4.3 (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullSaveSelectionWindowUiBuilder test can safely call
+        # ``process_event()`` without AttributeError on
+        # ``self.btn_load``/``self.saves_listbox``/etc. The production
+        # builder overwrites these in Stage 3.
+        self.saves_listbox = None
+        self.info_label = None
+        self.btn_load = None
+        self.btn_expand = None
+        self.btn_delete = None
+        self.btn_cancel = None
+
         # ---- Stage 2: UIWindow shell (skipped under bypass_init) ----
         # PROJ-324 / PROJ-328 / PROJ-329B test escape hatch.
         if getattr(type(self), 'bypass_init', False):
