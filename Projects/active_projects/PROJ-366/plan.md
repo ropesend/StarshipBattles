@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. replay_ship_builder registry-provider contract repair (CRIT) | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Sink wiring + ReplayStore + bootstrap-test cleanup | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Coordinator + start + run-loop shutdown + Combat Lab fallback adapter | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Integration tests (live battle → sidecar; headless-vs-visual; production materializer; no-recursion) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Combat Lab fallback test + verifier-import lint + docs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 0. replay_ship_builder registry-provider contract repair (CRIT) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Sink wiring + ReplayStore + bootstrap-test cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Coordinator + start + run-loop shutdown + Combat Lab fallback adapter | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Integration tests (live battle → sidecar; headless-vs-visual; production materializer; no-recursion) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Combat Lab fallback test + verifier-import lint + docs | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-05
-**Active Phase:** Planning (just scaffolded)
-**Last Action:** Project created from PROJ-354B Phases 5-6 unblock, after confirming codex is not handling the prereq sink wiring.
-**Next Action:** Begin Phase 1: construct `ReplayStore` and call `set_default_capture_sink(store)` + `set_replay_store(store)` from `app_bootstrap.py`.
-**Blockers:** None. PROJ-354A and PROJ-354B Phases 1-4 have all landed.
+**Active Phase:** Awaiting verification
+**Last Action:** All five phases (0–4) implemented end-to-end and committed. Sharded suite green pre-implementation (18287 passed) and post-implementation (zero regressions; new tests count up).
+**Next Action:** User verification + close-out.
+**Blockers:** None.
 
 **Context for Next Agent:**
 PROJ-354B's plan.md asserted that "the user is handling the production sink wiring with codex separately." The user clarified on 2026-05-05 that codex is NOT handling this. PROJ-366 picks up exactly the work that PROJ-354B Phases 5-6 had marked BLOCKED. Phases 1-4 of PROJ-354B are complete (commits `9dabe9042`, `ad42e4d78`, `93608a438`, `ef20ea35d`) and the audit-remediation commit `27e297815` resolved 5 CRIT + 13 MAJ findings against the verifier/sidecar/coordinator. Sharded suite is currently at 17797 passed, 0 failed.

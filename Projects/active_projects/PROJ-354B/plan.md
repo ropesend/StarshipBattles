@@ -17,16 +17,15 @@
 | 2. Sidecar persistence + lifecycle | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. ReplayStore callback + listener wiring | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Background coordinator (single-worker FIFO queue) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Composition root wiring + integration tests | Blocked | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Combat Lab fallback + docs | Blocked | [phase_6_checklist.md](phase_6_checklist.md) |
+| 5. Composition root wiring + integration tests | Complete (via PROJ-366) | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Combat Lab fallback + docs | Complete (via PROJ-366) | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-05
-**Active Phase:** Phases 1-4 complete; Phases 5-6 blocked on production sink wiring
-**Last Action:** Phases 1-4 implemented and committed; full sharded suite green (17763 passed, 0 failed)
-**Next Action:** Wait for codex's production sink wiring (`set_default_capture_sink` + `set_replay_store` in `game/app_bootstrap.py`); then resume Phase 5
-**Blockers:**
-1. **Production sink wiring** — codex is handling this separately. Specifically: `set_default_capture_sink(replay_store)` and `set_replay_store(replay_store)` must be called from the production composition root (likely `app_bootstrap.py:157-159` near `ApplicationContext.create_production`). Without this, `NullCaptureSink` is the active sink, no replays persist, and the coordinator has nothing to listen to in production. Phase 5 (composition root wiring + integration tests) and Phase 6 (Combat Lab fallback + end-to-end docs) cannot proceed until that lands.
+**Active Phase:** Project complete (Phases 1-4 + audit-remediation in this project; Phases 5-6 delivered by PROJ-366)
+**Last Action:** PROJ-366 wired the production sink + coordinator + run-loop shutdown + integration tests + Combat Lab fallback adapter + verifier-import lint + docs.
+**Next Action:** Awaiting user verification + close-out.
+**Blockers:** None — PROJ-366 resolved the sink-wiring prerequisite and shipped the originally-planned Phase 5 and Phase 6 work end-to-end. See `Projects/active_projects/PROJ-366/` for the canonical record.
 
 **Context for Next Agent:** Phases 1-4 implemented C4-C9 components in isolation. The pure verifier in `game/simulation/replay/replay_verifier.py`, the sidecar schema in `game/strategy/services/replay_verification_sidecar.py`, and the background coordinator in `game/strategy/services/replay_verification_coordinator.py` are all unit-tested and integration-tested without going through production capture. When sink wiring lands, Phase 5 wires the coordinator into `app_bootstrap.py` and `run_loop.py:84-85` and adds end-to-end + headless-vs-visual equivalence tests. Phase 6 covers Combat Lab fallback wiring and docs.
 
