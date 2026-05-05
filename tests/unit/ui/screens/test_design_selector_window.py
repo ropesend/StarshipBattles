@@ -612,3 +612,51 @@ class TestDesignSelectorIntegration:
         window.show_obsolete = True
         window._refresh_designs()
         assert len(window.filtered_designs) == 2
+
+
+# ---------------------------------------------------------------------------
+# PROJ-347 T4.3c: Pattern §33 widget-ref placeholders
+# ---------------------------------------------------------------------------
+
+class TestDesignSelectorWindowWidgetPlaceholders:
+    """PROJ-347 T4.3c — Pattern §33 widget-ref placeholders.
+
+    ``process_event`` reads ``apply_filters_button``, ``obsolete_button``,
+    ``select_button``, ``cancel_button``, ``name_search_entry``,
+    ``class_dropdown``, ``type_dropdown``. Stage 1 must set these to
+    ``None`` before the bypass guard so a Null-builder test can
+    construct via ``bypass_init`` without subsequent AttributeError.
+    """
+
+    def _make_window(self, *, ui_builder):
+        from game.ui.screens.design_selector_window import DesignSelectorWindow
+        from tests.fixtures.ui_widget_factory import bypass_init
+
+        rect = pygame.Rect(0, 0, 800, 600)
+        with bypass_init(DesignSelectorWindow):
+            return DesignSelectorWindow(
+                rect,
+                MagicMock(name="ui_manager"),
+                _make_design_library(),
+                mode="load",
+                on_select_callback=MagicMock(name="on_select_callback"),
+                ui_builder=ui_builder,
+            )
+
+    def test_null_builder_leaves_widget_placeholders_as_none(self):
+        from tests.fixtures.design_selector_window_ui_builder import (
+            NullDesignSelectorWindowUiBuilder,
+        )
+        window = self._make_window(
+            ui_builder=NullDesignSelectorWindowUiBuilder()
+        )
+        for slot in (
+            "sidebar_panel", "name_search_entry", "class_dropdown",
+            "type_dropdown", "obsolete_button", "apply_filters_button",
+            "main_panel", "scroll_container", "select_button",
+            "cancel_button",
+        ):
+            assert getattr(window, slot) is None, (
+                f"Pattern §33 placeholder {slot!r} should be None under "
+                f"Null builder; got {getattr(window, slot)!r}"
+            )
