@@ -1,0 +1,96 @@
+{
+  "request_id": "req_20260505_070825_cfa324",
+  "review_dir": "Reviews/results/2026-05-05_070827_code_proj-359-review-typed-weapon-execution-contract-la_req-req_20260505_070825_cfa324",
+  "report_path": "Reviews/results/2026-05-05_070827_code_proj-359-review-typed-weapon-execution-contract-la_req-req_20260505_070825_cfa324/report.md",
+  "findings": {
+    "critical": 0,
+    "major": 3,
+    "minor": 5,
+    "nit": 2
+  },
+  "completed_at": "2026-05-05T07:11:29Z",
+  "parent_request_id": null,
+  "verification": {},
+  "findings_by_id": {
+    "FND-001": {
+      "severity": "MAJ",
+      "title": "Redundant has_ability(\"BeamWeaponAbility\") lookup in _get_pdc_valid_targets",
+      "file": "game/simulation/combat/targeting_system.py",
+      "line": 222,
+      "fingerprint": "sha256:0c69049377f16042",
+      "phase_attributed_to": "phase_4"
+    },
+    "FND-002": {
+      "severity": "MAJ",
+      "title": "BeamHandler and PDCHandler byte-identical fire() methods with no sync guarantee",
+      "file": "game/simulation/combat/families/beam.py",
+      "line": 29,
+      "fingerprint": "sha256:2b97e27da260d6ab",
+      "phase_attributed_to": "phase_3"
+    },
+    "FND-003": {
+      "severity": "MAJ",
+      "title": "detect_family returning None has untested path through firing/targeting pipeline",
+      "file": "game/simulation/combat/weapon_firing_system.py",
+      "line": 196,
+      "fingerprint": "sha256:4b952b4275186300",
+      "phase_attributed_to": "phase_4"
+    },
+    "FND-004": {
+      "severity": "MIN",
+      "title": "Seeker arc-check logic lacks edge-case unit tests",
+      "file": "game/simulation/combat/families/seeker.py",
+      "line": 44,
+      "fingerprint": "sha256:4a97fb471909a90f",
+      "phase_attributed_to": "phase_3"
+    },
+    "FND-005": {
+      "severity": "MIN",
+      "title": "TestExtensibilityAcceptance uses existing enum slot, not new member",
+      "file": "tests/unit/simulation/combat/test_weapon_registry.py",
+      "line": 179,
+      "fingerprint": "sha256:f7f31e16308eb510",
+      "phase_attributed_to": "phase_2"
+    },
+    "FND-006": {
+      "severity": "MIN",
+      "title": "process_beam_attack visualization side-effect uses dict instead of typed dataclass",
+      "file": "game/engine/collision.py",
+      "line": 155,
+      "fingerprint": "sha256:92dc82c7b38917c9",
+      "phase_attributed_to": "phase_4"
+    },
+    "FND-007": {
+      "severity": "MIN",
+      "title": "LAUNCH dict path retained as out-of-scope, worth follow-up typing",
+      "file": "game/simulation/combat/weapon_firing_system.py",
+      "line": 113,
+      "fingerprint": "sha256:21049f9b2f32dcb7",
+      "phase_attributed_to": "out_of_scope"
+    },
+    "FND-008": {
+      "severity": "MIN",
+      "title": "process_beam_attack has no null-guard on get_ability(\"BeamWeaponAbility\")",
+      "file": "game/engine/collision.py",
+      "line": 116,
+      "fingerprint": "sha256:d875cd18ec447a5c",
+      "phase_attributed_to": "phase_4"
+    },
+    "FND-009": {
+      "severity": "NIT",
+      "title": "AttackRequest uses Any type hints instead of protocols",
+      "file": "game/simulation/combat/attack_contract.py",
+      "line": 75,
+      "fingerprint": "sha256:c3462a9fde9c6701",
+      "phase_attributed_to": "phase_2"
+    },
+    "FND-010": {
+      "severity": "NIT",
+      "title": "FAMILY_METADATA policy for missing enum members is undocumented",
+      "file": "game/simulation/combat/attack_contract.py",
+      "line": 182,
+      "fingerprint": "sha256:16f4e9deaa86aef3",
+      "phase_attributed_to": "phase_3"
+    }
+  }
+}
