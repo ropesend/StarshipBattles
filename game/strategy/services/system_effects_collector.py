@@ -40,6 +40,10 @@ from game.strategy.services.ability_iterator import (
     iter_ability_sources_at_hex,
     iter_ability_sources_in_system,
 )
+from game.strategy.services.effect_ability_metadata import (
+    find_metadata,
+    is_known_effect_ability,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.galaxy import StarSystem
@@ -59,39 +63,20 @@ _SECTOR_SCOPES = frozenset({
 })
 
 
-SYSTEM_EFFECT_ABILITIES = {
-    'GeologicStabilizer': 'Geologic Stabilizer',
-    'StellarStabilizer': 'Stellar Stabilizer',
-    'WarpFieldStabilizer': 'Warp Field Stabilizer',
-    'ResourceHarvestBooster': None,  # Display name derived from resource_type
-    'BuildRateBooster': 'Construction Acceleration',
-    'QualityImprovement': 'Quality Enrichment',
-    'ShieldModifier': 'Shield Modifier',
-    'DamageModifier': 'Damage Modifier',
-    # PROJ-300 — storm/environmental abilities (formerly StormEffect fields).
-    'ThrustModifier': 'Thrust Modifier',
-    'StrategicSpeedModifier': 'Strategic Speed Modifier',
-    'EnvironmentalDamage': None,  # Display name derived from damage_type
-    'FuelDrain': 'Fuel Drain',
-}
-
-
-# Rate-style abilities (read aggregate_value as additive). Multiplier-style
-# is the default and reads aggregate_value as multiplicative-with-1.0-default.
-_RATE_ABILITIES = frozenset({'EnvironmentalDamage', 'FuelDrain'})
-
-
-# PROJ-300 D17: ownership-aware scopes can only be declared by sources with
-# an owner_id ("enemy of whom?" is undefined for ownerless sources).
-_OWNER_AWARE_SCOPES = frozenset({
-    'allied_sector', 'enemy_sector', 'player_sector',
-    'allied_system', 'enemy_system', 'player_system',
-    'allied_empire',
-})
+# PROJ-362: ability metadata (display name, kind, grouping, owner-aware
+# scopes, value field selection) lives in `effect_ability_metadata.
+# EFFECT_ABILITY_METADATA`. Adding a new strategic effect is a single-entry
+# edit there — no changes needed here.
 
 
 def _ability_kind(ability_name: str) -> str:
-    return 'rate' if ability_name in _RATE_ABILITIES else 'multiplier'
+    """Return 'rate' or 'multiplier' based on the metadata registry.
+
+    Falls back to 'multiplier' for unknown ability names (matches the
+    legacy `_RATE_ABILITIES` membership-check behavior).
+    """
+    m = find_metadata(ability_name)
+    return m.kind if m is not None else 'multiplier'
 
 
 # ---------------------------------------------------------------------------
@@ -128,41 +113,60 @@ def _is_activatable(ability_data: dict) -> bool:
 def make_group_key(ability_name: str, ability_data) -> str:
     """Group key for an ability instance.
 
-    ResourceHarvestBooster + QualityImprovement: per resource_type.
-    EnvironmentalDamage: per damage_type (PROJ-300).
-    Other abilities: by ability_name alone.
+    Driven by `EffectAbilityMetadata.grouping_key_field` from the registry.
+    When set (e.g. 'resource_type' for ResourceHarvestBooster, 'damage_type'
+    for EnvironmentalDamage), the key is `f"{ability_name}:{value}"`. When
+    absent (or the ability is unknown), the key is the ability_name alone.
 
     Public since FEAT-16 — also consumed by the Planet List effects filter
     and per-effect column generators.
     """
-    if ability_name == 'ResourceHarvestBooster' and isinstance(ability_data, dict):
-        resource = ability_data.get('resource_type', '')
-        return f"{ability_name}:{resource}"
-    if ability_name == 'QualityImprovement' and isinstance(ability_data, dict):
-        resource = ability_data.get('resource_type', '')
-        if resource:
-            return f"{ability_name}:{resource}"
-    if ability_name == 'EnvironmentalDamage' and isinstance(ability_data, dict):
-        damage_type = ability_data.get('damage_type', 'environmental')
-        return f"{ability_name}:{damage_type}"
-    return ability_name
+    metadata = find_metadata(ability_name)
+    if metadata is None or metadata.grouping_key_field is None:
+        return ability_name
+    if not isinstance(ability_data, dict):
+        return ability_name
+    field_value = ability_data.get(metadata.grouping_key_field)
+    # Per-resource grouping for QualityImprovement preserves the legacy
+    # behavior of falling back to the bare ability_name when the field is
+    # missing/empty (e.g. tests with sparse fixtures).
+    if not field_value:
+        # EnvironmentalDamage's legacy fallback was the literal string
+        # 'environmental' when damage_type was missing — keep that exact
+        # behavior so callers see the same group keys.
+        if ability_name == 'EnvironmentalDamage':
+            return f"{ability_name}:environmental"
+        return ability_name
+    return f"{ability_name}:{field_value}"
 
 
 def make_display_name(ability_name: str, ability_data) -> str:
     """Human-readable label for an ability instance.
 
+    Driven by `EffectAbilityMetadata.display_name`. When the registry entry
+    has an explicit display_name, it is returned verbatim. When display_name
+    is None, the label is derived from the `grouping_key_field` value in
+    `ability_data` ("Metals Harvest Boost", "Plasma Damage").
+
     Public since FEAT-16 — used as Planet List per-effect column titles and
     Effects filter chip labels.
     """
-    if ability_name == 'ResourceHarvestBooster' and isinstance(ability_data, dict):
-        resource = ability_data.get('resource_type', 'unknown')
-        return f"{resource.capitalize()} Harvest Boost"
-    if ability_name == 'EnvironmentalDamage' and isinstance(ability_data, dict):
-        damage_type = ability_data.get('damage_type', 'environmental')
-        return f"{damage_type.capitalize()} Damage"
-    display = SYSTEM_EFFECT_ABILITIES.get(ability_name)
-    if display:
-        return display
+    metadata = find_metadata(ability_name)
+    if metadata is None:
+        return ability_name
+    if metadata.display_name is not None:
+        return metadata.display_name
+    # Derived display name from the data field. Pick the right suffix
+    # per grouping family — resource boosters get "Harvest Boost",
+    # environmental damage gets "Damage".
+    if isinstance(ability_data, dict) and metadata.grouping_key_field:
+        value = ability_data.get(metadata.grouping_key_field)
+        if metadata.grouping_key_field == 'resource_type':
+            label_value = value if value else 'unknown'
+            return f"{label_value.capitalize()} Harvest Boost"
+        if metadata.grouping_key_field == 'damage_type':
+            label_value = value if value else 'environmental'
+            return f"{label_value.capitalize()} Damage"
     return ability_name
 
 
@@ -180,7 +184,13 @@ def format_intrinsic_ability_magnitude(ability_name: str, ability_data) -> str:
     if not isinstance(ability_data, dict):
         return ""
 
-    if ability_name in _RATE_ABILITIES:
+    metadata = find_metadata(ability_name)
+    if metadata is None:
+        # Unknown ability — render nothing rather than fabricating "x..."
+        # for arbitrary input.
+        return ""
+
+    if metadata.kind == 'rate':
         rate = ability_data.get('rate')
         if not rate:
             return ""
@@ -194,11 +204,7 @@ def format_intrinsic_ability_magnitude(ability_name: str, ability_data) -> str:
             return f"-{r:.2f} fuel/turn"
         return f"{r:+.2f}/turn"
 
-    # Multiplier-style. Gate on SYSTEM_EFFECT_ABILITIES so unknown names
-    # (no registry entry, no rate kind) fall through to the empty string
-    # rather than fabricating "x..." for arbitrary input.
-    if ability_name not in SYSTEM_EFFECT_ABILITIES:
-        return ""
+    # Multiplier-style.
     mult = ability_data.get('multiplier')
     if mult is None:
         return ""
@@ -278,29 +284,76 @@ def aggregate_value_or(
 # ---------------------------------------------------------------------------
 
 
-def _aggregate(
+def _build_provider(source, entry, ability_name, metadata, owner_id) -> Dict[str, Any]:
+    """Build a single provider dict for one (source, ability_entry) pair.
+
+    Reads activation state, computes is_active, extracts the value, and
+    layers PROJ-300 universal fields with `_legacy_provider_fields`.
+    """
+    state = None
+    if _is_activatable(entry):
+        state = source.get_activation_state(ability_name)
+    status = _format_status(state)
+    if _is_activatable(entry):
+        is_active = state is not None and state.phase == ActivationPhase.ACTIVE
+    else:
+        is_active = True
+
+    # Value driven by the registry's primary/fallback field selection.
+    # Default depends on kind: 0.0 additive rate, 1.0 multiplicative multiplier.
+    default = 0.0 if metadata.kind == 'rate' else 1.0
+    value = float(entry.get(
+        metadata.value_field_primary,
+        entry.get(metadata.value_field_fallback, default),
+    ))
+
+    return {
+        # Universal PROJ-300 fields.
+        'source_kind': source.source_kind,
+        'source_label': source.source_label,
+        'source_id': source.source_id,
+        'owner_id': owner_id,
+        'status': status,
+        'is_active': is_active,
+        'value': value,
+        'ability_data': entry,
+        # Legacy back-compat fields — populated for facility sources so
+        # existing UI consumers keep working until Phase 4 (deferred).
+        **_legacy_provider_fields(source),
+    }
+
+
+def _collect_providers(
     sources,
     allowed_scopes: frozenset,
     empire_id,
-    registries,
     *,
     hex_coord,
-    system,
-) -> List[Dict[str, Any]]:
-    """Walk every source, build per-group provider dicts, aggregate per kind."""
+) -> Dict[str, dict]:
+    """Walk every source, return `{group_key: group_dict}` keyed dict.
+
+    Each group_dict carries `ability_name`, `display_name`, `resource_type`,
+    `damage_type`, `kind`, and `providers` (list of provider dicts). The
+    return shape is consumed downstream by `_aggregate_status`,
+    `_aggregate_value`, and `_format_rows`.
+
+    Per-source error tolerance: `affects_hex` and `get_abilities`
+    exceptions are caught + logged so a malformed adapter cannot poison
+    the pipeline.
+    """
     raw_providers: Dict[str, dict] = {}
 
     for source in sources:
-        # Owner filter: ownerless sources (storms, planets-themselves, stars,
-        # warp points, system archetypes) apply to ALL empires; owned sources
-        # only contribute to a query for their own owner_id.
+        # Owner filter: ownerless sources (storms, planets-themselves,
+        # stars, warp points, system archetypes) apply to ALL empires;
+        # owned sources only contribute to a query for their own owner_id.
         owner_id = getattr(source, 'owner_id', None)
         if owner_id is not None and empire_id is not None and owner_id != empire_id:
             continue
 
-        # Hex affinity check (if querying a specific hex). Storms enforce this
-        # via `affects_hex`; the iterator pre-filters facilities by-planet-at-hex,
-        # so this is mostly a safety net for adapter implementations.
+        # Hex affinity check (if querying a specific hex). Storms enforce
+        # this via `affects_hex`; facilities are pre-filtered by the
+        # iterator. This is mostly a safety net for adapter implementations.
         if hex_coord is not None:
             try:
                 if not source.affects_hex(hex_coord):
@@ -320,7 +373,8 @@ def _aggregate(
             continue
 
         for ability_name, ability_data in abilities.items():
-            if ability_name not in SYSTEM_EFFECT_ABILITIES:
+            metadata = find_metadata(ability_name)
+            if metadata is None:
                 continue
             entries = ability_data if isinstance(ability_data, list) else [ability_data]
             for entry in entries:
@@ -330,10 +384,10 @@ def _aggregate(
                 if entry_scope not in allowed_scopes:
                     continue
 
-                # PROJ-300 D17: ownerless sources may only declare ownership-
-                # neutral scopes. "enemy_sector" on a storm is undefined
-                # ("enemy of whom?"). Skip + log; do not crash the collector.
-                if owner_id is None and entry_scope in _OWNER_AWARE_SCOPES:
+                # PROJ-300 D17: ownerless sources may only declare
+                # ownership-neutral scopes. "enemy_sector" on a storm is
+                # undefined ("enemy of whom?"). Skip + log; don't crash.
+                if owner_id is None and entry_scope in metadata.owner_aware_scopes:
                     logger.warning(
                         "PROJ-300 D17 violation: ownerless %s '%s' declares "
                         "scope=%s on ability '%s'. Skipping. Use 'sector' or "
@@ -346,131 +400,143 @@ def _aggregate(
                     continue
 
                 group_key = make_group_key(ability_name, entry)
-                display_name = make_display_name(ability_name, entry)
-
-                # Activation state — None means always-on (storms, planets,
-                # stars, etc.). Activatable abilities on facilities have a
-                # state from their owning facility.
-                state = None
-                if _is_activatable(entry):
-                    state = source.get_activation_state(ability_name)
-                status = _format_status(state)
-                if _is_activatable(entry):
-                    is_active = state is not None and state.phase == ActivationPhase.ACTIVE
-                else:
-                    is_active = True
-
-                # Value pulled from the entry per its kind.
-                if ability_name in _RATE_ABILITIES:
-                    value = float(entry.get('rate', entry.get('improvement_rate', 0.0)))
-                else:
-                    value = float(entry.get('multiplier', entry.get('improvement_rate', 1.0)))
-
-                provider = {
-                    # Universal PROJ-300 fields.
-                    'source_kind': source.source_kind,
-                    'source_label': source.source_label,
-                    'source_id': source.source_id,
-                    'owner_id': owner_id,
-                    'status': status,
-                    'is_active': is_active,
-                    'value': value,
-                    'ability_data': entry,
-                    # Legacy back-compat fields — populated for facility sources
-                    # so existing UI consumers keep working until Phase 8.
-                    **_legacy_provider_fields(source),
-                }
+                provider = _build_provider(
+                    source, entry, ability_name, metadata, owner_id,
+                )
 
                 if group_key not in raw_providers:
                     raw_providers[group_key] = {
                         'ability_name': ability_name,
-                        'display_name': display_name,
+                        'display_name': make_display_name(ability_name, entry),
                         'resource_type': entry.get('resource_type'),
                         'damage_type': entry.get('damage_type'),
-                        'kind': _ability_kind(ability_name),
+                        'kind': metadata.kind,
                         'providers': [],
                     }
                 raw_providers[group_key]['providers'].append(provider)
 
-    # Build aggregated effect rows.
-    results: List[Dict[str, Any]] = []
-    for group_key, group_data in raw_providers.items():
-        providers = group_data['providers']
+    return raw_providers
 
-        any_active = any(p['is_active'] for p in providers)
-        any_activating = any('Activating' in p['status'] for p in providers)
-        any_deactivating = any('Deactivating' in p['status'] for p in providers)
 
-        if any_active:
-            aggregate_status = "Active"
-        elif any_activating:
-            for p in providers:
-                if 'Activating' in p['status']:
-                    aggregate_status = p['status']
-                    break
-            else:
-                aggregate_status = "Activating"
-        elif any_deactivating:
-            aggregate_status = "Deactivating"
-        else:
-            aggregate_status = "Inactive"
+def _aggregate_status(providers: List[Dict[str, Any]]) -> str:
+    """Roll a list of provider statuses into a single group status.
 
-        # Aggregate from active providers if any are active; otherwise show
-        # the would-be value across all providers (matches pre-PROJ-300
-        # behavior where inactive providers still rendered a stack value).
-        active_entries = [p['ability_data'] for p in providers if p['is_active']]
-        entries_for_agg = active_entries if active_entries else [p['ability_data'] for p in providers]
+    Precedence: any ACTIVE → "Active"; else any ACTIVATING → first
+    activating provider's status string; else any DEACTIVATING →
+    "Deactivating"; else "Inactive".
+    """
+    if any(p['is_active'] for p in providers):
+        return "Active"
+    if any('Activating' in p['status'] for p in providers):
+        for p in providers:
+            if 'Activating' in p['status']:
+                return p['status']
+        return "Activating"
+    if any('Deactivating' in p['status'] for p in providers):
+        return "Deactivating"
+    return "Inactive"
 
-        kind = group_data['kind']
-        # PROJ-300 D16: mixed-kind validation. A group declared as multiplier
-        # but containing rate-style entries (or vice versa) is a registry
-        # smell — skip the offender and log so the issue is debuggable
-        # without crashing the panel.
-        clean_entries = []
-        for entry in entries_for_agg:
-            entry_has_rate = isinstance(entry, dict) and 'rate' in entry
-            entry_has_mult = isinstance(entry, dict) and 'multiplier' in entry
-            if kind == 'rate' and entry_has_mult and not entry_has_rate:
-                logger.warning(
-                    "PROJ-300 D16: mixed-kind in group '%s' — multiplier-style "
-                    "entry in rate-grouped ability. Skipping entry.",
-                    group_key,
-                )
-                continue
-            if kind == 'multiplier' and entry_has_rate and not entry_has_mult:
-                logger.warning(
-                    "PROJ-300 D16: mixed-kind in group '%s' — rate-style "
-                    "entry in multiplier-grouped ability. Skipping entry.",
-                    group_key,
-                )
-                continue
-            clean_entries.append(entry)
-        entries_for_agg = clean_entries
 
-        if kind == 'rate':
-            # Adapt entry shape for aggregator: rate field maps to 'rate'.
-            agg_entries = [
-                {'rate': e.get('rate', e.get('improvement_rate', 0.0)),
-                 'stack_group': e.get('stack_group')}
-                for e in entries_for_agg
-            ]
-            aggregate_value = aggregate_rates(agg_entries)
-        else:
-            aggregate_value = aggregate_multipliers(entries_for_agg)
+def _aggregate_value(
+    providers: List[Dict[str, Any]],
+    kind: str,
+    group_key: str,
+) -> float:
+    """Aggregate the per-source values for a group.
 
-        results.append({
+    Active providers contribute when any exist; otherwise all providers'
+    would-be values contribute (matches pre-PROJ-300 behavior). PROJ-300
+    D16 mixed-kind entries (rate-shaped entry in a multiplier group, or
+    vice versa) are skipped + logged so a malformed registry entry can't
+    crash the panel.
+    """
+    active_entries = [p['ability_data'] for p in providers if p['is_active']]
+    entries_for_agg = active_entries if active_entries else [
+        p['ability_data'] for p in providers
+    ]
+
+    # PROJ-300 D16: mixed-kind validation.
+    clean_entries = []
+    for entry in entries_for_agg:
+        entry_has_rate = isinstance(entry, dict) and 'rate' in entry
+        entry_has_mult = isinstance(entry, dict) and 'multiplier' in entry
+        if kind == 'rate' and entry_has_mult and not entry_has_rate:
+            logger.warning(
+                "PROJ-300 D16: mixed-kind in group '%s' — multiplier-style "
+                "entry in rate-grouped ability. Skipping entry.",
+                group_key,
+            )
+            continue
+        if kind == 'multiplier' and entry_has_rate and not entry_has_mult:
+            logger.warning(
+                "PROJ-300 D16: mixed-kind in group '%s' — rate-style "
+                "entry in multiplier-grouped ability. Skipping entry.",
+                group_key,
+            )
+            continue
+        clean_entries.append(entry)
+
+    if kind == 'rate':
+        # Adapt entry shape for aggregator: rate field maps to 'rate'.
+        agg_entries = [
+            {'rate': e.get('rate', e.get('improvement_rate', 0.0)),
+             'stack_group': e.get('stack_group')}
+            for e in clean_entries
+        ]
+        return aggregate_rates(agg_entries)
+    return aggregate_multipliers(clean_entries)
+
+
+def _format_rows(
+    raw_providers: Dict[str, dict],
+    status_per_group: Dict[str, str],
+    value_per_group: Dict[str, float],
+) -> List[Dict[str, Any]]:
+    """Build the public effect-row return shape from intermediate state."""
+    return [
+        {
             'ability_name': group_data['ability_name'],
             'display_name': group_data['display_name'],
             'group_key': group_key,
-            'status': aggregate_status,
+            'status': status_per_group[group_key],
             'resource_type': group_data['resource_type'],
             'damage_type': group_data['damage_type'],
-            'kind': kind,
-            'aggregate_value': aggregate_value,
-            'providers': providers,
-        })
+            'kind': group_data['kind'],
+            'aggregate_value': value_per_group[group_key],
+            'providers': group_data['providers'],
+        }
+        for group_key, group_data in raw_providers.items()
+    ]
 
-    return results
+
+def _aggregate(
+    sources,
+    allowed_scopes: frozenset,
+    empire_id,
+    registries,
+    *,
+    hex_coord,
+    system,
+) -> List[Dict[str, Any]]:
+    """Walk every source, build per-group provider dicts, aggregate per kind.
+
+    Thin orchestrator over the four extracted helpers
+    (`_collect_providers`, `_aggregate_status`, `_aggregate_value`,
+    `_format_rows`). The `registries` and `system` parameters are unused
+    here but retained for signature compatibility — collectors at the
+    public boundary still pass them.
+    """
+    raw_providers = _collect_providers(
+        sources, allowed_scopes, empire_id, hex_coord=hex_coord,
+    )
+    status_per_group = {
+        k: _aggregate_status(v['providers']) for k, v in raw_providers.items()
+    }
+    value_per_group = {
+        k: _aggregate_value(v['providers'], v['kind'], k)
+        for k, v in raw_providers.items()
+    }
+    return _format_rows(raw_providers, status_per_group, value_per_group)
 
 
 def _legacy_provider_fields(source) -> Dict[str, Any]:

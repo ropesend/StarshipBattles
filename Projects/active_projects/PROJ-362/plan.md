@@ -13,16 +13,34 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Characterization tests (TDD baseline) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. EffectAbilityMetadata registry | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Decompose `_aggregate` | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Retire `_legacy_provider_fields` (deferred) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Characterization tests (TDD baseline) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. EffectAbilityMetadata registry | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Decompose `_aggregate` | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Retire `_legacy_provider_fields` (deferred) | Deferred | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning (awaiting user approval)
-**Last Action:** Plan drafted from review finding #2 (P1 hotspot — CC 47, 193 lines, hardcoded ability metadata). Renumbered from PROJ-352 to PROJ-362.
-**Next Action:** User approval, then begin Phase 1 in Continue Project session.
+**Active Phase:** Phases 1-3 complete; Phase 4 deferred per plan.
+**Last Action:** Phases 1-3 implemented end-to-end. (1) 10 characterization tests
+landed in `test_system_effects_collector_aggregate_characterization.py` and
+passed against pre-refactor code. (2) New
+`game/strategy/services/effect_ability_metadata.py` registry replaces
+`SYSTEM_EFFECT_ABILITIES`/`_RATE_ABILITIES`/`_OWNER_AWARE_SCOPES` and the
+name-keyed branches in `make_group_key`/`make_display_name`. 59 registry tests
+in `test_effect_ability_metadata.py`. (3) `_aggregate` decomposed into
+`_collect_providers`, `_aggregate_status`, `_aggregate_value`, `_format_rows`
++ helper `_build_provider`. `_aggregate` CC dropped from 47 to 3; the
+orchestrator body is 4 statements. 13 direct decomposition tests in
+`test_system_effects_collector_decomposition.py`.
+
+Phase 4 (`_legacy_provider_fields` retirement) **deferred** as documented in
+`phase_4_checklist.md`: 5 UI consumers still read the legacy keys
+(`planet_name`, `facility_name`, etc.), and removing the shim requires a
+separate UI-consumer audit and lockstep migration. Out of original PROJ-362
+scope.
+
+**Next Action:** User verification of Phases 1-3. Phase 4 awaits explicit
+user approval and a dedicated UI audit.
 **Blockers:** None
 
 ## Overview

@@ -3,7 +3,12 @@
 > **STATUS: DEFERRED** — Do not begin without explicit user direction.
 > This phase touches UI; it is out of the original scope of PROJ-362 and should be planned with a separate UI consumer audit.
 
-**Status:** Deferred
+**Status:** Deferred (confirmed by PROJ-362 Phase 1-3 implementation, 2026-05-04)
+**Deferral reason:** `_legacy_provider_fields` is consumed by 5 UI files
+(per `findings/02_dependencies.md`). Removing the shim requires migrating
+all 5 consumers in lockstep — a UI-layer concern out of scope for the
+metadata-registry / aggregator decomposition this project delivers. Awaiting
+explicit user direction + UI audit before reactivating.
 **Objective:** Eliminate the `_legacy_provider_fields` compatibility shim by migrating the 5 UI consumers to the new provider DTO shape (or deleting the legacy keys after consumers stop reading them).
 
 ---
