@@ -2,7 +2,9 @@
 #
 # Format:
 #   - One path or glob per line, relative to the repo root.
-#   - Glob patterns use `pathlib.PurePosixPath.match` semantics.
+#   - Glob patterns are matched by `lint_test_files.py`'s internal
+#     `_glob_to_regex` POSIX-glob translator (NOT `pathlib.PurePosixPath.match`,
+#     which does not recurse on `**`).
 #       e.g. `tests/unit/tools/**/*.py` matches every Python file under
 #       tests/unit/tools/ at any depth.
 #   - Blank lines and `#` comments are ignored.
