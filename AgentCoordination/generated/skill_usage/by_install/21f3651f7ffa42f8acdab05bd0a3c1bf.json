@@ -2,6 +2,13 @@
   "install_id": "21f3651f7ffa42f8acdab05bd0a3c1bf",
   "schema_version": 1,
   "skills": {
+    "claude-discuss-start": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-05T01:08:08Z"
+    },
     "claude-doc-audit-apply": {
       "agents": {
         "claude": 3
@@ -11,10 +18,10 @@
     },
     "claude-fix-crash": {
       "agents": {
-        "claude": 1
+        "claude": 2
       },
-      "count": 1,
-      "last_used": "2026-05-04T23:12:18Z"
+      "count": 2,
+      "last_used": "2026-05-05T00:59:14Z"
     },
     "claude-gi-add": {
       "agents": {
@@ -32,10 +39,17 @@
     },
     "codex-discuss-respond": {
       "agents": {
+        "codex": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-05T01:09:12Z"
+    },
+    "codex-starship-combat-lab": {
+      "agents": {
         "codex": 1
       },
       "count": 1,
-      "last_used": "2026-05-04T03:13:33Z"
+      "last_used": "2026-05-05T01:10:30Z"
     },
     "ocode-review-request": {
       "agents": {
