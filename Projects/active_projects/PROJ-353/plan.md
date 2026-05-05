@@ -9,7 +9,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. T6.8 — facade `_session` lint decision | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. T6.8 — facade `_session` lint decision | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Tier-7 polish bundle (test-quality MAJORs) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
