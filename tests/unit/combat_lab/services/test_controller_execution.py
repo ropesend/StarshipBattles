@@ -1,207 +1,15 @@
 """
-Unit tests for TestLabUIController - execution, metadata updates, and queries.
+Unit tests for TestLabUIController - metadata updates and queries.
 
 PROJ-48: Split from test_test_lab_controller.py
+PROJ-342: Removed `TestHandleRunHeadless` class — `handle_run_headless`
+deleted along with `TestExecutionService`/`TestResultsService` orphans.
 """
 
 import pytest
-from pathlib import Path
 from unittest.mock import Mock
 from combat_lab.services.test_lab_controller import TestLabUIController
 from tests.unit.combat_lab.services.conftest import create_test_metadata
-
-
-class TestHandleRunHeadless:
-    """Test headless test execution handling."""
-
-    def test_handle_run_headless_success(
-        self,
-        mock_game,
-        mock_test_registry,
-        mock_test_history,
-        sample_scenario_info
-    ):
-        """Test successful headless test run."""
-        mock_test_registry.get_by_id = Mock(return_value=sample_scenario_info)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-        controller.ui_state.select_test("TEST-001")
-        controller.test_execution.run_headless = Mock(return_value={
-            'passed': True,
-            'results': {'damage_dealt': 150},
-            'ticks_run': 500,
-            'duration_real': 0.5,
-            'error': None
-        })
-
-        result = controller.handle_run_headless()
-
-        assert result['passed'] is True
-        assert any("PASSED" in msg for msg in controller.output_log)
-
-    def test_handle_run_headless_failed_test(
-        self,
-        mock_game,
-        mock_test_registry,
-        mock_test_history,
-        sample_scenario_info
-    ):
-        """Test headless run with failed test."""
-        mock_test_registry.get_by_id = Mock(return_value=sample_scenario_info)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-        controller.ui_state.select_test("TEST-001")
-        controller.test_execution.run_headless = Mock(return_value={
-            'passed': False,
-            'results': {'damage_dealt': 0},
-            'ticks_run': 500,
-            'duration_real': 0.5,
-            'error': None
-        })
-
-        result = controller.handle_run_headless()
-
-        assert result['passed'] is False
-        assert any("FAILED" in msg for msg in controller.output_log)
-
-    def test_handle_run_headless_no_test_selected(
-        self,
-        mock_game,
-        mock_test_registry,
-        mock_test_history
-    ):
-        """Test headless run with no test selected."""
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-
-        controller.handle_run_headless()
-
-        assert any("No test selected" in msg for msg in controller.output_log)
-
-    def test_handle_run_headless_test_not_found(
-        self,
-        mock_game,
-        mock_test_registry,
-        mock_test_history
-    ):
-        """Test headless run with invalid test ID."""
-        mock_test_registry.get_by_id = Mock(return_value=None)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-        controller.ui_state.select_test("INVALID")
-
-        controller.handle_run_headless()
-
-        assert any("not found" in msg for msg in controller.output_log)
-
-    def test_handle_run_headless_with_error(
-        self,
-        mock_game,
-        mock_test_registry,
-        mock_test_history,
-        sample_scenario_info
-    ):
-        """Test headless run with error."""
-        mock_test_registry.get_by_id = Mock(return_value=sample_scenario_info)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-        controller.ui_state.select_test("TEST-001")
-        controller.test_execution.run_headless = Mock(return_value={
-            'passed': False,
-            'results': {},
-            'ticks_run': 0,
-            'duration_real': 0,
-            'error': "Test error"
-        })
-
-        result = controller.handle_run_headless()
-
-        assert any("ERROR" in msg for msg in controller.output_log)
-
-    def test_handle_run_headless_progress_callback(
-        self,
-        mock_game,
-        mock_test_registry,
-        mock_test_history,
-        sample_scenario_info
-    ):
-        """Test headless run with progress callback."""
-        mock_test_registry.get_by_id = Mock(return_value=sample_scenario_info)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-        controller.ui_state.select_test("TEST-001")
-
-        progress_callback = Mock()
-        controller.test_execution.run_headless = Mock(return_value={
-            'passed': True,
-            'results': {},
-            'ticks_run': 500,
-            'duration_real': 0.5,
-            'error': None
-        })
-
-        controller.handle_run_headless(on_progress=progress_callback)
-
-        # Verify progress callback was passed through
-        controller.test_execution.run_headless.assert_called_once()
-        call_kwargs = controller.test_execution.run_headless.call_args[1]
-        assert 'on_progress' in call_kwargs
-
-    def test_handle_run_headless_updates_ui_state(
-        self,
-        mock_game,
-        mock_test_registry,
-        mock_test_history,
-        sample_scenario_info
-    ):
-        """Test that headless running state is managed."""
-        mock_test_registry.get_by_id = Mock(return_value=sample_scenario_info)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-        controller.ui_state.select_test("TEST-001")
-
-        running_states = []
-
-        def capture_state(*args, **kwargs):
-            running_states.append(controller.ui_state.is_headless_running())
-            return {
-                'passed': True,
-                'results': {},
-                'ticks_run': 500,
-                'duration_real': 0.5,
-                'error': None
-            }
-
-        controller.test_execution.run_headless = capture_state
-
-        controller.handle_run_headless()
-
-        # Should be True during execution, False after
-        assert running_states[0] is True
-        assert controller.ui_state.is_headless_running() is False
-
-    def test_handle_run_headless_adds_to_history(
-        self,
-        mock_game,
-        mock_test_registry,
-        mock_test_history,
-        sample_scenario_info
-    ):
-        """Test that results are added to history."""
-        mock_test_registry.get_by_id = Mock(return_value=sample_scenario_info)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
-        controller.ui_state.select_test("TEST-001")
-        controller.test_results.add_run = Mock()
-
-        test_results = {'damage_dealt': 150}
-        controller.test_execution.run_headless = Mock(return_value={
-            'passed': True,
-            'results': test_results,
-            'ticks_run': 500,
-            'duration_real': 0.5,
-            'error': None
-        })
-
-        controller.handle_run_headless()
-
-        controller.test_results.add_run.assert_called_once_with(
-            "TEST-001",
-            test_results,
-            update_registry=True
-        )
 
 
 class TestGetFilteredScenarios:
@@ -209,7 +17,6 @@ class TestGetFilteredScenarios:
 
     def test_get_filtered_scenarios_all(
         self,
-        mock_game,
         mock_test_registry,
         mock_test_history
     ):
@@ -222,7 +29,7 @@ class TestGetFilteredScenarios:
             'TEST-002': {'metadata': metadata2, 'class': Mock()}
         }
         mock_test_registry.get_all_scenarios = Mock(return_value=all_scenarios)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+        controller = TestLabUIController(mock_test_registry, mock_test_history)
 
         scenarios = controller.get_filtered_scenarios(category=None)
 
@@ -230,7 +37,6 @@ class TestGetFilteredScenarios:
 
     def test_get_filtered_scenarios_by_category(
         self,
-        mock_game,
         mock_test_registry,
         mock_test_history
     ):
@@ -251,7 +57,7 @@ class TestGetFilteredScenarios:
             'TEST-002': {'metadata': metadata2}
         }
         mock_test_registry.get_all_scenarios = Mock(return_value=all_scenarios)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+        controller = TestLabUIController(mock_test_registry, mock_test_history)
 
         scenarios = controller.get_filtered_scenarios(category="Beam Weapons")
 
@@ -265,14 +71,13 @@ class TestGetShipInfo:
 
     def test_get_ship_info_success(
         self,
-        mock_game,
         mock_test_registry,
         mock_test_history,
         sample_scenario_info
     ):
         """Test getting ship info for test."""
         mock_test_registry.get_by_id = Mock(return_value=sample_scenario_info)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+        controller = TestLabUIController(mock_test_registry, mock_test_history)
         controller.scenario_data.extract_ships_from_scenario = Mock(return_value=[
             {'role': 'Attacker', 'filename': 'test.json'}
         ])
@@ -284,13 +89,12 @@ class TestGetShipInfo:
 
     def test_get_ship_info_test_not_found(
         self,
-        mock_game,
         mock_test_registry,
         mock_test_history
     ):
         """Test getting ship info for invalid test."""
         mock_test_registry.get_by_id = Mock(return_value=None)
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+        controller = TestLabUIController(mock_test_registry, mock_test_history)
 
         ships = controller.get_ship_info("INVALID")
 
@@ -302,13 +106,12 @@ class TestGetComponentData:
 
     def test_get_component_data_success(
         self,
-        mock_game,
         mock_test_registry,
         mock_test_history,
         sample_component_data
     ):
         """Test getting component data."""
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+        controller = TestLabUIController(mock_test_registry, mock_test_history)
         controller.scenario_data.load_component_data = Mock(return_value=sample_component_data)
 
         component = controller.get_component_data("test_beam_low_acc_1dmg")
@@ -317,12 +120,11 @@ class TestGetComponentData:
 
     def test_get_component_data_not_found(
         self,
-        mock_game,
         mock_test_registry,
         mock_test_history
     ):
         """Test getting non-existent component."""
-        controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+        controller = TestLabUIController(mock_test_registry, mock_test_history)
         controller.scenario_data.load_component_data = Mock(return_value=None)
 
         component = controller.get_component_data("invalid_component")

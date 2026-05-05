@@ -11,7 +11,7 @@
 | PROJ-345 | Closeout Sprint 3 - PROJ-333 critical coverage gaps from review | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-344 | Closeout Sprint 2 - Doc and test misalignments from PROJ-321..341 review | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-343 | Closeout Sprint 1 - Production behavior bug fixes from PROJ-321..341 review | Planning | 2026-05-04 | 2026-05-04 |
-| PROJ-342 | Drop self.game handle from TestLab UI | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-342 | Drop self.game handle from TestLab UI | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-340 | Test coverage - UI services + utility characterization (45 tests, 6 files) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-339 | Test coverage - UI panels mid-risk characterization (29 tests, 6 files) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
@@ -36,47 +36,31 @@
 | PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | Awaiting Verification (Partial — 25 deferred-with-blocker) | 2026-05-03 | 2026-05-03 |
 | PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | Awaiting Verification | 2026-05-03 | 2026-05-03 |
 | PROJ-320 | Strategic Combat Round Budget | Planning | 2026-05-02 | 2026-05-02 |
-| PROJ-319 | Audit-shrink cleanup 2026-05-02 | Planning | 2026-05-02 | 2026-05-02 |
-| PROJ-318 | PROJ-314 Closeout Remediations | Complete | 2026-04-28 | 2026-04-28 |
-| PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | Awaiting User Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-315 | Fleet Report Component Damage Panel | Awaiting User Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-314 | Unify Ship Theme Loader Schema | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-313 | Strategy Modal Window Base Class Refactor | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-312 | Add Battle Replay System | Plan Approved | 2026-04-27 | 2026-04-27 |
-| PROJ-310 | Deep Nesting Investigative Review | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-305 | Fleet Strategic-Layer Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-304 | Star System Archetype Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-303 | Warp Point Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-302 | Star Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-301 | Planet Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-300 | Universal IAbilitySource Framework + Storm/Facility Migration | Planning | 2026-04-26 | 2026-04-26 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-319 | Audit-shrink cleanup 2026-05-02 | Archived | 2026-05-02 | 2026-05-04 |
+| PROJ-318 | PROJ-314 Closeout Remediations | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-315 | Fleet Report Component Damage Panel | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-314 | Unify Ship Theme Loader Schema | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-313 | Strategy Modal Window Base Class Refactor | Archived | 2026-04-28 | 2026-05-04 |
+| PROJ-312 | Add Battle Replay System | Archived | 2026-04-27 | 2026-05-04 |
+| PROJ-310 | Deep Nesting Investigative Review | Archived | 2026-04-26 | 2026-05-04 |
+| PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | Archived | 2026-04-26 | 2026-05-04 |
+| PROJ-305 | Fleet Strategic-Layer Ability Sources | Archived | 2026-04-26 | 2026-05-04 |
+| PROJ-304 | Star System Archetype Ability Sources | Archived | 2026-04-26 | 2026-05-04 |
+| PROJ-303 | Warp Point Intrinsic Ability Sources | Archived | 2026-04-26 | 2026-05-04 |
+| PROJ-302 | Star Intrinsic Ability Sources | Archived | 2026-04-26 | 2026-05-04 |
+| PROJ-301 | Planet Intrinsic Ability Sources | Archived | 2026-04-26 | 2026-05-04 |
+| PROJ-300 | Universal IAbilitySource Framework + Storm/Facility Migration | Archived | 2026-04-26 | 2026-05-04 |
 | PROJ-311 | Return Type Annotation Backfill and Convention | Archived | 2026-04-26 | 2026-04-27 |
 | PROJ-308 | Broad Exception Handler Justifications | Archived | 2026-04-26 | 2026-04-27 |
 | PROJ-307 | Documentation Freshness Timestamps | Archived | 2026-04-26 | 2026-04-27 |
 | PROJ-306 | Battle Simulation DI Cleanup (PROJ-274 closure) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-298 | FleetOrder Rename Cleanup | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-297 | Code Review Cleanup - Quick Wins | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-299 | Race Description Generator (LLM) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-296 | LLM Service Foundation | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-292 | Audit High + Major Cleanup (PROJ-283..290 Closeout) | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-291 | Audit Critical Fixes (PROJ-283..290 Sign-off Blocker) | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-290 | Empire Treasury + Uncolonized Habitability UI | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-289 | Planet Report Panel Per-Species + Per-Resource UI | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-288 | Colony Output Projection Helpers | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-287 | Race Registry Facade + Empire.resident_species | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-286 | Multi-Resource Population Consumption | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-285 | Habitability-to-Production Economy Hook | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-284 | Colony Demographics Loop (Organics, Happiness, Population Growth Rework) | Archived | 2026-04-18 | 2026-04-26 |
 
 ---
 

@@ -120,10 +120,11 @@ class ScreenRouter:
             scene_callback=scene_callbacks.strategy,
             input_mapper=self.input_mapper,
         )
-        # NB: TestLabScreen still asks for `self` (the legacy "Game" handle)
-        # in its first arg. The router stands in for that role here.
         self.test_lab_scene = TestLabScreen(
-            self, scene_callback=scene_callbacks.test_lab
+            self.width,
+            self.height,
+            battle_scene=self.battle_scene,
+            scene_callback=scene_callbacks.test_lab,
         )
 
         # Optionally-instantiated scenes (created on demand).

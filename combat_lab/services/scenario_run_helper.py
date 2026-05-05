@@ -1,9 +1,9 @@
 """Shared spec-driven scenario runner for headless Combat Lab execution.
 
-Extracted during PROJ-270 Phase 1.1 and extended in Phase 2.5 so that both
-`combat_lab.services.test_execution_service.run_headless` and
-`game.ui.screens.test_lab.test_executor._run_scenario_via_run_battle`
-share a single implementation.
+Extracted during PROJ-270 Phase 1.1 and extended in Phase 2.5. PROJ-342
+deleted the duplicate `combat_lab.services.test_execution_service` path;
+`game.ui.screens.test_lab.test_executor._run_scenario_via_run_battle` is
+now the single in-game caller of this helper.
 
 Each scenario is materialized via its `to_spec(...)` compiler and driven
 through `run_battle(spec, ...)`. There is no legacy `scenario.setup(engine)`
@@ -65,7 +65,7 @@ def run_scenario_via_run_battle(
     scenario.before_run_battle(spec)
 
     # PROJ-274: route materialization through the context materializer
-    # (Combat Lab sets this to DesignOnlyMaterializer in TestExecutionService.__init__).
+    # (Combat Lab sets this to DesignOnlyMaterializer in TestRunner.__init__).
     # The closure keeps its role-tagging bookkeeping — that's orthogonal
     # to the ship-building pipeline and would otherwise need to be
     # replicated via post-hoc lookup on the outcome.

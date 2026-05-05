@@ -13,9 +13,12 @@ InputHandler / Controller. FleetBattleSetupScreen is the sibling exemplar.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable, TYPE_CHECKING
 import pygame
 import pygame_gui
+
+if TYPE_CHECKING:
+    from game.ui.screens.battle_screen import BattleScreen
 import os
 
 from game.ui.fonts import get_font, FONT_MONO
@@ -58,20 +61,29 @@ class TestLabScreen:
     - Delegates to MVVM components
     """
 
-    def __init__(self, game, scene_callback=None):
+    def __init__(
+        self,
+        screen_width: int,
+        screen_height: int,
+        battle_scene: "BattleScreen",
+        scene_callback: Callable[..., None] | None = None,
+    ) -> None:
         """Initialize test lab screen.
 
         Args:
-            game: Game instance providing screen, battle_scene, and state management.
+            screen_width: Display width in pixels.
+            screen_height: Display height in pixels.
+            battle_scene: BattleScreen instance used for engine access during
+                test execution and as the visual-mode battle target.
             scene_callback: Callback function for scene transitions.
-                           Called with (action, **kwargs) where action is:
-                           - "start_test_battle": Start visual test battle with scenario kwarg
-                           - "return_to_menu": Return to main menu
+                Called with (action, **kwargs) where action is:
+                - "start_test_battle": Start visual test battle with scenario kwarg
+                - "return_to_menu": Return to main menu
         """
-        self.game = game
+        self.battle_scene = battle_scene
         self.scene_callback = scene_callback
-        self.screen_width = game.screen.get_width() if hasattr(game, 'screen') else WIDTH
-        self.screen_height = game.screen.get_height() if hasattr(game, 'screen') else HEIGHT
+        self.screen_width = screen_width
+        self.screen_height = screen_height
 
         # pygame_gui UIManager for buttons
         self.ui_manager = pygame_gui.UIManager((self.screen_width, self.screen_height))
@@ -81,7 +93,7 @@ class TestLabScreen:
         from combat_lab.services.test_lab_controller import TestLabUIController
         self.registry = TestRegistry()
         self.test_history = TestHistory()
-        self.controller = TestLabUIController(game, self.registry, self.test_history)
+        self.controller = TestLabUIController(self.registry, self.test_history)
 
         # Data extraction helper (ships, components from test scenarios)
         self._data_extractor = TestLabDataExtractor(self.registry)
@@ -135,7 +147,7 @@ class TestLabScreen:
 
         # Battle state viewer (for viewing initial/final JSON states)
         from game.ui.screens.battle_state_viewer import BattleStateViewer
-        self.battle_state_viewer = BattleStateViewer(WIDTH, HEIGHT)
+        self.battle_state_viewer = BattleStateViewer(self.screen_width, self.screen_height)
 
         self._create_ui()
 
@@ -319,10 +331,10 @@ class TestLabScreen:
         results in the Test Details panel.
         """
         # Store results from completed visual test
-        if self.selected_test_id and hasattr(self.game.battle_scene, 'test_scenario'):
-            scenario = self.game.battle_scene.test_scenario
+        if self.selected_test_id and hasattr(self.battle_scene, 'test_scenario'):
+            scenario = self.battle_scene.test_scenario
             # Only capture results if test actually completed (not if user exited early)
-            if scenario and self.game.battle_scene.test_completed:
+            if scenario and self.battle_scene.test_completed:
                 # Ensure results dict exists
                 if not hasattr(scenario, 'results') or scenario.results is None:
                     scenario.results = {}
@@ -331,7 +343,7 @@ class TestLabScreen:
                 if 'passed' not in scenario.results:
                     scenario.results['passed'] = getattr(scenario, 'passed', False)
                 if 'ticks_run' not in scenario.results:
-                    scenario.results['ticks_run'] = self.game.battle_scene.test_tick_count
+                    scenario.results['ticks_run'] = self.battle_scene.test_tick_count
 
                 logger.debug(f"Storing visual test results for {self.selected_test_id}")
                 self.registry.update_last_run_results(self.selected_test_id, scenario.results)
@@ -344,10 +356,10 @@ class TestLabScreen:
                     self._viewmodel.results_panel.set_test(self.selected_test_id)
 
         # Clear battle scene test state
-        if hasattr(self.game.battle_scene, 'test_completed'):
-            self.game.battle_scene.test_completed = False
-        if hasattr(self.game.battle_scene, 'test_scenario'):
-            self.game.battle_scene.test_scenario = None
+        if hasattr(self.battle_scene, 'test_completed'):
+            self.battle_scene.test_completed = False
+        if hasattr(self.battle_scene, 'test_scenario'):
+            self.battle_scene.test_scenario = None
 
         # Keep selected_test_id so the test remains visually selected
         logger.debug(f"Returned from battle, test selection preserved: {self.selected_test_id}")
@@ -379,25 +391,45 @@ class TestLabScreen:
         overlay.blit(sub_text, (300 - sub_text.get_width()//2, 90))
         overlay.blit(detail_text, (300 - detail_text.get_width()//2, 130))
 
-        screen_center_x = self.game.screen.get_width() // 2
-        screen_center_y = self.game.screen.get_height() // 2
-        self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
+        surface = self._require_display_surface()
+        screen_center_x = self.screen_width // 2
+        screen_center_y = self.screen_height // 2
+        surface.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
 
     def _draw_and_flip(self) -> None:
         """Draw current screen state with progress overlay and flip display."""
-        self.game.screen.fill(theme.BG_PRIMARY)
-        self.draw(self.game.screen)
+        surface = self._require_display_surface()
+        surface.fill(theme.BG_PRIMARY)
+        self.draw(surface)
         pygame.display.flip()
+
+    def _require_display_surface(self) -> pygame.Surface:
+        """Return the active pygame display surface or raise.
+
+        `pygame.display.get_surface()` returns None if `set_mode` has not
+        been called. In production this never happens (bootstrap creates
+        the display before scenes exist); the explicit check exists so a
+        misconfigured unit test surfaces a clear error instead of an opaque
+        AttributeError downstream.
+        """
+        surface = pygame.display.get_surface()
+        if surface is None:
+            raise RuntimeError(
+                "Display surface not initialized; "
+                "TestLabScreen progress rendering requires "
+                "pygame.display.set_mode() to have been called."
+            )
+        return surface
 
     def _get_engine(self) -> Any:
         """Get the battle engine from battle scene."""
-        return self.game.battle_scene.engine
+        return self.battle_scene.engine
 
     def _ensure_engine(self) -> None:
         """Ensure battle engine exists (create if needed)."""
-        if self.game.battle_scene.engine is None:
+        if self.battle_scene.engine is None:
             from game.ai.ai_factory import AIControllerFactory
-            self.game.battle_scene._battle_service.create_battle(
+            self.battle_scene._battle_service.create_battle(
                 ai_factory=AIControllerFactory()
             )
 
@@ -486,7 +518,7 @@ class TestLabScreen:
         scenario.custom_setup(engine)
 
         # 7. Hand to BattleScreen for per-frame ticking.
-        self.game.battle_scene.start_battle(controller)
+        self.battle_scene.start_battle(controller)
 
         if self.scene_callback:
             self.scene_callback("start_test_battle", scenario=scenario)
@@ -625,6 +657,7 @@ class TestLabScreen:
         self.screen_width = width
         self.screen_height = height
         self.ui_manager.set_window_resolution((width, height))
+        self.battle_state_viewer.handle_resize(width, height)
         self._create_ui()
 
     def handle_input(self, events) -> None:
