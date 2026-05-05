@@ -18,7 +18,7 @@ without git index serialization. Multiple agents ran `git add` then
 first absorbed all currently-staged files, regardless of which agent
 originally staged them.
 
-This produced 2 cross-project commits:
+This produced 4 cross-project commits:
 
 ### Commit `cd7f84b59` — labeled "test(research): characterize ResearchRenderer drawing behavior (PROJ-337)"
 
@@ -52,9 +52,47 @@ Phase 1 or Phase 4 commit. `git blame` on `strategy_screen_assets.py`
 or `strategy_screen_selection.py` points at a PROJ-329A commit, which
 is semantically wrong.
 
+### Commit `ddfec64e0` — labeled "test(PROJ-333): add FleetMovementEngine characterization tests"
+
+Actually contains:
+- PROJ-333 `tests/unit/strategy/fleet_movement_engine/test_characterization.py` (NEW, 223 LOC)
+- **PROJ-329B `EmpirePanelWindow` Pattern §33 retrofit:**
+  - `game/ui/screens/empire_panel_window.py` (+49/-12)
+  - `tests/fixtures/empire_panel_window_ui_builder.py` (NEW, 79 LOC)
+  - `tests/unit/ui/screens/test_empire_panel_window.py` (NEW, 190 LOC)
+
+**Bisect/revert impact:** A bisect that lands on `ddfec64e0` for a PROJ-333
+fleet-movement-engine regression would incorrectly implicate
+EmpirePanelWindow's two-stage construction. A revert of `ddfec64e0` to
+undo a PROJ-333 issue would also remove the EmpirePanelWindow retrofit
+and its fixture/tests. `git blame` on `empire_panel_window.py`'s
+two-stage `__init__` lines points at a PROJ-333-labeled commit —
+semantically wrong.
+
+### Commit `9d16524f1` — labeled "test(PROJ-333): add ProductionSpawner characterization tests"
+
+Actually contains:
+- PROJ-333 `tests/unit/strategy/engine/test_production_spawner.py` (NEW, 269 LOC)
+- **PROJ-329C `PlanetAbilitiesWindow` decomposition + Pattern §33 retrofit:**
+  - `game/ui/screens/planet_abilities_controller.py` (NEW, 217 LOC) — extracted controller
+  - `game/ui/screens/planet_abilities_window.py` (+363/-229) — sweeping decomposition
+  - `tests/fixtures/planet_abilities_window_ui_builder.py` (NEW, 93 LOC)
+  - `tests/unit/ui/screens/test_planet_abilities_window_lifecycle.py` (+42 net)
+
+**Bisect/revert impact:** Largest contamination of the four — `9d16524f1`
+bundles a 580+ LOC PROJ-329C decomposition (introducing a new production
+file, `planet_abilities_controller.py`) with PROJ-333 characterization
+tests. A bisect that lands on `9d16524f1` for a PROJ-333 production-spawner
+regression would incorrectly implicate the PlanetAbilitiesWindow split.
+A revert would delete `planet_abilities_controller.py` entirely and
+revert 229 LOC of `planet_abilities_window.py` simplification. `git blame`
+on the new controller file points at a PROJ-333-labeled commit —
+semantically wrong, and the controller's existence is not even hinted at
+in the labeled commit message.
+
 ## Disposition
 
-These contaminations are **NOT being rebased away.** Per CLAUDE.md
+All 4 contaminations are **NOT being rebased away.** Per CLAUDE.md
 discipline ("Prefer to create a new commit rather than amending an
 existing commit"; "Never run destructive git commands... unless the user
 explicitly requests these actions"), rewriting published history is
