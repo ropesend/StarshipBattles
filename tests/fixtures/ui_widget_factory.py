@@ -273,6 +273,30 @@ def bypass_init(cls: Type):
     cleanup even on exception. Nested ``bypass_init(Cls)`` calls restore
     the previous value, not just ``False``.
 
+    Concurrency / parallelism notes (PROJ-353 Tier-7 T2.13)
+    ------------------------------------------------------
+
+    - **pytest-xdist** runs each worker in a SEPARATE PROCESS. The
+      ``cls.bypass_init`` mutation is therefore worker-local; there is
+      no cross-worker leak risk.
+    - Within a single worker, tests run SEQUENTIALLY. The context
+      manager's try/finally cleanup is sufficient there.
+    - The remaining risk is purely MRO-shaped: production code reads
+      ``getattr(type(self), 'bypass_init', False)``, which DOES walk the
+      MRO. If a test does ``with bypass_init(BaseCls): SubCls(...)``,
+      ``SubCls`` inherits the flag during the scope — that's the desired
+      behavior.
+    - The narrow trap: if a test, INSIDE the ``with bypass_init(BaseCls)``
+      block, explicitly assigns ``SubCls.bypass_init = <something>``,
+      the cleanup on ``BaseCls`` (this context manager's finally) will
+      NOT undo the SubCls assignment — that subclass override would
+      leak. Tests should not do this; if they need to flip a subclass
+      flag they should use a nested ``bypass_init(SubCls)`` block.
+    - The cleanup is class-local — restores the prior value of
+      ``BaseCls.__dict__['bypass_init']`` (or removes the attribute if
+      none was previously set). Pinned by
+      ``test_bypass_init_cleanup_pin`` in the fixture's test suite.
+
     Example
     -------
 
