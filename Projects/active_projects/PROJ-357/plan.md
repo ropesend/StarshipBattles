@@ -15,14 +15,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Characterization tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Provider identity rework | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Characterization tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Provider identity rework | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** 1
-**Last Action:** Project scaffolded from realtime-combat tech-debt review finding #2 (P1 correctness).
-**Next Action:** Run /claude-proj-start PROJ-357 to expand design + checklists.
+**Active Phase:** Done — awaiting user verification.
+**Last Action:** Phases 1 and 2 complete. `AuraProvider` now binds to `(component, ability)` identity and `_recalculate` reads live `ability.value`. 8 new identity tests pass; full aura corpus (63 tests) green; sharded suite green (17325 passed). Committed.
+**Next Action:** User verification. The 7 transient `test_post_battle_hook.py` failures observed in run #1 of the sharded suite (and 1 different failure in run #2) did not reproduce in run #3 and are unrelated to this fix — confirmed test-isolation flakes.
 **Blockers:** None
 
 ## Overview
