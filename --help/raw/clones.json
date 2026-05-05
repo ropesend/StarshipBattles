@@ -1,0 +1,592 @@
+{
+  "total_clusters": 33,
+  "total_duplicated_loc": 741,
+  "clusters": [
+    {
+      "member_count": 3,
+      "max_similarity": 1.0,
+      "estimated_loc": 12,
+      "members": [
+        {
+          "file": "simulation\\components\\abilities\\planetary.py",
+          "function": "__init__",
+          "line": 453
+        },
+        {
+          "file": "simulation\\components\\abilities\\planetary.py",
+          "function": "__init__",
+          "line": 528
+        },
+        {
+          "file": "simulation\\components\\abilities\\planetary.py",
+          "function": "__init__",
+          "line": 728
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 1.0,
+      "estimated_loc": 12,
+      "members": [
+        {
+          "file": "ui\\screens\\strategy_click_dispatcher.py",
+          "function": "_handle_drop_cargo_mode_click",
+          "line": 233
+        },
+        {
+          "file": "ui\\screens\\strategy_click_dispatcher.py",
+          "function": "_handle_load_cargo_mode_click",
+          "line": 247
+        },
+        {
+          "file": "ui\\screens\\strategy_click_dispatcher.py",
+          "function": "_handle_transfer_mode_click",
+          "line": 205
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 0.988,
+      "estimated_loc": 44,
+      "members": [
+        {
+          "file": "ui\\screens\\strategy_superweapons.py",
+          "function": "handle_close_warp_designation",
+          "line": 221
+        },
+        {
+          "file": "ui\\screens\\strategy_superweapons.py",
+          "function": "handle_dyson_sphere_designation",
+          "line": 265
+        },
+        {
+          "file": "ui\\screens\\strategy_superweapons.py",
+          "function": "handle_stellerate_star_designation",
+          "line": 119
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 0.939,
+      "estimated_loc": 15,
+      "members": [
+        {
+          "file": "strategy\\engine\\planet_command_handlers.py",
+          "function": "execute",
+          "line": 163
+        },
+        {
+          "file": "strategy\\engine\\planet_command_handlers.py",
+          "function": "execute",
+          "line": 184
+        },
+        {
+          "file": "strategy\\engine\\planet_command_handlers.py",
+          "function": "execute",
+          "line": 205
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 0.939,
+      "estimated_loc": 19,
+      "members": [
+        {
+          "file": "ui\\screens\\strategy_windows\\selection_prompts.py",
+          "function": "open_system",
+          "line": 50
+        },
+        {
+          "file": "ui\\screens\\strategy_windows\\selection_prompts.py",
+          "function": "prompt_fleet",
+          "line": 69
+        },
+        {
+          "file": "ui\\screens\\strategy_windows\\selection_prompts.py",
+          "function": "prompt_planet",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 1.0,
+      "estimated_loc": 20,
+      "members": [
+        {
+          "file": "services\\llm\\background.py",
+          "function": "shutdown_all_calls",
+          "line": 305
+        },
+        {
+          "file": "ui\\services\\image\\background.py",
+          "function": "shutdown_all_image_calls",
+          "line": 209
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 1.0,
+      "estimated_loc": 42,
+      "members": [
+        {
+          "file": "ui\\screens\\builder\\structure_list_items.py",
+          "function": "_rebuild_modifier_icons",
+          "line": 195
+        },
+        {
+          "file": "ui\\screens\\builder\\structure_list_items.py",
+          "function": "_rebuild_modifier_icons",
+          "line": 472
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.994,
+      "estimated_loc": 27,
+      "members": [
+        {
+          "file": "ui\\effects\\hit_effects.py",
+          "function": "_draw_armor_hit",
+          "line": 146
+        },
+        {
+          "file": "ui\\effects\\hit_effects.py",
+          "function": "_draw_component_destroyed",
+          "line": 176
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.994,
+      "estimated_loc": 31,
+      "members": [
+        {
+          "file": "ui\\screens\\planet_list_window.py",
+          "function": "update",
+          "line": 541
+        },
+        {
+          "file": "ui\\screens\\star_list_window.py",
+          "function": "update",
+          "line": 389
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.979,
+      "estimated_loc": 8,
+      "members": [
+        {
+          "file": "ui\\screens\\battle_setup\\controller.py",
+          "function": "delete_squadron",
+          "line": 288
+        },
+        {
+          "file": "ui\\screens\\battle_setup\\controller.py",
+          "function": "duplicate_squadron",
+          "line": 278
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.976,
+      "estimated_loc": 7,
+      "members": [
+        {
+          "file": "simulation\\components\\abilities\\base.py",
+          "function": "__init_subclass__",
+          "line": 450
+        },
+        {
+          "file": "simulation\\components\\abilities\\base.py",
+          "function": "__init_subclass__",
+          "line": 502
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.974,
+      "estimated_loc": 25,
+      "members": [
+        {
+          "file": "strategy\\engine\\superweapon_command_handlers.py",
+          "function": "execute",
+          "line": 225
+        },
+        {
+          "file": "strategy\\engine\\superweapon_command_handlers.py",
+          "function": "execute",
+          "line": 328
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.972,
+      "estimated_loc": 13,
+      "members": [
+        {
+          "file": "strategy\\engine\\planet_action_engine.py",
+          "function": "_get_deactivation_time",
+          "line": 327
+        },
+        {
+          "file": "strategy\\engine\\planet_action_engine.py",
+          "function": "_get_energy_drain_rate",
+          "line": 312
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.968,
+      "estimated_loc": 13,
+      "members": [
+        {
+          "file": "ui\\panels\\system_tree_panel.py",
+          "function": "_add_sector_effects",
+          "line": 496
+        },
+        {
+          "file": "ui\\panels\\system_tree_panel.py",
+          "function": "_add_system_effects",
+          "line": 481
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.959,
+      "estimated_loc": 21,
+      "members": [
+        {
+          "file": "strategy\\services\\race_description_llm_controller.py",
+          "function": "_apply_bio_transition",
+          "line": 266
+        },
+        {
+          "file": "strategy\\services\\race_description_llm_controller.py",
+          "function": "_apply_socio_transition",
+          "line": 289
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.958,
+      "estimated_loc": 53,
+      "members": [
+        {
+          "file": "simulation\\components\\modifier_manager.py",
+          "function": "get_stat_summary",
+          "line": 166
+        },
+        {
+          "file": "simulation\\components\\modifier_manager.py",
+          "function": "get_stat_summary_static",
+          "line": 297
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.955,
+      "estimated_loc": 15,
+      "members": [
+        {
+          "file": "strategy\\systems\\race_randomizer.py",
+          "function": "_pick_leader",
+          "line": 127
+        },
+        {
+          "file": "strategy\\systems\\race_randomizer.py",
+          "function": "_pick_name_entry",
+          "line": 109
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.952,
+      "estimated_loc": 22,
+      "members": [
+        {
+          "file": "ui\\screens\\event_log_data_source.py",
+          "function": "get_cell_replay_id",
+          "line": 150
+        },
+        {
+          "file": "ui\\screens\\event_log_data_source.py",
+          "function": "get_cell_replay_unavailable_reason",
+          "line": 172
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.947,
+      "estimated_loc": 10,
+      "members": [
+        {
+          "file": "ui\\screens\\workshop_event_router.py",
+          "function": "_handle_movement_dropdown",
+          "line": 493
+        },
+        {
+          "file": "ui\\screens\\workshop_event_router.py",
+          "function": "_handle_targeting_dropdown",
+          "line": 505
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.946,
+      "estimated_loc": 16,
+      "members": [
+        {
+          "file": "ui\\screens\\builder\\grouping_strategies.py",
+          "function": "group_components",
+          "line": 18
+        },
+        {
+          "file": "ui\\screens\\builder\\grouping_strategies.py",
+          "function": "group_components",
+          "line": 53
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.935,
+      "estimated_loc": 14,
+      "members": [
+        {
+          "file": "ui\\panels\\race_aptitudes_panel.py",
+          "function": "_create_content",
+          "line": 91
+        },
+        {
+          "file": "ui\\panels\\race_identity_panel.py",
+          "function": "_create_content",
+          "line": 86
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.925,
+      "estimated_loc": 36,
+      "members": [
+        {
+          "file": "ui\\services\\tkinter_utils.py",
+          "function": "open_load_dialog",
+          "line": 147
+        },
+        {
+          "file": "ui\\services\\tkinter_utils.py",
+          "function": "open_save_dialog",
+          "line": 108
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.924,
+      "estimated_loc": 30,
+      "members": [
+        {
+          "file": "strategy\\engine\\superweapon_command_handlers.py",
+          "function": "execute",
+          "line": 256
+        },
+        {
+          "file": "strategy\\engine\\superweapon_command_handlers.py",
+          "function": "execute",
+          "line": 292
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.921,
+      "estimated_loc": 24,
+      "members": [
+        {
+          "file": "ui\\screens\\test_lab\\renderer\\category_panel.py",
+          "function": "__init__",
+          "line": 28
+        },
+        {
+          "file": "ui\\screens\\test_lab\\renderer\\test_list_panel.py",
+          "function": "__init__",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.917,
+      "estimated_loc": 14,
+      "members": [
+        {
+          "file": "strategy\\services\\ability_iterator.py",
+          "function": "_planet_intrinsic_provider",
+          "line": 217
+        },
+        {
+          "file": "strategy\\services\\ability_iterator.py",
+          "function": "_warp_point_provider",
+          "line": 288
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.917,
+      "estimated_loc": 35,
+      "members": [
+        {
+          "file": "services\\llm\\factory.py",
+          "function": "create",
+          "line": 52
+        },
+        {
+          "file": "ui\\services\\image\\factory.py",
+          "function": "create",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.91,
+      "estimated_loc": 19,
+      "members": [
+        {
+          "file": "strategy\\services\\race_description_llm_controller.py",
+          "function": "_start_bio",
+          "line": 198
+        },
+        {
+          "file": "strategy\\services\\race_description_llm_controller.py",
+          "function": "_start_socio",
+          "line": 219
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.905,
+      "estimated_loc": 24,
+      "members": [
+        {
+          "file": "strategy\\data\\fleet_consumable_aggregator.py",
+          "function": "load_cargo_to_fleet",
+          "line": 291
+        },
+        {
+          "file": "strategy\\data\\fleet_consumable_aggregator.py",
+          "function": "unload_cargo_from_fleet",
+          "line": 317
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.897,
+      "estimated_loc": 21,
+      "members": [
+        {
+          "file": "ui\\screens\\strategy_fleet_ops.py",
+          "function": "execute_intercept",
+          "line": 134
+        },
+        {
+          "file": "ui\\screens\\strategy_fleet_ops.py",
+          "function": "execute_join",
+          "line": 197
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.883,
+      "estimated_loc": 36,
+      "members": [
+        {
+          "file": "services\\llm\\background.py",
+          "function": "start",
+          "line": 119
+        },
+        {
+          "file": "ui\\services\\image\\background.py",
+          "function": "start",
+          "line": 98
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.878,
+      "estimated_loc": 20,
+      "members": [
+        {
+          "file": "strategy\\data\\empire.py",
+          "function": "add_resources",
+          "line": 187
+        },
+        {
+          "file": "strategy\\data\\planet.py",
+          "function": "add_to_stockpile",
+          "line": 284
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.867,
+      "estimated_loc": 17,
+      "members": [
+        {
+          "file": "strategy\\engine\\harvesting_engine.py",
+          "function": "_get_storage_from_registry",
+          "line": 301
+        },
+        {
+          "file": "strategy\\engine\\harvesting_engine.py",
+          "function": "get_harvester_from_registry",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.851,
+      "estimated_loc": 26,
+      "members": [
+        {
+          "file": "strategy\\engine\\harvesting_engine.py",
+          "function": "_get_storage_info",
+          "line": 274
+        },
+        {
+          "file": "strategy\\engine\\harvesting_engine.py",
+          "function": "get_harvester_info",
+          "line": 38
+        }
+      ]
+    }
+  ]
+}

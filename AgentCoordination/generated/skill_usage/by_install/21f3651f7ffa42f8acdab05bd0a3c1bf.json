@@ -4,10 +4,10 @@
   "skills": {
     "claude-discuss-start": {
       "agents": {
-        "claude": 1
+        "claude": 2
       },
-      "count": 1,
-      "last_used": "2026-05-05T01:08:08Z"
+      "count": 2,
+      "last_used": "2026-05-05T03:44:41Z"
     },
     "claude-doc-audit-apply": {
       "agents": {
@@ -37,19 +37,26 @@
       "count": 2,
       "last_used": "2026-05-05T00:46:10Z"
     },
+    "claude-qa-triage-gh": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-05T02:59:26Z"
+    },
     "codex-discuss-respond": {
+      "agents": {
+        "codex": 5
+      },
+      "count": 5,
+      "last_used": "2026-05-05T03:56:52Z"
+    },
+    "codex-starship-analysis-review": {
       "agents": {
         "codex": 3
       },
       "count": 3,
-      "last_used": "2026-05-05T01:38:27Z"
-    },
-    "codex-starship-analysis-review": {
-      "agents": {
-        "codex": 1
-      },
-      "count": 1,
-      "last_used": "2026-05-05T02:04:49Z"
+      "last_used": "2026-05-05T03:24:24Z"
     },
     "codex-starship-combat-lab": {
       "agents": {
@@ -74,10 +81,10 @@
     },
     "ocode-testcoverage-audit": {
       "agents": {
-        "ocode": 1
+        "ocode": 9
       },
-      "count": 1,
-      "last_used": "2026-05-05T00:55:48Z"
+      "count": 9,
+      "last_used": "2026-05-05T04:58:29Z"
     }
   }
 }
