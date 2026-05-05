@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Document the new outcome fields and the schema version bump.
 
 See `plan.md` Phase 3 for full task details.
@@ -18,12 +18,12 @@ See `plan.md` Phase 3 for full task details.
 **File:** `docs/systems/combat_simulation.md`
 **Tests:** Manual review
 
-- [ ] In § 11 Replay Capture & Playback, document per-component end-state fields:
+- [x] In § 11 Replay Capture & Playback, document per-component end-state fields:
   - `current_hp`, `max_hp`, `status` (`ComponentStatus.name`), `is_active`
-- [ ] Note `REPLAY_SCHEMA_VERSION = "2.0.0"` (was `"1.0.0"`)
-- [ ] Note: existing v1 replays surface as `version_drift`, skipped gracefully
-- [ ] Update the `> **Last verified:**` blockquote at the top of the doc to today's date with brief change note
-- [ ] Verify: documented fields match `_component_state_to_dict` output
+- [x] Note `REPLAY_SCHEMA_VERSION = "2.0.0"` (was `"1.0.0"`)
+- [x] Note: existing v1 replays surface as `version_drift`, skipped gracefully
+- [x] Update the `> **Last verified:**` blockquote at the top of the doc to today's date with brief change note
+- [x] Verify: documented fields match `_component_state_to_dict` output
 
 **Notes:**
 
@@ -31,8 +31,8 @@ See `plan.md` Phase 3 for full task details.
 **Files:** `CLAUDE.md`, `AGENTS.md`
 **Tests:** Manual review
 
-- [ ] Skim both files for "ComponentStateSpec" or "REPLAY_SCHEMA_VERSION 1.0.0" references
-- [ ] Verify: either no edits needed, or specific edits applied
+- [x] Skim both files for "ComponentStateSpec" or "REPLAY_SCHEMA_VERSION 1.0.0" references
+- [x] Verify: either no edits needed, or specific edits applied
 
 **Notes:**
 
@@ -40,7 +40,7 @@ See `plan.md` Phase 3 for full task details.
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to indicate project complete and ready for verification
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to indicate project complete and ready for verification

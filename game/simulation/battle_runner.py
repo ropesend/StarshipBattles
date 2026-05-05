@@ -622,6 +622,12 @@ def _apply_spec_components_to_ship(
 def _extract_component_states(engine_ship: "Ship") -> tuple:
     """Emit a tuple of `ComponentStateSpec` reflecting each Ship component's
     final state. Walks layers in order; instance_index resets per component_id.
+
+    PROJ-354A: `max_hp` and `status` are populated from the live `Component`
+    so the replay record carries enough fidelity for end-state verification
+    (PROJ-354B). `status` is serialized as `ComponentStatus.name` (string),
+    not `.value` — the enum uses `auto()`, so numeric values aren't stable
+    across Python versions.
     """
     out: List[ComponentStateSpec] = []
     per_id_index: Dict[str, int] = {}
@@ -632,11 +638,17 @@ def _extract_component_states(engine_ship: "Ship") -> tuple:
                 continue
             idx = per_id_index.get(comp_id, 0)
             per_id_index[comp_id] = idx + 1
+            status_obj = getattr(comp, "status", None)
+            status_name = (
+                status_obj.name if hasattr(status_obj, "name") else str(status_obj)
+            )
             out.append(
                 ComponentStateSpec(
                     component_id=comp_id,
                     instance_index=idx,
                     current_hp=float(getattr(comp, "current_hp", 0)),
+                    max_hp=float(getattr(comp, "max_hp", 0)),
+                    status=status_name,
                     is_active=bool(getattr(comp, "is_active", True)),
                 )
             )

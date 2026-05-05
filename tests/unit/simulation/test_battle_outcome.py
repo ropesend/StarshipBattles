@@ -155,6 +155,8 @@ def _minimal_ship_outcome(instance_id: str = "ship-1") -> ShipOutcome:
                 component_id="bridge",
                 instance_index=0,
                 current_hp=200.0,
+                max_hp=200.0,
+                status="ACTIVE",
                 is_active=True,
             ),
         ),
