@@ -67,23 +67,23 @@ class TestTrackMultiplex:
         ship = MagicMock()
         ship.max_targets = 1
         # No ability at all
-        command.track_multiplex(ship, self._multiplex_comp(None))
+        command.contribute_multiplex_tracking(ship, self._multiplex_comp(None), {})
         assert ship.max_targets == 1
 
         # Ability with slots=0
-        command.track_multiplex(ship, self._multiplex_comp(0))
+        command.contribute_multiplex_tracking(ship, self._multiplex_comp(0), {})
         assert ship.max_targets == 1
 
     def test_higher_multiplex_replaces_lower(self):
         ship = MagicMock()
         ship.max_targets = 2
-        command.track_multiplex(ship, self._multiplex_comp(5))
+        command.contribute_multiplex_tracking(ship, self._multiplex_comp(5), {})
         assert ship.max_targets == 5
 
     def test_lower_multiplex_does_not_overwrite_higher(self):
         ship = MagicMock()
         ship.max_targets = 5
-        command.track_multiplex(ship, self._multiplex_comp(2))
+        command.contribute_multiplex_tracking(ship, self._multiplex_comp(2), {})
         assert ship.max_targets == 5
 
 

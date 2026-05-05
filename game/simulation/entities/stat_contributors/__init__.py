@@ -23,6 +23,12 @@ from game.simulation.entities.stat_contributors import (
     weapons,
 )
 
+# PROJ-367 Phase 2: seed built-in Phase-3 contributors AFTER the four domain
+# modules finish loading. Doing this from within registry.py would trigger
+# a circular import — command/defense/launch/movement all import names
+# from registry.py.
+registry._seed_builtin_contributors()
+
 __all__ = [
     "command",
     "defense",

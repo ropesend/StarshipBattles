@@ -66,7 +66,8 @@ class TestAggregateHangar:
     def test_no_hangar_ability_is_noop(self):
         ship = _make_ship()
         comp = _make_hangar_component(vehicle_launch=None)
-        launch.aggregate_hangar(ship, comp)
+        # PROJ-367 Phase 2: `aggregate_hangar` retired in favor of per-ability `contribute_*`.
+        launch.contribute_vehicle_launch(ship, comp, {})
         assert ship.fighter_capacity == 0
         assert ship.fighters_per_wave == 0
         assert ship.fighter_size_cap == 0
@@ -78,7 +79,8 @@ class TestAggregateHangar:
             vehicle_launch={"max_launch_mass": 500, "cycle_time": 8.0},
             vehicle_storage=4,
         )
-        launch.aggregate_hangar(ship, comp)
+        # PROJ-367 Phase 2: `aggregate_hangar` retired in favor of per-ability `contribute_*`.
+        launch.contribute_vehicle_launch(ship, comp, {})
         assert ship.fighter_capacity == 4
         assert ship.fighters_per_wave == 1
         assert ship.fighter_size_cap == 500
@@ -94,8 +96,8 @@ class TestAggregateHangar:
             vehicle_launch={"max_launch_mass": 600, "cycle_time": 4.0},
             vehicle_storage=3,
         )
-        launch.aggregate_hangar(ship, comp_a)
-        launch.aggregate_hangar(ship, comp_b)
+        launch.contribute_vehicle_launch(ship, comp_a, {})
+        launch.contribute_vehicle_launch(ship, comp_b, {})
         assert ship.fighter_capacity == 5
         assert ship.fighters_per_wave == 2
 
@@ -107,8 +109,8 @@ class TestAggregateHangar:
         comp_b = _make_hangar_component(
             vehicle_launch={"max_launch_mass": 800, "cycle_time": 4.0},
         )
-        launch.aggregate_hangar(ship, comp_a)
-        launch.aggregate_hangar(ship, comp_b)
+        launch.contribute_vehicle_launch(ship, comp_a, {})
+        launch.contribute_vehicle_launch(ship, comp_b, {})
         assert ship.fighter_size_cap == 800  # max, not 300+800
 
     def test_launch_cycle_takes_max_not_sum(self):
@@ -120,6 +122,6 @@ class TestAggregateHangar:
         comp_b = _make_hangar_component(
             vehicle_launch={"max_launch_mass": 300, "cycle_time": 9.5},
         )
-        launch.aggregate_hangar(ship, comp_a)
-        launch.aggregate_hangar(ship, comp_b)
+        launch.contribute_vehicle_launch(ship, comp_a, {})
+        launch.contribute_vehicle_launch(ship, comp_b, {})
         assert ship.launch_cycle == 9.5

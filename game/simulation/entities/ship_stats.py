@@ -39,12 +39,10 @@ from game.simulation.entities.combat_endurance import calculate_combat_endurance
 from game.simulation.entities.stat_contributors import (
     command as _cmd,
     defense as _def,
-    launch as _launch,
-    movement as _mov,
     weapons as _wep,
 )
 from game.simulation.entities.stat_contributors.registry import (
-    apply_registered_contributors,
+    STAT_CONTRIBUTOR_REGISTRY,
 )
 from game.simulation.interfaces import (
     is_resource_consumption,
@@ -257,19 +255,14 @@ class ShipStatsCalculator:
             if not comp.is_operational:
                 continue
 
-            _mov.aggregate_propulsion(comp, acc)
-            _def.aggregate_defense(ship, comp, acc)
-            _launch.aggregate_hangar(ship, comp)
-            _cmd.track_multiplex(ship, comp)
-
-            # Extension point: any contributor registered via
-            # `stat_contributors.registry.register_stat_contributor`
-            # runs here, with the same `is_operational` gating as
-            # the built-in domain contributors above. PROJ-360 audit
-            # EXT-12: registered contributors receive the same `acc`
-            # dict the built-ins mutate so accumulate-then-commit is
-            # consistent across both tiers.
-            apply_registered_contributors(ship, comp, acc)
+            # PROJ-367 Phase 2: single unified pipeline — built-in contributors
+            # are seeded as default registry entries with phase_order in
+            # 10..50; modder entries default to phase_order=99 so they fire
+            # after non-replaced built-ins. ``iter_for(comp)`` yields all
+            # entries the component qualifies for (via has_ability) in
+            # phase_order ascending, then registration order.
+            for entry in STAT_CONTRIBUTOR_REGISTRY.iter_for(comp):
+                entry.contributor(ship, comp, acc)
 
         self._apply_aggregated_stats(ship, acc)
 

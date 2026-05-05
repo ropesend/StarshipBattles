@@ -80,14 +80,22 @@ class TestArmorPoolAggregation:
         ship = _make_ship_with_armor_layer()
         acc = _empty_acc()
         comp = _make_component(has_ability_set={"Armor"}, max_hp=250.0)
-        defense.aggregate_defense(ship, comp, acc)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         assert ship.layers[LayerType.ARMOR].max_hp_pool == 250.0
 
     def test_no_armor_layer_does_not_crash(self):
         ship = _make_ship_with_armor_layer(armor_present=False)
         acc = _empty_acc()
         comp = _make_component(has_ability_set={"Armor"}, max_hp=250.0)
-        defense.aggregate_defense(ship, comp, acc)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         # No layers entry — no crash
         assert acc["max_shields"] == 0
 
@@ -104,7 +112,11 @@ class TestShieldAggregation:
                 ]
             }
         )
-        defense.aggregate_defense(ship, comp, acc)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         assert acc["max_shields"] == 800.0
 
     def test_shield_regeneration_sums_rate(self):
@@ -120,7 +132,11 @@ class TestShieldAggregation:
             has_ability_set={"ShieldRegeneration"},
             ability_instances=[],
         )
-        defense.aggregate_defense(ship, comp, acc)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         assert acc["shield_regen"] == 3.5
 
     def test_shield_energy_cost_only_counts_once_first_match_wins(self):
@@ -140,7 +156,11 @@ class TestShieldAggregation:
             abilities_by_name={"ResourceConsumption": [first, second]},
             has_ability_set={"ShieldRegeneration"},
         )
-        defense.aggregate_defense(ship, comp, acc)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         assert acc["shield_cost"] == 5.0  # not 12.0
 
     def test_shield_energy_cost_skipped_without_shield_regen(self):
@@ -152,7 +172,11 @@ class TestShieldAggregation:
             },
             has_ability_set=set(),  # no ShieldRegeneration -> skip
         )
-        defense.aggregate_defense(ship, comp, acc)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         assert acc["shield_cost"] == 0
 
     def test_shield_energy_cost_filters_by_resource_type(self):
@@ -168,7 +192,11 @@ class TestShieldAggregation:
             },
             has_ability_set={"ShieldRegeneration"},
         )
-        defense.aggregate_defense(ship, comp, acc)
+        # PROJ-367 Phase 2: legacy `aggregate_defense` retired — fan out to
+        # the per-ability contributors.
+        defense.contribute_armor(ship, comp, acc)
+        defense.contribute_shield_projection(ship, comp, acc)
+        defense.contribute_shield_regeneration(ship, comp, acc)
         assert acc["shield_cost"] == 4.0
 
 

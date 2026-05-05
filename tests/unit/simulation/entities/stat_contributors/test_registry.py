@@ -4,13 +4,15 @@ Unit tests for the stat contributor registry.
 Covers register/unregister round-trips and the priority lookup helper in
 isolation; the end-to-end extension test in
 ``tests/unit/simulation/entities/test_stat_contributor_extension.py`` covers
-the full ship pipeline.
+the full ship pipeline; the unified-pipeline acceptance tests in
+``test_registry_pipeline.py`` cover replacement / append / phase-ordering /
+default-managed behavior.
 
-PROJ-360 audit (2026-05-05): updated for the new contributor signature
-``(ship, comp, acc) -> None`` (EXT-12) and per-ability dedup (EXT-01). The
-``test_same_ability_different_domain_is_allowed`` test was removed — it
-codified the old per-(ability, domain) dedup which the audit identified as
-a double-counting bug.
+PROJ-360 audit (2026-05-05): updated for the contributor signature
+``(ship, comp, acc) -> None`` (EXT-12) and per-ability dedup (EXT-01).
+PROJ-367 Phase 2: migrated to handle-based unregister; suppression
+frozenset (``BUILTIN_HANDLED_ABILITIES``) is gone — replacement is
+implicit via ``RegistrationConflictPolicy.REPLACE_*``.
 """
 from __future__ import annotations
 
@@ -20,8 +22,9 @@ import pytest
 
 from game.simulation.entities.stat_contributors.registry import (
     CREW_PRIORITY_DEFAULT,
-    apply_registered_contributors,
-    is_builtin_suppressed_for,
+    RegistrationConflictError,
+    RegistrationConflictPolicy,
+    STAT_CONTRIBUTOR_REGISTRY,
     lookup_crew_priority,
     register_crew_priority,
     register_stat_contributor,
@@ -34,12 +37,15 @@ from game.simulation.entities.stat_contributors.registry import (
 def cleanup():
     """Track and undo any registrations done during the test."""
     crew_added: list[str] = []
-    stat_added: list[tuple[str, str]] = []
-    yield crew_added, stat_added
+    stat_handles: list = []  # PROJ-367 Phase 2: handle-based.
+    yield crew_added, stat_handles
     for n in crew_added:
         unregister_crew_priority(n)
-    for n, d in stat_added:
-        unregister_stat_contributor(n, domain=d)
+    for h in stat_handles:
+        try:
+            unregister_stat_contributor(h)
+        except Exception:  # Intentional broad catch: cleanup is best-effort across test failures
+            pass
 
 
 class TestLookupCrewPriority:
@@ -65,7 +71,7 @@ class TestRegisterCrewPriority:
 
         assert lookup_crew_priority(comp) == 2
 
-    def test_unregister_returns_to_default(self, cleanup):
+    def test_unregister_returns_to_default(self):
         comp = MagicMock()
         comp.has_ability = lambda name: name == "FakeRoundtrip"
 
@@ -79,93 +85,98 @@ class TestRegisterCrewPriority:
 
 
 class TestStatContributorRegistration:
-    def test_apply_invokes_registered_contributor_when_ability_matches(self, cleanup):
-        _, stat_added = cleanup
+    """PROJ-367 Phase 2 — handle-based registration."""
+
+    def test_active_entry_invokes_registered_contributor_when_ability_matches(
+        self, cleanup
+    ):
+        _, stat_handles = cleanup
         calls: list = []
 
         def fn(ship, comp, acc):
             calls.append((ship, comp, acc))
 
-        register_stat_contributor("FakeStatAbility", fn, domain="ut")
-        stat_added.append(("FakeStatAbility", "ut"))
+        h = register_stat_contributor("FakeStatAbility", fn)
+        stat_handles.append(h)
 
         ship = MagicMock()
         comp = MagicMock()
         comp.has_ability = lambda name: name == "FakeStatAbility"
         acc: dict = {}
 
-        apply_registered_contributors(ship, comp, acc)
+        # Iterate the registry exactly the way ship_stats.py does.
+        for entry in STAT_CONTRIBUTOR_REGISTRY.iter_for(comp):
+            if entry.ability_name == "FakeStatAbility":
+                entry.contributor(ship, comp, acc)
         assert calls == [(ship, comp, acc)]
 
-    def test_apply_skips_when_ability_missing(self, cleanup):
-        _, stat_added = cleanup
+    def test_iter_skips_when_ability_missing(self, cleanup):
+        _, stat_handles = cleanup
         calls: list = []
 
         def fn(ship, comp, acc):
             calls.append((ship, comp, acc))
 
-        register_stat_contributor("FakeMissingAbility", fn, domain="ut")
-        stat_added.append(("FakeMissingAbility", "ut"))
+        h = register_stat_contributor("FakeMissingAbility", fn)
+        stat_handles.append(h)
 
         ship = MagicMock()
         comp = MagicMock()
         comp.has_ability = lambda _name: False
 
-        apply_registered_contributors(ship, comp, {})
+        for entry in STAT_CONTRIBUTOR_REGISTRY.iter_for(comp):
+            entry.contributor(ship, comp, {})
         assert calls == []
 
-    def test_double_registration_raises(self, cleanup):
-        """Per-ability dedup (PROJ-360 audit EXT-01): re-registering an
-        ability — even with a different domain tag — must fail."""
-        _, stat_added = cleanup
+    def test_double_registration_with_error_policy_raises(self, cleanup):
+        """PROJ-367 Phase 2: ``policy=ERROR`` raises on conflict.
+
+        Default policy (``REPLACE_WARN``) replaces silently with a log; tests
+        for that path live in ``test_registry_pipeline.py``.
+        """
+        _, stat_handles = cleanup
 
         def fn(ship, comp, acc):  # pragma: no cover — never called
             pass
 
-        register_stat_contributor("FakeDup", fn, domain="ut")
-        stat_added.append(("FakeDup", "ut"))
+        h1 = register_stat_contributor("FakeDup", fn)
+        stat_handles.append(h1)
 
-        with pytest.raises(ValueError, match="already registered"):
-            register_stat_contributor("FakeDup", fn, domain="ut")
-        # Different domain tag does NOT escape the dedup guard anymore.
-        with pytest.raises(ValueError, match="already registered"):
-            register_stat_contributor("FakeDup", fn, domain="other-domain")
+        with pytest.raises(RegistrationConflictError):
+            register_stat_contributor(
+                "FakeDup", fn, policy=RegistrationConflictPolicy.ERROR
+            )
 
 
-class TestBuiltinSuppression:
-    """PROJ-360 audit EXT-02: a registered contributor for a built-in
-    ability suppresses the corresponding built-in handler."""
+class TestBuiltinReplacement:
+    """PROJ-367 Phase 2: replacement is implicit; no suppression frozenset.
 
-    def test_unregistered_ability_is_not_suppressed(self):
-        assert is_builtin_suppressed_for("ShieldProjection") is False
+    Registering for a built-in ability with the default policy
+    (``REPLACE_WARN``) replaces the default; with ``policy=ERROR`` it
+    raises. Tests for the full replace/append/phase-order semantics live
+    in ``test_registry_pipeline.py``.
+    """
 
-    def test_registering_builtin_ability_flags_it_as_suppressed(self, cleanup):
-        _, stat_added = cleanup
-
-        def fn(ship, comp, acc):  # pragma: no cover — never called
-            pass
-
-        register_stat_contributor("ShieldProjection", fn, domain="ext_ut")
-        stat_added.append(("ShieldProjection", "ext_ut"))
-        assert is_builtin_suppressed_for("ShieldProjection") is True
-
-    def test_unregistering_clears_suppression(self):
-        def fn(ship, comp, acc):  # pragma: no cover
-            pass
-
-        register_stat_contributor("ShieldRegeneration", fn, domain="ext_ut")
-        assert is_builtin_suppressed_for("ShieldRegeneration") is True
-        unregister_stat_contributor("ShieldRegeneration")
-        assert is_builtin_suppressed_for("ShieldRegeneration") is False
-
-    def test_non_builtin_ability_is_never_suppressed(self, cleanup):
-        _, stat_added = cleanup
+    def test_register_for_builtin_ability_replaces_default(self, cleanup):
+        _, stat_handles = cleanup
 
         def fn(ship, comp, acc):  # pragma: no cover
             pass
 
-        register_stat_contributor("FakeNonBuiltin", fn, domain="ext_ut")
-        stat_added.append(("FakeNonBuiltin", "ext_ut"))
-        # The ability isn't in BUILTIN_HANDLED_ABILITIES so suppression
-        # never fires regardless of registration state.
-        assert is_builtin_suppressed_for("FakeNonBuiltin") is False
+        h = register_stat_contributor(
+            "ShieldProjection", fn, policy=RegistrationConflictPolicy.REPLACE_SILENT
+        )
+        stat_handles.append(h)
+
+        active = STAT_CONTRIBUTOR_REGISTRY.get_active_entry("ShieldProjection")
+        assert active.contributor is fn
+        assert not active.is_default
+
+    def test_register_for_builtin_ability_with_error_policy_raises(self):
+        def fn(ship, comp, acc):  # pragma: no cover
+            pass
+
+        with pytest.raises(RegistrationConflictError):
+            register_stat_contributor(
+                "ShieldProjection", fn, policy=RegistrationConflictPolicy.ERROR
+            )

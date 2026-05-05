@@ -21,6 +21,7 @@ from game.core.json_utils import load_json
 from game.core.paths import Paths
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.stat_contributors.registry import (
+    RegistrationConflictPolicy,
     register_crew_priority,
     register_stat_contributor,
     unregister_crew_priority,
@@ -41,24 +42,33 @@ def clean_extension_registry():
     The production registries are module-level globals. Tests must clean
     up after themselves so a registration in one test cannot leak into
     another.
+
+    PROJ-367 Phase 2: ``add_stat`` now uses the handle-based API and the
+    default policy ``REPLACE_SILENT`` (built-in defaults are seeded for
+    every ability and we don't want every test to log a deprecation
+    warning). Domain tag dropped — ``RegistrationConflictPolicy`` covers
+    every legacy use case the ``domain`` field once papered over.
     """
     added_crew_abilities: list[str] = []
-    added_stat_keys: list[tuple[str, str]] = []
+    stat_handles: list = []
 
     def add_crew(name: str, priority: int) -> None:
         register_crew_priority(name, priority)
         added_crew_abilities.append(name)
 
-    def add_stat(name: str, fn, *, domain: str = "ext") -> None:
-        register_stat_contributor(name, fn, domain=domain)
-        added_stat_keys.append((name, domain))
+    def add_stat(name: str, fn, *, policy=RegistrationConflictPolicy.REPLACE_SILENT) -> None:
+        h = register_stat_contributor(name, fn, policy=policy)
+        stat_handles.append(h)
 
     yield add_crew, add_stat
 
     for name in added_crew_abilities:
         unregister_crew_priority(name)
-    for name, domain in added_stat_keys:
-        unregister_stat_contributor(name, domain=domain)
+    for h in stat_handles:
+        try:
+            unregister_stat_contributor(h)
+        except Exception:  # Intentional broad catch: cleanup best-effort across test failures
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -129,11 +139,11 @@ class TestStatContributorExtensionEndToEnd:
             ship.fake_contributor_calls.append(comp)
             invocations.append(comp)
 
-        # PROJ-360 audit EXT-02: this fake contributor *replaces* the
-        # built-in defense handling for ShieldProjection — so the test
-        # below also asserts the contributor takes over rather than
-        # double-firing alongside the built-in.
-        add_stat("ShieldProjection", fake_contributor, domain="proj360_test")
+        # PROJ-367 Phase 2: this fake contributor REPLACES the
+        # built-in defense handling for ShieldProjection — implicit via
+        # ``RegistrationConflictPolicy.REPLACE_SILENT`` (default for the
+        # ``add_stat`` test fixture).
+        add_stat("ShieldProjection", fake_contributor)
 
         # Build a battleship; it has shield regenerators. Recalculate stats.
         design = load_json(
@@ -219,9 +229,7 @@ class TestStatContributorExtensionEndToEnd:
                 acc["max_shields"] += ab.capacity * 7
                 invocations.append(ab.capacity)
 
-        add_stat(
-            "ShieldProjection", replacing_contributor, domain="audit_ext01_ext02"
-        )
+        add_stat("ShieldProjection", replacing_contributor)
 
         replaced_ship = Ship.from_dict(design, registries=fresh_registries)
         replaced_ship.recalculate_stats()
@@ -272,9 +280,7 @@ class TestStatContributorExtensionEndToEnd:
                 f"acc dict missing built-in keys; got keys={list(acc.keys())}"
             )
 
-        add_stat(
-            "ShieldProjection", acc_inspecting_contributor, domain="audit_ext12"
-        )
+        add_stat("ShieldProjection", acc_inspecting_contributor)
 
         design = load_json(
             str(Paths.get_starter_designs_dir() / "qs_battleship.json")
@@ -308,7 +314,7 @@ class TestStatContributorExtensionEndToEnd:
         def counting_contributor(ship, comp, acc):
             invocation_counts.append(comp)
 
-        add_stat("ShieldProjection", counting_contributor, domain="proj360_op_gate")
+        add_stat("ShieldProjection", counting_contributor)
 
         design = load_json(
             str(Paths.get_starter_designs_dir() / "qs_battleship.json")
