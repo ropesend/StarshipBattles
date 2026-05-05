@@ -68,7 +68,7 @@ process_turn(empires, galaxy, save_path=None, *, session=None, progress_callback
 
 | # | Phase key | Engine / call | `_time_phase`-wrapped? |
 |---|-----------|---------------|------------------------|
-| 0 | `harvest` | `harvesting_engine` | yes |
+| 0 | `harvesting` | `harvesting_engine` | yes |
 | 0b | `resources` | `resource_engine` | yes |
 | 0c | `fuel_gen` | `production_engine` (fuel-gen pass) | yes |
 | 0c1 | `planet_energy` | `planet_energy_engine` | yes |
