@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-342 | Drop self.game handle from TestLab UI | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-340 | Test coverage - UI services + utility characterization (45 tests, 6 files) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-339 | Test coverage - UI panels mid-risk characterization (29 tests, 6 files) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
