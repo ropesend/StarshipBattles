@@ -17,6 +17,9 @@ from game.ui.screens.strategy_detail_fmt import (
     format_fleet_info,
     format_uncolonized_habitability_for_empire,
     get_label_for_object,
+    _get_ability_status_text,
+    _get_system_ability_status,
+    _planet_has_ability_facility,
     _format_ship_groups,
     _format_cargo_summary,
     _format_orders,
@@ -1012,6 +1015,103 @@ class TestFormatStarSystemInfo:
         assert "Stellar Stabilizer" not in result
         assert "Warp Field Stabilizer" not in result
         assert "Geologic Stabilizer" not in result
+
+
+class TestAbilityStatusHelpers:
+    def _facility_with_inline_ability(self, ability_name):
+        facility = Mock()
+        facility.design_data = {
+            "layers": {
+                "OUTER": [
+                    {
+                        "id": ability_name.lower(),
+                        "abilities": {ability_name: {"scope": "system"}},
+                    }
+                ]
+            }
+        }
+        facility.component_states = {}
+        return facility
+
+    def test_detail_deactivating_status_includes_progress(self):
+        from game.strategy.data.component_activation_state import (
+            ActivationPhase,
+            ComponentActivationState,
+        )
+
+        planet = Mock()
+        facility = self._facility_with_inline_ability("GeologicStabilizer")
+        facility.component_states = {
+            "OUTER:0:geologic": ComponentActivationState(
+                phase=ActivationPhase.DEACTIVATING,
+                progress_ticks=25,
+                required_ticks=150,
+                ability_name="GeologicStabilizer",
+            ).to_dict()
+        }
+        planet.facilities = [facility]
+        planet.active_abilities = {}
+
+        result = _get_ability_status_text(planet, "GeologicStabilizer")
+
+        assert result == "Deactivating (25/150 ticks)"
+
+    def test_ability_status_ignores_non_dict_component_state_and_falls_back_active(self):
+        planet = Mock()
+        facility = self._facility_with_inline_ability("GravityModifier")
+        facility.component_states = {"bad": object()}
+        planet.facilities = [facility]
+        planet.active_abilities = {"GravityModifier": True}
+
+        assert _get_ability_status_text(planet, "GravityModifier") == "Active"
+
+    def test_system_ability_status_prefers_active_planet_over_inactive_planet(self):
+        from game.strategy.data.component_activation_state import (
+            ActivationPhase,
+            ComponentActivationState,
+        )
+
+        inactive_planet = Mock(name="inactive_planet")
+        inactive_planet.name = "InactiveWorld"
+        inactive_facility = self._facility_with_inline_ability("GeologicStabilizer")
+        inactive_planet.facilities = [inactive_facility]
+        inactive_planet.active_abilities = {"GeologicStabilizer": False}
+
+        active_planet = Mock(name="active_planet")
+        active_planet.name = "ActiveWorld"
+        active_facility = self._facility_with_inline_ability("GeologicStabilizer")
+        active_facility.component_states = {
+            "OUTER:0:geologic": ComponentActivationState(
+                phase=ActivationPhase.ACTIVE,
+                ability_name="GeologicStabilizer",
+            ).to_dict()
+        }
+        active_planet.facilities = [active_facility]
+        active_planet.active_abilities = {"GeologicStabilizer": True}
+        system = Mock()
+        system.planets = [inactive_planet, active_planet]
+
+        result = _get_system_ability_status(system)
+
+        assert result["GeologicStabilizer"] == {
+            "status_text": "Active",
+            "planet_name": "ActiveWorld",
+        }
+
+    def test_planet_has_ability_facility_uses_inline_abilities_when_registry_unavailable(
+        self, monkeypatch
+    ):
+        def _raise_uninitialized():
+            raise RuntimeError("registry unavailable")
+
+        planet = Mock()
+        planet.facilities = [self._facility_with_inline_ability("RadiationShield")]
+        monkeypatch.setattr(
+            "game.core.registry.get_default_registry_manager",
+            _raise_uninitialized,
+        )
+
+        assert _planet_has_ability_facility(planet, "RadiationShield") is True
 
 
 # =============================================================================

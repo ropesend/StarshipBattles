@@ -25,6 +25,7 @@ Endpoints:
 from __future__ import annotations
 
 import base64
+import binascii
 import logging
 import os
 import pathlib
@@ -136,6 +137,13 @@ class OpenAIImageProvider:
                     code=ErrorCode.IMAGE_TIMEOUT.value,
                     context={"attempt": attempt, "model": model, "endpoint": endpoint},
                 ) from e
+            except requests.exceptions.SSLError as e:
+                logger.error("OpenAI SSL error: attempt=%d", attempt)
+                raise ImageNetworkError(
+                    "OpenAI SSL error",
+                    code=ErrorCode.IMAGE_NETWORK_ERROR.value,
+                    context={"attempt": attempt, "model": model, "endpoint": endpoint},
+                ) from e
             except requests.ConnectionError as e:
                 logger.error(
                     "OpenAI connection error: attempt=%d type=%s",
@@ -148,13 +156,6 @@ class OpenAIImageProvider:
                         "attempt": attempt, "model": model, "endpoint": endpoint,
                         "error_type": type(e).__name__,
                     },
-                ) from e
-            except requests.exceptions.SSLError as e:
-                logger.error("OpenAI SSL error: attempt=%d", attempt)
-                raise ImageNetworkError(
-                    "OpenAI SSL error",
-                    code=ErrorCode.IMAGE_NETWORK_ERROR.value,
-                    context={"attempt": attempt, "model": model, "endpoint": endpoint},
                 ) from e
 
             latency = time.monotonic() - start
@@ -336,8 +337,8 @@ class OpenAIImageProvider:
             ) from e
 
         try:
-            image_bytes = base64.b64decode(b64)
-        except (ValueError, TypeError) as e:
+            image_bytes = base64.b64decode(b64, validate=True)
+        except (binascii.Error, ValueError, TypeError) as e:
             raise ImageResponseError(
                 "OpenAI image response had invalid base64 payload",
                 code=ErrorCode.IMAGE_BAD_RESPONSE.value,

@@ -98,6 +98,34 @@ def test_recorder_separates_hits_per_target_ship():
     assert len(rec.get_hits("b")) == 1
 
 
+def test_recorder_ignores_hit_events_without_target_ship():
+    bus = CombatEventBus(detail_level=EventDetailLevel.DETAILED)
+    rec = HitLogRecorder(bus)
+
+    bus.emit(CombatEvent(
+        event_type=CombatEventType.COMPONENT_HIT,
+        target_ship=None,
+        damage_amount=10.0,
+        context=_mk_attacker("attacker"),
+    ))
+
+    assert rec.snapshot() == {}
+
+
+def test_recorder_ignores_hit_events_without_target_instance_id():
+    bus = CombatEventBus(detail_level=EventDetailLevel.DETAILED)
+    rec = HitLogRecorder(bus)
+
+    bus.emit(CombatEvent(
+        event_type=CombatEventType.COMPONENT_HIT,
+        target_ship=_mk_ship(""),
+        damage_amount=10.0,
+        context=_mk_attacker("attacker"),
+    ))
+
+    assert rec.snapshot() == {}
+
+
 def test_recorder_records_tick_number_from_event_when_available():
     """Engine emits events with a tick_number on the event if available;
     otherwise, defaults to 0."""

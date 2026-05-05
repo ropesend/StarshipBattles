@@ -279,3 +279,107 @@ def test_event_log_window_replay_click_does_nothing_when_replay_id_missing(
 
     resolver.resolve.assert_not_called()
     launch_cb.assert_not_called()
+
+
+def test_event_log_window_replay_click_without_data_source_is_noop(
+    pygame_init,
+) -> None:
+    resolver = MagicMock()
+    launch_cb = MagicMock()
+    win = _make_event_log_window(
+        [_combat_row("uuid")], resolver=resolver, launch_cb=launch_cb
+    )
+    win.data_source = None
+
+    win._handle_replay_click(0)
+
+    resolver.resolve.assert_not_called()
+    launch_cb.assert_not_called()
+
+
+def test_event_log_window_replay_click_without_resolver_is_noop(
+    pygame_init,
+) -> None:
+    launch_cb = MagicMock()
+    win = _make_event_log_window(
+        [_combat_row("uuid")], resolver=None, launch_cb=launch_cb
+    )
+
+    win._handle_replay_click(0)
+
+    launch_cb.assert_not_called()
+
+
+def test_event_log_window_replay_click_missing_lookup_shows_reason_message(
+    pygame_init,
+) -> None:
+    from game.strategy.services.replay_resolver import ReplayLookup
+
+    resolver = MagicMock()
+    resolver.resolve.return_value = ReplayLookup(
+        found=False,
+        reason="corrupt",
+    )
+    launch_cb = MagicMock()
+    win = _make_event_log_window(
+        [_combat_row("uuid-bad")], resolver=resolver, launch_cb=launch_cb
+    )
+    win._show_replay_message = MagicMock()
+
+    win._handle_replay_click(0)
+
+    win._show_replay_message.assert_called_once()
+    title, message = win._show_replay_message.call_args.args
+    assert title == "Replay unavailable"
+    assert "corrupt" in message
+    launch_cb.assert_not_called()
+
+
+def test_event_log_window_replay_click_unknown_reason_uses_generic_message(
+    pygame_init,
+) -> None:
+    from game.strategy.services.replay_resolver import ReplayLookup
+
+    resolver = MagicMock()
+    resolver.resolve.return_value = ReplayLookup(
+        found=False,
+        reason="evicted_by_policy",
+    )
+    win = _make_event_log_window(
+        [_combat_row("uuid-missing")],
+        resolver=resolver,
+        launch_cb=MagicMock(),
+    )
+    win._show_replay_message = MagicMock()
+
+    win._handle_replay_click(0)
+
+    _, message = win._show_replay_message.call_args.args
+    assert message == "Replay unavailable (evicted_by_policy)."
+
+
+def test_event_log_window_replay_click_registry_drift_warns_and_launches(
+    pygame_init,
+) -> None:
+    from game.strategy.services.replay_resolver import ReplayLookup
+
+    record = MagicMock()
+    resolver = MagicMock()
+    resolver.resolve.return_value = ReplayLookup(
+        found=True,
+        record=record,
+        registry_drift=True,
+    )
+    launch_cb = MagicMock()
+    win = _make_event_log_window(
+        [_combat_row("uuid-drift")], resolver=resolver, launch_cb=launch_cb
+    )
+    win._show_replay_message = MagicMock()
+
+    win._handle_replay_click(0)
+
+    win._show_replay_message.assert_called_once()
+    title, message = win._show_replay_message.call_args.args
+    assert title == "Replay version drift"
+    assert "different components.json" in message
+    launch_cb.assert_called_once_with(record)

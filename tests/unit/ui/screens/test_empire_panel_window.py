@@ -7,9 +7,11 @@ shell).
 """
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pygame
+import pygame_gui
 
 from game.ui.screens.empire_panel_window import (
     TAB_MORE,
@@ -211,3 +213,110 @@ class TestEmpirePanelWindowShowTab:
         window._show_tab(TAB_MORE)
         assert window.tab_buttons[TAB_MORE].is_selected is True
         assert window.tab_buttons[TAB_TREASURY].is_selected is False
+
+
+class TestEmpirePanelWindowEventsAndEmptyData:
+    """Focused branch coverage for tab events and empty population data."""
+
+    def test_process_event_switches_tab_for_button_press(self):
+        window = _make_window()
+        event = MagicMock()
+        event.type = pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = window.tab_buttons[TAB_POPULATION]
+
+        with patch(
+            "pygame_gui.elements.UIWindow.process_event",
+            return_value=False,
+        ):
+            handled = window.process_event(event)
+
+        assert handled is True
+        assert window.current_tab == TAB_POPULATION
+        assert window.step_panels[TAB_POPULATION].is_visible is True
+
+    def test_build_population_tab_with_no_race_config_shows_empty_message(self):
+        empire = _empire(race_config=None)
+        window = _make_window(empire, ui_builder=NullEmpirePanelWindowUiBuilder())
+        panel = MagicMock(name="panel")
+        panel.get_relative_rect.return_value = pygame.Rect(0, 0, 420, 320)
+
+        with (
+            patch(
+                "game.ui.screens.empire_panel_window.UIScrollingContainer"
+            ) as scroll_cls,
+            patch("game.ui.screens.empire_panel_window.UILabel") as label_cls,
+        ):
+            window._build_population_tab(panel)
+
+        scroll_cls.assert_called_once()
+        label_cls.assert_called_once()
+        assert (
+            label_cls.call_args.kwargs["text"]
+            == "No species data available"
+        )
+        scroll_cls.return_value.set_scrollable_area_dimensions.assert_not_called()
+
+    def test_render_portrait_flag_row_skips_images_when_ids_missing(self):
+        race_config = SimpleNamespace(portrait_id="", flag_id="")
+        empire = _empire(race_config=race_config, portrait_id="", flag_id="")
+        window = _make_window(empire, ui_builder=NullEmpirePanelWindowUiBuilder())
+        window._asset_loader = MagicMock(name="asset_loader")
+
+        with (
+            patch("game.ui.screens.empire_panel_window.UIImage") as image_cls,
+            patch("pygame.transform.smoothscale") as smoothscale,
+        ):
+            y_offset = window._render_portrait_flag_row(
+                MagicMock(name="container"),
+                race_config,
+                25,
+            )
+
+        assert y_offset == 165
+        window._asset_loader.load_portrait_full.assert_not_called()
+        window._asset_loader.load_flag_full.assert_not_called()
+        image_cls.assert_not_called()
+        smoothscale.assert_not_called()
+
+    def test_render_environment_section_uses_placeholders_for_missing_prefs(self):
+        window = _make_window(ui_builder=NullEmpirePanelWindowUiBuilder())
+        race_config = SimpleNamespace(preferences={})
+
+        with (
+            patch("game.ui.screens.empire_panel_window.create_section_header"),
+            patch("game.ui.screens.empire_panel_window.UILabel") as label_cls,
+        ):
+            y_offset = window._render_environment_section(
+                MagicMock(name="container"),
+                race_config,
+                10,
+                500,
+            )
+
+        texts = [call.kwargs["text"] for call in label_cls.call_args_list]
+        assert texts == [
+            "Gravity: --",
+            "Temperature: --",
+            "Water: --",
+            "Radiation Tolerance: --",
+        ]
+        assert y_offset == 10 + 24 + 5 + (4 * 24) + 15
+
+    def test_render_descriptions_section_noops_for_empty_descriptions(self):
+        window = _make_window(ui_builder=NullEmpirePanelWindowUiBuilder())
+        race_config = SimpleNamespace(bio_description="", socio_description="")
+
+        with (
+            patch("game.ui.screens.empire_panel_window.create_section_header") as header,
+            patch("game.ui.screens.empire_panel_window.UITextBox") as text_box,
+        ):
+            y_offset = window._render_descriptions_section(
+                MagicMock(name="container"),
+                race_config,
+                40,
+                500,
+            )
+
+        assert y_offset == 40
+        header.assert_not_called()
+        text_box.assert_not_called()

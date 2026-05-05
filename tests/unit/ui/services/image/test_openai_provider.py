@@ -7,9 +7,11 @@ real network.
 from __future__ import annotations
 
 import base64
+import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from game.core.exceptions import (
     ImageCancelled,
@@ -21,6 +23,7 @@ from game.core.exceptions import (
 )
 from game.ui.services.image import ImageResult
 from game.ui.services.image.openai_provider import (
+    OPENAI_EDITS_ENDPOINT,
     OPENAI_GENERATIONS_ENDPOINT,
     OpenAIImageProvider,
 )
@@ -74,6 +77,41 @@ class TestOpenAIImageProviderHappyPath:
         args, kwargs = mock_post.call_args
         assert args[0] == OPENAI_GENERATIONS_ENDPOINT
         assert "Bearer test-key" in kwargs["headers"]["Authorization"]
+
+    def test_generate_image_with_edit_image_posts_to_edits_endpoint(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path,
+    ) -> None:
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        edit_image = tmp_path / "source.png"
+        mask = tmp_path / "mask.png"
+        edit_image.write_bytes(b"source-bytes")
+        mask.write_bytes(b"mask-bytes")
+
+        provider = OpenAIImageProvider()
+        with patch("requests.post", return_value=_ok_response()) as mock_post:
+            result = provider.generate_image(
+                "paint a cruiser",
+                size="1024x1024",
+                model="gpt-image-2",
+                edit_image=edit_image,
+                mask=mask,
+                quality="high",
+            )
+
+        assert result.provider == "openai"
+        args, kwargs = mock_post.call_args
+        assert args[0] == OPENAI_EDITS_ENDPOINT
+        assert kwargs["data"] == {
+            "model": "gpt-image-2",
+            "prompt": "paint a cruiser",
+            "size": "1024x1024",
+            "response_format": "b64_json",
+            "n": 1,
+            "quality": "high",
+        }
+        assert kwargs["files"]["image"] == ("image.png", b"source-bytes", "image/png")
+        assert kwargs["files"]["mask"] == ("mask.png", b"mask-bytes", "image/png")
+        assert "Content-Type" not in kwargs["headers"]
 
 
 class TestOpenAIImageProviderErrors:
@@ -132,13 +170,21 @@ class TestOpenAIImageProviderErrors:
     def test_connection_error_raises_image_network_error(
         self, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        import requests
-
         monkeypatch.setenv("OPENAI_API_KEY", "ok")
         provider = OpenAIImageProvider()
         with patch("requests.post", side_effect=requests.ConnectionError("dns")):
             with pytest.raises(ImageNetworkError):
                 provider.generate_image("x")
+
+    def test_ssl_error_raises_specific_image_network_error(
+        self, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("OPENAI_API_KEY", "ok")
+        provider = OpenAIImageProvider()
+        with patch("requests.post", side_effect=requests.exceptions.SSLError("cert")):
+            with pytest.raises(ImageNetworkError) as exc_info:
+                provider.generate_image("x")
+        assert "SSL" in str(exc_info.value)
 
     def test_5xx_retries_then_raises(
         self, monkeypatch: pytest.MonkeyPatch,
@@ -174,3 +220,43 @@ class TestOpenAIImageProviderErrors:
         provider = OpenAIImageProvider()
         assert "secret-key" not in repr(provider)
         assert "REDACTED" in repr(provider)
+
+    def test_parse_response_rejects_non_json(self) -> None:
+        response = MagicMock()
+        response.status_code = 200
+        response.json.side_effect = ValueError("not json")
+
+        provider = OpenAIImageProvider()
+        with pytest.raises(ImageResponseError) as exc_info:
+            provider._parse_response(response, model_in_request="gpt-image-2", latency=0.1)
+
+        assert "non-JSON" in str(exc_info.value)
+        assert exc_info.value.context == {"status_code": 200, "model": "gpt-image-2"}
+
+    def test_parse_response_rejects_missing_b64_json(self) -> None:
+        response = MagicMock()
+        response.status_code = 200
+        response.headers = {}
+        response.json.return_value = {"data": [{}]}
+
+        provider = OpenAIImageProvider()
+        with pytest.raises(ImageResponseError) as exc_info:
+            provider._parse_response(response, model_in_request="gpt-image-2", latency=0.1)
+
+        assert "missing expected fields" in str(exc_info.value)
+        assert exc_info.value.context["missing_field"] == "'b64_json'"
+
+    def test_parse_response_rejects_invalid_base64(self) -> None:
+        response = MagicMock()
+        response.status_code = 200
+        response.headers = {}
+        response.json.return_value = {"data": [{"b64_json": "!!!!"}]}
+
+        provider = OpenAIImageProvider()
+        with pytest.raises(ImageResponseError) as exc_info:
+            provider._parse_response(response, model_in_request="gpt-image-2", latency=0.1)
+
+        assert "invalid base64" in str(exc_info.value)
+
+    def test_read_actual_size_falls_back_when_pil_cannot_decode(self) -> None:
+        assert OpenAIImageProvider._read_actual_size(b"not a png") == (0, 0)

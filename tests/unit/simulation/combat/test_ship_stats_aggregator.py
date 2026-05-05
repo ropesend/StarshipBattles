@@ -82,6 +82,46 @@ def test_aggregator_tracks_damage_per_ship():
     assert agg.get_stats("b").total_damage_taken == pytest.approx(50.0)
 
 
+def test_aggregator_ignores_damage_events_without_target_ship():
+    bus = CombatEventBus(detail_level=EventDetailLevel.DETAILED)
+    agg = ShipStatsAggregator(bus)
+
+    bus.emit(CombatEvent(
+        event_type=CombatEventType.COMPONENT_HIT,
+        target_ship=None,
+        damage_amount=30.0,
+    ))
+
+    assert agg.snapshot() == {}
+
+
+@pytest.mark.parametrize("damage_amount", [0.0, -5.0, None])
+def test_aggregator_ignores_nonpositive_damage_amounts(damage_amount):
+    bus = CombatEventBus(detail_level=EventDetailLevel.DETAILED)
+    agg = ShipStatsAggregator(bus)
+
+    bus.emit(CombatEvent(
+        event_type=CombatEventType.COMPONENT_HIT,
+        target_ship=_mk_ship("target"),
+        damage_amount=damage_amount,
+    ))
+
+    assert agg.get_stats("target").total_damage_taken == 0.0
+
+
+def test_aggregator_ignores_damage_events_without_instance_id():
+    bus = CombatEventBus(detail_level=EventDetailLevel.DETAILED)
+    agg = ShipStatsAggregator(bus)
+
+    bus.emit(CombatEvent(
+        event_type=CombatEventType.COMPONENT_HIT,
+        target_ship=_mk_ship(""),
+        damage_amount=10.0,
+    ))
+
+    assert agg.snapshot() == {}
+
+
 # ---------------------------------------------------------------------------
 # peak_speed via sample_tick
 # ---------------------------------------------------------------------------

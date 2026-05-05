@@ -22,3 +22,7 @@ class TestNullImageProvider:
     def test_repr_does_not_leak_secrets(self) -> None:
         provider = NullImageProvider()
         assert "NullImageProvider" in repr(provider)
+
+    def test_str_matches_repr(self) -> None:
+        provider = NullImageProvider()
+        assert str(provider) == repr(provider)

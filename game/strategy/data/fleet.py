@@ -356,16 +356,24 @@ class Fleet:
 
         Returns the removed orders.
         """
-        removed = [
-            o for o in self.orders
-            if o.type in order_types and o.target is target
-        ]
+        removed: List[Order] = []
+        remaining: List[Order] = []
+        removed_active_order = False
+        for index, order in enumerate(self.orders):
+            if order.type in order_types and order.target is target:
+                removed.append(order)
+                removed_active_order = removed_active_order or index == 0
+            else:
+                remaining.append(order)
+
+        if not removed:
+            return []
+
+        self.orders = remaining
         for order in removed:
             self._unregister_from_target(order)
-        self.orders = [
-            o for o in self.orders
-            if not (o.type in order_types and o.target is target)
-        ]
+        if removed_active_order:
+            self.path = []
         return removed
 
     def merge_with(self, other_fleet: 'Fleet', event_bus=None) -> None:

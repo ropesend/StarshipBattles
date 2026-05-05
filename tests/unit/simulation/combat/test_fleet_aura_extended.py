@@ -252,6 +252,20 @@ class TestExternalModifiers:
         assert len(manager._external) == 0
 
 
+class TestBonusLookupDefaults:
+    """Tests for direct bonus lookup default branches."""
+
+    def test_unknown_team_returns_zero_bonuses(self):
+        """Unknown team IDs have no attack or defense aura bonus."""
+        manager = FleetAuraManager()
+        known_ship = _make_ship(team_id=0)
+        unknown_ship = _make_ship(team_id=99)
+        manager.initialize([known_ship])
+
+        assert manager.get_attack_bonus(unknown_ship) == 0.0
+        assert manager.get_defense_bonus(unknown_ship) == 0.0
+
+
 # =============================================================================
 # Provider Fingerprint Edge Cases
 # =============================================================================

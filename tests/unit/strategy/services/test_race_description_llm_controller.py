@@ -350,6 +350,29 @@ class TestCancel:
         assert controller.bio_status == FieldStatus.CANCELLED
         assert controller.socio_status == FieldStatus.CANCELLED
 
+    def test_cancel_socio_while_running(self, race, caption_loader):
+        from game.strategy.services.race_description_llm_controller import (
+            FieldStatus, RaceDescriptionLLMController,
+        )
+
+        provider = _BlockingProvider()
+        controller = RaceDescriptionLLMController(
+            race_config=race, provider=provider,
+            caption_loader=caption_loader, on_change=lambda: None,
+        )
+        controller.generate_socio()
+        time.sleep(0.02)
+        controller.cancel_socio()
+
+        assert _wait_until(
+            lambda: (
+                controller.update(),
+                controller.socio_status == FieldStatus.CANCELLED,
+            )[1]
+        )
+        assert controller.socio_status == FieldStatus.CANCELLED
+        assert race.socio_description == ""
+
 
 # ============================================================================
 # Re-roll
@@ -378,6 +401,37 @@ class TestReRoll:
         _wait_until(lambda: (controller.update(), True)[1] and controller.bio_status == FieldStatus.DONE
                      and race.bio_description == "second")
         assert race.bio_description == "second"
+
+    def test_re_roll_socio_from_done(self, race, caption_loader):
+        from game.strategy.services.race_description_llm_controller import (
+            FieldStatus, RaceDescriptionLLMController,
+        )
+
+        provider = _StubProvider(socio_text="first")
+        controller = RaceDescriptionLLMController(
+            race_config=race, provider=provider,
+            caption_loader=caption_loader, on_change=lambda: None,
+        )
+        controller.generate_socio()
+        assert _wait_until(
+            lambda: (
+                controller.update(),
+                controller.socio_status == FieldStatus.DONE,
+            )[1]
+        )
+        assert race.socio_description == "first"
+
+        provider._socio = "second"
+        controller.re_roll_socio()
+
+        assert _wait_until(
+            lambda: (
+                controller.update(),
+                controller.socio_status == FieldStatus.DONE
+                and race.socio_description == "second",
+            )[1]
+        )
+        assert race.socio_description == "second"
 
 
 # ============================================================================
