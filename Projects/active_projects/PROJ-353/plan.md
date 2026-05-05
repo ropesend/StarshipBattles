@@ -10,15 +10,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. T6.8 — facade `_session` lint decision | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Tier-7 polish bundle (test-quality MAJORs) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Tier-7 polish bundle (test-quality MAJORs) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning (awaiting implementation kickoff)
-**Last Action:** Project scaffolded as a closeout follow-up to PROJ-349
-**Next Action:** Begin Phase 1 (T6.8) — likely 5-minute decision per Codex's recommendation
-**Blockers:** None
-**Context for Next Agent:** Codex's review (consensus r003 plan) explicitly recommends keeping `_session` enforcement convention-only unless an external-access regression appears. Phase 1 is therefore expected to be a no-op that documents the decision rather than adding lint rules. Phase 2 (Tier-7) is the meat — a long list of small test-quality items.
+**Active Phase:** Complete — Awaiting Verification
+**Last Action:** Phase 2 (Tier-7) all 13 sub-tasks landed; full unit suite green (15,783 pass / 0 fail / 2 skip), lint clean.
+**Next Action:** User verification.
+**Blockers:** None.
+**Context for Next Agent:** All 14 sub-tasks (T6.8 + Tier-7 2.1..2.13) committed per-concern with PROJ-353 Tier-7 tags. Concurrent-commit hygiene maintained (PROJ-351/352 files left untouched). See decisions.md for the T6.8 convention-only rationale.
 
 ## Overview
 

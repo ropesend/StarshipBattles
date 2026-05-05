@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-353 | Closeout follow-up - Tooling and test-quality polish (T6.8 facade _session lint + Tier-7 polish bundle) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-353 | Closeout follow-up - Tooling and test-quality polish (T6.8 facade _session lint + Tier-7 polish bundle) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-352 | Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-351 | Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-350 | Combat Lab Registry Class Identity Fix | Planning | 2026-05-04 | 2026-05-04 |
