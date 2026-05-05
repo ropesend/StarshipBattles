@@ -175,4 +175,5 @@ class TestEndOfTurnEngineOrder:
 
         # `_phase_times` includes the 'happiness' entry now.
         assert 'happiness' in engine._phase_times
-        assert len(engine._phase_times) == 20
+        # PROJ-365 added `planet_modifier_effects` to the tick-loop bucket.
+        assert len(engine._phase_times) == 21

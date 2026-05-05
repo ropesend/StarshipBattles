@@ -28,6 +28,9 @@ def reset_game_state(monkeypatch, request):
     """
     from tests.infrastructure.session_cache import SessionRegistryCache
     from game.simulation.components.component import reset_component_caches
+    from game.simulation.entities.stat_contributors.registry import (
+        reset_stat_contributor_registry,
+    )
 
     # 0. PRE-TEST CLEANUP (ALWAYS - ensures isolation even after test failures)
     # PROJ-258: RegistryManager is no longer a singleton — create fresh and set as default
@@ -36,6 +39,12 @@ def reset_game_state(monkeypatch, request):
 
     # Reset module-level caches to prevent stale data from previous tests
     reset_component_caches()
+    # PROJ-360 audit A1: registry mutable state must reset per-test, not just
+    # via in-test cleanup fixtures. A test that crashes before its
+    # `clean_extension_registry` finally-block leaks STAT_CONTRIBUTOR_REGISTRY
+    # into the next test, where it can silently double-fire (or after the
+    # EXT-02 fix, suppress built-ins) for an unrelated test's ship.
+    reset_stat_contributor_registry()
 
     # Pygame state recovery: ~45 legacy test files still call pygame.quit() in
     # teardown, which leaves the next test in the shard with an uninitialized
@@ -110,6 +119,8 @@ def reset_game_state(monkeypatch, request):
 
         # 2. Reset module-level caches to prevent pollution to next test
         reset_component_caches()
+        # PROJ-360 audit A1: paired with the pre-test reset above.
+        reset_stat_contributor_registry()
 
         # 3. Reset AI Policy Manager
         from game.ai.policy_manager import get_default_policy_manager

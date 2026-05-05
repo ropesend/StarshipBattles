@@ -13,23 +13,22 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Settings + pure verifier | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Sidecar persistence + lifecycle | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. ReplayStore callback + listener wiring | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Background coordinator (single-worker FIFO queue) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Composition root wiring + integration tests | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Combat Lab fallback + docs | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. Settings + pure verifier | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Sidecar persistence + lifecycle | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. ReplayStore callback + listener wiring | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Background coordinator (single-worker FIFO queue) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Composition root wiring + integration tests | Blocked | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Combat Lab fallback + docs | Blocked | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04 22:00
-**Active Phase:** Planning (awaiting user approval)
-**Last Action:** Plan drafted from r003 consensus + swarm research
-**Next Action:** User approval, then begin Phase 1
+**Last Updated:** 2026-05-05
+**Active Phase:** Phases 1-4 complete; Phases 5-6 blocked on production sink wiring
+**Last Action:** Phases 1-4 implemented and committed; full sharded suite green (17763 passed, 0 failed)
+**Next Action:** Wait for codex's production sink wiring (`set_default_capture_sink` + `set_replay_store` in `game/app_bootstrap.py`); then resume Phase 5
 **Blockers:**
-1. **PROJ-354A must land first** — this project depends on `ComponentStateSpec` carrying `max_hp` and `status` for the verifier's diff to be diagnostic.
-2. **Production sink wiring must land** — the user is handling this with codex separately. Specifically: `set_default_capture_sink(replay_store)` and `set_replay_store(replay_store)` must be called from the production composition root (likely `app_bootstrap.py:157-159` near `ApplicationContext.create_production`). Without this, `NullCaptureSink` is the active sink, no replays persist, and verification has nothing to fire on.
+1. **Production sink wiring** — codex is handling this separately. Specifically: `set_default_capture_sink(replay_store)` and `set_replay_store(replay_store)` must be called from the production composition root (likely `app_bootstrap.py:157-159` near `ApplicationContext.create_production`). Without this, `NullCaptureSink` is the active sink, no replays persist, and the coordinator has nothing to listen to in production. Phase 5 (composition root wiring + integration tests) and Phase 6 (Combat Lab fallback + end-to-end docs) cannot proceed until that lands.
 
-**Context for Next Agent:** Implements C4–C9 of the consensus plan at `AgentCoordination/Scratchpad/Discussion/20260505T034554Z_replay-end-state-verification/plans/replay_end_state_verification_r003.md`. The Phase A work is in PROJ-354A (sibling project). This project assumes both prerequisites above have landed before Phase 5 (composition root wiring) is exercised end-to-end; Phases 1–4 can be implemented and tested in isolation.
+**Context for Next Agent:** Phases 1-4 implemented C4-C9 components in isolation. The pure verifier in `game/simulation/replay/replay_verifier.py`, the sidecar schema in `game/strategy/services/replay_verification_sidecar.py`, and the background coordinator in `game/strategy/services/replay_verification_coordinator.py` are all unit-tested and integration-tested without going through production capture. When sink wiring lands, Phase 5 wires the coordinator into `app_bootstrap.py` and `run_loop.py:84-85` and adds end-to-end + headless-vs-visual equivalence tests. Phase 6 covers Combat Lab fallback wiring and docs.
 
 ## Overview
 

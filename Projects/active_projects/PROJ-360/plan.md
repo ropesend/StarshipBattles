@@ -15,15 +15,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Golden output tests for representative ships | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Extract domain contributors behind current API | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Replace hardcoded ability-name checks with registered contributors | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Golden output tests for representative ships | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Extract domain contributors behind current API | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Replace hardcoded ability-name checks with registered contributors | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** 1
-**Last Action:** Project scaffolded from realtime-combat tech-debt review finding #5.
-**Next Action:** Run /claude-proj-start PROJ-360 to expand design + per-phase checklists.
+**Last Updated:** 2026-05-05
+**Active Phase:** Closed (awaiting user verification)
+**Last Action:** Phase 3 complete — `stat_contributors/registry.py` with `CREW_PRIORITY_REGISTRY` + `STAT_CONTRIBUTOR_REGISTRY`; `command.priority_sort_key` now consults the registry; calculator hooks `apply_registered_contributors` into the operational-component aggregation loop. Acceptance test `test_stat_contributor_extension.py` codifies the "no central edits" goal. `ship_stats.py` final LOC 495. Sharded suite 17717/17713 passed.
+**Next Action:** None — project ready for user sign-off.
 **Blockers:** None
 
 ## Overview

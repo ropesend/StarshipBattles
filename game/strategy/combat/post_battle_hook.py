@@ -137,10 +137,24 @@ def _apply_survivor_outcome(
     instance: "ShipInstance",
     is_derelict: bool,
 ) -> None:
-    """Write outcome per-component HP into instance.components + flags."""
-    # Preserve max_hp per instance from the pre-battle state so the
-    # rebuilt ComponentState stays self-describing. ComponentStateSpec
-    # doesn't carry max_hp today, but the instance's existing dict does.
+    """Write outcome per-component HP into instance.components + flags.
+
+    PROJ-354A audit remediation (MAJ-001/002/003): prefer the
+    outcome's `cs.max_hp` (populated by `_extract_component_states`
+    from the live engine `Component.max_hp`) so any modifier that
+    reshaped a component's cap during battle is preserved on the
+    persistent strategy-side `ComponentState`. Falls back to the
+    pre-battle snapshot only when the outcome reports max_hp <= 0
+    (defensive guard against zero/missing values from older code
+    paths). `cs.status` is intentionally dropped — the strategy-side
+    `ComponentState` is a damage-only DTO with no status field; the
+    engine reconciles `ComponentStatus` from HP/active state on the
+    next battle's first tick. Replay-side fidelity (max_hp + status)
+    is preserved in `ReplayRecord.outcome.data` regardless.
+    """
+    # Pre-battle max_hp snapshot retained as a defensive fallback when
+    # the outcome reports 0.0 (treated as "missing" rather than
+    # authoritative).
     prior_max_hp: Dict[str, float] = {
         key: cs.max_hp for key, cs in instance.components.items()
     }
@@ -149,11 +163,17 @@ def _apply_survivor_outcome(
     new_components: Dict[str, ComponentState] = {}
     for cs in ship_outcome.components:
         key = component_state_key(cs.component_id, cs.instance_index)
+        outcome_max_hp = float(cs.max_hp)
+        max_hp = (
+            outcome_max_hp
+            if outcome_max_hp > 0.0
+            else prior_max_hp.get(key, 0.0)
+        )
         new_components[key] = ComponentState(
             component_id=cs.component_id,
             instance_index=cs.instance_index,
             current_hp=float(cs.current_hp),
-            max_hp=prior_max_hp.get(key, 0.0),
+            max_hp=max_hp,
             is_active=bool(cs.is_active),
         )
     instance.components = new_components

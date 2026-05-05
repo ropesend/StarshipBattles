@@ -4,17 +4,19 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-354B | Replay Background Verification Coordinator (Phase B of replay verification consensus plan r003 - pure verifier + queue + sidecar; depends on PROJ-354A and on production sink wiring) | Planning | 2026-05-04 | 2026-05-04 |
-| PROJ-354A | Replay Component End-State Fidelity (Phase A of replay verification consensus plan r003 - capture-side; max_hp + status fields; schema bump) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-365 | TurnEngine phase descriptor registry (review finding #3) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-364 | Superweapon spec table refactor (review finding #5; depends on PROJ-363) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-363 | Declarative command/order spec registry (review finding #4) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-362 | Strategic effects metadata registry + `_aggregate` decomposition (review finding #2) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-361 | Battle resolver registry threading (PROJ-306 follow-on; review finding #1) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-360 | ShipStatsCalculator Decompose by Stat Domain (review 2026-05-04 finding #5) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-359 | Typed Weapon Execution Contract — Replace String/Class Dispatch (review 2026-05-04 finding #4) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-358 | Battle Runner — Validate Spec Components, No Silent Drift (review 2026-05-04 finding #7) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-357 | Fleet Aura Provider Identity — Bind to Component, Not Class (review 2026-05-04 finding #2) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-356 | AI PDC Capability Cache — Replace Non-Existent Class Check (review 2026-05-04 finding #9) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-354B | Replay Background Verification Coordinator (Phase B of replay verification consensus plan r003 - pure verifier + queue + sidecar; depends on PROJ-354A and on production sink wiring) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-354A | Replay Component End-State Fidelity (Phase A of replay verification consensus plan r003 - capture-side; max_hp + status fields; schema bump) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-350 | Combat Lab Registry Class Identity Fix | Planning | 2026-05-04 | 2026-05-04 |
-| PROJ-330 | strategy_screen.py LOC decomposition (708 → 458 LOC, 4 helper modules, +62 helper tests) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-329C | UIWindow retrofit - facade-coupled (PlanetAbilities, CargoQuickDialog, PlanetList; 3 controllers) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-329B | UIWindow retrofit - mid-tier modals (8 classes, 46 new tests + 390 preserved) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 
 ## Archived Projects
 

@@ -84,18 +84,28 @@ class CombatPolicies:
 
 @dataclass(frozen=True)
 class ComponentStateSpec:
-    """Persisted per-component HP + active-toggle state.
+    """Persisted per-component HP, max_hp, status, and active-toggle state.
 
     Populated by the strategy compiler from `ShipInstance.components` so
     per-component damage carries across battles. Combat Lab and Battle Setup
     normally emit ships with no persistent component state (empty tuple on
     `ShipSpec.components`), in which case the engine initializes HP from
     the design.
+
+    `max_hp` and `status` (PROJ-354A) capture battle-end fidelity for the
+    PROJ-354B replay end-state verifier — the live capture extractor in
+    `battle_runner._extract_component_states` populates them from the
+    engine `Component`. `status` carries the `ComponentStatus.name` string
+    (e.g., "ACTIVE", "DAMAGED", "NO_CREW", "NO_POWER", "NO_FUEL", "NO_AMMO");
+    the enum uses `auto()` numeric values which are not stable across
+    Python versions, so we serialize the name.
     """
 
     component_id: str
     instance_index: int
     current_hp: float
+    max_hp: float
+    status: str  # ComponentStatus.name (ACTIVE/DAMAGED/NO_CREW/NO_POWER/NO_FUEL/NO_AMMO)
     is_active: bool
 
 

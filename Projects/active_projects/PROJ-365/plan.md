@@ -7,16 +7,21 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Golden phase-list test (TDD baseline) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Define TickPhase + TickContext + DEFAULT_TICK_PHASE_LIST | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Replace `_process_tick` body with descriptor iteration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Golden phase-list test (TDD baseline) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Define TickPhase + TickContext + DEFAULT_TICK_PHASE_LIST | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Replace `_process_tick` body with descriptor iteration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning (awaiting user approval)
-**Last Action:** Plan drafted from review finding #3. Renumbered from PROJ-355 to PROJ-365.
-**Next Action:** User approval, then begin Phase 1.
-**Blockers:** None — does not depend on PROJ-361..364.
+**Active Phase:** Ready for user verification
+**Last Action:** All three phases implemented and committed. `_process_tick` body replaced with descriptor iteration over `DEFAULT_TICK_PHASE_LIST` (15 entries). New module `game/strategy/engine/turn_phase_registry.py` defines `TickPhase`, `TickContext`, and the registry. Two new test modules pin the golden phase ordering, the descriptor shape, and the PROJ-320 `moved_fleet_ids` invariant. Three pre-existing tests updated for the 21-key `_phase_times` dict (added `planet_modifier_effects`).
+**Next Action:** User verification — review the diff and confirm.
+**Blockers:** None.
+
+## Test Results
+- Focused: `pytest tests/unit/strategy/turn_engine/` → 110 passed.
+- Strategy integration: `pytest tests/integration/strategy/` → 483 passed, 1 skipped.
+- Full sharded: `python Tools/test_sharded/test_sharded.py` → 17325 passed / 0 failed / 4 skipped.
 
 ## Overview
 `TurnEngine.__init__` (`turn_engine.py:139-217`) wires 18 collaborators. `_process_tick` (`turn_engine.py:703-782`) hardcodes the 14-phase per-tick sequence as imperative `self._time_phase('name', engine.method, args...)` calls. Adding a per-tick system requires constructor growth + property growth + protocol growth + `_process_tick` edits. PROJ-365 makes the phase list a declarative `TickPhase` descriptor list that can be iterated, introspected, and overridden in tests.
@@ -63,9 +68,9 @@ End-of-turn engines (organics consumption / happiness / population growth / qual
 - [findings/03_test_impact.md](findings/03_test_impact.md) - Phase-order-pinning tests; golden-list test gap
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] `pytest tests/unit/strategy/turn_engine/ tests/integration/strategy/ --testmon` — green
-- [ ] PROJ-320 `moved_fleet_ids` characterization preserved
-- [ ] `_time_phase` timing accumulator output identical (same 20 keys, same semantics)
+- [x] All phase checklists complete
+- [x] `pytest tests/unit/strategy/turn_engine/ tests/integration/strategy/` — green
+- [x] PROJ-320 `moved_fleet_ids` characterization preserved
+- [x] `_time_phase` timing accumulator semantics preserved (now 21 keys — `planet_modifier_effects` added uniformly; see decisions.md)
 - [ ] Audit passed
 - [ ] User verified

@@ -41,17 +41,17 @@ class TestBeamHitTracking:
 
         # Create beam attack
         from game.core.math import Vector2
-        attack = {
-            'type': 'BEAM',
-            'source': attacker,
-            'target': target,
-            'damage': 100,
-            'range': 10000,
-            'origin': Vector2(0, 0),
-            'component': beam_comp,
-            'direction': Vector2(1, 0),
-            'hit': True
-        }
+        from game.simulation.combat.attack_contract import BeamResolution
+        attack = BeamResolution(
+            source=attacker,
+            component=beam_comp,
+            target=target,
+            damage=100,
+            range=10000,
+            origin=Vector2(0, 0),
+            direction=Vector2(1, 0),
+            hit=True,
+        )
 
         # Process the beam attack with a rigged RNG (always rolls > 0)
         collision = CollisionSystem(rng=random.Random(42))
@@ -82,17 +82,17 @@ class TestBeamHitTracking:
         beam_comp.get_ability.return_value = beam_ab
 
         from game.core.math import Vector2
-        attack = {
-            'type': 'BEAM',
-            'source': attacker,
-            'target': target,
-            'damage': 100,
-            'range': 10000,
-            'origin': Vector2(0, 0),
-            'component': beam_comp,
-            'direction': Vector2(1, 0),
-            'hit': True
-        }
+        from game.simulation.combat.attack_contract import BeamResolution
+        attack = BeamResolution(
+            source=attacker,
+            component=beam_comp,
+            target=target,
+            damage=100,
+            range=10000,
+            origin=Vector2(0, 0),
+            direction=Vector2(1, 0),
+            hit=True,
+        )
 
         collision = CollisionSystem(rng=random.Random(42))
         collision.process_beam_attack(attack, [])

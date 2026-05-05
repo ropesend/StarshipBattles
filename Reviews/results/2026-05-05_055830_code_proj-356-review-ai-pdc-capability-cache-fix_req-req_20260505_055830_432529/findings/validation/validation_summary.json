@@ -1,0 +1,31 @@
+{
+  "original_count": 24,
+  "confirmed": 24,
+  "downgraded": 0,
+  "rejected": 0,
+  "no_verdict": 0,
+  "filtered_count": 24,
+  "rejection_rate_pct": 0.0,
+  "by_shard": {
+    "validator_1": {
+      "reviewed": 8,
+      "confirmed": 8,
+      "downgraded": 0,
+      "rejected": 0
+    },
+    "validator_2": {
+      "reviewed": 8,
+      "confirmed": 8,
+      "downgraded": 0,
+      "rejected": 0
+    },
+    "validator_3": {
+      "reviewed": 8,
+      "confirmed": 8,
+      "downgraded": 0,
+      "rejected": 0
+    }
+  },
+  "rejected_ids": [],
+  "downgraded_ids": {}
+}

@@ -47,10 +47,13 @@ Hit Chance Calculation (Sigmoid):
 """
 import math
 import random
-from typing import List, Dict, Any
+from typing import List, Dict, Any, TYPE_CHECKING
 
 from game.core.config import BattleTuning
 from game.core.combat_types import DamageContext
+
+if TYPE_CHECKING:
+    from game.simulation.combat.attack_contract import BeamResolution
 
 # Note: Ship type hint uses Any to avoid tight coupling with simulation entities
 
@@ -65,29 +68,34 @@ class CollisionSystem:
     def __init__(self, rng: 'random.Random' = None):
         self.rng: random.Random = rng if rng is not None else random.Random()
 
-    def process_beam_attack(self, attack: Dict[str, Any], recent_beams: List[Dict[str, Any]]) -> None:
+    def process_beam_attack(self, attack: 'BeamResolution', recent_beams: List[Dict[str, Any]]) -> None:
         """
         Process a beam weapon attack using raycasting.
-        
+
+        PROJ-359 Phase 4: consumes the typed `BeamResolution` produced by the
+        Beam / PDC family handlers. The legacy dict-shaped carrier was deleted
+        in this phase; simulation-layer semantics no longer leak into the
+        engine layer via dict keys.
+
         Args:
-            attack: Dictionary containing beam parameters
+            attack: BeamResolution from a registered Beam/PDC family handler
             recent_beams: List to append beam visualization data to
         """
-        start_pos = attack['origin']
-        direction = attack['direction']
-        max_range = attack['range']
-        target = attack.get('target')
-        
+        start_pos = attack.origin
+        direction = attack.direction
+        max_range = attack.range
+        target = attack.target
+
         end_pos = start_pos + direction * max_range
-        
+
         if target and target.is_alive:
             f = start_pos - target.position
             a = direction.dot(direction)
             b = 2 * f.dot(direction)
             c = f.dot(f) - target.radius**2
-            
+
             discriminant = b*b - 4*a*c
-            
+
             if discriminant >= 0:
                 # Avoid division by zero if direction length is 0 (shouldn't happen with valid direction)
                 if a == 0:
@@ -95,20 +103,20 @@ class CollisionSystem:
                 else:
                     t1 = (-b - math.sqrt(discriminant)) / (2*a)
                     t2 = (-b + math.sqrt(discriminant)) / (2*a)
-                
+
                 valid_t = []
                 if 0 <= t1 <= max_range: valid_t.append(t1)
                 if 0 <= t2 <= max_range: valid_t.append(t2)
-                
+
                 if valid_t:
                     hit_dist = min(valid_t)
-                    beam_comp = attack['component']
-                    
+                    beam_comp = attack.component
+
                     # Get ability for hit chance and damage calculations
                     beam_ab = beam_comp.get_ability('BeamWeaponAbility')
-                    
-                    # New Logic: Get Scores (includes fleet aura bonuses)
-                    source_ship = attack.get('source')
+
+                    # Get Scores (includes fleet aura bonuses)
+                    source_ship = attack.source
                     attack_score = 0.0
                     if source_ship and hasattr(source_ship, 'get_total_sensor_score'):
                         attack_score = source_ship.get_total_sensor_score()

@@ -15,16 +15,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Characterization (golden) tests for current dispatch | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. AttackRequest / AttackResolution + registry skeleton | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate weapon families one at a time | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Delete string-class branches + dict carriers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Characterization (golden) tests for current dispatch | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. AttackRequest / AttackResolution + registry skeleton | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate weapon families one at a time | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Delete string-class branches + dict carriers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-04
-**Active Phase:** 1
-**Last Action:** Project scaffolded from realtime-combat tech-debt review finding #4 — largest of the 5 derived projects, intentionally phased.
-**Next Action:** Run /claude-proj-start PROJ-359 to expand design + per-phase checklists.
+**Last Updated:** 2026-05-05
+**Active Phase:** Done
+**Last Action:** Phase 4 complete — legacy string branches and dict carriers deleted. `_create_attack` is a thin family dispatcher; `_create_seeker_projectile` / `_create_standard_projectile` removed; `_beam_resolution_to_legacy_dict` adapter removed; `process_beam_attack` consumes `BeamResolution` directly; targeting `find_valid_target` and `calculate_firing_solution` use `detect_family` instead of string lookups. `docs/02_PATTERNS.md` § 34 + `docs/systems/combat_simulation.md` updated. Acceptance test in `test_weapon_registry.py::TestExtensibilityAcceptance` codifies "no central edits" for adding a new family.
+**Next Action:** Awaiting user verification.
 **Blockers:** None
 
 ## Overview

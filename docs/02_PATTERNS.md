@@ -42,6 +42,8 @@ Each section: **Where**, **How It Works**, **When to Use**.
 31. [Strategy Modal Window Base Class (PROJ-313)](#31-strategy-modal-window-base-class-proj-313)
 32. [Compositional Construction (PROJ-327)](#32-compositional-construction-proj-327)
 33. [UI Widget Test Factory (PROJ-322 / PROJ-324 / PROJ-325 / PROJ-328)](#33-ui-widget-test-factory-proj-322--proj-324--proj-325--proj-328)
+34. [Weapon Family Registry (PROJ-359)](#34-weapon-family-registry-proj-359)
+35. [Stat Contributor Registry (PROJ-360)](#35-stat-contributor-registry-proj-360)
 
 ---
 
@@ -1829,3 +1831,50 @@ def __init__(self, ..., *, ui_builder: RaceSetupUiBuilder | None = None,
 - **The guard MUST consult `type(self)`, not the class that defines `__init__`.** Setting `FleetReportWindow.bypass_init = True` must be honored by the inherited `StrategyModalWindow.__init__`. `getattr(type(self), "bypass_init", False)` does the right thing.
 - **Some subclasses call `pygame_gui.elements.UIWindow.__init__(self, ...)` explicitly instead of `super()`.** The guard handles `super()` but not explicit ancestor calls. Audit each affected class for explicit parent-class calls.
 - **Legacy `__new__` bypass helpers can be removed once the corresponding subclass adopts the guard.** PROJ-324 / PROJ-325 / PROJ-328 A/B/C did this incrementally — tests migrated as their target class adopted the two-stage `__init__`.
+
+---
+
+## 34. Weapon Family Registry (PROJ-359)
+
+**Where:** `game/simulation/combat/attack_contract.py` (`WeaponFamily` enum, `AttackRequest`, `BeamResolution`, `ProjectileResolution`, `NoAttack`, `WeaponHandler` protocol, `FAMILY_METADATA`), `game/simulation/combat/weapon_registry.py` (`WeaponRegistry`, `WEAPON_REGISTRY`, `detect_family`), `game/simulation/combat/families/{beam,projectile,seeker,pdc}.py`. Consumed by `weapon_firing_system.py`, `targeting_system.py`, `game/engine/collision.py` (`process_beam_attack` consumes `BeamResolution`).
+
+**How It Works:**
+- Each weapon family (`BEAM`, `PROJECTILE`, `SEEKER`, `PDC`) registers a `WeaponHandler` (one per family module). Importing `game.simulation.combat.families` triggers all registrations.
+- `weapon_firing_system._create_attack` is now a thin family-dispatcher: `detect_family(comp)` → build `AttackRequest` → `WEAPON_REGISTRY.dispatch(request)` → return the resolution. No string-class branches.
+- `BeamResolution` carries the same field set the legacy beam-attack dict carried (`source`, `component`, `target`, `damage`, `range`, `origin`, `direction`, `hit`) plus a `type=AttackType.BEAM` discriminator. `ProjectileResolution` wraps a `Projectile` instance.
+- Family-policy decisions that previously lived as `if comp.has_pdc_ability():` branches now live in `FAMILY_METADATA` (`targets_missiles`, `consumes_pdc_missile_context`). The targeting system consults metadata, not strings.
+- `game/engine/collision.py::process_beam_attack` consumes `BeamResolution` directly via attribute access — simulation semantics no longer leak into the engine layer through dict keys.
+
+**Why:**
+- Before PROJ-359, adding a new weapon family meant coordinated edits to four files: firing dispatch, targeting filters, collision (dict consumer), projectile manager. The dict-shaped attack carrier also leaked simulation-layer semantics (`attack['component']`, `attack.get('source')`) into `game/engine/`, which the layer architecture says owns physics/collision primitives only.
+- The registry collapses dispatch to one lookup site and pulls semantics back behind a typed boundary. `BeamResolution` and `ProjectileResolution` give telemetry consumers a uniform attribute-access shape (the headline plan goal "damage event contracts converge").
+
+**When to Use:**
+- Adding a new weapon family is now: (1) one new module under `families/<name>.py` implementing `WeaponHandler.fire(request) -> AttackResolution` and calling `WEAPON_REGISTRY.register(WeaponFamily.<NAME>, MyHandler())` at module scope; (2) one entry in `FAMILY_METADATA` if the family has special targeting behavior (missile-targeting, PDC-style context injection); (3) one import in `families/__init__.py` to trigger the registration. **No edits to weapon_firing_system, targeting_system, collision, or projectile_manager.**
+- The `WeaponFamily` enum gains a new member when a genuinely new family is added (not just a content variant of an existing family). The four current families correspond to the four ability classes (`BeamWeaponAbility`, `ProjectileWeaponAbility`, `SeekerWeaponAbility`, plus PDC as a Beam role distinguished by the 'pdc' tag).
+- Acceptance test: `tests/unit/simulation/combat/test_weapon_registry.py::TestExtensibilityAcceptance` — codifies the "no central edits" goal as an executable test.
+
+---
+
+## 35. Stat Contributor Registry (PROJ-360)
+
+**Where:** `game/simulation/entities/stat_contributors/registry.py` (`CREW_PRIORITY_REGISTRY`, `STAT_CONTRIBUTOR_REGISTRY`, `register_crew_priority`, `register_stat_contributor`, `apply_registered_contributors`, `lookup_crew_priority`). Consumed by `ShipStatsCalculator._phase_stats_aggregation` (calls `apply_registered_contributors` per operational component) and `stat_contributors.command.priority_sort_key` (consults `lookup_crew_priority`). Per-domain contributors live in sibling modules (`movement.py`, `defense.py`, `weapons.py`, `command.py`, `launch.py`).
+
+**How It Works:**
+- The calculator is now a coordinator: phase ordering + cross-cutting state (planetary resource ids, resource init, physics) only. Per-domain stat aggregation lives in `stat_contributors/<domain>.py`. Public API (`ShipStatsCalculator.calculate(ship)`) is unchanged; PROJ-360 Phase 1 golden snapshot tests pin bit-identical output across the decomposition.
+- `CREW_PRIORITY_REGISTRY: List[CrewPriorityEntry]` maps ability names to crew-allocation priority (lower = served first). `lookup_crew_priority(comp)` returns the lowest priority value across the abilities the component has — matching legacy semantics where a bridge-with-weapons component still sorts at bridge priority.
+- `STAT_CONTRIBUTOR_REGISTRY: List[StatContributorEntry]` is the generic extension point. Each entry pairs an ability class name with a `Callable[[Ship, Component], None]` — the contributor mutates `ship` based on `comp` whenever a ship has a component carrying that ability. `apply_registered_contributors` is called inside the operational-component loop in `_phase_stats_aggregation`, so contributors automatically respect the same `is_active`+`is_operational` gating the built-in domain helpers do.
+- Both registries support runtime register / unregister via `register_crew_priority` / `unregister_crew_priority` and `register_stat_contributor` / `unregister_stat_contributor`. Double-registration raises (caught early as programmer error). Tests clean up via a fixture that tracks registrations and unregisters them at teardown — so a test cannot leak into another.
+- Intentionally separate from `combat.ability_stat_registry.ABILITY_STAT_REGISTRY` (PROJ-273). That registry shapes the modifier-emission pipeline (compiler → ModifierEntry → external_stats); this one shapes per-component stat aggregation. Mixing them would warp both contracts.
+
+**Why:**
+- Pre-PROJ-360, `ship_stats.py` was 643 LOC (over the 500 LOC ceiling) and hardcoded ability-name string checks for movement, shields, regeneration, launch capacity, multiplex tracking, armor, command priority, and engine priority. Adding a new stat-affecting ability meant editing one broad single-source-of-truth file that owned multiple unrelated concerns.
+- Decomposition by domain plus the registry pattern collapses extension to a one-call registration. `ship_stats.py` drops to 486 LOC. New abilities don't require touching the calculator.
+
+**When to Use:**
+- Adding a new ability that contributes a stat at recalculate time:
+  1. Define the contributor function `def my_contrib(ship, comp): ship.my_stat += comp.abilities.get('MyValue', 0)`.
+  2. Register it: `register_stat_contributor('MyAbility', my_contrib, domain='my_domain')`.
+  3. Done — no edits to `ship_stats.py`, `command.py`, or any other contributor.
+- Adding a new component class that should slot into the crew-allocation priority order: `register_crew_priority('MyHotAbility', priority=1)`.
+- Acceptance test: `tests/unit/simulation/entities/test_stat_contributor_extension.py` — codifies the "no central edits" goal as an executable test for both registries.

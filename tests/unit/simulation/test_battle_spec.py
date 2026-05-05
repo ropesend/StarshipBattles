@@ -126,11 +126,15 @@ def test_component_state_spec_fields():
         component_id="bridge",
         instance_index=0,
         current_hp=123.4,
+        max_hp=150.0,
+        status="DAMAGED",
         is_active=True,
     )
     assert cs.component_id == "bridge"
     assert cs.instance_index == 0
     assert cs.current_hp == pytest.approx(123.4)
+    assert cs.max_hp == pytest.approx(150.0)
+    assert cs.status == "DAMAGED"
     assert cs.is_active is True
     with pytest.raises(dataclasses.FrozenInstanceError):
         cs.current_hp = 0.0  # type: ignore[misc]

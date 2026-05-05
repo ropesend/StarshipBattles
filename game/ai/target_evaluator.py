@@ -171,9 +171,9 @@ class TargetEvaluator:
 
         PROJ-272 Phase 3: projectile candidates (missiles) have no
         components — rule treats them as "no weapons" without crashing
-        on the `get_components_by_ability` call. Previously crashed in
-        the cache-miss fallback; outer try/except silently dropped the
-        missile from scoring.
+        on the `get_components_by_ability` call. Non-ship candidates
+        are routed through the `is_combat_ship` TypeGuard before any
+        component query.
         """
         weight = rule.get('weight', 0)
         required = rule.get('required', False)

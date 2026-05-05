@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Registry threading + regression test | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Registry threading + regression test | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning (awaiting user approval)
-**Last Action:** Plan drafted from Strategy Layer Tech Debt Review (Reviews/results/2026-05-05_strategy-layer-tech-debt-review/report.md, finding #1). Renumbered from PROJ-351 to PROJ-361 due to merge-conflict collision on PROJ-351..360.
-**Next Action:** User approval, then begin Phase 1 in Continue Project session.
+**Active Phase:** Awaiting user verification
+**Last Action:** Phase 1 implemented end-to-end. RED-then-GREEN TDD: new regression test `tests/unit/strategy/adapters/test_simulation_adapter_registry_threading.py` (2 cases — threading + PROJ-306 fallback) confirmed failing on master adapter, then fixed at `game/strategy/adapters/simulation_adapter.py:258` to forward `registries` to `run_battle.registry_provider` when present. Focused adapter run: 18 passed. Wider strategy run: 3993 passed, 1 skipped.
+**Next Action:** User verification, then archive.
 **Blockers:** None
 
 ## Overview

@@ -22,6 +22,9 @@ from typing import Optional
 
 from game.simulation.replay import ReplayRecord, compute_components_registry_hash
 from game.strategy.services.replay_store import ReplayStore
+from game.strategy.services.replay_verification_sidecar import (
+    read_verification_sidecar,
+)
 
 
 @dataclass(frozen=True)
@@ -33,12 +36,19 @@ class ReplayLookup:
     ``"corrupt"``, ``"version_drift"``. ``registry_drift`` is True when
     the captured components-registry hash differs from the running hash;
     the UI surfaces a confirmation dialog before launching playback.
+
+    PROJ-354B Phase 3.2: ``verification_status`` exposes the sidecar
+    status (``"PASSED"``, ``"FAILED"``, ``"ERROR"``,
+    ``"SKIPPED_QUEUE_FULL"``, ``"SKIPPED_DISABLED"``) when a sidecar
+    exists, or ``None`` when verification has not yet completed for
+    this replay.
     """
 
     found: bool
     record: Optional[ReplayRecord] = None
     reason: Optional[str] = None
     registry_drift: bool = False
+    verification_status: Optional[str] = None
 
 
 class ReplayResolver:
@@ -110,7 +120,17 @@ class ReplayResolver:
             and bool(self._current_hash)
             and record.components_registry_hash != self._current_hash
         )
-        return ReplayLookup(found=True, record=record, registry_drift=registry_drift)
+        # PROJ-354B Phase 3.2: surface sidecar verification status if
+        # present. Missing/corrupt sidecars yield ``None`` (the absence
+        # is normal pre-verification state).
+        sidecar = read_verification_sidecar(rd, replay_id)
+        verification_status = sidecar.status if sidecar is not None else None
+        return ReplayLookup(
+            found=True,
+            record=record,
+            registry_drift=registry_drift,
+            verification_status=verification_status,
+        )
 
     def _store_replay_dir(self):
         return self._store._replay_dir()  # noqa: SLF001 — package-internal

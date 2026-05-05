@@ -129,12 +129,19 @@ def _make_minimal_battle_spec() -> BattleSpec:
         velocity=Vector2(5.0, 0.0),
         components=(
             ComponentStateSpec(
-                component_id="bridge", instance_index=0, current_hp=10.0, is_active=True
+                component_id="bridge",
+                instance_index=0,
+                current_hp=10.0,
+                max_hp=10.0,
+                status="ACTIVE",
+                is_active=True,
             ),
             ComponentStateSpec(
                 component_id="armor_plate",
                 instance_index=0,
                 current_hp=8.5,
+                max_hp=10.0,
+                status="DAMAGED",
                 is_active=True,
             ),
         ),
@@ -188,7 +195,12 @@ def _make_minimal_outcome() -> BattleOutcome:
         final_velocity=Vector2(4.5, 0.1),
         components=(
             ComponentStateSpec(
-                component_id="bridge", instance_index=0, current_hp=8.5, is_active=True
+                component_id="bridge",
+                instance_index=0,
+                current_hp=8.5,
+                max_hp=10.0,
+                status="DAMAGED",
+                is_active=True,
             ),
         ),
         weapons=(
@@ -529,3 +541,45 @@ class TestReplayRecord:
         result = ReplayRecord.from_dict(d)
         assert result.sector_coords is None
         assert result.turn_number is None
+
+
+# ---------------------------------------------------------------------------
+# PROJ-354A — ComponentStateSpec end-state fidelity
+# ---------------------------------------------------------------------------
+
+
+def test_component_state_spec_round_trip_includes_max_hp_and_status():
+    """PROJ-354A Phase 1 Task 1.1 — TDD anchor.
+
+    Constructs a `ComponentStateSpec` carrying the new `max_hp` and `status`
+    fields, asserts the to-dict serializer emits them, and asserts the
+    from-dict reverse re-creates an equal spec.
+    """
+    from game.simulation.replay.replay_serialization import (
+        _component_state_from_dict,
+        _component_state_to_dict,
+    )
+
+    spec = ComponentStateSpec(
+        component_id="reactor",
+        instance_index=0,
+        current_hp=50.0,
+        max_hp=100.0,
+        status="DAMAGED",
+        is_active=True,
+    )
+    d = _component_state_to_dict(spec)
+    assert d["max_hp"] == 100.0
+    assert d["status"] == "DAMAGED"
+
+    rebuilt = _component_state_from_dict(_roundtrip_json(d))
+    assert rebuilt == spec
+
+
+def test_replay_schema_version_is_2_0_0():
+    """PROJ-354A Phase 2 Task 2.4 — pin schema version constant.
+
+    Bumped from "1.0.0" to "2.0.0" because per-component state gained two
+    new fields (`max_hp`, `status`) — backward-incompatible.
+    """
+    assert REPLAY_SCHEMA_VERSION == "2.0.0"

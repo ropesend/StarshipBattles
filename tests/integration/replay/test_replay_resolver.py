@@ -93,3 +93,88 @@ class TestReplayResolver:
         # The resolver took the live hash; resolving a missing replay still
         # returns gracefully.
         assert resolver.resolve("nope").reason == "missing"
+
+
+# PROJ-354B Phase 3.2: ReplayResolver surfaces sidecar verification status.
+class TestReplayResolverSidecarStatus:
+    def test_no_sidecar_yields_none(self, store: ReplayStore):
+        store.persist(_make_record("plain"))
+        resolver = ReplayResolver(
+            store, current_components_registry_hash="sha256:current"
+        )
+        result = resolver.resolve("plain")
+        assert result.found is True
+        assert result.verification_status is None
+
+    def test_passed_sidecar_surfaced(self, store: ReplayStore):
+        from game.strategy.services.replay_verification_sidecar import (
+            REPLAY_VERIFICATION_SCHEMA_VERSION,
+            VerificationSidecar,
+            VerificationSource,
+            VerificationStatus,
+            write_verification_sidecar,
+        )
+        store.persist(_make_record("good"))
+        rd = store.save_root / "replays"  # type: ignore[union-attr]
+        write_verification_sidecar(
+            rd,
+            VerificationSidecar(
+                replay_id="good",
+                schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+                status=VerificationStatus.PASSED.name,
+                source=VerificationSource.BACKGROUND.name,
+                verified_at="2026-05-04T00:00:00+00:00",
+                duration_ms=10,
+                diff=None,
+                error=None,
+            ),
+        )
+        resolver = ReplayResolver(
+            store, current_components_registry_hash="sha256:current"
+        )
+        result = resolver.resolve("good")
+        assert result.found is True
+        assert result.verification_status == "PASSED"
+
+    def test_failed_sidecar_surfaced(self, store: ReplayStore):
+        from game.strategy.services.replay_verification_sidecar import (
+            REPLAY_VERIFICATION_SCHEMA_VERSION,
+            VerificationSidecar,
+            VerificationSource,
+            VerificationStatus,
+            write_verification_sidecar,
+        )
+        store.persist(_make_record("bad"))
+        rd = store.save_root / "replays"  # type: ignore[union-attr]
+        write_verification_sidecar(
+            rd,
+            VerificationSidecar(
+                replay_id="bad",
+                schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+                status=VerificationStatus.FAILED.name,
+                source=VerificationSource.BACKGROUND.name,
+                verified_at="2026-05-04T00:00:00+00:00",
+                duration_ms=15,
+                diff=[{"path": ["x"], "expected": 1, "actual": 2}],
+                error=None,
+            ),
+        )
+        resolver = ReplayResolver(
+            store, current_components_registry_hash="sha256:current"
+        )
+        result = resolver.resolve("bad")
+        assert result.verification_status == "FAILED"
+
+    def test_corrupt_sidecar_yields_none(self, store: ReplayStore):
+        from game.strategy.services.replay_verification_sidecar import (
+            sidecar_path_for_replay,
+        )
+        store.persist(_make_record("c1"))
+        rd = store.save_root / "replays"  # type: ignore[union-attr]
+        sidecar_path_for_replay(rd, "c1").write_text("{not valid")
+        resolver = ReplayResolver(
+            store, current_components_registry_hash="sha256:current"
+        )
+        result = resolver.resolve("c1")
+        assert result.found is True  # replay still loadable
+        assert result.verification_status is None  # sidecar unreadable

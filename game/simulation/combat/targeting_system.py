@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Any, Union
 
 from game.core.math import Vector2
 from game.core.constants import AttackType, SimulationConstants
+from game.simulation.combat.attack_contract import FAMILY_METADATA, WeaponFamily
+from game.simulation.combat.weapon_registry import detect_family
 from game.simulation.interfaces import (
     ICombatShip,
     IProjectile,
@@ -160,27 +162,38 @@ class TargetingSystem:
             if candidate.team_id == ship.team_id:
                 continue
 
-            # PDC targeting restrictions:
-            # - Non-PDC weapons cannot fire at missiles
-            # - PDC weapons can only fire at target types listed in pdc_valid_targets
-            is_pdc = comp.has_pdc_ability()
+            # PROJ-359 Phase 3.4: Family-metadata-driven targeting restrictions.
+            # Previously: `is_pdc = comp.has_pdc_ability()` — string lookup.
+            # Now: family metadata declares whether this family is allowed to
+            # target enemy missiles. Adding a new family with this behavior is
+            # a FAMILY_METADATA edit, not a targeting-system edit.
+            family = detect_family(comp)
+            meta = FAMILY_METADATA.get(family) if family else None
+            targets_missiles = meta.targets_missiles if meta is not None else False
             is_missile = is_projectile(candidate) and candidate.type == AttackType.MISSILE
 
-            if is_missile and not is_pdc:
-                continue  # Non-PDC cannot target missiles
+            if is_missile and not targets_missiles:
+                continue  # Family cannot target missiles
 
-            if is_pdc:
+            if family is WeaponFamily.PDC:
                 # Determine candidate's target type for PDC matching
                 candidate_type = self._get_pdc_target_type(candidate, is_missile)
 
-                # Get valid targets from the beam ability on the component
-                pdc_valid_targets = self._get_pdc_valid_targets(comp, weapon_ab)
+                # PROJ-359 audit (MAJ-001): family is already known to be PDC,
+                # so there is no need to re-query `comp.has_ability(...)` —
+                # PDC weapons are Beam-role weapons, so `BeamWeaponAbility`
+                # is the canonical place to read `pdc_valid_targets`. Fetch
+                # it once via `get_ability` (returns None if absent) and pass
+                # the resolved ability to the helper.
+                beam_ab = comp.get_ability('BeamWeaponAbility')
+                pdc_valid_targets = self._get_pdc_valid_targets(beam_ab, weapon_ab)
 
                 if candidate_type not in pdc_valid_targets:
                     continue  # PDC can only target types in its valid targets list
 
-            # Validate firing solution
-            if comp.has_ability('SeekerWeaponAbility'):
+            # Validate firing solution. PROJ-359 Phase 4: branch on family,
+            # not string-class lookup.
+            if family is WeaponFamily.SEEKER:
                 seeker_ab = comp.get_ability('SeekerWeaponAbility')
                 dist = ship.position.distance_to(candidate.position)
                 max_range = seeker_ab.projectile_speed * seeker_ab.endurance * SimulationConstants.SEEKER_MAX_RANGE_MULTIPLIER
@@ -194,25 +207,25 @@ class TargetingSystem:
         return None
 
     @staticmethod
-    def _get_pdc_valid_targets(comp: 'Component', weapon_ab: Any) -> list:
+    def _get_pdc_valid_targets(beam_ab: Any, weapon_ab: Any) -> list:
         """
         Get the list of valid PDC target types from the weapon's beam ability.
 
-        Checks the component's BeamWeaponAbility for pdc_valid_targets first,
-        then falls back to the passed weapon_ab, and finally to the default
-        ["MISSILE", "FIGHTER"].
+        PROJ-359 audit (MAJ-001): the caller already knows the family is PDC,
+        so it has resolved the BeamWeaponAbility instance directly via
+        `comp.get_ability('BeamWeaponAbility')` (which returns None if absent).
+        This helper no longer performs its own `has_ability` lookup — it
+        simply consults the supplied ability, then `weapon_ab`, then a default.
 
         Args:
-            comp: The weapon component
-            weapon_ab: The weapon ability instance passed to find_valid_target
+            beam_ab: The component's `BeamWeaponAbility` instance, or None.
+            weapon_ab: The weapon ability instance passed to find_valid_target.
 
         Returns:
             List of uppercase target type strings (e.g. ["MISSILE", "FIGHTER"])
         """
         _DEFAULT = ["MISSILE", "FIGHTER"]
 
-        # Try to get from the component's BeamWeaponAbility
-        beam_ab = comp.get_ability('BeamWeaponAbility') if comp.has_ability('BeamWeaponAbility') else None
         if beam_ab is not None:
             targets = getattr(beam_ab, 'pdc_valid_targets', None)
             if isinstance(targets, list):
@@ -278,9 +291,12 @@ class TargetingSystem:
         # Determine target velocity (ICombatShip and IProjectile both have velocity)
         t_vel = target.velocity
 
-        if comp.has_ability('ProjectileWeaponAbility') or comp.has_ability('SeekerWeaponAbility'):
-            # Get projectile speed from the appropriate ability
-            if comp.has_ability('SeekerWeaponAbility'):
+        # PROJ-359 Phase 4: family-driven lead calculation. Beam family aims
+        # directly; Projectile and Seeker families lead the target based on
+        # their projectile_speed.
+        family = detect_family(comp)
+        if family in (WeaponFamily.PROJECTILE, WeaponFamily.SEEKER):
+            if family is WeaponFamily.SEEKER:
                 proj_ab = comp.get_ability('SeekerWeaponAbility')
             else:
                 proj_ab = comp.get_ability('ProjectileWeaponAbility')

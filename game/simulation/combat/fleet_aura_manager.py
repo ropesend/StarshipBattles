@@ -24,8 +24,26 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AuraProvider:
-    """A ship providing a scoped ability bonus."""
+    """A ship/component pair providing a scoped ability bonus.
+
+    PROJ-357: provider identity is bound to (`component`, `ability`)
+    not just `(ship, ability_class_name)`. The `value` field is the
+    snapshot at registration time — UI surfaces (`get_active_bonuses`)
+    read it for display, but `_recalculate` always re-reads the live
+    `ability.value` so a provider's contribution tracks the live
+    component / ability instance.
+
+    A provider is considered live when:
+      1. `ship.is_alive` AND not `ship.is_derelict`, AND
+      2. `component.is_operational`, AND
+      3. `ability` is still present in `component.ability_instances`.
+
+    Providers whose identity no longer resolves are dropped from the
+    `_providers` list during `_recalculate`.
+    """
     ship: Any
+    component: Any
+    ability: Any
     ability_name: str
     value: float
     stack_group: Optional[str]
@@ -92,9 +110,14 @@ class FleetAuraManager:
         self._external.clear()
         self._team_bonuses.clear()
 
-        # Scan ships for fleet/system/empire-scoped abilities
+        # Scan ships for fleet/system/empire-scoped abilities.
+        # PROJ-357 audit (CQ-001): derelict ships do not contribute fleet
+        # auras — match the filter applied in `_recalculate()` and
+        # `get_active_bonuses()` so the math, cache, and UI all agree.
         for ship in ships:
             if not ship.is_alive:
+                continue
+            if getattr(ship, 'is_derelict', False):
                 continue
             self._scan_ship(ship)
 
@@ -205,7 +228,12 @@ class FleetAuraManager:
         )
 
     def _scan_ship(self, ship: Any) -> None:
-        """Find all non-SELF scoped abilities on a ship."""
+        """Find all non-SELF scoped abilities on a ship.
+
+        PROJ-357: registers one `AuraProvider` per (component, ability)
+        pair so that disabling one of two same-class providers on the
+        same ship removes only the disabled component's contribution.
+        """
         for comp in ship.get_all_components():
             if not comp.is_operational:
                 continue
@@ -219,6 +247,8 @@ class FleetAuraManager:
                     stack_group = getattr(ab, 'stack_group', None)
                     self._providers.append(AuraProvider(
                         ship=ship,
+                        component=comp,
+                        ability=ab,
                         ability_name=ability_name,
                         value=value,
                         stack_group=stack_group,
@@ -238,7 +268,10 @@ class FleetAuraManager:
             ship: The newly added ship
             all_ships: All ships currently in battle (including the new one)
         """
-        if ship.is_alive:
+        # PROJ-357 audit (CQ-001): derelict ships do not contribute fleet
+        # auras — keep `register_ship()` in sync with the filter used by
+        # `initialize()` and `_recalculate()`.
+        if ship.is_alive and not getattr(ship, 'is_derelict', False):
             self._scan_ship(ship)
         self._recalculate(all_ships)
 
@@ -305,37 +338,66 @@ class FleetAuraManager:
             tid: {} for tid in team_ids
         }
 
+        # PROJ-357: identity-precise liveness check — the specific
+        # `component` and `ability` instance the provider was registered
+        # with must currently be operational/attached. Skip (do not
+        # drop) providers whose component is non-operational — a
+        # repaired component should resume contributing without
+        # requiring a re-scan. Drop only when the underlying ability
+        # instance has been replaced (true identity loss).
+        retained_providers: List[AuraProvider] = []
         for provider in self._providers:
             ship = provider.ship
-            if not ship.is_alive:
+
+            # Real identity loss: the ability instance is no longer
+            # attached to the component (component swap, ability
+            # re-materialization). Drop the provider.
+            ab = provider.ability
+            comp = provider.component
+            ability_instances = getattr(comp, 'ability_instances', ())
+            if ab not in ability_instances:
                 continue
 
-            # Check if the specific component is still operational
-            comp_still_operational = False
-            for comp in ship.get_all_components():
-                if not comp.is_operational:
-                    continue
-                for ab in getattr(comp, 'ability_instances', []):
-                    if (type(ab).__name__ == provider.ability_name
-                            and getattr(ab, 'scope', AbilityScope.SELF) != AbilityScope.SELF):
-                        comp_still_operational = True
-                        break
-                if comp_still_operational:
-                    break
+            retained_providers.append(provider)
 
-            if not comp_still_operational:
+            if not ship.is_alive:
+                continue
+            # PROJ-357 audit (CQ-001): derelict ships are incapacitated and
+            # must not contribute fleet auras. `get_active_bonuses()` and
+            # `_get_provider_fingerprint()` already treat derelict as a
+            # liveness gate; align the math path with them. Skip rather
+            # than drop — a ship that ceases to be derelict (recovery)
+            # should resume contributing without a re-scan.
+            if getattr(ship, 'is_derelict', False):
+                continue
+            if not getattr(comp, 'is_operational', False):
+                continue
+
+            # PROJ-357: read the LIVE value from the live ability
+            # instance, not the cached `provider.value` snapshot. This
+            # also future-proofs against formula re-resolution that
+            # mutates `ability.value` mid-battle.
+            live_value = getattr(ab, 'value', 0.0)
+            if live_value == 0.0:
+                # Zero live value contributes nothing; matches
+                # `_scan_ship`'s zero filter at registration time.
                 continue
 
             team_id = ship.team_id
-            ability = provider.ability_name
+            ability_name = provider.ability_name
             group = provider.stack_group or f"_default_{id(provider)}"
 
-            if ability not in team_ability_groups[team_id]:
-                team_ability_groups[team_id][ability] = {}
-            groups = team_ability_groups[team_id][ability]
+            if ability_name not in team_ability_groups[team_id]:
+                team_ability_groups[team_id][ability_name] = {}
+            groups = team_ability_groups[team_id][ability_name]
             if group not in groups:
                 groups[group] = []
-            groups[group].append(provider.value)
+            groups[group].append(live_value)
+
+        # Compact `_providers` only when an entry actually went away —
+        # avoids list churn on the typical no-change path.
+        if len(retained_providers) != len(self._providers):
+            self._providers = retained_providers
 
         # PROJ-271 Phase 7: external ModifierEntry values now route
         # through the same team_ability_groups structure BEFORE

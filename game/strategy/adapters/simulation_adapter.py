@@ -30,9 +30,26 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.battle_spec import BattleSpec
+    from game.simulation.entities.ship import Ship
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
     from game.simulation.interfaces.ai_controller import IAIControllerFactory
+
+
+def _resolve_registries(registries: Optional['GameRegistries']) -> 'GameRegistries':
+    """Resolve an effective ``GameRegistries`` for the strategy adapter.
+
+    PROJ-361 audit (CQ-01/CQ-02): downstream call sites
+    (``_instances_to_ships`` → ``ShipInstance.to_ship`` → ``ShipSerializer``;
+    ``_build_spec`` → ``build_strategy_battle_spec``) all require non-None
+    registries. Centralizing the ``None`` fallback here keeps the
+    PROJ-306-permitted boundary call in one place and lets the rest of the
+    adapter operate on a guaranteed non-None value.
+    """
+    if registries is not None:
+        return registries
+    from game.core.registry import get_default_registry_provider
+    return get_default_registry_provider()
 
 
 class SimulationBattleResolver(IBattleResolver):
@@ -118,6 +135,16 @@ class SimulationBattleResolver(IBattleResolver):
                 f"2 fleets; got {len(fleet_list)}"
             )
 
+        # PROJ-361 audit (CQ-01/CQ-02): resolve the registries fallback once
+        # at the resolver entry point. Every downstream call site
+        # (``_instances_to_ships``, ``_build_spec``,
+        # ``run_battle.registry_provider``, ``_build_capture_context``)
+        # requires non-None registries; centralizing the fallback here
+        # closes the gap where the shortcut ``sole_survivor`` branch and
+        # ``_instances_to_ships`` previously passed raw ``None`` to
+        # ``ShipInstance.to_ship``.
+        effective_registries = _resolve_registries(registries)
+
         # Per-team combat-capable ship lists, indexed by team_id.
         combat_capable: Dict[int, List[Any]] = {
             tid: [s for s in fleet.ships if s.is_combat_capable()]
@@ -139,7 +166,9 @@ class SimulationBattleResolver(IBattleResolver):
             )
             survivors = {
                 tid: (
-                    self._instances_to_ships(combat_capable[tid], tid, registries)
+                    self._instances_to_ships(
+                        combat_capable[tid], tid, effective_registries
+                    )
                     if tid == sole_winner else []
                 )
                 for tid in combat_capable
@@ -181,7 +210,7 @@ class SimulationBattleResolver(IBattleResolver):
             return self._run_simulated_battle(
                 fleet_list,
                 seed=seed,
-                registries=registries,
+                registries=effective_registries,
                 environmental_effects=environmental_effects,
                 modifiers=modifiers,
                 empires=empires,
@@ -198,7 +227,7 @@ class SimulationBattleResolver(IBattleResolver):
         return self._run_simulated_battle(
             fleet_list,
             seed=seed,
-            registries=registries,
+            registries=effective_registries,
             environmental_effects=environmental_effects,
             modifiers=modifiers,
             empires=empires,
@@ -209,7 +238,7 @@ class SimulationBattleResolver(IBattleResolver):
         fleet_list: List['Fleet'],
         *,
         seed: Optional[int],
-        registries: Optional['GameRegistries'],
+        registries: 'GameRegistries',
         environmental_effects: Any,
         modifiers: Optional[Mapping[int, Any]],
         empires: Optional[Mapping[int, Any]],
@@ -239,10 +268,14 @@ class SimulationBattleResolver(IBattleResolver):
         # `run_battle` invokes the compiler's `PostBattleHook` which
         # writes outcome data back into the ShipInstances and prunes
         # destroyed/retreated ships from the fleets.
-        # PROJ-306: pass `registry_provider` explicitly — the Strategy
-        # layer is allowed to call `get_default_registry_provider()`;
-        # the Simulation layer cannot.
-        from game.core.registry import get_default_registry_provider
+        # PROJ-306: the Strategy layer is allowed to call
+        # `get_default_registry_provider()`; the Simulation layer cannot.
+        # PROJ-361: forward the resolved ``registries`` to
+        # ``run_battle.registry_provider`` so ship materialization uses the
+        # same registries that built the spec. The PROJ-306 fallback for
+        # ``registries=None`` is applied once at ``resolve_battle`` entry
+        # via ``_resolve_registries``; this method receives a guaranteed
+        # non-None value (see CQ-01/CQ-02 audit remediation).
 
         # PROJ-312: build the replay capture context. ship_instance_lookup
         # serializes the strategy ShipInstance via ShipInstanceSerializer
@@ -255,7 +288,7 @@ class SimulationBattleResolver(IBattleResolver):
         outcome = run_battle(
             spec,
             ai_factory=self._ai_factory,
-            registry_provider=get_default_registry_provider(),
+            registry_provider=registries,
             capture_context=capture_context,
         )
 
@@ -307,7 +340,7 @@ class SimulationBattleResolver(IBattleResolver):
         fleets: List['Fleet'],
         *,
         seed: int,
-        registries: Optional['GameRegistries'],
+        registries: 'GameRegistries',
         environmental_effects: Any,  # PROJ-300: now a sector-effects list
         modifiers: Optional[Mapping[int, Any]],
         empires: Optional[Mapping[int, Any]] = None,
@@ -434,14 +467,20 @@ class SimulationBattleResolver(IBattleResolver):
         self,
         instances: List[Any],
         team_id: int,
-        registries: Optional['GameRegistries'],
-    ) -> List[Any]:
+        registries: 'GameRegistries',
+    ) -> List['Ship']:
         """Convert ShipInstances back to Ship objects for the BattleResult.
 
         Post-battle-hook has already updated the ShipInstances
         (component HP, removal of destroyed ships). `to_ship` reads the
         updated component state so the returned Ships reflect the
         post-battle fleet.
+
+        PROJ-361 audit (CQ-01): ``registries`` is required (non-Optional).
+        ``ShipInstance.to_ship`` and the underlying ``ShipSerializer``
+        require non-None registries; the fallback for ``registries=None``
+        callers is resolved once at ``resolve_battle`` entry via
+        ``_resolve_registries``.
         """
         return [
             inst.to_ship((0.0, 0.0), team_id=team_id, registries=registries)

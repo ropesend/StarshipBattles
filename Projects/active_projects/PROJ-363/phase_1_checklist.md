@@ -1,7 +1,9 @@
 # Phase 1: Contract tests (TDD baseline)
 
-**Status:** Not Started
-**Objective:** Write the contract tests that the Phase 2-4 implementation must satisfy. These tests will FAIL until the spec table exists; they pin the new contract.
+**Status:** Complete
+**Objective:** Write the contract tests that the Phase 2-4 implementation must satisfy.
+
+**Note (deviation from original plan):** the user requested characterization tests that PASS on current code. The Phase 1 deliverable is therefore tests that pin existing behavior (registry, OrderType frozensets, ORDER_TO_ABILITY_MAP, facade helper surface, serializer round-trips). Phases 2-4 must keep these tests passing unchanged. The spec-table-shape invariants are pinned in Phase 2's `test_command_specs_contract.py` instead.
 
 ---
 
@@ -57,6 +59,10 @@
 ---
 
 ## Phase Completion Checklist
-- [ ] All tests written; all currently fail (or error on import) — proving they are the Phase 2-4 entry contract
-- [ ] Update plan.md phase table to `Complete`
-- [ ] Update Current State to point to Phase 2
+- [x] All tests written as **characterization** tests; all PASS on current code (pre-spec-table). 54 test cases (8 named + 31 parametrized facade-helper + 12 parametrized round-trip + 3 derived constants).
+- [x] Test file: `tests/unit/strategy/engine/test_command_registry_contract.py`
+- [x] Update plan.md phase table to `Complete`
+- [x] Update Current State to point to Phase 2
+
+## Phase Outcome
+- 54 / 54 tests pass on current code. They continue passing after Phases 2-4 land — that's the contract.
