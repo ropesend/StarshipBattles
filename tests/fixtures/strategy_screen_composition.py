@@ -112,13 +112,16 @@ class MockStrategyScreenComposition:
         the slots ``__init__`` would have filled via the composition seam,
         without running ``__init__``.
 
-        **Not idempotent.** Calling populate() twice on the same instance
-        for the same screen is fine (re-assigns the same mocks). Calling
-        populate() on the same screen with a *different* MockStrategyScreenComposition
-        instance is a programming error: tests usually hold references to
-        the first instance's mocks for assertions, but the screen now
-        points at the second instance's mocks. Detect that case and fail
-        loudly.
+        **Same-screen reuse is fine; cross-screen reuse raises.** Calling
+        populate() multiple times with the *same* composition on the *same*
+        screen is fine (re-assigns the same mocks). Calling populate() with
+        the *same* composition on a *different* screen is a programming
+        error: the first screen still references this composition's mocks,
+        but tests building assertions on the second screen would either
+        share mock identity with the first screen (cross-test leakage) or
+        be reading mocks the first screen already mutated. Detect that
+        case and fail loudly with an AssertionError. Construct a fresh
+        ``MockStrategyScreenComposition()`` per screen.
         """
         screen_id = id(screen)
         if (

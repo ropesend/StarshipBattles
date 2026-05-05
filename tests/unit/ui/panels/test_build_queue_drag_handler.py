@@ -118,14 +118,67 @@ class TestConstructorDefaults:
         assert h.drag_threshold == 10
         assert h.drag_start_pos is None
 
-    def test_constructor_with_remove_callback_stores_it(self):
-        h = _make_handler(with_remove_callback=True)
-        assert h._on_remove_from_queue is not None
-        assert callable(h._on_remove_from_queue)
+    def test_drag_from_queue_invokes_remove_callback_when_provided(self):
+        """When constructed WITH on_remove_from_queue, a queue-pickup drag
+        dispatches the callback with the picked-up index instead of
+        mutating ``construction_queue`` in place.
 
-    def test_constructor_without_remove_callback_defaults_to_none(self):
+        PROJ-346 strengthening: was a constructor tautology
+        (``h._on_remove_from_queue is not None`` after passing a callback
+        in __init__). Now pin the production branch at
+        build_queue_drag_handler.py:193-194 — the actual reason the
+        callback is wired.
+        """
+        h = _make_handler(with_remove_callback=True)
+        # Seed pending-drag state directly so handle_mouse_motion's threshold
+        # check has something to act on (production normally seeds this in
+        # handle_mouse_down on the queue side; we test the motion branch
+        # in isolation).
+        h.drag_start_pos = (50, 50)
+        h._pending_queue_index = 0
+
+        queue = [{'design_id': 'Frigate', 'type': 'ship', 'turns_remaining': 3}]
+        # Move past the drag threshold (10).
+        result = h.handle_mouse_motion(
+            _mm_event(pos=(70, 70), buttons=(1, 0, 0)),
+            queue,
+            multi_select_active=False,
+        )
+
+        assert result is True
+        # Callback received the picked-up index.
+        h._on_remove_from_queue.assert_called_once_with(0)
+        # Production branch: when callback exists, the queue is NOT
+        # mutated in-place — removal is the caller's responsibility.
+        assert queue == [{'design_id': 'Frigate', 'type': 'ship', 'turns_remaining': 3}]
+
+    def test_drag_from_queue_falls_back_to_direct_pop_without_callback(self):
+        """When constructed WITHOUT on_remove_from_queue, a queue-pickup
+        drag pops the item from ``construction_queue`` directly (legacy
+        fallback at build_queue_drag_handler.py:195-197).
+
+        PROJ-346 strengthening: was a constructor tautology
+        (``h._on_remove_from_queue is None`` after passing None in
+        __init__). Now pin the actual fallback branch behaviour.
+        """
         h = _make_handler(with_remove_callback=False)
-        assert h._on_remove_from_queue is None
+        h.drag_start_pos = (50, 50)
+        h._pending_queue_index = 0
+
+        queue = [{'design_id': 'Frigate', 'type': 'ship', 'turns_remaining': 3}]
+        result = h.handle_mouse_motion(
+            _mm_event(pos=(70, 70), buttons=(1, 0, 0)),
+            queue,
+            multi_select_active=False,
+        )
+
+        assert result is True
+        # Fallback: queue mutated in-place since no callback exists.
+        assert queue == []
+        # Picked-up state populated for the drop handler.
+        assert h.dragged_item is not None
+        assert h.dragged_item['design_id'] == 'Frigate'
+        assert h.dragged_item['source'] == 'queue'
 
 
 # ===========================================================================

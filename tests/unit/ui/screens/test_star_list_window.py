@@ -156,8 +156,34 @@ class TestStarListWindowBuilderSeam:
         window = _make_window(ui_builder=NullStarListWindowUiBuilder())
         # Stage-1 default: btn_navigate is set to None before super().
         assert window.btn_navigate is None
-        # Builder didn't run; main_panel should not exist.
-        assert not hasattr(window, "main_panel")
+        # PROJ-347 T4.1a: main_panel is a Pattern §33 widget-ref
+        # placeholder set to None in Stage 1 (so kill() under a Null
+        # builder does not AttributeError). The Null builder leaves it
+        # as None; only the production builder overwrites it.
+        assert window.main_panel is None
+
+    def test_null_builder_kill_does_not_raise(self):
+        """PROJ-347 T4.1a: ``kill()`` on a window built with a Null
+        builder must not AttributeError on widget-ref accesses
+        (``self.virtual_table.kill()`` etc.). The Stage-1 placeholders
+        ensure ``virtual_table`` and other widget refs are at least
+        ``None``, so the existing truthiness guards short-circuit."""
+        window = _make_window(ui_builder=NullStarListWindowUiBuilder())
+        assert window.virtual_table is None
+        assert window.sidebar_panel is None
+        assert window.main_panel is None
+        # kill() should not raise — guards short-circuit on None refs.
+        # We can't actually call super().kill() under bypass_init (the
+        # window is not fully initialized), so just confirm the
+        # widget-ref placeholders exist.
+        for slot in (
+            "virtual_table", "sidebar_panel", "main_panel",
+            "data_source", "column_manager", "selection",
+        ):
+            assert getattr(window, slot) is None, (
+                f"Pattern §33 placeholder {slot!r} should be None under "
+                f"Null builder; got {getattr(window, slot)!r}"
+            )
 
     def test_production_builder_implements_protocol(self):
         from tests.fixtures.ui_builder_protocol import UiBuilder

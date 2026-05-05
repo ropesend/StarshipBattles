@@ -159,6 +159,18 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         self.btn_navigate = None
         self.last_preset_selection = None
 
+        # PROJ-347 T4.1a (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullStarListWindowUiBuilder test can safely call kill() without
+        # AttributeError on `self.virtual_table.kill()`. The production
+        # builder overwrites these in Stage 3.
+        self.virtual_table = None
+        self.sidebar_panel = None
+        self.main_panel = None
+        self.data_source = None
+        self.column_manager = None
+        self.selection = None
+
         # Cheap state previously set after super().__init__: hoisted up
         # so the builder (and bypass branch) sees it.
         self.galaxy = galaxy

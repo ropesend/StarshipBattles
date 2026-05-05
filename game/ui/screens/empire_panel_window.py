@@ -111,9 +111,12 @@ class EmpirePanelWindow(StrategyModalWindow):
         # Asset loader
         self._asset_loader = RaceAssetLoader()
 
-        # Load resource icons (cheap I/O cached at module level via
-        # load_resource_icons → AssetManager).
-        self._resource_icons = load_resource_icons()
+        # PROJ-347 T4.4: Stage-1 placeholder for resource icons. The
+        # actual ``load_resource_icons()`` call is heavyweight
+        # (``pygame.image.load(...).convert_alpha()`` per resource) so
+        # it MUST live AFTER the bypass guard to keep Stage 1 pure.
+        # The production builder branch below populates this slot.
+        self._resource_icons: Dict[str, pygame.Surface] = {}
 
         # Panel references
         self._treasury_panel: Optional[EmpireTreasuryPanel] = None
@@ -132,6 +135,11 @@ class EmpirePanelWindow(StrategyModalWindow):
             if ui_builder is not None:
                 ui_builder.build(self)
             return
+
+        # PROJ-347 T4.4: heavyweight asset I/O happens AFTER the bypass
+        # guard so Stage 1 stays pure (no pygame.image.load under
+        # bypass-init tests).
+        self._resource_icons = load_resource_icons()
 
         (ui_builder or EmpirePanelUiBuilder()).build(self)
 

@@ -1762,18 +1762,13 @@ Tests substitute via a `Mock<Class>Composition` that returns pre-stored `MagicMo
 - Introspects `cls.__init__` for default kwargs (`panel`, `manager` / `ui_manager`, `container`, `rect`) and supplies sensible mocks; caller kwargs override.
 - Accepts `extra_modules=(...)` for transitively-imported helpers the MRO walk misses.
 
-For UIWindow subclasses, the factory's element-class patches alone are insufficient — Python resolves `super().__init__()` against the MRO at class-definition time, so the patches don't intercept the chain. The fix is the `bypass_init` flag:
+For UIWindow subclasses, the factory's element-class patches alone are insufficient — Python resolves `super().__init__()` against the MRO at class-definition time, so the patches don't intercept the chain. The fix is the `bypass_init` flag, paired with the PROJ-325 / PROJ-328 A/B/C two-stage `__init__` shape:
 
-```python
-# In every UIWindow subclass __init__ (PROJ-324 Phase 1):
-def __init__(self, ...):
-    if getattr(type(self), "bypass_init", False):
-        return  # SHOULD be the first point where UIWindow.__init__ is avoided
-    super().__init__(...)
-    # ... rest of init
-```
+- **Stage 1** (above the guard): cheap pure-Python state + `Default{Foo}DelegateFactory` wiring + `Null{Foo}UiBuilder` / `Mock{Foo}UiBuilder` test seam set-up. No pygame_gui widget construction. No `self.get_container()`. No asset I/O.
+- **Bypass guard:** `if getattr(type(self), "bypass_init", False): return` — bypass-mode tests skip Stage 2.
+- **Stage 2** (below the guard): `super().__init__(...)` then the heavyweight widget tree built via the production UI builder.
 
-The guard SHOULD be the first point where `UIWindow.__init__` is avoided. Code above the guard runs in both production and test modes and MUST be pure-Python (no pygame_gui widgets, no `self.get_container()`). The two-stage construction shape documented below explicitly relies on running cheap state + delegate factory wiring above the guard so that bypass-mode tests still receive real, exercise-able delegates.
+The canonical example appears below ("Stage 1: cheap state + delegates" snippet). PROJ-324's earlier "first executable statement" framing was **superseded** by the PROJ-325 / PROJ-328 A/B/C two-stage refactor (commit `9e177edb7` showed the early-return shape was insufficient on its own when the subclass needs cheap state + delegates wired before the early-return). Code above the guard runs in both production and test modes and MUST stay pure-Python so bypass-mode tests still receive real, exercise-able delegates.
 
 Tests then wrap construction in the `bypass_init` context manager (NEVER bare assignment — bare assignment leaks the flag if the test crashes mid-construction):
 
@@ -1830,7 +1825,7 @@ def __init__(self, ..., *, ui_builder: RaceSetupUiBuilder | None = None,
 
 ### Migration notes
 
-- **The guard SHOULD be the first point where `UIWindow.__init__` is avoided.** Code above the guard runs in both production and test modes and MUST be pure-Python (no pygame_gui widgets, no `self.get_container()`). The two-stage construction shape (see "Stage 1: cheap state + delegates" snippet above) deliberately runs cheap state + delegate-factory wiring before the guard so that bypass-mode tests still receive real, exercise-able delegates. PROJ-324's earlier "first executable statement" framing was superseded by the PROJ-325 / PROJ-328 A/B/C two-stage refactor; audit adopting subclasses to confirm only pure-Python state lives above the guard, not that the guard is line 1 of `__init__`.
+- **Code above the guard MUST stay pure-Python.** No pygame_gui widgets, no `self.get_container()`, no asset I/O. The two-stage construction shape (see "Stage 1: cheap state + delegates" snippet above) deliberately runs cheap state + delegate-factory wiring before the guard so that bypass-mode tests still receive real, exercise-able delegates. PROJ-324's earlier "first executable statement" framing was superseded by the PROJ-325 / PROJ-328 A/B/C two-stage refactor; audit adopting subclasses to confirm only pure-Python state lives above the guard — the guard does NOT need to be line 1 of `__init__`.
 - **The guard MUST consult `type(self)`, not the class that defines `__init__`.** Setting `FleetReportWindow.bypass_init = True` must be honored by the inherited `StrategyModalWindow.__init__`. `getattr(type(self), "bypass_init", False)` does the right thing.
 - **Some subclasses call `pygame_gui.elements.UIWindow.__init__(self, ...)` explicitly instead of `super()`.** The guard handles `super()` but not explicit ancestor calls. Audit each affected class for explicit parent-class calls.
 - **Legacy `__new__` bypass helpers can be removed once the corresponding subclass adopts the guard.** PROJ-324 / PROJ-325 / PROJ-328 A/B/C did this incrementally — tests migrated as their target class adopted the two-stage `__init__`.

@@ -197,6 +197,11 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             object_id="#new_game_setup_window",
             resizable=False,
         )
+        # PROJ-347 T4.6: mirror StrategyModalWindow base — production
+        # paths set ``_window_init_bypassed = False`` so the flag is
+        # always defined (tests and call sites can rely on it without
+        # ``getattr(..., False)`` everywhere).
+        self._window_init_bypassed = False
 
         # ---- Stage 3 (production): widget tree ----
         (ui_builder or NewGameSetupUiBuilder()).build(self)

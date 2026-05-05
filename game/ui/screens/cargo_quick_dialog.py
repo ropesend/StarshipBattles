@@ -303,9 +303,24 @@ class CargoQuickDialog(StrategyModalWindow):
         PROJ-343 T1.5: wrap in try/finally so a facade-dispatch exception
         from the controller still tears down the modal. Mirrors the
         TransferDialog audit-S1.2 fix shape.
+
+        PROJ-348 T5.1: resolve each slider's current value into an
+        ``amount`` field BEFORE handing items to the controller. Keeps the
+        controller widget-pure per its docstring contract.
         """
         try:
-            orders_issued = self.controller.issue_orders(self.cargo_items)
+            resolved_items = [
+                {
+                    'amount': int(item['slider'].get_current_value()),
+                    'type': item['type'],
+                    'max': item['max'],
+                    'species_id': item['species_id'],
+                    'label': item['label'],
+                    'planet_id': item.get('planet_id'),
+                }
+                for item in self.cargo_items
+            ]
+            orders_issued = self.controller.issue_orders(resolved_items)
             if orders_issued > 0:
                 logger.info(f"CargoQuickDialog: {orders_issued} order(s) issued.")
         finally:

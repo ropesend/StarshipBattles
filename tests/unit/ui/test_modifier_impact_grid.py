@@ -187,23 +187,39 @@ class TestModifierImpactGrid:
         assert grid._format_value(-10.0, 'add') == '-10.00'
 
     def test_kill_cleans_up_elements(self):
-        """Test that kill() properly cleans up UI elements."""
+        """Pin grid-state cleanup contract on kill():
+
+        - ``_ui_elements`` list emptied (the per-element kill() path)
+        - ``_header_cache`` dict cleared
+        - ``panel`` no longer alive (pygame_gui side, retained as a
+          regression marker)
+
+        PROJ-346 strengthening: was previously a pygame_gui-only
+        ``not grid.panel.alive()`` assertion that didn't pin the grid
+        state cleared by ``_clear_ui``. The list/cache pins make
+        ``_clear_ui`` regressions visible here without relying on
+        pygame_gui internals.
+        """
         from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
 
         rect = pygame.Rect(10, 10, 400, 300)
         grid = ModifierImpactGrid(self.manager, self.container, rect)
 
-        # Create some mock component to generate UI elements
-        mock_component = MagicMock()
-        mock_component.modifiers = []
-        mock_component.get_all_modifier_effects.return_value = []
-        mock_component.get_modifier_stat_summary.return_value = {}
-        grid.update(mock_component)
+        # Seed the cleanup-target state directly so the assertions don't
+        # depend on _build_ui happening to populate _ui_elements (which
+        # in this fixture path renders the empty-message label only).
+        sentinel_element = MagicMock()
+        grid._ui_elements = [sentinel_element]
+        grid._header_cache['fake_stat'] = MagicMock()
 
-        # Kill should not raise
         grid.kill()
 
-        # Panel should be killed
+        # Per-element kill was dispatched.
+        sentinel_element.kill.assert_called_once()
+        # State cleared.
+        assert grid._ui_elements == []
+        assert grid._header_cache == {}
+        # Panel-level kill (pygame_gui) — kept as a regression marker.
         assert not grid.panel.alive()
 
 

@@ -424,37 +424,19 @@ class TestTransferCommandHandler:
     end of this module (PROJ-325 Phase 2 Task 2.1).
     """
 
-    def test_fleet_owner_not_found(self):
-        """Returns failure when fleet owner empire not found.
-
-        BUG-125: aligning active_empire with the fleet's owner_id passes
-        the authorization gate; the owner-empire-lookup failure is then
-        the next branch reached.
-        """
-        handler = TransferCommandHandler()
-
-        mock_fleet = Mock()
-        mock_fleet.owner_id = 99
-        mock_fleet.id = 1
-        mock_fleet.ships = []
-        mock_fleet.location = (0, 0)
-
-        mock_session = Mock()
-        # active_empire matches fleet owner so auth passes; empires list
-        # is empty so the owner-not-found branch fires.
-        mock_session.active_empire = Mock(id=99)
-        mock_session._get_fleet_by_id.return_value = mock_fleet
-        mock_session.empires = []
-
-        mock_cmd = Mock(fleet_id=1)
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet owner not found" in result.message
+    # PROJ-343 T1.1: `test_fleet_owner_not_found` was deleted. It pinned
+    # an unreachable "Fleet owner not found" error path — the now-removed
+    # `owning_empire = session.empires[fleet.owner_id]` lookup whose
+    # variable was never used. `_resolve_player_fleet` already enforces
+    # ownership at the auth gate via active_empire.
 
     def test_planet_not_found(self):
-        """Returns failure when planet not found."""
+        """Returns failure when planet not found.
+
+        PROJ-343 T1.1: command must explicitly set target_fleet_id=None for
+        the planet-target branch to fire. Prior to the fix the handler
+        unconditionally resolved planet_id; now it branches on target_fleet_id.
+        """
         handler = TransferCommandHandler()
 
         mock_fleet = Mock()
@@ -475,7 +457,7 @@ class TestTransferCommandHandler:
         mock_session.empires = [mock_empire]
         mock_session._get_planet_by_id.return_value = None
 
-        mock_cmd = Mock(fleet_id=1, planet_id=999)
+        mock_cmd = Mock(fleet_id=1, planet_id=999, target_fleet_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 

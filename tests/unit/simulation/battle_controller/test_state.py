@@ -46,6 +46,14 @@ class TestBattleControllerStateSaveLoad:
         `_retreat_manager.boundary` to `UnboundedRegion()` when the
         restored config carries no boundary (battle_controller.py:130-131).
         MAJ-003 fix (review req_20260504_213455_95a42d).
+
+        PROJ-346 strengthening: the ``isinstance(boundary, UnboundedRegion)``
+        assertion is tautological vs. the production hardcode at
+        battle_controller.py:638 (``RetreatManager(boundary=UnboundedRegion())``);
+        see PROJ-346 OBSERVATION-A in decisions.md. We retain it as a
+        regression marker for the hardcode AND add a behavioural pin on
+        seed restoration so a refactor that drops state-restore wiring
+        still fails this test.
         """
         from game.simulation.combat.boundary import UnboundedRegion
 
@@ -70,7 +78,9 @@ class TestBattleControllerStateSaveLoad:
         mock_state_manager = Mock()
         # restore_config_from_state returns a BattleConfig() — its `.boundary`
         # is None by default, which triggers the UnboundedRegion fallback.
-        mock_state_manager.restore_config_from_state.return_value = BattleConfig()
+        restored_config = BattleConfig()
+        restored_config.seed = 12345
+        mock_state_manager.restore_config_from_state.return_value = restored_config
         mock_state_manager.extract_ships_from_state.return_value = (
             [restored_ship],
             {restored_ship.id: "state-ship-id"},
@@ -87,7 +97,15 @@ class TestBattleControllerStateSaveLoad:
             registries=controller._registries,
         )
         mock_service.add_ship.assert_called_with(restored_ship, 0)
-        # MAJ-003 fix: pin OBSERVATION-B boundary default contract.
+        # restore_config_from_state was invoked with the state — pins the
+        # config-restore round-trip end-to-end (not the production hardcode).
+        mock_state_manager.restore_config_from_state.assert_called_once_with(mock_state)
+        # The restored config (seed=12345) is the one the controller adopted.
+        assert controller._config is restored_config
+        assert controller._config.seed == 12345
+        # MAJ-003 fix: pin OBSERVATION-B boundary default contract. This is
+        # a tautology vs. the hardcode at battle_controller.py:638 and is
+        # retained as a regression marker per PROJ-346 OBSERVATION-A.
         assert isinstance(
             controller._retreat_manager.boundary,
             UnboundedRegion,

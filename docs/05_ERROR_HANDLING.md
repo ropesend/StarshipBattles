@@ -1,6 +1,6 @@
 # Error Handling Guidelines
 
-> **Last verified:** 2026-04-28 — Corrected PROJ-308 archive link and retained broad-catch policy; remaining unjustified broad catches are current cleanup findings, not documentation exceptions.
+> **Last verified:** 2026-05-04 — PROJ-321..328 audit added `LLMUnexpectedError` (game/core/exceptions.py:309) for unexpected non-LLM exceptions escaping providers; `code` is intentionally `None` per the class docstring (callers use `isinstance` to discriminate, not `err.code`). PROJ-349 T6.2 annotated the `RaceEnvironmentPanel._update_points_display` broad catch.
 
 Error handling conventions, exception hierarchy, logging standards, and reference patterns for the Starship Battles codebase.
 

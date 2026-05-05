@@ -401,24 +401,56 @@ class TestBuildResourceGridAttributeSwallow:
             panel._build_resource_grid()
 
     def test_resource_grid_scrollable_area_dimensions_match_layout_constants(self):
-        """The set_scrollable_area_dimensions arg uses the layout constants
-        ``label_col_w + 5 + n*col_w + 10`` and ``data_start_y + n_data_rows*row_h + 6``.
+        """``_build_resource_grid`` calls
+        ``self.resource_panel.set_scrollable_area_dimensions((content_w, content_h))``
+        where ``content_w = label_col_w + 5 + n*col_w + 10`` and
+        ``content_h = data_start_y + n_data_rows*row_h + 6``.
+
+        PROJ-346 strengthening: previously did pure arithmetic on the
+        layout constants without ever building a panel. Now construct
+        a real panel via _bypass_panel(), exercise _build_resource_grid,
+        and capture the actual call args from the production code path
+        at planet_report_panel.py:600-607.
         """
-        # n=3 displayed resources; layout constants from production
-        n = 3
+        panel = _bypass_panel()
+        # Three displayed resources -> n=3 in the layout formula. Use real
+        # ids that pass production's "if rid in resource_icons" check.
+        panel._displayed_resources = ["metals", "organics", "vapors"]
+        panel._resource_grid_items = []
+        panel._resource_icons = {}  # No icons -> skip UIImage but still build labels.
+        panel.planet = None  # _projection_grid_rows handles None; falls through.
+        panel.view = None
+        panel.manager = MagicMock()
+        # The set_scrollable_area_dimensions call is what we're pinning.
+        panel.resource_panel = MagicMock()
+
+        # Replace UILabel so we don't need a real pygame_gui hierarchy.
+        with patch("game.ui.panels.planet_report_panel.UILabel",
+                   side_effect=lambda *a, **kw: MagicMock()), \
+             patch("game.ui.panels.planet_report_panel.UIImage",
+                   side_effect=lambda *a, **kw: MagicMock()):
+            panel._build_resource_grid()
+
+        # Production constants (planet_report_panel.py:534-541).
         label_col_w = 80
         col_w = 75
         icon_size = 20
         abbrev_h = 20
         row_h = 20
         header_y = 4
-        data_start_y = header_y + icon_size + abbrev_h + 2  # = 46
+        data_start_y = header_y + icon_size + abbrev_h + 2  # 46
+
+        n = 3
+        # _projection_grid_rows returns 9 tuples (header + 8 metric rows);
+        # the production formula uses len(rows) - 1 = 8 data rows.
         n_data_rows = 8
 
-        content_w = label_col_w + 5 + n * col_w + 10
-        content_h = data_start_y + n_data_rows * row_h + 6
-        assert content_w == 80 + 5 + 3 * 75 + 10
-        assert content_h == 46 + 8 * 20 + 6
+        expected_w = label_col_w + 5 + n * col_w + 10  # 80 + 5 + 225 + 10 = 320
+        expected_h = data_start_y + n_data_rows * row_h + 6  # 46 + 160 + 6 = 212
+
+        panel.resource_panel.set_scrollable_area_dimensions.assert_called_once_with(
+            (expected_w, expected_h)
+        )
 
 
 # ===========================================================================

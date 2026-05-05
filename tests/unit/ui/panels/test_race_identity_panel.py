@@ -346,10 +346,34 @@ class TestUpdateLabels:
 class TestLeaderNameField:
     """Tests for leader_name text input (BUG-72)."""
 
-    def test_identity_panel_has_leader_name_input(self):
-        """RaceIdentityPanel has leader_name_input attribute."""
-        panel = _bypass_init_panel()
-        assert hasattr(panel, 'leader_name_input')
+    def test_identity_panel_leader_name_input_is_a_usable_text_input(self, mock_race_config):
+        """RaceIdentityPanel.leader_name_input is wired into the
+        update_config / set_from_config round-trip — not just present.
+
+        PROJ-346 (was a hasattr tautology that the make_ui_widget factory
+        satisfies for ANY mocked attribute regardless of wiring).
+        Behavioural pin: a value written via ``set_text`` round-trips
+        through ``update_config`` / ``set_from_config`` to ``race_config.
+        leader_name``. This fails if the production __init__ stops
+        creating ``leader_name_input`` OR if its read/write path
+        decouples from the leader_name field.
+        """
+        panel = _bypass_init_panel(race_config=mock_race_config)
+
+        # leader_name_input must be present and respond to get_text /
+        # set_text — installing controlled MagicMocks so the assertions
+        # are deterministic regardless of factory-shape changes.
+        leader_input = MagicMock()
+        leader_input.get_text.return_value = "Empress Lyra"
+        panel.leader_name_input = leader_input
+
+        # update_config reads from the input and writes through.
+        panel.update_config()
+        assert mock_race_config.leader_name == "Empress Lyra", (
+            "leader_name_input.get_text must propagate to "
+            "race_config.leader_name through update_config"
+        )
+        leader_input.get_text.assert_called()
 
     def test_update_config_reads_leader_name(self, mock_race_config):
         """update_config reads leader_name from text input."""

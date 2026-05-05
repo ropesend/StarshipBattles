@@ -9,14 +9,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Pattern §33 + Stage-1 purity (T4.1 .. T4.7) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Pattern §33 + Stage-1 purity (T4.1 .. T4.7) | Awaiting Verification (T4.7 deferred) | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning (awaiting implementation kickoff)
-**Last Action:** Project scaffolded
-**Next Action:** Begin Phase 1
-**Blockers:** None (file-disjoint with PROJ-343..346; can run after them in any order)
+**Active Phase:** Awaiting Verification
+**Last Action:** T4.1 (a/b), T4.2, T4.3 (a/b/c), T4.4, T4.5, T4.6 (a/b) landed; T4.7 deferred for user decision (option a: move ~400 LOC widget code into builder.build(), or option b: remove the builder facade)
+**Next Action:** User to choose T4.7 option, then verify suite + close out
+**Blockers:** T4.7 awaits user direction on builder vs. removal
 
 ## Overview
 

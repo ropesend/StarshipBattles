@@ -281,16 +281,32 @@ def test_queue_item_not_a_dict_is_skipped(engine, empire, colony):
 
 
 def test_max_queue_iterations_limits_inner_loop_to_10(engine, empire, colony):
-    """At most MAX_QUEUE_ITERATIONS items are processed per tick."""
-    items = [_ship_item(design_id=f"ship_{i}", cost_a=0.001) for i in range(20)]
-    engine._spawner.spawn_completed_item = MagicMock()
+    """Inner loop processes EXACTLY MAX_QUEUE_ITERATIONS items per tick.
 
+    With 20 free items in the queue and effectively unlimited tick capacity
+    relative to per-item cost, the safety ceiling kicks in at exactly 10
+    iterations and the remaining 10 items carry over silently to the next
+    tick (PROJ-333 Observation: silent drop).
+    """
+    items = [_ship_item(design_id=f"ship_{i}", cost_a=0.001) for i in range(20)]
+    spawn_count = {"n": 0}
+
+    def _count_spawn(*_args, **_kwargs):
+        spawn_count["n"] += 1
+
+    engine._spawner.spawn_completed_item = MagicMock(side_effect=_count_spawn)
+
+    queue = list(items)
     engine._process_queue_tick_dynamic(
-        list(items), empire, 1, MagicMock(), None,
+        queue, empire, 1, MagicMock(), None,
         {"A": 1_000_000.0}, colony, is_complex_only=False,
     )
 
-    assert engine._spawner.spawn_completed_item.call_count <= MAX_QUEUE_ITERATIONS
+    # Exact ceiling: not <=, exactly == MAX_QUEUE_ITERATIONS.
+    assert spawn_count["n"] == MAX_QUEUE_ITERATIONS
+    assert engine._spawner.spawn_completed_item.call_count == MAX_QUEUE_ITERATIONS
+    # 20 - 10 = 10 items remain in the queue (silent carry-over).
+    assert len(queue) == 20 - MAX_QUEUE_ITERATIONS
 
 
 # ---------------------------------------------------------------------------

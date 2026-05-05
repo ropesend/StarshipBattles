@@ -92,6 +92,23 @@ class DesignSelectorWindow(UIWindow):
         self._obsolete_buttons: Set[UIButton] = set()
         self._obsolete_state_map: Dict[UIButton, bool] = {}
 
+        # PROJ-347 T4.3 (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullDesignSelectorWindowUiBuilder test can safely call
+        # ``process_event()`` without AttributeError on
+        # ``self.apply_filters_button``/``self.cancel_button``/etc. The
+        # production builder overwrites these in Stage 3.
+        self.sidebar_panel = None
+        self.name_search_entry = None
+        self.class_dropdown = None
+        self.type_dropdown = None
+        self.obsolete_button = None
+        self.apply_filters_button = None
+        self.main_panel = None
+        self.scroll_container = None
+        self.select_button = None
+        self.cancel_button = None
+
         # ---- Stage 2: UIWindow shell (skipped under bypass_init) ----
         if getattr(type(self), 'bypass_init', False):
             self.ui_manager = manager
