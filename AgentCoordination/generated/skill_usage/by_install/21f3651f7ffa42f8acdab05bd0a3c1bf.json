@@ -43,6 +43,13 @@
       },
       "count": 1,
       "last_used": "2026-05-02T20:26:12Z"
+    },
+    "ocode-testcoverage-audit": {
+      "agents": {
+        "ocode": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-05T00:55:48Z"
     }
   }
 }
