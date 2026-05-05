@@ -28,7 +28,7 @@ import os
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 import pygame
 
@@ -43,6 +43,12 @@ from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.fonts import get_font
 from game.ui.renderer.sprites import get_default_sprite_manager
 from game.ui.services.input_mapper import InputMapper
+
+if TYPE_CHECKING:
+    from game.strategy.services.replay_store import ReplayStore
+    from game.strategy.services.replay_verification_coordinator import (
+        ReplayVerificationCoordinator,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -258,6 +264,22 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
     with _timed_phase("input.load_keybindings", ctx.profiler):
         input_mapper = InputMapper()
         input_mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE, Paths.USER_KEYBINDINGS_FILE)
+
+    # PROJ-366 Phase 1: construct the replay store and register it as the
+    # process-wide capture sink + save-lifecycle store. The same
+    # `replay_settings` instance is reused by Phase 2's coordinator so a
+    # single file read serves both consumers (per r001 shared-settings
+    # delta). Lazy imports match the existing late-import pattern in this
+    # module.
+    with _timed_phase("replay.construct_store", ctx.profiler):
+        from game.simulation.replay.replay_capture import set_default_capture_sink
+        from game.strategy.services.replay_store import ReplayStore, load_replay_settings
+        from game.strategy.systems.save_game_service import set_replay_store
+
+        replay_settings = load_replay_settings()
+        replay_store = ReplayStore(settings=replay_settings)
+        set_default_capture_sink(replay_store)
+        set_replay_store(replay_store)
 
     dt_total = time.perf_counter() - t_total_start
     logger.info(f"[startup] total bootstrap: {dt_total:.2f}s")

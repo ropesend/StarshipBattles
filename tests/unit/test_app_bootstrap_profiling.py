@@ -32,7 +32,31 @@ EXPECTED_PHASE_NAMES = [
     "startup: assets.ensure_component_derivatives",
     "startup: assets.load_sprites",
     "startup: input.load_keybindings",
+    # PROJ-366 Phase 1: replay sink construction.
+    "startup: replay.construct_store",
 ]
+
+
+@pytest.fixture(autouse=True)
+def _drain_replay_globals():
+    """PROJ-366 Phase 1: drain coordinator threads + reset module globals
+    after every bootstrap test.
+
+    Production `bootstrap()` (post Phase 1+2) registers a process-wide
+    `ReplayStore` as the default capture sink and starts a non-daemon
+    `ReplayVerificationCoordinator` worker thread. Without explicit
+    cleanup these would leak across tests.
+    """
+    yield
+    from game.simulation.replay.replay_capture import reset_default_capture_sink
+    from game.strategy.services.replay_verification_coordinator import (
+        shutdown_all_coordinators,
+    )
+    from game.strategy.systems.save_game_service import set_replay_store
+
+    shutdown_all_coordinators(timeout=5.0)
+    reset_default_capture_sink()
+    set_replay_store(None)
 
 
 def _run_bootstrap_with_save_history_patched():

@@ -1,7 +1,7 @@
 """Invariant tests for `game.app_bootstrap`.
 
-These lock the six initialization-order invariants identified in the
-PROJ-309 sub-phase 3.9 design doc:
+These lock the initialization-order invariants identified in the
+PROJ-309 sub-phase 3.9 design doc, plus PROJ-366's two new invariants:
 
 1. `pygame.init()` MUST run before `pygame.display.Info()` /
    `pygame.display.set_mode()` / pygame_gui.
@@ -14,6 +14,12 @@ PROJ-309 sub-phase 3.9 design doc:
 5. `SpriteManager.load_sprites` MUST run after registries but before scene
    constructors.
 6. `MenuScene` constructor MUST run before any overlay-dialog code path.
+7. (PROJ-366 Phase 1) `set_default_capture_sink(replay_store)` and
+   `set_replay_store(replay_store)` MUST run after `InputMapper.load(...)`
+   and before `bootstrap()` returns.
+8. (PROJ-366 Phase 2) `BootstrapResult.replay_verification_coordinator`
+   MUST be present and `.start()`-ed (worker thread spawned + listener
+   registered).
 
 The strategy here is to record the sequence of "ordering-relevant" calls
 during `bootstrap()` and assert their relative ordering. We do NOT mock
@@ -29,6 +35,29 @@ import pytest
 
 # Force headless before any pygame import.
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+
+
+@pytest.fixture(autouse=True)
+def _drain_replay_globals():
+    """PROJ-366 Phase 1: drain coordinator threads + reset module globals
+    after every bootstrap test.
+
+    Production `bootstrap()` (post Phase 1+2) registers a process-wide
+    `ReplayStore` as the default capture sink and starts a non-daemon
+    `ReplayVerificationCoordinator` worker thread. Without explicit
+    cleanup these would leak across tests. Pattern from
+    `tests/unit/strategy/services/test_replay_verification_coordinator.py:93-98`.
+    """
+    yield
+    from game.simulation.replay.replay_capture import reset_default_capture_sink
+    from game.strategy.services.replay_verification_coordinator import (
+        shutdown_all_coordinators,
+    )
+    from game.strategy.systems.save_game_service import set_replay_store
+
+    shutdown_all_coordinators(timeout=5.0)
+    reset_default_capture_sink()
+    set_replay_store(None)
 
 
 @pytest.fixture
@@ -106,6 +135,32 @@ def _patched_bootstrap(call_order: list[str]):
     def record_ensure_derivatives():
         call_order.append("ensure_component_derivatives")
 
+    # PROJ-366 Phase 1: patch SOURCE modules (not lazy-import sites) for
+    # `set_default_capture_sink` and `set_replay_store` so we capture the
+    # production wiring's late-import calls. Per r001 monkeypatch-target
+    # delta.
+    from game.simulation.replay import replay_capture as replay_capture_mod
+    real_set_sink = replay_capture_mod.set_default_capture_sink
+
+    def record_set_sink(sink):
+        call_order.append("set_default_capture_sink")
+        return real_set_sink(sink)
+
+    from game.strategy.systems import save_game_service as save_game_service_mod
+    real_set_store = save_game_service_mod.set_replay_store
+
+    def record_set_store(store):
+        call_order.append("set_replay_store")
+        return real_set_store(store)
+
+    # PROJ-366 Phase 2: spy on coordinator.start at SOURCE-module level.
+    from game.strategy.services import replay_verification_coordinator as rvc_mod
+    real_start = rvc_mod.ReplayVerificationCoordinator.start
+
+    def record_coord_start(self):
+        call_order.append("replay_verification_coordinator.start")
+        return real_start(self)
+
     with patch.object(pygame, "init", record_pygame_init), \
          patch.object(pygame.font, "init", record_font_init), \
          patch.object(ApplicationContext, "create_production",
@@ -118,7 +173,13 @@ def _patched_bootstrap(call_order: list[str]):
          patch.object(sprites_mod.SpriteManager, "load_sprites",
                       record_load_sprites), \
          patch.object(boot, "ensure_component_derivatives",
-                      record_ensure_derivatives):
+                      record_ensure_derivatives), \
+         patch.object(replay_capture_mod, "set_default_capture_sink",
+                      record_set_sink), \
+         patch.object(save_game_service_mod, "set_replay_store",
+                      record_set_store), \
+         patch.object(rvc_mod.ReplayVerificationCoordinator, "start",
+                      record_coord_start):
         # Ensure a display surface exists so set_mode-bypass branch is taken.
         if not pygame.display.get_surface():
             pygame.display.set_mode((1440, 900), pygame.NOFRAME)
@@ -209,3 +270,56 @@ def test_bootstrap_returns_complete_result() -> None:
     assert result.font_small is not None
     assert result.font_med is not None
     assert result.font_large is not None
+
+
+def test_invariant_7_replay_store_registered_after_input_mapper(
+    call_order: list[str],
+) -> None:
+    """PROJ-366 Phase 1: `set_default_capture_sink(store)` and
+    `set_replay_store(store)` MUST run AFTER `InputMapper.load(...)` and
+    BEFORE `bootstrap()` returns.
+
+    The wiring must use the SOURCE-module functions
+    (`game.simulation.replay.replay_capture.set_default_capture_sink`,
+    `game.strategy.systems.save_game_service.set_replay_store`) so that
+    `_replay_store` and `_default_sink` module globals are updated for
+    every consumer. Patching the lazy-import site in `app_bootstrap`
+    would not catch this; this test records calls at the source module.
+    """
+    _patched_bootstrap(call_order)
+    assert "set_default_capture_sink" in call_order, (
+        f"set_default_capture_sink never called; got {call_order}"
+    )
+    assert "set_replay_store" in call_order, (
+        f"set_replay_store never called; got {call_order}"
+    )
+    # Both registrations must come AFTER ApplicationContext.create_production
+    # (the InputMapper load is itself after that, and our recorded calls
+    # don't include InputMapper.load — but anything after ctx is past it).
+    ctx_idx = call_order.index("ApplicationContext.create_production")
+    assert call_order.index("set_default_capture_sink") > ctx_idx
+    assert call_order.index("set_replay_store") > ctx_idx
+
+
+def test_invariant_8_replay_verification_coordinator_started() -> None:
+    """PROJ-366 Phase 2: `BootstrapResult` exposes both `replay_store` and
+    `replay_verification_coordinator`; the coordinator's worker thread is
+    spawned and the listener is registered on the store.
+    """
+    call_order: list[str] = []
+    result = _patched_bootstrap(call_order)
+    assert hasattr(result, "replay_store"), (
+        "BootstrapResult missing `replay_store` field"
+    )
+    assert hasattr(result, "replay_verification_coordinator"), (
+        "BootstrapResult missing `replay_verification_coordinator` field"
+    )
+    coord = result.replay_verification_coordinator
+    # Worker thread spawned.
+    assert coord._worker is not None, "coordinator worker not spawned"
+    # Listener registered on the store.
+    assert coord._listener_registered is True, (
+        "coordinator did not register its listener on the replay store"
+    )
+    # And the start() call was observed (source-module recorded).
+    assert "replay_verification_coordinator.start" in call_order
