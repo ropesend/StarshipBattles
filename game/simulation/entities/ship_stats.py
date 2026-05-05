@@ -43,6 +43,9 @@ from game.simulation.entities.stat_contributors import (
     movement as _mov,
     weapons as _wep,
 )
+from game.simulation.entities.stat_contributors.registry import (
+    apply_registered_contributors,
+)
 from game.simulation.interfaces import (
     is_resource_consumption,
     is_resource_generation,
@@ -256,6 +259,12 @@ class ShipStatsCalculator:
             _def.aggregate_defense(ship, comp, acc)
             _launch.aggregate_hangar(ship, comp)
             _cmd.track_multiplex(ship, comp)
+
+            # Extension point: any contributor registered via
+            # `stat_contributors.registry.register_stat_contributor`
+            # runs here, with the same `is_operational` gating as
+            # the built-in domain contributors above.
+            apply_registered_contributors(ship, comp)
 
         self._apply_aggregated_stats(ship, acc)
 

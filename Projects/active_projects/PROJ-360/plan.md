@@ -17,13 +17,13 @@
 |-------|--------|-----------|
 | 1. Golden output tests for representative ships | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract domain contributors behind current API | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Replace hardcoded ability-name checks with registered contributors | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Replace hardcoded ability-name checks with registered contributors | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-05
-**Active Phase:** 3
-**Last Action:** Phase 2 complete — `ship_stats.py` now 486 LOC (under 500), domain contributors live in `game/simulation/entities/stat_contributors/{movement,defense,weapons,command,launch}.py`. Golden tests bit-identical; sharded suite 17702/17698 passed (+37 new contributor tests).
-**Next Action:** Phase 3 — replace hardcoded ability-name string checks with a registered-contributor pattern; add the extension acceptance test.
+**Active Phase:** Closed (awaiting user verification)
+**Last Action:** Phase 3 complete — `stat_contributors/registry.py` with `CREW_PRIORITY_REGISTRY` + `STAT_CONTRIBUTOR_REGISTRY`; `command.priority_sort_key` now consults the registry; calculator hooks `apply_registered_contributors` into the operational-component aggregation loop. Acceptance test `test_stat_contributor_extension.py` codifies the "no central edits" goal. `ship_stats.py` final LOC 495. Sharded suite 17717/17713 passed.
+**Next Action:** None — project ready for user sign-off.
 **Blockers:** None
 
 ## Overview

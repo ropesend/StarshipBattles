@@ -21,6 +21,7 @@ from typing import List, TYPE_CHECKING
 
 from game.core.constants import CombatConstants
 from game.simulation.components.component_constants import ComponentStatus
+from game.simulation.entities.stat_contributors.registry import lookup_crew_priority
 from game.simulation.physics_constants import DEFAULT_MAX_MASS
 
 if TYPE_CHECKING:
@@ -31,16 +32,12 @@ if TYPE_CHECKING:
 def priority_sort_key(c: "Component") -> int:
     """Sort key for the resource-allocation phase.
 
-    Lower = higher priority. Bridge first, then movement, then weapons,
-    then everything else.
+    Lower = higher priority. The mapping (Command < Movement < Weapons <
+    Other) lives in
+    ``game.simulation.entities.stat_contributors.registry.CREW_PRIORITY_REGISTRY``
+    — adding a new priority class is a registry edit, not a code edit.
     """
-    if c.has_ability("CommandAndControl"):
-        return 0  # Bridge (Command)
-    if c.has_ability("CombatPropulsion") or c.has_ability("ManeuveringThruster"):
-        return 1  # Engines (Movement)
-    if c.has_ability("WeaponAbility"):
-        return 2  # Weapons (Offense)
-    return 3  # Others
+    return lookup_crew_priority(c)
 
 
 def track_multiplex(ship: "Ship", comp: "Component") -> None:

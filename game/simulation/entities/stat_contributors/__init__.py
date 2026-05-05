@@ -19,6 +19,7 @@ from game.simulation.entities.stat_contributors import (
     defense,
     launch,
     movement,
+    registry,
     weapons,
 )
 
@@ -27,5 +28,6 @@ __all__ = [
     "defense",
     "launch",
     "movement",
+    "registry",
     "weapons",
 ]
