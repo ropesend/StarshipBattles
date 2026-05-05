@@ -510,7 +510,12 @@ class TurnEngine:
         # Performance timing accumulators
         self._reset_phase_times()
 
-        # PROJ-251: Capture pre-turn state for rollback
+        # PROJ-251: Capture pre-turn state for rollback.
+        # PROJ-343 T1.2-snapshot: a capture failure means rollback is
+        # disabled for the rest of the turn. Continuing silently with
+        # snapshot=None can mask the loss of state-integrity safety —
+        # any later EnginePhaseError would skip rollback without warning.
+        # Re-raise so the caller knows the turn is unsafe and can decide.
         snapshot = None
         if session is not None:
             try:
@@ -519,9 +524,12 @@ class TurnEngine:
                     empires=empires,
                     galaxy=galaxy,
                 )
-            except Exception as e:
-                logger.error(f"Failed to capture pre-turn snapshot: {e}")
-                # Continue without snapshot — better to process the turn than abort
+            except Exception:
+                logger.error(
+                    "Failed to capture pre-turn snapshot; aborting turn to "
+                    "preserve state-integrity guarantees."
+                )
+                raise
 
         turn_start = time.perf_counter()
 

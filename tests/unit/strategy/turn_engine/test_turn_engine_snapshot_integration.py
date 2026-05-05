@@ -8,15 +8,16 @@ Pins:
   snapshot was captured AND a session is set.
 - On `EnginePhaseError`, `snapshot.dump_crash_snapshot(save_path, ...)`
   is invoked iff a snapshot was captured AND `save_path` is set.
-- D-008 OBSERVATION: if `TurnStateSnapshot.capture` itself raises, the
-  exception is swallowed (logged at ERROR), and the turn proceeds with
-  `snapshot is None`. Pinning as observed; no production fix proposed.
+- PROJ-343 T1.2-snapshot: if `TurnStateSnapshot.capture` raises, the
+  failure is now re-raised so callers know the turn aborted before any
+  engine ran. The dedicated assertion lives in
+  `test_turn_snapshot_capture_failure.py`. The prior D-008 OBSERVATION
+  (silent swallow with `snapshot=None`) was retracted as a real defect.
 
 Discipline: pure characterization — no production refactors.
 """
 from __future__ import annotations
 
-import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -127,44 +128,8 @@ class TestSnapshotIntegration:
         dump_call = fake_snapshot.dump_crash_snapshot.call_args
         assert dump_call.args[0] == "/tmp/proj332-fake-save"
 
-    def test_snapshot_capture_failure_is_swallowed_and_turn_continues_with_snapshot_none(
-        self, fresh_registries, mock_empire, mock_galaxy, caplog
-    ):
-        """D-008 OBSERVATION: if `TurnStateSnapshot.capture` raises, the
-        broad `except Exception` swallows it, logs at ERROR, and the turn
-        proceeds with snapshot=None.
-
-        Verified by:
-        - process_turn does not propagate the capture exception.
-        - On a subsequent EnginePhaseError, neither restore nor
-          dump_crash_snapshot is called (because snapshot is None).
-        - An ERROR log entry mentions the snapshot capture failure.
-        """
-        mock_empire.fleets = []
-        engine = _make_engine_with_failing_harvester(fresh_registries)
-        session = MagicMock()
-        session.turn_number = 1
-
-        # capture raises — its return value is unused; the snapshot var
-        # stays None for the rest of the turn.
-        with patch(
-            'game.strategy.engine.turn_state_snapshot.TurnStateSnapshot.capture',
-            side_effect=RuntimeError("snapshot capture failed"),
-        ):
-            with caplog.at_level(
-                logging.ERROR, logger="game.strategy.engine.turn_engine"
-            ):
-                with pytest.raises(EnginePhaseError):
-                    engine.process_turn(
-                        [mock_empire],
-                        mock_galaxy,
-                        save_path="/tmp/proj332-fake-save",
-                        session=session,
-                    )
-
-        # The capture failure is logged but not raised.
-        assert any(
-            "Failed to capture pre-turn snapshot" in record.getMessage()
-            for record in caplog.records
-            if record.levelno >= logging.ERROR
-        )
+    # Note: the prior D-008 pinning test
+    # (`test_snapshot_capture_failure_is_swallowed_and_turn_continues_with_snapshot_none`)
+    # was deleted by PROJ-343 T1.2-snapshot. The new contract — capture
+    # failure surfaces via re-raise — is pinned in
+    # `test_turn_snapshot_capture_failure.py`.
