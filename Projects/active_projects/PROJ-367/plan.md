@@ -27,7 +27,7 @@
 **Commits:**
 - Phase 1: `bd473a798` — typed ability classes (closes EXT-07)
 - Phase 2: `60e61851d` — built-in contributors as registry entries (closes EXT-11)
-- Phase 3: (see git log) — typed `StatAccumulator` (closes EXT-13)
+- Phase 3: `9a46e7a9d` — typed `StatAccumulator` (closes EXT-13)
 
 ## Overview
 
