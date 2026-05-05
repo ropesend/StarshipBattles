@@ -15,13 +15,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Failing tests + validation error | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Failing tests + validation error | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
 **Active Phase:** 1
-**Last Action:** Project scaffolded from realtime-combat tech-debt review finding #7.
-**Next Action:** Run /claude-proj-start PROJ-358 to expand design + checklist.
+**Last Action:** Replaced silent-ignore "design drift" path in `_apply_spec_components_to_ship` with `ValidationException` (code `V002 SCHEMA_VALIDATION_ERROR`). Added 5 new tests under `tests/unit/simulation/battle_runner/test_spec_component_validation.py` (3 drift-detect + 2 valid-spec). Full sharded suite green: 17340 passed, 0 failed, 4 skipped. No existing test fixture relied on the silent absorb.
+**Next Action:** Awaiting user verification.
 **Blockers:** None
 
 ## Overview

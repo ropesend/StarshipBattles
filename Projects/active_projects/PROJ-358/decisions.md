@@ -12,3 +12,7 @@
 | 2026-05-04 | Opted into 03c phase-aware execution | Per `.claude/skills/claude-proj-start/SKILL.md` Phase D. |
 | 2026-05-04 | Single-phase project | One narrow surface (one function); the validation, error-type choice, and caller contract live together. |
 | 2026-05-04 | Reuse `ValidationException` | Per AGENTS.md, prefer existing registries/services/protocols/helpers. Adding a new exception type is unwarranted. |
+| 2026-05-04 | Error code `V002 SCHEMA_VALIDATION_ERROR` | Drift is structural (the spec describes a layout the design doesn't have); fits "structural validation error (missing fields, invalid data structure)" closer than V001 generic or V003 missing-entity. |
+| 2026-05-04 | Report only the first unmapped key | Keeps the error message focused. The first drift typically points at the root cause (stale design, wrong design_id, compiler bug); subsequent drifts are usually downstream symptoms. |
+| 2026-05-04 | Two-pass design (apply, then validate) | Lets the valid-case materialization remain bit-identical (single forward walk through layers). Validation is a `set` diff afterwards — O(n) extra work, no behavioral change for valid specs. |
+| 2026-05-04 | Audit found NO existing test fixture relying on silent absorb | All 8 `ComponentStateSpec(...)` usages in tests/ construct entries that map cleanly to their fixture designs. None encoded the bug. |
