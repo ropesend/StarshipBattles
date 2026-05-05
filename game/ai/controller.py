@@ -73,7 +73,6 @@ from game.ai.combat_utils import (
     get_capability_cache_key,
     get_entity_id,
     get_hp_percent,
-    is_in_pdc_arc,
 )
 
 # Behaviors that can execute without an enemy target
@@ -268,8 +267,11 @@ class AIController:
             except (AttributeError, TypeError):
                 pass  # Will fall back to _safe_distance in evaluate()
 
-        # PERF: Pre-compute capability checks once for all candidates
-        # Avoids redundant component lookups for has_weapons, pdc_arc rules
+        # PERF: Pre-compute capability checks once for all candidates.
+        # Today only `has_weapons` rules consume the cache. The `has_pdc`
+        # / `pdc_components` keys are populated for a future PDC-arc cache
+        # consumer (see decisions.md PROJ-356 audit remediation, DC-003);
+        # `_eval_pdc_arc_rule` still calls `is_in_pdc_arc` directly.
         capabilities_cache = self._build_capabilities_cache(enemies)
 
         for e in enemies:
