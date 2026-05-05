@@ -30,15 +30,17 @@ from game.strategy.engine.turn_engine import TurnEngine
 class TestResetPhaseTimes:
     """Pin the exact key set populated by `_reset_phase_times`."""
 
-    def test_reset_phase_times_returns_dict_with_14_canonical_keys(
+    def test_reset_phase_times_returns_dict_with_canonical_keys(
         self, fresh_registries
     ):
-        """`_reset_phase_times` populates `_phase_times` with exactly 14
-        canonical keys, all zero floats.
+        """`_reset_phase_times` populates `_phase_times` with exactly 20
+        canonical keys (14 tick-loop + 6 end-of-turn), all zero floats.
 
-        OBSERVATION: production uses key 'harvesting' (not 'harvest'); the
-        full set also includes 'planet_energy', 'planet_actions', and
-        'activation_timers'. Pinning as observed.
+        OBSERVATION: production uses key 'harvesting' (not 'harvest').
+        The 6 end-of-turn keys (organics_consumption, happiness,
+        population_growth, quality_improvement, atmosphere,
+        water_modification) were added by PROJ-343 T1.2-engines so the
+        end-of-turn block routes through `_time_phase` for rollback safety.
         """
         engine = TurnEngine(registries=fresh_registries)
 
@@ -62,9 +64,16 @@ class TestResetPhaseTimes:
             'movement_calc',
             'movement_apply',
             'combat',
+            # PROJ-343 T1.2-engines additions:
+            'organics_consumption',
+            'happiness',
+            'population_growth',
+            'quality_improvement',
+            'atmosphere',
+            'water_modification',
         }
         assert set(engine._phase_times.keys()) == expected_keys
-        assert len(engine._phase_times) == 14
+        assert len(engine._phase_times) == 20
         assert all(v == 0.0 for v in engine._phase_times.values())
         assert all(isinstance(v, float) for v in engine._phase_times.values())
 

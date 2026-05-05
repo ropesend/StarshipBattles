@@ -137,14 +137,16 @@ class TestEndOfTurnEngineOrder:
             # and each local engine class was constructed/called once.
             assert population.process_population_growth.call_count == 1
 
-    def test_end_of_turn_engine_raise_propagates_unwrapped_and_skips_phase_times_recording(
+    def test_end_of_turn_engine_raise_wraps_in_engine_phase_error_and_records_timing(
         self, fresh_registries, mock_empire, mock_galaxy
     ):
-        """D-007 OBSERVATION: the end-of-turn block does NOT use
-        `_time_phase`. A raise from `happiness_engine.process_happiness`
-        propagates as the original exception type (NOT `EnginePhaseError`)
-        and `_phase_times` retains its 14 canonical keys without
-        a 'happiness' entry.
+        """PROJ-343 T1.2-engines: end-of-turn engines now route through
+        `_time_phase`, so a raise from `happiness_engine.process_happiness`
+        is wrapped in `EnginePhaseError` (with `phase_name='happiness'`)
+        and the rollback site at process_turn:599-613 catches it.
+
+        The prior D-007 OBSERVATION pinned the bug as required behavior;
+        this assertion has been flipped to pin the new contract.
         """
         mock_empire.fleets = []
         organics = MagicMock(spec=IOrganicsConsumptionEngine)
@@ -165,12 +167,12 @@ class TestEndOfTurnEngineOrder:
         ), patch(
             'game.strategy.engine.water_engine.WaterEngine'
         ):
-            with pytest.raises(RuntimeError, match="happiness boom") as exc_info:
+            with pytest.raises(EnginePhaseError) as exc_info:
                 engine.process_turn([mock_empire], mock_galaxy)
 
-        # NOT wrapped in EnginePhaseError.
-        assert not isinstance(exc_info.value, EnginePhaseError)
+        # `_time_phase` records the phase name in EnginePhaseError.context.
+        assert exc_info.value.context.get('phase_name') == 'happiness'
 
-        # `_phase_times` keeps its canonical 14 keys; no 'happiness' entry.
-        assert 'happiness' not in engine._phase_times
-        assert len(engine._phase_times) == 14
+        # `_phase_times` includes the 'happiness' entry now.
+        assert 'happiness' in engine._phase_times
+        assert len(engine._phase_times) == 20

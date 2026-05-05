@@ -42,13 +42,12 @@ class TestTurnEngineInitPrecedence:
         assert engine.movement_engine is kwarg_movement
         assert engine.movement_engine is not config_movement
 
-    def test_init_initializes_phase_times_with_14_canonical_keys(
+    def test_init_initializes_phase_times_with_canonical_keys(
         self, fresh_registries
     ):
         """Pins the exact phase_times key set populated by `_reset_phase_times`.
 
-        OBSERVATION: production code uses the key 'harvesting' (not 'harvest')
-        and the attribute is `_phase_times` (private). Pinning as observed.
+        14 tick-loop keys + 6 end-of-turn keys (added by PROJ-343 T1.2-engines).
         """
         engine = TurnEngine(registries=fresh_registries)
 
@@ -58,8 +57,11 @@ class TestTurnEngineInitPrecedence:
             'environmental', 'instant_orders', 'actions',
             'planet_energy', 'planet_actions', 'activation_timers',
             'movement_calc', 'movement_apply', 'combat',
+            # PROJ-343 T1.2-engines:
+            'organics_consumption', 'happiness', 'population_growth',
+            'quality_improvement', 'atmosphere', 'water_modification',
         }
-        assert len(engine._phase_times) == 14
+        assert len(engine._phase_times) == 20
         # All values start at 0.0 float.
         assert all(v == 0.0 for v in engine._phase_times.values())
         assert all(isinstance(v, float) for v in engine._phase_times.values())
