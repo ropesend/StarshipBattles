@@ -11,19 +11,7 @@
 | PROJ-358 | Battle Runner — Validate Spec Components, No Silent Drift (review 2026-05-04 finding #7) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-357 | Fleet Aura Provider Identity — Bind to Component, Not Class (review 2026-05-04 finding #2) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-356 | AI PDC Capability Cache — Replace Non-Existent Class Check (review 2026-05-04 finding #9) | Planning | 2026-05-04 | 2026-05-04 |
-| PROJ-353A | Closeout follow-up - Tooling and test-quality polish (T6.8 + Tier-7 + Codex audit-remediation R1/R2/R3 per 20260505T034007Z) | Awaiting Verification | 2026-05-04 | 2026-05-05 |
-| PROJ-352A | Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-351A | Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-350 | Combat Lab Registry Class Identity Fix | Planning | 2026-05-04 | 2026-05-04 |
-| PROJ-349 | Closeout Sprint 7 - Documentation drift and convention violations from review (T6.2/T6.7 + audit-update; T6.5 declined; T6.1/T6.3/T6.4/T6.6/T6.8 + Tier-7 deferred for user direction) | Awaiting Verification (Partial) | 2026-05-04 | 2026-05-04 |
-| PROJ-348 | Closeout Sprint 6 - Controller boundary cleanup from PROJ-329C review (T5.1/T5.3/T5.4 fixed; T5.2 declined as not-a-defect) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-347 | Closeout Sprint 5 - Pattern 33 placeholder gaps and Stage-1 purity from review (T4.7 deferred for user decision) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-346 | Closeout Sprint 4 - Vacuous test purges from PROJ-331/338/339/340 review | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-345 | Closeout Sprint 3 - PROJ-333 critical coverage gaps from review | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-344 | Closeout Sprint 2 - Doc and test misalignments from PROJ-321..341 review | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-343 | Closeout Sprint 1 - Production behavior bug fixes from PROJ-321..341 review (all 5 Tier-1 defects fixed including T1.3-combat per Codex review 2026-05-05) | Awaiting Verification | 2026-05-04 | 2026-05-05 |
-| PROJ-342 | Drop self.game handle from TestLab UI | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-330 | strategy_screen.py LOC decomposition (708 → 458 LOC, 4 helper modules, +62 helper tests) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-329C | UIWindow retrofit - facade-coupled (PlanetAbilities, CargoQuickDialog, PlanetList; 3 controllers) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-329B | UIWindow retrofit - mid-tier modals (8 classes, 46 new tests + 390 preserved) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
@@ -32,6 +20,18 @@
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-353A | Closeout follow-up - Tooling and test-quality polish (T6.8 + Tier-7 + Codex audit-remediation R1/R2/R3 per 20260505T034007Z) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-352A | Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-351A | Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-349 | Closeout Sprint 7 - Documentation drift and convention violations from review (T6.2/T6.7 + audit-update; T6.5 declined; T6.1/T6.3/T6.4/T6.6/T6.8 + Tier-7 deferred for user direction) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-348 | Closeout Sprint 6 - Controller boundary cleanup from PROJ-329C review (T5.1/T5.3/T5.4 fixed; T5.2 declined as not-a-defect) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-347 | Closeout Sprint 5 - Pattern 33 placeholder gaps and Stage-1 purity from review (T4.7 deferred for user decision) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-346 | Closeout Sprint 4 - Vacuous test purges from PROJ-331/338/339/340 review | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-345 | Closeout Sprint 3 - PROJ-333 critical coverage gaps from review | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-344 | Closeout Sprint 2 - Doc and test misalignments from PROJ-321..341 review | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-343 | Closeout Sprint 1 - Production behavior bug fixes from PROJ-321..341 review (all 5 Tier-1 defects fixed including T1.3-combat per Codex review 2026-05-05) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-342 | Drop self.game handle from TestLab UI | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | Archived | 2026-05-04 | 2026-05-04 |
 | PROJ-340 | Test coverage - UI services + utility characterization (45 tests, 6 files) | Archived | 2026-05-04 | 2026-05-04 |
 | PROJ-339 | Test coverage - UI panels mid-risk characterization (29 tests, 6 files) | Archived | 2026-05-04 | 2026-05-04 |
 | PROJ-338 | Test coverage - UI panels high-risk characterization (143 tests, 6 files) | Archived | 2026-05-04 | 2026-05-04 |
@@ -44,15 +44,6 @@
 | PROJ-331 | Test coverage - combat / save-load (44 tests + 4 review-fix tests, 4 files) | Archived | 2026-05-04 | 2026-05-04 |
 | PROJ-329A | UIWindow retrofit fast wins + inventory + deferral docs (Phase 2: 3 retrofits, +31 tests) | Archived | 2026-05-04 | 2026-05-04 |
 | PROJ-328 | UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on) | Archived | 2026-05-03 | 2026-05-04 |
-| PROJ-327 | Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope | Archived | 2026-05-03 | 2026-05-04 |
-| PROJ-326 | Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard | Archived | 2026-05-03 | 2026-05-04 |
-| PROJ-325 | PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision | Archived | 2026-05-03 | 2026-05-04 |
-| PROJ-324 | Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals | Archived | 2026-05-03 | 2026-05-04 |
-| PROJ-323 | Test review P2 opportunistic polish 2026-05-02 | Archived | 2026-05-03 | 2026-05-04 |
-| PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | Archived | 2026-05-03 | 2026-05-04 |
-| PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | Archived | 2026-05-03 | 2026-05-04 |
-| PROJ-320 | Strategic Combat Round Budget | Archived | 2026-05-02 | 2026-05-04 |
-| PROJ-319 | Audit-shrink cleanup 2026-05-02 | Archived | 2026-05-02 | 2026-05-04 |
 
 ---
 

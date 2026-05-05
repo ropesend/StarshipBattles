@@ -18,10 +18,10 @@
     },
     "claude-proj-archive": {
       "agents": {
-        "claude": 2
+        "claude": 4
       },
-      "count": 2,
-      "last_used": "2026-05-05T05:24:39Z"
+      "count": 4,
+      "last_used": "2026-05-05T05:29:14Z"
     },
     "codex-discuss-continue": {
       "agents": {

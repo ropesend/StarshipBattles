@@ -316,3 +316,12 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | 2026-05-04 | PROJ-301-350 |
 | PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | 2026-05-04 | PROJ-301-350 |
 | PROJ-318 | PROJ-314 Closeout Remediations | 2026-05-04 | PROJ-301-350 |
+| PROJ-319 | Audit-shrink cleanup 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-320 | Strategic Combat Round Budget | 2026-05-04 | PROJ-301-350 |
+| PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-323 | Test review P2 opportunistic polish 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-324 | Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals | 2026-05-04 | PROJ-301-350 |
+| PROJ-325 | PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision | 2026-05-04 | PROJ-301-350 |
+| PROJ-326 | Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard | 2026-05-04 | PROJ-301-350 |
+| PROJ-327 | Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope | 2026-05-04 | PROJ-301-350 |
