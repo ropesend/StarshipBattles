@@ -161,6 +161,14 @@ class TestActionTimeResolverInjection:
     def test_engine_falls_back_to_static_resolver_when_no_resolver_injected(self):
         """PROJ-351 T6.3: with `action_time_resolver=None` (the default), the
         engine falls back to the static `ActionTimeResolver.resolve_action_time`.
+
+        ANNOTATION (PROJ-353 Tier-7 T2.5): this test pins the dual-path
+        backwards-compatibility behavior introduced in PROJ-351 T6.3.
+        Production callers that have NOT yet adopted DI continue to work
+        because the engine falls back to the static class method when no
+        resolver is injected. If a future PROJ removes the static
+        fallback (mandatory DI), this test should fail and be deleted in
+        the same change — do not silently relax the assertion.
         """
         proc = _make_processor()
         engine = ActionExecutionEngine(proc)
