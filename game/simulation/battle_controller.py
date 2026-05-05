@@ -111,9 +111,9 @@ class BattleController:
         Args:
             config: Battle configuration
             spec: Optional BattleSpec for outcome extraction. Production
-                callers (app.py, test_lab/screen.py, test_execution_service.py)
-                pass the spec they compiled so the controller can emit a
-                `BattleOutcome` at battle end via `get_outcome()`.
+                callers (app.py, test_lab/screen.py) pass the spec they
+                compiled so the controller can emit a `BattleOutcome` at
+                battle end via `get_outcome()`.
 
         Returns:
             BattleResult indicating success/failure
@@ -253,11 +253,10 @@ class BattleController:
 
         PROJ-270 Phase 10 — single entry point for visual-mode battles.
         Routes through `start_engine_from_spec` (the same code path
-        `run_battle` uses), eliminating the 3 duplicated `engine.boundary
+        `run_battle` uses), eliminating the duplicated `engine.boundary
         = spec.boundary; engine.modifier_stack = spec.modifier_stack;
         materialize_spec_ships; controller.add_ships; controller.start`
-        blocks that previously lived in `app.py`, `test_lab/screen.py`,
-        and `test_execution_service.py`.
+        blocks that previously lived in `app.py` and `test_lab/screen.py`.
 
         Args:
             spec: The `BattleSpec` describing the battle.
