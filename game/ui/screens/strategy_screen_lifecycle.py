@@ -62,7 +62,14 @@ def on_menu_option(screen: "StrategyScreen", option: str) -> None:
 
 
 def show_load_game_dialog(screen: "StrategyScreen") -> None:
-    """Open the save selection window for loading a game."""
+    """Open the save selection window for loading a game.
+
+    PROJ-352 T6.6: pass ``screen.ui.window_manager`` so the dialog
+    auto-registers as a strategy modal and blocks strategy-screen input
+    while open. Without this the load dialog historically coexisted with
+    hex-clicks / sidebar-buttons because it was a raw ``UIWindow`` and
+    the modal tracker never saw it.
+    """
     from game.ui.screens.save_selection_window import SaveSelectionWindow
     from game.ui.utils import create_centered_rect
 
@@ -74,6 +81,7 @@ def show_load_game_dialog(screen: "StrategyScreen") -> None:
             screen, save_path, turn_number
         ),
         on_cancel_callback=lambda: None,
+        window_manager=screen.ui.window_manager,
     )
 
 
