@@ -58,6 +58,7 @@ def test_return_to_strategy_switches_to_strategy_scene():
 
 def test_start_replay_builds_replay_config_and_starts_battle(monkeypatch):
     import game.simulation.replay.replay_player as replay_player
+    import game.app as app_mod
 
     game = Game.__new__(Game)
     game.start_battle = MagicMock()
@@ -70,6 +71,10 @@ def test_start_replay_builds_replay_config_and_starts_battle(monkeypatch):
     )
     record = SimpleNamespace(replay_id="replay-1")
     monkeypatch.setattr(replay_player, "replay_record_to_spec", lambda actual: spec)
+    monkeypatch.setattr(
+        app_mod, "build_replay_ship_builder",
+        lambda r, *, registry_provider: object(),
+    )
 
     game.start_replay(record)
 
@@ -83,3 +88,39 @@ def test_start_replay_builds_replay_config_and_starts_battle(monkeypatch):
     assert config.replay_mode is True
     assert config.replay_id == "replay-1"
     assert config.captured_telemetry_level == "full"
+
+
+def test_start_replay_threads_replay_ship_builder_into_start_battle(monkeypatch):
+    """PROJ-368: replay playback must use the snapshot-backed ship_builder
+    (not the default InstanceBackedMaterializer, which fails because
+    replays' ShipSpecs have instance_ref=None).
+    """
+    import game.simulation.replay.replay_player as replay_player
+    import game.app as app_mod
+
+    game = Game.__new__(Game)
+    game.start_battle = MagicMock()
+    spec = SimpleNamespace(
+        seed=1, end_condition=object(), absolute_max_ticks=10,
+        telemetry_level="full",
+    )
+    record = SimpleNamespace(replay_id="replay-1")
+    monkeypatch.setattr(replay_player, "replay_record_to_spec", lambda r: spec)
+
+    sentinel_builder = object()
+    captured: dict = {}
+
+    def fake_build_replay_ship_builder(passed_record, *, registry_provider):
+        captured["record"] = passed_record
+        captured["registry_provider"] = registry_provider
+        return sentinel_builder
+
+    monkeypatch.setattr(
+        app_mod, "build_replay_ship_builder", fake_build_replay_ship_builder
+    )
+
+    game.start_replay(record)
+
+    assert captured["record"] is record
+    assert captured["registry_provider"] is not None
+    assert game.start_battle.call_args.kwargs.get("ship_builder") is sentinel_builder

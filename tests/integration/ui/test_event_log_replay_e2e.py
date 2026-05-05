@@ -116,6 +116,69 @@ def test_two_clicks_in_a_row_both_launch_idempotently(pygame_init) -> None:
     assert launch_cb.call_count == 2
 
 
+def test_replay_button_routes_through_scene_callback_end_to_end(pygame_init) -> None:
+    """PROJ-368: the full path — UI button press → EventLogWindow →
+    EventLogRegistrar._on_launch_replay → scene.scene_callback —
+    must reach the strategy scene callback with ('launch_replay', record=...).
+
+    Regression for the bug where the registrar reached for a non-existent
+    `scene.game` attribute and silently swallowed the click.
+    """
+    from game.strategy.services.replay_resolver import ReplayLookup
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
+
+    # Build a real registrar wired through StrategyWindowManager. The scene
+    # is a Mock with a real callable scene_callback that captures the call.
+    captured: list[tuple] = []
+
+    def scene_callback(action, **kwargs):
+        captured.append((action, kwargs))
+
+    scene = MagicMock()
+    scene.scene_callback = scene_callback
+    scene.current_empire = MagicMock()
+    scene.current_empire.id = 1
+
+    wm = StrategyWindowManager(
+        scene=scene,
+        manager=MagicMock(),
+        width=1024,
+        height=768,
+        input_mapper=None,
+        asset_resolver=None,
+    )
+
+    record = MagicMock()
+    resolver = MagicMock()
+    resolver.resolve.return_value = ReplayLookup(found=True, record=record)
+
+    # Build a real EventLogWindow whose launch callback IS the registrar's
+    # _on_launch_replay. The composer is the real wm so the registrar can
+    # close the modal on success.
+    from game.ui.screens.event_log_window import EventLogWindow
+    manager = pygame_gui.UIManager((1024, 768))
+    rect = pygame.Rect(0, 0, 1024, 768)
+    win = EventLogWindow(
+        rect,
+        manager,
+        [_combat_event("uuid-e2e")],
+        window_manager=wm,
+        replay_resolver=resolver,
+        launch_replay_callback=wm._event_log._on_launch_replay,
+    )
+    wm.event_log_window = win
+    win.virtual_table.update_visible_rows()
+
+    btn = _find_replay_button_for_row(win.virtual_table, 0)
+    assert btn is not None and btn.is_enabled
+
+    win.process_event(
+        pygame.event.Event(pygame_gui.UI_BUTTON_PRESSED, {"ui_element": btn})
+    )
+
+    assert captured == [("launch_replay", {"record": record})]
+
+
 def test_legacy_row_button_is_disabled_and_click_is_noop(pygame_init) -> None:
     """A legacy combat event (no replay_id) renders the button disabled
     and clicks short-circuit before the resolver is reached."""

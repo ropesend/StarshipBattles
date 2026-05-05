@@ -29,6 +29,7 @@ from game.core.paths import Paths
 from game.core.state_machine import ScreenStateMachine
 from game.run_loop import RunLoop
 from game.screen_router import SceneCallbacks, ScreenRouter
+from game.strategy.services.replay_ship_builder import build_replay_ship_builder
 
 if TYPE_CHECKING:
     from game.ui.screens.workshop_context import WorkshopContext
@@ -343,11 +344,14 @@ class Game:
         *,
         headless: bool = False,
         config: Optional[Any] = None,
+        ship_builder: Optional[Any] = None,
     ) -> None:
-        self._router.start_battle(spec, headless=headless, config=config)
+        self._router.start_battle(
+            spec, headless=headless, config=config, ship_builder=ship_builder
+        )
 
     def start_replay(self, record: Any) -> None:
-        """FEAT-26: launch a captured replay in the BattleScreen.
+        """FEAT-26 / PROJ-368: launch a captured replay in the BattleScreen.
 
         Reconstructs the playable ``BattleSpec`` from a ``ReplayRecord``
         (PROJ-312 Phase 5's ``replay_record_to_spec``), builds a
@@ -355,7 +359,15 @@ class Game:
         renders the REPLAY MODE badge, and dispatches through the
         standard ``start_battle`` entry. Capture is intentionally skipped
         for replay playback (no recursion).
+
+        PROJ-368: replays' ``ShipSpec.instance_ref`` is intentionally
+        ``None`` (see ``replay_record_to_spec`` docstring). We supply a
+        snapshot-backed ``ship_builder`` from
+        ``build_replay_ship_builder`` so the materializer reconstructs
+        each ship from its captured ``ShipInstance`` snapshot rather
+        than failing in ``InstanceBackedMaterializer``.
         """
+        from game.core.registry import get_default_registry_provider
         from game.simulation.battle_config import BattleConfig
         from game.simulation.replay.replay_player import replay_record_to_spec
 
@@ -368,7 +380,10 @@ class Game:
             replay_id=record.replay_id,
             captured_telemetry_level=getattr(spec, "telemetry_level", None),
         )
-        self.start_battle(spec, config=config)
+        ship_builder = build_replay_ship_builder(
+            record, registry_provider=get_default_registry_provider()
+        )
+        self.start_battle(spec, config=config, ship_builder=ship_builder)
 
     # ------------------------------------------------------------------
     # Action handler dispatch (kept on `Game` for test-mockability:
@@ -420,6 +435,10 @@ class Game:
                 self._on_load_game(save_path, turn_number)
         elif action == "open_keybindings":
             self.start_keybindings()
+        elif action == "launch_replay":
+            record = kwargs.get("record")
+            if record is not None:
+                self.start_replay(record)
         elif action == "quit_to_menu":
             logger.info("Returning to main menu from strategy")
             self._switch_scene(GameState.MENU, self._menu_scene)

@@ -4,10 +4,10 @@
   "skills": {
     "claude-discuss-start": {
       "agents": {
-        "claude": 6
+        "claude": 7
       },
-      "count": 6,
-      "last_used": "2026-05-05T15:08:59Z"
+      "count": 7,
+      "last_used": "2026-05-05T22:35:45Z"
     },
     "claude-fix-crash": {
       "agents": {
@@ -32,10 +32,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 13
+        "codex": 14
       },
-      "count": 13,
-      "last_used": "2026-05-05T15:52:45Z"
+      "count": 14,
+      "last_used": "2026-05-05T22:36:14Z"
     },
     "codex-discuss-start": {
       "agents": {
