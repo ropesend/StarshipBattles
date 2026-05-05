@@ -11,17 +11,28 @@ PROJ-329B Phase 1: two-stage construction. Cheap state (callbacks,
 saves_list, list_item_mapping, selection trackers) lives before the
 ``UIWindow`` shell; widget construction is behind
 ``SaveSelectionUiBuilder`` so tests can swap in a Mock under
-``bypass_init``. Direct UIWindow subclass — bypass guard inlined per
-PROJ-328 Phase B pattern.
+``bypass_init``.
+
+PROJ-352A T6.6: migrated from raw ``pygame_gui.elements.UIWindow`` to
+``StrategyModalWindow`` so the strategy-screen load dialog auto-registers
+with ``StrategyWindowManager.iter_live_modals()`` and blocks strategy
+input while open. Callers outside the strategy screen (e.g.,
+``screen_router.show_load_menu`` from the main menu) pass
+``window_manager=None`` to skip live-list registration; the base class
+handles the None case.
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import pygame
 import pygame_gui
 from game.ui.config import UIConfig
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 import logging
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +104,16 @@ class SaveSelectionUiBuilder:
         screen.btn_delete.disable()
 
 
-class SaveSelectionWindow(pygame_gui.elements.UIWindow):
-    """Window for selecting a save game to load."""
+class SaveSelectionWindow(StrategyModalWindow):
+    """Window for selecting a save game to load.
+
+    PROJ-352A T6.6: subclass of :class:`StrategyModalWindow` so the
+    strategy-screen load dialog auto-registers with
+    :meth:`StrategyWindowManager.iter_live_modals` and the strategy
+    event router treats it as a blocking modal. Outside the strategy
+    screen (e.g., the main-menu loader) callers pass
+    ``window_manager=None`` and the base class skips registration.
+    """
 
     def __init__(
         self,
@@ -103,6 +122,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         on_load_callback,
         on_cancel_callback,
         *,
+        window_manager: "StrategyWindowManager | None" = None,
         ui_builder: Optional[SaveSelectionUiBuilder] = None,
     ):
         """
@@ -113,6 +133,12 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             manager: pygame_gui UIManager
             on_load_callback: Callback(save_path, turn_number=None) when user selects a save
             on_cancel_callback: Callback() when user cancels
+            window_manager: Optional :class:`StrategyWindowManager` for
+                modal registration (PROJ-352A T6.6). Pass the strategy
+                screen's ``ui.window_manager`` when opening from the
+                strategy screen so the dialog blocks strategy input.
+                Pass ``None`` (default) when opening from the main menu
+                loader, which has no strategy modal-tracker.
             ui_builder: Optional UI builder override (test seam).
         """
         # ---- Stage 1: cheap state ----
@@ -141,25 +167,25 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         self.btn_delete = None
         self.btn_cancel = None
 
-        # ---- Stage 2: UIWindow shell (skipped under bypass_init) ----
-        # PROJ-324 / PROJ-328 / PROJ-329B test escape hatch.
-        if getattr(type(self), 'bypass_init', False):
-            self.ui_manager = manager
-            self._window_init_bypassed = True
-            # NOTE: do not assign ``self.rect`` (GUISprite descriptor).
-            if ui_builder is not None:
-                ui_builder.build(self)
-            return
-
+        # ---- Stage 2: UIWindow shell (skipped under bypass_init by the
+        # StrategyModalWindow base class). PROJ-352A T6.6: registration
+        # with the window manager (when non-None) happens inside
+        # ``super().__init__`` after the real ``UIWindow.__init__`` chain.
         super().__init__(
             rect,
             manager,
             window_display_title="Load Game",
             object_id="#save_selection_window",
             resizable=True,
+            window_manager=window_manager,
         )
 
         # ---- Stage 3: widgets + initial save load ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
+
         (ui_builder or SaveSelectionUiBuilder()).build(self)
         self._load_saves()
 

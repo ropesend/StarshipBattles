@@ -169,3 +169,32 @@ class TestFromDictReconstruction:
         restored = Squadron.from_dict(original.to_dict())
 
         assert restored.flagship_id == "ship-99"
+
+
+class TestFromDictMissingRequiredKeys:
+    """PROJ-353A Tier-7 (T2.7): coverage gap.
+
+    `Squadron.from_dict` requires `name`. Pin the missing-key behavior
+    (KeyError, sister-class symmetry with Order/PlanetaryFacility) and
+    extra-key tolerance.
+    """
+
+    def test_missing_name_raises_key_error(self):
+        import pytest
+
+        with pytest.raises(KeyError) as exc_info:
+            Squadron.from_dict({})
+        assert "name" in str(exc_info.value)
+
+    def test_extra_keys_are_tolerated(self):
+        """Loader must ignore unknown top-level keys for forward
+        compatibility — older versions reading newer saves shouldn't
+        fall over on a new optional field."""
+        sq = Squadron.from_dict({
+            "name": "Alpha",
+            "node_id": "id-1",
+            "_future_key": "x",
+            "another_extra": 99,
+        })
+        assert sq.name == "Alpha"
+        assert sq.node_id == "id-1"

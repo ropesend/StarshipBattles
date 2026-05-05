@@ -189,6 +189,60 @@ def test_bypass_init_preserves_pre_existing_truthy_value():
     assert Cls.bypass_init == "custom"
 
 
+def test_bypass_init_subclass_sees_inherited_flag_during_scope():
+    """PROJ-353A Tier-7 (T2.13) regression trap: production reads
+    `getattr(type(self), 'bypass_init', False)` which walks the MRO. So
+    a subclass instance constructed inside `with bypass_init(BaseCls):`
+    must see the flag as True. Pin this so a future refactor that
+    stores the flag in a non-MRO-visible location surfaces here."""
+
+    Base = type("Bypass_Base", (_BypassInitTarget,), {})
+    Sub = type("Bypass_Sub", (Base,), {})
+
+    assert "bypass_init" not in Base.__dict__
+    assert "bypass_init" not in Sub.__dict__
+
+    with bypass_init(Base):
+        # Subclass inherits the flag during the scope.
+        assert getattr(Sub, "bypass_init", False) is True
+        # But the flag is NOT a member of Sub's own dict — only Base's.
+        assert "bypass_init" not in Sub.__dict__
+
+    # After scope: clean on both Base and Sub.
+    assert "bypass_init" not in Base.__dict__
+    assert "bypass_init" not in Sub.__dict__
+
+
+def test_bypass_init_does_not_undo_subclass_override_set_inside_scope():
+    """PROJ-353A Tier-7 (T2.13): the documented narrow trap — if a test
+    inside a `with bypass_init(BaseCls)` block explicitly assigns
+    `SubCls.bypass_init = X`, the context manager's cleanup is class-
+    local on BaseCls and will NOT touch SubCls. This test PINS that
+    behavior (it is the documented contract, not an aspirational
+    invariant). Tests that need to flip a subclass flag should use a
+    nested `bypass_init(SubCls)` block."""
+
+    Base = type("Bypass_Base2", (_BypassInitTarget,), {})
+    Sub = type("Bypass_Sub2", (Base,), {})
+
+    try:
+        with bypass_init(Base):
+            # Test-author error pattern — flag flipped on subclass directly.
+            Sub.bypass_init = "subclass-override"
+
+        # Base cleanup ran, Sub's override survives — that's the
+        # documented constraint.
+        assert "bypass_init" not in Base.__dict__
+        assert Sub.__dict__.get("bypass_init") == "subclass-override"
+    finally:
+        # Be a tidy test — don't leak our own override.
+        Sub.__dict__.pop("bypass_init", None) if False else None
+        try:
+            del Sub.bypass_init
+        except AttributeError:
+            pass
+
+
 # ---------------------------------------------------------------------------
 # _build_default_kwargs direct unit tests (PROJ-321..328 audit S4.6)
 # ---------------------------------------------------------------------------

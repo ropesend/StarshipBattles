@@ -13,9 +13,16 @@ no facade I/O), and its query methods are called from the builder during
 Stage 3.
 
 Pattern reference: PROJ-328 Phase C ``transfer_controller.py``.
+
+Discovery semantics (PROJ-351A T6.4): toggleable abilities are discovered
+generically by scanning facility components for any ability whose data
+carries an ``activation_time`` field — per ``docs/03_CONVENTIONS.md`` 6.5
+("No Hardcoded Type Lists"). New activatable abilities are picked up
+automatically as soon as their data declares ``activation_time``.
 """
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from game.core.patterns.layer_iterator import iter_keyed_components
@@ -26,20 +33,24 @@ if TYPE_CHECKING:
     pass
 
 
-# Abilities that can be toggled (have activation_time and deactivation_time)
-TOGGLEABLE_ABILITIES = {
-    'PlanetaryShield': 'Planetary Shield',
-    'GeologicStabilizer': 'Geologic Stabilizer',
-    'StellarStabilizer': 'Stellar Stabilizer',
-    'WarpFieldStabilizer': 'Warp Field Stabilizer',
-    'GravityModifier': 'Gravity Modifier',
-    'RadiationShield': 'Radiation Shield',
-    'ShieldModifier': 'Shield Modifier',
-    'DamageModifier': 'Damage Modifier',
+# ---------------------------------------------------------------------------
+# Presentation-only label overrides (PROJ-351A T6.4).
+#
+# Toggleable-ability discovery is data-driven: any ability whose data carries
+# an ``activation_time`` field is considered toggleable (see ``scan_abilities``
+# below). Display names are derived from the CamelCase ability name via
+# ``_humanize_ability_name``. This dict only holds overrides where the natural
+# humanization does not match the established UI label — keep it minimal.
+# ---------------------------------------------------------------------------
+ABILITY_DISPLAY_NAME_OVERRIDES: Dict[str, str] = {
     'ShieldProjection': 'Shield Projector',
 }
 
-# Environment editor buttons — shown when planet has the corresponding ability
+# Environment editor buttons — these are a UI-presentation concern, NOT a
+# closed list of "valid abilities". The button is shown when the planet has
+# any facility carrying the named ability; the label is the human-friendly
+# environment domain (atmosphere, gravity, water, radiation), which is a
+# different naming axis from the ability class itself.
 ENVIRONMENT_EDITORS = [
     ('AtmosphereModifier', 'Atmosphere'),
     ('GravityModifier', 'Gravity'),
@@ -50,6 +61,22 @@ ENVIRONMENT_EDITORS = [
 # Food allocation (PROJ-284 Phase 4) — shown on any colony with populations.
 FOOD_EDITOR_LABEL = 'Food'
 FOOD_EDITOR_TYPE = 'food'
+
+
+_CAMEL_CASE_BOUNDARY_RE = re.compile(r'(?<!^)(?=[A-Z])')
+
+
+def _humanize_ability_name(ability_name: str) -> str:
+    """Convert a CamelCase ability name to a space-separated display label.
+
+    ``PlanetaryShield`` -> ``Planetary Shield``,
+    ``WarpFieldStabilizer`` -> ``Warp Field Stabilizer``.
+    Override via ``ABILITY_DISPLAY_NAME_OVERRIDES`` when humanization differs
+    from the established UI label.
+    """
+    if ability_name in ABILITY_DISPLAY_NAME_OVERRIDES:
+        return ABILITY_DISPLAY_NAME_OVERRIDES[ability_name]
+    return _CAMEL_CASE_BOUNDARY_RE.sub(' ', ability_name)
 
 
 class PlanetAbilitiesController:
@@ -100,7 +127,14 @@ class PlanetAbilitiesController:
 
     def scan_abilities(self) -> List[Dict]:
         """Scan planet facilities for toggleable abilities at per-component
-        granularity."""
+        granularity.
+
+        PROJ-351A T6.4: discovery is data-driven per
+        ``docs/03_CONVENTIONS.md`` 6.5 — any ability whose data dict carries
+        an ``activation_time`` field is considered toggleable. Display names
+        are derived from the CamelCase ability name (with optional override
+        via ``ABILITY_DISPLAY_NAME_OVERRIDES``).
+        """
         from game.strategy.services.component_inspector import (
             extract_abilities_from_component,
         )
@@ -115,20 +149,19 @@ class PlanetAbilitiesController:
                 abilities = extract_abilities_from_component(
                     comp, self.component_registry
                 )
-                for ability_name, display_name in TOGGLEABLE_ABILITIES.items():
-                    if ability_name in abilities:
-                        ability_data = abilities[ability_name]
-                        if (
-                            isinstance(ability_data, dict)
-                            and 'activation_time' in ability_data
-                        ):
-                            raw_entries.append({
-                                'ability_name': ability_name,
-                                'display_name': display_name,
-                                'facility_id': facility.instance_id,
-                                'facility_name': facility.name,
-                                'component_key': comp_key,
-                            })
+                # Generic data-driven scan: any ability with activation_time.
+                for ability_name, ability_data in abilities.items():
+                    if (
+                        isinstance(ability_data, dict)
+                        and 'activation_time' in ability_data
+                    ):
+                        raw_entries.append({
+                            'ability_name': ability_name,
+                            'display_name': _humanize_ability_name(ability_name),
+                            'facility_id': facility.instance_id,
+                            'facility_name': facility.name,
+                            'component_key': comp_key,
+                        })
 
         # Add instance labels when multiple entries share the same
         # ability_name.
@@ -210,7 +243,7 @@ class PlanetAbilitiesController:
 
 __all__ = [
     "PlanetAbilitiesController",
-    "TOGGLEABLE_ABILITIES",
+    "ABILITY_DISPLAY_NAME_OVERRIDES",
     "ENVIRONMENT_EDITORS",
     "FOOD_EDITOR_LABEL",
     "FOOD_EDITOR_TYPE",

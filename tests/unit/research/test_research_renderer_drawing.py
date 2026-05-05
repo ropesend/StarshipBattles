@@ -665,3 +665,30 @@ class TestMisc:
 
         # All small sizes should be clamped to 8
         assert all(s == 8 for s in seen_sizes)
+
+    def test_get_font_quantizes_to_nearest_even_step(
+            self, renderer_module, monkeypatch):
+        """PROJ-353A Tier-7 (T2.9): the floor at 8 was previously the only
+        pinned property. The quantize-to-2 step (`(size // 2) * 2`) is
+        what prevents unbounded cache growth — pin it explicitly so a
+        future refactor that drops the quantization (e.g. passing the
+        raw size through) is caught. Odd sizes round DOWN to the nearest
+        even value via Python integer-division semantics."""
+        renderer = _make_renderer(renderer_module)
+
+        seen_sizes = []
+        monkeypatch.setattr(
+            renderer_module, 'get_font',
+            lambda size: seen_sizes.append(size) or MagicMock()
+        )
+
+        # Even numbers above the floor pass through unchanged.
+        renderer._get_font(10)
+        # Odd numbers above the floor round DOWN to the prior even.
+        renderer._get_font(11)
+        renderer._get_font(13)
+        renderer._get_font(25)
+        # Even number well above the floor.
+        renderer._get_font(24)
+
+        assert seen_sizes == [10, 10, 12, 24, 24]

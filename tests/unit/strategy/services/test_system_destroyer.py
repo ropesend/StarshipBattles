@@ -225,9 +225,69 @@ class TestDestroySystem:
         assert result.fleets_removed == 1
 
 
-class TestModuleConstants:
-    def test_system_radius_hexes_is_50(self):
-        # Pins the contract that SystemDestroyer matches pathfinding's
-        # get_system_at_hex(radius=50). Changing this constant is a real
-        # behavior change for system-destroying superweapons.
-        assert SYSTEM_RADIUS_HEXES == 50
+class TestSystemRadiusBoundaryBehavior:
+    """PROJ-353A Tier-7 (T2.8): rewritten from a vacuous module-constant
+    assertion (`SYSTEM_RADIUS_HEXES == 50`) to a behavioral pin. The
+    constant matters because it picks `dist < radius` — i.e. fleets at
+    EXACTLY 50 hexes are NOT considered in-system. Pin the boundary
+    via the public `collect_system_contents` API rather than reading
+    the constant.
+    """
+
+    def test_default_radius_includes_fleet_at_distance_one_below_threshold(self):
+        center = HexCoord(0, 0)
+        system = MagicMock()
+        system.global_location = center
+        system.planets = []
+        system.stars = []
+
+        empire = Empire(empire_id=0, name="E", color=(0, 0, 0))
+        # 49 hexes from origin along the q-axis is strictly inside.
+        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(49, 0), speed=1.0)
+        empire.fleets.append(fleet)
+
+        plan = collect_system_contents(system, MagicMock(), [empire])
+
+        assert plan.fleets == ((empire, fleet),)
+
+    def test_default_radius_excludes_fleet_at_exactly_threshold_distance(self):
+        """`<` not `<=` — pathfinding contract per production comment at
+        line 110 of system_destroyer.py."""
+        center = HexCoord(0, 0)
+        system = MagicMock()
+        system.global_location = center
+        system.planets = []
+        system.stars = []
+
+        empire = Empire(empire_id=0, name="E", color=(0, 0, 0))
+        # Exactly SYSTEM_RADIUS_HEXES hexes from origin: NOT included.
+        fleet = Fleet(
+            fleet_id=1, owner_id=0,
+            location=HexCoord(SYSTEM_RADIUS_HEXES, 0),
+            speed=1.0,
+        )
+        empire.fleets.append(fleet)
+
+        plan = collect_system_contents(system, MagicMock(), [empire])
+
+        assert plan.fleets == ()
+
+    def test_explicit_radius_overrides_default(self):
+        """Caller-provided radius wins, proving the default isn't
+        hard-baked downstream of the kwarg."""
+        center = HexCoord(0, 0)
+        system = MagicMock()
+        system.global_location = center
+        system.planets = []
+        system.stars = []
+
+        empire = Empire(empire_id=0, name="E", color=(0, 0, 0))
+        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(10, 0), speed=1.0)
+        empire.fleets.append(fleet)
+
+        # radius=5 → dist 10 is excluded.
+        plan = collect_system_contents(system, MagicMock(), [empire], radius=5)
+        assert plan.fleets == ()
+        # radius=20 → dist 10 is included.
+        plan = collect_system_contents(system, MagicMock(), [empire], radius=20)
+        assert plan.fleets == ((empire, fleet),)

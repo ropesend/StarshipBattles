@@ -10,7 +10,6 @@ PROJ-335 Phase 1. Pins the gap-fill behaviors not already covered by:
 Specifically pins:
 
 - Required-key validation in ``from_dict``.
-- The legacy ``resource_levels`` key alias for ``consumable_levels``.
 - The ``is_shipyard`` short-circuit to False when ``is_operational`` is False.
 - The ``is_shipyard`` True path with an active space_shipyard component.
 - ``set_component_active`` / ``is_component_active`` round-trip through the
@@ -61,6 +60,41 @@ class TestFromDictRequiredKeys:
                 "design_id": "d",
                 "name": "n",
             })
+
+    # PROJ-353A Tier-7 (T2.7): coverage gap — only `instance_id` and
+    # `design_data` missing-key paths were pinned previously. Add the
+    # other two required keys plus an extra-key tolerance pin.
+
+    def test_missing_design_id_raises(self):
+        with pytest.raises(PersistenceException):
+            PlanetaryFacility.from_dict({
+                "instance_id": "i",
+                "name": "n",
+                "design_data": {},
+            })
+
+    def test_missing_name_raises(self):
+        with pytest.raises(PersistenceException):
+            PlanetaryFacility.from_dict({
+                "instance_id": "i",
+                "design_id": "d",
+                "design_data": {},
+            })
+
+    def test_extra_keys_are_tolerated(self):
+        """`from_dict` must ignore unknown top-level keys so adding new
+        save-format fields in a future release doesn't break the loader
+        when an older version reads a newer save."""
+        facility = PlanetaryFacility.from_dict({
+            "instance_id": "i",
+            "design_id": "d",
+            "name": "n",
+            "design_data": {"layers": {}},
+            "_unknown_future_key": "should-be-ignored",
+            "another_extra": 42,
+        })
+        assert facility.instance_id == "i"
+        assert facility.design_id == "d"
 
 
 class TestRoundTripPreservesTopLevelFields:

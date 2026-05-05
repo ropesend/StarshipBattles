@@ -113,6 +113,67 @@ class TestPublicHelperContract:
         builder = build_context_ship_builder(registry_provider=provider)
         assert callable(builder)
 
+    def test_returned_builder_calls_materializer_with_ship_spec_team_id_and_registries(
+        self, fresh_registries,
+    ):
+        """PROJ-353A Tier-7 (T2.11): rewrite of the PROJ-321-deleted
+        `test_start_battle_ship_builder_calls_to_ship_with_position_and_team_id`.
+
+        The original deleted test did a source-text scan
+        (`assert "to_ship(registries=registries)" not in app.py`) — a
+        fragile, trivially-bypassed pin. PROJ-321 deleted it; per Stream 2
+        the task should have been REWRITE not DELETE. Behavioral coverage
+        in `test_battle_runner.py::test_materialize_spec_ships_passes_team_id_to_builder`
+        and `test_ship_materializer.py::test_instance_backed_calls_to_ship_with_position_and_team_id`
+        partly fills the gap, but the production `_ship_builder` closure
+        (now `build_context_ship_builder`) was not directly pinned. This
+        test closes that gap.
+
+        It asserts the closure produced by `build_context_ship_builder`
+        forwards `(ship_spec, team_id, registries)` to the registered
+        materializer — the failure mode the deleted test was guarding
+        against (`to_ship(registries=registries)` missing position +
+        team_id) is now caught by a behavioral assertion on the closure
+        rather than by a string scan.
+        """
+        from unittest.mock import MagicMock
+
+        from game.core.registry import get_default_registry_provider
+        from game.simulation.battle_runner import build_context_ship_builder
+        from game.simulation.services import ship_materializer as mat_mod
+
+        # Capture invocations on a stub materializer so we can assert
+        # what the closure forwarded.
+        captured: list = []
+        fake_ship = MagicMock(name="fake_ship")
+
+        class _StubMaterializer:
+            def materialize(self, ship_spec, team_id, registries):
+                captured.append((ship_spec, team_id, registries))
+                return fake_ship
+
+        original_get = mat_mod.get_default_ship_materializer
+        mat_mod.get_default_ship_materializer = lambda: _StubMaterializer()
+        try:
+            provider = get_default_registry_provider()
+            builder = build_context_ship_builder(registry_provider=provider)
+
+            ship_spec = _make_ship_spec("recovered", 1.0, 2.0)
+            result = builder(ship_spec, 7)
+        finally:
+            mat_mod.get_default_ship_materializer = original_get
+
+        assert result is fake_ship
+        assert len(captured) == 1
+        forwarded_spec, forwarded_team_id, forwarded_registries = captured[0]
+        assert forwarded_spec is ship_spec
+        assert forwarded_team_id == 7
+        # The registries bundle was assembled from the explicit provider
+        # — not pulled via a global lookup inside simulation.
+        assert forwarded_registries is not None
+        # Sanity: the bundle has the catalog field PROJ-306 added.
+        assert hasattr(forwarded_registries, "resource_catalog")
+
 
 class TestRunBattleRequiresProviderWhenNoBuilder:
     """`run_battle(spec, ai_factory=...)` with neither `ship_builder` nor

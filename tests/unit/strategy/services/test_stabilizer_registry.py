@@ -12,7 +12,6 @@ import pytest
 from game.strategy.data.order_types import OrderType
 import game.strategy.services.stabilizer_registry as stab_module
 from game.strategy.services.stabilizer_registry import (
-    STABILIZERS,
     StabilizerSpec,
     find_blocking_stabilizer,
 )
@@ -247,10 +246,21 @@ class TestScannerKwargs:
         assert captured_registries[0] is sentinel
 
 
-class TestStabilizersTuple:
-    def test_stabilizers_is_a_tuple_with_three_specs(self):
-        # Pin the live ordering: Geologic, Stellar, WarpField.
-        assert len(STABILIZERS) == 3
-        assert STABILIZERS[0].ability_name == "GeologicStabilizer"
-        assert STABILIZERS[1].ability_name == "StellarStabilizer"
-        assert STABILIZERS[2].ability_name == "WarpFieldStabilizer"
+# PROJ-353A Tier-7 (T2.8): the previous `TestStabilizersTuple` class
+# pinned the literal contents of the `STABILIZERS` tuple. That was
+# vacuous — it re-asserted the module's source code rather than any
+# behavior. The three behaviors that *actually* depend on STABILIZERS'
+# contents and ordering are already pinned elsewhere in this file:
+#
+# - GeologicStabilizer + IMPLODE_PLANET → see
+#   `test_returns_geologic_spec_for_implode_planet_when_active`.
+# - StellarStabilizer + STELLERATE_STAR / CREATE_DYSON_SPHERE → see
+#   `test_returns_stellar_spec_for_stellerate_star_when_active` and
+#   `test_returns_stellar_spec_for_create_dyson_sphere_when_active`.
+# - WarpFieldStabilizer + OPEN_WARP_POINT → see
+#   `test_returns_warpfield_spec_for_open_warp_point_when_active`.
+# - Definition-order priority → see
+#   `test_geologic_spec_matched_before_stellar_when_both_block_order_type`.
+#
+# Adding/removing a stabilizer requires adding a behavioral test in the
+# pattern above, not editing this file.

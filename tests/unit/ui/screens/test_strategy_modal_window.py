@@ -77,23 +77,85 @@ def _make_manager():
 
 
 class TestRegisterOnConstruction:
-    """A subclass instance must appear in iter_live_modals on construction."""
+    """A subclass instance must appear in iter_live_modals on construction.
+
+    PROJ-353A Tier-7 (T2.12): retrofit. After PROJ-328 A.5 the original
+    versions of these tests went through `_make_modal_window`, which
+    uses `bypass_init` and then MANUALLY calls
+    `window_manager.register_modal(win)`. That meant the assertions were
+    actually pinning the factory's manual call, not the production
+    "register on construction" side-effect we care about.
+
+    The retrofit goes through the production code path: stub
+    `UIWindow.__init__` (the heavy pygame-display dependency that
+    `bypass_init` was created to avoid) and assert that
+    `register_modal` is invoked as a construction side-effect of
+    `StrategyModalWindow.__init__` itself, NOT via a manual fixture call.
+    """
+
+    def _build_through_production_path(self, mgr) -> "_ProbeModal":
+        """Construct a real `_ProbeModal` via the non-bypass code path
+        with `pygame_gui.elements.UIWindow.__init__` stubbed to a no-op.
+        Sets the few attributes the un-bypassed branch leaves to the
+        UIWindow chain (otherwise `register_modal`'s downstream
+        operations have nothing to attach to)."""
+
+        def _stub_init(self, *args, **kwargs):  # noqa: ANN001 — pygame_gui shim
+            return None
+
+        with patch(
+            "pygame_gui.elements.UIWindow.__init__", _stub_init,
+        ):
+            win = _ProbeModal(
+                pygame.Rect(0, 0, 100, 100),
+                MagicMock(name="ui_manager"),
+                window_manager=mgr,
+            )
+        return win
 
     def test_construction_registers_with_manager(self) -> None:
         mgr = _make_manager()
-        win = _make_modal_window(mgr)
 
-        assert win in list(mgr.iter_live_modals())
+        # Production path — NO manual `register_modal` call from the
+        # test side. Construction itself should register the modal.
+        win = self._build_through_production_path(mgr)
+
+        assert win in mgr._modals
+        # The bypass flag must NOT be set — we went through real init.
+        assert getattr(win, "_window_init_bypassed", None) is False
 
     def test_two_instances_both_registered(self) -> None:
         mgr = _make_manager()
-        a = _make_modal_window(mgr)
-        b = _make_modal_window(mgr)
+        a = self._build_through_production_path(mgr)
+        b = self._build_through_production_path(mgr)
 
-        live = list(mgr.iter_live_modals())
-        assert a in live
-        assert b in live
-        assert len(live) == 2
+        # Both must have arrived via the construction side-effect — not
+        # via any factory-side manual `register_modal` call.
+        assert a in mgr._modals
+        assert b in mgr._modals
+        assert len(mgr._modals) == 2
+
+    def test_construction_with_none_window_manager_does_not_register(self) -> None:
+        """The production guard `if window_manager is not None` skips
+        registration when no manager is supplied. Pin that branch too —
+        otherwise a future refactor that drops the guard would silently
+        crash on `None.register_modal(...)` at construction."""
+
+        def _stub_init(self, *args, **kwargs):  # noqa: ANN001
+            return None
+
+        with patch(
+            "pygame_gui.elements.UIWindow.__init__", _stub_init,
+        ):
+            # No manager — construction should NOT crash even though
+            # there's nothing to register with.
+            win = _ProbeModal(
+                pygame.Rect(0, 0, 100, 100),
+                MagicMock(name="ui_manager"),
+                window_manager=None,
+            )
+
+        assert win._window_manager is None
 
 
 class TestKillDeregisters:

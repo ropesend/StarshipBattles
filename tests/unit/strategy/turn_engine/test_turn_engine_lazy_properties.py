@@ -116,6 +116,138 @@ class TestLazyPropertyDefaults:
         assert isinstance(pe, PlanetEnergyEngine)
         assert engine.planet_energy_engine is pe
 
+    # PROJ-353A Tier-7 (T2.6): five additional lazy-property defaults flagged
+    # by OpenCode b4 as untested. Each pins (a) the production default class
+    # and (b) idempotency.
+
+    def test_action_engine_property_returns_default_class_and_is_idempotent(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.action_execution_engine import ActionExecutionEngine
+
+        engine = TurnEngine(registries=fresh_registries)
+
+        ae = engine.action_engine
+        assert isinstance(ae, ActionExecutionEngine)
+        assert engine.action_engine is ae
+
+    def test_planet_action_engine_property_returns_default_class_and_is_idempotent(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.planet_action_engine import PlanetActionEngine
+
+        engine = TurnEngine(registries=fresh_registries)
+
+        pae = engine.planet_action_engine
+        assert isinstance(pae, PlanetActionEngine)
+        assert engine.planet_action_engine is pae
+
+    def test_component_activation_engine_property_returns_default_class_and_is_idempotent(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.component_activation_engine import (
+            ComponentActivationEngine,
+        )
+
+        engine = TurnEngine(registries=fresh_registries)
+
+        cae = engine.component_activation_engine
+        assert isinstance(cae, ComponentActivationEngine)
+        assert engine.component_activation_engine is cae
+
+    def test_organics_consumption_engine_property_returns_default_class_and_is_idempotent(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.organics_consumption_engine import (
+            OrganicsConsumptionEngine,
+        )
+
+        engine = TurnEngine(registries=fresh_registries)
+
+        oce = engine.organics_consumption_engine
+        assert isinstance(oce, OrganicsConsumptionEngine)
+        assert engine.organics_consumption_engine is oce
+
+    def test_happiness_engine_property_returns_default_class_and_is_idempotent(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.happiness_engine import HappinessEngine
+
+        engine = TurnEngine(registries=fresh_registries)
+
+        he = engine.happiness_engine
+        assert isinstance(he, HappinessEngine)
+        assert engine.happiness_engine is he
+
+
+class TestCreateDefaultTurnEngineFactory:
+    """PROJ-353A Tier-7 (T2.6): pin `create_default_turn_engine` factory.
+
+    `test_dependency_injection.py::TestFactoryFunction` already covers the
+    five originally-pinned engines. This pins the remaining lazy defaults
+    flow through the factory too — the factory should produce a TurnEngine
+    whose lazy properties resolve to the production default classes.
+    """
+
+    def test_factory_produces_engine_whose_action_engine_resolves_to_default(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.action_execution_engine import ActionExecutionEngine
+        from game.strategy.engine.turn_engine import create_default_turn_engine
+
+        engine = create_default_turn_engine(fresh_registries, ai_factory=MagicMock())
+
+        assert isinstance(engine.action_engine, ActionExecutionEngine)
+
+    def test_factory_produces_engine_whose_planet_action_engine_resolves_to_default(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.planet_action_engine import PlanetActionEngine
+        from game.strategy.engine.turn_engine import create_default_turn_engine
+
+        engine = create_default_turn_engine(fresh_registries, ai_factory=MagicMock())
+
+        assert isinstance(engine.planet_action_engine, PlanetActionEngine)
+
+    def test_factory_forwards_explicit_config_to_turn_engine_constructor(
+        self, fresh_registries
+    ):
+        """`create_default_turn_engine(..., config=cfg)` must pass `config`
+        through to `TurnEngine.__init__`. We assert this via the spy on
+        TurnEngine to avoid coupling to TurnEngine's internal storage
+        layout (the constructor unbundles config into individual fields)."""
+        from game.strategy.engine import turn_engine as turn_engine_mod
+        from game.strategy.engine.turn_engine_config import TurnEngineConfig
+
+        cfg = TurnEngineConfig()
+        captured = {}
+        original = turn_engine_mod.TurnEngine
+
+        def spy(*args, **kwargs):
+            captured["config"] = kwargs.get("config")
+            return original(*args, **kwargs)
+
+        from unittest.mock import patch
+        with patch.object(turn_engine_mod, "TurnEngine", side_effect=spy):
+            turn_engine_mod.create_default_turn_engine(
+                fresh_registries, ai_factory=MagicMock(), config=cfg,
+            )
+
+        assert captured["config"] is cfg
+
+    def test_factory_works_without_ai_factory_and_uses_null_battle_resolver_path(
+        self, fresh_registries
+    ):
+        """Factory accepts ai_factory=None; the conflict_engine fallback
+        still works (ai_factory=None + battle_resolver=None falls into the
+        _NullBattleResolver branch)."""
+        from game.strategy.engine.turn_engine import create_default_turn_engine
+
+        engine = create_default_turn_engine(fresh_registries, ai_factory=None)
+
+        assert isinstance(engine, TurnEngine)
+        assert engine._ai_factory is None
+
 
 class TestConflictEngineBattleResolverBranches:
     """Pin the lazy `battle_resolver` decision tree inside `conflict_engine`:
