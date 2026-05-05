@@ -86,17 +86,11 @@ class ComponentListItem:
         # Dynamic Mass Calculation
         display_mass = component.mass
         if ship_context:
-            # Clone to avoid modifying template state
+            # Clone to avoid mutating the palette template, attach the
+            # workshop ship so ship_class_mass formulas resolve, then
+            # recalc to reflect the design's mass budget in the label.
             temp_comp = component.clone()
-            # Mock ship attributes needed for context
-            class MockShip:
-                def __init__(self, mass_budget):
-                    self.max_mass_budget = mass_budget
-
-            # Use real ship's max_mass_budget (always present on Ship after __init__)
-            budget = ship_context.max_mass_budget
-
-            temp_comp.ship = MockShip(budget)
+            temp_comp.ship = ship_context
             temp_comp.recalculate_stats()
             display_mass = temp_comp.mass
 

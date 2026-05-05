@@ -314,10 +314,20 @@ Frigate's WarpJump computing as if it were on an Escort, blocking warp).
 
 **Order of operations matters during component load.** `Component.add_modifier`
 triggers `recalculate_stats`, which evaluates formulas. So if you build a
-component from a registered definition and add modifiers, attach the
-component to its ship FIRST so `ship_class_mass` is resolvable. See
-`ship_serialization._load_components` and `BattleState._restore_components`
-for the canonical pattern.
+component from a registered definition (which has `ship is None`) and add
+modifiers, attach the component to its ship FIRST so `ship_class_mass` is
+resolvable. See `ship_serialization._load_components` and
+`BattleState._restore_components` for the canonical pattern.
+
+**`Component.clone()` propagates `self.ship`.** Cloning an attached
+component yields an attached clone (`source.ship` is copied to the clone).
+Cloning a detached source (registry template, palette item) yields a
+detached clone. This means workshop UI flows that clone a live ship
+component (for grouping, shift-drop duplication, "add another instance",
+etc.) do not need to manually re-attach the clone before
+`recalculate_stats`. Workshop flows that clone a *palette* template into
+a design-in-progress still need to set `clone.ship = workshop_ship`
+because the palette source has no ship to inherit from.
 
 ### Refreshing data-derived attributes (`_parse_attrs` template method)
 

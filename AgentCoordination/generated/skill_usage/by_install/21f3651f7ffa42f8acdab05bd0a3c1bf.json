@@ -9,6 +9,13 @@
       "count": 3,
       "last_used": "2026-05-04T19:03:09Z"
     },
+    "claude-fix-crash": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-04T23:12:18Z"
+    },
     "claude-gi-add": {
       "agents": {
         "claude": 1
