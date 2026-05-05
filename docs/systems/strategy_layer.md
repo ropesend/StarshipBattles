@@ -1091,16 +1091,22 @@ then `destroy_system`. Do not hand-roll fleet enumeration.
 1. Define ability class in `planetary.py` with `energy_drain_rate`, `activation_time`, `deactivation_time`, `scope` parameters
 2. Register in `ABILITY_REGISTRY` (`abilities/__init__.py`)
 3. Add to `_ACTIVATABLE_ABILITIES` list in `planet_energy_engine.py`
-4. Add display name to `TOGGLEABLE_ABILITIES` dict in `planet_abilities_window.py`
-5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py`
+4. PROJ-351 T6.4: discovery for the abilities window is now data-driven. Any ability whose component data carries an `activation_time` field is automatically picked up by `PlanetAbilitiesController.scan_abilities()` (`game/ui/screens/planet_abilities_controller.py:128-183`). No registration in a hardcoded ability list is required. Display name humanizes from CamelCase by default; if the natural humanization doesn't match the established UI label, add an entry to `ABILITY_DISPLAY_NAME_OVERRIDES` (`planet_abilities_controller.py:45-47`).
+5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py` (this list is independent of the abilities-window scanner; PROJ-351 T6.4 did not migrate this surface).
 6. If it blocks superweapons: add a `StabilizerSpec` entry to the `STABILIZERS` tuple in `game/strategy/services/stabilizer_registry.py`. No code changes in `superweapon_order_processor.py` are needed — existing handlers route through `StabilizerRegistry` automatically.
 7. Add to `SYSTEM_EFFECT_ABILITIES` in `system_effects_collector.py` if system or sector scope — system-scoped abilities show in the System panel via `_SYSTEM_SCOPES`, sector-scoped abilities show in the Sector panel via `_SECTOR_SCOPES`
 8. If it affects combat: add to `combat_modifier_collector.py` with `require_active=True`
 9. Add keyboard toggle binding in `strategy_fleet_command_router.py`
-10. Create component in `components.json` with `energy_drain_rate`, `activation_time`, `deactivation_time` in the ability data — these are required for the abilities window to show the ability
+10. Create component in `components.json` with `energy_drain_rate`, `activation_time`, `deactivation_time` in the ability data — `activation_time` IS LOAD-BEARING for abilities-window discovery (see step 4)
 11. Create QS complex design in `data/designs/` with `design_role` field
 12. Write tests in `tests/unit/simulation/components/abilities/` and `tests/unit/strategy/engine/`
 13. Update `docs/systems/ability_reference.md` and `docs/systems/strategy_layer.md` activatable abilities table
+
+**Adding a new environment editor (planet-modifier ability with its own editor window):**
+1. Add the editor window class (follow `gravity_target_editor.py` + `species_selector_mixin`)
+2. Add `(ability_key, label)` entry to `ENVIRONMENT_EDITORS` in `game/ui/screens/planet_abilities_controller.py:54-59`. This is an intentional UI editor-routing list — NOT a behavior gate per ability, but a closed list of which environment domains have dedicated editors. Adding a 5th env editor is the natural trigger to evaluate replacing this list with a registry/data-driven mechanism.
+3. Add an `_open_*_editor()` method to `strategy_event_router.py`
+4. Wire the editor in `strategy_window_manager.py:_open_planet_editor()`
 
 ### Build Queue Source DI
 
