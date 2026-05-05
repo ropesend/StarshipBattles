@@ -53,17 +53,17 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 8
+        "codex": 14
       },
-      "count": 8,
-      "last_used": "2026-05-05T05:47:56Z"
+      "count": 14,
+      "last_used": "2026-05-05T10:55:15Z"
     },
     "codex-starship-combat-lab": {
       "agents": {
-        "codex": 2
+        "codex": 3
       },
-      "count": 2,
-      "last_used": "2026-05-05T05:47:34Z"
+      "count": 3,
+      "last_used": "2026-05-05T10:55:17Z"
     },
     "ocode-discuss-start": {
       "agents": {

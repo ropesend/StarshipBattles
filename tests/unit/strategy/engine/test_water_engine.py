@@ -37,6 +37,14 @@ def _make_water_facility(rate=0.005):
     })
 
 
+def _make_registry_water_facility(component_id="registry_water_modifier"):
+    return MockFacility(design_data={
+        "layers": {"CORE": [
+            {"id": component_id}
+        ]}
+    })
+
+
 class TestWaterEngine:
 
     def test_no_target_no_change(self):
@@ -145,6 +153,61 @@ class TestWaterEngine:
         single_delta = planet_single.surface_water - 0.3
         double_delta = planet_double.surface_water - 0.3
         assert double_delta == pytest.approx(single_delta * 2)
+
+    def test_list_form_water_modifier_entries_stack(self):
+        """List-valued WaterModifier entries should all contribute."""
+        facility = MockFacility(design_data={
+            "layers": {"CORE": [
+                {"id": "water_modifier",
+                 "abilities": {"WaterModifier": [
+                     {"modification_rate": 0.01},
+                     {"modification_rate": 0.02},
+                 ]}}
+            ]}
+        })
+        planet = MockPlanet(
+            surface_water=0.3,
+            water_target=0.8,
+            facilities=[facility],
+        )
+        empire = MockEmpire(colonies=[planet])
+        engine = WaterEngine()
+
+        engine.process_water_modification([empire])
+
+        assert planet.surface_water == pytest.approx(0.33)
+
+    def test_registry_defined_water_modifier_uses_injected_registries(
+        self, fresh_registries
+    ):
+        """Components without inline abilities should resolve through DI."""
+        fresh_registries.components["registry_water_modifier"] = {
+            "abilities": {
+                "WaterModifier": {"modification_rate": 0.025}
+            }
+        }
+        planet = MockPlanet(
+            surface_water=0.3,
+            water_target=0.8,
+            facilities=[_make_registry_water_facility()],
+        )
+        empire = MockEmpire(colonies=[planet])
+        engine = WaterEngine(registries=fresh_registries)
+
+        engine.process_water_modification([empire])
+
+        assert planet.surface_water == pytest.approx(0.325)
+
+    def test_extract_water_modifier_ignores_non_dict_and_non_list_data(self):
+        """Malformed WaterModifier data is ignored by the extractor."""
+        engine = WaterEngine()
+
+        result = engine._extract_water_modifier({
+            "id": "bad_water_modifier",
+            "abilities": {"WaterModifier": True},
+        })
+
+        assert result is None
 
     def test_skips_nonoperational_facility(self):
         """Non-operational facilities should not contribute."""

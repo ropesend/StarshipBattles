@@ -59,12 +59,42 @@ pytest tests/unit/core/test_application_context.py tests/unit/core/test_protocol
 |---|---|
 | `game/strategy/facade/dto/build_queue_dto.py` | `BuildQueueSourceDTO.from_domain()` now deep-copies queue item dictionaries so nested data cannot be mutated through the UI DTO. |
 
+## Pass 2 Results
+
+Second pass started 2026-05-05 with five more worker slices plus two local low-overlap gaps.
+
+| Slice | Result | Notes |
+|---|---|---|
+| Local | Completed | Added full `RunLoop.run()` one-frame smoke coverage and `normalize_angle()` edge-case coverage. |
+| F / command handlers | Completed | Added movement and order-queue handler tests. Found and fixed a `MoveCommandHandler` no-op defect: moving to the current hex now returns success without queueing a `MOVE` order. |
+| G / simulation entity helpers | Completed | Added direct coverage for `ShipValidatorHelper`, `ShipResourceManager`, ship stats routing, ship construction branches, and serialization warnings. Found and fixed `_verify_stats` skipping expected zero values. |
+| H / app router/dialog | Completed | Added `ScreenRouter` and `exit_dialog` tests for scene callbacks, transitions, dialog rects/clicks/cancel behavior, and load/setup flags. No production changes needed. |
+| I / UI builder helpers | Completed | Added `stat_rows_dynamic`, `components`, `stat_getters`, and `workshop_viewmodel_layer_ops` coverage. Found and fixed `ResourceGeneration` tooltip handling, generic ability fallback, resource getter guards, missing-data guards, and a planetary engineering row break bug. |
+| J / strategy engine/services | Completed | Added tests for `planet_energy_engine`, `water_engine`, `turn_state_snapshot`, `ability_iterator`, `system_effects_collector`, and `spec_compiler` branches. No production changes needed. |
+
+Pass 2 combined targeted command:
+
+```powershell
+pytest tests/unit/core/test_math_vector2.py tests/unit/test_run_loop.py tests/unit/test_screen_router.py tests/unit/test_exit_dialog.py tests/unit/strategy/engine/handlers/test_movement_handlers.py tests/unit/strategy/engine/handlers/test_order_queue_handlers.py tests/unit/simulation/entities/test_ship.py tests/unit/simulation/entities/test_ship_resource_manager.py tests/unit/simulation/entities/test_ship_serialization.py tests/unit/simulation/entities/test_ship_shield_bonus_add.py tests/unit/simulation/entities/test_ship_stats.py tests/unit/simulation/entities/test_ship_validator_helper.py tests/unit/ui/screens/builder/test_stat_rows_dynamic.py tests/unit/ui/screens/builder/test_components.py tests/unit/ui/screens/builder/test_stat_getters.py tests/unit/ui/screens/test_workshop_viewmodel_layer_ops.py tests/unit/strategy/engine/test_planet_energy_engine.py tests/unit/strategy/engine/test_water_engine.py tests/unit/strategy/turn_engine/test_turn_state_snapshot.py tests/unit/strategy/services/test_ability_iterator.py tests/unit/strategy/services/test_system_effects_collector_aggregate_characterization.py tests/unit/strategy/combat/test_spec_compiler.py -q -n 0
+```
+
+Pass 2 result: `295 passed`.
+
+## Pass 2 Production Fixes
+
+| File | Fix |
+|---|---|
+| `game/strategy/engine/handlers/movement.py` | `MoveCommandHandler` now treats current-hex moves as a true no-op instead of queueing a redundant `MOVE` order. |
+| `game/simulation/entities/ship_serialization.py` | Expected stat verification now checks present zero-valued expected stats instead of skipping all falsey expected values. |
+| `game/ui/screens/builder/components.py` | Component tooltips now recognize `ResourceGeneration` and list generic abilities through `has_ability()` instead of only raw instance keys. |
+| `game/ui/screens/builder/stat_getters.py` | Resource getter helpers now tolerate missing `resources`, missing `get_resource_stat`, and non-numeric stat values. |
+| `game/ui/screens/builder/stat_rows_dynamic.py` | Dynamic rows now tolerate missing resource/layer APIs and no longer stops planetary engineering row discovery after the first component without a matching ability. |
+
 ## Deferred High-Risk/High-Effort Claims
 
 These remain good follow-up candidates if they are not completed by workers:
 
-- `game/run_loop.py`: add an end-to-end `run()` loop smoke with mocked `pygame.event.get`, `pygame.display.flip`, `shutdown_all_calls`, and `pygame.quit`.
-- `game/screen_router.py`: critical but likely requires careful pygame/router fakes.
-- `game/exit_dialog.py`: module-level pygame globals; should be isolated with surface/rect mocks.
-- `game/ui/screens/builder/stat_rows_dynamic.py`: large pure-data surface; likely needs a dedicated batch of focused tests.
 - `game/ui/screens/transfer_grid_renderer.py`, `orders_window_ctrl.py`, and other pygame_gui registrar/window claims: useful but more brittle than pure helpers.
+- `game/ui/screens/test_lab/test_run_card.py` and `screen_input_handler.py`: rect/event dispatch logic remains a good low-to-medium coupling target.
+- `game/ui/screens/battle_setup/controller.py`, `event_log_window.py`, `save_selection_window.py`, `species_selector_mixin.py`, and race setup controller/panel factory still have verified UI-layer gaps from the audit.
+- P2 simulation projectile/projectile-manager edge cases and strategy randomizer/storm-generator/filter helper gaps remain opportunistic follow-ups.

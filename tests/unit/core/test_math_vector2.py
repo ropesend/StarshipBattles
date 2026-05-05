@@ -7,7 +7,7 @@ angle_to, and as_int_tuple methods.
 import math
 import pytest
 
-from game.core.math import Vector2, angle_from_vector, signed_angle_between
+from game.core.math import Vector2, angle_from_vector, normalize_angle, signed_angle_between
 
 
 class TestVector2Indexing:
@@ -184,6 +184,33 @@ class TestAngleFromVector:
         """Result should always be in [0, 360)."""
         result = angle_from_vector(-1, -0.001)
         assert 0 <= result < 360
+
+
+class TestNormalizeAngle:
+    """Tests for normalize_angle utility edge cases."""
+
+    @pytest.mark.parametrize(
+        ("raw_angle", "expected"),
+        [
+            (0, 0),
+            (180, 180),
+            (-180, 180),
+            (360, 0),
+            (-360, 0),
+            (540, 180),
+            (-540, 180),
+            (181, -179),
+            (-181, 179),
+            (1081, 1),
+            (-1081, -1),
+        ],
+    )
+    def test_normalizes_to_negative_180_exclusive_positive_180_inclusive(
+        self,
+        raw_angle,
+        expected,
+    ):
+        assert normalize_angle(raw_angle) == pytest.approx(expected)
 
 
 class TestSignedAngleBetween:

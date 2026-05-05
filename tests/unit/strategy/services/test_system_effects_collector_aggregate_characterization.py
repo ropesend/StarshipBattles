@@ -348,6 +348,32 @@ class TestOwnerFiltering:
 
 
 # ---------------------------------------------------------------------------
+# Task 1.6b: unknown abilities / malformed entries filter out cleanly
+# ---------------------------------------------------------------------------
+
+
+class TestAbilityEntryFiltering:
+
+    def test_unknown_ability_and_non_dict_entries_are_skipped(self):
+        source = _FakeSource(
+            abilities={
+                'NotARealEffectAbility': {'scope': 'system', 'multiplier': 0.5},
+                'ShieldModifier': [
+                    True,
+                    {'multiplier': 0.8, 'scope': 'planet'},
+                ],
+            },
+        )
+
+        result = _aggregate(
+            [source], _SYSTEM_SCOPES, empire_id=None, registries=None,
+            hex_coord=None, system=None,
+        )
+
+        assert result == []
+
+
+# ---------------------------------------------------------------------------
 # Task 1.7: improvement_rate field fallback
 # ---------------------------------------------------------------------------
 

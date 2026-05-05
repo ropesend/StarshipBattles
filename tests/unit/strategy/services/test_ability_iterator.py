@@ -1,5 +1,6 @@
 """Tests for the unified ability-source iterator (PROJ-300)."""
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 from typing import Any, Dict, List
 
 import pytest
@@ -12,6 +13,7 @@ from game.strategy.services.ability_iterator import (
     iter_ability_sources_in_system,
     register_source_provider_at_hex,
     register_source_provider_in_system,
+    set_fleet_lookups,
     unregister_source_provider,
 )
 
@@ -37,6 +39,7 @@ class _MockPlanet:
     owner_id: int = 0
     location: Any = HexCoord(2, 2)
     facilities: List[Any] = field(default_factory=list)
+    intrinsic_abilities: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -158,6 +161,162 @@ def test_iter_in_system_yields_all_facilities():
     sources = list(iter_ability_sources_in_system(system))
     facility_ids = {s.source_id for s in sources if s.source_kind == 'facility'}
     assert facility_ids == {"facility:A", "facility:B"}
+
+
+def test_iter_at_hex_yields_planet_intrinsic_source_at_planet_hex():
+    planet = _MockPlanet(
+        name="Volcan",
+        location=HexCoord(4, 5),
+        intrinsic_abilities={
+            "EnvironmentalDamage": {
+                "rate": 0.2,
+                "damage_type": "thermal",
+                "scope": "sector",
+            }
+        },
+    )
+    system = _MockSystem(global_location=HexCoord(100, 200), planets=[planet])
+
+    sources = list(iter_ability_sources_at_hex(
+        system, HexCoord(104, 205), include_system_sources=False,
+    ))
+
+    planet_sources = [s for s in sources if s.source_kind == 'planet']
+    assert len(planet_sources) == 1
+    assert planet_sources[0].source_id == "planet:Volcan"
+
+
+def test_iter_at_hex_yields_star_sector_source_only_at_star_hex():
+    star = SimpleNamespace(
+        name="Sol",
+        location=HexCoord(1, 1),
+        intrinsic_abilities={
+            "EnvironmentalDamage": {
+                "rate": 0.1,
+                "damage_type": "radiation",
+                "scope": "sector",
+            }
+        },
+    )
+    system = _MockSystem(global_location=HexCoord(50, 60))
+    system.stars = [star]
+
+    sources = list(iter_ability_sources_at_hex(
+        system, HexCoord(51, 61), include_system_sources=False,
+    ))
+    distant_sources = list(iter_ability_sources_at_hex(
+        system, HexCoord(52, 62), include_system_sources=False,
+    ))
+
+    assert [s.source_id for s in sources if s.source_kind == 'star'] == ["star:Sol"]
+    assert [s for s in distant_sources if s.source_kind == 'star'] == []
+
+
+def test_iter_at_hex_yields_star_system_scope_source_away_from_star_hex():
+    star = SimpleNamespace(
+        name="Hazard Star",
+        location=HexCoord(1, 1),
+        intrinsic_abilities={
+            "ShieldModifier": {
+                "multiplier": 0.8,
+                "scope": "system",
+            }
+        },
+    )
+    system = _MockSystem(global_location=HexCoord(50, 60))
+    system.stars = [star]
+
+    sources = list(iter_ability_sources_at_hex(
+        system, HexCoord(99, 99), include_system_sources=False,
+    ))
+
+    assert [s.source_id for s in sources if s.source_kind == 'star'] == [
+        "star:Hazard Star"
+    ]
+
+
+def test_iter_at_hex_yields_warp_point_source_at_warp_hex():
+    warp_point = SimpleNamespace(
+        destination_id="Beta",
+        location=HexCoord(7, 8),
+        intrinsic_abilities={
+            "FuelDrain": {"rate": 0.5, "scope": "sector"}
+        },
+    )
+    system = _MockSystem(global_location=HexCoord(20, 30))
+    system.warp_points = [warp_point]
+
+    sources = list(iter_ability_sources_at_hex(
+        system, HexCoord(27, 38), include_system_sources=False,
+    ))
+
+    assert [s.source_id for s in sources if s.source_kind == 'warp_point'] == [
+        "warp_point:Beta"
+    ]
+
+
+def test_iter_at_hex_yields_system_archetype_source_when_abilities_exist():
+    system = _MockSystem(global_location=HexCoord(0, 0))
+    system.name = "Nebula Prime"
+    system.archetype = "ancient_nebula"
+    system.intrinsic_abilities = {
+        "ThrustModifier": {"multiplier": 0.9, "scope": "system"}
+    }
+
+    sources = list(iter_ability_sources_at_hex(
+        system, HexCoord(10, 10), include_system_sources=False,
+    ))
+
+    assert [s.source_id for s in sources if s.source_kind == 'system'] == [
+        "system:Nebula Prime"
+    ]
+
+
+def test_fleet_provider_uses_registered_lookups_and_injected_registries():
+    hex_coord = HexCoord(3, 4)
+    fleet = SimpleNamespace(
+        id=44,
+        owner_id=7,
+        location=hex_coord,
+        ships=[
+            SimpleNamespace(
+                design_data={
+                    "layers": {
+                        "CORE": [{"id": "fleet_aura_component"}],
+                    }
+                }
+            )
+        ],
+    )
+    registries = {
+        "fleet_aura_component": {
+            "abilities": {
+                "ShieldModifier": {
+                    "multiplier": 1.2,
+                    "scope": "sector",
+                }
+            }
+        }
+    }
+
+    set_fleet_lookups(
+        at_hex=lambda system, queried_hex: [fleet] if queried_hex == hex_coord else [],
+        in_system=lambda system: [fleet],
+    )
+    try:
+        sources = list(iter_ability_sources_at_hex(
+            _MockSystem(), hex_coord, registries=registries,
+            include_system_sources=False,
+        ))
+    finally:
+        set_fleet_lookups(at_hex=None, in_system=None)
+
+    fleet_sources = [s for s in sources if s.source_kind == 'fleet']
+    assert len(fleet_sources) == 1
+    assert fleet_sources[0].source_id == "fleet:44"
+    assert fleet_sources[0].get_abilities() == {
+        "ShieldModifier": [{"multiplier": 1.2, "scope": "sector"}]
+    }
 
 
 def test_iter_at_hex_dedupes_sources():

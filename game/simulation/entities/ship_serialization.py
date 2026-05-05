@@ -249,11 +249,14 @@ class ShipSerializer:
 
         mismatches = []
         for key, getter, tolerance in ShipSerializer._STAT_CHECKS:
-            exp_val = expected.get(key)
-            if exp_val:
-                actual = getter(ship)
-                if abs(actual - exp_val) > tolerance:
-                    mismatches.append(f"{key}: got {actual}, expected {exp_val}")
+            if key not in expected:
+                continue
+            exp_val = expected[key]
+            if exp_val is None:
+                continue
+            actual = getter(ship)
+            if abs(actual - exp_val) > tolerance:
+                mismatches.append(f"{key}: got {actual}, expected {exp_val}")
 
         ship._loading_warnings = mismatches
 

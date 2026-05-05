@@ -414,6 +414,77 @@ class TestStackGroupThreadingInStrategyCompiler:
         assert bonus_entries[0].stack_group == "team0_flat_shield"
 
 
+class TestSectorEffectCompilerBranches:
+    """Focused branch coverage for `_entries_from_sector_effects`."""
+
+    def test_noncombat_inactive_and_unity_sector_effects_are_skipped(self):
+        from game.strategy.combat.spec_compiler import _entries_from_sector_effects
+
+        sector_effects = [
+            {
+                'ability_name': 'ResourceHarvestBooster',
+                'providers': [{
+                    'source_kind': 'facility',
+                    'source_label': 'Mine',
+                    'source_id': 'facility:mine',
+                    'is_active': True,
+                    'ability_data': {'multiplier': 1.5, 'scope': 'sector'},
+                }],
+            },
+            {
+                'ability_name': 'ShieldModifier',
+                'providers': [{
+                    'source_kind': 'storm',
+                    'source_label': 'Dormant Storm',
+                    'source_id': 'storm:Dormant',
+                    'is_active': False,
+                    'ability_data': {'multiplier': 0.5, 'scope': 'sector'},
+                }],
+            },
+            {
+                'ability_name': 'DamageModifier',
+                'providers': [{
+                    'source_kind': 'storm',
+                    'source_label': 'Unity Storm',
+                    'source_id': 'storm:Unity',
+                    'is_active': True,
+                    'ability_data': {'multiplier': 1.0, 'scope': 'sector'},
+                }],
+            },
+        ]
+
+        global_entries, per_team_entries = _entries_from_sector_effects(
+            sector_effects
+        )
+
+        assert global_entries == []
+        assert per_team_entries == {}
+
+    def test_damage_modifier_sector_effect_emits_damage_entry(self):
+        from game.strategy.combat.spec_compiler import _entries_from_sector_effects
+
+        sector_effects = [{
+            'ability_name': 'DamageModifier',
+            'providers': [{
+                'source_kind': 'storm',
+                'source_label': 'Plasma Storm',
+                'source_id': 'storm:Plasma',
+                'owner_id': None,
+                'is_active': True,
+                'ability_data': {'multiplier': 1.4, 'scope': 'sector'},
+            }],
+        }]
+
+        global_entries, per_team_entries = _entries_from_sector_effects(
+            sector_effects
+        )
+
+        assert per_team_entries == {}
+        assert len(global_entries) == 1
+        assert global_entries[0].effect.stat_key == "damage_mult"
+        assert global_entries[0].effect.value == 1.4
+
+
 # ---------------------------------------------------------------------------
 # PROJ-275 Phase 6: N-fleet strategy compiler.
 # ---------------------------------------------------------------------------
