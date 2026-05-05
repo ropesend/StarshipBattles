@@ -162,7 +162,7 @@ class ActionExecutionEngine(IActionExecutionEngine):
         # Increment execution progress
         order.execution_progress += 1
 
-        # Resolve action_time. Prefer the injected resolver instance (PROJ-351 T6.3);
+        # Resolve action_time. Prefer the injected resolver instance (PROJ-351A T6.3);
         # fall back to the static method when no resolver was injected.
         if self._action_time_resolver is not None:
             action_time = self._action_time_resolver.resolve_action_time(

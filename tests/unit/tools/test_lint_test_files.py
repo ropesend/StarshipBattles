@@ -117,7 +117,7 @@ def test_lookalike_module_name_is_flagged(linter, tmp_tree, monkeypatch):
 def test_importlib_import_module_with_game_string_is_not_flagged(
     linter, tmp_tree, monkeypatch,
 ):
-    """PROJ-353 Tier-7 (T2.10): `importlib.import_module("game.foo")`
+    """PROJ-353A Tier-7 (T2.10): `importlib.import_module("game.foo")`
     is detected as a `game.*` dependency. The previous AST-based check
     only inspected `Import` / `ImportFrom` nodes, so a file using only
     dynamic imports would be flagged as zero-game-import."""
@@ -138,7 +138,7 @@ def test_importlib_import_module_with_game_string_is_not_flagged(
 def test_bare_import_module_with_game_string_is_not_flagged(
     linter, tmp_tree, monkeypatch,
 ):
-    """PROJ-353 Tier-7 (T2.10): the `from importlib import import_module`
+    """PROJ-353A Tier-7 (T2.10): the `from importlib import import_module`
     form is also recognized."""
     monkeypatch.setattr(linter, "PROJECT_ROOT", tmp_tree)
     _write(
@@ -157,7 +157,7 @@ def test_bare_import_module_with_game_string_is_not_flagged(
 def test_runtime_built_module_name_is_still_flagged(
     linter, tmp_tree, monkeypatch,
 ):
-    """PROJ-353 Tier-7 (T2.10): non-constant arguments to `import_module`
+    """PROJ-353A Tier-7 (T2.10): non-constant arguments to `import_module`
     (f-strings, variables) MUST NOT satisfy the check — that pattern
     hides the dependency from static analysis."""
     monkeypatch.setattr(linter, "PROJECT_ROOT", tmp_tree)

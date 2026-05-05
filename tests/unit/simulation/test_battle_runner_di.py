@@ -116,7 +116,7 @@ class TestPublicHelperContract:
     def test_returned_builder_calls_materializer_with_ship_spec_team_id_and_registries(
         self, fresh_registries,
     ):
-        """PROJ-353 Tier-7 (T2.11): rewrite of the PROJ-321-deleted
+        """PROJ-353A Tier-7 (T2.11): rewrite of the PROJ-321-deleted
         `test_start_battle_ship_builder_calls_to_ship_with_position_and_team_id`.
 
         The original deleted test did a source-text scan

@@ -55,7 +55,7 @@ class CallStatus(str, Enum):
 
 _in_flight_calls: int = 0
 _in_flight_lock: threading.Lock = threading.Lock()
-# PROJ-353 Tier-7 (T2.1): mutations of `_active_workers` are serialized via
+# PROJ-353A Tier-7 (T2.1): mutations of `_active_workers` are serialized via
 # `_in_flight_lock`. The set is read via `list(_active_workers)` in
 # `shutdown_all_calls`, which is also taken under the lock so the snapshot
 # is consistent with the in-flight counter.
@@ -123,42 +123,60 @@ class LLMBackgroundCall:
     def start(self) -> None:
         """Spawn the worker thread. Idempotent — second call is a no-op.
 
+        Idempotency holds for both sequential AND concurrent same-instance
+        callers. Pre-PROJ-353A-audit-R1 the guard, slot reservation, and
+        ``_thread`` assignment lived in three separate critical sections,
+        so two threads racing into ``start()`` could both pass the
+        ``_thread is None`` guard before either reserved a slot — burning
+        two slots and spawning two workers. The fix runs the entire
+        guard-then-reserve-then-assign sequence under ``_state_lock``.
+
         Raises `LLMConfigError` if starting would exceed
         `LLMConfig.MAX_CONCURRENT_CALLS`.
+
+        Lock-ordering note: ``_in_flight_lock`` is acquired INSIDE
+        ``_state_lock`` here. The reverse ordering (``_in_flight_lock``
+        held while waiting on ``_state_lock``) does not occur anywhere
+        else in this module — ``_run()`` cleanup at lines ~313-315 only
+        acquires ``_in_flight_lock``, and ``shutdown_all_calls`` likewise.
+        No inversion risk.
         """
+        global _in_flight_calls
         with self._state_lock:
             if self._thread is not None:
-                # Already started.
+                # Already started — sequential or concurrent caller's
+                # second invocation. No-op per the idempotency contract.
                 return
 
-        # Reserve a slot under the global counter lock.
-        global _in_flight_calls
-        with _in_flight_lock:
-            if _in_flight_calls >= LLMConfig.MAX_CONCURRENT_CALLS:
-                raise LLMConfigError(
-                    f"max concurrent LLM calls ({LLMConfig.MAX_CONCURRENT_CALLS}) reached",
-                    code=ErrorCode.LLM_CONFIG_MISSING.value,
-                    context={
-                        "in_flight": _in_flight_calls,
-                        "max": LLMConfig.MAX_CONCURRENT_CALLS,
-                    },
+            with _in_flight_lock:
+                if _in_flight_calls >= LLMConfig.MAX_CONCURRENT_CALLS:
+                    raise LLMConfigError(
+                        f"max concurrent LLM calls ({LLMConfig.MAX_CONCURRENT_CALLS}) reached",
+                        code=ErrorCode.LLM_CONFIG_MISSING.value,
+                        context={
+                            "in_flight": _in_flight_calls,
+                            "max": LLMConfig.MAX_CONCURRENT_CALLS,
+                        },
+                    )
+                _in_flight_calls += 1
+                # Track for shutdown_all_calls(). Add before the OS
+                # spawn so the worker can never finish before it is
+                # registered. PROJ-353A T2.1 ordering preserved: this
+                # serialization keeps the worker set consistent with
+                # the in-flight counter; a finishing worker must see
+                # itself in the set when it decrements the counter.
+                self._started_at = time.monotonic()
+                self._thread = threading.Thread(
+                    target=self._run,
+                    name=f"LLMBackgroundCall-{id(self):x}",
+                    daemon=False,
                 )
-            _in_flight_calls += 1
+                _active_workers.add(self._thread)
 
-        with self._state_lock:
-            self._started_at = time.monotonic()
-            self._thread = threading.Thread(
-                target=self._run,
-                name=f"LLMBackgroundCall-{id(self):x}",
-                daemon=False,
-            )
-
-        # Track for shutdown_all_calls(); add before .start() so the
-        # worker can never finish before we register it. PROJ-353 T2.1:
-        # serialized via `_in_flight_lock` to keep the worker set
-        # consistent with the in-flight counter.
-        with _in_flight_lock:
-            _active_workers.add(self._thread)
+        # OS thread spawn happens OUTSIDE the lock so we never hold it
+        # during the kernel call. By this point ``self._thread`` is the
+        # canonical reference (set under both locks); a concurrent
+        # second ``start()`` saw it non-None and returned at the guard.
         self._thread.start()
 
     def cancel(self) -> None:
@@ -228,7 +246,7 @@ class LLMBackgroundCall:
     # -- Worker --------------------------------------------------------------
 
     def _run(self) -> None:
-        # PROJ-324 Phase 2 / PROJ-353 Tier-7 T2.1: every code path through
+        # PROJ-324 Phase 2 / PROJ-353A Tier-7 T2.1: every code path through
         # `_run()` must signal completion via `self._done_event.set()` so
         # callers blocked on `wait(timeout)` unblock deterministically.
         # The OUTER `try/finally` below sets the event regardless of which
@@ -297,7 +315,7 @@ class LLMBackgroundCall:
                     self._finished_at = time.monotonic()
 
             finally:
-                # PROJ-353 Tier-7 T2.1: release the in-flight slot and
+                # PROJ-353A Tier-7 T2.1: release the in-flight slot and
                 # de-register the worker BEFORE signalling completion.
                 # Previously `_done_event.set()` ran first (in the inner
                 # `finally`), so a `wait()`-er observing the terminal
@@ -332,7 +350,7 @@ def shutdown_all_calls(timeout: float = 5.0) -> None:
     logged as a warning and the function returns — better than hanging
     the game forever on shutdown.
     """
-    # PROJ-353 T2.1: snapshot under the lock so we don't iterate a set
+    # PROJ-353A T2.1: snapshot under the lock so we don't iterate a set
     # being mutated by a concurrently-finishing worker.
     with _in_flight_lock:
         workers = list(_active_workers)

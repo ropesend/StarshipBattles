@@ -52,7 +52,7 @@
 **Tests:** see 2.3
 
 - [ ] All pass.
-- [ ] Commit: `fix(strategy-modal): track load dialog as blocking modal (PROJ-352 T6.6)`
+- [ ] Commit: `fix(strategy-modal): track load dialog as blocking modal (PROJ-352A T6.6)`
 
 **Notes:**
 
@@ -61,7 +61,7 @@
 
 - [ ] Full unit suite green.
 - [ ] `python Tools/lint_test_files.py` — 0 violations.
-- [ ] Update `Projects/projects_index.md` PROJ-352 → `Awaiting Verification`. Commit: `chore(PROJ-352): mark closeout follow-up awaiting verification`.
+- [ ] Update `Projects/projects_index.md` PROJ-352A → `Awaiting Verification`. Commit: `chore(PROJ-352A): mark closeout follow-up awaiting verification`.
 
 **Notes:**
 

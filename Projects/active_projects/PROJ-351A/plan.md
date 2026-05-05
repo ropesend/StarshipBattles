@@ -1,7 +1,7 @@
-# PROJ-351: Battle resolver registry threading (PROJ-306 follow-on)
+# PROJ-351A: Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan)
 
 > **WORKING ON THIS PROJECT:**
-> - Run `python Projects/scripts/current_task.py PROJ-351` to see what to do next
+> - Run `python Projects/scripts/current_task.py PROJ-351A` to see what to do next
 > - Open the phase checklist file for your current phase
 > - Check off tasks as you complete them
 > - Update Current State before stopping work

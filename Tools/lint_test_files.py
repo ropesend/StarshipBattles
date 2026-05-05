@@ -42,7 +42,7 @@ exceeds the marginal value):
       required, allowlist the specific test file.
 
 Created by PROJ-326 Phase 1.
-PROJ-353 Tier-7 (T2.10): docstring corrections + blind-spot
+PROJ-353A Tier-7 (T2.10): docstring corrections + blind-spot
 documentation; Python version comment updated to reflect 3.13+ baseline.
 """
 
@@ -148,7 +148,7 @@ def imports_game(tree: ast.AST) -> bool:
     ``from game...`` statement (the top-level package must be exactly
     ``game`` — ``somethinglikegame`` does NOT count).
 
-    PROJ-353 Tier-7 (T2.10): also detects the dynamic-import pattern
+    PROJ-353A Tier-7 (T2.10): also detects the dynamic-import pattern
     ``importlib.import_module("game.foo")`` so files using deferred
     imports as their primary surface are not flagged. The detection is
     deliberately limited to constant string arguments — a runtime-built

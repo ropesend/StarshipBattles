@@ -254,7 +254,7 @@ class TestFromDictSimplePath:
         assert not isinstance(order.target, HexCoord)
 
     def test_from_dict_missing_type_raises_keyerror(self):
-        """PROJ-353 Tier-7 (T2.7): coverage gap. `Order.from_dict` accesses
+        """PROJ-353A Tier-7 (T2.7): coverage gap. `Order.from_dict` accesses
         `data['type']` without a default; an empty dict (or any payload
         omitting 'type') raises KeyError. Pinning this completes the
         sister-class symmetry alongside the unknown-type test below."""
@@ -263,7 +263,7 @@ class TestFromDictSimplePath:
         assert "type" in str(exc_info.value)
 
     def test_from_dict_extra_keys_are_tolerated(self):
-        """PROJ-353 Tier-7 (T2.7): forward compatibility — unknown
+        """PROJ-353A Tier-7 (T2.7): forward compatibility — unknown
         top-level keys must be ignored by the loader so newer save fields
         don't break the loader when a prior version reads a later save."""
         order = Order.from_dict({

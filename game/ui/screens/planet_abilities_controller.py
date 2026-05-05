@@ -14,7 +14,7 @@ Stage 3.
 
 Pattern reference: PROJ-328 Phase C ``transfer_controller.py``.
 
-Discovery semantics (PROJ-351 T6.4): toggleable abilities are discovered
+Discovery semantics (PROJ-351A T6.4): toggleable abilities are discovered
 generically by scanning facility components for any ability whose data
 carries an ``activation_time`` field — per ``docs/03_CONVENTIONS.md`` 6.5
 ("No Hardcoded Type Lists"). New activatable abilities are picked up
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 
 # ---------------------------------------------------------------------------
-# Presentation-only label overrides (PROJ-351 T6.4).
+# Presentation-only label overrides (PROJ-351A T6.4).
 #
 # Toggleable-ability discovery is data-driven: any ability whose data carries
 # an ``activation_time`` field is considered toggleable (see ``scan_abilities``
@@ -129,7 +129,7 @@ class PlanetAbilitiesController:
         """Scan planet facilities for toggleable abilities at per-component
         granularity.
 
-        PROJ-351 T6.4: discovery is data-driven per
+        PROJ-351A T6.4: discovery is data-driven per
         ``docs/03_CONVENTIONS.md`` 6.5 — any ability whose data dict carries
         an ``activation_time`` field is considered toggleable. Display names
         are derived from the CamelCase ability name (with optional override

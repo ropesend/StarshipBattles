@@ -10,7 +10,6 @@ PROJ-335 Phase 1. Pins the gap-fill behaviors not already covered by:
 Specifically pins:
 
 - Required-key validation in ``from_dict``.
-- The legacy ``resource_levels`` key alias for ``consumable_levels``.
 - The ``is_shipyard`` short-circuit to False when ``is_operational`` is False.
 - The ``is_shipyard`` True path with an active space_shipyard component.
 - ``set_component_active`` / ``is_component_active`` round-trip through the
@@ -62,7 +61,7 @@ class TestFromDictRequiredKeys:
                 "name": "n",
             })
 
-    # PROJ-353 Tier-7 (T2.7): coverage gap — only `instance_id` and
+    # PROJ-353A Tier-7 (T2.7): coverage gap — only `instance_id` and
     # `design_data` missing-key paths were pinned previously. Add the
     # other two required keys plus an extra-key tolerance pin.
 

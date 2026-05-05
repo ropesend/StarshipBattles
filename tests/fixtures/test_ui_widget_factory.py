@@ -190,7 +190,7 @@ def test_bypass_init_preserves_pre_existing_truthy_value():
 
 
 def test_bypass_init_subclass_sees_inherited_flag_during_scope():
-    """PROJ-353 Tier-7 (T2.13) regression trap: production reads
+    """PROJ-353A Tier-7 (T2.13) regression trap: production reads
     `getattr(type(self), 'bypass_init', False)` which walks the MRO. So
     a subclass instance constructed inside `with bypass_init(BaseCls):`
     must see the flag as True. Pin this so a future refactor that
@@ -214,7 +214,7 @@ def test_bypass_init_subclass_sees_inherited_flag_during_scope():
 
 
 def test_bypass_init_does_not_undo_subclass_override_set_inside_scope():
-    """PROJ-353 Tier-7 (T2.13): the documented narrow trap — if a test
+    """PROJ-353A Tier-7 (T2.13): the documented narrow trap — if a test
     inside a `with bypass_init(BaseCls)` block explicitly assigns
     `SubCls.bypass_init = X`, the context manager's cleanup is class-
     local on BaseCls and will NOT touch SubCls. This test PINS that

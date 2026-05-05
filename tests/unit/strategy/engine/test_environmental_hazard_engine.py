@@ -378,7 +378,7 @@ class TestApplyDamageToShip:
         line 195. With damage=0 and current_hp == max_hp, the helper falls
         into the "Reset to full" branch and overwrites current_hp with None.
 
-        ANNOTATION (PROJ-353 Tier-7 T2.4): this branch is unreachable
+        ANNOTATION (PROJ-353A Tier-7 T2.4): this branch is unreachable
         through the production caller because `_apply_damage_to_ship` is
         only invoked with `damage > 0` (see
         `environmental_hazard_engine.py:141`, where damage is computed

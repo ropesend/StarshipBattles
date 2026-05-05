@@ -1,7 +1,7 @@
-# PROJ-352: Strategic effects metadata registry and _aggregate decomposition
+# PROJ-352A: Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring)
 
 > **WORKING ON THIS PROJECT:**
-> - Run `python Projects/scripts/current_task.py PROJ-352` to see what to do next
+> - Run `python Projects/scripts/current_task.py PROJ-352A` to see what to do next
 > - Open the phase checklist file for your current phase
 > - Check off tasks as you complete them
 > - Update Current State before stopping work

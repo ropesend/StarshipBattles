@@ -232,6 +232,136 @@ class TestStartIdempotency:
         # The stub was called exactly once.
         assert stub_llm_provider.call_count == 1
 
+    def test_concurrent_start_on_same_instance_is_atomic(self):
+        """PROJ-353A audit-remediation R1: Codex flagged that
+        ``LLMBackgroundCall.start()`` is sequentially idempotent but not
+        concurrently idempotent. Pre-fix, two threads calling ``start()``
+        on the same instance can both pass the ``_thread is None`` guard
+        before either assigns ``_thread``, because ``_state_lock`` is
+        released between the guard and the slot reservation
+        (``game/services/llm/background.py:129-162``). Result: two slots
+        reserved, two workers spawned, single-call idempotency contract
+        violated.
+
+        This test forces the race deterministically by wrapping
+        ``call._state_lock`` so that on first release each thread blocks
+        on a 2-thread ``threading.Barrier`` before continuing. With both
+        threads stalled past the guard at the barrier, the pre-fix
+        guard-then-reserve-then-assign sequence necessarily double-spawns;
+        the post-fix atomic guard+reserve+assign sequence allows exactly
+        one through.
+        """
+        import threading as _threading
+
+        from game.services.llm import background
+        from game.services.llm.background import LLMBackgroundCall
+
+        provider = _SlowProvider(delay=0.05)
+        call = LLMBackgroundCall(provider, [Message(role=Role.USER, content="hi")])
+
+        gate = _threading.Barrier(2, timeout=3.0)
+        racer_tids: set[int] = set()
+        racer_tids_lock = _threading.Lock()
+
+        class _GatedLock:
+            """Wraps a real Lock so racer threads (and only racer threads)
+            cross a 2-thread barrier on their first release. The worker
+            thread spawned by production must NOT be gated — it would
+            block at a barrier no third party can satisfy.
+
+            Mimics the ``__enter__/__exit__`` and explicit
+            ``acquire/release`` surface used by production.
+            """
+
+            def __init__(self, real_lock, barrier):
+                self._real = real_lock
+                self._barrier = barrier
+                self._gated_already: set[int] = set()
+
+            def __enter__(self):
+                self._real.__enter__()
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                tid = _threading.get_ident()
+                with racer_tids_lock:
+                    is_racer = tid in racer_tids
+                already_gated = tid in self._gated_already
+                must_gate = is_racer and not already_gated
+                if must_gate:
+                    self._gated_already.add(tid)
+                # Release real lock first so the OTHER racer can acquire.
+                result = self._real.__exit__(exc_type, exc, tb)
+                if must_gate:
+                    try:
+                        self._barrier.wait()
+                    except _threading.BrokenBarrierError:
+                        pass
+                return result
+
+            def acquire(self, *args, **kwargs):
+                return self._real.acquire(*args, **kwargs)
+
+            def release(self, *args, **kwargs):
+                return self._real.release(*args, **kwargs)
+
+        # Swap the instance attribute (tests can mutate; production
+        # constructed it as `threading.Lock()` per
+        # `game/services/llm/background.py:113`).
+        original_lock = call._state_lock
+        call._state_lock = _GatedLock(original_lock, gate)
+
+        errors: list[BaseException] = []
+
+        def runner():
+            with racer_tids_lock:
+                racer_tids.add(_threading.get_ident())
+            try:
+                call.start()
+            except BaseException as exc:  # capture for assertion
+                errors.append(exc)
+
+        try:
+            t1 = _threading.Thread(target=runner, name="start-racer-A")
+            t2 = _threading.Thread(target=runner, name="start-racer-B")
+            t1.start()
+            t2.start()
+            t1.join(timeout=4.0)
+            t2.join(timeout=4.0)
+        finally:
+            # Restore so the worker thread (spawned by the winning
+            # racer at the end of `start()`) acquires the original
+            # `_state_lock` from inside `_run()` without test wrapper.
+            call._state_lock = original_lock
+
+        assert not t1.is_alive() and not t2.is_alive(), (
+            "concurrent start() threads did not complete; possible deadlock"
+        )
+        assert not errors, f"start() raised in racer thread(s): {errors!r}"
+
+        # Wait for whichever worker actually got spawned to complete.
+        assert call.wait(timeout=2.0), "spawned worker did not complete"
+
+        # Post-fix contract: exactly ONE provider invocation. Pre-fix
+        # the race spawned 2 workers and `provider.call_count` would be 2.
+        assert provider.call_count == 1, (
+            f"start() must spawn exactly one worker; got {provider.call_count} "
+            "provider invocations (PROJ-353A audit-R1: same-instance concurrent "
+            "start() reserved multiple slots pre-fix)"
+        )
+        # Counter + active workers drained back to zero by cleanup. Pre-fix
+        # the second worker would have leaked a second counter increment
+        # (`_in_flight_calls` would still be 1 after cleanup of one worker).
+        with background._in_flight_lock:
+            in_flight = background._in_flight_calls
+            active = len(background._active_workers)
+        assert in_flight == 0, (
+            f"in-flight counter leaked: expected 0 after completion, got {in_flight}"
+        )
+        assert active == 0, (
+            f"_active_workers leaked: expected 0 after completion, got {active}"
+        )
+
 
 class TestConcurrentCallLimit:
     def test_creating_calls_up_to_max_is_ok(self):

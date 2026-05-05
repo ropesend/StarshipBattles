@@ -273,7 +273,7 @@ def bypass_init(cls: Type):
     cleanup even on exception. Nested ``bypass_init(Cls)`` calls restore
     the previous value, not just ``False``.
 
-    Concurrency / parallelism notes (PROJ-353 Tier-7 T2.13)
+    Concurrency / parallelism notes (PROJ-353A Tier-7 T2.13)
     ------------------------------------------------------
 
     - **pytest-xdist** runs each worker in a SEPARATE PROCESS. The

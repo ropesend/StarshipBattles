@@ -1,4 +1,4 @@
-"""PROJ-352 T6.6 regression: load dialog must block strategy input.
+"""PROJ-352A T6.6 regression: load dialog must block strategy input.
 
 The strategy load dialog (``SaveSelectionWindow``) opened via
 ``strategy_screen_lifecycle.show_load_game_dialog`` was historically a
@@ -10,7 +10,7 @@ dialog was visibly open. This let strategy-screen input (hex clicks,
 sidebar buttons) coexist with the dialog — the only modal in the
 strategy screen with that exemption.
 
-Shape A fix (per ``Projects/active_projects/PROJ-352/decisions.md``):
+Shape A fix (per ``Projects/active_projects/PROJ-352A/decisions.md``):
 ``SaveSelectionWindow`` now subclasses ``StrategyModalWindow`` and
 ``show_load_game_dialog`` passes the strategy ``window_manager``,
 so the dialog auto-registers via ``StrategyModalWindow.__init__`` and

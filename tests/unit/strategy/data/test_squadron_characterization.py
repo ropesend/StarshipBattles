@@ -172,7 +172,7 @@ class TestFromDictReconstruction:
 
 
 class TestFromDictMissingRequiredKeys:
-    """PROJ-353 Tier-7 (T2.7): coverage gap.
+    """PROJ-353A Tier-7 (T2.7): coverage gap.
 
     `Squadron.from_dict` requires `name`. Pin the missing-key behavior
     (KeyError, sister-class symmetry with Order/PlanetaryFacility) and
