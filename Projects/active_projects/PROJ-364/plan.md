@@ -7,16 +7,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Order-pop / event-payload characterization | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Order-pop / event-payload characterization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Define SuperweaponSpec + SUPERWEAPONS table | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Spec-driven dispatch + per-weapon effect closures | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning (awaiting user approval)
-**Last Action:** Plan drafted from review finding #5. Renumbered from PROJ-354 to PROJ-364.
-**Next Action:** User approval, then begin Phase 1.
-**Blockers:** PROJ-363 (declarative command/order spec) should land before this — PROJ-364 reuses the `'superweapon'` category from CommandSpec.
+**Active Phase:** Phase 2 (in progress)
+**Last Action:** Phase 1 landed (21 characterization tests; 148 superweapon tests + 17617 sharded all green).
+**Next Action:** Phase 2 — define SuperweaponSpec + SUPERWEAPONS table.
+**Blockers:** None (PROJ-363 landed at 579a097ec).
 
 ## Overview
 `game/strategy/engine/superweapon_order_processor.py` has 5 strategic-superweapon `process_*` methods (IMPLODE_PLANET, STELLERATE_STAR, OPEN_WARP_POINT, CLOSE_WARP_POINT, CREATE_DYSON_SPHERE) — each ~50 LOC repeating: get current order → check type → resolve target → check stabilizer → find ship by hardcoded ability name → mutate galaxy → call shared `_finalize_superweapon` tail. The shared tail exists; the prologue is copy-pasted. SELF_DESTRUCT is structurally different (no ability check, no stabilizer block) and stays out of the spec.
