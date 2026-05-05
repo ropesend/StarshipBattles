@@ -233,6 +233,59 @@ class TestSameClassMultiProviderIdentity:
 
         assert manager._team_bonuses[0].get("ShieldProjection", 0.0) == 0.0
 
+    def test_derelict_provider_ship_does_not_contribute(self):
+        """
+        PROJ-357 audit (CQ-001): a derelict provider ship must not
+        contribute fleet auras. Math path, registration scan, and
+        `get_active_bonuses()` UI must all agree.
+        """
+        ab = _make_ability("ShieldProjection", 10.0)
+        comp = _make_component("ShieldProjector_A", [ab])
+        provider_ship = _make_ship(team_id=0, name="Provider", components=[comp])
+        teammate = _make_ship(team_id=0, name="Teammate")
+
+        manager = FleetAuraManager()
+        manager.initialize([provider_ship, teammate])
+        assert manager._team_bonuses[0]["ShieldProjection"] == 10.0
+
+        # Mark the provider derelict — bonus must drop to 0 and the
+        # provider must be skipped (but not dropped) so recovery can
+        # restore the contribution without a re-scan.
+        provider_ship.is_derelict = True
+        manager._providers_dirty = True
+        manager._recalculate([provider_ship, teammate])
+        assert manager._team_bonuses[0].get("ShieldProjection", 0.0) == 0.0
+        # Provider entry retained (skip-not-drop policy).
+        assert any(p.ship is provider_ship for p in manager._providers)
+        # UI agrees — derelict ship contributes no active bonuses.
+        ui = manager.get_active_bonuses(team_id=0)
+        assert all(entry['source'] != f"{comp.name} ({provider_ship.name})" for entry in ui)
+
+        # Recovery (no longer derelict) restores the contribution.
+        provider_ship.is_derelict = False
+        manager._providers_dirty = True
+        manager._recalculate([provider_ship, teammate])
+        assert manager._team_bonuses[0]["ShieldProjection"] == 10.0
+
+    def test_initialize_skips_derelict_provider_ship(self):
+        """
+        PROJ-357 audit (CQ-001): `initialize()` must not scan a ship that
+        starts the battle derelict — matches the `_recalculate()` skip
+        and `get_active_bonuses()` UI filter.
+        """
+        ab = _make_ability("ShieldProjection", 10.0)
+        comp = _make_component("ShieldProjector_A", [ab])
+        provider_ship = _make_ship(team_id=0, name="Provider", components=[comp])
+        provider_ship.is_derelict = True
+        teammate = _make_ship(team_id=0, name="Teammate")
+
+        manager = FleetAuraManager()
+        manager.initialize([provider_ship, teammate])
+
+        # No provider was registered for the derelict ship.
+        assert all(p.ship is not provider_ship for p in manager._providers)
+        assert manager._team_bonuses[0].get("ShieldProjection", 0.0) == 0.0
+
     def test_unregister_provider_ship_removes_all_entries(self):
         """unregister_ship() with two same-class providers: all entries gone."""
         ab_a = _make_ability("ShieldProjection", 10.0, stack_group="alpha")

@@ -34,7 +34,7 @@ class AuraProvider:
     component / ability instance.
 
     A provider is considered live when:
-      1. `ship.is_alive` (and not derelict where relevant), AND
+      1. `ship.is_alive` AND not `ship.is_derelict`, AND
       2. `component.is_operational`, AND
       3. `ability` is still present in `component.ability_instances`.
 
@@ -110,9 +110,14 @@ class FleetAuraManager:
         self._external.clear()
         self._team_bonuses.clear()
 
-        # Scan ships for fleet/system/empire-scoped abilities
+        # Scan ships for fleet/system/empire-scoped abilities.
+        # PROJ-357 audit (CQ-001): derelict ships do not contribute fleet
+        # auras — match the filter applied in `_recalculate()` and
+        # `get_active_bonuses()` so the math, cache, and UI all agree.
         for ship in ships:
             if not ship.is_alive:
+                continue
+            if getattr(ship, 'is_derelict', False):
                 continue
             self._scan_ship(ship)
 
@@ -263,7 +268,10 @@ class FleetAuraManager:
             ship: The newly added ship
             all_ships: All ships currently in battle (including the new one)
         """
-        if ship.is_alive:
+        # PROJ-357 audit (CQ-001): derelict ships do not contribute fleet
+        # auras — keep `register_ship()` in sync with the filter used by
+        # `initialize()` and `_recalculate()`.
+        if ship.is_alive and not getattr(ship, 'is_derelict', False):
             self._scan_ship(ship)
         self._recalculate(all_ships)
 
@@ -353,6 +361,14 @@ class FleetAuraManager:
             retained_providers.append(provider)
 
             if not ship.is_alive:
+                continue
+            # PROJ-357 audit (CQ-001): derelict ships are incapacitated and
+            # must not contribute fleet auras. `get_active_bonuses()` and
+            # `_get_provider_fingerprint()` already treat derelict as a
+            # liveness gate; align the math path with them. Skip rather
+            # than drop — a ship that ceases to be derelict (recovery)
+            # should resume contributing without a re-scan.
+            if getattr(ship, 'is_derelict', False):
                 continue
             if not getattr(comp, 'is_operational', False):
                 continue
