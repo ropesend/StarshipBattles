@@ -18,7 +18,6 @@ from game.ui.panels.empire_treasury_panel import (
     LEFT_MARGIN,
     TOP_MARGIN,
 )
-from game.ui.utils.resource_display import RESOURCE_ABBREVIATIONS
 
 
 # =============================================================================
@@ -135,25 +134,98 @@ def mock_resource_icons():
 # =============================================================================
 
 class TestResourceAbbreviations:
-    """Tests for resource name abbreviations."""
+    """PROJ-346: pin EmpireTreasuryPanel header rendering against the
+    abbreviation lookup, NOT the module-level dict literal.
 
-    def test_all_resources_have_abbreviations(self):
-        """All planet resources should have abbreviations defined."""
+    The previous tests only inspected ``RESOURCE_ABBREVIATIONS`` (a
+    constant in ``game.ui.utils.resource_display``); they would have
+    passed even if the panel never imported the lookup. These rewrites
+    construct the panel and assert the header-row UILabel calls the
+    panel actually issues, which is the production-pinning behaviour.
+    """
+
+    def _build_and_capture_label_texts(
+        self, mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Construct an EmpireTreasuryPanel and return every UILabel text= arg
+        produced during ``_build_resource_header`` (the only call site that
+        consumes ``get_resource_abbreviation``)."""
+        captured_texts: list[str] = []
+
+        def _label_factory(*args, **kwargs):
+            captured_texts.append(kwargs.get("text", ""))
+            return MagicMock()
+
+        with patch(
+            'game.ui.panels.empire_treasury_panel.create_section_header'
+        ), patch(
+            'game.ui.panels.empire_treasury_panel.UIScrollingContainer'
+        ), patch(
+            'game.ui.panels.empire_treasury_panel.UILabel',
+            side_effect=_label_factory,
+        ), patch(
+            'game.ui.panels.empire_treasury_panel.UIImage'
+        ):
+            EmpireTreasuryPanel(
+                mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+            )
+        return captured_texts
+
+    def test_panel_header_renders_an_abbreviation_for_every_planetary_resource(
+        self, mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Every planetary resource produces an abbreviation UILabel in the
+        header row (pins the per-resource ``get_resource_abbreviation`` call,
+        not just the dict's keys)."""
+        from game.ui.utils.resource_display import get_resource_abbreviation
+
+        texts = self._build_and_capture_label_texts(
+            mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+        )
+
         for resource in PLANET_RESOURCE_NAMES:
-            assert resource in RESOURCE_ABBREVIATIONS
+            assert get_resource_abbreviation(resource) in texts, (
+                f"Panel header missing abbreviation UILabel for {resource!r}; "
+                f"captured texts={texts}"
+            )
 
-    def test_abbreviations_are_short(self):
-        """Abbreviations should be 3 characters or less."""
-        for abbrev in RESOURCE_ABBREVIATIONS.values():
+    def test_panel_header_abbreviation_labels_are_three_chars_or_less(
+        self, mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """The abbreviation cells the panel renders into the header row are
+        all <=3 characters. Pins the panel's UILabel ``text`` arg, not the
+        upstream constant."""
+        from game.ui.utils.resource_display import get_resource_abbreviation
+
+        texts = self._build_and_capture_label_texts(
+            mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+        )
+
+        # Filter to only the abbreviation labels (one per planetary resource).
+        expected_abbrevs = {get_resource_abbreviation(r) for r in PLANET_RESOURCE_NAMES}
+        rendered_abbrevs = [t for t in texts if t in expected_abbrevs]
+        assert rendered_abbrevs, (
+            f"No abbreviation labels rendered; texts={texts}"
+        )
+        for abbrev in rendered_abbrevs:
             assert len(abbrev) <= 3
 
-    def test_expected_abbreviations(self):
-        """Check expected abbreviation values."""
-        assert RESOURCE_ABBREVIATIONS["metals"] == "Met"
-        assert RESOURCE_ABBREVIATIONS["organics"] == "Org"
-        assert RESOURCE_ABBREVIATIONS["vapors"] == "Vap"
-        assert RESOURCE_ABBREVIATIONS["radioactives"] == "Rad"
-        assert RESOURCE_ABBREVIATIONS["exotics"] == "Exo"
+    def test_panel_renders_expected_planetary_abbreviations(
+        self, mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+    ):
+        """Pin the concrete header-cell texts for the five planetary
+        resources, in order — defends both the resource set AND the
+        abbreviation values that production actually renders."""
+        texts = self._build_and_capture_label_texts(
+            mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+        )
+
+        # Each of these MUST appear as a UILabel in the rendered panel.
+        for expected in ("Met", "Org", "Vap", "Rad", "Exo"):
+            assert expected in texts, (
+                f"Panel header missing expected abbreviation {expected!r}; "
+                f"texts={texts}"
+            )
 
 
 # =============================================================================
