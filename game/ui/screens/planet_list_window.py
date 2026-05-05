@@ -231,6 +231,18 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.btn_build_queue = None
         self.btn_navigate = None
         self.last_preset_selection = None  # PROJ-199: lazy init elimination
+
+        # PROJ-347 T4.1b (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullPlanetListWindowUiBuilder test can safely call kill() without
+        # AttributeError on `self.virtual_table.kill()`. The production
+        # builder overwrites these in Stage 3.
+        self.virtual_table = None
+        self.sidebar_panel = None
+        self.main_panel = None
+        self.data_source = None
+        self.column_manager = None
+        self.selection = None
         self._registries = registries  # PROJ-211: injected registries (DI)
         self._race_registry = race_registry  # PROJ-290
         # PROJ-292 H1: facade enables per-species sub-block rendering on
@@ -241,7 +253,9 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.empire = empire  # Current player empire
         self.empires = empires or []  # PROJ-198: all empires for owner lookup
         self.on_close_callback = on_close_callback
-        self.on_navigate_callback = on_navigate_callback
+        # PROJ-348 T5.3: navigate dispatch routes through controller (line ~321);
+        # window no longer caches the callback. Parameter still threads to the
+        # controller via the constructor passthrough below.
         self.asset_resolver = asset_resolver
 
         # Layout constants
@@ -616,13 +630,20 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.refresh_list()
 
     def _navigate_to_selected(self) -> None:
-        """Navigate camera to the selected planet's system."""
-        if self.selected_planet and self.on_navigate_callback:
-            loc = getattr(
-                self.selected_planet, '_cached_system_global_location', None
-            )
-            if loc:
-                self.on_navigate_callback(loc)
+        """Navigate camera to the selected planet's system.
+
+        PROJ-348 T5.3: route navigation through `controller.navigate_to`
+        rather than calling `self.on_navigate_callback` directly. The
+        controller owns the navigate-dispatch boundary; the window stays
+        focused on widget concerns.
+        """
+        if not self.selected_planet:
+            return
+        loc = getattr(
+            self.selected_planet, '_cached_system_global_location', None
+        )
+        if loc and self.controller is not None:
+            self.controller.navigate_to(loc)
 
     def _on_planet_selected(self, planet) -> None:
         """Handle planet selection - create/update detail panel."""
@@ -687,18 +708,11 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
     def _resolve_demographic_view(self, planet) -> Optional[Any]:
         """PROJ-292 H1: resolve per-species view for colonized planets.
 
-        Bypass-init tests construct the window via ``__new__`` and set
-        ``self._facade`` directly without going through ``__init__``, so
-        the controller may not exist. In that case fall back to the
-        original inline check that those tests pin.
+        PROJ-348 T5.4: the legacy ``__new__``-bypass fallback was deleted.
+        Bypass-init tests must wire a real ``PlanetListController`` (see
+        ``tests/unit/ui/screens/test_planet_list_window.py:_make_planet_list_window``).
         """
-        controller = getattr(self, 'controller', None)
-        if controller is not None:
-            return controller.resolve_demographic_view(planet)
-        # Legacy bypass-init test fallback
-        if planet.owner_id is None or self._facade is None:
-            return None
-        return self._facade.get_colony_demographic_view(planet.id)
+        return self.controller.resolve_demographic_view(planet)
 
     def _detail_panel_geometry(self) -> tuple:
         """Calculate detail panel position and size relative to window."""

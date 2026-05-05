@@ -122,3 +122,31 @@ class TestMockCompositionPopulate:
         assert screen._build_queue is comp.build_queue
         assert screen._game_state is comp.game_state
         assert screen._input is comp.input_handler
+
+    def test_populate_same_screen_twice_is_allowed(self):
+        """PROJ-344 T2.4: same composition on the same screen is fine —
+        re-assigning the same mocks is a no-op."""
+        comp = MockStrategyScreenComposition()
+        screen = MagicMock(name="screen")
+
+        comp.populate(screen)
+        # Second call on the same screen must not raise.
+        comp.populate(screen)
+
+        # All slots still wired to the same pre-stored mocks.
+        assert screen._renderer is comp.renderer
+        assert screen._input is comp.input_handler
+
+    def test_populate_different_screen_raises(self):
+        """PROJ-344 T2.4: reusing one composition across two screens leaks
+        mock identity and is a programming error — must raise AssertionError
+        with a message naming the offending fixture and recommending a fresh
+        instance per screen."""
+        comp = MockStrategyScreenComposition()
+        first_screen = MagicMock(name="first_screen")
+        second_screen = MagicMock(name="second_screen")
+
+        comp.populate(first_screen)
+
+        with pytest.raises(AssertionError, match="MockStrategyScreenComposition"):
+            comp.populate(second_screen)

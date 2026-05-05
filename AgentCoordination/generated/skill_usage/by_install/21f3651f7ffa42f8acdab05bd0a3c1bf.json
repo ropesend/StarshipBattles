@@ -39,10 +39,17 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 2
+        "codex": 3
       },
-      "count": 2,
-      "last_used": "2026-05-05T01:09:12Z"
+      "count": 3,
+      "last_used": "2026-05-05T01:38:27Z"
+    },
+    "codex-starship-analysis-review": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-05T02:04:49Z"
     },
     "codex-starship-combat-lab": {
       "agents": {
@@ -50,6 +57,13 @@
       },
       "count": 1,
       "last_used": "2026-05-05T01:10:30Z"
+    },
+    "ocode-discuss-start": {
+      "agents": {
+        "ocode": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-05T01:29:04Z"
     },
     "ocode-review-request": {
       "agents": {

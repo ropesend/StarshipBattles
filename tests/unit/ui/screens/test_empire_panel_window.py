@@ -99,10 +99,33 @@ class TestEmpirePanelWindowStageOneState:
         assert isinstance(window._asset_loader, RaceAssetLoader)
 
     def test_resource_icons_loaded(self):
-        # load_resource_icons() returns a dict (possibly empty if
-        # assets missing). Pin that the slot is a dict.
+        # PROJ-347 T4.4: under bypass_init the slot is the empty-dict
+        # Stage-1 placeholder. The production builder branch (skipped
+        # under bypass) calls load_resource_icons() AFTER the bypass
+        # guard. Pin that the slot is a dict (production replaces the
+        # placeholder with a populated dict).
         window = _make_window()
         assert isinstance(window._resource_icons, dict)
+
+    def test_bypass_init_does_not_call_pygame_image_load(self):
+        """PROJ-347 T4.4 Stage-1 purity: ``load_resource_icons()`` does
+        ``pygame.image.load(...).convert_alpha()`` per resource icon —
+        this is heavyweight Stage-2 work that must not run under
+        bypass_init. Assert the slot is the empty-dict placeholder and
+        that no ``pygame.image.load`` call happens during bypass-init
+        construction.
+        """
+        from unittest.mock import patch
+
+        with patch("pygame.image.load") as mock_load:
+            window = _make_window()
+            # Stage-1 placeholder is the empty dict; production load
+            # ran neither in Stage 1 nor in the bypass branch of Stage 3.
+            assert window._resource_icons == {}
+            assert mock_load.call_count == 0, (
+                f"pygame.image.load called {mock_load.call_count} times "
+                f"under bypass_init — Stage-1 purity violated."
+            )
 
     def test_treasury_panel_starts_none(self):
         window = _make_window()

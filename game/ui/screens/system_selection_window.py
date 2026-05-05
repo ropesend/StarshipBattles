@@ -106,6 +106,17 @@ class SystemSelectionWindow(StrategyModalWindow):
         self.current_system = current_system
         self.callback = on_selection_callback
 
+        # PROJ-347 T4.2 (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullSystemSelectionWindowUiBuilder test can safely call
+        # ``update()`` without AttributeError on
+        # ``self.btn_confirm.check_pressed()``. The production builder
+        # overwrites these in Stage 3.
+        self.label = None
+        self.selection_list = None
+        self.btn_confirm = None
+        self.btn_cancel = None
+
         # Build display_name -> system_name mapping for extraction.
         self.display_to_name: dict[str, str] = {}
         item_list: list[tuple[str, str]] = []

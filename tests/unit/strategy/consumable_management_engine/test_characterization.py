@@ -186,3 +186,38 @@ def test_auto_disable_only_targets_per_turn_trigger_for_matching_resource(mock_s
 
     disabled = engine._auto_disable_components_for_resource(mock_ship, "power")
     assert disabled == ["match"]
+
+
+def test_auto_disable_iterates_all_matching_components_in_single_call(mock_ship):
+    """Multiple matching components are ALL disabled in one tick.
+
+    PROJ-333 design.md Observation 8: auto-disable iterates ALL components
+    matching the depleted resource per ship per tick. Two reactors both
+    consuming `power` per_turn must both be disabled in a single call,
+    and `set_component_enabled(comp_id, False)` must be called for each.
+    """
+    comp_def = MagicMock()
+    comp_def.abilities = {
+        "ResourceConsumption": [{"trigger": "per_turn", "resource": "power"}],
+    }
+    # Two distinct registry entries, both matching, plus a third
+    # split across a second layer to prove cross-layer iteration.
+    mock_ship.design_data = {
+        "layers": {
+            "core": [{"id": "reactor_a"}, {"id": "reactor_b"}],
+            "aux": [{"id": "reactor_c"}],
+        },
+    }
+    engine = _make_engine_with_components({
+        "reactor_a": comp_def,
+        "reactor_b": comp_def,
+        "reactor_c": comp_def,
+    })
+
+    disabled = engine._auto_disable_components_for_resource(mock_ship, "power")
+
+    assert disabled == ["reactor_a", "reactor_b", "reactor_c"]
+    assert mock_ship.set_component_enabled.call_count == 3
+    mock_ship.set_component_enabled.assert_any_call("reactor_a", False)
+    mock_ship.set_component_enabled.assert_any_call("reactor_b", False)
+    mock_ship.set_component_enabled.assert_any_call("reactor_c", False)

@@ -106,8 +106,11 @@ class _ProductionScanner(ast.NodeVisitor):
 
     def __init__(self) -> None:
         self.symbols: list[dict[str, object]] = []
+        self._inside_class = False
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        if self._inside_class:
+            return
         self.symbols.append({
             "name": node.name,
             "type": "function",
@@ -119,6 +122,8 @@ class _ProductionScanner(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        if self._inside_class:
+            return
         self.symbols.append({
             "name": node.name,
             "type": "async_function",
@@ -143,6 +148,7 @@ class _ProductionScanner(ast.NodeVisitor):
                 fq_name = f"{node.name}.{body_item.name}"
                 self.symbols.append({
                     "name": fq_name,
+                    "aliases": [body_item.name],
                     "type": "method",
                     "line": body_item.lineno,
                     "decorators": [
@@ -150,7 +156,14 @@ class _ProductionScanner(ast.NodeVisitor):
                         for d in body_item.decorator_list
                     ],
                 })
-        self.generic_visit(node)
+        was_inside = self._inside_class
+        self._inside_class = True
+        try:
+            for body_item in node.body:
+                if not isinstance(body_item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    self.visit(body_item)
+        finally:
+            self._inside_class = was_inside
 
     @staticmethod
     def _decorator_name(node: ast.expr) -> str:
@@ -242,6 +255,20 @@ def _name_grep(source: str, symbol_name: str) -> bool:
     return bool(re.search(rf"\b{re.escape(symbol_name)}\b", source))
 
 
+def _symbol_match_names(symbol: dict) -> list[str]:
+    names: list[str] = []
+    primary = symbol.get("name")
+    if primary:
+        names.append(str(primary))
+    aliases = symbol.get("aliases", [])
+    if isinstance(aliases, list):
+        for alias in aliases:
+            alias_name = str(alias)
+            if alias_name and alias_name not in names:
+                names.append(alias_name)
+    return names
+
+
 def _build_coverage_matrix(
     prod_results: list[dict],
     test_results: list[dict],
@@ -274,22 +301,32 @@ def _build_coverage_matrix(
         for sym in pr.get("symbols", []):
             sym_name: str = sym["name"]
             found_in: list[str] = []
+            matched_names: list[str] = []
+            match_names = _symbol_match_names(sym)
             for test_file in related_test_files:
                 source = test_file_sources.get(test_file)
-                if source and _name_grep(source, sym_name):
+                matched_this_file = False
+                for match_name in match_names:
+                    if source and _name_grep(source, match_name):
+                        matched_this_file = True
+                        if match_name not in matched_names:
+                            matched_names.append(match_name)
+                if matched_this_file:
                     found_in.append(test_file)
             symbol_coverage[sym_name] = {
                 "type": sym["type"],
                 "line": sym["line"],
-                "test_files": found_in,
-                "mentioned": len(found_in) > 0,
+                "aliases": sym.get("aliases", []),
+                "matched_names": matched_names,
+                "candidate_test_files": found_in,
+                "heuristic_match": len(found_in) > 0,
             }
             if not found_in:
                 untested_symbols.append(sym)
 
         total_symbols = len(pr.get("symbols", []))
         tested_count = sum(
-            1 for sc in symbol_coverage.values() if sc["mentioned"]
+            1 for sc in symbol_coverage.values() if sc["heuristic_match"]
         )
 
         if not related_test_files:
@@ -304,7 +341,7 @@ def _build_coverage_matrix(
         matrix[prod_rel] = {
             "layer": pr["layer"],
             "loc": pr["loc"],
-            "test_files": related_test_files,
+            "candidate_test_files": related_test_files,
             "total_symbols": total_symbols,
             "tested_symbols": tested_count,
             "untested_symbols": [s["name"] for s in untested_symbols],

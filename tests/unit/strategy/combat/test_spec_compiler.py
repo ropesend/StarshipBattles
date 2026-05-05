@@ -377,7 +377,9 @@ class TestStackGroupThreadingInStrategyCompiler:
                 'ability_data': {'multiplier': 0.5, 'scope': 'sector'},
             }],
         }]
-        entries = _entries_from_sector_effects(sector_effects)
+        # PROJ-343 T1.3-combat: function returns (global, per_team).
+        # Storm provider has owner_id=None so it lands in global.
+        entries, _per_team = _entries_from_sector_effects(sector_effects)
         assert entries
         assert entries[0].stack_group is None, (
             "PROJ-300 D6 — overlapping storms now MULTIPLY (no shared "

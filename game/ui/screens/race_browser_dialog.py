@@ -124,6 +124,17 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         self.selected_race = None
         self.selected_row_index = -1
 
+        # PROJ-347 T4.3 (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullRaceBrowserDialogUiBuilder test can safely call
+        # ``process_event()`` without AttributeError on
+        # ``self.btn_cancel`` / ``self.btn_load``. The production
+        # builder overwrites these in Stage 3.
+        self.scroll_container = None
+        self.btn_cancel = None
+        self.btn_load = None
+        self.no_races_label = None
+
         # ---- Stage 2: UIWindow shell (skipped under bypass_init) ----
         if getattr(type(self), 'bypass_init', False):
             self.ui_manager = manager

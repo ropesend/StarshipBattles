@@ -21,9 +21,31 @@ UI code." Those characterization tests live at
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from game.strategy.engine.commands import IssueTransferCommand
+
+
+@dataclass
+class ConfirmResult:
+    """Result of `TransferController.confirm_pending`.
+
+    PROJ-343 T1.4: prior to this fix the controller returned a plain int
+    (orders_issued count). The dialog used `try/finally: self.kill()` and
+    closed regardless of the return — including on validation aborts where
+    the user wanted to correct input. This richer result lets the dialog
+    distinguish "user-correctable abort" from "successful issue or
+    catastrophic dispatch failure".
+
+    Attributes:
+        orders_issued: How many TRANSFER orders the facade accepted.
+        aborted_for_correction: True when the controller short-circuited on
+            input-validation grounds (no source/target, both endpoints
+            non-fleet, all pending zero) and the dialog should stay open.
+    """
+    orders_issued: int
+    aborted_for_correction: bool = False
 
 if TYPE_CHECKING:
     from game.ui.screens.transfer_view_model import TransferViewModel
@@ -197,17 +219,24 @@ class TransferController:
             return "unload" if amount > 0 else "load"
         return "load" if amount > 0 else "unload"
 
-    def confirm_pending(self) -> int:
-        """Issue an ``IssueTransferCommand`` for each non-zero
-        pending entry. Returns the number of orders successfully
-        accepted by the facade.
+    def confirm_pending(self) -> ConfirmResult:
+        """Issue an ``IssueTransferCommand`` for each non-zero pending entry.
 
-        Aborts (returns 0, no commands issued) when:
+        Returns a :class:`ConfirmResult` so the dialog can distinguish
+        "validation abort — keep dialog open for correction" from
+        "successful issue or catastrophic dispatch — close dialog".
+
+        Aborts with ``aborted_for_correction=True`` (no commands issued)
+        when:
 
         * No current source or target.
         * Both endpoints are non-fleet (planets/colonies cannot
           transfer to each other directly).
         * All pending entries are zero.
+
+        PROJ-343 T1.4: prior return type was plain int and `_on_confirm`
+        used always-kill `try/finally`, killing the dialog even on
+        validation aborts and breaking pre-refactor UX.
         """
         vm = self.view_model
         source = vm.current_source
@@ -222,14 +251,14 @@ class TransferController:
             logger.warning(
                 "TransferDialog._on_confirm: No source or target, aborting",
             )
-            return 0
+            return ConfirmResult(orders_issued=0, aborted_for_correction=True)
 
         endpoints = self._resolve_endpoints(source, target)
         if endpoints is None:
             logger.info(
                 "Transfer between two non-fleet entities not supported.",
             )
-            return 0
+            return ConfirmResult(orders_issued=0, aborted_for_correction=True)
         fleet_id, planet_id, target_fleet_id, source_is_fleet, target_is_fleet = endpoints
 
         orders_issued = 0
@@ -278,12 +307,17 @@ class TransferController:
             logger.info(
                 "TransferDialog: %d transfer order(s) issued.", orders_issued,
             )
-        else:
-            logger.warning(
-                "TransferDialog: No orders issued (pending had %d entries)",
-                len(vm.pending_transfers),
-            )
-        return orders_issued
+            return ConfirmResult(orders_issued=orders_issued, aborted_for_correction=False)
+
+        # All pending were zero (or facade rejected every command).
+        # Treat zero-pending as user-correctable; if every command was
+        # rejected by the facade, ALSO surface as correctable so the user
+        # can see the issue and adjust rather than having the dialog vanish.
+        logger.warning(
+            "TransferDialog: No orders issued (pending had %d entries)",
+            len(vm.pending_transfers),
+        )
+        return ConfirmResult(orders_issued=0, aborted_for_correction=True)
 
 
-__all__ = ["TransferController"]
+__all__ = ["ConfirmResult", "TransferController"]

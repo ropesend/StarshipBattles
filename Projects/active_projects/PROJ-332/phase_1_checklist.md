@@ -28,7 +28,7 @@
 
 > **MIN-003 mocking note:** `_time_phase` calls `time.perf_counter()` twice and subtracts. To avoid CI flake under load, monkeypatch `time.perf_counter` to return a deterministic sequence (e.g. `[0.0, 2.5]`) and assert `phase_times[key] == 2.5` exactly. Do NOT assert `> 0` only — that masks regressions where the timing accumulator stops working entirely.
 
-- [ ] **3.1** `test_reset_phase_times_returns_dict_with_14_canonical_keys` — pins exact key set: `harvest`, `resources`, `fuel_gen`, `planet_energy`, `resupply`, `production`, `environmental`, `instant_orders`, `actions`, `planet_actions`, `activation_timers`, `movement_calc`, `movement_apply`, `combat`.
+- [ ] **3.1** `test_reset_phase_times_returns_dict_with_14_canonical_keys` — pins exact key set: `harvesting`, `resources`, `fuel_gen`, `planet_energy`, `resupply`, `production`, `environmental`, `instant_orders`, `actions`, `planet_actions`, `activation_timers`, `movement_calc`, `movement_apply`, `combat`.
 - [ ] **3.2** `test_time_phase_accumulates_timing_in_finally_block_when_wrapped_callable_raises` — uses monkeypatched `time.perf_counter` returning `[0.0, 2.5]`, asserts `phase_times["combat"] == 2.5` after the wrapped callable raises.
 - [ ] **3.3** `test_time_phase_reraises_preexisting_engine_phase_error_without_double_wrapping` — uses `pytest.raises(EnginePhaseError) as exc_info`; asserts `exc_info.value.__cause__` is the original `EnginePhaseError`, not a wrapped chain.
 

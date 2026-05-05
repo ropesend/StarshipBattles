@@ -48,7 +48,9 @@ class TestOverlappingStormShieldStacking:
 
     def test_single_ion_storm_emits_one_shield_entry(self):
         effects = [_shield_effect(_storm_provider("Ion Storm Alpha", 0.5))]
-        entries = _entries_from_sector_effects(effects)
+        # PROJ-343 T1.3-combat: function now returns (global, per_team).
+        # All providers here are ownerless (storms) so they go to global.
+        entries, _per_team = _entries_from_sector_effects(effects)
         assert len(entries) == 1
         assert entries[0].effect.value == pytest.approx(0.5)
         assert entries[0].stack_group is None
@@ -63,7 +65,9 @@ class TestOverlappingStormShieldStacking:
             _storm_provider("Ion Storm Alpha", 0.5),
             _storm_provider("Ion Storm Beta", 0.5),
         )]
-        entries = _entries_from_sector_effects(effects)
+        # PROJ-343 T1.3-combat: function now returns (global, per_team).
+        # All providers here are ownerless (storms) so they go to global.
+        entries, _per_team = _entries_from_sector_effects(effects)
         assert len(entries) == 2
         for entry in entries:
             assert entry.effect.value == pytest.approx(0.5)
@@ -79,7 +83,9 @@ class TestOverlappingStormShieldStacking:
             _storm_provider("B", 0.5),
             _storm_provider("C", 0.5),
         )]
-        entries = _entries_from_sector_effects(effects)
+        # PROJ-343 T1.3-combat: function now returns (global, per_team).
+        # All providers here are ownerless (storms) so they go to global.
+        entries, _per_team = _entries_from_sector_effects(effects)
         assert len(entries) == 3
         for entry in entries:
             assert entry.effect.value == pytest.approx(0.5)
@@ -102,7 +108,9 @@ class TestOverlappingStormShieldStacking:
             },
         }
         effects = [_shield_effect(facility_provider)]
-        entries = _entries_from_sector_effects(effects)
+        # PROJ-343 T1.3-combat: function now returns (global, per_team).
+        # All providers here are ownerless (storms) so they go to global.
+        entries, _per_team = _entries_from_sector_effects(effects)
         assert len(entries) == 1
         assert entries[0].stack_group == 'planetary_shields'
 
@@ -111,7 +119,9 @@ class TestOverlappingStormShieldStacking:
         inactive = _storm_provider("Inactive Storm", 0.5)
         inactive['is_active'] = False
         effects = [_shield_effect(active, inactive)]
-        entries = _entries_from_sector_effects(effects)
+        # PROJ-343 T1.3-combat: function now returns (global, per_team).
+        # All providers here are ownerless (storms) so they go to global.
+        entries, _per_team = _entries_from_sector_effects(effects)
         assert len(entries) == 1
         assert entries[0].effect.source_modifier_id == 'storm:Active Storm'
 
@@ -128,7 +138,9 @@ class TestOverlappingStormShieldStacking:
             'aggregate_value': 0.6,
             'providers': [_storm_provider("Gravity Anomaly", 0.6)],
         }]
-        entries = _entries_from_sector_effects(effects)
+        # PROJ-343 T1.3-combat: function now returns (global, per_team).
+        # All providers here are ownerless (storms) so they go to global.
+        entries, _per_team = _entries_from_sector_effects(effects)
         assert len(entries) == 1
         assert entries[0].effect.value == pytest.approx(0.6)
         assert entries[0].effect.stat_key == 'thrust_mult'  # ABILITY_STAT_REGISTRY mapping
@@ -149,7 +161,9 @@ class TestOverlappingStormShieldStacking:
                 _storm_provider("B", 0.6),
             ],
         }]
-        entries = _entries_from_sector_effects(effects)
+        # PROJ-343 T1.3-combat: function now returns (global, per_team).
+        # All providers here are ownerless (storms) so they go to global.
+        entries, _per_team = _entries_from_sector_effects(effects)
         assert len(entries) == 2
         for entry in entries:
             assert entry.effect.value == pytest.approx(0.6)

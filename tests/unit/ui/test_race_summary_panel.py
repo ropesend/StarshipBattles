@@ -217,9 +217,16 @@ class TestRefreshSummary:
     """Tests for refreshing summary display."""
 
     def test_refresh_updates_faction_label(self, mock_race_config):
-        """refresh() updates faction label from race_config.
+        """refresh() forwards the faction summary string to faction_value.set_text.
 
         PROJ-66 Phase 6: Changed from name_value to faction_value.
+
+        PROJ-346 strengthening: previously asserted only that set_text
+        was called (proves invocation, not the value). Now pin the
+        single concrete arg returned by ``_format_faction_summary``,
+        which (per production race_summary_panel.py:317-324) returns
+        ``race_config.faction_name`` when set. mock_race_config seeds
+        ``faction_name='Test Empire'``.
         """
         panel = _make_summary_panel(race_config=mock_race_config)
         # Override the labels dict with a controlled mock so the assertion
@@ -231,17 +238,28 @@ class TestRefreshSummary:
 
         panel.refresh()
 
-        panel.summary_labels['faction_value'].set_text.assert_called()
+        panel.summary_labels['faction_value'].set_text.assert_called_once_with(
+            "Test Empire"
+        )
 
     def test_refresh_updates_theme_label(self, mock_race_config):
-        """refresh() updates theme label from race_config."""
+        """refresh() forwards race_config.theme_id to theme_value.set_text.
+
+        PROJ-346 strengthening: previously asserted only that set_text
+        was called. Now pin the concrete arg — production passes
+        ``race_config.theme_id or "[Click Ships tab to set]"``
+        (race_summary_panel.py:402-404). mock_race_config seeds
+        ``theme_id='Atlantians'``.
+        """
         panel = _make_summary_panel(race_config=mock_race_config)
         panel.summary_labels = {'theme_value': MagicMock()}
         panel._env_scroll_container = None
 
         panel.refresh()
 
-        panel.summary_labels['theme_value'].set_text.assert_called()
+        panel.summary_labels['theme_value'].set_text.assert_called_once_with(
+            "Atlantians"
+        )
 
     def test_refresh_clears_previous_flag_images(self, mock_race_config):
         """refresh() clears previous flag images before creating new ones."""
