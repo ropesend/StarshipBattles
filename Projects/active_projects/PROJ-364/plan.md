@@ -9,14 +9,16 @@
 |-------|--------|-----------|
 | 1. Order-pop / event-payload characterization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Define SuperweaponSpec + SUPERWEAPONS table | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Spec-driven dispatch + per-weapon effect closures | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Spec-driven dispatch + per-weapon effect closures | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Phase 3 (in progress)
-**Last Action:** Phase 2 landed (SuperweaponSpec + 5-row SUPERWEAPONS table + 15 contract tests; full superweapon suite + sharded suite green).
-**Next Action:** Phase 3 — wire `execute_superweapon` dispatcher and refactor process_* methods to spec lookup + effect closure.
+**Active Phase:** Ready for user verification
+**Last Action:** Phase 3 landed — `execute_superweapon` dispatcher wired; all 5 strategic `process_*` methods refactored to spec lookup + (precheck/effect) closures. Phase 1 characterization, all 163 superweapon tests, all 4298 strategy tests, and the full direct-pytest run (17645 passed) are green.
+**Next Action:** User verification.
 **Blockers:** None.
+
+**Commit-attribution note:** Phase 2 files (`game/strategy/services/superweapon_registry.py`, `tests/unit/strategy/services/test_superweapon_registry_contract.py`, and the Phase 2 checklist) were absorbed into the parallel PROJ-359 commit `a8a2fc10b` due to a concurrent-agent commit race. Files and tests are correct; only the commit attribution is conflated.
 
 ## Overview
 `game/strategy/engine/superweapon_order_processor.py` has 5 strategic-superweapon `process_*` methods (IMPLODE_PLANET, STELLERATE_STAR, OPEN_WARP_POINT, CLOSE_WARP_POINT, CREATE_DYSON_SPHERE) — each ~50 LOC repeating: get current order → check type → resolve target → check stabilizer → find ship by hardcoded ability name → mutate galaxy → call shared `_finalize_superweapon` tail. The shared tail exists; the prologue is copy-pasted. SELF_DESTRUCT is structurally different (no ability check, no stabilizer block) and stays out of the spec.
