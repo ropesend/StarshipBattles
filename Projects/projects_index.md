@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-350 | Combat Lab Registry Class Identity Fix | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-349 | Closeout Sprint 7 - Documentation drift and convention violations from review | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-348 | Closeout Sprint 6 - Controller boundary cleanup from PROJ-329C review | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-347 | Closeout Sprint 5 - Pattern 33 placeholder gaps and Stage-1 purity from review | Planning | 2026-05-04 | 2026-05-04 |
