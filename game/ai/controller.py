@@ -225,8 +225,10 @@ class AIController:
             # Get weapon components once
             weapons = entity.get_components_by_ability('WeaponAbility', operational_only=True)
 
-            # Filter for PDC weapons
-            pdc_weapons = [w for w in weapons if w.has_ability('PDCAbility')]
+            # Filter for PDC weapons via tag-based detection (PROJ-241/PROJ-356).
+            # PDC was generalized from a dedicated ability class to a 'pdc' tag
+            # on weapon abilities; `has_pdc_ability()` is the canonical surface.
+            pdc_weapons = [w for w in weapons if w.has_pdc_ability()]
 
             cache[entity_id] = {
                 'has_weapons': len(weapons) > 0,

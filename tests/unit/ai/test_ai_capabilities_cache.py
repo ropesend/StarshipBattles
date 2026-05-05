@@ -59,10 +59,12 @@ def create_mock_enemy(enemy_id, has_weapons=True, has_pdc=False):
     enemy.is_alive = True
     enemy.team_id = 1
 
-    # Mock weapon components
+    # Mock weapon components.
+    # PROJ-356: PDC detection is tag-based via has_pdc_ability(); the legacy
+    # has_ability('PDCAbility') string check was a dead path (no such class).
     if has_weapons:
         weapon = MagicMock()
-        weapon.has_ability = MagicMock(return_value=has_pdc)
+        weapon.has_pdc_ability = MagicMock(return_value=has_pdc)
         enemy.get_components_by_ability = MagicMock(return_value=[weapon])
     else:
         enemy.get_components_by_ability = MagicMock(return_value=[])
