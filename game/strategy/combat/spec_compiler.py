@@ -178,10 +178,18 @@ def build_strategy_battle_spec(
             )
         )
 
+    # PROJ-343 T1.3-combat: derive empire_id → team_id mapping so ownerful
+    # sector-effect providers (e.g., a colony's defensive ShieldModifier
+    # facility) route into the owning team's per-team modifier bucket
+    # rather than leaking globally onto the opponent.
+    empire_to_team_id: Dict[Any, int] = {
+        owner_id: team_id for team_id, owner_id in enumerate(owner_order)
+    }
     modifier_stack = _build_modifier_stack(
         team_count=len(teams),
         environmental_effects=environmental_effects,
         team_modifiers=team_modifiers,
+        empire_to_team_id=empire_to_team_id,
     )
 
     boundary = None
@@ -423,6 +431,7 @@ def _build_modifier_stack(
     team_count: int,
     environmental_effects: Any = None,
     team_modifiers: Optional[Mapping[int, Any]] = None,
+    empire_to_team_id: Optional[Mapping[Any, int]] = None,
 ) -> ModifierStack:
     # PROJ-271 Phase 9 + PROJ-272 Phase 7: `sector`/`system`/`empires`
     # kwargs removed. The old `_entries_from_modifier_source` helper
@@ -430,14 +439,23 @@ def _build_modifier_stack(
     # `sector.modifiers` / `system.modifiers` / `empire.combat_modifiers`
     # attributes; no production code populated them, and callers were
     # silently discarding the results. Real strategic modifiers flow via
-    # `environmental_effects` (global) and `team_modifiers` (per-team).
+    # `environmental_effects` (global ownerless + per-team ownerful) and
+    # `team_modifiers` (per-team).
+    #
+    # PROJ-343 T1.3-combat: `_entries_from_sector_effects` now returns
+    # `(global_entries, per_team_entries)` so ownerful facility effects
+    # apply only to the owning team's stack, not globally.
     global_entries: List[ModifierEntry] = []
+    sector_per_team: Dict[int, List[ModifierEntry]] = {}
     if environmental_effects is not None:
         # PROJ-300 Phase 7: only the new sector-effects list shape is accepted.
         # Legacy EnvironmentalEffects path was deleted alongside AreaEffectManager.
-        global_entries.extend(
-            _entries_from_sector_effects(environmental_effects)
+        global_entries_from_sector, sector_per_team = _entries_from_sector_effects(
+            environmental_effects,
+            empire_to_team_id=empire_to_team_id,
+            team_count=team_count,
         )
+        global_entries.extend(global_entries_from_sector)
 
     per_team: Dict[int, Tuple[ModifierEntry, ...]] = {}
     for team_id in range(team_count):
@@ -448,6 +466,10 @@ def _build_modifier_stack(
                     team_modifiers[team_id], team_id=team_id
                 )
             )
+        # PROJ-343 T1.3-combat: merge ownerful sector-effect entries scoped
+        # to this team.
+        if team_id in sector_per_team:
+            entries.extend(sector_per_team[team_id])
         if entries:
             per_team[team_id] = tuple(entries)
 
@@ -488,7 +510,12 @@ def _emit_entries_team_scoped(
     return [entry for _, entry in team_entries]
 
 
-def _entries_from_sector_effects(sector_effects: Sequence[Dict[str, Any]]) -> List[ModifierEntry]:
+def _entries_from_sector_effects(
+    sector_effects: Sequence[Dict[str, Any]],
+    *,
+    empire_to_team_id: Optional[Mapping[Any, int]] = None,
+    team_count: int = 1,
+) -> Tuple[List[ModifierEntry], Dict[int, List[ModifierEntry]]]:
     """Translate a PROJ-300 sector-effects list into `ModifierEntry` entries.
 
     For each combat-relevant ability (`ShieldModifier`, `DamageModifier`,
@@ -496,9 +523,39 @@ def _entries_from_sector_effects(sector_effects: Sequence[Dict[str, Any]]) -> Li
     overlapping storms/facilities multiply naturally (no shared stack_group).
     Per decisions.md D6, storm stacking goes from MAX (legacy) to MULTIPLY
     (new) — two ion storms now apply 0.25x shields, not 0.5x.
+
+    PROJ-343 T1.3-combat: split ownerless from ownerful providers so
+    facility-projected modifiers apply only to the owning team's stack.
+    Pre-fix every provider emitted as a global entry, so an empire's
+    defensive facility leaked into the opponent's modifier stack during
+    combat at the same hex.
+
+    Args:
+        sector_effects: PROJ-300 sector-effects list as produced by
+            `system_effects_collector.collect_sector_effects`.
+        empire_to_team_id: optional mapping of `provider['owner_id']` to
+            `team_id` for the current battle. Required to route ownerful
+            providers to per-team buckets; when None or empty, ALL providers
+            (ownerful or ownerless) fall through to the global bucket
+            (legacy behavior preserved for tests / callers that don't have
+            a battle-time team assignment).
+        team_count: total team count in the battle. Forwarded to
+            `emit_entries_for_ability` as `num_teams`.
+
+    Returns:
+        Tuple of:
+        - `global_entries`: ModifierEntry list applied to ALL teams (storms
+          + ownerless effects + ownerful-but-no-mapping fallback).
+        - `per_team_entries`: dict mapping `team_id` to a list of
+          ModifierEntry. Empty when no ownerful providers route to any team.
+        Ownerful providers whose `owner_id` is not in `empire_to_team_id`
+        are DROPPED — the effect's owner is not a combatant in this battle,
+        so it has no team to apply to.
     """
     combat_ability_names = {"ShieldModifier", "DamageModifier", "ThrustModifier"}
-    entries: List[ModifierEntry] = []
+    global_entries: List[ModifierEntry] = []
+    per_team_entries: Dict[int, List[ModifierEntry]] = {}
+
     for effect in sector_effects:
         ability_name = effect.get('ability_name')
         if ability_name not in combat_ability_names:
@@ -514,19 +571,50 @@ def _entries_from_sector_effects(sector_effects: Sequence[Dict[str, Any]]) -> Li
             source_id = provider.get('source_id', 'unknown')
             source_label = provider.get('source_label', source_id)
             stack_group = ability_data.get('stack_group')  # None on storms
-            team_entries = emit_entries_for_ability(
-                ability_name,
-                mult,
-                scope="self",
-                owner_team=0,
-                num_teams=1,
-                source=f"sector:{source_kind}",
-                source_modifier_id=source_id,
-                source_modifier_name=source_label,
-                stack_group=stack_group,
-            )
-            entries.extend(entry for _, entry in team_entries)
-    return entries
+            owner_id = provider.get('owner_id')
+
+            # Decide routing target team for emit_entries_for_ability.
+            # - Ownerless (owner_id is None) → global bucket, owner_team=0/num_teams=1.
+            # - Ownerful + mapping present + owner is combatant → per-team[team_id]
+            #   with that team's owner_team and the real team_count.
+            # - Ownerful + no mapping (legacy/test path) → fall through to global.
+            # - Ownerful + mapping present + owner NOT a combatant → DROP.
+            if owner_id is None or empire_to_team_id is None:
+                target_team: Optional[int] = None  # global
+            elif owner_id in empire_to_team_id:
+                target_team = empire_to_team_id[owner_id]
+            else:
+                continue  # owner not in this battle; effect has no target team
+
+            if target_team is None:
+                emitted = emit_entries_for_ability(
+                    ability_name,
+                    mult,
+                    scope="self",
+                    owner_team=0,
+                    num_teams=1,
+                    source=f"sector:{source_kind}",
+                    source_modifier_id=source_id,
+                    source_modifier_name=source_label,
+                    stack_group=stack_group,
+                )
+                global_entries.extend(entry for _, entry in emitted)
+            else:
+                emitted = emit_entries_for_ability(
+                    ability_name,
+                    mult,
+                    scope="self",
+                    owner_team=target_team,
+                    num_teams=team_count,
+                    source=f"sector:{source_kind}",
+                    source_modifier_id=source_id,
+                    source_modifier_name=source_label,
+                    stack_group=stack_group,
+                )
+                bucket = per_team_entries.setdefault(target_team, [])
+                bucket.extend(entry for _, entry in emitted)
+
+    return global_entries, per_team_entries
 
 
 def _entries_from_fleet_combat_modifiers(
