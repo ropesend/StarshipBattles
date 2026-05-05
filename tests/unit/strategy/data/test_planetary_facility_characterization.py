@@ -62,6 +62,41 @@ class TestFromDictRequiredKeys:
                 "name": "n",
             })
 
+    # PROJ-353 Tier-7 (T2.7): coverage gap — only `instance_id` and
+    # `design_data` missing-key paths were pinned previously. Add the
+    # other two required keys plus an extra-key tolerance pin.
+
+    def test_missing_design_id_raises(self):
+        with pytest.raises(PersistenceException):
+            PlanetaryFacility.from_dict({
+                "instance_id": "i",
+                "name": "n",
+                "design_data": {},
+            })
+
+    def test_missing_name_raises(self):
+        with pytest.raises(PersistenceException):
+            PlanetaryFacility.from_dict({
+                "instance_id": "i",
+                "design_id": "d",
+                "design_data": {},
+            })
+
+    def test_extra_keys_are_tolerated(self):
+        """`from_dict` must ignore unknown top-level keys so adding new
+        save-format fields in a future release doesn't break the loader
+        when an older version reads a newer save."""
+        facility = PlanetaryFacility.from_dict({
+            "instance_id": "i",
+            "design_id": "d",
+            "name": "n",
+            "design_data": {"layers": {}},
+            "_unknown_future_key": "should-be-ignored",
+            "another_extra": 42,
+        })
+        assert facility.instance_id == "i"
+        assert facility.design_id == "d"
+
 
 class TestRoundTripPreservesTopLevelFields:
     """to_dict -> from_dict preserves all top-level fields."""
