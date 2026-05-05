@@ -13,16 +13,21 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Typed ability classes (PodStorage, MultiplexTracking, VehicleStorage; extend VehicleLaunchAbility) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Built-in Phase-3 contributors as registry entries (collapse two-tier model) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Typed `StatAccumulator` dataclass (10 scalar + 4 map fields) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Typed ability classes (PodStorage, MultiplexTracking, VehicleStorage; extend VehicleLaunchAbility) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Built-in Phase-3 contributors as registry entries (collapse two-tier model) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Typed `StatAccumulator` dataclass (10 scalar + 4 map fields) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-05 (post-Codex consensus)
-**Active Phase:** Planning complete; ready for `/claude-proj-start PROJ-367` or direct implementer dispatch.
-**Last Action:** Codex pressure-test consensus reached (`AgentCoordination/Scratchpad/Discussion/20260505T150915Z_proj-367-plan-review/outcome.md`); thirteen material corrections absorbed across r002 + r003 + r004 plan revisions; backported here as the implementer source of truth.
-**Next Action:** Run `python Tools/test_sharded/test_sharded.py` to capture baseline pass count, then begin Phase 1.
-**Blockers:** None — landed on top of PROJ-360 remediation commit `79e79d9e5`.
+**Last Updated:** 2026-05-04 (PROJ-367 closure)
+**Active Phase:** All 3 phases complete; ready for audit / user verification.
+**Last Action:** Phase 3 committed; sharded suite green; PROJ-360 cross-link backfilled (EXT-07/EXT-11/EXT-13 marked resolved); `docs/02_PATTERNS.md` § 35 rewritten for the unified extension surface.
+**Next Action:** User review / audit. The unified extension surface goal is achieved: one registry, typed ability classes, typed StatAccumulator.
+**Blockers:** None.
+
+**Commits:**
+- Phase 1: `bd473a798` — typed ability classes (closes EXT-07)
+- Phase 2: `60e61851d` — built-in contributors as registry entries (closes EXT-11)
+- Phase 3: (see git log) — typed `StatAccumulator` (closes EXT-13)
 
 ## Overview
 

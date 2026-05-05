@@ -14,6 +14,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from game.simulation.entities.stat_contributors import movement
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
 
 
 def _make_thruster_ability(turn_rate: float):
@@ -48,15 +49,8 @@ def _make_component(*, abilities_by_name: dict):
     return comp
 
 
-def _empty_acc() -> dict:
-    return {
-        "thrust": 0,
-        "strategic_movement": 0,
-        "turn_speed": 0,
-        "maneuver_points": 0,
-        "warp_max_tonnage": 0,
-        "warp_energy_cost": 0,
-    }
+def _empty_acc() -> StatAccumulator:
+    return StatAccumulator()
 
 
 def _aggregate_propulsion(comp, acc):
@@ -83,13 +77,13 @@ class TestAggregatePropulsionThrust:
             }
         )
         _aggregate_propulsion(comp, acc)
-        assert acc["thrust"] == 150.0
+        assert acc.thrust == 150.0
 
     def test_no_combat_propulsion_leaves_thrust_zero(self):
         acc = _empty_acc()
         comp = _make_component(abilities_by_name={})
         _aggregate_propulsion(comp, acc)
-        assert acc["thrust"] == 0
+        assert acc.thrust == 0
 
 
 class TestAggregatePropulsionStrategicMovement:
@@ -104,7 +98,7 @@ class TestAggregatePropulsionStrategicMovement:
             }
         )
         _aggregate_propulsion(comp, acc)
-        assert acc["strategic_movement"] == 3.5
+        assert acc.strategic_movement == 3.5
 
 
 class TestAggregatePropulsionTurning:
@@ -120,8 +114,8 @@ class TestAggregatePropulsionTurning:
             }
         )
         _aggregate_propulsion(comp, acc)
-        assert acc["turn_speed"] == 100.0
-        assert acc["maneuver_points"] == 100.0
+        assert acc.turn_speed == 100.0
+        assert acc.maneuver_points == 100.0
 
 
 class TestAggregatePropulsionWarp:
@@ -136,7 +130,7 @@ class TestAggregatePropulsionWarp:
             }
         )
         _aggregate_propulsion(comp, acc)
-        assert acc["warp_max_tonnage"] == 1000
+        assert acc.warp_max_tonnage == 1000
 
     def test_warp_energy_cost_sums_across_drives(self):
         acc = _empty_acc()
@@ -149,7 +143,7 @@ class TestAggregatePropulsionWarp:
             }
         )
         _aggregate_propulsion(comp, acc)
-        assert acc["warp_energy_cost"] == 180.0
+        assert acc.warp_energy_cost == 180.0
 
 
 class TestAggregatePropulsionMixed:
@@ -166,9 +160,9 @@ class TestAggregatePropulsionMixed:
             }
         )
         _aggregate_propulsion(comp, acc)
-        assert acc["thrust"] == 200.0
-        assert acc["turn_speed"] == 45.0
-        assert acc["maneuver_points"] == 45.0
-        assert acc["strategic_movement"] == 1.0
-        assert acc["warp_max_tonnage"] == 750
-        assert acc["warp_energy_cost"] == 60.0
+        assert acc.thrust == 200.0
+        assert acc.turn_speed == 45.0
+        assert acc.maneuver_points == 45.0
+        assert acc.strategic_movement == 1.0
+        assert acc.warp_max_tonnage == 750
+        assert acc.warp_energy_cost == 60.0

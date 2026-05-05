@@ -17,7 +17,9 @@ can register their own contributor for ``VehicleStorage``.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -25,7 +27,7 @@ if TYPE_CHECKING:
 
 
 def contribute_vehicle_launch(
-    ship: "Ship", comp: "Component", acc: Dict[str, Any]
+    ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
     """Sum hangar capacity, wave width, max fighter mass, and longest launch cycle.
 

@@ -18,10 +18,11 @@ default Phase-3 contributor at module import.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from game.core.constants import CombatConstants
 from game.simulation.components.component_constants import ComponentStatus
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
 from game.simulation.entities.stat_contributors.registry import (
     lookup_crew_priority,
 )
@@ -38,7 +39,7 @@ def priority_sort_key(c: "Component") -> int:
 
 
 def contribute_multiplex_tracking(
-    ship: "Ship", comp: "Component", acc: Dict[str, Any]
+    ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
     """Bump ``ship.max_targets`` if this component's MultiplexTracking exceeds it.
 

@@ -41,6 +41,7 @@ from game.simulation.entities.stat_contributors import (
     defense as _def,
     weapons as _wep,
 )
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
 from game.simulation.entities.stat_contributors.registry import (
     STAT_CONTRIBUTOR_REGISTRY,
 )
@@ -228,19 +229,14 @@ class ShipStatsCalculator:
     ) -> None:
         """Phase 3: Aggregate stats from active components.
 
-        Resource keys (max_*, gen_*) are added dynamically by
-        ``_aggregate_resource_abilities`` — any resource type from data files
-        works without code changes.
+        PROJ-367 Phase 3: ``acc`` is a typed ``StatAccumulator`` dataclass
+        (10 scalar fields + 4 named map fields = 14 total). Misspelled
+        scalar/map field names raise ``AttributeError`` at runtime
+        (``slots=True`` semantics). Dynamic resource keys live INSIDE
+        ``acc.resource_storage`` / ``acc.resource_generation`` map fields —
+        any resource type from data files works without code changes.
         """
-        acc: Dict[str, Any] = {
-            "thrust": 0, "strategic_movement": 0, "turn_speed": 0,
-            "maneuver_points": 0,
-            "max_shields": 0, "shield_regen": 0, "shield_cost": 0,
-            "warp_max_tonnage": 0, "warp_energy_cost": 0,
-            "warp_resource_costs": {},
-            "cargo_storage": {},
-            "pod_storage_mass": 0.0,
-        }
+        acc = StatAccumulator()
 
         for comp in component_pool:
             if not comp.is_active:
@@ -267,10 +263,13 @@ class ShipStatsCalculator:
         self._apply_aggregated_stats(ship, acc)
 
     def _aggregate_resource_abilities(
-        self, comp: "Component", acc: Dict[str, Any]
+        self, comp: "Component", acc: StatAccumulator
     ) -> None:
         """Aggregate ResourceStorage, ResourceGeneration, ResourceConsumption.
 
+        PROJ-367 Phase 3: writes into ``acc.resource_storage`` /
+        ``acc.resource_generation`` map fields (was synthetic
+        ``max_<resource>`` / ``gen_<resource>`` keys on the legacy dict).
         Discovers resource types dynamically from component abilities so any
         resource defined in data files works without code changes. Also
         registers resources from consumption abilities (with 0 capacity) so
@@ -279,31 +278,36 @@ class ShipStatsCalculator:
         """
         for ability in comp.ability_instances:
             if is_resource_storage(ability):
-                key = f"max_{ability.resource_type}"
-                acc[key] = acc.get(key, 0) + ability.max_amount
+                rt = ability.resource_type
+                acc.resource_storage[rt] = (
+                    acc.resource_storage.get(rt, 0) + ability.max_amount
+                )
             elif is_resource_generation(ability):
-                key = f"gen_{ability.resource_type}"
-                acc[key] = acc.get(key, 0) + ability.rate
+                rt = ability.resource_type
+                acc.resource_generation[rt] = (
+                    acc.resource_generation.get(rt, 0) + ability.rate
+                )
             elif is_resource_consumption(ability):
-                key = f"max_{ability.resource_type}"
-                if key not in acc:
-                    acc[key] = 0
+                rt = ability.resource_type
+                # Ensure resource_storage has an entry for consumed resources
+                # so the registry sees them even with zero storage.
+                if rt not in acc.resource_storage:
+                    acc.resource_storage[rt] = 0
                 if getattr(ability, "trigger", "") == "warp_jump":
-                    rt = ability.resource_type
-                    acc["warp_resource_costs"][rt] = (
-                        acc["warp_resource_costs"].get(rt, 0) + ability.amount
+                    acc.warp_resource_costs[rt] = (
+                        acc.warp_resource_costs.get(rt, 0) + ability.amount
                     )
 
     def _aggregate_cargo_and_pod_abilities(
-        self, comp: "Component", acc: Dict[str, Any]
+        self, comp: "Component", acc: StatAccumulator
     ) -> None:
         """Aggregate CargoStorage and PodStorage abilities."""
         for ab in comp.get_abilities("CargoStorage"):
             cargo_type = getattr(ab, "cargo_type", "generic")
             capacity = getattr(ab, "capacity", 0.0)
             if capacity > 0:
-                acc["cargo_storage"][cargo_type] = (
-                    acc["cargo_storage"].get(cargo_type, 0) + capacity
+                acc.cargo_storage[cargo_type] = (
+                    acc.cargo_storage.get(cargo_type, 0) + capacity
                 )
 
         # PROJ-367 Phase 1 (closes EXT-07): PodStorage is now a typed class
@@ -312,20 +316,27 @@ class ShipStatsCalculator:
         for ab in comp.get_abilities("PodStorage"):
             capacity = getattr(ab, "capacity_mass", 0.0)
             if capacity > 0:
-                acc["pod_storage_mass"] += capacity
+                acc.pod_storage_mass += capacity
 
-    def _apply_aggregated_stats(self, ship: "Ship", acc: Dict[str, Any]) -> None:
-        """Atomic application of accumulated totals to ship."""
-        for key, value in acc.items():
-            if key.startswith("max_") and key != "max_shields":
-                ship.resources.register_storage(key[4:], value)
-            elif key.startswith("gen_"):
-                ship.resources.register_generation(key[4:], value)
-        ship.total_thrust = acc["thrust"]
-        ship.total_strategic_movement = acc["strategic_movement"]
-        ship.turn_speed = acc["turn_speed"]
-        ship.total_maneuver_points = acc["maneuver_points"]
-        ship.max_shields = acc["max_shields"]
+    def _apply_aggregated_stats(self, ship: "Ship", acc: StatAccumulator) -> None:
+        """Atomic application of accumulated totals to ship.
+
+        PROJ-367 Phase 3: reads from typed ``StatAccumulator`` fields. Resource
+        registration uses the dedicated ``resource_storage`` / ``resource_generation``
+        map fields (no more "starts with max_/gen_" string-prefix heuristic).
+        """
+        # Resource storage + generation registration (data-driven keys live
+        # in the dedicated map fields).
+        for resource_type, amount in acc.resource_storage.items():
+            ship.resources.register_storage(resource_type, amount)
+        for resource_type, rate in acc.resource_generation.items():
+            ship.resources.register_generation(resource_type, rate)
+
+        ship.total_thrust = acc.thrust
+        ship.total_strategic_movement = acc.strategic_movement
+        ship.turn_speed = acc.turn_speed
+        ship.total_maneuver_points = acc.maneuver_points
+        ship.max_shields = acc.max_shields
 
         # PROJ-271 Phase 1: flat shield bonus from external_stats acts as a
         # virtual extra shield component. Pipeline order (base + flat) × mult:
@@ -345,13 +356,13 @@ class ShipStatsCalculator:
                 shield_cap_mult = external_stats.get("shield_capacity_mult", 1.0)
                 ship.max_shields += flat_shield_bonus * shield_cap_mult
 
-        ship.shield_regen_rate = acc["shield_regen"]
-        ship.shield_regen_cost = acc["shield_cost"]
-        ship.warp_max_tonnage = acc["warp_max_tonnage"]
-        ship.warp_energy_cost = acc["warp_energy_cost"]
-        ship.cargo_storage = acc["cargo_storage"]
-        ship.pod_storage_mass = acc["pod_storage_mass"]
-        ship.warp_resource_costs = acc.get("warp_resource_costs", {})
+        ship.shield_regen_rate = acc.shield_regen
+        ship.shield_regen_cost = acc.shield_cost
+        ship.warp_max_tonnage = acc.warp_max_tonnage
+        ship.warp_energy_cost = acc.warp_energy_cost
+        ship.cargo_storage = acc.cargo_storage
+        ship.pod_storage_mass = acc.pod_storage_mass
+        ship.warp_resource_costs = acc.warp_resource_costs
 
     # ------------------------------------------------------------------ #
     # Phase 4: physics & limits

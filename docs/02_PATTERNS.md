@@ -1856,25 +1856,51 @@ def __init__(self, ..., *, ui_builder: RaceSetupUiBuilder | None = None,
 
 ---
 
-## 35. Stat Contributor Registry (PROJ-360)
+## 35. Stat Contributor Registry (PROJ-360, unified by PROJ-367)
 
-**Where:** `game/simulation/entities/stat_contributors/registry.py` (`CREW_PRIORITY_REGISTRY`, `STAT_CONTRIBUTOR_REGISTRY`, `register_crew_priority`, `register_stat_contributor`, `apply_registered_contributors`, `lookup_crew_priority`). Consumed by `ShipStatsCalculator._phase_stats_aggregation` (calls `apply_registered_contributors` per operational component) and `stat_contributors.command.priority_sort_key` (consults `lookup_crew_priority`). Per-domain contributors live in sibling modules (`movement.py`, `defense.py`, `weapons.py`, `command.py`, `launch.py`).
+> **Last verified:** 2026-05-04 (PROJ-367 closure — EXT-07/EXT-11/EXT-13)
+
+**Where:** `game/simulation/entities/stat_contributors/registry.py`
+(`CREW_PRIORITY_REGISTRY`, `STAT_CONTRIBUTOR_REGISTRY`,
+`register_stat_contributor`, `unregister_stat_contributor`,
+`RegistrationConflictPolicy`, `RegistrationHandle`,
+`reset_stat_contributor_registry`, `_seed_builtin_contributors`,
+`lookup_crew_priority`). Typed accumulator at
+`stat_contributors/accumulator.py` (`StatAccumulator`). Per-domain
+`contribute_*` functions live in sibling modules (`movement.py`,
+`defense.py`, `command.py`, `launch.py`). `weapons.py` Phase-5 helpers
+(`aggregate_targeting_scores`, `apply_armor_and_repair_scores`,
+`init_armor_pool`) stay imperative — they run after Phase-4 physics, out
+of scope for the unified pipeline (future project).
 
 **How It Works:**
-- The calculator is now a coordinator: phase ordering + cross-cutting state (planetary resource ids, resource init, physics) only. Per-domain stat aggregation lives in `stat_contributors/<domain>.py`. Public API (`ShipStatsCalculator.calculate(ship)`) is unchanged; PROJ-360 Phase 1 golden snapshot tests pin bit-identical output across the decomposition.
-- `CREW_PRIORITY_REGISTRY: List[CrewPriorityEntry]` maps ability names to crew-allocation priority (lower = served first). `lookup_crew_priority(comp)` returns the lowest priority value across the abilities the component has — matching legacy semantics where a bridge-with-weapons component still sorts at bridge priority.
-- `STAT_CONTRIBUTOR_REGISTRY: List[StatContributorEntry]` is the generic extension point. Each entry pairs an ability class name with a `Callable[[Ship, Component], None]` — the contributor mutates `ship` based on `comp` whenever a ship has a component carrying that ability. `apply_registered_contributors` is called inside the operational-component loop in `_phase_stats_aggregation`, so contributors automatically respect the same `is_active`+`is_operational` gating the built-in domain helpers do.
-- Both registries support runtime register / unregister via `register_crew_priority` / `unregister_crew_priority` and `register_stat_contributor` / `unregister_stat_contributor`. Double-registration raises (caught early as programmer error). Tests clean up via a fixture that tracks registrations and unregisters them at teardown — so a test cannot leak into another.
-- Intentionally separate from `combat.ability_stat_registry.ABILITY_STAT_REGISTRY` (PROJ-273). That registry shapes the modifier-emission pipeline (compiler → ModifierEntry → external_stats); this one shapes per-component stat aggregation. Mixing them would warp both contracts.
+
+- **Single registry; one Phase-3 iteration.** `ShipStatsCalculator._phase_stats_aggregation` walks `STAT_CONTRIBUTOR_REGISTRY.iter_for(comp)` once per operational component:
+
+      for entry in STAT_CONTRIBUTOR_REGISTRY.iter_for(comp):
+          entry.contributor(ship, comp, accumulator)
+
+- **Built-ins are registry entries.** `_seed_builtin_contributors()` (called from `stat_contributors/__init__.py` after the four domain modules finish loading — `command/defense/launch/movement` all import from `registry.py`) registers the per-ability `contribute_*` functions as `is_default=True` entries with explicit `phase_order`: movement=10, defense=20, hangar=40, command=50. Modder entries default to `phase_order=99` so they fire after non-replaced built-ins, mirroring the legacy "skip-built-in-then-modder-runs-last" semantics.
+- **Typed accumulator (`StatAccumulator` dataclass, `slots=True`).** 10 scalar fields + 4 named map fields = 14 total. Misspelled scalar/map field names raise `AttributeError` at runtime. Dynamic resource keys (`max_<resource>`, `gen_<resource>`) live INSIDE `acc.resource_storage` / `acc.resource_generation` map fields (resource types come from data files; promoting them statically would contradict the data-driven invariant).
+- **Conflict policy is explicit (`RegistrationConflictPolicy`).** `REPLACE_WARN` (default) replaces the active entry and logs a warning; `REPLACE_SILENT` replaces silently; `APPEND` coexists with the default; `ERROR` raises `RegistrationConflictError`. A `REPLACE_*` entry suppresses the underlying default while it lives; `unregister_stat_contributor(handle)` restores the default.
+- **`RegistrationHandle` makes APPEND entries individually addressable.** Capture the handle returned from `register_stat_contributor`; pass it to `unregister_stat_contributor(handle)` for unambiguous removal. Defaults cannot be unregistered by handle (raises `CannotUnregisterDefaultError`); they are managed via `reset_stat_contributor_registry()` (clear + re-seed, idempotent).
+- **Crew priority registry is separate.** `CREW_PRIORITY_REGISTRY` maps ability names to crew-allocation priority (lower = served first); `lookup_crew_priority(comp)` returns the lowest priority value across the abilities the component has.
+- **Intentionally separate from `combat.ability_stat_registry.ABILITY_STAT_REGISTRY` (PROJ-273).** That registry shapes the modifier-emission pipeline (compiler → ModifierEntry → external_stats); this one shapes per-component stat aggregation. Mixing them would warp both contracts.
 
 **Why:**
-- Pre-PROJ-360, `ship_stats.py` was 643 LOC (over the 500 LOC ceiling) and hardcoded ability-name string checks for movement, shields, regeneration, launch capacity, multiplex tracking, armor, command priority, and engine priority. Adding a new stat-affecting ability meant editing one broad single-source-of-truth file that owned multiple unrelated concerns.
-- Decomposition by domain plus the registry pattern collapses extension to a one-call registration. `ship_stats.py` drops to 486 LOC. New abilities don't require touching the calculator.
+
+- Pre-PROJ-360 `ship_stats.py` was 643 LOC and hardcoded ability-name string checks for movement, shields, regeneration, launch capacity, multiplex tracking, armor, command priority, and engine priority. PROJ-360 Phase 2 split per-domain helpers; PROJ-360 Phase 3 added the registry as a parallel extension surface; PROJ-367 collapses the two-tier model so built-ins and modder code share one pipeline.
+- The PROJ-360 review identified three coupled findings (EXT-07/EXT-11/EXT-13). PROJ-367 closes them together: typed ability classes (Phase 1 — closes EXT-07), unified registry-as-pipeline (Phase 2 — closes EXT-11), typed `StatAccumulator` (Phase 3 — closes EXT-13).
 
 **When to Use:**
+
 - Adding a new ability that contributes a stat at recalculate time:
-  1. Define the contributor function `def my_contrib(ship, comp): ship.my_stat += comp.abilities.get('MyValue', 0)`.
-  2. Register it: `register_stat_contributor('MyAbility', my_contrib, domain='my_domain')`.
-  3. Done — no edits to `ship_stats.py`, `command.py`, or any other contributor.
+  1. Define a contributor: `def my_contrib(ship, comp, accumulator: StatAccumulator) -> None: accumulator.thrust += ...`.
+  2. Register it: `handle = register_stat_contributor('MyAbility', my_contrib)`. Default policy `REPLACE_WARN` replaces existing entries with a log; pass `policy=RegistrationConflictPolicy.APPEND` to coexist with the built-in default, or `policy=ERROR` to raise on conflict.
+  3. Capture `handle`; clean up via `unregister_stat_contributor(handle)` (or rely on `reset_stat_contributor_registry()` between tests — the root `conftest.py` calls it before/after every test).
 - Adding a new component class that should slot into the crew-allocation priority order: `register_crew_priority('MyHotAbility', priority=1)`.
-- Acceptance test: `tests/unit/simulation/entities/test_stat_contributor_extension.py` — codifies the "no central edits" goal as an executable test for both registries.
+- Acceptance tests: `tests/unit/simulation/entities/stat_contributors/test_registry_pipeline.py` (replacement / append / phase-ordering / handle round-trip / reset-re-seeds) plus `tests/unit/simulation/entities/test_stat_contributor_extension.py` (end-to-end through `ShipStatsCalculator.calculate`).
+
+**Boundaries (out of scope for the unified pipeline):**
+
+- Phase-5 helpers (`weapons.aggregate_targeting_scores`, `defense.apply_armor_and_repair_scores`, `defense.init_armor_pool`) run after Phase-4 physics. Folding them into the registry would require the accumulator state to survive the physics boundary — a real architectural concern not addressed by PROJ-367. Future project required.

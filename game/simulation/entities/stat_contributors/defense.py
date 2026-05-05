@@ -20,10 +20,11 @@ contributors at module import. ``apply_armor_and_repair_scores`` and
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from game.core.constants import LayerType
 from game.simulation.entities.ability_aggregator import get_ability_total
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -31,12 +32,12 @@ if TYPE_CHECKING:
 
 
 # ---------------------------------------------------------------------------
-# Per-ability Phase-3 contributors (PROJ-367 Phase 2)
+# Per-ability Phase-3 contributors (PROJ-367 Phase 2 + Phase 3 typed acc)
 # ---------------------------------------------------------------------------
 
 
 def contribute_armor(
-    ship: "Ship", comp: "Component", acc: Dict[str, Any]
+    ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
     """Add this Armor component's max_hp into the ship's armor HP pool.
 
@@ -49,15 +50,15 @@ def contribute_armor(
 
 
 def contribute_shield_projection(
-    ship: "Ship", comp: "Component", acc: Dict[str, Any]
+    ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
-    """Sum ShieldProjection capacity into ``acc['max_shields']``."""
+    """Sum ShieldProjection capacity into ``acc.max_shields``."""
     for ab in comp.get_abilities("ShieldProjection"):
-        acc["max_shields"] += ab.capacity
+        acc.max_shields += ab.capacity
 
 
 def contribute_shield_regeneration(
-    ship: "Ship", comp: "Component", acc: Dict[str, Any]
+    ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
     """Sum ShieldRegeneration rate + first-match shield energy cost.
 
@@ -69,7 +70,7 @@ def contribute_shield_regeneration(
     that doesn't exist; future project required.)
     """
     for ab in comp.get_abilities("ShieldRegeneration"):
-        acc["shield_regen"] += ab.rate
+        acc.shield_regen += ab.rate
 
     # Shield energy cost from ResourceConsumption(energy) on shield-regen
     # components. EXT-05 fix from PROJ-360: typed
@@ -78,7 +79,7 @@ def contribute_shield_regeneration(
     if comp.has_ability("ShieldRegeneration"):
         for ab in comp.get_abilities("ResourceConsumption"):
             if getattr(ab, "resource_type", None) == "energy":
-                acc["shield_cost"] += ab.amount
+                acc.shield_cost += ab.amount
                 break
 
 

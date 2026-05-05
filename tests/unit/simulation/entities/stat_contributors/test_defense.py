@@ -14,6 +14,7 @@ import pytest
 
 from game.core.constants import LayerType
 from game.simulation.entities.stat_contributors import defense
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
 
 
 def _make_shield_projection(capacity: float):
@@ -40,8 +41,8 @@ def _make_resource_consumption(resource_type: str, amount: float):
     return ab
 
 
-def _empty_acc() -> dict:
-    return {"max_shields": 0, "shield_regen": 0, "shield_cost": 0}
+def _empty_acc() -> StatAccumulator:
+    return StatAccumulator()
 
 
 def _make_ship_with_armor_layer(armor_present: bool = True):
@@ -97,7 +98,7 @@ class TestArmorPoolAggregation:
         defense.contribute_shield_projection(ship, comp, acc)
         defense.contribute_shield_regeneration(ship, comp, acc)
         # No layers entry — no crash
-        assert acc["max_shields"] == 0
+        assert acc.max_shields == 0
 
 
 class TestShieldAggregation:
@@ -117,7 +118,7 @@ class TestShieldAggregation:
         defense.contribute_armor(ship, comp, acc)
         defense.contribute_shield_projection(ship, comp, acc)
         defense.contribute_shield_regeneration(ship, comp, acc)
-        assert acc["max_shields"] == 800.0
+        assert acc.max_shields == 800.0
 
     def test_shield_regeneration_sums_rate(self):
         ship = _make_ship_with_armor_layer()
@@ -137,7 +138,7 @@ class TestShieldAggregation:
         defense.contribute_armor(ship, comp, acc)
         defense.contribute_shield_projection(ship, comp, acc)
         defense.contribute_shield_regeneration(ship, comp, acc)
-        assert acc["shield_regen"] == 3.5
+        assert acc.shield_regen == 3.5
 
     def test_shield_energy_cost_only_counts_once_first_match_wins(self):
         """Legacy behavior: first energy ResourceConsumption breaks the loop.
@@ -161,7 +162,7 @@ class TestShieldAggregation:
         defense.contribute_armor(ship, comp, acc)
         defense.contribute_shield_projection(ship, comp, acc)
         defense.contribute_shield_regeneration(ship, comp, acc)
-        assert acc["shield_cost"] == 5.0  # not 12.0
+        assert acc.shield_cost == 5.0  # not 12.0
 
     def test_shield_energy_cost_skipped_without_shield_regen(self):
         ship = _make_ship_with_armor_layer()
@@ -177,7 +178,7 @@ class TestShieldAggregation:
         defense.contribute_armor(ship, comp, acc)
         defense.contribute_shield_projection(ship, comp, acc)
         defense.contribute_shield_regeneration(ship, comp, acc)
-        assert acc["shield_cost"] == 0
+        assert acc.shield_cost == 0
 
     def test_shield_energy_cost_filters_by_resource_type(self):
         """EXT-05: only ResourceConsumption(energy) is summed; fuel etc.
@@ -197,7 +198,7 @@ class TestShieldAggregation:
         defense.contribute_armor(ship, comp, acc)
         defense.contribute_shield_projection(ship, comp, acc)
         defense.contribute_shield_regeneration(ship, comp, acc)
-        assert acc["shield_cost"] == 4.0
+        assert acc.shield_cost == 4.0
 
 
 class TestArmorAndRepairPostAggregation:

@@ -225,8 +225,9 @@ class TestStatContributorExtensionEndToEnd:
         invocations: list = []
 
         def replacing_contributor(ship, comp, acc):
+            # PROJ-367 Phase 3: typed StatAccumulator — `acc.max_shields`.
             for ab in comp.get_abilities("ShieldProjection"):
-                acc["max_shields"] += ab.capacity * 7
+                acc.max_shields += ab.capacity * 7
                 invocations.append(ab.capacity)
 
         add_stat("ShieldProjection", replacing_contributor)
@@ -253,31 +254,36 @@ class TestStatContributorExtensionEndToEnd:
             f"the registered contributor — double-counting bug."
         )
 
-    def test_registered_contributor_receives_acc_dict(
+    def test_registered_contributor_receives_typed_accumulator(
         self, fresh_registries, clean_extension_registry
     ):
-        """PROJ-360 audit EXT-12: registered contributors receive the
-        accumulator dict, identical to built-in contributors.
+        """PROJ-360 audit EXT-12 + PROJ-367 Phase 3 (closes EXT-13):
+        registered contributors receive the typed ``StatAccumulator``
+        accumulator, identical to built-in contributors.
 
-        We register a non-builtin ability and assert the contributor sees
-        the in-progress ``acc`` dict (verified by reading a built-in
-        accumulator key like ``thrust`` that other contributors have
-        already written to).
+        The legacy ``acc: Dict`` accumulator was replaced with a
+        ``StatAccumulator`` dataclass (slots=True). Misspelled scalar/map
+        fields raise ``AttributeError`` at runtime; built-in fields like
+        ``thrust`` and ``max_shields`` are present as attributes.
         """
+        from game.simulation.entities.stat_contributors.accumulator import (
+            StatAccumulator,
+        )
+
         _, add_stat = clean_extension_registry
 
         seen_acc_types: list = []
 
         def acc_inspecting_contributor(ship, comp, acc):
-            # The acc dict is a real `dict`; built-in contributors have
-            # already written to it by the time we run.
             seen_acc_types.append(type(acc))
-            assert isinstance(acc, dict), (
-                f"Registered contributor expected acc=dict, got {type(acc)}"
+            assert isinstance(acc, StatAccumulator), (
+                f"Registered contributor expected acc=StatAccumulator, "
+                f"got {type(acc)}"
             )
-            # Built-in keys must exist (initialized at phase start).
-            assert "thrust" in acc and "max_shields" in acc, (
-                f"acc dict missing built-in keys; got keys={list(acc.keys())}"
+            # Built-in scalar fields are present as attributes (default zero).
+            assert hasattr(acc, "thrust") and hasattr(acc, "max_shields"), (
+                f"acc StatAccumulator missing built-in fields; got "
+                f"fields={[f.name for f in __import__('dataclasses').fields(acc)]}"
             )
 
         add_stat("ShieldProjection", acc_inspecting_contributor)
@@ -291,9 +297,9 @@ class TestStatContributorExtensionEndToEnd:
         assert seen_acc_types, (
             "EXT-12 regression: acc-inspecting contributor never ran."
         )
-        assert all(t is dict for t in seen_acc_types), (
-            f"EXT-12: contributor saw non-dict acc on at least one call: "
-            f"{seen_acc_types}"
+        assert all(t is StatAccumulator for t in seen_acc_types), (
+            f"EXT-13 (PROJ-367 Phase 3): contributor saw non-StatAccumulator "
+            f"acc on at least one call: {seen_acc_types}"
         )
 
     def test_contributor_only_runs_on_operational_components(

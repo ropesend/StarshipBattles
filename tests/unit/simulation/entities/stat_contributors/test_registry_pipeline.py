@@ -287,10 +287,10 @@ def test_replace_shield_projection_avoids_double_count(fresh_registries):
     )
 
     def fn(ship, comp, acc):
+        # PROJ-367 Phase 3: typed StatAccumulator — `acc.max_shields`.
         # Set to a sentinel value if any ShieldProjection-bearing component
-        # is encountered. (The replacement REPLACES the built-in's add of
-        # capacity from ShieldProjection abilities.)
-        acc["max_shields"] = 999.0
+        # is encountered (replacement of the built-in default).
+        acc.max_shields = 999.0
 
     handle = register_stat_contributor(
         "ShieldProjection", fn, policy=RegistrationConflictPolicy.REPLACE_SILENT
