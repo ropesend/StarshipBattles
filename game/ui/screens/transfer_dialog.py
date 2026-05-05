@@ -370,11 +370,22 @@ class TransferDialog(StrategyModalWindow):
         logger.info("TransferDialog: Cleared all pending transfers")
 
     def _on_confirm(self) -> None:
-        # PROJ-321..328 audit S1.2: guarantee window teardown even on dispatch
-        # failure. Original exception propagates; we only ensure cleanup.
+        # PROJ-321..328 audit S1.2: guarantee window teardown on dispatch
+        # failure (catastrophic exception path).
+        # PROJ-343 T1.4: do NOT kill the dialog on user-correctable validation
+        # aborts (no source/target, both endpoints non-fleet, all pending
+        # zero). The pre-S1.2 behavior had three early-returns that kept the
+        # dialog open for correction; the always-kill `try/finally` from S1.2
+        # broke that UX. The controller now returns a ConfirmResult that
+        # distinguishes the cases.
         try:
-            self._controller.confirm_pending()
-        finally:
+            result = self._controller.confirm_pending()
+        except Exception:
+            # Catastrophic dispatch failure — close the modal so it can't
+            # leak; let the exception propagate to the caller.
+            self.kill()
+            raise
+        if not result.aborted_for_correction:
             self.kill()
 
     # ------------------------------------------------------------------

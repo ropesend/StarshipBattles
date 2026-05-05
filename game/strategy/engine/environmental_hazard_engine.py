@@ -106,10 +106,13 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
                 if system is None:
                     continue
 
-                # PROJ-300: empire_id=None so ownerless storms apply to all empires
-                # but owned facility-projected hazards are filtered by the collector.
+                # PROJ-300 + PROJ-343 T1.3: pass the querying fleet's owner_id
+                # so the collector's gate at system_effects_collector.py:298
+                # filters owned hazards to only the owning empire. Ownerless
+                # storms still apply to all empires (their owner_id is None,
+                # which short-circuits the filter).
                 effects = collect_sector_effects(
-                    system, fleet.location, empire_id=None, registries=None,
+                    system, fleet.location, empire_id=fleet.owner_id, registries=None,
                 )
                 damage_effects = [e for e in effects if e['ability_name'] == 'EnvironmentalDamage']
                 fuel_effects = [e for e in effects if e['ability_name'] == 'FuelDrain']

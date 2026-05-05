@@ -298,12 +298,18 @@ class CargoQuickDialog(StrategyModalWindow):
                         break
 
     def _issue_orders(self) -> None:
-        """Dispatch transfer commands via the controller, then close."""
-        orders_issued = self.controller.issue_orders(self.cargo_items)
-        if orders_issued > 0:
-            logger.info(f"CargoQuickDialog: {orders_issued} order(s) issued.")
+        """Dispatch transfer commands via the controller, then close.
 
-        self.kill()
+        PROJ-343 T1.5: wrap in try/finally so a facade-dispatch exception
+        from the controller still tears down the modal. Mirrors the
+        TransferDialog audit-S1.2 fix shape.
+        """
+        try:
+            orders_issued = self.controller.issue_orders(self.cargo_items)
+            if orders_issued > 0:
+                logger.info(f"CargoQuickDialog: {orders_issued} order(s) issued.")
+        finally:
+            self.kill()
 
 
 __all__ = ["CargoQuickDialog", "CargoQuickDialogUiBuilder"]
