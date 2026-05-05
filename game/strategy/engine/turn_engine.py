@@ -228,11 +228,16 @@ class TurnEngine:
     def _reset_phase_times(self) -> None:
         """Reset performance timing accumulators to zero."""
         self._phase_times: dict[str, float] = {
+            # Tick-loop sub-engines (14 keys).
             'harvesting': 0.0, 'resources': 0.0,
             'fuel_gen': 0.0, 'resupply': 0.0, 'production': 0.0,
             'environmental': 0.0, 'instant_orders': 0.0, 'actions': 0.0,
             'planet_energy': 0.0, 'planet_actions': 0.0, 'activation_timers': 0.0,
             'movement_calc': 0.0, 'movement_apply': 0.0, 'combat': 0.0,
+            # PROJ-343 T1.2-engines: end-of-turn engines now route through
+            # `_time_phase` for rollback safety; their timings live here too.
+            'organics_consumption': 0.0, 'happiness': 0.0, 'population_growth': 0.0,
+            'quality_improvement': 0.0, 'atmosphere': 0.0, 'water_modification': 0.0,
         }
 
     def _time_phase(self, key: str, fn, *args, **kwargs) -> Any:
@@ -555,30 +560,46 @@ class TurnEngine:
             # [BUG-109] Log resource state after all ticks
             self._log_empire_state(empires, f"=== TURN END (after {TICKS_PER_TURN} ticks) ===")
 
+            # PROJ-343 T1.2-engines: end-of-turn engines must route through
+            # `_time_phase` so raw exceptions become EnginePhaseError and the
+            # rollback site below catches them. Pre-fix these calls were
+            # unwrapped and bypassed rollback after the tick loop had already
+            # mutated state.
+
             # PROJ-284 Phase 2: Food consumption runs BEFORE happiness
             # so `last_food_ratio` is fresh for the happiness formula.
-            self.organics_consumption_engine.process_consumption(empires)
+            self._time_phase('organics_consumption',
+                             self.organics_consumption_engine.process_consumption,
+                             empires)
 
             # PROJ-284 Phase 3: Happiness = base * ratio * habitability.
             # Derived fresh each turn between consumption and population
             # growth so `pop.happiness` carries no stale value into
             # `PopulationEngine._grow_species`.
-            self.happiness_engine.process_happiness(empires, galaxy)
+            self._time_phase('happiness',
+                             self.happiness_engine.process_happiness,
+                             empires, galaxy)
 
             # 2. Population Growth Phase (PROJ-68)
-            t0 = time.perf_counter()
-            self.population_engine.process_population_growth(empires)
-            pop_time = time.perf_counter() - t0
+            self._time_phase('population_growth',
+                             self.population_engine.process_population_growth,
+                             empires)
 
             # 3. Quality Improvement + Atmosphere Modification (once per turn)
             from game.strategy.engine.quality_engine import QualityEngine
             from game.strategy.engine.atmosphere_engine import AtmosphereEngine
-            QualityEngine(registries=self._registries).process_quality_improvement(empires)
-            AtmosphereEngine(registries=self._registries).process_atmosphere(empires)
+            self._time_phase('quality_improvement',
+                             QualityEngine(registries=self._registries).process_quality_improvement,
+                             empires)
+            self._time_phase('atmosphere',
+                             AtmosphereEngine(registries=self._registries).process_atmosphere,
+                             empires)
 
             # 4. Water Modification (once per turn)
             from game.strategy.engine.water_engine import WaterEngine
-            WaterEngine(registries=self._registries).process_water_modification(empires)
+            self._time_phase('water_modification',
+                             WaterEngine(registries=self._registries).process_water_modification,
+                             empires)
 
         except EnginePhaseError as e:
             # PROJ-251: Rollback state and re-raise
@@ -616,7 +637,7 @@ class TurnEngine:
             self._phase_times['activation_timers'],
             self._phase_times['movement_calc'],
             self._phase_times['movement_apply'], self._phase_times['combat'],
-            pop_time,
+            self._phase_times['population_growth'],
         )
         
     def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
