@@ -119,8 +119,10 @@ class TestCollectSystemEffects:
         assert effect['ability_name'] == "GeologicStabilizer"
         assert effect['status'] == "Active"
         assert len(effect['providers']) == 1
-        assert effect['providers'][0]['planet_name'] == "Akkadia I"
-        assert effect['providers'][0]['facility_name'] == "Facility-fac-1"
+        # PROJ-362 Phase 4: legacy ``planet_name`` / ``facility_name`` keys
+        # were removed; ``source_label`` carries the human-readable label.
+        assert effect['providers'][0]['source_kind'] == 'facility'
+        assert "Facility-fac-1" in effect['providers'][0]['source_label']
 
     def test_activatable_ability_inactive(self):
         """Inactive stabilizer still shows in results."""
@@ -520,9 +522,19 @@ class TestProviderUniversalFields:
         assert 'Facility-f-1' in provider['source_label']
         assert provider['source_id'].startswith('facility:')
         assert provider['owner_id'] == 1
-        # Legacy fields still present for back-compat.
-        assert provider['planet_name'] == 'Tarsis IV'
-        assert provider['facility_name'] == 'Facility-f-1'
+        # PROJ-362 Phase 4: legacy back-compat keys (``planet_name``,
+        # ``planet_id``, ``facility_name``, ``facility_id``,
+        # ``component_key``) were retired with the
+        # ``_legacy_provider_fields`` shim. The provider DTO now carries
+        # only the universal PROJ-300 fields.
+        for legacy_key in (
+            'planet_name', 'planet_id', 'facility_name',
+            'facility_id', 'component_key',
+        ):
+            assert legacy_key not in provider, (
+                f"PROJ-362 Phase 4 regression: provider DTO should not "
+                f"contain legacy key {legacy_key!r}"
+            )
 
 class TestD17OwnerlessScopeValidation:
     """PROJ-300 D17: ownerless sources may only declare ownership-neutral scopes."""

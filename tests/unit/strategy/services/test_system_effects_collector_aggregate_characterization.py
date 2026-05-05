@@ -57,7 +57,10 @@ class _FakeSource:
     activation_states: Dict[str, ComponentActivationState] = field(default_factory=dict)
     affects_hex_result: bool = True
 
-    # facility/planet attrs read by _legacy_provider_fields
+    # facility/planet attrs are no longer read by the collector after
+    # PROJ-362 Phase 4 (the ``_legacy_provider_fields`` shim was removed
+    # along with these legacy keys). Kept for IAbilitySource attr-shape
+    # parity with the real adapters; unused by the production pipeline.
     facility: Any = None
     planet: Any = None
 
