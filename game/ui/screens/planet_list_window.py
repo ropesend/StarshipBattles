@@ -253,7 +253,9 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.empire = empire  # Current player empire
         self.empires = empires or []  # PROJ-198: all empires for owner lookup
         self.on_close_callback = on_close_callback
-        self.on_navigate_callback = on_navigate_callback
+        # PROJ-348 T5.3: navigate dispatch routes through controller (line ~321);
+        # window no longer caches the callback. Parameter still threads to the
+        # controller via the constructor passthrough below.
         self.asset_resolver = asset_resolver
 
         # Layout constants
@@ -628,13 +630,20 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.refresh_list()
 
     def _navigate_to_selected(self) -> None:
-        """Navigate camera to the selected planet's system."""
-        if self.selected_planet and self.on_navigate_callback:
-            loc = getattr(
-                self.selected_planet, '_cached_system_global_location', None
-            )
-            if loc:
-                self.on_navigate_callback(loc)
+        """Navigate camera to the selected planet's system.
+
+        PROJ-348 T5.3: route navigation through `controller.navigate_to`
+        rather than calling `self.on_navigate_callback` directly. The
+        controller owns the navigate-dispatch boundary; the window stays
+        focused on widget concerns.
+        """
+        if not self.selected_planet:
+            return
+        loc = getattr(
+            self.selected_planet, '_cached_system_global_location', None
+        )
+        if loc and self.controller is not None:
+            self.controller.navigate_to(loc)
 
     def _on_planet_selected(self, planet) -> None:
         """Handle planet selection - create/update detail panel."""
