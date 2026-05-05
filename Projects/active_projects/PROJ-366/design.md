@@ -84,7 +84,19 @@ RunLoop.run():
     pygame.quit()
 ```
 
-Order matters: drain background work before pygame teardown. `shutdown_all_coordinators` is idempotent and bounded — coordinators that don't finish within the timeout are abandoned with a warning rather than hanging.
+Order remains `shutdown_all_calls` -> `shutdown_all_coordinators` ->
+`pygame.quit()` because the current code has no LLM dependency in the
+replay verification path (`AIControllerFactory` constructs local AI
+controllers directly per `game/ai/ai_factory.py:21-29,83-110`), and this
+preserves the existing LLM shutdown invariant before adding the coordinator
+drain. If a future verifier path invokes LLM work, revisit this order.
+The ordering test in `test_run_loop_shutdown_ordering.py` pins the
+current invariant by name so any future flip is loud.
+
+`shutdown_all_coordinators` is idempotent and bounded by the timeout. Note
+that a stuck non-daemon worker can still hold the process alive after a
+timed join — PROJ-354B accepted no process-boundary timeout, so the
+lifecycle docs do not overclaim termination guarantees.
 
 ### Failure isolation
 
