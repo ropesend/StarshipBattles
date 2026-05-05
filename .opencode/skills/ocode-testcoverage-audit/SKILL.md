@@ -1,12 +1,12 @@
 ---
 name: ocode-testcoverage-audit
-description: Comprehensive test coverage audit across the entire production codebase. Phase 1 deterministic AST scanner precomputes coverage tiers and shards. Phase 2 launches 18 discovery agents (3 batches of 6) that read every production file + corresponding unit tests, verifying coverage and identifying untested branches, error paths, and corner cases. Phase 3 launches 18 skeptical verification agents (3 batches of 6) that independently verify every claim. Phase 4 compiles a final report with prioritized test case suggestions. Production code only.
+description: Comprehensive test coverage audit across the entire production codebase. Phase 1 deterministic AST scanner precomputes coverage tiers and shards. Phase 2 launches one-per-shard discovery agents that read every production file + corresponding unit tests, verifying coverage and identifying untested branches, error paths, and corner cases. Phase 3 launches one-per-shard skeptical verification agents that exhaustively verify CRITICAL/MAJOR claims and sample MINOR/ADVISORY claims. Phase 4 compiles a final report with prioritized test case suggestions. Production code only.
 argument-hint: "[optional: --skip-phase1 to reuse existing raw results]"
 ---
 
 # Test Coverage Audit
 
-Run a comprehensive, line-by-line audit of unit test coverage across every production file in `game/`. Combines a deterministic Phase 1 AST scanner (to precompute coverage tiers and shard files) with 36 LLM agents: 18 discovery agents that read every production file and its unit tests to identify untested code paths, and 18 skeptical verification agents that independently verify every claim. Produces a prioritized test case catalog with specific test descriptions for every gap.
+Run a comprehensive, line-by-line audit of unit test coverage across every production file in `game/`. Combines a deterministic Phase 1 AST scanner (to precompute coverage tiers and shard files) with one-per-shard discovery agents that read every production file and its unit tests to identify untested code paths, and one-per-shard skeptical verification agents that exhaustively verify CRITICAL/MAJOR claims and sample MINOR/ADVISORY claims. Produces a prioritized test case catalog with specific test descriptions for every verified gap.
 
 Does NOT change any code. Targets `game/` only (not tests, not tools). Only `tests/unit/` counts as coverage.
 
@@ -25,6 +25,12 @@ This skill is a single-command workflow. The user loads it and you handle everyt
 
 ### Step 0: Pre-Flight Checks
 
+Log skill usage first (advisory counter, should reflect invocation even on failure):
+
+```bash
+python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-testcoverage-audit
+```
+
 Ensure the Phase 1 script exists:
 
 ```bash
@@ -34,7 +40,7 @@ python -c "import os; assert os.path.exists('Tools/testcoverage_audit/testcovera
 Ensure `Reviews/results/` directory exists:
 
 ```bash
-mkdir -p Reviews/results
+python -c "from pathlib import Path; Path('Reviews/results').mkdir(parents=True, exist_ok=True)"
 ```
 
 ### Step 1: Run Phase 1 — Deterministic Analysis
@@ -45,46 +51,64 @@ mkdir -p Reviews/results
 python Tools/testcoverage_audit/testcoverage_audit.py --shards 18 --max-loc-per-shard 10000
 ```
 
+The `--shards` value is a TARGET — the script may auto-increase shard count (up to 40) if `--max-loc-per-shard` is exceeded. Always read the actual shard count from the manifest after the run.
+
 Capture the last few lines of stdout. Look for the line that prints the output directory path:
 ```
 Output directory: Reviews/results/2026-05-04_175101_testcoverage-audit
 ```
 
-Store this as `REVIEW_DIR`. Also note the shard count (should be 18).
+Store this as `REVIEW_DIR`. Also capture the actual shard count as `{SHARD_COUNT}` from the manifest output line:
+```
+  18 shards (target: 18, max LOC/shard: 10000)
+```
+
+Future extension point: a later scanner CLI may add `--coverage-json <path>` to consume `coverage.py` output as an additional baseline. This is not currently implemented or required — the import-based + name-grep heuristic is the default.
 
 If the user passed `--skip-phase1`, find the most recent review directory:
 - Glob: `Reviews/results/*_testcoverage-audit/`
 - Sort by directory name, take the newest
 - Use that as `REVIEW_DIR`
+- Validate the raw output schema before continuing. `coverage_matrix.json` entries
+  must contain `candidate_test_files`, and each `symbol_coverage` entry must contain
+  `heuristic_match`. If the newest directory uses the old `test_files`/`mentioned`
+  schema, rerun Phase 1 instead of reusing it.
 
 The script creates `REVIEW_DIR/raw/` with these outputs:
 
-1. `coverage_matrix.json` — per-production-file: test_files, symbol_coverage, coverage_tier (0-3)
+1. `coverage_matrix.json` — per-production-file: `candidate_test_files` (import-based, heuristic), `symbol_coverage` with `heuristic_match` flags, `coverage_tier` (0-3)
 2. `layer_summary.json` — coverage statistics by architectural layer
 3. `file_inventory.json` — full production file inventory
-4. `manifest.json` — 18-shard file assignments for agent distribution
+4. `manifest.json` — shard file assignments for agent distribution; `shard_count` is the authoritative count
 
 ### Step 2: Read Phase 1 Outputs + Reference Docs
 
 Read these files into memory for use in agent prompts:
 
-1. Read `REVIEW_DIR/raw/manifest.json` — extract ALL 18 shard file lists from `shards.01.files` through `shards.18.files`
-2. Read `REVIEW_DIR/raw/coverage_matrix.json` — the full coverage data for every production file
+1. Read `REVIEW_DIR/raw/manifest.json` — extract `shard_count` and ALL shard file lists from `shards.01.files` through `shards.{SHARD_COUNT}.files`
+2. Read `REVIEW_DIR/raw/coverage_matrix.json` — the full coverage data for every production file (note: all Phase 1 evidence is heuristic — `candidate_test_files` are import-based matches, `heuristic_match` is name-grep, NOT proof of coverage)
 3. Read `REVIEW_DIR/raw/layer_summary.json` — layer-level statistics
 4. Read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
 
-### Step 3: Launch Phase 2 — Discovery Agents (3 batches of 6 = 18 agents)
+### Step 3: Launch Phase 2 — Discovery Agents (batches of up to 6)
 
 Create the findings directory:
 
 ```bash
-mkdir -p REVIEW_DIR/findings
+python -c "from pathlib import Path; Path(r'{REVIEW_DIR}').joinpath('findings').mkdir(parents=True, exist_ok=True)"
 ```
 
-Launch **18 agents in 3 batches of 6** using the Task tool with `subagent_type: general`. Launch batch 1 (shards 01-06) first, wait for all 6 to complete, then launch batch 2 (shards 07-12), wait, then batch 3 (shards 13-18).
+Launch **one agent per shard** using the Task tool with `subagent_type: general`. Batch agents in groups of up to 6, launching each batch in parallel and waiting for all to complete before starting the next batch.
+
+```
+BATCH_COUNT = ceil(SHARD_COUNT / 6)
+For each batch:
+    launch min(6, SHARD_COUNT - batch*6) agents in parallel
+    wait for all to complete
+```
 
 **Replace these placeholders** in the template below for each agent:
-- `{SHARD_ID}` → `"01"`, `"02"`, … `"18"`
+- `{SHARD_ID}` → `"01"`, `"02"`, … `"{SHARD_COUNT:02d}"`
 - `{SHARD_LABEL}` → from manifest.json `shards.{SHARD_ID}.label` (e.g., "Shard 01")
 - `{FILE_COUNT}` → from manifest.json `shards.{SHARD_ID}.file_count`
 - `{LOC_ESTIMATE}` → from manifest.json `shards.{SHARD_ID}.loc_estimate`
@@ -119,8 +143,12 @@ You MUST read EVERY file below. Do not skip any.
 ## Pre-Computed Coverage Data
 
 The Phase 1 deterministic scanner mapped imports and performed name-grep
-symbol matching. This data is a STARTING POINT — you must VERIFY it, not
-blindly trust it.
+symbol matching. **All Phase 1 data is heuristic — it is NOT proof of
+coverage.** Fields are:
+- `candidate_test_files`: test files that import this module (import-based match)
+- `heuristic_match`: symbol name appears in a candidate test file (name-grep)
+
+This data is a STARTING POINT — you must VERIFY it, not blindly trust it.
 
 Coverage matrix for your shard (abbreviated — agents should read the full
 coverage_matrix.json entries for each file they are assigned):
@@ -136,9 +164,9 @@ Read the file completely. Understand what it does and how it interacts
 with other modules.
 
 ### Step B: Read the Corresponding Unit Tests
-For each test file listed in the coverage matrix as importing this module,
-read it completely. If the coverage matrix lists NO test files (Tier 0),
-note this as a CRITICAL gap and move to the next file.
+For each test file listed in the coverage matrix as a candidate (importing this
+module), read it completely. If the coverage matrix lists NO candidate test files
+(Tier 0), note this as a CRITICAL gap and move to the next file.
 
 ### Step C: Verify Coverage Claims
 For each callable definition (function, method, class) in the production
@@ -183,14 +211,20 @@ For files under `game/ui/`:
 - Dunder methods (`__str__`, `__repr__`) unless they contain non-trivial logic
 
 ## Severity Guide
-- **CRITICAL**: Tier 0 file (zero unit tests import this module). Core, Engine,
-  Simulation, Strategy, and AI layers only. Core business logic with zero coverage.
+- **CRITICAL**: Tier 0 file (zero unit tests import this module) in any non-UI layer
+  (Core, Engine, Simulation, Strategy, AI, Research, Services, Assets, Game Root).
+  Core business logic with zero coverage. Allowed downgrades: generated code, glue
+  files, `__init__.py` re-exports, simple data classes with no logic.
 - **MAJOR**: Tier 1 file (imported but no symbols tested). Function with untested
   error paths or missing boundary condition tests that could hide production bugs.
 - **MINOR**: Partially tested function missing some branches. Minor corner case
   not covered but unlikely to cause production issues.
-- **ADVISORY**: UI rendering/event code. `__init__.py` re-exports. Code that
+- **ADVISORY**: UI rendering/event code (files under `game/ui/` where the code is
+  pygame drawing, event handling, or layout). `__init__.py` re-exports. Code that
   is inherently hard to unit test and conventionally verified via other means.
+  Note: UI files that contain testable business logic (calculations, data transforms,
+  validation) should be flagged at standard severity — only the rendering/event
+  portions get ADVISORY.
 
 ## Output — Save to: {REVIEW_DIR}/findings/SHARD_{SHARD_ID}.md
 
@@ -279,18 +313,18 @@ Use EXACTLY this structure:
 
 ### Step 4: Verify Phase 2 Completion
 
-After all 3 batches complete, check that all 18 shard report files exist and are non-empty:
+After all batches complete, check that all shard report files exist and are non-empty:
 
-- `REVIEW_DIR/findings/SHARD_01.md` through `REVIEW_DIR/findings/SHARD_18.md`
+- `REVIEW_DIR/findings/SHARD_01.md` through `REVIEW_DIR/findings/SHARD_{SHARD_COUNT:02d}.md`
 
 Use Read with limit=1 to verify each file exists and has content. If any agent failed, note which shard and proceed with available data. Re-launch failed shards if feasible.
 
-### Step 5: Launch Phase 3 — Skeptical Verification (3 batches of 6 = 18 agents)
+### Step 5: Launch Phase 3 — Skeptical Verification (batches of up to 6)
 
-Launch **18 verification agents in 3 batches of 6** using the Task tool with `subagent_type: general`. Each verifier gets its shard's Phase 2 report and must independently verify every claim.
+Launch **one verification agent per shard** using the Task tool with `subagent_type: general`. Batch in groups of up to 6, same as Phase 2. Each verifier gets its shard's Phase 2 report and must independently verify every CRITICAL and MAJOR claim, then sample MINOR and ADVISORY claims.
 
 **Replace these placeholders** for each agent:
-- `{SHARD_ID}` → `"01"`, `"02"`, … `"18"`
+- `{SHARD_ID}` → `"01"`, `"02"`, … `"{SHARD_COUNT:02d}"`
 - `{REVIEW_DIR}` → the actual review directory path
 
 #### Verification Agent Template
@@ -299,14 +333,16 @@ Launch **18 verification agents in 3 batches of 6** using the Task tool with `su
 # Test Coverage Audit — Shard {SHARD_ID} Skeptical Verifier
 
 You are the SKEPTICAL VERIFIER for Shard {SHARD_ID}. Your job is to
-independently verify every claim made by the Phase 2 discovery agent.
+independently verify every CRITICAL and MAJOR claim made by the Phase 2
+discovery agent, then verify sampled MINOR and ADVISORY claims.
 You must read the cited production code AND test code before confirming.
 
 You are skeptical. If a claim is overstated, false, or unverifiable,
 DISPUTE it with a specific reason drawn from the source code.
 
 ## Inputs You Must Read
-1. **Phase 2 report**: {REVIEW_DIR}/findings/SHARD_{SHARD_ID}.md — every claim
+1. **Phase 2 report**: {REVIEW_DIR}/findings/SHARD_{SHARD_ID}.md — all
+   CRITICAL/MAJOR claims plus sampled MINOR/ADVISORY claims
 2. **The actual production files** cited in each claim — read the cited line
    ranges PLUS at least 10 lines of surrounding context
 3. **The actual test files** cited in each claim — read enough to verify
@@ -314,7 +350,7 @@ DISPUTE it with a specific reason drawn from the source code.
 
 ## Verification Methodology
 
-For each claim in the Phase 2 shard report:
+For each claim selected for verification from the Phase 2 shard report:
 
 ### For CRITICAL claims (Tier 0 — zero unit tests):
 1. **Read the production file** at the cited lines
@@ -418,53 +454,45 @@ Use EXACTLY this structure:
 2. Always cite specific code and test evidence to justify DISPUTED claims
 3. A claim stays INCONCLUSIVE if you need more context than reasonably readable
 4. Only CONFIRMED claims appear in the final summary — your report is authoritative
-5. Verify at minimum: 100% of CRITICAL claims, 50% of MAJOR claims, 20% of MINOR/ADVISORY claims
+5. Verify 100% of CRITICAL and MAJOR claims (these drive implementation work). Sample
+   MINOR and ADVISORY claims at your discretion — the final report must label sampled
+   severities as "sampled (X% verified)" and unverified sampled-out claims are
+   excluded from "verified confirmed" counts.
 ```
 
 ### Step 6: Verify Phase 3 Completion
 
-After all 3 batches complete, check that all 18 verified shard report files exist and are non-empty:
+After all batches complete, check that all verified shard report files exist and are non-empty:
 
-- `REVIEW_DIR/findings/VERIFIED_SHARD_01.md` through `REVIEW_DIR/findings/VERIFIED_SHARD_18.md`
+- `REVIEW_DIR/findings/VERIFIED_SHARD_01.md` through `REVIEW_DIR/findings/VERIFIED_SHARD_{SHARD_COUNT:02d}.md`
 
 ### Step 7: Compile Final Report (Phase 4)
 
-Read all 18 VERIFIED shard reports. Extract ONLY CONFIRMED claims. Do NOT include DISPUTED or INCONCLUSIVE claims.
+Read all {SHARD_COUNT} VERIFIED shard reports. Extract ONLY CONFIRMED claims. Do NOT include DISPUTED or INCONCLUSIVE claims.
 
 Write `REVIEW_DIR/SUMMARY.md` and `REVIEW_DIR/SUMMARY.json`.
 
-**SUMMARY.json** with structured data:
+**SUMMARY.json** with structured data — all run_info values populated from raw JSON (`manifest.json`, `layer_summary.json`, `file_inventory.json`):
 
 ```json
 {
   "run_info": {
-    "date": "...",
-    "seed": "...",
-    "shard_count": 18,
-    "total_prod_files": 699,
-    "total_prod_loc": 153776,
-    "total_symbols": 12285
+    "date": "<populated from REVIEW_DIR timestamp>",
+    "seed": "<populated from manifest.json.seed>",
+    "shard_count": <populated from manifest.json.shard_count>,
+    "total_prod_files": <populated from file_inventory.json.total_files>,
+    "total_prod_loc": <populated from manifest.json.total_loc_estimate>,
+    "total_symbols": <populated from layer_summary.json.totals.total_symbols>
   },
   "phase1_coverage": {
-    "overall_pct": 33.1,
-    "by_layer": { "core": 32.7, "strategy": 42.9, "simulation": 36.5, "ui": 26.2, "ai": 38.9 }
+    "overall_pct": <populated from layer_summary.json.totals.overall_coverage_pct>,
+    "by_layer": <populated from layer_summary.json.layers — per-layer coverage_pct>
   },
-  "phase2_claims": 0,
-  "verified_confirmed": 0,
-  "disputed": 0,
-  "inconclusive": 0,
-  "findings": [
-    {
-      "id": "COV-01-001",
-      "severity": "CRITICAL",
-      "file": "game/path/to/file.py",
-      "symbol": "function_name",
-      "line": 42,
-      "issue": "Zero unit test coverage",
-      "suggestion": "Add test for X path with Y inputs",
-      "layer": "core"
-    }
-  ]
+  "phase2_claims": <total claims from all SHARD_*.md>,
+  "verified_confirmed": <total CONFIRMED from all VERIFIED_SHARD_*.md>,
+  "disputed": <total DISPUTED from all VERIFIED_SHARD_*.md>,
+  "inconclusive": <total INCONCLUSIVE from all VERIFIED_SHARD_*.md>,
+  "findings": [ ... ]
 }
 ```
 
@@ -474,29 +502,26 @@ Write `REVIEW_DIR/SUMMARY.md` and `REVIEW_DIR/SUMMARY.json`.
 # Test Coverage Audit — Final Summary (Verified Claims Only)
 
 ## Run Info
-- Date: {timestamp}
-- Seed: {seed}
-- Shards: 18
-- Total production files: 699 (~154K LOC)
-- Total symbols (functions/methods/classes): 12,285
-- Phase 1 estimated coverage: XX% (heuristic name-grep)
+- Date: <populated from REVIEW_DIR>
+- Seed: <populated from manifest.json.seed>
+- Shards: <populated from manifest.json.shard_count>
+- Total production files: <populated from file_inventory.json.total_files> (~<loc>K LOC)
+- Total symbols (functions/methods/classes): <populated from layer_summary.json.totals.total_symbols>
+- Phase 1 estimated coverage: <overall_coverage_pct>% (heuristic name-grep — NOT authoritative)
 - Phase 2 claims: N → Verified: N | Disputed: N | Inconclusive: N
 
-## Coverage Scorecard (Phase 1 heuristic baseline)
+## Coverage Scorecard (Phase 1 heuristic baseline — NOT authoritative)
+
+Populate from `layer_summary.json`:
 
 | Layer | Files | Symbols | Tested | Coverage % | Tier 0 | Tier 1 | Tier 2 | Tier 3 |
 |-------|-------|---------|--------|------------|--------|--------|--------|--------|
-| core | 35 | 744 | 243 | 32.7% | 9 | 3 | 15 | 8 |
-| engine | 4 | 37 | 18 | 48.6% | 1 | 0 | 3 | 0 |
-| services | 8 | 52 | 28 | 53.8% | 2 | 1 | 2 | 3 |
-| assets | 2 | 44 | 15 | 34.1% | 0 | 0 | 2 | 0 |
-| simulation | 96 | 2,156 | 786 | 36.5% | 16 | 7 | 57 | 16 |
-| research | 7 | 87 | 52 | 59.8% | 3 | 0 | 3 | 1 |
-| ai | 20 | 321 | 125 | 38.9% | 2 | 1 | 16 | 1 |
-| strategy | 197 | 2,982 | 1,279 | 42.9% | 40 | 8 | 128 | 21 |
-| ui | 323 | 5,645 | 1,480 | 26.2% | 117 | 23 | 175 | 8 |
-| game_root | 7 | 217 | 40 | 18.4% | 5 | 0 | 2 | 0 |
-| **Totals** | **699** | **12,285** | **4,066** | **33.1%** | **195** | **43** | **403** | **58** |
+| <for each layer in layer_summary.json.layers> |
+| **Totals** | <from layer_summary.json.totals> |
+
+The Phase 1 scorecard is a heuristic starting point. All numbers are derived
+from import-based candidate matching and name-grep — they are NOT proof of
+coverage. The verified findings below are the authoritative output.
 
 ## Verified Gap Summary
 
@@ -509,8 +534,8 @@ Write `REVIEW_DIR/SUMMARY.md` and `REVIEW_DIR/SUMMARY.json`.
 
 ## P0 — Critical Gaps (Immediate Attention)
 
-Files/modules with ZERO unit test coverage in Core, Engine, Simulation,
-Strategy, AI, or Research layers.
+Files/modules with ZERO unit test coverage in any non-UI layer
+(Core, Engine, Simulation, Strategy, AI, Research, Services, Assets, Game Root).
 
 [Per-file listing with suggested tests]
 
@@ -558,13 +583,7 @@ Top 20 items.
 - Structured data: `{REVIEW_DIR}/SUMMARY.json`
 ```
 
-### Step 8: Log Skill Usage
-
-```bash
-python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-testcoverage-audit
-```
-
-### Step 9: Present to User
+### Step 8: Present to User
 
 Show the user:
 1. Run info: date, shards, files reviewed
