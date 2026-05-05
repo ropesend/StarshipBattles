@@ -9,14 +9,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. T6.3 — ActionExecutionEngine consume injected resolver | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. T6.4 — PlanetAbilitiesController hardcoded list → registry scan | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. T6.3 — ActionExecutionEngine consume injected resolver | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. T6.4 — PlanetAbilitiesController hardcoded list → registry scan | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning (awaiting implementation kickoff)
-**Last Action:** Project scaffolded as a closeout follow-up to PROJ-349
-**Next Action:** Begin Phase 1 (T6.3) — small DI refactor + test rewrite
+**Active Phase:** Awaiting Verification
+**Last Action:** Both phases implemented and committed; full unit suite green; lint clean.
+**Next Action:** User verification of T6.3 (DI consumption) and T6.4 (registry scan + humanized labels).
 **Blockers:** None
 **Context for Next Agent:** Both items were deferred from PROJ-349 (Closeout Sprint 7) per Codex review consensus (`AgentCoordination/Scratchpad/Discussion/20260505T020232Z_proj343-349-codex-review/`). They share an "engine layer hygiene" theme: replace static-call / hardcoded-list patterns with proper DI / registry-scan idioms.
 
