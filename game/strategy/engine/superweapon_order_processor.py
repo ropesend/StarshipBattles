@@ -652,6 +652,8 @@ class SuperweaponOrderProcessor:
                 "event_message": f"Dyson Sphere created in {system.name}",
                 "log_message": f"Dyson Sphere created in {system.name}",
                 "system_name": system.name,
+                "planet_id": dyson.id,
+                "planet_name": dyson.name,
             }
 
         return self.execute_superweapon(

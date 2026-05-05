@@ -295,3 +295,5 @@ class TestDysonSphereCreatedPayload:
         assert kw['system_name'] == "Sol"
         assert 'location_hex' in kw
         assert 'message' in kw
+        assert 'planet_id' in kw
+        assert kw['planet_name'] == "Dyson Sphere (Sol)"
