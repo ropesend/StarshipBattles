@@ -22,7 +22,7 @@
 | 3 | 127.8 | 127.7 | 127.6 | 127.5 | Both clean. |
 | **Median** | **127.8** | **127.7** | **123.9** | **123.8** | |
 
-**Suite delta:** **~3.9 s wall reduction**, ~3.0 % suite-level reclaim. Slowest shard reduced from 127.7 s to 123.8 s (~3.0 % reduction).
+**Suite delta:** ~~**~3.9 s wall reduction**, ~3.0 % suite-level reclaim. Slowest shard reduced from 127.7 s to 123.8 s (~3.0 % reduction).~~ **RETRACTED 2026-05-04 (audit-remediation S2.7):** the observed -3.9 s sharded median is within the 15.3 s pre-baseline noise envelope; a 30 ms file-level delta cannot mechanistically produce a 3.9 s suite-level delta. Only the file-level ~30 ms reclaim above is citable. See `findings/runtime_delta.md` "OpenCode-327 retraction analysis" for the full math.
 
 The slowest-shard delta (3.9 s) is roughly the per-test reclaim (~30 ms × 16 tests = ~0.5 s) amplified by the fact that other tests in the same shard depend on this file's runtime budget — when the file is faster, the shard finishes earlier and pulls the rest of its test list along, but only modestly.
 
@@ -35,7 +35,7 @@ The slowest-shard delta (3.9 s) is roughly the per-test reclaim (~30 ms × 16 te
 | Post-Phase-1 | 123.8 s slowest shard |
 | Stretch target | < 90 s slowest shard |
 | Cumulative reduction so far (vs 137) | 13.2 s (~9.6 %) |
-| Cumulative reduction so far (vs 127.7 baseline) | 3.9 s (~3.0 %) |
+| Cumulative reduction so far (vs 127.7 baseline) | ~~3.9 s (~3.0 %)~~ (retracted per audit S2.7 — within noise envelope) |
 | Remaining gap to 90 s | ~33.8 s (~27 % more) |
 
 **Conclusion:** Phase 1 delivered the predicted *direction* but not the predicted *magnitude*. Phases 2 + 3 are very unlikely to close another ~34 s on their own — Phase 4 (`strategy_screen` 50-test refactor) will almost certainly be needed. The Phase 4 trigger remains armed.

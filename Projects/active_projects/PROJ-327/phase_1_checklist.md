@@ -89,7 +89,7 @@
 - [x] Compare to Phase 0 baseline for the same file.
 - [x] Record delta in `findings/virtual_table_runtime.md`.
 
-**Notes:** **File-level:** pre median 1.03 s, post median 1.00 s (~3 % reclaim, ~30 ms — much smaller than design.md's optimistic ~1.4 s prediction). **Suite-level:** pre median wall 127.8 s / slowest shard 127.7 s; post median wall 123.9 s / slowest shard 123.8 s (~3 % reduction, ~3.9 s wall reclaim). Detail in `findings/virtual_table_runtime.md`. Phase 4 trigger remains armed — gap to < 90 s target is still ~34 s.
+**Notes:** **File-level:** pre median 1.03 s, post median 1.00 s (~3 % reclaim, ~30 ms — much smaller than design.md's optimistic ~1.4 s prediction). **Suite-level:** pre median wall 127.8 s / slowest shard 127.7 s; post median wall 123.9 s / slowest shard 123.8 s ~~(~3 % reduction, ~3.9 s wall reclaim)~~ (retracted per audit S2.7 — observed -3.9 s is within the 15.3 s pre-baseline noise envelope and not mechanistically attributable to a 30 ms file-level change). Detail in `findings/virtual_table_runtime.md`. Phase 4 trigger remains armed — gap to < 90 s target is still ~34 s.
 
 ---
 
