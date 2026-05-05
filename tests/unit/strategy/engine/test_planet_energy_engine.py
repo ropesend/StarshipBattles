@@ -2,7 +2,12 @@
 
 import pytest
 from unittest.mock import MagicMock
-from game.strategy.engine.planet_energy_engine import PlanetEnergyEngine
+from game.strategy.engine.planet_energy_engine import (
+    PlanetEnergyEngine,
+    _is_ability_active,
+    get_activatable_ability_info,
+    get_shield_info,
+)
 from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,
@@ -100,6 +105,87 @@ def _shield_design(energy_drain_rate=25.0):
             ]
         }
     }
+
+
+class TestPlanetEnergyHelpers:
+    """Tests for module-level helper branches."""
+
+    def test_get_shield_info_reads_registry_defined_component(self, fresh_registries):
+        fresh_registries.components["lookup_planetary_shield"] = {
+            "abilities": {
+                "PlanetaryShield": {
+                    "energy_drain_rate": 12.5,
+                    "activation_time": 3,
+                    "deactivation_time": 2,
+                }
+            }
+        }
+
+        info = get_shield_info({"id": "lookup_planetary_shield"}, fresh_registries)
+
+        assert info == {
+            "energy_drain_rate": 12.5,
+            "activation_time": 3,
+            "deactivation_time": 2,
+        }
+
+    def test_get_shield_info_ignores_non_dict_ability_data(self, fresh_registries):
+        fresh_registries.components["scalar_planetary_shield"] = {
+            "abilities": {"PlanetaryShield": True}
+        }
+
+        info = get_shield_info({"id": "scalar_planetary_shield"}, fresh_registries)
+
+        assert info is None
+
+    def test_get_activatable_ability_info_reads_registry_defined_component(
+        self, fresh_registries
+    ):
+        fresh_registries.components["lookup_stabilizer"] = {
+            "abilities": {
+                "GeologicStabilizer": {
+                    "energy_drain_rate": 8.0,
+                    "activation_time": 5,
+                }
+            }
+        }
+
+        info = get_activatable_ability_info(
+            {"id": "lookup_stabilizer"},
+            "GeologicStabilizer",
+            fresh_registries,
+        )
+
+        assert info == {"energy_drain_rate": 8.0, "activation_time": 5}
+
+    def test_get_activatable_ability_info_returns_none_for_list_data(
+        self, fresh_registries
+    ):
+        fresh_registries.components["list_stabilizer"] = {
+            "abilities": {
+                "GeologicStabilizer": [{"energy_drain_rate": 8.0}]
+            }
+        }
+
+        info = get_activatable_ability_info(
+            {"id": "list_stabilizer"},
+            "GeologicStabilizer",
+            fresh_registries,
+        )
+
+        assert info is None
+
+    def test_is_ability_active_handles_dict_and_non_dict_active_abilities(self):
+        active_planet = MagicMock()
+        active_planet.active_abilities = {"RadiationShield": True}
+        inactive_planet = MagicMock()
+        inactive_planet.active_abilities = {"RadiationShield": False}
+        malformed_planet = MagicMock()
+        malformed_planet.active_abilities = ["RadiationShield"]
+
+        assert _is_ability_active(active_planet, "RadiationShield") is True
+        assert _is_ability_active(inactive_planet, "RadiationShield") is False
+        assert _is_ability_active(malformed_planet, "RadiationShield") is False
 
 
 class TestPlanetEnergyEngine:

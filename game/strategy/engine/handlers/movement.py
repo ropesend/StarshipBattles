@@ -84,7 +84,7 @@ class MoveCommandHandler(BaseCommandHandler):
 
         if not path:
             if fleet.location == cmd.target_hex:
-                pass  # Already there - no-op
+                return ValidationResult.success()  # Already there - no-op
             else:
                 return ValidationResult.error("Target is unreachable or invalid.")
 

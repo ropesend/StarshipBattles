@@ -716,6 +716,21 @@ class TestVerifyStats:
         assert len(equipped_ship._loading_warnings) > 0
         assert any("max_hp" in w for w in equipped_ship._loading_warnings)
 
+    def test_verify_stats_accumulates_multiple_mismatches_including_zero_expected(
+        self, equipped_ship
+    ):
+        """_verify_stats should compare expected zero values when the key exists."""
+        expected = {
+            "max_hp": 0,
+            "mass": equipped_ship.mass + 1000,
+        }
+
+        ShipSerializer._verify_stats(equipped_ship, expected)
+
+        assert len(equipped_ship._loading_warnings) == 2
+        assert any(w.startswith("max_hp:") for w in equipped_ship._loading_warnings)
+        assert any(w.startswith("mass:") for w in equipped_ship._loading_warnings)
+
     def test_verify_stats_handles_empty_expected(self, basic_ship):
         """_verify_stats should handle empty expected stats dict."""
         ShipSerializer._verify_stats(basic_ship, {})

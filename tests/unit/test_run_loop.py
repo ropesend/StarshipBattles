@@ -46,6 +46,35 @@ def test_request_shutdown_stops_loop():
     assert loop.running is False
 
 
+def test_run_smoke_processes_one_frame_and_shutdown(monkeypatch):
+    import game.services.llm.background as llm_background
+
+    loop, boot, _, _ = _make_loop()
+    boot.clock = MagicMock()
+    boot.clock.tick.return_value = 250
+    events = [SimpleNamespace(type=pygame.USEREVENT)]
+    handle_normal_events = MagicMock(side_effect=lambda actual_events: loop.request_shutdown())
+    update_and_draw = MagicMock()
+    display_flip = MagicMock()
+    pygame_quit = MagicMock()
+    shutdown_all_calls = MagicMock()
+    monkeypatch.setattr(pygame.event, "get", lambda: events)
+    monkeypatch.setattr(pygame.display, "flip", display_flip)
+    monkeypatch.setattr(pygame, "quit", pygame_quit)
+    monkeypatch.setattr(loop, "_handle_normal_events", handle_normal_events)
+    monkeypatch.setattr(loop, "_update_and_draw", update_and_draw)
+    monkeypatch.setattr(llm_background, "shutdown_all_calls", shutdown_all_calls)
+
+    loop.run()
+
+    boot.clock.tick.assert_called_once_with(0)
+    handle_normal_events.assert_called_once_with(events)
+    update_and_draw.assert_called_once_with(0.1, events)
+    display_flip.assert_called_once_with()
+    shutdown_all_calls.assert_called_once_with(timeout=5.0)
+    pygame_quit.assert_called_once_with()
+
+
 def test_escape_closes_exit_dialog():
     loop, _, router, _ = _make_loop()
     router.show_exit_dialog = True

@@ -110,29 +110,35 @@ def get_energy_consumption(ship) -> Any:
 
 def get_resource_storage(ship, res_name) -> Any:
     """Get max storage for a specific resource."""
-    r = ship.resources.get_resource(res_name)
+    resources = getattr(ship, 'resources', None)
+    r = resources.get_resource(res_name) if resources else None
     return r.max_value if r else 0
 
 def get_resource_current(ship, res_name) -> Any:
     """Get current value for a specific resource."""
-    r = ship.resources.get_resource(res_name)
+    resources = getattr(ship, 'resources', None)
+    r = resources.get_resource(res_name) if resources else None
     return r.current_value if r else 0
 
 def get_resource_generation(ship, res_name) -> Any:
     """Get generation/regen rate for a specific resource."""
-    r = ship.resources.get_resource(res_name)
+    resources = getattr(ship, 'resources', None)
+    r = resources.get_resource(res_name) if resources else None
     return r.regen_rate if r else 0
 
 def get_resource_consumption(ship, res_name) -> Any:
     """Get total consumption for a resource."""
-    val = ship.get_resource_stat(res_name, 'consumption')
-    if val > 0:
+    try:
+        val = ship.get_resource_stat(res_name, 'consumption')
+    except (TypeError, AttributeError):
+        val = 0
+    if isinstance(val, (int, float)) and val > 0:
         return val
     from game.simulation.components.abilities.resources import ResourceConsumption
     total = 0
-    for layer in ship.layers.values():
-        for comp in layer.components:
-            for ability in comp.ability_instances:
+    for layer in getattr(ship, 'layers', {}).values():
+        for comp in getattr(layer, 'components', []):
+            for ability in getattr(comp, 'ability_instances', []):
                 if isinstance(ability, ResourceConsumption):
                     if ability.resource_type == res_name and ability.trigger == 'constant':
                         total += ability.amount
@@ -163,11 +169,17 @@ def get_resource_max_usage(ship, res_name) -> Any:
     }
     potential_res = potential_map.get(res_name)
     if potential_res:
-        val = ship.get_resource_stat(potential_res, 'consumption')
-        if val > 0:
+        try:
+            val = ship.get_resource_stat(potential_res, 'consumption')
+        except (TypeError, AttributeError):
+            val = 0
+        if isinstance(val, (int, float)) and val > 0:
             return val
-    val = ship.get_resource_stat(res_name, 'consumption')
-    if val > 0:
+    try:
+        val = ship.get_resource_stat(res_name, 'consumption')
+    except (TypeError, AttributeError):
+        val = 0
+    if isinstance(val, (int, float)) and val > 0:
         return val
     return 0
 
