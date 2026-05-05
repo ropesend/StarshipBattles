@@ -23,6 +23,13 @@
       "count": 1,
       "last_used": "2026-05-02T22:14:57Z"
     },
+    "claude-proj-archive": {
+      "agents": {
+        "claude": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-05T00:46:10Z"
+    },
     "codex-discuss-respond": {
       "agents": {
         "codex": 1
