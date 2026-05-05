@@ -9,16 +9,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. T4.7 — NewGameSetup builder docstring fix (small) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. T6.6 — Strategy load dialog modal tracking (project-shaped) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. T4.7 — NewGameSetup builder docstring fix (small) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. T6.6 — Strategy load dialog modal tracking (project-shaped) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-04
-**Active Phase:** Planning (awaiting implementation kickoff)
-**Last Action:** Project scaffolded as a closeout follow-up to PROJ-347 + PROJ-349
-**Next Action:** Begin Phase 1 (T4.7) — small docstring fix
+**Active Phase:** Awaiting Verification
+**Last Action:** Phase 2 (T6.6) Shape A migration landed — `SaveSelectionWindow` now subclasses `StrategyModalWindow`; `strategy_screen_lifecycle.show_load_game_dialog` passes `screen.ui.window_manager`; new regression test pins live-list participation. Full unit suite (15767 passed, 2 skipped) + lint clean.
+**Next Action:** User manual smoke per Verification checklist — open load dialog mid-strategy-screen, confirm hex/sidebar input is blocked while the dialog is alive.
 **Blockers:** None
-**Context for Next Agent:** Both items deferred from earlier sprints per Codex review consensus (`AgentCoordination/Scratchpad/Discussion/20260505T020232Z_proj343-349-codex-review/plans/proj343_349_remaining_plan_r003.md`). They share a "UI follow-up" theme but are very different in size: T4.7 is a 1-line docstring + maybe doc-only optional cleanup; T6.6 is an architectural modal-management retrofit.
+**Context for Next Agent:** Both items deferred from earlier sprints per Codex review consensus (`AgentCoordination/Scratchpad/Discussion/20260505T020232Z_proj343-349-codex-review/plans/proj343_349_remaining_plan_r003.md`). T4.7 docstring fix landed first; T6.6 picked Shape A (migrate to `StrategyModalWindow`) per `decisions.md` rationale.
 
 ## Overview
 
