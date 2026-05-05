@@ -95,6 +95,55 @@ def test_apply_resource_consumption_updates_resources_consumed_dict(engine, empi
     colony.consume_from_stockpile.assert_called_once_with("metals", 3.0)
 
 
+def test_apply_resource_consumption_routes_to_fleet_cargo_when_context_fleet(engine, empire):
+    """PROJ-345 T3.5: `context_type='fleet'` calls `fleet.consume_cargo_resource`.
+
+    Pins the fleet-context branch of `_apply_resource_consumption`. The
+    empire pool is NOT touched, and the per-resource cargo consumer is
+    called with (resource, amount); resources_consumed is summed.
+    """
+    fleet = MagicMock(spec=Fleet)
+    fleet.context_type = "fleet"
+    fleet.consume_cargo_resource = MagicMock()
+    item = {"resources_consumed": {"metals": 1.5}}
+
+    engine._apply_resource_consumption(empire, item, {"metals": 2.5}, fleet)
+
+    fleet.consume_cargo_resource.assert_called_once_with("metals", 2.5)
+    assert item["resources_consumed"]["metals"] == 4.0
+    empire.consume_resources.assert_not_called()
+
+
+def test_apply_resource_consumption_falls_back_to_empire_pool_when_no_context(engine, empire):
+    """PROJ-345 T3.5: no `context_type` on owner → empire.consume_resources
+    is the consumer. Pins the empire-pool fallback branch (third branch);
+    neither stockpile nor cargo APIs are touched.
+    """
+    bare = object()  # No context_type attribute at all.
+    item = {"resources_consumed": {"metals": 0.0}}
+
+    engine._apply_resource_consumption(empire, item, {"metals": 7.0}, bare)
+
+    empire.consume_resources.assert_called_once_with("metals", 7.0)
+    assert item["resources_consumed"]["metals"] == 7.0
+
+
+def test_apply_resource_consumption_skips_zero_amount_resources(engine, empire):
+    """Resources with `amount <= 0` are not consumed (guard at line 601)."""
+    fleet = MagicMock(spec=Fleet)
+    fleet.context_type = "fleet"
+    fleet.consume_cargo_resource = MagicMock()
+    item = {"resources_consumed": {}}
+
+    engine._apply_resource_consumption(
+        empire, item, {"metals": 0.0, "organics": 5.0}, fleet,
+    )
+
+    # Only the non-zero resource was consumed.
+    fleet.consume_cargo_resource.assert_called_once_with("organics", 5.0)
+    assert item["resources_consumed"] == {"organics": 5.0}
+
+
 # ---------------------------------------------------------------------------
 # _log_resource_shortage limiting-resource picker
 # ---------------------------------------------------------------------------
@@ -131,6 +180,90 @@ def test_log_resource_shortage_picks_largest_shortfall_ratio_as_limiting():
     assert payload["limiting_resource"] == "organics"
     assert payload["available"] == 0.5
     assert payload["needed"] == 5.0
+
+
+def test_log_resource_shortage_uses_fleet_cargo_for_available_in_fleet_context():
+    """PROJ-345 T3.5: `context_type='fleet'` reads `fleet.get_cargo_resource`.
+
+    Pins the fleet-context branch of `_log_resource_shortage`
+    (production_engine.py:545). The shortfall ratio is computed from
+    cargo levels, NOT from empire.resource_pool or planet stockpile,
+    and the emitted RESOURCE_SHORTAGE event records the fleet-cargo
+    available value plus the fleet's hex location.
+    """
+    captured: list = []
+
+    class _Bus:
+        def log_event(self, event_type, **kwargs):
+            captured.append((event_type, kwargs))
+
+    from game.core.registry import GameRegistries
+    eng = ProductionEngine(
+        registries=GameRegistries(components={}, modifiers={}, vehicle_classes={}, resources={}),
+        event_bus=_Bus(),
+    )
+
+    empire = MagicMock(spec=Empire)
+    empire.id = 7
+    # Empire has plenty — but fleet cargo is the source of truth for fleet ctx.
+    empire.resource_pool = {"metals": 99999.0, "organics": 99999.0}
+
+    fleet = MagicMock(spec=Fleet)
+    fleet.context_type = "fleet"
+    fleet.location = MagicMock()
+    fleet.location.q = 3
+    fleet.location.r = -2
+    cargo = {"metals": 100.0, "organics": 0.5}
+    fleet.get_cargo_resource.side_effect = lambda res: cargo[res]
+
+    item = {"design_id": "frig", "type": "ship"}
+    eng._log_resource_shortage(empire, item, {"metals": 5.0, "organics": 5.0}, fleet)
+
+    assert len(captured) == 1
+    payload = captured[0][1]
+    # Limiting resource picked using FLEET cargo (organics: 5.0/0.5 worst).
+    assert payload["limiting_resource"] == "organics"
+    assert payload["available"] == 0.5
+    assert payload["needed"] == 5.0
+    assert payload["empire_id"] == 7
+    assert payload["location_hex"] == [3, -2]
+    # `get_cargo_resource` was the source — not stockpile, not pool.
+    assert fleet.get_cargo_resource.call_count >= 1
+
+
+def test_log_resource_shortage_uses_empire_pool_when_no_context_type():
+    """PROJ-345 T3.5: no `context_type` on owner → `empire.resource_pool`
+    is the source. Pins the third (fallback) branch at
+    production_engine.py:548. Neither `get_stockpile` nor
+    `get_cargo_resource` is consulted.
+    """
+    captured: list = []
+
+    class _Bus:
+        def log_event(self, event_type, **kwargs):
+            captured.append((event_type, kwargs))
+
+    from game.core.registry import GameRegistries
+    eng = ProductionEngine(
+        registries=GameRegistries(components={}, modifiers={}, vehicle_classes={}, resources={}),
+        event_bus=_Bus(),
+    )
+
+    empire = MagicMock(spec=Empire)
+    empire.id = 9
+    empire.resource_pool = {"metals": 1.0}
+
+    bare = object()  # No context_type attribute → fallback branch.
+    item = {"design_id": "frig", "type": "ship"}
+
+    eng._log_resource_shortage(empire, item, {"metals": 10.0}, bare)
+
+    assert len(captured) == 1
+    payload = captured[0][1]
+    assert payload["limiting_resource"] == "metals"
+    assert payload["available"] == 1.0
+    assert payload["needed"] == 10.0
+    assert payload["location_hex"] is None  # bare object has no `location`.
 
 
 def test_log_resource_shortage_emitted_once_per_item_per_turn(engine, empire):
