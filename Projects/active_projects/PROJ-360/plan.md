@@ -16,14 +16,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Golden output tests for representative ships | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Extract domain contributors behind current API | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Extract domain contributors behind current API | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Replace hardcoded ability-name checks with registered contributors | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-05
-**Active Phase:** 2
-**Last Action:** Phase 1 complete — golden snapshot for 7 designs locked in `tests/unit/simulation/entities/test_ship_stats_golden.py` + sibling `*_snapshot.json`. Sharded baseline 17665/17661 passed.
-**Next Action:** Phase 2 — extract domain contributors behind unchanged `ShipStatsCalculator.calculate()` API.
+**Active Phase:** 3
+**Last Action:** Phase 2 complete — `ship_stats.py` now 486 LOC (under 500), domain contributors live in `game/simulation/entities/stat_contributors/{movement,defense,weapons,command,launch}.py`. Golden tests bit-identical; sharded suite 17702/17698 passed (+37 new contributor tests).
+**Next Action:** Phase 3 — replace hardcoded ability-name string checks with a registered-contributor pattern; add the extension acceptance test.
 **Blockers:** None
 
 ## Overview

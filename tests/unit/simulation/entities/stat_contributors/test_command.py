@@ -1,0 +1,152 @@
+"""
+Unit tests for the command stat contributor.
+
+Covers ``priority_sort_key`` (component priority for crew allocation),
+``track_multiplex`` (max_targets propagation), and the crew/life-support
+allocation phase.
+"""
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+import pytest
+
+from game.core.constants import CombatConstants
+from game.simulation.components.component_constants import ComponentStatus
+from game.simulation.entities.stat_contributors import command
+
+
+def _make_comp_with_abilities(*has_ability_names: str):
+    """Component whose ``has_ability`` returns True for the listed names."""
+    comp = MagicMock()
+    names = set(has_ability_names)
+    comp.has_ability = lambda name: name in names
+    return comp
+
+
+class TestPrioritySortKey:
+    def test_command_is_top_priority(self):
+        bridge = _make_comp_with_abilities("CommandAndControl")
+        assert command.priority_sort_key(bridge) == 0
+
+    def test_engines_outrank_weapons(self):
+        engine = _make_comp_with_abilities("CombatPropulsion")
+        thruster = _make_comp_with_abilities("ManeuveringThruster")
+        assert command.priority_sort_key(engine) == 1
+        assert command.priority_sort_key(thruster) == 1
+
+    def test_weapons_above_other_systems(self):
+        weapon = _make_comp_with_abilities("WeaponAbility")
+        other = _make_comp_with_abilities()
+        assert command.priority_sort_key(weapon) == 2
+        assert command.priority_sort_key(other) == 3
+
+    def test_command_wins_when_component_has_multiple_priorities(self):
+        """A bridge that ALSO has weapons should still sort to bridge priority."""
+        hybrid = _make_comp_with_abilities("CommandAndControl", "WeaponAbility")
+        assert command.priority_sort_key(hybrid) == 0
+
+
+class TestTrackMultiplex:
+    def test_multiplex_zero_or_missing_is_noop(self):
+        ship = MagicMock()
+        ship.max_targets = 1
+        comp = MagicMock()
+        comp.abilities = {}
+        command.track_multiplex(ship, comp)
+        assert ship.max_targets == 1
+
+        comp.abilities = {"MultiplexTracking": 0}
+        command.track_multiplex(ship, comp)
+        assert ship.max_targets == 1
+
+    def test_higher_multiplex_replaces_lower(self):
+        ship = MagicMock()
+        ship.max_targets = 2
+        comp = MagicMock()
+        comp.abilities = {"MultiplexTracking": 5}
+        command.track_multiplex(ship, comp)
+        assert ship.max_targets == 5
+
+    def test_lower_multiplex_does_not_overwrite_higher(self):
+        ship = MagicMock()
+        ship.max_targets = 5
+        comp = MagicMock()
+        comp.abilities = {"MultiplexTracking": 2}
+        command.track_multiplex(ship, comp)
+        assert ship.max_targets == 5
+
+
+def _make_crew_required_ability(amount: int):
+    ab = MagicMock()
+    ab.amount = amount
+    return ab
+
+
+def _make_active_comp(*, crew_required: int = 0):
+    comp = MagicMock()
+    comp.is_active = True
+    comp.has_ability = lambda name: False  # ensures priority_sort_key returns 3
+    comp.get_abilities = lambda name: (
+        [_make_crew_required_ability(crew_required)] if name == "CrewRequired" and crew_required else []
+    )
+    comp.status = ComponentStatus.ACTIVE
+    return comp
+
+
+class TestAllocateCrewAndLifeSupport:
+    def test_zero_crew_ships_pass_through_when_no_components_demand_crew(self):
+        ship = MagicMock()
+        ship.ship_class = "Frigate"
+        pool = [_make_active_comp(crew_required=0)]
+        command.allocate_crew_and_life_support(
+            ship, pool, available_crew=0, available_life_support=0,
+            vehicle_classes={"Frigate": {"max_mass": 5000}},
+        )
+        assert ship.crew_onboard == 0
+        assert ship.crew_required == 0
+        assert ship.max_targets == CombatConstants.DEFAULT_MAX_TARGETS
+        assert ship.max_mass_budget == 5000
+        assert pool[0].is_active is True
+
+    def test_components_deactivated_when_crew_runs_out(self):
+        ship = MagicMock()
+        ship.ship_class = "Frigate"
+        c1 = _make_active_comp(crew_required=3)
+        c2 = _make_active_comp(crew_required=5)  # not enough crew
+        pool = [c1, c2]
+        command.allocate_crew_and_life_support(
+            ship, pool, available_crew=4, available_life_support=10,
+            vehicle_classes={"Frigate": {"max_mass": 5000}},
+        )
+        assert ship.crew_required == 8  # both demands recorded
+        # First in priority order gets staffed, second is deactivated
+        assert c1.is_active is True
+        assert c2.is_active is False
+        assert c2.status == ComponentStatus.NO_CREW
+
+    def test_life_support_can_clamp_below_crew(self):
+        """Effective crew = min(crew, life_support); LS shortage drops crew avail."""
+        ship = MagicMock()
+        ship.ship_class = "Frigate"
+        c = _make_active_comp(crew_required=3)
+        pool = [c]
+        command.allocate_crew_and_life_support(
+            ship, pool, available_crew=10, available_life_support=2,
+            vehicle_classes={"Frigate": {"max_mass": 5000}},
+        )
+        # Effective crew was 2 (LS clamp), comp wanted 3, so deactivated
+        assert c.is_active is False
+        assert c.status == ComponentStatus.NO_CREW
+
+    def test_unknown_ship_class_uses_default_mass_budget(self):
+        from game.simulation.physics_constants import DEFAULT_MAX_MASS
+
+        ship = MagicMock()
+        ship.ship_class = "UnknownClass"
+        pool = []
+        command.allocate_crew_and_life_support(
+            ship, pool, available_crew=0, available_life_support=0,
+            vehicle_classes={},
+        )
+        assert ship.max_mass_budget == DEFAULT_MAX_MASS
