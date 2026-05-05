@@ -2,7 +2,7 @@
 
 Pins behaviors the existing `test_action_execution_engine.py` does NOT cover:
 - `_validate_tick_inputs` happy + unhappy paths (PROJ-251).
-- `ActionTimeResolver`-injection constructor wiring — PROJ-351 T6.3:
+- `ActionTimeResolver`-injection constructor wiring — PROJ-351A T6.3:
   the engine now consumes the injected resolver instance when one is
   supplied, and falls back to the static class method otherwise.
 - Order-popping responsibility belongs to the processor (OBS-007).
@@ -127,7 +127,7 @@ class TestValidateTickInputs:
 class TestActionTimeResolverInjection:
 
     def test_engine_consults_injected_action_time_resolver(self):
-        """PROJ-351 T6.3: when an `ActionTimeResolver` is injected, the engine
+        """PROJ-351A T6.3: when an `ActionTimeResolver` is injected, the engine
         consumes it via `self._action_time_resolver.resolve_action_time(...)`
         rather than calling the static class method.
         """
@@ -159,11 +159,11 @@ class TestActionTimeResolverInjection:
         mock_static.assert_not_called()
 
     def test_engine_falls_back_to_static_resolver_when_no_resolver_injected(self):
-        """PROJ-351 T6.3: with `action_time_resolver=None` (the default), the
+        """PROJ-351A T6.3: with `action_time_resolver=None` (the default), the
         engine falls back to the static `ActionTimeResolver.resolve_action_time`.
 
-        ANNOTATION (PROJ-353 Tier-7 T2.5): this test pins the dual-path
-        backwards-compatibility behavior introduced in PROJ-351 T6.3.
+        ANNOTATION (PROJ-353A Tier-7 T2.5): this test pins the dual-path
+        backwards-compatibility behavior introduced in PROJ-351A T6.3.
         Production callers that have NOT yet adopted DI continue to work
         because the engine falls back to the static class method when no
         resolver is injected. If a future PROJ removes the static

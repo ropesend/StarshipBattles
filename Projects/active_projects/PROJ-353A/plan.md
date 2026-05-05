@@ -1,7 +1,7 @@
-# PROJ-353: Closeout follow-up - Tooling and test-quality polish (T6.8 facade _session lint + Tier-7 polish bundle)
+# PROJ-353A: Closeout follow-up - Tooling and test-quality polish (T6.8 facade _session lint + Tier-7 polish bundle)
 
 > **WORKING ON THIS PROJECT:**
-> - Run `python Projects/scripts/current_task.py PROJ-353` to see what to do next
+> - Run `python Projects/scripts/current_task.py PROJ-353A` to see what to do next
 > - Open the phase checklist file for your current phase
 > - Check off tasks as you complete them
 > - Update Current State before stopping work
@@ -18,7 +18,7 @@
 **Last Action:** Phase 2 (Tier-7) all 13 sub-tasks landed; full unit suite green (15,783 pass / 0 fail / 2 skip), lint clean.
 **Next Action:** User verification.
 **Blockers:** None.
-**Context for Next Agent:** All 14 sub-tasks (T6.8 + Tier-7 2.1..2.13) committed per-concern with PROJ-353 Tier-7 tags. Concurrent-commit hygiene maintained (PROJ-351/352 files left untouched). See decisions.md for the T6.8 convention-only rationale.
+**Context for Next Agent:** All 14 sub-tasks (T6.8 + Tier-7 2.1..2.13) committed per-concern with PROJ-353A Tier-7 tags. Concurrent-commit hygiene maintained (PROJ-351A/352 files left untouched). See decisions.md for the T6.8 convention-only rationale.
 
 ## Overview
 
@@ -40,7 +40,7 @@ Two unrelated closeout-follow-up areas grouped because both are low-risk polish:
 - production_spawner dispatch tests use `assert_called_once_with` not `assert_called_once`
 - `_collect_team_modifiers` brittle import patch refactor
 - `_apply_damage_to_ship` dead-branch pin annotations (link to ticket)
-- `ActionExecutionEngine` test pin annotation (after PROJ-351 T6.3 lands)
+- `ActionExecutionEngine` test pin annotation (after PROJ-351A T6.3 lands)
 - PROJ-332 lazy-property + factory tests
 - PROJ-335 from_dict gaps (4 tests)
 - PROJ-336 vacuous module-constant tests

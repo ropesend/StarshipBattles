@@ -116,7 +116,7 @@ class TestLazyPropertyDefaults:
         assert isinstance(pe, PlanetEnergyEngine)
         assert engine.planet_energy_engine is pe
 
-    # PROJ-353 Tier-7 (T2.6): five additional lazy-property defaults flagged
+    # PROJ-353A Tier-7 (T2.6): five additional lazy-property defaults flagged
     # by OpenCode b4 as untested. Each pins (a) the production default class
     # and (b) idempotency.
 
@@ -181,7 +181,7 @@ class TestLazyPropertyDefaults:
 
 
 class TestCreateDefaultTurnEngineFactory:
-    """PROJ-353 Tier-7 (T2.6): pin `create_default_turn_engine` factory.
+    """PROJ-353A Tier-7 (T2.6): pin `create_default_turn_engine` factory.
 
     `test_dependency_injection.py::TestFactoryFunction` already covers the
     five originally-pinned engines. This pins the remaining lazy defaults

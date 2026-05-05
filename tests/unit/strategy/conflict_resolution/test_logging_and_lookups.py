@@ -264,7 +264,7 @@ class TestCollectTeamModifiersExceptionSwallow:
         fleets_by_empire = {0: [f1], 1: [f2]}
         empire_order = [0, 1]
 
-        # PROJ-353 Tier-7 (T2.3): patch BOTH the source module AND the engine
+        # PROJ-353A Tier-7 (T2.3): patch BOTH the source module AND the engine
         # module's namespace so the test is stable regardless of whether
         # production keeps the deferred `from ... import collect_combat_modifiers`
         # inside `_collect_team_modifiers` or hoists it to a module-level

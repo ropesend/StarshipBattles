@@ -13,7 +13,7 @@ saves_list, list_item_mapping, selection trackers) lives before the
 ``SaveSelectionUiBuilder`` so tests can swap in a Mock under
 ``bypass_init``.
 
-PROJ-352 T6.6: migrated from raw ``pygame_gui.elements.UIWindow`` to
+PROJ-352A T6.6: migrated from raw ``pygame_gui.elements.UIWindow`` to
 ``StrategyModalWindow`` so the strategy-screen load dialog auto-registers
 with ``StrategyWindowManager.iter_live_modals()`` and blocks strategy
 input while open. Callers outside the strategy screen (e.g.,
@@ -107,7 +107,7 @@ class SaveSelectionUiBuilder:
 class SaveSelectionWindow(StrategyModalWindow):
     """Window for selecting a save game to load.
 
-    PROJ-352 T6.6: subclass of :class:`StrategyModalWindow` so the
+    PROJ-352A T6.6: subclass of :class:`StrategyModalWindow` so the
     strategy-screen load dialog auto-registers with
     :meth:`StrategyWindowManager.iter_live_modals` and the strategy
     event router treats it as a blocking modal. Outside the strategy
@@ -134,7 +134,7 @@ class SaveSelectionWindow(StrategyModalWindow):
             on_load_callback: Callback(save_path, turn_number=None) when user selects a save
             on_cancel_callback: Callback() when user cancels
             window_manager: Optional :class:`StrategyWindowManager` for
-                modal registration (PROJ-352 T6.6). Pass the strategy
+                modal registration (PROJ-352A T6.6). Pass the strategy
                 screen's ``ui.window_manager`` when opening from the
                 strategy screen so the dialog blocks strategy input.
                 Pass ``None`` (default) when opening from the main menu
@@ -168,7 +168,7 @@ class SaveSelectionWindow(StrategyModalWindow):
         self.btn_cancel = None
 
         # ---- Stage 2: UIWindow shell (skipped under bypass_init by the
-        # StrategyModalWindow base class). PROJ-352 T6.6: registration
+        # StrategyModalWindow base class). PROJ-352A T6.6: registration
         # with the window manager (when non-None) happens inside
         # ``super().__init__`` after the real ``UIWindow.__init__`` chain.
         super().__init__(

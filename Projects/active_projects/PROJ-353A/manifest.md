@@ -1,10 +1,10 @@
-# PROJ-353 File Manifest
+# PROJ-353A File Manifest
 
 ## Files
 
 | File | Type | Notes |
 |------|------|-------|
-| `Projects/active_projects/PROJ-353/decisions.md` | Project artifact | T6.8 decision logged + Tier-7 per-concern observations |
+| `Projects/active_projects/PROJ-353A/decisions.md` | Project artifact | T6.8 decision logged + Tier-7 per-concern observations |
 | `tests/unit/strategy/facade/test_strategy_session_facade_session_isolation.py` (or extend existing) | Test (NEW or extend) | T6.8 — optional regression trap asserting `_session` is not in `dir()` of facade public surface |
 | `game/services/llm/background.py` | Production (refactor) | Tier-7 — fix `_done_event` race (lines 210, 291-297); set event after `_active_workers` cleanup |
 | `tests/unit/strategy/engine/test_production_spawner.py` | Test (tighten) | Tier-7 — `assert_called_once` → `assert_called_once_with(...)` |

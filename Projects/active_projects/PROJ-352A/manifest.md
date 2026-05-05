@@ -1,4 +1,4 @@
-# PROJ-352 File Manifest
+# PROJ-352A File Manifest
 
 ## Files
 
@@ -11,7 +11,7 @@
 | `game/ui/screens/strategy_event_router.py` | Production (possibly refactor) | T6.6 — modal detection at lines 47-73 includes the load dialog |
 | `tests/unit/ui/screens/test_save_selection_window*.py` | Test (update) | T6.6 — adapt to whichever shape lands |
 | `tests/unit/ui/screens/test_strategy_event_router_modal_tracking.py` (or similar) | Test (NEW) | T6.6 — regression test asserting load dialog blocks strategy input |
-| `Projects/active_projects/PROJ-352/plan.md` | Project artifact | Updates per phase |
+| `Projects/active_projects/PROJ-352A/plan.md` | Project artifact | Updates per phase |
 | `Projects/projects_index.md` | Project index | Status update at end of Phase 2 |
 
 ## Verification commands

@@ -233,7 +233,7 @@ class TestStartIdempotency:
         assert stub_llm_provider.call_count == 1
 
     def test_concurrent_start_on_same_instance_is_atomic(self):
-        """PROJ-353 audit-remediation R1: Codex flagged that
+        """PROJ-353A audit-remediation R1: Codex flagged that
         ``LLMBackgroundCall.start()`` is sequentially idempotent but not
         concurrently idempotent. Pre-fix, two threads calling ``start()``
         on the same instance can both pass the ``_thread is None`` guard
@@ -346,7 +346,7 @@ class TestStartIdempotency:
         # the race spawned 2 workers and `provider.call_count` would be 2.
         assert provider.call_count == 1, (
             f"start() must spawn exactly one worker; got {provider.call_count} "
-            "provider invocations (PROJ-353 audit-R1: same-instance concurrent "
+            "provider invocations (PROJ-353A audit-R1: same-instance concurrent "
             "start() reserved multiple slots pre-fix)"
         )
         # Counter + active workers drained back to zero by cleanup. Pre-fix

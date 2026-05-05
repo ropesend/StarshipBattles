@@ -39,7 +39,7 @@
 
 - [ ] All pass.
 - [ ] `git status` — verify no unrelated files staged.
-- [ ] Commit: `fix(action-execution-engine): consume injected action_time_resolver instead of static (PROJ-351 T6.3)`
+- [ ] Commit: `fix(action-execution-engine): consume injected action_time_resolver instead of static (PROJ-351A T6.3)`
 
 **Notes:**
 

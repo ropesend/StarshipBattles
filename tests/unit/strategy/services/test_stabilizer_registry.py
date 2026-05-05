@@ -246,7 +246,7 @@ class TestScannerKwargs:
         assert captured_registries[0] is sentinel
 
 
-# PROJ-353 Tier-7 (T2.8): the previous `TestStabilizersTuple` class
+# PROJ-353A Tier-7 (T2.8): the previous `TestStabilizersTuple` class
 # pinned the literal contents of the `STABILIZERS` tuple. That was
 # vacuous — it re-asserted the module's source code rather than any
 # behavior. The three behaviors that *actually* depend on STABILIZERS'

@@ -226,7 +226,7 @@ class TestDestroySystem:
 
 
 class TestSystemRadiusBoundaryBehavior:
-    """PROJ-353 Tier-7 (T2.8): rewritten from a vacuous module-constant
+    """PROJ-353A Tier-7 (T2.8): rewritten from a vacuous module-constant
     assertion (`SYSTEM_RADIUS_HEXES == 50`) to a behavioral pin. The
     constant matters because it picks `dist < radius` — i.e. fleets at
     EXACTLY 50 hexes are NOT considered in-system. Pin the boundary

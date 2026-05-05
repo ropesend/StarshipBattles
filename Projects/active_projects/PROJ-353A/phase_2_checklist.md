@@ -17,7 +17,7 @@
 - [x] Move event-set to AFTER cleanup so callers observing `wait()` return see consistent state.
 - [x] Consider lock around `_active_workers` (currently mutated by `start`, `_run`, `shutdown_all_calls` without serialization).
 - [x] Run targeted tests; ignore the known-flaky timing test (documented in MEMORY.md `project_flaky_llm_background_test`).
-- [x] Commit: `fix(llm-background): set _done_event after worker cleanup (PROJ-353 Tier-7)`
+- [x] Commit: `fix(llm-background): set _done_event after worker cleanup (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -30,7 +30,7 @@
 
 - [x] `git grep -n "assert_called_once()" tests/unit/strategy/engine/test_production_spawner.py` — locate every call.
 - [x] For each: replace with `assert_called_once_with(<concrete expected args>)`.
-- [x] Commit: `test(production-spawner): tighten dispatch assertions to concrete args (PROJ-353 Tier-7)`
+- [x] Commit: `test(production-spawner): tighten dispatch assertions to concrete args (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -39,7 +39,7 @@
 
 - [x] Read the patch — depends on production keeping a deferred import.
 - [x] Refactor: patch a stable seam (the function itself or the registry) instead.
-- [x] Commit: `test(team-modifiers): remove brittle import patch (PROJ-353 Tier-7)`
+- [x] Commit: `test(team-modifiers): remove brittle import patch (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -48,15 +48,15 @@
 
 - [x] Find the test pinning a dead branch.
 - [x] Add a comment linking to the relevant Observation or ticket so future cleanup doesn't look like a regression.
-- [x] Commit: `test(damage): annotate dead-branch pin with observation link (PROJ-353 Tier-7)`
+- [x] Commit: `test(damage): annotate dead-branch pin with observation link (PROJ-353A Tier-7)`
 
 **Notes:**
 
 ### Task 2.5: ActionExecutionEngine pin annotation [Simple]
-**Dependency:** PROJ-351 T6.3 must land first.
+**Dependency:** PROJ-351A T6.3 must land first.
 **File:** `tests/unit/strategy/engine/test_action_execution_engine_gaps.py`
 
-- [x] After PROJ-351 T6.3 lands, the dead-DI test was rewritten. Annotate the now-correct test with a forward reference if it still pins anything subtle.
+- [x] After PROJ-351A T6.3 lands, the dead-DI test was rewritten. Annotate the now-correct test with a forward reference if it still pins anything subtle.
 
 **Notes:**
 
@@ -69,7 +69,7 @@
 
 - [x] Add tests for the 5 lazy-property defaults flagged by OpenCode b4.
 - [x] Add a test for `create_default_turn_engine` factory.
-- [x] Commit: `test(turn-engine): cover lazy-property defaults + create_default_turn_engine factory (PROJ-353 Tier-7)`
+- [x] Commit: `test(turn-engine): cover lazy-property defaults + create_default_turn_engine factory (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -77,7 +77,7 @@
 **File:** `tests/unit/strategy/data/`
 
 - [x] 4 missing tests: PlanetaryFacility/Squadron missing required keys; Order missing `type`; extra-key tolerance.
-- [x] Commit: `test(strategy-data): cover from_dict edge cases (PROJ-353 Tier-7)`
+- [x] Commit: `test(strategy-data): cover from_dict edge cases (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -85,7 +85,7 @@
 **File:** locate via grep on test names `test_stabilizers_is_a_tuple_with_three_specs`, `test_system_radius_hexes_is_50`
 
 - [x] Decide: delete (constants are self-evident) OR rewrite as behavioral pin.
-- [x] Commit: `test(strategy-services): replace vacuous module-constant tests with behavioral pins (PROJ-353 Tier-7)`
+- [x] Commit: `test(strategy-services): replace vacuous module-constant tests with behavioral pins (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -93,7 +93,7 @@
 **File:** locate via grep
 
 - [x] Add an assertion pinning the quantize-to-2 step (currently only the floor is pinned).
-- [x] Commit: `test(font): pin quantize-to-2 step in get_font minimum-size enforcement (PROJ-353 Tier-7)`
+- [x] Commit: `test(font): pin quantize-to-2 step in get_font minimum-size enforcement (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -122,7 +122,7 @@
 - [x] Per Stream 2: PROJ-321 task said REWRITE not delete; no replacement exists.
 - [x] Recover; rewrite to match current production.
 - [x] Update PROJ-321 phase checklist to reflect the actual state.
-- [x] Commit: `test: recover and rewrite test_start_battle_ship_builder_calls_to_ship_with_position_and_team_id (PROJ-353 Tier-7)`
+- [x] Commit: `test: recover and rewrite test_start_battle_ship_builder_calls_to_ship_with_position_and_team_id (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -131,7 +131,7 @@
 
 - [x] After PROJ-328 A.5 retrofit, this test no longer tests construction registration.
 - [x] Rewrite to actually exercise construction-time registration (do NOT call `register_modal` manually; assert it's called as a construction side-effect).
-- [x] Commit: `test: actually test construction-time modal registration in TestRegisterOnConstruction (PROJ-353 Tier-7)`
+- [x] Commit: `test: actually test construction-time modal registration in TestRegisterOnConstruction (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -140,7 +140,7 @@
 
 - [x] Read the context-manager. Identify the MRO leak risk under pytest-xdist parallel.
 - [x] Refactor to instance-level state OR document the constraint.
-- [x] Commit: `fix(test-fixtures): isolate bypass_init MRO state per worker (PROJ-353 Tier-7)`
+- [x] Commit: `fix(test-fixtures): isolate bypass_init MRO state per worker (PROJ-353A Tier-7)`
 
 **Notes:**
 
@@ -152,7 +152,7 @@
 
 - [x] `pytest tests/unit/ -q -p no:cacheprovider` — full suite green.
 - [x] `python Tools/lint_test_files.py` — 0 violations.
-- [x] Update `Projects/projects_index.md` PROJ-353 → `Awaiting Verification`. Commit: `chore(PROJ-353): mark closeout follow-up awaiting verification`.
+- [x] Update `Projects/projects_index.md` PROJ-353A → `Awaiting Verification`. Commit: `chore(PROJ-353A): mark closeout follow-up awaiting verification`.
 
 **Notes:**
 

@@ -61,7 +61,7 @@ class TestFromDictRequiredKeys:
                 "name": "n",
             })
 
-    # PROJ-353 Tier-7 (T2.7): coverage gap — only `instance_id` and
+    # PROJ-353A Tier-7 (T2.7): coverage gap — only `instance_id` and
     # `design_data` missing-key paths were pinned previously. Add the
     # other two required keys plus an extra-key tolerance pin.
 

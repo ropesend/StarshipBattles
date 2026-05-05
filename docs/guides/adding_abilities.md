@@ -343,9 +343,9 @@ Scope can also be set per-instance in component JSON:
 Strategic-layer abilities that appear in the game UI require additional registration beyond the ABILITY_REGISTRY. See [strategy_layer.md](../systems/strategy_layer.md) for the full checklist.
 
 **If the ability is activatable** (has `energy_drain_rate`/`activation_time`):
-1. PROJ-351 T6.4: the abilities-window scanner is data-driven — any component ability whose data carries an `activation_time` field is automatically discovered by `PlanetAbilitiesController.scan_abilities()` (`game/ui/screens/planet_abilities_controller.py:128-183`). No hardcoded list registration is required. If the CamelCase humanization doesn't match the desired UI label, add an entry to `ABILITY_DISPLAY_NAME_OVERRIDES` (`game/ui/screens/planet_abilities_controller.py:45-47`).
+1. PROJ-351A T6.4: the abilities-window scanner is data-driven — any component ability whose data carries an `activation_time` field is automatically discovered by `PlanetAbilitiesController.scan_abilities()` (`game/ui/screens/planet_abilities_controller.py:128-183`). No hardcoded list registration is required. If the CamelCase humanization doesn't match the desired UI label, add an entry to `ABILITY_DISPLAY_NAME_OVERRIDES` (`game/ui/screens/planet_abilities_controller.py:45-47`).
 2. Add to `_ACTIVATABLE_ABILITIES` in `game/strategy/engine/planet_energy_engine.py`
-3. Add to `_ACTIVATABLE_DISPLAY_NAMES` in `game/ui/screens/strategy_detail_fmt.py` (independent of the scanner; not migrated by PROJ-351 T6.4)
+3. Add to `_ACTIVATABLE_DISPLAY_NAMES` in `game/ui/screens/strategy_detail_fmt.py` (independent of the scanner; not migrated by PROJ-351A T6.4)
 
 **If the ability affects system or sector scope:**
 4. Add to `SYSTEM_EFFECT_ABILITIES` in `game/strategy/services/system_effects_collector.py` — system-scoped abilities appear in the System panel (`_SYSTEM_SCOPES`), sector-scoped abilities appear in the Sector panel (`_SECTOR_SCOPES`)
@@ -492,7 +492,7 @@ No `__init__` override needed -- the base `Ability.__init__` handles `component`
 - [ ] Unit tests for STAT_BINDINGS
 - [ ] Integration tests for modifier interaction
 - [ ] All tests pass
-- [ ] (If activatable) Component data declares `activation_time` (auto-discovered by `PlanetAbilitiesController.scan_abilities` per PROJ-351 T6.4); added to `_ACTIVATABLE_ABILITIES` + `_ACTIVATABLE_DISPLAY_NAMES`. Optional: `ABILITY_DISPLAY_NAME_OVERRIDES` entry if CamelCase humanization doesn't match the UI label.
+- [ ] (If activatable) Component data declares `activation_time` (auto-discovered by `PlanetAbilitiesController.scan_abilities` per PROJ-351A T6.4); added to `_ACTIVATABLE_ABILITIES` + `_ACTIVATABLE_DISPLAY_NAMES`. Optional: `ABILITY_DISPLAY_NAME_OVERRIDES` entry if CamelCase humanization doesn't match the UI label.
 - [ ] (If system/sector scope) Added to `SYSTEM_EFFECT_ABILITIES` in system_effects_collector
 - [ ] (If combat-affecting) Added to combat_modifier_collector with `require_active=True`
 - [ ] (If planet modifier) Editor window, `ENVIRONMENT_EDITORS` entry in `planet_abilities_controller.py`, event router method

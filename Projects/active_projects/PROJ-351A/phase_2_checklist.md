@@ -42,7 +42,7 @@
 **Tests:** `pytest tests/unit/ui/screens/test_planet_abilities_controller* -x -q`
 
 - [ ] All pass.
-- [ ] Commit: `refactor(planet-abilities-controller): replace hardcoded ability lists with registry scan (PROJ-351 T6.4)`
+- [ ] Commit: `refactor(planet-abilities-controller): replace hardcoded ability lists with registry scan (PROJ-351A T6.4)`
 
 **Notes:**
 
@@ -51,7 +51,7 @@
 
 - [ ] Full unit suite green.
 - [ ] `python Tools/lint_test_files.py` — 0 violations.
-- [ ] Update `Projects/projects_index.md` PROJ-351 → `Awaiting Verification`. Commit: `chore(PROJ-351): mark closeout follow-up awaiting verification`.
+- [ ] Update `Projects/projects_index.md` PROJ-351A → `Awaiting Verification`. Commit: `chore(PROJ-351A): mark closeout follow-up awaiting verification`.
 
 **Notes:**
 

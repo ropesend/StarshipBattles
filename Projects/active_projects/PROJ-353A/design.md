@@ -1,4 +1,4 @@
-# PROJ-352: Design Document
+# PROJ-353A: Design Document
 
 > **THIS IS A REFERENCE DOCUMENT**
 > Do not modify during implementation. Refer to this for architecture decisions.

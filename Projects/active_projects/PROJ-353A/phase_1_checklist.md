@@ -34,7 +34,7 @@
 
 ### Task 1.4: Commit decision [Simple]
 
-- [x] If only [decisions.md](decisions.md) changed: commit `docs(PROJ-353 T6.8): record decision to keep facade _session enforcement convention-only`.
+- [x] If only [decisions.md](decisions.md) changed: commit `docs(PROJ-353A T6.8): record decision to keep facade _session enforcement convention-only`.
 - [ ] ~~If a regression-trap test was added: separate commit~~ N/A.
 
 **Notes:**

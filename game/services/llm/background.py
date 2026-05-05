@@ -55,7 +55,7 @@ class CallStatus(str, Enum):
 
 _in_flight_calls: int = 0
 _in_flight_lock: threading.Lock = threading.Lock()
-# PROJ-353 Tier-7 (T2.1): mutations of `_active_workers` are serialized via
+# PROJ-353A Tier-7 (T2.1): mutations of `_active_workers` are serialized via
 # `_in_flight_lock`. The set is read via `list(_active_workers)` in
 # `shutdown_all_calls`, which is also taken under the lock so the snapshot
 # is consistent with the in-flight counter.
@@ -124,7 +124,7 @@ class LLMBackgroundCall:
         """Spawn the worker thread. Idempotent — second call is a no-op.
 
         Idempotency holds for both sequential AND concurrent same-instance
-        callers. Pre-PROJ-353-audit-R1 the guard, slot reservation, and
+        callers. Pre-PROJ-353A-audit-R1 the guard, slot reservation, and
         ``_thread`` assignment lived in three separate critical sections,
         so two threads racing into ``start()`` could both pass the
         ``_thread is None`` guard before either reserved a slot — burning
@@ -161,7 +161,7 @@ class LLMBackgroundCall:
                 _in_flight_calls += 1
                 # Track for shutdown_all_calls(). Add before the OS
                 # spawn so the worker can never finish before it is
-                # registered. PROJ-353 T2.1 ordering preserved: this
+                # registered. PROJ-353A T2.1 ordering preserved: this
                 # serialization keeps the worker set consistent with
                 # the in-flight counter; a finishing worker must see
                 # itself in the set when it decrements the counter.
@@ -246,7 +246,7 @@ class LLMBackgroundCall:
     # -- Worker --------------------------------------------------------------
 
     def _run(self) -> None:
-        # PROJ-324 Phase 2 / PROJ-353 Tier-7 T2.1: every code path through
+        # PROJ-324 Phase 2 / PROJ-353A Tier-7 T2.1: every code path through
         # `_run()` must signal completion via `self._done_event.set()` so
         # callers blocked on `wait(timeout)` unblock deterministically.
         # The OUTER `try/finally` below sets the event regardless of which
@@ -315,7 +315,7 @@ class LLMBackgroundCall:
                     self._finished_at = time.monotonic()
 
             finally:
-                # PROJ-353 Tier-7 T2.1: release the in-flight slot and
+                # PROJ-353A Tier-7 T2.1: release the in-flight slot and
                 # de-register the worker BEFORE signalling completion.
                 # Previously `_done_event.set()` ran first (in the inner
                 # `finally`), so a `wait()`-er observing the terminal
@@ -350,7 +350,7 @@ def shutdown_all_calls(timeout: float = 5.0) -> None:
     logged as a warning and the function returns — better than hanging
     the game forever on shutdown.
     """
-    # PROJ-353 T2.1: snapshot under the lock so we don't iterate a set
+    # PROJ-353A T2.1: snapshot under the lock so we don't iterate a set
     # being mutated by a concurrently-finishing worker.
     with _in_flight_lock:
         workers = list(_active_workers)

@@ -4,9 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-353 | Closeout follow-up - Tooling and test-quality polish (T6.8 + Tier-7 + Codex audit-remediation R1/R2/R3 per 20260505T034007Z) | Awaiting Verification | 2026-05-04 | 2026-05-05 |
-| PROJ-352 | Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
-| PROJ-351 | Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
+| PROJ-353A | Closeout follow-up - Tooling and test-quality polish (T6.8 + Tier-7 + Codex audit-remediation R1/R2/R3 per 20260505T034007Z) | Awaiting Verification | 2026-05-04 | 2026-05-05 |
+| PROJ-352A | Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
+| PROJ-351A | Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-350 | Combat Lab Registry Class Identity Fix | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-349 | Closeout Sprint 7 - Documentation drift and convention violations from review (T6.2/T6.7 + audit-update; T6.5 declined; T6.1/T6.3/T6.4/T6.6/T6.8 + Tier-7 deferred for user direction) | Awaiting Verification (Partial) | 2026-05-04 | 2026-05-04 |
 | PROJ-348 | Closeout Sprint 6 - Controller boundary cleanup from PROJ-329C review (T5.1/T5.3/T5.4 fixed; T5.2 declined as not-a-defect) | Awaiting Verification | 2026-05-04 | 2026-05-04 |

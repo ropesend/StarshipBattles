@@ -28,7 +28,7 @@
 ### Task 1.3: Commit [Simple]
 
 - [ ] `git status` — verify only `new_game_setup_screen.py` staged.
-- [ ] Commit: `docs(new-game-setup-screen): fix misleading builder docstring per PROJ-352 T4.7`
+- [ ] Commit: `docs(new-game-setup-screen): fix misleading builder docstring per PROJ-352A T4.7`
 
 **Notes:**
 

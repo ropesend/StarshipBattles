@@ -1,9 +1,9 @@
-"""PROJ-353 audit-R2: characterization tests for ``PlanetAbilitiesController``
+"""PROJ-353A audit-R2: characterization tests for ``PlanetAbilitiesController``
 scanner + editor-discovery surface.
 
-Codex's PROJ-351..353 audit
+Codex's PROJ-351A..353 audit
 (``AgentCoordination/Scratchpad/Discussion/20260505T034007Z_proj351-353-codex-audit/``)
-flagged that PROJ-351 T6.4's data-driven scanner refactor (replacing the
+flagged that PROJ-351A T6.4's data-driven scanner refactor (replacing the
 hardcoded ``TOGGLEABLE_ABILITIES`` / ``_ENVIRONMENT_EDITORS`` /
 ``_ACTIVATABLE_ABILITIES`` lists with registry/data scans) had no direct
 tests against ``scan_abilities`` or ``get_available_editors``. Without

@@ -79,7 +79,7 @@ def _make_manager():
 class TestRegisterOnConstruction:
     """A subclass instance must appear in iter_live_modals on construction.
 
-    PROJ-353 Tier-7 (T2.12): retrofit. After PROJ-328 A.5 the original
+    PROJ-353A Tier-7 (T2.12): retrofit. After PROJ-328 A.5 the original
     versions of these tests went through `_make_modal_window`, which
     uses `bypass_init` and then MANUALLY calls
     `window_manager.register_modal(win)`. That meant the assertions were

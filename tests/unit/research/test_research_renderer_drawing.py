@@ -668,7 +668,7 @@ class TestMisc:
 
     def test_get_font_quantizes_to_nearest_even_step(
             self, renderer_module, monkeypatch):
-        """PROJ-353 Tier-7 (T2.9): the floor at 8 was previously the only
+        """PROJ-353A Tier-7 (T2.9): the floor at 8 was previously the only
         pinned property. The quantize-to-2 step (`(size // 2) * 2`) is
         what prevents unbounded cache growth — pin it explicitly so a
         future refactor that drops the quantization (e.g. passing the
