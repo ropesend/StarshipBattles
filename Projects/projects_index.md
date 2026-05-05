@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-354B | Replay Background Verification Coordinator (Phase B of replay verification consensus plan r003 - pure verifier + queue + sidecar; depends on PROJ-354A and on production sink wiring) | Planning | 2026-05-04 | 2026-05-04 |
+| PROJ-354A | Replay Component End-State Fidelity (Phase A of replay verification consensus plan r003 - capture-side; max_hp + status fields; schema bump) | Planning | 2026-05-04 | 2026-05-04 |
 | PROJ-353A | Closeout follow-up - Tooling and test-quality polish (T6.8 + Tier-7 + Codex audit-remediation R1/R2/R3 per 20260505T034007Z) | Awaiting Verification | 2026-05-04 | 2026-05-05 |
 | PROJ-352A | Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
 | PROJ-351A | Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan) | Awaiting Verification | 2026-05-04 | 2026-05-04 |
