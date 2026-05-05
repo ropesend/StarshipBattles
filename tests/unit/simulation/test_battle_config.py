@@ -59,6 +59,21 @@ class TestBattleConfigDefaults:
         config = BattleConfig()
         assert isinstance(config.end_condition, TeamEliminatedCondition)
 
+    def test_default_end_condition_uses_fresh_instance(self):
+        """Each BattleConfig gets its own default end condition instance."""
+        first = BattleConfig()
+        second = BattleConfig()
+
+        assert first.end_condition is not second.end_condition
+
+    def test_default_replay_flags_are_disabled(self):
+        """Replay playback fields default to the non-replay visual-battle path."""
+        config = BattleConfig()
+
+        assert config.replay_mode is False
+        assert config.replay_id is None
+        assert config.captured_telemetry_level is None
+
 
 class TestBattleConfigDeletedFields:
     """Fields deleted by PROJ-269 Phase 6 + PROJ-270 must not reappear.
@@ -115,3 +130,29 @@ class TestBattleConfigKwargs:
 
     def test_absolute_max_ticks_kwarg(self):
         assert BattleConfig(absolute_max_ticks=500).absolute_max_ticks == 500
+
+    def test_end_condition_kwarg(self):
+        sentinel = object()
+
+        config = BattleConfig(end_condition=sentinel)
+
+        assert config.end_condition is sentinel
+
+
+class TestBattleConfigReplayKwargs:
+    """Explicit replay-mode configuration used by visual replay playback."""
+
+    def test_replay_fields_accept_explicit_values(self):
+        config = BattleConfig(
+            replay_mode=True,
+            replay_id="replay-123",
+            captured_telemetry_level="DETAILED",
+            return_destination=ReturnDestination.STRATEGY,
+            show_results=False,
+        )
+
+        assert config.replay_mode is True
+        assert config.replay_id == "replay-123"
+        assert config.captured_telemetry_level == "DETAILED"
+        assert config.return_destination == ReturnDestination.STRATEGY
+        assert config.show_results is False

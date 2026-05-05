@@ -24,6 +24,7 @@ from game.simulation.components.abilities.weapons import (
     ProjectileWeaponAbility,
     BeamWeaponAbility,
     SeekerWeaponAbility,
+    _parse_formula_field,
 )
 from game.core.config import PhysicsConfig
 
@@ -176,9 +177,24 @@ class TestWeaponAbilityInitialization:
         assert 'kinetic' in ability.tags
         assert 'heavy' in ability.tags
 
+    def test_get_raw_field_returns_default_when_fallback_missing(self, mock_component):
+        """Private raw-field helper falls back to default when neither key exists."""
+        ability = WeaponAbility(mock_component, {'damage': 1, 'range': 1})
+
+        result = ability._get_raw_field(True, 'missing', 7.5, 'base_missing')
+
+        assert result == 7.5
+
 
 class TestWeaponAbilityFormulaSupport:
     """Test formula-based damage/range/reload calculation."""
+
+    def test_parse_formula_field_uses_default_for_none(self):
+        """None raw values use the provided default and have no formula."""
+        value, formula = _parse_formula_field(None, default=2.5)
+
+        assert value == 2.5
+        assert formula is None
 
     def test_damage_formula_stored(self, mock_component, formula_weapon_data):
         """Damage formula is stored and base damage calculated at range 0."""
@@ -434,6 +450,15 @@ class TestWeaponAbilityRecalculate:
         ability.recalculate()  # Should be 150, not 300
 
         assert ability.damage == pytest.approx(150.0, rel=1e-6)
+
+    def test_recalculate_syncs_facing_angle_from_component_properties(self, mock_component, basic_weapon_data):
+        """Component properties can override weapon facing angle on recalculate."""
+        mock_component.stats = {'properties': {'facing_angle': 135.0}}
+        ability = WeaponAbility(mock_component, basic_weapon_data)
+
+        ability.recalculate()
+
+        assert ability.facing_angle == 135.0
 
 
 class TestWeaponAbilitySyncData:
@@ -717,6 +742,18 @@ class TestBeamWeaponAbility:
         assert ability.accuracy_falloff == 0.001
         assert ability.base_accuracy == 1.0
 
+    def test_init_non_dict_uses_component_accuracy_attributes(self, mock_component):
+        """Non-dict data falls back to component-level beam attributes."""
+        mock_component.data = {'damage': 50, 'range': 500, 'reload': 1.0}
+        mock_component.accuracy_falloff = 0.003
+        mock_component.base_accuracy = 0.75
+
+        ability = BeamWeaponAbility(mock_component, True)
+
+        assert ability.accuracy_falloff == 0.003
+        assert ability.base_accuracy == 0.75
+        assert ability.pdc_valid_targets == ["MISSILE", "FIGHTER"]
+
     def test_get_ui_rows_includes_accuracy(self, mock_component):
         """UI rows include accuracy percentage."""
         data = {
@@ -977,6 +1014,27 @@ class TestSeekerWeaponAbility:
         ability = SeekerWeaponAbility(mock_component, data)
 
         assert ability.projectile_damage == 200.0
+
+    def test_init_non_dict_uses_component_seeker_attributes(self, mock_component):
+        """Non-dict data falls back to component-level seeker attributes."""
+        mock_component.data = {'damage': 10, 'range': 1000, 'reload': 1.0}
+        mock_component.projectile_speed = 700
+        mock_component.endurance = 4.0
+        mock_component.turn_rate = 60.0
+        mock_component.to_hit_defense = 1.5
+        mock_component.projectile_damage = 250
+        mock_component.projectile_hp = 8
+        mock_component.projectile_stealth = 2.0
+
+        ability = SeekerWeaponAbility(mock_component, True)
+
+        assert ability.projectile_speed == 700.0
+        assert ability.endurance == 4.0
+        assert ability.turn_rate == 60.0
+        assert ability.to_hit_defense == 1.5
+        assert ability.projectile_damage == 250.0
+        assert ability.projectile_hp == 8.0
+        assert ability.projectile_stealth == 2.0
 
     def test_check_firing_solution_ignores_arc(self, mock_component, seeker_data):
         """Seekers ignore firing arc (omni-directional)."""

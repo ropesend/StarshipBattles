@@ -39,6 +39,33 @@ class TestResourceStateConsume:
         assert result is True
         assert state.current_value == 50.0
 
+    def test_has_sufficient_does_not_consume(self):
+        """has_sufficient checks availability without changing current value."""
+        state = ResourceState("fuel", max_value=100.0, current_value=40.0)
+
+        assert state.has_sufficient(40.0) is True
+        assert state.has_sufficient(40.1) is False
+        assert state.current_value == 40.0
+
+
+class TestResourceStateMutation:
+    """Tests for ResourceState direct mutation helpers."""
+
+    def test_add_clamps_at_max(self):
+        state = ResourceState("energy", max_value=100.0, current_value=90.0)
+
+        state.add(25.0)
+
+        assert state.current_value == 100.0
+
+    def test_set_max_clamps_current_when_reduced(self):
+        state = ResourceState("ammo", max_value=100.0, current_value=80.0)
+
+        state.set_max(50.0)
+
+        assert state.max_value == 50.0
+        assert state.current_value == 50.0
+
 
 class TestResourceStateRegen:
     """Tests for ResourceState regeneration edge cases."""
@@ -93,6 +120,37 @@ class TestResourceRegistryStorage:
         assert res.max_value == 200.0
 
 
+class TestResourceRegistryGeneration:
+    """Tests for ResourceRegistry generation registration and update."""
+
+    def test_register_generation_creates_new(self):
+        registry = ResourceRegistry()
+
+        registry.register_generation("energy", 5.0)
+
+        res = registry.get_resource("energy")
+        assert res is not None
+        assert res.regen_rate == 5.0
+
+    def test_register_generation_additive(self):
+        registry = ResourceRegistry()
+
+        registry.register_generation("energy", 5.0)
+        registry.register_generation("energy", 2.5)
+
+        assert registry.get_resource("energy").regen_rate == 7.5
+
+    def test_update_applies_registered_generation(self):
+        registry = ResourceRegistry()
+        registry.register_storage("energy", 100.0)
+        registry.register_generation("energy", 10.0)
+        registry.set_value("energy", 50.0)
+
+        registry.update()
+
+        assert registry.get_value("energy") > 50.0
+
+
 class TestResourceRegistrySetValue:
     """Tests for ResourceRegistry.set_value edge cases."""
 
@@ -122,6 +180,11 @@ class TestResourceRegistrySetValue:
         registry.set_value("missing", 50.0)
 
         assert registry.get_value("missing") == 0.0
+
+    def test_get_max_value_nonexistent_resource_returns_zero(self):
+        registry = ResourceRegistry()
+
+        assert registry.get_max_value("missing") == 0.0
 
 
 class TestResourceRegistryResetStats:
@@ -179,3 +242,56 @@ class TestResourceRegistryModifyValue:
         registry.modify_value("ammo", 50.0)
 
         assert registry.get_value("ammo") == 100.0
+
+    def test_modify_value_nonexistent_resource_does_nothing(self):
+        registry = ResourceRegistry()
+
+        registry.modify_value("missing", 50.0)
+
+        assert registry.get_value("missing") == 0.0
+
+
+class TestResourceRegistrySetters:
+    """Tests for direct max and regen setter helpers."""
+
+    def test_set_max_value_creates_missing_resource(self):
+        registry = ResourceRegistry()
+
+        registry.set_max_value("fuel", 125.0)
+
+        assert registry.get_max_value("fuel") == 125.0
+
+    def test_set_max_value_updates_existing_resource(self):
+        registry = ResourceRegistry()
+        registry.register_storage("fuel", 100.0)
+
+        registry.set_max_value("fuel", 75.0)
+
+        assert registry.get_max_value("fuel") == 75.0
+
+    def test_set_regen_rate_updates_existing_resource(self):
+        registry = ResourceRegistry()
+        registry.register_generation("energy", 5.0)
+
+        registry.set_regen_rate("energy", 12.0)
+
+        assert registry.get_resource("energy").regen_rate == 12.0
+
+    def test_set_regen_rate_missing_resource_does_nothing(self):
+        registry = ResourceRegistry()
+
+        registry.set_regen_rate("missing", 12.0)
+
+        assert registry.get_resource("missing") is None
+
+
+class TestResourceRegistryCollections:
+    """Tests for collection accessors."""
+
+    def test_resource_names_and_all_resources(self):
+        registry = ResourceRegistry()
+        registry.register_storage("fuel", 100.0)
+        registry.register_generation("energy", 5.0)
+
+        assert registry.get_resource_names() == ["fuel", "energy"]
+        assert [res.name for res in registry.get_all_resources()] == ["fuel", "energy"]
