@@ -8,9 +8,7 @@ and orchestrates service calls, keeping UI rendering separate from business logi
 from typing import Optional, List, Dict, Any
 from combat_lab.services import (
     ScenarioDataService,
-    TestExecutionService,
     UIStateService,
-    TestResultsService,
 )
 from combat_lab.registry import TestRegistry
 from combat_lab.test_history import TestHistory
@@ -24,23 +22,19 @@ class TestLabUIController:
 
     """Controller for Combat Lab UI, coordinating services and handling user actions."""
 
-    def __init__(self, game, registry: TestRegistry, test_history: TestHistory):
+    def __init__(self, registry: TestRegistry, test_history: TestHistory) -> None:
         """
         Initialize controller with services.
 
         Args:
-            game: Game instance for scene/engine access
             registry: TestRegistry instance
             test_history: TestHistory instance
         """
-        self.game = game
         self.registry = registry
 
         # Initialize services
         self.scenario_data = ScenarioDataService()
-        self.test_execution = TestExecutionService()
         self.ui_state = UIStateService()
-        self.test_results = TestResultsService(test_history, registry)
 
         # Output log for UI display
         self.output_log: List[str] = []
@@ -83,79 +77,6 @@ class TestLabUIController:
             test_id: Test ID
         """
         self.ui_state.select_test(test_id)
-
-    def handle_run_visual(self):
-        """Handle visual test execution button click."""
-        test_id = self.ui_state.get_selected_test_id()
-        if not test_id:
-            self.output_log.append("ERROR: No test selected!")
-            return
-
-        scenario_info = self.registry.get_by_id(test_id)
-        if not scenario_info:
-            self.output_log.append(f"ERROR: Test {test_id} not found!")
-            return
-
-        metadata = scenario_info['metadata']
-        self.output_log.append(f"Running {metadata.name}...")
-
-        success = self.test_execution.run_visual(
-            scenario_info,
-            self.game.battle_scene,
-            self.game
-        )
-
-        if success:
-            self.output_log.append(f"Started test {test_id}")
-        else:
-            self.output_log.append(f"ERROR: Failed to start test {test_id}")
-
-    def handle_run_headless(self, on_progress=None):
-        """
-        Handle headless test execution button click.
-
-        Args:
-            on_progress: Optional callback(tick, max_ticks) for progress updates
-        """
-        test_id = self.ui_state.get_selected_test_id()
-        if not test_id:
-            self.output_log.append("ERROR: No test selected!")
-            return
-
-        scenario_info = self.registry.get_by_id(test_id)
-        if not scenario_info:
-            self.output_log.append(f"ERROR: Test {test_id} not found!")
-            return
-
-        metadata = scenario_info['metadata']
-        self.output_log.append(f"Running {metadata.name} (headless)...")
-
-        # Mark as running
-        self.ui_state.set_headless_running(True)
-
-        # Execute test
-        result = self.test_execution.run_headless(
-            scenario_info,
-            on_progress=on_progress
-        )
-
-        # Mark as not running
-        self.ui_state.set_headless_running(False)
-
-        # Handle results
-        if result['error']:
-            self.output_log.append(f"ERROR: {result['error']}")
-        else:
-            # Add to history and update registry
-            self.test_results.add_run(test_id, result['results'], update_registry=True)
-
-            # Log status
-            status = "PASSED" if result['passed'] else "FAILED"
-            self.output_log.append(
-                f"Test {test_id} {status} ({result['ticks_run']} ticks, {result['duration_real']:.2f}s)"
-            )
-
-        return result
 
     def get_filtered_scenarios(self, category: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
         """

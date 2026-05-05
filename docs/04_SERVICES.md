@@ -197,7 +197,6 @@ Both `run_battle(spec, ai_factory=..., ship_builder=None)` and `BattleController
 |--------|------------------------|-------------------------------|-------------------|
 | `game/app.py::start_battle` | No | Yes (via `get_default_registry_provider()`) | InstanceBackedMaterializer (default) |
 | `game/strategy/adapters/simulation_adapter.py` | No | Yes | InstanceBackedMaterializer (default) |
-| `combat_lab/services/test_execution_service.py` | Yes (`build_context_ship_builder` wrapper) | Yes | DesignOnlyMaterializer (installed by TestRunner) |
 | `combat_lab/services/scenario_run_helper.py` | Yes (role-tagging wrapper around `build_context_ship_builder`) | Yes | Wraps context builder |
 | `game/ui/screens/test_lab/screen.py` | Yes (pre-snapshot via `build_context_ship_builder`) | Yes | DesignOnlyMaterializer |
 | `combat_lab/scenarios/templates.py::ComparisonScenario` | Yes (role-tagging wrapper) | Yes | Wraps context builder |

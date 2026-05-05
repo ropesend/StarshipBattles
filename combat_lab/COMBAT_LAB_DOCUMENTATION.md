@@ -70,8 +70,6 @@ Starship Battles/
 │   └── services/
 │       ├── test_lab_controller.py      # UI controller (coordinates services)
 │       ├── scenario_data_service.py    # Ship/component data loading
-│       ├── test_execution_service.py   # Test execution orchestration
-│       ├── test_results_service.py     # Results storage and retrieval
 │       └── ui_state_service.py         # UI state management
 │
 ├── combat_lab/
@@ -158,11 +156,11 @@ Starship Battles/
 │   TestRunner    │  │  TestRegistry   │  │          Services               │
 │  (runner.py)    │  │ (registry.py)   │  │                                 │
 │                 │  │                 │  │  - ScenarioDataService          │
-│  - Load data    │  │  - Auto-scan    │  │  - TestExecutionService         │
-│  - Run loop     │  │    scenarios/   │  │  - TestResultsService           │
-│  - Log results  │  │  - Filter by    │  │  - UIStateService               │
-│  - Handle       │  │    category/tag │  │                                 │
-│    errors       │  │  - Singleton    │  │                                 │
+│  - Load data    │  │  - Auto-scan    │  │  - UIStateService               │
+│  - Run loop     │  │    scenarios/   │  │                                 │
+│  - Log results  │  │  - Filter by    │  │  (Run orchestration lives in    │
+│  - Handle       │  │    category/tag │  │   TestLabExecutor — the UI      │
+│    errors       │  │  - Singleton    │  │   delegate, not a service.)     │
 └────────┬────────┘  └────────┬────────┘  └─────────────────────────────────┘
          │                    │
          └─────────┬──────────┘
@@ -216,14 +214,14 @@ Starship Battles/
          ├──> UIStateService.select_test(test_id)
          │
          ▼
-3. User clicks "Run Test"
+3. User clicks "Run Test" / "Run Headless" / "Run All"
          │
          ▼
-4. TestLabUIController.handle_run_headless() or handle_run_visual()
+4. TestLabInputHandler dispatches to TestLabScreen callbacks
          │
-         ├──> TestRegistry.get_by_id(test_id) → scenario_info
-         │
-         ├──> TestExecutionService.run_headless(scenario_info, engine)
+         ├──> TestLabExecutor.run_visual / run_headless / run_all
+         │         │
+         │         ├──> TestRegistry.get_by_id(test_id) → scenario_info
          │         │
          │         ├──> TestRunner.load_data_for_scenario(scenario)
          │         │         │
@@ -232,13 +230,7 @@ Starship Battles/
          │         │         ├──> Load modifiers.json
          │         │         └──> Load vehicleclasses.json
          │         │
-         │         ├──> scenario.setup(engine)
-         │         │         │
-         │         │         ├──> Load attacker ship from JSON
-         │         │         ├──> Load target ship from JSON
-         │         │         ├──> Position ships
-         │         │         ├──> Calculate expected values
-         │         │         └──> Store initial state
+         │         ├──> Build BattleSpec via spec_compiler
          │         │
          │         ├──> SIMULATION LOOP (max_ticks iterations)
          │         │         │
@@ -256,9 +248,9 @@ Starship Battles/
          │                   │
          │                   └──> Return report (passed = True/False)
          │
-         └──> TestResultsService.add_run(test_id, results)
+         └──> TestHistory.add_run(test_id, results)
                    │
-                   └──> Update TestHistory, Registry
+                   └──> Update history shard + registry "last run" cache
 ```
 
 ---

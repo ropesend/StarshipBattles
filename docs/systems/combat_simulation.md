@@ -355,9 +355,8 @@ engine via `engine.start_teams`. The game loop then drives
 `extract_outcome(engine, spec)` once and exposes the result via
 `controller.get_outcome()`.
 
-The three production visual call sites (`game/app.py:start_battle`,
-`game/ui/screens/test_lab/screen.py::_switch_to_battle`,
-`combat_lab/services/test_execution_service.py::run_visual`) are all
+The two production visual call sites (`game/app.py:start_battle`,
+`game/ui/screens/test_lab/screen.py::_switch_to_battle`) are
 single-line `controller.start_from_spec(spec, ...)` calls — no
 hand-rolled `engine.boundary = spec.boundary` / `add_ships` plumbing.
 

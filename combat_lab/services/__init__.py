@@ -7,13 +7,9 @@ headless contexts without pygame dependencies.
 """
 
 from .scenario_data_service import ScenarioDataService
-from .test_execution_service import TestExecutionService
 from .ui_state_service import UIStateService
-from .test_results_service import TestResultsService
 
 __all__ = [
     'ScenarioDataService',
-    'TestExecutionService',
     'UIStateService',
-    'TestResultsService',
 ]

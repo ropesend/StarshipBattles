@@ -57,16 +57,6 @@ def mock_battle_screen(mock_battle_engine):
 
 
 @pytest.fixture
-def mock_game(mock_battle_screen):
-    """Mock game object."""
-    from unittest.mock import Mock
-    game = Mock()
-    game.battle_scene = mock_battle_screen
-    game.state = None
-    return game
-
-
-@pytest.fixture
 def mock_test_scenario():
     """Mock test scenario instance."""
     return create_mock_test_scenario()
