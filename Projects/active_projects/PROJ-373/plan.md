@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Cache `_validate_designs` results | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Reuse `BuildQueueScreen` instance across opens | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Reuse VirtualTable row pool across opens | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. Reuse `BuildQueueScreen` instance across opens | Deferred (see decisions.md) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Reuse VirtualTable row pool across opens | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Reduce rounded-rect drawable cost (theme/pre-bake) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-06 (Phase 1 landed)
-**Active Phase:** Phase 2 — Reuse `BuildQueueScreen` instance across opens
-**Last Action:** Phase 1 complete. `BuildQueueController` now caches validation results keyed by `(design_id, file_mtime_ns)`; lazy-initializes `DesignValidator` on first miss; routes path resolution through `DesignLibrary.get_design_path` (no path logic in the controller). Added public `reset_filters()` (Phase 2 prerequisite). 13 new unit tests in `tests/unit/ui/panels/test_build_queue_controller.py::TestValidationCache` covering hit, miss, mtime invalidation, exception non-poisoning, category-switch survival, load-failure caching, lazy validator construction, pure-cache-hit zero-cost path, and reset_filters defaults. Focused suite: panels/ 483 passed.
-**Next Action:** Begin Phase 2 — split `BuildQueueScreen.__init__` into shell + `open_for_yard`, wire `StrategyBuildQueueManager` to construct once and reuse. TDD-first lifecycle test file in `tests/unit/ui/screens/test_build_queue_screen_lifecycle.py`.
-**Blockers:** None.
+**Last Updated:** 2026-05-06 (Phase 3 landed; Phase 2 deferred)
+**Active Phase:** Phase 4 — Reduce rounded-rect drawable cost
+**Last Action:** Phase 3 complete. `VirtualTable` now caches `(panel_height, row_height)` after each rebuild and `_rebuild_row_pool` early-returns when dimensions are unchanged AND a pool already exists. New helper `_pool_dims_changed()` is the single point of truth. 4 new unit tests in `tests/unit/ui/components/table/test_virtual_table.py::TestRowPoolReuseGuard` covering dims-unchanged skip, panel-height change, row-height change, and force_update non-interference. Focused suite: tests/unit/ui/components/table/ 86 passed. **Phase 2 deferred** — see decisions.md (high-risk pygame_gui lifecycle refactor; entire panel tree holds yard-specific references — full instructions explicitly authorize deferral and ordering 1 → 3 → 4 if Phase 2 is too risky to ship).
+**Next Action:** Phase 4 — switch `data/builder_theme.json` panel `shape` from `rounded_rectangle` to `rectangle` (default per design.md), or scoped object_id fallback if global change regresses any screen. Decision per project guidance: prefer scoped (b) since the subagent cannot eyeball-judge visual regressions.
+**Blockers:** Phase 2 deferred (instance-reuse refactor of `BuildQueueScreen` + `StrategyBuildQueueManager`; lifecycle complexity — see decisions.md).
 
 **Profile baseline (from `findings/profile_summary.md`):**
 - Per-click cost: 6.83s / 6.82s / 6.96s (mean 6.87s)

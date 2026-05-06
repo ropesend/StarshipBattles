@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (Phase 2 deferred — guard ships independently and pays off when Phase 2 lands later)
 **Objective:** Verify that Phase 2's screen-reuse keeps the `VirtualTable.row_pool` alive across opens. Add an explicit guard so `_rebuild_row_pool` is only called when panel dimensions change, not on every yard switch. After Phase 2, this is largely a verification phase; the explicit guard catches any future regression.
 
 ---

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Deferred — see `decisions.md` (2026-05-06 row). Pre-flight investigation surfaced significant risk: every panel created by `BuildQueuePanelFactory` embeds yard-specific references (Planet vs Fleet `build_context`), the `controller`/`drag_handler` collaborators hold their own `build_context`/`design_library` references, and `BuildQueueScreen.__init__` orchestrates all of these via FEAT-17 pause-toggle button state, modal-window layering with `PlanetSelectionWindow`, and `_apply_tooltips`. A correct `open_for_yard()` must thread through all of those without breaking event routing — beyond the 30-minute investigation budget the project guidance set as the deferral threshold. Phases 1 + 3 + 4 ship independently; Phase 3's row-pool guard pays off when Phase 2 eventually lands.
 **Objective:** Construct `BuildQueueScreen` once per `StrategyBuildQueueManager` lifetime; subsequent opens go through new `open_for_yard(yard)` that refreshes only yard-specific state and calls `show()`. Replace `_close()` with `hide()`. On second-and-later opens of the same context type (planet ↔ planet, fleet ↔ fleet) the panel tree is reused; cross-type transitions still rebuild. Saves the bulk of the 4.4s/click panel-construction cost.
 
 ---

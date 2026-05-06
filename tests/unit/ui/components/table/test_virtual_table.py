@@ -1091,3 +1091,180 @@ class TestDisabledReplayTooltip:
         assert _disabled_replay_tooltip(_Old(), 0) == (
             "No replay available — older save."
         )
+
+
+# ===========================================================================
+# PROJ-373 Phase 3 — Row-pool reuse guard
+#
+# `rebuild_row_pool()` should be a no-op when the table dimensions
+# `(list_panel_height, row_height)` are unchanged since the last build —
+# the existing pool is still correctly sized. Saves ~1.5s/click in the
+# subset of cases where the row pool would otherwise be rebuilt.
+# ===========================================================================
+
+
+class TestRowPoolReuseGuard:
+    """PROJ-373 Phase 3: rebuild_row_pool guards against redundant rebuilds."""
+
+    @pytest.fixture(autouse=True)
+    def patched_pygame_gui(self):
+        """Reuse the same patches as TestVirtualTable."""
+        with patch("game.ui.components.table.virtual_table.UIImage") as image, \
+             patch("game.ui.components.table.virtual_table.UILabel") as label, \
+             patch("game.ui.components.table.virtual_table.UIVerticalScrollBar") as scrollbar, \
+             patch("game.ui.components.table.virtual_table.UIPanel") as panel, \
+             patch("game.ui.components.table.virtual_table.TableHeader") as header:
+            yield {
+                "UIImage": image,
+                "UILabel": label,
+                "UIVerticalScrollBar": scrollbar,
+                "UIPanel": panel,
+                "TableHeader": header,
+            }
+
+    @pytest.fixture
+    def mock_manager(self):
+        return MagicMock()
+
+    @pytest.fixture
+    def mock_panel(self):
+        panel = MagicMock()
+        panel.get_relative_rect.return_value = pygame.Rect(0, 0, 300, 400)
+        return panel
+
+    @pytest.fixture
+    def column_manager(self):
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        return TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+        ])
+
+    @pytest.fixture
+    def selection_strategy(self):
+        from game.ui.components.table.selection import SingleSelect
+
+        return SingleSelect()
+
+    @pytest.fixture
+    def data_source(self):
+        return MockDataSource(rows=5)
+
+    def _build_table(self, patched_pygame_gui, mock_panel, mock_manager,
+                     data_source, column_manager, selection_strategy,
+                     list_panel_height: int = 200):
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, list_panel_height
+        )
+        return VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+
+    def test_rebuild_skipped_when_dimensions_unchanged(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """Calling rebuild_row_pool a second time with identical dimensions
+        must not trigger a fresh widget tear-down/rebuild."""
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        # Snapshot the pool's bg widgets (not the list itself)
+        first_bgs = [row["bg"] for row in table._row_pool]
+        first_kill_count = sum(bg.kill.call_count for bg in first_bgs)
+
+        # Call rebuild again — dimensions unchanged
+        table.rebuild_row_pool()
+
+        # Same widgets — none of the previous bgs were killed
+        new_kill_count = sum(bg.kill.call_count for bg in first_bgs)
+        assert new_kill_count == first_kill_count
+        # And the pool's bgs are unchanged (same objects, same length)
+        current_bgs = [row["bg"] for row in table._row_pool]
+        assert current_bgs == first_bgs
+
+    def test_rebuild_runs_when_panel_height_changes(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """When the list panel's height changes, the pool must be rebuilt
+        so visible-row count is recalculated."""
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+            list_panel_height=200,
+        )
+        first_pool = list(table._row_pool)
+
+        # Simulate a panel-height change. _list_view_panel is a MagicMock
+        # whose get_relative_rect returns a configurable rect.
+        table._list_view_panel.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 600
+        )
+        table.rebuild_row_pool()
+
+        # The first-pool bgs were killed during teardown
+        for row in first_pool:
+            assert row["bg"].kill.called
+
+    def test_rebuild_runs_when_row_height_changes(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """Mutating row_height invalidates the pool dimensions."""
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_pool = list(table._row_pool)
+        # Mutate row_height
+        table._row_height = table._row_height * 2
+        table.rebuild_row_pool()
+        for row in first_pool:
+            assert row["bg"].kill.called
+
+    def test_force_update_does_not_force_pool_rebuild(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """force_update only resets dirty-tracking for visible-row updates,
+        not the pool dims cache."""
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_bgs = [row["bg"] for row in table._row_pool]
+        table.force_update()
+        table.rebuild_row_pool()
+        # Dims unchanged — pool widgets reused
+        assert [row["bg"] for row in table._row_pool] == first_bgs
+        # And no kills were issued on the existing widgets
+        assert all(bg.kill.call_count == 0 for bg in first_bgs)
