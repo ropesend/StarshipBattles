@@ -73,7 +73,7 @@ def build_replay_ship_builder(
         if snapshot is not None:
             instance = ShipInstanceSerializer.from_dict(snapshot)
             position = Vector2(ship_spec.position.x, ship_spec.position.y)
-            return instance.to_ship(position, team_id, registries)
+            return instance.to_ship(position, team_id, registries=registries)
         if fallback_builder is not None:
             return fallback_builder(ship_spec, team_id)
         raise ValueError(
