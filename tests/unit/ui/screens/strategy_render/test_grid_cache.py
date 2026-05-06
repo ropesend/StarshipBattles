@@ -31,7 +31,18 @@ def _make_renderer(
     screen_height: int = 600,
     hex_size: int = 10,
 ) -> SimpleNamespace:
-    """Build a minimal renderer stub matching ``StrategyRenderer`` surface."""
+    """Build a minimal renderer stub matching ``StrategyRenderer`` surface.
+
+    NOTE on camera-dimension fidelity (PROJ-374 review MIN-1): production
+    ``StrategyScreen`` constructs ``Camera`` with ``width = screen_width -
+    SIDEBAR_WIDTH``, ``height = screen_height - TOP_BAR_HEIGHT``, and
+    ``offset_y = TOP_BAR_HEIGHT``. This stub uses full-screen dimensions and
+    zero offsets because every cache test mocks ``_render_grid_to_surface``
+    — the cache key does not read ``camera.width/height/offset_*``, so the
+    stub's divergence from production is insulated. If a future test
+    exercises the un-mocked render path, parameterise these values to match
+    production.
+    """
     camera = SimpleNamespace(
         zoom=zoom,
         width=screen_width,
@@ -226,6 +237,43 @@ class TestGridCacheCutoff:
             layer.draw(renderer, screen)
 
         assert render.call_count == 1
+
+    def test_zoom_cutoff_round_trip_preserves_cache(self) -> None:
+        """Zoom across the cutoff boundary must not invalidate the cache.
+
+        Sequence: render at zoom=0.5 (populate cache) → draw at zoom=0.3
+        (early return, no render, cache untouched) → draw at zoom=0.5 again
+        (must hit the populated cache, no second render). This locks in the
+        invariant that the early return at the start of GridLayer.draw
+        preserves cache state — a future refactor that moved the cutoff
+        check below _compute_key would silently break it.
+        """
+        renderer = _make_renderer(zoom=0.5)
+        screen = MagicMock()
+        layer = GridLayer()
+
+        with _patch_inner_draw(), patch(
+            "game.ui.screens.strategy_render.grid._render_grid_to_surface"
+        ) as render:
+            layer.draw(renderer, screen)
+            populated_surface = layer._cache_surface
+            populated_key = layer._cache_key
+            assert render.call_count == 1
+            assert populated_surface is not None
+            assert populated_key is not None
+
+            renderer.camera.zoom = 0.3
+            layer.draw(renderer, screen)
+            assert render.call_count == 1, "no render below cutoff"
+            assert layer._cache_surface is populated_surface, "cache surface preserved"
+            assert layer._cache_key == populated_key, "cache key preserved"
+
+            renderer.camera.zoom = 0.5
+            layer.draw(renderer, screen)
+            assert render.call_count == 1, (
+                "round-trip back across the cutoff must hit the existing cache"
+            )
+            assert layer._cache_surface is populated_surface
 
 
 class TestGridCacheSurface:

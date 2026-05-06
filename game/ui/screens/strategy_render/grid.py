@@ -131,9 +131,19 @@ class GridLayer:
     def _compute_key(self, r: Any) -> tuple:
         """Compute the quantized cache key for the current renderer state.
 
-        Every input that affects the rendered bitmap appears here. If a new
-        input is introduced (e.g. dynamic grid color from a theme), it must
-        be added or the cache will go stale.
+        Every *runtime-varying* input that affects the rendered bitmap appears
+        here. If a new input is introduced (e.g. dynamic grid color from a
+        theme), it must be added or the cache will go stale.
+
+        Constant inputs read by ``_render_grid_to_surface`` and intentionally
+        excluded from the key (their values are fixed for the renderer's
+        lifetime and the cache invalidates correctly when they would change):
+            - ``r.camera.width``  — derived from ``screen_width - SIDEBAR_WIDTH``
+            - ``r.camera.height`` — derived from ``screen_height - TOP_BAR_HEIGHT``
+            - ``r.camera.offset_x`` — fixed at 0
+            - ``r.camera.offset_y`` — fixed at TOP_BAR_HEIGHT
+            - ``COLORS['border_subtle']`` — hardcoded grid color
+        If any of these become runtime-varying, add them to the key.
         """
         cam = r.camera
         return (
