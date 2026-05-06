@@ -20,7 +20,7 @@ I expected these to be locally constructed at module top, lazy-init style. They'
 
 ## 4. Two production call sites only — both in `game_session.py`
 
-I expected to find scattered TurnEngine construction across screens, AI, and replay subsystems. Reality: only `game/strategy/engine/game_session.py:102` (init) and `:386` (from_dict). Both already pass exactly the same kwargs (`registries=`, `ai_factory=`, `event_bus=`, `race_registry=`). Phase 3's production migration is a 2-site mechanical edit; the test surface is where the work lives (~17 test files construct TurnEngine directly).
+I expected to find scattered TurnEngine construction across screens, AI, and replay subsystems. Reality: only `game/strategy/engine/game_session.py:102` (init) and `:386` (from_dict). Both already pass exactly the same kwargs (`registries=`, `ai_factory=`, `event_bus=`, `race_registry=`). Phase 3's production migration is a 2-site mechanical edit; the test surface is where the work lives (≥35 test sites — re-grepped at task start — construct TurnEngine directly).
 
 **Plan implication:** Phase 3 risk is concentrated in test migration, not production migration. The fixture at `tests/unit/strategy/turn_engine/conftest.py:24-26` is the single highest-leverage change — most test files indirect through it.
 

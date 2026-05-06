@@ -10,6 +10,8 @@
 **Review Mode:** standard
 **Files (planned):** see manifest.md "Phase 3: Planet" section
 
+**Sequencing precondition:** PROJ-368 must have landed (so Phase 3 targets `order_handlers/` rather than the legacy monolith). If PROJ-369 has landed, wire via `TurnEngineConfig`; otherwise wire via direct constructor kwargs and migrate to `TurnEngineConfig` when PROJ-369 closes.
+
 **Objective:** `IPlanetMutator` is a working Protocol implemented by `PlanetWriteService` (new). Engines, handlers, and post-PROJ-368 `order_handlers/` route Planet writes through it. The Planet AST guard goes hot. Zero behavior change.
 
 ---
@@ -27,12 +29,13 @@
 
 **Notes:**
 
-### Task 3.2: Wire `IPlanetMutator` into context/facade [Simple]
-**File:** `game/strategy/facade/slices/_facade_state.py` (or context wiring site)
-**Tests:** `pytest tests/unit/strategy/facade/ -v --testmon`
+### Task 3.2: Wire `IPlanetMutator` at `GameSession.__init__` [Simple]
+**File:** `game/strategy/engine/game_session.py` (construction point — see `game/strategy/engine/game_session.py:99-108`). If PROJ-369 has landed, also `game/strategy/engine/turn_engine_config.py` (default-population point in `TurnEngineConfig.create_default()`).
+**Tests:** `pytest tests/integration/strategy/test_game_session_strategy.py -v --testmon`
 
-- [ ] Wire `PlanetWriteService()` as the production default for `IPlanetMutator`.
-- [ ] Add accessor `get_planet_mutator() -> IPlanetMutator`.
+- [ ] Construct `PlanetWriteService()` inside `GameSession.__init__`.
+- [ ] **If PROJ-369 has landed:** add `planet_mutator: IPlanetMutator` to `TurnEngineConfig`; populate via `TurnEngineConfig.create_default()`; engines pull from `config.planet_mutator`.
+- [ ] **If PROJ-369 has NOT landed:** pass `PlanetWriteService` directly into the engines / hooks that need it via constructor kwargs from `GameSession`. Migrate to `TurnEngineConfig`-routed wiring when PROJ-369 closes.
 
 **Notes:**
 

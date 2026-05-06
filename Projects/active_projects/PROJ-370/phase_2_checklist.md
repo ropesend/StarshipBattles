@@ -10,6 +10,8 @@
 **Review Mode:** standard
 **Files (planned):** see manifest.md "Phase 2: Fleet" section
 
+**Sequencing precondition:** PROJ-368 must have landed before Phase 3+ (already a precondition for Planet/Empire/ShipInstance work). If PROJ-369 has landed, wire via `TurnEngineConfig`; otherwise wire via direct constructor kwargs and migrate to `TurnEngineConfig` when PROJ-369 closes.
+
 **Objective:** `IFleetMutator` is a working Protocol implemented by `FleetWriteService` (new) + `FleetNavigationService` (existing). Engines and handlers route Fleet writes through the mutator. The Fleet AST guard goes hot. Zero behavior change.
 
 ---
@@ -40,14 +42,14 @@
 
 **Notes:**
 
-### Task 2.3: Wire `IFleetMutator` into `ApplicationContext` / facade state [Medium]
-**File:** `game/strategy/facade/slices/_facade_state.py` (or wherever the strategy-side `ApplicationContext` registers services — confirm before editing)
-**Tests:** `pytest tests/unit/strategy/facade/ -v --testmon`
+### Task 2.3: Wire `IFleetMutator` at `GameSession.__init__` [Medium]
+**File:** `game/strategy/engine/game_session.py` (construction point — see `game/strategy/engine/game_session.py:99-108` where `TurnEngine` is constructed today). If PROJ-369 has landed, also `game/strategy/engine/turn_engine_config.py` (default-population point in `TurnEngineConfig.create_default()`).
+**Tests:** `pytest tests/integration/strategy/test_game_session_strategy.py -v --testmon`
 
-- [ ] Locate the strategy-layer service-wiring site (search for where `FleetNavigationService` is constructed in production today; the same wiring site adds `FleetWriteService`).
-- [ ] Wire `FleetWriteService(navigation_service=fleet_nav_service)` as the production default for `IFleetMutator`.
-- [ ] Add an accessor method on the relevant facade/context: `get_fleet_mutator() -> IFleetMutator`.
-- [ ] Verify: facade tests still pass.
+- [ ] Construct `FleetWriteService(navigation_service=fleet_nav_service)` inside `GameSession.__init__` (citing `game/strategy/engine/game_session.py:99-108`).
+- [ ] **If PROJ-369 has landed:** add `fleet_mutator: IFleetMutator` to `TurnEngineConfig`; populate it in `TurnEngineConfig.create_default()`; pass the config through to `TurnEngine`. Engines that need the mutator pull it via `config.fleet_mutator` or via direct ctor kwargs threaded from `GameSession`.
+- [ ] **If PROJ-369 has NOT landed:** pass `FleetWriteService` directly into the engines and hooks that need it (`OrderProcessor`, `PostBattleHook`, `FleetMovementEngine`, etc.) via constructor kwargs from `GameSession`. Migrate to `TurnEngineConfig`-routed wiring when PROJ-369 closes.
+- [ ] Verify: integration + facade tests still pass.
 
 **Notes:**
 

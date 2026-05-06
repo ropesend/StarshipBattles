@@ -13,21 +13,21 @@
 **Execution Protocol:** 03c-phase-aware-execution
 
 ## Quick Status
-| Phase | Status | Checklist |
-|-------|--------|-----------|
-| 0. Pre-Phase: facade-delegate template + AST/protocol scaffolding | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Star decomposition (770 LOC stars.py → ~280 facade + extracted services) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Galaxy query/spatial-aggregation services | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Galaxy algorithmic services (pathfinding, intercept, warp resolution) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. AST guards, perf bench, doc updates, final audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| Phase | Status | Checklist | Depends on |
+|-------|--------|-----------|------------|
+| 0. Pre-Phase: facade-delegate template + AST/protocol scaffolding | Not Started | [phase_0_checklist.md](phase_0_checklist.md) | **PROJ-370 verified** |
+| 1. Star decomposition (770 LOC stars.py → ~280 facade + extracted services) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | **PROJ-370 verified** + phase_0 |
+| 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | **PROJ-370 verified** + phase_0 |
+| 3. Galaxy query/spatial-aggregation services | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | **PROJ-370 verified** + phase_0 |
+| 4. Galaxy algorithmic services (pathfinding, intercept, warp resolution) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | **PROJ-370 verified** + phase_3 |
+| 5. AST guards, perf bench, doc updates, final audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | **PROJ-370 verified** + phases 1-4 |
 
 ## Current State
 **Last Updated:** 2026-05-05 (planning)
 **Active Phase:** Planning
 **Last Action:** Plan authored from `AgentCoordination/Scratchpad/reviews/strategy_layer_tech_debt_2026-05-05.md` item #5. PROJ-86/87/88/89 confirmed in `Projects/deep_archive/PROJ-051-100/` with NO Galaxy/Planet/Star coverage; companion modules already partially extracted at `galaxy_entity_registry.py` (188), `galaxy_spatial_index.py` (192), `galaxy_warp_generator.py` (421), `galaxy_system_generator.py` (354) (PROJ-173 Phase 2) plus `planet_physics.py` (212), `planet_atmosphere.py` (177), `planet_naming.py` (78), `planet_gen.py` (604), `planetary_facility.py` (214). Thin-facade pattern is partially in place on `Galaxy` (15 of 31 methods are 1-line `_spatial`/`_registry`/`_warp_gen`/`_sys_gen` delegations); `Planet` is mostly data with 9 query/calc methods that still execute logic; `Star` is the worst offender — 770 LOC of mixed dataclass + generator + spectrum math + serde.
-**Next Action:** User review of plan + sequencing decision re: PROJ-370. Recommendation: **PROJ-372 first, PROJ-370 after** (see Open Question Q1 in design.md). Decide before starting Phase 0.
-**Blockers:** PROJ-370 (data-boundary protocols) sequencing — recommendation in design.md is **run PROJ-372 first, independently** because PROJ-370 is currently a stub plan and PROJ-372's protocol surface (`IGalaxySystemGraph`, `IHabitabilityCalculator`) is a useful input to PROJ-370's broader contract work. Reverse sequencing also works but adds churn.
+**Next Action:** User review of plan. Sequencing resolved 2026-05-06 (Codex+Claude joint review): **PROJ-370 first; all of PROJ-372 follows.** Phase 0 cannot start until PROJ-370 is verified.
+**Blockers:** PROJ-370 (data-boundary protocols) sequencing — **resolved 2026-05-06 (Codex+Claude joint review):** PROJ-370 has a five-phase mutator plan. PROJ-372 sequences entirely after PROJ-370 — Phase 0 creates galaxy/planet protocol surfaces and modifies `game/context.py` habitability accessors that PROJ-370 must define first.
 
 ## Overview
 
@@ -157,7 +157,7 @@ core/spectrum_math.py:                   # ≤ 200 LOC, pure functions
 - [ ] Read every line of `galaxy.py` (689), `planet.py` (667), `stars.py` (770)
 - [ ] Read all four PROJ-173 Phase 2 delegates plus `pathfinding.py`, `planet_atmosphere.py`, `planet_physics.py`, `planet_naming.py`, `planetary_facility.py`, `planet_gen.py`
 - [ ] Read PROJ-86/87/88/89 plan.md (in `Projects/deep_archive/PROJ-051-100/`) — confirm no overlap with Galaxy/Planet/Star
-- [ ] Read PROJ-370/plan.md and design.md — confirm sequencing relative to PROJ-372 (PROJ-370 is currently a stub)
+- [ ] Read PROJ-370/plan.md and design.md — confirm sequencing relative to PROJ-372 (resolved 2026-05-06: PROJ-370 first, all of PROJ-372 follows)
 - [ ] Read PROJ-367 plan.md / design.md / manifest.md / phase_1_checklist.md / decisions.md as the rigor / style reference
 - [ ] Run full test suite: `python Tools/test_sharded/test_sharded.py` — pin baseline pass count in plan.md Current State
 

@@ -518,7 +518,9 @@ def test_every_action_order_type_has_a_handler():
 
 **Q3.** `OrderProcessor.process_join_fleet` (single-fleet, lines 110-149) has **no production callers** — only `tests/unit/strategy/engine/test_order_processor_fleet_merge.py` calls it. Is this dead production code that should be deleted, or is it a public method intentionally kept for future use? **Recommendation:** Verify with `grep -rn 'process_join_fleet' game/`. If no production hits, delete the method entirely in Phase 1 along with the test file. If it's intended future API, keep it as a public method on `JoinFleetHandler` and the facade delegates.
 
-**Q4.** Is `superweapon_order_processor.py` (782 LOC) **in or out of scope**? The plan as drafted treats it as out of scope — Phase 4 only adds an adapter wrapper. The review didn't list it as a target. But if user wants symmetric decomposition, Phase 4 grows significantly. **Recommendation:** Out of scope. PROJ-364 just stabilized it. Open a follow-up project (PROJ-369?) if the symmetry is wanted later.
+**Q4.** Is `superweapon_order_processor.py` (782 LOC) **in or out of scope**? The plan as drafted treats it as out of scope — Phase 4 only adds an adapter wrapper. The review didn't list it as a target. But if user wants symmetric decomposition, Phase 4 grows significantly. **Recommendation:** Out of scope. PROJ-364 just stabilized it. Open a future follow-up project if the symmetry is wanted later.
+
+**Resolved 2026-05-06 (Codex+Claude joint review):** Out of scope. Adapter wraps preserve PROJ-364's investment.
 
 **Q5.** Where should `order_handlers/` live? `game/strategy/engine/order_handlers/` (plan default — sibling to `engine/handlers/`) or under a different namespace (`game/strategy/engine/handlers/order/`?) to make the relationship explicit? **Recommendation:** `engine/order_handlers/`. Sibling makes the parallel obvious; a sub-namespace inside `handlers/` would conflate two distinct dispatchers (UI command → order vs. action tick → state mutation).
 

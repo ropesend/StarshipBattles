@@ -10,6 +10,8 @@
 **Review Mode:** standard
 **Files (planned):** see manifest.md "Phase 4: Empire" section
 
+**Sequencing precondition:** PROJ-368 must have landed (already true at Phase 4 since Phases 2 and 3 depend on it). If PROJ-369 has landed, wire via `TurnEngineConfig`; otherwise wire via direct constructor kwargs and migrate to `TurnEngineConfig` when PROJ-369 closes.
+
 **Objective:** `IEmpireMutator` is a working Protocol implemented by `EmpireWriteService` (new). The four post-battle / superweapon / system-destroyer / game-init sites that mutate `empire.colonies` and `empire.fleets` from outside route through it. The Empire AST guard goes hot. Zero behavior change.
 
 ---
@@ -45,12 +47,13 @@
 
 **Notes:**
 
-### Task 4.3: Wire `IEmpireMutator` into context/facade [Simple]
-**File:** `game/strategy/facade/slices/_facade_state.py`
-**Tests:** `pytest tests/unit/strategy/facade/ -v --testmon`
+### Task 4.3: Wire `IEmpireMutator` at `GameSession.__init__` [Simple]
+**File:** `game/strategy/engine/game_session.py` (construction point — see `game/strategy/engine/game_session.py:99-108`). If PROJ-369 has landed, also `game/strategy/engine/turn_engine_config.py` (default-population point in `TurnEngineConfig.create_default()`).
+**Tests:** `pytest tests/integration/strategy/test_game_session_strategy.py -v --testmon`
 
-- [ ] Wire `EmpireWriteService()` as the production default for `IEmpireMutator`.
-- [ ] Add accessor `get_empire_mutator() -> IEmpireMutator`.
+- [ ] Construct `EmpireWriteService()` inside `GameSession.__init__`.
+- [ ] **If PROJ-369 has landed:** add `empire_mutator: IEmpireMutator` to `TurnEngineConfig`; populate via `TurnEngineConfig.create_default()`; engines pull from `config.empire_mutator`.
+- [ ] **If PROJ-369 has NOT landed:** pass `EmpireWriteService` directly into the engines / hooks that need it (`SuperweaponOrderProcessor`, `PostBattleHook`, `SystemDestroyer`, `GameInitializer`, `HarvestingEngine`) via constructor kwargs from `GameSession`. Migrate to `TurnEngineConfig`-routed wiring when PROJ-369 closes.
 
 **Notes:**
 

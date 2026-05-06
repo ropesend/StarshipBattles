@@ -19,7 +19,7 @@
 | 1. Protocol + registry skeleton + JoinFleet PoC | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Port instant + simple action orders (Colonize, SelfDestruct) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Port Transfer family (TRANSFER, LOAD_POPULATION, UNLOAD_POPULATION) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Port superweapon dispatch and delete legacy methods | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Port superweapon dispatch and delete legacy methods (includes registry-completeness + no-legacy-helper AST gates) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Per-handler unit tests + AST static-guard regression | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State

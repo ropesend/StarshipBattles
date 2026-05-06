@@ -170,7 +170,7 @@ Adding a `_run_phases` helper introduces one extra Python call per phase invocat
 **Mitigation:** Phase 4 task includes a phase-timing test asserting `_phase_times['total']` overhead doesn't increase by more than +5% relative to baseline. PROJ-365's `TURN PERF` log gives us the baseline.
 
 ### Test-flake from new injection plumbing (MEDIUM — actively mitigated)
-17 test files construct `TurnEngine(...)` directly. Phase 3 changes the required-kwarg shape. Drive-by test rot is the most likely failure mode.
+≥35 test sites (re-grepped at task start) construct `TurnEngine(...)` directly. Phase 3 changes the required-kwarg shape. Drive-by test rot is the most likely failure mode.
 **Mitigation:** Phase 3 task list includes (a) updating `tests/unit/strategy/turn_engine/conftest.py:24-26` to use `TurnEngineConfig.create_default(...)`, (b) running a grep-driven inventory of every direct construction and converting them, (c) preserving the existing `mock_engines.py` indirection. Lazy-property tests in `test_turn_engine_lazy_properties.py` are repurposed to verify config-injected defaults.
 
 ### Silent removal of `_NullBattleResolver` warning path (LOW — by design)

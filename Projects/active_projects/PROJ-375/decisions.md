@@ -1,0 +1,16 @@
+# PROJ-375: Decisions Log
+
+> **LOG ALL DECISIONS HERE**
+> When you make a design choice or the user specifies a preference, add it to this table.
+> Future agents will reference this to understand why things were done a certain way.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-05-05 | Project initialized | Starting point for Audit-shrink cleanup 2026-05-05 |
+| 2026-05-05 | Acted only on findings that passed independent verification of `2026-05-05_185819_audit_shrink` | Audit-shrink reports have produced false positives in past runs (e.g. `_eval_least_armor_rule` was reachable via `data/targeting_policies.json` in the 2026-05-02 run). Re-verification kept 10 of 11 verified-safe candidates; rejected and uncertain items are recorded in [findings/verification_report.md](findings/verification_report.md). |
+| 2026-05-05 | Excluded DUP-X-08 (LLM/Image factory shared base) | Verifier flagged the proposed `BaseProviderFactory` in `game/services/` as a cross-domain shared service (LLM-config and image-generation are unrelated subsystems). 30 LOC saved is marginal vs. the architectural cost of a shared service base used by two separate domains. Defer pending architecture review. |
+| 2026-05-05 | Excluded DEEP-01-004 (`_validate_tick_inputs` boilerplate) | The audit's own recommendation rated this "Low priority — structural duplication, not logic-level". Re-verifier concurred. The 4 engines validate different fields; a generic helper would mostly relocate, not eliminate, the boilerplate. |
+| 2026-05-05 | Folded Cluster 11 into Task 2.4 (DUP-X-07) instead of a separate task | Cluster 11 names the same 4 superweapon handlers as DUP-X-07 grouped by `target` shape (None vs dict) instead of handler-by-handler. Resolving DUP-X-07 by routing all 4 through `_emit_validated_order` resolves Cluster 11 automatically. |
+| 2026-05-05 | Folded DUP-X-06 into Task 2.1 (DUP-X-02) instead of a separate task | DUP-X-06 names the 4 ability-extraction variants in `planet_action_engine.py` that DUP-X-02's proposed `get_ability_field_from_facility` helper subsumes. Migrating that single file as part of Task 2.1 covers both findings. |
+| 2026-05-05 | Dropped `build_queue_source.py:142` from Task 2.1 scope | Second-pass verification found this is a boolean "any component has X?" early-return, not field-extraction. It fits a separate `facility_has_ability(...)` helper (possible follow-up), not `get_ability_field_from_facility`. |
+| 2026-05-05 | Task 2.5 must preserve the 6 public `@property` accessors on `RaceDescriptionLLMController` | Second-pass verification found `race_description_panel.py` and `llm_dialog_service.py` read the 6 properties (`bio_status`, `socio_status`, `bio_error`, `socio_error`, `bio_elapsed_seconds`, `socio_elapsed_seconds`). The internal storage refactor to `_fields: dict[str, FieldState]` is fine; the public surface must stay as thin shims. |

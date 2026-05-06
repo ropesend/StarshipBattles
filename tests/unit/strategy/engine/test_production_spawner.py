@@ -51,6 +51,17 @@ def _fleet_at(location: HexCoord, fleet_id: int = 1):
 # ---------------------------------------------------------------------------
 
 
+def test_constructor_records_registries_and_event_bus():
+    """Constructor-injected collaborators are stored for spawn helpers."""
+    registries = MagicMock()
+    event_bus = MagicMock()
+
+    spawner = ProductionSpawner(registries=registries, event_bus=event_bus)
+
+    assert spawner._registries is registries
+    assert spawner._event_bus is event_bus
+
+
 def _stub_design_library(design_data: dict | None = None):
     """Build a DesignLibrary stub used by both _load_design and
     _load_and_create_ship. Returns the (cls, library, result) triple so
@@ -343,6 +354,90 @@ def test_spawn_ship_calculates_global_location_via_system_resolution():
     assert spawn_loc_arg == HexCoord(11, 1)
 
 
+def test_spawn_ship_without_galaxy_uses_local_location_and_fleet_id_zero():
+    """Missing galaxy uses the planet's local hex and logs empty system fields."""
+    event_bus = MagicMock()
+    spawner = ProductionSpawner(registries=MagicMock(), event_bus=event_bus)
+    empire = _empire()
+    planet = _planet()
+    planet.location = HexCoord(3, -2)
+    fake_ship = MagicMock()
+    fake_ship.name = "NoGalaxy"
+
+    fake_fleet_cls = MagicMock()
+    constructed_fleet = MagicMock()
+    constructed_fleet.id = 0
+    fake_fleet_cls.return_value = constructed_fleet
+
+    with patch.object(spawner, "_load_and_create_ship", return_value=fake_ship), \
+            patch("game.strategy.engine.production_spawner.Fleet", fake_fleet_cls):
+        spawner._spawn_ship(planet, "frig", empire, galaxy=None, save_path="/tmp")
+
+    fake_fleet_cls.assert_called_once()
+    assert fake_fleet_cls.call_args[0][0] == 0
+    assert fake_fleet_cls.call_args[0][2] == planet.location
+    empire.add_fleet.assert_called_once_with(constructed_fleet)
+    event_kwargs = event_bus.log_event.call_args.kwargs
+    assert event_kwargs["location_hex"] == [3, -2]
+    assert event_kwargs["system_name"] == ""
+    assert event_kwargs["local_hex"] is None
+
+
+# ---------------------------------------------------------------------------
+# _resolve_planet_location: event metadata edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_planet_location_without_galaxy_returns_empty_metadata():
+    """No galaxy context should leave event location metadata empty."""
+    spawner = ProductionSpawner()
+
+    assert spawner._resolve_planet_location(_planet(), None) == (None, "", None)
+
+
+def test_resolve_planet_location_without_lookup_method_returns_empty_metadata():
+    """Galaxy-like objects without planet lookup are ignored."""
+    spawner = ProductionSpawner()
+    galaxy = object()
+
+    assert spawner._resolve_planet_location(_planet(), galaxy) == (None, "", None)
+
+
+def test_resolve_planet_location_with_system_and_planet_location_returns_hex_lists():
+    """Resolved systems provide global and local hex lists for event payloads."""
+    spawner = ProductionSpawner()
+    planet = _planet()
+    planet.location = HexCoord(2, -1)
+    system = MagicMock()
+    system.name = "Vega"
+    system.global_location = HexCoord(10, 5)
+    galaxy = MagicMock()
+    galaxy.get_system_of_planet.return_value = system
+
+    location_hex, system_name, local_hex = spawner._resolve_planet_location(planet, galaxy)
+
+    assert location_hex == [12, 4]
+    assert system_name == "Vega"
+    assert local_hex == [2, -1]
+
+
+def test_resolve_planet_location_with_system_but_no_planet_location_keeps_hexes_empty():
+    """A resolved system still omits hex metadata when the planet has no location."""
+    spawner = ProductionSpawner()
+    planet = _planet()
+    planet.location = None
+    system = MagicMock()
+    system.name = "Vega"
+    galaxy = MagicMock()
+    galaxy.get_system_of_planet.return_value = system
+
+    location_hex, system_name, local_hex = spawner._resolve_planet_location(planet, galaxy)
+
+    assert location_hex is None
+    assert system_name == "Vega"
+    assert local_hex is None
+
+
 # ---------------------------------------------------------------------------
 # _spawn_to_staging_yard: design_data preference + staging-yard-full warning
 # ---------------------------------------------------------------------------
@@ -469,3 +564,32 @@ def test_spawn_fleet_complex_falls_back_to_first_planet_when_target_id_missing()
     chosen_planet = mock_create.call_args[0][0]
     # Pinned silent-wrong-planet behavior per design.md surprise #3.
     assert chosen_planet is p1
+
+
+def test_spawn_fleet_complex_returns_when_galaxy_missing():
+    """Fleet complex spawning requires galaxy context for planet lookup."""
+    spawner = ProductionSpawner()
+    fleet = _fleet_at(HexCoord(5, 5))
+
+    with patch.object(spawner, "_create_and_place_facility") as mock_create:
+        spawner._spawn_fleet_complex(
+            fleet, "complex", _empire(), galaxy=None, save_path="/tmp"
+        )
+
+    mock_create.assert_not_called()
+
+
+def test_spawn_fleet_complex_returns_when_fleet_not_at_planet_hex():
+    """No planet at the fleet hex cancels complex placement."""
+    spawner = ProductionSpawner()
+    fleet = _fleet_at(HexCoord(5, 5))
+    galaxy = MagicMock()
+    galaxy.get_planets_at_global_hex.return_value = []
+
+    with patch.object(spawner, "_create_and_place_facility") as mock_create:
+        spawner._spawn_fleet_complex(
+            fleet, "complex", _empire(), galaxy=galaxy, save_path="/tmp"
+        )
+
+    galaxy.get_planets_at_global_hex.assert_called_once_with(fleet.location)
+    mock_create.assert_not_called()

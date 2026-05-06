@@ -41,4 +41,4 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| | | |
+| 2026-05-06 | Codex+Claude joint review: applied r004 edits — see `AgentCoordination/Scratchpad/Discussion/20260506T024652Z_strategy-tech-debt-plans-review/outcome.md`. | E370-1..5 (BLOCKING WIRING REWRITE): production wiring site is `game/strategy/engine/game_session.py:99-108` (where `TurnEngine` is constructed today), NOT `game/strategy/facade/slices/_facade_state.py`. Post-PROJ-369, `TurnEngineConfig.create_default()` populates `fleet_mutator` / `planet_mutator` / `empire_mutator` / `ship_mutator`. Pre-PROJ-369: direct constructor kwargs from `GameSession`. PROJ-369 lands first per joint sequencing. Manifest rows, phase 2-5 checklists, design.md "Production wiring" section, and plan.md updated. |

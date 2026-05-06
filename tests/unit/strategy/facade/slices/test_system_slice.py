@@ -43,6 +43,69 @@ def test_get_all_stars_uses_cache_until_turn_changes(monkeypatch) -> None:
     assert calls[0]["planet_count"] == 1
 
 
+def test_get_all_systems_returns_dtos_for_each_system(monkeypatch) -> None:
+    alpha = SimpleNamespace(name="Alpha")
+    beta = SimpleNamespace(name="Beta")
+    galaxy = SimpleNamespace(systems={"alpha": alpha, "beta": beta})
+    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    monkeypatch.setattr(
+        SystemInfo,
+        "from_star_system",
+        staticmethod(lambda system: system.name),
+    )
+
+    assert SystemSlice(state).get_all_systems() == ["Alpha", "Beta"]
+
+
+def test_get_system_at_hex_converts_found_system_and_returns_none(monkeypatch) -> None:
+    system = SimpleNamespace(name="Alpha")
+    galaxy = SimpleNamespace(
+        get_system_at_location=lambda hex_coord: (
+            system if hex_coord == HexCoord(2, 3) else None
+        ),
+    )
+    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    monkeypatch.setattr(
+        SystemInfo,
+        "from_star_system",
+        staticmethod(lambda system: system.name),
+    )
+    system_slice = SystemSlice(state)
+
+    assert system_slice.get_system_at_hex(HexCoord(2, 3)) == "Alpha"
+    assert system_slice.get_system_at_hex(HexCoord(9, 9)) is None
+
+
+def test_get_system_containing_fleet_resolves_from_fleet_location(
+    monkeypatch,
+) -> None:
+    fleet = SimpleNamespace(location=HexCoord(4, 5))
+    system = SimpleNamespace(name="Fleet System", global_location=fleet.location)
+    galaxy = SimpleNamespace(
+        systems={"fleet-system": system},
+        get_system_at_location=lambda hex_coord: (
+            system if hex_coord == fleet.location else None
+        ),
+    )
+    state = SimpleNamespace(
+        session=SimpleNamespace(galaxy=galaxy),
+        get_fleet_by_id=lambda fleet_id: fleet,
+    )
+    monkeypatch.setattr(
+        SystemInfo,
+        "from_star_system",
+        staticmethod(lambda system: system.name),
+    )
+
+    assert SystemSlice(state).get_system_containing_fleet(7) == "Fleet System"
+
+
+def test_get_system_containing_fleet_returns_none_for_unknown_fleet() -> None:
+    state = SimpleNamespace(get_fleet_by_id=lambda fleet_id: None)
+
+    assert SystemSlice(state).get_system_containing_fleet(404) is None
+
+
 def test_get_system_near_hex_returns_closest_system_within_distance(
     monkeypatch,
 ) -> None:

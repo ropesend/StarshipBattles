@@ -6,6 +6,8 @@ from typing import Dict, List, Any, Optional
 from game.strategy.services.combat_modifier_collector import (
     FleetCombatModifiers,
     collect_combat_modifiers,
+    _find_empire,
+    _find_reference_planet,
 )
 
 
@@ -220,3 +222,36 @@ class TestCollectCombatModifiers:
         result = collect_combat_modifiers(fleet, opponent, galaxy, empires, None)
 
         assert result.damage_mult == pytest.approx(1.25)
+
+    def test_scope_none_uses_ability_default_scope(self):
+        """Ability entries with scope=None should use the class default scope."""
+        booster = _facility_with_ability("DamageModifier", {
+            "multiplier": 1.25,
+            "scope": None,
+            "stack_group": "damage_default_scope"
+        })
+        planet = MockPlanet(owner_id=0, facilities=[booster])
+        system = MockSystem(planets=[planet])
+        galaxy = MockGalaxy(
+            _systems={"default": system},
+            _planets_by_hex={"hex_0": [planet]}
+        )
+        fleet = MockFleet(location="hex_0", owner_id=0)
+        opponent = MockFleet(location="hex_0", owner_id=1)
+        empires = [MockEmpire(id=0, colonies=[planet]), MockEmpire(id=1)]
+
+        result = collect_combat_modifiers(fleet, opponent, galaxy, empires, None)
+
+        assert result.damage_mult == pytest.approx(1.25)
+
+
+class TestLookupHelpers:
+    """Tests for collector lookup helper edge cases."""
+
+    def test_find_reference_planet_returns_none_without_galaxy(self):
+        assert _find_reference_planet("hex_0", None, []) is None
+
+    def test_find_empire_returns_none_when_id_does_not_match(self):
+        empires = [MockEmpire(id=0), MockEmpire(id=1)]
+
+        assert _find_empire(99, empires) is None

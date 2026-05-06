@@ -55,11 +55,13 @@
 
 ## PROJ-370 sequencing recommendation
 
-**Recommendation: PROJ-372 ships first, independently.**
+**Original recommendation (architect, 2026-05-05): PROJ-372 ships first, independently.**
 
-### Reasoning
+**FINAL decision (Codex+Claude joint review, 2026-05-06): PROJ-370 first; ALL of PROJ-372 follows.** PROJ-370 has a five-phase mutator plan, and PROJ-372 Phase 0 creates galaxy/planet protocol surfaces and modifies `game/context.py` habitability accessors that PROJ-370 must define first. The reasoning below is preserved as the original architect rationale; the joint review concluded that the contract-surface coupling justified the sequencing flip.
 
-1. **PROJ-370 is currently a 1-phase stub.** Its `plan.md` has the boilerplate "TBD" for Phase 1; `design.md` has placeholder `[Risk/Dependency]`. Holding PROJ-372 on a project that hasn't planned itself is risky.
+### Reasoning (original — superseded by 2026-05-06 joint review)
+
+1. **PROJ-370 originally had no plan body.** Its `plan.md` had the boilerplate "TBD" for Phase 1; `design.md` had placeholder `[Risk/Dependency]`. That is no longer the case — PROJ-370 now has a five-phase plan.
 2. **PROJ-372 produces useful inputs to PROJ-370.** Phase 0 of PROJ-372 introduces 5 read protocols — `IGalaxySystemGraph`, `IGalaxySpatialQuery`, `IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder` — which are exactly the kind of typed surface PROJ-370 will layer contract tests over.
 3. **Scope separation is clean.** PROJ-372 is "extract god-class internals into services"; PROJ-370 is "enforce invariants at write sites". They share data classes but operate on different concerns.
 4. **No structural conflict.** PROJ-370's likely targets (Fleet.resources, Planet population/stockpile mutation paths) don't overlap with PROJ-372's god-class surgery; PROJ-372 leaves the public mutation API on `Planet` exactly as-is (per Risk R8 in design.md).

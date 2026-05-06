@@ -31,7 +31,7 @@
 | `game/strategy/data/order_serializer.py` | Production (modify) | Routed: `fleet.orders.pop(i)` (line 231). |
 | `game/strategy/data/fleet_pursuer_tracker.py` | Production (modify) | Routed: `pursuer.orders.pop(i)` (line 141). |
 | `game/strategy/validation/superweapon_validator.py` | Production (verify) | Suspected read-only — verify in Phase 2 task; if true, no change. |
-| `game/strategy/facade/slices/_facade_state.py` | Production (modify) | Wire `FleetWriteService` + `FleetNavigationService` composite into `ApplicationContext` as the production `IFleetMutator`. |
+| `game/strategy/engine/game_session.py` | Production (modify) | Construct `FleetWriteService` and pass into `TurnEngineConfig` (post-PROJ-369) or directly into `OrderProcessor`/`PostBattleHook`/etc. constructors (pre-PROJ-369). Sequencing-dependent — PROJ-369 lands first per joint review. |
 | `tests/unit/strategy/services/test_fleet_write_service.py` | Test (NEW) | ≥ 8 unit tests against `FleetWriteService` with a real Fleet. |
 | `tests/unit/strategy/services/test_fleet_navigation_service_mutator.py` | Test (NEW) | Verify `FleetNavigationService` satisfies the `IFleetMutator` navigation slice. |
 | `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` | Test (modify) | Fleet AST guard goes hot. Allowlist: `game/strategy/data/fleet.py`, `game/strategy/services/fleet_navigation_service.py`, `game/strategy/services/fleet_write_service.py`. Disallowlist: `location`, `path`, `ships`, `orders`, `construction_queue`, `display_name`, `fleet_policy`, `_task_forces`. |
@@ -55,7 +55,7 @@
 | `game/strategy/engine/planet_command_handlers.py` | Production (modify) | Routed: `planet.orders.pop(cmd.order_index)` (line 134). |
 | `game/strategy/engine/game_initializer.py` | Production (modify) | Routed: `home_planet.populations.append(initial_pop)` (line 344) + `empire.colonies.clear()` (line 86 — Phase 4 territory but flagged). |
 | `game/strategy/quickstart_builder.py` | Production (modify) | Routed: `home_planet.facilities.append(facility)` (line 309). |
-| `game/strategy/facade/slices/_facade_state.py` | Production (modify) | Wire `PlanetWriteService` into `ApplicationContext`. |
+| `game/strategy/engine/game_session.py` | Production (modify) | Construct `PlanetWriteService` and pass into `TurnEngineConfig` (post-PROJ-369) or directly into `OrderProcessor`/`PostBattleHook`/etc. constructors (pre-PROJ-369). Sequencing-dependent — PROJ-369 lands first per joint review. |
 | `tests/unit/strategy/services/test_planet_write_service.py` | Test (NEW) | ≥ 10 unit tests against `PlanetWriteService` with a real Planet. |
 | `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` | Test (modify) | Planet AST guard goes hot. Allowlist: `game/strategy/data/planet.py`, `game/strategy/services/planet_write_service.py`. Disallowlist: `populations`, `facilities`, `stockpile`, `staging_yard`, `construction_queue`, `orders`, `owner_id`, `atmosphere`, `atmosphere_target`, `gravity_target`, `water_target`, `radiation_shielding_target`, `energy`, `energy_capacity`, `energy_generation`, `species_configs`. |
 
@@ -71,7 +71,7 @@
 | `game/strategy/engine/game_initializer.py` | Production (modify) | Routed: `empire.colonies.clear()` (line 86), `empire.colonies.append(...)` if any. |
 | `game/strategy/engine/harvesting_engine.py` | Production (modify) | Routed: `empire.max_storage` writes. |
 | `game/strategy/data/empire.py` | Production (modify) | The deserialization shim `colonies[0].stockpile = dict(value)` at line 183 — verify whether this needs to route through `PlanetWriteService` (Phase 3 territory) or stays inside `Empire.from_dict` as data-class-owned (preferred). |
-| `game/strategy/facade/slices/_facade_state.py` | Production (modify) | Wire `EmpireWriteService` into `ApplicationContext`. |
+| `game/strategy/engine/game_session.py` | Production (modify) | Construct `EmpireWriteService` and pass into `TurnEngineConfig` (post-PROJ-369) or directly into `OrderProcessor`/`PostBattleHook`/etc. constructors (pre-PROJ-369). Sequencing-dependent — PROJ-369 lands first per joint review. |
 | `tests/unit/strategy/services/test_empire_write_service.py` | Test (NEW) | ≥ 6 unit tests against `EmpireWriteService` with a real Empire. |
 | `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` | Test (modify) | Empire AST guard goes hot. Allowlist: `game/strategy/data/empire.py`, `game/strategy/services/empire_write_service.py`. Disallowlist: `colonies`, `fleets`, `_fleet_resource_pool`, `max_storage`, `built_ship_designs`. |
 
@@ -87,7 +87,7 @@
 | `game/strategy/data/ship_consumable_manager.py` | Production (modify) | `IShipInstanceMutator.set_consumable_level` forwards here. May not need direct change — depends on whether the manager already accepts an `IShipInstanceMutator` (it doesn't today; minor refactor). |
 | `game/strategy/data/ship_cargo_manager.py` | Production (modify) | Same as above for cargo. |
 | `game/simulation/managers/retreat_manager.py` | Production (verify) | Mutates `ship.is_alive` — verify whether this is a *simulation-side* `Ship`, not the strategy-side `ShipInstance`. If sim-side, out of scope. |
-| `game/strategy/facade/slices/_facade_state.py` | Production (modify) | Wire `ShipInstanceWriteService` into `ApplicationContext`. |
+| `game/strategy/engine/game_session.py` | Production (modify) | Construct `ShipInstanceWriteService` and pass into `TurnEngineConfig` (post-PROJ-369) or directly into `OrderProcessor`/`PostBattleHook`/etc. constructors (pre-PROJ-369). Sequencing-dependent — PROJ-369 lands first per joint review. |
 | `tests/unit/strategy/services/test_ship_instance_write_service.py` | Test (NEW) | ≥ 8 unit tests, including a "post-battle round-trip" integration that drives `apply_outcome_to_fleets` end-to-end through the mutator. |
 | `tests/unit/strategy/combat/test_post_battle_hook.py` | Test (modify) | Existing tests parameterized over `IShipInstanceMutator` (real + mock). |
 | `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` | Test (modify) | ShipInstance AST guard goes hot. Allowlist: `game/strategy/data/ship_instance.py`, `game/strategy/services/ship_instance_write_service.py`, `game/strategy/data/ship_consumable_manager.py`, `game/strategy/data/ship_cargo_manager.py`, `game/strategy/data/ship_instance_serializer.py`, `game/strategy/data/ship_instance_bridge.py`. Disallowlist: `is_alive`, `is_derelict`, `current_hp`, `components`, `cargo_contents`, `carried_items`, `consumable_levels`, `component_toggles`, `activation_states`, `experience`, `kills`, `battles_survived`. |
@@ -96,6 +96,7 @@
 
 | File | Type | Notes |
 |------|------|-------|
+| `game/strategy/engine/turn_engine_config.py` | Production (modify) | If PROJ-369 has landed, add `fleet_mutator: IFleetMutator`, `planet_mutator: IPlanetMutator`, `empire_mutator: IEmpireMutator`, `ship_mutator: IShipInstanceMutator` fields with `create_default()` populating them from the constructed services. |
 | `docs/01_ARCHITECTURE.md` | Doc (modify) | New section: "Strategy mutator services" under the strategy-layer architecture. |
 | `docs/02_PATTERNS.md` | Doc (modify) | New pattern: "Read/Write Protocol Pair". |
 | `docs/systems/strategy_layer.md` | Doc (modify) | New "Write services" subsection naming the owner service per data class. |

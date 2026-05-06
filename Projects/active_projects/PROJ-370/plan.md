@@ -56,7 +56,7 @@ Cross-cutting goals (every phase):
 
 - **Zero behavior change.** Every test passes at every phase boundary. The pruning order, event-bus emission order, and side-effect sequencing inside `apply_outcome_to_fleets` and `OrderProcessor` are bit-identical.
 - **Read protocol is canonical.** Engines that do not need to write keep reading through `IFleet`/`IPlanet`/etc. directly. The read-DTOs in `facade/dto/` keep their UI-only role; this project does not push them into the engine layer.
-- **Owner service per protocol.** The "who owns the write?" answer is named in the design doc (one production class per mutator protocol). Engines accept the protocol, not the concrete service, in their constructors. The `ApplicationContext` (see `docs/02_PATTERNS.md` §1) wires production defaults.
+- **Owner service per protocol.** The "who owns the write?" answer is named in the design doc (one production class per mutator protocol). Engines accept the protocol, not the concrete service, in their constructors. Mutators are constructed in `GameSession.__init__` and passed via `TurnEngineConfig` (post-PROJ-369) or direct kwargs.
 - **Per-phase mutator unit tests.** Each phase ships ≥ 6 focused unit tests around its mutator that drive a real data instance, verifying one mutation per test. These are the first unit-testable seams over the four data types.
 
 ## Scope
@@ -69,7 +69,7 @@ Cross-cutting goals (every phase):
 - New module: `game/strategy/services/empire_write_service.py` — implements `IEmpireMutator`.
 - New module: `game/strategy/services/ship_instance_write_service.py` — implements `IShipInstanceMutator`.
 - Modified files (~14): `game/strategy/engine/fleet_movement_engine.py`, `order_processor.py`, `superweapon_order_processor.py`, `production_engine.py`, `production_spawner.py`, `harvesting_engine.py`, `planet_energy_engine.py`, `atmosphere_engine.py`, `organics_consumption_engine.py`, `planet_modifier_effect_engine.py`, `planet_command_handlers.py`, `environmental_hazard_engine.py`, `game_initializer.py`, `combat/post_battle_hook.py`, `services/system_destroyer.py`, plus the engine `handlers/` subpackage (5 files).
-- Modified `game/strategy/facade/slices/_facade_state.py` (or the `ApplicationContext` initialization site for the strategy layer) to wire the four new write services as defaults.
+- Modified `game/strategy/engine/game_session.py` (`GameSession.__init__`, citing `game/strategy/engine/game_session.py:99-108`) to construct the four new write services. Post-PROJ-369: also `game/strategy/engine/turn_engine_config.py` to add `fleet_mutator` / `planet_mutator` / `empire_mutator` / `ship_mutator` fields populated by `TurnEngineConfig.create_default()`.
 - New tests:
   - `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` (Phase 1; 4 parameterized AST-guard cases — Fleet/Planet/Empire/ShipInstance).
   - `tests/unit/strategy/services/test_fleet_write_service.py` (Phase 2).
@@ -103,7 +103,7 @@ old_location = fleet.location           # read still direct via IFleet
 self._fleet_mutator.set_location(fleet, next_hex)
 ```
 
-`FleetMovementEngine.__init__` accepts `fleet_mutator: IFleetMutator`. `ApplicationContext` wires `FleetNavigationService` (which already handles location-and-path together) as the production default. The AST guard at `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` parses every file under `game/` and fails if `fleet.location = ...` appears anywhere outside `game/strategy/data/fleet.py` and `game/strategy/services/fleet_navigation_service.py`.
+`FleetMovementEngine.__init__` accepts `fleet_mutator: IFleetMutator`. The mutator is constructed in `GameSession.__init__` (citing `game/strategy/engine/game_session.py:99-108`) and threaded via `TurnEngineConfig` (post-PROJ-369) or direct kwargs (pre-PROJ-369). The AST guard at `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` parses every file under `game/` and fails if `fleet.location = ...` appears anywhere outside `game/strategy/data/fleet.py` and `game/strategy/services/fleet_navigation_service.py`.
 
 ## Key Files
 

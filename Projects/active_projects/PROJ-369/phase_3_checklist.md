@@ -19,14 +19,14 @@
 - `tests/unit/strategy/mocks/mock_engines.py` (verify — update if construction shape changed)
 - 5+ integration test files under `tests/integration/strategy/` (verify — should JUST WORK via fixture migration)
 
-**Objective:** Add `TurnEngineConfig.create_default()` classmethod that eagerly constructs every default engine. Migrate 2 production call sites + ~17 test construction sites. Delete the 15 lazy-property fallback bodies; properties become `return self._foo_engine`. Delete `_NullBattleResolver` (dead after this phase). Reduce `TurnEngine.__init__` from 20 to 8 kwargs.
+**Objective:** Add `TurnEngineConfig.create_default()` classmethod that eagerly constructs every default engine. Migrate 2 production call sites + ≥35 test sites (re-grepped at task start). Delete the 15 lazy-property fallback bodies; properties become `return self._foo_engine`. Delete `_NullBattleResolver` (dead after this phase). Reduce `TurnEngine.__init__` from 20 to 8 kwargs.
 
 ---
 
 ## Pre-flight
 
 - [ ] Verify Phase 2 status is `verified` (or `committed`) per `phase_dag.py status`
-- [ ] Run `grep -rn "TurnEngine(" tests/ game/` and `grep -rn "create_default_turn_engine(" tests/ game/` — capture the COMPLETE inventory of call sites this phase must migrate. Expected: ~19 sites total (2 production + 17 test).
+- [ ] **Re-grep authoritative inventory** at task start: `grep -rln 'TurnEngine(' tests/` and `grep -rn "create_default_turn_engine(" tests/ game/`. Record the file list in this checklist BEFORE any sweeping work begins. Expected: ≥35 test sites (re-grepped at task start) plus 2 production sites in `game_session.py`.
 - [ ] Read `game/strategy/engine/conflict_resolution_engine.py` — confirm whether it raises a clear error when constructed with `battle_resolver=None`. If not, decide whether to add one in this phase (open question Q4 in design.md).
 
 ---
@@ -242,21 +242,34 @@
 **Notes:**
 
 ### Task 3.7: Migrate test fixture + direct test constructions [Complex]
-**File:** `tests/unit/strategy/turn_engine/conftest.py:24-26` and ~17 test construction sites
+**File:** `tests/unit/strategy/turn_engine/conftest.py:24-26` (and the nearest `tests/conftest.py` for the shared factory) and ≥35 test construction sites (re-grepped at task start)
 **Tests:** `pytest tests/unit/strategy/turn_engine/ -v`
 
-- [ ] In `conftest.py:24-26`, replace fixture body with:
+- [ ] **(a) Re-grep authoritative inventory.** Run `grep -rln 'TurnEngine(' tests/` at task start. Record the file list in this checklist's Notes section before any sweeping work begins. Expected: ≥35 test sites (the previously-quoted "17" was a stale estimate).
+- [ ] **(b) Introduce a shared `turn_engine_factory` fixture in the nearest `tests/conftest.py`** returning `TurnEngine(TurnEngineConfig.create_default(...))` parameterised on common engine swaps. Suites that take the factory directly (no per-test override) are migrated en bloc once the factory exists.
+  ```python
+  # tests/conftest.py (or nearest shared conftest)
+  @pytest.fixture
+  def turn_engine_factory(fresh_registries):
+      """Build TurnEngine via TurnEngineConfig.create_default; accept overrides."""
+      from game.strategy.engine.turn_engine_config import TurnEngineConfig
+      def _make(**overrides):
+          cfg = TurnEngineConfig.create_default(fresh_registries, ai_factory=MagicMock())
+          if overrides:
+              import dataclasses
+              cfg = dataclasses.replace(cfg, **overrides)
+          return TurnEngine(registries=fresh_registries, config=cfg, ai_factory=MagicMock())
+      return _make
+  ```
+- [ ] **(c) Update the existing `tests/unit/strategy/turn_engine/conftest.py:24-26` `turn_engine` fixture** to delegate to the factory:
   ```python
   @pytest.fixture
-  def turn_engine(fresh_registries):
-      """Create a fresh turn engine via TurnEngineConfig.create_default()."""
-      from game.strategy.engine.turn_engine_config import TurnEngineConfig
-      cfg = TurnEngineConfig.create_default(fresh_registries, ai_factory=MagicMock())
-      return TurnEngine(registries=fresh_registries, config=cfg, ai_factory=MagicMock())
+  def turn_engine(turn_engine_factory):
+      return turn_engine_factory()
   ```
-- [ ] Inventory test files via grep `TurnEngine\(`. For each call site (expected 17 files):
-  - If it constructs the engine for general turn-processing tests: replace with `TurnEngineConfig.create_default(...)` + `TurnEngine(registries=..., config=cfg)`.
-  - If it constructs the engine specifically to override one or more sub-engines (e.g. `test_turn_engine_end_of_turn_order.py`): construct `TurnEngineConfig.create_default(...)` first, then create a new `TurnEngineConfig(... overrides ...)` via `dataclasses.replace(cfg, foo_engine=mock_foo)`, then pass to `TurnEngine`. This preserves the per-test override pattern.
+- [ ] **(d) Per-test overrides** stay supported via `dataclasses.replace(cfg, foo_engine=mock_foo)`. For each call site recorded in step (a):
+  - If it constructs the engine for general turn-processing tests: replace with the `turn_engine_factory()` fixture or `TurnEngineConfig.create_default(...)` + `TurnEngine(registries=..., config=cfg)`.
+  - If it constructs the engine to override one or more sub-engines (e.g. `test_turn_engine_end_of_turn_order.py`): pass overrides through `turn_engine_factory(foo_engine=mock_foo)` (which internally `dataclasses.replace`s).
 - [ ] Pay special attention to:
   - `test_turn_engine_lazy_properties.py:26-180` — repurpose: instead of "lazy property creates default class", assert "config-injected default class flows through to the property". Drop `TestConflictEngineBattleResolverBranches::test_conflict_engine_uses_null_battle_resolver_and_warns…` as obsolete (Task 3.5).
   - `test_dependency_injection.py:336+` — `TestFactoryFunction` updated for `create_default_turn_engine` deletion (decided in Task 3.8).
@@ -321,7 +334,7 @@
 - [ ] `_NullBattleResolver` is deleted; symbol absent from module
 - [ ] `create_default_turn_engine()` is deleted (or kept as decided)
 - [ ] AST guard test (`test_no_lazy_fallback_init.py`) passes
-- [ ] All 17 test files migrated to new construction shape
+- [ ] All ≥35 test sites (re-grepped at task start) migrated to new construction shape
 - [ ] 2 production call sites in `game_session.py` migrated
 - [ ] Update status at top of this file to `Complete (Committed)`
 - [ ] Update plan.md phase table row to `Complete`

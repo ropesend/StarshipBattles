@@ -438,6 +438,129 @@ paths or exercised the code through public facades.
   `pytest tests/unit/strategy/services/test_ability_iterator.py tests/unit/strategy/services/test_replay_ship_builder_registry_contract.py tests/integration/replay/test_replay_resolver.py tests/unit/strategy/adapters/test_simulation_adapter.py tests/unit/strategy/combat/test_post_battle_hook.py tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py tests/unit/strategy/test_ship_instance_damage.py -q`
   - Result after adding tests: `110 passed`
 
+### Strategy Combat Modifier Collector Helper Edges
+
+- Covered remaining helper branches in
+  `game/strategy/services/combat_modifier_collector.py`.
+- Added focused tests to
+  `tests/unit/strategy/services/test_combat_modifier_collector.py`.
+- New coverage includes `scope=None` falling back to ability default scope,
+  `_find_reference_planet(..., galaxy=None, ...)` returning `None`, and
+  `_find_empire` returning `None` for no matching empire.
+- False positives found: none for this packet.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/services/test_combat_modifier_collector.py -q`
+  - Initial result before adding helper tests: `7 passed`
+  - Result after adding tests: `10 passed`
+
+### Strategy Facade And Session Data Edges
+
+- Covered remaining direct branches in:
+  - `game/strategy/facade/slices/system_slice.py`
+  - `game/strategy/facade/dto/fleet_dto.py`
+  - `game/strategy/engine/game_session.py`
+- Added focused tests to:
+  - `tests/unit/strategy/facade/slices/test_system_slice.py`
+  - `tests/unit/strategy/facade/test_fleet_dto.py`
+  - `tests/unit/strategy/engine/test_game_session_from_dict.py`
+- New coverage includes direct `SystemSlice` wrappers for all systems,
+  system-at-hex, and system-containing-fleet; `FleetInfo.from_fleet`
+  descriptions for `MOVE_TO_FLEET`, `BUILD`, `TRANSFER`, planetless
+  `COLONIZE`, and carried-item default aggregation; `GameSession.from_dict`
+  missing `config`/`galaxy` errors and pursuer tracker rebuild for
+  `MOVE_TO_FLEET` / `JOIN_FLEET`.
+- False positives found: `system_slice.py`, `fleet_dto.py`, and
+  `game_session.py` already had broad facade/DTO/session coverage. Missing
+  top-level `empires` is intentionally not an error because `from_dict`
+  defaults it to `[]`.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/facade/slices/test_system_slice.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/strategy/engine/test_game_session_from_dict.py -q`
+  - Result after adding tests: `36 passed`
+
+### Simulation Contracts And Debug Helper Edges
+
+- Covered remaining direct contract/debug branches in:
+  - `game/simulation/combat/attack_contract.py`
+  - `game/simulation/components/abilities/base.py`
+  - `game/simulation/systems/battle_end_conditions.py`
+  - `game/simulation/battle_controller.py`
+  - `game/core/constants.py`
+  - `game/strategy/data/classification_config.py`
+- Added or extended focused tests in:
+  - `tests/unit/simulation/combat/test_weapon_registry.py`
+  - `tests/unit/simulation/components/abilities/test_ability_base.py`
+  - `tests/unit/simulation/systems/test_battle_end_conditions.py`
+  - `tests/unit/simulation/battle_controller/test_utilities.py`
+  - `tests/unit/core/test_constants.py`
+  - `tests/unit/strategy/data/test_classification_config.py`
+- New coverage includes `FAMILY_METADATA` values for every
+  `WeaponFamily`, `_parse_primary_value(..., fallback_keys=...)`,
+  end-condition `__repr__` contracts, `BattleController.reset()` clearing
+  `_initial_state`, `LayerDefaults` radius ordering, and classification
+  config fallback for `KeyError`, `TypeError`, and `ValueError`.
+- False positives found: `ModifierManager` deprecated static methods have no
+  live callers outside the deprecated path and were not worth pinning before
+  cleanup. `game/simulation/event_bus.py` does not exist in this checkout;
+  active simulation event-bus coverage lives under `combat_events.py`.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/simulation/combat/test_weapon_registry.py tests/unit/simulation/components/abilities/test_ability_base.py tests/unit/simulation/components/test_modifier_manager.py tests/unit/simulation/systems/test_battle_end_conditions.py tests/unit/simulation/systems/test_mass_ratio_condition.py tests/unit/simulation/battle_controller/test_utilities.py tests/unit/core/test_constants.py tests/unit/strategy/data/test_classification_config.py -q`
+  - Result after adding tests: `264 passed`
+
+### Strategy Generation, Production, And Asset Metadata Edges
+
+- Covered remaining edge branches in:
+  - `game/strategy/generation/density/primitives/noise.py`
+  - `game/strategy/engine/production_spawner.py`
+  - `game/assets/asset_manager.py`
+- Added focused tests to:
+  - `tests/unit/strategy/generation/density/test_noise.py`
+  - `tests/unit/strategy/engine/test_production_spawner.py`
+  - `tests/unit/assets/test_asset_manager_resolutions.py`
+- New coverage includes negative-scale and zero-octave noise behavior,
+  `_hash_coord`, `_smooth_noise`, explicit `ProductionSpawner`
+  collaborators, no-galaxy ship spawn metadata, planet-location metadata
+  fallbacks, fleet-complex no-galaxy/no-planet guards, star metadata
+  loading/defaults, star asset-key manifest lookup, star folder validation,
+  and star image fallback/error handling.
+- False positives found: `NoisePrimitive` already covered normal
+  deterministic/output-bound behavior. `ProductionSpawner` already covered
+  main dispatch, normal ship/fleet complex paths, staging-yard behavior,
+  and target-planet selection. `AssetManager` planet image resolution
+  branches were already covered.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/generation/density/test_noise.py tests/unit/strategy/engine/test_production_spawner.py tests/unit/strategy/engine/test_production_spawner_staging_yard.py tests/unit/assets/test_asset_manager_resolutions.py -q`
+  - Initial result before adding tests: `38 passed`
+  - Result after adding tests: `59 passed`
+
+### UI Workshop Pure Business Logic
+
+- Covered pure business/orchestration branches in:
+  - `game/ui/screens/workshop_data_reloader.py`
+  - `game/ui/screens/workshop_viewmodel_ship_ops.py`
+  - `game/ui/screens/builder/stat_getters.py`
+- Added or extended focused tests in:
+  - `tests/unit/ui/screens/test_workshop_data_reloader.py`
+  - `tests/unit/ui/screens/test_workshop_viewmodel_ship_ops.py`
+  - `tests/unit/ui/screens/builder/test_stat_getters.py`
+- New coverage includes reload success/failure/error handling, data-folder
+  selection, standard/test data helpers, ship creation/component operations,
+  bulk-add warning counts, class changes, summary/validation helpers,
+  ship attribute setters, broad pure stat getter branches, warp/range/cargo
+  helpers, superweapon summary, and formatter/registry mappings.
+- False positives found: `workshop_viewmodel_ship_ops.pick_up_component`
+  had indirect ViewModel coverage already. `stat_getters.py` already covered
+  resource fallbacks, some formatters, and validators; remaining pure getter
+  branches were real gaps.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/ui/screens/test_workshop_data_loader.py tests/unit/ui/screens/test_workshop_data_reloader.py tests/unit/ui/screens/test_workshop_viewmodel_layer_ops.py tests/unit/ui/screens/test_workshop_viewmodel_pick_up.py tests/unit/ui/screens/test_workshop_viewmodel_selection.py tests/unit/ui/screens/test_workshop_viewmodel_ship_ops.py tests/unit/ui/screens/builder/test_stat_getters.py -q`
+  - Initial nearby baseline before adding tests: `30 passed`
+  - Result after adding tests: `70 passed`
+
 ## Verified False Positives Or Already-Covered Claims
 
 - `game/simulation/battle_runner.py` already has dedicated unit coverage
@@ -497,6 +620,21 @@ paths or exercised the code through public facades.
   tie fallback and unknown-role `other` fallback.
 - `game/strategy/engine/action_execution_engine.py` already covers the
   recommended return-`None` branches directly.
+- `game/simulation/components/modifier_manager.py` deprecated static methods
+  have no live callers outside the deprecated API path; pinning them before
+  cleanup would preserve low-value behavior.
+- `game/simulation/event_bus.py` does not exist in this checkout; active
+  simulation event-bus coverage maps to `game/simulation/combat/combat_events.py`.
+- `game/strategy/facade/slices/system_slice.py`,
+  `game/strategy/facade/dto/fleet_dto.py`, and
+  `game/strategy/engine/game_session.py` already had broad indirect or direct
+  coverage; this pass only added verified missing direct branches.
+- `game/strategy/generation/density/primitives/noise.py`,
+  `game/strategy/engine/production_spawner.py`, and
+  `game/assets/asset_manager.py` had substantial existing normal-path
+  coverage; this pass added only helper/fallback/metadata edges.
+- `game/ui/screens/builder/stat_getters.py` already had coverage for resource
+  fallbacks, selected formatters, and validators.
 
 ## Test Commands Run
 
@@ -608,21 +746,32 @@ paths or exercised the code through public facades.
 - Strategy replay/iterator/adapter and defensive branch continuation:
   - `pytest tests/unit/strategy/services/test_ability_iterator.py tests/unit/strategy/services/test_replay_ship_builder_registry_contract.py tests/integration/replay/test_replay_resolver.py tests/unit/strategy/adapters/test_simulation_adapter.py tests/unit/strategy/combat/test_post_battle_hook.py tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py tests/unit/strategy/test_ship_instance_damage.py -q`
   - Result: `110 passed`
+- Strategy combat/services, facade/data, simulation contracts, generation/assets,
+  UI workshop business logic, and local micro-edge continuation:
+  - `pytest tests/unit/strategy/services/test_combat_modifier_collector.py tests/unit/strategy/facade/slices/test_system_slice.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/strategy/engine/test_game_session_from_dict.py tests/unit/simulation/combat/test_weapon_registry.py tests/unit/simulation/components/abilities/test_ability_base.py tests/unit/simulation/components/test_modifier_manager.py tests/unit/strategy/generation/density/test_noise.py tests/unit/strategy/engine/test_production_spawner.py tests/unit/strategy/engine/test_production_spawner_staging_yard.py tests/unit/assets/test_asset_manager_resolutions.py tests/unit/ui/screens/test_workshop_data_loader.py tests/unit/ui/screens/test_workshop_data_reloader.py tests/unit/ui/screens/test_workshop_viewmodel_layer_ops.py tests/unit/ui/screens/test_workshop_viewmodel_pick_up.py tests/unit/ui/screens/test_workshop_viewmodel_selection.py tests/unit/ui/screens/test_workshop_viewmodel_ship_ops.py tests/unit/ui/screens/builder/test_stat_getters.py tests/unit/core/test_constants.py tests/unit/simulation/battle_controller/test_utilities.py tests/unit/simulation/systems/test_battle_end_conditions.py tests/unit/simulation/systems/test_mass_ratio_condition.py tests/unit/strategy/data/test_classification_config.py -q`
+  - Result: `439 passed`
+- Simulation/core contract subset:
+  - `pytest tests/unit/simulation/combat/test_weapon_registry.py tests/unit/simulation/components/abilities/test_ability_base.py tests/unit/simulation/components/test_modifier_manager.py tests/unit/simulation/systems/test_battle_end_conditions.py tests/unit/simulation/systems/test_mass_ratio_condition.py tests/unit/simulation/battle_controller/test_utilities.py tests/unit/core/test_constants.py tests/unit/strategy/data/test_classification_config.py -q`
+  - Result: `264 passed`
 
 ## Suggested Next Work Packets
 
-- Strategy data: `ship_instance.py` now has focused direct method coverage;
-  any remaining work should re-check serializer/bridge coverage first to
-  avoid duplicating existing `ship_instance/` and `fleets/` tests.
-- Strategy combat: `post_battle_hook.py` defensive branches are now covered;
-  remaining combat candidates should start with `combat_modifier_collector.py`
-  private helper edge cases only after checking existing collector tests.
-- Replay: `replay_ship_builder.py` and `replay_resolver.py` recommended
-  branches are now covered. Future replay work should re-check resolver/store
-  integration tests before adding more.
-- Strategy engine: `turn_phase_registry.py` hook functions are now covered;
-  remaining engine candidates should focus on genuinely untested helper
-  branches, not return-`None` paths already covered in action execution.
+- Simulation stats: re-check `game/simulation/entities/ship_stats.py`
+  resource aggregation and external-stat application helper branches against
+  current `ship_stats` and integration tests before adding any direct tests.
+- Strategy habitability/economy helpers: re-check
+  `game/strategy/data/habitability_factors.py` extractor factory branches
+  and any remaining `EconomySlice` claims against existing facade tests.
+- Strategy superweapon/order edges: re-check
+  `superweapon_order_processor.py` and order/staging-yard helper claims against
+  current `test_superweapon_order_processor*` and `test_order_processor*`
+  files before adding tests.
+- UI-adjacent logic: only test pure business branches such as editor math
+  (`gravity_target_editor.py`, `atmosphere_target_editor.py`) or
+  `BuildQueueScreen` parameter/action routing with heavy UI mocked out.
+- Threaded services: `game/ui/services/image/background.py` remains a
+  plausible high-value packet, but treat it as concurrency code and keep tests
+  deterministic with fakes and explicit shutdown.
 - Any newly selected packet should repeat verification against existing tests
   first; many broad audit claims in this area were false positives.
 

@@ -13,6 +13,7 @@ import pytest
 
 from game.core.math import Vector2
 from game.simulation.combat.attack_contract import (
+    FAMILY_METADATA,
     AttackRequest,
     AttackResolution,
     BeamResolution,
@@ -131,6 +132,21 @@ class TestFamilyDetection:
         comp.has_pdc_ability = MagicMock(return_value=False)
         comp.has_ability = MagicMock(return_value=False)
         assert detect_family(comp) is None
+
+
+class TestFamilyMetadata:
+    """Pins the metadata contract consumed by targeting and firing systems."""
+
+    def test_metadata_defined_for_every_weapon_family(self):
+        assert set(FAMILY_METADATA) == set(WeaponFamily)
+
+    def test_only_pdc_declares_missile_targeting_context(self):
+        for family in WeaponFamily:
+            meta = FAMILY_METADATA[family]
+            expected = family is WeaponFamily.PDC
+
+            assert meta.targets_missiles is expected
+            assert meta.consumes_pdc_missile_context is expected
 
 
 class TestFakeFamilyExtensibility:

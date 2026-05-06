@@ -37,6 +37,13 @@
       "count": 2,
       "last_used": "2026-05-05T00:46:10Z"
     },
+    "claude-proj-from-audit-shrink": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-06T03:00:28Z"
+    },
     "claude-qa-triage-gh": {
       "agents": {
         "claude": 1
@@ -53,17 +60,17 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 40
+        "codex": 43
       },
-      "count": 40,
-      "last_used": "2026-05-06T02:47:17Z"
+      "count": 43,
+      "last_used": "2026-05-06T03:16:48Z"
     },
     "codex-starship-combat-lab": {
       "agents": {
-        "codex": 7
+        "codex": 8
       },
-      "count": 7,
-      "last_used": "2026-05-06T02:21:59Z"
+      "count": 8,
+      "last_used": "2026-05-06T03:16:45Z"
     },
     "codex-starship-design-assets": {
       "agents": {

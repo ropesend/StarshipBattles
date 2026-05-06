@@ -83,39 +83,9 @@
   # Allow ≤ 1 OrderType reference (the registry key).
   assert len(ordertype_refs) <= 1, f"Found {len(ordertype_refs)} OrderType references; facade target is ≤ 1"
   ```
-- [ ] `def test_every_action_order_type_has_a_handler()`:
-  ```python
-  from game.strategy.engine.order_handlers.registry_factory import create_default_order_handler_registry
-  from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-  from game.strategy.data.order_types import (
-      ACTION_ORDER_TYPES, PLANET_ACTION_ORDER_TYPES, OrderType,
-  )
-  registry = create_default_order_handler_registry(
-      event_bus=None,
-      superweapon_processor=SuperweaponOrderProcessor(),
-  )
-  expected = (ACTION_ORDER_TYPES - PLANET_ACTION_ORDER_TYPES) | {OrderType.JOIN_FLEET}
-  registered = registry.all_registered()
-  missing = expected - registered
-  assert not missing, f"OrderTypes missing handlers: {missing}"
-  ```
-- [ ] `def test_no_legacy_private_helpers_on_order_processor()`:
-  ```python
-  # AST-walk OrderProcessor's class body; assert none of the deleted-Phase-4
-  # method names exist as definitions.
-  tree = ast.parse(path.read_text())
-  forbidden = {
-      "_execute_fleet_merge", "_execute_fleet_transfer", "_execute_load",
-      "_execute_unload", "_load_pod_from_staging_yard",
-      "_unload_pod_to_staging_yard", "_deploy_drop_pod",
-      "_validate_tick_inputs", "_elect_canonical_merges",
-      "_emit_join_cancelled",
-  }
-  for node in ast.walk(tree):
-      if isinstance(node, ast.FunctionDef):
-          assert node.name not in forbidden, f"{node.name} should have been deleted in Phase 4"
-  ```
-- [ ] **Verify:** all 4 tests pass
+- [ ] **Verify no regression** for `test_every_action_order_type_has_a_handler`: this test now lives at `tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py` (created in Phase 4 Task 4.10). Re-run it here to confirm the Phase 4 gate still passes after Phase 5 backfill tests land.
+- [ ] **Verify no regression** for `test_no_legacy_private_helpers_on_order_processor`: this test now lives at `tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py` (created in Phase 4 Task 4.11). Re-run it here as a regression check.
+- [ ] **Verify:** all 4 tests pass (2 inline + 2 Phase 4 pointers)
 
 **Notes:**
 

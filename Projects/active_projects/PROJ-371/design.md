@@ -185,7 +185,12 @@ command_registry = CommandRegistry()
 
 
 def command_spec(**spec_kwargs):
-    """Decorator: instantiate the decorated class and register a CommandSpec.
+    """Decorator: attach metadata to the decorated handler class.
+
+    METADATA-ONLY. Does NOT call command_registry.register at import time.
+    Each handler module exposes def register(registry) that reads the
+    metadata and calls registry.register(...) explicitly. seed_default_commands
+    drives those per-module register() functions.
 
     Usage:
         @command_spec(command_class=FooCommand, order_type=OrderType.FOO,
@@ -194,42 +199,76 @@ def command_spec(**spec_kwargs):
             ...
     """
     def _wrap(handler_cls: Type[ICommandHandler]) -> Type[ICommandHandler]:
-        spec = CommandSpec(handler_class=handler_cls, **spec_kwargs)
-        command_registry.register(spec)
+        # Metadata-only: attach kwargs, return class unchanged. No registry mutation.
+        handler_cls.__command_spec_kwargs__ = spec_kwargs
         return handler_cls
     return _wrap
 ```
 
-### Seeding the registry at import time
+**Implementation note (r004 refinement).** Earlier draft (r001) relied on import-side-effect registration via `@command_spec`. Re-importing already-imported modules does not re-run decorators (Python caches via `sys.modules`), so `reset_command_registry()` could not actually reseed. r004 switches to explicit per-module `register()` functions called by `seed_default_commands()`, with the decorator metadata-only. If `@command_spec` had also registered at import time, `seed_default_commands(registry)` after reset would double-register. The metadata-only decorator + explicit `register()` is the only shape that survives reset cleanly.
 
-The registry must be populated **before** any consumer reads it. Today
-`specs.py` triggers handler imports at module load (`specs.py:75-122`). After
-PROJ-371 Phase 2, `game/strategy/engine/commands/registry.py` provides a
-`seed_default_commands()` function that imports every handler module by side
-effect:
+### Seeding the registry — explicit per-module register()
+
+The registry is populated by `seed_default_commands()` calling each handler
+module's `register(registry)` function explicitly. The decorator is
+metadata-only; it does not register at import time. This is the
+duplicate-registration foot-gun mitigation: if the decorator ALSO registered
+at import time AND `seed_default_commands()` called `register()`, a second
+`seed_default_commands()` after a `reset_command_registry()` would
+double-register. r004 makes the decorator metadata-only.
 
 ```python
-def seed_default_commands() -> None:
-    """Import every default-handler module to trigger @command_spec registration.
+# Each handler module owns a register(registry) function.
+# Example for build.py:
+def register(registry: CommandRegistry) -> None:
+    registry.register(CommandSpec(
+        handler_class=BuildOrderCommandHandler,
+        **BuildOrderCommandHandler.__command_spec_kwargs__,
+    ))
+    registry.register(CommandSpec(
+        handler_class=RemoveBuildOrderCommandHandler,
+        **RemoveBuildOrderCommandHandler.__command_spec_kwargs__,
+    ))
 
-    Called once at strategy-engine boot. Idempotent.
+# registry.py
+def seed_default_commands(registry: CommandRegistry) -> None:
+    """Import handler modules (forces decorator metadata to attach) and
+    call each module's register(registry).
+
+    The metadata-only decorator means importing a handler module does NOT
+    mutate the registry. Mutation happens here, exactly once per call.
     """
-    # Import-by-side-effect — each module runs its @command_spec decorators.
-    from game.strategy.engine.handlers import (  # noqa: F401
+    from game.strategy.engine.handlers import (
         build, construction_queue, movement, order_queue, transfer,
     )
-    from game.strategy.engine import (  # noqa: F401
+    from game.strategy.engine import (
         planet_command_handlers, superweapon_command_handlers,
     )
+    for module in (
+        build, construction_queue, movement, order_queue, transfer,
+        planet_command_handlers, superweapon_command_handlers,
+    ):
+        module.register(registry)
+
+
+def reset_command_registry() -> None:
+    """Clear all entries and reseed via seed_default_commands.
+
+    No _SEEDED flag, no importlib.reload, no import side effects.
+    """
+    command_registry._specs.clear()
+    seed_default_commands(command_registry)
 ```
 
-`registry_factory.py::create_default_registry` calls `seed_default_commands()`
-first if the registry is empty. Idempotent.
+`registry_factory.py::create_default_registry` calls
+`seed_default_commands(command_registry)` once at strategy-engine boot.
 
 **This mirrors PROJ-367 conftest.py concern:** if a test resets the registry,
 re-seeding must work. `reset_command_registry()` clears + re-seeds (same
 idiom as `reset_stat_contributor_registry` per PROJ-367 decision-log entry
-2026-05-05).
+2026-05-05). r004 refinement: the decorator stays for human readability but
+is *not* the wiring path — the wiring path is the per-module `register()`
+function called by `seed_default_commands()`.
 
 ### Migration of consumer surfaces (Phase 2)
 

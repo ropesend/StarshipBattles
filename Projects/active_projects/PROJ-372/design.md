@@ -360,9 +360,9 @@ The reason `spectrum_math` lives in `core/` not `strategy/`: the Tanner Helland 
 - **Rejected** — `GalaxyState` is mandatory.
 
 ### I. Run after PROJ-370 (data boundary protocols)
-- Pro: PROJ-370 would define `IPlanetManager` / `IFleetResourceManager` first, which PROJ-372 could consume.
-- Con: PROJ-370 is currently a stub plan (1-phase, "Phase 1: TBD"). PROJ-372 has concrete extraction targets and a closed scope. Holding PROJ-372 on a project that hasn't planned itself yet is risky. Also, PROJ-372 will incidentally produce 5 new protocols (`IGalaxySystemGraph`, `IGalaxySpatialQuery`, `IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder`) — these are useful inputs to PROJ-370.
-- **Rejected** — PROJ-372 first.
+- Pro: PROJ-370 defines the strategy mutator surface first; PROJ-372's protocol extractions land on top of a stable mutation contract.
+- Con: PROJ-370's wiring rewrite must complete before any PROJ-372 work can claim a stable target.
+- **Accepted (resolved 2026-05-06 Codex+Claude joint review)** — PROJ-370 first; all of PROJ-372 follows. PROJ-372 Phase 0 creates `game/strategy/data/galaxy_protocols.py` (`IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder`, `IGalaxySystemGraph`, `IGalaxySpatialQuery`) and modifies `game/context.py` habitability accessors — those are exactly the contract surfaces PROJ-370 should own. Splitting Phase 0 to enable Star (Phase 1) parallelism with PROJ-370 was rejected as marginal benefit.
 
 ---
 
@@ -383,7 +383,7 @@ The reason `spectrum_math` lives in `core/` not `strategy/`: the Tanner Helland 
 
 ## Dependencies
 
-- **PROJ-370 (Strategy: Data Layer Boundary Protocols)** — currently a 1-phase stub. Sequencing recommendation: **PROJ-372 ships first.** PROJ-372 defines 5 read protocols (`IGalaxySystemGraph`, `IGalaxySpatialQuery`, `IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder`) which become inputs to PROJ-370's broader contract work. If PROJ-370 ships first, PROJ-372 would gain 1-2 days of "use the protocols PROJ-370 already defined" but lose nothing else. Either ordering is workable; **PROJ-372 first** is preferred because PROJ-370's plan is currently a stub and PROJ-372 has a closed scope.
+- **PROJ-370 (Strategy: Data Layer Boundary Protocols)** — has a five-phase mutator plan (Fleet, Planet, Empire, ShipInstance, plus foundation). Sequencing **resolved 2026-05-06 (Codex+Claude joint review): PROJ-370 first; all of PROJ-372 follows.** PROJ-372 Phase 0 creates `game/strategy/data/galaxy_protocols.py` (`IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder`, `IGalaxySystemGraph`, `IGalaxySpatialQuery`) and modifies `game/context.py` habitability accessors that PROJ-370 must define first.
 - **PROJ-86/87/88/89** — predecessors, all complete and archived in `Projects/deep_archive/PROJ-051-100/`. Each scoped god-class decomposition to specific classes that did NOT include Galaxy/Planet/Star (verified in their plan.md "Out:" sections). PROJ-372 is **not superseding** them; it's the bounded follow-up for the three classes they deliberately deferred.
 - **PROJ-173 Phase 2** — created `galaxy_entity_registry.py`, `galaxy_spatial_index.py`, `galaxy_warp_generator.py`, `galaxy_system_generator.py`. PROJ-372 builds on this; the four files are kept and refactored in place to take `GalaxyState` instead of `Galaxy`.
 - **PROJ-210** — extracted `PlanetaryFacility` and `SpeciesPopulation` from `Planet`. PROJ-372 preserves these.
@@ -395,6 +395,8 @@ The reason `spectrum_math` lives in `core/` not `strategy/`: the Tanner Helland 
 ## Open questions
 
 1. **Q1: Sequencing relative to PROJ-370.** Should PROJ-372 wait for PROJ-370 to complete its planning, then consume PROJ-370's protocols? Or run independently first and ship its own protocols? **Recommendation: independent, PROJ-372 first.** PROJ-370 currently has no plan body. PROJ-372's protocols are useful inputs to PROJ-370.
+
+   **Resolved 2026-05-06 (Codex+Claude joint review):** PROJ-370 first. All of PROJ-372 follows. Phase 0 creates Planet/Galaxy protocol surfaces (`IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder`, `IGalaxySystemGraph`, `IGalaxySpatialQuery`) and `game/context.py` habitability accessors that are PROJ-370's contract space; splitting Phase 0 to enable Star parallelism was rejected as marginal benefit.
 2. **Q2: Move `StarSystem` and `WarpPoint` to their own file?** Saves ~150 LOC from `galaxy.py` if needed. **Recommendation: defer to Phase 3 implementer based on actual LOC budget.**
 3. **Q3: Should `GalaxyState` be frozen / immutable in any way?** Today the indexes are mutated freely. Making `GalaxyState` a `@dataclass` with mutable fields is consistent with PROJ-371 (`StatAccumulator`). Any consideration of frozen-ness is PROJ-370's territory.
 4. **Q4: Should `_kelvin_to_rgb` move to `core/spectrum_math.py` or stay in `generation/star_generator.py`?** The function is pure math; `core/` is the architectural home. **Recommendation: move to `core/`** (Decision D6).

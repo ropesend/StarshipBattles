@@ -10,6 +10,8 @@
 **Review Mode:** standard
 **Files (planned):** see manifest.md "Phase 5: ShipInstance" section
 
+**Sequencing precondition:** PROJ-368 must have landed (already true at Phase 5). If PROJ-369 has landed, wire via `TurnEngineConfig`; otherwise wire via direct constructor kwargs and migrate to `TurnEngineConfig` when PROJ-369 closes.
+
 **Objective:** `IShipInstanceMutator` is a working Protocol implemented by `ShipInstanceWriteService` (new). The post-battle hook (the canonical battle→strategy write boundary) routes its writes through the mutator. The ShipInstance AST guard goes hot. Zero behavior change.
 
 ---
@@ -41,12 +43,13 @@
 
 **Notes:**
 
-### Task 5.3: Wire `IShipInstanceMutator` into context/facade [Simple]
-**File:** `game/strategy/facade/slices/_facade_state.py`
-**Tests:** `pytest tests/unit/strategy/facade/ -v --testmon`
+### Task 5.3: Wire `IShipInstanceMutator` at `GameSession.__init__` [Simple]
+**File:** `game/strategy/engine/game_session.py` (construction point — see `game/strategy/engine/game_session.py:99-108`). If PROJ-369 has landed, also `game/strategy/engine/turn_engine_config.py` (default-population point in `TurnEngineConfig.create_default()`).
+**Tests:** `pytest tests/integration/strategy/test_game_session_strategy.py -v --testmon`
 
-- [ ] Wire `ShipInstanceWriteService()` as the production default for `IShipInstanceMutator`.
-- [ ] Add accessor `get_ship_instance_mutator() -> IShipInstanceMutator`.
+- [ ] Construct `ShipInstanceWriteService()` inside `GameSession.__init__`.
+- [ ] **If PROJ-369 has landed:** add `ship_mutator: IShipInstanceMutator` to `TurnEngineConfig`; populate via `TurnEngineConfig.create_default()`; engines / hooks pull from `config.ship_mutator`.
+- [ ] **If PROJ-369 has NOT landed:** pass `ShipInstanceWriteService` directly into the engines and hooks that need it (`PostBattleHook`, `EnvironmentalHazardEngine`, `OrderProcessor`/`order_handlers/transfer.py`) via constructor kwargs from `GameSession`. Migrate to `TurnEngineConfig`-routed wiring when PROJ-369 closes.
 
 **Notes:**
 

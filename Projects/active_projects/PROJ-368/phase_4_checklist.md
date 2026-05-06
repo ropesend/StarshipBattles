@@ -182,6 +182,64 @@ This is the highest-risk phase (R8). One conceptual change, one commit. The cumu
 
 **Notes:**
 
+### Task 4.10: Registry-completeness test [Medium]
+
+**File:** `tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py` (new)
+**Tests:** `pytest tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py -v`
+
+- [ ] Create the file with imports for `create_default_order_handler_registry`, `SuperweaponOrderProcessor`, and `OrderType`.
+- [ ] Assert every `OrderType` value handled by `OrderProcessor` has a registered handler:
+  ```python
+  from game.strategy.engine.order_handlers.registry_factory import create_default_order_handler_registry
+  from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+  from game.strategy.data.order_types import (
+      ACTION_ORDER_TYPES, PLANET_ACTION_ORDER_TYPES, OrderType,
+  )
+  registry = create_default_order_handler_registry(
+      event_bus=None,
+      superweapon_processor=SuperweaponOrderProcessor(),
+  )
+  expected = (ACTION_ORDER_TYPES - PLANET_ACTION_ORDER_TYPES) | {OrderType.JOIN_FLEET}
+  registered = registry.all_registered()
+  missing = expected - registered
+  assert not missing, f"OrderTypes missing handlers: {missing}"
+  ```
+- [ ] **Verify:** test passes; failing this test BLOCKS Phase 4 sign-off.
+
+**Notes:** This task pulls Phase 5's registry-completeness coverage forward into Phase 4 so the gate fires at the deletion-and-switchover commit, not after the doc/test polish phase.
+
+### Task 4.11: No-legacy-helper AST guard [Medium]
+
+**File:** `tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py` (new)
+**Tests:** `pytest tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py -v`
+
+- [ ] Create the file with `ast` + `pathlib` imports.
+- [ ] AST scan of `game/strategy/engine/order_processor.py` to assert no `_process_*` private helpers remain on `OrderProcessor`. Allowlist: public facade methods only.
+  ```python
+  import ast, pathlib
+  ORDER_PROCESSOR = pathlib.Path(__file__).parent.parent.parent.parent / "game/strategy/engine/order_processor.py"
+
+  def test_no_legacy_private_helpers_on_order_processor():
+      tree = ast.parse(ORDER_PROCESSOR.read_text())
+      forbidden = {
+          "_execute_fleet_merge", "_execute_fleet_transfer", "_execute_load",
+          "_execute_unload", "_load_pod_from_staging_yard",
+          "_unload_pod_to_staging_yard", "_deploy_drop_pod",
+          "_validate_tick_inputs", "_elect_canonical_merges",
+          "_emit_join_cancelled",
+      }
+      offenders = []
+      for node in ast.walk(tree):
+          if isinstance(node, ast.FunctionDef) and node.name in forbidden:
+              offenders.append(node.name)
+          if isinstance(node, ast.FunctionDef) and node.name.startswith("_process_"):
+              offenders.append(node.name)
+      assert not offenders, f"Legacy private helpers must be deleted: {offenders}"
+  ```
+- [ ] **Verify:** test passes; failing this test BLOCKS Phase 4 sign-off.
+
+**Notes:** This task pulls Phase 5's no-legacy-helper coverage forward into Phase 4. Together with Task 4.10, the two gates ensure the Phase 4 deletion commit cannot be merged with stragglers or unrouted OrderTypes.
+
 ---
 
 ## Phase Completion Checklist

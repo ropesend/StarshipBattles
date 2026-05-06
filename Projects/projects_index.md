@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-375 | Audit-shrink cleanup 2026-05-05 | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-374 | Strategy grid surface cache | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-373 | Build queue open latency | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-372 | Strategy: Galaxy/Planet/Star God-Class Decomposition (facade-delegate pattern) | Planning | 2026-05-05 | 2026-05-05 |
