@@ -34,7 +34,13 @@ from typing import Any, Optional, TYPE_CHECKING
 from game.core.registry import GameRegistries
 
 if TYPE_CHECKING:
-    from game.core.protocols import IRaceRegistry
+    from game.core.protocols import (
+        IEmpireMutator,
+        IFleetMutator,
+        IPlanetMutator,
+        IRaceRegistry,
+        IShipInstanceMutator,
+    )
 
 __all__ = ['TurnEngineConfig']
 
@@ -73,6 +79,15 @@ class TurnEngineConfig:
     quality_engine: Optional[Any] = None
     atmosphere_engine: Optional[Any] = None
     water_engine: Optional[Any] = None
+    # PROJ-370: strategy mutator protocols. Wired in GameSession.__init__,
+    # populated by create_default(). Engines that need them pull from
+    # `config.fleet_mutator` / `planet_mutator` / `empire_mutator` /
+    # `ship_mutator`. Default None for tests that don't exercise the
+    # write boundary; production always sets them via create_default.
+    fleet_mutator: 'IFleetMutator | None' = None
+    planet_mutator: 'IPlanetMutator | None' = None
+    empire_mutator: 'IEmpireMutator | None' = None
+    ship_mutator: 'IShipInstanceMutator | None' = None
 
     @classmethod
     def create_default(
@@ -82,6 +97,10 @@ class TurnEngineConfig:
         ai_factory: Any = None,
         race_registry: 'IRaceRegistry | None' = None,
         event_bus: Any = None,
+        fleet_mutator: 'IFleetMutator | None' = None,
+        planet_mutator: 'IPlanetMutator | None' = None,
+        empire_mutator: 'IEmpireMutator | None' = None,
+        ship_mutator: 'IShipInstanceMutator | None' = None,
     ) -> 'TurnEngineConfig':
         """Eagerly construct all 18 default engines and bundle them.
 
@@ -165,7 +184,7 @@ class TurnEngineConfig:
         order_processor = OrderProcessor(event_bus=event_bus)
 
         return cls(
-            movement_engine=FleetMovementEngine(),
+            movement_engine=FleetMovementEngine(fleet_mutator=fleet_mutator),
             production_engine=ProductionEngine(
                 registries=registries, event_bus=event_bus,
             ),
@@ -198,4 +217,8 @@ class TurnEngineConfig:
             quality_engine=QualityEngine(registries=registries),
             atmosphere_engine=AtmosphereEngine(registries=registries),
             water_engine=WaterEngine(registries=registries),
+            fleet_mutator=fleet_mutator,
+            planet_mutator=planet_mutator,
+            empire_mutator=empire_mutator,
+            ship_mutator=ship_mutator,
         )

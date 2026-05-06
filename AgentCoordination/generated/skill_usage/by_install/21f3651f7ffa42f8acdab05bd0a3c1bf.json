@@ -2,6 +2,13 @@
   "install_id": "21f3651f7ffa42f8acdab05bd0a3c1bf",
   "schema_version": 1,
   "skills": {
+    "claude-delegate-review": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-06T04:10:36Z"
+    },
     "claude-discuss-start": {
       "agents": {
         "claude": 3
@@ -102,10 +109,10 @@
     },
     "ocode-review-request": {
       "agents": {
-        "ocode": 1
+        "ocode": 7
       },
-      "count": 1,
-      "last_used": "2026-05-02T20:26:12Z"
+      "count": 7,
+      "last_used": "2026-05-06T08:02:45Z"
     },
     "ocode-testcoverage-audit": {
       "agents": {

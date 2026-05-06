@@ -6,7 +6,7 @@ parameterized boundary guard) and ``test_mutator_boundary_ast_guard_self_test.py
 
 Detected patterns (per attribute in ``target_attrs``):
 
-1. Bare ``Store``:        ``obj.attr = X``
+1. Bare ``Store``:        ``obj.attr = X``    (where obj is NOT ``self`` / ``cls``)
 2. ``AugStore``:          ``obj.attr += X``
 3. Subscript-assign:      ``obj.attr[k] = X``
 4. Mutating method call:  ``obj.attr.append/.pop/.remove/.extend/.clear/.insert(...)``
@@ -15,6 +15,15 @@ The walker is attribute-name-based — it surfaces every write to any matching
 attribute regardless of what ``obj`` is. The parameterized AST-guard test
 applies a path-allowlist to filter writes by file location; this is the
 intentional layering so the walker stays simple and fast.
+
+**Why ``self.X`` / ``cls.X`` are skipped:** the boundary intent is "outsider
+writes" — engines reaching into a Fleet from a different module to assign
+``fleet.location = ...``. A class's own ``__init__`` and methods writing
+``self.location`` is the entire point of ``__init__``; no boundary is being
+crossed. The data-class allowlist already covers the class file, but other
+classes that happen to share an attribute name (e.g. ``WarpPoint.location``,
+``BattleEngine.ships``) would trip false positives. Excluding ``self`` / ``cls``
+targets keeps those out of the picture.
 
 This module name starts with an underscore so pytest does not auto-discover it
 as a test module.
@@ -32,6 +41,16 @@ __all__ = ["AttributeWriteHit", "find_attribute_writes", "MUTATING_METHODS"]
 MUTATING_METHODS: frozenset[str] = frozenset(
     {"append", "pop", "remove", "extend", "clear", "insert"}
 )
+
+# Names that the walker treats as "internal owner" — writes through them
+# are not external boundary crossings. ``self`` / ``cls`` cover instance
+# and classmethod writes inside the class body.
+_INTERNAL_OWNERS: frozenset[str] = frozenset({"self", "cls"})
+
+
+def _is_internal_owner(value: ast.AST) -> bool:
+    """Return True if `value` is a Name resolving to ``self`` or ``cls``."""
+    return isinstance(value, ast.Name) and value.id in _INTERNAL_OWNERS
 
 
 @dataclass(frozen=True)
@@ -105,9 +124,11 @@ class _Visitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def _check_assign_target(self, target: ast.AST, *, line: int, col: int) -> None:
-        # Pattern 1: obj.attr = X
+        # Pattern 1: obj.attr = X (skip self.attr / cls.attr — internal owners)
         if isinstance(target, ast.Attribute):
-            if target.attr in self.target_attrs:
+            if target.attr in self.target_attrs and not _is_internal_owner(
+                target.value
+            ):
                 self.hits.append(
                     AttributeWriteHit(
                         line=line,
@@ -122,7 +143,11 @@ class _Visitor(ast.NodeVisitor):
         # Pattern 3: obj.attr[k] = X
         if isinstance(target, ast.Subscript):
             value = target.value
-            if isinstance(value, ast.Attribute) and value.attr in self.target_attrs:
+            if (
+                isinstance(value, ast.Attribute)
+                and value.attr in self.target_attrs
+                and not _is_internal_owner(value.value)
+            ):
                 self.hits.append(
                     AttributeWriteHit(
                         line=line,
@@ -142,7 +167,11 @@ class _Visitor(ast.NodeVisitor):
     # --- Pattern 2: AugStore (e.g., obj.attr += X) ---
     def visit_AugAssign(self, node: ast.AugAssign) -> None:
         target = node.target
-        if isinstance(target, ast.Attribute) and target.attr in self.target_attrs:
+        if (
+            isinstance(target, ast.Attribute)
+            and target.attr in self.target_attrs
+            and not _is_internal_owner(target.value)
+        ):
             self.hits.append(
                 AttributeWriteHit(
                     line=node.lineno,
@@ -155,7 +184,11 @@ class _Visitor(ast.NodeVisitor):
             )
         elif isinstance(target, ast.Subscript):
             value = target.value
-            if isinstance(value, ast.Attribute) and value.attr in self.target_attrs:
+            if (
+                isinstance(value, ast.Attribute)
+                and value.attr in self.target_attrs
+                and not _is_internal_owner(value.value)
+            ):
                 self.hits.append(
                     AttributeWriteHit(
                         line=node.lineno,
@@ -176,6 +209,7 @@ class _Visitor(ast.NodeVisitor):
             if (
                 isinstance(inner, ast.Attribute)
                 and inner.attr in self.target_attrs
+                and not _is_internal_owner(inner.value)
             ):
                 self.hits.append(
                     AttributeWriteHit(

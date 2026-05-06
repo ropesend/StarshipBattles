@@ -76,7 +76,10 @@ def add_move_order_if_needed(
 
     # Set path immediately if it's the first order and fleet is at start
     if len(fleet.orders) == 1 and fleet.location == start_hex:
-        fleet.path = strip_start_hex(fleet.location, path)
+        # PROJ-370 Phase 2: route Fleet.path write through IFleetMutator.
+        session.fleet_mutator.set_path(
+            fleet, strip_start_hex(fleet.location, path)
+        )
 
     return ValidationResult.success()
 

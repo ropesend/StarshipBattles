@@ -1,0 +1,12 @@
+{
+  "request_id": "req_20260506_051906_ddfd29",
+  "review_dir": "Reviews/results/2026-05-06_051908_code_proj-373-build-queue-latency-phases-1-3-4-cache-co_req-req_20260506_051906_ddfd29",
+  "report_path": "Reviews/results/2026-05-06_051908_code_proj-373-build-queue-latency-phases-1-3-4-cache-co_req-req_20260506_051906_ddfd29/report.md",
+  "findings": {
+    "critical": 0,
+    "major": 4,
+    "minor": 5,
+    "info": 8
+  },
+  "completed_at": "2026-05-06T05:30:00Z"
+}

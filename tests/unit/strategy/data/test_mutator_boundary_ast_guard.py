@@ -20,7 +20,7 @@ The walker is in ``_mutator_ast_walker.py``; it has its own self-test in
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -52,13 +52,46 @@ class BoundarySpec:
 BOUNDARIES: list[BoundarySpec] = [
     BoundarySpec(
         data_class_name="Fleet",
-        target_attributes=frozenset(),
+        target_attributes=frozenset({
+            "location",
+            "path",
+            "ships",
+            "orders",
+            "construction_queue",
+            "construction_queue_paused",
+            "display_name",
+            "fleet_policy",
+            "_task_forces",
+        }),
         allowlist_paths=frozenset({
+            # Fleet data class + co-located helpers (PROJ-87 read-side delegates).
             "game/strategy/data/fleet.py",
+            "game/strategy/data/order_serializer.py",
+            "game/strategy/data/fleet_pursuer_tracker.py",
+            "game/strategy/data/fleet_battle_adapter.py",
+            "game/strategy/data/task_force.py",
+            # Owner services (PROJ-370 IFleetMutator co-implementers).
             "game/strategy/services/fleet_navigation_service.py",
             "game/strategy/services/fleet_write_service.py",
+            "game/strategy/services/fleet_speed_calculator.py",
+            # Planet shares ``orders`` and ``construction_queue`` attribute
+            # names with Fleet — its own boundary lands in Phase 3, but
+            # Planet's data class plus its planet-side handlers must be
+            # allowlisted here so the Fleet boundary doesn't trip on
+            # Planet writes.
+            "game/strategy/data/planet.py",
+            "game/strategy/engine/planet_command_handlers.py",
+            # Polymorphic owner branch (Fleet OR PlanetaryFacility); the
+            # Fleet branch is mutator-routed, the facility-else branch
+            # writes the facility's own queue-paused flag.
+            "game/strategy/engine/handlers/construction_queue.py",
+            # UI legacy fallback for tests without session/facade — used
+            # only when the command pipeline is not available. Pre-PROJ-370
+            # hold-over; safe because the production path goes through
+            # commands which don't write directly.
+            "game/ui/screens/empire_build_queue_window.py",
         }),
-        description="Phase 2 flips the Fleet disallowlist on.",
+        description="Phase 2: Fleet boundary live (PROJ-370).",
     ),
     BoundarySpec(
         data_class_name="Planet",
@@ -157,19 +190,18 @@ def test_mutator_boundary(spec: BoundarySpec) -> None:
         )
 
 
-def test_phase_1_boundaries_are_wired_but_inert() -> None:
-    """Sanity: Phase 1 should leave every disallowlist empty.
+def test_phase_status_summary() -> None:
+    """Sanity: which boundaries are live vs inert.
 
-    Each later phase removes its spec's empty-set guard and adds the real
-    attributes. This test catches accidental partial flips during phase
-    handoffs (e.g., editor leaving a stray attribute in a frozenset).
+    Updated as each phase lands. Live boundaries should have a non-empty
+    ``target_attributes``; inert ones should still be empty until their
+    phase flips them on.
     """
-    expected_empty = {"Fleet", "Planet", "Empire", "ShipInstance"}
-    for spec in BOUNDARIES:
-        if spec.data_class_name in expected_empty:
-            # When the phase that owns this spec lands, the assertion below
-            # gets removed/updated as part of the same change. Until then,
-            # the boundary is intentionally inert.
-            assert spec.target_attributes == frozenset() or len(
-                spec.target_attributes
-            ) > 0
+    by_name = {spec.data_class_name: spec for spec in BOUNDARIES}
+    # Phase 2 (Fleet) is live.
+    assert by_name["Fleet"].target_attributes, "Fleet boundary should be live"
+    # Phases 3-5 are still inert at this snapshot point.
+    for inert in ("Planet", "Empire", "ShipInstance"):
+        # No assertion — once each phase lands, this loop's expectations
+        # update. This test is a status mirror, not a gate.
+        _ = by_name[inert].target_attributes

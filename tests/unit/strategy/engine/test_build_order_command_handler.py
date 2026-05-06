@@ -45,7 +45,11 @@ class TestBuildOrderCommandHandler:
     """Tests for BuildOrderCommandHandler."""
 
     def test_handler_creates_build_order(self):
-        """Handler should create BUILD order and insert at position 0."""
+        """Handler should create BUILD order and insert at position 0.
+
+        PROJ-370 Phase 2: write goes through ``session.fleet_mutator``;
+        verify the mutator was called with the right BUILD order.
+        """
         # Setup
         handler = BuildOrderCommandHandler()
         session = Mock()
@@ -62,12 +66,20 @@ class TestBuildOrderCommandHandler:
 
         # Verify
         assert result.is_valid
-        assert len(mock_fleet.orders) == 1
-        assert mock_fleet.orders[0].type == OrderType.BUILD
-        assert mock_fleet.path == []  # Path should be cleared
+        # PROJ-370: insertion is routed through the mutator.
+        session.fleet_mutator.insert_order.assert_called_once()
+        call_args = session.fleet_mutator.insert_order.call_args
+        assert call_args[0][0] is mock_fleet
+        assert call_args[0][1] == 0
+        assert call_args[0][2].type == OrderType.BUILD
+        # Path clear is also routed through the mutator.
+        session.fleet_mutator.set_path.assert_called_once_with(mock_fleet, [])
 
     def test_handler_inserts_at_position_0(self):
-        """BUILD order should be inserted at position 0 (front of queue)."""
+        """BUILD order should be inserted at position 0 (front of queue).
+
+        PROJ-370 Phase 2: assert via the mutator call shape.
+        """
         handler = BuildOrderCommandHandler()
         session = Mock()
         session.active_empire = Mock(id=0)
@@ -84,12 +96,17 @@ class TestBuildOrderCommandHandler:
         result = handler.execute(session, cmd)
 
         assert result.is_valid
-        assert len(mock_fleet.orders) == 2
-        assert mock_fleet.orders[0].type == OrderType.BUILD
-        assert mock_fleet.orders[1].type == OrderType.MOVE
+        # The mutator received an insertion at index 0 with a BUILD order.
+        session.fleet_mutator.insert_order.assert_called_once()
+        call_args = session.fleet_mutator.insert_order.call_args
+        assert call_args[0][1] == 0
+        assert call_args[0][2].type == OrderType.BUILD
 
     def test_handler_clears_path(self):
-        """Handler should clear fleet.path when adding BUILD order."""
+        """Handler should clear fleet.path when adding BUILD order.
+
+        PROJ-370 Phase 2: ``set_path(fleet, [])`` is called via the mutator.
+        """
         handler = BuildOrderCommandHandler()
         session = Mock()
         session.active_empire = Mock(id=0)
@@ -104,7 +121,7 @@ class TestBuildOrderCommandHandler:
         result = handler.execute(session, cmd)
 
         assert result.is_valid
-        assert mock_fleet.path == []
+        session.fleet_mutator.set_path.assert_called_once_with(mock_fleet, [])
 
     def test_handler_returns_error_if_fleet_not_found(self):
         """Handler should return error if fleet doesn't exist."""

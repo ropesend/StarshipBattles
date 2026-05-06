@@ -65,6 +65,14 @@ class _FakeSession:
         self.galaxy = _FakeGalaxy()
         self.empires = empires or []
         self._planets = {}
+        # PROJ-370 Phase 2: handlers route Fleet writes through this mutator.
+        from game.strategy.services.fleet_navigation_service import (
+            FleetNavigationService,
+        )
+        from game.strategy.services.fleet_write_service import FleetWriteService
+        self.fleet_mutator = FleetWriteService(
+            navigation_service=FleetNavigationService(),
+        )
 
     def _get_fleet_by_id(self, fleet_id: int) -> Fleet | None:
         return self._fleets.get(fleet_id)

@@ -60,9 +60,10 @@ def complete_edit_move(screen: "StrategyScreen", new_hex) -> None:
     if fleet and idx is not None and 0 <= idx < len(fleet.orders):
         order = fleet.orders[idx]
         order.target = new_hex
-        # Invalidate path if editing the active (first) order
+        # Invalidate path if editing the active (first) order.
+        # PROJ-370 Phase 2: route through IFleetMutator.
         if idx == 0:
-            fleet.path = []
+            screen.session.fleet_mutator.set_path(fleet, [])
     # Clear edit state
     screen._edit_move_ghost_hex = None
     screen._edit_move_order_index = None
@@ -85,7 +86,8 @@ def start_edit_transfer(screen: "StrategyScreen", fleet, order_index, order) -> 
         elif prev.type == OrderType.WARP and isinstance(prev.target, HexCoord):
             transfer_hex = prev.target
 
-    # Delete the old order, then open transfer dialog at the resolved hex
+    # Delete the old order, then open transfer dialog at the resolved hex.
+    # PROJ-370 Phase 2: route through IFleetMutator.
     if 0 <= order_index < len(fleet.orders):
-        fleet.orders.pop(order_index)
+        screen.session.fleet_mutator.pop_order(fleet, index=order_index)
     screen.ui.open_transfer_dialog(fleet, transfer_hex)

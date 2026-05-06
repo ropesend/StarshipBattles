@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 from game.core.hex_math import HexCoord, hex_distance
 
 if TYPE_CHECKING:
+    from game.core.protocols import IFleetMutator
     from game.strategy.services.fleet_navigation_service import FleetNavigationService
 
 
@@ -56,6 +57,7 @@ class FleetMovementEngine(IMovementEngine):
     def __init__(
         self,
         nav_service: Optional['FleetNavigationService'] = None,
+        fleet_mutator: Optional['IFleetMutator'] = None,
     ):
         """
         Initialize the fleet movement engine.
@@ -63,12 +65,31 @@ class FleetMovementEngine(IMovementEngine):
         Args:
             nav_service: Optional FleetNavigationService for dependency injection.
                          If None, service is lazily initialized on first use.
+            fleet_mutator: Optional IFleetMutator (PROJ-370) for routing fleet
+                           writes through the named owner-service seam. If None,
+                           a default ``FleetWriteService`` (composed with the
+                           same nav_service) is constructed lazily on first use.
 
         PROJ-300 Phase 7: AreaEffectManager removed; environmental speed
         modifiers are now read by `_get_effective_fleet_speed` directly via
         the unified `system_effects_collector`.
         """
         self._nav_service = nav_service
+        self._fleet_mutator = fleet_mutator
+
+    def _get_fleet_mutator(self) -> 'IFleetMutator':
+        """Lazy-default the mutator using the engine's nav_service."""
+        if self._fleet_mutator is None:
+            from game.strategy.services.fleet_write_service import FleetWriteService
+            from game.strategy.services.fleet_navigation_service import (
+                FleetNavigationService,
+            )
+            if self._nav_service is None:
+                self._nav_service = FleetNavigationService()
+            self._fleet_mutator = FleetWriteService(
+                navigation_service=self._nav_service,
+            )
+        return self._fleet_mutator
 
     def calculate_next_hex(self, fleet: Fleet, galaxy) -> Optional[HexCoord]:
         """
@@ -179,7 +200,8 @@ class FleetMovementEngine(IMovementEngine):
 
         # Apply movement
         old_location = fleet.location
-        fleet.location = next_hex
+        # PROJ-370 Phase 2: route the location write through IFleetMutator.
+        self._get_fleet_mutator().set_location(fleet, next_hex)
 
         # PROJ-35: Order popping is now handled by calculate_next_hex (via FleetNavigationService)
         # during the collect_movements phase. Don't pop again here.

@@ -1042,6 +1042,23 @@ class TestReorderOrderCommandHandler:
         assert not result.is_valid
         assert "Cannot move order" in result.message
 
+    @staticmethod
+    def _wire_mutator(mock_session) -> None:
+        """PROJ-370 Phase 2: handlers route through ``session.fleet_mutator``.
+
+        Configure the mock mutator's ``swap_orders`` and ``set_path`` to
+        perform the real list mutation on the fleet, so existing assertions
+        on ``mock_fleet.orders`` / ``mock_fleet.path`` continue to work.
+        """
+        def _swap(fleet, a, b):
+            fleet.orders[a], fleet.orders[b] = fleet.orders[b], fleet.orders[a]
+
+        def _set_path(fleet, new_path):
+            fleet.path = new_path
+
+        mock_session.fleet_mutator.swap_orders.side_effect = _swap
+        mock_session.fleet_mutator.set_path.side_effect = _set_path
+
     def test_move_order_down_swaps_positions(self):
         """Moving order down swaps with next order."""
         handler = ReorderOrderCommandHandler()
@@ -1058,6 +1075,7 @@ class TestReorderOrderCommandHandler:
         mock_fleet.path = []
 
         mock_session = Mock()
+        self._wire_mutator(mock_session)
 
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -1085,6 +1103,7 @@ class TestReorderOrderCommandHandler:
         mock_fleet.path = []
 
         mock_session = Mock()
+        self._wire_mutator(mock_session)
 
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -1111,6 +1130,7 @@ class TestReorderOrderCommandHandler:
         mock_fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
 
         mock_session = Mock()
+        self._wire_mutator(mock_session)
 
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -1141,6 +1161,7 @@ class TestReorderOrderCommandHandler:
         mock_fleet.path = original_path.copy()
 
         mock_session = Mock()
+        self._wire_mutator(mock_session)
 
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet

@@ -52,10 +52,11 @@ class BuildOrderCommandHandler(BaseCommandHandler):
 
         # 2. Create BUILD order and insert at front
         build_order = Order(OrderType.BUILD)
-        fleet.orders.insert(0, build_order)
+        # PROJ-370 Phase 2: route order insertion through IFleetMutator.
+        session.fleet_mutator.insert_order(fleet, 0, build_order)
 
         # 3. Clear movement path - fleet must stay stationary to build
-        fleet.path = []
+        session.fleet_mutator.set_path(fleet, [])
 
         logger.info(f"GameSession: Issued BUILD order for Fleet {fleet.id}")
         return ValidationResult.success()

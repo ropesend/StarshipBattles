@@ -63,6 +63,13 @@ def mock_session(mock_fleet, mock_galaxy, mock_planet):
     session.empires = []
     # BUG-125: align active_empire with mock_fleet owner so authorization passes.
     session.active_empire = Mock(id=mock_fleet.owner_id)
+    # PROJ-370 Phase 2: handlers route Fleet writes through this mutator;
+    # configure ``set_path`` to actually mutate the mock fleet so existing
+    # assertions on ``mock_fleet.path`` continue to work.
+    def _set_path(fleet, new_path):
+        fleet.path = new_path
+
+    session.fleet_mutator.set_path.side_effect = _set_path
     return session
 
 

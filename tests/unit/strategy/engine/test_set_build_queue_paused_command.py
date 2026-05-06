@@ -64,6 +64,15 @@ def _make_session_for_fleet(fleet: Fleet):
     session = Mock()
     session._get_planet_by_id.return_value = None
     session._get_fleet_by_id.return_value = fleet
+    # PROJ-370 Phase 2: real FleetWriteService so set_construction_queue_paused
+    # actually mutates the fleet.
+    from game.strategy.services.fleet_navigation_service import (
+        FleetNavigationService,
+    )
+    from game.strategy.services.fleet_write_service import FleetWriteService
+    session.fleet_mutator = FleetWriteService(
+        navigation_service=FleetNavigationService(),
+    )
     return session
 
 

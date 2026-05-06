@@ -757,3 +757,17 @@ class FleetNavigationService:
             fleet.pop_order()
 
         return step.next_hex
+
+    # --- IFleetMutator navigation slice (PROJ-370 Phase 2) ---
+    # Explicit named seams that engines and the FleetWriteService composite
+    # route through. The existing calculate_fleet_next_hex above also writes
+    # ``fleet.path`` inline; both call sites are inside this module which is
+    # the AST-guard allowlist for navigation writes.
+
+    def set_location(self, fleet: Fleet, new_location: HexCoord) -> None:
+        """Set the fleet's location. Owner-service write for ``fleet.location``."""
+        fleet.location = new_location
+
+    def set_path(self, fleet: Fleet, new_path) -> None:
+        """Replace the fleet's movement path."""
+        fleet.path = list(new_path)

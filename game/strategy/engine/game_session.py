@@ -97,6 +97,19 @@ class GameSession:
         # keeps all engines reading the same instance.
         self._race_registry: Optional['IRaceRegistry'] = None
 
+        # PROJ-370: Construct strategy mutator services. These are the named
+        # owner-service seams for writes to Fleet/Planet/Empire/ShipInstance.
+        # Engines and hooks pull them via TurnEngineConfig (post-PROJ-369) or
+        # accept them directly via constructor kwargs.
+        from game.strategy.services.fleet_navigation_service import (
+            FleetNavigationService,
+        )
+        from game.strategy.services.fleet_write_service import FleetWriteService
+        self._fleet_nav_service = FleetNavigationService()
+        self._fleet_mutator = FleetWriteService(
+            navigation_service=self._fleet_nav_service,
+        )
+
         # Engine
         # PROJ-239: ai_factory is passed through to TurnEngine → SimulationBattleResolver.
         # Callers in the UI/app layer provide it; tests inject mocks.
@@ -107,6 +120,7 @@ class GameSession:
             ai_factory=ai_factory,
             race_registry=self.race_registry,
             event_bus=self._event_bus,
+            fleet_mutator=self._fleet_mutator,
         )
         self.turn_engine = TurnEngine(
             registries=self._registries,
@@ -162,6 +176,16 @@ class GameSession:
     def registries(self) -> GameRegistries:
         """The session's game registries for DI to sub-systems."""
         return self._registries
+
+    @property
+    def fleet_mutator(self):  # type: ignore[no-untyped-def]
+        """The session's IFleetMutator (PROJ-370).
+
+        Routed through ``FleetWriteService`` (composed with
+        ``FleetNavigationService``). Command handlers pull this to mutate
+        Fleet state without bypassing the AST-guarded boundary.
+        """
+        return self._fleet_mutator
 
     @property
     def race_registry(self) -> 'IRaceRegistry':

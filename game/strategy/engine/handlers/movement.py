@@ -116,7 +116,8 @@ class MoveCommandHandler(BaseCommandHandler):
 
         # Optimization: Set path immediately if it's the active order
         if len(fleet.orders) == 1:
-            fleet.path = path
+            # PROJ-370 Phase 2: route through IFleetMutator.
+            session.fleet_mutator.set_path(fleet, path)
 
         return ValidationResult.success()
 

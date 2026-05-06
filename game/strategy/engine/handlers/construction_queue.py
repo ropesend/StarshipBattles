@@ -288,8 +288,18 @@ class SetBuildQueuePausedCommandHandler(BaseCommandHandler):
                 f"Build queue '{getattr(cmd, 'queue_id', None)}' not found."
             )
 
-        # 3. Set the flag
-        owner.construction_queue_paused = bool(cmd.paused)
+        # 3. Set the flag.
+        # PROJ-370 Phase 2: when the queue owner is a Fleet, route through
+        # IFleetMutator. Other owner types (PlanetaryFacility) are a
+        # different class and not in the Fleet AST-guard scope; assign
+        # directly. Resolve by duck-type — Fleet has `add_order` etc.
+        from game.strategy.data.fleet import Fleet
+        if isinstance(owner, Fleet):
+            session.fleet_mutator.set_construction_queue_paused(
+                owner, bool(cmd.paused),
+            )
+        else:
+            owner.construction_queue_paused = bool(cmd.paused)
 
         action = "Paused" if cmd.paused else "Resumed"
         logger.info(

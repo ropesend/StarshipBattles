@@ -149,6 +149,50 @@ def f(fleet):
     assert hits == []
 
 
+def test_self_attr_writes_are_skipped() -> None:
+    """``self.X = Y`` is intentionally NOT flagged — that's what
+    ``__init__`` does. The walker only flags ``obj.attr`` writes where
+    ``obj`` is something other than ``self`` or ``cls``."""
+    source = '''
+class W:
+    def __init__(self, location):
+        self.location = location
+        self.path = []
+        self.orders = []
+        self.ships = []
+
+    @classmethod
+    def from_dict(cls, d):
+        cls.location = d.get("location")
+        return cls
+'''
+    hits = find_attribute_writes(
+        source,
+        target_attrs={"location", "path", "orders", "ships"},
+        filename="<test>",
+    )
+    assert hits == [], (
+        f"self/cls attribute writes should be skipped; got: {hits}"
+    )
+
+
+def test_self_attr_method_mutations_are_skipped() -> None:
+    """``self.orders.append(x)`` is also skipped — same internal-owner rule."""
+    source = '''
+class W:
+    def add(self, x):
+        self.orders.append(x)
+        self.ships.remove(x)
+        self.path.clear()
+'''
+    hits = find_attribute_writes(
+        source,
+        target_attrs={"orders", "ships", "path"},
+        filename="<test>",
+    )
+    assert hits == []
+
+
 def test_walker_handles_multiline_assignments() -> None:
     """Multi-line writes are parsed correctly."""
     source = '''

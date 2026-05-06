@@ -240,13 +240,14 @@ class ReorderOrderCommandHandler(BaseCommandHandler):
         if target_index < 0 or target_index >= len(fleet.orders):
             return ValidationResult.error(f"Cannot move order {cmd.order_index} in direction {cmd.direction}")
 
-        # 5. Swap orders
-        fleet.orders[cmd.order_index], fleet.orders[target_index] = \
-            fleet.orders[target_index], fleet.orders[cmd.order_index]
+        # 5. Swap orders.
+        # PROJ-370 Phase 2: route through IFleetMutator.
+        session.fleet_mutator.swap_orders(fleet, cmd.order_index, target_index)
 
         # 6. If active order (index 0) was affected, invalidate path
         if cmd.order_index == 0 or target_index == 0:
-            fleet.path = []
+            # PROJ-370 Phase 2: route through IFleetMutator.
+            session.fleet_mutator.set_path(fleet, [])
 
         logger.info(f"GameSession: Reordered fleet {cmd.fleet_id} order {cmd.order_index} -> {target_index}")
         return ValidationResult.success()
