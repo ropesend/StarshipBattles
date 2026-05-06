@@ -190,10 +190,17 @@ class BuildQueuePanelFactory:
         )
 
     def _create_background(self) -> ui.UIPanel:
-        """Create semi-transparent background overlay."""
+        """Create semi-transparent background overlay.
+
+        PROJ-373 Phase 4: opts into the scoped `@fast_panel` theme class so
+        pygame_gui uses the cheap `RectDrawableShape` instead of the global
+        `panel` block's `RoundedRectangleShape` (eliminates ~3s of
+        anti-aliased corner rasterization on first open).
+        """
         return ui.UIPanel(
             relative_rect=pygame.Rect(0, 0, self.screen_width, self.screen_height),
-            manager=self.manager
+            manager=self.manager,
+            object_id="@fast_panel",
         )
 
     def _create_context_report_panel(self, container: ui.UIPanel) -> tuple:
@@ -240,7 +247,8 @@ class BuildQueuePanelFactory:
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(10, 10, width, height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         ui.UITextBox(
@@ -317,7 +325,8 @@ class BuildQueuePanelFactory:
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         ui.UITextBox(
@@ -358,7 +367,8 @@ class BuildQueuePanelFactory:
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         header_text = ui.UITextBox(
@@ -378,7 +388,8 @@ class BuildQueuePanelFactory:
                 0, 42, panel_width, panel_height - 52 - footer_height
             ),
             manager=self.manager,
-            container=panel
+            container=panel,
+            object_id="@fast_panel",
         )
 
         # Get initial build rate / paused-state from first queue source
@@ -437,7 +448,8 @@ class BuildQueuePanelFactory:
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         ui.UITextBox(
@@ -517,7 +529,8 @@ class BuildQueuePanelFactory:
         bar = ui.UIPanel(
             relative_rect=pygame.Rect(10, bar_top, self.screen_width - 20, bar_height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         btn_close = ui.UIButton(

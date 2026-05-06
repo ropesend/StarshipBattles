@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (scoped (b) chosen — `panel.@fast_panel` block added; factory wired to `object_id="@fast_panel"`)
 **Objective:** Switch the global `panel` theme from `rounded_rectangle` to `rectangle` — eliminates pygame_gui's anti-aliased corner rasterization in `RoundedRectangleShape.redraw_state`. Saves ~3s on first build-queue open and benefits every other panel-heavy screen in the game.
 
 ---

@@ -103,3 +103,121 @@ class TestViewThreading:
 
         mock_panel_cls.assert_not_called()
         factory._facade.get_colony_demographic_view.assert_not_called()
+
+
+# ===========================================================================
+# PROJ-373 Phase 4 — Scoped fast-panel object_id
+#
+# Every UIPanel created by BuildQueuePanelFactory should opt into
+# `@fast_panel` so the global `panel` rounded-corner shape is replaced by
+# the scoped `panel.@fast_panel` rectangle shape — eliminates ~3s of
+# pygame_gui anti-alias rasterization on first build-queue open without
+# touching any other screen's visuals.
+# ===========================================================================
+
+
+class TestScopedFastPanelObjectId:
+    """PROJ-373 Phase 4: every UIPanel in the factory opts into @fast_panel."""
+
+    @staticmethod
+    def _build_factory_for_create_all_panels():
+        """Stand up a factory that can run create_all_panels with all UI
+        primitives mocked. Returns (factory, mock_modules) where mock_modules
+        is the dict captured from the patch context (UIPanel etc.)."""
+        from game.ui.screens.build_queue_panel_factory import BuildQueuePanelFactory
+
+        factory = BuildQueuePanelFactory.__new__(BuildQueuePanelFactory)
+        factory.manager = MagicMock()
+        factory.session = MagicMock()
+        factory.session.registries = MagicMock()
+        factory.session.current_empire = None
+        factory.session.turn = 0
+
+        build_context = MagicMock()
+        build_context.context_type = "fleet"  # avoid PlanetReportPanel branch
+        build_context.id = 1
+        build_context.owner_id = 1
+        build_context.name = "Test Fleet"
+        build_context.has_space_shipyard = True
+        build_context.construction_queue = []
+        build_context.ships = []
+        factory.build_context = build_context
+
+        factory.queue_sources = []
+        factory.portrait_loader = MagicMock()
+        factory.portrait_loader.load_resource_icons.return_value = {}
+        factory.portrait_surface = None
+        factory.on_queue_selection_changed = MagicMock()
+        factory._facade = None
+
+        factory.screen_width = 1600
+        factory.screen_height = 900
+
+        factory.resource_icons = {}
+        return factory
+
+    def test_every_uipanel_in_factory_uses_fast_panel_class_id(self):
+        """Every `ui.UIPanel(...)` call inside the factory passes
+        `object_id="@fast_panel"` so the scoped rectangle shape applies."""
+        factory = self._build_factory_for_create_all_panels()
+        with patch(
+            "game.ui.screens.build_queue_panel_factory.ui.UIPanel"
+        ) as mock_panel, patch(
+            "game.ui.screens.build_queue_panel_factory.ui.UIScrollingContainer"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.ui.UITextBox"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.ui.UIButton"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.ui.UILabel"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.BuildQueueSelector"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.DesignReportPanel"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.VirtualTable"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.TableColumnManager"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.BuildQueueQueueDataSource"
+        ), patch(
+            "game.ui.screens.build_queue_panel_factory.SingleSelect"
+        ):
+            factory.create_all_panels(format_empire_resources=lambda _e: "")
+
+        assert mock_panel.call_count >= 5, (
+            f"Expected ≥5 UIPanel constructions; got {mock_panel.call_count}"
+        )
+        for call in mock_panel.call_args_list:
+            assert call.kwargs.get("object_id") == "@fast_panel", (
+                f"UIPanel called without object_id='@fast_panel': "
+                f"args={call.args}, kwargs={call.kwargs}"
+            )
+
+    def test_theme_json_has_fast_panel_block_with_rectangle_shape(self):
+        """Sanity-check that the data file actually defines the scoped
+        block referenced by the factory."""
+        import json
+        import os
+
+        repo_root = os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(
+                    os.path.dirname(
+                        os.path.dirname(os.path.abspath(__file__))
+                    )
+                )
+            )
+        )
+        theme_path = os.path.join(repo_root, "data", "builder_theme.json")
+        with open(theme_path) as f:
+            theme = json.load(f)
+
+        assert "panel.@fast_panel" in theme, (
+            "panel.@fast_panel block missing from data/builder_theme.json"
+        )
+        block = theme["panel.@fast_panel"]
+        assert block.get("misc", {}).get("shape") == "rectangle", (
+            f"@fast_panel must use shape='rectangle'; got "
+            f"{block.get('misc', {}).get('shape')!r}"
+        )
