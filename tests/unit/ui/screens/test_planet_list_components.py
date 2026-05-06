@@ -765,14 +765,18 @@ class TestPlanetListColumnSwap:
         return stub
 
     def _run_update_with_swap(self, stub, col_dict, direction):
-        """Run PlanetListWindow.update on the stub with a swap_column header result."""
-        from game.ui.screens.planet_list_window import PlanetListWindow
-        from pygame_gui.elements import UIWindow
+        """Run the shared update template on the stub with a swap_column header result.
+
+        PROJ-375 Task 3.2: `PlanetListWindow.update` now delegates the
+        swap/sort/scroll/preset polling to `DataListWindowMixin._run_update_template`.
+        Test the production path by invoking that method directly on the
+        stub (the swap dispatch lives there now, not in `PlanetListWindow.update`).
+        """
+        from game.ui.screens.data_list_window_mixin import DataListWindowMixin
         stub.virtual_table.check_header_presses.return_value = {
             'swap_column': (col_dict, direction), 'sort_column': None
         }
-        with patch.object(UIWindow, 'update', return_value=None):
-            PlanetListWindow.update(stub, 0.016)
+        DataListWindowMixin._run_update_template(stub, [])
 
     def test_swap_column_calls_column_manager(self):
         """When header returns swap_column, column_manager.swap_column() must be called."""

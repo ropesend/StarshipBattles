@@ -15,13 +15,13 @@
 |-------|--------|-----------|
 | 1. Dead method removal | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Strategy-layer duplication consolidation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. UI-layer duplication consolidation | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. UI-layer duplication consolidation | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-05
-**Active Phase:** Phase 3 of 3
-**Last Action:** Phase 2 complete — `iter_facility_ability_entries` helper added to `component_inspector.py`; 6 strategy clusters consolidated (DUP-X-01/02+06/05/07+11/Cluster 5/29+30); 1762 strategy unit tests pass
-**Next Action:** Begin Phase 3 (UI-layer duplication consolidation)
+**Active Phase:** All phases complete
+**Last Action:** Phase 3 complete — 5 workshop dropdown handlers routed through 2 strategy helpers; planet/star list `update()` consolidated into `DataListWindowMixin._run_update_template`; `_rebuild_modifier_icons` extracted to module-level helper. 2907 UI screen unit tests pass.
+**Next Action:** All phases complete; ready for review.
 **Blockers:** None
 
 ## Overview

@@ -438,97 +438,144 @@ class WorkshopEventRouter:
 
         return False
     
+    def _apply_confirmation_dropdown(
+        self,
+        new_value,
+        current_value,
+        pending_action: tuple,
+        dialog_size: tuple,
+        dialog_message: str,
+        dialog_title: str,
+    ) -> bool:
+        """Shared body for confirmation-based dropdown handlers (PROJ-375).
+
+        Used by `_handle_class_dropdown` and `_handle_vehicle_type_dropdown`,
+        which differ only in the dialog sizing, message, and pending-action
+        tuple. If the ship has no components, runs the action immediately;
+        otherwise opens a `UIConfirmationDialog`.
+        """
+        gui = self.gui
+        if new_value == current_value:
+            return True
+
+        gui.pending_action = pending_action
+
+        if gui.ship.has_components():
+            width, height = dialog_size
+            gui.confirm_dialog = UIConfirmationDialog(
+                pygame.Rect(
+                    (gui.width - width) // 2,
+                    (gui.height - height) // 2,
+                    width, height,
+                ),
+                manager=gui.ui_manager,
+                action_long_desc=dialog_message,
+                window_title=dialog_title,
+            )
+        else:
+            gui.execute_pending_action()
+        return True
+
+    def _apply_resolver_dropdown(
+        self,
+        selected_name: str,
+        resolver,
+        setter,
+        kind_label: str,
+    ) -> bool:
+        """Shared body for resolver-based dropdown handlers (PROJ-375).
+
+        Used by `_handle_movement_dropdown`, `_handle_targeting_dropdown`,
+        and `_handle_role_dropdown`. The resolver is a callable
+        `(selected_name) -> id_or_None` so movement/targeting (options-list
+        lookup) and role (registry-loop) share the same dispatch surface.
+        Logs a warning if the resolver returns None.
+        """
+        resolved_id = resolver(selected_name)
+        if resolved_id is None:
+            logger.warning("No %s found for display name '%s'", kind_label, selected_name)
+            return True
+        setter(resolved_id)
+        return True
+
     def _handle_class_dropdown(self, event) -> bool:
         """Handle ship class dropdown change."""
-        gui = self.gui
         new_class = event.text
-        if new_class == gui.ship.ship_class:
-            return True
-        
-        gui.pending_action = ('change_class', new_class)
-        
-        # Check if ship has components using ship helper
-        if gui.ship.has_components():
-            msg = f"Change class to {new_class}?<br><br>Warning: This will attempt to refit existing components.<br>Some items may be resized or lost if they don't fit."
-            gui.confirm_dialog = UIConfirmationDialog(
-                pygame.Rect((gui.width - 600) // 2, (gui.height - 400) // 2, 600, 400),
-                manager=gui.ui_manager,
-                action_long_desc=msg,
-                window_title="Confirm Refit"
-            )
-        else:
-            gui.execute_pending_action()
-        
-        return True
-    
+        return self._apply_confirmation_dropdown(
+            new_value=new_class,
+            current_value=self.gui.ship.ship_class,
+            pending_action=('change_class', new_class),
+            dialog_size=(600, 400),
+            dialog_message=(
+                f"Change class to {new_class}?<br><br>Warning: This will "
+                "attempt to refit existing components.<br>Some items may be "
+                "resized or lost if they don't fit."
+            ),
+            dialog_title="Confirm Refit",
+        )
+
     def _handle_vehicle_type_dropdown(self, event) -> bool:
         """Handle vehicle type dropdown change."""
-        gui = self.gui
         new_type = event.text
-        if new_type == gui.ship.vehicle_type:
+        if new_type == self.gui.ship.vehicle_type:
             return True
-        
         # Determine default class for this type
         classes = self._get_vehicle_classes()
-        valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items() if c.get('type', 'Ship') == new_type]
+        valid_classes = [
+            (n, classes[n].get('max_mass', 0))
+            for n, c in classes.items() if c.get('type', 'Ship') == new_type
+        ]
         valid_classes.sort(key=lambda x: x[1])
         target_class = valid_classes[0][0] if valid_classes else "Escort"
-        
-        gui.pending_action = ('change_type', target_class)
-        
-        # Check if ship has components using ship helper
-        if gui.ship.has_components():
-            msg = f"Change type to {new_type}?<br><br><b>WARNING: This will CLEAR the current design.</b>"
-            gui.confirm_dialog = UIConfirmationDialog(
-                pygame.Rect((gui.width - 400) // 2, (gui.height - 200) // 2, 400, 200),
-                manager=gui.ui_manager,
-                action_long_desc=msg,
-                window_title="Confirm Type Change"
-            )
-        else:
-            gui.execute_pending_action()
-        
-        return True
-    
+        return self._apply_confirmation_dropdown(
+            new_value=new_type,
+            current_value=self.gui.ship.vehicle_type,
+            pending_action=('change_type', target_class),
+            dialog_size=(400, 200),
+            dialog_message=(
+                f"Change type to {new_type}?<br><br>"
+                "<b>WARNING: This will CLEAR the current design.</b>"
+            ),
+            dialog_title="Confirm Type Change",
+        )
+
     def _handle_movement_dropdown(self, event) -> bool:
         """Handle movement policy dropdown change."""
-        gui = self.gui
         from game.ui.screens.builder.right_panel import _MOVEMENT_OPTIONS
-        selected_name = event.text
-        for policy_id, name in _MOVEMENT_OPTIONS:
-            if name == selected_name:
-                gui.viewmodel.set_ship_movement_policy(policy_id)
-                return True
-        logger.warning("No movement policy found for display name '%s'", selected_name)
-        return True
+        return self._apply_resolver_dropdown(
+            selected_name=event.text,
+            resolver=lambda name: next(
+                (pid for pid, n in _MOVEMENT_OPTIONS if n == name), None
+            ),
+            setter=self.gui.viewmodel.set_ship_movement_policy,
+            kind_label="movement policy",
+        )
 
     def _handle_targeting_dropdown(self, event) -> bool:
         """Handle targeting policy dropdown change."""
-        gui = self.gui
         from game.ui.screens.builder.right_panel import _TARGETING_OPTIONS
-        selected_name = event.text
-        for policy_id, name in _TARGETING_OPTIONS:
-            if name == selected_name:
-                gui.viewmodel.set_ship_targeting_policy(policy_id)
-                return True
-        logger.warning("No targeting policy found for display name '%s'", selected_name)
-        return True
+        return self._apply_resolver_dropdown(
+            selected_name=event.text,
+            resolver=lambda name: next(
+                (pid for pid, n in _TARGETING_OPTIONS if n == name), None
+            ),
+            setter=self.gui.viewmodel.set_ship_targeting_policy,
+            kind_label="targeting policy",
+        )
 
     def _handle_role_dropdown(self, event) -> bool:
         """Handle design role dropdown change."""
-        gui = self.gui
         from game.strategy.data.design_role_registry import get_default_design_role_registry
 
-        selected_name = event.text
         registry = get_default_design_role_registry()
-        role_id = next(
-            (r.id for r in registry.all() if r.display_name == selected_name),
-            None,
+        return self._apply_resolver_dropdown(
+            selected_name=event.text,
+            resolver=lambda name: next(
+                (r.id for r in registry.all() if r.display_name == name), None
+            ),
+            setter=self.gui.viewmodel.set_ship_design_role,
+            kind_label="design role",
         )
-
-        if role_id:
-            gui.viewmodel.set_ship_design_role(role_id)
-        return True
 
     def _handle_confirmation(self, event) -> bool:
         """Handle confirmation dialog confirmed events."""

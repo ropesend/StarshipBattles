@@ -540,36 +540,8 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
 
     def update(self, time_delta) -> None:
         super().update(time_delta)
-
-        # Scrollbar movement (cheap — only updates rows when position changed)
-        if self.virtual_table.scroll_bar.check_has_moved_recently():
-            self.virtual_table.update_visible_rows()
-
-        # Slider text sync (only when slider actually moved)
-        self._sync_slider_text(['gravity', 'temp', 'mass'])
-
-        # Header sort/swap (check_presses iterates header buttons)
-        header_result = self.virtual_table.check_header_presses()
-        if header_result.get('swap_column'):
-            col_dict, direction = header_result.get('swap_column')
-            self.column_manager.swap_column(col_dict['id'], direction)
-            self.virtual_table.rebuild_headers()
-            self.virtual_table.rebuild_row_pool()
-            self.refresh_list()
-        elif header_result.get('sort_column'):
-            col_id = header_result.get('sort_column')
-            self.column_manager.set_sort(col_id)
-            self.virtual_table.rebuild_headers()
-            self.refresh_list()
-
-        # Preset dropdown (cheap — single string comparison)
-        if self.last_preset_selection is None:
-            self.last_preset_selection = self.dd_presets.selected_option
-        if self.dd_presets.selected_option != self.last_preset_selection:
-            self.last_preset_selection = self.dd_presets.selected_option
-            name = self.last_preset_selection
-            if self.preset_manager.has_preset(name):
-                self._apply_state(self.preset_manager.get_preset(name))
+        # PROJ-375 Task 3.2: shared scroll/slider/header/preset polling.
+        self._run_update_template(['gravity', 'temp', 'mass'])
 
     # -----------------------------------------------------------------------
     # Event-driven button handlers (called from process_event, not polled)
