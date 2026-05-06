@@ -16,18 +16,18 @@
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
 | 0. Pre-Phase: facade-delegate template + AST/protocol scaffolding | Complete | [phase_0_checklist.md](phase_0_checklist.md) | **PROJ-370 verified** |
-| 1. Star decomposition (770 LOC stars.py → ~280 facade + extracted services) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | **PROJ-370 verified** + phase_0 |
+| 1. Star decomposition (770 LOC stars.py → ~280 facade + extracted services) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 3. Galaxy query/spatial-aggregation services | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 4. Galaxy algorithmic services (pathfinding, intercept, warp resolution) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | **PROJ-370 verified** + phase_3 |
 | 5. AST guards, perf bench, doc updates, final audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | **PROJ-370 verified** + phases 1-4 |
 
 ## Current State
-**Last Updated:** 2026-05-05 (Phase 0 complete)
-**Active Phase:** Phase 1 (Star decomposition) — pending
-**Last Action:** Phase 0 complete. Created `game/strategy/data/galaxy_protocols.py` (5 read protocols: `IHabitabilityCalculator`, `IGalaxySystemGraph`, `IGalaxySpatialQuery`, `IStockpileHolder`, `IStagingYardHolder`); added `get_default_planet_habitability_service` / `set_default_planet_habitability_service` accessors to `game/context.py` (return None until Phase 2 wires PlanetHabitabilityService). LOC ceilings test pinned at today's baseline (galaxy=689, planet=667, stars=770). State-encapsulation AST guard found 5 grandfathered external reads (`movement.py`, `fleet_navigation_service.py`, `hex_outlines.py`); captured for Phase-3 cleanup. Perf baseline JSON committed at `tests/performance/bench_galaxy_planet_star_baseline.json` (50-system synthetic; pathfinding 41us, spatial 369us, habitability 240us). 15 Phase-0 tests pass.
-**Next Action:** Phase 1 — Star decomposition. Move `Spectrum` to `data/spectrum.py`, `StarGenerator` to `generation/star_generator.py`, `_kelvin_to_rgb` + math to `core/spectrum_math.py`. Tighten `stars.py` LOC ceiling to 280.
-**Blockers:** None. PROJ-370 verified shipped (5 phases + remediation in commit history).
+**Last Updated:** 2026-05-05 (Phase 1 complete)
+**Active Phase:** Phase 2 (Planet decomposition) — pending
+**Last Action:** Phase 1 complete. Split stars.py 770→181 LOC. New files: `game/strategy/data/spectrum.py` (74 LOC), `game/strategy/generation/star_generator.py` (471 LOC), `game/core/spectrum_math.py` (155 LOC, with `kelvin_to_rgb`, `stefan_boltzmann_luminosity`, `wien_peak_wavelength` + all solar/Kelvin/Wien constants). `_map_solar_radius_to_hex_radius` stays on StarGenerator (D6). stars.py keeps Star+StarType + re-exports Spectrum, StarGenerator (via __getattr__), and SOLAR_TEMP_K/SOLAR_MASS_KG/SOLAR_RADIUS_M/SOLAR_LUMINOSITY_W/WIEN_DISPLACEMENT_CONSTANT for backwards-compat with 15+ external import sites. Galaxy + galaxy_system_generator updated to import StarGenerator from new path. LOC ceiling tightened to 280. 4827 passed, 1 skipped on focused regression suite.
+**Next Action:** Phase 2 — Planet decomposition. Extract `PlanetQueryService` + `PlanetHabitabilityService`. Wire habitability service via ApplicationContext. Tighten planet.py to 350 LOC.
+**Blockers:** None.
 
 ## Overview
 

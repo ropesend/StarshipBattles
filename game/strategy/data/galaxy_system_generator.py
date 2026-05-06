@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from game.strategy.data.galaxy import Galaxy, StarSystem
     from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
-    from game.strategy.data.stars import StarGenerator
+    from game.strategy.generation.star_generator import StarGenerator
     from game.strategy.data.planet_gen import PlanetGenerator
     from game.strategy.data.naming import NameRegistry
     from game.strategy.generation.planet_image_registry import PlanetImageRegistry

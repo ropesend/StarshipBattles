@@ -3,16 +3,15 @@ from __future__ import annotations
 import random
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
-# hex_to_pixel/pixel_to_hex: Used for geometric calculations (angles, distances),
-# not rendering. These convert hex coords to/from Cartesian for trigonometry.
 from game.core.hex_math import HexCoord, hex_to_dict, hex_from_dict
 from game.core.validation_helpers import require_keys, validate_positive
 from game.core.exceptions import PersistenceException
 from game.core.error_codes import ErrorCode
 import logging
 from game.strategy.data.naming import NameRegistry
-from game.strategy.data.stars import StarGenerator, Star
+from game.strategy.data.stars import Star
 from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.generation.star_generator import StarGenerator
 from game.strategy.data.storm import Storm
 from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry

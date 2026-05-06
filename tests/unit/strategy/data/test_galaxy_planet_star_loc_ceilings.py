@@ -25,7 +25,7 @@ GAME_ROOT = REPO_ROOT / "game"
 # Phase 4 lowers galaxy to 350 (final).
 GALAXY_LOC_CEILING = 689
 PLANET_LOC_CEILING = 667
-STARS_LOC_CEILING = 770
+STARS_LOC_CEILING = 280  # Phase 1: tightened from 770 after Spectrum/StarGenerator extraction.
 
 
 def _count_lines(path: Path) -> int:

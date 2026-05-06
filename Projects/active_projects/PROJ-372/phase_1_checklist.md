@@ -9,7 +9,15 @@
 **Review Mode:** cumulative (covers Phase 0 + Phase 1)
 **Files (planned):** see manifest.md Phase 1 row group
 
-**Status:** Not Started
+**Status:** Complete
+
+**Notes (Phase 1 outcomes):**
+- stars.py: 770 -> 181 LOC (target 280; well under).
+- spectrum.py: 74 LOC (target 80).
+- star_generator.py: 471 LOC (target 500). `_map_solar_radius_to_hex_radius` retained per D6.
+- spectrum_math.py: 155 LOC (target 200). `kelvin_to_rgb`, `stefan_boltzmann_luminosity`, `wien_peak_wavelength` + all solar/Kelvin/Wien/_HEX_RADIUS_/_SPECTRUM_ constants.
+- stars.py re-exports preserve all 15+ existing import sites (Spectrum, SOLAR_TEMP_K, etc.); StarGenerator forwarded via module-level `__getattr__` to avoid circular import.
+- 4827 strategy/integration tests pass. Save round-trip test (Phase 1 boundary) green.
 **Objective:** Split `stars.py` (770 LOC, mixed dataclass + dataclass + generator + math) into 4 focused files: `Star` data class stays in `stars.py` (≤ 280 LOC), `Spectrum` moves to `game/strategy/data/spectrum.py` (≤ 80 LOC), `StarGenerator` moves to `game/strategy/generation/star_generator.py` (≤ 500 LOC), spectral math (`kelvin_to_rgb`, Wien's law, Stefan-Boltzmann helpers, all `_KELVIN_*` / `WIEN_*` / `_WAVELENGTHS` constants) moves to `game/core/spectrum_math.py` (≤ 200 LOC). Save format unchanged. All 13 `Star` dataclass fields and all 9 `Spectrum` dataclass fields verbatim. External readers in 15 files unchanged.
 
 ---
