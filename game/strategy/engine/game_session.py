@@ -108,11 +108,15 @@ class GameSession:
         from game.strategy.services.planet_write_service import (
             PlanetWriteService,
         )
+        from game.strategy.services.empire_write_service import (
+            EmpireWriteService,
+        )
         self._fleet_nav_service = FleetNavigationService()
         self._fleet_mutator = FleetWriteService(
             navigation_service=self._fleet_nav_service,
         )
         self._planet_mutator = PlanetWriteService()
+        self._empire_mutator = EmpireWriteService()
 
         # Engine
         # PROJ-239: ai_factory is passed through to TurnEngine → SimulationBattleResolver.
@@ -126,6 +130,7 @@ class GameSession:
             event_bus=self._event_bus,
             fleet_mutator=self._fleet_mutator,
             planet_mutator=self._planet_mutator,
+            empire_mutator=self._empire_mutator,
         )
         self.turn_engine = TurnEngine(
             registries=self._registries,
@@ -196,6 +201,11 @@ class GameSession:
     def planet_mutator(self):  # type: ignore[no-untyped-def]
         """The session's IPlanetMutator (PROJ-370)."""
         return self._planet_mutator
+
+    @property
+    def empire_mutator(self):  # type: ignore[no-untyped-def]
+        """The session's IEmpireMutator (PROJ-370)."""
+        return self._empire_mutator
 
     @property
     def race_registry(self) -> 'IRaceRegistry':

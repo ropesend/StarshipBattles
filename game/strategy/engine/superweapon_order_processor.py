@@ -57,13 +57,23 @@ class SuperweaponOrderProcessor:
     PROJ-368 Phase 2; it is no longer routed through this processor.
     """
 
-    def __init__(self, event_bus=None):
+    def __init__(self, event_bus=None, empire_mutator=None):
         """Initialize the superweapon order processor.
 
         Args:
             event_bus: Optional EventBus for structured event logging.
+            empire_mutator: PROJ-370 IEmpireMutator. Lazy-defaulted.
         """
         self._event_bus = event_bus
+        self._empire_mutator = empire_mutator
+
+    def _get_empire_mutator(self):
+        if self._empire_mutator is None:
+            from game.strategy.services.empire_write_service import (
+                EmpireWriteService,
+            )
+            self._empire_mutator = EmpireWriteService()
+        return self._empire_mutator
 
     def _finalize_superweapon(
         self,
@@ -356,9 +366,10 @@ class SuperweaponOrderProcessor:
             # Remove planet from colony list if owned (iterate all empires
             # to catch enemy planets).
             if target_planet.owner_id is not None:
+                # PROJ-370 Phase 4: route through IEmpireMutator.
+                mutator = self._get_empire_mutator()
                 for emp in empires:
-                    if target_planet in emp.colonies:
-                        emp.colonies.remove(target_planet)
+                    mutator.remove_colony(emp, target_planet)
             galaxy.unregister_planet(target_planet)
             return {
                 "event_message": f"Planet {target_planet.name} destroyed",
@@ -602,11 +613,12 @@ class SuperweaponOrderProcessor:
                 planet for planet in system.planets
                 if hex_distance(planet.location, star_loc) <= dyson_radius
             ]
+            mutator = self._get_empire_mutator()
             for planet in planets_to_remove:
                 if planet.owner_id is not None:
+                    # PROJ-370 Phase 4: route through IEmpireMutator.
                     for emp in empires:
-                        if planet in emp.colonies:
-                            emp.colonies.remove(planet)
+                        mutator.remove_colony(emp, planet)
                 galaxy.unregister_planet(planet)
 
             system.stars = []

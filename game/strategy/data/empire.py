@@ -58,6 +58,20 @@ class Empire:
             self.colonies.append(planet)
             planet.owner_id = self.id
 
+    def remove_colony(self, planet) -> bool:
+        """Remove a planet from this empire's colonies.
+
+        PROJ-370 Phase 4: data-class-internal helper symmetric with
+        ``add_colony``. Does NOT clear ``planet.owner_id`` — that's the
+        caller's responsibility (PlanetWriteService.set_owner_id).
+
+        Returns True if the planet was in the colony list and removed.
+        """
+        if planet in self.colonies:
+            self.colonies.remove(planet)
+            return True
+        return False
+
     def add_fleet(self, fleet) -> None:
         """Add fleet to empire and auto-register with galaxy for O(1) lookup.
 

@@ -131,12 +131,26 @@ BOUNDARIES: list[BoundarySpec] = [
     ),
     BoundarySpec(
         data_class_name="Empire",
-        target_attributes=frozenset(),
+        target_attributes=frozenset({
+            "colonies",
+            "fleets",
+            "max_storage",
+            "built_ship_designs",
+        }),
         allowlist_paths=frozenset({
             "game/strategy/data/empire.py",
             "game/strategy/services/empire_write_service.py",
+            # Initialization-time writers — not engine-tick boundary crossings.
+            "game/strategy/engine/game_initializer.py",
+            # Snapshot writes (different class, EmpireEconomySnapshot, that
+            # happens to use the attribute name `max_storage`).
+            "game/strategy/engine/empire_economy_calculator.py",
+            # UI-side BattleSetupSide containers also use `fleets` /
+            # `colonies` attribute names but are NOT Empire instances.
+            "game/ui/screens/battle_setup_state.py",
+            "game/ui/screens/battle_setup/controller.py",
         }),
-        description="Phase 4 flips the Empire disallowlist on.",
+        description="Phase 4: Empire boundary live (PROJ-370).",
     ),
     BoundarySpec(
         data_class_name="ShipInstance",

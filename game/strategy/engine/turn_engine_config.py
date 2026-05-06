@@ -183,13 +183,18 @@ class TurnEngineConfig:
 
         order_processor = OrderProcessor(event_bus=event_bus)
 
-        # Lazy-default planet_mutator if not provided (so engine instances
-        # share one instance per turn config).
+        # Lazy-default mutators if not provided (so engine instances share
+        # one instance per turn config).
         if planet_mutator is None:
             from game.strategy.services.planet_write_service import (
                 PlanetWriteService,
             )
             planet_mutator = PlanetWriteService()
+        if empire_mutator is None:
+            from game.strategy.services.empire_write_service import (
+                EmpireWriteService,
+            )
+            empire_mutator = EmpireWriteService()
 
         return cls(
             movement_engine=FleetMovementEngine(fleet_mutator=fleet_mutator),
@@ -206,7 +211,9 @@ class TurnEngineConfig:
             population_engine=PopulationEngine(race_registry=race_registry),
             resupply_engine=ResupplyEngine(registries=registries),
             harvesting_engine=HarvestingEngine(
-                registries=registries, planet_mutator=planet_mutator,
+                registries=registries,
+                planet_mutator=planet_mutator,
+                empire_mutator=empire_mutator,
             ),
             action_engine=ActionExecutionEngine(
                 order_processor=order_processor,

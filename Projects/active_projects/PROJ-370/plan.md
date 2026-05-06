@@ -19,14 +19,14 @@
 | 1. Mutator-protocol foundation + AST guard harness (no behavior change) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Fleet: `IFleetMutator` + route engine writes + AST guard | Complete | [phase_2_checklist.md](phase_2_checklist.md) | phase_1 |
 | 3. Planet: `IPlanetMutator` + route engine writes + AST guard | Complete | [phase_3_checklist.md](phase_3_checklist.md) | phase_1 |
-| 4. Empire: `IEmpireMutator` + route engine writes + AST guard | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | phase_2, phase_3 |
+| 4. Empire: `IEmpireMutator` + route engine writes + AST guard | Complete | [phase_4_checklist.md](phase_4_checklist.md) | phase_2, phase_3 |
 | 5. ShipInstance: `IShipInstanceMutator` + post-battle hook + AST guard | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | phase_2 |
 
 ## Current State
 **Last Updated:** 2026-05-06
-**Active Phase:** Phase 4 (Empire)
-**Last Action:** Phase 3 complete. `PlanetWriteService` at `game/strategy/services/planet_write_service.py` implements `IPlanetMutator` (single owner, 24 methods). Wired in `GameSession.__init__`, threaded into `TurnEngineConfig.create_default()` and propagated to HarvestingEngine, PlanetEnergyEngine, AtmosphereEngine, OrganicsConsumptionEngine. Routed writes: `organics_consumption_engine.py:107` (stockpile), `planet_energy_engine.py:225-249` (energy/capacity/generation, 5 sites), `atmosphere_engine.py:129` (atmosphere), `planet_modifier_effect_engine.py:78+83` (radiation_shielding), `production_spawner.py:202` (facility add), `order_handlers/colonize.py:166` (facility add), `order_handlers/transfer_branches.py:237` (population add), `harvesting_engine.py:229` (max_stockpile). BaseOrderHandler gained planet_mutator kwarg + `_get_planet_mutator()` helper. Planet AST guard live with 15 attributes + 5 allowlisted paths. New mutator method `set_max_stockpile` added. 4746 strategy tests pass.
-**Next Action:** Phase 4 — implement `EmpireWriteService`, route Empire writes (colonies/fleets/max_storage/built_ship_designs), include post-battle empty-fleet pruning, flip Empire AST guard hot.
+**Active Phase:** Phase 5 (ShipInstance)
+**Last Action:** Phase 4 complete. `EmpireWriteService` at `game/strategy/services/empire_write_service.py` implements `IEmpireMutator` (single owner) with 9 methods including `prune_empty_fleets` (lifted from `combat/post_battle_hook._prune_empty_fleets`). Added `Empire.remove_colony` 1-line helper for symmetry with `add_colony`. Wired in `GameSession.__init__`, threaded through `TurnEngineConfig.create_default()` into HarvestingEngine. Routed writes: `superweapon_order_processor.py:361+609` (colony removal), `system_destroyer.py:161` (colony removal), `harvesting_engine.py:248` (max_storage replace via `replace_max_storage`). Empire AST guard live with 4 attributes + 6 allowlisted paths (incl. UI battle_setup containers + EmpireEconomySnapshot calculator that share attribute names). New mutator methods: `replace_max_storage`. 4758 strategy tests pass.
+**Next Action:** Phase 5 — implement `ShipInstanceWriteService`, route post_battle_hook + environmental_hazard_engine writes, flip ShipInstance AST guard hot.
 **Blockers:** None.
 
 ## Overview

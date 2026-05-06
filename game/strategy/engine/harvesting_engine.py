@@ -130,6 +130,7 @@ class HarvestingEngine(IHarvestingEngine):
         registries: GameRegistries,
         race_registry: Optional[Any] = None,
         planet_mutator: Optional[Any] = None,
+        empire_mutator: Optional[Any] = None,
     ):
         """Initialize the harvesting engine.
 
@@ -156,6 +157,7 @@ class HarvestingEngine(IHarvestingEngine):
         self._registries = registries
         self._race_registry = race_registry
         self._planet_mutator = planet_mutator
+        self._empire_mutator = empire_mutator
         # PROJ-285: used to key the per-turn habitability cache on Planet.
         # TurnEngine calls `set_current_turn` before each turn's tick loop.
         self._current_turn: int = 0
@@ -169,6 +171,15 @@ class HarvestingEngine(IHarvestingEngine):
             )
             self._planet_mutator = PlanetWriteService()
         return self._planet_mutator
+
+    def _get_empire_mutator(self):
+        """Lazy-default the empire mutator (PROJ-370)."""
+        if self._empire_mutator is None:
+            from game.strategy.services.empire_write_service import (
+                EmpireWriteService,
+            )
+            self._empire_mutator = EmpireWriteService()
+        return self._empire_mutator
 
     def set_current_turn(self, turn: int) -> None:
         """PROJ-285: TurnEngine calls this at the start of each turn so the
@@ -240,12 +251,14 @@ class HarvestingEngine(IHarvestingEngine):
             # PROJ-370 Phase 3: route through IPlanetMutator.
             self._get_planet_mutator().set_max_stockpile(colony, colony_storage)
             colony.max_staging_mass = staging_mass
-        # Keep empire.max_storage as aggregate for read-only UI display
+        # Keep empire.max_storage as aggregate for read-only UI display.
+        # PROJ-370 Phase 4: route through IEmpireMutator.replace_max_storage
+        # (clear-then-update preserves the legacy whole-dict semantics).
         empire_total = {}
         for colony in empire.colonies:
             for res, cap in colony.max_stockpile.items():
                 empire_total[res] = empire_total.get(res, 0.0) + cap
-        empire.max_storage = empire_total
+        self._get_empire_mutator().replace_max_storage(empire, empire_total)
 
     def _collect_staging_capacity(self, facility: 'PlanetaryFacility') -> float:
         """Sum StagingYard capacity from a facility's components."""

@@ -150,6 +150,9 @@ class IEmpireMutator(Protocol):
     def set_max_storage_amount(
         self, empire: "Empire", resource_id: str, amount: float
     ) -> None: ...
+    def replace_max_storage(
+        self, empire: "Empire", new_max_storage: dict
+    ) -> None: ...
     def add_built_design(self, empire: "Empire", design_id: str) -> None: ...
     def prune_empty_fleets(
         self,
