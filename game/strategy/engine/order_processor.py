@@ -25,14 +25,14 @@ from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING
 import logging
 
 from game.strategy.interfaces.engines import IOrderProcessor
-
-logger = logging.getLogger(__name__)
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.galaxy import Galaxy
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -112,16 +112,15 @@ class OrderProcessor(IOrderProcessor):
         empire: "Empire",
         galaxy: "Galaxy",
     ) -> TransferResult:
-        """Process a TRANSFER / LOAD_POPULATION / UNLOAD_POPULATION order."""
-        order = fleet.get_current_order()
-        order_type = order.type if order else None
-        if order_type not in (
-            OrderType.TRANSFER,
-            OrderType.LOAD_POPULATION,
-            OrderType.UNLOAD_POPULATION,
-        ):
-            return TransferResult(success=False, message="No TRANSFER order")
-        handler = self._handler_registry.get(order_type)
+        """Process a TRANSFER / LOAD_POPULATION / UNLOAD_POPULATION order.
+
+        PROJ-368 review MIN-001: delegates immediately like the other facade
+        shims. ``TransferHandler`` is registered as a single instance for all
+        three transfer-family OrderTypes and validates the current order
+        internally — a wrong/missing order returns
+        ``success=False, message="No TRANSFER order"`` from the handler.
+        """
+        handler = self._handler_registry.get(OrderType.TRANSFER)
         result = handler.execute_action_order(fleet, empire, galaxy)
         return TransferResult(
             success=result.success,

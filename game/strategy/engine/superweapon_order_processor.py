@@ -4,9 +4,10 @@ SuperweaponOrderProcessor - Processes superweapon orders during turn execution.
 PROJ-102 Phase 6: Turn execution logic for strategic superweapon orders.
 
 Each superweapon order executes a galaxy-altering effect (destroy planet,
-destroy star, open/close warp points, create Dyson Sphere, or self-destruct).
-Only stellerate_star and self_destruct consume the ship; other superweapons
-preserve the ship for reuse.
+destroy star, open/close warp points, or create Dyson Sphere).
+Only stellerate_star consumes the ship; other superweapons preserve the
+ship for reuse. (Self-destruct was lifted to `order_handlers/self_destruct.py`
+in PROJ-368 Phase 2.)
 """
 from __future__ import annotations
 
@@ -51,7 +52,9 @@ class SuperweaponOrderProcessor:
     - process_open_warp_point() - Create warp link between two systems
     - process_close_warp_point() - Remove warp link between two systems
     - process_create_dyson_sphere() - Encase star in Dyson Sphere
-    - process_self_destruct() - Destroy specific ships in fleet
+
+    Self-destruct was lifted to `order_handlers/self_destruct.py` in
+    PROJ-368 Phase 2; it is no longer routed through this processor.
     """
 
     def __init__(self, event_bus=None):

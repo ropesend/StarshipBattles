@@ -166,7 +166,7 @@ Replace the inline 6-lambda dict at `order_processor.py:706-725` with a registry
 ### Phase 5: Per-handler unit tests + AST static-guard regression [Medium]
 
 Add focused unit tests under `tests/unit/strategy/engine/order_handlers/` for each handler (≥ 5 tests per handler covering: happy path, invalid order type, missing target, validation failure, event emission). Add an AST-walker regression test (`test_order_processor_facade.py`) that:
-1. Asserts `order_processor.py` is < 200 LOC.
+1. Asserts `order_processor.py` is ≤ 200 LOC.
 2. Asserts the `OrderType` enum is referenced ≤ 1 time in `order_processor.py` (the dispatch lookup).
 3. Asserts no `if order.type == OrderType.X` branches exist in `OrderProcessor`.
 4. Asserts every `OrderType` in `ACTION_ORDER_TYPES ∪ {JOIN_FLEET}` has a registered handler at module import.

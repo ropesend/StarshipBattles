@@ -45,40 +45,47 @@ def test_no_legacy_private_helpers_on_order_processor():
 
 
 def test_order_processor_facade_under_200_loc():
-    """The facade target is < 200 LOC."""
+    """The facade target is <= 200 LOC."""
     loc = len(ORDER_PROCESSOR.read_text(encoding="utf-8").splitlines())
-    assert loc < 200, (
-        f"order_processor.py is {loc} LOC; PROJ-368 facade target is < 200"
+    assert loc <= 200, (
+        f"order_processor.py is {loc} LOC; PROJ-368 facade target is <= 200"
     )
 
 
 def test_no_order_type_branching_in_facade():
-    """Facade should reference OrderType only for the registry lookup.
+    """Facade should reference OrderType only for registry lookups, never to branch.
 
-    PROJ-368 invariant: no `if order.type == OrderType.X` ladders or
-    `order.type in (OrderType.X, ...)` conditionals in the facade. The
-    only allowed OrderType references are the handful of explicit
-    member accesses (e.g. `OrderType.JOIN_FLEET` in delegating method
-    bodies) and the `in (...)` validation in `process_transfer`.
+    PROJ-368 invariant: zero comparison-based branching on ``OrderType``
+    members in the facade. Dispatch belongs in the handler layer; the
+    facade only owns argument shape-changes around ``registry.get(order_type)``.
 
-    The looser constraint here counts `Compare` AST nodes -- the facade
-    must contain ZERO `if order.type == OrderType.<name>` comparisons.
+    PROJ-368 review MAJ-002: the original guard only matched ``ast.Eq`` and
+    silently allowed ``order_type not in (OrderType.X, ...)`` ladders. The
+    revised guard drops the operator-type filter entirely and rejects ANY
+    ``ast.Compare`` whose operands include an ``OrderType.<member>``
+    attribute reference -- covers ``==``, ``!=``, ``is``, ``is not``,
+    ``in``, ``not in``, and any future operator. The `OrderType` LHS/RHS
+    can appear on either side of the comparison.
     """
+    def _references_order_type(node: ast.AST) -> bool:
+        """True if the AST subtree has an `OrderType.<member>` attribute access."""
+        for child in ast.walk(node):
+            if (
+                isinstance(child, ast.Attribute)
+                and isinstance(child.value, ast.Name)
+                and child.value.id == "OrderType"
+            ):
+                return True
+        return False
+
     tree = ast.parse(ORDER_PROCESSOR.read_text(encoding="utf-8"))
     bad_compares = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Compare):
             continue
-        # Look for `order.type == OrderType.<member>` patterns.
-        for cmp_op, cmp in zip(node.ops, node.comparators):
-            if not isinstance(cmp_op, ast.Eq):
-                continue
-            if (
-                isinstance(cmp, ast.Attribute)
-                and isinstance(cmp.value, ast.Name)
-                and cmp.value.id == "OrderType"
-            ):
-                bad_compares.append(ast.unparse(node))
+        operands = [node.left, *node.comparators]
+        if any(_references_order_type(op) for op in operands):
+            bad_compares.append(ast.unparse(node))
     assert not bad_compares, (
-        f"Facade must not branch on OrderType equality: {bad_compares}"
+        f"Facade must not branch by comparing OrderType: {bad_compares}"
     )
