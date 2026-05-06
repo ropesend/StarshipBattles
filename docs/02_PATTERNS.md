@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-05-06 — PROJ-369 Phase 5 rewrote Pattern #22 (TurnEngineConfig) to make `TurnEngineConfig.create_default(registries, ...)` the canonical injection entry point. Per-engine override kwargs on `TurnEngine.__init__` were removed (Phase 3 collapsed the ctor from 21 to 8 kwargs); tests override via `dataclasses.replace(cfg, foo_engine=mock)`. Documents the 18-field config (15 tick-loop + 3 end-of-turn terraforming, the 3 added by PROJ-369 Phase 2), the AST guard against function-local engine imports inside TurnEngine, and the cross-link to PROJ-365's descriptor pattern. 2026-05-05 — PROJ-368 Phase 5 added the "Parallel Order-Handler Registry" subsection under Pattern #7 (CommandHandlerRegistry). The strategy engine now exposes two registry-based dispatch systems with the same Protocol-and-registry shape: `engine/handlers/` (UI Command DTO → Order creation) and `engine/order_handlers/` (action tick → state mutation). 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
+> **Last verified:** 2026-05-06 — PROJ-371 Phase 3 added "Self-registering CommandRegistry (PROJ-371)" subsection under Pattern #7 (CommandHandlerRegistry). Documents the metadata-only `@command_spec` decorator (r004), per-module `register(registry)` functions, `seed_default_commands` / `reset_command_registry`, the AST regression forbidding tuple-literal reintroduction, and cross-references to PROJ-273 / PROJ-278 / PROJ-360. Earlier same-day pass: PROJ-369 Phase 5 rewrote Pattern #22 (TurnEngineConfig) to make `TurnEngineConfig.create_default(registries, ...)` the canonical injection entry point. Per-engine override kwargs on `TurnEngine.__init__` were removed (Phase 3 collapsed the ctor from 21 to 8 kwargs); tests override via `dataclasses.replace(cfg, foo_engine=mock)`. Documents the 18-field config (15 tick-loop + 3 end-of-turn terraforming, the 3 added by PROJ-369 Phase 2), the AST guard against function-local engine imports inside TurnEngine, and the cross-link to PROJ-365's descriptor pattern. 2026-05-05 — PROJ-368 Phase 5 added the "Parallel Order-Handler Registry" subsection under Pattern #7 (CommandHandlerRegistry). The strategy engine now exposes two registry-based dispatch systems with the same Protocol-and-registry shape: `engine/handlers/` (UI Command DTO → Order creation) and `engine/order_handlers/` (action tick → state mutation). 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
 
 Agent-optimized reference for every core pattern in the codebase (33 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -631,6 +631,53 @@ def create_default_registry() -> CommandHandlerRegistry:
 
 - Adding a new strategy command: create a handler class, register it in `create_default_registry()`.
 - Each handler follows: resolve entities, validate, apply, return `ValidationResult`.
+
+### Self-registering CommandRegistry (PROJ-371)
+
+PROJ-371 splits the original "register a handler instance" registry
+into two cooperating registries:
+
+- **`CommandRegistry`** (`game/strategy/engine/commands/registry.py`)
+  — *metadata*. Holds one `CommandSpec` per Command DTO with all
+  routing metadata (handler class, OrderType, category, execution
+  model, facade helper name, serializer codec). Populated by a
+  `@command_spec(...)` decorator + per-module `register(registry)`
+  function via `seed_default_commands(command_registry)`.
+- **`CommandHandlerRegistry`** (this section, above) — *runtime*.
+  Holds instantiated handlers; built by `create_default_registry()`,
+  which iterates `command_registry.all()`.
+
+The `@command_spec(...)` decorator is **METADATA-ONLY**: it attaches
+`__command_spec_kwargs__` to the handler class and returns the class
+unchanged. It does NOT call `command_registry.register(...)` at
+import time. Each handler module exposes `def register(registry)`
+that calls `registry.register(CommandSpec(handler_class=H,
+**H.__command_spec_kwargs__))`. Why metadata-only? Re-importing
+already-cached modules does not re-run decorators (Python caches
+`sys.modules`), so `reset_command_registry()` (clear + seed) cannot
+re-register from the decorator side. If both decorator and
+`seed_default_commands` registered, a second seed after a clear would
+double-register.
+
+Cross-references: PROJ-273's Ability-Stat Registry (Pattern 26) used
+a module-level dict for an immutable mapping; PROJ-278's Role
+Registry split into two instances with conflict policies; PROJ-360's
+Stat Contributor Registry. PROJ-371's `CommandRegistry` is a class
+with mutable insertion-ordered storage (commands are global; mods
+register the same way as built-ins).
+
+The strategy session facade auto-installs one bound
+`dispatch_<facade_helper_name>` method per spec at module import
+(loop in `strategy_session_facade.py::_install_dispatch_forwarders`),
+keeping `hasattr(class, name)` and `inspect.getmembers` honest for
+the public-API contract test. The
+`game/strategy/facade/slices/command_dispatch_slice.py` slice's own
+`__getattr__` resolves from `command_registry.specs_by_facade_helper()`.
+
+An AST regression test
+(`tests/unit/strategy/engine/test_no_specs_tuple_literal.py`) forbids
+re-introducing a module-level `COMMAND_SPECS = (CommandSpec(...),
+...)` tuple literal anywhere under `game/`.
 
 ### Parallel Order-Handler Registry (PROJ-368)
 

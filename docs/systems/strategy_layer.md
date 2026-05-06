@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-05-06 — PROJ-369 Phase 5: rewrote § "Dependency Injection" to make `TurnEngineConfig.create_default(...)` the canonical injection entry point (replaces the deleted `create_default_turn_engine` factory) and added § "Phase descriptor execution" documenting the unified `_run_phases` helper, `DEFAULT_TICK_PHASE_LIST` (15 entries) + `DEFAULT_END_OF_TURN_PHASE_LIST` (6 entries), and the `tick=0` end-of-turn sentinel convention. Also documents the `_NullBattleResolver` deletion + `ConflictResolutionEngine._resolve_combat_at_hex` raise-on-None-resolver guard. 2026-05-05 — PROJ-368 Phase 5: added "Order Handlers (PROJ-368)" subsection at the end of § 3 documenting the new `engine/order_handlers/` package: per-`OrderType` handler registry, six handlers (`JoinFleetHandler`, `ColonizeHandler`, `TransferHandler`, `SelfDestructHandler`, 5× `SuperweaponHandlerAdapter`), the `IOrderHandler` Protocol + `OrderHandlerRegistry`, factory entry point, two AST static guards, parallel with `engine/handlers/` (command handlers). `OrderProcessor` collapsed from 910 LOC to ~170 LOC pure facade; every legacy private helper deleted. 2026-05-05 — Galaxy Size Contract (FEAT-27): added "Warp connectivity guarantee" paragraph to § 6 documenting the all-pairs MST replacement of the prior k-nearest candidate generator (fixed sparse-N=2 isolation, e.g. seed-2 reproducer). 2026-05-04 — PROJ-366: extended § 5 Replay Persistence with a "Background Verification Sidecars" subsection covering the `ReplayVerificationCoordinator` listener API, sidecar lifecycle, `verification_status` field on `ReplayLookup`, and production wiring at `app_bootstrap.py`. Earlier same-day pass: Coverage backfill (T3-23 / T3-24): added § 1 "Facade Slice Architecture" subsection (PROJ-309 sub-phase 3.7, 9 internal slices behind the public facade with delegation pattern + cache-invalidation timing); added § 5 "Replay Persistence — `ReplayStore` + `ReplayResolver`" subsection (PROJ-312 strategy-side persistence + UI graceful-degradation contract). Earlier same-day pass: doc-audit fix (`IOrderable` protocol path → `game/core/protocols/strategy_entities.py`). 2026-05-02 — PROJ-320: documented per-fleet movement-opportunity combat dispatch in §3 Per-Tick Phase Execution Order Phase 4 row. Replaces the legacy per-tick contested-hex scan with per-fleet `tick % get_tick_interval(fleet.speed) == 0` triggering, gated by whether the fleet left its hex this tick (TurnEngine derives `moved_fleet_ids` from a pre/post Phase-3 location diff). Multi-fleet-per-empire encounters: spec compiler groups by `owner_id` so allied fleets share a team. ~10× reduction in combat invocations at typical contested sectors. Earlier same-day pass — Issue #7: documented `TurnEngine.process_turn`'s new `progress_callback: Optional[Callable[[int, int], None]]` keyword-only parameter (see §3 "Per-Tick Progress Callback"). Plumbed identically through `GameSession.process_turn` and `StrategySessionFacade.process_turn`. The strategy screen wires a closure that runs `pygame.event.pump()` + redraw + `display.flip()` every tick so the "PROCESSING TURN..." overlay can show a live "Tick N / 100" sub-line. Engine-side guard: callback exceptions are caught with `# Intentional broad catch:` (PROJ-308 convention) and logged at WARNING; a buggy UI callback never breaks turn execution. Per-call state cleared via `try/finally` in `process_turn`. Mid-turn Esc cancellation is NOT supported (event.pump() flushes the OS queue but does not consume Esc) — only inter-turn Esc cancel still works during `run_n_turns`. Earlier same-day pass — Issue #8: Updated §5 "Replay Wiring (FEAT-26)" to reflect the differentiated `SimulationBattleResolver` shortcut branches. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` so a real (brief) replay is captured; only `sole_survivor` and the defensive `no_ships` keep the shortcut, both shipping `BattleResult.replay_unavailable_reason` so the Event Log button shows an honest disabled-tooltip instead of "older save." Earlier verification (2026-04-29): FEAT-28: Added "Mutual-Pursuit Rendezvous Routing" subsection under FleetPursuerTracker. Two mutually-pursuing fleets (each head order is `MOVE_TO_FLEET`/`JOIN_FLEET` targeting the other) now bypass `calculate_intercept_point` and pathfind directly to the target's current hex; both move toward each other along the shortest line at their own speeds. `FleetMovementEngine.collect_movements` adds a `_filter_jump_past_collisions` post-processor that drops the larger fleet's queue entry on swap-hex parity (mirrors BUG-122 `_elect_canonical_merges` tiebreak). Earlier same-day pass: Added §6 "Galaxy Size Contract" subsection documenting FEAT-27: `DEFAULT_SYSTEM_COUNT = 2` single-source-of-truth in `game_config.py`, `1 ≤ system_count ≤ 150` validation, N=1 shared-system mode (multiple empires on distinct planets, no warp lanes, planet-shortage retry loop), N≥2 distinct-system invariant with hard error on E>N, hand-rolled linspace home-index distribution, per-system planet counter, and the continuous quadratic slider curve `value = 1 + 149 * (t / SLIDER_T_MAX) ** 2`. Concurrently backfilled BUG-123 + FEAT-26 deferred sections in §5 Event System. BUG-123: `EventLog.get_events_for_empire(empire_id, *, include_global=True)` + the `current_empire.id` UI scoping convention + the `empire_id == -1` broadcast sentinel + the optional `empire_id` kwarg added to `get_events_for_turn` / `get_events_by_category` + the empire-name window-title threading on `StrategyUI` / `StrategyWindowManager`. FEAT-26: strategy-side replay wiring (Replay button column, `EventLogWindow` click flow, `ReplayResolver` graceful-degradation states, `Game.start_replay` forwarder, `BattleConfig.replay_mode` with `screen_router.start_battle(config=...)` widening, `BattleScreen` REPLAY MODE label). BUG-125 fix from same-day verification still current: `Command.empire_id` field removed (Q5=DROP); `session.player_empire` renamed to `session.active_empire` and now rotated by `StrategyGameStateManager.advance_turn` on each hot-seat turn change. Fleet command handlers gate on `session.active_empire.id` via the new `BaseCommandHandler._resolve_player_fleet` helper; planet handlers continue to gate on `session.active_empire.id` (now correct in hot-seat). Earlier verification (2026-04-28): BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
+> **Last verified:** 2026-05-06 — PROJ-371 Phase 3: added "Self-registering CommandRegistry (PROJ-371)" subsection to § 2 Command Dispatch documenting the `@command_spec` decorator (METADATA-ONLY, r004), per-module `register(registry)` functions, `seed_default_commands` / `reset_command_registry`, the "Adding a new command" authoring rule, and the AST regression test forbidding tuple-literal reintroduction. `commands/specs.py` deleted; `command_registry` is the single source of truth. Earlier same-day pass: PROJ-369 Phase 5: rewrote § "Dependency Injection" to make `TurnEngineConfig.create_default(...)` the canonical injection entry point (replaces the deleted `create_default_turn_engine` factory) and added § "Phase descriptor execution" documenting the unified `_run_phases` helper, `DEFAULT_TICK_PHASE_LIST` (15 entries) + `DEFAULT_END_OF_TURN_PHASE_LIST` (6 entries), and the `tick=0` end-of-turn sentinel convention. Also documents the `_NullBattleResolver` deletion + `ConflictResolutionEngine._resolve_combat_at_hex` raise-on-None-resolver guard. 2026-05-05 — PROJ-368 Phase 5: added "Order Handlers (PROJ-368)" subsection at the end of § 3 documenting the new `engine/order_handlers/` package: per-`OrderType` handler registry, six handlers (`JoinFleetHandler`, `ColonizeHandler`, `TransferHandler`, `SelfDestructHandler`, 5× `SuperweaponHandlerAdapter`), the `IOrderHandler` Protocol + `OrderHandlerRegistry`, factory entry point, two AST static guards, parallel with `engine/handlers/` (command handlers). `OrderProcessor` collapsed from 910 LOC to ~170 LOC pure facade; every legacy private helper deleted. 2026-05-05 — Galaxy Size Contract (FEAT-27): added "Warp connectivity guarantee" paragraph to § 6 documenting the all-pairs MST replacement of the prior k-nearest candidate generator (fixed sparse-N=2 isolation, e.g. seed-2 reproducer). 2026-05-04 — PROJ-366: extended § 5 Replay Persistence with a "Background Verification Sidecars" subsection covering the `ReplayVerificationCoordinator` listener API, sidecar lifecycle, `verification_status` field on `ReplayLookup`, and production wiring at `app_bootstrap.py`. Earlier same-day pass: Coverage backfill (T3-23 / T3-24): added § 1 "Facade Slice Architecture" subsection (PROJ-309 sub-phase 3.7, 9 internal slices behind the public facade with delegation pattern + cache-invalidation timing); added § 5 "Replay Persistence — `ReplayStore` + `ReplayResolver`" subsection (PROJ-312 strategy-side persistence + UI graceful-degradation contract). Earlier same-day pass: doc-audit fix (`IOrderable` protocol path → `game/core/protocols/strategy_entities.py`). 2026-05-02 — PROJ-320: documented per-fleet movement-opportunity combat dispatch in §3 Per-Tick Phase Execution Order Phase 4 row. Replaces the legacy per-tick contested-hex scan with per-fleet `tick % get_tick_interval(fleet.speed) == 0` triggering, gated by whether the fleet left its hex this tick (TurnEngine derives `moved_fleet_ids` from a pre/post Phase-3 location diff). Multi-fleet-per-empire encounters: spec compiler groups by `owner_id` so allied fleets share a team. ~10× reduction in combat invocations at typical contested sectors. Earlier same-day pass — Issue #7: documented `TurnEngine.process_turn`'s new `progress_callback: Optional[Callable[[int, int], None]]` keyword-only parameter (see §3 "Per-Tick Progress Callback"). Plumbed identically through `GameSession.process_turn` and `StrategySessionFacade.process_turn`. The strategy screen wires a closure that runs `pygame.event.pump()` + redraw + `display.flip()` every tick so the "PROCESSING TURN..." overlay can show a live "Tick N / 100" sub-line. Engine-side guard: callback exceptions are caught with `# Intentional broad catch:` (PROJ-308 convention) and logged at WARNING; a buggy UI callback never breaks turn execution. Per-call state cleared via `try/finally` in `process_turn`. Mid-turn Esc cancellation is NOT supported (event.pump() flushes the OS queue but does not consume Esc) — only inter-turn Esc cancel still works during `run_n_turns`. Earlier same-day pass — Issue #8: Updated §5 "Replay Wiring (FEAT-26)" to reflect the differentiated `SimulationBattleResolver` shortcut branches. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` so a real (brief) replay is captured; only `sole_survivor` and the defensive `no_ships` keep the shortcut, both shipping `BattleResult.replay_unavailable_reason` so the Event Log button shows an honest disabled-tooltip instead of "older save." Earlier verification (2026-04-29): FEAT-28: Added "Mutual-Pursuit Rendezvous Routing" subsection under FleetPursuerTracker. Two mutually-pursuing fleets (each head order is `MOVE_TO_FLEET`/`JOIN_FLEET` targeting the other) now bypass `calculate_intercept_point` and pathfind directly to the target's current hex; both move toward each other along the shortest line at their own speeds. `FleetMovementEngine.collect_movements` adds a `_filter_jump_past_collisions` post-processor that drops the larger fleet's queue entry on swap-hex parity (mirrors BUG-122 `_elect_canonical_merges` tiebreak). Earlier same-day pass: Added §6 "Galaxy Size Contract" subsection documenting FEAT-27: `DEFAULT_SYSTEM_COUNT = 2` single-source-of-truth in `game_config.py`, `1 ≤ system_count ≤ 150` validation, N=1 shared-system mode (multiple empires on distinct planets, no warp lanes, planet-shortage retry loop), N≥2 distinct-system invariant with hard error on E>N, hand-rolled linspace home-index distribution, per-system planet counter, and the continuous quadratic slider curve `value = 1 + 149 * (t / SLIDER_T_MAX) ** 2`. Concurrently backfilled BUG-123 + FEAT-26 deferred sections in §5 Event System. BUG-123: `EventLog.get_events_for_empire(empire_id, *, include_global=True)` + the `current_empire.id` UI scoping convention + the `empire_id == -1` broadcast sentinel + the optional `empire_id` kwarg added to `get_events_for_turn` / `get_events_by_category` + the empire-name window-title threading on `StrategyUI` / `StrategyWindowManager`. FEAT-26: strategy-side replay wiring (Replay button column, `EventLogWindow` click flow, `ReplayResolver` graceful-degradation states, `Game.start_replay` forwarder, `BattleConfig.replay_mode` with `screen_router.start_battle(config=...)` widening, `BattleScreen` REPLAY MODE label). BUG-125 fix from same-day verification still current: `Command.empire_id` field removed (Q5=DROP); `session.player_empire` renamed to `session.active_empire` and now rotated by `StrategyGameStateManager.advance_turn` on each hot-seat turn change. Fleet command handlers gate on `session.active_empire.id` via the new `BaseCommandHandler._resolve_player_fleet` helper; planet handlers continue to gate on `session.active_empire.id` (now correct in hot-seat). Earlier verification (2026-04-28): BUG-122 fix: `redirect_pursuers` gains an `exclude=` kwarg and returns `(redirected, excluded)`; `Fleet.merge_with` excludes the absorbing fleet to prevent self-target cycles. Earlier same-day pass: BUG-119 storm coordinate-frame note (`StormAbilitySource.system` field for global-frame translation), FEAT-17 per-yard `construction_queue_paused` flag on Planet, PlanetaryFacility, and Fleet noted alongside `construction_queue` in the data-model sections, FEAT-19 surplus-food happiness bonus.
 
 System documentation for the turn-based strategy layer.
 
@@ -173,6 +173,88 @@ Mixin providing resolution helpers used by all handlers:
 Registry pattern with `register(command_name, handler)` and `dispatch(command_name, session, cmd)`.
 
 Factory: `create_default_registry()` registers all handlers.
+
+### Self-registering CommandRegistry (PROJ-371)
+
+Two registries cooperate:
+
+- **`CommandRegistry`** (metadata) — `game/strategy/engine/commands/registry.py`.
+  Holds one `CommandSpec` per Command DTO with all routing metadata
+  (handler class, OrderType, category, execution model, facade helper
+  name, serializer codec). Populated at module-import via
+  `seed_default_commands(command_registry)`. Single source of truth
+  for: the runtime dispatch handler set, the OrderType frozensets, the
+  action-time ability map, and the facade `dispatch_*` helper names.
+- **`CommandHandlerRegistry`** (runtime, above) — instantiated handlers.
+
+The metadata registry is built by `@command_spec(...)` decorators on
+each handler class plus a per-module `register(registry)` function:
+
+```python
+# game/strategy/engine/handlers/<domain>.py
+from game.strategy.engine.commands.registry import (
+    CommandRegistry, CommandSpec, command_spec,
+)
+
+@command_spec(
+    command_class=IssueFooCommand,
+    order_type=OrderType.FOO,
+    category='action',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_foo',
+    serializer_codec='planet_ref',
+)
+class FooCommandHandler(BaseCommandHandler):
+    def execute(self, session, cmd): ...
+
+
+def register(registry: CommandRegistry) -> None:
+    for handler_cls in (FooCommandHandler,):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))
+```
+
+`@command_spec(...)` is **METADATA-ONLY** — it attaches
+`__command_spec_kwargs__` to the class and returns the class
+unchanged. It does NOT call `command_registry.register(...)` at
+import time. Registration is exclusively performed by
+`seed_default_commands(registry)`, which imports every handler
+module and calls each module's `register(registry)`.
+
+This shape avoids the duplicate-registration foot-gun: re-importing
+already-imported modules does not re-run decorators (Python caches
+`sys.modules`), so `reset_command_registry()` (clear + reseed) cannot
+re-register from the decorator side; only `seed_default_commands`
+performs the registration. If both paths registered, a second seed
+after a clear would double-register.
+
+#### Adding a new command (authoring rule)
+
+1. Add the Command DTO to `game/strategy/engine/commands/__init__.py`.
+2. Add the handler class in
+   `game/strategy/engine/handlers/<domain>.py` (or a new domain
+   module). Decorate with `@command_spec(...)`.
+3. Add the handler to that module's `register(registry)` function (or
+   create one if the module is new + add it to
+   `seed_default_commands` in `commands/registry.py`).
+4. If a NEW `OrderType` is required, add it to
+   `game/strategy/data/order_types.py` and the relevant frozenset
+   (`MOVEMENT_/ACTION_/PLANET_ACTION_ORDER_TYPES`) — pinned by a
+   contract test; drift fails the build.
+5. Add tests at `tests/unit/strategy/engine/...`.
+
+You do NOT need to edit `registry_factory.py`,
+`action_time_resolver.py`, `command_dispatch_slice.py`, or
+`strategy_session_facade.py` — they all derive from
+`command_registry`. The strategy session facade auto-installs a bound
+`dispatch_<facade_helper_name>` method per spec at module import.
+
+The AST regression test
+`tests/unit/strategy/engine/test_no_specs_tuple_literal.py` forbids
+re-introducing a module-level `COMMAND_SPECS = (CommandSpec(...), ...)`
+tuple literal anywhere under `game/`.
 
 ### Registered Handlers
 
