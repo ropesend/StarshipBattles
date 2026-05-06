@@ -9,7 +9,17 @@
 **Review Mode:** cumulative (covers Phase 0 + 1 + 2)
 **Files (planned):** see manifest.md Phase 2 row group
 
-**Status:** Not Started
+**Status:** Complete
+
+**Notes (Phase 2 outcomes):**
+- planet.py: 667 -> 297 LOC (target 350, 53 LOC under).
+- planet_query_service.py: 82 LOC (target 250).
+- planet_habitability_service.py: 65 LOC (target 200).
+- planet_serde.py: 222 LOC (new — extracted to_dict/from_dict + order deserializer to keep planet.py under ceiling). Save format unchanged.
+- All 47 dataclass fields preserved verbatim. Round-trip equality test green on populated planet + minimal planet.
+- PROJ-285 cache invariant preserved: cache fields stay on planet, service holds no cache state.
+- Habitability acceptance test green: registering a stub `IHabitabilityCalculator` via `set_default_planet_habitability_service` causes `Planet.get_cached_habitability_multiplier` to return the stub's value.
+- 5008 strategy/save_load/integration tests pass.
 **Objective:** Move `Planet`'s 4 logic-bearing query/calc methods (`active_abilities`, `is_ability_active`, `occupied_hexes`, `can_build_type`) to `PlanetQueryService`. Convert `get_cached_habitability_multiplier` from a late-import logic body to a 1-line facade calling `ApplicationContext.get_default_planet_habitability_service().get_cached(...)`. Wire the real `PlanetHabitabilityService` into context. Preserve all 47 dataclass fields verbatim. Stockpile / staging / order methods stay on `Planet` but conform to `IStockpileHolder` / `IStagingYardHolder` protocols (defined in Phase 0). Save format unchanged.
 
 ---

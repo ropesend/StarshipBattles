@@ -24,7 +24,7 @@ GAME_ROOT = REPO_ROOT / "game"
 # Phase 3 lowers galaxy to 420 (intermediate).
 # Phase 4 lowers galaxy to 350 (final).
 GALAXY_LOC_CEILING = 689
-PLANET_LOC_CEILING = 667
+PLANET_LOC_CEILING = 350  # Phase 2: tightened after PlanetQueryService + PlanetHabitabilityService extraction.
 STARS_LOC_CEILING = 280  # Phase 1: tightened from 770 after Spectrum/StarGenerator extraction.
 
 

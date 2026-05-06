@@ -28,20 +28,18 @@ __all__ = [
 ]
 
 
-# PROJ-372 Phase 0: module-level habitability-calculator slot.
-# Phase 0 leaves this None — `Planet.get_cached_habitability_multiplier`
-# falls back to its existing late-import path. Phase 2 sets a real
-# `PlanetHabitabilityService()` instance at import time.
+# PROJ-372: module-level habitability-calculator slot. Phase 2 wires
+# the real default below at module-import time. Tests / mods may
+# override via ``set_default_planet_habitability_service``.
 _default_planet_habitability_service: Optional['IHabitabilityCalculator'] = None
 
 
 def get_default_planet_habitability_service() -> Optional['IHabitabilityCalculator']:
     """Return the registered habitability calculator (or None).
 
-    PROJ-372: Phase 0 always returns None (callers fall back to the
-    late-imported `planet_habitability_multiplier`). Phase 2 wires the
-    real default. Tests / mods may override via
-    `set_default_planet_habitability_service` (PROJ-258 pattern).
+    Phase 2 wires the real default at import time, so the typical
+    return is a ``PlanetHabitabilityService``. Modders may override via
+    ``set_default_planet_habitability_service`` (PROJ-258 pattern).
     """
     return _default_planet_habitability_service
 
@@ -52,6 +50,22 @@ def set_default_planet_habitability_service(
     """Register the global habitability calculator. Pass None to clear."""
     global _default_planet_habitability_service
     _default_planet_habitability_service = svc
+
+
+# PROJ-372 Phase 2: install the default habitability service at module
+# import time. Late import keeps this module light when only the class
+# definition is needed (tests / circular-import edge cases).
+def _install_default_habitability_service() -> None:
+    global _default_planet_habitability_service
+    if _default_planet_habitability_service is not None:
+        return
+    from game.strategy.services.planet_habitability_service import (
+        PlanetHabitabilityService,
+    )
+    _default_planet_habitability_service = PlanetHabitabilityService()
+
+
+_install_default_habitability_service()
 
 
 class ApplicationContext:

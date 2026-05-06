@@ -17,16 +17,16 @@
 |-------|--------|-----------|------------|
 | 0. Pre-Phase: facade-delegate template + AST/protocol scaffolding | Complete | [phase_0_checklist.md](phase_0_checklist.md) | **PROJ-370 verified** |
 | 1. Star decomposition (770 LOC stars.py → ~280 facade + extracted services) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | **PROJ-370 verified** + phase_0 |
-| 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | **PROJ-370 verified** + phase_0 |
+| 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 3. Galaxy query/spatial-aggregation services | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 4. Galaxy algorithmic services (pathfinding, intercept, warp resolution) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | **PROJ-370 verified** + phase_3 |
 | 5. AST guards, perf bench, doc updates, final audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | **PROJ-370 verified** + phases 1-4 |
 
 ## Current State
-**Last Updated:** 2026-05-05 (Phase 1 complete)
-**Active Phase:** Phase 2 (Planet decomposition) — pending
-**Last Action:** Phase 1 complete. Split stars.py 770→181 LOC. New files: `game/strategy/data/spectrum.py` (74 LOC), `game/strategy/generation/star_generator.py` (471 LOC), `game/core/spectrum_math.py` (155 LOC, with `kelvin_to_rgb`, `stefan_boltzmann_luminosity`, `wien_peak_wavelength` + all solar/Kelvin/Wien constants). `_map_solar_radius_to_hex_radius` stays on StarGenerator (D6). stars.py keeps Star+StarType + re-exports Spectrum, StarGenerator (via __getattr__), and SOLAR_TEMP_K/SOLAR_MASS_KG/SOLAR_RADIUS_M/SOLAR_LUMINOSITY_W/WIEN_DISPLACEMENT_CONSTANT for backwards-compat with 15+ external import sites. Galaxy + galaxy_system_generator updated to import StarGenerator from new path. LOC ceiling tightened to 280. 4827 passed, 1 skipped on focused regression suite.
-**Next Action:** Phase 2 — Planet decomposition. Extract `PlanetQueryService` + `PlanetHabitabilityService`. Wire habitability service via ApplicationContext. Tighten planet.py to 350 LOC.
+**Last Updated:** 2026-05-05 (Phase 2 complete)
+**Active Phase:** Phase 3 (Galaxy query/spatial services) — pending
+**Last Action:** Phase 2 complete. Split planet.py 667→297 LOC. New files: `game/strategy/services/planet_query_service.py` (82 LOC, static methods: active_abilities, is_ability_active, occupied_hexes, can_build_type), `game/strategy/services/planet_habitability_service.py` (65 LOC, implements IHabitabilityCalculator), `game/strategy/data/planet_serde.py` (222 LOC, planet_to_dict + planet_from_dict_kwargs + _deserialize_planet_orders). All 47 dataclass fields preserved verbatim. `Planet.get_cached_habitability_multiplier` now routes through ApplicationContext — modders register via `set_default_planet_habitability_service` (PROJ-258 pattern). PROJ-285 cache invariant preserved (cache lives on planet, not service). Phase 2 wired the real default at module import. LOC ceiling tightened to 350. 5008 strategy/save_load/integration tests pass.
+**Next Action:** Phase 3 — Galaxy query/spatial services. Introduce `GalaxyState` dataclass; refactor 4 PROJ-173 delegates to take state instead of `_galaxy: Galaxy` back-pointer. Tighten galaxy.py to 420 LOC (intermediate; final 350 in Phase 4).
 **Blockers:** None.
 
 ## Overview
