@@ -67,6 +67,25 @@
         "game/ai/behaviors.py",
         "game/research/data/tech_tree.py"
       ]
+    },
+    {
+      "date": "2026-05-05",
+      "review_dir": "Reviews/results/2026-05-05_185819_audit_shrink",
+      "deep_review_shard": "01",
+      "seed": "shrink-2026-05-05_192542",
+      "production_loc": 158476,
+      "dead_code_files": 0,
+      "dead_code_functions": 1,
+      "dead_code_imports": 0,
+      "duplication_clusters": 39,
+      "estimated_shrinkable_loc": 533,
+      "top_hotspots": [
+        "planet_list_window.py",
+        "battle_setup/input_handler.py",
+        "race_setup/input_handler.py",
+        "order_processor.py",
+        "turn_engine.py"
+      ]
     }
   ]
 }

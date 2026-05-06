@@ -4,6 +4,11 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-372 | Strategy: Galaxy/Planet/Star God-Class Decomposition (facade-delegate pattern) | Planning | 2026-05-05 | 2026-05-05 |
+| PROJ-371 | Strategy: Command Dispatch Registry (replace hardcoded specs.py table) | Planning | 2026-05-05 | 2026-05-05 |
+| PROJ-370 | Strategy: Data Layer Boundary Protocols (separate model from mutation) | Planning | 2026-05-05 | 2026-05-05 |
+| PROJ-369 | Strategy: TurnEngine Decomposition (phase-aware ITickPhase migration completion) | Planning | 2026-05-05 | 2026-05-05 |
+| PROJ-368 | Strategy: OrderProcessor Decomposition (handler-per-order-type) | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-367 | Unified Stat Contributor Extension Surface (typed abilities + registry-as-pipeline) | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-366 | Production replay sink wiring + verification coordinator bootstrap (PROJ-354B Phases 5-6 unblock) | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-365 | TurnEngine phase descriptor registry (review finding #3) | Planning | 2026-05-04 | 2026-05-04 |

@@ -112,6 +112,223 @@ paths or exercised the code through public facades.
   for malformed planet order data, and no longer falls back to the legacy
   `planet_orders` key when loading the current save schema.
 
+### Strategy Engines Part 1
+
+- Covered `game/strategy/engine/planet_action_engine.py`,
+  `component_activation_engine.py`, and `fleet_movement_engine.py`.
+- Added focused branch tests to:
+  - `tests/unit/strategy/engine/test_component_activation_engine.py`
+  - `tests/unit/strategy/engine/test_planet_action_engine.py`
+  - `tests/unit/strategy/fleet_movement_engine/test_characterization.py`
+- New coverage includes non-operational facility skips, non-dict component
+  state skips, planet action activation/deactivation guards, facility target
+  fallback branches, and FEAT-28 swap filter cases for ship count,
+  `JOIN_FLEET`, non-pursuit, and non-`Fleet` targets.
+- False positives found: these modules were not "mostly untested"; existing
+  direct and characterization tests already covered their main paths.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/engine/test_component_activation_engine.py tests/unit/strategy/engine/test_planet_action_engine.py tests/unit/strategy/fleet_movement_engine/test_characterization.py`
+  - Result: `46 passed`
+
+### Strategy Engines Part 2
+
+- Covered `game/strategy/engine/harvesting_engine.py` and
+  `production_engine.py`.
+- Added focused tests to:
+  - `tests/unit/strategy/engine/test_harvesting_engine.py`
+  - `tests/unit/strategy/engine/test_production_engine_queue.py`
+- New coverage includes staging-yard capacity aggregation for inline and
+  registry component entries, harvest booster aggregation across applicable
+  scopes, no-empire/no-galaxy booster fallback, non-shipyard queue skips, and
+  fleet-not-building skips before space-yard processing.
+- False positives found: `consumable_management_engine.py`,
+  `organics_consumption_engine.py`, `water_engine.py`, and most
+  `production_engine.py` behavior already had direct or facade coverage.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/engine/test_harvesting_engine.py tests/unit/strategy/engine/test_production_engine_queue.py -q`
+  - Result: `53 passed`
+
+### Simulation Combat Engine Coordination
+
+- Covered `game/simulation/entities/ship_combat_engine.py` and remaining
+  branches in `game/simulation/combat/weapon_firing_system.py`.
+- Added tests to:
+  - `tests/unit/simulation/ship_combat_engine/test_combat_ops.py`
+  - `tests/unit/simulation/combat/test_weapon_firing_system.py`
+- New coverage includes `ShipCombatEngine` target-selection and firing-solution
+  delegation, lethal `SHIP_DESTROYED` event emission, PDC missile context
+  filtering for alive enemy missiles only, and typed `NoAttack` dispatch
+  results returning no attack objects.
+- False positives found: `ship_resource_manager.py` already has direct unit
+  coverage, and positive PDC missile injection was already covered elsewhere.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/simulation/ship_combat_engine/test_combat_ops.py tests/unit/simulation/combat/test_weapon_firing_system.py -q`
+  - Result: `35 passed`
+
+### UI Fleet Command Router
+
+- Covered `game/ui/screens/strategy_fleet_command_router.py`.
+- Added `tests/unit/ui/screens/test_strategy_fleet_command_router.py`.
+- New coverage includes direct fleet actions, no-selected-fleet guards, warp
+  capability guards, cancel modes including `EDIT_MOVE`, superweapon target
+  routing, self-destruct routing, detail actions for planet orders, abilities,
+  fleet report, build, toggle hotkeys, ability-toggle activation/deactivation,
+  and `finish_move_action` shift behavior.
+- False positives found: `battle_results_data.py` already had direct coverage.
+  Broad `strategy_click_dispatcher.py` coverage claims were partly false, but
+  edit/choice callback branches remain a useful follow-up.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/ui/screens/test_strategy_fleet_command_router.py -q`
+  - Result: `61 passed`
+
+### UI Workshop And Transfer Selection
+
+- Covered `game/ui/screens/workshop_viewmodel_selection.py`,
+  `transfer_controller.py`, and `transfer_view_model.py`.
+- Added:
+  - `tests/unit/ui/screens/test_workshop_viewmodel_selection.py`
+  - `tests/unit/ui/screens/test_transfer_controller.py`
+- Added focused tests to
+  `tests/unit/ui/screens/test_transfer_view_model.py`.
+- New coverage includes selection normalization, append/toggle selection,
+  modifier synchronization, source discovery including selected source fleets,
+  projected-position planet fallback, pod design discovery sorting/fallback,
+  cargo key parsing, DTO fetching, non-fleet endpoint aborts, command
+  emission/counting, transfer filter visibility, and source/target labels.
+- False positives found: `transfer_controller.py` and
+  `transfer_view_model.py` had partial indirect/direct coverage already.
+- Production change: `game/ui/screens/workshop_viewmodel_selection.py` now
+  keeps duplicate incoming objects from re-adding an object toggled off earlier
+  in the same append-toggle operation.
+- Targeted command:
+  `pytest tests/unit/ui/screens/test_strategy_fleet_command_router.py tests/unit/ui/screens/test_workshop_viewmodel_selection.py tests/unit/ui/screens/test_transfer_controller.py tests/unit/ui/screens/test_transfer_view_model.py -q`
+  - Result: `86 passed`
+
+### UI Click Dispatcher And Battle Results False Positive
+
+- Covered remaining callback/edit branches in
+  `game/ui/screens/strategy_click_dispatcher.py`.
+- Added focused tests to
+  `tests/unit/ui/screens/test_strategy_click_dispatcher.py`.
+- New coverage includes unknown mode fallback, MOVE choice callbacks for move
+  and intercept, JOIN choice callback, SELECT right-click quick-move choice
+  callbacks, EDIT_MOVE left-click completion, and EDIT_MOVE right-click cancel
+  cleanup.
+- False positives found: existing click dispatcher tests already covered basic
+  mode routing, transfer/cargo, warp, superweapon clicks, picking, and planet
+  hit-testing. `game/ui/screens/battle_results_data.py` was also a false
+  positive with direct coverage in `tests/unit/ui/test_battle_results_data.py`.
+- Production changes: none.
+- Targeted commands:
+  - `pytest tests/unit/ui/screens/test_strategy_click_dispatcher.py -q`
+    - Result: `13 passed`
+  - `pytest tests/unit/ui/test_battle_results_data.py -q`
+    - Result: `9 passed`
+
+### Strategy Data And Prompt Helper Edges
+
+- Covered `game/strategy/data/race_caption_loader.py`,
+  `game/strategy/services/race_description_prompt_builder.py`, and
+  `game/strategy/data/galaxy_system_generator.py`.
+- Added focused tests to:
+  - `tests/unit/strategy/data/test_race_caption_loader.py`
+  - `tests/unit/strategy/services/test_race_description_prompt_builder.py`
+  - `tests/unit/strategy/data/test_galaxy_system_generator.py`
+- New coverage includes parsed non-object caption sidecars, unknown
+  habitability factor preferences being skipped in prompt rendering, and lazy
+  cache behavior for planet types, star types, and system archetypes.
+- False positives found: most caption loader error paths were already covered;
+  only the non-dict sidecar path was missing.
+- Production changes: none.
+- Targeted commands:
+  - `pytest tests/unit/strategy/data/test_race_caption_loader.py -q`
+    - Result: `11 passed`
+  - `pytest tests/unit/strategy/services/test_race_description_prompt_builder.py -q`
+    - Result: `15 passed`
+  - `pytest tests/unit/strategy/data/test_galaxy_system_generator.py -q`
+    - Result: `29 passed`
+
+### Strategy Action Timing And Resupply Edges
+
+- Covered `game/strategy/services/action_time_resolver.py` and
+  `game/strategy/engine/resupply_engine.py`.
+- Added focused tests to:
+  - `tests/unit/strategy/services/test_action_time_resolver.py`
+  - `tests/unit/strategy/engine/test_resupply_engine.py`
+- New coverage includes ACTIVATE/DEACTIVATE ability timing, missing
+  `ability_name` fallback, facility-instance filtering, non-operational
+  facility fallback, `_transfer_fuel` withdrawing only actual ship acceptance,
+  remaining-available capping, and early exit when available fuel is exhausted.
+- Production changes: none.
+- Targeted commands:
+  - `pytest tests/unit/strategy/services/test_action_time_resolver.py -q`
+    - Result: `18 passed`
+  - `pytest tests/unit/strategy/engine/test_resupply_engine.py -q`
+    - Result: `28 passed`
+
+### Simulation Tick Phases And Replay Wrapper
+
+- Covered `game/simulation/systems/tick_phase.py` and
+  `game/simulation/replay/replay_player.py`.
+- Added focused tests to:
+  - `tests/unit/simulation/systems/test_tick_phases.py`
+  - `tests/unit/simulation/replay/test_replay_player.py`
+- New coverage includes default tick phase names/priorities, each default
+  phase's engine collaborator call, `AttackProcessingPhase` use of
+  `_alive_ships_cache`, and `run_replay_headless` forwarding reconstructed
+  spec, `ai_factory`, `ship_builder`, `registry_provider`, and
+  `capture_context=None`.
+- Production changes: none.
+- Targeted commands:
+  - `pytest tests/unit/simulation/systems/test_tick_phases.py -q`
+    - Result: `16 passed`
+  - `pytest tests/unit/simulation/replay/test_replay_player.py -q`
+    - Result: `1 passed`
+  - `pytest tests/unit/simulation/replay -q`
+    - Result: `54 passed`
+
+### AI Battle Line And Ability Formula Detection
+
+- Covered `game/ai/spatial_behaviors/battle_line.py` and
+  `game/simulation/components/abilities/__init__.py`.
+- Added focused tests to:
+  - `tests/unit/ai/spatial_behaviors/test_spatial_behaviors.py`
+  - `tests/unit/simulation/components/abilities/test_ability_registry.py`
+- New coverage includes `leader=None`, empty group fallback, documented
+  `wall` shape behavior, formula string detection, non-formula string
+  detection, nested dict/list formula detection, and mixed primitive/empty
+  data cases.
+- Production change: `game/ai/spatial_behaviors/battle_line.py` now implements
+  the documented `wall` shape by staggering alternating slots into a second
+  rank. The formula helper already behaved correctly.
+- Targeted commands:
+  - `pytest tests/unit/ai/spatial_behaviors/test_spatial_behaviors.py -q -k "missing_leader or empty_group or wall_shape"`
+    - Initial TDD result: `2 passed`, `1 failed`; the `wall` shape behaved
+      like a flat line before the fix.
+    - Result after fix: `3 passed`
+  - `pytest tests/unit/ai/spatial_behaviors/test_spatial_behaviors.py -q`
+    - Result: `27 passed`
+  - `pytest tests/unit/simulation/components/abilities/test_ability_registry.py -q`
+    - Result: `9 passed`
+  - `pytest tests/unit/simulation/components/abilities -q`
+    - Result: `862 passed`
+
+### UI Strategy Render Context
+
+- Covered `game/ui/screens/strategy_render/context.py`.
+- Added `tests/unit/ui/screens/strategy_render/test_context.py`.
+- New coverage includes the `radius_hexes <= 0` minimum visible-radius guard
+  and tiny positive-radius clamping.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/ui/screens/strategy_render/test_context.py -q`
+  - Initial result before adding the file: no tests ran.
+  - Result after adding tests: `2 passed`
+
 ## Verified False Positives Or Already-Covered Claims
 
 - `game/simulation/battle_runner.py` already has dedicated unit coverage
@@ -131,6 +348,25 @@ paths or exercised the code through public facades.
 - `game/simulation/components/component_inspector.py` does not exist in
   this checkout; the verified component-inspector helper gap maps to
   `game/strategy/services/component_inspector.py`.
+- `game/strategy/engine/component_activation_engine.py`,
+  `planet_action_engine.py`, and `fleet_movement_engine.py` already had
+  main-path coverage; this pass added only verified edge branches.
+- `game/strategy/engine/consumable_management_engine.py`,
+  `organics_consumption_engine.py`, and `water_engine.py` already had
+  targeted coverage for the audited helper paths.
+- `game/simulation/ship_resource_manager.py` already has direct unit
+  coverage for resource manager helper behavior.
+- `game/ui/screens/battle_results_data.py` already has direct unit coverage.
+- `game/ai/target_evaluator.py`, `game/ai/protocols.py`,
+  `game/ai/spatial_behaviors/base.py`, and
+  `game/simulation/entities/stat_contributors/{launch,movement}.py` already
+  have substantial direct tests.
+- `game/strategy/data/tech_tree.py` now has direct tests for cycle detection,
+  loading, validation, query depth, and requirement resolution.
+- `game/strategy/engine/order_processor.py` pod staging helpers have multiple
+  direct tests.
+- `game/strategy/systems/save_game_service.py` replay-store hooks are covered
+  in integration replay tests.
 
 ## Test Commands Run
 
@@ -153,22 +389,87 @@ paths or exercised the code through public facades.
 - Full suite after production deserialization change:
   - `python Tools/test_sharded/test_sharded.py`
   - Result: `18528 passed`, `4 skipped`
+- Strategy engines part 1:
+  - `pytest tests/unit/strategy/engine/test_component_activation_engine.py tests/unit/strategy/engine/test_planet_action_engine.py tests/unit/strategy/fleet_movement_engine/test_characterization.py`
+  - Result: `46 passed`
+- Strategy engines part 2:
+  - `pytest tests/unit/strategy/engine/test_harvesting_engine.py tests/unit/strategy/engine/test_production_engine_queue.py -q`
+  - Result: `53 passed`
+- UI workshop/transfer/fleet-router packet:
+  - `pytest tests/unit/ui/screens/test_strategy_fleet_command_router.py tests/unit/ui/screens/test_workshop_viewmodel_selection.py tests/unit/ui/screens/test_transfer_controller.py tests/unit/ui/screens/test_transfer_view_model.py -q`
+  - Initial TDD result: failed as expected on
+    `test_append_selection_toggles_existing_object_off_without_readding_duplicate`
+    before the selection fix.
+  - Result after fix: `86 passed`
+- Simulation combat engine coordination packet:
+  - `pytest tests/unit/simulation/ship_combat_engine/test_combat_ops.py tests/unit/simulation/combat/test_weapon_firing_system.py -q`
+  - Result: `35 passed`
+- Combined targeted suite for all files touched in this pass:
+  - `pytest tests/unit/ui/screens/test_strategy_fleet_command_router.py tests/unit/ui/screens/test_workshop_viewmodel_selection.py tests/unit/ui/screens/test_transfer_controller.py tests/unit/ui/screens/test_transfer_view_model.py tests/unit/strategy/engine/test_harvesting_engine.py tests/unit/strategy/engine/test_production_engine_queue.py tests/unit/strategy/engine/test_component_activation_engine.py tests/unit/strategy/engine/test_planet_action_engine.py tests/unit/strategy/fleet_movement_engine/test_characterization.py tests/unit/simulation/ship_combat_engine/test_combat_ops.py tests/unit/simulation/combat/test_weapon_firing_system.py -q`
+  - Result: `220 passed`
+- Full suite after production selection change:
+  - `python Tools/test_sharded/test_sharded.py`
+  - First result: `18630 passed`, `3 errors`, `4 skipped`; errors were all
+    Pygame display setup errors in `tests/unit/builder/test_multi_selection_logic.py`.
+  - Follow-up isolation:
+    `pytest tests/unit/builder/test_multi_selection_logic.py -q`
+    - Result: `3 passed`
+  - Rerun result:
+    `python Tools/test_sharded/test_sharded.py`
+    - Result: `18633 passed`, `0 failed`, `0 errors`, `4 skipped`
+- UI click dispatcher and battle-results check:
+  - `pytest tests/unit/ui/screens/test_strategy_click_dispatcher.py -q`
+    - Result: `13 passed`
+  - `pytest tests/unit/ui/test_battle_results_data.py -q`
+    - Result: `9 passed`
+- Strategy data and prompt helper edges:
+  - `pytest tests/unit/strategy/data/test_race_caption_loader.py -q`
+    - Result: `11 passed`
+  - `pytest tests/unit/strategy/services/test_race_description_prompt_builder.py -q`
+    - Result: `15 passed`
+  - `pytest tests/unit/strategy/data/test_galaxy_system_generator.py -q`
+    - Result: `29 passed`
+- Strategy action timing and resupply:
+  - `pytest tests/unit/strategy/services/test_action_time_resolver.py -q`
+    - Result: `18 passed`
+  - `pytest tests/unit/strategy/engine/test_resupply_engine.py -q`
+    - Result: `28 passed`
+- Simulation replay and tick phases:
+  - `pytest tests/unit/simulation/replay/test_replay_player.py -q`
+    - Result: `1 passed`
+  - `pytest tests/unit/simulation/replay -q`
+    - Result: `54 passed`
+  - `pytest tests/unit/simulation/systems/test_tick_phases.py -q`
+    - Result: `16 passed`
+- AI battle-line and formula helper:
+  - `pytest tests/unit/ai/spatial_behaviors/test_spatial_behaviors.py -q`
+    - Result: `27 passed`
+  - `pytest tests/unit/simulation/components/abilities/test_ability_registry.py -q`
+    - Result: `9 passed`
+  - `pytest tests/unit/simulation/components/abilities -q`
+    - Result: `862 passed`
+- UI strategy render context:
+  - `pytest tests/unit/ui/screens/strategy_render/test_context.py -q`
+    - Result: `2 passed`
+- Combined targeted suite for this continuation:
+  - `pytest tests/unit/ui/screens/test_strategy_click_dispatcher.py tests/unit/ui/test_battle_results_data.py tests/unit/strategy/data/test_race_caption_loader.py tests/unit/strategy/services/test_race_description_prompt_builder.py tests/unit/strategy/data/test_galaxy_system_generator.py tests/unit/strategy/services/test_action_time_resolver.py tests/unit/strategy/engine/test_resupply_engine.py tests/unit/simulation/systems/test_tick_phases.py tests/unit/simulation/replay/test_replay_player.py tests/unit/simulation/replay tests/unit/ai/spatial_behaviors/test_spatial_behaviors.py tests/unit/simulation/components/abilities/test_ability_registry.py tests/unit/ui/screens/strategy_render/test_context.py -q`
+  - Result: `231 passed`
+- Full suite after AI battle-line production change:
+  - `python Tools/test_sharded/test_sharded.py`
+  - Result: `18664 passed`, `0 failed`, `0 errors`, `4 skipped`
 
 ## Suggested Next Work Packets
 
-Continue with P1/P2 items that were not touched in this pass:
+Continue with the remaining verified UI gap and then return to the audit for
+fresh candidates:
 
-- Strategy engines: `planet_action_engine.py`, `harvesting_engine.py`,
-  `production_engine.py`, `consumable_management_engine.py`,
-  `fleet_movement_engine.py`, `component_activation_engine.py`,
-  `organics_consumption_engine.py`, and `water_engine.py`.
-- Simulation: `ship_combat_engine.py`, `ship_resource_manager.py`, and
-  remaining `weapon_firing_system.py` branch coverage beyond existing
-  integration tests.
-- UI business logic: `strategy_fleet_command_router.py`,
-  `workshop_viewmodel_selection.py`, `transfer_controller.py`,
-  `battle_results_data.py`, `strategy_click_dispatcher.py`, and
-  `transfer_view_model.py`.
+- Strategy data: consider any remaining `galaxy_system_generator.py` generation
+  branches only after re-checking current characterization tests.
+- Strategy engine: remaining `resupply_engine.py` public-flow edge cases, if
+  any, should be verified against existing direct distribution and transfer
+  coverage first.
+- Any newly selected packet should repeat verification against existing tests
+  first; many broad audit claims in this area were false positives.
 
 Future agents should repeat the pattern used here: verify with `rg` and
 existing tests first, add focused tests only for real gaps, and update this

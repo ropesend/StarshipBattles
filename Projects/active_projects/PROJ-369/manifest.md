@@ -1,0 +1,37 @@
+# PROJ-369 File Manifest
+
+> Generated during /proj-start. Used by /proj-parallel for conflict detection.
+> Updated if implementation discovers additional files.
+
+## Files
+
+| File | Type | Phase | Notes |
+|------|------|-------|-------|
+| `game/strategy/engine/turn_engine.py` | Production (modify) | 1, 3, 4, 5 | Phase 1: replace end-of-turn imperative block (lines 587-620) with descriptor iteration. Phase 3: delete `_NullBattleResolver` class (lines 109-122); delete 15 lazy-property fallback bodies (lines 319-481, ~155 LOC); convert properties to trivial passthroughs; reduce `__init__` from 20 to 8 kwargs (lines 144-169). Phase 4: extract `_run_phases` helper; collapse `process_turn` body. Phase 5: AST guard verification. |
+| `game/strategy/engine/turn_engine_config.py` | Production (modify) | 2, 3 | Phase 2: add `quality_engine`, `atmosphere_engine`, `water_engine` fields. Phase 3: add `@classmethod create_default(cls, registries, *, ai_factory, race_registry, event_bus)` that eagerly constructs all 18 default engines. |
+| `game/strategy/engine/turn_phase_registry.py` | Production (modify) | 1, 4 | Phase 1: add `DEFAULT_END_OF_TURN_PHASE_LIST` (6 entries: organics_consumption, happiness, population_growth, quality_improvement, atmosphere, water_modification). Phase 4: optional small helpers if `_run_phases` ergonomics demand. Stays under 500 LOC. |
+| `game/strategy/interfaces/engines.py` | Production (modify) | 2 | Phase 2: add `IQualityEngine`, `IAtmosphereEngine`, `IWaterEngine` protocols (mirror existing `IPopulationEngine` shape). Add to `__all__`. File grows from 714 LOC → ~830 LOC (still under 500-LOC ceiling? No — `engines.py` is interfaces-only and exempt from the ceiling per docs/03_CONVENTIONS.md guidance; verify in phase task). |
+| `game/strategy/engine/quality_engine.py` | Production (verify only) | 2 | No code change expected. Verify `QualityEngine` already satisfies `IQualityEngine` protocol (it does — has `process_quality_improvement(empires)` already). |
+| `game/strategy/engine/atmosphere_engine.py` | Production (verify only) | 2 | No code change expected. Verify `AtmosphereEngine` satisfies `IAtmosphereEngine`. |
+| `game/strategy/engine/water_engine.py` | Production (verify only) | 2 | No code change expected. Verify `WaterEngine` satisfies `IWaterEngine`. |
+| `game/strategy/engine/game_session.py` | Production (modify) | 3 | Phase 3: migrate 2 `TurnEngine(...)` call sites at lines 102-107 (`__init__`) and 386-391 (`from_dict`) to use `TurnEngineConfig.create_default(self._registries, ai_factory=ai_factory, race_registry=self.race_registry, event_bus=self._event_bus)`. |
+| `tests/unit/strategy/turn_engine/conftest.py` | Test (modify) | 3 | Phase 3: update `turn_engine` fixture (lines 23-26) to use `TurnEngineConfig.create_default(...)`. |
+| `tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py` | Test (modify) | 3, 5 | Phase 3: tests at lines 26-180 (`TestLazyPropertyDefaults`) repurposed to verify config-injected defaults via `TurnEngineConfig.create_default()`. `TestConflictEngineBattleResolverBranches` (lines 252-305) updated for `_NullBattleResolver` deletion: only the "ai_factory provided → SimulationBattleResolver" branch remains; the warn-fallback branch is replaced with an "explicit raise from ConflictResolutionEngine" assertion. Phase 5: `_NullBattleResolver` import (line 18) removed. |
+| `tests/unit/strategy/turn_engine/test_turn_engine_end_of_turn_order.py` | Test (modify) | 1, 2 | Phase 1: order-pinning test at lines 43-92 still passes — descriptor iteration preserves order. Phase 2: `patch('game.strategy.engine.quality_engine.QualityEngine')` patches at lines 70-76 / 110-116 / 163-169 are replaced with constructor-injected `IQualityEngine` mocks. |
+| `tests/unit/strategy/turn_engine/test_turn_engine_init_precedence.py` | Test (modify) | 3 | Phase 3: precedence semantics shift — there are no individual-kwarg overrides anymore (everything comes through `config`). Tests rewritten to assert `config` field values appear on the engine, and that explicit `tick_phases=`/`end_of_turn_phases=` overrides take precedence over config defaults. |
+| `tests/unit/strategy/turn_engine/test_turn_engine_phase_timing.py` | Test (modify) | 4 | Phase 4: assert `_phase_times` covers all 21 keys after a `process_turn` run (15 tick + 6 end-of-turn). |
+| `tests/unit/strategy/turn_engine/test_dependency_injection.py` | Test (modify) | 3 | Phase 3: `TestFactoryFunction` tests (line 336+) updated for `create_default_turn_engine` deletion (if Q2 resolves "delete") OR for the new shim shape. |
+| `tests/unit/strategy/turn_engine/test_default_tick_phase_list.py` | Test (no change) | — | PROJ-365 golden test. Untouched. |
+| `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py` | Test (no change) | — | PROJ-365 descriptor-shape test. Untouched. |
+| `tests/unit/strategy/turn_engine/test_default_end_of_turn_phase_list.py` | Test (new) | 1 | NEW golden-list test mirroring `test_default_tick_phase_list.py` for the 6 end-of-turn descriptors. Pins phase_key order: `('organics_consumption', 'happiness', 'population_growth', 'quality_improvement', 'atmosphere', 'water_modification')`. |
+| `tests/unit/strategy/turn_engine/test_no_lazy_fallback_init.py` | Test (new) | 5 | NEW AST regression test. Walks `turn_engine.py`, asserts: zero `if self._\w+_engine is None:` patterns; zero function-local `from game.strategy.engine.\w+ import \w+Engine` inside `TurnEngine` methods (allowlist `TurnEngineConfig.create_default()`); `TurnEngine.__init__` has ≤ 8 parameters; `_NullBattleResolver` symbol absent. |
+| `tests/unit/strategy/turn_engine/test_phase_isolation_with_mock_context.py` | Test (new) | 5 | NEW per-phase isolation tests. Each tick + end-of-turn descriptor invocable via `descriptor.callable_target(mock_engine)(*descriptor.args_resolver(mock_ctx)[0], **descriptor.args_resolver(mock_ctx)[1])` where `mock_engine` exposes ONLY the engines that descriptor reads. Demonstrates "phase X depends on Y, Z, only" contract. |
+| `tests/unit/strategy/mocks/mock_engines.py` | Test (verify) | 3 | Verify mock factories are still usable; if they construct `TurnEngine(...)` directly, update to use `TurnEngineConfig.create_default()`. |
+| `tests/integration/strategy/turn_engine/test_basics.py` | Test (verify) | 3 | Integration test — verify still passes after constructor-shape change. |
+| `tests/integration/strategy/turn_engine/test_resources.py` | Test (verify) | 3 | Integration test — verify still passes. |
+| `tests/integration/strategy/turn_engine/test_resupply.py` | Test (verify) | 3 | Integration test — verify still passes. |
+| `tests/integration/strategy/turn_engine/test_components.py` | Test (verify) | 3 | Integration test — verify still passes. |
+| `tests/integration/strategy/turn_engine/test_harvesting.py` | Test (verify) | 3 | Integration test — verify still passes. |
+| `tests/integration/gameplay_loop/test_turn_execution.py` | Test (verify) | 3 | End-to-end gameplay loop — final verification that `process_turn` works through `TurnEngineConfig.create_default()` path. |
+| `docs/systems/strategy_layer.md` | Documentation (modify) | 5 | Phase 5: update Turn execution section to describe unified phase-execution loop. Update `> **Last verified:**` blockquote. |
+| `docs/02_PATTERNS.md` | Documentation (modify) | 5 | Phase 5: § 35 (TurnEngineConfig pattern) updated to describe `create_default()` factory as the canonical injection entry point. Update `> **Last verified:**` blockquote. |

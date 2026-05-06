@@ -156,6 +156,27 @@ def test_per_facility_pause_skips_only_that_shipyard(engine, empire, monkeypatch
     assert active_item["resources_consumed"]["A"] > 0.0
 
 
+def test_non_shipyard_facility_queue_is_skipped(engine, empire):
+    """A queued non-shipyard facility must not process construction."""
+    item = _ship_item(design_id="should_not_tick", cost_a=10.0)
+    facility = MagicMock()
+    facility.construction_queue = [item]
+    facility.construction_queue_paused = False
+    facility.is_shipyard = False
+
+    colony = MagicMock(spec=Planet)
+    colony.construction_queue = []
+    colony.facilities = [facility]
+    empire.colonies = [colony]
+    empire.fleets = []
+    engine._spawner.spawn_completed_item = MagicMock()
+
+    engine.process_construction_tick(1, [empire], None, None)
+
+    assert item["resources_consumed"]["A"] == 0.0
+    engine._spawner.spawn_completed_item.assert_not_called()
+
+
 def test_fleet_without_space_shipyard_is_skipped(engine, empire):
     """Fleet without `capabilities.has_space_shipyard` is silently skipped."""
     item = _ship_item()
@@ -169,6 +190,24 @@ def test_fleet_without_space_shipyard_is_skipped(engine, empire):
     engine.process_construction_tick(1, [empire], None, None)
 
     assert item["resources_consumed"]["A"] == 0.0
+
+
+def test_fleet_not_building_is_skipped_before_space_yard_processing(engine, empire):
+    """A fleet with yard capability but no BUILD order is not processed."""
+    item = _ship_item()
+    fleet = MagicMock()
+    fleet.is_building = False
+    fleet.capabilities.has_space_shipyard = True
+    fleet.capabilities.space_shipyard_count = 99
+    fleet.construction_queue = [item]
+    empire.colonies = []
+    empire.fleets = [fleet]
+    engine._spawner.spawn_completed_item = MagicMock()
+
+    engine.process_construction_tick(1, [empire], None, None)
+
+    assert item["resources_consumed"]["A"] == 0.0
+    engine._spawner.spawn_completed_item.assert_not_called()
 
 
 def test_fleet_pause_flag_blocks_fleet_queue_processing(engine, empire):

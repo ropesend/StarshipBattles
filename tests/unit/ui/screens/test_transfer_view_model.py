@@ -39,6 +39,19 @@ class TestTransferViewModelPendingMath:
         assert vm.apply_max("fuel", "drop") == TransferViewModel.MAX_DROP
         assert vm.pending_transfers["fuel"] == TransferViewModel.MAX_DROP
 
+    def test_pending_reset_helpers_clear_specific_or_all_entries(self) -> None:
+        vm = TransferViewModel()
+        vm.pending_transfers = {"metals": 50, "fuel": -5}
+
+        vm.set_pending_zero("metals")
+        assert vm.pending_transfers == {"metals": 0, "fuel": -5}
+
+        vm.clear_all_pending()
+        assert vm.pending_transfers == {"metals": 0, "fuel": 0}
+
+        vm.reset_pending()
+        assert vm.pending_transfers == {}
+
 
 class TestTransferViewModelRows:
     def test_worker_i_transfer_vm_species_key_ordering(self) -> None:
@@ -89,3 +102,34 @@ class TestTransferViewModelRows:
             "drop_pod:Drop Pod B",
             "drop_pod:Empty Pod",
         ]
+
+    def test_filter_empty_limits_visible_rows_to_rows_with_amounts(self) -> None:
+        vm = TransferViewModel()
+        vm.row_data = [
+            {"cargo_key": "metals", "source_amt": 0, "target_amt": 0},
+            {"cargo_key": "fuel", "source_amt": 1, "target_amt": 0},
+            {"cargo_key": "ammo", "source_amt": 0, "target_amt": 2},
+        ]
+
+        assert vm.visible_rows() == vm.row_data
+        assert vm.toggle_filter_empty() is True
+        assert [row["cargo_key"] for row in vm.visible_rows()] == ["fuel", "ammo"]
+
+    def test_source_and_target_selection_updates_labels_and_defaults(self) -> None:
+        vm = TransferViewModel()
+        vm.set_sources([
+            {"label": "Fleet A", "type": "fleet", "id": 1},
+            {"label": "Colony B", "type": "colony", "id": 2},
+            {"label": "Fleet C", "type": "fleet", "id": 3},
+        ])
+
+        selected = vm.select_source("Fleet A")
+
+        assert selected == {"label": "Fleet A", "type": "fleet", "id": 1}
+        assert vm.source_labels() == ["Fleet A", "Colony B", "Fleet C"]
+        assert vm.target_labels() == ["Colony B", "Fleet C"]
+        assert vm.current_target == {"label": "Colony B", "type": "colony", "id": 2}
+
+        assert vm.select_target("Fleet C") == {"label": "Fleet C", "type": "fleet", "id": 3}
+        assert vm.select_source("Missing") is None
+        assert vm.select_target("Missing") is None

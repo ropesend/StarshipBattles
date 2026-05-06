@@ -256,3 +256,69 @@ def test_filter_jump_past_drops_larger_fleet_on_swap_parity_with_id_tiebreak():
 
     surviving_ids = {f.id for f, _ in filtered}
     assert surviving_ids == {2}  # fleet_a (id=1) was dropped on tiebreak
+
+
+def test_filter_jump_past_drops_fleet_with_more_ships_on_swap_parity():
+    """The larger fleet by ship count waits when mutual pursuit would swap hexes."""
+    engine = FleetMovementEngine()
+    fleet_a = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+    fleet_b = Fleet(fleet_id=2, owner_id=0, location=HexCoord(1, 0))
+    fleet_a.orders = [Order(OrderType.MOVE_TO_FLEET, fleet_b)]
+    fleet_b.orders = [Order(OrderType.MOVE_TO_FLEET, fleet_a)]
+    fleet_a.ships = [MagicMock(), MagicMock()]
+    fleet_b.ships = [MagicMock()]
+
+    filtered = engine._filter_jump_past_collisions([
+        (fleet_a, fleet_b.location),
+        (fleet_b, fleet_a.location),
+    ])
+
+    assert [(fleet.id, next_hex) for fleet, next_hex in filtered] == [
+        (2, fleet_a.location)
+    ]
+
+
+def test_filter_jump_past_accepts_join_fleet_as_mutual_pursuit_trigger():
+    """JOIN_FLEET remains eligible after navigation pops MOVE_TO_FLEET."""
+    engine = FleetMovementEngine()
+    fleet_a = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+    fleet_b = Fleet(fleet_id=2, owner_id=0, location=HexCoord(1, 0))
+    fleet_a.orders = [Order(OrderType.JOIN_FLEET, fleet_b)]
+    fleet_b.orders = [Order(OrderType.JOIN_FLEET, fleet_a)]
+    fleet_a.ships = [MagicMock()]
+    fleet_b.ships = [MagicMock(), MagicMock()]
+
+    filtered = engine._filter_jump_past_collisions([
+        (fleet_a, fleet_b.location),
+        (fleet_b, fleet_a.location),
+    ])
+
+    assert {fleet.id for fleet, _ in filtered} == {1}
+
+
+def test_filter_jump_past_keeps_non_pursuit_swap_moves():
+    """Swap-shaped movement is ignored when current orders are normal MOVE orders."""
+    engine = FleetMovementEngine()
+    fleet_a = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+    fleet_b = Fleet(fleet_id=2, owner_id=0, location=HexCoord(1, 0))
+    fleet_a.orders = [Order(OrderType.MOVE, fleet_b.location)]
+    fleet_b.orders = [Order(OrderType.MOVE, fleet_a.location)]
+    fleet_a.ships = [MagicMock(), MagicMock()]
+    fleet_b.ships = [MagicMock()]
+    move_queue = [(fleet_a, fleet_b.location), (fleet_b, fleet_a.location)]
+
+    assert engine._filter_jump_past_collisions(move_queue) == move_queue
+
+
+def test_filter_jump_past_keeps_pursuit_when_target_is_not_fleet_instance():
+    """The Fleet isinstance guard leaves malformed pursuit targets untouched."""
+    engine = FleetMovementEngine()
+    fleet_a = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+    fleet_b = Fleet(fleet_id=2, owner_id=0, location=HexCoord(1, 0))
+    fleet_a.orders = [Order(OrderType.MOVE_TO_FLEET, MagicMock())]
+    fleet_b.orders = [Order(OrderType.MOVE_TO_FLEET, fleet_a)]
+    fleet_a.ships = [MagicMock(), MagicMock()]
+    fleet_b.ships = [MagicMock()]
+    move_queue = [(fleet_a, fleet_b.location), (fleet_b, fleet_a.location)]
+
+    assert engine._filter_jump_past_collisions(move_queue) == move_queue

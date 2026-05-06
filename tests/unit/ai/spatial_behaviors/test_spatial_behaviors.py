@@ -200,6 +200,49 @@ class TestBattleLineBehavior:
         assert [p.y for p in left_positions] == [-1000, 0, 1000]
         assert [p.y for p in right_positions] == [-1000, 0, 1000]
 
+    def test_missing_leader_returns_no_target(self):
+        """BattleLine has no constraint when no formation leader exists."""
+        from game.ai.spatial_behaviors.battle_line import BattleLineBehavior
+
+        behavior = BattleLineBehavior(spacing=1000, shape="line")
+        ship = _make_ship(100, 200)
+
+        result = behavior.compute_target_position(ship, [ship], leader=None)
+
+        assert result is None
+
+    def test_empty_group_uses_single_slot_fallback(self):
+        """An empty group still gives the requested ship the leader slot."""
+        from game.ai.spatial_behaviors.battle_line import BattleLineBehavior
+
+        behavior = BattleLineBehavior(spacing=1000, shape="line")
+        leader = _make_ship(500, 600, angle=0)
+        ship = _make_ship(0, 0)
+
+        result = behavior.compute_target_position(
+            ship, [], leader=leader, slot_index=0,
+        )
+
+        assert result == Vector2(500, 600)
+
+    def test_wall_shape_staggers_every_other_slot_backward(self):
+        """Wall shape forms a staggered defensive line instead of a flat line."""
+        from game.ai.spatial_behaviors.battle_line import BattleLineBehavior
+
+        behavior = BattleLineBehavior(spacing=1000, shape="wall")
+        leader = _make_ship(0, 0, angle=0)
+        ships = [_make_ship(0, 0) for _ in range(4)]
+
+        positions = [
+            behavior.compute_target_position(
+                ship, ships, leader=leader, slot_index=i,
+            )
+            for i, ship in enumerate(ships)
+        ]
+
+        assert [p.x for p in positions] == [0, -500, 0, -500]
+        assert [p.y for p in positions] == [-1500, -500, 500, 1500]
+
 
 # =============================================================================
 # Screen Behavior (Loose)
