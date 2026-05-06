@@ -9,8 +9,15 @@
 **Review Mode:** cumulative (covers Phase 0 only at this gate)
 **Files (planned):** see manifest.md Phase 0 row group
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Establish the scaffolding that downstream phases consume — the `galaxy_protocols.py` module, the `ApplicationContext` accessor stubs for `PlanetHabitabilityService`, the AST guard tests (initially permissive, tightened each phase), and the perf baseline bench. Zero algorithmic refactor in this phase; nothing in `galaxy.py` / `planet.py` / `stars.py` is restructured. Goal: every later phase can land safely because the safety nets are already in place.
+
+**Notes (Phase 0 outcomes):**
+- LOC baseline: galaxy=689, planet=667, stars=770 (matches plan).
+- State-encapsulation AST guard: 5 external read sites discovered (architect's manual grep missed them) — grandfathered with `GRANDFATHERED_EXTERNAL_READS`. Phase 3 will introduce public Galaxy methods (e.g. `iter_warp_point_hexes`) and remove these from the grandfather set.
+- Perf baseline (50 systems, 5 runs min): pathfinding 41us, spatial 369us, habitability 240us. Pinned at `tests/performance/bench_galaxy_planet_star_baseline.json`.
+- 15 Phase-0 tests pass (5 protocol conformance + 3 LOC + 2 state-encap + 3 context + 1 bench wired).
+- Tests live at `tests/performance/` (existing repo convention) not `tests/perf/` (plan slip; not material).
 
 ---
 

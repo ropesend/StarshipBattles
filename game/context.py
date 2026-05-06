@@ -11,10 +11,47 @@ Placed at game/ package level (outside any layer) to avoid upward
 dependencies from Core to UI/AI. Factory methods use late imports.
 
 PROJ-258: Initial implementation as wrapper around existing singletons.
+PROJ-372 (Phase 0): added module-level habitability service accessors so
+modders can swap `IHabitabilityCalculator` without monkey-patching. Phase
+0 ships with the accessors returning ``None``; Phase 2 wires the real
+``PlanetHabitabilityService`` default.
 """
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
-__all__ = ['ApplicationContext']
+if TYPE_CHECKING:
+    from game.strategy.data.galaxy_protocols import IHabitabilityCalculator
+
+__all__ = [
+    'ApplicationContext',
+    'get_default_planet_habitability_service',
+    'set_default_planet_habitability_service',
+]
+
+
+# PROJ-372 Phase 0: module-level habitability-calculator slot.
+# Phase 0 leaves this None — `Planet.get_cached_habitability_multiplier`
+# falls back to its existing late-import path. Phase 2 sets a real
+# `PlanetHabitabilityService()` instance at import time.
+_default_planet_habitability_service: Optional['IHabitabilityCalculator'] = None
+
+
+def get_default_planet_habitability_service() -> Optional['IHabitabilityCalculator']:
+    """Return the registered habitability calculator (or None).
+
+    PROJ-372: Phase 0 always returns None (callers fall back to the
+    late-imported `planet_habitability_multiplier`). Phase 2 wires the
+    real default. Tests / mods may override via
+    `set_default_planet_habitability_service` (PROJ-258 pattern).
+    """
+    return _default_planet_habitability_service
+
+
+def set_default_planet_habitability_service(
+    svc: Optional['IHabitabilityCalculator'],
+) -> None:
+    """Register the global habitability calculator. Pass None to clear."""
+    global _default_planet_habitability_service
+    _default_planet_habitability_service = svc
 
 
 class ApplicationContext:

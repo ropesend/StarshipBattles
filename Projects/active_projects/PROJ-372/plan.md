@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
-| 0. Pre-Phase: facade-delegate template + AST/protocol scaffolding | Not Started | [phase_0_checklist.md](phase_0_checklist.md) | **PROJ-370 verified** |
+| 0. Pre-Phase: facade-delegate template + AST/protocol scaffolding | Complete | [phase_0_checklist.md](phase_0_checklist.md) | **PROJ-370 verified** |
 | 1. Star decomposition (770 LOC stars.py → ~280 facade + extracted services) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 3. Galaxy query/spatial-aggregation services | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | **PROJ-370 verified** + phase_0 |
@@ -23,11 +23,11 @@
 | 5. AST guards, perf bench, doc updates, final audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | **PROJ-370 verified** + phases 1-4 |
 
 ## Current State
-**Last Updated:** 2026-05-05 (planning)
-**Active Phase:** Planning
-**Last Action:** Plan authored from `AgentCoordination/Scratchpad/reviews/strategy_layer_tech_debt_2026-05-05.md` item #5. PROJ-86/87/88/89 confirmed in `Projects/deep_archive/PROJ-051-100/` with NO Galaxy/Planet/Star coverage; companion modules already partially extracted at `galaxy_entity_registry.py` (188), `galaxy_spatial_index.py` (192), `galaxy_warp_generator.py` (421), `galaxy_system_generator.py` (354) (PROJ-173 Phase 2) plus `planet_physics.py` (212), `planet_atmosphere.py` (177), `planet_naming.py` (78), `planet_gen.py` (604), `planetary_facility.py` (214). Thin-facade pattern is partially in place on `Galaxy` (15 of 31 methods are 1-line `_spatial`/`_registry`/`_warp_gen`/`_sys_gen` delegations); `Planet` is mostly data with 9 query/calc methods that still execute logic; `Star` is the worst offender — 770 LOC of mixed dataclass + generator + spectrum math + serde.
-**Next Action:** User review of plan. Sequencing resolved 2026-05-06 (Codex+Claude joint review): **PROJ-370 first; all of PROJ-372 follows.** Phase 0 cannot start until PROJ-370 is verified.
-**Blockers:** PROJ-370 (data-boundary protocols) sequencing — **resolved 2026-05-06 (Codex+Claude joint review):** PROJ-370 has a five-phase mutator plan. PROJ-372 sequences entirely after PROJ-370 — Phase 0 creates galaxy/planet protocol surfaces and modifies `game/context.py` habitability accessors that PROJ-370 must define first.
+**Last Updated:** 2026-05-05 (Phase 0 complete)
+**Active Phase:** Phase 1 (Star decomposition) — pending
+**Last Action:** Phase 0 complete. Created `game/strategy/data/galaxy_protocols.py` (5 read protocols: `IHabitabilityCalculator`, `IGalaxySystemGraph`, `IGalaxySpatialQuery`, `IStockpileHolder`, `IStagingYardHolder`); added `get_default_planet_habitability_service` / `set_default_planet_habitability_service` accessors to `game/context.py` (return None until Phase 2 wires PlanetHabitabilityService). LOC ceilings test pinned at today's baseline (galaxy=689, planet=667, stars=770). State-encapsulation AST guard found 5 grandfathered external reads (`movement.py`, `fleet_navigation_service.py`, `hex_outlines.py`); captured for Phase-3 cleanup. Perf baseline JSON committed at `tests/performance/bench_galaxy_planet_star_baseline.json` (50-system synthetic; pathfinding 41us, spatial 369us, habitability 240us). 15 Phase-0 tests pass.
+**Next Action:** Phase 1 — Star decomposition. Move `Spectrum` to `data/spectrum.py`, `StarGenerator` to `generation/star_generator.py`, `_kelvin_to_rgb` + math to `core/spectrum_math.py`. Tighten `stars.py` LOC ceiling to 280.
+**Blockers:** None. PROJ-370 verified shipped (5 phases + remediation in commit history).
 
 ## Overview
 
