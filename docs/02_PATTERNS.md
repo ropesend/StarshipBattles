@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
+> **Last verified:** 2026-05-05 — PROJ-368 Phase 5 added the "Parallel Order-Handler Registry" subsection under Pattern #7 (CommandHandlerRegistry). The strategy engine now exposes two registry-based dispatch systems with the same Protocol-and-registry shape: `engine/handlers/` (UI Command DTO → Order creation) and `engine/order_handlers/` (action tick → state mutation). 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
 
 Agent-optimized reference for every core pattern in the codebase (33 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -631,6 +631,27 @@ def create_default_registry() -> CommandHandlerRegistry:
 
 - Adding a new strategy command: create a handler class, register it in `create_default_registry()`.
 - Each handler follows: resolve entities, validate, apply, return `ValidationResult`.
+
+### Parallel Order-Handler Registry (PROJ-368)
+
+The strategy engine has **two** registry-based dispatch systems with
+the same shape:
+
+| | `engine/handlers/` (PROJ-309 sub-phase 3.5) | `engine/order_handlers/` (PROJ-368) |
+|--|---|---|
+| **Input** | UI `Command` DTO | Live `Order` on a `Fleet` |
+| **Output** | `ValidationResult` (write side) + an `Order` queued on a fleet | `OrderExecutionResult` reshaped to legacy typed result + state mutations on Fleet/Planet/Empire |
+| **When** | The player issues a command | A fleet's action progress reaches `action_time` (or instant tick for `JOIN_FLEET`) |
+| **Protocol** | `ICommandHandler.execute(session, command)` | `IOrderHandler.execute_action_order(fleet, empire, galaxy, ...)` |
+| **Registry key** | Command class name (`'IssueColonizeCommand'`) | `OrderType` enum value (`OrderType.COLONIZE`) |
+| **Factory** | `create_default_registry()` | `create_default_order_handler_registry(*, event_bus, superweapon_processor=None)` |
+
+Adding a new order type: create an `IOrderHandler` subclass under
+`game/strategy/engine/order_handlers/`, register one line in
+`registry_factory.py`. Two AST static guards (`OrderProcessor` LOC <
+200, no legacy private helpers, no `if order.type == ...` ladders +
+every `OrderType` has a registered handler) prevent the facade from
+re-accreting old shape.
 
 ---
 

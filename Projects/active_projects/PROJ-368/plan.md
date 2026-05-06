@@ -20,14 +20,16 @@
 | 2. Port instant + simple action orders (Colonize, SelfDestruct) | Complete (Committed) | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Port Transfer family (TRANSFER, LOAD_POPULATION, UNLOAD_POPULATION) | Complete (Committed) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Port superweapon dispatch and delete legacy methods (includes registry-completeness + no-legacy-helper AST gates) | Complete (Committed) | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Per-handler unit tests + AST static-guard regression | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Per-handler unit tests + AST static-guard regression | Complete (Committed) | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-05
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 committed. `SuperweaponHandlerAdapter` + 5 spec-driven adapters wired; `OrderProcessor.execute_action_order` is now a pure registry lookup. All legacy private helpers (~700 LOC) deleted from OrderProcessor; `SuperweaponOrderProcessor.process_self_destruct` deleted. AST gates (`test_handler_registry_completeness.py` + `test_order_processor_no_legacy_helpers.py`) green. Pre-existing characterization tests that called legacy private methods on the processor were redirected to the live handler instances. 4676 strategy + integration tests pass. `OrderProcessor` LOC: 654 -> 168 (under 200 facade target). `SuperweaponOrderProcessor` LOC: 782 -> 708.
-**Next Action:** Phase 5 — backfill thin handler tests, document the registry pattern in `docs/systems/strategy_layer.md` + `docs/02_PATTERNS.md`, cross-link the source review.
+**Active Phase:** Done
+**Last Action:** All 5 phases complete. Phase 5: AST regression file `test_order_processor_facade.py` added (2 tests: OrderType-reference cap + Phase 4 gate re-import). `docs/systems/strategy_layer.md` § 3 gains an "Order Handlers (PROJ-368)" subsection (handler table, AST guards, parallel with `engine/handlers/`). `docs/02_PATTERNS.md` Pattern #7 gains a "Parallel Order-Handler Registry (PROJ-368)" subsection cross-referencing the two registry-based dispatchers. Source review `AgentCoordination/Scratchpad/reviews/strategy_layer_tech_debt_2026-05-05.md` target #1 marked Resolved by PROJ-368.
+
+Final stats: `OrderProcessor` 910 -> 168 LOC. `SuperweaponOrderProcessor` 782 -> 708 LOC. 69 new per-handler tests (8 base + 12 join_fleet + 7 colonize + 6 self_destruct + 17 transfer + 8 superweapon dispatch + 8 registry completeness + 3 no-legacy-helper + 2 facade AST). Strategy + integration tests: 4678 passed, 1 skipped (no regressions vs the 4639 baseline; +39 net new tests after migrations).
+**Next Action:** Sharded suite verification + audit + user end-to-end smoke.
 **Blockers:** None.
 
 ## Overview
