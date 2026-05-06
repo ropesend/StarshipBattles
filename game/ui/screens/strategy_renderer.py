@@ -38,7 +38,7 @@ from game.ui.screens.strategy_render.fleets import (
     draw_fleet_path as _layer_draw_fleet_path,
     draw_fleets as _layer_draw_fleets,
 )
-from game.ui.screens.strategy_render.grid import draw_grid as _layer_draw_grid
+from game.ui.screens.strategy_render.grid import GridLayer
 from game.ui.screens.strategy_render.hex_outlines import (
     HexOutlineLayer,
     draw_inner_hex as _layer_draw_inner_hex,
@@ -103,6 +103,9 @@ class StrategyRenderer:
 
         # Hex outline layer (owns its turn-keyed cache)
         self._hex_outlines = HexOutlineLayer()
+
+        # Grid layer (owns its property-keyed surface cache, PROJ-374)
+        self._grid = GridLayer()
 
     # -- Back-compat shims for tests that read these as instance attributes --
     @property
@@ -191,7 +194,7 @@ class StrategyRenderer:
         self._background.draw(screen, viewport_rect, self._settings.background_brightness)
 
     def _draw_grid(self, screen) -> None:
-        _layer_draw_grid(self, screen)
+        self._grid.draw(self, screen)
 
     def _draw_hex_outlines(self, screen) -> None:
         self._hex_outlines.draw(self, screen)

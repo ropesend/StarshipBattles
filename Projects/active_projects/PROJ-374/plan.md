@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Cache strategy grid surface with quantized camera-key invalidation | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Cache strategy grid surface with quantized camera-key invalidation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-05 (project scaffolded)
-**Active Phase:** Phase 1 — Cache strategy grid surface
-**Last Action:** Project scaffolded as a side-finding from the build-queue profile (PROJ-373's pyinstrument run). `_draw_grid` consumed 9.14s = 15.8% of a 58s session. One Explore subagent produced research at `findings/01_grid_render_research.md`.
-**Next Action:** Begin Phase 1 — implement cache layer in `StrategyRenderer._draw_grid` with property-based invalidation.
+**Last Updated:** 2026-05-05 (Phase 1 implementation complete)
+**Active Phase:** Complete — ready for review.
+**Last Action:** Phase 1 implemented end-to-end on `feat/03c-phase-aware-execution`. `GridLayer` introduced in `game/ui/screens/strategy_render/grid.py` with quantized property-keyed surface cache (position rounded to 0.1, zoom rounded to 0.01). `StrategyRenderer._draw_grid` delegates to `self._grid.draw(self, screen)`. 17 new cache tests in `tests/unit/ui/screens/strategy_render/test_grid_cache.py` cover idle hits, per-input invalidation (x/y/zoom/width/height/hex_size), sub-quantum jitter hit, zoom < 0.4 short-circuit, surface reuse, SRCALPHA flag, viewport-resize reallocation, blit target, render target, and transparent clear on miss. Focused suite green: 104 passed (17 new + 87 existing strategy renderer/render tests).
+**Next Action:** User to run a re-profile session (Task 1.6) and visual smoke (Task 1.5) at their leisure; record before/after numbers.
 **Blockers:** None.
 
 **Profile baseline (from `findings/profile_summary.md`):**
