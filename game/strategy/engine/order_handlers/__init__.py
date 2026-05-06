@@ -18,7 +18,9 @@ from game.strategy.engine.order_handlers.base import (
     OrderExecutionResult,
     OrderHandlerRegistry,
 )
+from game.strategy.engine.order_handlers.colonize import ColonizeHandler
 from game.strategy.engine.order_handlers.join_fleet import JoinFleetHandler
+from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
 from game.strategy.engine.order_handlers.registry_factory import (
     create_default_order_handler_registry,
 )
@@ -28,6 +30,8 @@ __all__ = [
     "IOrderHandler",
     "OrderExecutionResult",
     "OrderHandlerRegistry",
+    "ColonizeHandler",
     "JoinFleetHandler",
+    "SelfDestructHandler",
     "create_default_order_handler_registry",
 ]

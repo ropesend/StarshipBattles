@@ -8,6 +8,7 @@ import pytest
 from unittest.mock import MagicMock, patch, call
 
 from game.core.event_logging import EventBus
+from game.strategy.data.order_types import OrderType
 from game.strategy.events import EventType, EventCategory
 from game.strategy.systems.design_library import DesignLoadResult
 
@@ -479,7 +480,7 @@ class TestColonyFoundedEvent:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (fleet.ships[0], 0)
 
-            with patch.object(processor, '_deploy_drop_pod'):
+            with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -572,7 +573,7 @@ class TestColonyFoundedEvent:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'):
+            with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -973,7 +974,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'):
+            with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]
@@ -1026,7 +1027,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'):
+            with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]

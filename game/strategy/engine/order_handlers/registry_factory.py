@@ -16,7 +16,9 @@ from typing import Any, Optional
 
 from game.strategy.data.order_types import OrderType
 from game.strategy.engine.order_handlers.base import OrderHandlerRegistry
+from game.strategy.engine.order_handlers.colonize import ColonizeHandler
 from game.strategy.engine.order_handlers.join_fleet import JoinFleetHandler
+from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
 
 
 def create_default_order_handler_registry(
@@ -31,8 +33,11 @@ def create_default_order_handler_registry(
             etc.) can fire.
 
     Returns:
-        OrderHandlerRegistry with the Phase 1 set of handlers registered.
+        OrderHandlerRegistry with all currently-extracted handlers
+        registered. Phase 4 will add 5 superweapon adapters.
     """
     registry = OrderHandlerRegistry()
     registry.register(OrderType.JOIN_FLEET, JoinFleetHandler(event_bus=event_bus))
+    registry.register(OrderType.COLONIZE, ColonizeHandler(event_bus=event_bus))
+    registry.register(OrderType.SELF_DESTRUCT, SelfDestructHandler(event_bus=event_bus))
     return registry

@@ -132,97 +132,14 @@ class OrderProcessor(IOrderProcessor):
         component_registry: Dict[str, Any]
     ) -> ColonizeResult:
         """
-        Process a COLONIZE order.
-
-        Phase 2 Rework: Colony pods are cargo items. The pod is consumed from
-        fleet cargo, but the ship is reusable and stays in the fleet.
-
-        Args:
-            fleet: Fleet with COLONIZE order
-            empire: Empire that owns the fleet
-            galaxy: Galaxy for planet lookup
-            component_registry: Kept for API compatibility. Pod lookup is now
-                               cargo-based.
-
-        Returns:
-            ColonizeResult with colonization status
+        Process a COLONIZE order. PROJ-368 Phase 2: delegates to ColonizeHandler.
         """
-        from game.strategy.validation import ColonizeValidator
-
-        order = fleet.get_current_order()
-        if not order or order.type != OrderType.COLONIZE:
-            return ColonizeResult(colonized=False)
-
-        # Extract target planet (may be a plain Planet or a dict with planet key)
-        raw_target = order.target
-        if isinstance(raw_target, dict):
-            target_planet = raw_target.get('planet')
-        else:
-            target_planet = raw_target
-
-        # Validate (skip chain check — we're executing, not adding)
-        validation = ColonizeValidator.validate(
-            galaxy, fleet, target_planet, component_registry, skip_chain_check=True
+        handler = self._handler_registry.get(OrderType.COLONIZE)
+        result = handler.execute_action_order(
+            fleet, empire, galaxy,
+            component_registry=component_registry,
         )
-        if not validation.is_valid:
-            logger.warning(f"OrderProcessor: Colonize failed - {validation.message}")
-            fleet.pop_order()
-            return ColonizeResult(colonized=False)
-
-        # Determine final planet (for "Any" case, pick first unowned)
-        if target_planet is not None:
-            final_planet = target_planet
-        else:
-            planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
-            valid_candidates = [p for p in planets_at_loc if p.owner_id is None]
-            final_planet = valid_candidates[0] if valid_candidates else None
-
-            if final_planet is None:
-                logger.warning("OrderProcessor: No candidate planet for colonization")
-                fleet.pop_order()
-                return ColonizeResult(colonized=False)
-
-        # Pre-check drop pod availability BEFORE any mutation
-        if not ColonizeValidator.fleet_has_drop_pod(fleet):
-            logger.warning("OrderProcessor: No drop pod in fleet")
-            fleet.pop_order()
-            return ColonizeResult(colonized=False)
-
-        # Execute colonization — claim planet and deploy pod only.
-        # Population and cargo transfer is handled by TRANSFER orders queued after COLONIZE.
-        empire.add_colony(final_planet)
-        fleet.pop_order()
-
-        # Deploy drop pod as facility on the new colony
-        self._deploy_drop_pod(fleet, final_planet)
-
-        logger.info(f"OrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
-
-        # Look up system name and local hex for granular event log columns
-        system_name = ""
-        local_hex = None
-        if galaxy and hasattr(galaxy, 'get_system_of_planet'):
-            sys = galaxy.get_system_of_planet(final_planet)
-            if sys:
-                system_name = sys.name
-                if hasattr(final_planet, 'location') and final_planet.location is not None:
-                    local_hex = [final_planet.location.q, final_planet.location.r]
-
-        if self._event_bus:
-            self._event_bus.log_event(
-                EventType.COLONY_FOUNDED,
-                category=EventCategory.COLONIES,
-                empire_id=empire.id,
-                message=f"Founded colony on {final_planet.name}",
-                planet_id=final_planet.id,
-                planet_name=final_planet.name,
-                fleet_id=fleet.id,
-                location_name=final_planet.name,
-                location_hex=[fleet.location.q, fleet.location.r],
-                system_name=system_name,
-                local_hex=local_hex,
-            )
-        return ColonizeResult(colonized=True, planet_name=final_planet.name)
+        return ColonizeResult(colonized=result.colonized, planet_name=result.planet_name)
 
     def process_transfer(
         self,
@@ -695,9 +612,14 @@ class OrderProcessor(IOrderProcessor):
             OrderType.CREATE_DYSON_SPHERE: lambda: proc.process_create_dyson_sphere(
                 fleet, empire, galaxy, empires or [], component_registry
             ),
-            OrderType.SELF_DESTRUCT: lambda: proc.process_self_destruct(
-                fleet, empire, galaxy
-            ),
+            # PROJ-368 Phase 2: SELF_DESTRUCT now routes through the
+            # SelfDestructHandler in order_handlers/. The lambda's return
+            # value is an OrderExecutionResult; .fleet_consumed shape
+            # matches the SuperweaponResult contract used by the other
+            # superweapon entries.
+            OrderType.SELF_DESTRUCT: lambda: self._handler_registry.get(
+                OrderType.SELF_DESTRUCT
+            ).execute_action_order(fleet, empire, galaxy),
         }
 
         handler = superweapon_handlers.get(order.type)
