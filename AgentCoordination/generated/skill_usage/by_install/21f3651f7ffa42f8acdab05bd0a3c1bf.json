@@ -109,10 +109,10 @@
     },
     "ocode-review-request": {
       "agents": {
-        "ocode": 7
+        "ocode": 8
       },
-      "count": 7,
-      "last_used": "2026-05-06T08:02:45Z"
+      "count": 8,
+      "last_used": "2026-05-06T09:10:59Z"
     },
     "ocode-testcoverage-audit": {
       "agents": {

@@ -56,3 +56,35 @@ def test_stars_loc_ceiling() -> None:
     assert actual <= STARS_LOC_CEILING, (
         f"stars.py is {actual} LOC; ceiling is {STARS_LOC_CEILING}."
     )
+
+
+# PROJ-372 Phase 5: per-service LOC ceilings on the new files.
+SERVICE_CEILINGS = {
+    "strategy/data/galaxy_state.py": 150,
+    "strategy/data/galaxy_protocols.py": 200,
+    "strategy/data/spectrum.py": 80,
+    "core/spectrum_math.py": 200,
+    "strategy/generation/star_generator.py": 500,
+    "strategy/services/planet_query_service.py": 250,
+    "strategy/services/planet_habitability_service.py": 200,
+    "strategy/services/galaxy_pathfinding_service.py": 350,
+    "strategy/services/intercept_calculator.py": 250,
+    "strategy/data/star_system.py": 200,
+    "strategy/data/planet_serde.py": 300,
+}
+
+
+def test_per_service_loc_ceilings() -> None:
+    """Each PROJ-372 service / data module stays within its ceiling."""
+    failures: list[str] = []
+    for rel, ceiling in SERVICE_CEILINGS.items():
+        path = GAME_ROOT / rel
+        if not path.exists():
+            failures.append(f"{rel} missing")
+            continue
+        actual = _count_lines(path)
+        if actual > ceiling:
+            failures.append(f"{rel}: {actual} LOC (ceiling {ceiling})")
+    assert not failures, (
+        "PROJ-372 per-service LOC violations:\n  " + "\n  ".join(failures)
+    )
