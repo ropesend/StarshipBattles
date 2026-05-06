@@ -94,3 +94,13 @@ class TestGeometricPrimitive:
 
         assert inside == 1.0
         assert outside == 0.0
+
+    def test_invalid_side_count_falls_back_to_circle(self):
+        """Fewer than three sides should use a circular edge distance."""
+        prim = GeometricPrimitive(sides=2, radius=200, edge_falloff=0, peak_density=0.8)
+
+        inside = prim.evaluate(100, 0)
+        outside = prim.evaluate(250, 0)
+
+        assert inside == 0.8
+        assert outside == 0.0

@@ -243,6 +243,26 @@ class TestColonizeValidatorEdgeCases:
         assert result.is_valid is False
         assert result.error_code == "WRONG_LOCATION"
 
+    def test_validate_specific_planet_requires_exact_sector_not_same_system(
+        self, mock_galaxy, mock_fleet, mock_planet
+    ):
+        """A target planet in the same system but a different sector is not colocated."""
+        from game.strategy.validation import ColonizeValidator
+
+        system = MagicMock()
+        system.planets = [mock_planet]
+        mock_galaxy.get_system_at_location.return_value = system
+        mock_galaxy.get_planets_at_global_hex.return_value = []
+        mock_galaxy.get_zones_at_global_hex.return_value = []
+        mock_fleet.location = HexCoord(10, 10)
+        mock_planet.location = HexCoord(11, 10)
+
+        result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_planet)
+
+        assert result.is_valid is False
+        assert result.error_code == "WRONG_LOCATION"
+        mock_galaxy.get_planets_at_global_hex.assert_called_once_with(mock_fleet.location)
+
     def test_fleet_moved_between_validation_and_execution(self, mock_galaxy, mock_fleet, mock_planet):
         """Validation reflects current fleet location, not cached location."""
         from game.strategy.validation import ColonizeValidator
@@ -619,6 +639,48 @@ class TestColonizeValidatorColonyPods:
         )
 
         assert result.is_valid is True
+
+    def test_validate_drop_pod_availability_reports_committed_pod_exhaustion(
+        self, mock_ship_with_ice_dwarf_pod, mock_planet_ice_dwarf
+    ):
+        """Execution-time helper rejects when every carried pod is committed."""
+        from game.strategy.validation import ColonizeValidator
+        from game.strategy.data.order_types import OrderType
+
+        existing_order = MagicMock()
+        existing_order.type = OrderType.COLONIZE
+        existing_order.target = mock_planet_ice_dwarf
+
+        fleet = MagicMock()
+        fleet.ships = [mock_ship_with_ice_dwarf_pod]
+        fleet.orders = [existing_order]
+
+        result = ColonizeValidator._validate_drop_pod_availability(fleet)
+
+        assert result is not None
+        assert result.is_valid is False
+        assert result.error_code == "COLONY_POD_EXHAUSTED"
+
+    def test_validate_drop_pod_availability_skip_chain_check_ignores_committed_orders(
+        self, mock_ship_with_ice_dwarf_pod, mock_planet_ice_dwarf
+    ):
+        """skip_chain_check only requires that at least one pod is carried."""
+        from game.strategy.validation import ColonizeValidator
+        from game.strategy.data.order_types import OrderType
+
+        existing_order = MagicMock()
+        existing_order.type = OrderType.COLONIZE
+        existing_order.target = mock_planet_ice_dwarf
+
+        fleet = MagicMock()
+        fleet.ships = [mock_ship_with_ice_dwarf_pod]
+        fleet.orders = [existing_order]
+
+        result = ColonizeValidator._validate_drop_pod_availability(
+            fleet, skip_chain_check=True
+        )
+
+        assert result is None
 
 
 # =============================================================================

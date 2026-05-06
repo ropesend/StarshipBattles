@@ -544,6 +544,29 @@ class TestFeat27EmpirePlacement:
         total_warps = sum(len(sys.warp_points) for sys in galaxy.systems.values())
         assert total_warps == 2  # one bidirectional link = one warp point per system
 
+    def test_n2_far_apart_seed_2_still_links(self):
+        """Regression: galaxy_radius=4000 + galaxy_seed=2 historically placed
+        the only two systems many cell-widths apart and the MST left them
+        isolated. Every system must own at least one warp point at N=2.
+        """
+        from game.strategy.engine.game_config import GameConfig
+        from game.strategy.engine.game_initializer import GameInitializer
+
+        config = GameConfig(
+            system_count=2,
+            galaxy_radius=4000,
+            galaxy_seed=2,
+        )
+        galaxy, _empires = GameInitializer.initialize(config)
+
+        assert len(galaxy.systems) == 2
+        for sys in galaxy.systems.values():
+            assert len(sys.warp_points) >= 1, (
+                f"System {sys.name} at {sys.global_location} is isolated"
+            )
+        total_warps = sum(len(sys.warp_points) for sys in galaxy.systems.values())
+        assert total_warps == 2
+
     def test_n5_e4_distinct_systems_evenly_spread(self):
         """N=5 + E=4: linspace places empires at indices [0, 1, 3, 4] (no clustering)."""
         from game.strategy.engine.game_initializer import GameInitializer

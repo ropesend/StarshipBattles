@@ -114,7 +114,7 @@ class SpatialIndex:
         coord: HexCoord,
         k: int,
         exclude_coord: Optional[HexCoord] = None,
-        max_radius: int = None
+        max_radius: Optional[int] = None,
     ) -> List[Tuple[HexCoord, Any]]:
         """
         Get the k nearest neighbors to a coordinate.
@@ -123,45 +123,36 @@ class SpatialIndex:
             coord: Center coordinate to search from
             k: Number of nearest neighbors to return
             exclude_coord: Optional coordinate to exclude from results
-            max_radius: Maximum search radius (default: search all)
+            max_radius: Maximum search radius (default: search all populated cells)
 
         Returns:
             List of (coord, data) tuples for the k nearest neighbors,
             sorted by distance (closest first)
         """
-        # Start with a reasonable search radius and expand if needed
-        search_radius = max_radius if max_radius else self.cell_size * 2
-        candidates = []
-        prev_candidate_count = -1
+        # When max_radius is None we visit every populated cell. The previous
+        # iterative-expansion heuristic stopped once the candidate count
+        # stopped changing, which is unsound in sparse indexes: empty cells
+        # between the query point and the only neighbour leave the count at
+        # zero and the search exits before reaching the populated cell.
+        candidates: List[Tuple[int, HexCoord, Any]] = []
 
-        while True:
-            candidates = []
-            nearby_cells = self._get_nearby_cells(coord, search_radius)
+        if max_radius is None:
+            cells_iter = self._cells.values()
+        else:
+            cells_iter = (
+                self._cells[cell_key]
+                for cell_key in self._get_nearby_cells(coord, max_radius)
+            )
 
-            for cell_key in nearby_cells:
-                for obj_coord, obj_data in self._cells[cell_key]:
-                    if exclude_coord is not None and obj_coord == exclude_coord:
-                        continue
+        for cell in cells_iter:
+            for obj_coord, obj_data in cell:
+                if exclude_coord is not None and obj_coord == exclude_coord:
+                    continue
+                dist = hex_distance(coord, obj_coord)
+                if max_radius is not None and dist > max_radius:
+                    continue
+                candidates.append((dist, obj_coord, obj_data))
 
-                    dist = hex_distance(coord, obj_coord)
-                    candidates.append((dist, obj_coord, obj_data))
-
-            # If we have enough candidates or searched max radius, stop
-            if len(candidates) >= k or (max_radius and search_radius >= max_radius):
-                break
-
-            # If candidate count didn't change, we've searched all cells
-            if len(candidates) == prev_candidate_count:
-                break
-
-            prev_candidate_count = len(candidates)
-
-            # Expand search radius
-            search_radius *= 2
-            if max_radius and search_radius > max_radius:
-                search_radius = max_radius
-
-        # Sort by distance and return k nearest
         candidates.sort(key=lambda x: x[0])
         return [(c[1], c[2]) for c in candidates[:k]]
 

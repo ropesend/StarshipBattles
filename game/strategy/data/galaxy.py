@@ -574,21 +574,16 @@ class Galaxy:
 
     def generate_warp_lanes(
         self,
-        k_neighbors: int = 20,
         region_classifier: 'Optional[RegionClassifier]' = None,
         inter_region_mode: str = 'normal'
     ) -> None:
         """Generate warp lanes ensuring connectivity (MST) and adding density.
 
-        Uses spatial indexing with k-nearest neighbors for O(n*k) performance
-        instead of O(n²) all-pairs computation.
-
-        Facade method delegating to GalaxyWarpGenerator.
+        Facade method delegating to GalaxyWarpGenerator. The MST is computed
+        over all unique system pairs (bounded by ``MAX_SYSTEM_COUNT=150``)
+        so connectivity holds for any system layout.
 
         Args:
-            k_neighbors: Number of nearest neighbors to consider per system.
-                         Higher values = more edges to consider, slower but
-                         potentially better connectivity. Default 20.
             region_classifier: Optional RegionClassifier for region-aware
                          warp lane generation. If provided, inter-region
                          connections are penalized based on inter_region_mode.
@@ -598,7 +593,8 @@ class Galaxy:
                          - 'minimal': Only allow MST-required inter-region links
         """
         self._warp_gen.generate_warp_lanes(
-            self, k_neighbors, region_classifier, inter_region_mode
+            self, region_classifier=region_classifier,
+            inter_region_mode=inter_region_mode,
         )
         # PROJ-204: Rebuild warp point index after generation
         self._rebuild_all_warp_point_indices()
