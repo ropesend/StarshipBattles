@@ -148,113 +148,23 @@ class OrderProcessor(IOrderProcessor):
         galaxy: 'Galaxy'
     ) -> TransferResult:
         """
-        Process a TRANSFER order.
-
-        PROJ-68: Transfers cargo between fleet and colony.
-        PROJ-NEW: Transfers cargo between two fleets.
-
-        Args:
-            fleet: Fleet with TRANSFER order
-            empire: Empire that owns the fleet
-            galaxy: Galaxy for planet lookup
-
-        Returns:
-            TransferResult with transfer status
+        Process a TRANSFER order. PROJ-368 Phase 3: delegates to TransferHandler.
         """
-        from game.strategy.validation import TransferValidator
-        from game.strategy.data.planet import SpeciesPopulation
-
         order = fleet.get_current_order()
-        if not order or order.type not in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
+        order_type = order.type if order else None
+        if order_type not in (
+            OrderType.TRANSFER,
+            OrderType.LOAD_POPULATION,
+            OrderType.UNLOAD_POPULATION,
+        ):
             return TransferResult(success=False, message="No TRANSFER order")
-
-        # Extract params from order target dict
-        params = order.target
-        if not isinstance(params, dict):
-            fleet.pop_order()
-            return TransferResult(success=False, message="Invalid transfer params")
-
-        direction = params.get('direction', '')
-        cargo_type = params.get('cargo_type', '')
-        amount = params.get('amount', 0)
-        planet_id = params.get('planet_id')
-        target_fleet_id = params.get('target_fleet_id')
-        species_id = params.get('species_id')
-
-        # Resolve target
-        target = None
-        if planet_id:
-            target = galaxy.get_planet_by_id(planet_id)
-        elif not planet_id and not target_fleet_id and order.type == OrderType.LOAD_POPULATION:
-            # BUG-70: Generic LOAD_POPULATION — auto-resolve colony at fleet's current hex
-            planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
-            for p in planets_at_hex:
-                if p.owner_id == empire.id and hasattr(p, 'populations') and p.populations and p.total_population > 0:
-                    target = p
-                    logger.debug(f"BUG-70: Auto-resolved colony {p.name} (pop={p.total_population}) at fleet hex {fleet.location}")
-                    break
-            if not target:
-                # No owned colony at fleet hex — no-op, continue with next order
-                logger.debug(f"BUG-70: No owned colony at fleet hex {fleet.location}, skipping LOAD_POPULATION")
-                fleet.pop_order()
-                return TransferResult(success=True, message="No colony at location, skipped")
-        elif target_fleet_id:
-            # Need to find fleet by ID. OrderProcessor doesn't have session access here usually,
-            # but we can look through the empire's fleets or all empires.
-            from game.core.protocols import is_planet, is_fleet
-            # Search all empires for the target fleet
-            # NOTE: galaxy may not have 'empires' attr - depends on context
-            for emp in getattr(galaxy, 'empires', []):
-                for f in emp.fleets:
-                    if f.id == target_fleet_id:
-                        target = f
-                        break
-                if target: break
-            
-            # If not found in galaxy.empires, try searching the current empire
-            if not target:
-                for f in empire.fleets:
-                    if f.id == target_fleet_id:
-                        target = f
-                        break
-
-        # Validate — skip location check for drop_pod (fleet is already at planet via MOVE order)
-        skip_loc = cargo_type == "drop_pod"
-        logger.info(
-            f"OrderProcessor.process_transfer: fleet={fleet.id} cargo={cargo_type} "
-            f"dir={direction} amt={amount} species={species_id} "
-            f"target={getattr(target, 'name', target)} skip_loc={skip_loc}"
+        handler = self._handler_registry.get(order_type)
+        result = handler.execute_action_order(fleet, empire, galaxy)
+        return TransferResult(
+            success=result.success,
+            amount_transferred=result.amount_transferred,
+            message=result.message,
         )
-        validation = TransferValidator.validate(
-            galaxy, fleet, target, cargo_type, direction, amount, species_id,
-            skip_location_check=skip_loc
-        )
-
-        if not validation.is_valid:
-            logger.warning(
-                f"OrderProcessor: Transfer failed - {validation.message} "
-                f"(code={validation.error_code})"
-            )
-            fleet.pop_order()
-            return TransferResult(success=False, message=validation.message)
-
-        # Execute transfer
-        transferred = 0
-        from game.core.protocols import is_planet, is_fleet
-
-        if is_planet(target):
-            if direction == "load":
-                logger.info(f"OrderProcessor: Executing LOAD {cargo_type} from {target.name}")
-                transferred = self._execute_load(fleet, target, cargo_type, amount, empire, species_id)
-            else:  # unload
-                logger.info(f"OrderProcessor: Executing UNLOAD {cargo_type} to {target.name}")
-                transferred = self._execute_unload(fleet, target, cargo_type, amount, empire, species_id)
-        elif is_fleet(target):
-            transferred = self._execute_fleet_transfer(fleet, target, cargo_type, direction, amount, species_id)
-
-        fleet.pop_order()
-        logger.info(f"OrderProcessor: Transfer complete. {direction}ed {transferred} {cargo_type}")
-        return TransferResult(success=True, amount_transferred=transferred)
 
     def _execute_fleet_transfer(
         self,

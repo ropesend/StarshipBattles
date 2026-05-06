@@ -19,6 +19,7 @@ from game.strategy.engine.order_handlers.base import OrderHandlerRegistry
 from game.strategy.engine.order_handlers.colonize import ColonizeHandler
 from game.strategy.engine.order_handlers.join_fleet import JoinFleetHandler
 from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
+from game.strategy.engine.order_handlers.transfer import TransferHandler
 
 
 def create_default_order_handler_registry(
@@ -40,4 +41,9 @@ def create_default_order_handler_registry(
     registry.register(OrderType.JOIN_FLEET, JoinFleetHandler(event_bus=event_bus))
     registry.register(OrderType.COLONIZE, ColonizeHandler(event_bus=event_bus))
     registry.register(OrderType.SELF_DESTRUCT, SelfDestructHandler(event_bus=event_bus))
+    # TransferHandler is a single instance registered against three OrderType keys.
+    transfer_handler = TransferHandler(event_bus=event_bus)
+    registry.register(OrderType.TRANSFER, transfer_handler)
+    registry.register(OrderType.LOAD_POPULATION, transfer_handler)
+    registry.register(OrderType.UNLOAD_POPULATION, transfer_handler)
     return registry

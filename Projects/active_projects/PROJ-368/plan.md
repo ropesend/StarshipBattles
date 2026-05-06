@@ -18,16 +18,16 @@
 |-------|--------|-----------|
 | 1. Protocol + registry skeleton + JoinFleet PoC | Complete (Committed) | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Port instant + simple action orders (Colonize, SelfDestruct) | Complete (Committed) | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Port Transfer family (TRANSFER, LOAD_POPULATION, UNLOAD_POPULATION) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Port Transfer family (TRANSFER, LOAD_POPULATION, UNLOAD_POPULATION) | Complete (Committed) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Port superweapon dispatch and delete legacy methods (includes registry-completeness + no-legacy-helper AST gates) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Per-handler unit tests + AST static-guard regression | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-05
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 committed. `ColonizeHandler` and `SelfDestructHandler` extracted. `OrderProcessor.process_colonize` is now a one-line delegate. `SELF_DESTRUCT` superweapon entry routes through the registry. 13 new tests added (7 colonize + 6 self_destruct); 4639 strategy tests pass. `OrderProcessor` LOC: 822 -> 744.
-**Next Action:** Phase 3 — extract TransferHandler with 7 explicit `_dispatch_*` branches.
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 committed. `TransferHandler` extracted with 7 explicit `_dispatch_*` branches (covering the 5 implicit branches in legacy `process_transfer` plus their cargo-type sub-branches). Single instance registered against TRANSFER, LOAD_POPULATION, UNLOAD_POPULATION. `OrderProcessor.process_transfer` is now a one-line delegate. BUG-70 + PROJ-343 T1.1 invariants preserved. 17 new tests added; 4656 strategy tests pass. `OrderProcessor` LOC: 744 -> 654.
+**Next Action:** Phase 4 — superweapon adapter registry; delete legacy OrderProcessor private helpers; AST gate tests.
 **Blockers:** None.
 
 ## Overview
