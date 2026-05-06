@@ -712,5 +712,123 @@ class TestIterAllComponentsByLayerRemediations:
         assert result['CORE'] == []
 
 
+class TestShipInstanceOperationalMethods:
+    """Direct tests for ShipInstance methods commonly mocked by callers."""
+
+    def _ship(self) -> ShipInstance:
+        return ShipInstance(
+            instance_id='ship_ops',
+            design_id='ops',
+            name='Ops',
+            owner_id=0,
+            design_data={'name': 'Ops', 'layers': {}},
+        )
+
+    def test_pod_storage_uses_calculated_stats_and_carried_item_mass(self, monkeypatch):
+        ship = self._ship()
+        ship.carried_items = [
+            {'name': 'Pod A', 'mass': 2.5},
+            {'name': 'Pod Without Mass'},
+            {'name': 'Pod B', 'mass': 4.0},
+        ]
+        monkeypatch.setattr(
+            ship,
+            'get_calculated_stats',
+            lambda force_refresh=False: {'pod_storage_mass': 10.0},
+        )
+
+        assert ship.get_pod_storage_capacity() == pytest.approx(10.0)
+        assert ship.get_pod_storage_used() == pytest.approx(6.5)
+        assert ship.can_carry_pod(3.5) is True
+        assert ship.can_carry_pod(3.6) is False
+
+    def test_can_carry_pod_requires_positive_capacity(self, monkeypatch):
+        ship = self._ship()
+        monkeypatch.setattr(
+            ship,
+            'get_calculated_stats',
+            lambda force_refresh=False: {'pod_storage_mass': 0.0},
+        )
+
+        assert ship.can_carry_pod(0.1) is False
+
+    def test_ship_activation_state_roundtrip(self):
+        from game.strategy.data.component_activation_state import (
+            ActivationPhase,
+            ComponentActivationState,
+        )
+
+        ship = self._ship()
+        state = ComponentActivationState(
+            phase=ActivationPhase.ACTIVE,
+            ability_name='ShieldProjection',
+            energy_drain_rate=2.5,
+        )
+
+        ship.set_activation_state('OUTER:0:shield_projector', state)
+        restored = ship.get_activation_state('OUTER:0:shield_projector')
+
+        assert restored.phase is ActivationPhase.ACTIVE
+        assert restored.ability_name == 'ShieldProjection'
+        assert restored.energy_drain_rate == pytest.approx(2.5)
+
+    def test_repair_partial_damage_invalidates_stats_cache(self, monkeypatch):
+        ship = self._ship()
+        ship.current_hp = 40
+        ship._cached_stats = {'old': True}
+        monkeypatch.setattr(
+            ship,
+            'get_calculated_stats',
+            lambda force_refresh=False: {'max_hp': 100},
+        )
+
+        repaired = ship.repair(25)
+
+        assert repaired == 25
+        assert ship.current_hp == 65
+        assert ship._cached_stats is None
+
+    def test_repair_to_full_restores_component_hp(self, monkeypatch):
+        ship = self._ship()
+        ship.current_hp = 80
+        ship.components = {
+            component_state_key('bridge', 0): ComponentState(
+                component_id='bridge',
+                instance_index=0,
+                current_hp=10.0,
+                max_hp=40.0,
+                is_active=True,
+            ),
+            component_state_key('laser_cannon', 0): ComponentState(
+                component_id='laser_cannon',
+                instance_index=0,
+                current_hp=5.0,
+                max_hp=20.0,
+                is_active=True,
+            ),
+        }
+        monkeypatch.setattr(
+            ship,
+            'get_calculated_stats',
+            lambda force_refresh=False: {'max_hp': 100},
+        )
+
+        repaired = ship.repair(50)
+
+        assert repaired == 20
+        assert ship.current_hp is None
+        assert [
+            state.current_hp for state in ship.components.values()
+        ] == [40.0, 20.0]
+
+    def test_invalidate_stats_cache_clears_cached_stats(self):
+        ship = self._ship()
+        ship._cached_stats = {'mass': 123}
+
+        ship.invalidate_stats_cache()
+
+        assert ship._cached_stats is None
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

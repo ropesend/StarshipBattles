@@ -9,6 +9,7 @@ from game.core.hex_math import HexCoord
 from game.core.protocols import IAbilitySource
 from game.strategy.data.storm import Storm
 from game.strategy.services.ability_iterator import (
+    _planet_global_hex,
     iter_ability_sources_at_hex,
     iter_ability_sources_in_system,
     register_source_provider_at_hex,
@@ -317,6 +318,55 @@ def test_fleet_provider_uses_registered_lookups_and_injected_registries():
     assert fleet_sources[0].get_abilities() == {
         "ShieldModifier": [{"multiplier": 1.2, "scope": "sector"}]
     }
+
+
+def test_iter_in_system_yields_fleet_sources_from_system_lookup():
+    fleet = SimpleNamespace(
+        id=45,
+        owner_id=7,
+        location=HexCoord(3, 4),
+        ships=[
+            SimpleNamespace(
+                design_data={
+                    "layers": {
+                        "CORE": [{"id": "fleet_aura_component"}],
+                    }
+                }
+            )
+        ],
+    )
+    registries = {
+        "fleet_aura_component": {
+            "abilities": {
+                "ShieldModifier": {
+                    "multiplier": 1.2,
+                    "scope": "system",
+                }
+            }
+        }
+    }
+
+    set_fleet_lookups(at_hex=None, in_system=lambda system: [fleet])
+    try:
+        sources = list(iter_ability_sources_in_system(
+            _MockSystem(), registries=registries,
+        ))
+    finally:
+        set_fleet_lookups(at_hex=None, in_system=None)
+
+    fleet_sources = [s for s in sources if s.source_kind == 'fleet']
+    assert len(fleet_sources) == 1
+    assert fleet_sources[0].source_id == "fleet:45"
+    assert fleet_sources[0].get_abilities() == {
+        "ShieldModifier": [{"multiplier": 1.2, "scope": "system"}]
+    }
+
+
+def test_planet_global_hex_returns_none_for_incompatible_coordinate_types():
+    planet = SimpleNamespace(location=object())
+    system = SimpleNamespace(global_location=HexCoord(10, 20))
+
+    assert _planet_global_hex(planet, system) is None
 
 
 def test_iter_at_hex_dedupes_sources():

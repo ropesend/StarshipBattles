@@ -10,6 +10,7 @@ characterization.
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+from types import SimpleNamespace
 
 import pytest
 
@@ -17,6 +18,8 @@ from game.strategy.engine.turn_phase_registry import (
     DEFAULT_TICK_PHASE_LIST,
     TickContext,
     TickPhase,
+    _capture_move_queue,
+    _derive_moved_fleet_ids,
 )
 from tests.unit.strategy.turn_engine.test_default_tick_phase_list import (
     GOLDEN_PHASE_ORDER,
@@ -63,6 +66,39 @@ class TestTickContextShape:
         ctx_a.last_environmental_events.append('a')
         # Mutating one must not leak into the other (default_factory check).
         assert ctx_b.last_environmental_events == []
+
+
+class TestTickPhaseHooks:
+    """Pin module-level hooks that move state between descriptor phases."""
+
+    def test_capture_move_queue_stores_result_and_pre_locations(self):
+        fleet_a = SimpleNamespace(id=1, location='A')
+        fleet_b = SimpleNamespace(id=2, location='B')
+        ctx = TickContext(
+            tick=20,
+            empires=[SimpleNamespace(fleets=[fleet_a, fleet_b])],
+            galaxy=object(),
+        )
+        move_queue = [(fleet_a, 'C')]
+
+        _capture_move_queue(None, ctx, move_queue)
+
+        assert ctx.move_queue is move_queue
+        assert ctx.pre_movement_locations == {1: 'A', 2: 'B'}
+
+    def test_derive_moved_fleet_ids_compares_pre_and_post_locations(self):
+        fleet_a = SimpleNamespace(id=1, location='A')
+        fleet_b = SimpleNamespace(id=2, location='B')
+        ctx = TickContext(
+            tick=20,
+            empires=[SimpleNamespace(fleets=[fleet_a, fleet_b])],
+            galaxy=object(),
+            pre_movement_locations={1: 'old-A', 2: 'B'},
+        )
+
+        _derive_moved_fleet_ids(None, ctx, None)
+
+        assert ctx.moved_fleet_ids == {1}
 
 
 class TestDefaultTickPhaseList:

@@ -9,6 +9,7 @@ MultiplexTrackingAbility / VehicleStorageAbility / PodStorageAbility classes
 and the new ``max_launch_mass`` attribute on VehicleLaunchAbility.
 """
 import pytest
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from game.simulation.components.abilities.markers import (
@@ -292,6 +293,43 @@ class TestRequiresCommandAndControl:
         """get_primary_value returns 1.0."""
         ability = RequiresCommandAndControl(mock_component, {})
         assert ability.get_primary_value() == 1.0
+
+    def test_update_allows_component_without_ship_context(self, mock_component):
+        mock_component.ship = None
+        ability = RequiresCommandAndControl(mock_component, {})
+
+        assert ability.update() is True
+
+    def test_update_passes_when_active_command_provider_exists(self, mock_component):
+        provider = MagicMock()
+        provider.is_active = True
+        provider.has_ability.return_value = True
+        layer = SimpleNamespace(components=[mock_component, provider])
+        mock_component.ship = SimpleNamespace(layers={"CORE": layer})
+        ability = RequiresCommandAndControl(mock_component, {})
+
+        assert ability.update() is True
+        provider.has_ability.assert_called_once_with('CommandAndControl')
+
+    def test_update_fails_when_only_provider_is_inactive(self, mock_component):
+        provider = MagicMock()
+        provider.is_active = False
+        provider.has_ability.return_value = True
+        layer = SimpleNamespace(components=[mock_component, provider])
+        mock_component.ship = SimpleNamespace(layers={"CORE": layer})
+        ability = RequiresCommandAndControl(mock_component, {})
+
+        assert ability.update() is False
+        provider.has_ability.assert_not_called()
+
+    def test_update_ignores_own_component_as_command_provider(self, mock_component):
+        mock_component.is_active = True
+        mock_component.has_ability.return_value = True
+        layer = SimpleNamespace(components=[mock_component])
+        mock_component.ship = SimpleNamespace(layers={"CORE": layer})
+        ability = RequiresCommandAndControl(mock_component, {})
+
+        assert ability.update() is False
 
 
 class TestRequiresCombatMovement:

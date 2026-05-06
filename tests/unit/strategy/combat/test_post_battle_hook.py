@@ -7,6 +7,7 @@ ShipInstance / Fleet / Empire graph:
   - Retreated ships: remove from parent fleet (MVP — see decisions.md)
   - Empty fleets pruned from their owning empire
 """
+from types import SimpleNamespace
 from typing import Dict, List
 
 import pytest
@@ -323,6 +324,131 @@ def test_missing_empires_param_does_not_crash(two_fleets):
         fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
     )
     assert fleet_a.ships == []
+
+
+def test_orphan_ship_outcome_is_logged_and_skipped(two_fleets, caplog):
+    fleet_a, fleet_b = two_fleets
+    original_ids = [ship.instance_id for ship in fleet_a.ships]
+    outcome = _make_outcome({
+        0: [
+            _make_ship_outcome(
+                instance_id="not-in-any-fleet",
+                status=ShipStatus.DESTROYED,
+            )
+        ],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    assert [ship.instance_id for ship in fleet_a.ships] == original_ids
+    assert "no ShipInstance matches" in caplog.text
+
+
+def test_unknown_ship_status_is_logged_and_skipped(two_fleets, caplog):
+    fleet_a, fleet_b = two_fleets
+    target = fleet_a.ships[0]
+    outcome = _make_outcome({
+        0: [
+            _make_ship_outcome(
+                instance_id=target.instance_id,
+                status="mystery_status",
+            )
+        ],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    assert target in fleet_a.ships
+    assert "unknown ShipStatus" in caplog.text
+
+
+def test_empty_fleet_prune_ignores_missing_empire(two_fleets):
+    fleet_a, fleet_b = two_fleets
+    outcomes_team0 = [
+        _make_ship_outcome(instance_id=s.instance_id, status=ShipStatus.DESTROYED)
+        for s in list(fleet_a.ships)
+    ]
+    outcome = _make_outcome({
+        0: outcomes_team0,
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+        empires={},
+    )
+
+    assert fleet_a.ships == []
+
+
+def test_empty_fleet_prune_ignores_empire_without_fleets(two_fleets):
+    fleet_a, fleet_b = two_fleets
+    outcomes_team0 = [
+        _make_ship_outcome(instance_id=s.instance_id, status=ShipStatus.DESTROYED)
+        for s in list(fleet_a.ships)
+    ]
+    outcome = _make_outcome({
+        0: outcomes_team0,
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+        empires={0: SimpleNamespace()},
+    )
+
+    assert fleet_a.ships == []
+
+
+def test_empty_fleet_prune_logs_valueerror_during_removal(two_fleets, caplog):
+    fleet_a, fleet_b = two_fleets
+    outcomes_team0 = [
+        _make_ship_outcome(instance_id=s.instance_id, status=ShipStatus.DESTROYED)
+        for s in list(fleet_a.ships)
+    ]
+    outcome = _make_outcome({
+        0: outcomes_team0,
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    class _RemovalFails(list):
+        def remove(self, item):
+            raise ValueError("already removed")
+
+    empire = SimpleNamespace(fleets=_RemovalFails([fleet_a]))
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+        empires={0: empire},
+    )
+
+    assert "not found on empire while pruning" in caplog.text
 
 
 # ---------------------------------------------------------------------------
