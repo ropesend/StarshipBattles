@@ -18,16 +18,16 @@
 | 1. Extract end-of-turn block to descriptor list (`DEFAULT_END_OF_TURN_PHASE_LIST`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Make the 3 locally-constructed end-of-turn engines (Quality / Atmosphere / Water) injectable + lazy-property + `TurnEngineConfig` fields | Complete | [phase_2_checklist.md](phase_2_checklist.md) | phase_1 |
 | 3. Replace per-property lazy fallback init with required-kwarg injection from `TurnEngineConfig` (factory pre-fills defaults) | Complete | [phase_3_checklist.md](phase_3_checklist.md) | phase_2 |
-| 4. Convert tick + end-of-turn loops to a unified `for phase in self._phases: phase.run(ctx)` body | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | phase_3 |
+| 4. Convert tick + end-of-turn loops to a unified `for phase in self._phases: phase.run(ctx)` body | Complete | [phase_4_checklist.md](phase_4_checklist.md) | phase_3 |
 | 5. AST guard test + per-phase unit tests with mock context; remove `_NullBattleResolver`; finalize docs | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | phase_4 |
 
 ## Current State
 **Last Updated:** 2026-05-06
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete — `TurnEngineConfig.create_default()` classmethod added (eagerly constructs all 18 default engines). `TurnEngine.__init__` reduced from 21 kwargs to 8 (`registries`, `config`, `ai_factory`, `race_registry`, `event_bus`, `battle_resolver`, `tick_phases`, `end_of_turn_phases`). 18 lazy-property bodies collapsed to trivial passthroughs. `_NullBattleResolver` deleted. `create_default_turn_engine` factory deleted. `ConflictResolutionEngine._resolve_combat_at_hex` got an explicit raise-on-None-resolver guard at the dispatch site (replaces the silent `_NullBattleResolver` warn-then-raise path). New AST guard test (4 tests). New `tests/fixtures/turn_engine.py::build_test_turn_engine()` helper + shared `turn_engine_factory` fixture migrated 110+ test construction sites en bloc. 2 production call sites in `game_session.py` migrated. turn_engine.py: 802 → 679 LOC. Focused: 126/126 pass. Full unit + integration: 18633 pass.
-**Next Action:** Phase 4 — extract `_run_phases` helper; collapse tick + end-of-turn iteration into one shared invocation.
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete — `_run_phases(self, phases, ctx)` helper extracted; `_process_tick` and the end-of-turn block both call into it. ~13 lines of duplication removed. New test `test_all_21_phase_time_buckets_populated_after_process_turn` pins coverage of the unified helper across both lists. Focused: 127/127 pass.
+**Next Action:** Phase 5 — harden AST guard test; add per-phase mock-context isolation tests; update docs.
 **Blockers:** None.
-**Context for Next Agent:** Phase 4 is a small refactor — both `_process_tick` and the end-of-turn block share identical descriptor-iteration logic. Extracting `_run_phases(self, phases, ctx)` removes ~10 lines of duplication.
+**Context for Next Agent:** With Phase 4 done, `process_turn` body is structurally trivial: a 100-tick loop calling `_run_phases(self._tick_phases, ctx)` and one call to `_run_phases(self._end_of_turn_phases, end_of_turn_ctx)`. Phase 5's docs updates should reflect this.
 
 ## Overview
 

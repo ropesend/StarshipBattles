@@ -306,6 +306,42 @@ class TurnEngine:
             except (AttributeError, TypeError):
                 pass
 
+    def _run_phases(
+        self,
+        phases: tuple['TickPhase', ...],
+        ctx: 'TickContext',
+    ) -> None:
+        """Iterate a phase descriptor tuple, invoking each through ``_time_phase``.
+
+        PROJ-369 Phase 4: unified iteration shared between the per-tick
+        body (``_process_tick``) and the end-of-turn block
+        (``process_turn``). Hooks (``pre_exec_hook`` /
+        ``post_exec_hook``) and timing-bucket overrides are honored
+        uniformly. Accumulated env events are surfaced by the caller
+        via ``ctx.last_environmental_events`` after iteration completes.
+
+        Args:
+            phases: Frozen tuple of TickPhase descriptors to iterate.
+            ctx: Per-iteration TickContext (mutated by hooks).
+
+        Raises:
+            EnginePhaseError: From ``_time_phase`` if any phase callable
+                raises a non-EnginePhaseError exception (raw exceptions
+                are wrapped). Already-wrapped EnginePhaseError raises
+                propagate as-is.
+        """
+        for phase in phases:
+            if phase.pre_exec_hook is not None:
+                phase.pre_exec_hook(self, ctx)
+
+            target = phase.callable_target(self)
+            args, kwargs = phase.args_resolver(ctx)
+            bucket = phase.timing_bucket or phase.phase_key
+            result = self._time_phase(bucket, target, *args, **kwargs)
+
+            if phase.post_exec_hook is not None:
+                phase.post_exec_hook(self, ctx, result)
+
     # PROJ-369 Phase 3: All 18 engine properties are trivial
     # passthroughs. Construction lives in
     # ``TurnEngineConfig.create_default(...)``; tests override via
@@ -510,14 +546,15 @@ class TurnEngine:
             # [BUG-109] Log resource state after all ticks
             self._log_empire_state(empires, f"=== TURN END (after {TICKS_PER_TURN} ticks) ===")
 
-            # PROJ-343 T1.2-engines / PROJ-369 Phase 1: end-of-turn
+            # PROJ-343 T1.2-engines / PROJ-369 Phases 1+4: end-of-turn
             # engines route through `_time_phase` (so raw exceptions
             # become EnginePhaseError and the rollback site below
-            # catches them) and now iterate the
-            # `DEFAULT_END_OF_TURN_PHASE_LIST` descriptor list — same
-            # shape as the tick body. PROJ-284 ordering invariant
-            # (organics → happiness → population_growth) is encoded in
-            # the registry's pinned tuple.
+            # catches them) and iterate the
+            # `DEFAULT_END_OF_TURN_PHASE_LIST` descriptor list via the
+            # shared ``_run_phases`` helper — same shape as the tick
+            # body. PROJ-284 ordering invariant (organics → happiness
+            # → population_growth) is encoded in the registry's pinned
+            # tuple.
             end_of_turn_ctx = TickContext(
                 tick=0,  # sentinel: end-of-turn, not in 1..100 loop
                 empires=empires,
@@ -525,15 +562,7 @@ class TurnEngine:
                 component_registry=self._registries.components,
                 save_path=save_path,
             )
-            for phase in self._end_of_turn_phases:
-                if phase.pre_exec_hook is not None:
-                    phase.pre_exec_hook(self, end_of_turn_ctx)
-                target = phase.callable_target(self)
-                args, kwargs = phase.args_resolver(end_of_turn_ctx)
-                bucket = phase.timing_bucket or phase.phase_key
-                result = self._time_phase(bucket, target, *args, **kwargs)
-                if phase.post_exec_hook is not None:
-                    phase.post_exec_hook(self, end_of_turn_ctx, result)
+            self._run_phases(self._end_of_turn_phases, end_of_turn_ctx)
 
         except EnginePhaseError as e:
             # PROJ-251: Rollback state and re-raise
@@ -650,6 +679,8 @@ class TurnEngine:
                 logger.warning("progress_callback raised; suppressing", exc_info=True)
 
         # PROJ-365: Build the per-tick context, then iterate descriptors.
+        # PROJ-369 Phase 4: dispatch through the shared ``_run_phases``
+        # helper used by both the tick loop and the end-of-turn block.
         ctx = TickContext(
             tick=tick,
             empires=empires,
@@ -658,17 +689,7 @@ class TurnEngine:
             save_path=save_path,
         )
 
-        for phase in self._tick_phases:
-            if phase.pre_exec_hook is not None:
-                phase.pre_exec_hook(self, ctx)
-
-            target = phase.callable_target(self)
-            args, kwargs = phase.args_resolver(ctx)
-            bucket = phase.timing_bucket or phase.phase_key
-            result = self._time_phase(bucket, target, *args, **kwargs)
-
-            if phase.post_exec_hook is not None:
-                phase.post_exec_hook(self, ctx, result)
+        self._run_phases(self._tick_phases, ctx)
 
         # PROJ-189: Surface accumulated environmental events to the
         # public attribute that callers (and tests) read.

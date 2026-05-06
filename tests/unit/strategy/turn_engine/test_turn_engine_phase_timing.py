@@ -207,3 +207,102 @@ class TestTimePhase:
         # _time_phase itself (whatever __cause__ was on `original_err`
         # remains, but it must not be a new EnginePhaseError).
         assert not isinstance(exc_info.value.__cause__, EnginePhaseError)
+
+
+class TestAllPhaseBucketsPopulatedAfterProcessTurn:
+    """PROJ-369 Phase 4: every one of the 21 ``_phase_times`` buckets
+    (15 tick-loop + 6 end-of-turn) must be hit at least once during a
+    full ``process_turn`` invocation. Pins the unified
+    ``_run_phases`` helper's coverage of both the tick body and the
+    end-of-turn block.
+    """
+
+    def test_all_21_phase_time_buckets_populated_after_process_turn(
+        self, fresh_registries, mock_empire, mock_galaxy
+    ):
+        from game.strategy.interfaces.engines import (
+            IActionExecutionEngine,
+            IAtmosphereEngine,
+            IComponentActivationEngine,
+            IConflictEngine,
+            IConsumableEngine,
+            IEnvironmentalHazardEngine,
+            IHappinessEngine,
+            IHarvestingEngine,
+            IMovementEngine,
+            IOrderProcessor,
+            IOrganicsConsumptionEngine,
+            IPlanetActionEngine,
+            IPlanetEnergyEngine,
+            IPopulationEngine,
+            IProductionEngine,
+            IQualityEngine,
+            IResupplyEngine,
+            IWaterEngine,
+        )
+
+        mock_empire.fleets = []
+
+        # Mock every sub-engine with a typed spec so each phase callable
+        # can dispatch into its mock without TypeError. Empty-list returns
+        # for the few phases whose post-hooks read the result.
+        movement = MagicMock(spec=IMovementEngine)
+        movement.collect_movements.return_value = []
+        movement.apply_movements.return_value = []
+        resource = MagicMock(spec=IConsumableEngine)
+        resource.process_per_turn_consumption.return_value = []
+        order = MagicMock(spec=IOrderProcessor)
+        order.process_instant_orders.return_value = []
+        resupply = MagicMock(spec=IResupplyEngine)
+        resupply.process_fuel_generation.return_value = []
+        resupply.process_fleet_resupply.return_value = []
+        envhaz = MagicMock(spec=IEnvironmentalHazardEngine)
+        envhaz.process_environmental_tick.return_value = []
+        engine = build_test_turn_engine(
+            fresh_registries,
+            movement_engine=movement,
+            production_engine=MagicMock(spec=IProductionEngine),
+            order_processor=order,
+            conflict_engine=MagicMock(spec=IConflictEngine),
+            resource_engine=resource,
+            population_engine=MagicMock(spec=IPopulationEngine),
+            resupply_engine=resupply,
+            harvesting_engine=MagicMock(spec=IHarvestingEngine),
+            action_engine=MagicMock(spec=IActionExecutionEngine),
+            environmental_engine=envhaz,
+            planet_energy_engine=MagicMock(spec=IPlanetEnergyEngine),
+            planet_action_engine=MagicMock(spec=IPlanetActionEngine),
+            component_activation_engine=MagicMock(spec=IComponentActivationEngine),
+            organics_consumption_engine=MagicMock(spec=IOrganicsConsumptionEngine),
+            happiness_engine=MagicMock(spec=IHappinessEngine),
+            quality_engine=MagicMock(spec=IQualityEngine),
+            atmosphere_engine=MagicMock(spec=IAtmosphereEngine),
+            water_engine=MagicMock(spec=IWaterEngine),
+        )
+
+        # Patch the locally-constructed PlanetModifierEffectEngine so it
+        # doesn't reach real production code.
+        from unittest.mock import patch
+        with patch(
+            'game.strategy.engine.planet_modifier_effect_engine.PlanetModifierEffectEngine'
+        ):
+            engine.process_turn([mock_empire], mock_galaxy)
+
+        expected_buckets = {
+            # 15 tick-loop buckets:
+            'harvesting', 'resources', 'fuel_gen', 'planet_energy',
+            'resupply', 'production', 'environmental',
+            'instant_orders', 'actions', 'planet_actions',
+            'activation_timers', 'planet_modifier_effects',
+            'movement_calc', 'movement_apply', 'combat',
+            # 6 end-of-turn buckets:
+            'organics_consumption', 'happiness', 'population_growth',
+            'quality_improvement', 'atmosphere', 'water_modification',
+        }
+        assert set(engine._phase_times.keys()) == expected_buckets
+        assert len(engine._phase_times) == 21
+        # Every bucket has accumulated at least some duration (>= 0).
+        # Process_turn ran the full 100-tick body + the end-of-turn
+        # block, so every bucket was visited at least once.
+        for bucket, duration in engine._phase_times.items():
+            assert duration >= 0.0, f"bucket {bucket!r} has negative time"
