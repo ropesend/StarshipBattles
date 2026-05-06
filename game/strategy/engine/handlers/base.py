@@ -264,7 +264,15 @@ class BaseCommandHandler:
         handler. Handlers do their own resolve + validate, then call this to
         finish the "create-and-log if valid" pattern.
 
-        Returns the same `result` so callers can `return self._emit_validated_order(...)`.
+        Returns the same ``result`` argument unchanged so callers can write
+        ``return self._emit_validated_order(...)``. **The result is propagated
+        as-is — including any warnings the validator attached** — rather than
+        being flattened to ``ValidationResult.success()``. Today validators
+        return only clean-success or hard-error, so this contract is
+        observationally identical; if a future validator emits valid-with-warnings
+        results, callers will receive those warnings instead of a bare success.
+        Do not change this contract without updating every direct + mission
+        handler that currently relies on it (PROJ-375 review MAJ-001).
         """
         if result.is_valid:
             order = Order(order_type, target=target)

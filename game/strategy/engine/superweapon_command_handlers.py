@@ -211,12 +211,10 @@ class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
         if not move_result.is_valid:
             return move_result
 
-        # 5. Queue IMPLODE_PLANET order
-        action_order = Order(OrderType.IMPLODE_PLANET, target=planet)
-        fleet.add_order(action_order)
-
-        logger.info(f"GameSession: Queued IMPLODE_PLANET mission for Fleet {fleet.id}")
-        return ValidationResult.success()
+        # 5. Queue IMPLODE_PLANET order (PROJ-375 review MIN-001)
+        return self._emit_validated_order(
+            fleet, OrderType.IMPLODE_PLANET, planet, result, "IMPLODE_PLANET mission",
+        )
 
 
 class StellerateStarMissionCommandHandler(BaseCommandHandler):
