@@ -13,6 +13,18 @@ from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
 from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands import (
+    ClearOrdersCommand,
+    DeleteOrderCommand,
+    QueueColonizeMissionCommand,
+    ReorderOrderCommand,
+    SplitFleetCommand,
+)
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.engine.handlers.base import (
     BaseCommandHandler,
     add_move_order_if_needed,
@@ -21,16 +33,16 @@ from game.strategy.engine.handlers.base import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from game.strategy.engine.commands import (
-        ClearOrdersCommand,
-        DeleteOrderCommand,
-        QueueColonizeMissionCommand,
-        ReorderOrderCommand,
-        SplitFleetCommand,
-    )
     from game.strategy.engine.game_session import GameSession
 
 
+@command_spec(
+    command_class=QueueColonizeMissionCommand,
+    order_type=None,
+    category='action',
+    execution_model='mission',
+    facade_helper_name='dispatch_queue_colonize_mission',
+)
 class ColonizeMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueColonizeMissionCommand."""
 
@@ -69,6 +81,13 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=ClearOrdersCommand,
+    order_type=None,
+    category='fleet_management',
+    execution_model='instant',
+    facade_helper_name='dispatch_clear_orders',
+)
 class ClearOrdersCommandHandler(BaseCommandHandler):
     """Handler for ClearOrdersCommand."""
 
@@ -86,6 +105,13 @@ class ClearOrdersCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=SplitFleetCommand,
+    order_type=None,
+    category='fleet_management',
+    execution_model='instant',
+    facade_helper_name='dispatch_split_fleet',
+)
 class SplitFleetCommandHandler(BaseCommandHandler):
     """Handler for SplitFleetCommand (PROJ-208 Phase 1)."""
 
@@ -150,6 +176,13 @@ class SplitFleetCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=DeleteOrderCommand,
+    order_type=None,
+    category='fleet_management',
+    execution_model='instant',
+    facade_helper_name='dispatch_delete_order',
+)
 class DeleteOrderCommandHandler(BaseCommandHandler):
     """Handler for DeleteOrderCommand (PROJ-208 Phase 1)."""
 
@@ -174,6 +207,13 @@ class DeleteOrderCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=ReorderOrderCommand,
+    order_type=None,
+    category='fleet_management',
+    execution_model='instant',
+    facade_helper_name='dispatch_reorder_order',
+)
 class ReorderOrderCommandHandler(BaseCommandHandler):
     """Handler for ReorderOrderCommand (PROJ-208 Phase 1)."""
 
@@ -210,3 +250,17 @@ class ReorderOrderCommandHandler(BaseCommandHandler):
 
         logger.info(f"GameSession: Reordered fleet {cmd.fleet_id} order {cmd.order_index} -> {target_index}")
         return ValidationResult.success()
+
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (
+        ColonizeMissionCommandHandler,
+        ClearOrdersCommandHandler,
+        SplitFleetCommandHandler,
+        DeleteOrderCommandHandler,
+        ReorderOrderCommandHandler,
+    ):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))

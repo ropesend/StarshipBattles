@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** none
 **Review Mode:** standard
 **Files (planned):** `game/strategy/engine/commands/registry.py` (new), `game/strategy/engine/commands/specs.py` (modify — keep as redundant pin), `game/strategy/engine/handlers/{build,construction_queue,movement,order_queue,transfer}.py`, `game/strategy/engine/planet_command_handlers.py`, `game/strategy/engine/superweapon_command_handlers.py`, `tests/unit/strategy/engine/test_command_registry_seeding.py` (new)

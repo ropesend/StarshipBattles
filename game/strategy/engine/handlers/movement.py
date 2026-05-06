@@ -13,6 +13,18 @@ from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
 from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands import (
+    IssueColonizeCommand,
+    IssueInterceptCommand,
+    IssueJoinFleetCommand,
+    IssueMoveCommand,
+    IssueWarpCommand,
+)
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.engine.handlers.base import (
     BaseCommandHandler,
     add_move_order_if_needed,
@@ -21,16 +33,18 @@ from game.strategy.engine.handlers.base import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from game.strategy.engine.commands import (
-        IssueColonizeCommand,
-        IssueInterceptCommand,
-        IssueJoinFleetCommand,
-        IssueMoveCommand,
-        IssueWarpCommand,
-    )
     from game.strategy.engine.game_session import GameSession
 
 
+@command_spec(
+    command_class=IssueColonizeCommand,
+    order_type=OrderType.COLONIZE,
+    category='action',
+    action_ability_name='ColonizePlanet',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_colonize',
+    serializer_codec='planet_ref',
+)
 class ColonizeCommandHandler(BaseCommandHandler):
     """Handler for IssueColonizeCommand."""
 
@@ -69,6 +83,14 @@ class ColonizeCommandHandler(BaseCommandHandler):
         return result
 
 
+@command_spec(
+    command_class=IssueMoveCommand,
+    order_type=OrderType.MOVE,
+    category='movement',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_move',
+    serializer_codec='hex_coord',
+)
 class MoveCommandHandler(BaseCommandHandler):
     """Handler for IssueMoveCommand."""
 
@@ -103,6 +125,14 @@ class MoveCommandHandler(BaseCommandHandler):
 # Use AddToConstructionQueueCommandHandler instead for all build queue operations.
 
 
+@command_spec(
+    command_class=IssueInterceptCommand,
+    order_type=OrderType.MOVE_TO_FLEET,
+    category='movement',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_intercept',
+    serializer_codec='fleet_ref',
+)
 class InterceptCommandHandler(BaseCommandHandler):
     """Handler for IssueInterceptCommand."""
 
@@ -133,6 +163,14 @@ class InterceptCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=IssueJoinFleetCommand,
+    order_type=OrderType.JOIN_FLEET,
+    category='movement',
+    execution_model='instant',
+    facade_helper_name='dispatch_issue_join_fleet',
+    serializer_codec='fleet_ref',
+)
 class JoinCommandHandler(BaseCommandHandler):
     """Handler for IssueJoinFleetCommand."""
 
@@ -171,6 +209,14 @@ class JoinCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=IssueWarpCommand,
+    order_type=OrderType.WARP,
+    category='movement',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_warp',
+    serializer_codec='hex_coord',
+)
 class WarpCommandHandler(BaseCommandHandler):
     """Handler for IssueWarpCommand (PROJ-187)."""
 
@@ -212,3 +258,17 @@ class WarpCommandHandler(BaseCommandHandler):
 
         logger.info(f"GameSession: Issued WARP order for Fleet {fleet.id} -> {warp_point_hex}")
         return ValidationResult.success()
+
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (
+        MoveCommandHandler,
+        WarpCommandHandler,
+        InterceptCommandHandler,
+        JoinCommandHandler,
+        ColonizeCommandHandler,
+    ):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))

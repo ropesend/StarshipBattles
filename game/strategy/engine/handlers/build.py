@@ -12,18 +12,30 @@ from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
 from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands import (
+    IssueBuildOrderCommand,
+    RemoveBuildOrderCommand,
+)
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.engine.handlers.base import BaseCommandHandler
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from game.strategy.engine.commands import (
-        IssueBuildOrderCommand,
-        RemoveBuildOrderCommand,
-    )
     from game.strategy.engine.game_session import GameSession
 
 
+@command_spec(
+    command_class=IssueBuildOrderCommand,
+    order_type=OrderType.BUILD,
+    category='build',
+    execution_model='production',
+    facade_helper_name='dispatch_issue_build_order',
+)
 class BuildOrderCommandHandler(BaseCommandHandler):
     """Handler for IssueBuildOrderCommand (PROJ-207 Phase 4)."""
 
@@ -49,6 +61,13 @@ class BuildOrderCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=RemoveBuildOrderCommand,
+    order_type=None,
+    category='build',
+    execution_model='instant',
+    facade_helper_name='dispatch_remove_build_order',
+)
 class RemoveBuildOrderCommandHandler(BaseCommandHandler):
     """Handler for RemoveBuildOrderCommand (PROJ-207 Phase 4)."""
 
@@ -64,3 +83,12 @@ class RemoveBuildOrderCommandHandler(BaseCommandHandler):
 
         logger.info(f"GameSession: Removed BUILD orders from Fleet {fleet.id}")
         return ValidationResult.success()
+
+
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (BuildOrderCommandHandler, RemoveBuildOrderCommandHandler):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))

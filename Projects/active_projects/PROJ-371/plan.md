@@ -16,22 +16,28 @@
 
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Introduce `CommandRegistry` + decorator alongside existing tuple (bit-identical) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Introduce `CommandRegistry` + decorator alongside existing tuple (bit-identical) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate consumers to registry; delete `specs.py` tuple; collapse facade forwarders | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Authoring rule doc + AST regression + third-party-command smoke test | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-05
-**Active Phase:** Planning
-**Last Action:** Architect drafted full plan, design, manifest, decisions, and
-the three phase checklists. Initial-review findings written to
-`findings/initial_review.md` with the 35-spec inventory and the corrected
-"8 edits" mapping.
-**Next Action:** User reviews plan + open questions in `design.md` § "Open
-questions for the user". On approval, run Phase 1 in a new session via the
-"Continue Project" prompt (03c worker spawn).
-**Blockers:** Awaiting user approval of plan + 6 open questions in `design.md`.
+**Active Phase:** 2 (about to start)
+**Last Action:** Phase 1 complete. `CommandRegistry`, `@command_spec` decorator
+(metadata-only), `seed_default_commands`, `reset_command_registry` shipped
+in `game/strategy/engine/commands/registry.py`. All 35 handler classes
+decorated and per-module `register(registry)` functions added. Bit-identity
+contract test (`tests/unit/strategy/engine/test_command_registry_seeding.py`)
+passes with 10 tests including the metadata-only-decorator invariant
+(`test_import_handler_module_does_not_register`). `specs.py` re-exports
+`CommandSpec`/frozensets/etc. from registry; the literal tuple is unchanged.
+Strategy engine + facade + services tests: 2128 passing, 0 regressions.
+**Next Action:** Phase 2 — migrate `registry_factory.py`,
+`action_time_resolver.py`, `command_dispatch_slice.py` consumers to
+`command_registry`; collapse facade `dispatch_*` forwarders to
+`__getattr__`; delete `specs.py`.
+**Blockers:** None.
 
 ## Overview
 

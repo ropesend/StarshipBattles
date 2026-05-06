@@ -10,6 +10,12 @@ from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
 from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands import IssueTransferCommand
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.engine.handlers.base import (
     BaseCommandHandler,
     add_move_order_if_needed,
@@ -18,10 +24,17 @@ from game.strategy.engine.handlers.base import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from game.strategy.engine.commands import IssueTransferCommand
     from game.strategy.engine.game_session import GameSession
 
 
+@command_spec(
+    command_class=IssueTransferCommand,
+    order_type=OrderType.TRANSFER,
+    category='action',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_transfer',
+    serializer_codec='transfer',
+)
 class TransferCommandHandler(BaseCommandHandler):
     """Handler for IssueTransferCommand."""
 
@@ -118,3 +131,12 @@ class TransferCommandHandler(BaseCommandHandler):
             logger.info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}, orders now={len(fleet.orders)}")
 
         return result
+
+
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (TransferCommandHandler,):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))

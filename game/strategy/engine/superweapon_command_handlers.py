@@ -16,18 +16,25 @@ from game.strategy.engine.command_handlers import BaseCommandHandler, add_move_o
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands import (
+    IssueCloseWarpPointCommand,
+    IssueCreateDysonSphereCommand,
+    IssueImplodePlanetCommand,
+    IssueOpenWarpPointCommand,
+    IssueSelfDestructCommand,
+    IssueStellerateStarCommand,
+    QueueCloseWarpPointMissionCommand,
+    QueueCreateDysonSphereMissionCommand,
+    QueueImplodePlanetMissionCommand,
+    QueueOpenWarpPointMissionCommand,
+    QueueStellerateStarMissionCommand,
+)
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.validation import SuperweaponValidator
-
-if TYPE_CHECKING:
-    from game.strategy.engine.game_session import GameSession
-    from game.strategy.engine.commands import (
-        IssueImplodePlanetCommand, IssueStellerateStarCommand,
-        IssueOpenWarpPointCommand, IssueCloseWarpPointCommand,
-        IssueCreateDysonSphereCommand, IssueSelfDestructCommand,
-        QueueImplodePlanetMissionCommand, QueueStellerateStarMissionCommand,
-        QueueOpenWarpPointMissionCommand, QueueCloseWarpPointMissionCommand,
-        QueueCreateDysonSphereMissionCommand,
-    )
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
@@ -37,6 +44,15 @@ if TYPE_CHECKING:
 # Direct Command Handlers
 # =============================================================================
 
+@command_spec(
+    command_class=IssueImplodePlanetCommand,
+    order_type=OrderType.IMPLODE_PLANET,
+    category='superweapon',
+    action_ability_name='DestroyPlanet',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_implode_planet',
+    serializer_codec='planet_ref',
+)
 class ImplodePlanetCommandHandler(BaseCommandHandler):
     """Handler for IssueImplodePlanetCommand."""
 
@@ -64,6 +80,14 @@ class ImplodePlanetCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=IssueStellerateStarCommand,
+    order_type=OrderType.STELLERATE_STAR,
+    category='superweapon',
+    action_ability_name='DestroyStar',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_stellerate_star',
+)
 class StellerateStarCommandHandler(BaseCommandHandler):
     """Handler for IssueStellerateStarCommand."""
 
@@ -86,6 +110,15 @@ class StellerateStarCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=IssueOpenWarpPointCommand,
+    order_type=OrderType.OPEN_WARP_POINT,
+    category='superweapon',
+    action_ability_name='OpenWarpPoint',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_open_warp_point',
+    serializer_codec='warp_params',
+)
 class OpenWarpPointCommandHandler(BaseCommandHandler):
     """Handler for IssueOpenWarpPointCommand."""
 
@@ -112,6 +145,15 @@ class OpenWarpPointCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=IssueCloseWarpPointCommand,
+    order_type=OrderType.CLOSE_WARP_POINT,
+    category='superweapon',
+    action_ability_name='CloseWarpPoint',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_close_warp_point',
+    serializer_codec='warp_params',
+)
 class CloseWarpPointCommandHandler(BaseCommandHandler):
     """Handler for IssueCloseWarpPointCommand."""
 
@@ -138,6 +180,14 @@ class CloseWarpPointCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=IssueCreateDysonSphereCommand,
+    order_type=OrderType.CREATE_DYSON_SPHERE,
+    category='superweapon',
+    action_ability_name='CreateDysonSphere',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_create_dyson_sphere',
+)
 class CreateDysonSphereCommandHandler(BaseCommandHandler):
     """Handler for IssueCreateDysonSphereCommand."""
 
@@ -160,6 +210,15 @@ class CreateDysonSphereCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=IssueSelfDestructCommand,
+    order_type=OrderType.SELF_DESTRUCT,
+    category='superweapon',
+    action_ability_name='SelfDestruct',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_self_destruct',
+    serializer_codec='ship_id_list',
+)
 class SelfDestructCommandHandler(BaseCommandHandler):
     """Handler for IssueSelfDestructCommand."""
 
@@ -183,6 +242,13 @@ class SelfDestructCommandHandler(BaseCommandHandler):
 # Mission Command Handlers (Move + Action)
 # =============================================================================
 
+@command_spec(
+    command_class=QueueImplodePlanetMissionCommand,
+    order_type=None,
+    category='superweapon',
+    execution_model='mission',
+    facade_helper_name='dispatch_queue_implode_planet_mission',
+)
 class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueImplodePlanetMissionCommand."""
 
@@ -217,6 +283,13 @@ class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=QueueStellerateStarMissionCommand,
+    order_type=None,
+    category='superweapon',
+    execution_model='mission',
+    facade_helper_name='dispatch_queue_stellerate_star_mission',
+)
 class StellerateStarMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueStellerateStarMissionCommand."""
 
@@ -246,6 +319,13 @@ class StellerateStarMissionCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=QueueOpenWarpPointMissionCommand,
+    order_type=None,
+    category='superweapon',
+    execution_model='mission',
+    facade_helper_name='dispatch_queue_open_warp_point_mission',
+)
 class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueOpenWarpPointMissionCommand."""
 
@@ -280,6 +360,13 @@ class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=QueueCloseWarpPointMissionCommand,
+    order_type=None,
+    category='superweapon',
+    execution_model='mission',
+    facade_helper_name='dispatch_queue_close_warp_point_mission',
+)
 class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueCloseWarpPointMissionCommand."""
 
@@ -315,6 +402,13 @@ class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
         )
 
 
+@command_spec(
+    command_class=QueueCreateDysonSphereMissionCommand,
+    order_type=None,
+    category='superweapon',
+    execution_model='mission',
+    facade_helper_name='dispatch_queue_create_dyson_sphere_mission',
+)
 class CreateDysonSphereMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueCreateDysonSphereMissionCommand."""
 
@@ -342,3 +436,24 @@ class CreateDysonSphereMissionCommandHandler(BaseCommandHandler):
         return self._emit_validated_order(
             fleet, OrderType.CREATE_DYSON_SPHERE, None, result, "CREATE_DYSON_SPHERE mission",
         )
+
+
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (
+        ImplodePlanetCommandHandler,
+        StellerateStarCommandHandler,
+        OpenWarpPointCommandHandler,
+        CloseWarpPointCommandHandler,
+        CreateDysonSphereCommandHandler,
+        SelfDestructCommandHandler,
+        ImplodePlanetMissionCommandHandler,
+        StellerateStarMissionCommandHandler,
+        OpenWarpPointMissionCommandHandler,
+        CloseWarpPointMissionCommandHandler,
+        CreateDysonSphereMissionCommandHandler,
+    ):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))

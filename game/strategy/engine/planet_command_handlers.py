@@ -10,19 +10,35 @@ from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
 from game.strategy.data.order_types import OrderType, Order
+from game.strategy.engine.commands import (
+    ClearPlanetOrdersCommand,
+    DeletePlanetOrderCommand,
+    IssuePlanetOrderCommand,
+    SetAtmosphereTargetCommand,
+    SetGravityTargetCommand,
+    SetRadiationShieldTargetCommand,
+    SetWaterTargetCommand,
+)
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.validation.planet_order_validator import PlanetOrderValidator
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
-    from game.strategy.engine.commands import (
-        IssuePlanetOrderCommand,
-        ClearPlanetOrdersCommand,
-        DeletePlanetOrderCommand,
-    )
 
 
+@command_spec(
+    command_class=IssuePlanetOrderCommand,
+    order_type=None,  # Routes to ACTIVATE/DEACTIVATE_ABILITY at handle time
+    category='planet',
+    execution_model='planet',
+    facade_helper_name='dispatch_issue_planet_order',
+)
 class IssuePlanetOrderCommandHandler:
     """Handler for IssuePlanetOrderCommand."""
 
@@ -93,6 +109,13 @@ class IssuePlanetOrderCommandHandler:
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=ClearPlanetOrdersCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name='dispatch_clear_planet_orders',
+)
 class ClearPlanetOrdersCommandHandler:
     """Handler for ClearPlanetOrdersCommand."""
 
@@ -108,6 +131,13 @@ class ClearPlanetOrdersCommandHandler:
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=DeletePlanetOrderCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name='dispatch_delete_planet_order',
+)
 class DeletePlanetOrderCommandHandler:
     """Handler for DeletePlanetOrderCommand."""
 
@@ -160,6 +190,13 @@ def _apply_planet_environmental_target(
     return ValidationResult.success()
 
 
+@command_spec(
+    command_class=SetAtmosphereTargetCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name='dispatch_set_atmosphere_target',
+)
 class SetAtmosphereTargetCommandHandler:
     """Handler for SetAtmosphereTargetCommand."""
 
@@ -175,6 +212,14 @@ class SetAtmosphereTargetCommandHandler:
         )
 
 
+@command_spec(
+    command_class=SetGravityTargetCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    # No facade helper today.
+    facade_helper_name=None,
+)
 class SetGravityTargetCommandHandler:
     """Handler for SetGravityTargetCommand."""
 
@@ -191,6 +236,13 @@ class SetGravityTargetCommandHandler:
         )
 
 
+@command_spec(
+    command_class=SetWaterTargetCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name=None,
+)
 class SetWaterTargetCommandHandler:
     """Handler for SetWaterTargetCommand."""
 
@@ -207,6 +259,13 @@ class SetWaterTargetCommandHandler:
         )
 
 
+@command_spec(
+    command_class=SetRadiationShieldTargetCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name=None,
+)
 class SetRadiationShieldTargetCommandHandler:
     """Handler for SetRadiationShieldTargetCommand."""
 
@@ -221,3 +280,20 @@ class SetRadiationShieldTargetCommandHandler:
             ),
             clear_log="radiation shielding target cleared",
         )
+
+
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (
+        IssuePlanetOrderCommandHandler,
+        ClearPlanetOrdersCommandHandler,
+        DeletePlanetOrderCommandHandler,
+        SetAtmosphereTargetCommandHandler,
+        SetGravityTargetCommandHandler,
+        SetWaterTargetCommandHandler,
+        SetRadiationShieldTargetCommandHandler,
+    ):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))
