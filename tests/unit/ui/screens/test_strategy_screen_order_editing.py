@@ -23,6 +23,17 @@ def _make_screen():
     screen.ui = MagicMock()
     screen.ui.window_manager = MagicMock()
     screen.ui.window_manager.fleet_orders_window = MagicMock()
+
+    # PROJ-370 Phase 5: order edit routes through session.fleet_mutator;
+    # configure pop_order / set_path to actually mutate the mock fleet.
+    def _pop_order(fleet, index=0):
+        return fleet.orders.pop(index)
+
+    def _set_path(fleet, new_path):
+        fleet.path = new_path
+
+    screen.session.fleet_mutator.pop_order.side_effect = _pop_order
+    screen.session.fleet_mutator.set_path.side_effect = _set_path
     return screen
 
 
