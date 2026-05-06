@@ -10,12 +10,13 @@ import pytest
 
 from game.strategy.data.empire import Empire
 from game.strategy.engine.turn_engine import TICKS_PER_TURN, TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 
 
 @pytest.fixture
 def engine_inputs(fresh_registries):
     """Build a TurnEngine plus an empty empire/galaxy pair for a no-op turn."""
-    engine = TurnEngine(registries=fresh_registries, ai_factory=MagicMock())
+    engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock())
 
     empire = MagicMock(spec=Empire)
     empire.id = 0

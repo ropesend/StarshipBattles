@@ -10,6 +10,7 @@ import shutil
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.empire import Empire
 
 
@@ -100,7 +101,7 @@ def production_setup(fresh_registries):
     )
     planet.facilities.append(yard)
 
-    engine = TurnEngine(registries=fresh_registries)
+    engine = build_test_turn_engine(fresh_registries)
     empires = [empire]
 
     yield {

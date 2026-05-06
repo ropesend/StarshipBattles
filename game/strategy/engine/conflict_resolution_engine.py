@@ -447,6 +447,17 @@ class ConflictResolutionEngine(IConflictEngine):
         # happen via the compiler's `PostBattleHook` inside `run_battle`.
         # `empires` flows through to the hook so empty fleets are
         # removed from their empires post-battle.
+        # PROJ-369 Phase 3: explicit raise replaces the deleted
+        # ``_NullBattleResolver`` placeholder. Combat without a wired
+        # resolver is a caller mistake — fail loudly at the actual
+        # resolve site so non-combat ticks aren't penalised.
+        if self._battle_resolver is None:
+            raise ValueError(
+                "ConflictResolutionEngine was constructed without a "
+                "battle_resolver; combat cannot resolve. Provide "
+                "ai_factory= to TurnEngineConfig.create_default(...) so "
+                "a SimulationBattleResolver is wired."
+            )
         result = self._battle_resolver.resolve_battle(
             fleets,
             modifiers=modifiers,

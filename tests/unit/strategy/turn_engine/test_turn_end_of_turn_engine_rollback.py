@@ -25,6 +25,7 @@ import pytest
 
 from game.core.exceptions import EnginePhaseError
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.interfaces.engines import (
     IHappinessEngine,
     IOrganicsConsumptionEngine,
@@ -46,9 +47,7 @@ def test_happiness_engine_raise_wraps_in_engine_phase_error_and_triggers_rollbac
     happiness = MagicMock(spec=IHappinessEngine)
     happiness.process_happiness.side_effect = RuntimeError("forced happiness failure")
 
-    engine = TurnEngine(
-        registries=fresh_registries,
-        ai_factory=MagicMock(),
+    engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock(),
         organics_consumption_engine=organics,
         happiness_engine=happiness,
     )

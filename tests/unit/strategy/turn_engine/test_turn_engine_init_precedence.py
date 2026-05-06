@@ -1,46 +1,41 @@
 """
-PROJ-332 — Characterization tests for TurnEngine.__init__ precedence and slot wiring.
+PROJ-332 — Characterization tests for TurnEngine.__init__ wiring.
 
-Pins observed behavior of:
-- Individual engine kwargs taking precedence over `TurnEngineConfig` fields.
-- `_reset_phase_times` populating an exact 14-key dict.
-- `race_registry` slot wiring (provided / None / default).
-- `last_environmental_events` initializing to an empty list.
-
-Discipline: pure characterization — no production refactors.
+PROJ-369 Phase 3: Per-engine kwarg overrides have been removed; the
+config is the single source of engine wiring. Tests here pin:
+- ``dataclasses.replace(cfg, foo_engine=mock)`` flows through to the
+  property (replaces the prior "kwarg overrides config" precedence).
+- ``_reset_phase_times`` populates an exact 21-key dict.
+- ``race_registry`` slot wiring (provided / None / default).
+- ``last_environmental_events`` initializing to an empty list.
 """
 from __future__ import annotations
 
 from unittest.mock import MagicMock
 
 from game.core.protocols import IRaceRegistry
-from game.strategy.engine.turn_engine import TurnEngine
-from game.strategy.engine.turn_engine_config import TurnEngineConfig
 from game.strategy.interfaces.engines import IMovementEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 
 
-class TestTurnEngineInitPrecedence:
-    """Pin __init__ behavior: kwarg > config; slot defaults; phase-times keys."""
+class TestTurnEngineInitWiring:
+    """Pin __init__ behavior: config flows through; slot defaults;
+    phase-times keys."""
 
-    def test_init_kwarg_takes_precedence_over_config_field_when_both_supplied(
-        self, fresh_registries
-    ):
-        """Per-engine kwarg overrides the same field on `TurnEngineConfig`.
+    def test_config_field_flows_through_to_property(self, fresh_registries):
+        """``dataclasses.replace(cfg, movement_engine=mock)`` produces a
+        config whose injected mock surfaces on the property.
 
-        Pins the `kwarg or cfg.field` precedence pattern in __init__.
+        Replaces the prior "kwarg overrides config" precedence test
+        (PROJ-369 Phase 3 removed the per-engine kwargs).
         """
-        config_movement = MagicMock(spec=IMovementEngine, name="config_movement")
-        kwarg_movement = MagicMock(spec=IMovementEngine, name="kwarg_movement")
-        config = TurnEngineConfig(movement_engine=config_movement)
+        kwarg_movement = MagicMock(spec=IMovementEngine, name="injected_movement")
 
-        engine = TurnEngine(
-            registries=fresh_registries,
-            config=config,
-            movement_engine=kwarg_movement,
+        engine = build_test_turn_engine(
+            fresh_registries, movement_engine=kwarg_movement,
         )
 
         assert engine.movement_engine is kwarg_movement
-        assert engine.movement_engine is not config_movement
 
     def test_init_initializes_phase_times_with_canonical_keys(
         self, fresh_registries
@@ -52,7 +47,7 @@ class TestTurnEngineInitPrecedence:
         tick-loop bucket because the descriptor registry routes every
         per-tick phase through `_time_phase` uniformly.
         """
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         assert set(engine._phase_times.keys()) == {
             'harvesting', 'resources',
@@ -74,31 +69,33 @@ class TestTurnEngineInitPrecedence:
     def test_init_threads_race_registry_through_when_supplied_and_accepts_none(
         self, fresh_registries
     ):
-        """Pins `race_registry` slot wiring: stored as `_race_registry`,
+        """Pins ``race_registry`` slot wiring: stored as ``_race_registry``,
         defaults to None when omitted, accepts None explicitly, and threads
         a supplied registry through unchanged.
         """
         # Default: None when not supplied.
-        engine_default = TurnEngine(registries=fresh_registries)
+        engine_default = build_test_turn_engine(fresh_registries)
         assert engine_default._race_registry is None
 
         # Explicit None.
-        engine_none = TurnEngine(registries=fresh_registries, race_registry=None)
+        engine_none = build_test_turn_engine(
+            fresh_registries, race_registry=None,
+        )
         assert engine_none._race_registry is None
 
         # Supplied registry threaded through.
         mock_registry = MagicMock(spec=IRaceRegistry)
-        engine_with = TurnEngine(
-            registries=fresh_registries, race_registry=mock_registry
+        engine_with = build_test_turn_engine(
+            fresh_registries, race_registry=mock_registry,
         )
         assert engine_with._race_registry is mock_registry
 
     def test_init_initializes_last_environmental_events_to_empty_list(
         self, fresh_registries
     ):
-        """`last_environmental_events` is a fresh empty list per instance."""
-        engine_a = TurnEngine(registries=fresh_registries)
-        engine_b = TurnEngine(registries=fresh_registries)
+        """``last_environmental_events`` is a fresh empty list per instance."""
+        engine_a = build_test_turn_engine(fresh_registries)
+        engine_b = build_test_turn_engine(fresh_registries)
 
         assert engine_a.last_environmental_events == []
         assert isinstance(engine_a.last_environmental_events, list)

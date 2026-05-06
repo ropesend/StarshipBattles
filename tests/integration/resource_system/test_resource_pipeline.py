@@ -11,6 +11,7 @@ from game.core.resources import ResourceCatalog
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 
 from .conftest import create_mock_component, create_test_ship_design, make_ship_instance
 
@@ -146,7 +147,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
         empires = [MockEmpire()]
 
         # Run turn engine for 100 ticks
-        turn_engine = TurnEngine(registries=loaded_registry)
+        turn_engine = build_test_turn_engine(loaded_registry)
 
         for tick in range(1, 101):
             turn_engine.resource_engine.process_per_turn_consumption(tick, empires)
@@ -223,7 +224,7 @@ class TestAutoDisableComponentChainOnResourceDepletion:
                 self.fleets = [fleet]
 
         empires = [MockEmpire()]
-        turn_engine = TurnEngine(registries=loaded_registry)
+        turn_engine = build_test_turn_engine(loaded_registry)
 
         # Component should be enabled initially
         assert ship.is_component_enabled('test_plasma_engine') is True

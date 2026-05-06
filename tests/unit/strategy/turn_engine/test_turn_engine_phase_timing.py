@@ -25,6 +25,7 @@ import pytest
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import EnginePhaseError
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 
 
 class TestResetPhaseTimes:
@@ -45,7 +46,7 @@ class TestResetPhaseTimes:
         (the descriptor registry routes every per-tick phase through
         `_time_phase` uniformly).
         """
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         # Force a re-reset to make sure this method (not just __init__)
         # is what's pinned.
@@ -105,7 +106,7 @@ class TestTimePhase:
             turn_engine_mod.time, 'perf_counter', lambda: next(perf_values)
         )
 
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
         # Sanity: combat starts at zero.
         assert engine._phase_times['combat'] == 0.0
 
@@ -151,7 +152,7 @@ class TestTimePhase:
         from game.strategy.engine.turn_engine import TurnEngine
 
         src = inspect.getsource(TurnEngine.process_turn)
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         # Legacy log-label aliases retained for backward log-grep
         # compatibility — these dict keys are written under shorter
@@ -180,7 +181,7 @@ class TestTimePhase:
         re-raises the SAME exception object. It must not wrap it again
         in another EnginePhaseError.
         """
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         original_err = EnginePhaseError(
             "nested phase failure",

@@ -231,9 +231,11 @@ def _make_fleet_with_ship(
 
 def _make_economy_turn_engine(registries):
     """Create TurnEngine with real economy engines, all others mocked."""
+    from tests.fixtures.turn_engine import build_test_turn_engine
+
     mocks = _make_mock_non_economy_engines()
-    return TurnEngine(
-        registries=registries,
+    return build_test_turn_engine(
+        registries,
         **mocks,
         harvesting_engine=HarvestingEngine(registries=registries),
         production_engine=ProductionEngine(registries=registries),

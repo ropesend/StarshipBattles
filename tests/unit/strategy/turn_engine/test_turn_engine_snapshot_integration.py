@@ -24,6 +24,7 @@ import pytest
 
 from game.core.exceptions import EnginePhaseError
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 
 
 def _make_engine_with_failing_harvester(fresh_registries):
@@ -31,7 +32,7 @@ def _make_engine_with_failing_harvester(fresh_registries):
 
     Used to force the EnginePhaseError code path inside `process_turn`.
     """
-    engine = TurnEngine(registries=fresh_registries, ai_factory=MagicMock())
+    engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock())
     failing_harvester = MagicMock()
     failing_harvester.process_harvesting_tick.side_effect = RuntimeError("boom")
     engine._harvesting_engine = failing_harvester
@@ -48,7 +49,7 @@ class TestSnapshotIntegration:
         mock_empire.fleets = []
 
         # Case 1: session provided → capture called.
-        engine = TurnEngine(registries=fresh_registries, ai_factory=MagicMock())
+        engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock())
         session = MagicMock()
         session.turn_number = 5
 
@@ -70,7 +71,7 @@ class TestSnapshotIntegration:
         assert passed.get("turn_number") == 5
 
         # Case 2: no session → capture not called.
-        engine_b = TurnEngine(registries=fresh_registries, ai_factory=MagicMock())
+        engine_b = build_test_turn_engine(fresh_registries, ai_factory=MagicMock())
         with patch(
             'game.strategy.engine.turn_state_snapshot.TurnStateSnapshot.capture'
         ) as mock_capture_b:

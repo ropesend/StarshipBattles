@@ -11,6 +11,7 @@ import random
 
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy
@@ -101,9 +102,9 @@ def turn_engine(fresh_registries):
     PROJ-50 Phase 8: Uses fresh_registries for strict DI compliance.
     Uses InstantBattleResolver to avoid running full combat simulations.
     """
-    return TurnEngine(
+    return build_test_turn_engine(
+        fresh_registries,
         battle_resolver=InstantBattleResolver(),
-        registries=fresh_registries,
     )
 
 

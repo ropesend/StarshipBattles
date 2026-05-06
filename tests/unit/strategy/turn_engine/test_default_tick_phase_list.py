@@ -21,6 +21,7 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.interfaces.engines import (
     IActionExecutionEngine,
     IComponentActivationEngine,
@@ -89,9 +90,7 @@ def _build_engine_with_all_mocks(
     if conflict_engine is None:
         conflict_engine = MagicMock(spec=IConflictEngine)
 
-    engine = TurnEngine(
-        registries=fresh_registries,
-        ai_factory=MagicMock(),
+    engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock(),
         movement_engine=movement_engine,
         conflict_engine=conflict_engine,
         resource_engine=mock_resource,

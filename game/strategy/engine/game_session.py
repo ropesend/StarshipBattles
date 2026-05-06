@@ -62,6 +62,7 @@ from game.strategy.events import Event, EventLog
 
 logger = logging.getLogger(__name__)
 from game.strategy.engine.turn_engine import TurnEngine
+from game.strategy.engine.turn_engine_config import TurnEngineConfig
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.command_handlers import create_default_registry
 from game.strategy.data.empire import Empire
@@ -99,8 +100,17 @@ class GameSession:
         # Engine
         # PROJ-239: ai_factory is passed through to TurnEngine → SimulationBattleResolver.
         # Callers in the UI/app layer provide it; tests inject mocks.
+        # PROJ-369 Phase 3: TurnEngine ctor now requires `config`; build
+        # eagerly via TurnEngineConfig.create_default(...).
+        _turn_engine_config = TurnEngineConfig.create_default(
+            self._registries,
+            ai_factory=ai_factory,
+            race_registry=self.race_registry,
+            event_bus=self._event_bus,
+        )
         self.turn_engine = TurnEngine(
             registries=self._registries,
+            config=_turn_engine_config,
             ai_factory=ai_factory,
             event_bus=self._event_bus,
             race_registry=self.race_registry,
@@ -382,9 +392,17 @@ class GameSession:
         # PROJ-291 C3: propagate the session-scoped race registry into
         # TurnEngine so restored saves also resolve multi-species
         # RaceConfig correctly during process_turn.
+        # PROJ-369 Phase 3: ditto — `config=` required.
         session._race_registry = None
+        _turn_engine_config = TurnEngineConfig.create_default(
+            session._registries,
+            ai_factory=ai_factory,
+            race_registry=session.race_registry,
+            event_bus=session._event_bus,
+        )
         session.turn_engine = TurnEngine(
             registries=session._registries,
+            config=_turn_engine_config,
             ai_factory=ai_factory,
             event_bus=session._event_bus,
             race_registry=session.race_registry,

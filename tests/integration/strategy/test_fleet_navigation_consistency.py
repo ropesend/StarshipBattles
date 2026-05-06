@@ -27,6 +27,7 @@ def _positions_by_turn(projected_segments):
     return dict(grouped)
 
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
@@ -66,7 +67,7 @@ class MockGalaxy:
 @pytest.fixture
 def turn_engine(fresh_registries):
     """Create a TurnEngine instance."""
-    return TurnEngine(registries=fresh_registries)
+    return build_test_turn_engine(fresh_registries)
 
 
 @pytest.fixture

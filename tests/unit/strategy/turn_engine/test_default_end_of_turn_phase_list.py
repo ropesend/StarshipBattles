@@ -21,6 +21,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.engine.turn_phase_registry import (
     DEFAULT_END_OF_TURN_PHASE_LIST,
     TickPhase,
@@ -54,9 +55,7 @@ class TestDefaultEndOfTurnPhaseList:
     ):
         """Every phase_key (or timing_bucket) must be a valid bucket key
         in TurnEngine._phase_times so timing accumulation works."""
-        engine = TurnEngine(
-            registries=fresh_registries,
-            ai_factory=MagicMock(),
+        engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock(),
         )
         for descriptor in DEFAULT_END_OF_TURN_PHASE_LIST:
             bucket = descriptor.timing_bucket or descriptor.phase_key

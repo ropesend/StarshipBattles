@@ -17,17 +17,17 @@
 |-------|--------|-----------|------------|
 | 1. Extract end-of-turn block to descriptor list (`DEFAULT_END_OF_TURN_PHASE_LIST`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Make the 3 locally-constructed end-of-turn engines (Quality / Atmosphere / Water) injectable + lazy-property + `TurnEngineConfig` fields | Complete | [phase_2_checklist.md](phase_2_checklist.md) | phase_1 |
-| 3. Replace per-property lazy fallback init with required-kwarg injection from `TurnEngineConfig` (factory pre-fills defaults) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | phase_2 |
+| 3. Replace per-property lazy fallback init with required-kwarg injection from `TurnEngineConfig` (factory pre-fills defaults) | Complete | [phase_3_checklist.md](phase_3_checklist.md) | phase_2 |
 | 4. Convert tick + end-of-turn loops to a unified `for phase in self._phases: phase.run(ctx)` body | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | phase_3 |
 | 5. AST guard test + per-phase unit tests with mock context; remove `_NullBattleResolver`; finalize docs | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | phase_4 |
 
 ## Current State
 **Last Updated:** 2026-05-06
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete — 3 protocols (`IQualityEngine`/`IAtmosphereEngine`/`IWaterEngine`) added to `engines.py`; 3 fields added to `TurnEngineConfig`; 3 ctor kwargs + 3 lazy properties added to `TurnEngine`; descriptor list now resolves through injected lazy properties (resolver helpers from Phase 1 deleted). `test_turn_engine_end_of_turn_order.py` migrated to constructor injection (no more module patching). 3 lazy-default tests added. Focused: 122/122 pass (was 119). Strategy integration: 483 pass.
-**Next Action:** Phase 3 — add `TurnEngineConfig.create_default()` classmethod, delete 18 lazy fallback bodies, delete `_NullBattleResolver`, reduce ctor to 8 kwargs, migrate 35+ test sites + 2 production sites.
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete — `TurnEngineConfig.create_default()` classmethod added (eagerly constructs all 18 default engines). `TurnEngine.__init__` reduced from 21 kwargs to 8 (`registries`, `config`, `ai_factory`, `race_registry`, `event_bus`, `battle_resolver`, `tick_phases`, `end_of_turn_phases`). 18 lazy-property bodies collapsed to trivial passthroughs. `_NullBattleResolver` deleted. `create_default_turn_engine` factory deleted. `ConflictResolutionEngine._resolve_combat_at_hex` got an explicit raise-on-None-resolver guard at the dispatch site (replaces the silent `_NullBattleResolver` warn-then-raise path). New AST guard test (4 tests). New `tests/fixtures/turn_engine.py::build_test_turn_engine()` helper + shared `turn_engine_factory` fixture migrated 110+ test construction sites en bloc. 2 production call sites in `game_session.py` migrated. turn_engine.py: 802 → 679 LOC. Focused: 126/126 pass. Full unit + integration: 18633 pass.
+**Next Action:** Phase 4 — extract `_run_phases` helper; collapse tick + end-of-turn iteration into one shared invocation.
 **Blockers:** None.
-**Context for Next Agent:** Sub-engine count is now 18 (was 15 + 3 newly injectable). The lazy property surface still exists as a stable read API; Phase 3 will collapse the bodies to trivial passthroughs once `TurnEngineConfig.create_default()` eagerly populates everything.
+**Context for Next Agent:** Phase 4 is a small refactor — both `_process_tick` and the end-of-turn block share identical descriptor-iteration logic. Extracting `_run_phases(self, phases, ctx)` removes ~10 lines of duplication.
 
 ## Overview
 

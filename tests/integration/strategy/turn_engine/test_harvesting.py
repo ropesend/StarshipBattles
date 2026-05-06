@@ -12,6 +12,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.empire import Empire
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
 from game.core.hex_math import HexCoord
@@ -112,8 +113,8 @@ class TestHarvestingIntegration:
         mock_harvesting = MagicMock()
         mocks = _make_mock_engines()
 
-        engine = TurnEngine(
-            registries=fresh_registries,
+        engine = build_test_turn_engine(
+            fresh_registries,
             **mocks,
             harvesting_engine=mock_harvesting,
         )
@@ -146,8 +147,8 @@ class TestHarvestingIntegration:
         mocks = _make_mock_engines()
         harvesting = HarvestingEngine(registries=fresh_registries)
 
-        engine = TurnEngine(
-            registries=fresh_registries,
+        engine = build_test_turn_engine(
+            fresh_registries,
             **mocks,
             harvesting_engine=harvesting,
         )
@@ -177,8 +178,8 @@ class TestHarvestingIntegration:
         mocks = _make_mock_engines()
         mocks['production_engine'].process_construction_tick.side_effect = lambda t, e, g, **kw: production_ticks.append(t)
 
-        engine = TurnEngine(
-            registries=fresh_registries,
+        engine = build_test_turn_engine(
+            fresh_registries,
             **mocks,
             harvesting_engine=mock_harvesting,
         )
@@ -236,8 +237,8 @@ class TestHarvestingIntegration:
         mocks = _make_mock_engines()
         harvesting = HarvestingEngine(registries=fresh_registries)
 
-        engine = TurnEngine(
-            registries=fresh_registries,
+        engine = build_test_turn_engine(
+            fresh_registries,
             **mocks,
             harvesting_engine=harvesting,
         )

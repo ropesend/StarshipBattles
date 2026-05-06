@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 
 from game.core.validation import ValidationResult
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 
 
 class TestValidateColonizeOrder:
@@ -33,7 +34,7 @@ class TestValidateColonizeOrder:
         package — that's the import site `validate_colonize_order` reads from
         via `from game.strategy.validation import ColonizeValidator`.
         """
-        engine = TurnEngine(registries=fresh_registries, ai_factory=MagicMock())
+        engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock())
 
         sentinel_result = ValidationResult.success()
 

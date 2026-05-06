@@ -10,6 +10,7 @@ from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
@@ -71,9 +72,9 @@ def turn_engine(fresh_registries):
 
     Uses InstantBattleResolver to avoid running full combat simulations.
     """
-    return TurnEngine(
+    return build_test_turn_engine(
+        fresh_registries,
         battle_resolver=InstantBattleResolver(),
-        registries=fresh_registries,
     )
 
 
@@ -87,9 +88,9 @@ def turn_engine_with_mock_movement(fresh_registries):
     """
     from tests.unit.strategy.mocks import MockMovementEngine
     mock = MockMovementEngine()
-    engine = TurnEngine(
+    engine = build_test_turn_engine(
+        fresh_registries,
         battle_resolver=InstantBattleResolver(),
-        registries=fresh_registries,
         movement_engine=mock,
     )
     engine._mock_movement = mock

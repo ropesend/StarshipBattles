@@ -9,6 +9,7 @@ import pytest
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.turn_engine import TurnEngine, TICKS_PER_TURN
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.planet import PlanetaryFacility
@@ -161,9 +162,9 @@ class TestMultipleTurns:
 
         empire1, empire2, galaxy = two_empire_setup
         stub = _StubMovementEngine()
-        engine = TurnEngine(
+        engine = build_test_turn_engine(
+            fresh_registries,
             battle_resolver=InstantBattleResolver(),
-            registries=fresh_registries,
             movement_engine=stub,
         )
 
@@ -273,10 +274,16 @@ class TestTurnEngineIsolation:
     """Tests for turn engine state isolation."""
 
     def test_turn_engine_has_no_persistent_state(self, turn_engine):
-        """Turn engine starts with clean state."""
-        # PROJ-36: Battle seed counter moved to ConflictResolutionEngine
-        # Conflict engine should be None initially (lazy initialization)
-        assert turn_engine._conflict_engine is None
+        """Turn engine starts with clean state.
+
+        PROJ-369 Phase 3: ``_conflict_engine`` is now eagerly
+        constructed in ``TurnEngineConfig.create_default(...)`` (was
+        lazily initialized pre-Phase 3). The "clean state" invariant
+        is asserted via ``_battle_seed_counter == 0`` instead.
+        """
+        # PROJ-36: Battle seed counter moved to ConflictResolutionEngine.
+        assert turn_engine._conflict_engine is not None
+        assert turn_engine.conflict_engine._battle_seed_counter == 0
 
     def test_battle_seeds_increment(self, turn_engine, two_empire_setup, fresh_registries):
         """Battle seeds increment for determinism."""

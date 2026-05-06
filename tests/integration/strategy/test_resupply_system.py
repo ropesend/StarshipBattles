@@ -8,6 +8,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.engine.resupply_engine import ResupplyEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
@@ -158,7 +159,7 @@ class TestCompleteResupplyFlow:
         """Full cycle: synthesizer generates fuel, facility stores it, fleet receives it."""
         # Setup: 300 fuel/turn synthesizer, 500 capacity tank
         registries = _make_registries(fuel_tank_amount=500.0, fuel_gen_amount=300.0)
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         location = HexCoord(2, 3)
 
@@ -188,7 +189,7 @@ class TestCompleteResupplyFlow:
     def test_multi_turn_fuel_accumulation(self):
         """Fuel accumulates across multiple turns when no fleet is present."""
         registries = _make_registries(fuel_tank_amount=1000.0, fuel_gen_amount=200.0)
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         facility = _make_facility(fuel_level=0.0, has_synthesizer=True)
         colony = _make_colony(owner_id=0, facilities=[facility])
@@ -210,7 +211,7 @@ class TestCompleteResupplyFlow:
         """Fuel does not exceed facility storage capacity."""
         # Tank capacity 500, generation 300/turn
         registries = _make_registries(fuel_tank_amount=500.0, fuel_gen_amount=300.0)
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         facility = _make_facility(fuel_level=0.0, has_synthesizer=True)
         colony = _make_colony(owner_id=0, facilities=[facility])
@@ -230,7 +231,7 @@ class TestCompleteResupplyFlow:
     def test_non_operational_facility_no_generation(self):
         """Non-operational facilities produce no fuel."""
         registries = _make_registries(fuel_gen_amount=300.0)
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         facility = _make_facility(fuel_level=0.0, has_synthesizer=True, is_operational=False)
         colony = _make_colony(owner_id=0, facilities=[facility])

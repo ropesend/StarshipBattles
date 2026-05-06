@@ -6,6 +6,8 @@ doesn't generate starting fleets.
 
 PROJ-55: Updated to create fleets with colony pods for colonization tests.
 """
+from unittest.mock import MagicMock
+
 import pytest
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
@@ -364,9 +366,15 @@ class TestFacadeProcessTurn:
 
     @pytest.fixture
     def game_setup(self):
-        """Create a real game session with facade."""
+        """Create a real game session with facade.
+
+        PROJ-369 Phase 3: combat raises clearly when no ``ai_factory`` is
+        provided (the silent ``_NullBattleResolver`` warn path was
+        deleted). Pass ``ai_factory=MagicMock()`` so the
+        SimulationBattleResolver is wired and combat resolves.
+        """
         config = GameConfig(galaxy_radius=5000, system_count=5)
-        session = GameSession(config=config)
+        session = GameSession(config=config, ai_factory=MagicMock())
         facade = StrategySessionFacade(session)
         return session, facade
 

@@ -30,6 +30,7 @@ import pytest
 
 from game.core.exceptions import EnginePhaseError
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.interfaces.engines import (
     IAtmosphereEngine,
     IHappinessEngine,
@@ -71,9 +72,7 @@ class TestEndOfTurnEngineOrder:
         parent.attach_mock(atmosphere, "atmosphere")
         parent.attach_mock(water, "water")
 
-        engine = TurnEngine(
-            registries=fresh_registries,
-            ai_factory=MagicMock(),
+        engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock(),
             organics_consumption_engine=organics,
             happiness_engine=happiness,
             population_engine=population,
@@ -115,9 +114,7 @@ class TestEndOfTurnEngineOrder:
         population = MagicMock(spec=IPopulationEngine)
         quality, atmosphere, water = _build_terraforming_mocks()
 
-        engine = TurnEngine(
-            registries=fresh_registries,
-            ai_factory=MagicMock(),
+        engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock(),
             population_engine=population,
             quality_engine=quality,
             atmosphere_engine=atmosphere,
@@ -151,9 +148,7 @@ class TestEndOfTurnEngineOrder:
         happiness.process_happiness.side_effect = RuntimeError("happiness boom")
         quality, atmosphere, water = _build_terraforming_mocks()
 
-        engine = TurnEngine(
-            registries=fresh_registries,
-            ai_factory=MagicMock(),
+        engine = build_test_turn_engine(fresh_registries, ai_factory=MagicMock(),
             organics_consumption_engine=organics,
             happiness_engine=happiness,
             quality_engine=quality,

@@ -5,6 +5,7 @@ PROJ-68 Phase 3: Logistic population growth engine.
 """
 import pytest
 from unittest.mock import MagicMock, patch
+from tests.fixtures.turn_engine import build_test_turn_engine
 
 from game.strategy.engine.population_engine import PopulationEngine
 from game.strategy.data.planet import Planet, SpeciesPopulation, PlanetType
@@ -428,10 +429,7 @@ class TestTurnEngineIntegration:
         mock_pop_engine = MagicMock()
 
         # Inject into TurnEngine
-        turn_engine = TurnEngine(
-            registries=fresh_registries,
-            population_engine=mock_pop_engine
-        )
+        turn_engine = build_test_turn_engine(fresh_registries, population_engine=mock_pop_engine)
 
         # Create minimal test data
         empire = MagicMock(spec=Empire)

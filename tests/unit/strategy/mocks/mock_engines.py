@@ -6,11 +6,12 @@ for isolated unit testing of TurnEngine and related components.
 
 Usage:
     from tests.unit.strategy.mocks import MockMovementEngine
+    from tests.fixtures.turn_engine import build_test_turn_engine
 
     mock_movement = MockMovementEngine()
     mock_movement.collect_movements_result = [(fleet, hex)]
 
-    engine = TurnEngine(movement_engine=mock_movement)
+    engine = build_test_turn_engine(registries, movement_engine=mock_movement)
     engine._process_tick(1, [empire], galaxy)
 
     assert mock_movement.collect_movements_called

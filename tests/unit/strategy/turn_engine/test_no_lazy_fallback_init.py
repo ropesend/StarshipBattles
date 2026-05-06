@@ -1,0 +1,146 @@
+"""
+PROJ-369 Phase 3 — AST regression guard for TurnEngine.
+
+Pins three invariants that the Phase 3 refactor establishes:
+
+1. Zero ``if self._<x>_engine is None:`` fallback patterns inside
+   ``turn_engine.py`` (the lazy-init pattern that defeated DI).
+2. Zero function-local ``from game.strategy.engine.<x>_engine import
+   <X>Engine`` statements inside ``TurnEngine`` methods. The ONE
+   allow-listed location for engine imports is
+   ``TurnEngineConfig.create_default()`` (different module).
+3. ``TurnEngine.__init__`` accepts at most 8 parameters (excluding
+   ``self``) — collapsed from 21 in PROJ-259's wire-up.
+4. The ``_NullBattleResolver`` symbol is no longer importable from
+   ``game.strategy.engine.turn_engine`` — eliminated in favor of
+   raise-on-use in ``ConflictResolutionEngine``.
+
+Any of these failing means the refactor regressed; that's intentional
+and the test should NOT be relaxed without surfacing the change in
+PROJ-369's decisions.md.
+"""
+from __future__ import annotations
+
+import ast
+import inspect
+from pathlib import Path
+
+import pytest
+
+
+TURN_ENGINE_PATH = (
+    Path(__file__).resolve().parents[4]
+    / "game"
+    / "strategy"
+    / "engine"
+    / "turn_engine.py"
+)
+
+
+def _parse_turn_engine() -> ast.Module:
+    src = TURN_ENGINE_PATH.read_text(encoding="utf-8")
+    return ast.parse(src)
+
+
+def _turn_engine_class_node(tree: ast.Module) -> ast.ClassDef:
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef) and node.name == "TurnEngine":
+            return node
+    pytest.fail("TurnEngine class not found in turn_engine.py")
+
+
+class TestNoLazyFallbackInit:
+    """AST-level regression guard for PROJ-369 Phase 3 invariants."""
+
+    def test_no_if_self_engine_is_none_pattern(self):
+        """No ``if self._foo_engine is None:`` checks inside the file.
+
+        These are the 15 lazy-fallback init bodies that PROJ-369 Phase 3
+        removed. Any reappearance is a regression.
+        """
+        tree = _parse_turn_engine()
+        offenders: list[str] = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.If):
+                continue
+            t = node.test
+            if not isinstance(t, ast.Compare):
+                continue
+            if not (len(t.ops) == 1 and isinstance(t.ops[0], ast.Is)):
+                continue
+            # left side: self._<x>_engine (Attribute on self)
+            left = t.left
+            if not (
+                isinstance(left, ast.Attribute)
+                and isinstance(left.value, ast.Name)
+                and left.value.id == "self"
+                and left.attr.startswith("_")
+                and left.attr.endswith(("_engine", "_processor", "_resolver"))
+            ):
+                continue
+            # right side: Constant(None) or NameConstant
+            right = t.comparators[0]
+            if isinstance(right, ast.Constant) and right.value is None:
+                offenders.append(left.attr)
+        assert not offenders, (
+            f"Found `if self._X is None` fallback patterns: {offenders}. "
+            "PROJ-369 Phase 3 removed these in favor of "
+            "TurnEngineConfig.create_default()."
+        )
+
+    def test_no_function_local_engine_imports_in_TurnEngine_methods(self):
+        """No ``from game.strategy.engine.foo_engine import FooEngine``
+        inside any method on TurnEngine.
+
+        The lone allow-listed location for engine imports is
+        ``TurnEngineConfig.create_default()`` (a different module).
+        """
+        tree = _parse_turn_engine()
+        cls = _turn_engine_class_node(tree)
+        offenders: list[str] = []
+        for child in cls.body:
+            if not isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            for node in ast.walk(child):
+                if not isinstance(node, ast.ImportFrom):
+                    continue
+                module = node.module or ""
+                if (
+                    module.startswith("game.strategy.engine.")
+                    and module.endswith("_engine")
+                ):
+                    offenders.append(f"{child.name}: from {module} import ...")
+        assert not offenders, (
+            f"Found function-local engine imports inside TurnEngine: {offenders}. "
+            "Construction belongs in TurnEngineConfig.create_default()."
+        )
+
+    def test_TurnEngine_init_signature_has_at_most_8_params(self):
+        """``TurnEngine.__init__`` should accept at most 8 params after self.
+
+        Phase 3 collapses the 21-param ctor (battle_resolver + 16 engine
+        kwargs + registries/race_registry/event_bus/config/ai_factory/
+        tick_phases/end_of_turn_phases) down to 8.
+        """
+        from game.strategy.engine.turn_engine import TurnEngine
+
+        sig = inspect.signature(TurnEngine.__init__)
+        # Exclude 'self'.
+        params = [p for p in sig.parameters.values() if p.name != "self"]
+        assert len(params) <= 8, (
+            f"TurnEngine.__init__ has {len(params)} params: "
+            f"{[p.name for p in params]}. Phase 3 caps this at 8."
+        )
+
+    def test_NullBattleResolver_symbol_absent(self):
+        """``_NullBattleResolver`` must not exist on the module.
+
+        Phase 3 deleted this class. Combat with ``battle_resolver=None``
+        now raises directly from ``ConflictResolutionEngine`` instead of
+        going through a placeholder warn-and-raise wrapper.
+        """
+        from game.strategy.engine import turn_engine as turn_engine_module
+
+        assert not hasattr(turn_engine_module, "_NullBattleResolver"), (
+            "_NullBattleResolver was deleted in PROJ-369 Phase 3."
+        )

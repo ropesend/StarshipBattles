@@ -100,29 +100,9 @@ if TYPE_CHECKING:
         IAtmosphereEngine,
         IWaterEngine,
     )
-    from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-    from game.strategy.engine.production_engine import ProductionEngine
-    from game.strategy.engine.order_processor import OrderProcessor
-    from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-    from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
     from game.strategy.data.empire import Empire
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.engine.game_session import GameSession
-
-
-class _NullBattleResolver:
-    """Placeholder battle resolver that raises if actually invoked.
-
-    Used when no ai_factory or battle_resolver is provided (e.g., in tests
-    that don't trigger combat). Allows TurnEngine construction without
-    requiring an AI factory for non-combat scenarios.
-    """
-
-    def resolve_battle(self, *args, **kwargs) -> Any:
-        raise RuntimeError(
-            "No battle resolver configured. Provide ai_factory or battle_resolver "
-            "to TurnEngine when combat resolution is needed."
-        )
 
 
 class TurnEngine:
@@ -147,98 +127,80 @@ class TurnEngine:
 
     def __init__(
         self,
-        battle_resolver: Optional['IBattleResolver'] = None,
         *,
         registries: GameRegistries,
-        config: Optional['TurnEngineConfig'] = None,
+        config: 'TurnEngineConfig',
         ai_factory: Optional[Any] = None,
-        movement_engine: Optional['IMovementEngine'] = None,
-        production_engine: Optional['IProductionEngine'] = None,
-        order_processor: Optional['IOrderProcessor'] = None,
-        conflict_engine: Optional['IConflictEngine'] = None,
-        resource_engine: Optional['IConsumableEngine'] = None,
-        population_engine: Optional['IPopulationEngine'] = None,
-        resupply_engine: Optional['IResupplyEngine'] = None,
-        harvesting_engine: Optional['IHarvestingEngine'] = None,
-        action_engine: Optional['IActionExecutionEngine'] = None,
-        environmental_engine: Optional['IEnvironmentalHazardEngine'] = None,
-        planet_energy_engine: Optional['IPlanetEnergyEngine'] = None,
-        planet_action_engine: Optional['IPlanetActionEngine'] = None,
-        component_activation_engine: Optional['IComponentActivationEngine'] = None,
-        organics_consumption_engine: Optional['IOrganicsConsumptionEngine'] = None,
-        happiness_engine: Optional['IHappinessEngine'] = None,
-        quality_engine: Optional['IQualityEngine'] = None,
-        atmosphere_engine: Optional['IAtmosphereEngine'] = None,
-        water_engine: Optional['IWaterEngine'] = None,
         race_registry: Optional['IRaceRegistry'] = None,
         event_bus=None,
+        battle_resolver: Optional['IBattleResolver'] = None,
         tick_phases: Optional[tuple['TickPhase', ...]] = None,
         end_of_turn_phases: Optional[tuple['TickPhase', ...]] = None,
     ):
         """Initialize the turn engine.
 
-        PROJ-259: Accepts optional TurnEngineConfig to bundle engine dependencies.
-        Individual engine kwargs still work for backward compatibility — they
-        take precedence over config values when both are provided.
+        PROJ-369 Phase 3: ``config`` is REQUIRED. The 18 sub-engines are
+        always read from ``config``; there is no per-engine override
+        kwarg. Tests that need to swap one engine should construct the
+        config via ``TurnEngineConfig.create_default(registries, ...)``
+        followed by ``dataclasses.replace(cfg, foo_engine=mock_foo)``.
+
+        The ``_NullBattleResolver`` placeholder is gone; combat with
+        ``battle_resolver=None`` raises clearly from
+        ``ConflictResolutionEngine`` at first attempt.
 
         Args:
-            battle_resolver: Optional battle resolver. If None, defaults to SimulationBattleResolver.
             registries: GameRegistries for DI to sub-engines (required).
-            config: Optional TurnEngineConfig bundling all 13 engine dependencies.
-                   Individual kwargs override config values.
-            ai_factory: Optional AI controller factory.
-            movement_engine..component_activation_engine: Individual engine overrides.
-                   If None and config provides a value, config value is used.
-                   If both None, lazy-initializes default implementation.
-            event_bus: Optional event bus for structured logging.
+            config: TurnEngineConfig bundling all 18 engine dependencies
+                (required). Build via ``TurnEngineConfig.create_default(...)``.
+            ai_factory: Optional AI controller factory. Documentation
+                hook only — config is expected to have already-bound
+                values that used this.
+            race_registry: Optional race registry. Documentation hook
+                only — config is expected to have already-bound values
+                that used this.
+            event_bus: Optional event bus. Documentation hook only —
+                config is expected to have already-bound values that
+                used this.
+            battle_resolver: Optional escape hatch to override the
+                resolver bound to ``config.conflict_engine`` (e.g.
+                tests that want to skip combat). Stored on self for
+                introspection; the conflict engine itself reads
+                whatever resolver was bound at construction time.
+            tick_phases: Optional override for the per-tick phase
+                descriptor list. Defaults to
+                ``DEFAULT_TICK_PHASE_LIST`` (15 entries).
+            end_of_turn_phases: Optional override for the end-of-turn
+                phase descriptor list. Defaults to
+                ``DEFAULT_END_OF_TURN_PHASE_LIST`` (6 entries).
         """
-        from game.strategy.engine.turn_engine_config import TurnEngineConfig
-        cfg = config or TurnEngineConfig()
-
         self._battle_resolver = battle_resolver
         self._ai_factory = ai_factory
         self._registries = registries
         self._event_bus = event_bus
-        # PROJ-291 C3: optional race registry threaded into Happiness +
-        # Population engines so multi-species colonies resolve each
-        # species' RaceConfig correctly. None-fallback preserves the
-        # legacy single-race resolver path for test callers that don't
-        # supply a registry.
         self._race_registry: Optional['IRaceRegistry'] = race_registry
 
-        # Engine fields: individual kwargs take precedence over config
-        self._movement_engine: Optional['IMovementEngine'] = movement_engine or cfg.movement_engine
-        self._production_engine: Optional['IProductionEngine'] = production_engine or cfg.production_engine
-        self._order_processor: Optional['IOrderProcessor'] = order_processor or cfg.order_processor
-        self._conflict_engine: Optional['IConflictEngine'] = conflict_engine or cfg.conflict_engine
-        self._resource_engine: Optional['IConsumableEngine'] = resource_engine or cfg.resource_engine
-        self._population_engine: Optional['IPopulationEngine'] = population_engine or cfg.population_engine
-        self._resupply_engine: Optional['IResupplyEngine'] = resupply_engine or cfg.resupply_engine
-        self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine or cfg.harvesting_engine
-        self._action_engine: Optional['IActionExecutionEngine'] = action_engine or cfg.action_engine
-        self._environmental_engine: Optional['IEnvironmentalHazardEngine'] = environmental_engine or cfg.environmental_engine
-        self._planet_energy_engine: Optional['IPlanetEnergyEngine'] = planet_energy_engine or cfg.planet_energy_engine
-        self._planet_action_engine: Optional['IPlanetActionEngine'] = planet_action_engine or cfg.planet_action_engine
-        self._component_activation_engine: Optional['IComponentActivationEngine'] = component_activation_engine or cfg.component_activation_engine
-        # PROJ-284: per-turn food consumption engine (drains configured
-        # food resource, writes last_food_ratio for happiness + population)
-        self._organics_consumption_engine: Optional['IOrganicsConsumptionEngine'] = (
-            organics_consumption_engine or cfg.organics_consumption_engine
-        )
-        # PROJ-284 Phase 3: happiness = base_happiness * last_food_ratio * habitability
-        self._happiness_engine: Optional['IHappinessEngine'] = (
-            happiness_engine or cfg.happiness_engine
-        )
-        # PROJ-369 Phase 2: per-turn terraforming engines now injectable.
-        self._quality_engine: Optional['IQualityEngine'] = (
-            quality_engine or cfg.quality_engine
-        )
-        self._atmosphere_engine: Optional['IAtmosphereEngine'] = (
-            atmosphere_engine or cfg.atmosphere_engine
-        )
-        self._water_engine: Optional['IWaterEngine'] = (
-            water_engine or cfg.water_engine
-        )
+        # PROJ-369 Phase 3: every sub-engine comes straight from config.
+        # `TurnEngineConfig.create_default(...)` is the only sanctioned
+        # construction site. No per-property fallback init.
+        self._movement_engine = config.movement_engine
+        self._production_engine = config.production_engine
+        self._order_processor = config.order_processor
+        self._conflict_engine = config.conflict_engine
+        self._resource_engine = config.resource_engine
+        self._population_engine = config.population_engine
+        self._resupply_engine = config.resupply_engine
+        self._harvesting_engine = config.harvesting_engine
+        self._action_engine = config.action_engine
+        self._environmental_engine = config.environmental_engine
+        self._planet_energy_engine = config.planet_energy_engine
+        self._planet_action_engine = config.planet_action_engine
+        self._component_activation_engine = config.component_activation_engine
+        self._organics_consumption_engine = config.organics_consumption_engine
+        self._happiness_engine = config.happiness_engine
+        self._quality_engine = config.quality_engine
+        self._atmosphere_engine = config.atmosphere_engine
+        self._water_engine = config.water_engine
 
         # PROJ-365: Per-tick phase descriptor list. Defaults to the
         # canonical 15-phase ordering; tests may inject a custom list to
@@ -344,204 +306,110 @@ class TurnEngine:
             except (AttributeError, TypeError):
                 pass
 
+    # PROJ-369 Phase 3: All 18 engine properties are trivial
+    # passthroughs. Construction lives in
+    # ``TurnEngineConfig.create_default(...)``; tests override via
+    # ``dataclasses.replace(cfg, foo_engine=mock_foo)``. The fallback
+    # init that previously sat in each property body is gone; the AST
+    # guard test ``test_no_lazy_fallback_init.py`` enforces that.
+
     @property
     def movement_engine(self) -> 'IMovementEngine':
-        """Return movement engine, lazily creating default if not injected."""
-        if self._movement_engine is None:
-            from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-            self._movement_engine = FleetMovementEngine()
+        """Return injected movement engine."""
         return self._movement_engine
 
     @property
     def production_engine(self) -> 'IProductionEngine':
-        """Return production engine, lazily creating default if not injected."""
-        if self._production_engine is None:
-            from game.strategy.engine.production_engine import ProductionEngine
-            # PROJ-211: Pass registries for ship creation DI compliance
-            self._production_engine = ProductionEngine(registries=self._registries, event_bus=self._event_bus)
+        """Return injected production engine."""
         return self._production_engine
 
     @property
     def order_processor(self) -> 'IOrderProcessor':
-        """Return order processor, lazily creating default if not injected."""
-        if self._order_processor is None:
-            from game.strategy.engine.order_processor import OrderProcessor
-            self._order_processor = OrderProcessor(event_bus=self._event_bus)
+        """Return injected order processor."""
         return self._order_processor
 
     @property
     def conflict_engine(self) -> 'IConflictEngine':
-        """Return conflict engine, lazily creating default if not injected."""
-        if self._conflict_engine is None:
-            from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-            # PROJ-239: Lazily create battle resolver if not injected
-            battle_resolver = self._battle_resolver
-            if battle_resolver is None and self._ai_factory is not None:
-                from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
-                battle_resolver = SimulationBattleResolver(ai_factory=self._ai_factory)
-                self._battle_resolver = battle_resolver
-            if battle_resolver is None:
-                logger.warning(
-                    "TurnEngine: no battle_resolver or ai_factory provided. "
-                    "Combat resolution will fail if battles occur."
-                )
-                battle_resolver = _NullBattleResolver()
-            # PROJ-50: Pass registries for strict DI compliance.
-            # PROJ-300 Phase 7: AreaEffectManager removed; sector effects are
-            # now read by the engine itself via collect_sector_effects.
-            self._conflict_engine = ConflictResolutionEngine(
-                battle_resolver,
-                registries=self._registries,
-                event_bus=self._event_bus,
-            )
+        """Return injected conflict engine."""
         return self._conflict_engine
 
     @property
     def resource_engine(self) -> 'IConsumableEngine':
-        """Return resource engine, lazily creating default if not injected."""
-        if self._resource_engine is None:
-            from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
-            # PROJ-50: Pass registries for strict DI
-            self._resource_engine = ConsumableManagementEngine(registries=self._registries)
+        """Return injected resource (consumable) engine."""
         return self._resource_engine
 
     @property
     def population_engine(self) -> 'IPopulationEngine':
-        """Return population engine, lazily creating default if not injected."""
-        if self._population_engine is None:
-            from game.strategy.engine.population_engine import PopulationEngine
-            # PROJ-291 C3: thread the race registry so multi-species
-            # colonies grow each species at its own reproduction rate.
-            self._population_engine = PopulationEngine(race_registry=self._race_registry)
+        """Return injected population engine."""
         return self._population_engine
 
     @property
     def resupply_engine(self) -> 'IResupplyEngine':
-        """Return resupply engine, lazily creating default if not injected."""
-        if self._resupply_engine is None:
-            from game.strategy.engine.resupply_engine import ResupplyEngine
-            self._resupply_engine = ResupplyEngine(registries=self._registries)
+        """Return injected resupply engine."""
         return self._resupply_engine
 
     @property
     def harvesting_engine(self) -> 'IHarvestingEngine':
-        """Return harvesting engine, lazily creating default if not injected."""
-        if self._harvesting_engine is None:
-            from game.strategy.engine.harvesting_engine import HarvestingEngine
-            self._harvesting_engine = HarvestingEngine(registries=self._registries)
+        """Return injected harvesting engine."""
         return self._harvesting_engine
 
     @property
     def action_engine(self) -> 'IActionExecutionEngine':
-        """Return action execution engine, lazily creating default if not injected."""
-        if self._action_engine is None:
-            from game.strategy.engine.action_execution_engine import ActionExecutionEngine
-            from game.strategy.services.action_time_resolver import ActionTimeResolver
-            self._action_engine = ActionExecutionEngine(
-                order_processor=self.order_processor,
-                action_time_resolver=ActionTimeResolver()
-            )
+        """Return injected action execution engine."""
         return self._action_engine
 
     @property
     def environmental_engine(self) -> 'IEnvironmentalHazardEngine':
-        """Return environmental hazard engine, lazily creating default if not injected."""
-        if self._environmental_engine is None:
-            from game.strategy.engine.environmental_hazard_engine import EnvironmentalHazardEngine
-            self._environmental_engine = EnvironmentalHazardEngine()
+        """Return injected environmental hazard engine."""
         return self._environmental_engine
 
     @property
     def planet_energy_engine(self) -> 'IPlanetEnergyEngine':
-        """Return planet energy engine, lazily creating default if not injected."""
-        if self._planet_energy_engine is None:
-            from game.strategy.engine.planet_energy_engine import PlanetEnergyEngine
-            self._planet_energy_engine = PlanetEnergyEngine(registries=self._registries, event_bus=self._event_bus)
+        """Return injected planet energy engine."""
         return self._planet_energy_engine
 
     @property
     def planet_action_engine(self) -> 'IPlanetActionEngine':
-        """Return planet action engine, lazily creating default if not injected."""
-        if self._planet_action_engine is None:
-            from game.strategy.engine.planet_action_engine import PlanetActionEngine
-            from game.strategy.services.action_time_resolver import ActionTimeResolver
-            self._planet_action_engine = PlanetActionEngine(
-                registries=self._registries,
-                action_time_resolver=ActionTimeResolver(),
-                event_bus=self._event_bus,
-            )
+        """Return injected planet action engine."""
         return self._planet_action_engine
 
     @property
     def component_activation_engine(self) -> 'IComponentActivationEngine':
-        """Return component activation engine, lazily creating default if not injected."""
-        if self._component_activation_engine is None:
-            from game.strategy.engine.component_activation_engine import ComponentActivationEngine
-            self._component_activation_engine = ComponentActivationEngine()
+        """Return injected component activation engine."""
         return self._component_activation_engine
 
     @property
     def organics_consumption_engine(self) -> 'IOrganicsConsumptionEngine':
-        """Return organics consumption engine, lazily creating default if not injected.
+        """Return injected organics consumption engine.
 
-        PROJ-284 Phase 2: Drains the configured food resource per turn
-        and writes `last_food_ratio` for downstream happiness / population
-        reads.
+        PROJ-284 Phase 2: drains the configured food resource per turn
+        and writes ``last_food_ratio`` for downstream happiness /
+        population reads.
         """
-        if self._organics_consumption_engine is None:
-            from game.strategy.engine.organics_consumption_engine import OrganicsConsumptionEngine
-            self._organics_consumption_engine = OrganicsConsumptionEngine()
         return self._organics_consumption_engine
 
     @property
     def happiness_engine(self) -> 'IHappinessEngine':
-        """Return happiness engine, lazily creating default if not injected.
+        """Return injected happiness engine.
 
-        PROJ-284 Phase 3: Derives `SpeciesPopulation.happiness` between
+        PROJ-284 Phase 3: derives ``SpeciesPopulation.happiness`` between
         consumption and population growth.
         """
-        if self._happiness_engine is None:
-            from game.strategy.engine.happiness_engine import HappinessEngine
-            # PROJ-291 C3: thread the race registry so multi-species
-            # colonies compute happiness from each species' own
-            # base_happiness.
-            self._happiness_engine = HappinessEngine(race_registry=self._race_registry)
         return self._happiness_engine
 
     @property
     def quality_engine(self) -> 'IQualityEngine':
-        """Return quality engine, lazily creating default if not injected.
-
-        PROJ-369 Phase 2: per-turn planet-quality processing, now
-        injectable via TurnEngineConfig.
-        """
-        if self._quality_engine is None:
-            from game.strategy.engine.quality_engine import QualityEngine
-            self._quality_engine = QualityEngine(registries=self._registries)
+        """Return injected per-turn planet-quality engine."""
         return self._quality_engine
 
     @property
     def atmosphere_engine(self) -> 'IAtmosphereEngine':
-        """Return atmosphere engine, lazily creating default if not injected.
-
-        PROJ-369 Phase 2: per-turn atmosphere processing, now
-        injectable via TurnEngineConfig.
-        """
-        if self._atmosphere_engine is None:
-            from game.strategy.engine.atmosphere_engine import AtmosphereEngine
-            self._atmosphere_engine = AtmosphereEngine(registries=self._registries)
+        """Return injected per-turn atmosphere engine."""
         return self._atmosphere_engine
 
     @property
     def water_engine(self) -> 'IWaterEngine':
-        """Return water engine, lazily creating default if not injected.
-
-        PROJ-369 Phase 2: per-turn water-level processing, now
-        injectable via TurnEngineConfig.
-        """
-        if self._water_engine is None:
-            from game.strategy.engine.water_engine import WaterEngine
-            self._water_engine = WaterEngine(registries=self._registries)
+        """Return injected per-turn water-level engine."""
         return self._water_engine
 
     def process_turn(
@@ -808,43 +676,4 @@ class TurnEngine:
             self.last_environmental_events.extend(ctx.last_environmental_events)
 
 
-def create_default_turn_engine(registries: GameRegistries, ai_factory=None, config=None) -> TurnEngine:
-    """
-    Factory function to create a TurnEngine with all default engines.
-
-    PROJ-43 Phase 4: Simplifies instantiation for production code.
-    PROJ-211: Requires registries parameter for strict DI.
-    PROJ-259: Accepts optional TurnEngineConfig.
-
-    This factory creates a TurnEngine with all default sub-engines.
-    For testing, use the TurnEngine constructor directly to inject
-    mock engines.
-
-    Args:
-        registries: GameRegistries for DI to sub-engines (required).
-
-    Returns:
-        TurnEngine with default implementations of all sub-engines.
-
-    Example:
-        # Production code
-        from game.core.registry import get_default_registry_provider, GameRegistries
-        provider = get_default_registry_provider()
-        registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-        )
-        engine = create_default_turn_engine(registries)
-        engine.process_turn(empires, galaxy, save_path)
-
-        # Test code - use constructor for mocking
-        engine = TurnEngine(
-            registries=test_registries,
-            movement_engine=mock_movement,
-            production_engine=mock_production
-        )
-    """
-    return TurnEngine(registries=registries, config=config, ai_factory=ai_factory)
 
