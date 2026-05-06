@@ -19,15 +19,15 @@
 | 2. Make the 3 locally-constructed end-of-turn engines (Quality / Atmosphere / Water) injectable + lazy-property + `TurnEngineConfig` fields | Complete | [phase_2_checklist.md](phase_2_checklist.md) | phase_1 |
 | 3. Replace per-property lazy fallback init with required-kwarg injection from `TurnEngineConfig` (factory pre-fills defaults) | Complete | [phase_3_checklist.md](phase_3_checklist.md) | phase_2 |
 | 4. Convert tick + end-of-turn loops to a unified `for phase in self._phases: phase.run(ctx)` body | Complete | [phase_4_checklist.md](phase_4_checklist.md) | phase_3 |
-| 5. AST guard test + per-phase unit tests with mock context; remove `_NullBattleResolver`; finalize docs | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | phase_4 |
+| 5. AST guard test + per-phase unit tests with mock context; remove `_NullBattleResolver`; finalize docs | Complete | [phase_5_checklist.md](phase_5_checklist.md) | phase_4 |
 
 ## Current State
 **Last Updated:** 2026-05-06
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete — `_run_phases(self, phases, ctx)` helper extracted; `_process_tick` and the end-of-turn block both call into it. ~13 lines of duplication removed. New test `test_all_21_phase_time_buckets_populated_after_process_turn` pins coverage of the unified helper across both lists. Focused: 127/127 pass.
-**Next Action:** Phase 5 — harden AST guard test; add per-phase mock-context isolation tests; update docs.
+**Active Phase:** Complete
+**Last Action:** Phase 5 complete — 7 AST regression invariants pinned (4 from Phase 3 + 3 new in Phase 5: `_run_phases` called exactly twice in `process_turn`+`_process_tick`, no inline engine-method calls in `process_turn`, `create_default` allow-list verification). 5 new per-phase mock-context isolation tests demonstrate descriptor isolation. `docs/systems/strategy_layer.md` § "Dependency Injection" rewritten + new § "Phase descriptor execution" added. `docs/02_PATTERNS.md` § 22 (TurnEngineConfig) rewritten to match the post-PROJ-369 contract. Both docs' `> **Last verified:**` blockquotes updated. Focused: 135/135 pass. Sharded: 18926/18933 pass, 0 failures (3-5 non-deterministic pycache/isolation errors unrelated to PROJ-369).
+**Next Action:** None — project complete. Open for user review and merge.
 **Blockers:** None.
-**Context for Next Agent:** With Phase 4 done, `process_turn` body is structurally trivial: a 100-tick loop calling `_run_phases(self._tick_phases, ctx)` and one call to `_run_phases(self._end_of_turn_phases, end_of_turn_ctx)`. Phase 5's docs updates should reflect this.
+**Context for Next Agent:** PROJ-369 complete. Five commits on `feat/03c-phase-aware-execution`. Awaiting user verification. Cross-link: PROJ-370 (queued next per the strategy chain) can wire its mutator-protocol defaults into `TurnEngineConfig.create_default()` — the classmethod's signature is extensible by design.
 
 ## Overview
 

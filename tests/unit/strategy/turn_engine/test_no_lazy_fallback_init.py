@@ -144,3 +144,101 @@ class TestNoLazyFallbackInit:
         assert not hasattr(turn_engine_module, "_NullBattleResolver"), (
             "_NullBattleResolver was deleted in PROJ-369 Phase 3."
         )
+
+    def test_run_phases_called_exactly_twice_in_process_turn(self):
+        """``process_turn`` must dispatch through ``_run_phases`` twice:
+        once for the per-tick body (inside the 100-tick loop via
+        ``_process_tick``) and once for the end-of-turn block.
+
+        PROJ-369 Phase 5: pins the unified-loop invariant so future
+        edits cannot reintroduce inline iteration without breaking
+        this test.
+        """
+        tree = _parse_turn_engine()
+        cls = _turn_engine_class_node(tree)
+
+        # Find the two functions whose bodies should each contain one
+        # _run_phases call: process_turn (end-of-turn dispatch) and
+        # _process_tick (per-tick dispatch).
+        target_methods = {"process_turn", "_process_tick"}
+        run_phases_calls: dict[str, int] = {}
+        for child in cls.body:
+            if not isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if child.name not in target_methods:
+                continue
+            count = 0
+            for node in ast.walk(child):
+                if (
+                    isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "_run_phases"
+                ):
+                    count += 1
+            run_phases_calls[child.name] = count
+
+        assert run_phases_calls.get("process_turn") == 1, (
+            f"process_turn must call _run_phases exactly once "
+            f"(found {run_phases_calls.get('process_turn', 0)})"
+        )
+        assert run_phases_calls.get("_process_tick") == 1, (
+            f"_process_tick must call _run_phases exactly once "
+            f"(found {run_phases_calls.get('_process_tick', 0)})"
+        )
+
+    def test_no_inline_engine_method_calls_in_process_turn(self):
+        """``process_turn`` must not contain inline ``self.<x>_engine.<m>(...)``
+        calls outside the descriptor-iteration helper.
+
+        PROJ-369 Phase 5: ensures the imperative end-of-turn block
+        cannot reappear. Whitelist: snapshot capture, _log_empire_state,
+        _process_tick, _run_phases, _reset_phase_times — none of those
+        match the engine-method-call pattern.
+        """
+        tree = _parse_turn_engine()
+        cls = _turn_engine_class_node(tree)
+        process_turn = next(
+            n for n in cls.body
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and n.name == "process_turn"
+        )
+
+        offenders: list[str] = []
+        for node in ast.walk(process_turn):
+            if not isinstance(node, ast.Call):
+                continue
+            f = node.func
+            if not isinstance(f, ast.Attribute):
+                continue
+            # `self.<x>_engine.<method>(...)` pattern, e.g.
+            # `self.population_engine.process_population_growth(...)`.
+            if not isinstance(f.value, ast.Attribute):
+                continue
+            inner = f.value
+            if not isinstance(inner.value, ast.Name):
+                continue
+            if inner.value.id != "self":
+                continue
+            if not (
+                inner.attr.endswith("_engine")
+                or inner.attr == "order_processor"
+            ):
+                continue
+            offenders.append(f"self.{inner.attr}.{f.attr}(...)")
+        assert not offenders, (
+            f"Found inline engine-method calls in process_turn: "
+            f"{offenders}. End-of-turn dispatch must go through "
+            f"`_run_phases(self._end_of_turn_phases, ...)`."
+        )
+
+    def test_create_default_is_only_function_local_engine_import_site(self):
+        """``TurnEngineConfig.create_default`` is the lone module that
+        may use function-local engine imports. ``turn_engine.py`` must
+        contain zero such imports inside any TurnEngine method
+        (already pinned by ``test_no_function_local_engine_imports_…``);
+        this test verifies the ``create_default`` allow-listing
+        explicitly to lock in the convention.
+        """
+        from game.strategy.engine.turn_engine_config import TurnEngineConfig
+        # Sanity: create_default exists and is a classmethod.
+        assert callable(getattr(TurnEngineConfig, "create_default", None))

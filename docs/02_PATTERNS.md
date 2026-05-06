@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-05-05 — PROJ-368 Phase 5 added the "Parallel Order-Handler Registry" subsection under Pattern #7 (CommandHandlerRegistry). The strategy engine now exposes two registry-based dispatch systems with the same Protocol-and-registry shape: `engine/handlers/` (UI Command DTO → Order creation) and `engine/order_handlers/` (action tick → state mutation). 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
+> **Last verified:** 2026-05-06 — PROJ-369 Phase 5 rewrote Pattern #22 (TurnEngineConfig) to make `TurnEngineConfig.create_default(registries, ...)` the canonical injection entry point. Per-engine override kwargs on `TurnEngine.__init__` were removed (Phase 3 collapsed the ctor from 21 to 8 kwargs); tests override via `dataclasses.replace(cfg, foo_engine=mock)`. Documents the 18-field config (15 tick-loop + 3 end-of-turn terraforming, the 3 added by PROJ-369 Phase 2), the AST guard against function-local engine imports inside TurnEngine, and the cross-link to PROJ-365's descriptor pattern. 2026-05-05 — PROJ-368 Phase 5 added the "Parallel Order-Handler Registry" subsection under Pattern #7 (CommandHandlerRegistry). The strategy engine now exposes two registry-based dispatch systems with the same Protocol-and-registry shape: `engine/handlers/` (UI Command DTO → Order creation) and `engine/order_handlers/` (action tick → state mutation). 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
 
 Agent-optimized reference for every core pattern in the codebase (33 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -1342,14 +1342,24 @@ def _validate_tick_inputs(self, empires):
 
 ---
 
-## 22. TurnEngineConfig (PROJ-259)
+## 22. TurnEngineConfig (PROJ-259, finalized by PROJ-369)
 
-**Where:** `game/strategy/engine/turn_engine_config.py` -- `TurnEngineConfig`
+**Where:** `game/strategy/engine/turn_engine_config.py` -- `TurnEngineConfig`, `TurnEngineConfig.create_default(...)`
 
 **How It Works:**
-Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__()` accepts `config=TurnEngineConfig(...)` alongside individual kwargs (individual kwargs take precedence for backward compat).
+Frozen dataclass bundling 18 sub-engine dependencies (15 tick-loop + 3 end-of-turn terraforming). `TurnEngineConfig.create_default(registries, *, ai_factory=None, race_registry=None, event_bus=None)` is the canonical injection entry point: it eagerly constructs every default engine in one place. `TurnEngine.__init__` requires `config=...`; there are no per-engine override kwargs anymore (PROJ-369 Phase 3 deleted them along with the per-property lazy-fallback init).
 
-**When to Use:** Pass to `TurnEngine()` or `create_default_turn_engine()` when overriding specific engines for testing.
+Tests override specific engines via `dataclasses.replace(cfg, foo_engine=mock)`. Phase descriptor lists (`tick_phases=` / `end_of_turn_phases=`) are separate ctor kwargs because they are descriptor tuples, not engine dependencies.
+
+**When to Use:**
+- Production: `TurnEngineConfig.create_default(registries, ai_factory=ai_factory, ...)` followed by `TurnEngine(registries=..., config=cfg, ...)`.
+- Tests: same pattern, then `dataclasses.replace(cfg, foo_engine=mock_foo)` to swap individual engines. The `tests/fixtures/turn_engine.py::build_test_turn_engine(...)` helper collapses both steps to a single call.
+
+**Precedence:** explicit `tick_phases=` / `end_of_turn_phases=` ctor kwargs win over the registry defaults; everything else flows through `config`.
+
+**Don't:** import engine classes inside `TurnEngine` methods. The lone allow-listed location for function-local engine imports is `TurnEngineConfig.create_default()`. The AST guard test `test_no_lazy_fallback_init.py::test_no_function_local_engine_imports_in_TurnEngine_methods` enforces this.
+
+**Cross-link:** PROJ-365 produced the per-tick descriptor list; PROJ-369 extended the descriptor pattern to the end-of-turn block (`DEFAULT_END_OF_TURN_PHASE_LIST`) and unified iteration via `TurnEngine._run_phases(self, phases, ctx)`.
 
 ---
 
