@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
-from game.core.patterns.layer_iterator import iter_components, iter_keyed_components
+from game.core.patterns.layer_iterator import iter_keyed_components
 from game.strategy.data.order_types import OrderType, PLANET_ACTION_ORDER_TYPES
 from game.strategy.data.component_activation_state import (
     ActivationPhase,
@@ -314,14 +314,13 @@ class PlanetActionEngine(IPlanetActionEngine):
         component_registry: Optional[Dict[str, Any]] = None,
     ) -> float:
         """Get energy_drain_rate from the component's ability data."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-        for comp in iter_components(facility.design_data):
+        from game.strategy.services.component_inspector import iter_facility_ability_entries
+        for comp, entry in iter_facility_ability_entries(
+            facility, ability_name, self._registries
+        ):
             cid = comp.get('id', '') if isinstance(comp, dict) else str(comp)
             if cid == comp_id:
-                abilities = extract_abilities_from_component(comp, self._registries)
-                ability_data = abilities.get(ability_name, {})
-                if isinstance(ability_data, dict):
-                    return float(ability_data.get('energy_drain_rate', 0.0))
+                return float(entry.get('energy_drain_rate', 0.0))
         return 0.0
 
     def _get_deactivation_time(
@@ -329,14 +328,13 @@ class PlanetActionEngine(IPlanetActionEngine):
         component_registry: Optional[Dict[str, Any]] = None,
     ) -> int:
         """Get deactivation_time from the component's ability data."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-        for comp in iter_components(facility.design_data):
+        from game.strategy.services.component_inspector import iter_facility_ability_entries
+        for comp, entry in iter_facility_ability_entries(
+            facility, ability_name, self._registries
+        ):
             cid = comp.get('id', '') if isinstance(comp, dict) else str(comp)
             if cid == comp_id:
-                abilities = extract_abilities_from_component(comp, self._registries)
-                ability_data = abilities.get(ability_name, {})
-                if isinstance(ability_data, dict):
-                    return int(ability_data.get('deactivation_time', 1))
+                return int(entry.get('deactivation_time', 1))
         return 1
 
     def _target_facility_exists(self, planet: 'Planet', order: 'Order') -> bool:
@@ -373,11 +371,11 @@ class PlanetActionEngine(IPlanetActionEngine):
 
     def _find_ability_component_id(self, facility, ability_name: str) -> Optional[str]:
         """Find the component ID that provides a specific ability in a facility."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-        for comp in iter_components(facility.design_data):
-            abilities = extract_abilities_from_component(comp, self._registries)
-            if ability_name in abilities:
-                if isinstance(comp, dict):
-                    return comp.get('id', '')
-                return str(comp)
+        from game.strategy.services.component_inspector import iter_facility_ability_entries
+        for comp, _entry in iter_facility_ability_entries(
+            facility, ability_name, self._registries
+        ):
+            if isinstance(comp, dict):
+                return comp.get('id', '')
+            return str(comp)
         return None

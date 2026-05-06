@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from typing import Dict, List, TYPE_CHECKING
 
-from game.core.patterns.layer_iterator import iter_components
+from game.strategy.services.component_inspector import iter_facility_ability_entries
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -65,15 +65,10 @@ class AtmosphereEngine:
         for facility in getattr(colony, 'facilities', []):
             if not getattr(facility, 'is_operational', True):
                 continue
-            for comp in iter_components(facility.design_data):
-                am_data = self._extract_atmo_modifier(comp)
-                if am_data is None:
-                    continue
-                if isinstance(am_data, list):
-                    for entry in am_data:
-                        total_rate_kg += entry.get('modification_rate', 0.0)
-                else:
-                    total_rate_kg += am_data.get('modification_rate', 0.0)
+            for _comp, entry in iter_facility_ability_entries(
+                facility, 'AtmosphereModifier', self._registries
+            ):
+                total_rate_kg += entry.get('modification_rate', 0.0)
 
         if total_rate_kg <= 0:
             return
@@ -136,12 +131,3 @@ class AtmosphereEngine:
         # Update surface_pressure as sum of all partial pressures
         total_pressure = sum(atmosphere.values())
         colony.surface_pressure = total_pressure
-
-    def _extract_atmo_modifier(self, comp) -> dict | list | None:
-        """Extract AtmosphereModifier ability data from a component entry."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-        abilities = extract_abilities_from_component(comp, self._registries)
-        data = abilities.get('AtmosphereModifier')
-        if isinstance(data, (dict, list)):
-            return data
-        return None

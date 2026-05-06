@@ -10,6 +10,7 @@ from game.strategy.services.component_inspector import (
     extract_abilities_from_component,
     get_component_abilities,
     get_ability_list,
+    iter_facility_ability_entries,
     iterate_design_components,
     ship_has_ability,
     find_ship_with_ability,
@@ -368,3 +369,97 @@ class TestGetAbilityList:
         result = get_ability_list({"CrewRequired": 5}, "CrewRequired")
 
         assert result == [{"value": 5}]
+
+
+class TestIterFacilityAbilityEntries:
+    """PROJ-375 Task 2.1: tests for iter_facility_ability_entries."""
+
+    def _facility(self, layers):
+        facility = Mock()
+        facility.design_data = {"layers": layers}
+        return facility
+
+    def test_no_components_yields_nothing(self):
+        facility = self._facility({})
+        assert list(iter_facility_ability_entries(facility, "WaterModifier")) == []
+
+    def test_inline_dict_ability_yielded_once(self):
+        comp = {"id": "c1", "abilities": {"WaterModifier": {"modification_rate": 0.5}}}
+        facility = self._facility({"hull": [comp]})
+        result = list(iter_facility_ability_entries(facility, "WaterModifier"))
+        assert len(result) == 1
+        out_comp, entry = result[0]
+        assert out_comp is comp
+        assert entry == {"modification_rate": 0.5}
+
+    def test_inline_list_ability_yielded_per_entry(self):
+        comp = {
+            "id": "c1",
+            "abilities": {
+                "ResourceHarvester": [
+                    {"resource_type": "metals", "base_harvest_rate": 1.0},
+                    {"resource_type": "organics", "base_harvest_rate": 2.0},
+                ]
+            },
+        }
+        facility = self._facility({"core": [comp]})
+        result = list(iter_facility_ability_entries(facility, "ResourceHarvester"))
+        assert len(result) == 2
+        assert result[0][1] == {"resource_type": "metals", "base_harvest_rate": 1.0}
+        assert result[1][1] == {"resource_type": "organics", "base_harvest_rate": 2.0}
+        assert result[0][0] is comp and result[1][0] is comp
+
+    def test_scalar_ability_wrapped_as_value_dict(self):
+        comp = {"id": "c1", "abilities": {"CrewRequired": 5}}
+        facility = self._facility({"hull": [comp]})
+        result = list(iter_facility_ability_entries(facility, "CrewRequired"))
+        assert result == [(comp, {"value": 5})]
+
+    def test_missing_ability_skipped(self):
+        comp_a = {"id": "a", "abilities": {"WaterModifier": {"modification_rate": 0.1}}}
+        comp_b = {"id": "b", "abilities": {"AtmosphereModifier": {"x": 1}}}
+        facility = self._facility({"hull": [comp_a, comp_b]})
+        result = list(iter_facility_ability_entries(facility, "WaterModifier"))
+        assert len(result) == 1
+        assert result[0][0] is comp_a
+
+    def test_registry_lookup_by_id(self):
+        comp = {"id": "shield_basic"}  # no inline abilities
+        registries = {
+            "shield_basic": {"abilities": {"PlanetaryShield": {"radius": 100}}}
+        }
+        facility = self._facility({"hull": [comp]})
+        result = list(
+            iter_facility_ability_entries(facility, "PlanetaryShield", registries)
+        )
+        assert len(result) == 1
+        out_comp, entry = result[0]
+        assert out_comp is comp
+        assert entry == {"radius": 100}
+
+    def test_string_component_uses_registry(self):
+        registries = {"plain_id": {"abilities": {"LocalStorage": {"capacity": 50}}}}
+        facility = self._facility({"hull": ["plain_id"]})
+        result = list(
+            iter_facility_ability_entries(facility, "LocalStorage", registries)
+        )
+        assert len(result) == 1
+        comp, entry = result[0]
+        assert comp == "plain_id"
+        assert entry == {"capacity": 50}
+
+    def test_list_with_non_dict_entries_wrapped(self):
+        comp = {"id": "c1", "abilities": {"Tags": [42, "alpha"]}}
+        facility = self._facility({"hull": [comp]})
+        result = list(iter_facility_ability_entries(facility, "Tags"))
+        assert result == [(comp, {"value": 42}), (comp, {"value": "alpha"})]
+
+    def test_multiple_components_iterate_all(self):
+        comp_a = {"id": "a", "abilities": {"WaterModifier": {"modification_rate": 0.1}}}
+        comp_b = {"id": "b", "abilities": {"WaterModifier": {"modification_rate": 0.2}}}
+        facility = self._facility({"hull": [comp_a, comp_b]})
+        rates = [
+            entry["modification_rate"]
+            for _, entry in iter_facility_ability_entries(facility, "WaterModifier")
+        ]
+        assert sorted(rates) == [0.1, 0.2]

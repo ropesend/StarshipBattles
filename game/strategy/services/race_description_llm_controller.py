@@ -18,8 +18,9 @@ for the full state diagram and contract.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional
 
 from game.core.exceptions import LLMConfigError, LLMException
 from game.services.llm.background import (
@@ -62,6 +63,30 @@ _CALL_STATUS_MAP = {
 }
 
 
+@dataclass
+class _FieldState:
+    """Per-field state container (PROJ-375 Task 2.5).
+
+    Replaces the mirrored `_bio_*` / `_socio_*` attribute pairs.
+
+    Attributes:
+        race_attr: The attribute name on `RaceConfig` to write the
+            generated text to (`bio_description` or `socio_description`).
+        prompt_builder: Callable that produces the `messages` list for
+            the LLM call given (race_config, captions).
+        log_label: Short label for log lines (`"bio"` / `"socio"`).
+        status: Current `FieldStatus`.
+        call: Live `LLMBackgroundCall`, or None.
+        error: Last `LLMException` if status is ERROR.
+    """
+    race_attr: str
+    prompt_builder: Callable
+    log_label: str
+    status: FieldStatus = FieldStatus.IDLE
+    call: Optional[LLMBackgroundCall] = None
+    error: Optional[LLMException] = field(default=None)
+
+
 class RaceDescriptionLLMController:
     """Owns the LLM-call lifecycle for bio + socio description generation.
 
@@ -93,79 +118,82 @@ class RaceDescriptionLLMController:
         self._loader = caption_loader
         self._on_change = on_change
 
-        # Per-field state.
-        self._bio_status: FieldStatus = FieldStatus.IDLE
-        self._socio_status: FieldStatus = FieldStatus.IDLE
-        self._bio_call: Optional[LLMBackgroundCall] = None
-        self._socio_call: Optional[LLMBackgroundCall] = None
-        self._bio_error: Optional[LLMException] = None
-        self._socio_error: Optional[LLMException] = None
+        # PROJ-375 Task 2.5: per-field state in a dict, no mirrored
+        # attribute pairs. The 6 public `@property` accessors below read
+        # from this dict — external readers (race_description_panel.py,
+        # llm_dialog_service.py) keep their existing API.
+        self._fields: Dict[str, _FieldState] = {
+            "bio": _FieldState(
+                race_attr="bio_description",
+                prompt_builder=build_bio_prompt,
+                log_label="bio",
+            ),
+            "socio": _FieldState(
+                race_attr="socio_description",
+                prompt_builder=build_socio_prompt,
+                log_label="socio",
+            ),
+        }
 
     # -- Public state accessors ---------------------------------------------
 
     @property
     def bio_status(self) -> FieldStatus:
-        return self._bio_status
+        return self._fields["bio"].status
 
     @property
     def socio_status(self) -> FieldStatus:
-        return self._socio_status
+        return self._fields["socio"].status
 
     @property
     def bio_error(self) -> Optional[LLMException]:
-        return self._bio_error
+        return self._fields["bio"].error
 
     @property
     def socio_error(self) -> Optional[LLMException]:
-        return self._socio_error
+        return self._fields["socio"].error
 
     @property
     def bio_elapsed_seconds(self) -> float:
-        return self._bio_call.elapsed_seconds if self._bio_call is not None else 0.0
+        call = self._fields["bio"].call
+        return call.elapsed_seconds if call is not None else 0.0
 
     @property
     def socio_elapsed_seconds(self) -> float:
-        return self._socio_call.elapsed_seconds if self._socio_call is not None else 0.0
+        call = self._fields["socio"].call
+        return call.elapsed_seconds if call is not None else 0.0
 
     # -- Public actions ------------------------------------------------------
 
     def generate_bio(self) -> None:
         """Start a bio-description generation. Idempotent if already RUNNING."""
-        if self._bio_status == FieldStatus.RUNNING:
+        if self._fields["bio"].status == FieldStatus.RUNNING:
             return
-        self._start_bio()
+        self._start_field("bio")
 
     def generate_socio(self) -> None:
         """Start a socio-description generation. Idempotent if already RUNNING."""
-        if self._socio_status == FieldStatus.RUNNING:
+        if self._fields["socio"].status == FieldStatus.RUNNING:
             return
-        self._start_socio()
+        self._start_field("socio")
 
     def re_roll_bio(self) -> None:
         """Cancel any in-flight bio call and start a fresh one."""
         self.cancel_bio()
-        self._start_bio()
+        self._start_field("bio")
 
     def re_roll_socio(self) -> None:
         """Cancel any in-flight socio call and start a fresh one."""
         self.cancel_socio()
-        self._start_socio()
+        self._start_field("socio")
 
     def cancel_bio(self) -> None:
         """Logical cancel of the bio call. Idempotent."""
-        if self._bio_call is not None:
-            self._bio_call.cancel()
-        if self._bio_status in (FieldStatus.RUNNING,):
-            self._bio_status = FieldStatus.CANCELLED
-            self._fire_on_change()
+        self._cancel_field("bio")
 
     def cancel_socio(self) -> None:
         """Logical cancel of the socio call. Idempotent."""
-        if self._socio_call is not None:
-            self._socio_call.cancel()
-        if self._socio_status in (FieldStatus.RUNNING,):
-            self._socio_status = FieldStatus.CANCELLED
-            self._fire_on_change()
+        self._cancel_field("socio")
 
     def cancel_all(self) -> None:
         """Cancel both fields. Called from `RaceSetupScreen.kill()`."""
@@ -195,46 +223,37 @@ class RaceDescriptionLLMController:
 
     # -- Private -------------------------------------------------------------
 
-    def _start_bio(self) -> None:
+    def _start_field(self, field_name: str) -> None:
+        """Start an LLM call for the given field (PROJ-375 Task 2.5)."""
+        state = self._fields[field_name]
         captions = self._gather_captions()
         cap_summary = {k: ("present" if v else "missing") for k, v in captions.items()}
-        logger.info("Race description bio START: captions=%s", cap_summary)
-        messages = build_bio_prompt(self._race, captions)
-        self._bio_error = None
-        self._bio_call = LLMBackgroundCall(
+        logger.info("Race description %s START: captions=%s", state.log_label, cap_summary)
+        messages = state.prompt_builder(self._race, captions)
+        state.error = None
+        state.call = LLMBackgroundCall(
             self._provider, messages, timeout_seconds=_LLM_TIMEOUT_SECONDS,
         )
         try:
-            self._bio_call.start()
+            state.call.start()
         except LLMConfigError as e:
             # Concurrent-call limit reached (or other config issue at start).
-            logger.error("Race description bio start failed: %s", e)
-            self._bio_status = FieldStatus.ERROR
-            self._bio_error = e
+            logger.error("Race description %s start failed: %s", state.log_label, e)
+            state.status = FieldStatus.ERROR
+            state.error = e
             self._fire_on_change()
             return
-        self._bio_status = FieldStatus.RUNNING
+        state.status = FieldStatus.RUNNING
         self._fire_on_change()
 
-    def _start_socio(self) -> None:
-        captions = self._gather_captions()
-        cap_summary = {k: ("present" if v else "missing") for k, v in captions.items()}
-        logger.info("Race description socio START: captions=%s", cap_summary)
-        messages = build_socio_prompt(self._race, captions)
-        self._socio_error = None
-        self._socio_call = LLMBackgroundCall(
-            self._provider, messages, timeout_seconds=_LLM_TIMEOUT_SECONDS,
-        )
-        try:
-            self._socio_call.start()
-        except LLMConfigError as e:
-            logger.error("Race description socio start failed: %s", e)
-            self._socio_status = FieldStatus.ERROR
-            self._socio_error = e
+    def _cancel_field(self, field_name: str) -> None:
+        """Cancel a field's in-flight call (PROJ-375 Task 2.5)."""
+        state = self._fields[field_name]
+        if state.call is not None:
+            state.call.cancel()
+        if state.status in (FieldStatus.RUNNING,):
+            state.status = FieldStatus.CANCELLED
             self._fire_on_change()
-            return
-        self._socio_status = FieldStatus.RUNNING
-        self._fire_on_change()
 
     def _gather_captions(self) -> dict:
         """Resolve visual captions; tolerate missing sidecars."""
@@ -244,67 +263,43 @@ class RaceDescriptionLLMController:
             "theme": self._loader.load_theme(self._race.theme_id) if self._race.theme_id else None,
         }
 
-    def _poll_field(self, field: str) -> None:
+    def _poll_field(self, field_name: str) -> None:
         """Poll a field's underlying call; transition state if it changed."""
-        if field == "bio":
-            call = self._bio_call
-            current = self._bio_status
-            apply = self._apply_bio_transition
-        else:
-            call = self._socio_call
-            current = self._socio_status
-            apply = self._apply_socio_transition
-
-        if call is None or current not in (FieldStatus.RUNNING,):
+        state = self._fields[field_name]
+        if state.call is None or state.status not in (FieldStatus.RUNNING,):
             return
 
-        new_status = _CALL_STATUS_MAP.get(call.status, FieldStatus.RUNNING)
-        if new_status == current:
+        new_status = _CALL_STATUS_MAP.get(state.call.status, FieldStatus.RUNNING)
+        if new_status == state.status:
             return
-        apply(call, new_status)
+        self._apply_field_transition(field_name, state.call, new_status)
 
-    def _apply_bio_transition(
-        self, call: LLMBackgroundCall, new_status: FieldStatus
+    def _apply_field_transition(
+        self,
+        field_name: str,
+        call: LLMBackgroundCall,
+        new_status: FieldStatus,
     ) -> None:
+        """Apply a status transition for a field (PROJ-375 Task 2.5)."""
+        state = self._fields[field_name]
         if new_status == FieldStatus.DONE and call.result is not None:
             text = call.result.text or ""
             logger.info(
-                "Race description bio DONE: text_len=%d latency=%.2fs tokens=%d",
-                len(text), call.result.latency_seconds,
+                "Race description %s DONE: text_len=%d latency=%.2fs tokens=%d",
+                state.log_label, len(text), call.result.latency_seconds,
                 call.result.usage.total_tokens,
             )
-            self._race.bio_description = text
+            setattr(self._race, state.race_attr, text)
         elif new_status == FieldStatus.ERROR:
             logger.error(
-                "Race description bio ERROR: %s: %s",
+                "Race description %s ERROR: %s: %s",
+                state.log_label,
                 type(call.error).__name__ if call.error else "Unknown",
                 call.error,
             )
-            self._bio_error = call.error
-        # CANCELLED also lands here when the call was cancelled by us;
-        # bio_description stays as-is (preserves prior text).
-        self._bio_status = new_status
-        self._fire_on_change()
-
-    def _apply_socio_transition(
-        self, call: LLMBackgroundCall, new_status: FieldStatus
-    ) -> None:
-        if new_status == FieldStatus.DONE and call.result is not None:
-            text = call.result.text or ""
-            logger.info(
-                "Race description socio DONE: text_len=%d latency=%.2fs tokens=%d",
-                len(text), call.result.latency_seconds,
-                call.result.usage.total_tokens,
-            )
-            self._race.socio_description = text
-        elif new_status == FieldStatus.ERROR:
-            logger.error(
-                "Race description socio ERROR: %s: %s",
-                type(call.error).__name__ if call.error else "Unknown",
-                call.error,
-            )
-            self._socio_error = call.error
-        self._socio_status = new_status
+            state.error = call.error
+        # CANCELLED also lands here; the race_attr stays as-is (preserves prior text).
+        state.status = new_status
         self._fire_on_change()
 
     def _fire_on_change(self) -> None:

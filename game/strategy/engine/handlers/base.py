@@ -183,6 +183,32 @@ class BaseCommandHandler:
         return fleet
 
     @staticmethod
+    def _resolve_player_planet(session: 'GameSession', planet_id: int) -> tuple:
+        """Resolve a planet and authorize against the active empire.
+
+        PROJ-375 (DUP-X-01): the standard authorization path for planet
+        command handlers. Mirrors `_resolve_player_fleet`. Identity is
+        session context (`session.active_empire.id`); handlers must NEVER
+        trust an empire identifier supplied through the request body.
+
+        Args:
+            session: The game session with empires and galaxy.
+            planet_id: The planet ID to resolve.
+
+        Returns:
+            tuple[Planet, None] on success, tuple[None, ValidationResult] on failure.
+        """
+        active = session.active_empire
+        if active is None:
+            return (None, ValidationResult.error("No active empire."))
+        planet = session._get_planet_by_id(planet_id)
+        if planet is None:
+            return (None, ValidationResult.error("Planet not found."))
+        if planet.owner_id != active.id:
+            return (None, ValidationResult.error("Planet does not belong to this empire."))
+        return (planet, None)
+
+    @staticmethod
     def _resolve_planet(session: 'GameSession', planet_id: int) -> tuple:
         """Resolve a planet by ID.
 

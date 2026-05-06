@@ -14,14 +14,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Dead method removal | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Strategy-layer duplication consolidation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Strategy-layer duplication consolidation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. UI-layer duplication consolidation | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-05
-**Active Phase:** Phase 2 of 3
-**Last Action:** Phase 1 complete — `_find_shield_component_id` deleted from `planet_action_engine.py`; 20 unit tests pass
-**Next Action:** Begin Phase 2 (strategy-layer duplication consolidation)
+**Active Phase:** Phase 3 of 3
+**Last Action:** Phase 2 complete — `iter_facility_ability_entries` helper added to `component_inspector.py`; 6 strategy clusters consolidated (DUP-X-01/02+06/05/07+11/Cluster 5/29+30); 1762 strategy unit tests pass
+**Next Action:** Begin Phase 3 (UI-layer duplication consolidation)
 **Blockers:** None
 
 ## Overview

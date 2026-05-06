@@ -198,16 +198,31 @@ class TestWaterEngine:
 
         assert planet.surface_water == pytest.approx(0.325)
 
-    def test_extract_water_modifier_ignores_non_dict_and_non_list_data(self):
-        """Malformed WaterModifier data is ignored by the extractor."""
+    def test_malformed_water_modifier_data_does_not_change_water(self):
+        """Malformed WaterModifier data (scalar) contributes no rate.
+
+        PROJ-375: after consolidating the extract→iterate logic into
+        component_inspector.iter_facility_ability_entries, scalar payloads are
+        wrapped as {"value": x} but lack 'modification_rate' so they
+        contribute 0 — leaving surface_water unchanged.
+        """
+        bad_facility = MockFacility(design_data={
+            "layers": {"CORE": [
+                {"id": "bad_water_modifier",
+                 "abilities": {"WaterModifier": True}}
+            ]}
+        })
+        planet = MockPlanet(
+            surface_water=0.3,
+            water_target=0.5,
+            facilities=[bad_facility],
+        )
+        empire = MockEmpire(colonies=[planet])
         engine = WaterEngine()
 
-        result = engine._extract_water_modifier({
-            "id": "bad_water_modifier",
-            "abilities": {"WaterModifier": True},
-        })
+        engine.process_water_modification([empire])
 
-        assert result is None
+        assert planet.surface_water == pytest.approx(0.3)
 
     def test_skips_nonoperational_facility(self):
         """Non-operational facilities should not contribute."""

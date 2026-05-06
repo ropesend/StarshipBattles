@@ -21,7 +21,7 @@ from typing import List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
-from game.core.patterns.layer_iterator import iter_components
+from game.strategy.services.component_inspector import iter_facility_ability_entries
 from game.strategy.data.component_activation_state import (
     ComponentActivationState,
 )
@@ -203,24 +203,18 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
             for facility in planet.facilities:
                 if not facility.is_operational:
                     continue
-                for comp in iter_components(facility.design_data):
-                    abilities = _extract_abilities(comp, self._registries)
-
-                    # Resource storage
-                    storage_entries = abilities.get('ResourceStorage')
-                    if storage_entries:
-                        entries = storage_entries if isinstance(storage_entries, list) else [storage_entries]
-                        for entry in entries:
-                            if isinstance(entry, dict) and entry.get('resource') == resource:
-                                new_capacity += entry.get('amount', 0.0)
-
-                    # Strategic resource generation
-                    gen_entries = abilities.get('StrategicResourceGeneration')
-                    if gen_entries:
-                        entries = gen_entries if isinstance(gen_entries, list) else [gen_entries]
-                        for entry in entries:
-                            if isinstance(entry, dict) and entry.get('resource') == resource:
-                                new_generation += entry.get('generation_rate', 0.0)
+                # Resource storage
+                for _comp, entry in iter_facility_ability_entries(
+                    facility, 'ResourceStorage', self._registries
+                ):
+                    if entry.get('resource') == resource:
+                        new_capacity += entry.get('amount', 0.0)
+                # Strategic resource generation
+                for _comp, entry in iter_facility_ability_entries(
+                    facility, 'StrategicResourceGeneration', self._registries
+                ):
+                    if entry.get('resource') == resource:
+                        new_generation += entry.get('generation_rate', 0.0)
 
             self._energy_cache[planet.id] = {
                 'capacity': new_capacity,

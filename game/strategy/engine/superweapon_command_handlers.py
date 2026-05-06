@@ -242,12 +242,10 @@ class StellerateStarMissionCommandHandler(BaseCommandHandler):
         if not move_result.is_valid:
             return move_result
 
-        # 4. Queue STELLERATE_STAR order
-        action_order = Order(OrderType.STELLERATE_STAR, target=None)
-        fleet.add_order(action_order)
-
-        logger.info(f"GameSession: Queued STELLERATE_STAR mission for Fleet {fleet.id}")
-        return ValidationResult.success()
+        # 4. Queue STELLERATE_STAR order (PROJ-375 Task 2.4)
+        return self._emit_validated_order(
+            fleet, OrderType.STELLERATE_STAR, None, result, "STELLERATE_STAR mission",
+        )
 
 
 class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
@@ -274,16 +272,14 @@ class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
         if not move_result.is_valid:
             return move_result
 
-        # 4. Queue OPEN_WARP_POINT order with target dict
+        # 4. Queue OPEN_WARP_POINT order with target dict (PROJ-375 Task 2.4)
         target_dict = {
             'target_hex': cmd.target_hex,
             'target_system_name': cmd.target_system_name
         }
-        action_order = Order(OrderType.OPEN_WARP_POINT, target=target_dict)
-        fleet.add_order(action_order)
-
-        logger.info(f"GameSession: Queued OPEN_WARP_POINT mission for Fleet {fleet.id}")
-        return ValidationResult.success()
+        return self._emit_validated_order(
+            fleet, OrderType.OPEN_WARP_POINT, target_dict, result, "OPEN_WARP_POINT mission",
+        )
 
 
 class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
@@ -311,15 +307,14 @@ class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
             return move_result
 
         # 4. Queue CLOSE_WARP_POINT order with target sector for execution-time validation
+        # (PROJ-375 Task 2.4)
         target_dict = {
             'destination_id': cmd.warp_point_destination_id,
             'target_hex': {'q': cmd.target_hex.q, 'r': cmd.target_hex.r},
         }
-        action_order = Order(OrderType.CLOSE_WARP_POINT, target=target_dict)
-        fleet.add_order(action_order)
-
-        logger.info(f"GameSession: Queued CLOSE_WARP_POINT mission for Fleet {fleet.id}")
-        return ValidationResult.success()
+        return self._emit_validated_order(
+            fleet, OrderType.CLOSE_WARP_POINT, target_dict, result, "CLOSE_WARP_POINT mission",
+        )
 
 
 class CreateDysonSphereMissionCommandHandler(BaseCommandHandler):
@@ -345,9 +340,7 @@ class CreateDysonSphereMissionCommandHandler(BaseCommandHandler):
         if not move_result.is_valid:
             return move_result
 
-        # 4. Queue CREATE_DYSON_SPHERE order
-        action_order = Order(OrderType.CREATE_DYSON_SPHERE, target=None)
-        fleet.add_order(action_order)
-
-        logger.info(f"GameSession: Queued CREATE_DYSON_SPHERE mission for Fleet {fleet.id}")
-        return ValidationResult.success()
+        # 4. Queue CREATE_DYSON_SPHERE order (PROJ-375 Task 2.4)
+        return self._emit_validated_order(
+            fleet, OrderType.CREATE_DYSON_SPHERE, None, result, "CREATE_DYSON_SPHERE mission",
+        )

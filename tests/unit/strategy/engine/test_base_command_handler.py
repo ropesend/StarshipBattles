@@ -126,6 +126,63 @@ class TestResolvePlanet:
         assert error is None
 
 
+class TestResolvePlayerPlanet:
+    """PROJ-375 Task 2.2: tests for BaseCommandHandler._resolve_player_planet()."""
+
+    def test_no_active_empire_returns_error(self):
+        session = Mock()
+        session.active_empire = None
+
+        planet, error = BaseCommandHandler._resolve_player_planet(session, planet_id=1)
+
+        assert planet is None
+        assert error is not None
+        assert not error.is_valid
+        assert "No active empire" in error.errors[0]
+
+    def test_planet_not_found_returns_error(self):
+        session = Mock()
+        active = Mock()
+        active.id = 7
+        session.active_empire = active
+        session._get_planet_by_id.return_value = None
+
+        planet, error = BaseCommandHandler._resolve_player_planet(session, planet_id=999)
+
+        assert planet is None
+        assert error is not None
+        assert "Planet not found" in error.errors[0]
+
+    def test_planet_owned_by_other_empire_returns_error(self):
+        session = Mock()
+        active = Mock()
+        active.id = 7
+        session.active_empire = active
+        mock_planet = Mock()
+        mock_planet.owner_id = 99
+        session._get_planet_by_id.return_value = mock_planet
+
+        planet, error = BaseCommandHandler._resolve_player_planet(session, planet_id=10)
+
+        assert planet is None
+        assert error is not None
+        assert "does not belong" in error.errors[0]
+
+    def test_success_returns_planet(self):
+        session = Mock()
+        active = Mock()
+        active.id = 7
+        session.active_empire = active
+        mock_planet = Mock()
+        mock_planet.owner_id = 7
+        session._get_planet_by_id.return_value = mock_planet
+
+        planet, error = BaseCommandHandler._resolve_player_planet(session, planet_id=10)
+
+        assert planet is mock_planet
+        assert error is None
+
+
 class TestResolvePlanetOptional:
     """Tests for BaseCommandHandler._resolve_planet_optional()."""
 
