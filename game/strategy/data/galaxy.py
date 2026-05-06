@@ -1,22 +1,22 @@
 from __future__ import annotations
 
 import random
-from enum import Enum, auto
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from game.core.hex_math import HexCoord, hex_to_dict, hex_from_dict
 from game.core.validation_helpers import require_keys, validate_positive
 from game.core.exceptions import PersistenceException
 from game.core.error_codes import ErrorCode
-import logging
 from game.strategy.data.naming import NameRegistry
-from game.strategy.data.stars import Star
-from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.generation.star_generator import StarGenerator
-from game.strategy.data.storm import Storm
+from game.strategy.data.planet import Planet, PlanetType  # noqa: F401  (PlanetType re-export)
 from game.strategy.data.planet_gen import PlanetGenerator
+from game.strategy.data.galaxy_state import GalaxyState
+# PROJ-372 Phase 3: WarpPoint + StarSystem extracted to star_system.py.
+# Re-exported here so external import sites continue to resolve them.
+from game.strategy.data.star_system import StarSystem, WarpPoint  # noqa: F401
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 from game.strategy.generation.star_image_registry import StarImageRegistry
 from game.strategy.generation.storm_generator import StormGenerator
+from game.strategy.generation.star_generator import StarGenerator
 from game.strategy.data.galaxy_warp_generator import GalaxyWarpGenerator
 from game.strategy.data.galaxy_system_generator import GalaxySystemGenerator
 from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry
@@ -30,494 +30,221 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
 
 
-class WarpPoint:
-    def __init__(self, destination_id, location, warp_type='stable', intrinsic_abilities=None):
-        self.destination_id = destination_id
-        self.location = location  # HexCoord (Local to system)
-        # PROJ-303: warp point type (stable, unstable, dimensional_rift, etc.)
-        # — drives intrinsic abilities. Defaults to 'stable' (no effects).
-        self.warp_type = warp_type
-        self.intrinsic_abilities = dict(intrinsic_abilities) if intrinsic_abilities else {}
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize WarpPoint to dict."""
-        return {
-            'destination_id': self.destination_id,
-            'location': hex_to_dict(self.location),
-            'warp_type': self.warp_type,
-            'intrinsic_abilities': dict(self.intrinsic_abilities),
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict) -> 'WarpPoint':
-        """Deserialize WarpPoint from dict.
-
-        Raises:
-            PersistenceException: If required keys missing or location is malformed.
-        """
-        require_keys(data, ['destination_id', 'location'], 'WarpPoint')
-
-        try:
-            location = hex_from_dict(data['location'])
-        except (KeyError, TypeError) as e:
-            raise PersistenceException(
-                f"WarpPoint: invalid location format - {type(e).__name__}: {e}",
-                code=ErrorCode.CORRUPT_DATA.value,
-                context={
-                    "source": "WarpPoint",
-                    "field": "location",
-                    "value": data.get('location'),
-                    "error": str(e),
-                }
-            ) from e
-
-        return cls(
-            destination_id=data['destination_id'],
-            location=location,
-            warp_type=data.get('warp_type', 'stable'),
-            intrinsic_abilities=data.get('intrinsic_abilities') or {},
-        )
-
-class StarSystem:
-    def __init__(self, name, global_location, stars=None, region_id=None,
-                 archetype=None, intrinsic_abilities=None):
-        self.name = name
-        self.global_location = global_location # HexCoord
-        self.stars = stars if stars else []
-        self.warp_points = []
-        self.planets = [] # List[Planet]
-        self.storms = []  # List[Storm] - environmental hazards (PROJ-189)
-        self.region_id = region_id  # Optional[int] - which arm/cluster this belongs to
-        # PROJ-304: system archetype (nebula, ancient_battlefield, etc.) +
-        # intrinsic_abilities rolled from data/system_archetypes.json. Most
-        # systems have archetype=None. Roll percentage configurable in
-        # galaxy generation config (default 15%).
-        self.archetype: Optional[str] = archetype
-        self.intrinsic_abilities: Dict[str, Any] = dict(intrinsic_abilities) if intrinsic_abilities else {}
-
-    @property
-    def primary_star(self) -> Optional[Star]:
-        return self.stars[0] if self.stars else None
-
-    def add_warp_point(self, destination_id, location) -> None:
-        self.warp_points.append(WarpPoint(destination_id, location))
-
-    def __repr__(self):
-        star_count = len(self.stars)
-        p_name = self.primary_star.name if self.primary_star else "Empty"
-        return f"System('{self.name}', Loc:{self.global_location}, Stars:{star_count}, Primary:{p_name})"
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize StarSystem to dict."""
-        result = {
-            'name': self.name,
-            'global_location': hex_to_dict(self.global_location),
-            'stars': [star.to_dict() for star in self.stars],
-            'warp_points': [wp.to_dict() for wp in self.warp_points],
-            'planets': [planet.to_dict() for planet in self.planets],
-            'storms': [s.to_dict() for s in self.storms]
-        }
-        if self.region_id is not None:
-            result['region_id'] = self.region_id
-        # PROJ-304: archetype + intrinsic abilities (most systems have None).
-        if self.archetype is not None:
-            result['archetype'] = self.archetype
-        if self.intrinsic_abilities:
-            result['intrinsic_abilities'] = dict(self.intrinsic_abilities)
-        return result
-
-    @classmethod
-    def from_dict(cls, data: dict) -> 'StarSystem':
-        """Deserialize StarSystem from dict.
-
-        Raises:
-            PersistenceException: If required keys missing.
-
-        Note:
-            Invalid children (stars, planets, warp points) are skipped with
-            a warning log to allow resilient degradation.
-        """
-        from game.core.json_utils import deserialize_list
-
-        require_keys(data, ['name', 'global_location'], 'StarSystem')
-        parent_name = f"StarSystem '{data['name']}'"
-
-        # PROJ-251: strict=True — corrupt entries fail the load
-        stars = deserialize_list(
-            data.get('stars', []), Star.from_dict, 'star', parent_name, strict=True
-        )
-
-        system = cls(
-            name=data['name'],
-            global_location=hex_from_dict(data['global_location']),
-            stars=stars,
-            region_id=data.get('region_id'),
-            # PROJ-304: archetype + intrinsic_abilities (None / empty for old saves).
-            archetype=data.get('archetype'),
-            intrinsic_abilities=data.get('intrinsic_abilities') or {},
-        )
-
-        system.warp_points = deserialize_list(
-            data.get('warp_points', []), WarpPoint.from_dict, 'warp point', parent_name, strict=True
-        )
-
-        system.planets = deserialize_list(
-            data.get('planets', []), Planet.from_dict, 'planet', parent_name, strict=True
-        )
-
-        # PROJ-189: Storm deserialization
-        system.storms = deserialize_list(
-            data.get('storms', []), Storm.from_dict, 'storm', parent_name, strict=True
-        )
-
-        return system
-
 class Galaxy:
-    def __init__(self, radius=100):
-        self.radius = radius
-        self.systems = {} # keys: HexCoord, values: StarSystem
-        self.name_map = {} # keys: str (name), values: StarSystem
-        
-        # Entity Registries (Issue #1 fix: proper IDs instead of id())
-        self._next_planet_id = 1
-        self.planets_by_id = {}  # int -> Planet
-        
-        # Spatial Indexes (Issue #2 fix: O(1) lookups instead of O(n²))
-        self._planet_to_system = {}    # Planet -> StarSystem
-        self._global_hex_planets = {}  # HexCoord -> List[Planet]
+    """Facade over `GalaxyState` + entity / spatial / generation services.
 
-        # Zone Registry (PROJ-139 Phase 2: multi-hex object lookup)
-        self._global_hex_zones = {}    # HexCoord -> List[object] (stars, Dyson Spheres)
-        self._zone_to_system = {}      # object -> StarSystem (PROJ-179: O(1) zone lookup)
+    PROJ-372 Phase 3: state extracted to ``GalaxyState``; the four
+    PROJ-173-Phase-2 delegates take ``self._state`` rather than
+    ``self`` back-reference. Public attribute reads (``galaxy.systems``
+    etc.) are preserved via ``@property`` forwarders.
+    """
 
-        # Warp Point Index (PROJ-179 Phase 2: O(1) warp point lookup)
-        self._global_hex_warp_points = {}  # HexCoord -> StarSystem
+    def __init__(self, radius: int = 100):
+        self._state = GalaxyState(radius=radius)
 
-        # Fleet Registry (PROJ-87 Phase 6: O(1) fleet lookup)
-        self.fleets_by_id = {}  # int -> Fleet
-        self._next_fleet_id = 1  # Global fleet ID counter (unique across all empires)
-        
-        # Initialize Naming Registry
-        data_path = Paths.STAR_SYSTEM_NAMES_FILE
-        self.naming = NameRegistry(data_path)
+        # Naming + image registries (heavy data loads — same as PROJ-173).
+        self.naming = NameRegistry(Paths.STAR_SYSTEM_NAMES_FILE)
         self.star_image_registry = StarImageRegistry()
         self.star_generator = StarGenerator(image_registry=self.star_image_registry)
         self.image_registry = PlanetImageRegistry()
         self.planet_generator = PlanetGenerator(self.image_registry)
 
-        # Load storm definitions and create storm generator (PROJ-189)
-        storms_path = Paths.STORMS_FILE
-        storm_defs = load_json(storms_path, default={})
+        storm_defs = load_json(Paths.STORMS_FILE, default={})
         self.storm_generator = StormGenerator(storm_defs) if storm_defs else None
 
-        # Internal delegates (PROJ-173 Phase 2)
+        # Service delegates (PROJ-173 Phase 2 + PROJ-372 Phase 3).
         self._warp_gen = GalaxyWarpGenerator()
         self._sys_gen = GalaxySystemGenerator(
             self.star_generator, self.planet_generator, self.naming, self.image_registry,
-            storm_generator=self.storm_generator
+            storm_generator=self.storm_generator,
         )
-        self._registry = GalaxyEntityRegistry(self)
-        self._spatial = GalaxySpatialIndex(self)
-        
-    def add_system(self, system) -> None:
-        """Add a system to the galaxy map."""
-        self.systems[system.global_location] = system
-        self.name_map[system.name] = system
-        # PROJ-204: Shared zone and warp point registration
-        self._register_zones_from_system(system)
-        self._rebuild_warp_point_index(system)
+        self._registry = GalaxyEntityRegistry(self._state)
+        self._spatial = GalaxySpatialIndex(self._state)
 
-    def _register_zones_from_system(self, system: 'StarSystem') -> None:
-        """Register all star and storm zones from a system.
+    # --- State property forwarders (preserve public + grandfathered private API) ---
 
-        PROJ-204 Phase 2: Consolidates duplicated zone registration (CQ-26).
+    @property
+    def radius(self) -> int:
+        return self._state.radius
 
-        Args:
-            system: The StarSystem whose zones to register.
-        """
-        for star in system.stars:
-            self.register_zone(system, star)
-        for storm in system.storms:
-            self.register_zone(system, storm)
+    @radius.setter
+    def radius(self, value: int) -> None:
+        self._state.radius = value
 
-    def _rebuild_warp_point_index(self, system: 'StarSystem') -> None:
-        """Add warp points from a system to the global hex index.
+    @property
+    def systems(self) -> Dict[HexCoord, 'StarSystem']:
+        return self._state.systems
 
-        PROJ-204 Phase 2: Consolidates duplicated warp point indexing (CQ-27).
+    @property
+    def name_map(self) -> Dict[str, 'StarSystem']:
+        return self._state.name_map
 
-        Args:
-            system: The StarSystem whose warp points to index.
-        """
-        for wp in system.warp_points:
-            global_hex = system.global_location + wp.location
-            self._global_hex_warp_points[global_hex] = system
+    @property
+    def planets_by_id(self) -> Dict[int, 'Planet']:
+        return self._state.planets_by_id
 
-    def _rebuild_all_warp_point_indices(self) -> None:
-        """Rebuild the warp point index for all systems.
+    @property
+    def fleets_by_id(self) -> Dict[int, 'Fleet']:
+        return self._state.fleets_by_id
 
-        PROJ-204 Phase 2: Consolidates full rebuild after warp generation (CQ-27).
-        Call after bulk warp point changes (e.g., generate_warp_lanes).
-        """
-        self._global_hex_warp_points.clear()
-        for system in self.systems.values():
-            self._rebuild_warp_point_index(system)
+    # PROJ-372: backwards-compat under-prefixed forwarders for the five
+    # grandfathered external read sites (movement.py, fleet_navigation_service.py,
+    # hex_outlines.py). Phase 3-cleanup work will migrate those to public
+    # accessors; until then this property layer keeps the call sites green.
+    def _ensure_state(self) -> 'GalaxyState':
+        """Lazy-create GalaxyState for tests that use ``Galaxy.__new__`` to
+        skip the heavy ``__init__`` and then mutate state directly."""
+        state = self.__dict__.get('_state')
+        if state is None:
+            from game.strategy.data.galaxy_entity_registry import (
+                GalaxyEntityRegistry,
+            )
+            from game.strategy.data.galaxy_spatial_index import (
+                GalaxySpatialIndex,
+            )
+            state = GalaxyState(radius=100)
+            self.__dict__['_state'] = state
+            self.__dict__['_registry'] = GalaxyEntityRegistry(state)
+            self.__dict__['_spatial'] = GalaxySpatialIndex(state)
+        return state
+
+    @property
+    def _global_hex_planets(self) -> Dict[HexCoord, List['Planet']]:
+        return self._state.global_hex_planets
+
+    @property
+    def _global_hex_zones(self) -> Dict[HexCoord, list]:
+        return self._state.global_hex_zones
+
+    @property
+    def _global_hex_warp_points(self) -> Dict[HexCoord, 'StarSystem']:
+        return self._state.global_hex_warp_points
+
+    @property
+    def _planet_to_system(self) -> Dict['Planet', 'StarSystem']:
+        return self._state.planet_to_system
+
+    @property
+    def _zone_to_system(self) -> Dict[int, 'StarSystem']:
+        return self._state.zone_to_system
+
+    @property
+    def _next_planet_id(self) -> int:
+        return self._ensure_state().next_planet_id
+
+    @_next_planet_id.setter
+    def _next_planet_id(self, value: int) -> None:
+        self._ensure_state().next_planet_id = value
+
+    @property
+    def _next_fleet_id(self) -> int:
+        return self._ensure_state().next_fleet_id
+
+    @_next_fleet_id.setter
+    def _next_fleet_id(self, value: int) -> None:
+        self._ensure_state().next_fleet_id = value
+
+    # --- Public facade methods (1-line delegations) ---
+
+    def add_system(self, system: 'StarSystem') -> None:
+        """Add a system to the galaxy map (delegates to entity registry)."""
+        self._registry.add_system(system)
 
     def get_system_by_name(self, name: str) -> Optional['StarSystem']:
-        """Get system by name."""
-        return self.name_map.get(name)
+        """O(1) name-keyed system lookup."""
+        return self._state.name_map.get(name)
 
     def get_system_of_object(self, obj: Any) -> Optional['StarSystem']:
-        """Find the system containing a Fleet (by its global location).
-
-        Facade method delegating to GalaxySpatialIndex.
-
-        Auto-routes Planet objects to get_system_of_planet(). Planets have
-        local coordinates relative to their system, not global coordinates.
-
-        Args:
-            obj: Object with a 'location' attribute (global HexCoord).
-
-        Returns:
-            StarSystem or None.
-        """
+        """Find the system containing an object with a global location."""
         return self._spatial.get_system_of_object(obj)
-    
+
     def register_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
-        """Register a planet with the galaxy, assigning ID and updating indexes.
-
-        Facade method delegating to GalaxyEntityRegistry.
-
-        Args:
-            system: StarSystem containing the planet.
-            planet: Planet to register.
-        """
+        """Register a planet, assigning ID and updating indexes."""
         self._registry.register_planet(system, planet)
 
     def get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
-        """O(1) lookup of planet by ID.
-
-        Facade method delegating to GalaxyEntityRegistry.
-
-        Args:
-            planet_id: Planet ID to find.
-
-        Returns:
-            Planet if found, None otherwise.
-        """
+        """O(1) lookup of planet by ID."""
         return self._registry.get_planet_by_id(planet_id)
-    
+
     def get_system_of_planet(self, planet: 'Planet') -> Optional['StarSystem']:
-        """O(1) reverse lookup: Planet -> StarSystem.
-
-        Facade method delegating to GalaxySpatialIndex.
-
-        Args:
-            planet: Planet to find system for.
-
-        Returns:
-            StarSystem containing the planet, or None if not registered.
-        """
+        """O(1) reverse lookup: Planet -> StarSystem."""
         return self._spatial.get_system_of_planet(planet)
 
     def get_planets_at_global_hex(self, global_hex: 'HexCoord') -> List['Planet']:
-        """O(1) spatial lookup: get all planets at a global hex coordinate.
-
-        Facade method delegating to GalaxySpatialIndex.
-
-        Args:
-            global_hex: Global HexCoord to query.
-
-        Returns:
-            List of planets at this hex, or empty list.
-        """
+        """O(1) spatial lookup: planets at a global hex."""
         return self._spatial.get_planets_at_global_hex(global_hex)
 
     def get_planet_global_hex(self, planet: 'Planet') -> Optional['HexCoord']:
-        """O(1) lookup: get the global hex coordinate of a planet.
-
-        Facade method delegating to GalaxySpatialIndex.
-
-        Args:
-            planet: Planet to get location for.
-
-        Returns:
-            Global HexCoord of the planet, or None if planet not registered.
-        """
+        """O(1) lookup: planet's global hex coordinate."""
         return self._spatial.get_planet_global_hex(planet)
 
-    # --- Zone Registry Methods (PROJ-139 Phase 2: multi-hex zones) ---
-    # Facade methods delegating to GalaxyEntityRegistry
-
     def register_zone(self, system: 'StarSystem', obj) -> None:
-        """Register a multi-hex zone object (star, Dyson Sphere) in the zone index.
-
-        Facade method delegating to GalaxyEntityRegistry.
-
-        Args:
-            system: The StarSystem containing the object.
-            obj: Object with an occupied_hexes property (IZoneOccupant).
-        """
+        """Register a multi-hex zone object (PROJ-139)."""
         self._registry.register_zone(system, obj)
 
     def unregister_zone(self, system: 'StarSystem', obj) -> None:
-        """Remove a multi-hex zone object from the zone index.
-
-        Facade method delegating to GalaxyEntityRegistry.
-
-        Args:
-            system: The StarSystem containing the object.
-            obj: Object with an occupied_hexes property (IZoneOccupant).
-        """
+        """Remove a multi-hex zone object."""
         self._registry.unregister_zone(system, obj)
 
     def get_zones_at_global_hex(self, global_hex: 'HexCoord') -> list:
-        """O(1) spatial lookup: get all zone objects at a global hex.
-
-        Facade method delegating to GalaxySpatialIndex.
-
-        Args:
-            global_hex: Global HexCoord to query.
-
-        Returns:
-            List of zone objects (stars, Dyson Spheres) at this hex, or empty list.
-        """
+        """O(1) spatial lookup: zones at a global hex."""
         return self._spatial.get_zones_at_global_hex(global_hex)
 
-    # --- Fleet Registry Methods (PROJ-87 Phase 6) ---
-    # Facade methods delegating to GalaxyEntityRegistry
-
     def get_next_fleet_id(self) -> int:
-        """Generate globally unique sequential fleet ID.
-
-        All empires share one counter to prevent ID collisions in the
-        galaxy-wide fleets_by_id registry.
-        """
-        fleet_id = self._next_fleet_id
-        self._next_fleet_id += 1
-        return fleet_id
+        """Generate globally unique sequential fleet ID."""
+        return self._registry.get_next_fleet_id()
 
     def register_fleet(self, fleet: 'Fleet') -> None:
-        """Register a fleet for O(1) lookup by ID.
-
-        Facade method delegating to GalaxyEntityRegistry.
-
-        Args:
-            fleet: Fleet object to register.
-        """
+        """Register a fleet for O(1) lookup by ID."""
         self._registry.register_fleet(fleet)
 
     def unregister_fleet(self, fleet: 'Fleet') -> None:
-        """Remove a fleet from the registry.
-
-        Facade method delegating to GalaxyEntityRegistry.
-
-        Args:
-            fleet: Fleet object to unregister.
-        """
+        """Remove a fleet from the registry."""
         self._registry.unregister_fleet(fleet)
 
     def get_fleet_by_id(self, fleet_id: int) -> Optional['Fleet']:
-        """O(1) lookup of fleet by ID.
-
-        Facade method delegating to GalaxyEntityRegistry.
-
-        Args:
-            fleet_id: Fleet ID to find.
-
-        Returns:
-            Fleet if found, None otherwise.
-        """
+        """O(1) lookup of fleet by ID."""
         return self._registry.get_fleet_by_id(fleet_id)
 
     def unregister_planet(self, planet: 'Planet') -> None:
-        """Remove a planet from all galaxy indexes and its parent system.
-
-        Facade method delegating to GalaxyEntityRegistry.
-
-        Args:
-            planet: The planet to unregister.
-        """
+        """Remove a planet from all galaxy indexes and its parent system."""
         self._registry.unregister_planet(planet)
 
     def remove_warp_link(self, system_a_name: str, system_b_name: str) -> None:
-        """Remove warp points connecting two systems.
-
-        Removes warp points from both systems that link to each other.
-        Handles missing systems gracefully.
-
-        Args:
-            system_a_name: Name of the first system.
-            system_b_name: Name of the second system.
-        """
-        system_a = self.name_map.get(system_a_name)
-        system_b = self.name_map.get(system_b_name)
+        """Remove warp points connecting two systems. Handles missing systems."""
+        system_a = self._state.name_map.get(system_a_name)
+        system_b = self._state.name_map.get(system_b_name)
 
         if system_a is not None:
-            # Remove from warp point index (PROJ-179: O(1) lookup)
             for wp in system_a.warp_points:
                 if wp.destination_id == system_b_name:
-                    global_hex = system_a.global_location + wp.location
-                    self._global_hex_warp_points.pop(global_hex, None)
+                    self._state.global_hex_warp_points.pop(
+                        system_a.global_location + wp.location, None,
+                    )
             system_a.warp_points = [
-                wp for wp in system_a.warp_points
-                if wp.destination_id != system_b_name
+                wp for wp in system_a.warp_points if wp.destination_id != system_b_name
             ]
 
         if system_b is not None:
-            # Remove from warp point index (PROJ-179: O(1) lookup)
             for wp in system_b.warp_points:
                 if wp.destination_id == system_a_name:
-                    global_hex = system_b.global_location + wp.location
-                    self._global_hex_warp_points.pop(global_hex, None)
+                    self._state.global_hex_warp_points.pop(
+                        system_b.global_location + wp.location, None,
+                    )
             system_b.warp_points = [
-                wp for wp in system_b.warp_points
-                if wp.destination_id != system_a_name
+                wp for wp in system_b.warp_points if wp.destination_id != system_a_name
             ]
 
     def get_system_at_location(self, location: 'HexCoord') -> Optional['StarSystem']:
-        """Find the star system containing a given global hex location.
-
-        Facade method delegating to GalaxySpatialIndex.
-
-        Checks if the location is:
-        - At a system's global_location
-        - At a planet within a system
-        - At a star within a system
-        - At a warp point within a system
-
-        Args:
-            location: Global HexCoord to search for.
-
-        Returns:
-            StarSystem if location is within a system, None if in deep space.
-        """
+        """Find the star system containing a given global hex location (O(1))."""
         return self._spatial.get_system_at_location(location)
 
     def get_all_fleets_in_system(self, system: 'StarSystem', empires: List) -> List[tuple]:
-        """Find all fleets from all empires at any hex within a system.
-
-        Facade method delegating to GalaxySpatialIndex.
-
-        Checks the system's global_location plus all planet, star, and
-        warp point local offsets.
-
-        Args:
-            system: The StarSystem to search within.
-            empires: List of Empire objects to search.
-
-        Returns:
-            List of (empire, fleet) tuples for all fleets in the system.
-        """
+        """All (empire, fleet) at any hex within `system`."""
         return self._spatial.get_all_fleets_in_system(system, empires)
 
     def generate_planets(self, system: 'StarSystem') -> None:
-        """Generate planets for a system based on its star type.
-
-        Facade method delegating to GalaxySystemGenerator.
-
-        Args:
-            system: StarSystem to generate planets for.
-        """
+        """Generate planets for `system` based on its star type."""
         self._sys_gen.generate_planets(self, system)
 
     def generate_systems(
@@ -525,163 +252,101 @@ class Galaxy:
         count: int,
         min_dist: int = 10,
         placement_strategy: Optional['ISystemPlacementStrategy'] = None,
-        rng: Optional[random.Random] = None
+        rng: Optional[random.Random] = None,
     ) -> List['StarSystem']:
-        """Generate star systems ensuring minimum distance and assigning Star Types.
-
-        Facade method delegating to GalaxySystemGenerator.
-
-        Args:
-            count: Number of systems to generate.
-            min_dist: Minimum distance between systems in hex units.
-            placement_strategy: Strategy for placing systems. If None, uses
-                RandomPlacementStrategy for uniform random placement.
-            rng: Random number generator for deterministic generation.
-                If None, uses global random state.
-
-        Returns:
-            List of generated StarSystem objects.
-        """
+        """Generate `count` systems with min hex distance, returns the list."""
         return self._sys_gen.generate_systems(
-            self, count, min_dist, placement_strategy, rng
+            self, count, min_dist, placement_strategy, rng,
         )
 
     def create_vars_link(self, sys_a: 'StarSystem', sys_b: 'StarSystem') -> None:
-        """Create a warp link between two systems.
-
-        Facade method delegating to GalaxyWarpGenerator.
-
-        Args:
-            sys_a: First system.
-            sys_b: Second system.
-        """
-        # Track warp point count before to detect new additions
+        """Create a warp link between two systems and index any new warp points."""
         wp_count_a = len(sys_a.warp_points)
         wp_count_b = len(sys_b.warp_points)
 
         self._warp_gen.create_warp_link(sys_a, sys_b)
 
-        # Register any newly created warp points (PROJ-179: O(1) lookup)
+        # PROJ-179: index any newly created warp points.
         if len(sys_a.warp_points) > wp_count_a:
-            wp = sys_a.warp_points[-1]  # Most recently added
-            global_hex = sys_a.global_location + wp.location
-            self._global_hex_warp_points[global_hex] = sys_a
+            wp = sys_a.warp_points[-1]
+            self._state.global_hex_warp_points[sys_a.global_location + wp.location] = sys_a
         if len(sys_b.warp_points) > wp_count_b:
             wp = sys_b.warp_points[-1]
-            global_hex = sys_b.global_location + wp.location
-            self._global_hex_warp_points[global_hex] = sys_b
+            self._state.global_hex_warp_points[sys_b.global_location + wp.location] = sys_b
 
     def generate_warp_lanes(
         self,
         region_classifier: 'Optional[RegionClassifier]' = None,
-        inter_region_mode: str = 'normal'
+        inter_region_mode: str = 'normal',
     ) -> None:
-        """Generate warp lanes ensuring connectivity (MST) and adding density.
-
-        Facade method delegating to GalaxyWarpGenerator. The MST is computed
-        over all unique system pairs (bounded by ``MAX_SYSTEM_COUNT=150``)
-        so connectivity holds for any system layout.
-
-        Args:
-            region_classifier: Optional RegionClassifier for region-aware
-                         warp lane generation. If provided, inter-region
-                         connections are penalized based on inter_region_mode.
-            inter_region_mode: How to handle inter-region connections:
-                         - 'normal': No region restrictions (default)
-                         - 'limited': Allow 1-2 inter-region links per region pair
-                         - 'minimal': Only allow MST-required inter-region links
-        """
+        """Generate warp lanes ensuring connectivity (MST) and adding density."""
         self._warp_gen.generate_warp_lanes(
-            self, region_classifier=region_classifier,
+            self,
+            region_classifier=region_classifier,
             inter_region_mode=inter_region_mode,
         )
-        # PROJ-204: Rebuild warp point index after generation
-        self._rebuild_all_warp_point_indices()
+        # PROJ-204: rebuild warp point index after bulk generation.
+        self._registry.rebuild_all_warp_point_indices()
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize Galaxy to dict."""
-        # Convert systems dict (HexCoord keys -> dict keys)
-        systems_list = []
-        for coord, system in self.systems.items():
-            systems_list.append({
-                'coord': hex_to_dict(coord),
-                'system': system.to_dict()
-            })
-
+        systems_list = [
+            {'coord': hex_to_dict(coord), 'system': system.to_dict()}
+            for coord, system in self._state.systems.items()
+        ]
         return {
-            'radius': self.radius,
+            'radius': self._state.radius,
             'systems': systems_list,
-            '_next_planet_id': self._next_planet_id,
-            '_next_fleet_id': self._next_fleet_id,
+            '_next_planet_id': self._state.next_planet_id,
+            '_next_fleet_id': self._state.next_fleet_id,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Galaxy':
-        """
-        Deserialize Galaxy from dict.
-
-        Args:
-            data: Saved galaxy data
-
-        Returns:
-            Reconstructed Galaxy with all indexes rebuilt
+        """Deserialize Galaxy from dict.
 
         Raises:
-            PersistenceException: If required keys missing or radius is not positive.
-
-        Note:
-            Invalid systems are skipped with a warning log to allow
-            resilient degradation.
+            PersistenceException: required key missing or radius non-positive,
+            or any system entry corrupt (PROJ-251 strict).
         """
-        logger = logging.getLogger(__name__)
         require_keys(data, ['radius'], 'Galaxy')
         validate_positive(data['radius'], 'radius', 'Galaxy')
 
-        # Create empty galaxy
         galaxy = cls(radius=data['radius'])
+        galaxy._state.next_planet_id = data.get('_next_planet_id', 1)
+        galaxy._state.next_fleet_id = data.get('_next_fleet_id', 1)
 
-        # Restore planet ID counter
-        galaxy._next_planet_id = data.get('_next_planet_id', 1)
-
-        # Restore fleet ID counter
-        galaxy._next_fleet_id = data.get('_next_fleet_id', 1)
-
-        # Deserialize systems with error isolation
         for i, sys_entry in enumerate(data.get('systems', [])):
             try:
-                # Validate system entry structure
                 if 'coord' not in sys_entry:
                     raise PersistenceException(
                         f"Galaxy: system entry {i} missing 'coord'",
                         code=ErrorCode.CORRUPT_DATA.value,
-                        context={"source": "Galaxy", "index": i, "missing_key": "coord"}
+                        context={"source": "Galaxy", "index": i, "missing_key": "coord"},
                     )
                 if 'system' not in sys_entry:
                     raise PersistenceException(
                         f"Galaxy: system entry {i} missing 'system'",
                         code=ErrorCode.CORRUPT_DATA.value,
-                        context={"source": "Galaxy", "index": i, "missing_key": "system"}
+                        context={"source": "Galaxy", "index": i, "missing_key": "system"},
                     )
 
                 coord = hex_from_dict(sys_entry['coord'])
                 system = StarSystem.from_dict(sys_entry['system'])
             except (PersistenceException, KeyError, TypeError, ValueError) as e:
-                # PROJ-251: Strict deserialization — corrupt systems fail the load
                 raise PersistenceException(
                     f"Corrupt system data at index {i} in galaxy",
                     code=ErrorCode.CORRUPT_DATA.value,
-                    context={"system_index": i, "original_error": str(e)}
+                    context={"system_index": i, "original_error": str(e)},
                 ) from e
 
-            # Add to galaxy maps
-            galaxy.systems[coord] = system
-            galaxy.name_map[system.name] = system
+            galaxy._state.systems[coord] = system
+            galaxy._state.name_map[system.name] = system
 
-            # PROJ-204: Shared zone and warp point registration
-            galaxy._register_zones_from_system(system)
-            galaxy._rebuild_warp_point_index(system)
+            # PROJ-204: zone + warp point registration via service.
+            galaxy._registry._register_zones_from_system(system)
+            galaxy._registry._rebuild_warp_point_index_for(system)
 
-            # Restore planet registrations (preserves existing IDs from saved data)
             for planet in system.planets:
                 galaxy._registry.restore_planet(system, planet)
 

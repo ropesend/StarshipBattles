@@ -9,7 +9,18 @@
 **Review Mode:** cumulative (Phases 0-3)
 **Files (planned):** see manifest.md Phase 3 row group
 
-**Status:** Not Started
+**Status:** Complete
+
+**Notes (Phase 3 outcomes):**
+- galaxy.py: 689 -> 353 LOC. Already at the Phase-4 final budget (no Phase-4 churn needed for Galaxy itself, only pathfinding extractions).
+- galaxy_state.py: 65 LOC (target 150). Owns systems/name_map/planets_by_id/fleets_by_id/planet_to_system/global_hex_planets/global_hex_zones/global_hex_warp_points/zone_to_system + next_planet_id/next_fleet_id + radius.
+- star_system.py: 148 LOC (new — Decision E activated to fit galaxy.py budget). StarSystem + WarpPoint extracted; galaxy.py re-exports both for the 7+ external import sites.
+- galaxy_entity_registry.py: 169 LOC (target 250). Now takes GalaxyState; gained add_system, get_next_fleet_id, _register_zones_from_system, _rebuild_warp_point_index_for, rebuild_all_warp_point_indices.
+- galaxy_spatial_index.py: 121 LOC (target 250). Now takes GalaxyState.
+- galaxy_warp_generator.py and galaxy_system_generator.py unchanged in scope — they use the public Galaxy API surface.
+- Galaxy facade exposes property forwarders for the 5 grandfathered external readers. Lazy `_ensure_state()` keeps `Galaxy.__new__()` test patterns green (test_empire, test_fleet_registration_lifecycle).
+- Save format unchanged; round-trip equality holds on 5-system synthetic galaxy.
+- 5008 strategy/save_load/integration tests pass.
 **Objective:** Introduce `GalaxyState` dataclass owning the 11 mutable indexes + 2 ID counters + radius. Refactor the four PROJ-173-Phase-2 delegates (`GalaxyEntityRegistry`, `GalaxySpatialIndex`, `GalaxyWarpGenerator`, `GalaxySystemGenerator`) to take `GalaxyState` instead of `Galaxy`. Move 7 logic-bearing methods off `Galaxy` (3 zone/warp registration, ID-counter `get_next_fleet_id`, `remove_warp_link`, the inline warp-index rebuilds in `create_vars_link` and `generate_warp_lanes`) into the appropriate service. Preserve external API: `galaxy.systems` etc. become `@property` forwarders to `_state.systems`. Save format unchanged.
 
 ---

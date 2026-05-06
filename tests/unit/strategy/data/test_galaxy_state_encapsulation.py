@@ -117,14 +117,24 @@ def test_no_external_reads_of_galaxy_private_indexes() -> None:
 
 def test_allowed_files_actually_use_at_least_one_index() -> None:
     """Sanity check the allow-list — every entry should reference at least
-    one restricted attr (otherwise it's stale and should be pruned)."""
+    one restricted attr (otherwise it's stale and should be pruned).
+
+    Phase-3 update: ``galaxy.py`` no longer reads the restricted attrs
+    directly (state migrated to GalaxyState); it exposes them as
+    ``@property`` forwarders for back-compat with the grandfathered
+    external readers. The property names appear as ``FunctionDef``
+    nodes, not as ``Attribute`` reads, so they don't show as
+    violations and ``galaxy.py`` is the second skip-from-must-use case
+    after warp generator."""
+    skip_must_use = {
+        "game/strategy/data/galaxy_warp_generator.py",
+        "game/strategy/data/galaxy.py",
+    }
     for rel in ALLOWED_FILES:
         path = REPO_ROOT / rel
         assert path.exists(), f"Stale allow-list entry: {rel}"
         viols = _find_violations(path)
-        # Warp generator may legitimately not read the indexes today; it's
-        # included for Phase-3 readiness. Don't require usage from it.
-        if rel == "game/strategy/data/galaxy_warp_generator.py":
+        if rel in skip_must_use:
             continue
         assert viols, (
             f"Allow-listed file {rel} does not actually read any restricted "

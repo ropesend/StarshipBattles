@@ -64,26 +64,19 @@ class InstantBattleResolver(IBattleResolver):
 def galaxy():
     """Create a minimal Galaxy with registry support for fleet lifecycle tests.
 
+    PROJ-372 Phase 3: Galaxy now uses GalaxyState for shared state.
     Uses Galaxy.__new__ to skip the heavy __init__ (file I/O, generators),
-    then manually sets up only the state needed for fleet registration.
+    then attaches a fresh GalaxyState + service delegates.
     """
-    gal = Galaxy.__new__(Galaxy)
-    gal.systems = {}
-    gal.warp_points = []
-    gal.radius = 300
-    gal.fleets_by_id = {}
-    gal.planets_by_id = {}
-    gal._planet_to_system = {}
-    gal._global_hex_planets = {}
-    gal._global_hex_zones = {}
-    gal._zone_to_system = {}
-    gal._global_hex_warp_points = {}
-    gal.name_map = {}
-    # Delegates needed for facade methods
     from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry
     from game.strategy.data.galaxy_spatial_index import GalaxySpatialIndex
-    gal._registry = GalaxyEntityRegistry(gal)
-    gal._spatial = GalaxySpatialIndex(gal)
+    from game.strategy.data.galaxy_state import GalaxyState
+
+    gal = Galaxy.__new__(Galaxy)
+    gal._state = GalaxyState(radius=300)
+    gal.warp_points = []
+    gal._registry = GalaxyEntityRegistry(gal._state)
+    gal._spatial = GalaxySpatialIndex(gal._state)
     return gal
 
 

@@ -18,15 +18,15 @@
 | 0. Pre-Phase: facade-delegate template + AST/protocol scaffolding | Complete | [phase_0_checklist.md](phase_0_checklist.md) | **PROJ-370 verified** |
 | 1. Star decomposition (770 LOC stars.py → ~280 facade + extracted services) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | **PROJ-370 verified** + phase_0 |
-| 3. Galaxy query/spatial-aggregation services | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | **PROJ-370 verified** + phase_0 |
+| 3. Galaxy query/spatial-aggregation services | Complete | [phase_3_checklist.md](phase_3_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 4. Galaxy algorithmic services (pathfinding, intercept, warp resolution) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | **PROJ-370 verified** + phase_3 |
 | 5. AST guards, perf bench, doc updates, final audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | **PROJ-370 verified** + phases 1-4 |
 
 ## Current State
-**Last Updated:** 2026-05-05 (Phase 2 complete)
-**Active Phase:** Phase 3 (Galaxy query/spatial services) — pending
-**Last Action:** Phase 2 complete. Split planet.py 667→297 LOC. New files: `game/strategy/services/planet_query_service.py` (82 LOC, static methods: active_abilities, is_ability_active, occupied_hexes, can_build_type), `game/strategy/services/planet_habitability_service.py` (65 LOC, implements IHabitabilityCalculator), `game/strategy/data/planet_serde.py` (222 LOC, planet_to_dict + planet_from_dict_kwargs + _deserialize_planet_orders). All 47 dataclass fields preserved verbatim. `Planet.get_cached_habitability_multiplier` now routes through ApplicationContext — modders register via `set_default_planet_habitability_service` (PROJ-258 pattern). PROJ-285 cache invariant preserved (cache lives on planet, not service). Phase 2 wired the real default at module import. LOC ceiling tightened to 350. 5008 strategy/save_load/integration tests pass.
-**Next Action:** Phase 3 — Galaxy query/spatial services. Introduce `GalaxyState` dataclass; refactor 4 PROJ-173 delegates to take state instead of `_galaxy: Galaxy` back-pointer. Tighten galaxy.py to 420 LOC (intermediate; final 350 in Phase 4).
+**Last Updated:** 2026-05-05 (Phase 3 complete)
+**Active Phase:** Phase 4 (Galaxy algorithmic services) — pending
+**Last Action:** Phase 3 complete. Split galaxy.py 689→353 LOC. New files: `game/strategy/data/galaxy_state.py` (65 LOC, dataclass owning systems/name_map/indexes/ID counters/radius), `game/strategy/data/star_system.py` (148 LOC, extracted StarSystem + WarpPoint per Decision E to fit galaxy.py budget). Refactored: `galaxy_entity_registry.py` and `galaxy_spatial_index.py` now take `GalaxyState` (no `_galaxy` back-pointer); registry gained `add_system`, `get_next_fleet_id`, and warp-index rebuild methods. Galaxy facade exposes `_state`, `@property` forwarders for `systems`/`name_map`/`planets_by_id`/`fleets_by_id`/`radius`, and back-compat `_global_hex_*`/`_planet_to_system`/`_zone_to_system` properties for the 5 grandfathered external readers. Lazy `_ensure_state()` method supports tests that use `Galaxy.__new__()` to skip heavy init. `galaxy_warp_generator.py` and `galaxy_system_generator.py` continue to use the public Galaxy API (unchanged). LOC ceiling tightened to 420 (final 350 in Phase 4 — already at 353). Round-trip test green on 5-system synthetic galaxy. 5008 tests pass.
+**Next Action:** Phase 4 — Galaxy algorithmic services. Extract pathfinding + intercept into services accepting GalaxyState/IGalaxySystemGraph. Convert pathfinding.py free functions to deprecated 1-line shims. Tighten galaxy.py to 350 LOC.
 **Blockers:** None.
 
 ## Overview
