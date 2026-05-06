@@ -396,7 +396,7 @@ def test_load_pod_from_staging_yard_iterates_in_reverse():
         return planet.staging_yard.pop(idx)
     planet.remove_from_staging_yard = MagicMock(side_effect=_remove)
 
-    loaded = proc._load_pod_from_staging_yard(fleet, planet, pod_name=None, amount=1)
+    loaded = proc._handler_registry.get(OrderType.TRANSFER)._dispatch_drop_pod_load(fleet, planet, None, 1)
 
     assert loaded == 1
     # Reverse iteration: the LAST pod (PodC) was loaded first.
@@ -417,7 +417,7 @@ def test_unload_pod_to_staging_yard_returns_count_unloaded():
     planet = _planet()
     planet.add_to_staging_yard = MagicMock(return_value=True)
 
-    count = proc._unload_pod_to_staging_yard(fleet, planet, pod_name=None, amount=2)
+    count = proc._handler_registry.get(OrderType.TRANSFER)._dispatch_drop_pod_unload(fleet, planet, None, 2)
 
     assert count == 2
     assert ship.carried_items == []

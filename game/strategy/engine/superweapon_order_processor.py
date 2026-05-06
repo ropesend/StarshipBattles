@@ -661,83 +661,9 @@ class SuperweaponOrderProcessor:
             precheck_fn=_precheck,
         )
 
-    def process_self_destruct(
-        self,
-        fleet: Fleet,
-        empire: 'Empire',
-        galaxy: Galaxy
-    ) -> SuperweaponResult:
-        """
-        Process a SELF_DESTRUCT order.
-
-        Removes the specified ships from the fleet.
-
-        Args:
-            fleet: Fleet with SELF_DESTRUCT order
-            empire: Empire that owns the fleet
-            galaxy: Galaxy (unused, for signature consistency)
-
-        Returns:
-            SuperweaponResult with success status.
-        """
-        order = fleet.get_current_order()
-        if not order or order.type != OrderType.SELF_DESTRUCT:
-            return SuperweaponResult(success=False, message="No SELF_DESTRUCT order")
-
-        # Target is list of ship IDs
-        ship_ids = order.target
-        if not isinstance(ship_ids, list) or not ship_ids:
-            fleet.pop_order()
-            return SuperweaponResult(success=False, message="No ships specified")
-
-        # Build ship lookup
-        ships_by_id = {ship.id: ship for ship in fleet.ships}
-
-        # Collect ships to remove
-        ships_to_remove = []
-        ship_names = []
-        for ship_id in ship_ids:
-            ship = ships_by_id.get(ship_id)
-            if ship:
-                ships_to_remove.append(ship)
-                # Get name - ship.name always exists on ShipInstance
-                name = ship.name if isinstance(ship.name, str) else str(ship_id)
-                ship_names.append(name)
-
-        # FEAT-04: Capture location before fleet may be consumed
-        fleet_loc = fleet.location
-
-        # Remove ships
-        for ship in ships_to_remove:
-            fleet.remove_ship(ship)
-
-        fleet.pop_order()
-
-        # Check if fleet is now empty
-        fleet_consumed = len(fleet.ships) == 0
-
-        # Clean up empty fleet (SG-003 fix)
-        if fleet_consumed:
-            empire.remove_fleet(fleet, event_bus=self._event_bus)
-
-        logger.info(f"Ships self-destructed: {', '.join(ship_names)}")
-        if self._event_bus:
-            self._event_bus.log_event(
-                EventType.SHIPS_SELF_DESTRUCTED,
-                category=EventCategory.SUPERWEAPONS,
-                empire_id=empire.id,
-                message=f"{len(ships_to_remove)} ships self-destructed",
-                fleet_id=fleet.id,
-                ship_count=len(ships_to_remove),
-                ship_names=ship_names,
-                location_hex=[fleet_loc.q, fleet_loc.r],
-            )
-
-        return SuperweaponResult(
-            success=True,
-            fleet_consumed=fleet_consumed,
-            message=f"{len(ships_to_remove)} ships self-destructed"
-        )
+    # PROJ-368 Phase 4: process_self_destruct DELETED. SELF_DESTRUCT now
+    # routes through SelfDestructHandler at game.strategy.engine.
+    # order_handlers.self_destruct.
 
     def _check_blocking_stabilizer(
         self,

@@ -125,8 +125,13 @@ class ColonizeHandler(BaseOrderHandler):
             system_name=system_name,
             local_hex=local_hex,
         )
+        # PROJ-368: legacy execute_action_order's COLONIZE branch returned
+        # `result.colonized` as the "fleet consumed" signal -- documented
+        # quirk preserved for backward compat with existing characterization
+        # tests in test_fleet_order_processor.py.
         return OrderExecutionResult(
             success=True,
+            fleet_consumed=True,  # mirror legacy: colonized -> fleet_consumed
             colonized=True,
             planet_name=final_planet.name,
         )

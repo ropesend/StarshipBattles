@@ -21,6 +21,10 @@ from game.strategy.engine.order_handlers.base import (
 from game.strategy.engine.order_handlers.colonize import ColonizeHandler
 from game.strategy.engine.order_handlers.join_fleet import JoinFleetHandler
 from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
+from game.strategy.engine.order_handlers.superweapons import (
+    SuperweaponHandlerAdapter,
+    build_superweapon_handlers,
+)
 from game.strategy.engine.order_handlers.transfer import TransferHandler
 from game.strategy.engine.order_handlers.registry_factory import (
     create_default_order_handler_registry,
@@ -34,6 +38,8 @@ __all__ = [
     "ColonizeHandler",
     "JoinFleetHandler",
     "SelfDestructHandler",
+    "SuperweaponHandlerAdapter",
     "TransferHandler",
+    "build_superweapon_handlers",
     "create_default_order_handler_registry",
 ]

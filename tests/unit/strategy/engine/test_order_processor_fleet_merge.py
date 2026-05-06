@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+from game.strategy.data.order_types import OrderType
 from tests.fixtures.strategy_entities import create_test_empire, create_test_fleet
 
 
@@ -83,6 +84,6 @@ def test_order_processor_merge_path_invokes_speed_recalc():
     processor = OrderProcessor()
 
     with patch.object(type(target), "trigger_speed_recalculation") as mock_recalc:
-        processor._execute_fleet_merge(source, target, empire)
+        processor._handler_registry.get(OrderType.JOIN_FLEET)._execute_fleet_merge(source, target, empire)
 
     mock_recalc.assert_called()

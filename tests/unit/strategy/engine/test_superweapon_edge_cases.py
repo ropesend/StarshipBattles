@@ -20,6 +20,16 @@ from game.strategy.data.order_types import Order, OrderType
 # Fixtures
 # =============================================================================
 
+# PROJ-368 Phase 4: SELF_DESTRUCT was lifted from SuperweaponOrderProcessor
+# to SelfDestructHandler. Tests that called process_self_destruct now route
+# through the handler with the same arguments and field shape.
+def _lift_self_destruct(processor, fleet, empire, galaxy):
+    from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
+    handler = SelfDestructHandler(event_bus=getattr(processor, "_event_bus", None))
+    return handler.execute_action_order(fleet, empire, galaxy)
+
+
+
 @pytest.fixture
 def mock_fleet():
     """Create a mock fleet with basic attributes."""
@@ -498,7 +508,7 @@ class TestOrderProcessorErrorCases:
         fleet.pop_order = Mock()
 
         processor = SuperweaponOrderProcessor()
-        result = processor.process_self_destruct(fleet, Mock(), Mock())
+        result = _lift_self_destruct(processor, fleet, Mock(), Mock())
 
         assert not result.success
         assert "No ships specified" in result.message
@@ -671,7 +681,7 @@ class TestSelfDestructShipNames:
 
         # Should not raise, should use ship_id as name fallback
         with patch('game.strategy.engine.superweapon_order_processor.logger'):
-            result = processor.process_self_destruct(fleet, empire, Mock())
+            result = _lift_self_destruct(processor, fleet, empire, Mock())
 
         assert result.success
         fleet.remove_ship.assert_called_once_with(ship)
@@ -696,7 +706,7 @@ class TestSelfDestructShipNames:
         empire.id = 0
 
         with patch('game.strategy.engine.superweapon_order_processor.logger'):
-            result = processor.process_self_destruct(fleet, empire, Mock())
+            result = _lift_self_destruct(processor, fleet, empire, Mock())
 
         assert result.success
 
@@ -722,7 +732,7 @@ class TestSelfDestructShipNames:
         empire = Mock()
 
         with patch('game.strategy.engine.superweapon_order_processor.logger'):
-            result = processor.process_self_destruct(fleet, empire, Mock())
+            result = _lift_self_destruct(processor, fleet, empire, Mock())
 
         assert result.success
         # Only existing ship should be removed

@@ -19,15 +19,15 @@
 | 1. Protocol + registry skeleton + JoinFleet PoC | Complete (Committed) | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Port instant + simple action orders (Colonize, SelfDestruct) | Complete (Committed) | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Port Transfer family (TRANSFER, LOAD_POPULATION, UNLOAD_POPULATION) | Complete (Committed) | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Port superweapon dispatch and delete legacy methods (includes registry-completeness + no-legacy-helper AST gates) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Port superweapon dispatch and delete legacy methods (includes registry-completeness + no-legacy-helper AST gates) | Complete (Committed) | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Per-handler unit tests + AST static-guard regression | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-05
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 committed. `TransferHandler` extracted with 7 explicit `_dispatch_*` branches (covering the 5 implicit branches in legacy `process_transfer` plus their cargo-type sub-branches). Single instance registered against TRANSFER, LOAD_POPULATION, UNLOAD_POPULATION. `OrderProcessor.process_transfer` is now a one-line delegate. BUG-70 + PROJ-343 T1.1 invariants preserved. 17 new tests added; 4656 strategy tests pass. `OrderProcessor` LOC: 744 -> 654.
-**Next Action:** Phase 4 — superweapon adapter registry; delete legacy OrderProcessor private helpers; AST gate tests.
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 committed. `SuperweaponHandlerAdapter` + 5 spec-driven adapters wired; `OrderProcessor.execute_action_order` is now a pure registry lookup. All legacy private helpers (~700 LOC) deleted from OrderProcessor; `SuperweaponOrderProcessor.process_self_destruct` deleted. AST gates (`test_handler_registry_completeness.py` + `test_order_processor_no_legacy_helpers.py`) green. Pre-existing characterization tests that called legacy private methods on the processor were redirected to the live handler instances. 4676 strategy + integration tests pass. `OrderProcessor` LOC: 654 -> 168 (under 200 facade target). `SuperweaponOrderProcessor` LOC: 782 -> 708.
+**Next Action:** Phase 5 — backfill thin handler tests, document the registry pattern in `docs/systems/strategy_layer.md` + `docs/02_PATTERNS.md`, cross-link the source review.
 **Blockers:** None.
 
 ## Overview

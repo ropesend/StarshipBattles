@@ -5,7 +5,7 @@ Load: planet.staging_yard -> ship.carried_items
 Unload: ship.carried_items -> planet.staging_yard
 """
 from unittest.mock import MagicMock, patch
-from game.strategy.engine.order_processor import OrderProcessor
+from game.strategy.engine.order_handlers.transfer import TransferHandler
 
 
 def _make_planet(staging_items=None):
@@ -62,8 +62,8 @@ class TestLoadPodFromStagingYard:
         ship = _make_ship(pod_capacity=2000.0)
         fleet = _make_fleet([ship])
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        loaded = proc._load_pod_from_staging_yard(fleet, planet, amount=1)
+        proc = TransferHandler()
+        loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=1)
 
         assert loaded == 1
         assert len(ship.carried_items) == 1
@@ -74,8 +74,8 @@ class TestLoadPodFromStagingYard:
         ship = _make_ship(pod_capacity=2000.0)
         fleet = _make_fleet([ship])
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        loaded = proc._load_pod_from_staging_yard(fleet, planet, amount=0)
+        proc = TransferHandler()
+        loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
 
         assert loaded == 3
         assert len(ship.carried_items) == 3
@@ -86,8 +86,8 @@ class TestLoadPodFromStagingYard:
         ship = _make_ship(pod_capacity=1000.0)  # Can only fit 2
         fleet = _make_fleet([ship])
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        loaded = proc._load_pod_from_staging_yard(fleet, planet, amount=0)
+        proc = TransferHandler()
+        loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
 
         assert loaded == 2
         assert len(ship.carried_items) == 2
@@ -101,8 +101,8 @@ class TestLoadPodFromStagingYard:
         ship = _make_ship(pod_capacity=5000.0)
         fleet = _make_fleet([ship])
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        loaded = proc._load_pod_from_staging_yard(fleet, planet, pod_name="Small Pod", amount=1)
+        proc = TransferHandler()
+        loaded = proc._dispatch_drop_pod_load(fleet, planet, pod_name="Small Pod", amount=1)
 
         assert loaded == 1
         assert ship.carried_items[0]['name'] == "Small Pod"
@@ -114,8 +114,8 @@ class TestLoadPodFromStagingYard:
         ship = _make_ship(pod_capacity=0.0)
         fleet = _make_fleet([ship])
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        loaded = proc._load_pod_from_staging_yard(fleet, planet, amount=1)
+        proc = TransferHandler()
+        loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=1)
 
         assert loaded == 0
         assert len(planet.staging_yard) == 1
@@ -126,8 +126,8 @@ class TestLoadPodFromStagingYard:
         ship2 = _make_ship(pod_capacity=1000.0)  # Fits 2
         fleet = _make_fleet([ship1, ship2])
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        loaded = proc._load_pod_from_staging_yard(fleet, planet, amount=0)
+        proc = TransferHandler()
+        loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
 
         assert loaded == 3
         assert len(ship1.carried_items) == 2
@@ -143,8 +143,8 @@ class TestUnloadPodToStagingYard:
         fleet = _make_fleet([ship])
         planet = _make_planet()
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        unloaded = proc._unload_pod_to_staging_yard(fleet, planet, amount=1)
+        proc = TransferHandler()
+        unloaded = proc._dispatch_drop_pod_unload(fleet, planet, amount=1)
 
         assert unloaded == 1
         assert len(ship.carried_items) == 0
@@ -155,8 +155,8 @@ class TestUnloadPodToStagingYard:
         fleet = _make_fleet([ship])
         planet = _make_planet()
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        unloaded = proc._unload_pod_to_staging_yard(fleet, planet, amount=0)
+        proc = TransferHandler()
+        unloaded = proc._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
         assert unloaded == 2
         assert len(ship.carried_items) == 0
@@ -170,8 +170,8 @@ class TestUnloadPodToStagingYard:
         fleet = _make_fleet([ship])
         planet = _make_planet()
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        unloaded = proc._unload_pod_to_staging_yard(fleet, planet, pod_name="Large Pod", amount=1)
+        proc = TransferHandler()
+        unloaded = proc._dispatch_drop_pod_unload(fleet, planet, pod_name="Large Pod", amount=1)
 
         assert unloaded == 1
         assert len(ship.carried_items) == 1
@@ -184,8 +184,8 @@ class TestUnloadPodToStagingYard:
         planet = _make_planet()
         planet.max_staging_mass = 500.0  # Only fits 1
 
-        proc = OrderProcessor.__new__(OrderProcessor)
-        unloaded = proc._unload_pod_to_staging_yard(fleet, planet, amount=0)
+        proc = TransferHandler()
+        unloaded = proc._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
         assert unloaded == 1
         assert len(ship.carried_items) == 1

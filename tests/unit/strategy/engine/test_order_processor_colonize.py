@@ -267,22 +267,33 @@ def test_process_colonize_logs_colony_founded_event_with_system_and_local_hex():
 
 
 def test_execute_action_order_routes_colonize_with_component_registry():
-    """COLONIZE order with non-None registry → process_colonize is invoked."""
+    """COLONIZE order with non-None registry → ColonizeHandler is invoked.
+
+    PROJ-368 Phase 4: execute_action_order is a registry lookup. The
+    routing-test now patches the registered ColonizeHandler instead of
+    the legacy process_colonize delegate.
+    """
     proc = OrderProcessor()
     fleet = _fleet_with_order(Order(OrderType.COLONIZE, _colonizable_planet()))
     galaxy = MagicMock()
 
-    with patch.object(proc, "process_colonize") as mock_pc:
-        mock_pc.return_value = MagicMock(colonized=True)
-        result = proc.execute_action_order(fleet, _empire(), galaxy,
-                                           component_registry={"any": "thing"})
+    handler = proc._handler_registry.get(OrderType.COLONIZE)
+    with patch.object(handler, "execute_action_order") as mock_exec:
+        mock_exec.return_value = MagicMock(
+            success=True, fleet_consumed=False, colonized=True, planet_name="X",
+        )
+        proc.execute_action_order(fleet, _empire(), galaxy,
+                                  component_registry={"any": "thing"})
 
-    mock_pc.assert_called_once()
-    assert result is True
+    mock_exec.assert_called_once()
 
 
 def test_execute_action_order_logs_error_and_pops_when_colonize_missing_registry(caplog):
-    """COLONIZE with `component_registry=None` → error log + pop, returns False."""
+    """COLONIZE with `component_registry=None` → ColonizeHandler logs + pops, returns False.
+
+    PROJ-368 Phase 4: the missing-component_registry branch lives inside
+    ColonizeHandler.execute_action_order (Q1: log+pop+False preserved).
+    """
     proc = OrderProcessor()
     fleet = _fleet_with_order(Order(OrderType.COLONIZE, _colonizable_planet()))
 
@@ -311,7 +322,7 @@ def test_deploy_drop_pod_warns_and_returns_when_no_pod_found(caplog):
 
     import logging
     with caplog.at_level(logging.WARNING):
-        proc._deploy_drop_pod(fleet, planet)
+        proc._handler_registry.get(OrderType.COLONIZE)._deploy_drop_pod(fleet, planet)
 
     assert "No drop pod found" in caplog.text
     assert planet.facilities == []

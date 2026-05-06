@@ -311,8 +311,8 @@ class TransferHandler(BaseOrderHandler):
         self,
         fleet: Fleet,
         planet: "Planet",
-        pod_name: Optional[str],
-        amount: int,
+        pod_name: Optional[str] = None,
+        amount: int = 0,
     ) -> int:
         """Branch 3: planet -> fleet, drop_pod (load from staging yard).
 
@@ -432,8 +432,8 @@ class TransferHandler(BaseOrderHandler):
         self,
         fleet: Fleet,
         planet: "Planet",
-        pod_name: Optional[str],
-        amount: int,
+        pod_name: Optional[str] = None,
+        amount: int = 0,
     ) -> int:
         """Branch 6: fleet -> planet, drop_pod (unload to staging yard).
 

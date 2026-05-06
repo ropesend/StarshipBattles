@@ -30,6 +30,15 @@ from game.strategy.engine.superweapon_order_processor import (
 # ---------------------------------------------------------------------------
 
 
+# PROJ-368 Phase 4: SELF_DESTRUCT was lifted from SuperweaponOrderProcessor
+# to SelfDestructHandler. Tests that called process_self_destruct now route
+# through the handler with the same arguments and field shape.
+def _lift_self_destruct(processor, fleet, empire, galaxy):
+    from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
+    handler = SelfDestructHandler(event_bus=getattr(processor, "_event_bus", None))
+    return handler.execute_action_order(fleet, empire, galaxy)
+
+
 @pytest.fixture
 def mock_galaxy():
     galaxy = MagicMock(spec=Galaxy)
@@ -470,7 +479,7 @@ class TestSelfDestructFleetCleanup:
         empire = MagicMock()
         empire.id = 0
 
-        result = processor.process_self_destruct(mock_fleet, empire, mock_galaxy)
+        result = _lift_self_destruct(processor, mock_fleet, empire, mock_galaxy)
 
         assert result.success is True
         assert result.fleet_consumed is True
@@ -489,7 +498,7 @@ class TestSelfDestructFleetCleanup:
         empire = MagicMock()
         empire.id = 0
 
-        result = processor.process_self_destruct(mock_fleet, empire, mock_galaxy)
+        result = _lift_self_destruct(processor, mock_fleet, empire, mock_galaxy)
 
         assert result.success is True
         assert result.fleet_consumed is False
@@ -504,7 +513,7 @@ class TestSelfDestructFleetCleanup:
         processor = SuperweaponOrderProcessor()
         empire = MagicMock()
 
-        result = processor.process_self_destruct(mock_fleet, empire, mock_galaxy)
+        result = _lift_self_destruct(processor, mock_fleet, empire, mock_galaxy)
 
         assert result.success is False
         assert "no ships specified" in result.message.lower()
@@ -518,7 +527,7 @@ class TestSelfDestructFleetCleanup:
         processor = SuperweaponOrderProcessor()
         empire = MagicMock()
 
-        result = processor.process_self_destruct(mock_fleet, empire, mock_galaxy)
+        result = _lift_self_destruct(processor, mock_fleet, empire, mock_galaxy)
 
         assert result.success is False
         assert "no ships specified" in result.message.lower()

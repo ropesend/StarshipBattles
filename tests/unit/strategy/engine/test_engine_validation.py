@@ -153,17 +153,24 @@ class TestEnvironmentalHazardEngineValidation:
 class TestOrderProcessorValidation:
 
     def test_valid_empires_pass(self):
+        from game.strategy.data.order_types import OrderType
         from game.strategy.engine.order_processor import OrderProcessor
         engine = OrderProcessor()
-        engine._validate_tick_inputs([_empire(fleets=[_fleet()])])
+        # PROJ-368 Phase 4: _validate_tick_inputs lives on JoinFleetHandler.
+        engine._handler_registry.get(OrderType.JOIN_FLEET)._validate_tick_inputs(
+            [_empire(fleets=[_fleet()])]
+        )
 
     def test_fleet_none_orders_raises(self):
+        from game.strategy.data.order_types import OrderType
         from game.strategy.engine.order_processor import OrderProcessor
         engine = OrderProcessor()
         fleet = _fleet()
         fleet.orders = None
         with pytest.raises(ValidationException):
-            engine._validate_tick_inputs([_empire(fleets=[fleet])])
+            engine._handler_registry.get(OrderType.JOIN_FLEET)._validate_tick_inputs(
+                [_empire(fleets=[fleet])]
+            )
 
 
 # ---------------------------------------------------------------------------

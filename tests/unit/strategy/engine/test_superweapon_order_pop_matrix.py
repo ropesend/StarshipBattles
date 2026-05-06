@@ -41,6 +41,16 @@ from game.strategy.engine.superweapon_order_processor import (
 # ---------------------------------------------------------------------------
 
 
+# PROJ-368 Phase 4: SELF_DESTRUCT was lifted from SuperweaponOrderProcessor
+# to SelfDestructHandler. Tests that called process_self_destruct now route
+# through the handler with the same arguments and field shape.
+def _lift_self_destruct(processor, fleet, empire, galaxy):
+    from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
+    handler = SelfDestructHandler(event_bus=getattr(processor, "_event_bus", None))
+    return handler.execute_action_order(fleet, empire, galaxy)
+
+
+
 @pytest.fixture
 def component_registry():
     return {
@@ -521,7 +531,7 @@ class TestSelfDestructOrderPop:
         empire = MagicMock()
         empire.id = 0
 
-        result = proc.process_self_destruct(fleet, empire, galaxy)
+        result = _lift_self_destruct(proc, fleet, empire, galaxy)
 
         assert result.success
         fleet.pop_order.assert_called_once()
@@ -535,7 +545,7 @@ class TestSelfDestructOrderPop:
         proc = SuperweaponOrderProcessor()
         empire = MagicMock()
 
-        result = proc.process_self_destruct(fleet, empire, galaxy)
+        result = _lift_self_destruct(proc, fleet, empire, galaxy)
 
         assert not result.success
         fleet.pop_order.assert_called_once()

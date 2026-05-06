@@ -110,7 +110,7 @@ def test_elect_canonical_merges_picks_more_ships_in_mutual_pair():
     empire = _empire_with([big, small])
 
     candidates = [(empire, big, small), (empire, small, big)]
-    result = proc._elect_canonical_merges(candidates)
+    result = proc._handler_registry.get(OrderType.JOIN_FLEET)._elect_canonical_merges(candidates)
 
     assert len(result) == 1
     _, loser, winner = result[0]
@@ -126,7 +126,7 @@ def test_elect_canonical_merges_uses_smaller_id_tiebreak_on_equal_ships():
     empire = _empire_with([a, b])
 
     candidates = [(empire, a, b), (empire, b, a)]
-    result = proc._elect_canonical_merges(candidates)
+    result = proc._handler_registry.get(OrderType.JOIN_FLEET)._elect_canonical_merges(candidates)
 
     assert len(result) == 1
     _, loser, winner = result[0]
@@ -219,7 +219,7 @@ def test_execute_fleet_merge_logs_fleet_joined_event_with_ship_count():
     # behavior under test (ship transfer + event emission) doesn't need
     # an actual speed recompute.
     with patch.object(type(tgt), "trigger_speed_recalculation"):
-        proc._execute_fleet_merge(src, tgt, empire)
+        proc._handler_registry.get(OrderType.JOIN_FLEET)._execute_fleet_merge(src, tgt, empire)
 
     joined = [e for e in captured if e[0] == EventType.FLEET_JOINED]
     assert len(joined) == 1
@@ -284,4 +284,4 @@ def test_emit_join_cancelled_no_op_when_event_bus_none():
     empire = _empire_with([src, tgt])
 
     # Should simply return without raising.
-    proc._emit_join_cancelled(src, tgt, empire, reason="anything")
+    proc._handler_registry.get(OrderType.JOIN_FLEET)._emit_join_cancelled(src, tgt, empire, reason="anything")
