@@ -16,18 +16,18 @@
 
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
-| 1. Mutator-protocol foundation + AST guard harness (no behavior change) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | — |
+| 1. Mutator-protocol foundation + AST guard harness (no behavior change) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Fleet: `IFleetMutator` + route engine writes + AST guard | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | phase_1 |
 | 3. Planet: `IPlanetMutator` + route engine writes + AST guard | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | phase_1 |
 | 4. Empire: `IEmpireMutator` + route engine writes + AST guard | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | phase_2, phase_3 |
 | 5. ShipInstance: `IShipInstanceMutator` + post-battle hook + AST guard | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | phase_2 |
 
 ## Current State
-**Last Updated:** 2026-05-05
-**Active Phase:** Planning
-**Last Action:** Architect drafted plan, design, manifest, decisions, and findings note from the strategy-layer tech-debt review (`AgentCoordination/Scratchpad/reviews/strategy_layer_tech_debt_2026-05-05.md`, target #3) and a write-traffic survey of `game/strategy/data/`.
-**Next Action:** User reviews plan; on approval, run `claude-proj-start PROJ-370` to seed `phase_state.json` and create `proj/PROJ-370/main`.
-**Blockers:** Awaiting user approval + responses to the open questions in `design.md`.
+**Last Updated:** 2026-05-06
+**Active Phase:** Phase 2 (Fleet)
+**Last Action:** Phase 1 complete. Created `game/core/protocols/strategy_mutators.py` with 4 `@runtime_checkable` Protocols. Built AST walker helper at `tests/unit/strategy/data/_mutator_ast_walker.py` and parameterized guard at `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` with empty disallowlists. Self-test (`test_mutator_boundary_ast_guard_self_test.py`) verifies the walker catches all 4 illegal patterns and rejects 4 legal patterns + comments + strings. 16 tests pass. New "Read/Write Protocol Pair (PROJ-370)" subsection added to docs/02_PATTERNS.md under Pattern 2.
+**Next Action:** Phase 2 — implement `FleetWriteService`, route Fleet writes through `IFleetMutator`, flip Fleet AST guard hot.
+**Blockers:** None.
 
 ## Overview
 

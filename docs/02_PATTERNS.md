@@ -1,6 +1,6 @@
 # Design Patterns Reference
 
-> **Last verified:** 2026-05-06 — PROJ-371 Phase 3 added "Self-registering CommandRegistry (PROJ-371)" subsection under Pattern #7 (CommandHandlerRegistry). Documents the metadata-only `@command_spec` decorator (r004), per-module `register(registry)` functions, `seed_default_commands` / `reset_command_registry`, the AST regression forbidding tuple-literal reintroduction, and cross-references to PROJ-273 / PROJ-278 / PROJ-360. Earlier same-day pass: PROJ-369 Phase 5 rewrote Pattern #22 (TurnEngineConfig) to make `TurnEngineConfig.create_default(registries, ...)` the canonical injection entry point. Per-engine override kwargs on `TurnEngine.__init__` were removed (Phase 3 collapsed the ctor from 21 to 8 kwargs); tests override via `dataclasses.replace(cfg, foo_engine=mock)`. Documents the 18-field config (15 tick-loop + 3 end-of-turn terraforming, the 3 added by PROJ-369 Phase 2), the AST guard against function-local engine imports inside TurnEngine, and the cross-link to PROJ-365's descriptor pattern. 2026-05-05 — PROJ-368 Phase 5 added the "Parallel Order-Handler Registry" subsection under Pattern #7 (CommandHandlerRegistry). The strategy engine now exposes two registry-based dispatch systems with the same Protocol-and-registry shape: `engine/handlers/` (UI Command DTO → Order creation) and `engine/order_handlers/` (action tick → state mutation). 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
+> **Last verified:** 2026-05-06 — PROJ-370 Phase 1 added "Read/Write Protocol Pair (PROJ-370)" subsection under Pattern #2 (Protocol + TypeGuard). Documents the four mutator protocols (`IFleetMutator`/`IPlanetMutator`/`IEmpireMutator`/`IShipInstanceMutator`) in `game/core/protocols/strategy_mutators.py`, the `GameSession.__init__` + `TurnEngineConfig.create_default()` wiring path, and the AST-guard policy at `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py`. Earlier same-day pass: PROJ-371 Phase 3 added "Self-registering CommandRegistry (PROJ-371)" subsection under Pattern #7 (CommandHandlerRegistry). Documents the metadata-only `@command_spec` decorator (r004), per-module `register(registry)` functions, `seed_default_commands` / `reset_command_registry`, the AST regression forbidding tuple-literal reintroduction, and cross-references to PROJ-273 / PROJ-278 / PROJ-360. Earlier same-day pass: PROJ-369 Phase 5 rewrote Pattern #22 (TurnEngineConfig) to make `TurnEngineConfig.create_default(registries, ...)` the canonical injection entry point. Per-engine override kwargs on `TurnEngine.__init__` were removed (Phase 3 collapsed the ctor from 21 to 8 kwargs); tests override via `dataclasses.replace(cfg, foo_engine=mock)`. Documents the 18-field config (15 tick-loop + 3 end-of-turn terraforming, the 3 added by PROJ-369 Phase 2), the AST guard against function-local engine imports inside TurnEngine, and the cross-link to PROJ-365's descriptor pattern. 2026-05-05 — PROJ-368 Phase 5 added the "Parallel Order-Handler Registry" subsection under Pattern #7 (CommandHandlerRegistry). The strategy engine now exposes two registry-based dispatch systems with the same Protocol-and-registry shape: `engine/handlers/` (UI Command DTO → Order creation) and `engine/order_handlers/` (action tick → state mutation). 2026-05-04 — Applied doc-audit fixes (1 item: protocols.py → protocols/ subdir refs across 7 sites including Quick Reference rows; see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier same-day passes: PROJ-324 Phase 4 added Pattern #33 (UI Widget Test Factory); PROJ-327 Phase 4 added Pattern #32 (Compositional Construction); PROJ-318 verified `ApplicationContext` manages 10 services. Pattern count is 33.
 
 Agent-optimized reference for every core pattern in the codebase (33 patterns).
 Each section: **Where**, **How It Works**, **When to Use**.
@@ -199,6 +199,50 @@ Protocol families (representative subset — see `game/core/protocols/` for the 
 - Cross-layer boundaries where you cannot import the concrete class.
 - Polymorphic code that handles multiple entity types (e.g., rendering fleets vs planets).
 - Always pair a Protocol with a TypeGuard function for runtime checks.
+
+### Read/Write Protocol Pair (PROJ-370)
+
+The strategy data layer pairs **read protocols** (`IFleet`, `IPlanet`, etc. in
+`strategy_entities.py` / `strategy_domain.py`) with **mutator protocols**
+(`IFleetMutator`, `IPlanetMutator`, `IEmpireMutator`, `IShipInstanceMutator` in
+`strategy_mutators.py`). The two live as siblings under `game/core/protocols/`.
+
+```python
+# Read side — the question is "what is the state?"
+@runtime_checkable
+class IFleet(Protocol):
+    @property
+    def location(self) -> Any: ...
+    @property
+    def path(self) -> list: ...
+
+# Write side — the question is "who is allowed to change it?"
+@runtime_checkable
+class IFleetMutator(Protocol):
+    def set_location(self, fleet: "Fleet", new_location: HexCoord) -> None: ...
+    def set_path(self, fleet: "Fleet", new_path: list[HexCoord]) -> None: ...
+```
+
+Engines accept the mutator protocol via constructor injection; production
+wiring constructs the concrete service in `GameSession.__init__` and threads
+it through `TurnEngineConfig.create_default()`. A per-data-class AST guard
+(`tests/unit/strategy/data/test_mutator_boundary_ast_guard.py`) walks every
+file under `game/`, parses with `ast.parse`, and fails if any non-allowlisted
+file performs `Store` / `AugStore` / subscript-assign / mutating method call
+(`append`/`pop`/`remove`/`extend`/`clear`/`insert`) against the disallowlisted
+attributes. The data class itself plus a small set of co-located helper modules
+form the allowlist.
+
+**When to use:** any data class mutated from > 2 outside files. The four
+strategy data classes covered today are Fleet, Planet, Empire, ShipInstance.
+
+**When NOT to use:** value objects (frozen dataclasses), single-writer state
+(already encapsulated by one owner), and types that are write-once at
+construction. Read-only types stay protocol-paired only — they don't need a
+mutator twin.
+
+See `Projects/active_projects/PROJ-370/` for the four-class scope rationale,
+the write-traffic heatmap, and the AST-guard policy.
 
 ---
 

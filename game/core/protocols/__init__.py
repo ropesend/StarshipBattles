@@ -85,6 +85,12 @@ from game.core.protocols.strategy_entities import (
     is_warp_point,
     is_zone_occupant,
 )
+from game.core.protocols.strategy_mutators import (
+    IEmpireMutator,
+    IFleetMutator,
+    IPlanetMutator,
+    IShipInstanceMutator,
+)
 from game.core.protocols.ui import ICamera, IScene, is_camera
 
 
@@ -125,6 +131,11 @@ __all__ = [
     "is_empire",
     "is_facility",
     "is_ship_instance",
+    # Strategy mutator protocols (PROJ-370)
+    "IFleetMutator",
+    "IPlanetMutator",
+    "IEmpireMutator",
+    "IShipInstanceMutator",
     # Combat — protocol classes
     "ICombatant",
     "IDamageable",
