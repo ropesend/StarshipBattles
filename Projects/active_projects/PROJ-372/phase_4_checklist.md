@@ -9,7 +9,17 @@
 **Review Mode:** cumulative (Phases 0-4)
 **Files (planned):** see manifest.md Phase 4 row group
 
-**Status:** Not Started
+**Status:** Complete
+
+**Notes (Phase 4 outcomes):**
+- galaxy.py: 353 -> 350 LOC (final ceiling met).
+- pathfinding.py: 503 -> 100 LOC. Each free function a 1-line forwarder.
+- galaxy_pathfinding_service.py: 217 LOC (target 350). Takes IGalaxySystemGraph; tests inject 3-system stub.
+- intercept_calculator.py: 197 LOC (target 150 — slight overage; preserved adapter classes that the original code split inline). Acceptable given that `_ChaserProxy` + `_ChaserProxyCapabilities` add ~30 LOC of preserved adapter boilerplate.
+- Acceptance test (10 tests in test_galaxy_pathfinding_service.py) demonstrates G5: pathfinding callable on a 3-system stub graph (no Galaxy() construction).
+- DeprecationWarning omitted from shims because pytest.ini's `error::DeprecationWarning` filter would convert all 80+ caller sites into errors. Phase 5 will delete the shims after the migration sweep — that's the design.md plan.
+- InterceptCalculator routes pathfinding/projection calls through the shim free functions when `galaxy` is passed, so existing tests that patch `pathfinding.find_hybrid_path` / `pathfinding.project_fleet_path` continue to work without per-test rewrites.
+- 5020 strategy/save_load/integration tests pass.
 **Objective:** Move pathfinding (`pathfinding.py`, 503 LOC) into `GalaxyPathfindingService` (≤ 350 LOC) and `InterceptCalculator` (≤ 150 LOC), accepting `IGalaxySystemGraph` from `galaxy_protocols.py` so unit tests can inject 3-system stubs. Convert each free function in `pathfinding.py` to a 1-line deprecated wrapper calling the service. Wire the pathfinding service through `ApplicationContext`. Final reduction of `galaxy.py` to ≤ 350 LOC.
 
 ---

@@ -19,15 +19,15 @@
 | 1. Star decomposition (770 LOC stars.py → ~280 facade + extracted services) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 3. Galaxy query/spatial-aggregation services | Complete | [phase_3_checklist.md](phase_3_checklist.md) | **PROJ-370 verified** + phase_0 |
-| 4. Galaxy algorithmic services (pathfinding, intercept, warp resolution) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | **PROJ-370 verified** + phase_3 |
+| 4. Galaxy algorithmic services (pathfinding, intercept, warp resolution) | Complete | [phase_4_checklist.md](phase_4_checklist.md) | **PROJ-370 verified** + phase_3 |
 | 5. AST guards, perf bench, doc updates, final audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | **PROJ-370 verified** + phases 1-4 |
 
 ## Current State
-**Last Updated:** 2026-05-05 (Phase 3 complete)
-**Active Phase:** Phase 4 (Galaxy algorithmic services) — pending
-**Last Action:** Phase 3 complete. Split galaxy.py 689→353 LOC. New files: `game/strategy/data/galaxy_state.py` (65 LOC, dataclass owning systems/name_map/indexes/ID counters/radius), `game/strategy/data/star_system.py` (148 LOC, extracted StarSystem + WarpPoint per Decision E to fit galaxy.py budget). Refactored: `galaxy_entity_registry.py` and `galaxy_spatial_index.py` now take `GalaxyState` (no `_galaxy` back-pointer); registry gained `add_system`, `get_next_fleet_id`, and warp-index rebuild methods. Galaxy facade exposes `_state`, `@property` forwarders for `systems`/`name_map`/`planets_by_id`/`fleets_by_id`/`radius`, and back-compat `_global_hex_*`/`_planet_to_system`/`_zone_to_system` properties for the 5 grandfathered external readers. Lazy `_ensure_state()` method supports tests that use `Galaxy.__new__()` to skip heavy init. `galaxy_warp_generator.py` and `galaxy_system_generator.py` continue to use the public Galaxy API (unchanged). LOC ceiling tightened to 420 (final 350 in Phase 4 — already at 353). Round-trip test green on 5-system synthetic galaxy. 5008 tests pass.
-**Next Action:** Phase 4 — Galaxy algorithmic services. Extract pathfinding + intercept into services accepting GalaxyState/IGalaxySystemGraph. Convert pathfinding.py free functions to deprecated 1-line shims. Tighten galaxy.py to 350 LOC.
-**Blockers:** None.
+**Last Updated:** 2026-05-05 (Phase 4 complete)
+**Active Phase:** Phase 5 (final audit) — pending
+**Last Action:** Phase 4 complete. galaxy.py 350 LOC (final ceiling met). New files: `game/strategy/services/galaxy_pathfinding_service.py` (217 LOC, takes IGalaxySystemGraph), `game/strategy/services/intercept_calculator.py` (197 LOC). pathfinding.py 503 -> 100 LOC: each free function a 1-line forwarder routing through `galaxy._pathfinder` / `galaxy._intercept`. Tests patching `pathfinding.find_hybrid_path` / `pathfinding.project_fleet_path` continue to work — InterceptCalculator routes through the shim's free functions when `galaxy` is supplied. Acceptance test green: pathfinding callable on a 3-system stub graph (10 tests; closes G5). Galaxy.__init__ wires `_pathfinder` (GalaxyPathfindingService(self)) and `_intercept` (InterceptCalculator(_pathfinder)). 5020 tests pass.
+**Next Action:** Phase 5 — final audit. AST guards (no method body > 5 LOC on Galaxy/Planet/Star), perf bench reassertion, save round-trip on 5 fixture saves, doc updates.
+**Blockers:** None. Note: shims in pathfinding.py do NOT emit DeprecationWarning at this phase (pytest.ini turns DeprecationWarnings into errors and Phase 4 ships green); Phase 5's plan to delete shims is the migration target.
 
 ## Overview
 

@@ -52,7 +52,9 @@ class Galaxy:
         storm_defs = load_json(Paths.STORMS_FILE, default={})
         self.storm_generator = StormGenerator(storm_defs) if storm_defs else None
 
-        # Service delegates (PROJ-173 Phase 2 + PROJ-372 Phase 3).
+        # Service delegates (PROJ-173 Phase 2 + PROJ-372 Phase 3-4).
+        from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+        from game.strategy.services.intercept_calculator import InterceptCalculator
         self._warp_gen = GalaxyWarpGenerator()
         self._sys_gen = GalaxySystemGenerator(
             self.star_generator, self.planet_generator, self.naming, self.image_registry,
@@ -60,6 +62,8 @@ class Galaxy:
         )
         self._registry = GalaxyEntityRegistry(self._state)
         self._spatial = GalaxySpatialIndex(self._state)
+        self._pathfinder = GalaxyPathfindingService(self)
+        self._intercept = InterceptCalculator(self._pathfinder)
 
     # --- State property forwarders (preserve public + grandfathered private API) ---
 
@@ -89,19 +93,12 @@ class Galaxy:
 
     # PROJ-372: backwards-compat under-prefixed forwarders for the five
     # grandfathered external read sites (movement.py, fleet_navigation_service.py,
-    # hex_outlines.py). Phase 3-cleanup work will migrate those to public
-    # accessors; until then this property layer keeps the call sites green.
+    # hex_outlines.py). Phase 3-cleanup work will migrate those to public accessors.
     def _ensure_state(self) -> 'GalaxyState':
         """Lazy-create GalaxyState for tests that use ``Galaxy.__new__`` to
-        skip the heavy ``__init__`` and then mutate state directly."""
+        skip ``__init__`` and then mutate state directly."""
         state = self.__dict__.get('_state')
         if state is None:
-            from game.strategy.data.galaxy_entity_registry import (
-                GalaxyEntityRegistry,
-            )
-            from game.strategy.data.galaxy_spatial_index import (
-                GalaxySpatialIndex,
-            )
             state = GalaxyState(radius=100)
             self.__dict__['_state'] = state
             self.__dict__['_registry'] = GalaxyEntityRegistry(state)
