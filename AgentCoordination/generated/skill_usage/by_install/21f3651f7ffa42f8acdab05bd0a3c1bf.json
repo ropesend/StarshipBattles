@@ -53,17 +53,17 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 30
+        "codex": 38
       },
-      "count": 30,
-      "last_used": "2026-05-06T01:04:25Z"
+      "count": 38,
+      "last_used": "2026-05-06T02:20:40Z"
     },
     "codex-starship-combat-lab": {
       "agents": {
-        "codex": 4
+        "codex": 7
       },
-      "count": 4,
-      "last_used": "2026-05-05T23:32:15Z"
+      "count": 7,
+      "last_used": "2026-05-06T02:21:59Z"
     },
     "codex-starship-design-assets": {
       "agents": {
@@ -71,6 +71,13 @@
       },
       "count": 1,
       "last_used": "2026-05-05T14:30:41Z"
+    },
+    "ocode-audit-shrink": {
+      "agents": {
+        "ocode": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-06T02:25:22Z"
     },
     "ocode-discuss-start": {
       "agents": {

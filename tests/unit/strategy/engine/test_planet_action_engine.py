@@ -332,6 +332,111 @@ class TestPlanetActionEngine:
         assert len(results) == 2
         assert len(planet.orders) == 0
 
+    def test_activate_when_component_already_active_does_not_restart(self, caplog):
+        """ACTIVATE_ABILITY only starts from INACTIVE component state."""
+        engine = PlanetActionEngine()
+        facility = _make_facility("fac-1", _shield_design())
+        key = "OUTER:0:geologic_stabilizer_sector"
+        facility.component_states[key] = ComponentActivationState(
+            phase=ActivationPhase.ACTIVE,
+            progress_ticks=0,
+            required_ticks=250,
+            ability_name="PlanetaryShield",
+            energy_drain_rate=25.0,
+        ).to_dict()
+        order = Order(OrderType.ACTIVATE_ABILITY, target={
+            "facility_instance_id": "fac-1",
+            "ability_name": "PlanetaryShield",
+            "component_key": key,
+        })
+        planet = _make_planet(facilities=[facility], orders=[order])
+        empire = _make_empire(colonies=[planet])
+
+        with caplog.at_level("WARNING"):
+            results = engine.process_planet_actions_tick(1, [empire])
+
+        state = facility.get_activation_state(key)
+        assert state.phase == ActivationPhase.ACTIVE
+        assert len(results) == 1
+        assert len(planet.orders) == 0
+        assert "cannot activate PlanetaryShield" in caplog.text
+
+    def test_activate_missing_ability_pops_order_without_setting_state(self):
+        """Missing ability resolution takes the no-component-key guard path."""
+        engine = PlanetActionEngine()
+        facility = _make_facility("fac-1", _shield_design())
+        order = Order(OrderType.ACTIVATE_ABILITY, target={
+            "facility_instance_id": "fac-1",
+            "ability_name": "MissingAbility",
+        })
+        planet = _make_planet(facilities=[facility], orders=[order])
+        empire = _make_empire(colonies=[planet])
+
+        results = engine.process_planet_actions_tick(1, [empire])
+
+        assert len(results) == 1
+        assert len(planet.orders) == 0
+        assert facility.component_states == {}
+
+    def test_deactivate_from_inactive_logs_warning_without_state_change(self, caplog):
+        """DEACTIVATE_ABILITY rejects components that are not active."""
+        engine = PlanetActionEngine()
+        facility = _make_facility("fac-1", _shield_design())
+        key = "OUTER:0:geologic_stabilizer_sector"
+        facility.component_states[key] = ComponentActivationState(
+            phase=ActivationPhase.INACTIVE,
+            ability_name="PlanetaryShield",
+        ).to_dict()
+        order = Order(OrderType.DEACTIVATE_ABILITY, target={
+            "facility_instance_id": "fac-1",
+            "ability_name": "PlanetaryShield",
+            "component_key": key,
+        })
+        planet = _make_planet(facilities=[facility], orders=[order])
+        empire = _make_empire(colonies=[planet])
+
+        with caplog.at_level("WARNING"):
+            results = engine.process_planet_actions_tick(1, [empire])
+
+        state = facility.get_activation_state(key)
+        assert state.phase == ActivationPhase.INACTIVE
+        assert len(results) == 1
+        assert len(planet.orders) == 0
+        assert "cannot deactivate PlanetaryShield" in caplog.text
+
+    def test_find_target_facility_legacy_non_dict_target_uses_shield_fallback(self):
+        """Legacy non-dict targets resolve to the first shield-capable facility."""
+        engine = PlanetActionEngine()
+        no_shield = _make_facility("fac-1", {"layers": {"OUTER": [{"id": "plain"}]}})
+        shield = _make_facility("fac-2", _shield_design())
+        planet = _make_planet(facilities=[no_shield, shield])
+        order = Order(OrderType.ACTIVATE_ABILITY, target=None)
+
+        assert engine._find_target_facility(planet, order) is shield
+
+    def test_find_target_facility_returns_none_when_no_facility_has_ability(self):
+        """Ability fallback returns None when no facility can satisfy the target."""
+        engine = PlanetActionEngine()
+        facility = _make_facility("fac-1", {"layers": {"OUTER": [{"id": "plain"}]}})
+        planet = _make_planet(facilities=[facility])
+        order = Order(OrderType.ACTIVATE_ABILITY, target={
+            "ability_name": "MissingAbility",
+        })
+
+        assert engine._find_target_facility(planet, order) is None
+
+    def test_target_facility_exists_allows_non_dict_and_unconstrained_targets(self):
+        """Targets without a facility constraint should not cancel the order."""
+        engine = PlanetActionEngine()
+        planet = _make_planet()
+
+        assert engine._target_facility_exists(
+            planet, Order(OrderType.ACTIVATE_ABILITY, target=None)
+        ) is True
+        assert engine._target_facility_exists(
+            planet, Order(OrderType.ACTIVATE_ABILITY, target={"ability_name": "A"})
+        ) is True
+
 
 class TestPlanetActionEngineEvents:
     """Tests for shield event logging in PlanetActionEngine."""

@@ -77,6 +77,12 @@ class BattleLineBehavior(SpatialBehavior):
             target_x -= fwd_x * setback
             target_y -= fwd_y * setback
 
+        elif self.shape == "wall":
+            # Stagger alternating slots into a second rank.
+            setback = (slot_index % 2) * self.spacing * 0.5
+            target_x -= fwd_x * setback
+            target_y -= fwd_y * setback
+
         elif self.shape == "echelon_left":
             # Diagonal offset backward-left
             setback = slot_index * self.spacing * 0.3

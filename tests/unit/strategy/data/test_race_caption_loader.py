@@ -83,6 +83,16 @@ class TestLoadFlag:
         result = loader_at.load_flag(flag_id)
         assert result is None
 
+    def test_returns_none_when_sidecar_is_not_json_object(self, fake_assets, loader_at):
+        flag_id = "flag_array"
+        flag_dir = fake_assets["flags"] / flag_id
+        flag_dir.mkdir()
+        sidecar = flag_dir / f"{flag_id}.caption.json"
+        sidecar.write_text(json.dumps(["not", "a", "caption"]), encoding="utf-8")
+
+        result = loader_at.load_flag(flag_id)
+        assert result is None
+
 
 # ============================================================================
 # Portrait captions

@@ -152,12 +152,26 @@ class TestBuildBioPrompt:
         from game.strategy.services.race_description_prompt_builder import (
             build_bio_prompt,
         )
+        from game.strategy.data.environmental_preference import (
+            EnvironmentalPreference,
+        )
 
         messages = build_bio_prompt(_sample_race(), _sample_captions())
         user = messages[-1].content
         # FACTOR_REGISTRY display names
         assert "Gravity" in user
         assert "Temperature" in user
+
+        race = _sample_race()
+        race.preferences["unknown_factor"] = EnvironmentalPreference(
+            setpoint=1.0,
+            tolerance=0.1,
+            min_value=0.0,
+            max_value=2.0,
+            step=0.1,
+        )
+        user = build_bio_prompt(race, _sample_captions())[-1].content
+        assert "unknown_factor" not in user
 
     def test_user_prompt_includes_homeworld_type(self):
         from game.strategy.services.race_description_prompt_builder import (

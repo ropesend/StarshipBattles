@@ -472,6 +472,66 @@ class TestFuelDistributionEdges:
 
 
 # ===========================================================================
+# Fuel Transfer Edge Cases
+# ===========================================================================
+
+class TestFuelTransferEdges:
+    """Direct coverage for ResupplyEngine._transfer_fuel()."""
+
+    def test_transfer_fuel_withdraws_only_actual_ship_acceptance(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        ship = MagicMock()
+        ship.resupply.return_value = 25.0
+        facility = MagicMock()
+
+        total = engine._transfer_fuel({ship: 100.0}, available=100.0, facility=facility)
+
+        ship.resupply.assert_called_once_with("fuel", 100.0)
+        facility.withdraw_fuel.assert_called_once_with(25.0)
+        assert total == pytest.approx(25.0)
+
+    def test_transfer_fuel_caps_later_ships_at_remaining_available(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        first = MagicMock()
+        second = MagicMock()
+        first.resupply.return_value = 80.0
+        second.resupply.return_value = 20.0
+        facility = MagicMock()
+
+        total = engine._transfer_fuel(
+            {first: 80.0, second: 80.0},
+            available=100.0,
+            facility=facility,
+        )
+
+        first.resupply.assert_called_once_with("fuel", 80.0)
+        second.resupply.assert_called_once_with("fuel", 20.0)
+        facility.withdraw_fuel.assert_called_once_with(100.0)
+        assert total == pytest.approx(100.0)
+
+    def test_transfer_fuel_breaks_when_available_exhausted(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        first = MagicMock()
+        second = MagicMock()
+        first.resupply.return_value = 30.0
+        facility = MagicMock()
+
+        total = engine._transfer_fuel(
+            {first: 30.0, second: 10.0},
+            available=30.0,
+            facility=facility,
+        )
+
+        first.resupply.assert_called_once_with("fuel", 30.0)
+        second.resupply.assert_not_called()
+        facility.withdraw_fuel.assert_called_once_with(30.0)
+        assert total == pytest.approx(30.0)
+
+
+# ===========================================================================
 # Task 4.1: Fleet Resupply Tests
 # ===========================================================================
 

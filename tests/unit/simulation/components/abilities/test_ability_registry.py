@@ -1,8 +1,42 @@
 """Tests for ability package registry helpers."""
 import logging
 
-from game.simulation.components.abilities import ABILITY_REGISTRY, get_ability_default_scope
+import pytest
+
+from game.simulation.components.abilities import (
+    ABILITY_REGISTRY,
+    _contains_unevaluated_formula,
+    get_ability_default_scope,
+)
 from game.simulation.components.abilities.base import AbilityScope
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        pytest.param("=ship_class_mass", True, id="formula-string"),
+        pytest.param("ship_class_mass", False, id="non-formula-string"),
+        pytest.param(
+            {"outer": [{"inner": "plain"}, {"amount": "=ceil(ship_class_mass)"}]},
+            True,
+            id="nested-dict-list-formula",
+        ),
+        pytest.param(
+            {
+                "empty_dict": {},
+                "empty_list": [],
+                "number": 10,
+                "flag": True,
+                "none": None,
+                "strings": ["plain", ""],
+            },
+            False,
+            id="mixed-primitives-empty-data",
+        ),
+    ],
+)
+def test_contains_unevaluated_formula_detects_recursive_formula_data(data, expected) -> None:
+    assert _contains_unevaluated_formula(data) is expected
 
 
 def test_get_ability_default_scope_uses_class_enum_default() -> None:

@@ -188,3 +188,39 @@ class TestComponentActivationEngine:
 
         results = engine.process_activation_tick(1, [empire])
         assert results == []
+
+    def test_non_operational_facility_is_not_ticked(self):
+        """Facilities that are offline should not advance activation timers."""
+        state = ComponentActivationState(
+            phase=ActivationPhase.ACTIVATING,
+            progress_ticks=0,
+            required_ticks=10,
+            ability_name="StellarStabilizer",
+        )
+        facility = _make_facility(component_states={
+            "OUTER:0:stellar_stabilizer": state.to_dict()
+        })
+        facility.is_operational = False
+        planet = _make_planet(facilities=[facility])
+        empire = _make_empire(colonies=[planet])
+        engine = ComponentActivationEngine()
+
+        results = engine.process_activation_tick(1, [empire])
+
+        updated = facility.get_activation_state("OUTER:0:stellar_stabilizer")
+        assert updated.progress_ticks == 0
+        assert results == []
+
+    def test_non_dict_component_state_is_ignored(self):
+        """Malformed state payloads are skipped instead of crashing the tick."""
+        facility = _make_facility(component_states={
+            "OUTER:0:bad_state": "not-a-state-dict"
+        })
+        planet = _make_planet(facilities=[facility])
+        empire = _make_empire(colonies=[planet])
+        engine = ComponentActivationEngine()
+
+        results = engine.process_activation_tick(1, [empire])
+
+        assert facility.component_states["OUTER:0:bad_state"] == "not-a-state-dict"
+        assert results == []
