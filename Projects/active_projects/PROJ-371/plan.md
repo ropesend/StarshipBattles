@@ -17,26 +17,28 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Introduce `CommandRegistry` + decorator alongside existing tuple (bit-identical) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate consumers to registry; delete `specs.py` tuple; collapse facade forwarders | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Migrate consumers to registry; delete `specs.py` tuple; collapse facade forwarders | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Authoring rule doc + AST regression + third-party-command smoke test | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-05
-**Active Phase:** 2 (about to start)
-**Last Action:** Phase 1 complete. `CommandRegistry`, `@command_spec` decorator
-(metadata-only), `seed_default_commands`, `reset_command_registry` shipped
-in `game/strategy/engine/commands/registry.py`. All 35 handler classes
-decorated and per-module `register(registry)` functions added. Bit-identity
-contract test (`tests/unit/strategy/engine/test_command_registry_seeding.py`)
-passes with 10 tests including the metadata-only-decorator invariant
-(`test_import_handler_module_does_not_register`). `specs.py` re-exports
-`CommandSpec`/frozensets/etc. from registry; the literal tuple is unchanged.
-Strategy engine + facade + services tests: 2128 passing, 0 regressions.
-**Next Action:** Phase 2 — migrate `registry_factory.py`,
-`action_time_resolver.py`, `command_dispatch_slice.py` consumers to
-`command_registry`; collapse facade `dispatch_*` forwarders to
-`__getattr__`; delete `specs.py`.
+**Active Phase:** 3 (about to start)
+**Last Action:** Phase 2 complete. `registry_factory.py`,
+`action_time_resolver.py`, `command_dispatch_slice.py` migrated to
+`command_registry`. `strategy_session_facade.py` 31 hand-written
+`dispatch_*` forwarders replaced by `_install_dispatch_forwarders()`
+loop that derives bound methods from `command_registry.specs_by_facade_helper()`
+at module import (preserves `hasattr(StrategySessionFacade, name)` so
+`test_strategy_session_facade_public_api` still passes). `specs.py`
+DELETED. 4 test files migrated. Local `MOVEMENT_ORDER_TYPES` frozenset
+in `action_time_resolver.py` deleted; canonical set imported from
+`data/order_types.py`. Silent-drift test (WARP) corrected — WARP now
+returns 0 (movement-engine-handled) consistent with canonical
+`MOVEMENT_ORDER_TYPES`. Strategy unit + integration: 4223 + 483 passed,
+0 regressions.
+**Next Action:** Phase 3 — AST regression, third-party-command smoke
+test, authoring rule docs.
 **Blockers:** None.
 
 ## Overview

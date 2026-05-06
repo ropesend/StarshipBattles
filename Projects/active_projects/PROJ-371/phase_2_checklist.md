@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** phase_1
 **Review Mode:** standard
 **Files (planned):** `game/strategy/engine/handlers/registry_factory.py`, `game/strategy/services/action_time_resolver.py`, `game/strategy/facade/slices/command_dispatch_slice.py`, `game/strategy/facade/strategy_session_facade.py`, `game/strategy/engine/commands/specs.py` (DELETE), `tests/unit/strategy/engine/test_command_specs_contract.py`, `tests/unit/strategy/facade/test_command_dispatch_slice_getattr.py`, `tests/unit/strategy/services/test_superweapon_registry_contract.py`, `tests/unit/strategy/engine/test_command_registry_seeding.py` (DELETE or migrate)

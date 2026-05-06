@@ -16,10 +16,19 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from game.strategy.engine.commands.specs import COMMAND_SPECS
+from game.strategy.engine.commands.registry import (
+    command_registry,
+    seed_default_commands,
+)
 from game.strategy.facade.slices.command_dispatch_slice import (
     CommandDispatchSlice,
 )
+
+
+# PROJ-371 Phase 2: COMMAND_SPECS is now ``tuple(command_registry.all())``.
+if len(command_registry) == 0:
+    seed_default_commands(command_registry)
+COMMAND_SPECS = tuple(command_registry.all())
 
 
 def _make_slice() -> tuple[CommandDispatchSlice, MagicMock]:

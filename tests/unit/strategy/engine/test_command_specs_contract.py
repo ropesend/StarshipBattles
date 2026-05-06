@@ -17,21 +17,50 @@ from game.strategy.data.order_types import (
     OrderType,
     PLANET_ACTION_ORDER_TYPES,
 )
-from game.strategy.engine.commands.specs import (
+from game.strategy.engine.commands.registry import (
     ALLOWED_CATEGORIES,
     ALLOWED_EXECUTION_MODELS,
-    COMMAND_SPECS,
     CommandSpec,
-    action_order_types,
-    movement_order_types,
-    order_to_ability_map,
-    order_types_for_category,
-    planet_action_order_types,
-    specs_by_command_name,
-    specs_by_facade_helper,
+    command_registry,
+    seed_default_commands,
 )
 from game.strategy.engine.handlers.registry_factory import create_default_registry
 from game.strategy.services.action_time_resolver import ORDER_TO_ABILITY_MAP
+
+
+# PROJ-371 Phase 2: COMMAND_SPECS is now ``tuple(command_registry.all())``.
+# Seed once at module-load (idempotent).
+if len(command_registry) == 0:
+    seed_default_commands(command_registry)
+COMMAND_SPECS: tuple[CommandSpec, ...] = tuple(command_registry.all())
+
+
+def specs_by_command_name() -> dict[str, CommandSpec]:
+    return command_registry.specs_by_command_name()
+
+
+def specs_by_facade_helper() -> dict[str, CommandSpec]:
+    return command_registry.specs_by_facade_helper()
+
+
+def order_types_for_category(category: str):
+    return command_registry.order_types_for_category(category)
+
+
+def movement_order_types():
+    return command_registry.movement_order_types()
+
+
+def action_order_types():
+    return command_registry.action_order_types()
+
+
+def planet_action_order_types():
+    return command_registry.planet_action_order_types()
+
+
+def order_to_ability_map():
+    return command_registry.order_to_ability_map()
 
 
 def _declared_command_classes() -> set[str]:

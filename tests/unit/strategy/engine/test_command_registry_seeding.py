@@ -1,15 +1,21 @@
-"""Bit-identity contract: COMMAND_SPECS tuple == command_registry view.
+"""Registry-seeding contract tests.
 
-PROJ-371 Phase 1: introduces ``CommandRegistry`` alongside the existing
-``COMMAND_SPECS`` tuple. Both surfaces enumerate the same set of
-``CommandSpec`` rows. This module pins that invariant for the duration
-of Phase 1 — Phase 2 deletes the tuple and this file goes away (or
-migrates the still-relevant tests onto ``test_command_specs_contract``).
+PROJ-371 Phase 1 introduced these alongside ``COMMAND_SPECS`` to assert
+bit-identity. Phase 2 deleted ``commands.specs`` (the registry is now the
+single source of truth), so the bit-identity check has nothing to compare
+against; what's left are the invariants that DON'T depend on the legacy
+tuple:
 
-Decorator-as-metadata-only invariant (r004): importing a handler
-module must NOT mutate ``command_registry._specs``. Mutation only
-happens via ``seed_default_commands(registry)`` calling each module's
-``register()`` function.
+- The metadata-only decorator contract (r004): importing a handler
+  module must NOT mutate ``command_registry._specs``. Mutation only
+  happens via ``seed_default_commands(registry)``.
+- ``reset_command_registry()`` clears + reseeds round-trip cleanly.
+- Duplicate registration is guarded.
+- Every handler module exposes ``register(registry)``.
+- The decorator returns the wrapped class unchanged and attaches
+  ``__command_spec_kwargs__``.
+- The seeded registry contains exactly 35 specs (the count is the
+  PROJ-371 baseline; pin moves with future spec additions).
 """
 from __future__ import annotations
 
@@ -19,13 +25,11 @@ from unittest.mock import Mock
 import pytest
 
 from game.strategy.engine.commands.registry import (
-    CommandSpec,
     command_registry,
     command_spec,
     reset_command_registry,
     seed_default_commands,
 )
-from game.strategy.engine.commands.specs import COMMAND_SPECS
 
 
 @pytest.fixture(autouse=True)
@@ -50,35 +54,8 @@ def test_registry_module_exists() -> None:
     assert isinstance(registry_mod.command_registry, registry_mod.CommandRegistry)
 
 
-# ---------------------------------------------------------------------------
-# Bit-identity (post-seed)
-# ---------------------------------------------------------------------------
-
-def test_registry_yields_same_command_classes_as_tuple() -> None:
-    tuple_names = {s.command_class.__name__ for s in COMMAND_SPECS}
-    registry_names = {s.command_class.__name__ for s in command_registry.all()}
-    assert tuple_names == registry_names
-
-
-def test_registry_specs_are_field_for_field_identical_to_tuple() -> None:
-    """Every CommandSpec field matches between the tuple and the registry."""
-    by_name_tuple = {s.command_class.__name__: s for s in COMMAND_SPECS}
-    by_name_reg = {s.command_class.__name__: s for s in command_registry.all()}
-    assert set(by_name_tuple) == set(by_name_reg)
-    for name, spec_t in by_name_tuple.items():
-        spec_r = by_name_reg[name]
-        assert spec_t.command_class is spec_r.command_class, name
-        assert spec_t.handler_class is spec_r.handler_class, name
-        assert spec_t.order_type == spec_r.order_type, name
-        assert spec_t.category == spec_r.category, name
-        assert spec_t.subcategories == spec_r.subcategories, name
-        assert spec_t.action_ability_name == spec_r.action_ability_name, name
-        assert spec_t.execution_model == spec_r.execution_model, name
-        assert spec_t.facade_helper_name == spec_r.facade_helper_name, name
-        assert spec_t.serializer_codec == spec_r.serializer_codec, name
-
-
 def test_registry_count_is_35() -> None:
+    """The seeded default registry contains 35 specs (PROJ-371 baseline)."""
     assert len(command_registry) == 35
     assert len(list(command_registry.all())) == 35
 

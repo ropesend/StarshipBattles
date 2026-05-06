@@ -146,9 +146,15 @@ class TestProj363CommandSpecCrossLink:
 
     def test_order_types_match_command_specs(self):
         try:
-            from game.strategy.engine.commands.specs import COMMAND_SPECS
+            from game.strategy.engine.commands.registry import (
+                command_registry,
+                seed_default_commands,
+            )
         except ImportError:
-            pytest.skip("PROJ-363 COMMAND_SPECS not available")
+            pytest.skip("PROJ-371 command_registry not available")
+        if len(command_registry) == 0:
+            seed_default_commands(command_registry)
+        COMMAND_SPECS = tuple(command_registry.all())
 
         sw_command_order_types = {
             cmd.order_type for cmd in COMMAND_SPECS
@@ -164,9 +170,15 @@ class TestProj363CommandSpecCrossLink:
         """Each spec's ability_name must match the action_ability_name on
         the corresponding PROJ-363 CommandSpec (when both are set)."""
         try:
-            from game.strategy.engine.commands.specs import COMMAND_SPECS
+            from game.strategy.engine.commands.registry import (
+                command_registry,
+                seed_default_commands,
+            )
         except ImportError:
-            pytest.skip("PROJ-363 COMMAND_SPECS not available")
+            pytest.skip("PROJ-371 command_registry not available")
+        if len(command_registry) == 0:
+            seed_default_commands(command_registry)
+        COMMAND_SPECS = tuple(command_registry.all())
 
         cmd_by_order = {
             cmd.order_type: cmd for cmd in COMMAND_SPECS

@@ -20,7 +20,11 @@ from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import (
     iterate_design_components,
 )
-from game.strategy.data.order_types import OrderType, PLANET_ACTION_ORDER_TYPES
+from game.strategy.data.order_types import (
+    MOVEMENT_ORDER_TYPES,
+    OrderType,
+    PLANET_ACTION_ORDER_TYPES,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -28,13 +32,19 @@ if TYPE_CHECKING:
     from game.strategy.data.order_types import Order
 
 
-# PROJ-363 Phase 3: ``ORDER_TO_ABILITY_MAP`` is derived from
-# ``COMMAND_SPECS`` (single source of truth). The deferred import keeps
-# this module loadable even before specs.py is on the import path
+# PROJ-371 Phase 2: ``ORDER_TO_ABILITY_MAP`` is derived from the
+# self-registering ``command_registry``. The deferred import keeps
+# this module loadable even before the registry is on the import path
 # (e.g. by tools that import the resolver in isolation).
 def _build_order_to_ability_map() -> Dict[OrderType, str]:
-    from game.strategy.engine.commands.specs import order_to_ability_map
-    return order_to_ability_map()
+    from game.strategy.engine.commands.registry import (
+        command_registry,
+        seed_default_commands,
+    )
+
+    if len(command_registry) == 0:
+        seed_default_commands(command_registry)
+    return command_registry.order_to_ability_map()
 
 
 ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = _build_order_to_ability_map()
@@ -43,9 +53,6 @@ ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = _build_order_to_ability_map()
 # If not listed here, 'action_time' is used (the default).
 ORDER_TO_TIME_FIELD: Dict[OrderType, str] = {
 }
-
-# Order types that are handled by movement engine, not action engine
-MOVEMENT_ORDER_TYPES: frozenset = frozenset({OrderType.MOVE, OrderType.MOVE_TO_FLEET})
 
 
 class ActionTimeResolver:

@@ -1,14 +1,15 @@
-"""Command dispatch slice (PROJ-309 sub-phase 3.7; PROJ-363 Phase 4).
+"""Command dispatch slice (PROJ-309 sub-phase 3.7; PROJ-363 Phase 4;
+PROJ-371 Phase 2).
 
 Holds the universal ``handle_command`` entry point and the
 ``dispatch_*`` resolver. Each ``dispatch_*_command`` helper has the
 same one-line shape: import the command, instantiate it from kwargs,
 and forward to ``handle_command``. PROJ-363 collapsed the 31 hand-
-written helpers into a single ``__getattr__`` resolver that consults
-``COMMAND_SPECS`` for the command class to instantiate. The slice
-routes through a caller-supplied ``handle_command`` callable so tests
-that monkey-patch ``facade.handle_command = MagicMock(...)`` still
-intercept the call.
+written helpers into a single ``__getattr__`` resolver. PROJ-371
+Phase 2 retargets the resolver onto ``command_registry`` (the new
+self-registering metadata source). The slice routes through a
+caller-supplied ``handle_command`` callable so tests that monkey-patch
+``facade.handle_command = MagicMock(...)`` still intercept the call.
 """
 
 from __future__ import annotations
@@ -74,12 +75,18 @@ class CommandDispatchSlice:
             raise AttributeError(
                 f"{type(self).__name__!r} object has no attribute {name!r}"
             )
-        # Deferred import: ``specs.py`` lives downstream in the engine
+        # Deferred import: the registry lives downstream in the engine
         # graph; importing it at module load would couple the facade to
         # engine internals at import time.
-        from game.strategy.engine.commands.specs import specs_by_facade_helper
+        from game.strategy.engine.commands.registry import (
+            command_registry,
+            seed_default_commands,
+        )
 
-        spec = specs_by_facade_helper().get(name)
+        if len(command_registry) == 0:
+            seed_default_commands(command_registry)
+
+        spec = command_registry.specs_by_facade_helper().get(name)
         if spec is None:
             raise AttributeError(
                 f"{type(self).__name__!r} object has no attribute {name!r}: "
