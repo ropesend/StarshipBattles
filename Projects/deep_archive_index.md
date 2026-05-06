@@ -325,3 +325,16 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-325 | PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision | 2026-05-04 | PROJ-301-350 |
 | PROJ-326 | Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard | 2026-05-04 | PROJ-301-350 |
 | PROJ-327 | Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope | 2026-05-04 | PROJ-301-350 |
+| PROJ-328 | UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on) | 2026-05-04 | PROJ-301-350 |
+| PROJ-331 | Test coverage - combat / save-load (44 tests + 4 review-fix tests, 4 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-332 | Test coverage - turn engine (31 tests, 7 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-333 | Test coverage - per-turn processing engines (94 tests, 8 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-334 | Test coverage - algorithmic correctness (pathfinding + galaxy generation, 36 tests + audit) | 2026-05-04 | PROJ-301-350 |
+| PROJ-335 | Test coverage - strategy data layer batch (77 tests, 5 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-336 | Test coverage - strategy services (51 tests, 4 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-337 | Test coverage - UI research subsystem (60 tests, 3 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-338 | Test coverage - UI panels high-risk characterization (143 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-339 | Test coverage - UI panels mid-risk characterization (29 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-340 | Test coverage - UI services + utility characterization (45 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | 2026-05-04 | PROJ-301-350 |
+| PROJ-342 | Drop self.game handle from TestLab UI | 2026-05-04 | PROJ-301-350 |
