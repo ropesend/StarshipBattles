@@ -100,6 +100,25 @@ def build_test_turn_engine(
     # preserves the pre-Phase-3 contract where
     # ``TurnEngine(battle_resolver=mock)`` overrode the auto-wired
     # ``SimulationBattleResolver``.
+    #
+    # PROJ-369 review MAJ-001: mutation-order invariant. ``TurnEngineConfig``
+    # is ``frozen=True``, but the freeze prevents reassigning fields on the
+    # dataclass — it does NOT prevent mutating attributes of a held object.
+    # The mutation here writes through to the *original* ``conflict_engine``
+    # instance ``create_default`` returned. The subsequent
+    # ``dataclasses.replace(cfg, ...)`` is a shallow copy, so the cloned
+    # config still references the SAME mutated ``conflict_engine`` —
+    # which is intentional and required by tests that assert
+    # ``engine._battle_resolver is mock_resolver``. This is safe because:
+    #   1. ``ConflictResolutionEngine`` is constructed fresh on every
+    #      ``create_default()`` call (turn_engine_config.py:173), so each
+    #      ``build_test_turn_engine`` gets its own instance — no
+    #      cross-test leak.
+    #   2. Lines 103-107 are adjacent with no early return between them,
+    #      so the mutation cannot persist past the call frame.
+    # If you ever insert code between the mutation and the
+    # ``dataclasses.replace`` line, restate this invariant or refactor to
+    # plumb ``battle_resolver`` through ``TurnEngineConfig`` directly.
     if battle_resolver is not None:
         cfg.conflict_engine._battle_resolver = battle_resolver
 

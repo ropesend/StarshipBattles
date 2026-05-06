@@ -88,9 +88,43 @@ class TestNoLazyFallbackInit:
             "TurnEngineConfig.create_default()."
         )
 
+    # Set of engine submodules whose construction must happen in
+    # ``TurnEngineConfig.create_default()`` (turn_engine_config.py:122-151).
+    # Any function-local import of one of these inside a TurnEngine method
+    # is a regression that re-introduces the lazy-fallback pattern PROJ-369
+    # eliminated. Update this set when new engines land in
+    # ``TurnEngineConfig.create_default()``.
+    #
+    # PROJ-369 review MIN-002: this is an explicit allowlist rather than a
+    # ``module.endswith("_engine")`` filter, which (a) failed to catch
+    # ``order_processor`` (a real engine submodule whose name does not
+    # match the suffix) and (b) over-caught legitimate non-engine helper
+    # modules like ``turn_state_snapshot`` (PROJ-251 rollback) which have
+    # documented late-import reasons.
+    _CONSTRUCTABLE_ENGINE_MODULES = frozenset({
+        "game.strategy.engine.fleet_movement_engine",
+        "game.strategy.engine.production_engine",
+        "game.strategy.engine.order_processor",
+        "game.strategy.engine.conflict_resolution_engine",
+        "game.strategy.engine.consumable_management_engine",
+        "game.strategy.engine.population_engine",
+        "game.strategy.engine.resupply_engine",
+        "game.strategy.engine.harvesting_engine",
+        "game.strategy.engine.action_execution_engine",
+        "game.strategy.engine.environmental_hazard_engine",
+        "game.strategy.engine.planet_energy_engine",
+        "game.strategy.engine.planet_action_engine",
+        "game.strategy.engine.component_activation_engine",
+        "game.strategy.engine.organics_consumption_engine",
+        "game.strategy.engine.happiness_engine",
+        "game.strategy.engine.quality_engine",
+        "game.strategy.engine.atmosphere_engine",
+        "game.strategy.engine.water_engine",
+    })
+
     def test_no_function_local_engine_imports_in_TurnEngine_methods(self):
-        """No ``from game.strategy.engine.foo_engine import FooEngine``
-        inside any method on TurnEngine.
+        """No function-local import of any constructable engine module
+        inside a TurnEngine method.
 
         The lone allow-listed location for engine imports is
         ``TurnEngineConfig.create_default()`` (a different module).
@@ -105,10 +139,7 @@ class TestNoLazyFallbackInit:
                 if not isinstance(node, ast.ImportFrom):
                     continue
                 module = node.module or ""
-                if (
-                    module.startswith("game.strategy.engine.")
-                    and module.endswith("_engine")
-                ):
+                if module in self._CONSTRUCTABLE_ENGINE_MODULES:
                     offenders.append(f"{child.name}: from {module} import ...")
         assert not offenders, (
             f"Found function-local engine imports inside TurnEngine: {offenders}. "
