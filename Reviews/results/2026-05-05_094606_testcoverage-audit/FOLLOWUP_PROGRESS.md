@@ -94,6 +94,24 @@ paths or exercised the code through public facades.
   normalization.
 - Production changes: none.
 
+### Strategy Planet Order Deserialization
+
+- Verified `game/strategy/data/planet.py`, `order_types.py`, and
+  `order_serializer.py` against existing tests in
+  `tests/unit/strategy/planet/test_planet_validation.py`,
+  `tests/unit/strategy/data/test_order_serializer.py`, and save/load
+  round-trip coverage.
+- Confirmed gap: corrupt `Planet.from_dict(..., orders=[...])` entries
+  were silently dropped by `_deserialize_planet_orders`; no existing test
+  covered that corruption path.
+- False positives found: none for this packet.
+- Added
+  `tests/unit/strategy/planet/test_planet_validation.py::TestPlanetFromDictValidation::test_bad_order_raises_persistence_exception`.
+- Production change: `game/strategy/data/planet.py` now raises
+  `PersistenceException` with `field="orders"` and `order_index` context
+  for malformed planet order data, and no longer falls back to the legacy
+  `planet_orders` key when loading the current save schema.
+
 ## Verified False Positives Or Already-Covered Claims
 
 - `game/simulation/battle_runner.py` already has dedicated unit coverage
@@ -126,6 +144,15 @@ paths or exercised the code through public facades.
 - Replay serialization and component-inspector packet:
   - `pytest tests/unit/strategy/services/test_replay_verification_coordinator.py tests/unit/strategy/test_component_inspector.py tests/unit/simulation/replay/test_serialization.py -q`
   - Result: `74 passed`
+- Planet order deserialization packet:
+  - `pytest tests/unit/strategy/planet/test_planet_validation.py -q`
+  - Initial TDD result: failed as expected on
+    `test_bad_order_raises_persistence_exception` because no
+    `PersistenceException` was raised.
+  - Result after fix: `38 passed`
+- Full suite after production deserialization change:
+  - `python Tools/test_sharded/test_sharded.py`
+  - Result: `18528 passed`, `4 skipped`
 
 ## Suggested Next Work Packets
 
@@ -142,8 +169,6 @@ Continue with P1/P2 items that were not touched in this pass:
   `workshop_viewmodel_selection.py`, `transfer_controller.py`,
   `battle_results_data.py`, `strategy_click_dispatcher.py`, and
   `transfer_view_model.py`.
-- Strategy data/services: `planet.py` order deserialization corruption
-  paths.
 
 Future agents should repeat the pattern used here: verify with `rg` and
 existing tests first, add focused tests only for real gaps, and update this
