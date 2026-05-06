@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Cache `_validate_designs` results | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Cache `_validate_designs` results | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Reuse `BuildQueueScreen` instance across opens | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Reuse VirtualTable row pool across opens | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Reduce rounded-rect drawable cost (theme/pre-bake) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-05 (project scaffolded)
-**Active Phase:** Phase 1 — Cache `_validate_designs` results
-**Last Action:** Project scaffolded from a pyinstrument profile of 3 sequential build-queue opens (~6.9s each, ~20.6s total = 35.7% of a 58s session). Three Explore subagents produced research reports under `findings/`.
-**Next Action:** Begin Phase 1 — implement validation result cache on `BuildQueueController._validate_designs`.
+**Last Updated:** 2026-05-06 (Phase 1 landed)
+**Active Phase:** Phase 2 — Reuse `BuildQueueScreen` instance across opens
+**Last Action:** Phase 1 complete. `BuildQueueController` now caches validation results keyed by `(design_id, file_mtime_ns)`; lazy-initializes `DesignValidator` on first miss; routes path resolution through `DesignLibrary.get_design_path` (no path logic in the controller). Added public `reset_filters()` (Phase 2 prerequisite). 13 new unit tests in `tests/unit/ui/panels/test_build_queue_controller.py::TestValidationCache` covering hit, miss, mtime invalidation, exception non-poisoning, category-switch survival, load-failure caching, lazy validator construction, pure-cache-hit zero-cost path, and reset_filters defaults. Focused suite: panels/ 483 passed.
+**Next Action:** Begin Phase 2 — split `BuildQueueScreen.__init__` into shell + `open_for_yard`, wire `StrategyBuildQueueManager` to construct once and reuse. TDD-first lifecycle test file in `tests/unit/ui/screens/test_build_queue_screen_lifecycle.py`.
 **Blockers:** None.
 
 **Profile baseline (from `findings/profile_summary.md`):**

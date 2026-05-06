@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Cache validation results in `BuildQueueController` keyed by `(design_id, file_mtime)`. On a repeat call to `_validate_designs` with unchanged designs, every entry is a cache hit and neither `Ship.from_dict` nor `validator.validate` runs. Saves ~2.2s per repeat build-queue open. Cache invalidates correctly when a design's on-disk JSON is modified.
 
 ---

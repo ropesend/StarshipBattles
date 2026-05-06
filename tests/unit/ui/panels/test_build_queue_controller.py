@@ -1341,3 +1341,231 @@ class TestCharacterizationCoverageGaps:
         controller.design_library.load_design_data.side_effect = ValueError("bad data")
         controller.refresh_design_report("DSN-X")
         controller.design_report.show_placeholder.assert_called_once()
+
+
+# ===========================================================================
+# PROJ-373 Phase 1 — Validation cache
+#
+# Cache `_validate_designs` results keyed by (design_id, file_mtime).
+# Repeat calls hit the cache and skip both Ship.from_dict and validator.validate.
+# ===========================================================================
+
+
+class TestValidationCache:
+    """PROJ-373 Phase 1: validation result cache on BuildQueueController."""
+
+    @staticmethod
+    def _make_controller_with_validator_spy(monkeypatch):
+        """Build a controller and replace DesignValidator with a counted stub.
+
+        Returns (controller, validator_call_counter) where the counter is a
+        mutable dict {"count": int} incremented every time
+        validator.validate(...) is called. Each `validate` call returns a
+        result with `has_issues=False` so designs come back as valid.
+        """
+        from unittest.mock import patch
+        from game.ui.panels.build_queue_controller import BuildQueueController
+
+        registries = MagicMock()
+
+        build_context = MagicMock()
+        build_context.context_type = "planet"
+        build_context.has_space_shipyard = True
+        build_context.can_build_type.return_value = True
+        build_context.id = 1
+
+        mock_library = MagicMock()
+        # Default load_design_data returns success with empty data
+        mock_library.load_design_data.return_value = MagicMock(success=True, data={})
+        # Sensible default fingerprint for the path-resolution helper
+        mock_library.get_design_path.side_effect = lambda did: f"/fake/{did}.json"
+
+        controller = BuildQueueController(
+            build_context=build_context,
+            design_library=mock_library,
+            design_loader=MagicMock(),
+            design_report=MagicMock(),
+            on_queue_changed=MagicMock(),
+            registries=registries,
+        )
+
+        counter = {"count": 0, "constructed": 0}
+
+        class _StubValidator:
+            def __init__(self, _registries):
+                counter["constructed"] += 1
+
+            def validate(self, _data):
+                counter["count"] += 1
+                return MagicMock(has_issues=False)
+
+        # Patch the symbol *inside* the controller's import path (the
+        # function-local `from ... import` creates a fresh binding each call).
+        monkeypatch.setattr(
+            "game.strategy.services.design_validator.DesignValidator",
+            _StubValidator,
+        )
+
+        return controller, counter
+
+    @staticmethod
+    def _design(design_id: str):
+        d = MagicMock()
+        d.design_id = design_id
+        return d
+
+    # -- fingerprint helper --------------------------------------------------
+
+    def test_fingerprint_returns_mtime_ns_for_existing_path(self, monkeypatch):
+        controller, _ = self._make_controller_with_validator_spy(monkeypatch)
+        fake_stat = MagicMock(st_mtime_ns=12345)
+        monkeypatch.setattr("os.stat", lambda _path: fake_stat)
+        assert controller._design_fingerprint("DSN-A") == 12345
+
+    def test_fingerprint_returns_none_for_missing_file(self, monkeypatch):
+        controller, _ = self._make_controller_with_validator_spy(monkeypatch)
+
+        def _raise(_path):
+            raise FileNotFoundError("nope")
+
+        monkeypatch.setattr("os.stat", _raise)
+        assert controller._design_fingerprint("DSN-A") is None
+
+    def test_fingerprint_changes_when_mtime_changes(self, monkeypatch):
+        controller, _ = self._make_controller_with_validator_spy(monkeypatch)
+        current = {"mtime": 100}
+        monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=current["mtime"]))
+        first = controller._design_fingerprint("DSN-A")
+        current["mtime"] = 200
+        second = controller._design_fingerprint("DSN-A")
+        assert first != second
+
+    # -- validation cache ----------------------------------------------------
+
+    def test_first_call_validates_each_design(self, monkeypatch):
+        controller, counter = self._make_controller_with_validator_spy(monkeypatch)
+        monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
+        d1 = self._design("DSN-1")
+        d2 = self._design("DSN-2")
+        controller._validate_designs([d1, d2])
+        assert counter["count"] == 2
+        assert d1.design_valid is True
+        assert d2.design_valid is True
+
+    def test_repeat_call_uses_cache(self, monkeypatch):
+        controller, counter = self._make_controller_with_validator_spy(monkeypatch)
+        monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
+        d1 = self._design("DSN-1")
+        d2 = self._design("DSN-2")
+        controller._validate_designs([d1, d2])
+        controller._validate_designs([d1, d2])
+        assert counter["count"] == 2  # Not 4
+        assert d1.design_valid is True
+        assert d2.design_valid is True
+
+    def test_mtime_change_invalidates_one_entry(self, monkeypatch):
+        controller, counter = self._make_controller_with_validator_spy(monkeypatch)
+        # Per-design mtime: DSN-1 mtime stays at 1, DSN-2 changes from 1 → 2
+        mtimes = {"DSN-1": 1, "DSN-2": 1}
+
+        def _stat(path):
+            for did, mt in mtimes.items():
+                if did in path:
+                    return MagicMock(st_mtime_ns=mt)
+            return MagicMock(st_mtime_ns=0)
+
+        monkeypatch.setattr("os.stat", _stat)
+        d1 = self._design("DSN-1")
+        d2 = self._design("DSN-2")
+        controller._validate_designs([d1, d2])
+        # First pass: 2 validate calls
+        assert counter["count"] == 2
+        # Mutate mtime for DSN-2
+        mtimes["DSN-2"] = 2
+        controller._validate_designs([d1, d2])
+        # Only DSN-2 is re-validated
+        assert counter["count"] == 3
+
+    def test_validator_exception_does_not_poison_cache(self, monkeypatch):
+        controller, counter = self._make_controller_with_validator_spy(monkeypatch)
+        monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
+
+        # First call: load_design_data raises → broad-catch fallback (design_valid=True)
+        controller.design_library.load_design_data.side_effect = RuntimeError("boom")
+        d = self._design("DSN-1")
+        controller._validate_designs([d])
+        assert d.design_valid is True
+
+        # Second call: load_design_data succeeds → must run validator (no stale cache)
+        controller.design_library.load_design_data.side_effect = None
+        controller.design_library.load_design_data.return_value = MagicMock(success=True, data={})
+        d2 = self._design("DSN-1")
+        controller._validate_designs([d2])
+        assert counter["count"] == 1  # Validator ran on the second call only
+        assert d2.design_valid is True
+
+    def test_cache_survives_category_switch(self, monkeypatch):
+        controller, counter = self._make_controller_with_validator_spy(monkeypatch)
+        monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
+        # Simulate two category lists with overlap
+        a = self._design("DSN-A")
+        b = self._design("DSN-B")
+        c = self._design("DSN-C")
+        controller._validate_designs([a, b])
+        controller._validate_designs([b, c])
+        # Unique design_ids: A, B, C → 3 validate calls total
+        assert counter["count"] == 3
+
+    def test_load_failure_caches_invalid_result(self, monkeypatch):
+        """Cache load-failure as design_valid=False so repeats don't re-attempt."""
+        controller, counter = self._make_controller_with_validator_spy(monkeypatch)
+        monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
+        controller.design_library.load_design_data.return_value = MagicMock(success=False)
+        d1 = self._design("DSN-1")
+        controller._validate_designs([d1])
+        d2 = self._design("DSN-1")
+        controller._validate_designs([d2])
+        assert d1.design_valid is False
+        assert d2.design_valid is False
+        # load_design_data should be called once (cache hit on second call)
+        assert controller.design_library.load_design_data.call_count == 1
+
+    def test_validator_constructed_lazily_on_first_miss_only(self, monkeypatch):
+        """DesignValidator is constructed at most once per controller, lazily."""
+        controller, counter = self._make_controller_with_validator_spy(monkeypatch)
+        monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
+        d1 = self._design("DSN-1")
+        d2 = self._design("DSN-2")
+        controller._validate_designs([d1, d2])
+        controller._validate_designs([d1, d2])  # All cache hits
+        # Only one DesignValidator instance constructed across both calls
+        assert counter["constructed"] == 1
+
+    def test_cache_hit_path_does_not_construct_validator(self, monkeypatch):
+        """A pure cache-hit call must not construct a validator at all."""
+        controller, counter = self._make_controller_with_validator_spy(monkeypatch)
+        monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
+        d1 = self._design("DSN-1")
+        controller._validate_designs([d1])
+        assert counter["constructed"] == 1
+        # Reset the controller's lazy validator and confirm a pure cache-hit
+        # call doesn't reconstruct it.
+        controller._validator = None
+        controller._validate_designs([d1])
+        assert counter["constructed"] == 1
+
+    # -- reset_filters (Phase 2 prerequisite) -------------------------------
+
+    def test_reset_filters_restores_defaults(self, monkeypatch):
+        controller, _ = self._make_controller_with_validator_spy(monkeypatch)
+        controller.selected_category = "ship"
+        controller.selected_role = "Capital"
+        controller.reset_filters()
+        assert controller.selected_category == "complex"
+        assert controller.selected_role == "Any"
+
+    def test_reset_filters_does_not_fire_callback(self, monkeypatch):
+        controller, _ = self._make_controller_with_validator_spy(monkeypatch)
+        controller.on_queue_changed.reset_mock()
+        controller.reset_filters()
+        controller.on_queue_changed.assert_not_called()
