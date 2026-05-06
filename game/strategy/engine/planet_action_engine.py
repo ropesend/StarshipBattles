@@ -381,7 +381,3 @@ class PlanetActionEngine(IPlanetActionEngine):
                     return comp.get('id', '')
                 return str(comp)
         return None
-
-    def _find_shield_component_id(self, facility) -> Optional[str]:
-        """Find the component ID of a PlanetaryShield in a facility (legacy)."""
-        return self._find_ability_component_id(facility, 'PlanetaryShield')
