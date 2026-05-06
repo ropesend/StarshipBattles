@@ -173,6 +173,11 @@ class IOrderProcessor(ABC):
     - process_instant_orders(): Called every tick for JOIN_FLEET co-location
     - execute_action_order(): Called by ActionExecutionEngine when action completes
 
+    PROJ-368: implementation now uses a per-OrderType handler registry.
+    See `game.strategy.engine.order_handlers`. The public method signatures
+    on this ABC are preserved verbatim; the facade `OrderProcessor` delegates
+    each method to the registered handler.
+
     Implementations handle:
     - Instant order processing (JOIN_FLEET when co-located)
     - Action order execution (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine

@@ -82,6 +82,10 @@ class OrderProcessor(IOrderProcessor):
         # Lazy import to avoid circular dependency
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
         self._superweapon_processor = SuperweaponOrderProcessor(event_bus=event_bus)
+        # PROJ-368: per-OrderType handler registry. Phases 1-4 progressively
+        # delegate the legacy `process_*` methods through this registry.
+        from game.strategy.engine.order_handlers import create_default_order_handler_registry
+        self._handler_registry = create_default_order_handler_registry(event_bus=event_bus)
 
     def _execute_fleet_merge(self, fleet: Fleet, target_fleet: Fleet, empire: 'Empire') -> None:
         """Merge fleet into target and log the event.
@@ -114,39 +118,11 @@ class OrderProcessor(IOrderProcessor):
         galaxy: 'Galaxy'
     ) -> JoinFleetResult:
         """
-        Process a JOIN_FLEET order.
-
-        Merges fleet into target if at same location.
-
-        Args:
-            fleet: Fleet with JOIN_FLEET order
-            empire: Empire that owns the fleet
-            galaxy: Galaxy for validation
-
-        Returns:
-            JoinFleetResult with merge status
+        Process a JOIN_FLEET order. PROJ-368 Phase 1: delegates to JoinFleetHandler.
         """
-        order = fleet.get_current_order()
-        if not order or order.type != OrderType.JOIN_FLEET:
-            return JoinFleetResult(merged=False)
-
-        target_fleet = order.target
-
-        # Validation: target must be a valid Fleet (Fleet always has location)
-        if target_fleet is None:
-            logger.warning("OrderProcessor: Join Fleet failed - Target invalid/destroyed.")
-            fleet.pop_order()
-            return JoinFleetResult(merged=False, cancelled=True)
-
-        if fleet.location == target_fleet.location:
-            logger.debug(f"OrderProcessor: Fleet {fleet.id} merging into {target_fleet.id}")
-            self._execute_fleet_merge(fleet, target_fleet, empire)
-            return JoinFleetResult(merged=True)
-        else:
-            # Not at location yet
-            logger.warning("OrderProcessor: Join Fleet failed - Not at same location.")
-            fleet.pop_order()
-            return JoinFleetResult(merged=False)
+        handler = self._handler_registry.get(OrderType.JOIN_FLEET)
+        result = handler.execute_action_order(fleet, empire, galaxy)
+        return JoinFleetResult(merged=result.merged, cancelled=result.cancelled)
 
     def process_colonize(
         self,
@@ -748,77 +724,13 @@ class OrderProcessor(IOrderProcessor):
     ) -> List[Tuple['Empire', Fleet]]:
         """
         Process instant orders during tick (JOIN_FLEET when co-located).
-
-        This processes JOIN_FLEET orders for any fleets that are already
-        co-located with their target. Happens every subtick.
-
-        BUG-122: Three-phase implementation with mutual-pair canonicalisation
-        and per-iteration aliveness re-validation:
-
-          Phase A — collect candidate (empire, source, target) tuples.
-          Phase B — collapse mutual A↔B pairs to a single canonical merge,
-                    most-ships-wins (smaller id breaks ties). Cycles of 3+
-                    are NOT pre-collapsed — Phase C's re-validation handles
-                    them naturally (whichever direction iterates first wins).
-          Phase C — execute, re-checking that source AND target are still
-                    in empire.fleets at execution time. Skipped entries fire
-                    FLEET_JOIN_CANCELLED with a `reason` field.
-
-        Args:
-            empires: List of Empire objects
+        PROJ-368 Phase 1: delegates to JoinFleetHandler.
 
         Returns:
-            List of (empire, fleet) tuples for removed fleets
+            List of (empire, fleet) tuples for removed fleets.
         """
-        self._validate_tick_inputs(empires)
-
-        # Phase A: collect candidates
-        candidates: List[Tuple['Empire', Fleet, Fleet]] = []
-        for empire in empires:
-            for fleet in list(empire.fleets):
-                order = fleet.get_current_order()
-                if order and order.type == OrderType.JOIN_FLEET:
-                    target_fleet = order.target
-                    if target_fleet is not None and fleet.location == target_fleet.location:
-                        logger.debug(
-                            f"OrderProcessor [Instant]: Fleet {fleet.id} candidate merge into {target_fleet.id}"
-                        )
-                        candidates.append((empire, fleet, target_fleet))
-
-        # Phase B: canonicalise mutual pairs (most ships wins, smaller id breaks ties)
-        canonical = self._elect_canonical_merges(candidates)
-
-        # Phase C: execute with re-validation
-        result: List[Tuple['Empire', Fleet]] = []
-        for empire, fleet, target_fleet in canonical:
-            if fleet not in empire.fleets:
-                logger.warning(
-                    f"[BUG-122] Skip merge: source Fleet {fleet.id} no longer in "
-                    f"Empire {empire.id} (absorbed by earlier merge this tick)"
-                )
-                self._emit_join_cancelled(
-                    fleet, target_fleet, empire,
-                    reason="absorbed_by_other_merge",
-                )
-                continue
-            if target_fleet not in empire.fleets:
-                logger.warning(
-                    f"[BUG-122] Skip merge: target Fleet {target_fleet.id} no longer in "
-                    f"Empire {empire.id} (absorbed mid-iteration)"
-                )
-                self._emit_join_cancelled(
-                    fleet, target_fleet, empire,
-                    reason="target_absorbed_mid_iteration",
-                )
-                # Pop the now-stale JOIN_FLEET order so the source can move on
-                current = fleet.get_current_order()
-                if current and current.type == OrderType.JOIN_FLEET and current.target is target_fleet:
-                    fleet.pop_order()
-                continue
-            self._execute_fleet_merge(fleet, target_fleet, empire)
-            result.append((empire, fleet))
-
-        return result
+        handler = self._handler_registry.get(OrderType.JOIN_FLEET)
+        return handler.process_instant_orders(empires)
 
     def _elect_canonical_merges(
         self,

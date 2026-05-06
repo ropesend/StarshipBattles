@@ -152,9 +152,12 @@ def test_phase_c_skips_when_source_no_longer_in_empire_emits_absorbed_by_other_m
     # Force them co-located so candidate collection includes the entry…
     src.location = tgt.location
 
-    # Inject the candidate manually by patching _elect_canonical_merges:
+    # PROJ-368: live JOIN_FLEET path lives in JoinFleetHandler. Patch the
+    # handler's `_elect_canonical_merges` so injected candidates flow through
+    # the real Phase C aliveness check.
+    handler = proc._handler_registry.get(OrderType.JOIN_FLEET)
     with patch.object(
-        proc, "_elect_canonical_merges",
+        handler, "_elect_canonical_merges",
         return_value=[(empire, src, tgt)],
     ):
         # Make the validate path see src.orders so we don't trip on None.
@@ -181,8 +184,10 @@ def test_phase_c_skips_when_target_absorbed_mid_iteration_pops_stale_order():
     src.orders = [Order(OrderType.JOIN_FLEET, tgt)]
     tgt.orders = []
 
+    # PROJ-368: patch handler-side _elect_canonical_merges (live path).
+    handler = proc._handler_registry.get(OrderType.JOIN_FLEET)
     with patch.object(
-        proc, "_elect_canonical_merges",
+        handler, "_elect_canonical_merges",
         return_value=[(empire, src, tgt)],
     ):
         result = proc.process_instant_orders([empire])
