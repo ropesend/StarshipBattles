@@ -426,8 +426,10 @@ class TestTransferCommandDispatch:
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.empire import Empire
 
-        # Create minimal session with mocked galaxy generation
-        def mock_initialize(config):
+        # Create minimal session with mocked galaxy generation.
+        # PROJ-370 review MAJ-002: GameSession now passes
+        # planet_mutator/empire_mutator as kwargs; absorb them.
+        def mock_initialize(config, **_):
             galaxy = Galaxy(radius=config.galaxy_radius)
             empires = [Empire(i, f"Empire {i}", (255, 255, 255)) for i in range(2)]
             return galaxy, empires

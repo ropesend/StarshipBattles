@@ -36,8 +36,14 @@ class EmpireWriteService:
 
     def remove_colony(self, empire: "Empire", planet: "Planet") -> bool:
         # Direct list operation rather than delegating to
-        # ``Empire.remove_colony`` so test mocks (which don't carry the
-        # data-class method) still see the colony list shrink.
+        # ``Empire.remove_colony`` (asymmetric with ``add_colony``, intentional).
+        # PROJ-370 review MIN-004: a hasattr-based delegation pattern was
+        # tried and reverted because ``MagicMock`` makes ``hasattr`` return
+        # True for any attribute name, which silently routes test mocks
+        # through Mock methods that don't actually mutate ``empire.colonies``.
+        # When ``Empire.remove_colony`` grows side effects (e.g. owner_id
+        # reset, event emission), revisit by replacing test fakes with
+        # ``spec=Empire``-bound mocks instead of bare ``MagicMock``.
         if planet in empire.colonies:
             empire.colonies.remove(planet)
             return True
@@ -102,10 +108,11 @@ class EmpireWriteService:
     ) -> list:
         """Prune fleets that lost all their ships in a battle.
 
-        Mirrors the logic in `combat/post_battle_hook._prune_empty_fleets`
-        (lines 200-218). When the empire exposes a ``remove_fleet`` method
-        (production ``Empire`` class), delegate so the pursuer-cancellation
-        + galaxy-unregister + event-bus semantics are preserved. When it
+        Lifted from the legacy inline ``_prune_empty_fleets`` in
+        ``combat/post_battle_hook`` (deleted PROJ-370 review MAJ-001 cleanup).
+        When the empire exposes a ``remove_fleet`` method (production
+        ``Empire`` class), delegate so the pursuer-cancellation +
+        galaxy-unregister + event-bus semantics are preserved. When it
         doesn't (test fakes), fall back to a direct ``fleets.remove(...)``
         list operation — bit-identical to the legacy inline pruning.
 

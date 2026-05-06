@@ -1101,7 +1101,8 @@ layer does **not** assign a winner. After the resolver returns:
   is the authoritative source of truth: it mutates each
   `Fleet.ships` list to reflect SURVIVED / DERELICT / DESTROYED /
   RETREATED outcomes and prunes empty fleets from
-  `Empire.fleets` via `_prune_empty_fleets`.
+  `Empire.fleets` via `EmpireWriteService.prune_empty_fleets`
+  (PROJ-370; lifted out of `post_battle_hook.py`).
 * `_resolve_combat_at_hex` simply observes which fleets ended the
   battle with zero ships and reports their ids in
   `ConflictResult.fleets_destroyed` — it no longer calls

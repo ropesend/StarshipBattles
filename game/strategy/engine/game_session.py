@@ -146,9 +146,16 @@ class GameSession:
         )
         self._command_registry = create_default_registry()
 
-        # Initialization via GameInitializer (PROJ-87 Phase 6)
+        # Initialization via GameInitializer (PROJ-87 Phase 6).
+        # PROJ-370 review MAJ-002: thread planet_mutator + empire_mutator so
+        # GameInitializer's homeworld population seeding + colony reset writes
+        # route through the mutator surface (no allowlist exception needed).
         from game.strategy.engine.game_initializer import GameInitializer
-        self.galaxy, self.empires = GameInitializer.initialize(config)
+        self.galaxy, self.empires = GameInitializer.initialize(
+            config,
+            planet_mutator=self._planet_mutator,
+            empire_mutator=self._empire_mutator,
+        )
         self.systems = list(self.galaxy.systems.values())
 
         # Human player IDs based on is_human flag

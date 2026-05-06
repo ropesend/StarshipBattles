@@ -248,25 +248,4 @@ def _remove_ship(
         )
 
 
-def _prune_empty_fleets(
-    fleets_by_team_id: Mapping[int, List["Fleet"]],
-    empires: Mapping[int, Any],
-) -> None:
-    for team_id, fleets in fleets_by_team_id.items():
-        empire = empires.get(team_id)
-        if empire is None:
-            continue
-        empire_fleets = getattr(empire, "fleets", None)
-        if empire_fleets is None:
-            continue
-        for fleet in list(fleets):
-            if not fleet.ships and fleet in empire_fleets:
-                try:
-                    empire_fleets.remove(fleet)
-                except ValueError:
-                    logger.warning(
-                        f"Fleet {fleet.id} not found on empire while pruning."
-                    )
-
-
 __all__ = ["apply_outcome_to_fleets"]

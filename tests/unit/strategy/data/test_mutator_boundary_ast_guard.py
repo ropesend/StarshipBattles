@@ -121,9 +121,16 @@ BOUNDARIES: list[BoundarySpec] = [
             # initial-load shim) Planet.stockpile. Owner-side writes that
             # Phase 4 (EmpireWriteService) will further route.
             "game/strategy/data/empire.py",
-            # Initialization-time writers — homeworld setup, race-tuning.
-            # Legitimate construction writes; not engine-tick boundary
-            # crossings.
+            # PROJ-370 review MAJ-002: the homeworld POPULATION seed write
+            # at game_initializer.py:391 was routed through IPlanetMutator
+            # (no longer in this file's allowlist). The file remains
+            # allowlisted ONLY for the race-tuning ATMOSPHERE writes in
+            # `_adjust_homeworld_to_race` (lines 425, 428) — those are
+            # one-shot construction writes for BUG-63 species-preference
+            # tuning and are distinct from the routed population/colony
+            # writes. If `atmosphere` ever needs engine-tick mutation, add
+            # `IPlanetMutator.set_atmosphere(...)` calls here and remove
+            # this allowlist entry.
             "game/strategy/engine/game_initializer.py",
             "game/strategy/quickstart_builder.py",
         }),
@@ -140,8 +147,11 @@ BOUNDARIES: list[BoundarySpec] = [
         allowlist_paths=frozenset({
             "game/strategy/data/empire.py",
             "game/strategy/services/empire_write_service.py",
-            # Initialization-time writers — not engine-tick boundary crossings.
-            "game/strategy/engine/game_initializer.py",
+            # PROJ-370 review MAJ-002: game_initializer.py removed from
+            # the allowlist after the colony-reset clear was routed
+            # through IEmpireMutator.clear_colonies. The file is now an
+            # enforced consumer of the mutator surface, not an
+            # allowlisted writer.
             # Snapshot writes (different class, EmpireEconomySnapshot, that
             # happens to use the attribute name `max_storage`).
             "game/strategy/engine/empire_economy_calculator.py",
@@ -177,9 +187,10 @@ BOUNDARIES: list[BoundarySpec] = [
             "game/strategy/data/ship_instance_bridge.py",
             # Owner service (PROJ-370 IShipInstanceMutator).
             "game/strategy/services/ship_instance_write_service.py",
-            # PostBattleHook is the canonical battle->strategy write
-            # boundary; it threads `ship_mutator` lazily.
-            "game/strategy/combat/post_battle_hook.py",
+            # PROJ-370 review MIN-001: post_battle_hook.py removed from
+            # the allowlist after Phase 5 routed all writes through
+            # `ship_mutator`. The file is now an enforced consumer of
+            # IShipInstanceMutator, not an allowlisted writer.
             # Simulation-side `Ship`, `Component`, `BattleState`, etc.
             # share attribute names with strategy ShipInstance but are
             # different classes. Per PROJ-370 design: simulation-layer

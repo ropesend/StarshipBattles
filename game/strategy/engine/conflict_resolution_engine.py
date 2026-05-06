@@ -12,8 +12,8 @@ Responsibilities:
 BUG-126: the strategy layer no longer assigns a winner. Surviving
 ships from BOTH sides remain in their fleets after the battle, and the
 fleet stays on the strategy map. Empty fleets (every ship destroyed)
-are pruned by `PostBattleHook._prune_empty_fleets` — the strategy
-engine just reports their ids in `ConflictResult.fleets_destroyed`.
+are pruned by `EmpireWriteService.prune_empty_fleets` (PROJ-370) — the
+strategy engine just reports their ids in `ConflictResult.fleets_destroyed`.
 
 PROJ-320: combat dispatch is per-fleet on movement-opportunity ticks
 (`tick % get_tick_interval(fleet.speed) == 0`) gated by whether the

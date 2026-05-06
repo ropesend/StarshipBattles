@@ -1,6 +1,8 @@
 """Configuration dataclass for TurnEngine engine dependencies.
 
-Bundles the 18 engine dependencies into a single frozen dataclass.
+Bundles 22 fields (18 engines + 4 mutator protocols) into a single frozen
+dataclass. PROJ-370 added the 4 mutator-protocol fields (Fleet, Planet,
+Empire, ShipInstance write services).
 
 PROJ-259: Created to simplify TurnEngine constructor.
 PROJ-369 Phase 3: Adds ``create_default(registries, ...)`` classmethod
@@ -47,7 +49,7 @@ __all__ = ['TurnEngineConfig']
 
 @dataclass(frozen=True)
 class TurnEngineConfig:
-    """Frozen configuration bundling 18 engine dependencies for TurnEngine.
+    """Frozen configuration bundling 22 fields (18 engines + 4 mutator protocols) for TurnEngine.
 
     Fields default to None for the convenience of test paths that build
     a config via ``dataclasses.replace`` from the eager
@@ -102,7 +104,7 @@ class TurnEngineConfig:
         empire_mutator: 'IEmpireMutator | None' = None,
         ship_mutator: 'IShipInstanceMutator | None' = None,
     ) -> 'TurnEngineConfig':
-        """Eagerly construct all 18 default engines and bundle them.
+        """Eagerly construct all 18 default engines + 4 default mutators and bundle them.
 
         This is the canonical injection entry point for production
         callers. Tests that need to override specific engines should
