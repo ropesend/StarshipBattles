@@ -383,3 +383,71 @@ def test_event_log_window_replay_click_registry_drift_warns_and_launches(
     assert title == "Replay version drift"
     assert "different components.json" in message
     launch_cb.assert_called_once_with(record)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-368 — Verification status gating (r002 status table)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("status", ["FAILED", "ERROR"])
+def test_event_log_window_replay_click_blocked_by_verification(
+    pygame_init, status,
+) -> None:
+    """PROJ-368 r002 Step 5: hard-disable launch when verification proved
+    the replay is broken (FAILED) or errored (ERROR).
+    """
+    from game.strategy.services.replay_resolver import ReplayLookup
+
+    record = MagicMock()
+    resolver = MagicMock()
+    resolver.resolve.return_value = ReplayLookup(
+        found=True,
+        record=record,
+        registry_drift=False,
+        verification_status=status,
+    )
+    launch_cb = MagicMock()
+    win = _make_event_log_window(
+        [_combat_row("uuid-bad-verify")], resolver=resolver, launch_cb=launch_cb
+    )
+    win._show_replay_message = MagicMock()
+
+    win._handle_replay_click(0)
+
+    win._show_replay_message.assert_called_once()
+    title, message = win._show_replay_message.call_args.args
+    assert title == "Replay unavailable"
+    assert status in message
+    launch_cb.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "status", [None, "PENDING", "PASSED", "SKIPPED_QUEUE_FULL", "SKIPPED_DISABLED"],
+)
+def test_event_log_window_replay_click_launches_for_non_blocking_status(
+    pygame_init, status,
+) -> None:
+    """PROJ-368 r002 Step 5: keep launch enabled for None (async pre-verified),
+    PENDING (in progress), PASSED (success), and the SKIPPED_* states (no
+    positive evidence of broken playback)."""
+    from game.strategy.services.replay_resolver import ReplayLookup
+
+    record = MagicMock()
+    resolver = MagicMock()
+    resolver.resolve.return_value = ReplayLookup(
+        found=True,
+        record=record,
+        registry_drift=False,
+        verification_status=status,
+    )
+    launch_cb = MagicMock()
+    win = _make_event_log_window(
+        [_combat_row(f"uuid-{status or 'none'}")],
+        resolver=resolver,
+        launch_cb=launch_cb,
+    )
+
+    win._handle_replay_click(0)
+
+    launch_cb.assert_called_once_with(record)

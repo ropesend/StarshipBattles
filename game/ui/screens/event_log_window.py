@@ -44,6 +44,16 @@ _REPLAY_DRIFT_MESSAGE = (
 )
 _REPLAY_NOT_AVAILABLE_TITLE = "Replay unavailable"
 
+# PROJ-368 r002 Step 5: hard-disable launch only when verification produced
+# positive evidence that playback would not work. PENDING / SKIPPED_* / None
+# are documented states with no positive evidence, so launch stays enabled
+# for them.
+_REPLAY_VERIFICATION_BLOCKING_STATUSES = frozenset({"FAILED", "ERROR"})
+_REPLAY_VERIFICATION_BLOCK_MESSAGES = {
+    "FAILED": "Verification FAILED — playback would not match the recorded outcome.",
+    "ERROR": "Verification ERROR — see log for details.",
+}
+
 
 # ---------------------------------------------------------------------------
 # Layout constants
@@ -464,6 +474,15 @@ class EventLogWindow(StrategyModalWindow):
                 reason,
                 f"Replay unavailable ({reason}).",
             )
+            self._show_replay_message(_REPLAY_NOT_AVAILABLE_TITLE, message)
+            return
+
+        # PROJ-368 r002 Step 5: gate hard on verification status that proves
+        # playback is broken. Other states (None / PENDING / PASSED /
+        # SKIPPED_*) fall through to normal launch.
+        verification_status = getattr(lookup, "verification_status", None)
+        if verification_status in _REPLAY_VERIFICATION_BLOCKING_STATUSES:
+            message = _REPLAY_VERIFICATION_BLOCK_MESSAGES[verification_status]
             self._show_replay_message(_REPLAY_NOT_AVAILABLE_TITLE, message)
             return
 
