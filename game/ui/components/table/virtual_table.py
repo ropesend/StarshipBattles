@@ -148,14 +148,30 @@ class VirtualTable:
     def _pool_dims_changed(self) -> bool:
         """PROJ-373 Phase 3: True if list-panel dims changed since last build.
 
-        Compares the current `(panel_height, row_height)` tuple against the
-        cached `self._last_pool_dims`. A no-op rebuild when dims are unchanged
-        keeps the existing widget pool alive and saves ~1.5s of widget
-        tear-down/recreate per yard switch (when this is reached via the
-        public `rebuild_row_pool()` entry point).
+        Compares the current cache fingerprint against ``self._last_pool_dims``.
+        A no-op rebuild when the fingerprint is unchanged keeps the existing
+        widget pool alive and saves ~1.5s of widget tear-down/recreate per
+        yard switch (when reached via the public ``rebuild_row_pool()`` entry
+        point).
+
+        Cache fingerprint contents (PROJ-373 review MAJ-001 + MAJ-002):
+            - ``panel_rect.height`` — drives ``visible_rows`` count.
+            - ``panel_rect.width`` — row backgrounds are sized to it
+              (``virtual_table.py`` row-bg rect uses ``panel_rect.width``);
+              a width-only resize must invalidate.
+            - ``self._row_height``.
+            - Visible-column fingerprint as ``((col_id, col_width), …)`` —
+              ``column_manager.toggle_column()`` and ``swap_column()`` mutate
+              the visible-column list without changing panel dimensions, and
+              every production caller of ``rebuild_row_pool()``
+              (``data_list_window_mixin``, ``event_log_window``,
+              ``fleet_report_window``, ``empire_build_queue_window``)
+              expects the rebuild to reflect the new column set.
         """
         panel_rect = self._list_view_panel.get_relative_rect()
-        current = (panel_rect.height, self._row_height)
+        visible_cols = self._column_manager.get_visible_columns()
+        col_fp = tuple((c["id"], c.get("width", 100)) for c in visible_cols)
+        current = (panel_rect.height, panel_rect.width, self._row_height, col_fp)
         return self._last_pool_dims != current
 
     def _rebuild_row_pool(self) -> None:
@@ -185,10 +201,14 @@ class VirtualTable:
         # Calculate how many rows we need
         panel_rect = self._list_view_panel.get_relative_rect()
         visible_rows = max(1, (panel_rect.height // self._row_height) + 2)
-        # PROJ-373 Phase 3: cache the dims this pool was built for.
-        self._last_pool_dims = (panel_rect.height, self._row_height)
 
         visible_cols = self._column_manager.get_visible_columns()
+        # PROJ-373 Phase 3: cache the fingerprint this pool was built for.
+        # Must match the tuple shape in `_pool_dims_changed`.
+        col_fp = tuple((c["id"], c.get("width", 100)) for c in visible_cols)
+        self._last_pool_dims = (
+            panel_rect.height, panel_rect.width, self._row_height, col_fp,
+        )
 
         for i in range(visible_rows):
             y = i * self._row_height

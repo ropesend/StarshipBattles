@@ -1268,3 +1268,108 @@ class TestRowPoolReuseGuard:
         assert [row["bg"] for row in table._row_pool] == first_bgs
         # And no kills were issued on the existing widgets
         assert all(bg.kill.call_count == 0 for bg in first_bgs)
+
+    def test_rebuild_runs_when_panel_width_changes(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """PROJ-373 review MAJ-001: width-only resize must invalidate the pool.
+
+        Row backgrounds are sized to ``panel_rect.width`` (virtual_table.py:198);
+        a width change without a height change leaves stale-width row
+        backgrounds and broken cell layouts.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+            list_panel_height=200,
+        )
+        first_pool = list(table._row_pool)
+
+        # Width changes (280 → 200), height unchanged.
+        table._list_view_panel.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 200, 200
+        )
+        table.rebuild_row_pool()
+
+        for row in first_pool:
+            assert row["bg"].kill.called, (
+                "width change must invalidate the pool"
+            )
+
+    def test_rebuild_runs_when_visible_columns_toggled(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """PROJ-373 review MAJ-002: a visibility toggle on the column manager
+        must invalidate the pool.
+
+        Production sites in ``data_list_window_mixin``, ``event_log_window``,
+        ``fleet_report_window``, ``empire_build_queue_window`` all call
+        ``column_manager.toggle_column()`` followed by
+        ``virtual_table.rebuild_row_pool()`` and expect the pool to reflect
+        the new visible-column set. Without this guard input, the rebuild
+        is silently skipped because (height, row_height) did not change.
+        """
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        column_manager = TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+            {"id": "value", "label": "Value", "width": 80, "visible": True},
+        ])
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_pool = list(table._row_pool)
+
+        # Hide one column. Panel dimensions and row_height do NOT change.
+        column_manager.toggle_column("value")
+        table.rebuild_row_pool()
+
+        for row in first_pool:
+            assert row["bg"].kill.called, (
+                "visibility toggle must invalidate the pool"
+            )
+
+    def test_rebuild_runs_when_columns_reordered(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """PROJ-373 review MAJ-002: a column-order swap must invalidate the
+        pool. Header-drag swap path in
+        ``data_list_window_mixin._run_update_template`` and equivalents
+        depends on a rebuild after ``swap_column``.
+        """
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        column_manager = TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+            {"id": "value", "label": "Value", "width": 80, "visible": True},
+        ])
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_pool = list(table._row_pool)
+
+        column_manager.swap_column("name", 1)
+        table.rebuild_row_pool()
+
+        for row in first_pool:
+            assert row["bg"].kill.called, (
+                "column reorder must invalidate the pool"
+            )

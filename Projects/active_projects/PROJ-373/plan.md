@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Cache `_validate_designs` results | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Cache `_validate_designs` results (effective only within a single open until Phase 2 lands) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Reuse `BuildQueueScreen` instance across opens | Deferred (see decisions.md) | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Reuse VirtualTable row pool across opens | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Reduce rounded-rect drawable cost (theme/pre-bake) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -104,7 +104,7 @@ See [phase_1_checklist.md](phase_1_checklist.md).
 
 ### Phase 2: Reuse `BuildQueueScreen` instance across opens [Medium]
 **Objective:** Construct `BuildQueueScreen` once per `StrategyBuildQueueManager` lifetime; subsequent opens go through a new `open_for_yard(yard)` method that refreshes only yard-specific state. Replace `_close()` with `hide()`. Eliminates ~3-4s/click on second-and-later opens.
-**Status:** Not Started
+**Status:** Deferred — see [decisions.md](decisions.md) for rationale. Do not implement; revisit in a follow-up project where a focused single-purpose effort can untangle the pygame_gui lifecycle, modal stack, FEAT-17 pause-button, and per-yard reference graph.
 
 See [phase_2_checklist.md](phase_2_checklist.md).
 
