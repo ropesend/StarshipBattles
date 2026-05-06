@@ -95,7 +95,7 @@ class CommandDispatchSlice:
         command_class = spec.command_class
         handle_command = self._handle_command
 
-        def _dispatch(**kwargs):
+        def _dispatch(**kwargs) -> ValidationResult:
             return handle_command(command_class(**kwargs))
 
         _dispatch.__name__ = name

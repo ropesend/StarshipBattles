@@ -59,8 +59,13 @@ self-registers.
 
 The project ALSO collapses the 31 hand-written `dispatch_*` forwarders in
 `strategy_session_facade.py:186-300` (missed by PROJ-363 Phase 4) into a
-single `__getattr__` resolver, mirroring the slice-level resolver landed by
-PROJ-363.
+class-level auto-install loop (`_install_dispatch_forwarders()`) that
+generates real bound methods from the registry. The original plan called
+for `__getattr__` mirroring the slice-level resolver, but Phase 2
+implementation found that `hasattr(StrategySessionFacade, name)` and
+`inspect.getmembers` (relied upon by the public-API contract test)
+require class-level attribute visibility, which `__getattr__` does not
+provide. See [decisions.md](decisions.md) row 2026-05-06 (`_install_dispatch_forwarders` deviation).
 
 ## Goals
 
@@ -75,8 +80,11 @@ PROJ-363.
 - **Phase 2:** Three production consumers (`registry_factory.py`,
   `action_time_resolver.py`, `command_dispatch_slice.py`) migrate from
   `COMMAND_SPECS` to `command_registry`. The 31 hand-written `dispatch_*`
-  forwarders in `strategy_session_facade.py:186-?` collapse into `__getattr__`
-  proxying to `self._command_slice.dispatch_*`. The cross-link test
+  forwarders in `strategy_session_facade.py:186-?` collapse into a class-level
+  `_install_dispatch_forwarders()` auto-install loop that proxies each
+  forwarder to `self._command_slice.<helper_name>`. (Was originally planned
+  as `__getattr__`; changed during implementation — see [decisions.md](decisions.md) row 2026-05-06.)
+  The cross-link test
   `tests/unit/strategy/services/test_superweapon_registry_contract.py`
   (PROJ-364) updates to read `command_registry.all()`. `specs.py` is
   **deleted**; `data/order_types.py` frozensets stay (they're pinned to the
@@ -122,7 +130,9 @@ Phase 3 (AST regression + third-party smoke test).
 - `game/strategy/facade/slices/command_dispatch_slice.py` — Phase 2: read
   from `command_registry.specs_by_facade_helper()`.
 - `game/strategy/facade/strategy_session_facade.py` — Phase 2: collapse 31
-  hand-written `dispatch_*` forwarders into `__getattr__`.
+  hand-written `dispatch_*` forwarders via a class-level
+  `_install_dispatch_forwarders()` auto-install loop (originally planned as
+  `__getattr__`; revised — see [decisions.md](decisions.md) row 2026-05-06).
 - `tests/unit/strategy/engine/test_command_specs_contract.py` — Phase 2:
   migrate imports from `commands.specs` to `commands.registry`. Test names
   unchanged; assertions update mechanically.
@@ -130,7 +140,7 @@ Phase 3 (AST regression + third-party smoke test).
   exists; no changes (it tests the surface, not the spec module).
 - `tests/unit/strategy/facade/test_command_dispatch_slice_getattr.py` —
   Phase 2: update import; add a `test_facade_dispatch_proxies_to_slice` test
-  for the new `strategy_session_facade.__getattr__`.
+  for the class-level forwarders installed by `_install_dispatch_forwarders`.
 - `tests/unit/strategy/services/test_superweapon_registry_contract.py` —
   Phase 2: update PROJ-364 cross-link to read `command_registry.all()`.
 - `tests/unit/strategy/engine/test_command_registry_seeding.py` (new, Phase 1)
@@ -244,8 +254,11 @@ See [phase_1_checklist.md](phase_1_checklist.md).
 **Objective:** `registry_factory.py`, `action_time_resolver.py`, and
 `command_dispatch_slice.py` read from `command_registry`. The PROJ-364
 cross-link test reads `command_registry.all()`. `strategy_session_facade.py`'s
-31 hand-written `dispatch_*` forwarders collapse into `__getattr__` proxying
-to `self._command_slice.dispatch_*`. `specs.py` is **deleted**. The redundant
+31 hand-written `dispatch_*` forwarders collapse into a class-level
+`_install_dispatch_forwarders()` auto-install loop proxying each forwarder
+to `self._command_slice.<helper_name>` (originally planned as
+`__getattr__`; revised — see [decisions.md](decisions.md) row 2026-05-06).
+`specs.py` is **deleted**. The redundant
 `MOVEMENT_ORDER_TYPES` local frozenset at `action_time_resolver.py:48` is
 deleted. Three contract tests update imports. Sharded suite green.
 
@@ -295,7 +308,7 @@ See [phase_3_checklist.md](phase_3_checklist.md).
 - [ ] `game/strategy/engine/commands/specs.py` is deleted (`git ls-files | grep specs.py` returns nothing for that path)
 - [ ] `command_registry` is the single source of truth for `CommandSpec` rows
 - [ ] All 35 handler classes carry an `@command_spec(...)` decorator
-- [ ] `strategy_session_facade.py:186-300` (31 forwarders) is gone — replaced by `__getattr__`
+- [ ] `strategy_session_facade.py:186-300` (31 hand-written forwarders) is gone — replaced by class-level methods auto-installed via `_install_dispatch_forwarders()` (revised from the original `__getattr__` plan; see decisions.md 2026-05-06)
 - [ ] Local `MOVEMENT_ORDER_TYPES` at `action_time_resolver.py:48` is gone
 - [ ] AST regression test passes — no new `COMMAND_SPECS = (...)` literal can land
 - [ ] Third-party smoke test passes — a `FakeModCommand` registers, dispatches, unregisters cleanly

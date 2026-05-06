@@ -32,7 +32,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Iterable, Type
+from typing import TYPE_CHECKING, Callable, Iterable, Type, TypeVar
+
+# Bound to ``type`` (rather than ``type[ICommandHandler]``) so test fixtures
+# can decorate plain marker classes without forcing the full handler protocol.
+_HandlerT = TypeVar("_HandlerT", bound=type)
 
 from game.strategy.data.order_types import OrderType
 
@@ -280,7 +284,7 @@ command_registry = CommandRegistry()
 # @command_spec decorator (METADATA-ONLY — r004 refinement).
 # ---------------------------------------------------------------------------
 
-def command_spec(**spec_kwargs):
+def command_spec(**spec_kwargs) -> Callable[[_HandlerT], _HandlerT]:
     """Attach :class:`CommandSpec` kwargs to the decorated handler class.
 
     **METADATA-ONLY.** Returns the class unchanged. Does NOT call
@@ -314,7 +318,7 @@ def command_spec(**spec_kwargs):
         class FooCommandHandler(BaseCommandHandler):
             ...
     """
-    def _wrap(handler_cls):
+    def _wrap(handler_cls: _HandlerT) -> _HandlerT:
         handler_cls.__command_spec_kwargs__ = spec_kwargs
         return handler_cls
     return _wrap
