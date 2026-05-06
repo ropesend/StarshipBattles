@@ -368,6 +368,7 @@ class Game:
         than failing in ``InstanceBackedMaterializer``.
         """
         from game.core.registry import get_default_registry_provider
+        from game.core.return_destination import ReturnDestination
         from game.simulation.battle_config import BattleConfig
         from game.simulation.replay.replay_player import replay_record_to_spec
 
@@ -379,6 +380,10 @@ class Game:
             replay_mode=True,
             replay_id=record.replay_id,
             captured_telemetry_level=getattr(spec, "telemetry_level", None),
+            # PROJ-368 (post-r001): the only caller today is the strategy
+            # Event Log; on exit we must land back on the strategy scene
+            # rather than the BattleConfig default of BATTLE_SETUP.
+            return_destination=ReturnDestination.STRATEGY,
         )
         ship_builder = build_replay_ship_builder(
             record, registry_provider=get_default_registry_provider()

@@ -59,12 +59,15 @@ class BattleConfig:
 
     # PROJ-312 — Replay playback flags.
     # When `replay_mode` is True the BattleScreen renders a "REPLAY MODE"
-    # badge, suppresses the post-battle outcome flow (returns to the Event
-    # Log on exit), and capture is skipped (Phase 3 honors this via the
-    # spec compiler passing `capture_context=None`). Production wiring sets
-    # `replay_id` and `captured_telemetry_level` so the screen can display
-    # provenance + emit a divergence warning when the runtime telemetry
-    # level differs from what was captured.
+    # badge and capture is skipped (Phase 3 honors this via the spec
+    # compiler passing `capture_context=None`). Post-battle navigation is
+    # NOT controlled by `replay_mode`; it follows `return_destination` like
+    # any other battle (PROJ-368: replay launchers are responsible for
+    # setting that field — `Game.start_replay` sets STRATEGY for Event Log
+    # launches). Production wiring sets `replay_id` and
+    # `captured_telemetry_level` so the screen can display provenance +
+    # emit a divergence warning when the runtime telemetry level differs
+    # from what was captured.
     replay_mode: bool = False
     replay_id: Optional[str] = None
     captured_telemetry_level: Optional[Any] = None

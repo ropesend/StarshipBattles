@@ -88,6 +88,10 @@ def test_start_replay_builds_replay_config_and_starts_battle(monkeypatch):
     assert config.replay_mode is True
     assert config.replay_id == "replay-1"
     assert config.captured_telemetry_level == "full"
+    # PROJ-368 (post-r001): replays launched from the strategy Event Log
+    # must return to the Strategy scene on exit, not to Battle Setup.
+    from game.core.return_destination import ReturnDestination
+    assert config.return_destination == ReturnDestination.STRATEGY
 
 
 def test_start_replay_threads_replay_ship_builder_into_start_battle(monkeypatch):

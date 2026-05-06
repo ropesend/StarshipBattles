@@ -390,47 +390,22 @@ def test_event_log_window_replay_click_registry_drift_warns_and_launches(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("status", ["FAILED", "ERROR"])
-def test_event_log_window_replay_click_blocked_by_verification(
-    pygame_init, status,
-) -> None:
-    """PROJ-368 r002 Step 5: hard-disable launch when verification proved
-    the replay is broken (FAILED) or errored (ERROR).
-    """
-    from game.strategy.services.replay_resolver import ReplayLookup
-
-    record = MagicMock()
-    resolver = MagicMock()
-    resolver.resolve.return_value = ReplayLookup(
-        found=True,
-        record=record,
-        registry_drift=False,
-        verification_status=status,
-    )
-    launch_cb = MagicMock()
-    win = _make_event_log_window(
-        [_combat_row("uuid-bad-verify")], resolver=resolver, launch_cb=launch_cb
-    )
-    win._show_replay_message = MagicMock()
-
-    win._handle_replay_click(0)
-
-    win._show_replay_message.assert_called_once()
-    title, message = win._show_replay_message.call_args.args
-    assert title == "Replay unavailable"
-    assert status in message
-    launch_cb.assert_not_called()
-
-
 @pytest.mark.parametrize(
-    "status", [None, "PENDING", "PASSED", "SKIPPED_QUEUE_FULL", "SKIPPED_DISABLED"],
+    "status",
+    [None, "PENDING", "PASSED", "FAILED", "ERROR",
+     "SKIPPED_QUEUE_FULL", "SKIPPED_DISABLED"],
 )
-def test_event_log_window_replay_click_launches_for_non_blocking_status(
+def test_event_log_window_replay_click_launches_for_any_verification_status(
     pygame_init, status,
 ) -> None:
-    """PROJ-368 r002 Step 5: keep launch enabled for None (async pre-verified),
-    PENDING (in progress), PASSED (success), and the SKIPPED_* states (no
-    positive evidence of broken playback)."""
+    """PROJ-368 (post-r001 discussion): verification_status is a diagnostic
+    signal, NOT a launch gate. The Event Log launches whenever the resolver
+    returns ``found=True``, regardless of verification outcome.
+
+    The prior r002 hard-block on FAILED/ERROR was wrong: it prevented the
+    user from ever seeing a captured battle if the headless determinism
+    re-run diverged. Verification mismatch ≠ replay unwatchable.
+    """
     from game.strategy.services.replay_resolver import ReplayLookup
 
     record = MagicMock()
