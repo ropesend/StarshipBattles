@@ -129,6 +129,7 @@ class HarvestingEngine(IHarvestingEngine):
         *,
         registries: GameRegistries,
         race_registry: Optional[Any] = None,
+        planet_mutator: Optional[Any] = None,
     ):
         """Initialize the harvesting engine.
 
@@ -154,10 +155,20 @@ class HarvestingEngine(IHarvestingEngine):
             )
         self._registries = registries
         self._race_registry = race_registry
+        self._planet_mutator = planet_mutator
         # PROJ-285: used to key the per-turn habitability cache on Planet.
         # TurnEngine calls `set_current_turn` before each turn's tick loop.
         self._current_turn: int = 0
         self._galaxy = None
+
+    def _get_planet_mutator(self):
+        """Lazy-default the planet mutator (PROJ-370)."""
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
 
     def set_current_turn(self, turn: int) -> None:
         """PROJ-285: TurnEngine calls this at the start of each turn so the
@@ -226,7 +237,8 @@ class HarvestingEngine(IHarvestingEngine):
                     continue
                 self._collect_storage_from_facility(facility, colony_storage)
                 staging_mass += self._collect_staging_capacity(facility)
-            colony.max_stockpile = colony_storage
+            # PROJ-370 Phase 3: route through IPlanetMutator.
+            self._get_planet_mutator().set_max_stockpile(colony, colony_storage)
             colony.max_staging_mass = staging_mass
         # Keep empire.max_storage as aggregate for read-only UI display
         empire_total = {}

@@ -31,6 +31,7 @@ from game.strategy.events.event_types import EventType, EventCategory
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from game.core.protocols import IPlanetMutator
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet
     from game.strategy.data.planetary_facility import PlanetaryFacility
@@ -122,12 +123,19 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
     # The resource type used for planetary energy. Configurable if needed.
     ENERGY_RESOURCE = "energy"
 
-    def __init__(self, *, registries: GameRegistries, event_bus=None):
+    def __init__(
+        self,
+        *,
+        registries: GameRegistries,
+        event_bus=None,
+        planet_mutator: Optional['IPlanetMutator'] = None,
+    ):
         """Initialize planet energy engine.
 
         Args:
             registries: GameRegistries for component ability lookup. Required.
             event_bus: Optional EventBus for structured event logging.
+            planet_mutator: PROJ-370 IPlanetMutator. If None, lazy-defaulted.
 
         Raises:
             ValidationException: If registries is None.
@@ -142,8 +150,17 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
             )
         self._registries = registries
         self._event_bus = event_bus
+        self._planet_mutator = planet_mutator
         # PROJ-253: Cache for facility scan results per planet
         self._energy_cache: dict = {}  # planet_id -> {capacity, generation, fingerprint}
+
+    def _get_planet_mutator(self) -> 'IPlanetMutator':
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
 
     def invalidate_energy_cache(self, planet_id: str) -> None:
         """Remove cached energy metadata for a planet (PROJ-253).
@@ -222,12 +239,14 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
                 'fingerprint': fingerprint,
             }
 
-        planet.energy_capacity = new_capacity
-        planet.energy_generation = new_generation
+        # PROJ-370 Phase 3: route energy writes through IPlanetMutator.
+        mutator = self._get_planet_mutator()
+        mutator.set_energy_capacity(planet, new_capacity)
+        mutator.set_energy_generation(planet, new_generation)
 
         # 2. Generate energy (1/100th per tick)
         if new_generation > 0:
-            planet.energy += new_generation / 100.0
+            mutator.set_energy(planet, planet.energy + new_generation / 100.0)
 
         # 3. Compute total drain from ComponentActivationState entries
         total_drain = self._compute_activation_drain(planet)
@@ -236,17 +255,17 @@ class PlanetEnergyEngine(IPlanetEnergyEngine):
         if total_drain > 0:
             drain_per_tick = total_drain / 100.0
             if planet.energy >= drain_per_tick:
-                planet.energy -= drain_per_tick
+                mutator.set_energy(planet, planet.energy - drain_per_tick)
             else:
                 # Insufficient energy — cancel all activating/active components
-                planet.energy = 0.0
+                mutator.set_energy(planet, 0.0)
                 self._cancel_all_draining_components(planet, empire_id=empire_id)
 
         # 5. Clamp energy to [0, capacity]
         if new_capacity > 0:
-            planet.energy = max(0.0, min(planet.energy, new_capacity))
+            mutator.set_energy(planet, max(0.0, min(planet.energy, new_capacity)))
         else:
-            planet.energy = 0.0
+            mutator.set_energy(planet, 0.0)
 
     def _compute_activation_drain(self, planet: 'Planet') -> float:
         """Sum energy_drain_rate from all ComponentActivationState entries that are draining."""

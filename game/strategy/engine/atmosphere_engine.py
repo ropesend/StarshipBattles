@@ -23,8 +23,17 @@ logger = logging.getLogger(__name__)
 class AtmosphereEngine:
     """Engine for processing per-turn atmosphere modification."""
 
-    def __init__(self, registries=None):
+    def __init__(self, registries=None, planet_mutator=None):
         self._registries = registries
+        self._planet_mutator = planet_mutator
+
+    def _get_planet_mutator(self):
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
 
     def _validate_tick_inputs(self, empires) -> None:
         """PROJ-251: Validate preconditions before mutating state."""
@@ -125,8 +134,9 @@ class AtmosphereEngine:
             new_pa = max(0.0, current_pa + actual_pa_change)
             atmosphere[gas] = new_pa
 
-        # Update planet atmosphere reference (in case it was empty)
-        colony.atmosphere = atmosphere
+        # Update planet atmosphere reference (in case it was empty).
+        # PROJ-370 Phase 3: route through IPlanetMutator.
+        self._get_planet_mutator().set_atmosphere(colony, atmosphere)
 
         # Update surface_pressure as sum of all partial pressures
         total_pressure = sum(atmosphere.values())

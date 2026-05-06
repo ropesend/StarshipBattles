@@ -183,6 +183,14 @@ class TurnEngineConfig:
 
         order_processor = OrderProcessor(event_bus=event_bus)
 
+        # Lazy-default planet_mutator if not provided (so engine instances
+        # share one instance per turn config).
+        if planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            planet_mutator = PlanetWriteService()
+
         return cls(
             movement_engine=FleetMovementEngine(fleet_mutator=fleet_mutator),
             production_engine=ProductionEngine(
@@ -197,14 +205,18 @@ class TurnEngineConfig:
             resource_engine=ConsumableManagementEngine(registries=registries),
             population_engine=PopulationEngine(race_registry=race_registry),
             resupply_engine=ResupplyEngine(registries=registries),
-            harvesting_engine=HarvestingEngine(registries=registries),
+            harvesting_engine=HarvestingEngine(
+                registries=registries, planet_mutator=planet_mutator,
+            ),
             action_engine=ActionExecutionEngine(
                 order_processor=order_processor,
                 action_time_resolver=ActionTimeResolver(),
             ),
             environmental_engine=EnvironmentalHazardEngine(),
             planet_energy_engine=PlanetEnergyEngine(
-                registries=registries, event_bus=event_bus,
+                registries=registries,
+                event_bus=event_bus,
+                planet_mutator=planet_mutator,
             ),
             planet_action_engine=PlanetActionEngine(
                 registries=registries,
@@ -212,10 +224,14 @@ class TurnEngineConfig:
                 event_bus=event_bus,
             ),
             component_activation_engine=ComponentActivationEngine(),
-            organics_consumption_engine=OrganicsConsumptionEngine(),
+            organics_consumption_engine=OrganicsConsumptionEngine(
+                planet_mutator=planet_mutator,
+            ),
             happiness_engine=HappinessEngine(race_registry=race_registry),
             quality_engine=QualityEngine(registries=registries),
-            atmosphere_engine=AtmosphereEngine(registries=registries),
+            atmosphere_engine=AtmosphereEngine(
+                registries=registries, planet_mutator=planet_mutator,
+            ),
             water_engine=WaterEngine(registries=registries),
             fleet_mutator=fleet_mutator,
             planet_mutator=planet_mutator,

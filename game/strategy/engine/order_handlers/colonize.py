@@ -163,7 +163,8 @@ class ColonizeHandler(BaseOrderHandler):
             design_data=design_data,
             is_operational=True,
         )
-        planet.facilities.append(facility)
+        # PROJ-370 Phase 3: route through IPlanetMutator.
+        self._get_planet_mutator().add_facility(planet, facility)
 
         # Seed planet stockpile from design's initial_stockpile if present
         initial_stock = design_data.get("initial_stockpile", {})

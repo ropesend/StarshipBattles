@@ -31,15 +31,30 @@ class ProductionSpawner:
     design loading, and event logging for completed construction items.
     """
 
-    def __init__(self, registries: Optional['GameRegistries'] = None, event_bus=None):
+    def __init__(
+        self,
+        registries: Optional['GameRegistries'] = None,
+        event_bus=None,
+        planet_mutator=None,
+    ):
         """Initialize the spawner.
 
         Args:
             registries: Optional GameRegistries for ship creation (DI).
             event_bus: Optional EventBus for structured event logging.
+            planet_mutator: PROJ-370 IPlanetMutator. Lazy-defaulted.
         """
         self._registries = registries
         self._event_bus = event_bus
+        self._planet_mutator = planet_mutator
+
+    def _get_planet_mutator(self):
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
 
     def spawn_completed_item(self, item: Dict, empire: 'Empire',
                              colony_or_fleet: Any, galaxy: Optional['Galaxy'],
@@ -199,7 +214,8 @@ class ProductionSpawner:
             is_operational=True
         )
 
-        planet.facilities.append(facility)
+        # PROJ-370 Phase 3: route through IPlanetMutator.
+        self._get_planet_mutator().add_facility(planet, facility)
         logger.info(f"{log_prefix}Built {facility.name} on {planet.name}")
 
         # Compute location info for event logging (PROJ-233: shared helper)

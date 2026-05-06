@@ -75,11 +75,11 @@ BOUNDARIES: list[BoundarySpec] = [
             "game/strategy/services/fleet_write_service.py",
             "game/strategy/services/fleet_speed_calculator.py",
             # Planet shares ``orders`` and ``construction_queue`` attribute
-            # names with Fleet — its own boundary lands in Phase 3, but
-            # Planet's data class plus its planet-side handlers must be
-            # allowlisted here so the Fleet boundary doesn't trip on
-            # Planet writes.
+            # names with Fleet — its own boundary owns those writes (Phase 3),
+            # so allowlist Planet's data class, its mutator service, and the
+            # planet-side handlers here.
             "game/strategy/data/planet.py",
+            "game/strategy/services/planet_write_service.py",
             "game/strategy/engine/planet_command_handlers.py",
             # Polymorphic owner branch (Fleet OR PlanetaryFacility); the
             # Fleet branch is mutator-routed, the facility-else branch
@@ -95,12 +95,39 @@ BOUNDARIES: list[BoundarySpec] = [
     ),
     BoundarySpec(
         data_class_name="Planet",
-        target_attributes=frozenset(),
-        allowlist_paths=frozenset({
-            "game/strategy/data/planet.py",
-            "game/strategy/services/planet_write_service.py",
+        target_attributes=frozenset({
+            "populations",
+            "facilities",
+            "stockpile",
+            "max_stockpile",
+            "staging_yard",
+            "atmosphere",
+            "atmosphere_target",
+            "gravity_target",
+            "water_target",
+            "radiation_shielding",
+            "radiation_shielding_target",
+            "energy",
+            "energy_capacity",
+            "energy_generation",
+            "species_configs",
         }),
-        description="Phase 3 flips the Planet disallowlist on.",
+        allowlist_paths=frozenset({
+            # Planet data class.
+            "game/strategy/data/planet.py",
+            # Owner service (PROJ-370 IPlanetMutator).
+            "game/strategy/services/planet_write_service.py",
+            # Empire's add_colony writes Planet.owner_id and (for the
+            # initial-load shim) Planet.stockpile. Owner-side writes that
+            # Phase 4 (EmpireWriteService) will further route.
+            "game/strategy/data/empire.py",
+            # Initialization-time writers — homeworld setup, race-tuning.
+            # Legitimate construction writes; not engine-tick boundary
+            # crossings.
+            "game/strategy/engine/game_initializer.py",
+            "game/strategy/quickstart_builder.py",
+        }),
+        description="Phase 3: Planet boundary live (PROJ-370).",
     ),
     BoundarySpec(
         data_class_name="Empire",

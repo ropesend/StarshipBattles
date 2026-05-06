@@ -105,10 +105,14 @@ class GameSession:
             FleetNavigationService,
         )
         from game.strategy.services.fleet_write_service import FleetWriteService
+        from game.strategy.services.planet_write_service import (
+            PlanetWriteService,
+        )
         self._fleet_nav_service = FleetNavigationService()
         self._fleet_mutator = FleetWriteService(
             navigation_service=self._fleet_nav_service,
         )
+        self._planet_mutator = PlanetWriteService()
 
         # Engine
         # PROJ-239: ai_factory is passed through to TurnEngine → SimulationBattleResolver.
@@ -121,6 +125,7 @@ class GameSession:
             race_registry=self.race_registry,
             event_bus=self._event_bus,
             fleet_mutator=self._fleet_mutator,
+            planet_mutator=self._planet_mutator,
         )
         self.turn_engine = TurnEngine(
             registries=self._registries,
@@ -186,6 +191,11 @@ class GameSession:
         Fleet state without bypassing the AST-guarded boundary.
         """
         return self._fleet_mutator
+
+    @property
+    def planet_mutator(self):  # type: ignore[no-untyped-def]
+        """The session's IPlanetMutator (PROJ-370)."""
+        return self._planet_mutator
 
     @property
     def race_registry(self) -> 'IRaceRegistry':

@@ -90,8 +90,23 @@ class BaseOrderHandler:
     instead of touching `self._event_bus` directly.
     """
 
-    def __init__(self, *, event_bus: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        *,
+        event_bus: Optional[Any] = None,
+        planet_mutator: Optional[Any] = None,
+    ) -> None:
         self._event_bus = event_bus
+        self._planet_mutator = planet_mutator
+
+    def _get_planet_mutator(self) -> Any:
+        """Lazy-default the planet mutator (PROJ-370)."""
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
 
     def _emit_event(
         self,

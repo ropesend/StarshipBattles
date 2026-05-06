@@ -232,9 +232,10 @@ class _TransferDispatchMixin:
                 break
 
         if species_pop is None:
-            # Create new species population
+            # Create new species population.
+            # PROJ-370 Phase 3: route through IPlanetMutator.
             species_pop = SpeciesPopulation(race_id=race_id, count=0, happiness=0.5)
-            planet.populations.append(species_pop)
+            self._get_planet_mutator().add_species_population(planet, species_pop)
 
         species_pop.count += actual_unloaded
         return actual_unloaded

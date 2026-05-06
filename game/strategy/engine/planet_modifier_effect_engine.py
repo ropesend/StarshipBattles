@@ -27,8 +27,17 @@ logger = logging.getLogger(__name__)
 class PlanetModifierEffectEngine:
     """Engine for applying/reverting instant planet modifier effects."""
 
-    def __init__(self, registries=None):
+    def __init__(self, registries=None, planet_mutator=None):
         self._registries = registries
+        self._planet_mutator = planet_mutator
+
+    def _get_planet_mutator(self):
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
 
     def process_modifier_effects_tick(self, tick: int, empires: List) -> None:
         """Process modifier effects for all empires.
@@ -74,13 +83,16 @@ class PlanetModifierEffectEngine:
         # Check if any active RadiationShield exists
         has_active = self._has_active_ability(planet, 'RadiationShield')
 
+        # PROJ-370 Phase 3: route radiation_shielding writes through IPlanetMutator.
         if has_active and shielding_target is not None:
-            planet.radiation_shielding = shielding_target
+            self._get_planet_mutator().set_radiation_shielding(
+                planet, shielding_target,
+            )
         elif not has_active:
             # Revert: no active shield means no artificial shielding
             current = getattr(planet, 'radiation_shielding', 0.0)
             if isinstance(current, (int, float)) and current > 0:
-                planet.radiation_shielding = 0.0
+                self._get_planet_mutator().set_radiation_shielding(planet, 0.0)
 
     def _has_active_ability(self, planet, ability_name: str) -> bool:
         """Check if any facility has an active component with the given ability."""

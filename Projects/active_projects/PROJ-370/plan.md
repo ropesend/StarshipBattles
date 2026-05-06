@@ -18,15 +18,15 @@
 |-------|--------|-----------|------------|
 | 1. Mutator-protocol foundation + AST guard harness (no behavior change) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Fleet: `IFleetMutator` + route engine writes + AST guard | Complete | [phase_2_checklist.md](phase_2_checklist.md) | phase_1 |
-| 3. Planet: `IPlanetMutator` + route engine writes + AST guard | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | phase_1 |
+| 3. Planet: `IPlanetMutator` + route engine writes + AST guard | Complete | [phase_3_checklist.md](phase_3_checklist.md) | phase_1 |
 | 4. Empire: `IEmpireMutator` + route engine writes + AST guard | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | phase_2, phase_3 |
 | 5. ShipInstance: `IShipInstanceMutator` + post-battle hook + AST guard | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | phase_2 |
 
 ## Current State
 **Last Updated:** 2026-05-06
-**Active Phase:** Phase 3 (Planet)
-**Last Action:** Phase 2 complete. `FleetWriteService` at `game/strategy/services/fleet_write_service.py` implements `IFleetMutator` (non-nav slice); `FleetNavigationService` gained `set_location` / `set_path` methods (nav slice). Wiring at `GameSession.__init__` (constructs nav + write services and threads `fleet_mutator` through `TurnEngineConfig.create_default()` — TurnEngineConfig grew from 18 to 22 fields). Routed writes: `fleet_movement_engine.py:182`, `engine/handlers/base.py:79`, `handlers/movement.py:119`, `handlers/build.py:55+58`, `handlers/order_queue.py:244+249`, `handlers/construction_queue.py:302` (polymorphic Fleet branch only), `ui/screens/strategy_screen_order_editing.py:65+90`. AST walker hardened to skip `self.X`/`cls.X` patterns (avoids false positives from WarpPoint, simulation BattleEngine). Fleet AST guard live with 9 attributes + 13 allowlisted paths (incl. Planet data class & planet command handler for shared `orders`/`construction_queue` attribute names). 4730 strategy tests pass. New `swap_orders` mutator method added (1 swap site in handlers/order_queue.py).
-**Next Action:** Phase 3 — implement `PlanetWriteService`, route Planet writes (16 attributes), flip Planet AST guard hot.
+**Active Phase:** Phase 4 (Empire)
+**Last Action:** Phase 3 complete. `PlanetWriteService` at `game/strategy/services/planet_write_service.py` implements `IPlanetMutator` (single owner, 24 methods). Wired in `GameSession.__init__`, threaded into `TurnEngineConfig.create_default()` and propagated to HarvestingEngine, PlanetEnergyEngine, AtmosphereEngine, OrganicsConsumptionEngine. Routed writes: `organics_consumption_engine.py:107` (stockpile), `planet_energy_engine.py:225-249` (energy/capacity/generation, 5 sites), `atmosphere_engine.py:129` (atmosphere), `planet_modifier_effect_engine.py:78+83` (radiation_shielding), `production_spawner.py:202` (facility add), `order_handlers/colonize.py:166` (facility add), `order_handlers/transfer_branches.py:237` (population add), `harvesting_engine.py:229` (max_stockpile). BaseOrderHandler gained planet_mutator kwarg + `_get_planet_mutator()` helper. Planet AST guard live with 15 attributes + 5 allowlisted paths. New mutator method `set_max_stockpile` added. 4746 strategy tests pass.
+**Next Action:** Phase 4 — implement `EmpireWriteService`, route Empire writes (colonies/fleets/max_storage/built_ship_designs), include post-battle empty-fleet pruning, flip Empire AST guard hot.
 **Blockers:** None.
 
 ## Overview
