@@ -44,6 +44,23 @@ class TestReplayResolver:
         assert result.found is False
         assert result.reason == "missing"
 
+    def test_resolve_when_store_has_no_replay_dir_returns_missing(self):
+        class _NoReplayDirStore:
+            replay_dir = None
+
+            def load_or_error(self, replay_id: str):
+                raise AssertionError("load_or_error should not be called")
+
+        resolver = ReplayResolver(
+            _NoReplayDirStore(),
+            current_components_registry_hash="sha256:current",
+        )
+
+        result = resolver.resolve("not-mounted")
+
+        assert result.found is False
+        assert result.reason == "missing"
+
     def test_resolve_healthy_replay_returns_found(self, store: ReplayStore):
         store.persist(_make_record("ok", components_hash="sha256:current"))
         resolver = ReplayResolver(store, current_components_registry_hash="sha256:current")

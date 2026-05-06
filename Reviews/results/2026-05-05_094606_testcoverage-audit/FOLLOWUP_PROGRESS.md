@@ -329,6 +329,115 @@ paths or exercised the code through public facades.
   - Initial result before adding the file: no tests ran.
   - Result after adding tests: `2 passed`
 
+### Strategy Ability Source Adapter Edges
+
+- Covered remaining branch edges in
+  `game/strategy/services/ability_sources/facility.py` and
+  `warp_point.py`.
+- Verified `game/strategy/services/ability_sources/labels.py` against
+  existing direct tests.
+- Added focused tests to:
+  - `tests/unit/strategy/services/ability_sources/test_facility.py`
+  - `tests/unit/strategy/services/ability_sources/test_warp_point.py`
+- New coverage includes facility activation-state lookup by owning component,
+  missing activation-state getter, missing ability lookup, warp-point default
+  label/source-id fallbacks, missing intrinsic abilities, missing coordinate
+  data, incompatible coordinate types, identity-based system matching, and
+  the always-`None` activation state contract.
+- False positives found: the broad facility/warp/label claims were mostly
+  already covered by dedicated adapter tests; only these branch edges were
+  missing.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/services/ability_sources/test_facility.py tests/unit/strategy/services/ability_sources/test_warp_point.py tests/unit/strategy/services/ability_sources/test_labels.py -q`
+  - Initial result before adding branch tests: `20 passed`
+  - Result after adding tests: `30 passed`
+
+### Strategy Fleet Pursuer Tracker Defensive Branch
+
+- Covered `game/strategy/data/fleet_pursuer_tracker.py`.
+- Added one focused test to
+  `tests/unit/strategy/fleet/test_fleet_pursuer_tracker.py`.
+- New coverage includes redirecting pursuer orders to a target object that
+  does not expose `_pursuer_tracker`; order rewrite still succeeds and
+  registration transfer is skipped.
+- False positives found: the tracker already had broad redirect, exclude,
+  unregister, merge, and destruction coverage; only the defensive `hasattr`
+  branch was unpinned.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/fleet/test_fleet_pursuer_tracker.py -q`
+  - Initial result before adding the branch test: `27 passed`
+  - Result after adding tests: `28 passed`
+
+### Simulation Marker Ability Requirement Branches
+
+- Covered `game/simulation/components/abilities/markers.py`.
+- Added focused tests to
+  `tests/unit/simulation/components/abilities/test_markers.py`.
+- New coverage includes `RequiresCommandAndControl.update()` with no ship
+  context, active command provider success, inactive provider skip/failure,
+  and self-component exclusion.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/simulation/components/abilities/test_markers.py -q`
+  - Initial result before adding branch tests: `35 passed`
+  - Result after adding tests: `39 passed`
+
+### Strategy Replay, Ability Iterator, And Simulation Adapter Edges
+
+- Covered remaining branch edges in:
+  - `game/strategy/services/replay_ship_builder.py`
+  - `game/strategy/services/replay_resolver.py`
+  - `game/strategy/services/ability_iterator.py`
+  - `game/strategy/adapters/simulation_adapter.py`
+- Added focused tests to:
+  - `tests/unit/strategy/services/test_replay_ship_builder_registry_contract.py`
+  - `tests/integration/replay/test_replay_resolver.py`
+  - `tests/unit/strategy/services/test_ability_iterator.py`
+  - `tests/unit/strategy/adapters/test_simulation_adapter.py`
+- New coverage includes replay builder fallback selection, missing
+  snapshot/no-fallback `ValueError`, resolver behavior when the store has
+  no `replay_dir`, system-scope fleet ability-source lookup, incompatible
+  planet/system coordinate `TypeError` handling, explicit seed passthrough,
+  and lazy RNG creation/reuse for generated battle seeds.
+- False positives found: `game/simulation/entities/stat_contributors/weapons.py`
+  already has direct tests for `aggregate_targeting_scores` bool coercion,
+  zero values, returned ECM score, and `baseline_to_hit_offense`.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/services/test_ability_iterator.py tests/unit/strategy/services/test_replay_ship_builder_registry_contract.py tests/integration/replay/test_replay_resolver.py tests/unit/strategy/adapters/test_simulation_adapter.py tests/unit/strategy/combat/test_post_battle_hook.py tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py tests/unit/strategy/test_ship_instance_damage.py -q`
+  - Result after adding tests: `110 passed`
+
+### Strategy Post-Battle, Turn Phase Hooks, And ShipInstance Edges
+
+- Covered remaining defensive branches in:
+  - `game/strategy/combat/post_battle_hook.py`
+  - `game/strategy/engine/turn_phase_registry.py`
+  - `game/strategy/data/ship_instance.py`
+- Added focused tests to:
+  - `tests/unit/strategy/combat/test_post_battle_hook.py`
+  - `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py`
+  - `tests/unit/strategy/test_ship_instance_damage.py`
+- New coverage includes orphan outcome logging/skipping, unknown ship-status
+  logging/skipping, empty-fleet pruning when the empire is missing or lacks
+  a `fleets` list, `ValueError` during empty-fleet removal, movement queue
+  capture, moved-fleet diff derivation, pod storage capacity/usage, pod
+  capacity denial, ship activation-state roundtrip, partial repair cache
+  invalidation, full repair component restoration, and direct stats-cache
+  invalidation.
+- False positives found: `game/simulation/combat/formation.py` already
+  covers default-formation tie fallback and unknown-role `other` fallback
+  in `tests/unit/simulation/combat/test_formation_defaults.py`.
+  `game/strategy/engine/action_execution_engine.py` already has direct
+  tests for the audited return-`None` branches, including speed/tick
+  gating, no-order, movement-order skip, BUILD skip/auto-pop, and
+  non-action order skip.
+- Production changes: none.
+- Targeted command:
+  `pytest tests/unit/strategy/services/test_ability_iterator.py tests/unit/strategy/services/test_replay_ship_builder_registry_contract.py tests/integration/replay/test_replay_resolver.py tests/unit/strategy/adapters/test_simulation_adapter.py tests/unit/strategy/combat/test_post_battle_hook.py tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py tests/unit/strategy/test_ship_instance_damage.py -q`
+  - Result after adding tests: `110 passed`
+
 ## Verified False Positives Or Already-Covered Claims
 
 - `game/simulation/battle_runner.py` already has dedicated unit coverage
@@ -367,6 +476,27 @@ paths or exercised the code through public facades.
   direct tests.
 - `game/strategy/systems/save_game_service.py` replay-store hooks are covered
   in integration replay tests.
+- `game/simulation/replay/replay_outcome.py` already has direct coverage in
+  `tests/unit/simulation/replay/test_serialization.py`, with additional
+  verifier/store/capture usage.
+- `game/strategy/facade/slices/economy_slice.py` already has dedicated
+  `get_colony_demographic_view` and race-registry tests under
+  `tests/unit/strategy/facade/`.
+- `game/strategy/data/naming.py` already has unit coverage for load errors,
+  duplicate skipping, exhaustion, and Roman numeral edge cases, plus an
+  integration test.
+- `game/strategy/data/spatial_index.py` already has a direct sparse-index
+  regression test for `get_k_nearest`.
+- `game/simulation/components/abilities/planetary.py` already covers the
+  non-dict constructor branches in `test_planetary_abilities.py`.
+- `game/simulation/components/abilities/stat_keys.py` already covers the
+  invalid operation `ValidationException` path.
+- `game/simulation/entities/stat_contributors/weapons.py` already has direct
+  branch tests for `aggregate_targeting_scores`.
+- `game/simulation/combat/formation.py` already covers default-formation
+  tie fallback and unknown-role `other` fallback.
+- `game/strategy/engine/action_execution_engine.py` already covers the
+  recommended return-`None` branches directly.
 
 ## Test Commands Run
 
@@ -451,23 +581,48 @@ paths or exercised the code through public facades.
 - UI strategy render context:
   - `pytest tests/unit/ui/screens/strategy_render/test_context.py -q`
     - Result: `2 passed`
+- Strategy ability-source adapter edges:
+  - `pytest tests/unit/strategy/services/ability_sources/test_facility.py tests/unit/strategy/services/ability_sources/test_warp_point.py tests/unit/strategy/services/ability_sources/test_labels.py -q`
+    - Initial result before adding branch tests: `20 passed`
+    - Result after adding tests: `30 passed`
+- Strategy fleet pursuer tracker defensive branch:
+  - `pytest tests/unit/strategy/fleet/test_fleet_pursuer_tracker.py -q`
+    - Initial result before adding the branch test: `27 passed`
+    - Result after adding tests: `28 passed`
+- Simulation marker ability requirement branches:
+  - `pytest tests/unit/simulation/components/abilities/test_markers.py -q`
+    - Initial result before adding branch tests: `35 passed`
+    - Result after adding tests: `39 passed`
+- Combined targeted suite for this continuation:
+  - `pytest tests/unit/strategy/services/ability_sources/test_facility.py tests/unit/strategy/services/ability_sources/test_warp_point.py tests/unit/strategy/services/ability_sources/test_labels.py tests/unit/strategy/fleet/test_fleet_pursuer_tracker.py tests/unit/simulation/components/abilities/test_markers.py -q`
+    - Result: `97 passed`
 - Combined targeted suite for this continuation:
   - `pytest tests/unit/ui/screens/test_strategy_click_dispatcher.py tests/unit/ui/test_battle_results_data.py tests/unit/strategy/data/test_race_caption_loader.py tests/unit/strategy/services/test_race_description_prompt_builder.py tests/unit/strategy/data/test_galaxy_system_generator.py tests/unit/strategy/services/test_action_time_resolver.py tests/unit/strategy/engine/test_resupply_engine.py tests/unit/simulation/systems/test_tick_phases.py tests/unit/simulation/replay/test_replay_player.py tests/unit/simulation/replay tests/unit/ai/spatial_behaviors/test_spatial_behaviors.py tests/unit/simulation/components/abilities/test_ability_registry.py tests/unit/ui/screens/strategy_render/test_context.py -q`
   - Result: `231 passed`
 - Full suite after AI battle-line production change:
   - `python Tools/test_sharded/test_sharded.py`
   - Result: `18664 passed`, `0 failed`, `0 errors`, `4 skipped`
+- Baseline verification before this continuation's additions:
+  - `pytest tests/unit/strategy/services/test_ability_iterator.py tests/unit/strategy/services/test_replay_ship_builder_registry_contract.py tests/integration/replay/test_replay_resolver.py tests/unit/strategy/adapters/test_simulation_adapter.py tests/unit/strategy/combat/test_post_battle_hook.py tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py tests/unit/strategy/test_ship_instance_damage.py tests/unit/simulation/entities/stat_contributors/test_weapons.py tests/unit/simulation/combat/test_formation_defaults.py tests/unit/strategy/engine/test_action_execution_engine.py tests/unit/strategy/engine/test_action_execution_engine_gaps.py -q`
+  - Result: `142 passed`
+- Strategy replay/iterator/adapter and defensive branch continuation:
+  - `pytest tests/unit/strategy/services/test_ability_iterator.py tests/unit/strategy/services/test_replay_ship_builder_registry_contract.py tests/integration/replay/test_replay_resolver.py tests/unit/strategy/adapters/test_simulation_adapter.py tests/unit/strategy/combat/test_post_battle_hook.py tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py tests/unit/strategy/test_ship_instance_damage.py -q`
+  - Result: `110 passed`
 
 ## Suggested Next Work Packets
 
-Continue with the remaining verified UI gap and then return to the audit for
-fresh candidates:
-
-- Strategy data: consider any remaining `galaxy_system_generator.py` generation
-  branches only after re-checking current characterization tests.
-- Strategy engine: remaining `resupply_engine.py` public-flow edge cases, if
-  any, should be verified against existing direct distribution and transfer
-  coverage first.
+- Strategy data: `ship_instance.py` now has focused direct method coverage;
+  any remaining work should re-check serializer/bridge coverage first to
+  avoid duplicating existing `ship_instance/` and `fleets/` tests.
+- Strategy combat: `post_battle_hook.py` defensive branches are now covered;
+  remaining combat candidates should start with `combat_modifier_collector.py`
+  private helper edge cases only after checking existing collector tests.
+- Replay: `replay_ship_builder.py` and `replay_resolver.py` recommended
+  branches are now covered. Future replay work should re-check resolver/store
+  integration tests before adding more.
+- Strategy engine: `turn_phase_registry.py` hook functions are now covered;
+  remaining engine candidates should focus on genuinely untested helper
+  branches, not return-`None` paths already covered in action execution.
 - Any newly selected packet should repeat verification against existing tests
   first; many broad audit claims in this area were false positives.
 

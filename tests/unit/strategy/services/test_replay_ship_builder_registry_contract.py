@@ -18,6 +18,8 @@ the protocol's individual getters.
 """
 from __future__ import annotations
 
+import pytest
+
 from game.core.registry import DefaultRegistryProvider
 from game.simulation.replay import REPLAY_SCHEMA_VERSION, ReplayOutcome, ReplayRecord, ReplaySpec
 from game.strategy.services.replay_ship_builder import build_replay_ship_builder
@@ -64,3 +66,39 @@ def test_build_replay_ship_builder_uses_protocol_getters_only() -> None:
     builder = build_replay_ship_builder(record, registry_provider=provider)
 
     assert callable(builder)
+
+
+def _first_ship_spec(record: ReplayRecord):
+    spec = record.spec.to_battle_spec()
+    return spec.teams[0].fleet_hierarchy[0].squadrons[0].ships[0]
+
+
+def test_builder_uses_fallback_when_snapshot_is_missing() -> None:
+    record = _make_record()
+    provider = DefaultRegistryProvider()
+    ship_spec = _first_ship_spec(record)
+    calls = []
+    sentinel_ship = object()
+
+    def fallback_builder(passed_spec, team_id):
+        calls.append((passed_spec, team_id))
+        return sentinel_ship
+
+    builder = build_replay_ship_builder(
+        record,
+        registry_provider=provider,
+        fallback_builder=fallback_builder,
+    )
+
+    assert builder(ship_spec, 3) is sentinel_ship
+    assert calls == [(ship_spec, 3)]
+
+
+def test_builder_raises_when_snapshot_and_fallback_are_missing() -> None:
+    record = _make_record()
+    provider = DefaultRegistryProvider()
+    ship_spec = _first_ship_spec(record)
+    builder = build_replay_ship_builder(record, registry_provider=provider)
+
+    with pytest.raises(ValueError, match="no instance snapshot"):
+        builder(ship_spec, 0)
