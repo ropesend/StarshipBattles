@@ -1,10 +1,49 @@
 """Tests for StrategySessionFacade event query methods (PROJ-77 Phase 2)."""
 
-import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.events import Event, EventLog, EventType, EventCategory
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
+
+
+class _EventWithDict:
+    def __init__(self, marker: str) -> None:
+        self.marker = marker
+
+    def to_dict(self) -> dict:
+        return {"marker": self.marker}
+
+
+class _RecordingEventLog:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, tuple, dict]] = []
+
+    def get_events_for_turn(self, *args, **kwargs) -> list[_EventWithDict]:
+        self.calls.append(("get_events_for_turn", args, kwargs))
+        return [_EventWithDict("turn")]
+
+    def get_all_events(self, *args, **kwargs) -> list[_EventWithDict]:
+        self.calls.append(("get_all_events", args, kwargs))
+        return [_EventWithDict("all")]
+
+    def get_events_for_empire(self, *args, **kwargs) -> list[_EventWithDict]:
+        self.calls.append(("get_events_for_empire", args, kwargs))
+        return [_EventWithDict("empire")]
+
+    def get_events_by_category(self, *args, **kwargs) -> list[_EventWithDict]:
+        self.calls.append(("get_events_by_category", args, kwargs))
+        return [_EventWithDict("category")]
+
+
+def _make_facade_with_recording_event_log(
+    event_log: _RecordingEventLog,
+    turn_number: int = 7,
+) -> StrategySessionFacade:
+    mock_session = MagicMock()
+    mock_session.event_log = event_log
+    mock_session.turn_number = turn_number
+    mock_session.empires = []
+    return StrategySessionFacade(mock_session)
 
 
 def _make_facade_with_events(events: list[Event], turn_number: int = 1) -> StrategySessionFacade:
@@ -193,3 +232,58 @@ class TestFacadeEventQueriesEmpireScoping:
         messages = {e["message"] for e in result}
         assert messages == {"E0", "E0t2"}  # Global is SUPERWEAPONS, not PRODUCTION
         assert "E1" not in messages
+
+
+class TestFacadeEventQueryDispatch:
+    """EventSlice chooses the scoped/unscoped EventLog API intentionally."""
+
+    def test_turn_events_without_empire_id_calls_legacy_positional_api(self):
+        event_log = _RecordingEventLog()
+        facade = _make_facade_with_recording_event_log(event_log, turn_number=9)
+
+        result = facade.get_turn_events()
+
+        assert result == [{"marker": "turn"}]
+        assert event_log.calls == [("get_events_for_turn", (9,), {})]
+
+    def test_turn_events_with_empire_id_calls_scoped_kwarg_api(self):
+        event_log = _RecordingEventLog()
+        facade = _make_facade_with_recording_event_log(event_log)
+
+        result = facade.get_turn_events(turn=3, empire_id=2)
+
+        assert result == [{"marker": "turn"}]
+        assert event_log.calls == [
+            ("get_events_for_turn", (3,), {"empire_id": 2}),
+        ]
+
+    def test_all_events_scoped_uses_get_events_for_empire(self):
+        event_log = _RecordingEventLog()
+        facade = _make_facade_with_recording_event_log(event_log)
+
+        result = facade.get_all_events(empire_id=4)
+
+        assert result == [{"marker": "empire"}]
+        assert event_log.calls == [("get_events_for_empire", (4,), {})]
+
+    def test_category_events_without_empire_id_preserves_legacy_call_shape(self):
+        event_log = _RecordingEventLog()
+        facade = _make_facade_with_recording_event_log(event_log)
+
+        result = facade.get_events_by_category(EventCategory.COMBAT)
+
+        assert result == [{"marker": "category"}]
+        assert event_log.calls == [
+            ("get_events_by_category", (EventCategory.COMBAT,), {}),
+        ]
+
+    def test_category_events_with_empire_id_uses_scoped_kwarg_api(self):
+        event_log = _RecordingEventLog()
+        facade = _make_facade_with_recording_event_log(event_log)
+
+        result = facade.get_events_by_category(EventCategory.PRODUCTION, empire_id=5)
+
+        assert result == [{"marker": "category"}]
+        assert event_log.calls == [
+            ("get_events_by_category", (EventCategory.PRODUCTION,), {"empire_id": 5}),
+        ]

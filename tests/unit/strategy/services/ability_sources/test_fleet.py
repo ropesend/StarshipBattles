@@ -17,6 +17,14 @@ class _MockShip:
 
 
 @dataclass
+class _RaisingCombatCheckShip:
+    design_data: Dict[str, Any] = field(default_factory=dict)
+
+    def is_combat_capable(self) -> bool:
+        raise RuntimeError("bad ship state")
+
+
+@dataclass
 class _MockFleet:
     id: int = 1
     owner_id: int = 0
@@ -91,6 +99,36 @@ def test_get_abilities_skips_inactive_ships():
     assert src.get_abilities() == {}
 
 
+def test_get_abilities_skips_ship_when_combat_capability_check_raises():
+    fleet = _MockFleet(ships=[
+        _RaisingCombatCheckShip(design_data={"layers": {"CORE": [
+            {"id": "x", "abilities": {"ShieldModifier": {"multiplier": 1.25, "scope": "allied_sector"}}},
+        ]}}),
+    ])
+    src = FleetAbilitySource(fleet=fleet)
+    assert src.get_abilities() == {}
+
+
+def test_get_abilities_skips_ship_without_design_data():
+    fleet = _MockFleet(ships=[_MockShip(design_data=None)])
+    src = FleetAbilitySource(fleet=fleet)
+    assert src.get_abilities() == {}
+
+
+def test_get_abilities_filters_mixed_entry_lists_to_strategic_dict_entries():
+    fleet = _MockFleet(ships=[
+        _ship_with_ability("ShieldModifier", [
+            True,
+            {"multiplier": 1.1, "scope": "fleet"},
+            {"multiplier": 1.2, "scope": "allied_sector"},
+        ]),
+    ])
+    src = FleetAbilitySource(fleet=fleet)
+    assert src.get_abilities() == {
+        "ShieldModifier": [{"multiplier": 1.2, "scope": "allied_sector"}],
+    }
+
+
 def test_get_abilities_memoized():
     """PROJ-305 D12: per-instance memoization avoids re-walking ships."""
     fleet = _MockFleet(ships=[
@@ -111,6 +149,7 @@ def test_cloaked_fleet_projects_nothing():
     src = FleetAbilitySource(fleet=fleet)
     assert src.get_abilities() == {}
     assert src.affects_hex(HexCoord(5, 5)) is False
+    assert src.affects_system(object()) is False
 
 
 def test_affects_hex_matches_fleet_location():

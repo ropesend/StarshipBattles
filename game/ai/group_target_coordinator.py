@@ -21,6 +21,26 @@ class GroupTargetCoordinator:
     without maintaining any internal state between calls.
     """
 
+    @staticmethod
+    def _max_hp_capacity(ship: Any) -> float:
+        max_hp = getattr(ship, "max_hp", 0) or 0
+        return max(max_hp, 0)
+
+    @classmethod
+    def _bounded_hp(cls, ship: Any) -> float:
+        max_hp = cls._max_hp_capacity(ship)
+        if max_hp <= 0:
+            return 0.0
+        hp = getattr(ship, "hp", 0) or 0
+        return max(0.0, min(hp, max_hp))
+
+    @classmethod
+    def _hp_ratio(cls, ship: Any) -> float:
+        max_hp = cls._max_hp_capacity(ship)
+        if max_hp <= 0:
+            return 0.0
+        return cls._bounded_hp(ship) / max_hp
+
     def select_focus_target(
         self,
         enemies: List[Any],
@@ -46,7 +66,7 @@ class GroupTargetCoordinator:
             return max(alive_enemies, key=lambda e: e.mass)
 
         elif priority == "most_damaged":
-            return min(alive_enemies, key=lambda e: e.hp / max(e.max_hp, 1))
+            return min(alive_enemies, key=self._hp_ratio)
 
         elif priority == "nearest":
             if reference_position is None:
@@ -72,8 +92,8 @@ class GroupTargetCoordinator:
         Returns:
             Total current HP / total max HP, or 0.0 if empty.
         """
-        total_hp = sum(s.hp for s in ships)
-        total_max = sum(s.max_hp for s in ships)
+        total_hp = sum(GroupTargetCoordinator._bounded_hp(s) for s in ships)
+        total_max = sum(GroupTargetCoordinator._max_hp_capacity(s) for s in ships)
 
         if total_max <= 0:
             return 0.0
