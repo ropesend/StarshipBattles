@@ -15,19 +15,19 @@
 ## Quick Status
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
-| 1. Extract end-of-turn block to descriptor list (`DEFAULT_END_OF_TURN_PHASE_LIST`) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | — |
+| 1. Extract end-of-turn block to descriptor list (`DEFAULT_END_OF_TURN_PHASE_LIST`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Make the 3 locally-constructed end-of-turn engines (Quality / Atmosphere / Water) injectable + lazy-property + `TurnEngineConfig` fields | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | phase_1 |
 | 3. Replace per-property lazy fallback init with required-kwarg injection from `TurnEngineConfig` (factory pre-fills defaults) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | phase_2 |
 | 4. Convert tick + end-of-turn loops to a unified `for phase in self._phases: phase.run(ctx)` body | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | phase_3 |
 | 5. AST guard test + per-phase unit tests with mock context; remove `_NullBattleResolver`; finalize docs | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | phase_4 |
 
 ## Current State
-**Last Updated:** 2026-05-05
-**Active Phase:** Planning
-**Last Action:** Plan drafted; awaiting user approval.
-**Next Action:** User reviews plan; on approval, run `claude-proj-start PROJ-369` to seed `phase_state.json` and create `proj/PROJ-369/main` branch.
-**Blockers:** Awaiting user approval.
-**Context for Next Agent:** This project completes (does NOT supersede) PROJ-259 + PROJ-365. Per-tick descriptor migration shipped in PROJ-365 (`game/strategy/engine/turn_phase_registry.py:174-297` defines `DEFAULT_TICK_PHASE_LIST`). PROJ-259 added `TurnEngineConfig`. The 13 sub-engines have lazy fallback init in 15 properties at `turn_engine.py:319-481`; 3 end-of-turn engines (`QualityEngine`/`AtmosphereEngine`/`WaterEngine`) are still locally constructed inline at `turn_engine.py:606-620` (function-local imports — non-injectable today). Constructor still accepts 20 kwargs. The fallback init defeats DI: tests cannot tell which default got used; behavior diverges between CI and local.
+**Last Updated:** 2026-05-06
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete — `DEFAULT_END_OF_TURN_PHASE_LIST` (6 entries) added to `turn_phase_registry.py`; `process_turn` end-of-turn block replaced with descriptor iteration; new `end_of_turn_phases` ctor kwarg added to `TurnEngine`. New golden-list test `test_default_end_of_turn_phase_list.py` (4 tests). Focused: 119/119 pass (was 115). Strategy integration: 483 pass, 1 skipped.
+**Next Action:** Phase 2 — promote QualityEngine/AtmosphereEngine/WaterEngine to injectable engines via 3 protocols + `TurnEngineConfig` fields + lazy properties.
+**Blockers:** None.
+**Context for Next Agent:** Phase 1 used the same resolver-helper pattern as PROJ-365's `_resolve_planet_modifier_effects` (per-call construction). Phase 2 will swap those resolvers for `lambda e: e.quality_engine.process_quality_improvement` style accessors after adding the lazy properties.
 
 ## Overview
 

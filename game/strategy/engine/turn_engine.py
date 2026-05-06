@@ -63,6 +63,7 @@ import logging
 from game.core.validation import ValidationResult
 from game.core.registry import GameRegistries
 from game.strategy.engine.turn_phase_registry import (
+    DEFAULT_END_OF_TURN_PHASE_LIST,
     DEFAULT_TICK_PHASE_LIST,
     TickContext,
     TickPhase,
@@ -166,6 +167,7 @@ class TurnEngine:
         race_registry: Optional['IRaceRegistry'] = None,
         event_bus=None,
         tick_phases: Optional[tuple['TickPhase', ...]] = None,
+        end_of_turn_phases: Optional[tuple['TickPhase', ...]] = None,
     ):
         """Initialize the turn engine.
 
@@ -227,6 +229,16 @@ class TurnEngine:
         # exercise reordering or single-phase isolation.
         self._tick_phases: tuple[TickPhase, ...] = (
             tick_phases if tick_phases is not None else DEFAULT_TICK_PHASE_LIST
+        )
+
+        # PROJ-369 Phase 1: End-of-turn phase descriptor list. Defaults
+        # to the 6-phase ordering pinned by PROJ-284 (organics →
+        # happiness → population_growth → quality → atmosphere →
+        # water). Tests may inject a custom list for isolation.
+        self._end_of_turn_phases: tuple[TickPhase, ...] = (
+            end_of_turn_phases
+            if end_of_turn_phases is not None
+            else DEFAULT_END_OF_TURN_PHASE_LIST
         )
 
         # PROJ-189: Environmental event storage for UI notification
@@ -578,46 +590,30 @@ class TurnEngine:
             # [BUG-109] Log resource state after all ticks
             self._log_empire_state(empires, f"=== TURN END (after {TICKS_PER_TURN} ticks) ===")
 
-            # PROJ-343 T1.2-engines: end-of-turn engines must route through
-            # `_time_phase` so raw exceptions become EnginePhaseError and the
-            # rollback site below catches them. Pre-fix these calls were
-            # unwrapped and bypassed rollback after the tick loop had already
-            # mutated state.
-
-            # PROJ-284 Phase 2: Food consumption runs BEFORE happiness
-            # so `last_food_ratio` is fresh for the happiness formula.
-            self._time_phase('organics_consumption',
-                             self.organics_consumption_engine.process_consumption,
-                             empires)
-
-            # PROJ-284 Phase 3: Happiness = base * ratio * habitability.
-            # Derived fresh each turn between consumption and population
-            # growth so `pop.happiness` carries no stale value into
-            # `PopulationEngine._grow_species`.
-            self._time_phase('happiness',
-                             self.happiness_engine.process_happiness,
-                             empires, galaxy)
-
-            # 2. Population Growth Phase (PROJ-68)
-            self._time_phase('population_growth',
-                             self.population_engine.process_population_growth,
-                             empires)
-
-            # 3. Quality Improvement + Atmosphere Modification (once per turn)
-            from game.strategy.engine.quality_engine import QualityEngine
-            from game.strategy.engine.atmosphere_engine import AtmosphereEngine
-            self._time_phase('quality_improvement',
-                             QualityEngine(registries=self._registries).process_quality_improvement,
-                             empires)
-            self._time_phase('atmosphere',
-                             AtmosphereEngine(registries=self._registries).process_atmosphere,
-                             empires)
-
-            # 4. Water Modification (once per turn)
-            from game.strategy.engine.water_engine import WaterEngine
-            self._time_phase('water_modification',
-                             WaterEngine(registries=self._registries).process_water_modification,
-                             empires)
+            # PROJ-343 T1.2-engines / PROJ-369 Phase 1: end-of-turn
+            # engines route through `_time_phase` (so raw exceptions
+            # become EnginePhaseError and the rollback site below
+            # catches them) and now iterate the
+            # `DEFAULT_END_OF_TURN_PHASE_LIST` descriptor list — same
+            # shape as the tick body. PROJ-284 ordering invariant
+            # (organics → happiness → population_growth) is encoded in
+            # the registry's pinned tuple.
+            end_of_turn_ctx = TickContext(
+                tick=0,  # sentinel: end-of-turn, not in 1..100 loop
+                empires=empires,
+                galaxy=galaxy,
+                component_registry=self._registries.components,
+                save_path=save_path,
+            )
+            for phase in self._end_of_turn_phases:
+                if phase.pre_exec_hook is not None:
+                    phase.pre_exec_hook(self, end_of_turn_ctx)
+                target = phase.callable_target(self)
+                args, kwargs = phase.args_resolver(end_of_turn_ctx)
+                bucket = phase.timing_bucket or phase.phase_key
+                result = self._time_phase(bucket, target, *args, **kwargs)
+                if phase.post_exec_hook is not None:
+                    phase.post_exec_hook(self, end_of_turn_ctx, result)
 
         except EnginePhaseError as e:
             # PROJ-251: Rollback state and re-raise

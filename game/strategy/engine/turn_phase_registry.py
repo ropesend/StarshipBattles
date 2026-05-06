@@ -46,6 +46,11 @@ class TickContext:
     closures or instance attributes on ``TurnEngine``. Hooks are free
     to write back any field; phases later in the iteration order read
     them via their ``args_resolver``.
+
+    PROJ-369: ``TickContext`` is also reused for the end-of-turn
+    descriptor block (``DEFAULT_END_OF_TURN_PHASE_LIST``). End-of-turn
+    invocations pass ``tick=0`` as a sentinel — impossible during the
+    1..100 tick loop and unambiguous as "after the tick loop completed".
     """
 
     tick: int
@@ -162,6 +167,43 @@ def _resolve_planet_modifier_effects(engine):
     return PlanetModifierEffectEngine(
         registries=engine._registries
     ).process_modifier_effects_tick
+
+
+# ---------------------------------------------------------------------------
+# End-of-turn descriptor resolvers (PROJ-369 Phase 1).
+#
+# QualityEngine, AtmosphereEngine, and WaterEngine are constructed
+# locally inside ``process_turn`` today (function-local imports). Phase 1
+# preserves that semantics by wrapping each in a per-call resolver that
+# mirrors ``_resolve_planet_modifier_effects`` above. Phase 2 promotes
+# them to injectable engines via ``TurnEngineConfig``; the resolvers
+# below are then deleted in favor of inline ``lambda e: e.foo_engine.X``
+# accessors.
+# ---------------------------------------------------------------------------
+
+
+def _resolve_quality_engine(engine):
+    """Resolver for the locally-constructed QualityEngine (Phase 1)."""
+    from game.strategy.engine.quality_engine import QualityEngine
+    return QualityEngine(
+        registries=engine._registries
+    ).process_quality_improvement
+
+
+def _resolve_atmosphere_engine(engine):
+    """Resolver for the locally-constructed AtmosphereEngine (Phase 1)."""
+    from game.strategy.engine.atmosphere_engine import AtmosphereEngine
+    return AtmosphereEngine(
+        registries=engine._registries
+    ).process_atmosphere
+
+
+def _resolve_water_engine(engine):
+    """Resolver for the locally-constructed WaterEngine (Phase 1)."""
+    from game.strategy.engine.water_engine import WaterEngine
+    return WaterEngine(
+        registries=engine._registries
+    ).process_water_modification
 
 
 # ---------------------------------------------------------------------------
@@ -293,5 +335,72 @@ DEFAULT_TICK_PHASE_LIST: tuple[TickPhase, ...] = (
                 'moved_fleet_ids': ctx.moved_fleet_ids,
             },
         ),
+    ),
+)
+
+
+# ---------------------------------------------------------------------------
+# DEFAULT_END_OF_TURN_PHASE_LIST — 6 entries (PROJ-369 Phase 1).
+#
+# These descriptors describe the end-of-turn block that runs ONCE per
+# turn after the 100-tick loop finishes. The order is pinned by the
+# PROJ-284 invariant: organics_consumption writes ``last_food_ratio``
+# → happiness reads it → population_growth reads happiness. Reordering
+# would silently break gameplay.
+#
+# All six descriptors route through ``_time_phase`` (PROJ-343
+# T1.2-engines) so a raise becomes ``EnginePhaseError`` and the
+# rollback site in ``process_turn`` catches it.
+#
+# Phase 1 keeps QualityEngine / AtmosphereEngine / WaterEngine
+# locally constructed inside resolvers (matching the legacy semantics).
+# Phase 2 makes them injectable; the resolver helpers below are
+# replaced by inline ``lambda e: e.foo_engine.X`` accessors then.
+#
+# End-of-turn descriptors invoke with ``TickContext(tick=0, ...)`` —
+# tick=0 is impossible during the 1..100 loop and unambiguous as
+# "after the tick loop". See ``TickContext`` docstring.
+# ---------------------------------------------------------------------------
+
+DEFAULT_END_OF_TURN_PHASE_LIST: tuple[TickPhase, ...] = (
+    # PROJ-284 Phase 2: Food consumption runs BEFORE happiness so
+    # ``last_food_ratio`` is fresh for the happiness formula.
+    TickPhase(
+        phase_key='organics_consumption',
+        callable_target=lambda e: e.organics_consumption_engine.process_consumption,
+        args_resolver=lambda ctx: ((ctx.empires,), {}),
+    ),
+    # PROJ-284 Phase 3: Happiness derives between consumption and pop
+    # growth so ``pop.happiness`` carries no stale value into
+    # ``PopulationEngine._grow_species``.
+    TickPhase(
+        phase_key='happiness',
+        callable_target=lambda e: e.happiness_engine.process_happiness,
+        args_resolver=lambda ctx: ((ctx.empires, ctx.galaxy), {}),
+    ),
+    # PROJ-68: Population growth uses freshly derived happiness.
+    TickPhase(
+        phase_key='population_growth',
+        callable_target=lambda e: e.population_engine.process_population_growth,
+        args_resolver=lambda ctx: ((ctx.empires,), {}),
+    ),
+    # Quality / Atmosphere / Water are locally constructed in Phase 1;
+    # Phase 2 promotes them to injectable engines. The resolver helpers
+    # mirror ``_resolve_planet_modifier_effects`` semantics: a fresh
+    # instance per call (matches today's per-turn instantiation).
+    TickPhase(
+        phase_key='quality_improvement',
+        callable_target=_resolve_quality_engine,
+        args_resolver=lambda ctx: ((ctx.empires,), {}),
+    ),
+    TickPhase(
+        phase_key='atmosphere',
+        callable_target=_resolve_atmosphere_engine,
+        args_resolver=lambda ctx: ((ctx.empires,), {}),
+    ),
+    TickPhase(
+        phase_key='water_modification',
+        callable_target=_resolve_water_engine,
+        args_resolver=lambda ctx: ((ctx.empires,), {}),
     ),
 )
