@@ -17,6 +17,7 @@ import threading
 import time
 from dataclasses import replace
 from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
 from typing import Any, List
 
@@ -31,6 +32,7 @@ from game.strategy.services.replay_verification_coordinator import (
     ReplayVerificationCoordinator,
     shutdown_all_coordinators,
 )
+from game.strategy.services import replay_verification_coordinator as rvc_mod
 from game.strategy.services.replay_verification_sidecar import (
     VerificationStatus,
     read_verification_sidecar,
@@ -90,6 +92,16 @@ def _raising_replay_runner(record, **_kwargs):
     raise RuntimeError("simulated headless failure")
 
 
+class _JsonSafeProbe(Enum):
+    READY = "ready"
+    COUNT = 7
+
+
+class _ReprOnly:
+    def __repr__(self) -> str:
+        return "<repr-only>"
+
+
 @pytest.fixture(autouse=True)
 def _shutdown_all_coordinators_after_test():
     """Defensively shut down any stray coordinators a test forgot to
@@ -127,6 +139,40 @@ class TestCoordinatorBasics:
         assert sidecar.status == VerificationStatus.PASSED.name
         assert sidecar.error is None
         assert sidecar.diff is None
+
+    def test_json_safe_recurses_non_primitive_values(self):
+        payload = {
+            _JsonSafeProbe.READY: (
+                _JsonSafeProbe.COUNT,
+                {"nested": [_ReprOnly(), None]},
+            )
+        }
+
+        result = rvc_mod._json_safe(payload)
+
+        assert result == {
+            "_JsonSafeProbe.READY": [
+                7,
+                {"nested": ["<repr-only>", None]},
+            ]
+        }
+
+    def test_difference_to_dict_coerces_path_expected_and_actual(self):
+        from game.simulation.replay.replay_verifier import Difference
+
+        diff = Difference(
+            path=("teams", _JsonSafeProbe.COUNT),
+            expected=_JsonSafeProbe.READY,
+            actual=_ReprOnly(),
+        )
+
+        result = rvc_mod._difference_to_dict(diff)
+
+        assert result == {
+            "path": ["teams", 7],
+            "expected": "ready",
+            "actual": "<repr-only>",
+        }
 
     def test_fails_when_outcome_diverges(self, store: ReplayStore):
         record = _make_record("fail-1")

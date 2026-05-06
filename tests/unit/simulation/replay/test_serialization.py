@@ -266,6 +266,13 @@ class TestBoundarySerialization:
         with pytest.raises(ValueError):
             boundary_from_dict({"type": "hexagonal", "exit_policy": "destroy"})
 
+    def test_unknown_boundary_subtype_raises_type_error(self):
+        class HexBoundary:
+            pass
+
+        with pytest.raises(TypeError, match="HexBoundary"):
+            boundary_to_dict(HexBoundary())
+
 
 # ---------------------------------------------------------------------------
 # ModifierStack  (Task 2.2)
@@ -311,6 +318,28 @@ class TestModifierSerialization:
     def test_none_passes_through(self):
         assert modifier_stack_to_dict(None) is None
         assert modifier_stack_from_dict(None) is None
+
+
+class TestSerializationPrivateHelpers:
+    def test_list_to_vec_returns_existing_vector2_unchanged(self):
+        from game.simulation.replay.replay_serialization import _list_to_vec
+
+        vector = Vector2(3.0, 4.0)
+
+        result = _list_to_vec(vector)
+
+        assert result is vector
+
+    def test_formation_to_dict_falls_back_for_non_formation_object(self):
+        from game.simulation.replay.replay_serialization import _formation_to_dict
+
+        result = _formation_to_dict(object())
+
+        assert result == {
+            "shape": FormationShape.LINE_ASTERN.value,
+            "spacing": 0.0,
+            "custom_positions": [],
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -541,6 +570,84 @@ class TestReplayRecord:
         result = ReplayRecord.from_dict(d)
         assert result.sector_coords is None
         assert result.turn_number is None
+
+
+class TestComponentsRegistryHash:
+    def test_hash_is_stable_for_dict_components(self):
+        from game.simulation.replay.replay_serialization import (
+            compute_components_registry_hash,
+        )
+
+        class RegistryStub:
+            def __init__(self, components):
+                self._components = components
+
+            def get_components(self):
+                return self._components
+
+        first = RegistryStub(
+            {
+                "laser": {"mass": 5, "abilities": {"BeamWeaponAbility": {}}},
+                "armor": {"mass": 10, "hp": 100},
+            }
+        )
+        second = RegistryStub(
+            {
+                "armor": {"hp": 100, "mass": 10},
+                "laser": {"abilities": {"BeamWeaponAbility": {}}, "mass": 5},
+            }
+        )
+
+        first_hash = compute_components_registry_hash(first)
+        second_hash = compute_components_registry_hash(second)
+
+        assert first_hash == second_hash
+        assert first_hash.startswith("sha256:")
+        assert first_hash != "sha256:unknown"
+
+    def test_hash_accepts_objects_and_bad_to_dict_fallback(self):
+        from game.simulation.replay.replay_serialization import (
+            compute_components_registry_hash,
+        )
+
+        class RegistryStub:
+            def get_components(self):
+                return {
+                    "object_component": ComponentObject(),
+                    "bad_component": BadComponentObject(),
+                }
+
+        class ComponentObject:
+            def to_dict(self):
+                return {"mass": 3, "abilities": {"CrewRequired": 1}}
+
+        class BadComponentObject:
+            def to_dict(self):
+                raise RuntimeError("broken component export")
+
+            def __str__(self):
+                return "bad-component-string"
+
+        result = compute_components_registry_hash(RegistryStub())
+
+        assert result.startswith("sha256:")
+        assert result != "sha256:unknown"
+
+    def test_hash_returns_unknown_for_invalid_registry_shapes(self):
+        from game.simulation.replay.replay_serialization import (
+            compute_components_registry_hash,
+        )
+
+        class RaisingRegistry:
+            def get_components(self):
+                raise RuntimeError("registry unavailable")
+
+        class ListRegistry:
+            def get_components(self):
+                return []
+
+        assert compute_components_registry_hash(RaisingRegistry()) == "sha256:unknown"
+        assert compute_components_registry_hash(ListRegistry()) == "sha256:unknown"
 
 
 # ---------------------------------------------------------------------------

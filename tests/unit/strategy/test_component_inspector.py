@@ -7,11 +7,14 @@ import pytest
 from unittest.mock import Mock
 
 from game.strategy.services.component_inspector import (
+    extract_abilities_from_component,
     get_component_abilities,
+    get_ability_list,
     iterate_design_components,
     ship_has_ability,
     find_ship_with_ability,
     count_ability,
+    list_ship_abilities,
 )
 
 
@@ -47,6 +50,59 @@ class TestGetComponentAbilities:
         comp_obj = Mock(spec=['id', 'hp'])  # No 'abilities' attribute
         result = get_component_abilities(comp_obj)
         assert result == {}
+
+
+class TestExtractAbilitiesFromComponent:
+    """Tests for design-entry ability extraction."""
+
+    def test_inline_abilities_take_precedence(self):
+        comp_entry = {
+            "id": "registry_component",
+            "abilities": {"InlineAbility": {"value": 3}},
+        }
+        registry = {
+            "registry_component": {"abilities": {"RegistryAbility": {}}},
+        }
+
+        result = extract_abilities_from_component(comp_entry, registry)
+
+        assert result == {"InlineAbility": {"value": 3}}
+
+    def test_dict_entry_uses_registries_components_lookup(self):
+        registries = Mock()
+        registries.components = {
+            "warp_drive": {
+                "abilities": {
+                    "WarpJump": {"max_tonnage": 1500, "resource": "fuel"}
+                }
+            }
+        }
+
+        result = extract_abilities_from_component({"id": "warp_drive"}, registries)
+
+        assert result == {
+            "WarpJump": {"max_tonnage": 1500, "resource": "fuel"}
+        }
+
+    def test_string_entry_uses_plain_registry_lookup(self):
+        registry = {
+            "fuel_tank": {
+                "abilities": {
+                    "ResourceStorage": [{"resource": "fuel", "capacity": 50}]
+                }
+            }
+        }
+
+        result = extract_abilities_from_component("fuel_tank", registry)
+
+        assert result == {
+            "ResourceStorage": [{"resource": "fuel", "capacity": 50}]
+        }
+
+    def test_unknown_or_unregistered_component_returns_empty_dict(self):
+        assert extract_abilities_from_component({"id": "missing"}, {}) == {}
+        assert extract_abilities_from_component("missing", {}) == {}
+        assert extract_abilities_from_component({"id": "missing"}, None) == {}
 
 
 class TestIterateDesignComponents:
@@ -257,3 +313,58 @@ class TestCountAbility:
 
         result = count_ability(ship, "SomeAbility", {})
         assert result == 0
+
+
+class TestListShipAbilities:
+    """Tests for unique ability-name extraction."""
+
+    def test_returns_unique_ability_names_across_components(self):
+        ship = Mock()
+        ship.design_data = {
+            "layers": {
+                "outer": [
+                    {"id": "laser"},
+                    {"id": "spare_laser"},
+                    {"id": "fuel_tank"},
+                ],
+            }
+        }
+        registry = {
+            "laser": {"abilities": {"BeamWeaponAbility": {}, "CrewRequired": 2}},
+            "spare_laser": {"abilities": {"BeamWeaponAbility": {}}},
+            "fuel_tank": {"abilities": {"ResourceStorage": {}}},
+        }
+
+        result = list_ship_abilities(ship, registry)
+
+        assert set(result) == {
+            "BeamWeaponAbility",
+            "CrewRequired",
+            "ResourceStorage",
+        }
+
+
+class TestGetAbilityList:
+    """Tests for ability payload normalization."""
+
+    def test_missing_ability_returns_empty_list(self):
+        assert get_ability_list({}, "ResourceConsumption") == []
+
+    def test_list_payload_passes_through(self):
+        payload = [{"resource": "fuel"}, {"resource": "ammo"}]
+
+        result = get_ability_list({"ResourceConsumption": payload}, "ResourceConsumption")
+
+        assert result is payload
+
+    def test_dict_payload_is_wrapped(self):
+        payload = {"resource": "fuel", "amount": 1}
+
+        result = get_ability_list({"ResourceConsumption": payload}, "ResourceConsumption")
+
+        assert result == [payload]
+
+    def test_scalar_payload_is_wrapped_as_value_dict(self):
+        result = get_ability_list({"CrewRequired": 5}, "CrewRequired")
+
+        assert result == [{"value": 5}]

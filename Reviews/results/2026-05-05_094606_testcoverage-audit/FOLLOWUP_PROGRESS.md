@@ -1,6 +1,6 @@
 # Test Coverage Follow-Up Progress
 
-> Updated: 2026-05-05 by Codex
+> Updated: 2026-05-06 by Codex
 
 ## Scope Completed This Pass
 
@@ -75,6 +75,25 @@ paths or exercised the code through public facades.
   `GeometricPrimitive.sides < 3` circular fallback.
 - Production changes: none.
 
+### Replay Serialization And Component Inspector Helpers
+
+- Covered `game/strategy/services/replay_verification_coordinator.py`,
+  `game/simulation/replay/replay_serialization.py`, and
+  `game/strategy/services/component_inspector.py`.
+- Added tests to:
+  - `tests/unit/strategy/services/test_replay_verification_coordinator.py`
+  - `tests/unit/simulation/replay/test_serialization.py`
+  - `tests/unit/strategy/test_component_inspector.py`
+- New coverage includes `_json_safe` Enum/dict/list/tuple/fallback
+  coercion, `_difference_to_dict` coercion, replay serialization
+  fallback paths for `Vector2` passthrough, non-`FormationSpec`
+  formations, unknown boundary subtype errors, component-registry hash
+  dict/object/bad-`to_dict`/invalid-registry branches, and direct
+  strategy component-inspector helpers for registry lookup, string
+  component entries, unique ability listing, and ability payload
+  normalization.
+- Production changes: none.
+
 ## Verified False Positives Or Already-Covered Claims
 
 - `game/simulation/battle_runner.py` already has dedicated unit coverage
@@ -91,6 +110,9 @@ paths or exercised the code through public facades.
 - `game/services/llm/deepseek.py` already has unit coverage for missing
   API key, auth failures, rate limits, 5xx retry/exhaustion, non-JSON
   responses, and missing response fields.
+- `game/simulation/components/component_inspector.py` does not exist in
+  this checkout; the verified component-inspector helper gap maps to
+  `game/strategy/services/component_inspector.py`.
 
 ## Test Commands Run
 
@@ -101,6 +123,9 @@ paths or exercised the code through public facades.
 - Combined targeted suite:
   - `pytest tests/unit/ai/test_group_target_coordinator.py tests/unit/core/test_protocols_common.py tests/unit/simulation/combat/test_weapon_family_handlers.py tests/unit/simulation/combat/test_weapon_registry.py tests/unit/simulation/combat/test_weapon_firing_system.py tests/unit/strategy/facade/test_event_queries.py tests/unit/strategy/services/ability_sources/test_fleet.py tests/unit/strategy/services/test_effect_ability_display.py tests/unit/strategy/validation/test_colonize_validator.py tests/unit/strategy/validation/test_superweapon_validator.py tests/unit/strategy/engine/test_base_command_handler.py tests/unit/strategy/engine/test_command_ownership.py tests/unit/strategy/generation/density/test_density_primitive.py tests/unit/strategy/generation/density/test_geometric.py -q`
   - Result: `245 passed`
+- Replay serialization and component-inspector packet:
+  - `pytest tests/unit/strategy/services/test_replay_verification_coordinator.py tests/unit/strategy/test_component_inspector.py tests/unit/simulation/replay/test_serialization.py -q`
+  - Result: `74 passed`
 
 ## Suggested Next Work Packets
 
@@ -110,17 +135,15 @@ Continue with P1/P2 items that were not touched in this pass:
   `production_engine.py`, `consumable_management_engine.py`,
   `fleet_movement_engine.py`, `component_activation_engine.py`,
   `organics_consumption_engine.py`, and `water_engine.py`.
-- Simulation: `component_inspector.py`, `ship_combat_engine.py`,
-  `ship_resource_manager.py`, and remaining `weapon_firing_system.py`
-  branch coverage beyond existing integration tests.
+- Simulation: `ship_combat_engine.py`, `ship_resource_manager.py`, and
+  remaining `weapon_firing_system.py` branch coverage beyond existing
+  integration tests.
 - UI business logic: `strategy_fleet_command_router.py`,
   `workshop_viewmodel_selection.py`, `transfer_controller.py`,
   `battle_results_data.py`, `strategy_click_dispatcher.py`, and
   `transfer_view_model.py`.
 - Strategy data/services: `planet.py` order deserialization corruption
-  paths, `strategy/services/component_inspector.py`,
-  `replay_verification_coordinator._json_safe`, and
-  `replay_serialization.py` P2 paths.
+  paths.
 
 Future agents should repeat the pattern used here: verify with `rg` and
 existing tests first, add focused tests only for real gaps, and update this
