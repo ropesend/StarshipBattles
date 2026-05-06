@@ -103,19 +103,34 @@ class EmpireWriteService:
         """Prune fleets that lost all their ships in a battle.
 
         Mirrors the logic in `combat/post_battle_hook._prune_empty_fleets`
-        (lines 200-218). Routed through ``Empire.remove_fleet`` so the
-        existing pursuer-cancellation + galaxy-unregister + event-bus
-        emission semantics are preserved bit-identically.
+        (lines 200-218). When the empire exposes a ``remove_fleet`` method
+        (production ``Empire`` class), delegate so the pursuer-cancellation
+        + galaxy-unregister + event-bus semantics are preserved. When it
+        doesn't (test fakes), fall back to a direct ``fleets.remove(...)``
+        list operation — bit-identical to the legacy inline pruning.
 
         Returns the list of removed fleet IDs (for caller logging).
         """
+        import logging
+        log = logging.getLogger(__name__)
         removed_ids: list = []
         for team_id, fleets in list(fleets_by_team_id.items()):
             empire = empires_by_team_id.get(team_id)
             if empire is None:
                 continue
+            empire_fleets = getattr(empire, "fleets", None)
+            if empire_fleets is None:
+                continue
             for fleet in list(fleets):
-                if not fleet.ships and fleet in empire.fleets:
-                    empire.remove_fleet(fleet, event_bus=event_bus)
+                if not fleet.ships and fleet in empire_fleets:
+                    if hasattr(empire, "remove_fleet"):
+                        empire.remove_fleet(fleet, event_bus=event_bus)
+                    else:
+                        try:
+                            empire_fleets.remove(fleet)
+                        except ValueError:
+                            log.warning(
+                                f"Fleet {fleet.id} not found on empire while pruning."
+                            )
                     removed_ids.append(fleet.id)
         return removed_ids

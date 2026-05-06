@@ -152,8 +152,9 @@ class ColonizeHandler(BaseOrderHandler):
             logger.warning("_deploy_drop_pod: No drop pod found in fleet")
             return
 
-        # Remove the drop pod from the ship
-        drop_pod = ship.carried_items.pop(item_index)
+        # Remove the drop pod from the ship.
+        # PROJ-370 Phase 5: route through IShipInstanceMutator.
+        drop_pod = self._get_ship_mutator().pop_carried_item(ship, item_index)
         design_data = drop_pod.get('design_data', {})
 
         facility = PlanetaryFacility(

@@ -54,8 +54,21 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
     `EnvironmentalDamage` (rate) and `FuelDrain` (rate) at the fleet's hex.
     """
 
-    def __init__(self):
-        """Initialize the engine. PROJ-300: no longer takes AreaEffectManager."""
+    def __init__(self, ship_mutator=None):
+        """Initialize the engine. PROJ-300: no longer takes AreaEffectManager.
+
+        Args:
+            ship_mutator: PROJ-370 IShipInstanceMutator. Lazy-defaulted.
+        """
+        self._ship_mutator = ship_mutator
+
+    def _get_ship_mutator(self):
+        if self._ship_mutator is None:
+            from game.strategy.services.ship_instance_write_service import (
+                ShipInstanceWriteService,
+            )
+            self._ship_mutator = ShipInstanceWriteService()
+        return self._ship_mutator
 
     def _validate_tick_inputs(self, empires) -> None:
         """PROJ-251: Validate preconditions before mutating state."""
@@ -191,15 +204,17 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
         new_hp = max(0, current_hp - damage)
         actual_damage = current_hp - new_hp
 
-        # Update ship HP
+        # Update ship HP.
+        # PROJ-370 Phase 5: route through IShipInstanceMutator.
+        mutator = self._get_ship_mutator()
         if new_hp < max_hp:
-            ship.current_hp = new_hp
+            mutator.set_current_hp(ship, new_hp)
         else:
-            ship.current_hp = None  # Reset to full (won't happen with damage > 0)
+            mutator.set_current_hp(ship, None)  # Reset to full
 
         # Check for destruction
         if new_hp <= 0:
-            ship.is_alive = False
+            mutator.set_is_alive(ship, False)
 
         return actual_damage
 

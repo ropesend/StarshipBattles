@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** phase_2 (PostBattleHook prunes fleets — needs `IFleetMutator` already wired)
 **Review Mode:** standard
 **Files (planned):** see manifest.md "Phase 5: ShipInstance" section

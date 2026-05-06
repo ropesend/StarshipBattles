@@ -195,6 +195,11 @@ class TurnEngineConfig:
                 EmpireWriteService,
             )
             empire_mutator = EmpireWriteService()
+        if ship_mutator is None:
+            from game.strategy.services.ship_instance_write_service import (
+                ShipInstanceWriteService,
+            )
+            ship_mutator = ShipInstanceWriteService()
 
         return cls(
             movement_engine=FleetMovementEngine(fleet_mutator=fleet_mutator),
@@ -219,7 +224,9 @@ class TurnEngineConfig:
                 order_processor=order_processor,
                 action_time_resolver=ActionTimeResolver(),
             ),
-            environmental_engine=EnvironmentalHazardEngine(),
+            environmental_engine=EnvironmentalHazardEngine(
+                ship_mutator=ship_mutator,
+            ),
             planet_energy_engine=PlanetEnergyEngine(
                 registries=registries,
                 event_bus=event_bus,

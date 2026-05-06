@@ -20,13 +20,13 @@
 | 2. Fleet: `IFleetMutator` + route engine writes + AST guard | Complete | [phase_2_checklist.md](phase_2_checklist.md) | phase_1 |
 | 3. Planet: `IPlanetMutator` + route engine writes + AST guard | Complete | [phase_3_checklist.md](phase_3_checklist.md) | phase_1 |
 | 4. Empire: `IEmpireMutator` + route engine writes + AST guard | Complete | [phase_4_checklist.md](phase_4_checklist.md) | phase_2, phase_3 |
-| 5. ShipInstance: `IShipInstanceMutator` + post-battle hook + AST guard | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | phase_2 |
+| 5. ShipInstance: `IShipInstanceMutator` + post-battle hook + AST guard | Complete | [phase_5_checklist.md](phase_5_checklist.md) | phase_2 |
 
 ## Current State
 **Last Updated:** 2026-05-06
-**Active Phase:** Phase 5 (ShipInstance)
-**Last Action:** Phase 4 complete. `EmpireWriteService` at `game/strategy/services/empire_write_service.py` implements `IEmpireMutator` (single owner) with 9 methods including `prune_empty_fleets` (lifted from `combat/post_battle_hook._prune_empty_fleets`). Added `Empire.remove_colony` 1-line helper for symmetry with `add_colony`. Wired in `GameSession.__init__`, threaded through `TurnEngineConfig.create_default()` into HarvestingEngine. Routed writes: `superweapon_order_processor.py:361+609` (colony removal), `system_destroyer.py:161` (colony removal), `harvesting_engine.py:248` (max_storage replace via `replace_max_storage`). Empire AST guard live with 4 attributes + 6 allowlisted paths (incl. UI battle_setup containers + EmpireEconomySnapshot calculator that share attribute names). New mutator methods: `replace_max_storage`. 4758 strategy tests pass.
-**Next Action:** Phase 5 — implement `ShipInstanceWriteService`, route post_battle_hook + environmental_hazard_engine writes, flip ShipInstance AST guard hot.
+**Active Phase:** All complete — awaiting final audit + user verification
+**Last Action:** Phase 5 complete. `ShipInstanceWriteService` at `game/strategy/services/ship_instance_write_service.py` implements `IShipInstanceMutator` (single owner, 14 methods) with cargo/consumable forwarding to ShipCargoManager/ShipConsumableManager. Wired in `GameSession.__init__`, threaded through `TurnEngineConfig.create_default()` into EnvironmentalHazardEngine. PostBattleHook signature gained `ship_mutator`/`fleet_mutator`/`empire_mutator` kwargs (lazy-defaulted for backward compat). Routed writes: `post_battle_hook.py` (replace_components+invalidate_cache, set_is_alive, set_is_derelict, set_current_hp, increment_battles_survived, fleet ship removal via fleet_mutator, empty-fleet pruning via empire_mutator), `environmental_hazard_engine.py:196-202` (current_hp + is_alive on env damage), `order_handlers/colonize.py:156` (carried_items pop), `order_handlers/transfer_branches.py:172+269` (carried_items append/pop). BaseOrderHandler gained `ship_mutator` kwarg + `_get_ship_mutator()` helper. ShipInstance AST guard live with 12 attributes + 19 allowlisted paths (mostly simulation/ Ship class which shares attribute names but is out of scope per design). 4770 strategy tests pass.
+**Next Action:** All phases complete. Final user smoke (3-empire end-turn, savegame round-trip).
 **Blockers:** None.
 
 ## Overview

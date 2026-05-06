@@ -154,16 +154,54 @@ BOUNDARIES: list[BoundarySpec] = [
     ),
     BoundarySpec(
         data_class_name="ShipInstance",
-        target_attributes=frozenset(),
+        target_attributes=frozenset({
+            "is_alive",
+            "is_derelict",
+            "current_hp",
+            "components",
+            "cargo_contents",
+            "carried_items",
+            "consumable_levels",
+            "component_toggles",
+            "activation_states",
+            "experience",
+            "kills",
+            "battles_survived",
+        }),
         allowlist_paths=frozenset({
+            # Strategy ShipInstance + co-located helpers (PROJ-87 read-side delegates).
             "game/strategy/data/ship_instance.py",
-            "game/strategy/services/ship_instance_write_service.py",
             "game/strategy/data/ship_consumable_manager.py",
             "game/strategy/data/ship_cargo_manager.py",
             "game/strategy/data/ship_instance_serializer.py",
             "game/strategy/data/ship_instance_bridge.py",
+            # Owner service (PROJ-370 IShipInstanceMutator).
+            "game/strategy/services/ship_instance_write_service.py",
+            # PostBattleHook is the canonical battle->strategy write
+            # boundary; it threads `ship_mutator` lazily.
+            "game/strategy/combat/post_battle_hook.py",
+            # Simulation-side `Ship`, `Component`, `BattleState`, etc.
+            # share attribute names with strategy ShipInstance but are
+            # different classes. Per PROJ-370 design: simulation-layer
+            # writes are out of scope.
+            "game/simulation/battle_state.py",
+            "game/simulation/projectile_manager.py",
+            "game/simulation/combat/damage_calculator.py",
+            "game/simulation/components/component_health_manager.py",
+            "game/simulation/components/component_stats_calculator.py",
+            "game/simulation/entities/ship_combat_engine.py",
+            "game/simulation/entities/ship_combat_manager.py",
+            "game/simulation/entities/ship_component_manager.py",
+            "game/simulation/entities/ship_design_stats.py",
+            "game/simulation/entities/ship_layer_manager.py",
+            "game/simulation/managers/retreat_manager.py",
+            "game/simulation/services/registry_loader.py",
+            "game/simulation/services/vehicle_design_service.py",
+            # Workshop UI mutates a Vehicle/design components list, not a
+            # strategy ShipInstance.
+            "game/ui/screens/builder/layer_panel.py",
         }),
-        description="Phase 5 flips the ShipInstance disallowlist on.",
+        description="Phase 5: ShipInstance boundary live (PROJ-370).",
     ),
 ]
 

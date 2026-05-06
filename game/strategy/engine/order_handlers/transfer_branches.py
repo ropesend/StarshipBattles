@@ -169,7 +169,8 @@ class _TransferDispatchMixin:
                 continue  # No ship has capacity
             removed = planet.remove_from_staging_yard(i)
             if removed:
-                target_ship.carried_items.append(removed)
+                # PROJ-370 Phase 5: route through IShipInstanceMutator.
+                self._get_ship_mutator().add_carried_item(target_ship, removed)
                 loaded += 1
 
         return loaded
@@ -266,7 +267,8 @@ class _TransferDispatchMixin:
                 if pod_name and item.get("name") != pod_name:
                     continue
                 if planet.add_to_staging_yard(item):
-                    ship.carried_items.pop(i)
+                    # PROJ-370 Phase 5: route through IShipInstanceMutator.
+                    self._get_ship_mutator().pop_carried_item(ship, i)
                     unloaded += 1
 
         return unloaded
