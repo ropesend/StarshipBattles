@@ -57,8 +57,11 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         self.fleet.add_order(Order(OrderType.LOAD_POPULATION, {'direction': 'load', 'cargo_type': 'passengers', 'amount': 100, 'planet_id': 10}))
 
         from game.core.validation import ValidationResult
+        # PROJ-368 Phase 4: live transfer logic moved to TransferHandler;
+        # patch the handler's passenger-load dispatcher to short-circuit.
+        transfer_handler = self.processor._handler_registry.get(OrderType.TRANSFER)
         with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult.success()):
-            with patch.object(self.processor, '_execute_load', return_value=100):
+            with patch.object(transfer_handler, '_dispatch_load_planet_passengers', return_value=100):
                 result = self.processor.process_transfer(self.fleet, self.empire, self.galaxy)
                 self.assertTrue(result.success)
 
@@ -80,8 +83,11 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         self.galaxy.get_planets_at_global_hex.return_value = [colony]
 
         from game.core.validation import ValidationResult
+        # PROJ-368 Phase 4: short-circuit the passenger-load dispatcher on
+        # the live TransferHandler.
+        transfer_handler = self.processor._handler_registry.get(OrderType.TRANSFER)
         with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult.success()):
-            with patch.object(self.processor, '_execute_load', return_value=1000):
+            with patch.object(transfer_handler, '_dispatch_load_planet_passengers', return_value=1000):
                 result = self.processor.process_transfer(self.fleet, self.empire, self.galaxy)
                 self.assertTrue(result.success)
                 self.assertEqual(result.amount_transferred, 1000)
