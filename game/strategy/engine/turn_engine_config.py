@@ -51,3 +51,9 @@ class TurnEngineConfig:
     organics_consumption_engine: Optional[Any] = None
     # PROJ-284 Phase 3: Derives happiness between consumption and pop growth.
     happiness_engine: Optional[Any] = None
+    # PROJ-369 Phase 2: per-turn terraforming engines now injectable.
+    # Previously constructed inline inside `TurnEngine.process_turn`
+    # (function-local imports — non-injectable).
+    quality_engine: Optional[Any] = None
+    atmosphere_engine: Optional[Any] = None
+    water_engine: Optional[Any] = None

@@ -170,40 +170,13 @@ def _resolve_planet_modifier_effects(engine):
 
 
 # ---------------------------------------------------------------------------
-# End-of-turn descriptor resolvers (PROJ-369 Phase 1).
-#
-# QualityEngine, AtmosphereEngine, and WaterEngine are constructed
-# locally inside ``process_turn`` today (function-local imports). Phase 1
-# preserves that semantics by wrapping each in a per-call resolver that
-# mirrors ``_resolve_planet_modifier_effects`` above. Phase 2 promotes
-# them to injectable engines via ``TurnEngineConfig``; the resolvers
-# below are then deleted in favor of inline ``lambda e: e.foo_engine.X``
-# accessors.
+# PROJ-369 Phase 2: Quality / Atmosphere / Water engines are now
+# injectable via TurnEngineConfig + TurnEngine lazy properties (mirror
+# of the existing 15 sub-engines). The end-of-turn descriptors below
+# resolve through ``e.quality_engine`` / ``e.atmosphere_engine`` /
+# ``e.water_engine`` instead of constructing fresh instances per call.
+# Phase 1's per-call resolver helpers are deleted.
 # ---------------------------------------------------------------------------
-
-
-def _resolve_quality_engine(engine):
-    """Resolver for the locally-constructed QualityEngine (Phase 1)."""
-    from game.strategy.engine.quality_engine import QualityEngine
-    return QualityEngine(
-        registries=engine._registries
-    ).process_quality_improvement
-
-
-def _resolve_atmosphere_engine(engine):
-    """Resolver for the locally-constructed AtmosphereEngine (Phase 1)."""
-    from game.strategy.engine.atmosphere_engine import AtmosphereEngine
-    return AtmosphereEngine(
-        registries=engine._registries
-    ).process_atmosphere
-
-
-def _resolve_water_engine(engine):
-    """Resolver for the locally-constructed WaterEngine (Phase 1)."""
-    from game.strategy.engine.water_engine import WaterEngine
-    return WaterEngine(
-        registries=engine._registries
-    ).process_water_modification
 
 
 # ---------------------------------------------------------------------------
@@ -384,23 +357,23 @@ DEFAULT_END_OF_TURN_PHASE_LIST: tuple[TickPhase, ...] = (
         callable_target=lambda e: e.population_engine.process_population_growth,
         args_resolver=lambda ctx: ((ctx.empires,), {}),
     ),
-    # Quality / Atmosphere / Water are locally constructed in Phase 1;
-    # Phase 2 promotes them to injectable engines. The resolver helpers
-    # mirror ``_resolve_planet_modifier_effects`` semantics: a fresh
-    # instance per call (matches today's per-turn instantiation).
+    # PROJ-369 Phase 2: Quality / Atmosphere / Water engines are now
+    # injectable via TurnEngineConfig and resolved through the
+    # TurnEngine lazy properties (same shape as the other 15
+    # sub-engines).
     TickPhase(
         phase_key='quality_improvement',
-        callable_target=_resolve_quality_engine,
+        callable_target=lambda e: e.quality_engine.process_quality_improvement,
         args_resolver=lambda ctx: ((ctx.empires,), {}),
     ),
     TickPhase(
         phase_key='atmosphere',
-        callable_target=_resolve_atmosphere_engine,
+        callable_target=lambda e: e.atmosphere_engine.process_atmosphere,
         args_resolver=lambda ctx: ((ctx.empires,), {}),
     ),
     TickPhase(
         phase_key='water_modification',
-        callable_target=_resolve_water_engine,
+        callable_target=lambda e: e.water_engine.process_water_modification,
         args_resolver=lambda ctx: ((ctx.empires,), {}),
     ),
 )

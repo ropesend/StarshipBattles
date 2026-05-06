@@ -179,6 +179,42 @@ class TestLazyPropertyDefaults:
         assert isinstance(he, HappinessEngine)
         assert engine.happiness_engine is he
 
+    # PROJ-369 Phase 2: Quality / Atmosphere / Water are now injectable
+    # via TurnEngineConfig. The lazy properties mirror the existing 15
+    # sub-engines.
+    def test_quality_engine_property_returns_default_class_and_is_idempotent(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.quality_engine import QualityEngine
+
+        engine = TurnEngine(registries=fresh_registries)
+
+        qe = engine.quality_engine
+        assert isinstance(qe, QualityEngine)
+        assert engine.quality_engine is qe
+
+    def test_atmosphere_engine_property_returns_default_class_and_is_idempotent(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.atmosphere_engine import AtmosphereEngine
+
+        engine = TurnEngine(registries=fresh_registries)
+
+        ae = engine.atmosphere_engine
+        assert isinstance(ae, AtmosphereEngine)
+        assert engine.atmosphere_engine is ae
+
+    def test_water_engine_property_returns_default_class_and_is_idempotent(
+        self, fresh_registries
+    ):
+        from game.strategy.engine.water_engine import WaterEngine
+
+        engine = TurnEngine(registries=fresh_registries)
+
+        we = engine.water_engine
+        assert isinstance(we, WaterEngine)
+        assert engine.water_engine is we
+
 
 class TestCreateDefaultTurnEngineFactory:
     """PROJ-353A Tier-7 (T2.6): pin `create_default_turn_engine` factory.

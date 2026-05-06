@@ -96,6 +96,9 @@ if TYPE_CHECKING:
         IComponentActivationEngine,
         IOrganicsConsumptionEngine,
         IHappinessEngine,
+        IQualityEngine,
+        IAtmosphereEngine,
+        IWaterEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -164,6 +167,9 @@ class TurnEngine:
         component_activation_engine: Optional['IComponentActivationEngine'] = None,
         organics_consumption_engine: Optional['IOrganicsConsumptionEngine'] = None,
         happiness_engine: Optional['IHappinessEngine'] = None,
+        quality_engine: Optional['IQualityEngine'] = None,
+        atmosphere_engine: Optional['IAtmosphereEngine'] = None,
+        water_engine: Optional['IWaterEngine'] = None,
         race_registry: Optional['IRaceRegistry'] = None,
         event_bus=None,
         tick_phases: Optional[tuple['TickPhase', ...]] = None,
@@ -222,6 +228,16 @@ class TurnEngine:
         # PROJ-284 Phase 3: happiness = base_happiness * last_food_ratio * habitability
         self._happiness_engine: Optional['IHappinessEngine'] = (
             happiness_engine or cfg.happiness_engine
+        )
+        # PROJ-369 Phase 2: per-turn terraforming engines now injectable.
+        self._quality_engine: Optional['IQualityEngine'] = (
+            quality_engine or cfg.quality_engine
+        )
+        self._atmosphere_engine: Optional['IAtmosphereEngine'] = (
+            atmosphere_engine or cfg.atmosphere_engine
+        )
+        self._water_engine: Optional['IWaterEngine'] = (
+            water_engine or cfg.water_engine
         )
 
         # PROJ-365: Per-tick phase descriptor list. Defaults to the
@@ -491,6 +507,42 @@ class TurnEngine:
             # base_happiness.
             self._happiness_engine = HappinessEngine(race_registry=self._race_registry)
         return self._happiness_engine
+
+    @property
+    def quality_engine(self) -> 'IQualityEngine':
+        """Return quality engine, lazily creating default if not injected.
+
+        PROJ-369 Phase 2: per-turn planet-quality processing, now
+        injectable via TurnEngineConfig.
+        """
+        if self._quality_engine is None:
+            from game.strategy.engine.quality_engine import QualityEngine
+            self._quality_engine = QualityEngine(registries=self._registries)
+        return self._quality_engine
+
+    @property
+    def atmosphere_engine(self) -> 'IAtmosphereEngine':
+        """Return atmosphere engine, lazily creating default if not injected.
+
+        PROJ-369 Phase 2: per-turn atmosphere processing, now
+        injectable via TurnEngineConfig.
+        """
+        if self._atmosphere_engine is None:
+            from game.strategy.engine.atmosphere_engine import AtmosphereEngine
+            self._atmosphere_engine = AtmosphereEngine(registries=self._registries)
+        return self._atmosphere_engine
+
+    @property
+    def water_engine(self) -> 'IWaterEngine':
+        """Return water engine, lazily creating default if not injected.
+
+        PROJ-369 Phase 2: per-turn water-level processing, now
+        injectable via TurnEngineConfig.
+        """
+        if self._water_engine is None:
+            from game.strategy.engine.water_engine import WaterEngine
+            self._water_engine = WaterEngine(registries=self._registries)
+        return self._water_engine
 
     def process_turn(
         self,
