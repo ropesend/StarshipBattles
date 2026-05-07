@@ -11,7 +11,6 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
 from game.strategy.engine.order_processor import OrderProcessor
@@ -20,6 +19,7 @@ from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 from tests.conftest import make_mock_ship_instance
+from tests.fixtures.galaxy_fixtures import make_galaxy_stub
 
 
 class InstantBattleResolver(IBattleResolver):
@@ -64,19 +64,11 @@ class InstantBattleResolver(IBattleResolver):
 def galaxy():
     """Create a minimal Galaxy with registry support for fleet lifecycle tests.
 
-    PROJ-372 Phase 3: Galaxy now uses GalaxyState for shared state.
-    Uses Galaxy.__new__ to skip the heavy __init__ (file I/O, generators),
-    then attaches a fresh GalaxyState + service delegates.
+    PROJ-378: delegates to the shared `make_galaxy_stub()` factory; the
+    `gal.warp_points = []` test-specific attribute is preserved.
     """
-    from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry
-    from game.strategy.data.galaxy_spatial_index import GalaxySpatialIndex
-    from game.strategy.data.galaxy_state import GalaxyState
-
-    gal = Galaxy.__new__(Galaxy)
-    gal._state = GalaxyState(radius=300)
+    gal = make_galaxy_stub(radius=300)
     gal.warp_points = []
-    gal._registry = GalaxyEntityRegistry(gal._state)
-    gal._spatial = GalaxySpatialIndex(gal._state)
     return gal
 
 

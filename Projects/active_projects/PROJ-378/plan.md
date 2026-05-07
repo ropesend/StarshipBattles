@@ -16,15 +16,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Shared `make_galaxy_stub()` fixture + migrate `test_galaxy_cleanup.py` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Sweep remaining `Galaxy.__new__` callers + opportunistic doc cleanup | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Sweep remaining `Galaxy.__new__` callers + opportunistic doc cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 **Depends on:** none — PROJ-372 is closed; this cleans up its trailing test debt.
 
 ## Current State
 **Last Updated:** 2026-05-07
-**Active Phase:** Phase 1 complete; ready for Phase 2.
-**Last Action:** Phase 1 shipped — `tests/fixtures/galaxy_fixtures.py::make_galaxy_stub()` added + `tests/unit/strategy/data/conftest.py` thin bridge added; 3 fixtures in `test_galaxy_cleanup.py` migrated. 18/18 passing (was 3/18 with 15 setup errors). One incidental fix: `planet.radius_hexes = 0` on the `MagicMock` planet in `TestGalaxyGetAllFleetsInSystem` (post-PROJ-372 `_spatial` reads this field; pre-PROJ-372 inline method didn't).
-**Next Action:** Phase 2 — sweep `tests/integration/strategy/test_empire.py` (5 sites) and `tests/integration/strategy/test_fleet_registration_lifecycle.py` (1 inline factory); optional doc note in `docs/02_PATTERNS.md`.
+**Active Phase:** All phases complete; ready for review.
+**Last Action:** Phase 2 shipped — `test_empire.py` (5 sites) and `test_fleet_registration_lifecycle.py` (1 inline factory) migrated to `make_galaxy_stub()`. Zero `Galaxy.__new__(Galaxy)` call sites + zero `patch.object(Galaxy, '__init__')` call sites remain in `tests/`. Optional `docs/02_PATTERNS.md` note skipped per design Q4.
+**Next Action:** Run sharded suite once; OpenCode delegate review + verifier subagent + remediations; closeout.
 **Blockers:** None.
 
 ## Overview
