@@ -68,7 +68,7 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 
 - **`Tools/test_sharded/`** — Sharded parallel runner. Auto-detects CPU count with greedy load balancing from `.test_durations.json`. This is the canonical full-suite runner.
 - **`Tools/audit_shrink/`** — Code shrinkage audit: vulture (dead code), radon (complexity), clone detector (near-duplicate functions), orphan/dependency analysis. See `.opencode/skills/ocode-audit-shrink/SKILL.md` for the agent-driven Phase 2 workflow.
-- **`requirements-dev.txt`** includes radon, vulture, Pillow, numpy, opencv-python, matplotlib, fastapi, uvicorn, dearpygui, and QA tooling. Runtime-only deps in `requirements.txt`.
+- **`requirements-dev.txt`** includes radon, vulture, tiktoken, Pillow, numpy, opencv-python, matplotlib, fastapi, uvicorn, dearpygui, and QA tooling. Runtime-only deps in `requirements.txt`.
 
 ## Project Management
 

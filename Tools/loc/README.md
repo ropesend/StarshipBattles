@@ -8,7 +8,7 @@ Provides a quick overview of project size and test-to-source ratio. Useful for t
 
 ## Requirements
 
-No additional dependencies beyond the base project.
+Requires `tiktoken`, installed via `requirements-dev.txt`.
 
 ## Usage
 
