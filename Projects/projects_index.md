@@ -4,6 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-378 | Galaxy Cleanup Test Pattern Update (post-PROJ-372 facade-delegate) | Planning | 2026-05-06 | 2026-05-06 |
+| PROJ-377 | PROJ-372 Phase 5 Leftovers: Golden-Save Fixture + Pathfinding Shim Sweep | Planning | 2026-05-06 | 2026-05-06 |
+| PROJ-376 | BuildQueueScreen Lifecycle Refactor (PROJ-373 Phase 2 follow-up) | Planning | 2026-05-06 | 2026-05-06 |
 | PROJ-375 | Audit-shrink cleanup 2026-05-05 | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-374 | Strategy grid surface cache | Planning | 2026-05-05 | 2026-05-05 |
 | PROJ-373 | Build queue open latency | Planning | 2026-05-05 | 2026-05-05 |

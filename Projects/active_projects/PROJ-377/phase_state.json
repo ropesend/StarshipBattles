@@ -1,0 +1,81 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_1": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/fixtures/saves/galaxy_proj372_baseline.json",
+        "tests/fixtures/saves/galaxy_proj372_populated.json",
+        "tests/fixtures/saves/_capture_baseline.py",
+        "tests/integration/strategy/test_save_round_trip.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": [
+        "phase_1"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/superweapon_order_processor.py",
+        "game/strategy/facade/slices/planet_slice.py",
+        "game/ui/screens/strategy_screen.py",
+        "game/ui/screens/strategy_colonization.py",
+        "Projects/active_projects/PROJ-377/decisions.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": [
+        "phase_2"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/data/test_pathfinding_shim_scope.py",
+        "game/strategy/data/pathfinding.py",
+        "Projects/active_projects/PROJ-372/decisions.md",
+        "docs/systems/strategy_layer.md",
+        "Projects/active_projects/PROJ-377/plan.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_branch": "proj/PROJ-377/main",
+  "project_id": "PROJ-377",
+  "reviews": {},
+  "schema_version": 1
+}
