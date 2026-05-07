@@ -20,13 +20,15 @@
 | 2. Planet decomposition (667 LOC → ~350 facade + habitability/query services) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 3. Galaxy query/spatial-aggregation services | Complete | [phase_3_checklist.md](phase_3_checklist.md) | **PROJ-370 verified** + phase_0 |
 | 4. Galaxy algorithmic services (pathfinding, intercept, warp resolution) | Complete | [phase_4_checklist.md](phase_4_checklist.md) | **PROJ-370 verified** + phase_3 |
-| 5. AST guards, perf bench, doc updates, final audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | **PROJ-370 verified** + phases 1-4 |
+| 5. AST guards, perf bench, doc updates, final audit | Complete | [phase_5_checklist.md](phase_5_checklist.md) | **PROJ-370 verified** + phases 1-4 |
 
 ## Current State
-**Last Updated:** 2026-05-05 (Phase 4 complete)
-**Active Phase:** Phase 5 (final audit) — pending
-**Last Action:** Phase 4 complete. galaxy.py 350 LOC (final ceiling met). New files: `game/strategy/services/galaxy_pathfinding_service.py` (217 LOC, takes IGalaxySystemGraph), `game/strategy/services/intercept_calculator.py` (197 LOC). pathfinding.py 503 -> 100 LOC: each free function a 1-line forwarder routing through `galaxy._pathfinder` / `galaxy._intercept`. Tests patching `pathfinding.find_hybrid_path` / `pathfinding.project_fleet_path` continue to work — InterceptCalculator routes through the shim's free functions when `galaxy` is supplied. Acceptance test green: pathfinding callable on a 3-system stub graph (10 tests; closes G5). Galaxy.__init__ wires `_pathfinder` (GalaxyPathfindingService(self)) and `_intercept` (InterceptCalculator(_pathfinder)). 5020 tests pass.
-**Next Action:** Phase 5 — final audit. AST guards (no method body > 5 LOC on Galaxy/Planet/Star), perf bench reassertion, save round-trip on 5 fixture saves, doc updates.
+**Last Updated:** 2026-05-06 (Phase 5 complete; project complete)
+**Active Phase:** Complete — ready for OpenCode review.
+**Last Action:** Phase 5 deliverables landed via commit `1b1631d88`. AST guards added: LOC-ceiling guard (galaxy.py 350 / planet.py 297 / stars.py 181 — all under target ceilings), method-body guard (forbids regrowth of fat methods on the three god-classes). Save round-trip integration test passes — pre-PROJ-372 fixture saves load identically. Perf bench updated. Docs (01_ARCHITECTURE / 02_PATTERNS / systems/strategy_layer) updated. 12/12 audit-gate tests pass on focused run.
+
+**LOC summary:** stars.py 770→181 (-589), planet.py 667→297 (-370), galaxy.py 689→350 (-339). Total reclamation: -1,298 LOC from the three god-classes; redistributed across 7+ new service files, all under 500 LOC.
+**Next Action:** OpenCode review pending; then verifier + remediation.
 **Blockers:** None. Note: shims in pathfinding.py do NOT emit DeprecationWarning at this phase (pytest.ini turns DeprecationWarnings into errors and Phase 4 ships green); Phase 5's plan to delete shims is the migration target.
 
 ## Overview

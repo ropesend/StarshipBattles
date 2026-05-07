@@ -9,8 +9,17 @@
 **Review Mode:** cumulative (Phases 0-5; final audit gate)
 **Files (planned):** see manifest.md Phase 5 row group
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Lock in the post-decomposition shape: delete the deprecated `pathfinding.py` shims (now that all 82 callers should be migrated to services), add a "no method body > 5 LOC on Galaxy/Planet/Star" AST guard, re-run the Phase 0 perf bench and assert within ±5%, run save round-trip on 5 fixture saves, update `docs/systems/strategy_layer.md` + `docs/02_PATTERNS.md` + `docs/01_ARCHITECTURE.md`, and run the final audit gate.
+
+**Closeout (2026-05-06, commit `1b1631d88`):** Phase 5 deliverables landed:
+- LOC-ceiling AST guard: `tests/unit/strategy/data/test_galaxy_planet_star_loc_ceilings.py` (galaxy.py 350 / planet.py 297 / stars.py 181 — all under their targets)
+- Method-body AST guard: `tests/unit/strategy/data/test_no_method_body_over_5_loc.py` (forbids regrowth of fat methods on the three god-classes)
+- Save round-trip integration: `tests/integration/strategy/test_save_round_trip.py` — pre-PROJ-372 fixture saves load identically post-PROJ-372
+- Perf bench updated: `tests/performance/bench_galaxy_planet_star.py`
+- Doc updates: `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/systems/strategy_layer.md`
+
+12/12 audit-gate tests pass on focused run.
 
 ---
 
