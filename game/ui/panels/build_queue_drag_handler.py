@@ -85,6 +85,21 @@ class BuildQueueDragHandler:
         """Return True if currently dragging an item."""
         return self.dragged_item is not None
 
+    def reset_state(self) -> None:
+        """Clear all transient drag/selection state.
+
+        PROJ-376: called from ``BuildQueueScreen.open_for_yard`` when the
+        screen is reused across yard switches. Clears the 5 fields established
+        in ``__init__`` lines 73-81 — leaving any of them populated would
+        leak state across opens (e.g., a half-clicked queue row in yard A
+        priming a phantom drag in yard B).
+        """
+        self.dragged_item = None
+        self.drag_preview = None
+        self.drag_start_pos = None
+        self._pending_queue_index = None
+        self.selected_design = None
+
     def handle_mouse_down(
         self,
         event: pygame.event.Event,

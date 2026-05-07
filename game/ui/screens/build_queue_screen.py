@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import pygame
 import pygame_gui
-from typing import TYPE_CHECKING, List, Optional, Callable, Set
+from typing import TYPE_CHECKING, List, Optional, Callable, Set, Union
 
 from game.core.input_actions import InputAction
 from game.core.exceptions import ValidationException
@@ -48,9 +48,9 @@ class BuildQueueScreen:
     def __init__(
         self,
         manager: pygame_gui.UIManager,
-        build_context,  # Planet, Fleet, or BuildContext
-        session,
-        on_close_callback: Callable,
+        build_context=None,  # Planet, Fleet, or BuildContext (legacy positional yard)
+        session=None,
+        on_close_callback: Optional[Callable] = None,
         portrait_surface: Optional[pygame.Surface] = None,
         design_library: 'DesignLibrary' = None,
         design_loader: 'DesignLoaderAdapter' = None,
@@ -58,121 +58,88 @@ class BuildQueueScreen:
         galaxy: 'Galaxy' = None,
         empire: 'Empire' = None,
         input_mapper: Optional['InputMapper'] = None,
-        facade=None
+        facade=None,
+        *,
+        initial_yard: Optional[Union['object', None]] = None,
     ):
         """Initialize the build queue screen.
 
         PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
-        """
-        # Validate required parameters
-        self._validate_params(hex_coord, galaxy, empire, build_context)
 
+        PROJ-376 Phase 1: Split into "UI shell" (always runs) + "yard population"
+        (only when ``initial_yard`` is provided, or legacy ``build_context`` is
+        non-None). When neither is provided, the screen constructs in shell-only
+        mode — no panels, controller, or drag handler — and waits for
+        ``open_for_yard()`` to populate the panel tree on first open.
+
+        ``initial_yard`` (keyword-only) is the new explicit kwarg. The legacy
+        ``build_context`` positional/keyword arg is preserved for back-compat:
+        when ``initial_yard is None`` and ``build_context is not None``,
+        ``build_context`` is treated as the initial yard.
+        """
+        # PROJ-376: Resolve the effective initial yard from new + legacy kwargs.
+        effective_initial_yard = initial_yard if initial_yard is not None else build_context
+
+        # Validate required parameters (relaxed when no yard is provided).
+        self._validate_params(hex_coord, galaxy, empire, effective_initial_yard)
+
+        # ---- Shell block: DI / always-present state. ----------------------
         self.manager = manager
-        self.build_context = build_context
         self.session = session
         self.facade = facade  # PROJ-208: For command dispatch
         self.on_close = on_close_callback
         self.portrait_surface = portrait_surface
         self._mapper = input_mapper
-        self.selected_queue_index = None  # Currently selected item in queue
 
-        # Dependencies
+        # Dependencies (some yard-specific defaults are seeded here so shell-
+        # only construction has a defined attribute surface).
         self.design_library = design_library
         self.design_loader = design_loader
-        self.hex_coord = hex_coord
         self.galaxy = galaxy
         self.empire = empire
-        self.planet_selection_window = None
 
-        # Portrait loading
+        # Yard-specific state (initialized to "no yard" defaults; ``open_for_yard``
+        # mutates these when a yard arrives).
+        self.build_context = None
+        self.hex_coord = None
+        self.selected_queue_index = None
+        self.planet_selection_window = None
+        self.queue_sources: List[BuildQueueSource] = []
+        self.selected_queue_indices: Set[int] = set()
+        self.active_queue_source: Optional[BuildQueueSource] = None
+
+        # Portrait loading — needs design_library + session, both shell-side.
         self.portrait_loader = BuildQueuePortraitLoader(design_library, session)
 
-        # Populate queue sources from hex context
-        self.queue_sources: List[BuildQueueSource] = collect_build_queues_at_hex(
-            hex_coord, galaxy, empire, registries=session.registries
-        )
-
-        # Queue selection state
-        self.selected_queue_indices: Set[int] = {0} if self.queue_sources else set()
-        self.active_queue_source: Optional[BuildQueueSource] = (
-            self.queue_sources[0] if self.queue_sources else None
-        )
-
-        logger.info(f"BuildQueue: Initialized for {build_context.context_type} '{build_context.name}'")
-        logger.info(f"BuildQueue: {len(self.queue_sources)} queue source(s) discovered")
-
-        # Get screen dimensions
+        # Get screen dimensions (stable across yards; cheap and idempotent).
         screen_size = manager.get_root_container().get_container().get_size()
         self.screen_width = screen_size[0]
         self.screen_height = screen_size[1]
 
-        # Create UI panels via factory
-        factory = BuildQueuePanelFactory(
-            manager=manager,
-            build_context=build_context,
-            session=session,
-            queue_sources=self.queue_sources,
-            portrait_loader=self.portrait_loader,
-            on_queue_selection_changed=self._on_queue_selection_changed,
-            portrait_surface=self.portrait_surface,
-            facade=facade,  # PROJ-292 H1: enables per-species sub-block
-        )
-        self.panels = factory.create_all_panels(format_empire_resources)
-        self._queue_selector = self.panels.queue_selector
+        # Panel-dependent collaborators stay None until a yard arrives. When
+        # ``initial_yard is not None`` we delegate to ``open_for_yard`` below.
+        self.panels = None
+        self._queue_selector = None
+        self.renderer = None
+        self.controller = None
+        self.drag_handler = None
 
-        # Create renderer
-        self.renderer = BuildQueueRenderer(
-            manager=manager,
-            panels=self.panels,
-            portrait_loader=self.portrait_loader,
-        )
-
-        # Controller for queue business logic
-        # PROJ-208: Create callback for AddToConstructionQueueCommand dispatch
-        self.controller = BuildQueueController(
-            build_context=self.build_context,
-            design_library=self.design_library,
-            design_loader=self.design_loader,
-            design_report=self.panels.design_report,
-            on_queue_changed=self._refresh_queue_display,
-            hex_coord=self.hex_coord,
-            galaxy=self.galaxy,
-            empire=self.empire,
-            on_planet_selection_needed=self._prompt_target_planet,
-            add_to_queue_callback=self._dispatch_add_to_queue_command,
-            registries=getattr(self.session, 'registries', None),
-        )
-
-        # Sync controller with initial queue selection
-        if self.active_queue_source is not None:
-            self.controller.set_active_queue(self.active_queue_source)
-
-        # Drag-drop handling
-        # PROJ-208: Inject remove callback for command dispatch
-        self.drag_handler = BuildQueueDragHandler(
-            portrait_loader=self.portrait_loader,
-            design_library=self.design_library,
-            on_add_to_queue=self.controller.add_to_queue,
-            on_refresh_queue=self._refresh_queue_display,
-            on_refresh_design_report=self.controller.refresh_design_report,
-            on_remove_from_queue=self._dispatch_remove_from_queue_command,
-        )
-
-        # Apply hotkey tooltips
-        self._apply_tooltips()
-
-        # Load initial designs
-        self._refresh_items_list()
-        self._refresh_queue_display()
+        # ---- Yard population block (delegate to open_for_yard). -----------
+        if effective_initial_yard is not None:
+            self.open_for_yard(
+                effective_initial_yard,
+                hex_coord=hex_coord,
+                portrait_surface=portrait_surface,
+            )
 
     def _validate_params(self, hex_coord, galaxy, empire, build_context) -> None:
-        """Validate required constructor parameters."""
-        if hex_coord is None:
-            raise ValidationException(
-                "BuildQueueScreen requires hex_coord parameter",
-                code=ErrorCode.MISSING_DEPENDENCY.value,
-                context={"screen": "BuildQueueScreen", "missing_param": "hex_coord"}
-            )
+        """Validate required constructor parameters.
+
+        PROJ-376: When ``build_context`` is None (shell-only construction),
+        ``hex_coord`` may also be None. ``galaxy`` and ``empire`` remain
+        required because they're shell-level dependencies (the screen routes
+        commands through them regardless of the active yard).
+        """
         if galaxy is None:
             raise ValidationException(
                 "BuildQueueScreen requires galaxy parameter",
@@ -185,6 +152,15 @@ class BuildQueueScreen:
                 code=ErrorCode.MISSING_DEPENDENCY.value,
                 context={"screen": "BuildQueueScreen", "missing_param": "empire"}
             )
+        if build_context is None:
+            # Shell-only construction: hex_coord may also be None.
+            return
+        if hex_coord is None:
+            raise ValidationException(
+                "BuildQueueScreen requires hex_coord parameter when a yard is provided",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"screen": "BuildQueueScreen", "missing_param": "hex_coord"}
+            )
         if not hasattr(build_context, 'owner_id'):
             raise ValidationException(
                 f"build_context '{getattr(build_context, 'name', 'unknown')}' missing 'owner_id' attribute",
@@ -193,6 +169,183 @@ class BuildQueueScreen:
             )
         if not hasattr(build_context, 'name'):
             logger.warning("BuildQueueScreen: build_context missing 'name' attribute")
+
+    # -----------------------------------------------------------------------
+    # Lifecycle (PROJ-376 Phase 1)
+    # -----------------------------------------------------------------------
+
+    def _construct_collaborators(self, yard, hex_coord, portrait_surface) -> None:
+        """Build the panel tree + collaborators for ``yard``.
+
+        Called from ``open_for_yard`` when no panels exist yet (shell-only
+        first-open) and from ``_rebuild_panels`` on a context-type transition.
+        Collaborators (renderer, controller, drag handler) hold references
+        INTO ``panels``, so they're reseated together.
+        """
+        factory = BuildQueuePanelFactory(
+            manager=self.manager,
+            build_context=yard,
+            session=self.session,
+            queue_sources=collect_build_queues_at_hex(
+                hex_coord, self.galaxy, self.empire,
+                registries=self.session.registries,
+            ),
+            portrait_loader=self.portrait_loader,
+            on_queue_selection_changed=self._on_queue_selection_changed,
+            portrait_surface=portrait_surface,
+            facade=self.facade,  # PROJ-292 H1: enables per-species sub-block
+        )
+        self.panels = factory.create_all_panels(format_empire_resources)
+        self._queue_selector = self.panels.queue_selector
+        self.renderer = BuildQueueRenderer(
+            manager=self.manager,
+            panels=self.panels,
+            portrait_loader=self.portrait_loader,
+        )
+        self.controller = BuildQueueController(
+            build_context=yard,
+            design_library=self.design_library,
+            design_loader=self.design_loader,
+            design_report=self.panels.design_report,
+            on_queue_changed=self._refresh_queue_display,
+            hex_coord=hex_coord,
+            galaxy=self.galaxy,
+            empire=self.empire,
+            on_planet_selection_needed=self._prompt_target_planet,
+            add_to_queue_callback=self._dispatch_add_to_queue_command,
+            registries=getattr(self.session, 'registries', None),
+        )
+        # PROJ-208: drag handler wires through controller's add/refresh.
+        self.drag_handler = BuildQueueDragHandler(
+            portrait_loader=self.portrait_loader,
+            design_library=self.design_library,
+            on_add_to_queue=self.controller.add_to_queue,
+            on_refresh_queue=self._refresh_queue_display,
+            on_refresh_design_report=self.controller.refresh_design_report,
+            on_remove_from_queue=self._dispatch_remove_from_queue_command,
+        )
+        self._apply_tooltips()
+
+    def _rebuild_panels(self, yard, hex_coord, portrait_surface) -> None:
+        """Tear down + reconstruct the panel tree for a context-type transition.
+
+        Called from ``open_for_yard`` when ``build_context.context_type`` changes
+        (planet ↔ fleet). The panel factory dispatches different concrete panels
+        based on context type (``PlanetReportPanel`` vs fleet info panel), so the
+        whole tree must be rebuilt. Collaborators are reseated alongside.
+        """
+        if self.panels is not None:
+            self.panels.background.kill()
+            self.manager.update(0)
+        self._construct_collaborators(yard, hex_coord, portrait_surface)
+
+    def open_for_yard(
+        self,
+        yard,
+        *,
+        hex_coord: 'HexCoord',
+        portrait_surface: Optional[pygame.Surface] = None,
+    ) -> None:
+        """Populate yard-specific state and show the screen.
+
+        PROJ-376 Phase 1: split out from ``__init__`` so the manager can reuse
+        a single ``BuildQueueScreen`` instance across opens (Phase 2). Behavior
+        parity with today is the contract — the post-call observable state must
+        match what ``__init__(initial_yard=yard, hex_coord=hex_coord)`` produced.
+        """
+        prev_type = self.build_context.context_type if self.build_context is not None else None
+        new_type = yard.context_type
+
+        # Decide whether to rebuild panels.
+        if self.panels is None:
+            # Shell-only first open — construct the collaborators.
+            self._construct_collaborators(yard, hex_coord, portrait_surface)
+        elif prev_type is not None and prev_type != new_type:
+            # Cross-context-type transition (planet ↔ fleet) — rebuild.
+            self._rebuild_panels(yard, hex_coord, portrait_surface)
+
+        # Update yard-specific state.
+        self.build_context = yard
+        self.hex_coord = hex_coord
+        if portrait_surface is not None:
+            self.portrait_surface = portrait_surface
+        self.queue_sources = collect_build_queues_at_hex(
+            hex_coord, self.galaxy, self.empire,
+            registries=self.session.registries,
+        )
+        self.selected_queue_indices = {0} if self.queue_sources else set()
+        self.active_queue_source = (
+            self.queue_sources[0] if self.queue_sources else None
+        )
+        self.selected_queue_index = None
+        self.planet_selection_window = None
+
+        logger.info(
+            f"BuildQueue: open_for_yard {new_type} '{getattr(yard, 'name', 'unknown')}' "
+            f"({len(self.queue_sources)} queue source(s))"
+        )
+
+        # Update controller for the new yard.
+        self.controller.build_context = yard
+        self.controller.hex_coord = hex_coord
+        self.controller.galaxy = self.galaxy
+        self.controller.empire = self.empire
+        if self.active_queue_source is not None:
+            self.controller.set_active_queue(self.active_queue_source)
+        self.controller.reset_filters()
+
+        # Reset drag handler transient state.
+        self.drag_handler.reset_state()
+        # PROJ-376: design_library may differ between Planet and Fleet manager
+        # call sites (each constructs a fresh DesignLibrary). Rebind so the
+        # drag handler always reflects the current manager's library.
+        self.drag_handler.design_library = self.design_library
+
+        # Refresh queue selector against the new sources.
+        self._queue_selector.queue_sources = self.queue_sources
+        self._queue_selector.selected_indices = self.selected_queue_indices
+        self._queue_selector.active_source = self.active_queue_source
+        self._queue_selector.refresh()
+
+        # Initial render — also resyncs the FEAT-17 pause-button label via
+        # ``renderer.refresh_pause_button(...)``.
+        self._refresh_items_list()
+        self._refresh_queue_display()
+
+        self.show()
+
+    def hide(self) -> None:
+        """Hide the build-queue overlay without destroying widgets.
+
+        PROJ-376: replaces destroy-then-reconstruct close path. Kills any
+        transient ``PlanetSelectionWindow`` that's still open (matching
+        today's ``_close()`` cleanup) and toggles panel visibility off.
+        Panels remain alive across calls so subsequent ``show()`` is cheap.
+
+        Decision: ``hide()`` does NOT invoke ``on_close``. Only the close-
+        button / Esc handler invokes ``hide()`` then ``on_close()`` in
+        sequence (decisions.md row 2026-05-07).
+        """
+        if self.planet_selection_window is not None:
+            self.planet_selection_window.kill()
+            self.planet_selection_window = None
+        if self.panels is not None:
+            # pygame_gui.UIPanel exposes hide()/show() methods + a `visible`
+            # attribute (no `set_visible`). hide() recursively toggles
+            # visibility of children and stops event delivery.
+            self.panels.background.hide()
+            # Provisional: mirror today's _close() flush. See decisions.md.
+            self.manager.update(0)
+
+    def show(self) -> None:
+        """Reveal the build-queue overlay (panels must already exist)."""
+        if self.panels is not None:
+            self.panels.background.show()
+            self.manager.update(0)
+
+    def is_visible(self) -> bool:
+        """Return True iff panels exist AND their root is currently visible."""
+        return self.panels is not None and bool(self.panels.background.visible)
 
     # -----------------------------------------------------------------------
     # Queue Selection
@@ -396,6 +549,12 @@ class BuildQueueScreen:
 
     def handle_event(self, event: pygame.event.Event) -> None:
         """Handle UI events for the build queue screen."""
+        # PROJ-376 Phase 1: defensive visibility gate. Pre-Phase-2 the manager
+        # still constructs and shows the screen synchronously, so this is a
+        # no-op for legacy callers; it guards against post-Phase-2 paths where
+        # a hidden screen might still receive events.
+        if not self.is_visible():
+            return
         if event.type == pygame.KEYDOWN:
             logger.debug(f"BuildQueueScreen.handle_event: KEYDOWN key={event.key}")
 
