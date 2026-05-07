@@ -388,11 +388,21 @@ def _ship_spec_from_instance(
             instance_components.values(),
             key=lambda cs: (cs.component_id, cs.instance_index),
         )
+        # PROJ-354A: ComponentStateSpec gained mandatory `max_hp` and
+        # `status` fields. `max_hp` flows from the persistent ComponentState
+        # (which already carries it). `status` is set to "ACTIVE" because
+        # the persistent strategy-side ComponentState does not track per-
+        # component status — only HP and active flag. This is the pre-
+        # battle compile site, so the engine will reconcile real status
+        # (DAMAGED at <50% HP, etc.) once ticks start; the live extractor
+        # at battle end overwrites with the truthful name.
         component_specs = tuple(
             ComponentStateSpec(
                 component_id=cs.component_id,
                 instance_index=cs.instance_index,
                 current_hp=float(cs.current_hp),
+                max_hp=float(cs.max_hp),
+                status="ACTIVE",
                 is_active=bool(cs.is_active),
             )
             for cs in sorted_states

@@ -67,7 +67,7 @@ from game.simulation.systems.battle_end_conditions import (
 # Strict-match version pinned on every saved replay file. See
 # `Projects/active_projects/PROJ-312/decisions.md` and Pattern #18 (PROJ-312
 # Regression Contract) for the policy.
-REPLAY_SCHEMA_VERSION = "1.0.0"
+REPLAY_SCHEMA_VERSION = "2.0.0"
 
 
 # ---------------------------------------------------------------------------
@@ -243,6 +243,8 @@ def _component_state_to_dict(c: ComponentStateSpec) -> Dict[str, Any]:
         "component_id": c.component_id,
         "instance_index": int(c.instance_index),
         "current_hp": float(c.current_hp),
+        "max_hp": float(c.max_hp),
+        "status": str(c.status),
         "is_active": bool(c.is_active),
     }
 
@@ -252,6 +254,8 @@ def _component_state_from_dict(data: Dict[str, Any]) -> ComponentStateSpec:
         component_id=data["component_id"],
         instance_index=int(data["instance_index"]),
         current_hp=float(data["current_hp"]),
+        max_hp=float(data["max_hp"]),
+        status=str(data["status"]),
         is_active=bool(data["is_active"]),
     )
 

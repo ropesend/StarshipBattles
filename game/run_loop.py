@@ -84,6 +84,21 @@ class RunLoop:
         from game.services.llm.background import shutdown_all_calls
         shutdown_all_calls(timeout=5.0)
 
+        # PROJ-366 Phase 2: drain background replay-verification work
+        # before pygame teardown. Order is `shutdown_all_calls` first
+        # because the current code has no LLM dependency in the verifier
+        # path (AIControllerFactory constructs local AI controllers
+        # directly per `game/ai/ai_factory.py:21-29,83-110`); preserving
+        # the existing LLM shutdown invariant before adding the
+        # coordinator drain. If a future verifier path invokes LLM work,
+        # revisit this order. The ordering test in
+        # `test_run_loop_shutdown_ordering.py` pins the invariant by name
+        # so any future flip is loud.
+        from game.strategy.services.replay_verification_coordinator import (
+            shutdown_all_coordinators,
+        )
+        shutdown_all_coordinators(timeout=5.0)
+
         pygame.quit()
 
     # ------------------------------------------------------------------

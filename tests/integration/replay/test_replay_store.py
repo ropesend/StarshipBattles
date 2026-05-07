@@ -106,6 +106,51 @@ class TestReplaySettings:
         settings = load_replay_settings(path=path)
         assert settings.max_replays_per_save == 50
 
+    # PROJ-354B Phase 1.1: verification settings
+    def test_verification_defaults_when_missing(self, tmp_path: Path):
+        path = tmp_path / "missing.json"
+        settings = load_replay_settings(path=path)
+        assert settings.verification_enabled is True
+        assert settings.verification_queue_cap == 16
+
+    def test_verification_overrides_via_json(self, tmp_path: Path):
+        path = tmp_path / "replay_settings.json"
+        path.write_text(json.dumps({
+            "max_replays_per_save": 12,
+            "verification_enabled": False,
+            "verification_queue_cap": 4,
+        }))
+        settings = load_replay_settings(path=path)
+        assert settings.verification_enabled is False
+        assert settings.verification_queue_cap == 4
+
+    def test_verification_queue_cap_clamped_to_minimum_one(self, tmp_path: Path):
+        path = tmp_path / "replay_settings.json"
+        path.write_text(json.dumps({"verification_queue_cap": 0}))
+        settings = load_replay_settings(path=path)
+        assert settings.verification_queue_cap == 1
+
+    def test_verification_queue_cap_invalid_falls_back_to_default(
+        self, tmp_path: Path
+    ):
+        path = tmp_path / "replay_settings.json"
+        path.write_text(json.dumps({"verification_queue_cap": "not-an-int"}))
+        settings = load_replay_settings(path=path)
+        assert settings.verification_queue_cap == 16
+
+    def test_verification_enabled_falsy_value_coerced(self, tmp_path: Path):
+        path = tmp_path / "replay_settings.json"
+        path.write_text(json.dumps({"verification_enabled": 0}))
+        settings = load_replay_settings(path=path)
+        assert settings.verification_enabled is False
+
+    def test_malformed_json_keeps_verification_defaults(self, tmp_path: Path):
+        path = tmp_path / "replay_settings.json"
+        path.write_text("{not valid json")
+        settings = load_replay_settings(path=path)
+        assert settings.verification_enabled is True
+        assert settings.verification_queue_cap == 16
+
 
 # ---------------------------------------------------------------------------
 # ReplayStore — persistence + ring buffer
@@ -143,6 +188,44 @@ class TestReplayStorePersistence:
     def test_delete_returns_false_for_missing(self, store: ReplayStore):
         assert store.delete("never-existed") is False
 
+    # PROJ-354B Phase 2.2: sidecar lifecycle on delete
+    def test_delete_removes_sidecar(self, store: ReplayStore):
+        from game.strategy.services.replay_verification_sidecar import (
+            REPLAY_VERIFICATION_SCHEMA_VERSION,
+            VerificationSidecar,
+            VerificationSource,
+            VerificationStatus,
+            sidecar_path_for_replay,
+            write_verification_sidecar,
+        )
+        store.persist(_make_record("with-sidecar"))
+        rd = store.save_root / "replays"  # type: ignore[union-attr]
+        sidecar = VerificationSidecar(
+            replay_id="with-sidecar",
+            schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+            status=VerificationStatus.PASSED.name,
+            source=VerificationSource.BACKGROUND.name,
+            verified_at="2026-05-04T00:00:00+00:00",
+            duration_ms=10,
+            diff=None,
+            error=None,
+        )
+        write_verification_sidecar(rd, sidecar)
+        assert sidecar_path_for_replay(rd, "with-sidecar").exists()
+
+        assert store.delete("with-sidecar") is True
+        assert not sidecar_path_for_replay(rd, "with-sidecar").exists()
+        # Original replay file gone too.
+        assert store.load("with-sidecar") is None
+
+    def test_delete_returns_true_when_only_record_exists(
+        self, store: ReplayStore
+    ):
+        # No sidecar present — delete still succeeds and is a no-op for
+        # the missing sidecar.
+        store.persist(_make_record("no-sidecar"))
+        assert store.delete("no-sidecar") is True
+
 
 class TestReplayStoreRingBuffer:
     def test_evicts_excess_after_write(self, store: ReplayStore):
@@ -151,6 +234,50 @@ class TestReplayStoreRingBuffer:
             store.persist(_make_record(f"r{i}", captured_at=f"2026-04-27T00:00:0{i}Z"))
         kept = {r.replay_id for r in store.list()}
         assert len(kept) == 3
+
+    # PROJ-354B Phase 2.3: sidecars are evicted alongside their replays.
+    def test_evicts_sidecars_alongside_records(self, store: ReplayStore):
+        from game.strategy.services.replay_verification_sidecar import (
+            REPLAY_VERIFICATION_SCHEMA_VERSION,
+            VerificationSidecar,
+            VerificationSource,
+            VerificationStatus,
+            sidecar_path_for_replay,
+            write_verification_sidecar,
+        )
+        rd = store.save_root / "replays"  # type: ignore[union-attr]
+        rd.mkdir(parents=True, exist_ok=True)
+
+        ids = ["r0", "r1", "r2", "r3", "r4"]
+        for i, rid in enumerate(ids):
+            store.persist(_make_record(rid, captured_at=f"2026-04-27T00:00:0{i}Z"))
+            sidecar = VerificationSidecar(
+                replay_id=rid,
+                schema_version=REPLAY_VERIFICATION_SCHEMA_VERSION,
+                status=VerificationStatus.PASSED.name,
+                source=VerificationSource.BACKGROUND.name,
+                verified_at=f"2026-04-27T00:00:0{i}+00:00",
+                duration_ms=1,
+                diff=None,
+                error=None,
+            )
+            write_verification_sidecar(rd, sidecar)
+
+        # Eviction during the loop above should have already kicked in;
+        # cap=3 so we expect 3 records + 3 sidecars.
+        remaining_ids = {r.replay_id for r in store.list()}
+        assert len(remaining_ids) == 3
+
+        # Sidecars for kept records still exist; sidecars for evicted
+        # records are gone.
+        for rid in ids:
+            sidecar_present = sidecar_path_for_replay(rd, rid).exists()
+            if rid in remaining_ids:
+                assert sidecar_present, f"sidecar for kept {rid} should exist"
+            else:
+                assert not sidecar_present, (
+                    f"sidecar for evicted {rid} should be gone"
+                )
 
     def test_writes_before_evicting(self, tmp_path: Path):
         """If the eviction step ran first and the new write then failed,
@@ -181,6 +308,84 @@ class TestReplayStoreRingBuffer:
         # On the 3rd persist, when fake_writer was invoked, the dir held
         # the previous 2 (no eviction yet). Eviction runs *after*.
         assert len(seen_files_during_write[-1]) == 2
+
+
+# PROJ-354B Phase 3.1: post-persist listener API
+class TestReplayStoreListenerAPI:
+    def test_listener_called_on_persist(self, store: ReplayStore):
+        calls = []
+
+        def listener(record, path):
+            calls.append((record.replay_id, path))
+
+        store.add_on_record_persisted_listener(listener)
+        store.persist(_make_record("listened"))
+        assert len(calls) == 1
+        assert calls[0][0] == "listened"
+        assert calls[0][1].name == "replay_listened.json"
+
+    def test_listener_unsubscribe(self, store: ReplayStore):
+        calls = []
+
+        def listener(record, path):
+            calls.append(record.replay_id)
+
+        store.add_on_record_persisted_listener(listener)
+        store.remove_on_record_persisted_listener(listener)
+        store.persist(_make_record("a"))
+        assert calls == []
+
+    def test_multiple_listeners_called_in_order(self, store: ReplayStore):
+        order = []
+
+        def first(record, path):
+            order.append("first")
+
+        def second(record, path):
+            order.append("second")
+
+        store.add_on_record_persisted_listener(first)
+        store.add_on_record_persisted_listener(second)
+        store.persist(_make_record("multi"))
+        assert order == ["first", "second"]
+
+    def test_listener_exception_does_not_block_persist(
+        self, store: ReplayStore
+    ):
+        calls = []
+
+        def bad(record, path):
+            raise RuntimeError("boom")
+
+        def good(record, path):
+            calls.append(record.replay_id)
+
+        store.add_on_record_persisted_listener(bad)
+        store.add_on_record_persisted_listener(good)
+        path = store.persist(_make_record("x"))
+        # Persist still succeeded, returning the path.
+        assert path is not None
+        assert path.exists()
+        # Subsequent listener still called.
+        assert calls == ["x"]
+
+    def test_no_listener_path_unaffected(self, store: ReplayStore):
+        # Sanity: existing behavior preserved when no listeners are
+        # registered.
+        path = store.persist(_make_record("y"))
+        assert path is not None
+        assert path.exists()
+
+    def test_duplicate_subscribe_idempotent(self, store: ReplayStore):
+        calls = []
+
+        def listener(record, path):
+            calls.append(record.replay_id)
+
+        store.add_on_record_persisted_listener(listener)
+        store.add_on_record_persisted_listener(listener)  # duplicate
+        store.persist(_make_record("dup"))
+        assert calls == ["dup"]
 
 
 class TestReplayStoreGracefulDegradation:

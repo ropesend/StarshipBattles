@@ -4,10 +4,10 @@
   "skills": {
     "claude-discuss-start": {
       "agents": {
-        "claude": 2
+        "claude": 3
       },
-      "count": 2,
-      "last_used": "2026-05-05T03:44:41Z"
+      "count": 3,
+      "last_used": "2026-05-06T02:46:23Z"
     },
     "claude-doc-audit-apply": {
       "agents": {
@@ -37,6 +37,13 @@
       "count": 2,
       "last_used": "2026-05-05T00:46:10Z"
     },
+    "claude-proj-from-audit-shrink": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-06T03:00:28Z"
+    },
     "claude-qa-triage-gh": {
       "agents": {
         "claude": 1
@@ -46,24 +53,45 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 5
+        "codex": 7
       },
-      "count": 5,
-      "last_used": "2026-05-05T03:56:52Z"
+      "count": 7,
+      "last_used": "2026-05-06T02:51:18Z"
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 3
+        "codex": 43
       },
-      "count": 3,
-      "last_used": "2026-05-05T03:24:24Z"
+      "count": 43,
+      "last_used": "2026-05-06T03:16:48Z"
     },
     "codex-starship-combat-lab": {
+      "agents": {
+        "codex": 8
+      },
+      "count": 8,
+      "last_used": "2026-05-06T03:16:45Z"
+    },
+    "codex-starship-design-assets": {
       "agents": {
         "codex": 1
       },
       "count": 1,
-      "last_used": "2026-05-05T01:10:30Z"
+      "last_used": "2026-05-05T14:30:41Z"
+    },
+    "codex-starship-project-system": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-06T02:51:52Z"
+    },
+    "ocode-audit-shrink": {
+      "agents": {
+        "ocode": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-06T02:25:22Z"
     },
     "ocode-discuss-start": {
       "agents": {
@@ -81,10 +109,10 @@
     },
     "ocode-testcoverage-audit": {
       "agents": {
-        "ocode": 9
+        "ocode": 20
       },
-      "count": 9,
-      "last_used": "2026-05-05T04:58:29Z"
+      "count": 20,
+      "last_used": "2026-05-05T21:55:42Z"
     }
   }
 }

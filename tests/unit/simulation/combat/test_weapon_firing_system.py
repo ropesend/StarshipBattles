@@ -137,11 +137,12 @@ class TestBeamWeaponFiring:
 
         attacks = system.fire_weapons(ship)
 
+        # PROJ-359 Phase 4: beam dispatch returns BeamResolution (typed)
         assert len(attacks) == 1
-        assert attacks[0]['type'] == AttackType.BEAM
-        assert attacks[0]['source'] is ship
-        assert attacks[0]['target'] is target
-        assert attacks[0]['damage'] == 50
+        assert attacks[0].type == AttackType.BEAM
+        assert attacks[0].source is ship
+        assert attacks[0].target is target
+        assert attacks[0].damage == 50
 
 
 class TestProjectileWeaponFiring:
@@ -196,7 +197,9 @@ class TestProjectileWeaponFiring:
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        # PROJ-359 Phase 3.2: Projectile family handler now lives in
+        # families/projectile.py — patch its Projectile import.
+        with patch('game.simulation.combat.families.projectile.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             attacks = system.fire_weapons(ship)
 
@@ -263,7 +266,7 @@ class TestSeekerWeaponFiring:
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        with patch('game.simulation.combat.families.seeker.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             attacks = system.fire_weapons(ship)
 
@@ -468,9 +471,9 @@ class TestMultipleWeaponsFiring:
 
         attacks = system.fire_weapons(ship)
 
-        # All 3 weapons should fire
+        # All 3 weapons should fire (PROJ-359 Phase 4: BeamResolution typed)
         assert len(attacks) == 3
-        assert all(a['type'] == AttackType.BEAM for a in attacks)
+        assert all(a.type == AttackType.BEAM for a in attacks)
 
     def test_multiple_projectile_weapons_all_fire(self):
         """Ship with multiple projectile weapons fires all of them."""
@@ -527,7 +530,8 @@ class TestMultipleWeaponsFiring:
         ]
         ship.iter_components = MagicMock(return_value=weapons)
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        # PROJ-359 Phase 3.2: Projectile family in families/projectile.py
+        with patch('game.simulation.combat.families.projectile.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             attacks = system.fire_weapons(ship)
 
@@ -606,14 +610,16 @@ class TestMultipleWeaponsFiring:
         ]
         ship.iter_components = MagicMock(return_value=weapons)
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        # PROJ-359 Phase 3.2: Projectile family in families/projectile.py
+        with patch('game.simulation.combat.families.projectile.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             attacks = system.fire_weapons(ship)
 
             # Both should fire
             assert len(attacks) == 2
-            # One beam, one projectile
-            beam_attacks = [a for a in attacks if isinstance(a, dict) and a.get('type') == AttackType.BEAM]
+            # PROJ-359 Phase 4: beam attacks are BeamResolution objects
+            from game.simulation.combat.attack_contract import BeamResolution
+            beam_attacks = [a for a in attacks if isinstance(a, BeamResolution)]
             assert len(beam_attacks) == 1
 
 
@@ -782,6 +788,53 @@ class TestPointDefenseWeapons:
         # PDC should NOT fire at regular ships
         assert len(attacks) == 0
 
+    def test_pdc_context_adds_only_alive_enemy_missiles_to_candidates(self):
+        """PDC missile context ignores friendly, dead, and non-missile projectiles."""
+        from game.simulation.combat.attack_contract import WeaponFamily
+        from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
+
+        targeting = MagicMock()
+        selected_target = MagicMock()
+        targeting.find_valid_target.return_value = selected_target
+        system = WeaponFiringSystem(targeting)
+
+        ship = MagicMock()
+        ship.team_id = 7
+        ship.current_target = None
+        ship.max_targets = 1
+        ship.secondary_targets = []
+
+        def projectile(is_alive, team_id, attack_type):
+            item = MagicMock()
+            item.is_alive = is_alive
+            item.team_id = team_id
+            item.type = attack_type
+            return item
+
+        valid_enemy_missile = projectile(True, 3, AttackType.MISSILE)
+        friendly_missile = projectile(True, 7, AttackType.MISSILE)
+        dead_enemy_missile = projectile(False, 3, AttackType.MISSILE)
+        enemy_non_missile = projectile(True, 3, AttackType.PROJECTILE)
+        context = {
+            'projectiles': [
+                friendly_missile,
+                valid_enemy_missile,
+                dead_enemy_missile,
+                enemy_non_missile,
+            ]
+        }
+
+        with patch(
+            'game.simulation.combat.weapon_firing_system.detect_family',
+            return_value=WeaponFamily.PDC,
+        ):
+            result = system._find_valid_target(ship, MagicMock(), MagicMock(), context)
+
+        assert result is selected_target
+        targeting.find_valid_target.assert_called_once()
+        secondary_targets = targeting.find_valid_target.call_args.args[2]
+        assert secondary_targets == [valid_enemy_missile]
+
 
 class TestWeaponFireFails:
     """Tests for weapon fire failure scenarios."""
@@ -832,6 +885,59 @@ class TestWeaponFireFails:
         attacks = system.fire_weapons(ship)
 
         assert attacks == []
+
+    def test_noattack_dispatch_resolution_returns_no_attacks(self):
+        """NoAttack keeps the firing path typed without leaking a result."""
+        from game.simulation.combat.attack_contract import NoAttack, WeaponFamily
+        from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
+
+        targeting = MagicMock()
+        target = MagicMock()
+        targeting.find_valid_target.return_value = target
+        targeting.calculate_firing_solution.return_value = (
+            Vector2(100, 0),
+            Vector2(1, 0),
+        )
+        system = WeaponFiringSystem(targeting)
+
+        ship = MagicMock()
+        ship.is_alive = True
+        ship.is_derelict = False
+        ship.team_id = 0
+        ship.current_target = target
+        ship.total_shots_fired = 0
+        ship.max_targets = 1
+        ship.secondary_targets = []
+
+        weapon_ab = MagicMock()
+        weapon_ab.can_fire.return_value = True
+        weapon_ab.fire.return_value = True
+
+        weapon = MagicMock()
+        weapon.is_operational = True
+        weapon.has_ability = lambda name: name == 'WeaponAbility'
+        weapon.get_ability = lambda name: weapon_ab if name == 'WeaponAbility' else None
+        weapon.can_afford_activation.return_value = True
+        weapon.shots_fired = 0
+
+        ship.iter_components.return_value = [(LayerType.OUTER, weapon)]
+
+        with patch(
+            'game.simulation.combat.weapon_firing_system.detect_family',
+            return_value=WeaponFamily.BEAM,
+        ), patch(
+            'game.simulation.combat.weapon_firing_system.WEAPON_REGISTRY.dispatch',
+            return_value=NoAttack("out of arc"),
+        ) as dispatch:
+            attacks = system.fire_weapons(ship)
+
+        assert attacks == []
+        assert ship.total_shots_fired == 1
+        assert weapon.shots_fired == 1
+        dispatch.assert_called_once()
+        request = dispatch.call_args.args[0]
+        assert request.family is WeaponFamily.BEAM
+        assert request.target is target
 
 
 class TestWeaponShotTracking:
@@ -1225,7 +1331,7 @@ class TestSeekerProjectileCreation:
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        with patch('game.simulation.combat.families.seeker.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             system.fire_weapons(ship)
 
@@ -1290,7 +1396,7 @@ class TestSeekerProjectileCreation:
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
-        with patch('game.simulation.combat.weapon_firing_system.Projectile') as mock_proj:
+        with patch('game.simulation.combat.families.seeker.Projectile') as mock_proj:
             mock_proj.return_value = MagicMock()
             system.fire_weapons(ship)
 

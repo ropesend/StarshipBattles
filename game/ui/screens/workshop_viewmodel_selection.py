@@ -100,6 +100,7 @@ def apply_append_selection(
     # Add/toggle unique items (by object identity)
     result = list(current)
     current_objs = {c[2] for c in result}
+    toggled_off = set()
     for item in incoming:
         if item[2] in current_objs:
             if toggle:
@@ -108,7 +109,8 @@ def apply_append_selection(
                 # Update object set so a later duplicate in `incoming` doesn't
                 # re-add the same item.
                 current_objs = {c[2] for c in result}
-        else:
+                toggled_off.add(item[2])
+        elif item[2] not in toggled_off:
             result.append(item)
             current_objs.add(item[2])
     return result

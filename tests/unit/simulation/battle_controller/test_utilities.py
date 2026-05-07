@@ -101,6 +101,7 @@ class TestBattleControllerReset:
 
         assert controller._is_configured is False
         assert controller._is_started is False
+        assert controller._initial_state is None
 
     def test_reset_clears_tracking_dicts(self, controller, basic_config, mock_service):
         """reset clears tracking dictionaries."""
@@ -114,5 +115,4 @@ class TestBattleControllerReset:
         assert controller._ship_id_map == {}
         assert controller._retreat_manager.retreating_ships == {}
         assert controller._retreat_manager.escaped_ships == []
-
 

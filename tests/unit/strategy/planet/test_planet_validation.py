@@ -137,6 +137,30 @@ class TestPlanetFromDictValidation:
         with pytest.raises(PersistenceException):
             Planet.from_dict(data)
 
+    def test_bad_order_raises_persistence_exception(self):
+        """PROJ-251: Bad planet order raises PersistenceException instead of being dropped."""
+        data = _valid_planet_data()
+        data['orders'] = [
+            {
+                'type': 'ACTIVATE_ABILITY',
+                'target': {
+                    'type': 'dict',
+                    'value': {
+                        'facility_instance_id': 'fac-1',
+                        'ability_name': 'PlanetaryShield',
+                    },
+                },
+            },
+            {'target': {'type': 'dict', 'value': {'ability_name': 'Broken'}}},
+        ]
+
+        with pytest.raises(PersistenceException) as exc_info:
+            Planet.from_dict(data)
+
+        assert 'Planet' in str(exc_info.value)
+        assert 'order' in str(exc_info.value).lower()
+        assert exc_info.value.context.get('order_index') == 1
+
     def test_corrupt_location_raises_persistence_exception(self):
         """Corrupt location should raise PersistenceException."""
         data = _valid_planet_data()

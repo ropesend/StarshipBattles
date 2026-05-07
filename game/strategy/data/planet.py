@@ -599,7 +599,7 @@ class Planet:
             image_id=data.get('image_id', ''),
             image_rotation=data.get('image_rotation', 0.0),
             radius_hexes=data.get('radius_hexes', 0),
-            # PROJ-237: Energy, shield, and planet orders (safe defaults for old saves)
+            # PROJ-237: Energy, shield, and planet orders.
             energy=data.get('energy', 0.0),
             energy_capacity=data.get('energy_capacity', 0.0),
             energy_generation=data.get('energy_generation', 0.0),
@@ -610,7 +610,7 @@ class Planet:
             water_target=data.get('water_target'),
             radiation_shielding=data.get('radiation_shielding', 0.0),
             radiation_shielding_target=data.get('radiation_shielding_target'),
-            orders=_deserialize_planet_orders(data.get('orders', data.get('planet_orders', []))),
+            orders=_deserialize_planet_orders(data.get('orders', []), data['name']),
             # PROJ-284: per-colony per-species sliders. Old saves without
             # the key load with an empty dict; configs lazy-create on
             # first read via `get_species_config(race_id)`.
@@ -623,20 +623,45 @@ class Planet:
         )
 
 
-def _deserialize_planet_orders(orders_data: list) -> list:
+def _deserialize_planet_orders(orders_data: list, planet_name: str = "") -> list:
     """Deserialize planet orders from save data.
 
     Args:
         orders_data: List of order dicts from save data.
+        planet_name: Planet name for persistence error context.
 
     Returns:
-        List of Order instances. Silently skips invalid entries.
+        List of Order instances.
+
+    Raises:
+        PersistenceException: If any order entry is corrupt.
     """
+    from game.core.error_codes import ErrorCode
+    from game.core.exceptions import PersistenceException
     from game.strategy.data.order_types import Order as _Order
+
+    if not isinstance(orders_data, list):
+        source = f"Planet '{planet_name}'" if planet_name else "Planet"
+        raise PersistenceException(
+            f"{source}: orders must be a list",
+            code=ErrorCode.CORRUPT_DATA.value,
+            context={"source": source, "field": "orders"},
+        )
+
     result = []
-    for item in orders_data:
+    source = f"Planet '{planet_name}'" if planet_name else "Planet"
+    for index, item in enumerate(orders_data):
         try:
             result.append(_Order.from_dict(item))
-        except (KeyError, TypeError, ValueError):
-            pass  # Skip malformed orders
+        except (PersistenceException, KeyError, TypeError, ValueError) as e:
+            raise PersistenceException(
+                f"{source}: corrupt order data at index {index}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={
+                    "source": source,
+                    "field": "orders",
+                    "order_index": index,
+                    "original_error": str(e),
+                },
+            ) from e
     return result

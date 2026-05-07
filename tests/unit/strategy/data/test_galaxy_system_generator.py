@@ -206,6 +206,68 @@ class TestLoadJsonOrEmpty:
         assert result == {"a": 1, "b": 2}
 
 
+class TestLazyTypeCaches:
+    def test_load_planet_types_caches_after_first_read(self, monkeypatch):
+        from game.core.paths import Paths
+        from game.strategy.data import galaxy_system_generator as mod
+
+        calls = []
+
+        def fake_load(path_value, dict_key=None):
+            calls.append((path_value, dict_key))
+            return {"TERRAN": {"abilities": {}}}
+
+        monkeypatch.setattr(mod, "_PLANET_TYPES_CACHE", None)
+        monkeypatch.setattr(mod, "_load_json_or_empty", fake_load)
+
+        first = mod._load_planet_types()
+        second = mod._load_planet_types()
+
+        assert first is second
+        assert first == {"TERRAN": {"abilities": {}}}
+        assert calls == [(Paths.PLANET_TYPES_FILE, "planet_types")]
+
+    def test_load_star_types_caches_after_first_read(self, monkeypatch):
+        from game.core.paths import Paths
+        from game.strategy.data import galaxy_system_generator as mod
+
+        calls = []
+
+        def fake_load(path_value, dict_key=None):
+            calls.append((path_value, dict_key))
+            return {"G_TYPE": {"abilities": {}}}
+
+        monkeypatch.setattr(mod, "_STAR_TYPES_CACHE", None)
+        monkeypatch.setattr(mod, "_load_json_or_empty", fake_load)
+
+        first = mod._load_star_types()
+        second = mod._load_star_types()
+
+        assert first is second
+        assert first == {"G_TYPE": {"abilities": {}}}
+        assert calls == [(Paths.STAR_TYPES_FILE, "star_types")]
+
+    def test_load_system_archetypes_caches_after_first_read(self, monkeypatch):
+        from game.core.paths import Paths
+        from game.strategy.data import galaxy_system_generator as mod
+
+        calls = []
+
+        def fake_load(path_value, dict_key=None):
+            calls.append((path_value, dict_key))
+            return {"archetype_chance": 0.5, "archetypes": {}}
+
+        monkeypatch.setattr(mod, "_SYSTEM_ARCHETYPES_CACHE", None)
+        monkeypatch.setattr(mod, "_load_json_or_empty", fake_load)
+
+        first = mod._load_system_archetypes()
+        second = mod._load_system_archetypes()
+
+        assert first is second
+        assert first == {"archetype_chance": 0.5, "archetypes": {}}
+        assert calls == [(Paths.SYSTEM_ARCHETYPES_FILE, None)]
+
+
 # ---------------------------------------------------------------------------
 # _apply_intrinsic_abilities (idempotency / no-op branches)
 # ---------------------------------------------------------------------------

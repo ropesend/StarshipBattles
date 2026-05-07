@@ -42,6 +42,8 @@ Each section: **Where**, **How It Works**, **When to Use**.
 31. [Strategy Modal Window Base Class (PROJ-313)](#31-strategy-modal-window-base-class-proj-313)
 32. [Compositional Construction (PROJ-327)](#32-compositional-construction-proj-327)
 33. [UI Widget Test Factory (PROJ-322 / PROJ-324 / PROJ-325 / PROJ-328)](#33-ui-widget-test-factory-proj-322--proj-324--proj-325--proj-328)
+34. [Weapon Family Registry (PROJ-359)](#34-weapon-family-registry-proj-359)
+35. [Stat Contributor Registry (PROJ-360)](#35-stat-contributor-registry-proj-360)
 
 ---
 
@@ -1829,3 +1831,76 @@ def __init__(self, ..., *, ui_builder: RaceSetupUiBuilder | None = None,
 - **The guard MUST consult `type(self)`, not the class that defines `__init__`.** Setting `FleetReportWindow.bypass_init = True` must be honored by the inherited `StrategyModalWindow.__init__`. `getattr(type(self), "bypass_init", False)` does the right thing.
 - **Some subclasses call `pygame_gui.elements.UIWindow.__init__(self, ...)` explicitly instead of `super()`.** The guard handles `super()` but not explicit ancestor calls. Audit each affected class for explicit parent-class calls.
 - **Legacy `__new__` bypass helpers can be removed once the corresponding subclass adopts the guard.** PROJ-324 / PROJ-325 / PROJ-328 A/B/C did this incrementally — tests migrated as their target class adopted the two-stage `__init__`.
+
+---
+
+## 34. Weapon Family Registry (PROJ-359)
+
+**Where:** `game/simulation/combat/attack_contract.py` (`WeaponFamily` enum, `AttackRequest`, `BeamResolution`, `ProjectileResolution`, `NoAttack`, `WeaponHandler` protocol, `FAMILY_METADATA`), `game/simulation/combat/weapon_registry.py` (`WeaponRegistry`, `WEAPON_REGISTRY`, `detect_family`), `game/simulation/combat/families/{beam,projectile,seeker,pdc}.py`. Consumed by `weapon_firing_system.py`, `targeting_system.py`, `game/engine/collision.py` (`process_beam_attack` consumes `BeamResolution`).
+
+**How It Works:**
+- Each weapon family (`BEAM`, `PROJECTILE`, `SEEKER`, `PDC`) registers a `WeaponHandler` (one per family module). Importing `game.simulation.combat.families` triggers all registrations.
+- `weapon_firing_system._create_attack` is now a thin family-dispatcher: `detect_family(comp)` → build `AttackRequest` → `WEAPON_REGISTRY.dispatch(request)` → return the resolution. No string-class branches.
+- `BeamResolution` carries the same field set the legacy beam-attack dict carried (`source`, `component`, `target`, `damage`, `range`, `origin`, `direction`, `hit`) plus a `type=AttackType.BEAM` discriminator. `ProjectileResolution` wraps a `Projectile` instance.
+- Family-policy decisions that previously lived as `if comp.has_pdc_ability():` branches now live in `FAMILY_METADATA` (`targets_missiles`, `consumes_pdc_missile_context`). The targeting system consults metadata, not strings.
+- `game/engine/collision.py::process_beam_attack` consumes `BeamResolution` directly via attribute access — simulation semantics no longer leak into the engine layer through dict keys.
+
+**Why:**
+- Before PROJ-359, adding a new weapon family meant coordinated edits to four files: firing dispatch, targeting filters, collision (dict consumer), projectile manager. The dict-shaped attack carrier also leaked simulation-layer semantics (`attack['component']`, `attack.get('source')`) into `game/engine/`, which the layer architecture says owns physics/collision primitives only.
+- The registry collapses dispatch to one lookup site and pulls semantics back behind a typed boundary. `BeamResolution` and `ProjectileResolution` give telemetry consumers a uniform attribute-access shape (the headline plan goal "damage event contracts converge").
+
+**When to Use:**
+- Adding a new weapon family is now: (1) one new module under `families/<name>.py` implementing `WeaponHandler.fire(request) -> AttackResolution` and calling `WEAPON_REGISTRY.register(WeaponFamily.<NAME>, MyHandler())` at module scope; (2) one entry in `FAMILY_METADATA` if the family has special targeting behavior (missile-targeting, PDC-style context injection); (3) one import in `families/__init__.py` to trigger the registration. **No edits to weapon_firing_system, targeting_system, collision, or projectile_manager.**
+- The `WeaponFamily` enum gains a new member when a genuinely new family is added (not just a content variant of an existing family). The four current families correspond to the four ability classes (`BeamWeaponAbility`, `ProjectileWeaponAbility`, `SeekerWeaponAbility`, plus PDC as a Beam role distinguished by the 'pdc' tag).
+- Acceptance test: `tests/unit/simulation/combat/test_weapon_registry.py::TestExtensibilityAcceptance` — codifies the "no central edits" goal as an executable test.
+
+---
+
+## 35. Stat Contributor Registry (PROJ-360, unified by PROJ-367)
+
+> **Last verified:** 2026-05-04 (PROJ-367 closure — EXT-07/EXT-11/EXT-13)
+
+**Where:** `game/simulation/entities/stat_contributors/registry.py`
+(`CREW_PRIORITY_REGISTRY`, `STAT_CONTRIBUTOR_REGISTRY`,
+`register_stat_contributor`, `unregister_stat_contributor`,
+`RegistrationConflictPolicy`, `RegistrationHandle`,
+`reset_stat_contributor_registry`, `_seed_builtin_contributors`,
+`lookup_crew_priority`). Typed accumulator at
+`stat_contributors/accumulator.py` (`StatAccumulator`). Per-domain
+`contribute_*` functions live in sibling modules (`movement.py`,
+`defense.py`, `command.py`, `launch.py`). `weapons.py` Phase-5 helpers
+(`aggregate_targeting_scores`, `apply_armor_and_repair_scores`,
+`init_armor_pool`) stay imperative — they run after Phase-4 physics, out
+of scope for the unified pipeline (future project).
+
+**How It Works:**
+
+- **Single registry; one Phase-3 iteration.** `ShipStatsCalculator._phase_stats_aggregation` walks `STAT_CONTRIBUTOR_REGISTRY.iter_for(comp)` once per operational component:
+
+      for entry in STAT_CONTRIBUTOR_REGISTRY.iter_for(comp):
+          entry.contributor(ship, comp, accumulator)
+
+- **Built-ins are registry entries.** `_seed_builtin_contributors()` (called from `stat_contributors/__init__.py` after the four domain modules finish loading — `command/defense/launch/movement` all import from `registry.py`) registers the per-ability `contribute_*` functions as `is_default=True` entries with explicit `phase_order`: movement=10, defense=20, hangar=40, command=50. Modder entries default to `phase_order=99` so they fire after non-replaced built-ins, mirroring the legacy "skip-built-in-then-modder-runs-last" semantics.
+- **Typed accumulator (`StatAccumulator` dataclass, `slots=True`).** 10 scalar fields + 4 named map fields = 14 total. Misspelled scalar/map field names raise `AttributeError` at runtime. Dynamic resource keys (`max_<resource>`, `gen_<resource>`) live INSIDE `acc.resource_storage` / `acc.resource_generation` map fields (resource types come from data files; promoting them statically would contradict the data-driven invariant).
+- **Conflict policy is explicit (`RegistrationConflictPolicy`).** `REPLACE_WARN` (default) replaces the active entry and logs a warning; `REPLACE_SILENT` replaces silently; `APPEND` coexists with the default; `ERROR` raises `RegistrationConflictError`. A `REPLACE_*` entry suppresses the underlying default while it lives; `unregister_stat_contributor(handle)` restores the default.
+- **`RegistrationHandle` makes APPEND entries individually addressable.** Capture the handle returned from `register_stat_contributor`; pass it to `unregister_stat_contributor(handle)` for unambiguous removal. Defaults cannot be unregistered by handle (raises `CannotUnregisterDefaultError`); they are managed via `reset_stat_contributor_registry()` (clear + re-seed, idempotent).
+- **Crew priority registry is separate.** `CREW_PRIORITY_REGISTRY` maps ability names to crew-allocation priority (lower = served first); `lookup_crew_priority(comp)` returns the lowest priority value across the abilities the component has.
+- **Intentionally separate from `combat.ability_stat_registry.ABILITY_STAT_REGISTRY` (PROJ-273).** That registry shapes the modifier-emission pipeline (compiler → ModifierEntry → external_stats); this one shapes per-component stat aggregation. Mixing them would warp both contracts.
+
+**Why:**
+
+- Pre-PROJ-360 `ship_stats.py` was 643 LOC and hardcoded ability-name string checks for movement, shields, regeneration, launch capacity, multiplex tracking, armor, command priority, and engine priority. PROJ-360 Phase 2 split per-domain helpers; PROJ-360 Phase 3 added the registry as a parallel extension surface; PROJ-367 collapses the two-tier model so built-ins and modder code share one pipeline.
+- The PROJ-360 review identified three coupled findings (EXT-07/EXT-11/EXT-13). PROJ-367 closes them together: typed ability classes (Phase 1 — closes EXT-07), unified registry-as-pipeline (Phase 2 — closes EXT-11), typed `StatAccumulator` (Phase 3 — closes EXT-13).
+
+**When to Use:**
+
+- Adding a new ability that contributes a stat at recalculate time:
+  1. Define a contributor: `def my_contrib(ship, comp, accumulator: StatAccumulator) -> None: accumulator.thrust += ...`.
+  2. Register it: `handle = register_stat_contributor('MyAbility', my_contrib)`. Default policy `REPLACE_WARN` replaces existing entries with a log; pass `policy=RegistrationConflictPolicy.APPEND` to coexist with the built-in default, or `policy=ERROR` to raise on conflict.
+  3. Capture `handle`; clean up via `unregister_stat_contributor(handle)` (or rely on `reset_stat_contributor_registry()` between tests — the root `conftest.py` calls it before/after every test).
+- Adding a new component class that should slot into the crew-allocation priority order: `register_crew_priority('MyHotAbility', priority=1)`.
+- Acceptance tests: `tests/unit/simulation/entities/stat_contributors/test_registry_pipeline.py` (replacement / append / phase-ordering / handle round-trip / reset-re-seeds) plus `tests/unit/simulation/entities/test_stat_contributor_extension.py` (end-to-end through `ShipStatsCalculator.calculate`).
+
+**Boundaries (out of scope for the unified pipeline):**
+
+- Phase-5 helpers (`weapons.aggregate_targeting_scores`, `defense.apply_armor_and_repair_scores`, `defense.init_armor_pool`) run after Phase-4 physics. Folding them into the registry would require the accumulator state to survive the physics boundary — a real architectural concern not addressed by PROJ-367. Future project required.

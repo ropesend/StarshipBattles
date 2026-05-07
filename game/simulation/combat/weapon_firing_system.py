@@ -3,19 +3,27 @@ WeaponFiringSystem - Extracted weapon firing logic from ShipCombatEngine.
 
 This class handles all weapon firing operations:
 - Processing weapon components for firing
-- Creating beam attacks
-- Creating projectile attacks
-- Creating seeker/missile attacks
-- Handling hangar vehicle launches
+- Hangar vehicle launches (out-of-scope dict-shaped path)
+- Family-routed weapon dispatch (Beam, PDC, Projectile, Seeker via
+  WEAPON_REGISTRY)
 
-Part of PROJ-44 Phase 5: ShipCombatEngine Decomposition.
+Part of PROJ-44 Phase 5: ShipCombatEngine Decomposition. Refactored under
+PROJ-359 to delegate per-family construction to WeaponHandler instances
+(see game/simulation/combat/families/).
 """
-import math
 from typing import TYPE_CHECKING, List, Optional, Any, Dict
 
-from game.core.math import Vector2, angle_from_vector
-from game.core.constants import AttackType, CombatConstants, SimulationConstants
-from game.simulation.entities.projectile import Projectile
+from game.core.constants import AttackType, CombatConstants
+
+# PROJ-359 Phase 3: importing `families` triggers WEAPON_REGISTRY registrations
+from game.simulation.combat import families  # noqa: F401
+from game.simulation.combat.attack_contract import (
+    FAMILY_METADATA,
+    AttackRequest,
+    BeamResolution,
+    ProjectileResolution,
+)
+from game.simulation.combat.weapon_registry import WEAPON_REGISTRY, detect_family
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -180,8 +188,14 @@ class WeaponFiringSystem:
         if ship.max_targets > CombatConstants.DEFAULT_MAX_TARGETS:
             secondary_targets = list(ship.secondary_targets)
 
-        # PDC weapons: inject enemy missiles into candidate list
-        if comp.has_pdc_ability() and context:
+        # PROJ-359 Phase 3.4: Family-metadata-driven missile injection.
+        # Previously: `if comp.has_pdc_ability() and context:` — string lookup.
+        # Now: family metadata declares whether this family consumes the
+        # PDC missile context. Adding a new family with this behavior is a
+        # FAMILY_METADATA edit, not a firing-system edit.
+        family = detect_family(comp)
+        meta = FAMILY_METADATA.get(family) if family else None
+        if meta is not None and meta.consumes_pdc_missile_context and context:
             projectiles = context.get('projectiles', [])
             for p in projectiles:
                 if p.is_alive and p.team_id != ship.team_id and p.type == AttackType.MISSILE:
@@ -202,112 +216,31 @@ class WeaponFiringSystem:
         weapon_ab: Any,
         target: Any
     ) -> List[Any]:
-        """
-        Create attack object(s) for a successful weapon fire.
+        """Create attack object(s) for a successful weapon fire.
 
-        Args:
-            ship: The ship firing
-            comp: Weapon component
-            weapon_ab: Weapon ability
-            target: Target being fired at
-
-        Returns:
-            List containing attack object(s)
+        PROJ-359 Phase 4: thin family-dispatcher. The four legacy string
+        branches (`comp.has_ability('BeamWeaponAbility')` etc.) collapsed into
+        a single `detect_family` call. Adding a new weapon family does not
+        require any change to this method.
         """
-        attacks = []
+        family = detect_family(comp)
+        if family is None:
+            return []
 
         aim_pos, aim_vec = self._targeting.calculate_firing_solution(ship, comp, target)
-
-        if comp.has_ability('BeamWeaponAbility'):
-            # Beam attack — shots_hit tracked in collision.py after accuracy roll
-            attacks.append({
-                'type': AttackType.BEAM,
-                'source': ship,
-                'target': target,
-                'damage': weapon_ab.damage,
-                'range': weapon_ab.range,
-                'origin': ship.position,
-                'component': comp,
-                'direction': aim_vec.normalize() if aim_vec.length() > 0 else Vector2(1, 0),
-                'hit': True
-            })
-        else:
-            # Projectile attack
-            if comp.has_ability('SeekerWeaponAbility'):
-                projectile = self._create_seeker_projectile(ship, comp, target, weapon_ab, aim_vec)
-            else:
-                projectile = self._create_standard_projectile(ship, comp, target, aim_vec)
-
-            attacks.append(projectile)
-
-        return attacks
-
-    def _create_seeker_projectile(
-        self,
-        ship: 'Ship',
-        comp: 'Component',
-        target: Any,
-        weapon_ab: Any,
-        aim_vec: Vector2
-    ) -> Projectile:
-        """Create a seeker/missile projectile."""
-        seeker_ab = comp.get_ability('SeekerWeaponAbility')
-
-        # Calculate launch direction - facing_angle is on the weapon ability
-        comp_facing = ship.angle + weapon_ab.facing_angle
-        rad = math.radians(comp_facing)
-        launch_vec = Vector2(math.cos(rad), math.sin(rad))
-
-        # Check if target is in arc
-        if target:
-            rel_pos = target.position - ship.position
-            target_angle = angle_from_vector(rel_pos.x, rel_pos.y)
-            diff = (target_angle - comp_facing + 180) % 360 - 180
-            if abs(diff) <= (weapon_ab.firing_arc / 2):
-                launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
-
-        speed = seeker_ab.projectile_speed / SimulationConstants.PROJECTILE_SPEED_SCALE
-        p_vel = launch_vec * speed + ship.velocity
-
-        # PROJ-113: Removed color - visual properties now in UI layer
-        return Projectile(
-            owner=ship,
-            position=Vector2(ship.position),
-            velocity=p_vel,
-            damage=seeker_ab.projectile_damage,
-            range_val=seeker_ab.projectile_speed * seeker_ab.endurance,
-            endurance=seeker_ab.endurance,
-            proj_type=AttackType.MISSILE,
-            turn_rate=seeker_ab.turn_rate,
-            max_speed=speed,
+        request = AttackRequest(
+            source=ship,
+            component=comp,
+            weapon_ability=weapon_ab,
             target=target,
-            hp=seeker_ab.projectile_hp,
-            to_hit_defense=seeker_ab.to_hit_defense,
-            source_weapon=comp
+            aim_pos=aim_pos,
+            aim_vec=aim_vec,
+            family=family,
         )
+        resolution = WEAPON_REGISTRY.dispatch(request)
 
-    def _create_standard_projectile(
-        self,
-        ship: 'Ship',
-        comp: 'Component',
-        target: Any,
-        aim_vec: Vector2
-    ) -> Projectile:
-        """Create a standard (non-seeking) projectile."""
-        projectile_ab = comp.get_ability('ProjectileWeaponAbility')
-
-        speed = projectile_ab.projectile_speed / SimulationConstants.PROJECTILE_SPEED_SCALE
-        p_vel = aim_vec.normalize() * speed + ship.velocity
-
-        # PROJ-113: Removed color - visual properties now in UI layer
-        return Projectile(
-            owner=ship,
-            position=Vector2(ship.position),
-            velocity=p_vel,
-            damage=projectile_ab.damage,
-            range_val=projectile_ab.range,
-            endurance=None,
-            proj_type=AttackType.PROJECTILE,
-            source_weapon=comp,
-            target=target
-        )
+        if isinstance(resolution, BeamResolution):
+            return [resolution]
+        if isinstance(resolution, ProjectileResolution):
+            return [resolution.projectile]
+        return []  # NoAttack — handler chose not to fire

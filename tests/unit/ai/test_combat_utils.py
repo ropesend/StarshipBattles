@@ -8,6 +8,7 @@ from unittest.mock import Mock, MagicMock
 
 from game.ai.combat_utils import (
     is_vector2_like,
+    get_capability_cache_key,
     get_entity_id,
     get_position,
     get_rotation,
@@ -39,6 +40,37 @@ class TestGetEntityId:
 
         # Should be the string representation of the object id
         assert result == str(id(entity))
+
+
+class TestGetCapabilityCacheKey:
+    """Tests for capability-cache key selection."""
+
+    def test_prefers_runtime_id_over_name(self):
+        """Runtime id is the stable capability-cache key for ships."""
+        entity = Mock(spec=["id", "name"])
+        entity.id = "ship-123"
+        entity.name = "Duplicate Name"
+
+        result = get_capability_cache_key(entity)
+
+        assert result == "ship-123"
+
+    def test_falls_back_to_name_when_id_missing(self):
+        """Name is retained as a fallback for older tests and mocks."""
+        entity = Mock(spec=["name"])
+        entity.name = "Legacy Mock"
+
+        result = get_capability_cache_key(entity)
+
+        assert result == "Legacy Mock"
+
+    def test_returns_none_without_id_or_name(self):
+        """Entities without stable identity are not cacheable."""
+        entity = Mock(spec=[])
+
+        result = get_capability_cache_key(entity)
+
+        assert result is None
 
 
 class TestIsVector2Like:

@@ -20,8 +20,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from game.simulation.replay import ReplayRecord, compute_components_registry_hash
+from game.simulation.replay import (
+    REPLAY_SCHEMA_VERSION,
+    ReplayRecord,
+    compute_components_registry_hash,
+)
 from game.strategy.services.replay_store import ReplayStore
+from game.strategy.services.replay_verification_sidecar import (
+    read_verification_sidecar,
+)
 
 
 @dataclass(frozen=True)
@@ -33,12 +40,19 @@ class ReplayLookup:
     ``"corrupt"``, ``"version_drift"``. ``registry_drift`` is True when
     the captured components-registry hash differs from the running hash;
     the UI surfaces a confirmation dialog before launching playback.
+
+    PROJ-354B Phase 3.2: ``verification_status`` exposes the sidecar
+    status (``"PASSED"``, ``"FAILED"``, ``"ERROR"``,
+    ``"SKIPPED_QUEUE_FULL"``, ``"SKIPPED_DISABLED"``) when a sidecar
+    exists, or ``None`` when verification has not yet completed for
+    this replay.
     """
 
     found: bool
     record: Optional[ReplayRecord] = None
     reason: Optional[str] = None
     registry_drift: bool = False
+    verification_status: Optional[str] = None
 
 
 class ReplayResolver:
@@ -82,26 +96,16 @@ class ReplayResolver:
         if not replay_id:
             return ReplayLookup(found=False, reason="missing")
 
-        # Probe the file system directly for "missing": ``store.load``
-        # collapses missing/corrupt/version-drift into None, but we want
-        # to distinguish them for the UI tooltip.
-        rd = self._store_replay_dir()
+        # PROJ-354B audit AR-002: use the public ``load_or_error`` API
+        # instead of reaching into ``_safe_load``. ``replay_dir`` is
+        # the public property the sidecar reader still needs.
+        rd = self._store.replay_dir
         if rd is None:
             return ReplayLookup(found=False, reason="missing")
-        replay_path = rd / f"{ReplayStore.REPLAY_FILE_PREFIX}{replay_id}{ReplayStore.REPLAY_FILE_SUFFIX}"
-        if not replay_path.exists():
-            return ReplayLookup(found=False, reason="missing")
 
-        # File exists — use _safe_load to distinguish corrupt vs valid.
-        record = self._store._safe_load(replay_path)  # noqa: SLF001 — internal helper, intentional
+        record, reason = self._store.load_or_error(replay_id)
         if record is None:
-            return ReplayLookup(found=False, reason="corrupt")
-
-        # Schema-version drift = unloadable (treated like corrupt for the
-        # UI: skip, no replay).
-        from game.simulation.replay import REPLAY_SCHEMA_VERSION
-        if record.schema_version != REPLAY_SCHEMA_VERSION:
-            return ReplayLookup(found=False, reason="version_drift")
+            return ReplayLookup(found=False, reason=reason or "missing")
 
         # Components-registry drift: still loadable, but UI surfaces a
         # confirmation dialog.
@@ -110,10 +114,17 @@ class ReplayResolver:
             and bool(self._current_hash)
             and record.components_registry_hash != self._current_hash
         )
-        return ReplayLookup(found=True, record=record, registry_drift=registry_drift)
-
-    def _store_replay_dir(self):
-        return self._store._replay_dir()  # noqa: SLF001 — package-internal
+        # PROJ-354B Phase 3.2: surface sidecar verification status if
+        # present. Missing/corrupt sidecars yield ``None`` (the absence
+        # is normal pre-verification state).
+        sidecar = read_verification_sidecar(rd, replay_id)
+        verification_status = sidecar.status if sidecar is not None else None
+        return ReplayLookup(
+            found=True,
+            record=record,
+            registry_drift=registry_drift,
+            verification_status=verification_status,
+        )
 
 
 __all__ = ["ReplayLookup", "ReplayResolver"]

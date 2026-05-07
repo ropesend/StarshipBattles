@@ -1,6 +1,7 @@
 
 import pytest
 from unittest.mock import MagicMock
+from types import SimpleNamespace
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
 from game.ui.screens.planet_list_filters import gather_planets, filter_planets
@@ -383,3 +384,33 @@ class TestFilterPlanetsWithEffects:
             filter_effects={'ThrustModifier': FilterState.YES},
         )
         assert out == [cryo_thrust]
+
+
+class TestPlanetColumnValues:
+    def test_worker_i_planet_dot_walk_column(self):
+        from game.ui.screens.planet_list_filters import get_column_value
+
+        planet = SimpleNamespace(
+            star_system=SimpleNamespace(
+                primary=SimpleNamespace(name="Aster"),
+                orbit=SimpleNamespace(distance=12.345),
+            )
+        )
+
+        assert get_column_value(planet, {"attr": "star_system.primary.name"}) == "Aster"
+        assert get_column_value(
+            planet,
+            {"attr": "star_system.orbit.distance", "fmt": "{:.1f} AU"},
+        ) == "12.3 AU"
+        assert get_column_value(planet, {"attr": "star_system.missing.name"}) == "?"
+
+
+class TestPlanetRangeDefaults:
+    def test_worker_i_planet_empty_range_defaults(self):
+        from game.ui.screens.planet_list_filters import compute_planet_ranges
+
+        assert compute_planet_ranges([]) == {
+            "gravity": (0.0, 10.0),
+            "temp": (0, 2000),
+            "mass": (0.0, 500.0),
+        }

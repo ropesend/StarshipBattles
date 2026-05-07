@@ -11,6 +11,7 @@ from unittest.mock import MagicMock
 
 from game.simulation.components.component_health_manager import ComponentHealthManager
 from game.simulation.components.component_constants import ComponentStatus
+from game.simulation.components.component import create_component
 
 
 @pytest.fixture
@@ -386,3 +387,35 @@ class TestIntegrationScenarios:
         # Reset
         health_manager.reset_hp()
         assert health_manager.hp_ratio == 1.0
+
+
+class TestComponentHealthFacade:
+    """Tests for Component health-manager lazy facade methods."""
+
+    def test_component_health_manager_is_lazily_initialized_and_cached(self, fresh_registries):
+        railgun = create_component('railgun', registries=fresh_registries)
+
+        assert railgun._health_mgr is None
+
+        manager = railgun.health_manager
+
+        assert isinstance(manager, ComponentHealthManager)
+        assert railgun._health_mgr is manager
+        assert railgun.health_manager is manager
+
+    def test_component_reset_hp_lazily_initializes_manager(self, fresh_registries):
+        railgun = create_component('railgun', registries=fresh_registries)
+        railgun.current_hp = 0
+        railgun.is_active = False
+        railgun.status = ComponentStatus.DAMAGED
+        railgun._hp_ratio_dirty = False
+
+        assert railgun._health_mgr is None
+
+        railgun.reset_hp()
+
+        assert isinstance(railgun._health_mgr, ComponentHealthManager)
+        assert railgun.current_hp == railgun.max_hp
+        assert railgun.is_active is True
+        assert railgun.status == ComponentStatus.ACTIVE
+        assert railgun._hp_ratio_dirty is True

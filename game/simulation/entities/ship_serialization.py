@@ -196,7 +196,19 @@ class ShipSerializer:
 
                 comp_id = c_entry.get("id", "")
                 if comp_id not in comps:
-                    continue
+                    # PROJ-358 audit (CQ-01): surface registry/save drift loudly.
+                    # Silent skip previously absorbed stale saves and registry
+                    # mismatches the same way the spec→ship drift bug did.
+                    raise ValidationException(
+                        f"Component id '{comp_id}' in layer '{l_name}' is not "
+                        f"present in the component registry; ship='{ship.name}'",
+                        code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                        context={
+                            "ship_name": ship.name,
+                            "layer": l_name,
+                            "component_id": comp_id,
+                        },
+                    )
 
                 new_comp = comps[comp_id].clone()
                 new_comp._registries = registries
@@ -237,11 +249,14 @@ class ShipSerializer:
 
         mismatches = []
         for key, getter, tolerance in ShipSerializer._STAT_CHECKS:
-            exp_val = expected.get(key)
-            if exp_val:
-                actual = getter(ship)
-                if abs(actual - exp_val) > tolerance:
-                    mismatches.append(f"{key}: got {actual}, expected {exp_val}")
+            if key not in expected:
+                continue
+            exp_val = expected[key]
+            if exp_val is None:
+                continue
+            actual = getter(ship)
+            if abs(actual - exp_val) > tolerance:
+                mismatches.append(f"{key}: got {actual}, expected {exp_val}")
 
         ship._loading_warnings = mismatches
 

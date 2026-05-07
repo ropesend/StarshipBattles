@@ -23,7 +23,7 @@ import pytest
 from game.strategy.data.environmental_preference import EnvironmentalPreference
 from game.strategy.data.habitability_factors import FACTOR_REGISTRY
 from game.strategy.data.race_config import RaceConfig
-from game.strategy.formulas.habitability import calculate_habitability
+from game.strategy.formulas.habitability import _gaussian_factor, calculate_habitability
 
 
 # ---------------------------------------------------------------------------
@@ -138,6 +138,13 @@ class TestCalculateHabitabilityV2HappyPath:
         )
         score = calculate_habitability(planet, race)
         assert score < 0.1, f"Hostile setup should score < 0.1, got {score}"
+
+    def test_gaussian_min_sigma_guard_handles_zero_tolerance(self):
+        """Zero tolerance uses min_sigma instead of dividing by zero."""
+        assert _gaussian_factor(1.0, 1.0, tolerance=0.0) == pytest.approx(1.0)
+        assert _gaussian_factor(1.01, 1.0, tolerance=0.0, min_sigma=0.01) == pytest.approx(
+            0.6065306597,
+        )
 
 
 # ---------------------------------------------------------------------------

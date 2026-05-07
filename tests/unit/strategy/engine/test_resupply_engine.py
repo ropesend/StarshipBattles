@@ -384,6 +384,154 @@ from game.core.hex_math import HexCoord
 
 
 # ===========================================================================
+# Fuel Distribution Edge Cases
+# ===========================================================================
+
+class TestFuelDistributionEdges:
+    """Direct coverage for ResupplyEngine._calculate_fuel_distribution()."""
+
+    def test_fuel_distribution_ignores_non_combat_ships(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        ship = _make_mock_ship(combat_capable=False)
+        fleet = _make_mock_fleet(ships=[ship])
+
+        distribution = engine._calculate_fuel_distribution(fleet, available_fuel=100.0)
+
+        assert distribution == {}
+        ship.get_all_resource_costs_per_hex.assert_not_called()
+
+    def test_fuel_distribution_skips_zero_total_fuel_cost(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        ship = _make_mock_ship(
+            fuel_capacity=500.0,
+            current_fuel=0.0,
+            fuel_cost_per_hex=0.0,
+        )
+        fleet = _make_mock_fleet(ships=[ship])
+
+        distribution = engine._calculate_fuel_distribution(fleet, available_fuel=100.0)
+
+        assert distribution == {}
+        ship.resupply.assert_not_called()
+
+    def test_fuel_distribution_zero_available_returns_empty_for_empty_ships(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        ship = _make_mock_ship(
+            fuel_capacity=500.0,
+            current_fuel=0.0,
+            fuel_cost_per_hex=5.0,
+        )
+        fleet = _make_mock_fleet(ships=[ship])
+
+        distribution = engine._calculate_fuel_distribution(fleet, available_fuel=0.0)
+
+        assert distribution == {}
+
+    def test_fuel_distribution_caps_target_at_ship_capacity(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        capped = _make_mock_ship(
+            fuel_capacity=50.0,
+            current_fuel=0.0,
+            fuel_cost_per_hex=10.0,
+        )
+        roomy = _make_mock_ship(
+            fuel_capacity=500.0,
+            current_fuel=0.0,
+            fuel_cost_per_hex=10.0,
+        )
+        fleet = _make_mock_fleet(ships=[capped, roomy])
+
+        distribution = engine._calculate_fuel_distribution(fleet, available_fuel=200.0)
+
+        assert distribution[capped] == pytest.approx(50.0)
+        assert distribution[roomy] == pytest.approx(100.0)
+
+    def test_fuel_distribution_omits_ships_already_at_target_range(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        full = _make_mock_ship(
+            fuel_capacity=100.0,
+            current_fuel=100.0,
+            fuel_cost_per_hex=10.0,
+        )
+        empty = _make_mock_ship(
+            fuel_capacity=100.0,
+            current_fuel=0.0,
+            fuel_cost_per_hex=10.0,
+        )
+        fleet = _make_mock_fleet(ships=[full, empty])
+
+        distribution = engine._calculate_fuel_distribution(fleet, available_fuel=100.0)
+
+        assert full not in distribution
+        assert distribution[empty] == pytest.approx(100.0)
+
+
+# ===========================================================================
+# Fuel Transfer Edge Cases
+# ===========================================================================
+
+class TestFuelTransferEdges:
+    """Direct coverage for ResupplyEngine._transfer_fuel()."""
+
+    def test_transfer_fuel_withdraws_only_actual_ship_acceptance(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        ship = MagicMock()
+        ship.resupply.return_value = 25.0
+        facility = MagicMock()
+
+        total = engine._transfer_fuel({ship: 100.0}, available=100.0, facility=facility)
+
+        ship.resupply.assert_called_once_with("fuel", 100.0)
+        facility.withdraw_fuel.assert_called_once_with(25.0)
+        assert total == pytest.approx(25.0)
+
+    def test_transfer_fuel_caps_later_ships_at_remaining_available(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        first = MagicMock()
+        second = MagicMock()
+        first.resupply.return_value = 80.0
+        second.resupply.return_value = 20.0
+        facility = MagicMock()
+
+        total = engine._transfer_fuel(
+            {first: 80.0, second: 80.0},
+            available=100.0,
+            facility=facility,
+        )
+
+        first.resupply.assert_called_once_with("fuel", 80.0)
+        second.resupply.assert_called_once_with("fuel", 20.0)
+        facility.withdraw_fuel.assert_called_once_with(100.0)
+        assert total == pytest.approx(100.0)
+
+    def test_transfer_fuel_breaks_when_available_exhausted(self):
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+        first = MagicMock()
+        second = MagicMock()
+        first.resupply.return_value = 30.0
+        facility = MagicMock()
+
+        total = engine._transfer_fuel(
+            {first: 30.0, second: 10.0},
+            available=30.0,
+            facility=facility,
+        )
+
+        first.resupply.assert_called_once_with("fuel", 30.0)
+        second.resupply.assert_not_called()
+        facility.withdraw_fuel.assert_called_once_with(30.0)
+        assert total == pytest.approx(30.0)
+
+
+# ===========================================================================
 # Task 4.1: Fleet Resupply Tests
 # ===========================================================================
 

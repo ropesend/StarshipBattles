@@ -9,6 +9,8 @@ Follows the `test_storm_shield_interference.py` pattern of materializing
 a real ship via `ShipSerializer.from_dict` + shield_generator component
 whose baseline `max_shields == 500`.
 """
+from unittest.mock import MagicMock
+
 from game.simulation.entities.ship_serialization import ShipSerializer
 
 
@@ -133,5 +135,12 @@ class TestShieldBonusAddPipelineAtShipLevel:
         """`shield_bonus_add` of 0.0 has no effect — max_shields unchanged."""
         ship = ShipSerializer.from_dict(_design_with_shields(), registries=fresh_registries)
         ship.external_stats = {"shield_bonus_add": 0.0}
+        ship.recalculate_stats()
+        assert ship.max_shields == 500
+
+    def test_non_dict_external_stats_is_ignored(self, fresh_registries):
+        """Mock-like external_stats objects must not behave like shield bonuses."""
+        ship = ShipSerializer.from_dict(_design_with_shields(), registries=fresh_registries)
+        ship.external_stats = MagicMock()
         ship.recalculate_stats()
         assert ship.max_shields == 500

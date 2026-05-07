@@ -157,3 +157,46 @@ class TestLLMProviderField:
         sentinel = MagicMock(name='custom_llm')
         ctx = ApplicationContext.create_test(llm_provider=sentinel)
         assert ctx.llm_provider is sentinel
+
+    def test_create_production_survives_llm_config_error(self, monkeypatch):
+        from game.core.exceptions import LLMConfigError
+        from game.services.llm import LLMProviderFactory, get_default_llm_provider
+
+        def fail_create():
+            raise LLMConfigError("missing test key")
+
+        monkeypatch.setattr(LLMProviderFactory, "create", fail_create)
+
+        ctx = ApplicationContext.create_production()
+
+        assert ctx.llm_provider is None
+        assert get_default_llm_provider() is None
+
+
+class TestImageProviderField:
+    """PROJ-314: ApplicationContext exposes image provider fallbacks."""
+
+    def test_create_production_survives_image_config_error(self, monkeypatch):
+        from game.core.exceptions import ImageConfigError
+        from game.ui.services.image import (
+            ImageProviderFactory,
+            NullImageProvider,
+            get_default_image_provider,
+        )
+
+        def fail_create():
+            raise ImageConfigError("missing test key")
+
+        monkeypatch.setattr(ImageProviderFactory, "create", fail_create)
+
+        ctx = ApplicationContext.create_production()
+
+        assert isinstance(ctx.image_provider, NullImageProvider)
+        assert ctx.image_provider is get_default_image_provider()
+
+    def test_create_test_defaults_to_null_image_provider(self):
+        from game.ui.services.image import NullImageProvider
+
+        ctx = ApplicationContext.create_test()
+
+        assert isinstance(ctx.image_provider, NullImageProvider)

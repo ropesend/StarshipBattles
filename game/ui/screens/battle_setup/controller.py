@@ -237,7 +237,12 @@ class BattleSetupController:
             return
         fleet = side.fleets[self._view_model.active_fleet_index]
         if ship_index < len(fleet.ships):
-            fleet.remove_ship(fleet.ships[ship_index])
+            ship = fleet.ships[ship_index]
+            fleet.remove_ship(ship)
+            for tf in fleet.task_forces:
+                tf.remove_lone_ship(ship)
+                for sq in tf.squadrons:
+                    sq.remove_ship(ship)
             self._on_change()
 
     # === TaskForce / Squadron CRUD ===

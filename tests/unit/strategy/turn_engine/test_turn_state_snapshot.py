@@ -3,6 +3,8 @@ Tests for TurnStateSnapshot capture and restore.
 
 PROJ-251 Phase 4: Turn State Snapshot & Rollback
 """
+import json
+import logging
 import time
 import pytest
 from unittest.mock import MagicMock, patch
@@ -137,6 +139,64 @@ class TestTurnStateSnapshotRestore:
         snapshot.restore(session)
 
         assert len(session.empires) == len(snapshot.empire_dicts)
+
+
+class TestTurnStateSnapshotCrashDump:
+    """Tests for crash snapshot disk-writing helpers."""
+
+    def test_dump_crash_snapshot_writes_summary_json(self, tmp_path):
+        from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
+
+        snapshot = TurnStateSnapshot(
+            turn_number=7,
+            empire_dicts=[{"id": 1}, {"id": 2}],
+            galaxy_dict={"systems": [{"name": "Alpha"}, {"name": "Beta"}]},
+            timestamp=123.5,
+        )
+
+        snapshot.dump_crash_snapshot(
+            str(tmp_path),
+            {
+                "tick": 42,
+                "phase_name": "PlanetEnergy",
+                "error": "boom",
+            },
+        )
+
+        crash_path = tmp_path / "crash_turn7_tick42_phase_PlanetEnergy.json"
+        assert crash_path.exists()
+        data = json.loads(crash_path.read_text())
+        assert data == {
+            "turn_number": 7,
+            "timestamp": 123.5,
+            "error": {
+                "tick": 42,
+                "phase_name": "PlanetEnergy",
+                "error": "boom",
+            },
+            "empire_count": 2,
+            "system_count": 2,
+        }
+
+    def test_dump_crash_snapshot_logs_oserror_without_raising(
+        self, tmp_path, caplog
+    ):
+        from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
+
+        snapshot = TurnStateSnapshot(turn_number=3)
+
+        with patch(
+            "game.strategy.engine.turn_state_snapshot.os.makedirs",
+            side_effect=OSError("disk full"),
+        ):
+            with caplog.at_level(logging.ERROR):
+                snapshot.dump_crash_snapshot(
+                    str(tmp_path),
+                    {"tick": 9, "phase_name": "Movement"},
+                )
+
+        assert any("Failed to write crash snapshot" in rec.message for rec in caplog.records)
+        assert any("disk full" in rec.message for rec in caplog.records)
 
 
 # Fixtures

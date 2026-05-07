@@ -138,18 +138,18 @@ class ComponentListItem:
             ab = c.get_ability('ShieldProjection')
             lines.append(f"Shield: {ab.capacity}")
             
-        if c.has_ability('PowerGenerator'):
-            ab = c.get_ability('PowerGenerator')
-            lines.append(f"Power: +{ab.generation_rate}/s")
+        if c.has_ability('ResourceGeneration'):
+            ab = c.get_ability('ResourceGeneration')
+            lines.append(f"Power: +{ab.rate}/s")
             
         # Generic Ability Listing (Fallback for others)
-        shown_abilities = {'WeaponAbility', 'CombatPropulsion', 'ManeuveringThruster', 'ShieldProjection', 'PowerGenerator', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility'}
+        shown_abilities = {'WeaponAbility', 'CombatPropulsion', 'ManeuveringThruster', 'ShieldProjection', 'ResourceGeneration', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility'}
         
         if c.abilities:
-            for k, v in c.abilities.items():
-                if k not in shown_abilities and k in c.ability_instances:
+            for k in c.abilities:
+                if k not in shown_abilities and c.has_ability(k):
                     # Just show name for uncategorized abilities
-                     lines.append(f"- {k}")
+                    lines.append(f"- {k}")
 
         return "<br>".join(lines)
 

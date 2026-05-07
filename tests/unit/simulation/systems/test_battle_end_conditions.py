@@ -20,6 +20,7 @@ from game.simulation.systems.battle_end_conditions import (
     EscapeCondition,
     ShipDestroyedCondition,
     NeverCondition,
+    MassRatioCondition,
     AnyCondition,
     AllCondition,
     end_condition_from_dict,
@@ -534,6 +535,44 @@ class TestDeserialization:
     def test_missing_type_raises(self):
         with pytest.raises(KeyError):
             end_condition_from_dict({"max_ticks": 500})
+
+
+# ============================================================================
+# Debug Representations
+# ============================================================================
+
+@pytest.mark.parametrize(
+    "condition, expected",
+    [
+        (TickLimitCondition(max_ticks=100), "TickLimitCondition(max_ticks=100)"),
+        (
+            TeamEliminatedCondition(check_derelict=True),
+            "TeamEliminatedCondition(check_derelict=True)",
+        ),
+        (TeamIncapacitatedCondition(), "TeamIncapacitatedCondition()"),
+        (
+            EscapeCondition(escape_radius=500.0, escape_team=1),
+            "EscapeCondition(radius=500.0, center=(0.0, 0.0), team=1, all_ships=False)",
+        ),
+        (
+            ShipDestroyedCondition(ship_name="Flagship"),
+            "ShipDestroyedCondition(ship_name='Flagship')",
+        ),
+        (NeverCondition(), "NeverCondition()"),
+        (MassRatioCondition(threshold=0.25), "MassRatioCondition(threshold=0.25)"),
+        (
+            AnyCondition([TickLimitCondition(max_ticks=5)]),
+            "AnyCondition([TickLimitCondition(max_ticks=5)])",
+        ),
+        (
+            AllCondition([NeverCondition()]),
+            "AllCondition([NeverCondition()])",
+        ),
+    ],
+)
+def test_condition_repr_contract(condition, expected):
+    """Debug reprs should identify the condition type and key configuration."""
+    assert repr(condition) == expected
 
 
 # ============================================================================

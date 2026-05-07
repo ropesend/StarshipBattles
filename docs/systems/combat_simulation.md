@@ -1,6 +1,6 @@
 # Combat Simulation System
 
-> **Last verified:** 2026-05-04 — Coverage backfill (T2-18 / T3-23 / T3-26 / T3-27): added § 11 "Replay Capture & Playback" (PROJ-312); added "Retreat Manager" subsection in § 1 (PROJ-29 SIM-03; clarifies visual-mode wiring vs headless `BoundaryEnforcementPhase`); added "Ship Component Manager" subsection in § 3 (PROJ-240 list-structure owner, distinct from `ModifierManager` / `AbilityManager` / health / resource peers). Earlier same-day pass: doc-audit fix to stale `planetary.py` ability list. 2026-05-02 — PROJ-320 rewrote § 9 "Performance follow-up (out of BUG-126 scope)" as "PROJ-320 (closed)". Per-fleet movement-opportunity combat triggering replaces the legacy per-tick scan; ~10× fewer dispatches at typical contested sectors. Performance regression gate at `tests/performance/test_contested_hex_round_budget.py`. Earlier same-day pass — issue #8: `SimulationBattleResolver` shortcut branches differentiated. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10` = 2 000 ticks) so the existing replay-capture pipeline records a real (brief) replay; `BattleResult.replay_id` is populated. `sole_survivor` (one team has ≥1 capable ship, the other has 0 ships at start) keeps its shortcut and stays non-replayable, but now ships `BattleResult.replay_unavailable_reason="sole_survivor"` so the Event Log button shows an honest tooltip ("No combat — one side had no ships.") instead of the legacy "older save." wording. Defensive `no_ships` (both fleets empty) keeps the shortcut with `replay_unavailable_reason="no_ships"`. New `max_ticks` kwarg on `build_strategy_battle_spec` swaps BOTH `absolute_max_ticks` AND `end_condition` (to `TickLimitCondition`) — required because the strategy default `TeamEliminatedCondition` cannot fire in a no-weapons battle. Earlier verification (2026-04-29): FEAT-26 documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`); empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract still current.
+> **Last verified:** 2026-05-04 — PROJ-366: added § 11 "Background Verification" subsection documenting the `ReplayVerificationCoordinator` post-persist pipeline, sidecar schema, settings, no-recursion guarantee, Combat Lab fallback, and production wiring at `app_bootstrap.py` + run-loop shutdown ordering. Earlier same-day pass: PROJ-354A: § 11 documents `REPLAY_SCHEMA_VERSION` bump from `"1.0.0"` → `"2.0.0"` and adds "Per-Component End-State Fidelity" subsection covering the new `ComponentStateSpec.max_hp` and `ComponentStateSpec.status` (`ComponentStatus.name`) fields populated by `_extract_component_states`. Existing v1 replays surface as `version_drift` per `ReplayResolver`. Earlier same-day pass: Coverage backfill (T2-18 / T3-23 / T3-26 / T3-27): added § 11 "Replay Capture & Playback" (PROJ-312); added "Retreat Manager" subsection in § 1 (PROJ-29 SIM-03; clarifies visual-mode wiring vs headless `BoundaryEnforcementPhase`); added "Ship Component Manager" subsection in § 3 (PROJ-240 list-structure owner, distinct from `ModifierManager` / `AbilityManager` / health / resource peers). Earlier same-day pass: doc-audit fix to stale `planetary.py` ability list. 2026-05-02 — PROJ-320 rewrote § 9 "Performance follow-up (out of BUG-126 scope)" as "PROJ-320 (closed)". Per-fleet movement-opportunity combat triggering replaces the legacy per-tick scan; ~10× fewer dispatches at typical contested sectors. Performance regression gate at `tests/performance/test_contested_hex_round_budget.py`. Earlier same-day pass — issue #8: `SimulationBattleResolver` shortcut branches differentiated. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10` = 2 000 ticks) so the existing replay-capture pipeline records a real (brief) replay; `BattleResult.replay_id` is populated. `sole_survivor` (one team has ≥1 capable ship, the other has 0 ships at start) keeps its shortcut and stays non-replayable, but now ships `BattleResult.replay_unavailable_reason="sole_survivor"` so the Event Log button shows an honest tooltip ("No combat — one side had no ships.") instead of the legacy "older save." wording. Defensive `no_ships` (both fleets empty) keeps the shortcut with `replay_unavailable_reason="no_ships"`. New `max_ticks` kwarg on `build_strategy_battle_spec` swaps BOTH `absolute_max_ticks` AND `end_condition` (to `TickLimitCondition`) — required because the strategy default `TeamEliminatedCondition` cannot fire in a no-weapons battle. Earlier verification (2026-04-29): FEAT-26 documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`); empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract still current.
 
 System documentation for the real-time combat simulation layer.
 
@@ -661,6 +661,38 @@ Ship
 All subsystems are lazy-initialized. `ShipCombatEngine` subsystems (TargetingSystem,
 DamageCalculator, WeaponFiringSystem) are class-level shared instances since they are stateless.
 
+#### Weapon Family Registry (PROJ-359)
+
+`WeaponFiringSystem` no longer dispatches on `comp.has_ability('BeamWeaponAbility')` /
+`'SeekerWeaponAbility'` / `'ProjectileWeaponAbility'` string branches. Instead:
+
+- `game/simulation/combat/attack_contract.py` defines `WeaponFamily` (enum: `BEAM`,
+  `PROJECTILE`, `SEEKER`, `PDC`), the typed `AttackRequest` / `AttackResolution`
+  contract (`BeamResolution`, `ProjectileResolution`, `NoAttack`), the
+  `WeaponHandler` protocol, and `FAMILY_METADATA` (per-family policy: `targets_missiles`,
+  `consumes_pdc_missile_context`).
+- `game/simulation/combat/weapon_registry.py` provides `WEAPON_REGISTRY` (singleton)
+  and `detect_family(component)` (the single point that owns the legacy
+  `comp.has_ability(...)` lookup; PDC is detected before BEAM because a PDC
+  weapon is a Beam weapon with the `pdc` tag).
+- `game/simulation/combat/families/{beam,projectile,seeker,pdc}.py` each
+  implement one `WeaponHandler` and register on import.
+
+`WeaponFiringSystem._create_attack` is now a thin family-dispatcher: build
+`AttackRequest` → `WEAPON_REGISTRY.dispatch(request)` → return resolution.
+`game/engine/collision.py::process_beam_attack` consumes the typed
+`BeamResolution` directly, removing the dict-carrier leak from the engine layer.
+
+**Adding a new weapon family** is one new module under `families/<name>.py`,
+one entry in `FAMILY_METADATA` if it has special targeting behavior, and one
+import in `families/__init__.py` to trigger the registration. **No edits to
+weapon_firing_system, targeting_system, collision, or projectile_manager.**
+The acceptance test
+(`tests/unit/simulation/combat/test_weapon_registry.py::TestExtensibilityAcceptance`)
+codifies this contract.
+
+See `docs/02_PATTERNS.md` § 34 for the full pattern entry.
+
 ### Ship Component Manager (PROJ-240)
 
 **File:** `game/simulation/entities/ship_component_manager.py`
@@ -1287,8 +1319,10 @@ re-fed into `run_battle()` later.
 **Files:** `game/simulation/replay/`
 - `replay_serialization.py` — free-function `to_dict`/`from_dict` pairs for
   every simulation DTO (boundary, modifier entry, modifier stack,
-  `BattleSpec`, `BattleOutcome`). Defines `REPLAY_SCHEMA_VERSION = "1.0.0"`.
-  Free functions (not methods) so DTOs stay frozen/hashable.
+  `BattleSpec`, `BattleOutcome`). Defines `REPLAY_SCHEMA_VERSION = "2.0.0"`
+  (bumped from `"1.0.0"` by PROJ-354A — see "Per-Component End-State
+  Fidelity" below). Free functions (not methods) so DTOs stay
+  frozen/hashable.
 - `replay_spec.py` — `ReplaySpec`, `ReplayShipSpec`. JSON-safe mirror of
   `BattleSpec`. Each `ReplayShipSpec` carries a per-ship `ShipInstance`
   snapshot so playback is decoupled from current strategy state.
@@ -1354,6 +1388,45 @@ in § 10 ("Empty-string canonicalisation").
    `BattleScreen` renders a "REPLAY MODE" badge, hides order buttons, and
    skips the post-battle results transition.
 
+### Per-Component End-State Fidelity (PROJ-354A — schema 2.0.0)
+
+`ComponentStateSpec` (defined in `game/simulation/battle_spec.py`) is the
+frozen DTO that carries each component's persisted state into and out of
+a battle. The replay record's `outcome.data.teams[*].ships[*].components`
+array is a tuple of `ComponentStateSpec` entries, serialized via
+`_component_state_to_dict` in `replay_serialization.py`.
+
+Fields:
+
+| Field | Type | Source at capture | Purpose |
+|-------|------|-------------------|---------|
+| `component_id` | `str` | `Component.id` | Stable design-id for component lookup |
+| `instance_index` | `int` | per-id counter inside the layer walk | Disambiguates duplicate-id components on the same ship |
+| `current_hp` | `float` | `Component.current_hp` | Live HP at battle end |
+| `max_hp` | `float` | `Component.max_hp` | Capacity at battle end (PROJ-354A — needed for verification baseline; mod stack may reshape this) |
+| `status` | `str` | `Component.status.name` | `ComponentStatus.name` — one of `ACTIVE`, `DAMAGED`, `NO_CREW`, `NO_POWER`, `NO_FUEL`, `NO_AMMO`. Serialized as the **name** (string), not the `auto()` numeric value, because `auto()` outputs are not stable across Python versions (Codex correction during PROJ-354A inter-agent discussion). There is no `DESTROYED` enum member; destruction is `current_hp == 0` plus `is_active is False`. |
+| `is_active` | `bool` | `Component.is_active` | Binary operational flag (collapses several status values; kept alongside `status` for backward-compatible reads in the post-battle hook bridge) |
+
+**Capture path:** `_extract_component_states(engine_ship)` in
+`battle_runner.py` walks the live `Ship.layers` after the battle ends and
+emits one `ComponentStateSpec` per component. `_build_ship_outcome` calls
+it; the result tuple becomes `ShipOutcome.components`.
+
+**Schema version migration:** the `max_hp` + `status` addition is
+backward-incompatible for the JSON dict shape, so `REPLAY_SCHEMA_VERSION`
+moves from `"1.0.0"` → `"2.0.0"`. Per project convention (CLAUDE.md
+Rule 3 — no save/replay compat shims), existing v1 replay files surface
+through `ReplayResolver.resolve()` as `version_drift` and the UI gates
+them out (see `replay_resolver.py:103-104`); they are skipped gracefully
+with a "different game version" tooltip rather than migrated in place.
+
+**Why these fields specifically:** PROJ-354B's end-state verifier
+compares the captured live outcome against a re-run replay's outcome
+field-by-field. Without `max_hp`, divergence in mod-induced cap
+reshaping is invisible. Without `status` (which carries 6 distinct
+values where `is_active` collapses to 2), two damage scenarios that
+produce different statuses but the same `is_active` would silently pass.
+
 ### Determinism Contract
 
 Replays are byte-stable because the RNG is fully seeded per battle. See
@@ -1374,3 +1447,78 @@ hot path will fail CI.
 | `tests/unit/simulation/replay/test_replay_serialization.py` | `to_dict`/`from_dict` round-trips per DTO. |
 | `tests/unit/strategy/test_replay_resolver.py` | Graceful degradation for missing / corrupt / version-drift / registry-drift. |
 | `tests/unit/strategy/test_replay_store.py` | Persistence (atomic write, ring-buffer eviction, settings fallback). |
+
+### Background Verification (PROJ-354B + PROJ-366)
+
+Every persisted replay record is verified asynchronously after capture.
+The `ReplayVerificationCoordinator` (in
+`game/strategy/services/replay_verification_coordinator.py`) is a
+single-worker FIFO queue that:
+
+1. Subscribes to `ReplayStore.add_on_record_persisted_listener` at
+   `coordinator.start()`.
+2. On callback, enqueues the record (or writes a `SKIPPED_QUEUE_FULL`
+   sidecar inline if at cap).
+3. The worker thread pops records FIFO, materializes a ship builder via
+   `build_replay_ship_builder` (production materializer factory in
+   `game/strategy/services/replay_ship_builder.py`), runs
+   `run_replay_headless(record, capture_context=None)`, runs the pure
+   verifier, and writes a sidecar.
+
+**Sidecar schema and file layout:** for each `replay_<id>.json`, a
+sibling `replay_<id>.verification.json` records the verification result.
+Schema is defined in `game/strategy/services/replay_verification_sidecar.py`
+(`VerificationSidecar` dataclass, `REPLAY_VERIFICATION_SCHEMA_VERSION`).
+Status values: `PASSED`, `FAILED`, `ERROR`, `SKIPPED_DISABLED`,
+`SKIPPED_QUEUE_FULL`. Sidecars are deleted alongside their replay record
+(both via explicit `delete()` and ring-buffer eviction).
+
+**Settings:** `output/settings/replay_settings.json` carries
+`verification_enabled` (default `True`) and `verification_queue_cap`
+(default `16`). Loaded by `load_replay_settings()` once at bootstrap and
+shared by both the store and the coordinator (single instance avoids
+divergence between consumers).
+
+**No-recursion guarantee:** `run_replay_headless` passes
+`capture_context=None` so `start_engine_from_spec` skips the capture
+sink. The verifier headless replay cannot itself produce a replay
+record. Pinned by integration test
+`tests/integration/replay/test_verification_queue_integration.py::test_live_battle_produces_passed_sidecar_and_no_recursion`.
+
+**Combat Lab fallback:** Combat Lab captures have
+`ShipSpec.instance_ref=None`, so the captured `ReplaySpec.iter_ship_snapshots()`
+yields `None` for every ship. The coordinator constructor accepts a
+`fallback_ship_builder` callable; production wires it as
+`DesignOnlyMaterializer(load_combat_lab_design)` wrapped in a closure
+that captures the bootstrap-time `registries` (see
+`game/app_bootstrap.py::bootstrap` `_replay_combat_lab_fallback`). When
+no fallback is wired AND the snapshot is missing,
+`build_replay_ship_builder` raises `ValueError` and the coordinator
+writes an ERROR sidecar.
+
+**Production wiring (PROJ-366):** `game/app_bootstrap.py` constructs the
+`ReplayStore`, registers it via `set_default_capture_sink` +
+`set_replay_store`, constructs the `ReplayVerificationCoordinator` with
+the production `AIControllerFactory` + `get_default_registry_provider()`
++ shared `replay_settings` + Combat Lab fallback adapter, and calls
+`coordinator.start()`. `RunLoop.run()` calls
+`shutdown_all_coordinators(timeout=5.0)` between
+`shutdown_all_calls(timeout=5.0)` (LLM cleanup) and `pygame.quit()`. The
+ordering is pinned by name in
+`tests/unit/test_run_loop_shutdown_ordering.py`.
+
+**Layer compliance:** the verifier (`game/simulation/replay/replay_verifier.py`)
+imports only stdlib + `game.simulation.*`. PROJ-354B audit-remediation
+`27e297815` moved `build_replay_ship_builder` out of the simulation
+layer so the verifier no longer reaches into Strategy. Locked in by
+`tests/unit/simulation/replay/test_replay_verifier_imports.py` (AST
+lint).
+
+| Test | Purpose |
+|------|---------|
+| `tests/integration/replay/test_verification_queue_integration.py` | Live battle → store → coordinator → sidecar PASSED; toggle case → SKIPPED_DISABLED; no-recursion assertion. |
+| `tests/integration/replay/test_headless_visual_equivalence.py` | `run_replay_headless` outcome ≡ `BattleController.start_from_spec` outcome at the spec boundary (no Pygame UI). |
+| `tests/integration/replay/test_verification_uses_production_materializer.py` | Coordinator uses `build_replay_ship_builder` from the source module, not a hand-built test stub. |
+| `tests/integration/replay/test_combat_lab_verification.py` | Combat Lab synthetic record + fallback wired → PASSED; no fallback → ERROR with diagnostic. |
+| `tests/unit/simulation/replay/test_replay_verifier_imports.py` | AST lint: verifier has no `game.strategy.*`/`game.ui.*`/`game.ai.*` imports. |
+| `tests/unit/test_run_loop_shutdown_ordering.py` | `shutdown_all_calls` → `shutdown_all_coordinators` → `pygame.quit()` order pinned by test name. |

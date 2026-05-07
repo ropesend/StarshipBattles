@@ -12,6 +12,7 @@ Phase 1 deliberately keeps scope narrow:
     `battle_runner.py`. Phase 2 wires proper per-component HP from spec
     into Ship construction.
 """
+from types import SimpleNamespace
 from typing import Callable
 
 import pytest
@@ -253,6 +254,30 @@ def test_run_battle_hits_tick_limit_and_reports_correct_end_reason(ship_builder)
     outcome = _run_minimal_battle(ship_builder, seed=42, max_ticks=3, absolute_max_ticks=1000)
     assert outcome.end_reason == EndReason.TICK_LIMIT
     assert outcome.duration_ticks >= 3
+
+
+def test_derive_end_reason_prefers_tick_limit_when_limit_matches_absolute_ceiling():
+    from game.simulation.battle_runner import _derive_end_reason
+
+    engine = SimpleNamespace(tick_counter=10)
+    spec = SimpleNamespace(
+        end_condition=TickLimitCondition(max_ticks=10),
+        absolute_max_ticks=10,
+    )
+
+    assert _derive_end_reason(engine, spec) == EndReason.TICK_LIMIT
+
+
+def test_derive_end_reason_reports_absolute_max_for_nonmatching_tick_limit():
+    from game.simulation.battle_runner import _derive_end_reason
+
+    engine = SimpleNamespace(tick_counter=10)
+    spec = SimpleNamespace(
+        end_condition=TickLimitCondition(max_ticks=50),
+        absolute_max_ticks=10,
+    )
+
+    assert _derive_end_reason(engine, spec) == EndReason.ABSOLUTE_MAX
 
 
 def test_run_battle_team_ids_preserved_in_order(ship_builder):

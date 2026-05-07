@@ -247,6 +247,96 @@ class TestActionTimeResolverDefaults:
         assert result == 1
 
 
+class TestActionTimeResolverPlanetAbilities:
+    """Tests for generic planet ability activation/deactivation timing."""
+
+    def _planet_with_facilities(self):
+        active_facility = MagicMock()
+        active_facility.instance_id = "shield-facility"
+        active_facility.is_operational = True
+        active_facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'shield_generator',
+                    'abilities': {
+                        'PlanetaryShield': {
+                            'activation_time': 50,
+                            'deactivation_time': 10,
+                        }
+                    },
+                }]
+            }
+        }
+
+        inactive_facility = MagicMock()
+        inactive_facility.instance_id = "inactive-facility"
+        inactive_facility.is_operational = False
+        inactive_facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'inactive_generator',
+                    'abilities': {
+                        'PlanetaryShield': {
+                            'activation_time': 99,
+                            'deactivation_time': 88,
+                        }
+                    },
+                }]
+            }
+        }
+
+        planet = MagicMock()
+        planet.facilities = [inactive_facility, active_facility]
+        return planet
+
+    def test_activate_ability_uses_planet_activation_time(self):
+        planet = self._planet_with_facilities()
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={'ability_name': 'PlanetaryShield'},
+        )
+
+        result = ActionTimeResolver.resolve_action_time(planet, order, {})
+
+        assert result == 50
+
+    def test_deactivate_ability_uses_planet_deactivation_time(self):
+        planet = self._planet_with_facilities()
+        order = Order(
+            OrderType.DEACTIVATE_ABILITY,
+            target={'ability_name': 'PlanetaryShield'},
+        )
+
+        result = ActionTimeResolver.resolve_action_time(planet, order, {})
+
+        assert result == 10
+
+    def test_activate_ability_missing_name_defaults_to_one(self):
+        planet = self._planet_with_facilities()
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={'facility_instance_id': 'shield-facility'},
+        )
+
+        result = ActionTimeResolver.resolve_action_time(planet, order, {})
+
+        assert result == 1
+
+    def test_activate_ability_filters_by_facility_instance_id(self):
+        planet = self._planet_with_facilities()
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={
+                'ability_name': 'PlanetaryShield',
+                'facility_instance_id': 'inactive-facility',
+            },
+        )
+
+        result = ActionTimeResolver.resolve_action_time(planet, order, {})
+
+        assert result == 1
+
+
 class TestActionTimeResolverMultipleShips:
     """Tests for fleets with multiple ships."""
 

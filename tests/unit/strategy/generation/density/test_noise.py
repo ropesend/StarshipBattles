@@ -3,7 +3,11 @@ Tests for NoisePrimitive density field.
 """
 
 import pytest
-from game.strategy.generation.density.primitives.noise import NoisePrimitive
+from game.strategy.generation.density.primitives.noise import (
+    NoisePrimitive,
+    _hash_coord,
+    _smooth_noise,
+)
 
 
 class TestNoisePrimitive:
@@ -74,6 +78,19 @@ class TestNoisePrimitive:
         # Should all be the same (midpoint density)
         assert d1 == d2 == d3
 
+    def test_negative_scale_returns_clamped_midpoint_density(self):
+        """Non-positive scale uses the midpoint fallback and clamps the result."""
+        prim = NoisePrimitive(scale=-10, peak_density=3.0)
+
+        assert prim.evaluate(0, 0) == 1.0
+
+    def test_non_positive_octaves_uses_single_octave(self):
+        """The octave loop always evaluates at least one octave."""
+        zero_octave = NoisePrimitive(scale=50, octaves=0, seed=42, peak_density=1.0)
+        one_octave = NoisePrimitive(scale=50, octaves=1, seed=42, peak_density=1.0)
+
+        assert zero_octave.evaluate(25, -10) == one_octave.evaluate(25, -10)
+
     def test_handles_negative_coordinates(self, noise_primitive):
         """Should handle negative coordinates without issues."""
         densities = [
@@ -83,3 +100,34 @@ class TestNoisePrimitive:
         ]
         for d in densities:
             assert 0.0 <= d <= 1.0
+
+
+class TestNoiseHelpers:
+    """Tests for module-level value-noise helpers."""
+
+    def test_hash_coord_is_deterministic_and_seed_sensitive(self):
+        """Coordinate hashing should be stable and seed-dependent."""
+        assert _hash_coord(12, -7, 99) == _hash_coord(12, -7, 99)
+        assert _hash_coord(12, -7, 99) != _hash_coord(12, -7, 100)
+
+    def test_smooth_noise_integer_coordinate_matches_corner_hash(self):
+        """At integer coordinates, interpolation should return the corner value."""
+        expected = (_hash_coord(-3, 4, 11) & 0xFFFF) / 0xFFFF
+
+        assert _smooth_noise(-3.0, 4.0, 11) == pytest.approx(expected)
+
+    def test_smooth_noise_fractional_coordinate_interpolates_between_corners(self):
+        """Fractional samples should stay within their four corner values."""
+        x = 2.25
+        y = -1.75
+        seed = 5
+        corners = [
+            (_hash_coord(2, -2, seed) & 0xFFFF) / 0xFFFF,
+            (_hash_coord(3, -2, seed) & 0xFFFF) / 0xFFFF,
+            (_hash_coord(2, -1, seed) & 0xFFFF) / 0xFFFF,
+            (_hash_coord(3, -1, seed) & 0xFFFF) / 0xFFFF,
+        ]
+
+        value = _smooth_noise(x, y, seed)
+
+        assert min(corners) <= value <= max(corners)

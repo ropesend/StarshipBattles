@@ -25,7 +25,6 @@ import pytest
 from game.ui.panels.system_tree_panel import (
     SystemTreePanel,
     SystemTreeItem,
-    _legacy_provider_label,
 )
 
 
@@ -335,27 +334,33 @@ class TestSetItemsEffects:
         assert getattr(sub, "is_group", False) is True
         assert sub.group_key == "effect_rhb_multi"
 
-    def test_add_effects_group_uses_legacy_provider_label_when_source_label_missing(self, panel):
+    def test_add_effects_group_falls_back_to_unknown_when_source_label_missing(self, panel):
+        """PROJ-362 Phase 4: with the ``_legacy_provider_fields`` shim deleted,
+        a provider missing ``source_label`` falls back to the literal
+        ``"(unknown)"`` — the legacy facility_name/planet_name combo is no
+        longer read.
+
+        In practice every provider emitted by ``collect_system_effects`` /
+        ``collect_sector_effects`` carries a non-empty ``source_label`` (every
+        ``IAbilitySource`` adapter sets it), so the fallback is a defensive
+        safety net only.
+        """
         effects = [{
             "ability_name": "ResourceHarvestBooster",
             "display_name": "Harvest Booster",
             "status": "active",
             "kind": "multiplier",
             "aggregate_value": 1.10,
-            "group_key": "legacy",
+            "group_key": "no_source_label",
             "providers": [{
-                # No source_label → falls back to facility/planet
-                "facility_name": "Mine",
-                "planet_name": "Terra",
+                # No source_label, no legacy keys → "(unknown)"
                 "value": 1.10,
                 "status": "active",
             }],
         }]
         panel._add_effects_group(effects, "System Effects", "system_effects")
         leaf = panel.items[1]
-        # Legacy fallback combines facility + planet
-        assert "Mine" in leaf.label_text
-        assert "Terra" in leaf.label_text
+        assert "(unknown)" in leaf.label_text
 
 
 # ===========================================================================
@@ -471,19 +476,52 @@ class TestFormatHelpers:
 
 
 # ===========================================================================
-# Helper module-level: _legacy_provider_label
+# Provider-label rendering uses ``source_label`` only (PROJ-362 Phase 4).
+# The pre-PROJ-300 ``_legacy_provider_label`` helper was deleted in this phase
+# along with the upstream ``_legacy_provider_fields`` shim. See
+# ``Projects/active_projects/PROJ-362/findings/04_ui_migration_map.md``.
 # ===========================================================================
 
 
-class TestLegacyProviderLabel:
-    def test_facility_and_planet_present(self):
-        s = _legacy_provider_label({"facility_name": "Mine", "planet_name": "Terra"})
-        assert s == "Mine (Terra)"
+class TestProviderLabelRendering:
+    def test_single_provider_uses_source_label_when_present(self, panel):
+        """PROJ-300: provider rendering reads ``source_label`` directly."""
+        effects = [{
+            "ability_name": "ResourceHarvestBooster",
+            "display_name": "Harvest Booster",
+            "status": "active",
+            "kind": "multiplier",
+            "aggregate_value": 1.25,
+            "group_key": "rhb_src",
+            "providers": [{
+                "source_label": "Crab Storm Alpha",
+                "source_kind": "storm",
+                "source_id": "storm-1",
+                "value": 1.25,
+                "status": "active",
+            }],
+        }]
+        panel._add_effects_group(effects, "System Effects", "system_effects")
+        leaf = panel.items[1]
+        assert "Crab Storm Alpha" in leaf.label_text
 
-    def test_facility_only(self):
-        s = _legacy_provider_label({"facility_name": "Mine"})
-        assert s == "Mine"
-
-    def test_neither_returns_unknown(self):
-        s = _legacy_provider_label({})
-        assert s == "(unknown)"
+    def test_multi_provider_subgroup_each_child_uses_source_label(self, panel):
+        effects = [{
+            "ability_name": "ResourceHarvestBooster",
+            "display_name": "Harvest Booster",
+            "status": "active",
+            "kind": "multiplier",
+            "aggregate_value": 1.5,
+            "group_key": "rhb_src_multi",
+            "providers": [
+                {"source_label": "Storm A", "value": 1.25, "status": "active"},
+                {"source_label": "Storm B", "value": 1.20, "status": "active"},
+            ],
+        }]
+        panel._add_effects_group(effects, "System Effects", "system_effects")
+        # Header + sub-group + 2 children = 4 items.
+        assert len(panel.items) == 4
+        child_labels = [item.label_text for item in panel.items[2:]]
+        joined = " | ".join(child_labels)
+        assert "Storm A" in joined
+        assert "Storm B" in joined

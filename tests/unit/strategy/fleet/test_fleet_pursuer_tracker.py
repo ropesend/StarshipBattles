@@ -157,6 +157,23 @@ class TestRedirectPursuers:
         assert redirected == []
         assert excluded == []
 
+    def test_redirect_to_target_without_tracker_still_rewrites_orders(self):
+        """Defensive branch: registration transfer is skipped if target lacks a tracker."""
+        old_target = make_fleet("old_target")
+        new_target = object()
+        pursuer = make_fleet("pursuer")
+        pursuer.add_order(Order(OrderType.MOVE_TO_FLEET, target=old_target))
+
+        tracker = FleetPursuerTracker(old_target)
+        tracker.add_pursuer(pursuer)
+
+        redirected, excluded = tracker.redirect_pursuers(new_target)
+
+        assert pursuer.orders[0].target is new_target
+        assert redirected == [(pursuer, old_target)]
+        assert excluded == []
+        assert tracker.pursuer_count == 0
+
 
 class TestUnregisterOnOrderRemoval:
     """Tests for pursuer unregistration when orders are removed from Fleet (PROJ-222 Phase 3)."""

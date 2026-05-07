@@ -898,6 +898,21 @@ class TestParsePrimaryValue:
         """Dict with custom key parameter returns that key's value."""
         assert Ability._parse_primary_value({'amount': 7}, key='amount') == 7.0
 
+    def test_dict_uses_first_available_fallback_key(self):
+        """Fallback keys are checked in order when the primary key is absent."""
+        assert Ability._parse_primary_value(
+            {'capacity': 12, 'amount': 7},
+            fallback_keys=('amount', 'capacity'),
+        ) == 7.0
+
+    def test_dict_missing_fallback_keys_returns_default(self):
+        """Missing primary and fallback keys return the configured default."""
+        assert Ability._parse_primary_value(
+            {'capacity': 12},
+            default=2.5,
+            fallback_keys=('amount',),
+        ) == 2.5
+
     def test_dict_custom_default(self):
         """Empty dict with custom default returns that default."""
         assert Ability._parse_primary_value({}, default=99.0) == 99.0

@@ -467,6 +467,12 @@ class EventLogWindow(StrategyModalWindow):
             self._show_replay_message(_REPLAY_NOT_AVAILABLE_TITLE, message)
             return
 
+        # PROJ-368 (post-r002): verification_status is intentionally NOT a
+        # launch gate. It is a determinism diagnostic; a FAILED/ERROR sidecar
+        # means the headless re-run diverged from the captured outcome, not
+        # that the captured replay is unwatchable. Resolver loadability
+        # (handled above) remains the only launch precondition.
+
         if lookup.registry_drift:
             self._show_replay_message(
                 _REPLAY_DRIFT_TITLE, _REPLAY_DRIFT_MESSAGE

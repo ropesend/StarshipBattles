@@ -167,7 +167,16 @@ class TestClassificationConfigFromJson:
 class TestGetClassificationConfig:
     """Tests for the get_classification_config cached function."""
 
-    def test_cached_config_fallback_on_error(self):
+    @pytest.mark.parametrize(
+        "error",
+        [
+            FileNotFoundError("Test error"),
+            KeyError("classification"),
+            TypeError("bad classification payload"),
+            ValueError("invalid threshold"),
+        ],
+    )
+    def test_cached_config_fallback_on_error(self, error):
         """Test that get_classification_config falls back to defaults on error."""
         # Clear cache before test
         get_classification_config.cache_clear()
@@ -176,7 +185,7 @@ class TestGetClassificationConfig:
         with patch(
             'game.strategy.generation.loaders.astrophysics_loader.AstrophysicsLoader'
         ) as mock_loader:
-            mock_loader.return_value.load.side_effect = FileNotFoundError("Test error")
+            mock_loader.return_value.load.side_effect = error
 
             config = get_classification_config()
 

@@ -1,4 +1,5 @@
 """Data Transfer Objects for Build Queues."""
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
 
@@ -29,8 +30,8 @@ class BuildQueueSourceDTO:
             queue_id=source.queue_id,
             display_name=source.display_name,
             entity_id=entity_id,
-            # Create a detached copy of the queue items to prevent UI mutation
-            construction_queue=[dict(item) for item in list(source.construction_queue)],
+            # Create detached copies of the queue items to prevent UI mutation
+            construction_queue=[deepcopy(item) for item in list(source.construction_queue)],
             can_build_ships=source.can_build_ships,
             can_build_complexes=source.can_build_complexes,
             context_type=source.context_type,

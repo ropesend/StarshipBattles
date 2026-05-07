@@ -4,10 +4,10 @@
   "skills": {
     "claude-discuss-start": {
       "agents": {
-        "claude": 4
+        "claude": 8
       },
-      "count": 4,
-      "last_used": "2026-05-05T00:06:08Z"
+      "count": 8,
+      "last_used": "2026-05-06T00:29:54Z"
     },
     "claude-fix-crash": {
       "agents": {
@@ -15,6 +15,13 @@
       },
       "count": 1,
       "last_used": "2026-05-04T23:27:39Z"
+    },
+    "claude-proj-archive": {
+      "agents": {
+        "claude": 6
+      },
+      "count": 6,
+      "last_used": "2026-05-06T02:54:10Z"
     },
     "codex-discuss-continue": {
       "agents": {
@@ -25,10 +32,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 8
+        "codex": 17
       },
-      "count": 8,
-      "last_used": "2026-05-05T01:35:39Z"
+      "count": 17,
+      "last_used": "2026-05-06T02:50:43Z"
     },
     "codex-discuss-start": {
       "agents": {
@@ -44,6 +51,13 @@
       "count": 15,
       "last_used": "2026-05-05T04:10:24Z"
     },
+    "codex-starship-project-system": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-05T15:09:23Z"
+    },
     "codex-starship-qa-observer": {
       "agents": {
         "codex": 2
@@ -57,6 +71,13 @@
       },
       "count": 2,
       "last_used": "2026-05-04T14:24:03Z"
+    },
+    "ocode-review-request": {
+      "agents": {
+        "ocode": 24
+      },
+      "count": 24,
+      "last_used": "2026-05-05T11:11:14Z"
     },
     "skill-creator": {
       "agents": {

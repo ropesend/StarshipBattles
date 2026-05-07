@@ -189,6 +189,37 @@ class TestSimulationBattleResolverBehavior:
         assert result.winner == 1
         assert result.tick_count == 250
 
+    def test_resolve_seed_returns_explicit_seed_without_rng(self):
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+
+        assert resolver._resolve_seed(12345) == 12345
+        assert not hasattr(resolver, "_seed_rng")
+
+    def test_resolve_seed_lazily_creates_and_reuses_rng(self, monkeypatch):
+        import random
+
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        created = []
+
+        class _FakeRandom:
+            def __init__(self):
+                self.values = [101, 202]
+                created.append(self)
+
+            def randint(self, low, high):
+                assert (low, high) == (0, 1000000)
+                return self.values.pop(0)
+
+        monkeypatch.setattr(random, "Random", _FakeRandom)
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+
+        assert resolver._resolve_seed(None) == 101
+        assert resolver._resolve_seed(None) == 202
+        assert len(created) == 1
+
 
 class TestSimulationBattleResolverDependencyInjection:
     """AI factory must be injectable; no direct AI-layer import at module level."""

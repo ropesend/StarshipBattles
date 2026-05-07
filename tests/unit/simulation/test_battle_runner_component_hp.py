@@ -116,6 +116,8 @@ def test_run_battle_applies_component_hp_from_spec_before_ticks(
                 component_id="laser_cannon",
                 instance_index=0,
                 current_hp=40.0,
+                max_hp=100.0,
+                status="DAMAGED",
                 is_active=True,
             ),
         ),
@@ -264,3 +266,78 @@ def test_run_battle_full_hp_spec_yields_outcome_not_exceeding_full(
     # Every component's outcome HP must be finite and non-negative.
     for c in full_outcome.components:
         assert c.current_hp >= 0
+
+
+# ---------------------------------------------------------------------------
+# PROJ-354A — extractor populates max_hp + status from live Component
+# ---------------------------------------------------------------------------
+
+
+def test_extract_component_states_populates_max_hp_and_status_distinctly():
+    """PROJ-354A Phase 2 Task 2.1.
+
+    The live extractor must read `comp.max_hp` and `comp.status.name` off
+    each engine `Component` so per-component end-state fidelity is preserved
+    in the replay record. Three components with distinct ComponentStatus
+    values should round-trip through the JSON serializer with their status
+    strings intact.
+    """
+    from game.simulation.battle_runner import _extract_component_states
+    from game.simulation.components.component_constants import ComponentStatus
+    from game.simulation.replay.replay_serialization import (
+        _component_state_from_dict,
+        _component_state_to_dict,
+    )
+
+    class _FakeComp:
+        def __init__(
+            self,
+            cid: str,
+            current_hp: float,
+            max_hp: float,
+            status: ComponentStatus,
+            is_active: bool,
+        ) -> None:
+            self.id = cid
+            self.current_hp = current_hp
+            self.max_hp = max_hp
+            self.status = status
+            self.is_active = is_active
+
+    class _FakeLayer:
+        def __init__(self, comps: list) -> None:
+            self.components = comps
+
+    class _FakeShip:
+        def __init__(self, layers: dict) -> None:
+            self.layers = layers
+
+    ship = _FakeShip(
+        {
+            "CORE": _FakeLayer(
+                [_FakeComp("bridge", 100.0, 100.0, ComponentStatus.ACTIVE, True)]
+            ),
+            "OUTER": _FakeLayer(
+                [
+                    _FakeComp("laser_cannon", 30.0, 100.0, ComponentStatus.DAMAGED, True),
+                    _FakeComp("missile_rack", 80.0, 100.0, ComponentStatus.NO_AMMO, False),
+                ]
+            ),
+        }
+    )
+
+    states = _extract_component_states(ship)
+    assert len(states) == 3
+
+    by_id = {s.component_id: s for s in states}
+    assert by_id["bridge"].status == "ACTIVE"
+    assert by_id["bridge"].max_hp == 100.0
+    assert by_id["laser_cannon"].status == "DAMAGED"
+    assert by_id["laser_cannon"].current_hp == 30.0
+    assert by_id["missile_rack"].status == "NO_AMMO"
+    assert by_id["missile_rack"].is_active is False
+
+    # JSON round-trip preserves all three statuses.
+    for s in states:
+        rebuilt = _component_state_from_dict(_component_state_to_dict(s))
+        assert rebuilt == s

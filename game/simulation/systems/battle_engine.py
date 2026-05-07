@@ -577,8 +577,15 @@ class BattleEngine:
         return new_attacks
 
     def _process_attacks(self, attacks: List[Any]) -> None:
-        """Process projectile, beam, and launch attacks."""
+        """Process projectile, beam, and launch attacks.
+
+        PROJ-359 Phase 4: discriminator unified on `.type`. Beam attacks
+        are now `BeamResolution` dataclasses (not dicts); only the LAUNCH
+        path remains a dict (out-of-scope for PROJ-359; that's a hangar
+        path, not a weapon family).
+        """
         for attack in attacks:
+            # LAUNCH is the only remaining dict-shaped attack carrier.
             is_dict = isinstance(attack, dict)
             attack_type = attack.get('type') if is_dict else attack.type
 

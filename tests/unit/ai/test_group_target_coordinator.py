@@ -138,6 +138,68 @@ class TestFocusFireCoordination:
 
         assert target == alive
 
+    def test_all_dead_enemies_returns_none(self):
+        """Dead enemies are filtered before fallback selection."""
+        from game.ai.group_target_coordinator import GroupTargetCoordinator
+
+        coordinator = GroupTargetCoordinator()
+        dead = _make_enemy("Dead")
+        dead.is_alive = False
+
+        target = coordinator.select_focus_target(
+            enemies=[dead],
+            priority="unknown",
+        )
+
+        assert target is None
+
+    def test_unknown_priority_defaults_to_first_alive_enemy(self):
+        """Unknown priority keeps deterministic first-alive fallback."""
+        from game.ai.group_target_coordinator import GroupTargetCoordinator
+
+        coordinator = GroupTargetCoordinator()
+        dead = _make_enemy("Dead")
+        dead.is_alive = False
+        first_alive = _make_enemy("FirstAlive")
+        second_alive = _make_enemy("SecondAlive")
+
+        target = coordinator.select_focus_target(
+            enemies=[dead, first_alive, second_alive],
+            priority="not_a_policy",
+        )
+
+        assert target == first_alive
+
+    def test_most_damaged_treats_none_max_hp_as_zero_capacity(self):
+        """None max HP should not crash most-damaged target selection."""
+        from game.ai.group_target_coordinator import GroupTargetCoordinator
+
+        coordinator = GroupTargetCoordinator()
+        unknown_capacity = _make_enemy("UnknownCapacity", hp=10, max_hp=None)
+        healthy = _make_enemy("Healthy", hp=100, max_hp=100)
+
+        target = coordinator.select_focus_target(
+            enemies=[healthy, unknown_capacity],
+            priority="most_damaged",
+        )
+
+        assert target == unknown_capacity
+
+    def test_most_damaged_treats_zero_max_hp_as_zero_capacity(self):
+        """Zero max HP should be selectable as fully damaged, not divide by zero."""
+        from game.ai.group_target_coordinator import GroupTargetCoordinator
+
+        coordinator = GroupTargetCoordinator()
+        zero_capacity = _make_enemy("ZeroCapacity", hp=10, max_hp=0)
+        healthy = _make_enemy("Healthy", hp=100, max_hp=100)
+
+        target = coordinator.select_focus_target(
+            enemies=[healthy, zero_capacity],
+            priority="most_damaged",
+        )
+
+        assert target == zero_capacity
+
 
 # =============================================================================
 # Group HP Calculation
@@ -170,6 +232,41 @@ class TestGroupHP:
         from game.ai.group_target_coordinator import GroupTargetCoordinator
 
         ships = [_make_ship("S1", hp=0, max_hp=100)]
+        ratio = GroupTargetCoordinator.compute_group_hp_ratio(ships)
+        assert ratio == 0.0
+
+    def test_group_hp_ratio_ignores_none_max_hp(self):
+        """None max HP should remove the ship from aggregate ratio math."""
+        from game.ai.group_target_coordinator import GroupTargetCoordinator
+
+        ships = [
+            _make_ship("Known", hp=50, max_hp=100),
+            _make_ship("Unknown", hp=10, max_hp=None),
+        ]
+
+        ratio = GroupTargetCoordinator.compute_group_hp_ratio(ships)
+        assert ratio == 0.5
+
+    def test_group_hp_ratio_clamps_current_hp_to_capacity(self):
+        """Over-capacity current HP cannot inflate the aggregate ratio above 1.0."""
+        from game.ai.group_target_coordinator import GroupTargetCoordinator
+
+        ships = [
+            _make_ship("OverCapacity", hp=150, max_hp=100),
+        ]
+
+        ratio = GroupTargetCoordinator.compute_group_hp_ratio(ships)
+        assert ratio == 1.0
+
+    def test_group_hp_ratio_all_zero_max_hp_returns_zero(self):
+        """All zero-capacity ships return 0.0 instead of dividing by zero."""
+        from game.ai.group_target_coordinator import GroupTargetCoordinator
+
+        ships = [
+            _make_ship("ZeroA", hp=10, max_hp=0),
+            _make_ship("ZeroB", hp=20, max_hp=None),
+        ]
+
         ratio = GroupTargetCoordinator.compute_group_hp_ratio(ships)
         assert ratio == 0.0
 
@@ -294,3 +391,19 @@ class TestFlagshipSuccession:
         )
 
         assert successor == heavy_cnc
+
+    def test_find_successor_tie_keeps_first_eligible_ship(self):
+        """Equal-mass C&C candidates retain input order."""
+        from game.ai.group_target_coordinator import GroupTargetCoordinator
+
+        first_cnc = _make_ship("FirstCNC", has_cnc=True)
+        second_cnc = _make_ship("SecondCNC", has_cnc=True)
+        first_cnc.mass = 12000
+        second_cnc.mass = 12000
+
+        successor = GroupTargetCoordinator.find_flagship_successor(
+            ships=[first_cnc, second_cnc],
+            has_cnc_check=lambda s: s._has_cnc,
+        )
+
+        assert successor == first_cnc

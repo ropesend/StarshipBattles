@@ -699,8 +699,15 @@ class TestShipIOEdgeCases:
         loaded_ship = Ship.from_dict(loaded_data, registries=fresh_registries)
         assert loaded_ship is not None
 
-    def test_load_ship_ignores_unknown_component_ids(self, fresh_registries, tmp_path):
-        """Load should skip unknown component IDs without error."""
+    def test_load_ship_raises_for_unknown_component_ids(self, fresh_registries, tmp_path):
+        """Load should raise ValidationException for unknown component IDs.
+
+        PROJ-358 audit remediation (CQ-01): unknown ids previously silently
+        absorbed; the contract now is a loud ValidationException so save/registry
+        drift cannot mask itself.
+        """
+        from game.core.exceptions import ValidationException
+
         ship_data = {
             "name": "UnknownComponentShip",
             "ship_class": "Escort",
@@ -719,9 +726,10 @@ class TestShipIOEdgeCases:
         with open(load_file, 'r') as f:
             loaded_data = json.load(f)
 
-        # Should not raise
-        loaded_ship = Ship.from_dict(loaded_data, registries=fresh_registries)
-        assert loaded_ship is not None
+        with pytest.raises(ValidationException) as exc_info:
+            Ship.from_dict(loaded_data, registries=fresh_registries)
+        assert exc_info.value.context["component_id"] == "nonexistent_component_12345"
+        assert exc_info.value.context["layer"] == "CORE"
 
     def test_default_ships_folder_is_configurable(self):
         """ShipIO.default_ships_folder should be configurable."""

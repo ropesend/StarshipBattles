@@ -1,0 +1,40 @@
+{
+  "original_count": 44,
+  "confirmed": 31,
+  "downgraded": 0,
+  "rejected": 2,
+  "no_verdict": 11,
+  "filtered_count": 42,
+  "rejection_rate_pct": 4.5,
+  "by_shard": {
+    "validator_1": {
+      "reviewed": 11,
+      "confirmed": 11,
+      "downgraded": 0,
+      "rejected": 0
+    },
+    "validator_2": {
+      "reviewed": 11,
+      "confirmed": 9,
+      "downgraded": 0,
+      "rejected": 2
+    },
+    "validator_3": {
+      "reviewed": 11,
+      "confirmed": 11,
+      "downgraded": 0,
+      "rejected": 0
+    },
+    "validator_4": {
+      "reviewed": 0,
+      "confirmed": 0,
+      "downgraded": 0,
+      "rejected": 0
+    }
+  },
+  "rejected_ids": [
+    "CJ-07",
+    "ERR-354B-004"
+  ],
+  "downgraded_ids": {}
+}

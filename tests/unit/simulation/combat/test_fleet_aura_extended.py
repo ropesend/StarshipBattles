@@ -252,6 +252,20 @@ class TestExternalModifiers:
         assert len(manager._external) == 0
 
 
+class TestBonusLookupDefaults:
+    """Tests for direct bonus lookup default branches."""
+
+    def test_unknown_team_returns_zero_bonuses(self):
+        """Unknown team IDs have no attack or defense aura bonus."""
+        manager = FleetAuraManager()
+        known_ship = _make_ship(team_id=0)
+        unknown_ship = _make_ship(team_id=99)
+        manager.initialize([known_ship])
+
+        assert manager.get_attack_bonus(unknown_ship) == 0.0
+        assert manager.get_defense_bonus(unknown_ship) == 0.0
+
+
 # =============================================================================
 # Provider Fingerprint Edge Cases
 # =============================================================================
@@ -264,8 +278,17 @@ class TestProviderFingerprint:
         """Dead provider ship has op_count=0 in fingerprint."""
         manager = FleetAuraManager()
         ship = _make_ship(team_id=0, alive=False)
+        # PROJ-357: AuraProvider now binds to (component, ability)
+        # identity. Direct construction here is exercising the
+        # fingerprint helper only — the identity fields are stubbed
+        # so the helper has something to walk.
+        stub_ab = MagicMock()
+        stub_comp = MagicMock()
+        stub_comp.is_operational = False
+        stub_comp.ability_instances = [stub_ab]
         manager._providers = [AuraProvider(
-            ship=ship, ability_name="Test", value=1.0,
+            ship=ship, component=stub_comp, ability=stub_ab,
+            ability_name="Test", value=1.0,
             scope=AbilityScope.FLEET, source_name="Ship", stack_group="default",
         )]
 

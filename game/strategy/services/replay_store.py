@@ -29,6 +29,7 @@ and only then — the oldest replays beyond the cap are deleted.
 from __future__ import annotations
 
 import logging
+import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -43,6 +44,10 @@ from game.simulation.replay import (
     ReplayOutcome,
     ReplayRecord,
     ReplaySpec,
+)
+from game.strategy.services.replay_verification_sidecar import (
+    SIDECAR_FILE_SUFFIX,
+    sidecar_path_for_replay,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,9 +64,16 @@ class ReplaySettings:
 
     Loaded from ``output/settings/replay_settings.json``. Missing file
     or malformed JSON → defaults silently with a debug log.
+
+    PROJ-354B Phase 1: ``verification_enabled`` and
+    ``verification_queue_cap`` control the background end-state
+    verification coordinator. Both default to safe values that turn the
+    feature on with a small bounded queue.
     """
 
     max_replays_per_save: int = 50
+    verification_enabled: bool = True
+    verification_queue_cap: int = 16
 
 
 def load_replay_settings(path: Optional[Path] = None) -> ReplaySettings:
@@ -82,7 +94,18 @@ def load_replay_settings(path: Optional[Path] = None) -> ReplaySettings:
         cap = int(cap_raw)
     except (TypeError, ValueError):
         cap = 50
-    return ReplaySettings(max_replays_per_save=max(1, cap))
+    # PROJ-354B Phase 1.1: verification settings.
+    verification_enabled = bool(data.get("verification_enabled", True))
+    queue_cap_raw = data.get("verification_queue_cap", 16)
+    try:
+        queue_cap = int(queue_cap_raw)
+    except (TypeError, ValueError):
+        queue_cap = 16
+    return ReplaySettings(
+        max_replays_per_save=max(1, cap),
+        verification_enabled=verification_enabled,
+        verification_queue_cap=max(1, queue_cap),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +152,18 @@ class ReplayStore:
         self._json_writer = json_writer
         self._clock = clock
         self._pending: Dict[str, _PendingCapture] = {}
+        # PROJ-354B Phase 3.1: post-persist listeners. Each listener is
+        # a ``Callable[[ReplayRecord, Path], None]``; failures are
+        # caught so one bad subscriber cannot block the others or the
+        # persist itself.
+        # PROJ-354B audit ERR-354B-002: ``add``/``remove``/``persist``
+        # may run on different threads (composition root, shutdown
+        # thread, simulation thread). Guard the registry with a lock
+        # so check-then-mutate sequences are atomic.
+        self._listener_lock = threading.Lock()
+        self._on_record_persisted_listeners: List[
+            Callable[[ReplayRecord, Path], None]
+        ] = []
 
     # ---- save lifecycle ----
 
@@ -146,10 +181,50 @@ class ReplayStore:
     def save_root(self) -> Optional[Path]:
         return self._save_root
 
-    def _replay_dir(self) -> Optional[Path]:
+    # ---- PROJ-354B Phase 3.1: post-persist listener API ----
+
+    def add_on_record_persisted_listener(
+        self,
+        callback: Callable[[ReplayRecord, Path], None],
+    ) -> None:
+        """Register ``callback`` to fire after each successful persist.
+
+        Idempotent — registering the same callable twice is a no-op.
+        Listeners receive ``(record, path)`` AFTER the atomic write
+        succeeds and BEFORE ring-buffer eviction runs.
+        """
+        with self._listener_lock:
+            if callback not in self._on_record_persisted_listeners:
+                self._on_record_persisted_listeners.append(callback)
+
+    def remove_on_record_persisted_listener(
+        self,
+        callback: Callable[[ReplayRecord, Path], None],
+    ) -> None:
+        """Unregister ``callback``. Tolerant to unknown callables."""
+        with self._listener_lock:
+            if callback in self._on_record_persisted_listeners:
+                self._on_record_persisted_listeners.remove(callback)
+
+    @property
+    def replay_dir(self) -> Optional[Path]:
+        """Return the ``replays/`` directory under the save root, or
+        ``None`` when no save is active.
+
+        PROJ-354B audit AR-002: promoted from a private helper so
+        sibling services (``ReplayResolver``,
+        ``ReplayVerificationCoordinator``) can ask for the path through
+        the public surface instead of reaching into ``_replay_dir``.
+        """
         if self._save_root is None:
             return None
         return self._save_root / self.REPLAY_SUBDIR
+
+    def _replay_dir(self) -> Optional[Path]:
+        # Backwards-compatible private alias kept so existing callers
+        # don't break across the audit-remediation commit. Prefer the
+        # ``replay_dir`` public property in new code.
+        return self.replay_dir
 
     def _ensure_replay_dir(self) -> Optional[Path]:
         rd = self._replay_dir()
@@ -199,7 +274,13 @@ class ReplayStore:
 
     def persist(self, record: ReplayRecord) -> Optional[Path]:
         """Atomic-write the record then evict excess. Returns the file path
-        on success, ``None`` if no save root is set."""
+        on success, ``None`` if no save root is set.
+
+        PROJ-354B Phase 3.1: listeners fire AFTER the successful write
+        and BEFORE eviction. Each listener runs in its own
+        ``try/except`` so one bad subscriber cannot block others or
+        cause persist to return ``None``.
+        """
         rd = self._ensure_replay_dir()
         if rd is None:
             return None
@@ -209,6 +290,20 @@ class ReplayStore:
         except Exception:  # Intentional broad catch: capture must not crash
             logger.exception("PROJ-312 replay persist failed: %s", path)
             return None
+        # Notify listeners (snapshot the list so a listener that
+        # mutates the registry mid-iteration cannot break the loop).
+        # PROJ-354B audit ERR-354B-002: snapshot under the listener
+        # lock so a concurrent ``add``/``remove`` cannot interleave
+        # with the read.
+        with self._listener_lock:
+            listeners_snapshot = list(self._on_record_persisted_listeners)
+        for listener in listeners_snapshot:
+            try:
+                listener(record, path)
+            except Exception:  # Intentional broad catch: bad subscriber must not block persist
+                logger.exception(
+                    "PROJ-354B on_record_persisted listener raised; ignoring"
+                )
         # Write-then-evict: never delete before the new file is on disk.
         self._evict_excess()
         return path
@@ -221,7 +316,7 @@ class ReplayStore:
         if rd is None or not rd.exists():
             return []
         records: List[ReplayRecord] = []
-        for p in sorted(rd.glob(f"{self.REPLAY_FILE_PREFIX}*{self.REPLAY_FILE_SUFFIX}")):
+        for p in sorted(self._iter_replay_files(rd)):
             rec = self._safe_load(p)
             if rec is None:
                 continue
@@ -236,7 +331,7 @@ class ReplayStore:
         return records
 
     def load(self, replay_id: str) -> Optional[ReplayRecord]:
-        rd = self._replay_dir()
+        rd = self.replay_dir
         if rd is None:
             return None
         path = rd / f"{self.REPLAY_FILE_PREFIX}{replay_id}{self.REPLAY_FILE_SUFFIX}"
@@ -247,6 +342,31 @@ class ReplayStore:
             return None
         return rec
 
+    def load_or_error(
+        self, replay_id: str
+    ) -> Tuple[Optional[ReplayRecord], Optional[str]]:
+        """Load a replay and surface the failure reason for the UI.
+
+        PROJ-354B audit AR-002: gives ``ReplayResolver`` the
+        granularity it needs (missing / corrupt / version_drift)
+        without reaching into ``_safe_load``. Returns
+        ``(record, None)`` on success or ``(None, reason)`` on
+        failure. ``reason`` is one of ``"missing"``, ``"corrupt"``,
+        ``"version_drift"``.
+        """
+        rd = self.replay_dir
+        if rd is None:
+            return None, "missing"
+        path = rd / f"{self.REPLAY_FILE_PREFIX}{replay_id}{self.REPLAY_FILE_SUFFIX}"
+        if not path.exists():
+            return None, "missing"
+        rec = self._safe_load(path)
+        if rec is None:
+            return None, "corrupt"
+        if rec.schema_version != REPLAY_SCHEMA_VERSION:
+            return None, "version_drift"
+        return rec, None
+
     def delete(self, replay_id: str) -> bool:
         rd = self._replay_dir()
         if rd is None:
@@ -255,10 +375,13 @@ class ReplayStore:
         if path.exists():
             try:
                 path.unlink()
-                return True
             except OSError:
                 logger.exception("PROJ-312 failed to delete replay: %s", path)
                 return False
+            # PROJ-354B Phase 2.2: also unlink the verification sidecar so
+            # it can never outlive its replay record.
+            self._unlink_sidecar(rd, replay_id)
+            return True
         return False
 
     # ---- helpers ----
@@ -279,12 +402,17 @@ class ReplayStore:
 
     def _evict_excess(self) -> int:
         """Delete the oldest replays beyond ``max_replays_per_save``.
-        Returns the count deleted."""
+        Returns the count deleted.
+
+        PROJ-354B Phase 2.3: each evicted record's verification sidecar
+        is unlinked alongside it so the sidecar lifecycle is bounded by
+        the replay it describes.
+        """
         rd = self._replay_dir()
         if rd is None or not rd.exists():
             return 0
         files = sorted(
-            rd.glob(f"{self.REPLAY_FILE_PREFIX}*{self.REPLAY_FILE_SUFFIX}"),
+            self._iter_replay_files(rd),
             key=lambda p: p.stat().st_mtime,
         )
         cap = self._settings.max_replays_per_save
@@ -296,7 +424,51 @@ class ReplayStore:
                 deleted += 1
             except OSError:
                 logger.exception("PROJ-312 ring buffer eviction failed: %s", p)
+                continue
+            replay_id = self._replay_id_from_path(p)
+            if replay_id is not None:
+                self._unlink_sidecar(rd, replay_id)
         return deleted
+
+    @staticmethod
+    def _iter_replay_files(rd: Path):
+        """Yield only true replay-record files, excluding sidecars.
+
+        Sidecars are named ``replay_<id>.verification.json`` and so
+        match the same ``replay_*.json`` glob; without the suffix
+        filter the eviction logic would count them toward the cap and
+        evict real records prematurely.
+        """
+        for p in rd.glob(f"{ReplayStore.REPLAY_FILE_PREFIX}*{ReplayStore.REPLAY_FILE_SUFFIX}"):
+            if p.name.endswith(SIDECAR_FILE_SUFFIX):
+                continue
+            yield p
+
+    @staticmethod
+    def _replay_id_from_path(path: Path) -> Optional[str]:
+        """Extract the replay_id from a ``replay_<id>.json`` filename."""
+        name = path.name
+        if not name.startswith(ReplayStore.REPLAY_FILE_PREFIX):
+            return None
+        if not name.endswith(ReplayStore.REPLAY_FILE_SUFFIX):
+            return None
+        stem = name[len(ReplayStore.REPLAY_FILE_PREFIX): -len(ReplayStore.REPLAY_FILE_SUFFIX)]
+        return stem or None
+
+    @staticmethod
+    def _unlink_sidecar(rd: Path, replay_id: str) -> None:
+        """Best-effort unlink of the sidecar for ``replay_id``. Errors
+        are logged but never raised — a failed sidecar unlink must not
+        break replay deletion or eviction."""
+        sidecar_path = sidecar_path_for_replay(rd, replay_id)
+        if not sidecar_path.exists():
+            return
+        try:
+            sidecar_path.unlink()
+        except OSError:
+            logger.exception(
+                "PROJ-354B failed to delete verification sidecar: %s", sidecar_path
+            )
 
     def _build_record(
         self,

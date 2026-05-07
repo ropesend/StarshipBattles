@@ -297,3 +297,44 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-297 | Code Review Cleanup - Quick Wins | 2026-04-27 | PROJ-251-300 |
 | PROJ-298 | FleetOrder Rename Cleanup | 2026-04-27 | PROJ-251-300 |
 | PROJ-299 | Race Description Generator (LLM) | 2026-04-27 | PROJ-251-300 |
+| PROJ-300 | Universal IAbilitySource Framework + Storm/Facility Migration | 2026-05-04 | PROJ-251-300 |
+| PROJ-301 | Planet Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-302 | Star Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-303 | Warp Point Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-304 | Star System Archetype Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-305 | Fleet Strategic-Layer Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-306 | Battle Simulation DI Cleanup (PROJ-274 closure) | 2026-04-27 | PROJ-301-350 |
+| PROJ-307 | Documentation Freshness Timestamps | 2026-04-27 | PROJ-301-350 |
+| PROJ-308 | Broad Exception Handler Justifications | 2026-04-27 | PROJ-301-350 |
+| PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | 2026-05-04 | PROJ-301-350 |
+| PROJ-310 | Deep Nesting Investigative Review | 2026-05-04 | PROJ-301-350 |
+| PROJ-311 | Return Type Annotation Backfill and Convention | 2026-04-27 | PROJ-301-350 |
+| PROJ-312 | Add Battle Replay System | 2026-05-04 | PROJ-301-350 |
+| PROJ-313 | Strategy Modal Window Base Class Refactor | 2026-05-04 | PROJ-301-350 |
+| PROJ-314 | Unify Ship Theme Loader Schema | 2026-05-04 | PROJ-301-350 |
+| PROJ-315 | Fleet Report Component Damage Panel | 2026-05-04 | PROJ-301-350 |
+| PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | 2026-05-04 | PROJ-301-350 |
+| PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | 2026-05-04 | PROJ-301-350 |
+| PROJ-318 | PROJ-314 Closeout Remediations | 2026-05-04 | PROJ-301-350 |
+| PROJ-319 | Audit-shrink cleanup 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-320 | Strategic Combat Round Budget | 2026-05-04 | PROJ-301-350 |
+| PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-323 | Test review P2 opportunistic polish 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-324 | Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals | 2026-05-04 | PROJ-301-350 |
+| PROJ-325 | PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision | 2026-05-04 | PROJ-301-350 |
+| PROJ-326 | Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard | 2026-05-04 | PROJ-301-350 |
+| PROJ-327 | Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope | 2026-05-04 | PROJ-301-350 |
+| PROJ-328 | UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on) | 2026-05-04 | PROJ-301-350 |
+| PROJ-331 | Test coverage - combat / save-load (44 tests + 4 review-fix tests, 4 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-332 | Test coverage - turn engine (31 tests, 7 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-333 | Test coverage - per-turn processing engines (94 tests, 8 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-334 | Test coverage - algorithmic correctness (pathfinding + galaxy generation, 36 tests + audit) | 2026-05-04 | PROJ-301-350 |
+| PROJ-335 | Test coverage - strategy data layer batch (77 tests, 5 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-336 | Test coverage - strategy services (51 tests, 4 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-337 | Test coverage - UI research subsystem (60 tests, 3 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-338 | Test coverage - UI panels high-risk characterization (143 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-339 | Test coverage - UI panels mid-risk characterization (29 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-340 | Test coverage - UI services + utility characterization (45 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | 2026-05-04 | PROJ-301-350 |
+| PROJ-342 | Drop self.game handle from TestLab UI | 2026-05-04 | PROJ-301-350 |
