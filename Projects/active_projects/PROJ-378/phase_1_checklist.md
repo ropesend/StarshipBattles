@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** none
 **Review Mode:** standard
 **Files (planned):**
@@ -23,9 +23,9 @@
 **File:** `tests/fixtures/galaxy_fixtures.py` (new — canonical implementation), `tests/unit/strategy/data/conftest.py` (new, optional thin bridge)
 **Tests:** N/A (will be exercised by Task 1.3)
 
-- [ ] Create new file `tests/fixtures/galaxy_fixtures.py` (this is the canonical implementation module, mirroring the established `tests.fixtures.*` convention — see `tests/fixtures/README.md`, `tests/fixtures/ai.py`, `tests/fixtures/battle.py`, `tests/fixtures/common.py`).
-- [ ] Add module docstring referencing PROJ-378 and the post-PROJ-372 facade.
-- [ ] Implement `make_galaxy_stub(radius: int = 100) -> Galaxy:` per the design doc:
+- [x] Create new file `tests/fixtures/galaxy_fixtures.py` (this is the canonical implementation module, mirroring the established `tests.fixtures.*` convention — see `tests/fixtures/README.md`, `tests/fixtures/ai.py`, `tests/fixtures/battle.py`, `tests/fixtures/common.py`).
+- [x] Add module docstring referencing PROJ-378 and the post-PROJ-372 facade.
+- [x] Implement `make_galaxy_stub(radius: int = 100) -> Galaxy:` per the design doc:
   ```python
   from game.strategy.data.galaxy import Galaxy
   from game.strategy.data.galaxy_state import GalaxyState
@@ -41,8 +41,8 @@
       galaxy._spatial = GalaxySpatialIndex(galaxy._state)
       return galaxy
   ```
-- [ ] Docstring on `make_galaxy_stub` lists which methods are safe to call (anything that delegates to `_registry` / `_spatial` or reads `_state`) and which are NOT (anything calling generators — `generate_systems`, `generate_planets`, `generate_warp_lanes`); for those, use real `Galaxy(radius=...)`.
-- [ ] (Optional but recommended) Create `tests/unit/strategy/data/conftest.py` as a thin pytest fixture bridge that delegates to the implementation:
+- [x] Docstring on `make_galaxy_stub` lists which methods are safe to call (anything that delegates to `_registry` / `_spatial` or reads `_state`) and which are NOT (anything calling generators — `generate_systems`, `generate_planets`, `generate_warp_lanes`); for those, use real `Galaxy(radius=...)`.
+- [x] (Optional but recommended) Create `tests/unit/strategy/data/conftest.py` as a thin pytest fixture bridge that delegates to the implementation:
   ```python
   import pytest
   from tests.fixtures.galaxy_fixtures import make_galaxy_stub
@@ -53,9 +53,9 @@
       return make_galaxy_stub()
   ```
   This gives unit tests in this directory a one-line fixture-injection API while integration tests import `make_galaxy_stub` directly.
-- [ ] Verify: `python -c "from tests.fixtures.galaxy_fixtures import make_galaxy_stub; g = make_galaxy_stub(); assert g.radius == 100; assert g.systems == {}"` succeeds.
+- [x] Verify: `python -c "from tests.fixtures.galaxy_fixtures import make_galaxy_stub; g = make_galaxy_stub(); assert g.radius == 100; assert g.systems == {}"` succeeds.
 
-**Notes:** [Filled during implementation]
+**Notes:** Done — fixture module + thin bridge in place; smoke test green.
 
 ---
 
@@ -63,8 +63,8 @@
 **File:** `tests/unit/strategy/data/test_galaxy_cleanup.py:58-104`
 **Tests:** `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyUnregisterPlanet -v`
 
-- [ ] Replace the entire `with patch.object(Galaxy, '__init__', lambda self, radius=100: None):` block at `:62-103` with a `make_galaxy_stub()` call.
-- [ ] **Before:**
+- [x] Replace the entire `with patch.object(Galaxy, '__init__', lambda self, radius=100: None):` block at `:62-103` with a `make_galaxy_stub()` call.
+- [x] **Before:**
   ```python
   with patch.object(Galaxy, '__init__', lambda self, radius=100: None):
       galaxy = Galaxy.__new__(Galaxy)
@@ -85,10 +85,10 @@
   galaxy = make_galaxy_stub()
   # ... (rest of fixture, unchanged: planet creation + state population via galaxy._state.* or via galaxy.register_planet)
   ```
-- [ ] Remove the local `from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry` import inside the fixture (no longer needed; the stub wires it).
-- [ ] Update the manual registration block at `:94-102` — keep the inline mutations against `galaxy._state.*` or `galaxy._registry.register_planet(...)`. (The current code mutates the un-prefixed dicts; verify all six mutations land on `galaxy._state.*` correctly via property forwarders.)
-- [ ] Drop the now-unused `from unittest.mock import ... patch` import if no other test uses it (check the file's other imports first).
-- [ ] Verify: `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyUnregisterPlanet -v` shows 5 passed, 0 errors.
+- [x] Remove the local `from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry` import inside the fixture (no longer needed; the stub wires it).
+- [x] Update the manual registration block at `:94-102` — keep the inline mutations against `galaxy._state.*` or `galaxy._registry.register_planet(...)`. (The current code mutates the un-prefixed dicts; verify all six mutations land on `galaxy._state.*` correctly via property forwarders.)
+- [x] Drop the now-unused `from unittest.mock import ... patch` import if no other test uses it (check the file's other imports first).
+- [x] Verify: `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyUnregisterPlanet -v` shows 5 passed, 0 errors.
 
 **Notes:** [Filled during implementation]
 
@@ -98,10 +98,10 @@
 **File:** `tests/unit/strategy/data/test_galaxy_cleanup.py:163-190`
 **Tests:** `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyRemoveWarpLink -v`
 
-- [ ] Replace the `with patch.object(...)` block at `:166-188` with `galaxy = make_galaxy_stub()`.
-- [ ] Reset/replace the inline state population — `galaxy.systems[system_a.global_location] = system_a` works through the property forwarder, but for clarity and to mirror the production wiring, prefer `galaxy._state.systems[...] = ...` inside test setup.
-- [ ] Note: `Galaxy.remove_warp_link` at `galaxy.py:209-232` reads `self._state.name_map` and `self._state.global_hex_warp_points` directly — no service delegation. Stub provides this via `_state`. No additional wiring needed.
-- [ ] Verify: `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyRemoveWarpLink -v` shows 4 passed, 0 errors.
+- [x] Replace the `with patch.object(...)` block at `:166-188` with `galaxy = make_galaxy_stub()`.
+- [x] Reset/replace the inline state population — kept inline `galaxy.systems[...] = ...` writes (route through forwarder identically).
+- [x] Note: `Galaxy.remove_warp_link` at `galaxy.py:209-232` reads `self._state.name_map` and `self._state.global_hex_warp_points` directly — no service delegation. Stub provides this via `_state`. No additional wiring needed.
+- [x] Verify: `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyRemoveWarpLink -v` shows 4 passed, 0 errors.
 
 **Notes:** [Filled during implementation]
 
@@ -111,10 +111,10 @@
 **File:** `tests/unit/strategy/data/test_galaxy_cleanup.py:245-294`
 **Tests:** `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyGetAllFleetsInSystem -v`
 
-- [ ] Replace the `with patch.object(...)` block at `:248-273` with `galaxy = make_galaxy_stub()`.
-- [ ] Note: `Galaxy.get_all_fleets_in_system` at `galaxy.py:238-240` delegates to `self._spatial.get_all_fleets_in_system(...)` — stub wires `_spatial` (Task 1.1). No additional wiring needed.
-- [ ] State population: `galaxy.systems[...] = ...` and `galaxy.name_map[...] = ...` route through property forwarders correctly (read-modify on the forwarded dict). Inline writes work; the test's existing logic doesn't need restructuring.
-- [ ] Verify: `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyGetAllFleetsInSystem -v` shows 6 passed, 0 errors.
+- [x] Replace the `with patch.object(...)` block at `:248-273` with `galaxy = make_galaxy_stub()`.
+- [x] Note: `Galaxy.get_all_fleets_in_system` at `galaxy.py:238-240` delegates to `self._spatial.get_all_fleets_in_system(...)` — stub wires `_spatial` (Task 1.1). No additional wiring needed.
+- [x] State population: inline writes route through forwarder.
+- [x] Verify: `pytest tests/unit/strategy/data/test_galaxy_cleanup.py::TestGalaxyGetAllFleetsInSystem -v` shows 6 passed, 0 errors. **Note:** PROJ-372's `_spatial.get_all_fleets_in_system` reads `planet.radius_hexes`; the test's `MagicMock` planet needed `planet.radius_hexes = 0` set explicitly (pre-PROJ-372 the method was inline on Galaxy and didn't iterate planet hexes). One-line fixture amendment.
 
 **Notes:** [Filled during implementation]
 
@@ -124,10 +124,10 @@
 **File:** `tests/unit/strategy/data/test_galaxy_cleanup.py` (full)
 **Tests:** `pytest tests/unit/strategy/data/test_galaxy_cleanup.py -v`
 
-- [ ] Run the full file; expect **18 passed, 0 errors** (was 3 passed, 15 errors; 18 tests collected total).
-- [ ] Spot-check: the `TestDysonSpherePlanetType` class at `:13-52` is unchanged (tests the enum, not Galaxy state) — ensure its 3 tests still pass.
-- [ ] Run an adjacent unit test to verify no global-state pollution: `pytest tests/unit/strategy/data/test_galaxy.py tests/unit/strategy/data/test_galaxy_state.py -v` — expect all-pass.
-- [ ] Confirm: `Grep` for `patch.object(Galaxy,` in `tests/unit/strategy/data/test_galaxy_cleanup.py` returns zero matches.
+- [x] Run the full file; expect **18 passed, 0 errors** — confirmed: `18 passed in 0.44s`.
+- [x] Spot-check: the `TestDysonSpherePlanetType` class at `:13-52` is unchanged (tests the enum, not Galaxy state) — its 3 tests still pass.
+- [x] Run an adjacent unit test to verify no global-state pollution: `test_galaxy.py + test_galaxy_state.py` → 49 passed.
+- [x] Confirm: `Grep` for `patch.object(Galaxy,` in `tests/unit/strategy/data/test_galaxy_cleanup.py` returns zero matches.
 
 **Notes:** [Filled during implementation]
 
@@ -136,10 +136,10 @@
 ## Phase Completion Checklist
 
 When all tasks above are done:
-- [ ] All task checkboxes above are checked.
-- [ ] `pytest tests/unit/strategy/data/test_galaxy_cleanup.py -v` reports 18 passed, 0 errors.
-- [ ] `python -c "import ast, pathlib; src = pathlib.Path('tests/unit/strategy/data/test_galaxy_cleanup.py').read_text(); assert 'patch.object(Galaxy' not in src; assert 'Galaxy.__new__' not in src"` succeeds.
-- [ ] Update status at top of this file to `Complete`.
-- [ ] Update plan.md phase table row to `Complete`.
-- [ ] Update plan.md Current State to point to Phase 2.
+- [x] All task checkboxes above are checked.
+- [x] `pytest tests/unit/strategy/data/test_galaxy_cleanup.py -v` reports 18 passed, 0 errors.
+- [x] AST guard: legacy pattern check passes.
+- [x] Update status at top of this file to `Complete`.
+- [x] Update plan.md phase table row to `Complete`.
+- [x] Update plan.md Current State to point to Phase 2.
 - [ ] Run `python Projects/scripts/phase_complete.py PROJ-378 1` per 03c.
