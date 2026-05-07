@@ -15,16 +15,16 @@
 ## Quick Status
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
-| 1. Golden-save fixture (closes PROJ-372 review MAJ-001) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | — |
+| 1. Golden-save fixture (closes PROJ-372 review MAJ-001) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Pathfinding shim migration sweep (closes PROJ-372 review MIN-002, partial) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 (independent in code; serial for review continuity) |
 | 3. Shim deletion or scope-rebound + AST guard | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
 
 ## Current State
-**Last Updated:** 2026-05-06 22:15
-**Active Phase:** Planning complete; awaiting user kickoff for Phase 1.
-**Last Action:** Architect produced plan + design + per-phase checklists. PROJ-372 review MAJ-001 (golden-save fixture) and MIN-002 (pathfinding shim sweep) are scoped here.
-**Next Action:** User confirms scope. Phase 1 can start.
-**Blockers:** None. Note: PROJ-372 plan.md row dated 2026-05-07 mentions "PROJ-376 follow-up" for these two items; PROJ-376 was already allocated to BuildQueueScreen Lifecycle, so this work moved to PROJ-377.
+**Last Updated:** 2026-05-07
+**Active Phase:** Phase 1 complete; ready for Phase 2.
+**Last Action:** Phase 1 shipped — `tests/fixtures/saves/_capture_baseline.py` capture script + `galaxy_proj372_baseline.json` (~99 KB) + `galaxy_proj372_populated.json` (~252 KB) + 2 round-trip identity tests in `test_save_round_trip.py`. 7/7 passing. Capture is best-effort deterministic (image fields normalised; warp-point fields and star image_ids consume unseeded Random — see `decisions.md` 2026-05-07 row); CI contract is round-trip identity, not byte-identical re-capture.
+**Next Action:** Phase 2 — pathfinding shim migration sweep (Class A: 5 sites + Class D verify). Phase 3 — AST shim-scope guard.
+**Blockers:** None.
 
 ## Overview
 

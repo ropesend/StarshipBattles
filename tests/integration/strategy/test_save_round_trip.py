@@ -10,14 +10,23 @@ The five fixture saves vary across:
 3. 5-system synthetic with warp lanes.
 4. 10-system synthetic with planets.
 5. 20-system synthetic with planets + warp lanes.
+
+PROJ-377 Phase 1 adds two checked-in JSON golden-save fixtures (baseline +
+populated) plus matching round-trip identity tests. See PROJ-377 plan.md
++ decisions.md for the format / seed / capture-script convention.
 """
 from __future__ import annotations
 
+import json
 import random
+from pathlib import Path
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.planet import Planet, PlanetType
+
+
+_FIXTURE_DIR = Path(__file__).resolve().parent.parent.parent / "fixtures" / "saves"
 
 
 def _build_minimal_planet(name: str, location: HexCoord) -> Planet:
@@ -96,3 +105,26 @@ def test_round_trip_20_systems_planets_warp() -> None:
             pass
     galaxy.generate_warp_lanes()
     _round_trip_assert(galaxy)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-377 Phase 1: golden-save JSON fixture round-trip identity tests.
+# ---------------------------------------------------------------------------
+
+def test_round_trip_golden_baseline_fixture() -> None:
+    """Load the checked-in baseline fixture and assert byte-identical round-trip.
+
+    Captures cumulative serialization drift across PROJ-368 → PROJ-372 (and
+    forward). If a field is added to `to_dict` but not read by `from_dict`
+    (or vice versa), this test fails.
+    """
+    fixture = json.loads((_FIXTURE_DIR / "galaxy_proj372_baseline.json").read_text())
+    galaxy = Galaxy.from_dict(fixture)
+    assert galaxy.to_dict() == fixture
+
+
+def test_round_trip_golden_populated_fixture() -> None:
+    """Round-trip identity for a populated galaxy with planets + warp lanes."""
+    fixture = json.loads((_FIXTURE_DIR / "galaxy_proj372_populated.json").read_text())
+    galaxy = Galaxy.from_dict(fixture)
+    assert galaxy.to_dict() == fixture
