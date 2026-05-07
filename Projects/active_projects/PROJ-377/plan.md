@@ -17,13 +17,13 @@
 |-------|--------|-----------|------------|
 | 1. Golden-save fixture (closes PROJ-372 review MAJ-001) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Pathfinding shim migration sweep (closes PROJ-372 review MIN-002, partial) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 (independent in code; serial for review continuity) |
-| 3. Shim deletion or scope-rebound + AST guard | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
+| 3. Shim deletion or scope-rebound + AST guard | Complete | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
 
 ## Current State
 **Last Updated:** 2026-05-07
-**Active Phase:** Phase 1 complete; ready for Phase 2.
-**Last Action:** Phase 1 shipped — `tests/fixtures/saves/_capture_baseline.py` capture script + `galaxy_proj372_baseline.json` (~99 KB) + `galaxy_proj372_populated.json` (~252 KB) + 2 round-trip identity tests in `test_save_round_trip.py`. 7/7 passing. Capture is best-effort deterministic (image fields normalised; warp-point fields and star image_ids consume unseeded Random — see `decisions.md` 2026-05-07 row); CI contract is round-trip identity, not byte-identical re-capture.
-**Next Action:** Phase 2 — pathfinding shim migration sweep (Class A: 5 sites + Class D verify). Phase 3 — AST shim-scope guard.
+**Active Phase:** All phases complete; ready for review.
+**Last Action:** Phase 3 shipped — `tests/unit/strategy/data/test_pathfinding_shim_scope.py` AST guard pins the surviving 8 free functions + 2 helpers; `pathfinding.py` module docstring rewritten to reflect the post-PROJ-377 "permanent test-patch transparency surface" role; PROJ-372 `decisions.md` cross-link backfilled. Phase 3 also reverted Phase 2's site #3 (`superweapon_order_processor.py`) migration after the sharded run surfaced 40 regressions — tests patch the local module re-export, not the shim. Final migration count: 4 of 14 (sites #10, #11, #12, #14).
+**Next Action:** OpenCode review + verifier subagent + closeout.
 **Blockers:** None.
 
 ## Overview

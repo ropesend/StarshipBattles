@@ -28,6 +28,7 @@ from game.strategy.services.superweapon_registry import (
     find_superweapon_spec,
 )
 from game.strategy.validation.superweapon_validator import SuperweaponValidator
+from game.strategy.data.pathfinding import get_system_at_hex
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -341,7 +342,7 @@ class SuperweaponOrderProcessor:
             target_planet = order.target
             return f"Planet {target_planet.name}" if target_planet else "Planet"
         # System-scope weapons: name of the system at fleet location.
-        system = galaxy._pathfinder.get_system_at_hex(fleet.location)
+        system = get_system_at_hex(galaxy, fleet.location)
         if system is not None:
             return f"System {system.name}"
         return "System"
@@ -404,12 +405,12 @@ class SuperweaponOrderProcessor:
         spec = find_superweapon_spec(OrderType.STELLERATE_STAR)
 
         def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
-            if galaxy._pathfinder.get_system_at_hex(fleet.location) is None:
+            if get_system_at_hex(galaxy, fleet.location) is None:
                 return SuperweaponResult(success=False, message="Fleet not at a star system")
             return None
 
         def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
-            system = galaxy._pathfinder.get_system_at_hex(fleet.location)
+            system = get_system_at_hex(galaxy, fleet.location)
             system_name = system.name
 
             # PROJ-277: SystemDestroyer collects-then-mutates so every fleet
@@ -449,7 +450,7 @@ class SuperweaponOrderProcessor:
         spec = find_superweapon_spec(OrderType.OPEN_WARP_POINT)
 
         def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
-            if galaxy._pathfinder.get_system_at_hex(fleet.location) is None:
+            if get_system_at_hex(galaxy, fleet.location) is None:
                 return SuperweaponResult(success=False, message="Fleet not at a star system")
             # Pre-refactor parity: target-system existence is validated
             # BEFORE ability-ship lookup, so "Target system not found" beats
@@ -466,7 +467,7 @@ class SuperweaponOrderProcessor:
             params = order.target  # dispatcher already validated isinstance(dict)
             target_system_name = params.get('target_system_name', '')
 
-            current_system = galaxy._pathfinder.get_system_at_hex(fleet.location)
+            current_system = get_system_at_hex(galaxy, fleet.location)
             target_system = galaxy.name_map[target_system_name]
 
             # Calculate warp point locations.
@@ -536,13 +537,13 @@ class SuperweaponOrderProcessor:
             destination_id, _expected_hex = _parse_close_target(order.target)
             if not destination_id:
                 return SuperweaponResult(success=False, message="No destination specified")
-            if galaxy._pathfinder.get_system_at_hex(fleet.location) is None:
+            if get_system_at_hex(galaxy, fleet.location) is None:
                 return SuperweaponResult(success=False, message="Fleet not at a star system")
             return None
 
         def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
             destination_id, expected_hex = _parse_close_target(order.target)
-            current_system = galaxy._pathfinder.get_system_at_hex(fleet.location)
+            current_system = get_system_at_hex(galaxy, fleet.location)
 
             # Strict sector-level validation: fleet must be AT the warp
             # point hex, not just somewhere in the system.
@@ -593,7 +594,7 @@ class SuperweaponOrderProcessor:
         spec = find_superweapon_spec(OrderType.CREATE_DYSON_SPHERE)
 
         def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
-            system = galaxy._pathfinder.get_system_at_hex(fleet.location)
+            system = get_system_at_hex(galaxy, fleet.location)
             if system is None:
                 return SuperweaponResult(success=False, message="Fleet not at a star system")
             if not system.stars:
@@ -601,7 +602,7 @@ class SuperweaponOrderProcessor:
             return None
 
         def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
-            system = galaxy._pathfinder.get_system_at_hex(fleet.location)
+            system = get_system_at_hex(galaxy, fleet.location)
             primary_star = system.stars[0]
             star_loc = primary_star.location
 
@@ -711,7 +712,7 @@ class SuperweaponOrderProcessor:
 
         Returns the first planet in the system, or None if there are none.
         """
-        system = galaxy._pathfinder.get_system_at_hex(fleet_location) if galaxy else None
+        system = get_system_at_hex(galaxy, fleet_location) if galaxy else None
         if system is None:
             return None
         planets = getattr(system, 'planets', [])
