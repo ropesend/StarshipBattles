@@ -1,10 +1,16 @@
-"""Read protocols for galaxy/planet/star surfaces. PROJ-372.
+"""Read + read+write surface protocols for galaxy/planet/star. PROJ-372.
 
-These are read/calc/query/spatial protocols that describe what services
-need from Galaxy, Planet, and the habitability calculator. They compose
-with PROJ-370's mutator protocols (`IPlanetMutator`, `IFleetMutator`,
-`IEmpireMutator`, `IShipInstanceMutator`) — PROJ-370 owns writes,
-PROJ-372 owns reads.
+Five protocols, two surface shapes:
+
+- **Pure-read:** ``IGalaxySystemGraph``, ``IGalaxySpatialQuery``,
+  ``IHabitabilityCalculator``. These describe query surfaces with no
+  state mutation.
+- **Read+write:** ``IStockpileHolder``, ``IStagingYardHolder``. These
+  describe the per-item add/consume/remove surface that ``Planet``
+  exposes today. Capacity / conservation invariants belong to PROJ-370.
+  PROJ-370's higher-level batch-mutation surface (`IPlanetMutator`'s
+  ``set_max_stockpile`` / ``add_staging_item`` / ``pop_staging_item``)
+  composes with these per-item protocols rather than replacing them.
 
 Goals (G4, G5 in PROJ-372 plan.md):
 

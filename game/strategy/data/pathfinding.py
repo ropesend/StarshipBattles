@@ -1,10 +1,14 @@
 """Pathfinding free-function shims.
 
 PROJ-372 Phase 4: each function is a 1-line forwarder to
-``GalaxyPathfindingService`` / ``InterceptCalculator``. **Phase 5 will
-delete these shims** once all 80+ caller sites migrate to the service
-objects (callers: ``galaxy._pathfinder`` / ``galaxy._intercept`` set in
-``Galaxy.__init__``).
+``GalaxyPathfindingService`` / ``InterceptCalculator``. The shims
+remain as a back-compat surface for the ~14 production caller sites
+that still import them directly. PROJ-372 Phase 5 closed without the
+caller-site migration sweep; tracked as PROJ-376 follow-up (or a
+direct sweep on the next strategy-layer touch). The fresh
+``InterceptCalculator`` constructed by ``_intercept_for(galaxy)`` is
+intentional — routing through ``galaxy._intercept`` would defeat the
+test-patch transparency the shims provide.
 
 The shims do not emit ``DeprecationWarning`` because pytest.ini
 filters DeprecationWarnings as errors and we want Phase 4 to ship

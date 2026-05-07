@@ -63,7 +63,6 @@ class Galaxy:
         self._registry = GalaxyEntityRegistry(self._state)
         self._spatial = GalaxySpatialIndex(self._state)
         self._pathfinder = GalaxyPathfindingService(self)
-        self._intercept = InterceptCalculator(self._pathfinder)
 
     # --- State property forwarders (preserve public + grandfathered private API) ---
 
@@ -337,12 +336,13 @@ class Galaxy:
                     context={"system_index": i, "original_error": str(e)},
                 ) from e
 
-            galaxy._state.systems[coord] = system
-            galaxy._state.name_map[system.name] = system
-
-            # PROJ-204: zone + warp point registration via service.
-            galaxy._registry._register_zones_from_system(system)
-            galaxy._registry._rebuild_warp_point_index_for(system)
+            # PROJ-372 review MAJ-002: route through `add_system` (owns
+            # state + zone + warp-point index rebuild) — keeps
+            # `from_dict` from drifting if the registration block grows.
+            assert system.global_location == coord, (
+                f"system entry {i} coord/global_location mismatch"
+            )
+            galaxy._registry.add_system(system)
 
             for planet in system.planets:
                 galaxy._registry.restore_planet(system, planet)
