@@ -6,5 +6,10 @@
   "passed": 18944,
   "schema_version": 2,
   "skipped": 4,
+<<<<<<< HEAD
   "total": 18948
 }
+=======
+  "total": 18703
+}
+>>>>>>> 8df55d800414be2de9b1047679eabf578cda8a01
