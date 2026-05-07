@@ -16,7 +16,7 @@
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
 | 1. Golden-save fixture (closes PROJ-372 review MAJ-001) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
-| 2. Pathfinding shim migration sweep (closes PROJ-372 review MIN-002, partial) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 (independent in code; serial for review continuity) |
+| 2. Pathfinding shim migration sweep (closes PROJ-372 review MIN-002, partial) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 (independent in code; serial for review continuity) |
 | 3. Shim deletion or scope-rebound + AST guard | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
 
 ## Current State
