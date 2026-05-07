@@ -433,18 +433,15 @@ class StrategyScreen:
 
     def calculate_hybrid_path(self, start_hex, end_hex) -> Any:
         """Calculate path combining local hex movement and warp jumps."""
-        from game.strategy.data.pathfinding import find_hybrid_path
-        return find_hybrid_path(self.galaxy, start_hex, end_hex)
+        return self.galaxy._pathfinder.find_hybrid_path(start_hex, end_hex)
 
     def _get_system_at_hex(self, hex_c) -> Any:
         """Find which system owns this hex."""
-        from game.strategy.data.pathfinding import get_system_at_hex
-        return get_system_at_hex(self.galaxy, hex_c)
+        return self.galaxy._pathfinder.get_system_at_hex(hex_c)
 
     def _find_nearest_system(self, hex_c) -> Any:
         """Find the nearest system to a hex coordinate."""
-        from game.strategy.data.pathfinding import find_nearest_system
-        return find_nearest_system(self.galaxy, hex_c)
+        return self.galaxy._pathfinder.find_nearest_system(hex_c)
 
     # =========================================================================
     # Private Helpers

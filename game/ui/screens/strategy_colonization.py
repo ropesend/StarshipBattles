@@ -255,9 +255,8 @@ class ColonizationSystem:
         Returns:
             StarSystem or None
         """
-        from game.strategy.data.pathfinding import get_system_at_hex
         # Access galaxy through scene (read-only for internal lookups)
-        return get_system_at_hex(self.scene.galaxy, hex_coord)
+        return self.scene.galaxy._pathfinder.get_system_at_hex(hex_coord)
 
     def _resolve_planet_global_hex(self, planet) -> Any:
         """

@@ -15,16 +15,16 @@
 ## Quick Status
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
-| 1. Golden-save fixture (closes PROJ-372 review MAJ-001) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | — |
-| 2. Pathfinding shim migration sweep (closes PROJ-372 review MIN-002, partial) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 (independent in code; serial for review continuity) |
-| 3. Shim deletion or scope-rebound + AST guard | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
+| 1. Golden-save fixture (closes PROJ-372 review MAJ-001) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
+| 2. Pathfinding shim migration sweep (closes PROJ-372 review MIN-002, partial) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 (independent in code; serial for review continuity) |
+| 3. Shim deletion or scope-rebound + AST guard | Complete | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
 
 ## Current State
-**Last Updated:** 2026-05-06 22:15
-**Active Phase:** Planning complete; awaiting user kickoff for Phase 1.
-**Last Action:** Architect produced plan + design + per-phase checklists. PROJ-372 review MAJ-001 (golden-save fixture) and MIN-002 (pathfinding shim sweep) are scoped here.
-**Next Action:** User confirms scope. Phase 1 can start.
-**Blockers:** None. Note: PROJ-372 plan.md row dated 2026-05-07 mentions "PROJ-376 follow-up" for these two items; PROJ-376 was already allocated to BuildQueueScreen Lifecycle, so this work moved to PROJ-377.
+**Last Updated:** 2026-05-07
+**Active Phase:** All phases complete; ready for review.
+**Last Action:** Phase 3 shipped — `tests/unit/strategy/data/test_pathfinding_shim_scope.py` AST guard pins the surviving 8 free functions + 2 helpers; `pathfinding.py` module docstring rewritten to reflect the post-PROJ-377 "permanent test-patch transparency surface" role; PROJ-372 `decisions.md` cross-link backfilled. Phase 3 also reverted Phase 2's site #3 (`superweapon_order_processor.py`) migration after the sharded run surfaced 40 regressions — tests patch the local module re-export, not the shim. Final migration count: 4 of 14 (sites #10, #11, #12, #14).
+**Next Action:** OpenCode review + verifier subagent + closeout.
+**Blockers:** None.
 
 ## Overview
 
