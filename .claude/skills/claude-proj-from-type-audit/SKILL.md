@@ -55,7 +55,9 @@ DISPUTED and INCONCLUSIVE items from OpenCode's own `findings/verification.md` s
 7. Populate each project from VERIFIED + user-included UNCERTAIN items.
    **You MUST create a non-empty `phase_N_checklist.md` for every phase listed in `plan.md`.** Use `PHASE_TEMPLATE` from `Projects/scripts/create_project.py`. Phases inside each project: Critical → Major → Minor → Strategic (drop empty).
 8. Write each project's `findings/verification_report.md`, `findings/source_audit.md`, and `findings/bundling_decisions.md` per the protocol.
-9. Print the hand-off summary: project IDs, project paths, per-bundle counts (`V verified, U_in user-included, R rejected, O out-of-scope`), bundling rationale, and one `/claude-proj-continue PROJ-NNN` line per created project.
+9. **Refinement Feedback** — write a proposal back to the originating OpenCode skill per `Projects/protocols/15_refinement_feedback.md`. Inputs: `audit_dir`, `source_skill: "ocode-type-audit"`, `audit_name: "type"`, REJECTED findings (with reasons), UNCERTAIN items, audit-missed type-safety issues the user flagged during bundling, and the list of `PROJ-NNN` IDs created. Write to `.opencode/skills/ocode-type-audit/refinement_proposals/<today>_<basename(audit_dir)>.md`. If both REJECTED and user_flagged_misses are empty, write a minimal "no refinements suggested this run" proposal and exit. The proposal is for the user to read manually and decide what to merge into `SKILL.md` or `Tools/type_audit/`.
+
+10. Print the hand-off summary: project IDs, project paths, per-bundle counts (`V verified, U_in user-included, R rejected, O out-of-scope`), bundling rationale, and one `/claude-proj-continue PROJ-NNN` line per created project.
 
 ## Forbidden in this skill
 

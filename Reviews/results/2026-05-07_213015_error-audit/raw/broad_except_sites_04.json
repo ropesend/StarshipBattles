@@ -1,0 +1,104 @@
+[
+  {
+    "file": "game/simulation/replay/replay_serialization.py",
+    "line": 607,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash a battle on registry shape drift",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/replay/replay_serialization.py",
+    "line": 622,
+    "context": "except Exception:  # Intentional broad catch: tolerate odd to_dict implementations",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/conflict_resolution_engine.py",
+    "line": 563,
+    "context": "except Exception as e:  # Intentional broad catch: external collector",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_verification_coordinator.py",
+    "line": 314,
+    "context": "except Exception:  # Intentional broad catch: worker death must be visible and not deadlock waiters",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_verification_coordinator.py",
+    "line": 372,
+    "context": "except Exception as exc:  # Intentional broad catch: worker must continue past one bad record",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/ship_detail_panel.py",
+    "line": 452,
+    "context": "except Exception:  # Intentional broad catch: UI tests run without ApplicationContext",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/workshop_data_reloader.py",
+    "line": 26,
+    "context": "except Exception:  # Intentional broad catch: Tkinter init is platform-dependent",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/battle_setup/controller.py",
+    "line": 56,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized (tests) or partially loaded; None signals \"no registries\" to callers",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/battle_setup/controller.py",
+    "line": 123,
+    "context": "except Exception as e:",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_windows/event_log_window_ctrl.py",
+    "line": 113,
+    "context": "except Exception:  # Intentional broad catch: resolver build must not crash the Event Log open path",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_windows/event_log_window_ctrl.py",
+    "line": 149,
+    "context": "except Exception:  # Intentional broad catch: replay launch failures must not crash the Event Log",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 69,
+    "context": "except Exception as e:  # Intentional broad catch: Tkinter init is platform-dependent",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 100,
+    "context": "except Exception:  # Intentional broad catch: Tk widget .destroy() raises various TclError subclasses if already destroyed or interpreter is gone",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 142,
+    "context": "except Exception as e:  # Intentional: file dialog is platform-dependent",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 175,
+    "context": "except Exception as e:  # Intentional: file dialog is platform-dependent",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 206,
+    "context": "except Exception as e:  # Intentional: dialog is platform-dependent",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 229,
+    "context": "except Exception as e:  # Intentional: clipboard is platform-dependent",
+    "has_comment": false
+  }
+]

@@ -4,6 +4,13 @@ description: Run a comprehensive code shrinkage audit. Combines deterministic to
 argument-hint: [optional: --skip-phase1 to reuse existing raw results]
 ---
 
+## Invocation
+
+- **Slash command (interactive):** `/ocode-audit-shrink`
+- **CLI (non-interactive):** `opencode run "Load the ocode-audit-shrink skill and execute it. Args: [optional --skip-phase1, --all-shards]"`
+
+The skill is identical in both modes. CLI mode skips any user-prompt confirmations.
+
 # Code Shrinkage Audit
 
 Run a two-phase audit of the production codebase to find dead code, near-duplicate code, and complexity hotspots. Combines deterministic tools (vulture, radon, clone detector) with 3 LLM agents: cross-shard duplication hunter, in-shard deep reviewer (1 shard per run, rotating), and dead code validator. Produces a unified report with estimated LOC savings and a prioritized cleanup order.
@@ -58,7 +65,9 @@ The script creates `REVIEW_DIR/raw/` with these outputs against `game/`:
 5. `dead_deps.txt` — unreachable files from entry points
 6. `radon.json` — complexity hotspots (CC >= 11)
 7. `clones.json` — AST near-duplicate function clusters
-8. `manifest.json` — file inventory + shard assignments
+8. `manifest.json` — file inventory + shard assignments + `next_shard_id` field (computed by the Phase 1 tool from history)
+
+**Optional `--all-shards`:** When passed, Phase 2 launches one in-shard agent per shard (4 total) instead of just the rotating one. Use this before major refactors when you need 100% LLM coverage in a single run rather than across the 4-run cycle.
 
 ### Step 2: Read Phase 1 Outputs
 
@@ -71,16 +80,16 @@ Read these files into memory for use in agent prompts:
 5. Read `REVIEW_DIR/raw/radon.json` — complexity data (get the full JSON content)
 6. Read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
 
-**Do NOT use orphans.txt or dead_deps.txt.** These tools are misconfigured/noisy (orphan detection uses wrong base path; dead_deps includes Projects/ and .agents/ which are not production code). Vulture output is the only reliable deterministic dead-code signal. All other dead code discovery must come from manual grep verification by agents.
+Use `orphans.txt` and `dead_deps.txt` as supplementary dead-code signals alongside vulture. The Phase 1 tool now uses `game/` as the base path and excludes non-production trees (`Projects/`, `.agents/`, `AgentCoordination/`, `Reviews/`, `_marked_for_deletion_*`, `Tools/`).
 
-### Step 3: Launch 3 Agents in Parallel
+### Step 3: Launch Agents in Parallel
 
 Create the findings directory:
 ```bash
 mkdir -p REVIEW_DIR/findings
 ```
 
-Launch **3 agents** in parallel using the Task tool with `subagent_type: general`:
+Launch agents in parallel — by default 3 (1 cross-shard + 1 rotating in-shard + 1 dead-code validator); when `--all-shards` is used, 6 (1 cross-shard + 4 in-shard, one per shard + 1 dead-code validator).
 - **1 cross-shard duplication agent** (scans all of game/)
 - **1 in-shard deep review agent** (reviews 1 shard per run; rotates through manifest shard IDs `01 → 02 → 03 → 04` across runs for 100% LLM coverage every 4 runs)
 - **1 dead code validator agent** (validates vulture findings against tests/docs/data)
@@ -178,7 +187,7 @@ Use EXACTLY this structure:
 
 #### Agent 2: In-Shard Deep Review (1 agent — rotating shard per run)
 
-Launch **1 agent** for deep review. The manifest randomly shuffles all `game/*.py` files into 4 balanced shards (`Shard 01` through `Shard 04`). Rotate through shard IDs `01 → 02 → 03 → 04` across runs (check `shrink_tracker.json` history to pick the next shard in rotation). All 4 shards get LLM deep review over a 4-run cycle.
+Launch **1 agent** for deep review. The manifest randomly shuffles all `game/*.py` files into 4 balanced shards (`Shard 01` through `Shard 04`). Phase 1 writes `next_shard_id` to `manifest.json` based on history; use that value as the `{shard_id}` for the in-shard agent. All 4 shards get LLM deep review over a 4-run cycle.
 
 ```
 # In-Shard Deep Review Agent
@@ -324,10 +333,8 @@ the code should be removed.
 ### Vulture 80% Confidence (high-likelihood):
 {vulture_80}
 
-NOTE: Do NOT use orphans.txt or dead_deps.txt. These tools are misconfigured
-(orphan detection uses wrong base path; dead_deps includes Projects/ and
-.agents/ which are not production code). Vulture is the only reliable
-deterministic dead-code signal.
+NOTE: Use `orphans.txt` and `dead_deps.txt` as additional signals alongside
+vulture. All three need manual cross-reference against tests/docs/data.
 
 ## Methodology
 
@@ -508,7 +515,7 @@ Items that appear dead in production but are referenced by tests, docs, or data 
 These items must NOT be counted in the safe-shrinkage total. They inflate shrinkage estimates until a product decision is made. Separate them clearly so the shrinkage scorecard is actionable without waiting for decisions.
 
 **8. Prioritized Cleanup Plan**
-Top 10 items ordered by impact/effort. Only include verified-safe items here.
+Top 10 items ordered by impact/effort. Only include verified-safe items here. Sorted by `severity_weight × layer_weight × loc_affected` via `Tools/_audit_common/layer_weight.py`. All findings still appear in the dead-code inventory, duplication clusters, and complexity hotspots tables; weighting only affects this top-N ordering.
 
 **9. Trend Comparison**
 Use shrink_tracker.py to compare with previous run.
@@ -522,12 +529,14 @@ Run this Python code (replace placeholders):
 
 ```python
 from Tools.audit_shrink import shrink_tracker
+from Tools._audit_common import run_tracker
 import json
 
 with open("{REVIEW_DIR}/raw/manifest.json") as f:
     manifest = json.load(f)
 
-run_data = {
+# Audit-specific tracker (existing behavior, unchanged)
+shrink_run_data = {
     "date": "{REVIEW_DIR}".split("/")[1].split("_")[0],
     "review_dir": "{REVIEW_DIR}",
     "deep_review_shard": "{shard_id}",  # shard reviewed this run (rotates 01→02→03→04)
@@ -540,8 +549,26 @@ run_data = {
     "estimated_shrinkable_loc": ...,  # sum from scorecard
     "top_hotspots": ...,  # top 5 files by finding count
 }
+shrink_tracker.add_run("Reviews/results", shrink_run_data)
 
-shrink_tracker.add_run("Reviews/results", run_data)
+# Common tracker for cross-audit dashboards
+common_run_data = {
+    "date": "{REVIEW_DIR}".split("/")[1].split("_")[0],
+    "review_dir": "{REVIEW_DIR}",
+    "findings": {
+        "critical": ...,  # from agent 3
+        "major": ...,     # from agent 1
+        "minor": ...,
+    },
+    "by_category": {
+        "dead_files": ...,
+        "dead_classes": ...,
+        "dead_functions": ...,
+        "dead_imports": ...,
+        "duplication_clusters": ...,
+    }
+}
+run_tracker.add_run("Reviews/results", "shrink", common_run_data)
 ```
 
 ### Step 7: Log Skill Usage

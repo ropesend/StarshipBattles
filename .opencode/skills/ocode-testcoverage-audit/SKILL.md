@@ -4,6 +4,13 @@ description: Comprehensive test coverage audit across the entire production code
 argument-hint: "[optional: --skip-phase1 to reuse existing raw results]"
 ---
 
+## Invocation
+
+- **Slash command (interactive):** `/ocode-testcoverage-audit`
+- **CLI (non-interactive):** `opencode run "Load the ocode-testcoverage-audit skill and execute it. Args: [optional --skip-phase1]"`
+
+The skill is identical in both modes. CLI mode skips any user-prompt confirmations.
+
 # Test Coverage Audit
 
 Run a comprehensive, line-by-line audit of unit test coverage across every production file in `game/`. Combines a deterministic Phase 1 AST scanner (to precompute coverage tiers and shard files) with one-per-shard discovery agents that read every production file and its unit tests to identify untested code paths, and one-per-shard skeptical verification agents that exhaustively verify CRITICAL/MAJOR claims and sample MINOR/ADVISORY claims. Produces a prioritized test case catalog with specific test descriptions for every verified gap.
@@ -48,7 +55,7 @@ python -c "from pathlib import Path; Path('Reviews/results').mkdir(parents=True,
 **Run the orchestrator script yourself** — do NOT ask the user to run it:
 
 ```bash
-python Tools/testcoverage_audit/testcoverage_audit.py --shards 18 --max-loc-per-shard 10000
+python Tools/testcoverage_audit/testcoverage_audit.py --shards 18 --max-loc-per-shard 10000 [--coverage-json path/to/coverage.json]
 ```
 
 The `--shards` value is a TARGET — the script may auto-increase shard count (up to 40) if `--max-loc-per-shard` is exceeded. Always read the actual shard count from the manifest after the run.
@@ -63,7 +70,7 @@ Store this as `REVIEW_DIR`. Also capture the actual shard count as `{SHARD_COUNT
   18 shards (target: 18, max LOC/shard: 10000)
 ```
 
-Future extension point: a later scanner CLI may add `--coverage-json <path>` to consume `coverage.py` output as an additional baseline. This is not currently implemented or required — the import-based + name-grep heuristic is the default.
+Optional flag: `--coverage-json <path>` consumes `coverage.py` output as an authoritative coverage signal alongside the import-based heuristic. When provided, Phase 1 cross-references each symbol against actual line-coverage data and emits a `coverage_authoritative` flag in `coverage_matrix.json` entries. Heuristic-only entries remain marked as such. Recommended when the user has a recent `coverage.xml` from `pytest --cov`.
 
 If the user passed `--skip-phase1`, find the most recent review directory:
 - Glob: `Reviews/results/*_testcoverage-audit/`
@@ -76,7 +83,7 @@ If the user passed `--skip-phase1`, find the most recent review directory:
 
 The script creates `REVIEW_DIR/raw/` with these outputs:
 
-1. `coverage_matrix.json` — per-production-file: `candidate_test_files` (import-based, heuristic), `symbol_coverage` with `heuristic_match` flags, `coverage_tier` (0-3)
+1. `coverage_matrix.json` — wrapped as `{"coverage_source": "heuristic" | "authoritative+heuristic", "files": {<path>: ...}}`. Each file entry has `candidate_test_files` (import-based, heuristic), `symbol_coverage` with `heuristic_match` flags, `coverage_tier` (0-3), and (when `--coverage-json` was used) `coverage_authoritative` per symbol. Read entries via `data["files"][path]`.
 2. `layer_summary.json` — coverage statistics by architectural layer
 3. `file_inventory.json` — full production file inventory
 4. `manifest.json` — shard file assignments for agent distribution; `shard_count` is the authoritative count
@@ -86,7 +93,7 @@ The script creates `REVIEW_DIR/raw/` with these outputs:
 Read these files into memory for use in agent prompts:
 
 1. Read `REVIEW_DIR/raw/manifest.json` — extract `shard_count` and ALL shard file lists from `shards.01.files` through `shards.{SHARD_COUNT}.files`
-2. Read `REVIEW_DIR/raw/coverage_matrix.json` — the full coverage data for every production file (note: all Phase 1 evidence is heuristic — `candidate_test_files` are import-based matches, `heuristic_match` is name-grep, NOT proof of coverage)
+2. Read `REVIEW_DIR/raw/coverage_matrix.json` — the full coverage data for every production file
 3. Read `REVIEW_DIR/raw/layer_summary.json` — layer-level statistics
 4. Read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
 
@@ -98,7 +105,7 @@ Create the findings directory:
 python -c "from pathlib import Path; Path(r'{REVIEW_DIR}').joinpath('findings').mkdir(parents=True, exist_ok=True)"
 ```
 
-Launch **one agent per shard** using the Task tool with `subagent_type: general`. Batch agents in groups of up to 6, launching each batch in parallel and waiting for all to complete before starting the next batch.
+Launch **one agent per shard** using the OpenCode subagents in parallel. Batch agents in groups of up to 6, launching each batch in parallel and waiting for all to complete before starting the next batch.
 
 ```
 BATCH_COUNT = ceil(SHARD_COUNT / 6)
@@ -321,7 +328,7 @@ Use Read with limit=1 to verify each file exists and has content. If any agent f
 
 ### Step 5: Launch Phase 3 — Skeptical Verification (batches of up to 6)
 
-Launch **one verification agent per shard** using the Task tool with `subagent_type: general`. Batch in groups of up to 6, same as Phase 2. Each verifier gets its shard's Phase 2 report and must independently verify every CRITICAL and MAJOR claim, then sample MINOR and ADVISORY claims.
+Launch **one verification agent per shard** using the OpenCode subagents in parallel. Batch in groups of up to 6, same as Phase 2. Each verifier gets its shard's Phase 2 report and must independently verify every CRITICAL and MAJOR claim, then sample MINOR and ADVISORY claims.
 
 **Replace these placeholders** for each agent:
 - `{SHARD_ID}` → `"01"`, `"02"`, … `"{SHARD_COUNT:02d}"`
@@ -507,15 +514,15 @@ Write `REVIEW_DIR/SUMMARY.md` and `REVIEW_DIR/SUMMARY.json`.
 - Shards: <populated from manifest.json.shard_count>
 - Total production files: <populated from file_inventory.json.total_files> (~<loc>K LOC)
 - Total symbols (functions/methods/classes): <populated from layer_summary.json.totals.total_symbols>
-- Phase 1 estimated coverage: <overall_coverage_pct>% (heuristic name-grep — NOT authoritative)
+- Heuristic Coverage Estimate (NOT authoritative): <overall_coverage_pct>% (heuristic name-grep)
 - Phase 2 claims: N → Verified: N | Disputed: N | Inconclusive: N
 
 ## Coverage Scorecard (Phase 1 heuristic baseline — NOT authoritative)
 
 Populate from `layer_summary.json`:
 
-| Layer | Files | Symbols | Tested | Coverage % | Tier 0 | Tier 1 | Tier 2 | Tier 3 |
-|-------|-------|---------|--------|------------|--------|--------|--------|--------|
+| Layer | Files | Symbols | Tested | Heuristic Coverage % | Tier 0 | Tier 1 | Tier 2 | Tier 3 |
+|-------|-------|---------|--------|----------------------|--------|--------|--------|--------|
 | <for each layer in layer_summary.json.layers> |
 | **Totals** | <from layer_summary.json.totals> |
 
@@ -568,12 +575,25 @@ Corner cases and minor branches not covered.
 Ordered by: (severity × LOC affected × layer importance)
 Top 20 items.
 
+Layer weight comes from `Tools/_audit_common/layer_weight.py`. All verified gaps appear in the P0/P1/P2 sections regardless of layer — minor gaps in low-weight layers still appear, just lower in the action plan.
+
 ## Estimated Test Effort
 
 - CRITICAL gaps: ~N new test functions needed
 - MAJOR gaps: ~N new test functions needed
 - MINOR gaps: ~N new test functions needed
 - ADVISORY: N items — no unit test action required
+
+## Trend Comparison
+
+Use `Tools/_audit_common/run_tracker.py` with `audit_name="testcoverage"` to compare this run against the previous run and append a markdown trend block:
+
+```python
+from Tools._audit_common import run_tracker
+trend = run_tracker.compute_trend("Reviews/results", "testcoverage", current_summary)
+# Append run_tracker.render_trend_markdown(trend) here.
+run_tracker.add_run("Reviews/results", "testcoverage", current_summary)
+```
 
 ## Full Report Paths
 - Phase 1 raw data: `{REVIEW_DIR}/raw/`

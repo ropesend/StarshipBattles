@@ -1,12 +1,19 @@
 ---
 name: ocode-test-review
-description: Exhaustive test suite audit across 12 quality categories. Seeded file-shuffle sharding for cross-run randomization. Includes skeptical verification stage — only verified claims appear in final report. Read-only — produces findings documents, no code changes.
+description: Exhaustive test suite audit across 13 quality categories. Seeded file-shuffle sharding for cross-run randomization. Includes skeptical verification stage — only verified claims appear in final report. Read-only — produces findings documents, no code changes.
 argument-hint: "[--seed STR] [--shards N] [--max-loc-per-shard N] [--skip-generate to reuse existing SHARD_CONFIG.json]"
 ---
 
+## Invocation
+
+- **Slash command (interactive):** `/ocode-test-review`
+- **CLI (non-interactive):** `opencode run "Load the ocode-test-review skill and execute it. Args: [optional --seed STR --shards N --max-loc-per-shard N --skip-generate]"`
+
+The skill is identical in both modes. CLI mode skips any user-prompt confirmations.
+
 # Test Suite Audit
 
-Run an exhaustive review of the test suite (`tests/`) for 12 categories of quality issues. Uses randomized seeded sharding so each run reviews tests in different groupings, increasing the chance of detecting cross-file duplicates.
+Run an exhaustive review of the test suite (`tests/`) for 13 categories of quality issues. Uses randomized seeded sharding so each run reviews tests in different groupings, increasing the chance of detecting cross-file duplicates.
 
 **Four-phase workflow**: Phase 1 (shard reviewers) → Phase 2 (cross-shard dedup) → Phase 3 (skeptical verification) → Phase 4 (final summary, verified claims only).
 
@@ -78,7 +85,7 @@ Extract from it:
 
 ### Step 2: Launch Phase 1 — Shard Reviewers ({SHARD_COUNT} agents in parallel)
 
-Launch **one agent per shard** in parallel using the Task tool with `subagent_type: general`.
+Launch **one agent per shard** in parallel using the OpenCode subagents in parallel.
 
 **Replace these placeholders** in the template below for each agent:
 - `{SHARD_ID}` → `"01"`, `"02"`, ... `"{SHARD_COUNT}"`
@@ -105,7 +112,7 @@ Read EVERY file below. Do not skip any.
 
 {FILE_LIST}
 
-## The 12-Category Rubric
+## The 13-Category Rubric
 
 For EVERY test function in EVERY file, evaluate against these categories.
 Report only tests that HAVE an issue — do not report tests that are fine.
@@ -121,10 +128,13 @@ If downgrading, note the reason in the Issue field.
 Signals: `assert len(X) > 0`, `assert True`, no assertions after setup, `assert X is not None` where X is always not-None. Does NOT include: constants validation (e.g., checking all RGB values are in [0,255]), or registry hydration sanity checks that verify data loaded correctly.
 
 **CAT-2 — Tests Nothing Real**: Exercises only mocked constructs or local reimplementations, never touches production code paths. Zero regression protection.
-Signals: No imports from `game.*`; reimplements game functions locally with copied logic; every dependency including the SUT is MagicMock; `inspect.getsource()` assertions that check source text rather than behavior; tests a local copy of production code. A test that mocks SOME dependencies (like file I/O or pygame display) but exercises the REAL SUT is NOT CAT-2.
+Signals: No imports from `game.*`; reimplements game functions locally with copied logic; every dependency including the SUT is MagicMock; `inspect.getsource()` assertions that check source text rather than behavior; tests a local copy of production code; `unittest.mock.patch.multiple` chains where every dependency including the SUT is mocked (same anti-pattern as MagicMock-everything but uses a different mocking idiom). A test that mocks SOME dependencies (like file I/O or pygame display) but exercises the REAL SUT is NOT CAT-2.
 
 **CAT-3 — Dead Test Code**: Test for removed functionality, unused test helpers, or tests targeting deleted modules/classes.
 Signals: `pytest.raises(ImportError)` for classes that were removed; test helper functions defined in the file but never called by any test; test files containing only imports/constants with no `def test_` functions; tests that import from modules that no longer exist. Standalone repro scripts that are covered by proper tests elsewhere are CAT-3.
+
+**CAT-13 — Tests Targeting Deleted Code**: Test that exercises code paths in `_marked_for_deletion_*/` directories or imports from such paths. The target code is scheduled for removal; the test should be deleted alongside its target.
+Signals: imports from any directory matching `_marked_for_deletion_*/`; references to symbols defined only in such directories. Severity: MAJOR (clean delete with the target).
 
 ### MAJOR severity categories
 
@@ -293,7 +303,7 @@ Check that `CROSS_SHARD.md` exists and is non-empty.
 
 ### Step 6: Launch Phase 3 — Skeptical Verification ({SHARD_COUNT} agents in parallel)
 
-Launch **one verification agent per shard** in parallel using the Task tool with `subagent_type: general`.
+Launch **one verification agent per shard** in parallel using the OpenCode subagents in parallel.
 
 Each verifier receives:
 1. Its shard's Phase 1 report (`SHARD_{SHARD_ID}.md`) — ALL claims from that shard
@@ -453,6 +463,7 @@ Write `SUMMARY.json` with a structured findings array so downstream consumers do
 | CAT-1 Trivial Pass | | - | - | |
 | CAT-2 Tests Nothing Real | | - | - | |
 | CAT-3 Dead Test Code | | - | - | |
+| CAT-13 Tests Targeting Deleted Code | - | | - | |
 | CAT-4 Duplicate Testing | - | | - | |
 | CAT-5 Fixture Bloat | - | | - | |
 | CAT-6 Mocking Brittleness | - | | - | |
@@ -467,6 +478,8 @@ Write `SUMMARY.json` with a structured findings array so downstream consumers do
 ## Top 20 Highest-Impact Verified Findings
 Ordered by estimated LOC affected × severity weight (CRITICAL=10, MAJOR=5, MINOR=1).
 List: finding ID, file, category, severity, LOC affected, brief description.
+
+Ordered by `severity × layer_weight(production_layer) × loc_affected` using `Tools/_audit_common/layer_weight.py`. All verified findings still appear in the by-category table and per-shard reports; weighting only affects this top-N ordering. Layer is determined by the production code the test imports/exercises (e.g., a test importing `game.core.X` is weighted as 'core'; a test under `tests/unit/ui/` is weighted as 'ui').
 
 ## Shard Verification Summary
 | Shard | Phase 1 Claims | Verified | Disputed | Inconclusive |
@@ -493,6 +506,17 @@ Verified nice-to-have improvements.
 - Tests mergeable via parametrize: [N clusters → N resulting tests]
 - Fixture rescoping candidates: [N]
 - Estimated total LOC reduction: [N]
+
+## Trend Comparison
+
+Compute and render trend versus previous runs using `Tools/_audit_common/run_tracker.py`:
+
+```python
+from Tools._audit_common import run_tracker
+trend = run_tracker.compute_trend("Reviews/results", "test", current_summary)
+# Append run_tracker.render_trend_markdown(trend) here.
+run_tracker.add_run("Reviews/results", "test", current_summary)
+```
 
 ## Full Report Paths
 - Phase 1 shard reports: {REVIEW_DIR}/SHARD_*.md

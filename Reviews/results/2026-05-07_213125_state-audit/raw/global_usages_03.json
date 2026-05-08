@@ -1,0 +1,142 @@
+[
+  {
+    "file": "game/exit_dialog.py",
+    "line": 24,
+    "variable": "_exit_yes_rect",
+    "function": "draw_exit_dialog",
+    "context": "global _exit_yes_rect, _exit_no_rect"
+  },
+  {
+    "file": "game/exit_dialog.py",
+    "line": 24,
+    "variable": "_exit_no_rect",
+    "function": "draw_exit_dialog",
+    "context": "global _exit_yes_rect, _exit_no_rect"
+  },
+  {
+    "file": "game/ai/policy_manager.py",
+    "line": 34,
+    "variable": "_default_policy_manager",
+    "function": "get_default_policy_manager",
+    "context": "global _default_policy_manager"
+  },
+  {
+    "file": "game/core/event_logging.py",
+    "line": 68,
+    "variable": "_event_handler",
+    "function": "set_event_handler",
+    "context": "global _event_handler"
+  },
+  {
+    "file": "game/core/profiling.py",
+    "line": 27,
+    "variable": "_default_profiler",
+    "function": "set_default_profiler",
+    "context": "global _default_profiler"
+  },
+  {
+    "file": "game/services/llm/defaults.py",
+    "line": 38,
+    "variable": "_default_llm_provider",
+    "function": "set_default_llm_provider",
+    "context": "global _default_llm_provider"
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 141,
+    "variable": "_default",
+    "function": "get_default_economy_config",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 150,
+    "variable": "_default",
+    "function": "set_default_economy_config",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/data/build_queue_source.py",
+    "line": 34,
+    "variable": "_production_rates_cache",
+    "function": "_load_production_rates",
+    "context": "global _production_rates_cache"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 241,
+    "variable": "_PLANET_TYPES_CACHE",
+    "function": "_load_planet_types",
+    "context": "global _PLANET_TYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 295,
+    "variable": "_STAR_TYPES_CACHE",
+    "function": "_load_star_types",
+    "context": "global _STAR_TYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 320,
+    "variable": "_SYSTEM_ARCHETYPES_CACHE",
+    "function": "_load_system_archetypes",
+    "context": "global _SYSTEM_ARCHETYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/services/ability_iterator.py",
+    "line": 249,
+    "variable": "_FLEETS_AT_HEX_LOOKUP",
+    "function": "set_fleet_lookups",
+    "context": "global _FLEETS_AT_HEX_LOOKUP, _FLEETS_IN_SYSTEM_LOOKUP"
+  },
+  {
+    "file": "game/strategy/services/ability_iterator.py",
+    "line": 249,
+    "variable": "_FLEETS_IN_SYSTEM_LOOKUP",
+    "function": "set_fleet_lookups",
+    "context": "global _FLEETS_AT_HEX_LOOKUP, _FLEETS_IN_SYSTEM_LOOKUP"
+  },
+  {
+    "file": "game/ui/renderer/sprites.py",
+    "line": 123,
+    "variable": "_default_sprite_manager",
+    "function": "get_default_sprite_manager",
+    "context": "global _default_sprite_manager"
+  },
+  {
+    "file": "game/ui/renderer/sprites.py",
+    "line": 131,
+    "variable": "_default_sprite_manager",
+    "function": "set_default_sprite_manager",
+    "context": "global _default_sprite_manager"
+  },
+  {
+    "file": "game/ui/screens/battle_setup_state.py",
+    "line": 28,
+    "variable": "_next_fleet_id",
+    "function": "_generate_fleet_id",
+    "context": "global _next_fleet_id"
+  },
+  {
+    "file": "game/ui/screens/strategy_build_queue_manager.py",
+    "line": 45,
+    "variable": "_cached_registries",
+    "function": "_get_registries",
+    "context": "global _cached_registries"
+  },
+  {
+    "file": "game/ui/services/game_settings.py",
+    "line": 85,
+    "variable": "_default_game_settings",
+    "function": "get_default_game_settings",
+    "context": "global _default_game_settings"
+  },
+  {
+    "file": "game/ui/services/game_settings.py",
+    "line": 93,
+    "variable": "_default_game_settings",
+    "function": "set_default_game_settings",
+    "context": "global _default_game_settings"
+  }
+]

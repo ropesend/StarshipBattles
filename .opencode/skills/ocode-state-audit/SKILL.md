@@ -1,12 +1,19 @@
 ---
 name: ocode-state-audit
-description: State management & mutability audit. Scans all production code for module-level mutable state, singleton divergence risk (ctx.xxx vs get_default_xxx()), global keyword abuse, class-level mutable defaults, and random.seed() bypass. Produces a PROJ-258 transition progress report and singleton divergence risk map. Production code only.
+description: State management & mutability audit. Scans all production code for module-level mutable state, singleton divergence risk (ctx.xxx vs get_default_xxx()), global keyword abuse, class-level mutable defaults, and random.seed() bypass. Produces a singleton access-pattern divergence risk map. Production code only.
 argument-hint: "[--skip-phase1 to reuse existing raw results]"
 ---
 
+## Invocation
+
+- **Slash command (interactive):** `/ocode-state-audit`
+- **CLI (non-interactive):** `opencode run "Load the ocode-state-audit skill and execute it. Args: [optional --skip-phase1]"`
+
+The skill is identical in both modes. CLI mode skips any user-prompt confirmations and defaults to the most conservative option, noting the choice in the report.
+
 # State Management & Mutability Audit
 
-Run a comprehensive audit of state management patterns across the production codebase. Scans for module-level mutable state, singleton divergence risk (PROJ-258 transition), global keyword usage, and unintended caching. Produces a state hygiene scorecard and singleton divergence risk map.
+Run a comprehensive audit of state management patterns across the production codebase. Scans for module-level mutable state, singleton divergence risk (ApplicationContext + module-level singleton coexistence), global keyword usage, and unintended caching. Produces a state hygiene scorecard and singleton divergence risk map.
 
 Does NOT change any code. Targets `game/` only (not tests).
 
@@ -73,7 +80,7 @@ Read these files into memory:
 6. Read `REVIEW_DIR/raw/random_seed_sites.json`
 7. Read `REVIEW_DIR/raw/ctx_usage_ratio.json`
 8. Read `docs/02_PATTERNS.md` (Patterns #1, #4, #12 — ApplicationContext, Registry, Configuration)
-9. Read `game/context.py` (PROJ-258 bridge mechanics)
+9. Read `game/context.py` (ApplicationContext bridge mechanics)
 
 ### Step 3: Launch 5 Agents in Parallel
 
@@ -83,7 +90,7 @@ Create the findings directory:
 mkdir -p REVIEW_DIR/findings
 ```
 
-Launch **5 agents** in parallel using the Task tool with `subagent_type: general`:
+Launch **5 agents** in parallel:
 - **4 in-shard deep review agents** (one per shard: 01, 02, 03, 04)
 - **1 cross-shard divergence detector**
 
@@ -92,9 +99,11 @@ Launch **5 agents** in parallel using the Task tool with `subagent_type: general
 - `{shard_id}` → `"01"`, `"02"`, `"03"`, `"04"`
 - `{shard_label}` → from manifest.json
 - `{shard_files}` → from manifest.json
-- `{singleton_sites}` → full singleton_sites.json content
-- `{global_usages}` → full global_usages.json content
-- `{ctx_ratio}` → full ctx_usage_ratio.json content
+- `{singleton_sites}` → the path to a per-shard filtered file `REVIEW_DIR/raw/singleton_sites_{shard_id}.json` (Phase 1 tool now writes per-shard filtered copies)
+- `{global_usages}` → the path to a per-shard filtered file `REVIEW_DIR/raw/global_usages_{shard_id}.json` (Phase 1 tool now writes per-shard filtered copies)
+- `{ctx_ratio}` → the path to a per-shard filtered file `REVIEW_DIR/raw/ctx_usage_ratio_{shard_id}.json` (Phase 1 tool now writes per-shard filtered copies)
+
+Note: the underlying tool `Tools/state_audit/state_audit.py` will be updated separately to produce these per-shard filtered files. For now, document the contract in the SKILL.md so the tool change has a target.
 
 #### Agents 1a-1d: In-Shard State Reviewers
 
@@ -106,7 +115,8 @@ You MUST exhaustively read EVERY file in this shard.
 
 ## Documentation Reference
 Read docs/02_PATTERNS.md Patterns #1 (ApplicationContext), #4 (Registry DI),
-and #12 (Configuration Classes). Read game/context.py for PROJ-258 context.
+and #12 (Configuration Classes). Read game/context.py for ApplicationContext
+bridge context.
 
 ## Scope
 All files listed below MUST be read.
@@ -116,11 +126,9 @@ Shard file list:
 
 ## Deterministic Scan Results (filtered for your shard)
 
-Singleton definitions in your shard:
-{singleton_sites}
-
-Global keyword usages in your shard:
-{global_usages}
+Read `{REVIEW_DIR}/raw/singleton_sites_{shard_id}.json` and
+`{REVIEW_DIR}/raw/global_usages_{shard_id}.json` for the deterministic
+findings filtered to your shard.
 
 ## Methodology
 For EACH file in your shard:
@@ -142,7 +150,7 @@ For EACH file in your shard:
    - Flag any parameter defaulting to `[]`, `{}`, or `set()`
 6. **Random state hygiene:**
    - Verify `random.seed()` calls are ONLY in per-battle RNG initialization
-7. **Track PROJ-258 progress:**
+7. **Track singleton access-pattern divergence:**
    - Count `get_default_xxx()` calls per file
    - Count `ctx.xxx` accesses per file
    - Flag files where both patterns coexist (divergence risk)
@@ -166,7 +174,7 @@ For EACH file in your shard:
 - MAJOR: Module-level collection mutated across files; high global keyword
   density; file using both ctx.xxx and get_default_xxx() (divergence risk)
 - MINOR: Single-use module-level cache that could be local; unnecessary
-  global keyword; PROJ-258 transition opportunity
+  global keyword; ApplicationContext migration opportunity
 
 ## Output
 You MUST use the Write tool to save your report to:
@@ -201,7 +209,7 @@ You MUST use the Write tool to save your report to:
 ## Class Mutable Default Findings
 ...
 
-## PROJ-258 Transition Progress (this shard)
+## Singleton Access-Pattern Divergence (this shard)
 - get_default_xxx() call sites: [N]
 - ctx.xxx accesses: [N]
 - Transition percentage: [N]%
@@ -218,20 +226,19 @@ You MUST use the Write tool to save your report to:
 # Cross-Shard Divergence Detector
 
 Detect state accessed differently across architectural layers — the
-primary risk of the PROJ-258 transition state where ApplicationContext
-and module-level singletons coexist.
+primary risk where ApplicationContext and module-level singletons coexist.
 
 ## Documentation Reference
 Read docs/01_ARCHITECTURE.md and game/context.py.
 
 ## Context
-PROJ-258 exists as a bridge: ApplicationContext.create_production() calls
-every set_default_xxx() to keep module-level singletons in sync with ctx.
-But the UI layer still overwhelmingly uses get_default_xxx(). If any code
-path sets ctx.xxx without also calling set_default_xxx(), or calls
-set_default_xxx() without updating ctx, the instances diverge. The exact
-call-site counts are derived from `ctx_usage_ratio.json` at runtime — do
-not use hardcoded numbers from this skill text.
+ApplicationContext.create_production() calls every set_default_xxx() to
+keep module-level singletons in sync with ctx. But the UI layer still
+overwhelmingly uses get_default_xxx(). If any code path sets ctx.xxx
+without also calling set_default_xxx(), or calls set_default_xxx() without
+updating ctx, the instances diverge. The exact call-site counts are
+derived from `ctx_usage_ratio.json` at runtime — do not use hardcoded
+numbers from this skill text.
 
 ## Scope
 All files under game/.
@@ -248,6 +255,7 @@ All files under game/.
    - Does every _default_* variable have a set_default_*() function?
    - Does ApplicationContext.create_production() call ALL of them?
    - Are there direct assignments to _default_* that bypass both?
+   - Check for stale `set_default_*` functions whose only caller is `ApplicationContext.create_production()` — these are bridge mechanics that should ultimately be removed; flag them as `MINOR` drift.
 
 3. **Divergence risk scoring:**
    For each singleton, calculate risk based on:
@@ -291,7 +299,7 @@ You MUST use the Write tool to save your report to:
 ### MEDIUM: _default_yyy
 ...
 
-## PROJ-258 Overall Progress
+## Layer-by-Layer Divergence Summary
 | Layer | get_default sites | ctx sites | % via ctx | Trend |
 |-------|-------------------|-----------|-----------|-------|
 | ui | | | | |
@@ -303,6 +311,8 @@ You MUST use the Write tool to save your report to:
 
 ## Prioritized Remediation Plan
 [Ordered by risk × call-site count]
+
+Findings are sorted by `severity_weight × layer_weight × loc_affected` (using `Tools/_audit_common/layer_weight.py`). All findings still appear in the per-shard detail tables and category scorecards above — weighting only affects this top-N ordering.
 ```
 
 ### Step 4: Verify Agent Outputs
@@ -348,7 +358,7 @@ Write `REVIEW_DIR/report.md`:
 **1. Executive Summary**
 - Date, review directory
 - Singleton count, divergence risk assessment
-- PROJ-258 transition progress (overall ctx usage %)
+- ApplicationContext access pattern progress (overall ctx usage %)
 
 **2. State Hygiene Scorecard**
 | Category | Count | Critical | Major | Minor |
@@ -362,13 +372,25 @@ Write `REVIEW_DIR/report.md`:
 **3. Singleton Divergence Risk Map**
 Per-singleton table with risk scores.
 
-**4. PROJ-258 Transition Progress**
+**4. ApplicationContext Access Pattern Progress**
 Per-layer migration status and overall percentage.
 
 **5. Prioritized Remediation Plan**
 Top 10 items.
 
-**6. Appendices**
+**6. Trend Comparison**
+
+Use `Tools/_audit_common/run_tracker.py` to compare against the previous run:
+
+```python
+from Tools._audit_common import run_tracker
+trend = run_tracker.compute_trend("Reviews/results", "state", current_summary)
+markdown = run_tracker.render_trend_markdown(trend)
+```
+
+Append the rendered markdown here. Then call `run_tracker.add_run("Reviews/results", "state", current_summary)` to record this run.
+
+**7. Appendices**
 Paths to all raw and findings files.
 
 ### Step 7: Log Skill Usage
@@ -382,7 +404,7 @@ python Tools/agent_coordination/log_skill_usage.py --agent ocode --skill ocode-s
 Show the user:
 1. State hygiene scorecard summary
 2. Singleton divergence risk count (HIGH/MEDIUM/LOW)
-3. PROJ-258 transition progress (% via ctx)
+3. ApplicationContext access pattern progress (% via ctx)
 4. Top 3 highest-risk singletons
 5. Path to the full report
 

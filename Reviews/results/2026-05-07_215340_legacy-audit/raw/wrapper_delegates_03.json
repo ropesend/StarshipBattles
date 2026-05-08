@@ -1,0 +1,1263 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 179,
+  "total_findings": 157,
+  "findings": [
+    {
+      "file": "game/app_bootstrap.py",
+      "line": 308,
+      "function": "_replay_combat_lab_fallback",
+      "delegates_to": "_cl_materializer.materialize",
+      "args_pass_through": false,
+      "context": "        def _replay_combat_lab_fallback(ship_spec, team_id):"
+    },
+    {
+      "file": "game/ai/interfaces/controllable.py",
+      "line": 370,
+      "function": "get_components_by_ability",
+      "delegates_to": "self._ship.get_components_by_ability",
+      "args_pass_through": false,
+      "context": "    def get_components_by_ability(self, name: str, operational_only: bool = True) -> List[Any]:"
+    },
+    {
+      "file": "game/ai/interfaces/controllable.py",
+      "line": 390,
+      "function": "get_all_components",
+      "delegates_to": "self._ship.get_all_components",
+      "args_pass_through": false,
+      "context": "    def get_all_components(self) -> List[Any]:"
+    },
+    {
+      "file": "game/assets/asset_manager.py",
+      "line": 348,
+      "function": "get_asset_manager",
+      "delegates_to": "get_default_asset_manager",
+      "args_pass_through": true,
+      "context": "def get_asset_manager() -> AssetManager:"
+    },
+    {
+      "file": "game/assets/asset_manager.py",
+      "line": 160,
+      "function": "get_star_core_info",
+      "delegates_to": "self.star_metadata.get",
+      "args_pass_through": false,
+      "context": "    def get_star_core_info(self, image_filename: str) -> dict:"
+    },
+    {
+      "file": "game/core/hex_math.py",
+      "line": 297,
+      "function": "hex_from_dict",
+      "delegates_to": "HexCoord",
+      "args_pass_through": false,
+      "context": "def hex_from_dict(data: dict) -> HexCoord:"
+    },
+    {
+      "file": "game/core/hex_math.py",
+      "line": 91,
+      "function": "__hash__",
+      "delegates_to": "hash",
+      "args_pass_through": false,
+      "context": "    def __hash__(self) -> int:"
+    },
+    {
+      "file": "game/core/protocols/common.py",
+      "line": 17,
+      "function": "_has_attrs",
+      "delegates_to": "all",
+      "args_pass_through": false,
+      "context": "def _has_attrs(obj: Any, *attrs: str) -> bool:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 414,
+      "function": "is_star_system",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_star_system(obj: Any) -> TypeGuard[IStarSystem]:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 419,
+      "function": "is_star",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_star(obj: Any) -> TypeGuard[IStar]:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 424,
+      "function": "is_planet",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_planet(obj: Any) -> TypeGuard[IPlanet]:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 429,
+      "function": "is_fleet",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_fleet(obj: Any) -> TypeGuard[IFleet]:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 434,
+      "function": "is_warp_point",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_warp_point(obj: Any) -> TypeGuard[IWarpPoint]:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 439,
+      "function": "is_sector_environment",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_sector_environment(obj: Any) -> TypeGuard[ISectorEnvironment]:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 444,
+      "function": "is_storm",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_storm(obj: Any) -> TypeGuard[IStorm]:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 449,
+      "function": "is_ability_source",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_ability_source(obj: Any) -> TypeGuard[IAbilitySource]:"
+    },
+    {
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 454,
+      "function": "is_zone_occupant",
+      "delegates_to": "_has_attrs",
+      "args_pass_through": false,
+      "context": "def is_zone_occupant(obj: Any) -> TypeGuard[IZoneOccupant]:"
+    },
+    {
+      "file": "game/research/data/research_tracker.py",
+      "line": 32,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> 'NodeState':"
+    },
+    {
+      "file": "game/research/data/research_tracker.py",
+      "line": 94,
+      "function": "get_total_allocated",
+      "delegates_to": "sum",
+      "args_pass_through": false,
+      "context": "    def get_total_allocated(self) -> int:"
+    },
+    {
+      "file": "game/research/data/research_tracker.py",
+      "line": 103,
+      "function": "get_remaining_rp",
+      "delegates_to": "max",
+      "args_pass_through": false,
+      "context": "    def get_remaining_rp(self) -> int:"
+    },
+    {
+      "file": "game/research/data/tech_tree.py",
+      "line": 172,
+      "function": "get_node",
+      "delegates_to": "self.nodes.get",
+      "args_pass_through": false,
+      "context": "    def get_node(self, node_id: str) -> Optional[TechNode]:"
+    },
+    {
+      "file": "game/research/data/tech_tree.py",
+      "line": 184,
+      "function": "get_all_node_ids",
+      "delegates_to": "list",
+      "args_pass_through": false,
+      "context": "    def get_all_node_ids(self) -> List[str]:"
+    },
+    {
+      "file": "game/simulation/combat/telemetry.py",
+      "line": 360,
+      "function": "get_hits",
+      "delegates_to": "tuple",
+      "args_pass_through": false,
+      "context": "    def get_hits(self, instance_id: str) -> Tuple[\"HitRecord\", ...]:"
+    },
+    {
+      "file": "game/simulation/components/component_constants.py",
+      "line": 45,
+      "function": "create_modifier",
+      "delegates_to": "ApplicationModifier",
+      "args_pass_through": true,
+      "context": "    def create_modifier(self, value=None) -> \"ApplicationModifier\":"
+    },
+    {
+      "file": "game/simulation/components/abilities/base.py",
+      "line": 200,
+      "function": "applies_to_layer",
+      "delegates_to": "bool",
+      "args_pass_through": false,
+      "context": "    def applies_to_layer(self, layer: AbilityLayer) -> bool:"
+    },
+    {
+      "file": "game/simulation/components/abilities/base.py",
+      "line": 475,
+      "function": "get_primary_value",
+      "delegates_to": "float",
+      "args_pass_through": false,
+      "context": "    def get_primary_value(self) -> float:"
+    },
+    {
+      "file": "game/simulation/components/abilities/base.py",
+      "line": 533,
+      "function": "get_primary_value",
+      "delegates_to": "float",
+      "args_pass_through": false,
+      "context": "    def get_primary_value(self) -> float:"
+    },
+    {
+      "file": "game/simulation/components/abilities/crew.py",
+      "line": 84,
+      "function": "get_primary_value",
+      "delegates_to": "float",
+      "args_pass_through": false,
+      "context": "    def get_primary_value(self) -> float:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 385,
+      "function": "add_component",
+      "delegates_to": "self.component_manager.add_component",
+      "args_pass_through": false,
+      "context": "    def add_component(self, component: Component, layer_type: LayerType) -> bool:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 394,
+      "function": "add_components_bulk",
+      "delegates_to": "self.component_manager.add_components_bulk",
+      "args_pass_through": false,
+      "context": "    def add_components_bulk(self, component: Component, layer_type: LayerType, count: int) -> int:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 401,
+      "function": "remove_component",
+      "delegates_to": "self.component_manager.remove_component",
+      "args_pass_through": false,
+      "context": "    def remove_component(self, layer_type: LayerType, index: int) -> Optional[Component]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 449,
+      "function": "get_missing_requirements",
+      "delegates_to": "self.validator_helper.get_missing_requirements",
+      "args_pass_through": false,
+      "context": "    def get_missing_requirements(self) -> List[str]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 453,
+      "function": "get_validation_warnings",
+      "delegates_to": "self.validator_helper.get_validation_warnings",
+      "args_pass_through": false,
+      "context": "    def get_validation_warnings(self) -> List[str]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 457,
+      "function": "get_ability_total",
+      "delegates_to": "self.stat_querier.get_ability_total",
+      "args_pass_through": false,
+      "context": "    def get_ability_total(self, ability_name: str) -> Union[float, int, bool]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 461,
+      "function": "get_total_ability_value",
+      "delegates_to": "self.stat_querier.get_total_ability_value",
+      "args_pass_through": false,
+      "context": "    def get_total_ability_value(self, ability_name: str, operational_only: bool = True) -> float:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 475,
+      "function": "get_total_sensor_score",
+      "delegates_to": "self.stat_querier.get_total_sensor_score",
+      "args_pass_through": false,
+      "context": "    def get_total_sensor_score(self) -> float:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 479,
+      "function": "get_resource_stat",
+      "delegates_to": "self._resource_manager.get_resource_stat",
+      "args_pass_through": false,
+      "context": "    def get_resource_stat(self, resource_name: str, stat_type: str) -> float:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 508,
+      "function": "get_total_ecm_score",
+      "delegates_to": "self.stat_querier.get_total_ecm_score",
+      "args_pass_through": false,
+      "context": "    def get_total_ecm_score(self) -> float:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 516,
+      "function": "get_all_components",
+      "delegates_to": "self.component_manager.get_all_components",
+      "args_pass_through": false,
+      "context": "    def get_all_components(self) -> List[Component]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 523,
+      "function": "iter_components",
+      "delegates_to": "self.component_manager.iter_components",
+      "args_pass_through": false,
+      "context": "    def iter_components(self) -> Iterator[Tuple[LayerType, Component]]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 527,
+      "function": "get_components_by_ability",
+      "delegates_to": "self.component_manager.get_components_by_ability",
+      "args_pass_through": false,
+      "context": "    def get_components_by_ability("
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 535,
+      "function": "get_weapon_components_cached",
+      "delegates_to": "self.component_manager.get_weapon_components_cached",
+      "args_pass_through": false,
+      "context": "    def get_weapon_components_cached(self) -> List[Component]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 542,
+      "function": "get_components_by_layer",
+      "delegates_to": "self.component_manager.get_components_by_layer",
+      "args_pass_through": false,
+      "context": "    def get_components_by_layer(self, layer_type: LayerType) -> List[Component]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 546,
+      "function": "has_components",
+      "delegates_to": "self.component_manager.has_components",
+      "args_pass_through": false,
+      "context": "    def has_components(self) -> bool:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 550,
+      "function": "find_component_with_index",
+      "delegates_to": "self.component_manager.find_component_with_index",
+      "args_pass_through": false,
+      "context": "    def find_component_with_index("
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 561,
+      "function": "check_validity",
+      "delegates_to": "self.validator_helper.check_validity",
+      "args_pass_through": false,
+      "context": "    def check_validity(self) -> bool:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 568,
+      "function": "to_dict",
+      "delegates_to": "ShipSerializer.to_dict",
+      "args_pass_through": true,
+      "context": "    def to_dict(self) -> Dict[str, Any]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 581,
+      "function": "from_dict",
+      "delegates_to": "ShipSerializer.from_dict",
+      "args_pass_through": true,
+      "context": "    def from_dict("
+    },
+    {
+      "file": "game/simulation/entities/ship_combat_engine.py",
+      "line": 69,
+      "function": "solve_lead",
+      "delegates_to": "self._targeting_system.solve_lead",
+      "args_pass_through": false,
+      "context": "    def solve_lead(self, pos, vel, t_pos, t_vel, p_speed) -> float:"
+    },
+    {
+      "file": "game/simulation/entities/ship_combat_engine.py",
+      "line": 99,
+      "function": "select_target",
+      "delegates_to": "self._targeting_system.select_target",
+      "args_pass_through": false,
+      "context": "    def select_target(self, candidates: List[Any]) -> Optional[Any]:"
+    },
+    {
+      "file": "game/simulation/entities/ship_combat_engine.py",
+      "line": 113,
+      "function": "calculate_firing_solution",
+      "delegates_to": "self._targeting_system.calculate_firing_solution",
+      "args_pass_through": false,
+      "context": "    def calculate_firing_solution(self, comp, target) -> Tuple[Vector2, Vector2]:"
+    },
+    {
+      "file": "game/simulation/entities/ship_combat_engine.py",
+      "line": 132,
+      "function": "fire_weapons",
+      "delegates_to": "self._weapon_firing_system.fire_weapons",
+      "args_pass_through": false,
+      "context": "    def fire_weapons(self, context: Optional[dict] = None) -> List[Any]:"
+    },
+    {
+      "file": "game/simulation/entities/stat_contributors/registry.py",
+      "line": 341,
+      "function": "_next_entry_id",
+      "delegates_to": "next",
+      "args_pass_through": false,
+      "context": "def _next_entry_id() -> int:"
+    },
+    {
+      "file": "game/simulation/entities/stat_contributors/registry.py",
+      "line": 187,
+      "function": "as_handle",
+      "delegates_to": "RegistrationHandle",
+      "args_pass_through": false,
+      "context": "    def as_handle(self) -> RegistrationHandle:"
+    },
+    {
+      "file": "game/simulation/entities/stat_contributors/registry.py",
+      "line": 293,
+      "function": "get",
+      "delegates_to": "self.get_active_entry",
+      "args_pass_through": false,
+      "context": "    def get(self, ability_name: str) -> Optional[StatContributorEntry]:"
+    },
+    {
+      "file": "game/simulation/replay/replay_player.py",
+      "line": 34,
+      "function": "replay_record_to_spec",
+      "delegates_to": "record.spec.to_battle_spec",
+      "args_pass_through": false,
+      "context": "def replay_record_to_spec(record: ReplayRecord) -> BattleSpec:"
+    },
+    {
+      "file": "game/simulation/replay/replay_spec.py",
+      "line": 169,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> \"ReplaySpec\":"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 104,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> 'TickLimitCondition':"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 156,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> 'TeamEliminatedCondition':"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 212,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> 'TeamIncapacitatedCondition':"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 309,
+      "function": "is_met",
+      "delegates_to": "any",
+      "args_pass_through": false,
+      "context": "    def is_met(self, ships: List['Ship'], tick: int) -> bool:"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 319,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> 'ShipDestroyedCondition':"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 344,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> 'NeverCondition':"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 388,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> 'MassRatioCondition':"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 409,
+      "function": "is_met",
+      "delegates_to": "any",
+      "args_pass_through": false,
+      "context": "    def is_met(self, ships: List['Ship'], tick: int) -> bool:"
+    },
+    {
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 440,
+      "function": "is_met",
+      "delegates_to": "all",
+      "args_pass_through": false,
+      "context": "    def is_met(self, ships: List['Ship'], tick: int) -> bool:"
+    },
+    {
+      "file": "game/strategy/config/economy_config.py",
+      "line": 74,
+      "function": "primary_resource",
+      "delegates_to": "next",
+      "args_pass_through": false,
+      "context": "    def primary_resource(self) -> str:"
+    },
+    {
+      "file": "game/strategy/data/colony_species_config.py",
+      "line": 114,
+      "function": "from_dict",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_dict(cls, data: Dict[str, Any]) -> \"ColonySpeciesConfig\":"
+    },
+    {
+      "file": "game/strategy/data/empire.py",
+      "line": 259,
+      "function": "get_resource",
+      "delegates_to": "self.resource_pool.get",
+      "args_pass_through": false,
+      "context": "    def get_resource(self, resource_type: str) -> float:"
+    },
+    {
+      "file": "game/strategy/data/fleet.py",
+      "line": 239,
+      "function": "get_cargo_resource",
+      "delegates_to": "float",
+      "args_pass_through": false,
+      "context": "    def get_cargo_resource(self, resource_type: str) -> float:"
+    },
+    {
+      "file": "game/strategy/data/fleet.py",
+      "line": 622,
+      "function": "__hash__",
+      "delegates_to": "hash",
+      "args_pass_through": false,
+      "context": "    def __hash__(self):"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 139,
+      "function": "get_system_by_name",
+      "delegates_to": "self._state.name_map.get",
+      "args_pass_through": false,
+      "context": "    def get_system_by_name(self, name: str) -> Optional['StarSystem']:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 143,
+      "function": "get_system_of_object",
+      "delegates_to": "self._spatial.get_system_of_object",
+      "args_pass_through": false,
+      "context": "    def get_system_of_object(self, obj: Any) -> Optional['StarSystem']:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 151,
+      "function": "get_planet_by_id",
+      "delegates_to": "self._registry.get_planet_by_id",
+      "args_pass_through": false,
+      "context": "    def get_planet_by_id(self, planet_id: int) -> Optional['Planet']:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 155,
+      "function": "get_system_of_planet",
+      "delegates_to": "self._spatial.get_system_of_planet",
+      "args_pass_through": false,
+      "context": "    def get_system_of_planet(self, planet: 'Planet') -> Optional['StarSystem']:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 159,
+      "function": "get_planets_at_global_hex",
+      "delegates_to": "self._spatial.get_planets_at_global_hex",
+      "args_pass_through": false,
+      "context": "    def get_planets_at_global_hex(self, global_hex: 'HexCoord') -> List['Planet']:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 163,
+      "function": "get_planet_global_hex",
+      "delegates_to": "self._spatial.get_planet_global_hex",
+      "args_pass_through": false,
+      "context": "    def get_planet_global_hex(self, planet: 'Planet') -> Optional['HexCoord']:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 175,
+      "function": "get_zones_at_global_hex",
+      "delegates_to": "self._spatial.get_zones_at_global_hex",
+      "args_pass_through": false,
+      "context": "    def get_zones_at_global_hex(self, global_hex: 'HexCoord') -> list:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 179,
+      "function": "get_next_fleet_id",
+      "delegates_to": "self._registry.get_next_fleet_id",
+      "args_pass_through": false,
+      "context": "    def get_next_fleet_id(self) -> int:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 191,
+      "function": "get_fleet_by_id",
+      "delegates_to": "self._registry.get_fleet_by_id",
+      "args_pass_through": false,
+      "context": "    def get_fleet_by_id(self, fleet_id: int) -> Optional['Fleet']:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 224,
+      "function": "get_system_at_location",
+      "delegates_to": "self._spatial.get_system_at_location",
+      "args_pass_through": false,
+      "context": "    def get_system_at_location(self, location: 'HexCoord') -> Optional['StarSystem']:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 228,
+      "function": "get_all_fleets_in_system",
+      "delegates_to": "self._spatial.get_all_fleets_in_system",
+      "args_pass_through": false,
+      "context": "    def get_all_fleets_in_system(self, system: 'StarSystem', empires: List) -> List[tuple]:"
+    },
+    {
+      "file": "game/strategy/data/galaxy.py",
+      "line": 236,
+      "function": "generate_systems",
+      "delegates_to": "self._sys_gen.generate_systems",
+      "args_pass_through": true,
+      "context": "    def generate_systems("
+    },
+    {
+      "file": "game/strategy/data/planet_naming.py",
+      "line": 16,
+      "function": "to_roman",
+      "delegates_to": "NameRegistry.to_roman",
+      "args_pass_through": true,
+      "context": "def to_roman(n: int) -> str:"
+    },
+    {
+      "file": "game/strategy/data/ship_cargo_manager.py",
+      "line": 43,
+      "function": "get_current_cargo",
+      "delegates_to": "self._ship.cargo_contents.get",
+      "args_pass_through": false,
+      "context": "    def get_current_cargo(self, cargo_type: str) -> int:"
+    },
+    {
+      "file": "game/strategy/data/ship_instance_serializer.py",
+      "line": 143,
+      "function": "to_json",
+      "delegates_to": "json.dumps",
+      "args_pass_through": false,
+      "context": "    def to_json(ship: 'ShipInstance', indent: int = 2) -> str:"
+    },
+    {
+      "file": "game/strategy/engine/action_execution_engine.py",
+      "line": 202,
+      "function": "_execute_action",
+      "delegates_to": "self._order_processor.execute_action_order",
+      "args_pass_through": false,
+      "context": "    def _execute_action("
+    },
+    {
+      "file": "game/strategy/engine/happiness_engine.py",
+      "line": 131,
+      "function": "_get_race_config",
+      "delegates_to": "resolve_race_config",
+      "args_pass_through": false,
+      "context": "    def _get_race_config("
+    },
+    {
+      "file": "game/strategy/facade/dto/system_dto.py",
+      "line": 61,
+      "function": "from_star",
+      "delegates_to": "cls",
+      "args_pass_through": false,
+      "context": "    def from_star(cls, star: 'Star', system_name: str = \"\","
+    },
+    {
+      "file": "game/strategy/facade/slices/command_dispatch_slice.py",
+      "line": 45,
+      "function": "handle_command",
+      "delegates_to": "self._state.session.handle_command",
+      "args_pass_through": false,
+      "context": "    def handle_command(self, command: \"Command\") -> \"ValidationResult\":"
+    },
+    {
+      "file": "game/strategy/facade/slices/command_dispatch_slice.py",
+      "line": 98,
+      "function": "_dispatch",
+      "delegates_to": "handle_command",
+      "args_pass_through": false,
+      "context": "        def _dispatch(**kwargs) -> ValidationResult:"
+    },
+    {
+      "file": "game/strategy/facade/slices/empire_slice.py",
+      "line": 32,
+      "function": "get_empire_by_id",
+      "delegates_to": "self._state.get_empire_by_id",
+      "args_pass_through": false,
+      "context": "    def get_empire_by_id(self, empire_id: int) -> Optional[\"Empire\"]:"
+    },
+    {
+      "file": "game/strategy/facade/slices/_facade_state.py",
+      "line": 71,
+      "function": "get_fleet_by_id",
+      "delegates_to": "self.session._get_fleet_by_id",
+      "args_pass_through": false,
+      "context": "    def get_fleet_by_id(self, fleet_id: int) -> Optional[\"Fleet\"]:"
+    },
+    {
+      "file": "game/strategy/generation/planet_image_registry.py",
+      "line": 111,
+      "function": "get_image_count",
+      "delegates_to": "len",
+      "args_pass_through": false,
+      "context": "    def get_image_count(self, planet_type: PlanetType) -> int:"
+    },
+    {
+      "file": "game/strategy/generation/planet_image_registry.py",
+      "line": 122,
+      "function": "get_total_image_count",
+      "delegates_to": "sum",
+      "args_pass_through": false,
+      "context": "    def get_total_image_count(self) -> int:"
+    },
+    {
+      "file": "game/strategy/generation/star_image_registry.py",
+      "line": 91,
+      "function": "get_image_count",
+      "delegates_to": "len",
+      "args_pass_through": false,
+      "context": "    def get_image_count(self, star_type: StarType) -> int:"
+    },
+    {
+      "file": "game/strategy/generation/density/density_map.py",
+      "line": 239,
+      "function": "__len__",
+      "delegates_to": "len",
+      "args_pass_through": false,
+      "context": "    def __len__(self) -> int:"
+    },
+    {
+      "file": "game/strategy/services/system_destroyer.py",
+      "line": 64,
+      "function": "fleet_count",
+      "delegates_to": "len",
+      "args_pass_through": false,
+      "context": "    def fleet_count(self) -> int:"
+    },
+    {
+      "file": "game/strategy/services/ability_sources/system_archetype.py",
+      "line": 38,
+      "function": "get_abilities",
+      "delegates_to": "dict",
+      "args_pass_through": false,
+      "context": "    def get_abilities(self) -> Dict[str, Any]:"
+    },
+    {
+      "file": "game/ui/components/table/column_manager.py",
+      "line": 117,
+      "function": "get_total_visible_width",
+      "delegates_to": "sum",
+      "args_pass_through": false,
+      "context": "    def get_total_visible_width(self) -> int:"
+    },
+    {
+      "file": "game/ui/panels/battle_panels.py",
+      "line": 104,
+      "function": "_is_expanded",
+      "delegates_to": "self._is_id_expanded",
+      "args_pass_through": false,
+      "context": "    def _is_expanded(self, ship) -> bool:"
+    },
+    {
+      "file": "game/ui/panels/battle_panels.py",
+      "line": 284,
+      "function": "_is_seeker_expanded",
+      "delegates_to": "self._is_id_expanded",
+      "args_pass_through": false,
+      "context": "    def _is_seeker_expanded(self, proj) -> bool:"
+    },
+    {
+      "file": "game/ui/screens/battle_screen.py",
+      "line": 178,
+      "function": "engine",
+      "delegates_to": "self._battle_service.get_engine",
+      "args_pass_through": false,
+      "context": "    def engine(self) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/battle_screen.py",
+      "line": 494,
+      "function": "get_winner",
+      "delegates_to": "self._battle_service.get_winner",
+      "args_pass_through": false,
+      "context": "    def get_winner(self) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_filter_manager.py",
+      "line": 113,
+      "function": "get_filter_state",
+      "delegates_to": "self._filter_mgr.get_state",
+      "args_pass_through": false,
+      "context": "    def get_filter_state(self, key: str) -> FilterState:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_viewmodel.py",
+      "line": 132,
+      "function": "get_filter_state",
+      "delegates_to": "self._filter_mgr.get_filter_state",
+      "args_pass_through": false,
+      "context": "    def get_filter_state(self, key: str) -> FilterState:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 334,
+      "function": "get_selected_sources",
+      "delegates_to": "self._viewmodel.get_selected_sources",
+      "args_pass_through": false,
+      "context": "    def get_selected_sources(self) -> List[BuildQueueSource]:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 338,
+      "function": "get_selection_summary",
+      "delegates_to": "self._viewmodel.get_selection_summary",
+      "args_pass_through": false,
+      "context": "    def get_selection_summary(self) -> str:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 526,
+      "function": "_get_visible_columns",
+      "delegates_to": "self._filter_mgr.get_visible_columns",
+      "args_pass_through": false,
+      "context": "    def _get_visible_columns(self) -> List[Dict[str, Any]]:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 540,
+      "function": "toggle_column_visibility",
+      "delegates_to": "self._filter_mgr.toggle_column_visibility",
+      "args_pass_through": false,
+      "context": "    def toggle_column_visibility(self, col_id: str) -> bool:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 584,
+      "function": "_get_system_name",
+      "delegates_to": "get_system_name",
+      "args_pass_through": false,
+      "context": "    def _get_system_name(self, source: BuildQueueSource) -> str:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 589,
+      "function": "_get_sector_text",
+      "delegates_to": "get_sector_text",
+      "args_pass_through": true,
+      "context": "    def _get_sector_text(source: BuildQueueSource) -> str:"
+    },
+    {
+      "file": "game/ui/screens/fleet_data_source.py",
+      "line": 70,
+      "function": "get_row_count",
+      "delegates_to": "len",
+      "args_pass_through": false,
+      "context": "    def get_row_count(self) -> int:"
+    },
+    {
+      "file": "game/ui/screens/fleet_data_source.py",
+      "line": 207,
+      "function": "_format_design",
+      "delegates_to": "ship.design_data.get",
+      "args_pass_through": false,
+      "context": "    def _format_design(self, ship: \"ShipInstance\") -> str:"
+    },
+    {
+      "file": "game/ui/screens/fleet_report_view_model.py",
+      "line": 125,
+      "function": "get_tri_state",
+      "delegates_to": "self._filter_mgr.get_state",
+      "args_pass_through": false,
+      "context": "    def get_tri_state(self, attribute: str) -> FilterState:"
+    },
+    {
+      "file": "game/ui/screens/fleet_report_view_model.py",
+      "line": 168,
+      "function": "get_ship_count",
+      "delegates_to": "len",
+      "args_pass_through": false,
+      "context": "    def get_ship_count(self) -> int:"
+    },
+    {
+      "file": "game/ui/screens/fleet_report_view_model.py",
+      "line": 172,
+      "function": "get_total_ship_count",
+      "delegates_to": "len",
+      "args_pass_through": false,
+      "context": "    def get_total_ship_count(self) -> int:"
+    },
+    {
+      "file": "game/ui/screens/planet_data_source.py",
+      "line": 52,
+      "function": "get_planet_at_index",
+      "delegates_to": "self._entity_at",
+      "args_pass_through": false,
+      "context": "    def get_planet_at_index(self, row_index: int) -> Optional[Any]:"
+    },
+    {
+      "file": "game/ui/screens/planet_data_source.py",
+      "line": 61,
+      "function": "_render_icon",
+      "delegates_to": "self._get_planet_icon",
+      "args_pass_through": false,
+      "context": "    def _render_icon(self, entity: Any) -> pygame.Surface:"
+    },
+    {
+      "file": "game/ui/screens/planet_list_window.py",
+      "line": 581,
+      "function": "_capture_current_state",
+      "delegates_to": "capture_planet_list_state",
+      "args_pass_through": false,
+      "context": "    def _capture_current_state(self) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/planet_list_window.py",
+      "line": 680,
+      "function": "_resolve_demographic_view",
+      "delegates_to": "self.controller.resolve_demographic_view",
+      "args_pass_through": false,
+      "context": "    def _resolve_demographic_view(self, planet) -> Optional[Any]:"
+    },
+    {
+      "file": "game/ui/screens/strategy_click_dispatcher.py",
+      "line": 303,
+      "function": "_handle_implode_planet_click",
+      "delegates_to": "self._handle_superweapon_click",
+      "args_pass_through": false,
+      "context": "    def _handle_implode_planet_click(self, mx: int, my: int, button: int) -> bool:"
+    },
+    {
+      "file": "game/ui/screens/strategy_click_dispatcher.py",
+      "line": 307,
+      "function": "_handle_stellerate_star_click",
+      "delegates_to": "self._handle_superweapon_click",
+      "args_pass_through": false,
+      "context": "    def _handle_stellerate_star_click(self, mx: int, my: int, button: int) -> bool:"
+    },
+    {
+      "file": "game/ui/screens/strategy_click_dispatcher.py",
+      "line": 311,
+      "function": "_handle_open_warp_click",
+      "delegates_to": "self._handle_superweapon_click",
+      "args_pass_through": false,
+      "context": "    def _handle_open_warp_click(self, mx: int, my: int, button: int) -> bool:"
+    },
+    {
+      "file": "game/ui/screens/strategy_click_dispatcher.py",
+      "line": 315,
+      "function": "_handle_close_warp_click",
+      "delegates_to": "self._handle_superweapon_click",
+      "args_pass_through": false,
+      "context": "    def _handle_close_warp_click(self, mx: int, my: int, button: int) -> bool:"
+    },
+    {
+      "file": "game/ui/screens/strategy_click_dispatcher.py",
+      "line": 319,
+      "function": "_handle_dyson_sphere_click",
+      "delegates_to": "self._handle_superweapon_click",
+      "args_pass_through": false,
+      "context": "    def _handle_dyson_sphere_click(self, mx: int, my: int, button: int) -> bool:"
+    },
+    {
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 85,
+      "function": "make_renderer",
+      "delegates_to": "StrategyRenderer",
+      "args_pass_through": false,
+      "context": "    def make_renderer(self, screen: \"StrategyScreen\") -> StrategyRenderer:"
+    },
+    {
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 88,
+      "function": "make_camera_navigator",
+      "delegates_to": "CameraNavigator",
+      "args_pass_through": false,
+      "context": "    def make_camera_navigator(self, screen: \"StrategyScreen\") -> CameraNavigator:"
+    },
+    {
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 91,
+      "function": "make_fleet_ops",
+      "delegates_to": "FleetOperations",
+      "args_pass_through": false,
+      "context": "    def make_fleet_ops(self, screen: \"StrategyScreen\") -> FleetOperations:"
+    },
+    {
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 94,
+      "function": "make_colonization",
+      "delegates_to": "ColonizationSystem",
+      "args_pass_through": false,
+      "context": "    def make_colonization(self, screen: \"StrategyScreen\") -> ColonizationSystem:"
+    },
+    {
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 97,
+      "function": "make_superweapons",
+      "delegates_to": "SuperweaponOperations",
+      "args_pass_through": false,
+      "context": "    def make_superweapons(self, screen: \"StrategyScreen\") -> SuperweaponOperations:"
+    },
+    {
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 100,
+      "function": "make_build_queue_manager",
+      "delegates_to": "StrategyBuildQueueManager",
+      "args_pass_through": false,
+      "context": "    def make_build_queue_manager("
+    },
+    {
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 105,
+      "function": "make_game_state_manager",
+      "delegates_to": "StrategyGameStateManager",
+      "args_pass_through": false,
+      "context": "    def make_game_state_manager("
+    },
+    {
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 110,
+      "function": "make_input_handler",
+      "delegates_to": "StrategyInputHandler",
+      "args_pass_through": false,
+      "context": "    def make_input_handler(self, screen: \"StrategyScreen\") -> StrategyInputHandler:"
+    },
+    {
+      "file": "game/ui/screens/transfer_dialog.py",
+      "line": 292,
+      "function": "_extract_dropdown_value",
+      "delegates_to": "TransferGridRenderer.extract_dropdown_value",
+      "args_pass_through": false,
+      "context": "    def _extract_dropdown_value(self, value: Any) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/transfer_dialog.py",
+      "line": 295,
+      "function": "_format_pending",
+      "delegates_to": "self.view_model.format_pending",
+      "args_pass_through": false,
+      "context": "    def _format_pending(self, amount: Any) -> str:"
+    },
+    {
+      "file": "game/ui/screens/transfer_dialog.py",
+      "line": 298,
+      "function": "_get_amounts",
+      "delegates_to": "self.view_model.get_amounts",
+      "args_pass_through": false,
+      "context": "    def _get_amounts(self, info_obj) -> Dict[str, int]:"
+    },
+    {
+      "file": "game/ui/screens/transfer_dialog.py",
+      "line": 301,
+      "function": "_discover_pod_designs",
+      "delegates_to": "self._controller.discover_pod_designs",
+      "args_pass_through": false,
+      "context": "    def _discover_pod_designs(self) -> List[str]:"
+    },
+    {
+      "file": "game/ui/screens/workshop_viewmodel_layer_ops.py",
+      "line": 195,
+      "function": "move_component",
+      "delegates_to": "self._viewmodel._with_ship",
+      "args_pass_through": false,
+      "context": "    def move_component("
+    },
+    {
+      "file": "game/ui/screens/battle_setup/controller.py",
+      "line": 471,
+      "function": "_total_ships",
+      "delegates_to": "sum",
+      "args_pass_through": false,
+      "context": "        def _total_ships(side) -> int:"
+    },
+    {
+      "file": "game/ui/screens/builder/modifier_logic.py",
+      "line": 66,
+      "function": "is_modifier_allowed",
+      "delegates_to": "self._component_service.is_modifier_allowed",
+      "args_pass_through": false,
+      "context": "    def is_modifier_allowed(self, mod_id: str, component) -> bool:"
+    },
+    {
+      "file": "game/ui/screens/builder/modifier_logic.py",
+      "line": 231,
+      "function": "calculate_snap_value",
+      "delegates_to": "ModifierLogicService.calculate_snap_value",
+      "args_pass_through": true,
+      "context": "    def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "line": 38,
+      "function": "_get_total_crew_requirement",
+      "delegates_to": "ship.get_ability_total",
+      "args_pass_through": false,
+      "context": "def _get_total_crew_requirement(ship) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "line": 66,
+      "function": "get_crew_required",
+      "delegates_to": "_get_total_crew_requirement",
+      "args_pass_through": true,
+      "context": "def get_crew_required(ship) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "line": 69,
+      "function": "get_crew_capacity",
+      "delegates_to": "max",
+      "args_pass_through": false,
+      "context": "def get_crew_capacity(ship) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "line": 72,
+      "function": "get_life_support",
+      "delegates_to": "ship.get_ability_total",
+      "args_pass_through": false,
+      "context": "def get_life_support(ship) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "line": 263,
+      "function": "get_cargo_capacity",
+      "delegates_to": "ship.cargo_storage.get",
+      "args_pass_through": false,
+      "context": "def get_cargo_capacity(ship, cargo_type='generic') -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "line": 267,
+      "function": "get_passenger_capacity",
+      "delegates_to": "ship.cargo_storage.get",
+      "args_pass_through": false,
+      "context": "def get_passenger_capacity(ship) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/race_setup/view_model.py",
+      "line": 66,
+      "function": "tab_count",
+      "delegates_to": "len",
+      "args_pass_through": false,
+      "context": "    def tab_count(self) -> int:"
+    },
+    {
+      "file": "game/ui/screens/race_setup/view_model.py",
+      "line": 69,
+      "function": "clamp_step",
+      "delegates_to": "max",
+      "args_pass_through": false,
+      "context": "    def clamp_step(self, step_num: int) -> int:"
+    },
+    {
+      "file": "game/ui/screens/test_lab/details/panel.py",
+      "line": 140,
+      "function": "_build_ctx",
+      "delegates_to": "DetailsDrawContext",
+      "args_pass_through": false,
+      "context": "    def _build_ctx(self, surface) -> DetailsDrawContext:"
+    },
+    {
+      "file": "game/ui/services/battle_ui_service.py",
+      "line": 67,
+      "function": "_get_engine_or_none",
+      "delegates_to": "self._battle_service.get_engine",
+      "args_pass_through": false,
+      "context": "    def _get_engine_or_none(self) -> BattleEngine | None:"
+    },
+    {
+      "file": "game/ui/services/design_loader_adapter.py",
+      "line": 58,
+      "function": "load_ship_from_design_data",
+      "delegates_to": "self._loader.load_ship_from_design_data",
+      "args_pass_through": false,
+      "context": "    def load_ship_from_design_data("
+    },
+    {
+      "file": "game/ui/services/design_loader_adapter.py",
+      "line": 83,
+      "function": "load_ship_from_file",
+      "delegates_to": "self._loader.load_ship_from_file",
+      "args_pass_through": false,
+      "context": "    def load_ship_from_file("
+    },
+    {
+      "file": "game/ui/services/image/null_provider.py",
+      "line": 37,
+      "function": "__str__",
+      "delegates_to": "self.__repr__",
+      "args_pass_through": false,
+      "context": "    def __str__(self) -> str:"
+    },
+    {
+      "file": "game/ui/services/image/openai_provider.py",
+      "line": 81,
+      "function": "__str__",
+      "delegates_to": "self.__repr__",
+      "args_pass_through": false,
+      "context": "    def __str__(self) -> str:"
+    },
+    {
+      "file": "game/ui/widgets/scroll_state.py",
+      "line": 51,
+      "function": "max_offset",
+      "delegates_to": "max",
+      "args_pass_through": false,
+      "context": "    def max_offset(self) -> int:"
+    }
+  ]
+}

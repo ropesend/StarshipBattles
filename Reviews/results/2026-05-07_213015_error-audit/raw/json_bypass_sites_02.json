@@ -1,0 +1,12 @@
+[
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 106,
+    "call": "json.load"
+  },
+  {
+    "file": "game/strategy/engine/turn_state_snapshot.py",
+    "line": 131,
+    "call": "json.dump"
+  }
+]

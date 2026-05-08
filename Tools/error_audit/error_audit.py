@@ -141,7 +141,11 @@ class _ErrorScanner(ast.NodeVisitor):
 
         if isinstance(func, ast.Attribute):
             full = self._resolve_attr(func)
-            if full in ("json.load", "json.dump", "json.loads", "json.dumps"):
+            # Only flag file-I/O variants (json.load / json.dump). The in-memory
+            # variants json.loads(string) / json.dumps(obj) are excluded — see
+            # SKILL.md: json_utils does not offer in-memory equivalents, so these
+            # are pre-filtered out of the audit scope.
+            if full in ("json.load", "json.dump"):
                 if not self._json_utils_aliases:
                     self.json_bypasses.append({
                         "file": _rel(self.filepath),
@@ -350,6 +354,23 @@ def run(force_output_dir: str | None = None) -> str:
     manifest = _generate_manifest(rel_files, output_dir)
     with open(os.path.join(raw_dir, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
+
+    # Per-shard filtered copies of large categories (B3): each shard agent
+    # consumes only the findings whose `file` field belongs to that shard.
+    per_shard_categories = {
+        "broad_except_sites": broad_excepts,
+        "bare_except_sites": bare_excepts,
+        "json_bypass_sites": json_bypasses,
+        "raise_generic_sites": generic_raises,
+        "print_debug_sites": print_debugs,
+    }
+    for sid, shard_info in manifest["shards"].items():
+        shard_files = set(shard_info["files"])
+        for category, items in per_shard_categories.items():
+            filtered = [item for item in items if item.get("file") in shard_files]
+            shard_path = os.path.join(raw_dir, f"{category}_{sid}.json")
+            with open(shard_path, "w", encoding="utf-8") as f:
+                json.dump(filtered, f, indent=2)
 
     print(f"  Broad except w/o comment: {len(broad_excepts)}")
     print(f"  Bare except:             {len(bare_excepts)}")

@@ -1,0 +1,107 @@
+[
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 70,
+    "function": "_get_empire_mutator",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 364,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 407,
+    "function": "_precheck",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 412,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 452,
+    "function": "_precheck",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 466,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 523,
+    "function": "_parse_close_target",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 536,
+    "function": "_precheck",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 544,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 596,
+    "function": "_precheck",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 604,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/facade/strategy_session_facade.py",
+    "line": 339,
+    "function": "_resolve_economy_config",
+    "class": "StrategySessionFacade",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/facade/strategy_session_facade.py",
+    "line": 414,
+    "function": "_make_forwarder",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/gravity_target_editor.py",
+    "line": 164,
+    "function": "_button_handlers",
+    "class": "GravityTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/race_setup/screen.py",
+    "line": 279,
+    "function": "_description_controller",
+    "class": "RaceSetupScreen",
+    "layer": "ui"
+  }
+]

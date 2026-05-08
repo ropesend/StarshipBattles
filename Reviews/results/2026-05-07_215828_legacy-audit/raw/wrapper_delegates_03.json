@@ -1,0 +1,79 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 179,
+  "total_findings": 8,
+  "findings": [
+    {
+      "file": "game/assets/asset_manager.py",
+      "line": 348,
+      "function": "get_asset_manager",
+      "delegates_to": "get_default_asset_manager",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_asset_manager() -> AssetManager:"
+    },
+    {
+      "file": "game/simulation/components/component_constants.py",
+      "line": 45,
+      "function": "create_modifier",
+      "delegates_to": "ApplicationModifier",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def create_modifier(self, value=None) -> \"ApplicationModifier\":"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 568,
+      "function": "to_dict",
+      "delegates_to": "ShipSerializer.to_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def to_dict(self) -> Dict[str, Any]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 581,
+      "function": "from_dict",
+      "delegates_to": "ShipSerializer.from_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def from_dict("
+    },
+    {
+      "file": "game/strategy/data/planet_naming.py",
+      "line": 16,
+      "function": "to_roman",
+      "delegates_to": "NameRegistry.to_roman",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def to_roman(n: int) -> str:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 589,
+      "function": "_get_sector_text",
+      "delegates_to": "get_sector_text",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _get_sector_text(source: BuildQueueSource) -> str:"
+    },
+    {
+      "file": "game/ui/screens/builder/modifier_logic.py",
+      "line": 231,
+      "function": "calculate_snap_value",
+      "delegates_to": "ModifierLogicService.calculate_snap_value",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "line": 66,
+      "function": "get_crew_required",
+      "delegates_to": "_get_total_crew_requirement",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_crew_required(ship) -> Any:"
+    }
+  ]
+}

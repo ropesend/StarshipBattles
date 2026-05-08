@@ -70,6 +70,31 @@ def greedy_balance(
     return shards
 
 
+def _compute_next_shard_id(shard_count: int) -> str:
+    """Look at the audit_shrink history to determine which shard to deep-review next.
+
+    Rotates ``01 -> 02 -> ... -> {shard_count:02d} -> 01``. Returns ``"01"`` on
+    first run or when history can't be read.
+    """
+    history_path = os.path.join(PROJECT_ROOT, "Reviews", "results", "shrink_tracker.json")
+    try:
+        with open(history_path, encoding="utf-8") as f:
+            history = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return "01"
+    runs = history.get("runs", [])
+    if not runs:
+        return "01"
+    last = runs[-1].get("deep_review_shard")
+    if not last:
+        return "01"
+    try:
+        next_idx = (int(last) % shard_count) + 1
+    except (TypeError, ValueError):
+        return "01"
+    return f"{next_idx:02d}"
+
+
 def generate(output_dir: str | None = None, seed: str | None = None, shard_count: int = 4) -> dict:
     """Generate shard manifest. If output_dir is set, write manifest.json there."""
     file_paths = _collect_files()
@@ -88,6 +113,7 @@ def generate(output_dir: str | None = None, seed: str | None = None, shard_count
         "shard_count": shard_count,
         "total_files": len(files),
         "total_loc_estimate": sum(loc for _, loc in files),
+        "next_shard_id": _compute_next_shard_id(shard_count),
         "shards": {},
     }
 

@@ -1,0 +1,7 @@
+[
+  {
+    "file": "game/app.py",
+    "line": 522,
+    "call": "traceback.format_exc"
+  }
+]

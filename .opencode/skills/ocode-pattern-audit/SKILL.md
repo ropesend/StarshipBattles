@@ -4,9 +4,16 @@ description: Pattern conformance & architecture drift audit. Validates all 31 do
 argument-hint: "[--skip-phase1] [--focus PATTERN_NAME]"
 ---
 
+## Invocation
+
+- **Slash command (interactive):** `/ocode-pattern-audit`
+- **CLI (non-interactive):** `opencode run "Load the ocode-pattern-audit skill and execute it. Args: [optional --skip-phase1, --focus PATTERN_NAME]"`
+
+The skill is identical in both modes. CLI mode skips any user-prompt confirmations.
+
 # Pattern Conformance & Architecture Drift Audit
 
-Run a comprehensive audit of pattern adherence across the production codebase. Validates the 8-layer dependency table, checks for pattern bypass (Registry DI, Facade, CQRS-lite), detects naming collisions, and scores the 31 documented patterns for conformance against live code.
+Run a comprehensive audit of pattern adherence across the production codebase. Validates the 8-layer dependency table, checks for pattern bypass (Registry DI, Facade, CQRS-lite), detects naming collisions, and scores the documented patterns for conformance against live code.
 
 Does NOT change any code. Targets `game/` only (not tests).
 
@@ -58,6 +65,7 @@ The script creates `REVIEW_DIR/raw/` with these outputs:
 3. `file_size_violations.txt` — files over 500 LOC
 4. `protocol_registry.json` — Protocol classes found + TypeGuard presence
 5. `manifest.json` — 4-shard file assignments
+6. `patterns_toc.json` — parsed Table of Contents from docs/02_PATTERNS.md (numbered headings + verbatim names) — fed to agents so they don't have to extract it themselves
 
 ### Step 2: Read Phase 1 Outputs + Reference Docs
 
@@ -69,7 +77,7 @@ Read these files into memory:
 4. Read `REVIEW_DIR/raw/protocol_registry.json`
 5. Read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
 
-The docs document **31 patterns**. Read the Table of Contents in `docs/02_PATTERNS.md` to get the current pattern list at runtime — do NOT use a manually copied enumeration. The canonical ToC headings (as of the doc's last-verified date) define the active pattern set. When evaluating pattern adherence, reference patterns by their doc heading number and name verbatim.
+The docs document a numbered list of patterns (current count tracked in `raw/patterns_toc.json`). Phase 1 parses the Table of Contents in `docs/02_PATTERNS.md` and writes it to `raw/patterns_toc.json` — agents reference this rather than re-extracting. When evaluating pattern adherence, reference patterns by their doc heading number and name verbatim.
 
 ### Step 3: Launch 6 Agents in Parallel
 
@@ -81,7 +89,7 @@ Launch **6 agents**:
 **Replace placeholders:**
 - `{REVIEW_DIR}` → actual review directory
 - `{shard_id}`, `{shard_label}`, `{shard_files}` → from manifest.json
-- `{layer_violations}` → layer_violations.json content
+- `{layer_violations}` → per-shard file path: `REVIEW_DIR/raw/layer_violations_{shard_id}.json` (agents read the file rather than receiving inline JSON)
 
 #### Agents 1a-1d: In-Shard Pattern Reviewers
 
@@ -93,14 +101,15 @@ You MUST exhaustively read EVERY file in this shard.
 
 ## Documentation Reference
 Read docs/01_ARCHITECTURE.md and docs/02_PATTERNS.md. You must understand
-all 31 patterns before reviewing files.
+each pattern in patterns_toc.json before reviewing files.
 
 ## Scope
 Shard file list:
 {shard_files}
 
 ## Layer Violations (filtered for your shard)
-{layer_violations}
+Read the per-shard layer-violations file at: {layer_violations}
+(This is a file path, not inline content. Use the Read tool.)
 
 ## Methodology
 For EACH file in your shard:
@@ -112,7 +121,8 @@ For EACH file in your shard:
    - Is it a genuine violation that needs remediation?
 3. **Check for pattern bypass (the most damaging form of drift):**
    - **Registry DI bypass (#3):** Is any simulation/strategy code calling
-     get_default_registry_provider()? (This was banned by PROJ-252.)
+     `get_default_registry_provider()`? Per `docs/02_PATTERNS.md` Pattern #3,
+     simulation/strategy code must receive the registry via DI.
    - **Facade bypass (#5):** Is UI code directly importing engine/simulation
      internals instead of going through StrategySessionFacade?
    - **CQRS-lite violation (#6):** Are DTOs being mutated? Are commands
@@ -120,22 +130,21 @@ For EACH file in your shard:
    - **Protocol bypass (#2):** Is code using isinstance() checks against
      concrete implementations instead of Protocol TypeGuard functions?
    - **CommandHandlerRegistry bypass (#7):** Are strategy commands dispatched
-     via if/elif chains instead of the registry's `dispatch()`? Use the live
-     pattern doc's named API surface; current example: `CommandHandlerRegistry.dispatch()`.
+     via if/elif chains instead of the registry's documented dispatch entry
+     point? (see `docs/02_PATTERNS.md` Pattern #7 for the live API surface name).
    - **Ability aggregation bypass (#14):** Is two-phase aggregation reimplemented
-     locally? Use the pattern doc's shared function; current example: `_aggregate_ability_groups()`.
+     locally? (see `docs/02_PATTERNS.md` Pattern #14 for the live API surface name).
    - **Scope-Driven Team Routing bypass (#25):** Is scope routing duplicated
-     locally instead of using the registry? Use the pattern doc's constants
-     and helpers; current examples: `OPPONENT_SCOPES`, `_route_team_ids`.
+     locally instead of using the registry? (see `docs/02_PATTERNS.md` Pattern
+     #25 for the live API surface name).
    - **Ability-Stat Registry bypass (#26):** Are `ModifierEntry` objects
-     constructed by hand? Use the pattern doc's entry point; current example:
-     `emit_entries_for_ability()`.
+     constructed by hand instead of via the registry's emit entry point?
+     (see `docs/02_PATTERNS.md` Pattern #26 for the live API surface name).
    - **Strategy Modal Window (#31) vs superseded #30:** New strategy-modal
      windows must subclass `StrategyModalWindow`. Flag windows implementing
      manual close-callback tracking when #31 is the current contract.
    - For ALL bypass checks: the pattern doc's named helpers/APIs are the
-     single source of truth. The examples above are current as of the docs'
-     last-verified date; always verify against the live doc.
+     single source of truth. Always verify against the live doc.
 4. **Check naming collisions:**
    - Two distinct classes/functions with the same name in different layers
    - Example: EventBus appears in both game/ui/screens/builder/ and game/core/
@@ -155,7 +164,7 @@ For EACH file in your shard:
 - Pygame idioms that don't match GoF pattern purity
 
 ## Severity Guide
-- CRITICAL: Registry DI bypass (simulation calling get_default_registry_provider());
+- CRITICAL: Registry DI bypass (simulation calling `get_default_registry_provider()`);
   Facade bypass (UI calling engine internals); Layer dependency violation
   that is NOT TYPE_CHECKING or documented bridge
 - MAJOR: CQRS-lite DTO mutation; Protocol bypass with isinstance();
@@ -289,20 +298,21 @@ You MUST use the Write tool to save your report to:
 ```
 # Pattern Documentation Validator
 
-Cross-reference the 31 documented patterns in docs/02_PATTERNS.md against
+Cross-reference the documented patterns in docs/02_PATTERNS.md against
 their actual usage in code. Flag patterns that are documented but unused,
 patterns that are used but not documented, and documentation that no longer
 matches the implementation.
 
 ## Documentation Reference
-Read docs/02_PATTERNS.md (you must understand all 31 patterns).
+Read docs/02_PATTERNS.md and `{REVIEW_DIR}/raw/patterns_toc.json` (you must
+understand each pattern in patterns_toc.json).
 
 ## Scope
 docs/02_PATTERNS.md + all files under game/.
 
 ## Methodology
 
-For EACH of the 31 documented patterns:
+For EACH pattern in patterns_toc.json:
 
 1. **Read the pattern's documentation** in docs/02_PATTERNS.md.
 2. **Find the pattern's implementation(s)** in game/.
@@ -323,7 +333,7 @@ You MUST use the Write tool to save your report to:
 
 # Pattern Documentation Validation Report
 ## Summary
-- Patterns Documented: 31
+- Patterns Documented: [N from patterns_toc.json]
 - Patterns Verified: [N]
 - Accurate: [N] | Minor Diff: [N] | Stale: [N] | Wrong: [N]
 - Undocumented Patterns Found: [N]
@@ -401,7 +411,20 @@ Pattern docs validator results.
 
 **8. Prioritized Architecture Remediation Plan**
 
-**9. Appendices**
+Sorted by `severity_weight × layer_weight × loc_affected` via `Tools/_audit_common/layer_weight.py`. All findings still appear in detail tables above; weighting only affects this top-N ordering.
+
+**9. Trend Comparison**
+
+Use `Tools/_audit_common/run_tracker.py` with `audit_name="pattern"`:
+
+```python
+from Tools._audit_common import run_tracker
+trend = run_tracker.compute_trend("Reviews/results", "pattern", current_summary)
+# Append run_tracker.render_trend_markdown(trend) here.
+run_tracker.add_run("Reviews/results", "pattern", current_summary)
+```
+
+**10. Appendices**
 
 ### Step 7: Log Skill Usage
 

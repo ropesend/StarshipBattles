@@ -1,0 +1,20 @@
+[
+  {
+    "file": "game/context.py",
+    "line": 34,
+    "variable": "_default_planet_habitability_service",
+    "context": "_default_planet_habitability_service: Optional['IHabitabilityCalculator'] = None"
+  },
+  {
+    "file": "game/simulation/replay/replay_capture.py",
+    "line": 110,
+    "variable": "_default_sink",
+    "context": "_default_sink: IReplayCaptureSink = NullCaptureSink()"
+  },
+  {
+    "file": "game/ui/services/image/defaults.py",
+    "line": 19,
+    "variable": "_default_image_provider",
+    "context": "_default_image_provider: Optional[ImageProvider] = None"
+  }
+]

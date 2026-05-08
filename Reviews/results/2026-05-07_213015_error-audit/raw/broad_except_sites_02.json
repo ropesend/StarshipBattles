@@ -1,0 +1,134 @@
+[
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 154,
+    "context": "except Exception as e:",
+    "has_comment": false
+  },
+  {
+    "file": "game/core/event_logging.py",
+    "line": 53,
+    "context": "except Exception:  # Intentional broad catch: third-party event handler may raise anything; instrumentation must never crash the simulation",
+    "has_comment": false
+  },
+  {
+    "file": "game/core/event_logging.py",
+    "line": 87,
+    "context": "except Exception:  # Intentional broad catch: third-party event handler may raise anything; instrumentation must never crash the simulation",
+    "has_comment": false
+  },
+  {
+    "file": "game/core/formula_evaluator.py",
+    "line": 308,
+    "context": "except Exception as e:  # Intentional broad catch: catch-and-convert to FormulaException",
+    "has_comment": false
+  },
+  {
+    "file": "game/core/roles.py",
+    "line": 233,
+    "context": "except Exception:  # Intentional broad catch: subscriber callbacks may raise anything; one bad subscriber must not abort the rest of the invalidation fan-out",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 187,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash a battle",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 365,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash a battle",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/data/ship_instance.py",
+    "line": 69,
+    "context": "except Exception as e:",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/data/ship_instance.py",
+    "line": 570,
+    "context": "except Exception:  # Intentional broad catch: registry may be absent in legacy save context",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 178,
+    "context": "except Exception:  # Intentional broad catch: hex impl errors don't poison iteration",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_state_snapshot.py",
+    "line": 56,
+    "context": "except Exception as e:",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_cost_calculator.py",
+    "line": 84,
+    "context": "except Exception as e:  # Intentional broad catch: Ship loading is best-effort; inline cost fallback already attempted",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 87,
+    "context": "except Exception:  # Intentional broad catch: corrupt settings must not block capture",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 290,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 303,
+    "context": "except Exception:  # Intentional broad catch: bad subscriber must not block persist",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 392,
+    "context": "except Exception:  # Intentional broad catch: corrupt files must be skipped, not raised",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 399,
+    "context": "except Exception:  # Intentional broad catch: schema mismatches must be skipped",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 261,
+    "context": "except Exception:  # Intentional broad catch: size validation is best-effort, must not block discovery.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/race_description_panel.py",
+    "line": 399,
+    "context": "except Exception as e:  # Intentional broad catch: rebuild is defensive",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/event_log_window.py",
+    "line": 492,
+    "context": "except Exception:  # Intentional broad catch: pygame_gui internals may not be ready in test contexts",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/transfer_controller.py",
+    "line": 143,
+    "context": "except Exception:  # Intentional broad catch: DesignLibrary load surfaces I/O, JSON, and schema-validation errors; transfer dialog falls back to empty pod list",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_windows/planet_abilities_ctrl.py",
+    "line": 36,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized; abilities window opens without registry-backed lookups",
+    "has_comment": false
+  }
+]

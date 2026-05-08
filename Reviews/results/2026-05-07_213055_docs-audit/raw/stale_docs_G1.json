@@ -1,0 +1,49 @@
+{
+  "group": "G1",
+  "label": "core architecture docs",
+  "total": 7,
+  "staleness": [
+    {
+      "doc": "docs/README.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    }
+  ]
+}

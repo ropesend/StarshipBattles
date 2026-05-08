@@ -21,6 +21,7 @@ from __future__ import annotations
 import ast
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -134,6 +135,124 @@ def _scan_protocol_registry(raw_dir: str) -> dict:
     return result
 
 
+def _slugify_anchor(name: str) -> str:
+    """Convert a heading name to a markdown anchor slug."""
+    slug = name.lower().strip()
+    # Remove backticks, parentheses contents handled below; strip non-alnum/space/hyphen
+    slug = slug.replace("`", "")
+    slug = re.sub(r"[^a-z0-9\s\-]", "", slug)
+    slug = re.sub(r"\s+", "-", slug)
+    slug = re.sub(r"-+", "-", slug)
+    return slug.strip("-")
+
+
+def _parse_patterns_toc(raw_dir: str) -> dict:
+    """Parse docs/02_PATTERNS.md numbered headings into structured JSON."""
+    patterns_path = os.path.join(PROJECT_ROOT, "docs", "02_PATTERNS.md")
+    patterns: list[dict] = []
+    try:
+        with open(patterns_path, encoding="utf-8") as f:
+            lines = f.readlines()
+    except OSError as e:
+        result = {
+            "source": "docs/02_PATTERNS.md",
+            "extracted_at": datetime.now().isoformat(),
+            "patterns": [],
+            "count": 0,
+            "error": str(e),
+        }
+        out_path = os.path.join(raw_dir, "patterns_toc.json")
+        with open(out_path, "w", encoding="utf-8") as fp:
+            json.dump(result, fp, indent=2)
+        return result
+
+    heading_re = re.compile(r"^##\s+(\d+)\.\s+(.+?)\s*$")
+    superseded_re = re.compile(r"superseded\s+by\s+(?:pattern\s*)?#?(\d+)", re.IGNORECASE)
+
+    for i, line in enumerate(lines):
+        m = heading_re.match(line.rstrip("\n"))
+        if not m:
+            continue
+        number = int(m.group(1))
+        name = m.group(2).strip()
+        anchor = _slugify_anchor(f"{number}-{name}")
+
+        # Search heading line + next ~5 non-empty lines for superseded marker
+        superseded_by: int | None = None
+        sm = superseded_re.search(name)
+        if sm:
+            superseded_by = int(sm.group(1))
+        else:
+            scanned = 0
+            for follow in lines[i + 1 : i + 12]:
+                stripped = follow.strip()
+                if not stripped:
+                    continue
+                if stripped.startswith("## "):
+                    break
+                sm2 = superseded_re.search(stripped)
+                if sm2:
+                    superseded_by = int(sm2.group(1))
+                    break
+                scanned += 1
+                if scanned >= 5:
+                    break
+
+        patterns.append({
+            "number": number,
+            "name": name,
+            "anchor": anchor,
+            "superseded_by": superseded_by,
+        })
+
+    result = {
+        "source": "docs/02_PATTERNS.md",
+        "extracted_at": datetime.now().isoformat(),
+        "patterns": patterns,
+        "count": len(patterns),
+    }
+    out_path = os.path.join(raw_dir, "patterns_toc.json")
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2)
+    return result
+
+
+def _write_per_shard_layer_violations(raw_dir: str, manifest: dict) -> None:
+    """Filter the global layer_violations.json into per-shard files."""
+    global_path = os.path.join(raw_dir, "layer_violations.json")
+    if not os.path.exists(global_path):
+        print("  [SKIP] layer_violations.json not found; cannot produce per-shard files")
+        return
+    try:
+        with open(global_path, encoding="utf-8") as f:
+            global_data = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"  [SKIP] could not read layer_violations.json: {e}")
+        return
+
+    violations = global_data.get("violations", [])
+    if not isinstance(violations, list):
+        violations = []
+
+    shards = manifest.get("shards", {})
+    for sid, shard_info in shards.items():
+        shard_files = set(shard_info.get("files", []))
+        filtered = [
+            v for v in violations
+            if isinstance(v, dict) and v.get("file", "").replace("\\", "/") in shard_files
+        ]
+        per_shard = {
+            "shard_id": sid,
+            "shard_label": shard_info.get("label", f"Shard {sid}"),
+            "file_count": shard_info.get("file_count", len(shard_files)),
+            "violations_count": len(filtered),
+            "violations": filtered,
+        }
+        out_path = os.path.join(raw_dir, f"layer_violations_{sid}.json")
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(per_shard, f, indent=2)
+
+
 def _discover_py_files(root: str) -> list[str]:
     results: list[str] = []
     for dirpath, _, filenames in os.walk(root):
@@ -234,6 +353,15 @@ def run(force_output_dir: str | None = None) -> str:
     manifest = _generate_manifest(rel_files, output_dir)
     with open(os.path.join(raw_dir, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
+
+    print("6. Patterns ToC parser (docs/02_PATTERNS.md)...")
+    toc_result = _parse_patterns_toc(raw_dir)
+    print(f"  Patterns parsed: {toc_result.get('count', 0)}")
+
+    print("7. Per-shard layer_violations split...")
+    _write_per_shard_layer_violations(raw_dir, manifest)
+    shard_ids = sorted(manifest.get("shards", {}).keys())
+    print(f"  Per-shard files: {', '.join(f'layer_violations_{s}.json' for s in shard_ids)}")
 
     print()
     print(f"Phase 1 complete. Raw results: {raw_dir}")

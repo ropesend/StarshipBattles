@@ -1,0 +1,289 @@
+[
+  {
+    "file": "game/app_bootstrap.py",
+    "line": 308,
+    "function": "_replay_combat_lab_fallback",
+    "class": null,
+    "layer": "unknown"
+  },
+  {
+    "file": "game/simulation/entities/stat_contributors/registry.py",
+    "line": 297,
+    "function": "iter_for",
+    "class": "_StatContributorRegistry",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/strategy/adapters/simulation_adapter.py",
+    "line": 429,
+    "function": "_lookup",
+    "class": "SimulationBattleResolver",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/data/pathfinding.py",
+    "line": 47,
+    "function": "_pathfinder_for",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/data/pathfinding.py",
+    "line": 64,
+    "function": "_intercept_for",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/data/star_system.py",
+    "line": 85,
+    "function": "primary_star",
+    "class": "StarSystem",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/atmosphere_engine.py",
+    "line": 30,
+    "function": "_get_planet_mutator",
+    "class": "AtmosphereEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/environmental_hazard_engine.py",
+    "line": 65,
+    "function": "_get_ship_mutator",
+    "class": "EnvironmentalHazardEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 157,
+    "function": "_at_hex",
+    "class": "GameInitializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 163,
+    "function": "_in_system",
+    "class": "GameInitializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 203,
+    "function": "fleet_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 213,
+    "function": "planet_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 218,
+    "function": "empire_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 223,
+    "function": "ship_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/harvesting_engine.py",
+    "line": 166,
+    "function": "_get_planet_mutator",
+    "class": "HarvestingEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/harvesting_engine.py",
+    "line": 175,
+    "function": "_get_empire_mutator",
+    "class": "HarvestingEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/planet_modifier_effect_engine.py",
+    "line": 34,
+    "function": "_get_planet_mutator",
+    "class": "PlanetModifierEffectEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/production_spawner.py",
+    "line": 51,
+    "function": "_get_planet_mutator",
+    "class": "ProductionSpawner",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 70,
+    "function": "_get_empire_mutator",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 364,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 407,
+    "function": "_precheck",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 412,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 452,
+    "function": "_precheck",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 466,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 523,
+    "function": "_parse_close_target",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 536,
+    "function": "_precheck",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 544,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 596,
+    "function": "_precheck",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 604,
+    "function": "_effect",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/turn_phase_registry.py",
+    "line": 157,
+    "function": "_resolve_planet_modifier_effects",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/facade/strategy_session_facade.py",
+    "line": 339,
+    "function": "_resolve_economy_config",
+    "class": "StrategySessionFacade",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/facade/strategy_session_facade.py",
+    "line": 414,
+    "function": "_make_forwarder",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 434,
+    "function": "_iter_replay_files",
+    "class": "ReplayStore",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/ability_sources/fleet.py",
+    "line": 128,
+    "function": "_walk_strategic_abilities",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/atmosphere_target_editor.py",
+    "line": 223,
+    "function": "_button_handlers",
+    "class": "AtmosphereTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/gravity_target_editor.py",
+    "line": 164,
+    "function": "_button_handlers",
+    "class": "GravityTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/radiation_shield_editor.py",
+    "line": 176,
+    "function": "_button_handlers",
+    "class": "RadiationShieldEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/water_target_editor.py",
+    "line": 173,
+    "function": "_button_handlers",
+    "class": "WaterTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_viewmodel.py",
+    "line": 129,
+    "function": "_with_ship",
+    "class": "WorkshopViewModel",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/race_setup/screen.py",
+    "line": 279,
+    "function": "_description_controller",
+    "class": "RaceSetupScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/details/validation.py",
+    "line": 39,
+    "function": "_phase_color",
+    "class": null,
+    "layer": "ui"
+  }
+]

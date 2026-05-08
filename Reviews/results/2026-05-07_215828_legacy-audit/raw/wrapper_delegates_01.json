@@ -1,0 +1,97 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 197,
+  "total_findings": 10,
+  "findings": [
+    {
+      "file": "game/simulation/components/ability_manager.py",
+      "line": 291,
+      "function": "get_abilities_static",
+      "delegates_to": "AbilityManager._get_abilities_polymorphic",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def get_abilities_static("
+    },
+    {
+      "file": "game/simulation/components/ability_manager.py",
+      "line": 333,
+      "function": "instantiate_abilities_static",
+      "delegates_to": "AbilityManager._instantiate",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def instantiate_abilities_static("
+    },
+    {
+      "file": "game/simulation/entities/stat_contributors/command.py",
+      "line": 36,
+      "function": "priority_sort_key",
+      "delegates_to": "lookup_crew_priority",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def priority_sort_key(c: \"Component\") -> int:"
+    },
+    {
+      "file": "game/strategy/quickstart_builder.py",
+      "line": 39,
+      "function": "get_quickstart_races_dir",
+      "delegates_to": "Paths.get_starter_races_dir",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_quickstart_races_dir() -> Path:"
+    },
+    {
+      "file": "game/strategy/quickstart_builder.py",
+      "line": 44,
+      "function": "get_quickstart_designs_dir",
+      "delegates_to": "Paths.get_starter_designs_dir",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_quickstart_designs_dir() -> Path:"
+    },
+    {
+      "file": "game/strategy/services/effect_ability_metadata.py",
+      "line": 150,
+      "function": "find_metadata",
+      "delegates_to": "_BY_NAME.get",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def find_metadata(ability_name: str) -> Optional[EffectAbilityMetadata]:"
+    },
+    {
+      "file": "game/strategy/services/galaxy_pathfinding_service.py",
+      "line": 62,
+      "function": "find_path_deep_space",
+      "delegates_to": "hex_linedraw",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def find_path_deep_space(start: HexCoord, end: HexCoord) -> List[HexCoord]:"
+    },
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "line": 217,
+      "function": "_load_star_image",
+      "delegates_to": "_layer_load_star_image",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _load_star_image(self, star) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "line": 241,
+      "function": "_load_planet_v3_image",
+      "delegates_to": "_layer_load_planet_v3_image",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _load_planet_v3_image(self, image_id) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "line": 244,
+      "function": "_load_dyson_sphere_image",
+      "delegates_to": "_layer_load_dyson_sphere_image",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _load_dyson_sphere_image(self) -> Any:"
+    }
+  ]
+}

@@ -14,6 +14,16 @@ Usage:
     python Tools/testcoverage_audit/testcoverage_audit.py
     python Tools/testcoverage_audit/testcoverage_audit.py --output CUSTOM_DIR
     python Tools/testcoverage_audit/testcoverage_audit.py --max-loc-per-shard 8000
+    python Tools/testcoverage_audit/testcoverage_audit.py --coverage-json PATH
+
+When --coverage-json is provided, the tool reads authoritative line-coverage
+data (either coverage.py's native JSON format or a simple
+``{file: {line: hit_count}}`` dict) and cross-references it against each
+symbol's line range. Each symbol entry in coverage_matrix.json gains a
+``coverage_authoritative`` field (true / false), and the matrix top-level
+``coverage_source`` field is set to ``"authoritative+heuristic"``. Without
+the flag, ``coverage_authoritative`` is ``null`` and ``coverage_source`` is
+``"heuristic"``.
 """
 
 from __future__ import annotations
@@ -115,6 +125,7 @@ class _ProductionScanner(ast.NodeVisitor):
             "name": node.name,
             "type": "function",
             "line": node.lineno,
+            "end_line": getattr(node, "end_lineno", node.lineno) or node.lineno,
             "decorators": [
                 self._decorator_name(d) for d in node.decorator_list
             ],
@@ -128,6 +139,7 @@ class _ProductionScanner(ast.NodeVisitor):
             "name": node.name,
             "type": "async_function",
             "line": node.lineno,
+            "end_line": getattr(node, "end_lineno", node.lineno) or node.lineno,
             "decorators": [
                 self._decorator_name(d) for d in node.decorator_list
             ],
@@ -139,6 +151,7 @@ class _ProductionScanner(ast.NodeVisitor):
             "name": node.name,
             "type": "class",
             "line": node.lineno,
+            "end_line": getattr(node, "end_lineno", node.lineno) or node.lineno,
             "decorators": [
                 self._decorator_name(d) for d in node.decorator_list
             ],
@@ -151,6 +164,7 @@ class _ProductionScanner(ast.NodeVisitor):
                     "aliases": [body_item.name],
                     "type": "method",
                     "line": body_item.lineno,
+                    "end_line": getattr(body_item, "end_lineno", body_item.lineno) or body_item.lineno,
                     "decorators": [
                         self._decorator_name(d)
                         for d in body_item.decorator_list
@@ -269,9 +283,77 @@ def _symbol_match_names(symbol: dict) -> list[str]:
     return names
 
 
+def _load_authoritative_coverage(
+    coverage_json_path: str,
+) -> dict[str, set[int]]:
+    """Load authoritative line coverage from a JSON file.
+
+    Accepts two formats permissively:
+      1. coverage.py native: {"files": {file: {"executed_lines": [...]}}}
+      2. Simple dict: {file: {line_number: hit_count}}  (line_number may be
+         int or string; hit_count > 0 means hit)
+
+    Returns mapping ``rel_file_path -> set of hit line numbers``. Paths
+    are normalized to forward-slash repo-relative form when possible.
+    """
+    try:
+        with open(coverage_json_path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"  WARNING: failed to read --coverage-json {coverage_json_path}: {exc}")
+        return {}
+
+    result: dict[str, set[int]] = {}
+
+    def _normalize(p: str) -> str:
+        norm = p.replace("\\", "/")
+        # Strip absolute repo-root prefix if present
+        root_norm = PROJECT_ROOT.replace("\\", "/").rstrip("/") + "/"
+        if norm.startswith(root_norm):
+            norm = norm[len(root_norm):]
+        return norm
+
+    if isinstance(data, dict) and isinstance(data.get("files"), dict):
+        # coverage.py native format
+        for fpath, finfo in data["files"].items():
+            if not isinstance(finfo, dict):
+                continue
+            executed = finfo.get("executed_lines")
+            if not isinstance(executed, list):
+                # Fallback: support older variants storing per-line dicts
+                executed = []
+            hit_lines: set[int] = set()
+            for ln in executed:
+                try:
+                    hit_lines.add(int(ln))
+                except (TypeError, ValueError):
+                    continue
+            if hit_lines:
+                result[_normalize(str(fpath))] = hit_lines
+        return result
+
+    # Generic {file: {line: hits}} format
+    if isinstance(data, dict):
+        for fpath, line_map in data.items():
+            if not isinstance(line_map, dict):
+                continue
+            hit_lines = set()
+            for ln, hits in line_map.items():
+                try:
+                    if int(hits) > 0:
+                        hit_lines.add(int(ln))
+                except (TypeError, ValueError):
+                    continue
+            if hit_lines:
+                result[_normalize(str(fpath))] = hit_lines
+
+    return result
+
+
 def _build_coverage_matrix(
     prod_results: list[dict],
     test_results: list[dict],
+    authoritative_coverage: dict[str, set[int]] | None = None,
 ) -> dict:
     module_to_tests: dict[str, set[str]] = {}
     for tr in test_results:
@@ -296,6 +378,17 @@ def _build_coverage_matrix(
             module_to_tests.get(prod_module, set())
         )
 
+        # Lookup authoritative hit lines for this production file (if any)
+        file_hit_lines: set[int] | None = None
+        if authoritative_coverage is not None:
+            file_hit_lines = authoritative_coverage.get(prod_rel)
+            if file_hit_lines is None:
+                # Try basename-suffix match as a fallback for path-shape mismatches
+                for cov_path, lines in authoritative_coverage.items():
+                    if cov_path.endswith(prod_rel) or prod_rel.endswith(cov_path):
+                        file_hit_lines = lines
+                        break
+
         symbol_coverage: dict = {}
         untested_symbols: list[dict] = []
         for sym in pr.get("symbols", []):
@@ -313,13 +406,31 @@ def _build_coverage_matrix(
                             matched_names.append(match_name)
                 if matched_this_file:
                     found_in.append(test_file)
+
+            # Authoritative coverage cross-reference
+            coverage_authoritative: bool | None
+            if authoritative_coverage is None:
+                coverage_authoritative = None
+            elif file_hit_lines is None:
+                coverage_authoritative = False
+            else:
+                start_line = int(sym.get("line", 0))
+                end_line = int(sym.get("end_line", start_line) or start_line)
+                if end_line < start_line:
+                    end_line = start_line
+                coverage_authoritative = any(
+                    start_line <= ln <= end_line for ln in file_hit_lines
+                )
+
             symbol_coverage[sym_name] = {
                 "type": sym["type"],
                 "line": sym["line"],
+                "end_line": sym.get("end_line", sym["line"]),
                 "aliases": sym.get("aliases", []),
                 "matched_names": matched_names,
                 "candidate_test_files": found_in,
                 "heuristic_match": len(found_in) > 0,
+                "coverage_authoritative": coverage_authoritative,
             }
             if not found_in:
                 untested_symbols.append(sym)
@@ -481,6 +592,7 @@ def run(
     force_output_dir: str | None = None,
     max_loc_per_shard: int = 8000,
     target_shards: int = 18,
+    coverage_json: str | None = None,
 ) -> str:
     date_slug = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     output_dir = force_output_dir or os.path.join(
@@ -525,8 +637,22 @@ def run(
     print(f"  Found {total_imports} game-module imports "
           f"across {len(test_results)} parseable test files")
 
+    authoritative_coverage: dict[str, set[int]] | None = None
+    if coverage_json:
+        print(f"Loading authoritative line coverage from {coverage_json}...")
+        authoritative_coverage = _load_authoritative_coverage(coverage_json)
+        print(
+            f"  Loaded coverage for {len(authoritative_coverage)} files"
+        )
+
     print("Building coverage matrix...")
-    matrix = _build_coverage_matrix(prod_results, test_results)
+    matrix = _build_coverage_matrix(
+        prod_results, test_results, authoritative_coverage
+    )
+    coverage_source = (
+        "authoritative+heuristic" if authoritative_coverage is not None
+        else "heuristic"
+    )
 
     tier_counts = {0: 0, 1: 0, 2: 0, 3: 0}
     for info in matrix.values():
@@ -555,7 +681,13 @@ def run(
 
     with open(os.path.join(raw_dir, "coverage_matrix.json"), "w",
               encoding="utf-8") as f:
-        json.dump(matrix, f, indent=2)
+        json.dump(
+            {
+                "coverage_source": coverage_source,
+                "files": matrix,
+            },
+            f, indent=2,
+        )
 
     with open(os.path.join(raw_dir, "layer_summary.json"), "w",
               encoding="utf-8") as f:
@@ -602,9 +734,23 @@ if __name__ == "__main__":
         "--shards", type=int, default=18,
         help="Target number of shards (default: 18)",
     )
+    parser.add_argument(
+        "--coverage-json", default=None,
+        help=(
+            "Optional path to a JSON file containing authoritative line-"
+            "coverage data (coverage.py native format or a simple "
+            "{file: {line: hit_count}} dict). When provided, each symbol "
+            "in coverage_matrix.json gains a 'coverage_authoritative' "
+            "boolean and the matrix's top-level 'coverage_source' is set "
+            "to 'authoritative+heuristic'. Without the flag, "
+            "coverage_authoritative is null and coverage_source is "
+            "'heuristic'."
+        ),
+    )
     args = parser.parse_args()
     run(
         force_output_dir=args.output,
         max_loc_per_shard=args.max_loc_per_shard,
         target_shards=args.shards,
+        coverage_json=args.coverage_json,
     )

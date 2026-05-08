@@ -1,0 +1,36 @@
+{
+  "detector": "name_pair_drift",
+  "scanned_files": 197,
+  "total_findings": 2,
+  "findings": [
+    {
+      "kind": "underscore_pair",
+      "legacy_name": "_iter_components",
+      "current_name": "iter_components",
+      "legacy": {
+        "file": "game/ui/screens/battle_setup/spec_compiler.py",
+        "line": 419
+      },
+      "current": {
+        "file": "game/core/patterns/layer_iterator.py",
+        "line": 42
+      }
+    },
+    {
+      "kind": "manager_service_overlap",
+      "manager_name": "ModifierManager",
+      "service_name": "ModifierService",
+      "shared_methods": [
+        "__init__"
+      ],
+      "manager": {
+        "file": "game/simulation/components/modifier_manager.py",
+        "line": 31
+      },
+      "service": {
+        "file": "game/simulation/services/modifier_service.py",
+        "line": 16
+      }
+    }
+  ]
+}

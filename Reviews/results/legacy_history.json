@@ -1,0 +1,80 @@
+{
+  "audit_name": "legacy",
+  "runs": [
+    {
+      "date": "2026-05-07",
+      "review_dir": "Reviews/results/2026-05-07_215340_legacy-audit",
+      "findings": {
+        "module_aliases": 3,
+        "init_reexports": 1,
+        "deprecation_markers": 23,
+        "wrapper_delegates": 557,
+        "name_pair_drift": 3,
+        "save_migration_code": 0,
+        "type_checking_only_reexports": 0,
+        "optional_protocol_methods": 40,
+        "superseded_pattern_uses": 0
+      },
+      "by_category": {
+        "module_aliases": 3,
+        "init_reexports": 1,
+        "deprecation_markers": 23,
+        "wrapper_delegates": 557,
+        "name_pair_drift": 3,
+        "save_migration_code": 0,
+        "type_checking_only_reexports": 0,
+        "optional_protocol_methods": 40
+      }
+    },
+    {
+      "date": "2026-05-07",
+      "review_dir": "Reviews/results/2026-05-07_215828_legacy-audit",
+      "findings": {
+        "module_aliases": 3,
+        "init_reexports": 1,
+        "deprecation_markers": 23,
+        "wrapper_delegates": 22,
+        "name_pair_drift": 3,
+        "save_migration_code": 0,
+        "type_checking_only_reexports": 0,
+        "optional_protocol_methods": 0,
+        "superseded_pattern_uses": 0
+      },
+      "by_category": {
+        "module_aliases": 3,
+        "init_reexports": 1,
+        "deprecation_markers": 23,
+        "wrapper_delegates": 22,
+        "name_pair_drift": 3,
+        "save_migration_code": 0,
+        "type_checking_only_reexports": 0,
+        "optional_protocol_methods": 0
+      }
+    },
+    {
+      "date": "2026-05-07",
+      "review_dir": "Reviews/results/2026-05-07_215931_legacy-audit",
+      "findings": {
+        "module_aliases": 3,
+        "init_reexports": 1,
+        "deprecation_markers": 23,
+        "wrapper_delegates": 22,
+        "name_pair_drift": 3,
+        "save_migration_code": 0,
+        "type_checking_only_reexports": 0,
+        "optional_protocol_methods": 0,
+        "superseded_pattern_uses": 0
+      },
+      "by_category": {
+        "module_aliases": 3,
+        "init_reexports": 1,
+        "deprecation_markers": 23,
+        "wrapper_delegates": 22,
+        "name_pair_drift": 3,
+        "save_migration_code": 0,
+        "type_checking_only_reexports": 0,
+        "optional_protocol_methods": 0
+      }
+    }
+  ]
+}

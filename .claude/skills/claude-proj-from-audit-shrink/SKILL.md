@@ -63,7 +63,9 @@ which audit is being processed, then continue without prompting.
    phases. Cross-check that `manifest.md` and the checklists agree on the
    file set, and that no checklist contains placeholder text like "TBD" or
    "fill in".
-7. Print a summary: project ID, project path, counts
+7. **Refinement Feedback** — write a proposal back to the originating OpenCode skill per `Projects/protocols/15_refinement_feedback.md`. Inputs: `audit_dir`, `source_skill: "ocode-audit-shrink"`, `audit_name: "shrink"`, REJECTED findings (with reasons), UNCERTAIN items the verifier couldn't decide on, audit-missed issues the user flagged during bundling, and the list of `PROJ-NNN` IDs created. Write to `.opencode/skills/ocode-audit-shrink/refinement_proposals/<today>_<basename(audit_dir)>.md`. If both REJECTED and user_flagged_misses are empty, write a minimal "no refinements suggested this run" proposal and exit. The proposal is for the user to read manually and decide what (if anything) to merge into `SKILL.md` or `Tools/audit_shrink/`.
+
+8. Print a summary: project ID, project path, counts
    (`X verified, Y rejected, Z uncertain`), and the next-step suggestion
    `/claude-proj-continue PROJ-NNN`.
 

@@ -1,0 +1,27 @@
+[
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 203,
+    "content": "def fleet_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 213,
+    "content": "def planet_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 218,
+    "content": "def empire_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 223,
+    "content": "def ship_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/ui/panels/race_theme_gallery.py",
+    "line": 101,
+    "content": "def _discover_assets(self) -> List[Tuple[str, Dict[str, pygame.Surface]]]:  # type: ignore[override]"
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 185,
+  "total_findings": 2,
+  "findings": [
+    {
+      "file": "game/ui/screens/new_game_setup_screen.py",
+      "line": 709,
+      "function": "validate_save_name",
+      "delegates_to": "NewGameSetupController.validate_save_name",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def validate_save_name("
+    },
+    {
+      "file": "game/ui/screens/new_game_setup_screen.py",
+      "line": 717,
+      "function": "generate_default_save_name",
+      "delegates_to": "NewGameSetupController.generate_default_save_name",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def generate_default_save_name() -> str:"
+    }
+  ]
+}

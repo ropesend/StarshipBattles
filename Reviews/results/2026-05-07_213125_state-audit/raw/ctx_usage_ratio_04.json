@@ -1,0 +1,5 @@
+{
+  "get_default_calls": 25,
+  "ctx_accesses": 33,
+  "ratio_ctx_percent": 56.9
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "file": "game/strategy/adapters/simulation_adapter.py",
+    "line": 429,
+    "function": "_lookup",
+    "class": "SimulationBattleResolver",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/data/star_system.py",
+    "line": 85,
+    "function": "primary_star",
+    "class": "StarSystem",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/atmosphere_engine.py",
+    "line": 30,
+    "function": "_get_planet_mutator",
+    "class": "AtmosphereEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 157,
+    "function": "_at_hex",
+    "class": "GameInitializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 163,
+    "function": "_in_system",
+    "class": "GameInitializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/turn_phase_registry.py",
+    "line": 157,
+    "function": "_resolve_planet_modifier_effects",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/atmosphere_target_editor.py",
+    "line": 223,
+    "function": "_button_handlers",
+    "class": "AtmosphereTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/radiation_shield_editor.py",
+    "line": 176,
+    "function": "_button_handlers",
+    "class": "RadiationShieldEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_viewmodel.py",
+    "line": 129,
+    "function": "_with_ship",
+    "class": "WorkshopViewModel",
+    "layer": "ui"
+  }
+]

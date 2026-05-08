@@ -1,0 +1,282 @@
+[
+  {
+    "file": "game/ai/protocols.py",
+    "line": 42,
+    "function": "position",
+    "class": "IGridEntity",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/protocols.py",
+    "line": 75,
+    "function": "type",
+    "class": "IProjectile",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 41,
+    "function": "get_position",
+    "class": "IControllable",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 46,
+    "function": "get_velocity",
+    "class": "IControllable",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 239,
+    "function": "ship",
+    "class": "ShipControllableAdapter",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 258,
+    "function": "get_position",
+    "class": "ShipControllableAdapter",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 262,
+    "function": "get_velocity",
+    "class": "ShipControllableAdapter",
+    "layer": "ai"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 79,
+    "function": "load_json",
+    "class": null,
+    "layer": "core"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 119,
+    "function": "load_json_required",
+    "class": null,
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/boundary.py",
+    "line": 91,
+    "function": "resources",
+    "class": "IResourceHolder",
+    "layer": "core"
+  },
+  {
+    "file": "game/strategy/engine/turn_engine.py",
+    "line": 251,
+    "function": "_time_phase",
+    "class": "TurnEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/base.py",
+    "line": 104,
+    "function": "_get_planet_mutator",
+    "class": "BaseOrderHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/base.py",
+    "line": 113,
+    "function": "_get_ship_mutator",
+    "class": "BaseOrderHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/design_selector_window.py",
+    "line": 363,
+    "function": "_get_role_filter_options",
+    "class": "DesignSelectorWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/setup_renderer.py",
+    "line": 35,
+    "function": "draw_available_ships",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 15,
+    "function": "gather_stars",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 46,
+    "function": "filter_stars",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 100,
+    "function": "sort_stars",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 141,
+    "function": "compute_star_ranges",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 181,
+    "function": "get_system_name",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 195,
+    "function": "get_star_type_display",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 41,
+    "function": "systems",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 45,
+    "function": "camera",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 49,
+    "function": "hex_size",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 226,
+    "function": "request_colonize_order",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 248,
+    "function": "_get_system_at_hex",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 261,
+    "function": "_resolve_planet_global_hex",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_fleet_ops.py",
+    "line": 41,
+    "function": "camera",
+    "class": "FleetOperations",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_fleet_ops.py",
+    "line": 45,
+    "function": "empires",
+    "class": "FleetOperations",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_fleet_ops.py",
+    "line": 49,
+    "function": "hex_size",
+    "class": "FleetOperations",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_fleet_ops.py",
+    "line": 68,
+    "function": "handle_move_designation",
+    "class": "FleetOperations",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_fleet_ops.py",
+    "line": 157,
+    "function": "handle_join_designation",
+    "class": "FleetOperations",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/transfer_dialog.py",
+    "line": 292,
+    "function": "_extract_dropdown_value",
+    "class": "TransferDialog",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/transfer_grid_renderer.py",
+    "line": 185,
+    "function": "recreate_dropdown",
+    "class": "TransferGridRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/transfer_grid_renderer.py",
+    "line": 203,
+    "function": "extract_dropdown_value",
+    "class": "TransferGridRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/layer_panel.py",
+    "line": 358,
+    "function": "handle_event",
+    "class": "LayerPanel",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/layer_panel.py",
+    "line": 472,
+    "function": "get_range_selection",
+    "class": "LayerPanel",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/modifier_row.py",
+    "line": 129,
+    "function": "build_ui",
+    "class": "ModifierControlRow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stats_config.py",
+    "line": 45,
+    "function": "load_stats_config",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_render/planets.py",
+    "line": 57,
+    "function": "load_planet_v3_image",
+    "class": null,
+    "layer": "ui"
+  }
+]

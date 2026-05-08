@@ -1,0 +1,1028 @@
+{
+  "group": "G5",
+  "label": "Projects/protocols",
+  "count": 204,
+  "modules": [
+    {
+      "module": "game/exit_dialog.py",
+      "loc": 103,
+      "dir": "game"
+    },
+    {
+      "module": "game/simulation/physics_constants.py",
+      "loc": 72,
+      "dir": "game/simulation"
+    },
+    {
+      "module": "game/simulation/entities/combat_endurance.py",
+      "loc": 155,
+      "dir": "game/simulation/entities"
+    },
+    {
+      "module": "game/simulation/entities/layer_data.py",
+      "loc": 112,
+      "dir": "game/simulation/entities"
+    },
+    {
+      "module": "game/simulation/entities/ship_combat_manager.py",
+      "loc": 184,
+      "dir": "game/simulation/entities"
+    },
+    {
+      "module": "game/simulation/entities/ship_layer_manager.py",
+      "loc": 167,
+      "dir": "game/simulation/entities"
+    },
+    {
+      "module": "game/simulation/entities/ship_resource_manager.py",
+      "loc": 53,
+      "dir": "game/simulation/entities"
+    },
+    {
+      "module": "game/simulation/entities/ship_serialization.py",
+      "loc": 266,
+      "dir": "game/simulation/entities"
+    },
+    {
+      "module": "game/simulation/interfaces/ability_protocols.py",
+      "loc": 359,
+      "dir": "game/simulation/interfaces"
+    },
+    {
+      "module": "game/simulation/interfaces/component_protocols.py",
+      "loc": 226,
+      "dir": "game/simulation/interfaces"
+    },
+    {
+      "module": "game/simulation/interfaces/entity_protocols.py",
+      "loc": 487,
+      "dir": "game/simulation/interfaces"
+    },
+    {
+      "module": "game/simulation/managers/battle_state_manager.py",
+      "loc": 134,
+      "dir": "game/simulation/managers"
+    },
+    {
+      "module": "game/simulation/systems/tech_preset_loader.py",
+      "loc": 203,
+      "dir": "game/simulation/systems"
+    },
+    {
+      "module": "game/strategy/data/component_activation_state.py",
+      "loc": 156,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/design_metadata.py",
+      "loc": 294,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/galaxy_entity_registry.py",
+      "loc": 169,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/galaxy_spatial_index.py",
+      "loc": 121,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/planet_atmosphere.py",
+      "loc": 177,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/planet_naming.py",
+      "loc": 78,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/planet_physics.py",
+      "loc": 212,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/ship_cargo_manager.py",
+      "loc": 117,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/ship_display_formatter.py",
+      "loc": 127,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/ship_instance_bridge.py",
+      "loc": 163,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/data/spatial_index.py",
+      "loc": 185,
+      "dir": "game/strategy/data"
+    },
+    {
+      "module": "game/strategy/engine/consumable_management_engine.py",
+      "loc": 164,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/empire_economy_calculator.py",
+      "loc": 327,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/game_config.py",
+      "loc": 261,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/game_initializer.py",
+      "loc": 446,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/happiness_engine.py",
+      "loc": 141,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/organics_consumption_engine.py",
+      "loc": 126,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/population_engine.py",
+      "loc": 176,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/resupply_engine.py",
+      "loc": 294,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/superweapon_order_processor.py",
+      "loc": 723,
+      "dir": "game/strategy/engine"
+    },
+    {
+      "module": "game/strategy/engine/handlers/order_queue.py",
+      "loc": 267,
+      "dir": "game/strategy/engine/handlers"
+    },
+    {
+      "module": "game/strategy/facade/dto/empire_dto.py",
+      "loc": 116,
+      "dir": "game/strategy/facade/dto"
+    },
+    {
+      "module": "game/strategy/facade/dto/fleet_dto.py",
+      "loc": 235,
+      "dir": "game/strategy/facade/dto"
+    },
+    {
+      "module": "game/strategy/facade/dto/planet_dto.py",
+      "loc": 111,
+      "dir": "game/strategy/facade/dto"
+    },
+    {
+      "module": "game/strategy/facade/dto/system_dto.py",
+      "loc": 162,
+      "dir": "game/strategy/facade/dto"
+    },
+    {
+      "module": "game/strategy/generation/planet_image_registry.py",
+      "loc": 129,
+      "dir": "game/strategy/generation"
+    },
+    {
+      "module": "game/strategy/generation/star_image_registry.py",
+      "loc": 111,
+      "dir": "game/strategy/generation"
+    },
+    {
+      "module": "game/strategy/generation/density/density_map.py",
+      "loc": 241,
+      "dir": "game/strategy/generation/density"
+    },
+    {
+      "module": "game/strategy/generation/density/primitives/spiral_arm.py",
+      "loc": 103,
+      "dir": "game/strategy/generation/density/primitives"
+    },
+    {
+      "module": "game/strategy/generation/loaders/galaxy_layouts_loader.py",
+      "loc": 182,
+      "dir": "game/strategy/generation/loaders"
+    },
+    {
+      "module": "game/strategy/generation/loaders/system_blueprints_loader.py",
+      "loc": 241,
+      "dir": "game/strategy/generation/loaders"
+    },
+    {
+      "module": "game/strategy/validation/superweapon_validator.py",
+      "loc": 270,
+      "dir": "game/strategy/validation"
+    },
+    {
+      "module": "game/ui/components/table/column_manager.py",
+      "loc": 176,
+      "dir": "game/ui/components/table"
+    },
+    {
+      "module": "game/ui/components/table/data_source.py",
+      "loc": 111,
+      "dir": "game/ui/components/table"
+    },
+    {
+      "module": "game/ui/filters/filter_state_manager.py",
+      "loc": 54,
+      "dir": "game/ui/filters"
+    },
+    {
+      "module": "game/ui/interfaces/battle_ui.py",
+      "loc": 244,
+      "dir": "game/ui/interfaces"
+    },
+    {
+      "module": "game/ui/panels/base_gallery.py",
+      "loc": 265,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/battle_panels.py",
+      "loc": 563,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/builder_widgets.py",
+      "loc": 294,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/build_queue_portraits.py",
+      "loc": 205,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/component_modifier_grid_panel.py",
+      "loc": 151,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/design_report_panel.py",
+      "loc": 200,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/modifier_impact_grid.py",
+      "loc": 514,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/race_aptitudes_panel.py",
+      "loc": 280,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/race_description_panel.py",
+      "loc": 418,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/race_environment_panel.py",
+      "loc": 337,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/race_flag_gallery.py",
+      "loc": 165,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/race_identity_panel.py",
+      "loc": 493,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/race_portrait_gallery.py",
+      "loc": 153,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/race_summary_panel.py",
+      "loc": 733,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/race_theme_gallery.py",
+      "loc": 191,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/ship_stats_renderer.py",
+      "loc": 440,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/strategy_widgets.py",
+      "loc": 191,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/panels/system_tree_panel.py",
+      "loc": 711,
+      "dir": "game/ui/panels"
+    },
+    {
+      "module": "game/ui/renderer/game_renderer.py",
+      "loc": 171,
+      "dir": "game/ui/renderer"
+    },
+    {
+      "module": "game/ui/screens/battle_setup_state.py",
+      "loc": 300,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/battle_state_viewer.py",
+      "loc": 262,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/battle_ui.py",
+      "loc": 209,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/builder_selection.py",
+      "loc": 123,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/build_queue_helpers.py",
+      "loc": 205,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/build_queue_list_window.py",
+      "loc": 221,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/build_queue_queue_data_source.py",
+      "loc": 184,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/build_queue_selector.py",
+      "loc": 196,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/cargo_quick_dialog.py",
+      "loc": 330,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/cargo_quick_dialog_controller.py",
+      "loc": 131,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/data_list_window_mixin.py",
+      "loc": 130,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/design_image_helper.py",
+      "loc": 218,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/design_selector_window.py",
+      "loc": 653,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/empire_build_queue_data_source.py",
+      "loc": 114,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/empire_build_queue_filter_manager.py",
+      "loc": 242,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/empire_build_queue_formatter.py",
+      "loc": 189,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/empire_build_queue_sidebar.py",
+      "loc": 234,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/empire_build_queue_viewmodel.py",
+      "loc": 298,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/empire_panel_window.py",
+      "loc": 572,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/event_log_data_source.py",
+      "loc": 242,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/event_log_sidebar.py",
+      "loc": 91,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/event_log_window.py",
+      "loc": 539,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/fleet_data_source.py",
+      "loc": 327,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/fleet_report_filters.py",
+      "loc": 316,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/fleet_report_sidebar.py",
+      "loc": 512,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/fleet_report_view_model.py",
+      "loc": 182,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/fleet_selection_window.py",
+      "loc": 152,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/food_allocation_editor.py",
+      "loc": 394,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/keybindings_scene.py",
+      "loc": 582,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/list_data_source_base.py",
+      "loc": 104,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/menu_scene.py",
+      "loc": 109,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/new_game_setup_screen.py",
+      "loc": 745,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/new_game_setup_view_model.py",
+      "loc": 191,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/planet_data_source.py",
+      "loc": 100,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/planet_list_filters.py",
+      "loc": 385,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/planet_list_filter_manager.py",
+      "loc": 148,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/planet_list_presets.py",
+      "loc": 242,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/planet_list_sidebar.py",
+      "loc": 286,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/planet_selection_window.py",
+      "loc": 232,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/race_asset_loader.py",
+      "loc": 269,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/race_browser_dialog.py",
+      "loc": 338,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/race_validator.py",
+      "loc": 96,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/save_selection_window.py",
+      "loc": 473,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/setup_data_io.py",
+      "loc": 230,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/setup_renderer.py",
+      "loc": 216,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/setup_screen.py",
+      "loc": 314,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/star_data_source.py",
+      "loc": 71,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/star_list_filters.py",
+      "loc": 204,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/star_list_filter_manager.py",
+      "loc": 85,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/star_list_presets.py",
+      "loc": 127,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/star_list_sidebar.py",
+      "loc": 180,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/star_list_window.py",
+      "loc": 463,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_build_queue_manager.py",
+      "loc": 288,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_camera_nav.py",
+      "loc": 232,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_colonization.py",
+      "loc": 275,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_detail_formatter.py",
+      "loc": 454,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_fleet_ops.py",
+      "loc": 218,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_game_state_manager.py",
+      "loc": 246,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_menu_panel.py",
+      "loc": 103,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_panel_manager.py",
+      "loc": 507,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_screen_assets.py",
+      "loc": 88,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_screen_lifecycle.py",
+      "loc": 156,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_screen_selection.py",
+      "loc": 99,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_superweapons.py",
+      "loc": 400,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_ui.py",
+      "loc": 415,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/strategy_ui_action_router.py",
+      "loc": 97,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/system_selection_window.py",
+      "loc": 166,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/transfer_grid_renderer.py",
+      "loc": 366,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/workshop_viewmodel_layer_ops.py",
+      "loc": 254,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/workshop_viewmodel_selection.py",
+      "loc": 140,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/workshop_viewmodel_ship_ops.py",
+      "loc": 330,
+      "dir": "game/ui/screens"
+    },
+    {
+      "module": "game/ui/screens/battle_setup/fleet_hierarchy_editor.py",
+      "loc": 191,
+      "dir": "game/ui/screens/battle_setup"
+    },
+    {
+      "module": "game/ui/screens/battle_setup/panels/center_panel.py",
+      "loc": 299,
+      "dir": "game/ui/screens/battle_setup/panels"
+    },
+    {
+      "module": "game/ui/screens/builder/grouping_strategies.py",
+      "loc": 79,
+      "dir": "game/ui/screens/builder"
+    },
+    {
+      "module": "game/ui/screens/builder/interaction_controller.py",
+      "loc": 132,
+      "dir": "game/ui/screens/builder"
+    },
+    {
+      "module": "game/ui/screens/builder/layer_panel.py",
+      "loc": 536,
+      "dir": "game/ui/screens/builder"
+    },
+    {
+      "module": "game/ui/screens/builder/modifier_row.py",
+      "loc": 355,
+      "dir": "game/ui/screens/builder"
+    },
+    {
+      "module": "game/ui/screens/builder/panel_layout_config.py",
+      "loc": 71,
+      "dir": "game/ui/screens/builder"
+    },
+    {
+      "module": "game/ui/screens/builder/structure_list_items.py",
+      "loc": 630,
+      "dir": "game/ui/screens/builder"
+    },
+    {
+      "module": "game/ui/screens/builder/weapons_renderer.py",
+      "loc": 524,
+      "dir": "game/ui/screens/builder"
+    },
+    {
+      "module": "game/ui/screens/builder/weapons_viewmodel.py",
+      "loc": 494,
+      "dir": "game/ui/screens/builder"
+    },
+    {
+      "module": "game/ui/screens/galaxy_test/galaxy_mode.py",
+      "loc": 427,
+      "dir": "game/ui/screens/galaxy_test"
+    },
+    {
+      "module": "game/ui/screens/galaxy_test/system_mode.py",
+      "loc": 576,
+      "dir": "game/ui/screens/galaxy_test"
+    },
+    {
+      "module": "game/ui/screens/race_setup/llm_dialog_service.py",
+      "loc": 154,
+      "dir": "game/ui/screens/race_setup"
+    },
+    {
+      "module": "game/ui/screens/race_setup/ship_preview.py",
+      "loc": 163,
+      "dir": "game/ui/screens/race_setup"
+    },
+    {
+      "module": "game/ui/screens/strategy_render/cursor.py",
+      "loc": 53,
+      "dir": "game/ui/screens/strategy_render"
+    },
+    {
+      "module": "game/ui/screens/strategy_render/dyson_spheres.py",
+      "loc": 105,
+      "dir": "game/ui/screens/strategy_render"
+    },
+    {
+      "module": "game/ui/screens/strategy_render/hex_outlines.py",
+      "loc": 133,
+      "dir": "game/ui/screens/strategy_render"
+    },
+    {
+      "module": "game/ui/screens/strategy_render/warp_lanes.py",
+      "loc": 69,
+      "dir": "game/ui/screens/strategy_render"
+    },
+    {
+      "module": "game/ui/screens/strategy_windows/build_queue_windows.py",
+      "loc": 84,
+      "dir": "game/ui/screens/strategy_windows"
+    },
+    {
+      "module": "game/ui/screens/strategy_windows/event_log_window_ctrl.py",
+      "loc": 174,
+      "dir": "game/ui/screens/strategy_windows"
+    },
+    {
+      "module": "game/ui/screens/strategy_windows/fleet_report_ctrl.py",
+      "loc": 63,
+      "dir": "game/ui/screens/strategy_windows"
+    },
+    {
+      "module": "game/ui/screens/strategy_windows/list_windows.py",
+      "loc": 107,
+      "dir": "game/ui/screens/strategy_windows"
+    },
+    {
+      "module": "game/ui/screens/strategy_windows/planet_abilities_ctrl.py",
+      "loc": 83,
+      "dir": "game/ui/screens/strategy_windows"
+    },
+    {
+      "module": "game/ui/screens/strategy_windows/selection_prompts.py",
+      "loc": 85,
+      "dir": "game/ui/screens/strategy_windows"
+    },
+    {
+      "module": "game/ui/screens/strategy_windows/transfer_dialogs.py",
+      "loc": 79,
+      "dir": "game/ui/screens/strategy_windows"
+    },
+    {
+      "module": "game/ui/screens/test_lab/component_dropdown.py",
+      "loc": 157,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/data_extractor.py",
+      "loc": 227,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/dialogs.py",
+      "loc": 272,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/formatting_utils.py",
+      "loc": 67,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/panel_manager.py",
+      "loc": 233,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/results_panel.py",
+      "loc": 266,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/ship_panels.py",
+      "loc": 260,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/test_executor.py",
+      "loc": 393,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/test_run_card.py",
+      "loc": 370,
+      "dir": "game/ui/screens/test_lab"
+    },
+    {
+      "module": "game/ui/screens/test_lab/details/chrome.py",
+      "loc": 244,
+      "dir": "game/ui/screens/test_lab/details"
+    },
+    {
+      "module": "game/ui/screens/test_lab/details/draw_context.py",
+      "loc": 62,
+      "dir": "game/ui/screens/test_lab/details"
+    },
+    {
+      "module": "game/ui/screens/test_lab/details/propulsion_outcomes.py",
+      "loc": 229,
+      "dir": "game/ui/screens/test_lab/details"
+    },
+    {
+      "module": "game/ui/screens/test_lab/details/resource_outcomes.py",
+      "loc": 294,
+      "dir": "game/ui/screens/test_lab/details"
+    },
+    {
+      "module": "game/ui/screens/test_lab/renderer/category_panel.py",
+      "loc": 157,
+      "dir": "game/ui/screens/test_lab/renderer"
+    },
+    {
+      "module": "game/ui/screens/test_lab/renderer/header_panel.py",
+      "loc": 152,
+      "dir": "game/ui/screens/test_lab/renderer"
+    },
+    {
+      "module": "game/ui/screens/test_lab/renderer/metadata_panel.py",
+      "loc": 221,
+      "dir": "game/ui/screens/test_lab/renderer"
+    },
+    {
+      "module": "game/ui/screens/test_lab/renderer/tag_filter_panel.py",
+      "loc": 146,
+      "dir": "game/ui/screens/test_lab/renderer"
+    },
+    {
+      "module": "game/ui/screens/test_lab/renderer/test_list_panel.py",
+      "loc": 202,
+      "dir": "game/ui/screens/test_lab/renderer"
+    },
+    {
+      "module": "game/ui/screens/test_lab/renderer/validation_panel.py",
+      "loc": 230,
+      "dir": "game/ui/screens/test_lab/renderer"
+    },
+    {
+      "module": "game/ui/screens/test_lab/renderer/_condition_logic.py",
+      "loc": 136,
+      "dir": "game/ui/screens/test_lab/renderer"
+    },
+    {
+      "module": "game/ui/screens/test_lab/renderer/_draw_helpers.py",
+      "loc": 222,
+      "dir": "game/ui/screens/test_lab/renderer"
+    },
+    {
+      "module": "game/ui/services/battle_ui_service.py",
+      "loc": 299,
+      "dir": "game/ui/services"
+    },
+    {
+      "module": "game/ui/services/design_loader_adapter.py",
+      "loc": 99,
+      "dir": "game/ui/services"
+    },
+    {
+      "module": "game/ui/services/input_mapper.py",
+      "loc": 380,
+      "dir": "game/ui/services"
+    },
+    {
+      "module": "game/ui/services/modifier_icon_service.py",
+      "loc": 87,
+      "dir": "game/ui/services"
+    },
+    {
+      "module": "game/ui/services/ship_io_adapter.py",
+      "loc": 100,
+      "dir": "game/ui/services"
+    },
+    {
+      "module": "game/ui/services/tkinter_utils.py",
+      "loc": 231,
+      "dir": "game/ui/services"
+    },
+    {
+      "module": "game/ui/services/validation_service.py",
+      "loc": 79,
+      "dir": "game/ui/services"
+    },
+    {
+      "module": "game/ui/services/vehicle_class_service.py",
+      "loc": 134,
+      "dir": "game/ui/services"
+    },
+    {
+      "module": "game/ui/services/image/null_provider.py",
+      "loc": 62,
+      "dir": "game/ui/services/image"
+    },
+    {
+      "module": "game/ui/services/image/openai_provider.py",
+      "loc": 426,
+      "dir": "game/ui/services/image"
+    },
+    {
+      "module": "game/ui/utils/json_diff.py",
+      "loc": 113,
+      "dir": "game/ui/utils"
+    },
+    {
+      "module": "game/ui/utils/pygame_utils.py",
+      "loc": 260,
+      "dir": "game/ui/utils"
+    },
+    {
+      "module": "game/ui/utils/resource_display.py",
+      "loc": 58,
+      "dir": "game/ui/utils"
+    },
+    {
+      "module": "game/ui/widgets/column_toggle_section.py",
+      "loc": 66,
+      "dir": "game/ui/widgets"
+    },
+    {
+      "module": "game/ui/widgets/dropdown_helper.py",
+      "loc": 52,
+      "dir": "game/ui/widgets"
+    },
+    {
+      "module": "game/ui/widgets/preference_row.py",
+      "loc": 237,
+      "dir": "game/ui/widgets"
+    },
+    {
+      "module": "game/ui/widgets/range_slider_builder.py",
+      "loc": 85,
+      "dir": "game/ui/widgets"
+    },
+    {
+      "module": "game/ui/widgets/scrollable_json_panel.py",
+      "loc": 412,
+      "dir": "game/ui/widgets"
+    },
+    {
+      "module": "game/ui/widgets/ui_element_registry.py",
+      "loc": 62,
+      "dir": "game/ui/widgets"
+    }
+  ],
+  "note": "Undocumented modules are global; the same set is emitted for each group for uniform consumer input."
+}

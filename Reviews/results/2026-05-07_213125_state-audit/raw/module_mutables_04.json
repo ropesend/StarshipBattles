@@ -1,0 +1,191 @@
+[
+  {
+    "file": "game/ai/combat_utils.py",
+    "line": 26,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/component_state.py",
+    "line": 102,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ComponentInstanceView\", \"ComponentState\", \"component_state_key\"]"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 31,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/state_machine.py",
+    "line": 38,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ScreenStateMachine']"
+  },
+  {
+    "file": "game/services/llm/provider.py",
+    "line": 76,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"LLMProvider\"]"
+  },
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 724,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/components/component_constants.py",
+    "line": 8,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/entities/stat_contributors/registry.py",
+    "line": 534,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/entities/stat_contributors/__init__.py",
+    "line": 34,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 207,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/combat/spec_compiler.py",
+    "line": 693,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"build_strategy_battle_spec\"]"
+  },
+  {
+    "file": "game/strategy/data/galaxy_state.py",
+    "line": 30,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"GalaxyState\"]"
+  },
+  {
+    "file": "game/strategy/engine/turn_engine_config.py",
+    "line": 47,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['TurnEngineConfig']"
+  },
+  {
+    "file": "game/strategy/generation/star_generator.py",
+    "line": 38,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"StarGenerator\"]"
+  },
+  {
+    "file": "game/strategy/generation/__init__.py",
+    "line": 16,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/ship_instance_write_service.py",
+    "line": 22,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ShipInstanceWriteService\"]"
+  },
+  {
+    "file": "game/strategy/services/system_effects_collector.py",
+    "line": 64,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/research/__init__.py",
+    "line": 8,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ResearchTreeScene']"
+  },
+  {
+    "file": "game/ui/screens/design_image_helper.py",
+    "line": 35,
+    "variable": "_portrait_cache",
+    "type": "Dict",
+    "context": "_portrait_cache: Dict[Tuple[str, int], pygame.Surface] = {}"
+  },
+  {
+    "file": "game/ui/screens/design_image_helper.py",
+    "line": 36,
+    "variable": "_topdown_cache",
+    "type": "Dict",
+    "context": "_topdown_cache: Dict[Tuple[str, int], Optional[pygame.Surface]] = {}"
+  },
+  {
+    "file": "game/ui/screens/new_game_setup_view_model.py",
+    "line": 186,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/galaxy_test/__init__.py",
+    "line": 9,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['GalaxyTestScreen']"
+  },
+  {
+    "file": "game/ui/screens/race_setup/ui_builder.py",
+    "line": 42,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"RaceSetupUiBuilder\"]"
+  },
+  {
+    "file": "game/ui/screens/race_setup/__init__.py",
+    "line": 26,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"RaceSetupScreen\"]"
+  },
+  {
+    "file": "game/ui/services/image/openai_provider.py",
+    "line": 421,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/utils/__init__.py",
+    "line": 38,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/widgets/__init__.py",
+    "line": 9,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ScrollableJsonPanel']"
+  }
+]

@@ -4,6 +4,13 @@ description: Type safety & annotation quality audit. Runs mypy strict-mode + AST
 argument-hint: "[--skip-phase1] [--skip-mypy]"
 ---
 
+## Invocation
+
+- **Slash command (interactive):** `/ocode-type-audit`
+- **CLI (non-interactive):** `opencode run "Load the ocode-type-audit skill and execute it. Args: [optional --skip-phase1, --skip-mypy]"`
+
+The skill is identical in both modes. CLI mode skips any user-prompt confirmations.
+
 # Type Safety & Annotation Quality Audit
 
 Run a comprehensive audit of type annotation quality across the production codebase. Two-pass analysis: mypy strict-mode + AST-based annotation scanner. Produces an Any-density heatmap by layer, mypy readiness score, and a prioritized narrowing plan. Measures progress against baseline — the main value is reducing new type debt and picking safe first layers, not fixing every mypy error at once.
@@ -92,9 +99,9 @@ Launch **5 agents**:
 **Replace placeholders:**
 - `{REVIEW_DIR}` → actual review directory
 - `{shard_id}`, `{shard_label}`, `{shard_files}` → from manifest.json
-- `{any_returns}` → any_returns.json content
-- `{any_heatmap}` → any_heatmap.json content
-- `{mypy_errors}` → mypy_report.json content (or "skipped")
+- `{any_returns}` → instruct agent to "Read `{REVIEW_DIR}/raw/any_returns_{shard_id}.json`"
+- `{any_heatmap}` → "Read `{REVIEW_DIR}/raw/any_heatmap.json`" (heatmap is global, no per-shard split)
+- `{mypy_errors}` → "Read `{REVIEW_DIR}/raw/mypy_report_{shard_id}.json` (or `mypy_report.json` if mypy was skipped)"
 
 #### Agents 1a-1d: In-Shard Type Reviewers
 
@@ -145,6 +152,11 @@ For EACH file in your shard:
 6. **TYPE_CHECKING block hygiene:**
    - Are imports in TYPE_CHECKING blocks only used for type annotations?
    - Flag runtime-usage of TYPE_CHECKING-only imports.
+   - **Deferred narrowings:** Check for `# type: ignore[no-any-return]` or
+     `-> Any` accompanied by a `# TODO:` comment. These are deliberately
+     deferred — they should be tracked as a backlog list. Flag as MINOR;
+     aggregate them in a separate '## Deferred Narrowings' section in the
+     report.
 7. **Protocol conformance in type system:**
    - Does the implementation match the Protocol's type signature?
    - Note any Protocol mismatches the type checker would catch.
@@ -164,6 +176,10 @@ For EACH file in your shard:
   protocol casts. These are architectural boundaries — note them as INFO.
 - **Narrowable Any**: stable app-owned APIs where the return type is always
   one concrete class or a known union. These are MAJOR or CRITICAL.
+  - Concrete example from this codebase: `Component.get(name) -> Any`
+    patterns where every code path returns `Optional[Component]` — these
+    are clear narrowing candidates. Confirm by reading every return
+    statement in the function body before proposing the narrowed type.
 - **Suggested concrete type**: only propose a specific type when you have
   verified ALL return paths in the function body. If unsure, mark as
   INCONCLUSIVE and request developer review.
@@ -249,8 +265,11 @@ All files under game/.
    that mypy would catch in strict mode.
 
 4. **Propose a mypy strict-mode migration path:**
-   Which layer could adopt strict mode first? Recommended adoption order:
-   Core → Services → Engine → Research → Simulation → Strategy/AI → Assets → UI.
+   Which layer could adopt strict mode first? Compute the recommended
+   adoption order from `mypy_report.json` error counts per layer at runtime
+   — propose the layer with the lowest error density first. The migration
+   table below should be filled in from the actual data, not from a
+   hardcoded sequence.
    Estimate error count reduction if each layer went strict.
 
 ## Output
@@ -335,7 +354,13 @@ Step-by-step layer adoption plan.
 
 **5. Prioritized Remediation Plan**
 
-**6. Appendices**
+Sorted by `severity_weight × layer_weight × loc_affected` via `Tools/_audit_common/layer_weight.py`. All findings still appear in detail tables; weighting only affects this top-N ordering.
+
+**6. Trend Comparison**
+
+Use `Tools/_audit_common/run_tracker.py` with `audit_name="type"` to compare against prior runs (delta in Any-density, missing returns, mypy error counts, type-ignore counts).
+
+**7. Appendices**
 
 ### Step 7: Log Skill Usage
 

@@ -74,7 +74,9 @@ user sees which review is being processed, then continue without prompting.
    contains placeholder text like "TBD" or "fill in".
 7. Write each project's `findings/verification_report.md` and
    `findings/source_review.md` per the protocol.
-8. Print a summary: project IDs, project paths, per-tier counts
+8. **Refinement Feedback** — write a proposal back to the originating OpenCode skill per `Projects/protocols/15_refinement_feedback.md`. Inputs: `audit_dir` (the test-review directory), `source_skill: "ocode-test-review"`, `audit_name: "test"`, REJECTED/DISPUTED items collected during verification (with reasons), NEEDS_REWORK items if any pattern was identified, audit-missed test-quality issues the user flagged during bundling, and the list of `PROJ-NNN` IDs created. Write to `.opencode/skills/ocode-test-review/refinement_proposals/<today>_<basename(audit_dir)>.md`. If both REJECTED and user_flagged_misses are empty, write a minimal "no refinements suggested this run" proposal and exit. The proposal is for the user to read manually and decide what to merge into `SKILL.md` or `Tools/test_review/`.
+
+9. Print a summary: project IDs, project paths, per-tier counts
    (`X verified, Y needs-rework, Z rejected, W out-of-scope`), and the
    next-step suggestion (one `/claude-proj-continue PROJ-NNN` line per
    created project).
