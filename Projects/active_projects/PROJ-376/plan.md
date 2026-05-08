@@ -17,14 +17,14 @@
 |-------|--------|-----------|
 | 1. Lifecycle seam — split `BuildQueueScreen.__init__` into shell + `open_for_yard()` (manager unchanged) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Instance reuse — manager constructs once, calls `open_for_yard()` thereafter; replace `_close()` with `hide()` / `show()` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Acceptance + dead-code activation — close PROJ-373 acceptance bar, activate `reset_filters()`, address PROJ-373 review MIN findings | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Acceptance + dead-code activation — close PROJ-373 acceptance bar, activate `reset_filters()`, address PROJ-373 review MIN findings | Complete (Task 3.1 user-side re-profile deferred) | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-07
-**Active Phase:** Phase 2 complete; ready for Phase 3.
-**Last Action:** Phase 2 shipped — `StrategyBuildQueueManager._open_build_queue(yard, hex_coord, portrait_surface)` helper consolidates the 3 entry points; lazy-construct on first click, reuse via `open_for_yard()` thereafter. Three `is_not_None` gates migrated to `is_visible()` (event_router :58, input_handler :55, strategy_screen :246). Close-button + Esc handler routes through new `_request_close()` (calls `hide()` then `on_close()`); old `_close()` removed. `_on_build_queue_close` no longer nulls the slot. `tests/unit/ui/screens/test_sub_window_hotkeys.py` updated for the rename. 19075 passed (+8 from Phase 2's restructured + new tests).
-**Next Action:** Phase 3 — editorial close-out, PROJ-373 plan.md backfill, deferred profiling acceptance is user-side.
-**Blockers:** None.
+**Active Phase:** All phases complete; Task 3.1 user-side re-profile deferred.
+**Last Action:** Phase 3 editorial close-out shipped — PROJ-373 review MIN-001 (`BuildQueueController.reset_filters()` docstring updated to "live since PROJ-376"), MIN-002 (HFS+ mtime resolution comment), MIN-003 (`VirtualTable.rebuild_row_pool` docstring documents layout-pass dependency), MIN-005 (column-config-change test added in `TestRowPoolReuseGuard`); MAJ-003 + MAJ-004 backfilled in PROJ-373 plan.md (Phase 1 cross-open caveat updated; Phase 2 row + detailed status flipped from "Deferred" to "Completed in PROJ-376"). PROJ-373 Current State + Blockers updated to reflect Phase 2 closure.
+**Next Action:** OpenCode review + verifier subagent + closeout. **User-side:** re-profile per Task 3.1 to confirm < 0.5 s repeat-open acceptance bar (Tools/profile_game/profile_game.py against the same 3-clicks-on-same-yard repro from PROJ-373's findings/profile_summary.md).
+**Blockers:** Task 3.1 re-profile is a user-side smoke; not blocking the code-side closeout.
 
 ## Overview
 

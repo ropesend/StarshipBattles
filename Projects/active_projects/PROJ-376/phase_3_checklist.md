@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (Task 3.1 user-side re-profile deferred)
 **Depends on:** phase_2
 **Review Mode:** standard
 **Files (planned):**

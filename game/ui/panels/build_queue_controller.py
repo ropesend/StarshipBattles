@@ -210,6 +210,10 @@ class BuildQueueController:
         """
         try:
             path = self.design_library.get_design_path(design_id)
+            # PROJ-373 review MIN-002: legacy HFS+ has 1-second mtime resolution.
+            # Two saves within the same second on HFS+ produce identical fingerprints
+            # → cache returns stale validation. Self-corrects on next open per
+            # design.md alternative F (false invalidation is harmless).
             return os.stat(path).st_mtime_ns
         except (OSError, AttributeError):
             # Missing file, missing helper, or any IO failure → cache miss.
@@ -260,9 +264,10 @@ class BuildQueueController:
     def reset_filters(self) -> None:
         """Reset category and role filters to their defaults.
 
-        PROJ-373 Phase 2 prerequisite: called from `BuildQueueScreen.open_for_yard`
-        when the screen is reused across yard switches. Does NOT call
-        `on_queue_changed` — caller decides when to refresh.
+        PROJ-376 (continuation of PROJ-373 Phase 1): called from
+        `BuildQueueScreen.open_for_yard` when the screen is reused
+        across yard switches. Live as of PROJ-376 Phase 1.
+        Does NOT call `on_queue_changed` — caller decides when to refresh.
         """
         self.selected_category = "complex"
         self.selected_role = "Any"

@@ -1373,3 +1373,47 @@ class TestRowPoolReuseGuard:
             assert row["bg"].kill.called, (
                 "column reorder must invalidate the pool"
             )
+
+    def test_column_config_change_triggers_rebuild(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """PROJ-376 Phase 3 (PROJ-373 review MIN-005): adding a column to the
+        column manager — without changing panel dimensions or row_height —
+        must invalidate the pool. Confirms the visible-column fingerprint
+        (``virtual_table.py:163-174``) covers config changes that go beyond
+        toggle / reorder, e.g. a new column appearing at runtime.
+        """
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        column_manager = TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+            {"id": "value", "label": "Value", "width": 80, "visible": True},
+        ])
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_pool = list(table._row_pool)
+        assert len(column_manager.get_visible_columns()) == 2
+
+        # Add a third column. Panel dimensions and row_height do NOT change.
+        # No public ``add_column`` API exists; mutate the internal list as the
+        # column-manager allows direct dict-mutation on visibility/order paths.
+        column_manager._columns.append(
+            {"id": "extra", "label": "Extra", "width": 60, "visible": True}
+        )
+        assert len(column_manager.get_visible_columns()) == 3
+
+        table.rebuild_row_pool()
+
+        for row in first_pool:
+            assert row["bg"].kill.called, (
+                "column-config change (added column) must invalidate the pool"
+            )
+        # New pool reflects the 3-column config.
+        assert len(column_manager.get_visible_columns()) == 3

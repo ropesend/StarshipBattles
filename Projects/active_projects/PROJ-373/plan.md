@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Cache `_validate_designs` results (effective only within a single open until Phase 2 lands) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Reuse `BuildQueueScreen` instance across opens | Deferred (see decisions.md) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Cache `_validate_designs` results | Complete (cross-open value live since PROJ-376 Phase 2) | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Reuse `BuildQueueScreen` instance across opens | Completed in PROJ-376 | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Reuse VirtualTable row pool across opens | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Reduce rounded-rect drawable cost (theme/pre-bake) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-06 (Phase 4 landed; Phase 2 deferred)
-**Active Phase:** Project ready for user verification (Phases 1, 3, 4 complete; Phase 2 deferred)
+**Last Updated:** 2026-05-07 (Phase 2 closed via PROJ-376)
+**Active Phase:** All phases complete (Phases 1, 3, 4 in PROJ-373; Phase 2 in PROJ-376)
 **Last Action:** Phase 4 complete via the scoped (b) approach per project guidance: added `panel.@fast_panel` block to `data/builder_theme.json` (rectangle shape, same colours as the default panel block), threaded `object_id="@fast_panel"` through every `ui.UIPanel(...)` construction in `BuildQueuePanelFactory` (7 panels: background, fleet info, items list, build queue, table, filter, bottom bar). Eliminates the ~3s `pygame_gui.RoundedRectangleShape.redraw_state` cost on first build-queue open without touching any other screen. 2 new tests in `TestScopedFastPanelObjectId`: AST-style assertion that every UIPanel call passes the class_id, plus a JSON-shape sanity check on the theme block. Focused suite: tests/unit/ui/screens/test_build_queue_panel_factory.py 5 passed; tests/unit/ui/ ~4619 passed (1 unrelated cache-collision error on a pre-existing duplicate-named test file). **Phase 2 deferred** — see decisions.md.
 **Next Action:** User-driven manual verification: open the build queue at a planet, then a fleet, switch yards, eyeball-check that panels look acceptable with rectangle (vs rounded) corners. Re-profile under `python Tools/profile_game/profile_game.py` to capture the first-open improvement (~3s expected) and the cache-driven 2.2s validation savings on repeat opens.
-**Blockers:** Phase 2 deferred — see decisions.md.
+**Blockers:** None — PROJ-376 closed Phase 2. User-driven re-profile (Tools/profile_game/profile_game.py) is the remaining acceptance gate.
 
 **Profile baseline (from `findings/profile_summary.md`):**
 - Per-click cost: 6.83s / 6.82s / 6.96s (mean 6.87s)
@@ -104,7 +104,7 @@ See [phase_1_checklist.md](phase_1_checklist.md).
 
 ### Phase 2: Reuse `BuildQueueScreen` instance across opens [Medium]
 **Objective:** Construct `BuildQueueScreen` once per `StrategyBuildQueueManager` lifetime; subsequent opens go through a new `open_for_yard(yard)` method that refreshes only yard-specific state. Replace `_close()` with `hide()`. Eliminates ~3-4s/click on second-and-later opens.
-**Status:** Deferred — see [decisions.md](decisions.md) for rationale. Do not implement; revisit in a follow-up project where a focused single-purpose effort can untangle the pygame_gui lifecycle, modal stack, FEAT-17 pause-button, and per-yard reference graph.
+**Status:** Deferred → Completed in PROJ-376 (2026-05-07). See `Projects/active_projects/PROJ-376/` for the lifecycle refactor that delivered Phase 2's instance-reuse goal.
 
 See [phase_2_checklist.md](phase_2_checklist.md).
 

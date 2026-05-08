@@ -543,7 +543,13 @@ class VirtualTable:
         self._header.rebuild()
 
     def rebuild_row_pool(self) -> None:
-        """Public method to rebuild the row pool."""
+        """Public method to rebuild the row pool.
+
+        Note: Reads ``_list_view_panel.get_relative_rect()`` for dimension
+        fingerprinting. Callers MUST ensure pygame_gui has completed its
+        layout pass before calling — typically by running ``manager.update(0.0)``
+        beforehand. PROJ-373 review MIN-003.
+        """
         self._rebuild_row_pool()
 
     def force_update(self) -> None:
