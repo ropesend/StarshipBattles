@@ -18,10 +18,10 @@
     },
     "claude-discuss-start": {
       "agents": {
-        "claude": 4
+        "claude": 6
       },
-      "count": 4,
-      "last_used": "2026-05-05T03:39:48Z"
+      "count": 6,
+      "last_used": "2026-05-07T03:20:38Z"
     },
     "claude-proj-continue": {
       "agents": {
@@ -53,10 +53,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 4
+        "codex": 6
       },
-      "count": 4,
-      "last_used": "2026-05-05T03:40:36Z"
+      "count": 6,
+      "last_used": "2026-05-07T03:45:35Z"
     },
     "codex-discuss-start": {
       "agents": {

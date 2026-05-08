@@ -2,13 +2,14 @@
 
 The five private indexes — `_global_hex_planets`, `_global_hex_zones`,
 `_zone_to_system`, `_planet_to_system`, `_global_hex_warp_points` — are
-encapsulation boundaries. Only the registry/spatial-index/warp-generator
-services are allowed to read them directly. All other call sites must
-go through public methods on Galaxy or the relevant service.
+legacy compatibility properties. All call sites must go through public
+methods on Galaxy, the relevant service, or GalaxyState's non-underscore
+indexes.
 
-Phase 0 captures today's allow-list. Phase 3 introduces `GalaxyState`
-and renames the indexes (drops the leading underscore); after Phase 3
-this guard tightens to also cover the renamed identifiers.
+Phase 3 introduced `GalaxyState` and renamed the indexes (dropped the
+leading underscore). This guard now pins the old underscore names as
+compatibility-only surfaces that external callers must not read, except
+for the explicit grandfathered sites tracked below.
 
 The walker scans every `*.py` under `game/` and asserts no
 `Attribute(value=Name|Attribute(...), attr='_global_hex_planets')` etc.
@@ -33,23 +34,14 @@ RESTRICTED_ATTRS = frozenset(
     }
 )
 
-# Files allowed to read the restricted attrs directly.
-# Phase 3 will narrow this further when GalaxyState lands.
-ALLOWED_FILES = frozenset(
-    {
-        "game/strategy/data/galaxy.py",
-        "game/strategy/data/galaxy_entity_registry.py",
-        "game/strategy/data/galaxy_spatial_index.py",
-        # Warp generator currently does not read these directly but Phase 3
-        # may need it to. Listing pre-emptively keeps phase moves cheap.
-        "game/strategy/data/galaxy_warp_generator.py",
-    }
-)
+# No file should read the legacy underscore properties directly. Galaxy's
+# compatibility property definitions are FunctionDef nodes, not Attribute reads,
+# so they do not need an allowlist entry.
+ALLOWED_FILES = frozenset()
 
 # PROJ-372 Phase 0 discovery: five external read sites the architect's
 # initial review missed. Captured here so today's baseline ships green;
-# Phase 3 introduces `Galaxy.iter_warp_point_hexes` / equivalent public
-# methods and removes these entries from the grandfathered set.
+# each tuple is precise so new reads still fail.
 GRANDFATHERED_EXTERNAL_READS = frozenset(
     {
         ("game/strategy/engine/handlers/movement.py", "_global_hex_warp_points"),
@@ -119,23 +111,12 @@ def test_allowed_files_actually_use_at_least_one_index() -> None:
     """Sanity check the allow-list — every entry should reference at least
     one restricted attr (otherwise it's stale and should be pruned).
 
-    Phase-3 update: ``galaxy.py`` no longer reads the restricted attrs
-    directly (state migrated to GalaxyState); it exposes them as
-    ``@property`` forwarders for back-compat with the grandfathered
-    external readers. The property names appear as ``FunctionDef``
-    nodes, not as ``Attribute`` reads, so they don't show as
-    violations and ``galaxy.py`` is the second skip-from-must-use case
-    after warp generator."""
-    skip_must_use = {
-        "game/strategy/data/galaxy_warp_generator.py",
-        "game/strategy/data/galaxy.py",
-    }
+    Kept even though the current allow-list is empty, so future deliberate
+    exceptions cannot silently go stale."""
     for rel in ALLOWED_FILES:
         path = REPO_ROOT / rel
         assert path.exists(), f"Stale allow-list entry: {rel}"
         viols = _find_violations(path)
-        if rel in skip_must_use:
-            continue
         assert viols, (
             f"Allow-listed file {rel} does not actually read any restricted "
             "attr. Either remove it from ALLOWED_FILES or restore the usage."
