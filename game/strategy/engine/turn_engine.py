@@ -224,6 +224,13 @@ class TurnEngine:
 
         # PROJ-251: Track current tick for error context
         self._current_tick: int = 0
+        # PROJ-381 Phase 3 (B-2): track turn_number for EnginePhaseError
+        # context so crash dumps correlate to the saved turn.
+        self._current_turn_number: int = 0
+        # save_path is also threaded via _current_save_path at
+        # process_turn entry; both keys are added defensively to the
+        # error context so dump-and-resume tooling has the breadcrumb.
+        self._current_save_path: Optional[str] = None
 
         # Performance timing accumulators (reset each turn in process_turn)
         self._reset_phase_times()
@@ -282,12 +289,19 @@ class TurnEngine:
                 "Sub-engine phase '%s' failed during tick processing",
                 key, exc_info=True,
             )
+            # PROJ-381 Phase 3 (B-2): include turn_number + save_path so
+            # crash dumps and the UI dialog can correlate the failure
+            # back to the saved turn. `getattr` defensively in case the
+            # attribute drifts in future refactors — context construction
+            # itself must never raise a secondary error.
             raise EnginePhaseError(
                 f"Phase '{key}' failed: {e}",
                 code=ErrorCode.PHASE_FAILED.value,
                 context={
                     "phase_name": key,
                     "tick": self._current_tick,
+                    "turn_number": getattr(self, "_current_turn_number", 0),
+                    "save_path": getattr(self, "_current_save_path", None),
                     "original_error": str(e),
                     "original_type": type(e).__name__,
                 }
@@ -489,6 +503,12 @@ class TurnEngine:
 
         # Store save_path for tick processing (PROJ-79)
         self._current_save_path = save_path
+        # PROJ-381 Phase 3 (B-2): cache turn_number for EnginePhaseError
+        # context. Defensive `getattr` because process_turn callers
+        # sometimes pass headless sessions / mocks without turn_number.
+        self._current_turn_number = (
+            getattr(session, "turn_number", 0) if session is not None else 0
+        )
 
         # Issue #7: stash the per-tick progress callback for _process_tick to
         # invoke. Cleared in the outer finally so the callback never leaks

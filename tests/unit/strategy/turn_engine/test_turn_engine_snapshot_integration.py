@@ -134,3 +134,36 @@ class TestSnapshotIntegration:
     # was deleted by PROJ-343 T1.2-snapshot. The new contract — capture
     # failure surfaces via re-raise — is pinned in
     # `test_turn_snapshot_capture_failure.py`.
+
+
+class TestEnginePhaseErrorContextEnrichment:
+    """PROJ-381 Phase 3 (B-2): EnginePhaseError context must include
+    turn_number and save_path so crash dumps and the UI dialog can
+    correlate the failure to the saved turn."""
+
+    def test_phase_error_context_includes_turn_number_and_save_path(
+        self, fresh_registries, mock_empire, mock_galaxy
+    ):
+        mock_empire.fleets = []
+        engine = _make_engine_with_failing_harvester(fresh_registries)
+        session = MagicMock()
+        session.turn_number = 17
+
+        with patch(
+            'game.strategy.engine.turn_state_snapshot.TurnStateSnapshot.capture',
+            return_value=MagicMock(),
+        ):
+            with pytest.raises(EnginePhaseError) as exc_info:
+                engine.process_turn(
+                    [mock_empire],
+                    mock_galaxy,
+                    save_path="/tmp/proj381-b2-fake",
+                    session=session,
+                )
+
+        ctx = exc_info.value.context or {}
+        assert ctx.get("turn_number") == 17
+        assert ctx.get("save_path") == "/tmp/proj381-b2-fake"
+        # Pre-existing keys must still be present.
+        assert ctx.get("phase_name") is not None
+        assert "tick" in ctx

@@ -172,13 +172,32 @@ class StrategySessionFacade:
         resolving movement, and processing AI actions. PROJ-254: invalidates
         every per-turn cache after the session advances.
 
+        PROJ-381 Phase 3 (B-4): catches the domain-engine
+        :class:`EnginePhaseError` and re-raises as a facade-level
+        :class:`TurnFailedError` so the UI never has to import a
+        sub-engine exception type. The original error is preserved on
+        ``__cause__`` and the same context dict travels through.
+
         Args:
             progress_callback: Issue #7 — optional per-tick callback
                 ``(current_tick, total_ticks)`` forwarded to the underlying
                 ``GameSession.process_turn`` so the strategy screen can
                 repaint the "PROCESSING TURN..." overlay between ticks.
+
+        Raises:
+            TurnFailedError: If a sub-engine phase failure escaped the
+                rollback boundary in ``GameSession.process_turn``.
         """
-        self._session.process_turn(progress_callback=progress_callback)
+        from game.core.exceptions import EnginePhaseError, TurnFailedError
+
+        try:
+            self._session.process_turn(progress_callback=progress_callback)
+        except EnginePhaseError as e:
+            raise TurnFailedError(
+                message=str(e),
+                code=e.code,
+                context=dict(e.context or {}),
+            ) from e
         self._state.invalidate_all()
 
     # --- Command dispatch helpers ---

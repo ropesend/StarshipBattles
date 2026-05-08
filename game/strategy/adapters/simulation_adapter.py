@@ -285,12 +285,35 @@ class SimulationBattleResolver(IBattleResolver):
         capture_context = self._build_capture_context(
             fleet_list, registries=registries
         )
-        outcome = run_battle(
-            spec,
-            ai_factory=self._ai_factory,
-            registry_provider=registries,
-            capture_context=capture_context,
-        )
+        # PROJ-381 Phase 3 (B-6): wrap SimulationException so battle
+        # context (fleet IDs, hex coord, empire IDs) survives into crash
+        # dumps. Re-raise as `BattleResolutionError` preserving
+        # `from e` chaining.
+        from game.core.exceptions import BattleResolutionError, SimulationException
+        try:
+            outcome = run_battle(
+                spec,
+                ai_factory=self._ai_factory,
+                registry_provider=registries,
+                capture_context=capture_context,
+            )
+        except SimulationException as e:
+            fleet_ids = [getattr(f, "id", None) for f in fleet_list]
+            empire_ids = [getattr(f, "owner_id", None) for f in fleet_list]
+            hex_coord = next(
+                (getattr(f, "hex_coord", None) for f in fleet_list if getattr(f, "hex_coord", None) is not None),
+                None,
+            )
+            raise BattleResolutionError(
+                message=f"Battle resolution failed: {e}",
+                code=getattr(e, "code", None),
+                context={
+                    "fleet_ids": fleet_ids,
+                    "empire_ids": empire_ids,
+                    "hex_coord": hex_coord,
+                    "original_type": type(e).__name__,
+                },
+            ) from e
 
         winner = self._determine_winner(outcome)
         team_survivors: Dict[int, List[Any]] = {

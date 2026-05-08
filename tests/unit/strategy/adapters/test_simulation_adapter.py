@@ -367,3 +367,44 @@ class TestSimulationAdapterReplayId:
         mock_run.assert_called_once()
         assert result.replay_id == "brief-replay-uuid"
         assert result.replay_unavailable_reason is None
+
+
+class TestSimulationAdapterBattleContextPreservation:
+    """PROJ-381 Phase 3 (B-6): a SimulationException raised by run_battle
+    must be re-raised as BattleResolutionError carrying fleet_ids and
+    hex_coord context so crash dumps capture the situation."""
+
+    def test_simulation_exception_wrapped_with_battle_context(self):
+        import pytest
+
+        from game.core.exceptions import BattleResolutionError, ValidationException
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet1.owner_id = 7
+        fleet1.hex_coord = (3, 4)
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet2.owner_id = 9
+        fleet2.hex_coord = (3, 4)
+
+        # ValidationException is a SimulationException? No — it's a
+        # GameException sibling. The B-6 wrap catches SimulationException
+        # only. Use a real SimulationException subclass.
+        from game.core.exceptions import SimulationException
+
+        class _BoomSim(SimulationException):
+            pass
+
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            side_effect=_BoomSim("boom"),
+        ):
+            with pytest.raises(BattleResolutionError) as exc_info:
+                resolver.resolve_battle([fleet1, fleet2])
+
+        ctx = exc_info.value.context or {}
+        assert ctx.get("fleet_ids") == [1, 2]
+        assert ctx.get("empire_ids") == [7, 9]
+        assert ctx.get("hex_coord") == (3, 4)
+        assert isinstance(exc_info.value.__cause__, _BoomSim)

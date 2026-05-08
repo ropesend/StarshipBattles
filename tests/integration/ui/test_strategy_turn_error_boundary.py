@@ -155,3 +155,31 @@ class TestStrategyTurnErrorBoundary:
 
         assert screen.current_tick is None
         assert screen.total_ticks is None
+
+    def test_turn_failed_error_is_caught_and_dialog_shown(self) -> None:
+        """PROJ-381 Phase 3 (B-4): facade-level TurnFailedError must also
+        be caught — the standard production path raises this, not the
+        domain-engine EnginePhaseError."""
+        from game.core.exceptions import TurnFailedError
+
+        manager, screen = _make_state_manager_with_screen()
+        screen._facade.get_turn_events.return_value = []
+        err = TurnFailedError(
+            "Phase 'production' failed",
+            code=ErrorCode.PHASE_FAILED.value,
+            context={
+                "phase_name": "production",
+                "tick": 12,
+                "original_type": "RuntimeError",
+            },
+        )
+        screen._facade.process_turn.side_effect = err
+
+        with patch("pygame.display.get_surface", return_value=None), \
+             patch("pygame_gui.windows.UIMessageWindow") as mock_msg:
+            manager.process_full_turn()
+
+        mock_msg.assert_called_once()
+        body = mock_msg.call_args.kwargs.get("html_message", "")
+        assert "production" in body
+        assert "RuntimeError" in body

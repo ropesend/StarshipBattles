@@ -181,13 +181,16 @@ class TestTurnStateSnapshotCrashDump:
     def test_dump_crash_snapshot_logs_oserror_without_raising(
         self, tmp_path, caplog
     ):
+        """PROJ-381 Phase 3 (ERR-02-005): dump_crash_snapshot routes
+        through `save_json`, which returns False on write failure. The
+        method must log the error and not raise."""
         from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
 
         snapshot = TurnStateSnapshot(turn_number=3)
 
         with patch(
-            "game.strategy.engine.turn_state_snapshot.os.makedirs",
-            side_effect=OSError("disk full"),
+            "game.strategy.engine.turn_state_snapshot.save_json",
+            return_value=False,
         ):
             with caplog.at_level(logging.ERROR):
                 snapshot.dump_crash_snapshot(
@@ -195,8 +198,10 @@ class TestTurnStateSnapshotCrashDump:
                     {"tick": 9, "phase_name": "Movement"},
                 )
 
-        assert any("Failed to write crash snapshot" in rec.message for rec in caplog.records)
-        assert any("disk full" in rec.message for rec in caplog.records)
+        assert any(
+            "Failed to write crash snapshot" in rec.message
+            for rec in caplog.records
+        )
 
 
 # Fixtures

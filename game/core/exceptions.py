@@ -224,6 +224,40 @@ class EnginePhaseError(StrategyException):
     pass
 
 
+class TurnFailedError(StrategyException):
+    """Facade-level wrapper around an EnginePhaseError (PROJ-381 Phase 3 B-4).
+
+    The strategy facade re-raises ``EnginePhaseError`` as
+    ``TurnFailedError`` so the UI never has to import a domain-engine
+    exception type. Preserves the wrapped error via ``__cause__`` and
+    exposes UI-formatted convenience properties.
+
+    Attributes mirror EnginePhaseError context: ``phase_name``, ``tick``,
+    ``turn_number``, ``original_type`` are surfaced as properties for the
+    modal dialog rendering.
+    """
+
+    @property
+    def phase_name(self) -> str:
+        """Failed phase name, or 'unknown' if missing from context."""
+        return self.context.get("phase_name", "unknown")
+
+    @property
+    def recoverable(self) -> bool:
+        """Whether the user can retry the turn (always True for now)."""
+        return True
+
+
+class BattleResolutionError(StrategyException):
+    """Wrapper around a SimulationException raised during battle resolution
+    (PROJ-381 Phase 3 B-6).
+
+    Carries fleet IDs, hex coordinate, and empire IDs in ``context`` so a
+    crash dump captures the situation that triggered the failure.
+    """
+    pass
+
+
 # =============================================================================
 # Simulation Exceptions
 # =============================================================================
@@ -451,6 +485,8 @@ __all__ = [
     'StrategyException',
     'EnginePhaseError',
     'SessionInitializationError',
+    'TurnFailedError',
+    'BattleResolutionError',
     # Simulation
     'SimulationException',
     'ComponentException',
