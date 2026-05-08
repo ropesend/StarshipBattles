@@ -8,6 +8,10 @@ Cross-layer imports (acceptable for builder UI):
 """
 from __future__ import annotations
 
+# PROJ-382 Phase 3 (Pattern #12): bare ``json`` import preserved because
+# ``json_utils`` has no string-formatter (dumps) helper — only file-IO
+# wrappers.  This call is in-memory pretty-printing for a debug popup,
+# not persistence; routing through json_utils would add no benefit.
 import json
 import logging
 import pygame

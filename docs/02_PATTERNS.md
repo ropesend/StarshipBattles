@@ -160,8 +160,14 @@ Use for UI-to-strategy communication and any new operation that mutates strategy
 
 ## 7. CommandHandlerRegistry
 
+> **Last verified:** 2026-05-08
+
 Where:
-- Legacy/runtime command handler registry: `game/strategy/engine/command_handlers.py`.
+- Canonical `BaseCommandHandler` + `CommandHandlerRegistry`:
+  `game/strategy/engine/handlers/base.py`. The legacy
+  `game/strategy/engine/command_handlers.py` is a transitional re-export
+  shim (see "Re-Export Shim" pattern entry); new code imports from
+  `handlers/base.py` directly.
 - Self-registering command metadata: `game/strategy/engine/commands/registry.py`.
 - UI command handlers: `game/strategy/engine/handlers/`.
 - Order action handlers: `game/strategy/engine/order_handlers/`.
@@ -423,12 +429,17 @@ Use for all turn-engine dependency construction and test substitution.
 
 ## 23. Tick Phase Registry
 
+> **Last verified:** 2026-05-08
+
 Where: `game/simulation/systems/tick_phase.py`.
 
 Contract:
 - `ITickPhase` has `name`, `priority`, and `execute(engine)`.
 - `TickPhaseRegistry` executes phases ordered by ascending priority.
-- Defaults: `RebuildGrid(100)`, `AIAndShipUpdate(200)`, `AttackProcessing(300)`, `Ramming(400)`, `ProjectileUpdate(500)`.
+- Defaults (six phases — every name carries the `Phase` suffix):
+  `RebuildGridPhase(100)`, `AIAndShipUpdatePhase(200)`,
+  `BoundaryEnforcementPhase(250)`, `AttackProcessingPhase(300)`,
+  `RammingPhase(400)`, `ProjectileUpdatePhase(500)`.
 - `BattleEngine.update()` delegates to the registry.
 
 Add simulation tick behavior by registering a phase at a deliberate priority.

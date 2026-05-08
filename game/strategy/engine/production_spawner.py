@@ -33,27 +33,49 @@ class ProductionSpawner:
 
     def __init__(
         self,
-        registries: Optional['GameRegistries'] = None,
+        *,
+        registries: 'GameRegistries',
         event_bus=None,
         planet_mutator=None,
     ):
         """Initialize the spawner.
 
+        PROJ-382 Phase 3 (Pattern #3 strategy-layer DI tightening):
+        ``registries`` is now a required keyword-only argument.  Callers
+        that previously passed None (and relied on later ship-creation
+        paths to silently skip mass calculation) must now thread the
+        session's GameRegistries through explicitly — this matches the
+        approach already taken by the ``TurnEngineConfig.create_default``
+        composition path.
+
         Args:
-            registries: Optional GameRegistries for ship creation (DI).
+            registries: GameRegistries for ship creation (required).
             event_bus: Optional EventBus for structured event logging.
-            planet_mutator: PROJ-370 IPlanetMutator. Lazy-defaulted.
+            planet_mutator: PROJ-370 IPlanetMutator. Eager-defaulted to
+                ``PlanetWriteService()`` when None — the previous
+                lazy-fallback walked the same code path on first access
+                anyway, so the eager default is a no-op behavior change
+                that surfaces construction-time failures.
         """
+        if registries is None:
+            raise TypeError(
+                "ProductionSpawner requires registries= (PROJ-382 Phase 3). "
+                "Pass session.registries (or a real GameRegistries) at "
+                "construction time."
+            )
         self._registries = registries
         self._event_bus = event_bus
-        self._planet_mutator = planet_mutator
-
-    def _get_planet_mutator(self):
-        if self._planet_mutator is None:
+        if planet_mutator is None:
             from game.strategy.services.planet_write_service import (
                 PlanetWriteService,
             )
-            self._planet_mutator = PlanetWriteService()
+            planet_mutator = PlanetWriteService()
+        self._planet_mutator = planet_mutator
+
+    def _get_planet_mutator(self):
+        # PROJ-382 Phase 3: kept as a thin accessor; the lazy-fallback
+        # has been collapsed into eager construction-time defaulting
+        # above, so this just returns the field.
         return self._planet_mutator
 
     def spawn_completed_item(self, item: Dict, empire: 'Empire',

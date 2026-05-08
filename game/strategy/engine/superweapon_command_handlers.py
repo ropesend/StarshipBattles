@@ -12,7 +12,7 @@ from typing import Any, TYPE_CHECKING
 import logging
 
 from game.core.validation import ValidationResult
-from game.strategy.engine.command_handlers import BaseCommandHandler, add_move_order_if_needed
+from game.strategy.engine.handlers.base import BaseCommandHandler, add_move_order_if_needed
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.order_types import Order, OrderType

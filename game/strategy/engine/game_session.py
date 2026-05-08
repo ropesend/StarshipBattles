@@ -366,9 +366,10 @@ class GameSession:
         Returns:
             ValidationResult (is_valid=True/False)
         """
-        if command.type == command.type.ISSUE_ORDER:
-            return self._command_registry.dispatch(command.name, self, command)
-        return None
+        # PROJ-382 Phase 3 (Pattern #6): tautology guard removed.  Every
+        # ``Command`` DTO sets ``type = CommandType.ISSUE_ORDER`` in
+        # ``__post_init__``, so the conditional was unreachable.
+        return self._command_registry.dispatch(command.name, self, command)
 
     def _get_fleet_by_id(self, fleet_id: int) -> Optional['Fleet']:
         """

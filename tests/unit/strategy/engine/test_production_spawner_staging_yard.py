@@ -31,7 +31,7 @@ class TestSpawnToStagingYardEmpireParam:
     def test_load_design_receives_empire_object_not_int(self):
         """When design_data is not cached in the item, _load_design must
         receive the Empire object (not empire.id) so it can access .id itself."""
-        spawner = ProductionSpawner(registries=None)
+        spawner = ProductionSpawner(registries=MagicMock())
         empire = _make_empire(empire_id=42)
         planet = _make_planet()
         item = {'design_id': 'fighter_mk1', 'type': 'fighter'}
@@ -45,7 +45,7 @@ class TestSpawnToStagingYardEmpireParam:
     def test_spawn_to_staging_yard_no_crash_with_real_empire(self):
         """End-to-end: calling _spawn_to_staging_yard with an Empire object
         must not raise AttributeError on empire.id."""
-        spawner = ProductionSpawner(registries=None)
+        spawner = ProductionSpawner(registries=MagicMock())
         empire = _make_empire(empire_id=7)
         planet = _make_planet()
         item = {'design_id': 'drop_pod_1', 'type': 'drop_pod',
@@ -57,7 +57,7 @@ class TestSpawnToStagingYardEmpireParam:
 
     def test_spawn_to_staging_yard_uses_empire_id_for_owner(self):
         """The staging_item dict should contain owner_id from empire.id."""
-        spawner = ProductionSpawner(registries=None)
+        spawner = ProductionSpawner(registries=MagicMock())
         empire = _make_empire(empire_id=99)
         planet = _make_planet()
         item = {'design_id': 'fighter_x', 'type': 'fighter',

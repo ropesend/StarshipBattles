@@ -84,7 +84,7 @@ def test_spawn_dispatches_complex_to_create_and_place_facility_for_colony():
     DesignLibrary stub at the module boundary so the inner method runs
     in full (load → PlanetaryFacility() → planet.facilities.append).
     """
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "ferrite_mine", "type": "complex"}
     planet = _planet()
     empire = _empire()
@@ -112,7 +112,7 @@ def test_spawn_dispatches_drop_pod_to_staging_yard_for_colony():
     only un-patches `_load_and_create_ship`, `_create_and_place_facility`,
     `_spawn_fleet_ship`).
     """
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "pod1", "type": "drop_pod"}
     empire = _empire()
     planet = _planet()
@@ -239,7 +239,7 @@ def test_spawn_dispatches_to_fleet_complex_when_fleet_and_complex_type():
     chain runs: `_spawn_fleet_complex` → `_create_and_place_facility` →
     `planet.facilities.append`.
     """
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "yard", "type": "complex"}
     fleet = _fleet_at(HexCoord(5, 5))
     planet = _planet(planet_id=1, name="Alpha")
@@ -271,14 +271,14 @@ def test_spawn_dispatches_to_fleet_complex_when_fleet_and_complex_type():
 
 def test_load_design_returns_empty_dict_when_no_save_path():
     """Missing save_path → empty dict (NOT None) per design.md observation."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     result = spawner._load_design("any", _empire(), None)
     assert result == {}
 
 
 def test_load_design_returns_empty_dict_when_load_fails():
     """DesignLibrary failure → empty dict, NOT raised."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     failing = MagicMock()
     failing.success = False
     failing.error = "not found"
@@ -390,14 +390,14 @@ def test_spawn_ship_without_galaxy_uses_local_location_and_fleet_id_zero():
 
 def test_resolve_planet_location_without_galaxy_returns_empty_metadata():
     """No galaxy context should leave event location metadata empty."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
 
     assert spawner._resolve_planet_location(_planet(), None) == (None, "", None)
 
 
 def test_resolve_planet_location_without_lookup_method_returns_empty_metadata():
     """Galaxy-like objects without planet lookup are ignored."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     galaxy = object()
 
     assert spawner._resolve_planet_location(_planet(), galaxy) == (None, "", None)
@@ -405,7 +405,7 @@ def test_resolve_planet_location_without_lookup_method_returns_empty_metadata():
 
 def test_resolve_planet_location_with_system_and_planet_location_returns_hex_lists():
     """Resolved systems provide global and local hex lists for event payloads."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     planet = _planet()
     planet.location = HexCoord(2, -1)
     system = MagicMock()
@@ -423,7 +423,7 @@ def test_resolve_planet_location_with_system_and_planet_location_returns_hex_lis
 
 def test_resolve_planet_location_with_system_but_no_planet_location_keeps_hexes_empty():
     """A resolved system still omits hex metadata when the planet has no location."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     planet = _planet()
     planet.location = None
     system = MagicMock()
@@ -445,7 +445,7 @@ def test_resolve_planet_location_with_system_but_no_planet_location_keeps_hexes_
 
 def test_spawn_to_staging_yard_uses_design_data_from_item_when_present():
     """If `item['design_data']` is set, `_load_design` is NOT called."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "pod", "type": "drop_pod",
             "design_data": {"name": "InlinePod"}}
     planet = _planet()
@@ -489,28 +489,23 @@ def test_spawn_to_staging_yard_reaches_into_simulation_for_mass_calculation():
     assert staged["mass"] == 4200.0
 
 
-def test_spawn_to_staging_yard_skips_mass_calculation_when_no_registries():
-    """When `_registries` is None, the simulation reach-in is skipped
-    and the staged item gets mass=0.0. Pins the guard at
-    production_spawner.py:251 (`if self._registries:`)."""
-    spawner = ProductionSpawner()  # registries default = None
-    item = {"design_id": "pod", "type": "drop_pod",
-            "design_data": {"name": "NoRegPod"}}
-    planet = _planet()
+def test_production_spawner_requires_registries():
+    """PROJ-382 Phase 3 (Pattern #3 strategy-layer DI tightening):
+    ``registries`` is a required keyword-only argument.
 
-    with patch(
-        "game.simulation.entities.ship_design_stats.calculate_design_stats",
-    ) as mock_calc:
-        spawner._spawn_to_staging_yard(planet, "pod", item, _empire(), "/tmp")
-
-    mock_calc.assert_not_called()
-    staged = planet.add_to_staging_yard.call_args[0][0]
-    assert staged["mass"] == 0.0
+    Replaces the prior ``test_spawn_to_staging_yard_skips_mass_calculation_when_no_registries``
+    which asserted the silent-fallback path that has been removed; the
+    silent fallback hid construction-time DI failures, and the
+    refactored contract surfaces them at the construction call instead.
+    """
+    import pytest
+    with pytest.raises(TypeError, match="requires registries"):
+        ProductionSpawner(registries=None)
 
 
 def test_spawn_to_staging_yard_logs_warning_when_full(caplog):
     """`add_to_staging_yard` returning False emits a 'Staging yard full' warning."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     planet = _planet()
     planet.add_to_staging_yard = MagicMock(return_value=False)
     item = {"design_id": "pod", "type": "drop_pod",
@@ -529,7 +524,7 @@ def test_spawn_to_staging_yard_logs_warning_when_full(caplog):
 
 def test_spawn_fleet_complex_uses_target_planet_id_when_specified():
     """`target_planet_id` matching a planet at the hex picks that planet."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     fleet = _fleet_at(HexCoord(5, 5))
     p1 = _planet(planet_id=1, name="Alpha")
     p2 = _planet(planet_id=2, name="Beta")
@@ -548,7 +543,7 @@ def test_spawn_fleet_complex_uses_target_planet_id_when_specified():
 
 def test_spawn_fleet_complex_falls_back_to_first_planet_when_target_id_missing():
     """`target_planet_id` not matching any planet → first planet (silent)."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     fleet = _fleet_at(HexCoord(5, 5))
     p1 = _planet(planet_id=1, name="Alpha")
     p2 = _planet(planet_id=2, name="Beta")
@@ -568,7 +563,7 @@ def test_spawn_fleet_complex_falls_back_to_first_planet_when_target_id_missing()
 
 def test_spawn_fleet_complex_returns_when_galaxy_missing():
     """Fleet complex spawning requires galaxy context for planet lookup."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     fleet = _fleet_at(HexCoord(5, 5))
 
     with patch.object(spawner, "_create_and_place_facility") as mock_create:
@@ -581,7 +576,7 @@ def test_spawn_fleet_complex_returns_when_galaxy_missing():
 
 def test_spawn_fleet_complex_returns_when_fleet_not_at_planet_hex():
     """No planet at the fleet hex cancels complex placement."""
-    spawner = ProductionSpawner()
+    spawner = ProductionSpawner(registries=MagicMock())
     fleet = _fleet_at(HexCoord(5, 5))
     galaxy = MagicMock()
     galaxy.get_planets_at_global_hex.return_value = []
