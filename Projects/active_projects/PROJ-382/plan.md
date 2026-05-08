@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical — Facade bypass eradication (Pattern #5) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Critical — Facade bypass eradication (Pattern #5) | Active | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Major — Pattern #2/#10/#31 + naming + conv | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Minor — CQRS/#7/#12 fixes + doc drift | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategic — Pattern doc-adds | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,9 +21,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-07_220452_pattern-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1, working
+**Last Action:** Beginning Phase 1: TDD-installing AST static-guard against facade bypass.
+**Next Action:** Tasks 1.1-1.6
 **Blockers:** None
 
 ## Overview
