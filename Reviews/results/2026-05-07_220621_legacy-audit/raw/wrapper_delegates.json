@@ -1,0 +1,205 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 749,
+  "total_findings": 22,
+  "findings": [
+    {
+      "file": "game/assets/asset_manager.py",
+      "line": 348,
+      "function": "get_asset_manager",
+      "delegates_to": "get_default_asset_manager",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_asset_manager() -> AssetManager:"
+    },
+    {
+      "file": "game/simulation/components/ability_manager.py",
+      "line": 291,
+      "function": "get_abilities_static",
+      "delegates_to": "AbilityManager._get_abilities_polymorphic",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def get_abilities_static("
+    },
+    {
+      "file": "game/simulation/components/ability_manager.py",
+      "line": 333,
+      "function": "instantiate_abilities_static",
+      "delegates_to": "AbilityManager._instantiate",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def instantiate_abilities_static("
+    },
+    {
+      "file": "game/simulation/components/component_constants.py",
+      "line": 45,
+      "function": "create_modifier",
+      "delegates_to": "ApplicationModifier",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def create_modifier(self, value=None) -> \"ApplicationModifier\":"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 568,
+      "function": "to_dict",
+      "delegates_to": "ShipSerializer.to_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def to_dict(self) -> Dict[str, Any]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 581,
+      "function": "from_dict",
+      "delegates_to": "ShipSerializer.from_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def from_dict("
+    },
+    {
+      "file": "game/simulation/entities/stat_contributors/command.py",
+      "line": 36,
+      "function": "priority_sort_key",
+      "delegates_to": "lookup_crew_priority",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def priority_sort_key(c: \"Component\") -> int:"
+    },
+    {
+      "file": "game/strategy/quickstart_builder.py",
+      "line": 39,
+      "function": "get_quickstart_races_dir",
+      "delegates_to": "Paths.get_starter_races_dir",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_quickstart_races_dir() -> Path:"
+    },
+    {
+      "file": "game/strategy/quickstart_builder.py",
+      "line": 44,
+      "function": "get_quickstart_designs_dir",
+      "delegates_to": "Paths.get_starter_designs_dir",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_quickstart_designs_dir() -> Path:"
+    },
+    {
+      "file": "game/strategy/data/planet_naming.py",
+      "line": 16,
+      "function": "to_roman",
+      "delegates_to": "NameRegistry.to_roman",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def to_roman(n: int) -> str:"
+    },
+    {
+      "file": "game/strategy/formulas/habitability.py",
+      "line": 99,
+      "function": "score_planet_for_race",
+      "delegates_to": "calculate_habitability",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def score_planet_for_race(planet: 'Planet', race_config: 'RaceConfig') -> float:"
+    },
+    {
+      "file": "game/strategy/services/effect_ability_metadata.py",
+      "line": 150,
+      "function": "find_metadata",
+      "delegates_to": "_BY_NAME.get",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def find_metadata(ability_name: str) -> Optional[EffectAbilityMetadata]:"
+    },
+    {
+      "file": "game/strategy/services/galaxy_pathfinding_service.py",
+      "line": 62,
+      "function": "find_path_deep_space",
+      "delegates_to": "hex_linedraw",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def find_path_deep_space(start: HexCoord, end: HexCoord) -> List[HexCoord]:"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 589,
+      "function": "_get_sector_text",
+      "delegates_to": "get_sector_text",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _get_sector_text(source: BuildQueueSource) -> str:"
+    },
+    {
+      "file": "game/ui/screens/new_game_setup_screen.py",
+      "line": 709,
+      "function": "validate_save_name",
+      "delegates_to": "NewGameSetupController.validate_save_name",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def validate_save_name("
+    },
+    {
+      "file": "game/ui/screens/new_game_setup_screen.py",
+      "line": 717,
+      "function": "generate_default_save_name",
+      "delegates_to": "NewGameSetupController.generate_default_save_name",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def generate_default_save_name() -> str:"
+    },
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "line": 217,
+      "function": "_load_star_image",
+      "delegates_to": "_layer_load_star_image",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _load_star_image(self, star) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "line": 241,
+      "function": "_load_planet_v3_image",
+      "delegates_to": "_layer_load_planet_v3_image",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _load_planet_v3_image(self, image_id) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "line": 244,
+      "function": "_load_dyson_sphere_image",
+      "delegates_to": "_layer_load_dyson_sphere_image",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _load_dyson_sphere_image(self) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/modifier_logic.py",
+      "line": 231,
+      "function": "calculate_snap_value",
+      "delegates_to": "ModifierLogicService.calculate_snap_value",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def calculate_snap_value(current, step, direction, min_val, max_val, smart_floor=False) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "line": 66,
+      "function": "get_crew_required",
+      "delegates_to": "_get_total_crew_requirement",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_crew_required(ship) -> Any:"
+    },
+    {
+      "file": "game/ui/screens/builder/weapons_viewmodel.py",
+      "line": 392,
+      "function": "calc_damage_at_range",
+      "delegates_to": "ab.get_damage",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "        def calc_damage_at_range(r) -> Any:"
+    }
+  ]
+}

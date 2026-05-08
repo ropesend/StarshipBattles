@@ -1,0 +1,37 @@
+[
+  {
+    "file": "game/core/json_utils.py",
+    "line": 104,
+    "call": "json.load"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 145,
+    "call": "json.load"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 186,
+    "call": "json.dump"
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 106,
+    "call": "json.load"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 229,
+    "call": "json.load"
+  },
+  {
+    "file": "game/strategy/data/galaxy_warp_generator.py",
+    "line": 368,
+    "call": "json.load"
+  },
+  {
+    "file": "game/strategy/engine/turn_state_snapshot.py",
+    "line": 131,
+    "call": "json.dump"
+  }
+]

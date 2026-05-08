@@ -1,0 +1,128 @@
+[
+  {
+    "file": "game/app.py",
+    "line": 520,
+    "context": "except Exception as e:  # Intentional broad catch: top-level crash handler, logs and re-raises",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/combat/combat_events.py",
+    "line": 161,
+    "context": "except Exception:  # Intentional broad catch: subscribers may raise anything; one buggy observer must not break combat event dispatch",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_engine.py",
+    "line": 279,
+    "context": "except Exception as e:",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_engine.py",
+    "line": 518,
+    "context": "except Exception:",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_engine.py",
+    "line": 678,
+    "context": "except Exception:  # Intentional broad catch: UI callback must never break turn processing (PROJ-308)",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_validator.py",
+    "line": 76,
+    "context": "except Exception as e:",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_validator.py",
+    "line": 92,
+    "context": "except Exception as e:",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/system_effects_collector.py",
+    "line": 233,
+    "context": "except Exception:  # Intentional broad catch: source-impl errors must not poison the pipeline",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/system_effects_collector.py",
+    "line": 241,
+    "context": "except Exception:  # Intentional broad catch: same as above",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 51,
+    "context": "except Exception:  # Intentional broad catch: store hooks must not crash save/load",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 60,
+    "context": "except Exception:  # Intentional broad catch: store hooks must not crash delete",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/race_environment_panel.py",
+    "line": 331,
+    "context": "except Exception as e:  # Intentional broad catch: the points label is non-critical UI; any failure (missing race attribute, bad budget config, etc.) blanks the label rather than crashing the panel.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/species_selector_mixin.py",
+    "line": 126,
+    "context": "except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; UI mixin must not crash species selection on bad data",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_detail_fmt.py",
+    "line": 394,
+    "context": "except Exception:  # Intentional broad catch: registry manager may be uninitialized; fall back to inline-ability inspection",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 202,
+    "context": "except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; editor opens without race-specific UI",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 303,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized; food editor opens without resource catalog",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 315,
+    "context": "except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; resolver returns None on failure",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 347,
+    "context": "except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; caller falls back to None",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/transfer_dialog.py",
+    "line": 383,
+    "context": "except Exception:",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/builder/event_bus.py",
+    "line": 66,
+    "context": "except Exception as e:  # Intentional broad catch: event handler isolation prevents handler bugs from crashing callers",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/image/openai_provider.py",
+    "line": 413,
+    "context": "except Exception:  # Intentional broad catch: image-size detection is best-effort; failure must not block return.",
+    "has_comment": false
+  }
+]

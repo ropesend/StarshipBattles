@@ -86,6 +86,25 @@
         "order_processor.py",
         "turn_engine.py"
       ]
+    },
+    {
+      "date": "2026-05-07",
+      "review_dir": "Reviews/results/2026-05-07_220215_audit_shrink",
+      "deep_review_shard": "02",
+      "seed": "shrink-2026-05-07_220215",
+      "production_loc": 161231,
+      "dead_code_files": 0,
+      "dead_code_functions": 0,
+      "dead_code_imports": 1,
+      "duplication_clusters": 30,
+      "estimated_shrinkable_loc": 230,
+      "top_hotspots": [
+        "game/ui/screens/race_setup/input_handler.py",
+        "game/ui/screens/planet_list_window.py",
+        "game/ui/screens/battle_setup/input_handler.py",
+        "game/ui/screens/planet_list_presets.py",
+        "game/ui/screens/battle_setup/panels/center_panel.py"
+      ]
     }
   ]
 }

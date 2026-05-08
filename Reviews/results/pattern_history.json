@@ -1,0 +1,26 @@
+{
+  "audit_name": "pattern",
+  "runs": [
+    {
+      "overall_compliance_pct": 96.2,
+      "critical": 2,
+      "major": 4,
+      "minor": 24,
+      "layer_violations": 0,
+      "patterns_accurate": 29,
+      "patterns_minor_diff": 4,
+      "patterns_stale": 2,
+      "patterns_wrong": 0,
+      "loc_ceiling_violations": 1,
+      "undocumented_patterns": 2
+    },
+    {
+      "critical": 2,
+      "major": 12,
+      "minor": 33,
+      "health_score": 94.0,
+      "layer_violations": 0,
+      "doc_accuracy_pct": 94.3
+    }
+  ]
+}
