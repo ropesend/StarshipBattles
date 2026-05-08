@@ -132,7 +132,7 @@ class TestBuildQueueScreenHotkeys:
         screen.selected_queue_indices = {0}
         screen.active_queue_source = MagicMock()
         screen.build_context = MagicMock()
-        screen._close = MagicMock()
+        screen._request_close = MagicMock()
         screen._refresh_items_list = MagicMock()
         screen._refresh_queue_display = MagicMock()
         # Bind the real method
@@ -140,11 +140,11 @@ class TestBuildQueueScreenHotkeys:
         return screen
 
     def test_escape_closes_screen(self, mapper):
-        """ESC triggers _close() via InputMapper."""
+        """ESC triggers _request_close() via InputMapper (PROJ-376 Phase 2 rename)."""
         screen = self._make_screen(mapper)
         event = _keydown(pygame.K_ESCAPE)
         screen._handle_keydown(event)
-        screen._close.assert_called_once()
+        screen._request_close.assert_called_once()
 
     def test_key_1_selects_complexes(self, mapper):
         """Key 1 switches to Complexes category."""
@@ -203,7 +203,7 @@ class TestBuildQueueScreenHotkeys:
         screen = self._make_screen(None)
         event = _keydown(pygame.K_ESCAPE)
         screen._handle_keydown(event)
-        screen._close.assert_not_called()
+        screen._request_close.assert_not_called()
 
     def test_close_button_tooltip(self, mapper):
         """Close button shows Esc tooltip."""

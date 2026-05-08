@@ -6,17 +6,22 @@ to ~530 lines. Handles all build queue screen creation, closing, and fleet BUILD
 management.
 
 PROJ-211: DesignLoaderAdapter now requires registry_provider. Uses lazy initialization.
+PROJ-376 Phase 2: Manager constructs ``BuildQueueScreen`` lazily on the first
+build-yard click and reuses the same instance for every subsequent open via
+``open_for_yard()``. The close callback no longer nulls the slot — callers
+that want "currently displayed" semantics use ``is_visible()``.
 """
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pygame
 
 from game.ui.screens.build_queue_screen import BuildQueueScreen
 from game.strategy.systems.design_library import DesignLibrary
 from game.ui.services.design_loader_adapter import DesignLoaderAdapter
+from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 from game.strategy.data.order_types import OrderType
 
 from game.core.protocols import is_planet, is_fleet
@@ -26,6 +31,7 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.core.protocols import IFleet
     from game.core.registry import GameRegistries
+    from game.core.hex_math import HexCoord
 
 logger = logging.getLogger(__name__)
 
@@ -68,13 +74,63 @@ class StrategyBuildQueueManager:
         """
         self._screen = screen
 
+    def _open_build_queue(
+        self,
+        yard,
+        hex_coord: 'HexCoord',
+        portrait_surface: Optional[pygame.Surface],
+        design_library: DesignLibrary,
+        design_loader: DesignLoaderAdapter,
+    ) -> None:
+        """Open the build queue overlay for ``yard``.
+
+        PROJ-376 Phase 2: Constructs ``BuildQueueScreen`` lazily on first
+        call and reuses the cached instance for every subsequent call via
+        ``open_for_yard()``. Re-binds the per-click ``DesignLibrary`` /
+        ``DesignLoaderAdapter`` (and the drag handler / portrait loader
+        references that hang off them) onto the cached instance so each
+        open reflects the manager's current empire context.
+        """
+        if self._screen.build_queue_screen is None:
+            self._screen.build_queue_screen = BuildQueueScreen(
+                self._screen.ui.manager,
+                build_context=None,
+                session=self._screen.session,
+                on_close_callback=self._on_build_queue_close,
+                portrait_surface=portrait_surface,
+                design_library=design_library,
+                design_loader=design_loader,
+                hex_coord=None,
+                galaxy=self._screen.session.galaxy,
+                empire=self._screen.current_empire,
+                input_mapper=self._screen.input_mapper,
+                facade=self._screen.facade,
+                initial_yard=None,
+            )
+        else:
+            # Re-bind per-click dependencies onto the cached instance. The
+            # manager constructs a fresh ``DesignLibrary`` / ``DesignLoader``
+            # per click (the empire context CAN differ — e.g. a
+            # navigate-from-empire-queue path uses ``current_empire`` while
+            # ``on_build_yard_click`` uses ``planet.owner_id``). The
+            # ``portrait_loader`` holds a reference to the library, so it
+            # must be rebuilt too. The drag handler's ``design_library``
+            # reference is rebound inside ``open_for_yard`` already, but
+            # only if the drag handler exists yet — covered by the fact
+            # that we only reach this branch after first construction.
+            screen = self._screen.build_queue_screen
+            screen.design_library = design_library
+            screen.design_loader = design_loader
+            screen.portrait_loader = BuildQueuePortraitLoader(
+                design_library, self._screen.session
+            )
+
+        self._screen.build_queue_screen.open_for_yard(
+            yard, hex_coord=hex_coord, portrait_surface=portrait_surface
+        )
+
     def on_build_yard_click(self) -> None:
         """Open build queue screen for selected planet."""
-        # Guard against double-open - if build queue is already open, ignore
-        if self._screen.build_queue_screen is not None:
-            logger.info("Build queue already open, ignoring click")
-            return
-
         if is_planet(self._screen.selected_object):
             planet = self._screen.selected_object
             if planet.owner_id == self._screen.current_empire.id:
@@ -95,21 +151,9 @@ class StrategyBuildQueueManager:
                 parent_sys = self._screen.session.galaxy.get_system_of_planet(planet)
                 hex_coord = parent_sys.global_location + planet.location if parent_sys else None
 
-                # Create screen with injected dependencies and hex context
-                # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
-                self._screen.build_queue_screen = BuildQueueScreen(
-                    self._screen.ui.manager,
-                    planet,
-                    self._screen.session,
-                    on_close_callback=self._on_build_queue_close,
-                    portrait_surface=portrait_surface,
-                    design_library=design_library,
-                    design_loader=design_loader,
-                    hex_coord=hex_coord,
-                    galaxy=self._screen.session.galaxy,
-                    empire=self._screen.current_empire,
-                    input_mapper=self._screen.input_mapper,
-                    facade=self._screen.facade,
+                self._open_build_queue(
+                    planet, hex_coord, portrait_surface,
+                    design_library, design_loader,
                 )
                 logger.info(f"Opened build queue for {planet.name}")
 
@@ -118,6 +162,12 @@ class StrategyBuildQueueManager:
 
         PROJ-69: Iterates all queue sources from the closing screen and
         manages BUILD orders for any fleet-type sources.
+
+        PROJ-376 Phase 2: The close-button / Esc handler in
+        ``BuildQueueScreen._request_close`` already invoked ``hide()``
+        before invoking this callback. The manager does NOT call
+        ``hide()`` again and does NOT null the screen slot — the
+        instance survives across opens for reuse.
         """
         logger.info("_on_build_queue_close() CALLED")
 
@@ -132,7 +182,8 @@ class StrategyBuildQueueManager:
                     processed_fleets.add(fleet_id)
                     self._handle_fleet_build_queue_close(fleet)
 
-        self._screen.build_queue_screen = None
+        # PROJ-376 Phase 2: do NOT null self._screen.build_queue_screen.
+        # The cached instance is reused on the next click via open_for_yard().
 
         # Show main UI again
         self._screen.ui.show_ui()
@@ -182,11 +233,6 @@ class StrategyBuildQueueManager:
             hex_coord: The HexCoord of the source's location.
             source: BuildQueueSource identifying the entity to open.
         """
-        # Guard against double-open
-        if self._screen.build_queue_screen is not None:
-            logger.info("Build queue already open, ignoring navigate")
-            return
-
         entity = source.owner_entity
         if entity is None:
             logger.warning("on_navigate_to_hex_build: source has no owner_entity")
@@ -208,31 +254,14 @@ class StrategyBuildQueueManager:
         # PROJ-211: Pass registries explicitly
         design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
-        # Create build queue screen with hex context
-        # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
-        self._screen.build_queue_screen = BuildQueueScreen(
-            self._screen.ui.manager,
-            entity,
-            self._screen.session,
-            on_close_callback=self._on_build_queue_close,
-            portrait_surface=portrait_surface,
-            design_library=design_library,
-            design_loader=design_loader,
-            hex_coord=hex_coord,
-            galaxy=self._screen.session.galaxy,
-            empire=self._screen.current_empire,
-            input_mapper=self._screen.input_mapper,
-            facade=self._screen.facade,
+        self._open_build_queue(
+            entity, hex_coord, portrait_surface,
+            design_library, design_loader,
         )
         logger.info(f"Navigated to build queue for {source.display_name} at hex {hex_coord}")
 
     def on_fleet_build_click(self) -> None:
         """Open build queue screen for selected fleet (PROJ-67: Fleet Space Yards)."""
-        # Guard against double-open
-        if self._screen.build_queue_screen is not None:
-            logger.info("Build queue already open, ignoring click")
-            return
-
         if is_fleet(self._screen.selected_object):
             fleet = self._screen.selected_object
             if fleet.owner_id == self._screen.current_empire.id and fleet.capabilities.has_space_shipyard:
@@ -252,20 +281,8 @@ class StrategyBuildQueueManager:
                 # PROJ-69: Use fleet.location as hex_coord for multi-queue discovery
                 hex_coord = fleet.location
 
-                # Create screen with fleet as build_context and hex context
-                # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
-                self._screen.build_queue_screen = BuildQueueScreen(
-                    self._screen.ui.manager,
-                    fleet,  # Fleet as build_context
-                    self._screen.session,
-                    on_close_callback=self._on_build_queue_close,
-                    portrait_surface=portrait_surface,
-                    design_library=design_library,
-                    design_loader=design_loader,
-                    hex_coord=hex_coord,
-                    galaxy=self._screen.session.galaxy,
-                    empire=self._screen.current_empire,
-                    input_mapper=self._screen.input_mapper,
-                    facade=self._screen.facade,
+                self._open_build_queue(
+                    fleet, hex_coord, portrait_surface,
+                    design_library, design_loader,
                 )
                 logger.info(f"Opened build queue for fleet {fleet.id}")

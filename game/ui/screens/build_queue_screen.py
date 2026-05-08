@@ -591,7 +591,7 @@ class BuildQueueScreen:
 
         # Close button
         elif event.ui_element == panels.btn_close:
-            self._close()
+            self._request_close()
 
         # FEAT-17: Pause/Unpause toggle for the active queue source
         elif event.ui_element == panels.btn_pause_queue:
@@ -718,7 +718,7 @@ class BuildQueueScreen:
             return False
         action = self._mapper.resolve(event, contexts=["build_queue"])
         if action == InputAction.BUILD_QUEUE_CLOSE:
-            self._close()
+            self._request_close()
             return True
         if action == InputAction.BUILD_QUEUE_ADD:
             if self.drag_handler.selected_design:
@@ -795,15 +795,20 @@ class BuildQueueScreen:
     # Lifecycle
     # -----------------------------------------------------------------------
 
-    def _close(self) -> None:
-        """Close the build queue screen."""
-        if self.planet_selection_window:
-            self.planet_selection_window.kill()
-            self.planet_selection_window = None
+    def _request_close(self) -> None:
+        """Hide the build queue screen and notify the close callback.
 
-        self.panels.background.kill()
-        self.manager.update(0)
+        PROJ-376 Phase 2: replaces ``_close()`` (which destroyed the panel
+        tree). Single source of truth for "user closed the screen": calls
+        ``hide()`` (panels survive across opens) then invokes ``on_close``
+        so the manager can run side-effect cleanup (FEAT-17 fleet BUILD
+        order auto-issue, restoring the galaxy UI).
 
+        Per decisions.md row 2026-05-07, ``hide()`` does NOT invoke
+        ``on_close``; the close-button / Esc handler is the only place
+        that pairs them.
+        """
+        self.hide()
         if self.on_close:
             self.on_close()
 

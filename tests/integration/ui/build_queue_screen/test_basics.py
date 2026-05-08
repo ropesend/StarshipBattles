@@ -183,12 +183,19 @@ def test_queue_display_updates(build_queue_screen):
 
 
 def test_close_callback_fires(build_queue_screen):
-    """Test that on_close callback is invoked."""
-    # Close the screen
-    build_queue_screen._close()
+    """Test that on_close callback is invoked.
+
+    PROJ-376 Phase 2: ``_close()`` was replaced by ``_request_close()``
+    (hide + on_close). The close-button / Esc handler routes through it.
+    """
+    # Close the screen via the public close path.
+    build_queue_screen._request_close()
 
     # Verify callback was called
     build_queue_screen.on_close.assert_called_once()
+    # Panels survive across opens — only visibility toggles.
+    assert build_queue_screen.panels.background.alive()
+    assert not build_queue_screen.panels.background.visible
 
 
 def test_planet_report_panel_exists(build_queue_screen):

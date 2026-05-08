@@ -16,14 +16,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Lifecycle seam — split `BuildQueueScreen.__init__` into shell + `open_for_yard()` (manager unchanged) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Instance reuse — manager constructs once, calls `open_for_yard()` thereafter; replace `_close()` with `hide()` / `show()` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Instance reuse — manager constructs once, calls `open_for_yard()` thereafter; replace `_close()` with `hide()` / `show()` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Acceptance + dead-code activation — close PROJ-373 acceptance bar, activate `reset_filters()`, address PROJ-373 review MIN findings | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-07
-**Active Phase:** Phase 1 complete; ready for Phase 2.
-**Last Action:** Phase 1 shipped — `BuildQueueScreen.__init__` split into shell + `open_for_yard(yard, *, hex_coord, portrait_surface=None)`; new `hide()`, `show()`, `is_visible()`, private `_construct_collaborators()` + `_rebuild_panels()`; `BuildQueueDragHandler.reset_state()` clears 5 fields; `handle_event` is visibility-gated. Manager unchanged. 10/10 lifecycle tests pass; 555/555 focused regression; sharded 19067 passed (+10 from new tests) / 1 pre-existing failure unchanged. **Note:** pygame_gui's `UIPanel` does not expose `set_visible()` — `hide()`/`show()` use `panel.hide()`/`panel.show()`; `is_visible()` reads `panel.visible`.
-**Next Action:** Phase 2 — manager rewires to lazy-construct + reuse instance.
+**Active Phase:** Phase 2 complete; ready for Phase 3.
+**Last Action:** Phase 2 shipped — `StrategyBuildQueueManager._open_build_queue(yard, hex_coord, portrait_surface)` helper consolidates the 3 entry points; lazy-construct on first click, reuse via `open_for_yard()` thereafter. Three `is_not_None` gates migrated to `is_visible()` (event_router :58, input_handler :55, strategy_screen :246). Close-button + Esc handler routes through new `_request_close()` (calls `hide()` then `on_close()`); old `_close()` removed. `_on_build_queue_close` no longer nulls the slot. `tests/unit/ui/screens/test_sub_window_hotkeys.py` updated for the rename. 19075 passed (+8 from Phase 2's restructured + new tests).
+**Next Action:** Phase 3 — editorial close-out, PROJ-373 plan.md backfill, deferred profiling acceptance is user-side.
 **Blockers:** None.
 
 ## Overview

@@ -242,8 +242,13 @@ class StrategyScreen:
 
         self.ui.draw(screen)
 
-        # Draw build queue screen overlay (including drag preview)
-        if self.build_queue_screen is not None:
+        # Draw build queue screen overlay (including drag preview).
+        # PROJ-376 Phase 2: gate on is_visible() — the cached screen
+        # persists across opens and must not draw while hidden.
+        if (
+            self.build_queue_screen is not None
+            and self.build_queue_screen.is_visible()
+        ):
             self.build_queue_screen.draw(screen)
 
     def handle_resize(self, width, height) -> None:

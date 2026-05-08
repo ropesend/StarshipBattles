@@ -51,8 +51,14 @@ class StrategyInputHandler:
         Args:
             event: Pygame event to process
         """
-        # If build queue screen is open, route events to it first
-        if self.scene.build_queue_screen is not None:
+        # If build queue screen is open, route events to it first.
+        # PROJ-376 Phase 2: gate on is_visible() — the manager caches the
+        # screen across opens, so "instance exists" no longer implies
+        # "currently displayed".
+        if (
+            self.scene.build_queue_screen is not None
+            and self.scene.build_queue_screen.is_visible()
+        ):
             self.scene.build_queue_screen.handle_event(event)
             return
 

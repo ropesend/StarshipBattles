@@ -501,3 +501,83 @@ def test_hide_kills_planet_selection_window_if_open(
 
     assert fake_window.kill.called
     assert screen.planet_selection_window is None
+
+
+# -------------------------------------------------------------------------
+# PROJ-376 Phase 2 — close routing tests
+# -------------------------------------------------------------------------
+
+
+def test_request_close_hides_and_invokes_on_close(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, hex_a,
+):
+    """PROJ-376 Phase 2: ``_request_close`` is the close-button entry point.
+
+    Calls ``hide()`` then ``on_close()``. Panels survive (no kill).
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    on_close = MagicMock()
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        session=session_with_planet,
+        on_close_callback=on_close,
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=planet_a,
+    )
+
+    assert screen.is_visible() is True
+
+    screen._request_close()
+
+    on_close.assert_called_once()
+    assert not screen.is_visible()
+    # Panels survive — only visibility toggled.
+    assert screen.panels.background.alive()
+
+
+def test_close_method_is_removed():
+    """PROJ-376 Phase 2: ``_close()`` was replaced by ``_request_close()``."""
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    assert not hasattr(BuildQueueScreen, '_close')
+    assert hasattr(BuildQueueScreen, '_request_close')
+
+
+def test_request_close_can_be_re_opened(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
+):
+    """PROJ-376 Phase 2: the cached instance is reusable after _request_close."""
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    galaxy_with_planet._global_hex_planets[hex_b] = [planet_b]
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        session=session_with_planet,
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=planet_a,
+    )
+    panels_id = id(screen.panels)
+
+    screen._request_close()
+    assert not screen.is_visible()
+
+    # Re-open at a different planet — same context type, panels reused.
+    screen.open_for_yard(planet_b, hex_coord=hex_b)
+    assert screen.is_visible()
+    assert id(screen.panels) == panels_id
+    assert screen.build_context is planet_b

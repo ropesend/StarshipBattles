@@ -49,14 +49,37 @@ class TestBuildQueueManagerInit:
 class TestOnBuildYardClick:
     """Test on_build_yard_click() method."""
 
-    def test_ignores_when_build_queue_already_open(self):
-        """Should do nothing if build queue is already open."""
+    def test_reopens_when_build_queue_already_constructed(self):
+        """PROJ-376 Phase 2: reopens reuse the cached instance via open_for_yard.
+
+        Pre-Phase-2 the manager had an entry guard that ignored clicks
+        when the screen slot was non-None. Post-Phase-2 the slot is
+        cached and reuses are routed through ``open_for_yard()``.
+        """
         manager, screen = _make_build_queue_manager()
-        screen.build_queue_screen = MagicMock()
 
-        manager.on_build_yard_click()
+        from game.strategy.data.planet import Planet
+        mock_planet = MagicMock(spec=Planet)
+        mock_planet.owner_id = 0
+        mock_planet.name = "Test Planet"
+        screen.selected_object = mock_planet
+        screen._get_object_asset = MagicMock(return_value=None)
+        screen.session.galaxy.get_system_of_planet.return_value = None
 
-        screen.ui.hide_ui.assert_not_called()
+        # Pre-populate the cached screen — simulate a prior open.
+        cached_screen = MagicMock()
+        screen.build_queue_screen = cached_screen
+
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
+             patch('game.ui.screens.strategy_build_queue_manager.is_planet', return_value=True):
+            manager.on_build_yard_click()
+
+        # No fresh construction — the cached instance is reused.
+        MockBQS.assert_not_called()
+        cached_screen.open_for_yard.assert_called_once()
+        screen.ui.hide_ui.assert_called_once()
 
     def test_ignores_when_no_selected_object(self):
         """Should do nothing when no object is selected."""
@@ -97,22 +120,89 @@ class TestOnBuildYardClick:
             manager.on_build_yard_click()
 
         MockBQS.assert_called_once()
+        # PROJ-376 Phase 2: open_for_yard runs on every open (including the first).
+        MockBQS.return_value.open_for_yard.assert_called_once()
         screen.ui.hide_ui.assert_called_once()
+
+    def test_second_click_calls_open_for_yard_not_construct(self):
+        """PROJ-376 Phase 2: manager constructs once, reuses across opens."""
+        manager, screen = _make_build_queue_manager()
+
+        from game.strategy.data.planet import Planet
+        mock_planet = MagicMock(spec=Planet)
+        mock_planet.owner_id = 0
+        mock_planet.name = "Test Planet"
+        screen.selected_object = mock_planet
+        screen._get_object_asset = MagicMock(return_value=None)
+        screen.session.galaxy.get_system_of_planet.return_value = None
+
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
+             patch('game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader'), \
+             patch('game.ui.screens.strategy_build_queue_manager.is_planet', return_value=True):
+            # First click — constructs.
+            manager.on_build_yard_click()
+
+            # MagicMock side effect: assigning return_value to the slot
+            # only happens if the manager actually constructs. Mirror the
+            # production behavior: the first open returned MockBQS instance,
+            # so it should now be the cached slot.
+            assert screen.build_queue_screen is MockBQS.return_value
+
+            # Second click — same yard, no fresh construction.
+            manager.on_build_yard_click()
+
+            assert MockBQS.call_count == 1
+            assert MockBQS.return_value.open_for_yard.call_count == 2
+
+    def test_close_callback_does_not_null_screen_slot(self):
+        """PROJ-376 Phase 2: close callback must NOT null the cached instance."""
+        manager, screen = _make_build_queue_manager()
+
+        cached = MagicMock()
+        cached.queue_sources = []
+        screen.build_queue_screen = cached
+        screen.selected_object = None
+
+        manager._on_build_queue_close()
+
+        # The cached instance survives across opens.
+        assert screen.build_queue_screen is cached
+
+    def test_close_callback_does_not_call_hide(self):
+        """PROJ-376 Phase 2: close-button handler is the only hide() caller.
+
+        ``_on_build_queue_close`` runs AFTER ``_request_close`` already
+        invoked ``hide()``; calling ``hide()`` again from the callback
+        would split the source of truth.
+        """
+        manager, screen = _make_build_queue_manager()
+
+        cached = MagicMock()
+        cached.queue_sources = []
+        screen.build_queue_screen = cached
+        screen.selected_object = None
+
+        manager._on_build_queue_close()
+
+        cached.hide.assert_not_called()
 
 
 class TestOnBuildQueueClose:
     """Test _on_build_queue_close() method."""
 
-    def test_clears_build_queue_screen(self):
-        """Should set build_queue_screen to None."""
+    def test_does_not_null_build_queue_screen(self):
+        """PROJ-376 Phase 2: cached instance survives across closes."""
         manager, screen = _make_build_queue_manager()
-        screen.build_queue_screen = MagicMock()
-        screen.build_queue_screen.queue_sources = []
+        cached = MagicMock()
+        cached.queue_sources = []
+        screen.build_queue_screen = cached
         screen.selected_object = None
 
         manager._on_build_queue_close()
 
-        assert screen.build_queue_screen is None
+        assert screen.build_queue_screen is cached
 
     def test_shows_ui(self):
         """Should call ui.show_ui()."""
@@ -201,14 +291,32 @@ class TestHandleFleetBuildQueueClose:
 class TestOnFleetBuildClick:
     """Test on_fleet_build_click() method."""
 
-    def test_ignores_when_build_queue_already_open(self):
-        """Should do nothing if build queue is already open."""
+    def test_reopens_when_build_queue_already_constructed(self):
+        """PROJ-376 Phase 2: reopens reuse the cached instance via open_for_yard."""
         manager, screen = _make_build_queue_manager()
-        screen.build_queue_screen = MagicMock()
 
-        manager.on_fleet_build_click()
+        from game.strategy.data.fleet import Fleet
+        mock_fleet = MagicMock(spec=Fleet)
+        mock_fleet.owner_id = 0
+        mock_fleet.has_space_shipyard = True
+        mock_fleet.location = MagicMock()
+        mock_fleet.id = 1
+        screen.selected_object = mock_fleet
+        screen._get_object_asset = MagicMock(return_value=None)
 
-        screen.ui.hide_ui.assert_not_called()
+        cached_screen = MagicMock()
+        screen.build_queue_screen = cached_screen
+
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
+             patch('game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader'), \
+             patch('game.ui.screens.strategy_build_queue_manager.is_fleet', return_value=True):
+            manager.on_fleet_build_click()
+
+        MockBQS.assert_not_called()
+        cached_screen.open_for_yard.assert_called_once()
+        screen.ui.hide_ui.assert_called_once()
 
     def test_ignores_non_fleet_selection(self):
         """Should do nothing when selected object is not a Fleet."""
@@ -246,17 +354,28 @@ class TestOnFleetBuildClick:
 class TestOnNavigateToHexBuild:
     """Test on_navigate_to_hex_build() method."""
 
-    def test_ignores_when_build_queue_already_open(self):
-        """Should do nothing if build queue is already open."""
+    def test_reopens_when_build_queue_already_constructed(self):
+        """PROJ-376 Phase 2: navigate reuses the cached instance via open_for_yard."""
         manager, screen = _make_build_queue_manager()
-        screen.build_queue_screen = MagicMock()
+        screen._get_object_asset = MagicMock(return_value=None)
+
+        cached_screen = MagicMock()
+        screen.build_queue_screen = cached_screen
 
         mock_hex = MagicMock()
         mock_source = MagicMock()
+        mock_source.owner_entity = MagicMock()
+        mock_source.display_name = "Test"
 
-        manager.on_navigate_to_hex_build(mock_hex, mock_source)
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
+             patch('game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader'):
+            manager.on_navigate_to_hex_build(mock_hex, mock_source)
 
-        screen.ui.hide_ui.assert_not_called()
+        MockBQS.assert_not_called()
+        cached_screen.open_for_yard.assert_called_once()
+        screen.ui.hide_ui.assert_called_once()
 
     def test_ignores_source_with_no_entity(self):
         """Should do nothing if source has no owner_entity."""
