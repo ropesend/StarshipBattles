@@ -358,17 +358,15 @@ _WARP_POINT_TYPES_CACHE = None
 def _load_warp_point_types() -> dict:
     global _WARP_POINT_TYPES_CACHE
     if _WARP_POINT_TYPES_CACHE is None:
-        from pathlib import Path
-        import json
+        # PROJ-381 Phase 3 (ERR-04-004): route through canonical
+        # json_utils so missing-file / corrupt-JSON / OSError all
+        # collapse into the same default-{} graceful-degradation
+        # contract. Drops the manual `path.exists()` guard.
+        from game.core.json_utils import load_json
         from game.core.paths import Paths
 
-        path = Path(Paths.WARP_POINT_TYPES_FILE)
-        if path.exists():
-            with path.open('r', encoding='utf-8') as f:
-                data = json.load(f)
-            _WARP_POINT_TYPES_CACHE = data.get('warp_point_types', {})
-        else:
-            _WARP_POINT_TYPES_CACHE = {}
+        data = load_json(Paths.WARP_POINT_TYPES_FILE, default={})
+        _WARP_POINT_TYPES_CACHE = data.get('warp_point_types', {})
     return _WARP_POINT_TYPES_CACHE
 
 

@@ -535,7 +535,12 @@ class TestBaseCommandHandler:
         assert fleet is mock_fleet
 
     def test_resolve_fleet_required_raises_when_not_found(self):
-        """_resolve_fleet_required raises ValueError when fleet not found."""
+        """_resolve_fleet_required raises ValidationException(MISSING_ENTITY) when fleet not found.
+
+        PROJ-381 Phase 3 (ERR-01-003): bare ValueError replaced with
+        structured ValidationException so handlers can branch on `code`.
+        """
+        from game.core.exceptions import ValidationException
         from game.strategy.engine.command_handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
@@ -543,13 +548,14 @@ class TestBaseCommandHandler:
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             handler._resolve_fleet_required(mock_session, 999)
 
         assert "Fleet not found" in str(exc_info.value)
 
     def test_resolve_fleet_required_validates_ownership(self):
-        """_resolve_fleet_required raises when owner_id doesn't match."""
+        """_resolve_fleet_required raises ValidationException when owner_id doesn't match."""
+        from game.core.exceptions import ValidationException
         from game.strategy.engine.command_handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
@@ -563,7 +569,7 @@ class TestBaseCommandHandler:
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             handler._resolve_fleet_required(mock_session, 1, empire_id=99)
 
         assert "does not belong" in str(exc_info.value)
@@ -599,7 +605,8 @@ class TestBaseCommandHandler:
         assert planet is None
 
     def test_resolve_planet_optional_raises_when_not_found_and_required(self):
-        """_resolve_planet_optional raises ValueError when not found and required=True."""
+        """_resolve_planet_optional raises ValidationException when not found and required=True."""
+        from game.core.exceptions import ValidationException
         from game.strategy.engine.command_handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
@@ -607,7 +614,7 @@ class TestBaseCommandHandler:
         mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = None
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             handler._resolve_planet_optional(mock_session, 999, required=True)
 
         assert "Planet not found" in str(exc_info.value)

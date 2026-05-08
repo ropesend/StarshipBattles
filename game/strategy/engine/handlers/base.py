@@ -16,6 +16,8 @@ from __future__ import annotations
 from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable, Optional
 import logging
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
 from game.core.validation import ValidationResult
 from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 from game.strategy.data.order_types import Order, OrderType
@@ -174,14 +176,25 @@ class BaseCommandHandler:
             Fleet object if found.
 
         Raises:
-            ValueError: If fleet not found or ownership validation fails.
+            ValidationException: If fleet not found (MISSING_ENTITY) or
+                ownership validation fails (OWNERSHIP_MISMATCH). PROJ-381
+                Phase 3 (ERR-01-003) replaced the previous bare
+                ValueError so handlers can branch on `code`.
         """
         fleet = session._get_fleet_by_id(fleet_id)
         if fleet is None:
-            raise ValueError("Fleet not found.")
+            raise ValidationException(
+                message="Fleet not found.",
+                code=ErrorCode.MISSING_ENTITY.value,
+                context={"fleet_id": fleet_id},
+            )
 
         if empire_id is not None and fleet.owner_id != empire_id:
-            raise ValueError("Fleet does not belong to this empire.")
+            raise ValidationException(
+                message="Fleet does not belong to this empire.",
+                code=ErrorCode.OWNERSHIP_MISMATCH.value,
+                context={"fleet_id": fleet_id, "empire_id": empire_id},
+            )
 
         return fleet
 
@@ -243,12 +256,17 @@ class BaseCommandHandler:
             Planet object if found, None if not found and required=False.
 
         Raises:
-            ValueError: If planet not found and required=True.
+            ValidationException: If planet not found and required=True
+                (MISSING_ENTITY). PROJ-381 Phase 3 (ERR-01-003).
         """
         planet = session._get_planet_by_id(planet_id)
         if planet is None:
             if required:
-                raise ValueError("Planet not found.")
+                raise ValidationException(
+                    message="Planet not found.",
+                    code=ErrorCode.MISSING_ENTITY.value,
+                    context={"planet_id": planet_id},
+                )
             return None
 
         return planet

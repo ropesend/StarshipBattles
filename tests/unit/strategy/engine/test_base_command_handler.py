@@ -1,10 +1,14 @@
 """Tests for BaseCommandHandler resolution methods.
 
 PROJ-176 Phase 2: Unit tests for fleet/planet resolution helpers.
+PROJ-381 Phase 3 (ERR-01-003): updated to expect ValidationException
+instead of ValueError; also asserts on the error `code` field.
 """
 import pytest
 from unittest.mock import Mock, MagicMock
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
 from game.strategy.engine.command_handlers import BaseCommandHandler
 
 
@@ -67,24 +71,29 @@ class TestResolveFleetRequired:
         assert fleet is mock_fleet
 
     def test_resolve_fleet_required_not_found_raises(self):
-        """Raises ValueError when fleet does not exist."""
+        """Raises ValidationException(MISSING_ENTITY) when fleet does not exist."""
         session = Mock()
         session._get_fleet_by_id.return_value = None
 
-        with pytest.raises(ValueError, match="Fleet not found"):
+        with pytest.raises(ValidationException, match="Fleet not found") as exc:
             BaseCommandHandler._resolve_fleet_required(session, fleet_id=999)
+        assert exc.value.code == ErrorCode.MISSING_ENTITY.value
+        assert exc.value.context.get("fleet_id") == 999
 
     def test_resolve_fleet_required_wrong_owner_raises(self):
-        """Raises ValueError when ownership validation fails."""
+        """Raises ValidationException(OWNERSHIP_MISMATCH) on owner mismatch."""
         session = Mock()
         mock_fleet = Mock()
         mock_fleet.owner_id = 1
         session._get_fleet_by_id.return_value = mock_fleet
 
-        with pytest.raises(ValueError, match="does not belong"):
+        with pytest.raises(ValidationException, match="does not belong") as exc:
             BaseCommandHandler._resolve_fleet_required(
                 session, fleet_id=100, empire_id=2
             )
+        assert exc.value.code == ErrorCode.OWNERSHIP_MISMATCH.value
+        assert exc.value.context.get("fleet_id") == 100
+        assert exc.value.context.get("empire_id") == 2
 
     def test_resolve_fleet_success_no_owner_check(self):
         """Returns fleet when found without owner validation."""
@@ -208,14 +217,16 @@ class TestResolvePlanetOptional:
         assert planet is None
 
     def test_resolve_planet_optional_required_true_raises(self):
-        """Raises ValueError for missing required planets."""
+        """Raises ValidationException(MISSING_ENTITY) for missing required planets."""
         session = Mock()
         session._get_planet_by_id.return_value = None
 
-        with pytest.raises(ValueError, match="Planet not found"):
+        with pytest.raises(ValidationException, match="Planet not found") as exc:
             BaseCommandHandler._resolve_planet_optional(
                 session, planet_id=999, required=True
             )
+        assert exc.value.code == ErrorCode.MISSING_ENTITY.value
+        assert exc.value.context.get("planet_id") == 999
 
 
 class TestResolveBuildEntity:

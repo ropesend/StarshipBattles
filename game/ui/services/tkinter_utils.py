@@ -139,7 +139,7 @@ def open_save_dialog(
             filetypes=filetypes,
             title=title
         )
-    except Exception as e:  # Intentional: file dialog is platform-dependent
+    except Exception as e:  # Intentional broad catch: file dialog is platform-dependent
         logger.warning(f"Save dialog failed: {e}")
         return None
 
@@ -172,7 +172,7 @@ def open_load_dialog(
             filetypes=filetypes,
             title=title
         )
-    except Exception as e:  # Intentional: file dialog is platform-dependent
+    except Exception as e:  # Intentional broad catch: file dialog is platform-dependent
         logger.warning(f"Open dialog failed: {e}")
         return None
 
@@ -203,7 +203,7 @@ def prompt_string(
             initialvalue=initialvalue,
             parent=root
         )
-    except Exception as e:  # Intentional: dialog is platform-dependent
+    except Exception as e:  # Intentional broad catch: dialog is platform-dependent
         logger.warning(f"String prompt failed: {e}")
         return initialvalue if initialvalue else None
 
@@ -226,6 +226,6 @@ def copy_to_clipboard(text: str) -> bool:
         root.clipboard_append(text)
         root.update()  # Required to finalize clipboard
         return True
-    except Exception as e:  # Intentional: clipboard is platform-dependent
+    except Exception as e:  # Intentional broad catch: clipboard is platform-dependent
         logger.warning(f"Clipboard copy failed (Tkinter): {e}")
         return False

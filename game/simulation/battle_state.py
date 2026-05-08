@@ -653,8 +653,20 @@ class BattleState:
 
     @classmethod
     def from_json(cls, json_str: str) -> 'BattleState':
-        """Deserialize from JSON string."""
-        data = json.loads(json_str)
+        """Deserialize from JSON string.
+
+        PROJ-381 Phase 3 (ERR-01-004): wrap json.JSONDecodeError as a
+        chained PersistenceException so corrupt-state failures are
+        distinguishable from other deserialization paths.
+        """
+        try:
+            data = json.loads(json_str)
+        except json.JSONDecodeError as e:
+            raise PersistenceException(
+                message=f"Corrupt BattleState JSON: {e}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={"json_length": len(json_str)},
+            ) from e
         return cls.from_dict(data)
 
     @classmethod

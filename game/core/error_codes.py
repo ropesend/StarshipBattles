@@ -71,6 +71,9 @@ class ErrorCode(Enum):
     OUT_OF_RANGE = "V004"
     """Value is outside allowed range."""
 
+    OWNERSHIP_MISMATCH = "V005"
+    """Entity exists but does not belong to the requesting empire (PROJ-381)."""
+
     # =========================================================================
     # State Codes (S001-S099)
     # =========================================================================
