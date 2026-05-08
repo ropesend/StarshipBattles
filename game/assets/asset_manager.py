@@ -151,7 +151,10 @@ class AssetManager:
                 img = self.load_external_image(image_path)
                 if img and img != self.get_missing_texture():
                     return img
-            except Exception as e:
+            except (FileNotFoundError, pygame.error, ValueError, OSError) as e:
+                # PROJ-381 Phase 2 (ERR-02-001): narrow to match
+                # load_planet_image so MemoryError / KeyboardInterrupt /
+                # other genuinely-fatal types are not silently swallowed.
                 logger.warning(f"Could not load star image {image_filename} at {size}px: {e}")
                 continue
                 

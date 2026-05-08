@@ -82,8 +82,8 @@ def planet_habitability_multiplier(
 
         try:
             race_config = race_registry.get_race(race_id)
-        except Exception as e:
-            logger.debug(
+        except Exception as e:  # Intentional broad catch: race_registry may raise any type from duck-typed get_race; warn-log and skip species to avoid poisoning colony output calculation
+            logger.warning(
                 "race_registry.get_race(%r) raised %s — skipping species for multiplier",
                 race_id, type(e).__name__,
             )

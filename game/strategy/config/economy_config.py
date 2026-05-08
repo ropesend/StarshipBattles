@@ -39,11 +39,11 @@ default at `DEFAULT_POPULATION_CONSUMPTION`. A fresh install missing
 """
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from game.core.json_utils import load_json
 from game.core.paths import Paths
 
 logger = logging.getLogger(__name__)
@@ -101,15 +101,11 @@ def load_economy_config(path: Optional[str] = None) -> EconomyConfig:
     import os
 
     resolved = path if path is not None else os.path.join(Paths.DATA_DIR, "economy.json")
-    try:
-        with open(resolved, "r", encoding="utf-8") as fh:
-            data = json.load(fh)
-    except (FileNotFoundError, OSError, json.JSONDecodeError) as e:
-        logger.warning(
-            "Failed to load economy config from %s: %s. Using defaults.",
-            resolved, e,
-        )
-        data = {}
+    # PROJ-381 Phase 2 (ERR-02-004): route through canonical json_utils so
+    # missing-file / corrupt-JSON / OSError all collapse into the same
+    # default-{} graceful-degradation contract used everywhere else in
+    # the strategy layer.
+    data = load_json(resolved, default={})
 
     if not isinstance(data, dict):
         logger.warning("economy.json did not contain a JSON object; using defaults.")

@@ -53,7 +53,7 @@ class TurnStateSnapshot:
         try:
             empire_dicts = [e.to_dict() for e in empires]
             galaxy_dict = galaxy.to_dict()
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: any to_dict() failure must become SNAPSHOT_FAILED PersistenceException for the turn rollback contract.
             raise PersistenceException(
                 f"Failed to capture turn state snapshot: {e}",
                 code=ErrorCode.SNAPSHOT_FAILED.value,

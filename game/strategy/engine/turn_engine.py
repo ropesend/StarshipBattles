@@ -276,7 +276,7 @@ class TurnEngine:
             # Already wrapped — re-raise as-is
             self._phase_times[key] += time.perf_counter() - t0
             raise
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: wraps unknown phase failures as EnginePhaseError(T001) and re-raises with phase_name + tick context; documented strategy-layer pattern.
             self._phase_times[key] += time.perf_counter() - t0
             logger.error(
                 "Sub-engine phase '%s' failed during tick processing",
@@ -484,7 +484,7 @@ class TurnEngine:
             Populates self.last_environmental_events (List[EnvironmentalEvent]) from storms.
             This list is cleared at turn start and readable after this method returns.
         """
-        from game.core.exceptions import EnginePhaseError
+        from game.core.exceptions import EnginePhaseError, PersistenceException
         from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
 
         # Store save_path for tick processing (PROJ-79)
@@ -515,7 +515,11 @@ class TurnEngine:
                     empires=empires,
                     galaxy=galaxy,
                 )
-            except Exception:
+            except PersistenceException:
+                # PROJ-381 Phase 2 (ERR-03-002): TurnStateSnapshot.capture
+                # is documented to raise PersistenceException(T003); narrow
+                # the catch so any unrelated escape (e.g. a future bug in
+                # session/empire lookup above) surfaces unmasked.
                 logger.error(
                     "Failed to capture pre-turn snapshot; aborting turn to "
                     "preserve state-integrity guarantees."

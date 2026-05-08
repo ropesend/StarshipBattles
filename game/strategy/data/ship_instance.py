@@ -66,7 +66,7 @@ def _build_full_hp_components_from_design(
 
     try:
         ship = ShipSerializer.from_dict(design_data, registries=registries)
-    except Exception as e:
+    except Exception as e:  # Intentional broad catch: ShipSerializer.from_dict() may raise various exception types on corrupt/incomplete design data; falling back to empty components is safe — callers treat empty dict as "no per-component data available".
         logger.warning(
             f"Could not materialize ship from design for component-state "
             f"population: {e}. Falling back to empty components."

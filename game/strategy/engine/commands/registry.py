@@ -99,16 +99,38 @@ class CommandSpec:
     serializer_codec: str | None = None
 
     def __post_init__(self) -> None:
+        # PROJ-381 Phase 2 (ERR-01-002): structured ValidationException so
+        # callers/handlers see a code + context rather than a string-only
+        # ValueError.
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import ValidationException
+
         if self.category not in ALLOWED_CATEGORIES:
-            raise ValueError(
-                f"CommandSpec({self.command_class.__name__}): "
-                f"category {self.category!r} not in ALLOWED_CATEGORIES."
+            raise ValidationException(
+                message=(
+                    f"CommandSpec({self.command_class.__name__}): "
+                    f"category {self.category!r} not in ALLOWED_CATEGORIES."
+                ),
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "command_class": self.command_class.__name__,
+                    "category": self.category,
+                    "allowed": sorted(ALLOWED_CATEGORIES),
+                },
             )
         if self.execution_model not in ALLOWED_EXECUTION_MODELS:
-            raise ValueError(
-                f"CommandSpec({self.command_class.__name__}): "
-                f"execution_model {self.execution_model!r} not in "
-                f"ALLOWED_EXECUTION_MODELS."
+            raise ValidationException(
+                message=(
+                    f"CommandSpec({self.command_class.__name__}): "
+                    f"execution_model {self.execution_model!r} not in "
+                    f"ALLOWED_EXECUTION_MODELS."
+                ),
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "command_class": self.command_class.__name__,
+                    "execution_model": self.execution_model,
+                    "allowed": sorted(ALLOWED_EXECUTION_MODELS),
+                },
             )
 
 
