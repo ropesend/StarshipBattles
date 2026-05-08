@@ -278,6 +278,13 @@ class BuildQueueScreen:
             self.queue_sources[0] if self.queue_sources else None
         )
         self.selected_queue_index = None
+        # PROJ-376 review LS-04: kill any orphan PlanetSelectionWindow before
+        # clearing the slot. Mirrors hide()'s pattern for the case where
+        # open_for_yard is invoked while the screen is still visible (rapid
+        # yard switch); production paths today always call hide() first, but
+        # this is defense-in-depth so the slot can never leak a live window.
+        if self.planet_selection_window is not None:
+            self.planet_selection_window.kill()
         self.planet_selection_window = None
 
         logger.info(
