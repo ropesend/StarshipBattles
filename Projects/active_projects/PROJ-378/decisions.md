@@ -21,5 +21,6 @@
 ## Future opportunities (logged, NOT in scope)
 
 - **Remove `Galaxy._ensure_state()` from production** (`galaxy.py:96-105`). After PROJ-378 ships, no remaining test calls `Galaxy.__new__(Galaxy)`, and `_ensure_state()` becomes dead code. A 5-minute follow-up project to delete it + update the property forwarder docstrings.
+  - **Resolved 2026-05-08:** `_ensure_state()` deleted. Property forwarders for `_next_planet_id` / `_next_fleet_id` simplified to direct `self._state.next_*_id` reads/writes. Verified all callers: production paths in `Galaxy.to_dict` / `from_dict` use `_state.*` directly; the only remaining test callers are on galaxies where `_state` is already set (real `Galaxy(radius=N)` in `test_roundtrip_galaxy.py`/`test_save_round_trip_phase3.py` or `make_galaxy_stub()` in `test_empire.py`). Sharded delta: 19077 passed / 1 pre-existing failure unchanged.
 - **Generalize the stub pattern to other heavy-init classes** (`GameSession`, possibly `Empire`). Each would get its own `make_<x>_stub()` factory in a sibling `conftest.py`. Out of scope for PROJ-378.
 - **Document `make_galaxy_stub()` in `docs/02_PATTERNS.md`** alongside the PROJ-279 fixture-bridge pattern. Marked optional in Phase 2.
