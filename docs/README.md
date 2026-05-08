@@ -80,10 +80,10 @@ Forbidden shortcuts:
 
 - Strict TDD: write or identify the failing test first, run it, then implement.
 - Do not revert unrelated changes; this repo often has parallel workers.
-- Python baseline is 3.14. Public functions/methods require return-type
+- Python baseline is 3.13. Public functions/methods require return-type
   annotations using PEP 604 style (`int | None`). Dunders are exempt.
 - Production files under `game/` have a 500 LOC ceiling; split by responsibility
-  when approaching it. UI screens have a 300 LOC soft budget.
+  when approaching it.
 - Broad `except Exception` requires `# Intentional broad catch: <reason>` on the
   same line.
 - No save-file migration. Old saves/replays are disposable; do not add
@@ -170,6 +170,11 @@ Forbidden shortcuts:
   `DesignWorkshopScreen`, etc.). Do not invent `BattleScene` or `StrategyScene`.
 - Workshop files live directly under `game/ui/screens/`; builder panels live under
   `game/ui/screens/builder/`.
+
+## UI Targets
+
+- Minimum supported resolution: 2560x1600.
+- Optimized for 4K: 3840x2160.
 
 ## Commands
 

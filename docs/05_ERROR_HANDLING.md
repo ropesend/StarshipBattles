@@ -141,6 +141,7 @@ Avoid `print()`, `traceback.print_exc()`, custom logger wrappers such as deleted
 - `EventBus(handler=None)`: owns a per-session handler.
 - `EventBus.log_event(event_type, **kwargs)`: emits structured event data.
 - Handler exceptions are caught with an intentional broad catch and logged so instrumentation cannot crash simulation.
+- When no handler is registered, `log_event()` is a no-op. Tests rely on this; do not raise on missing handler.
 
 The module-level `set_event_handler()`, `get_event_handler()`, and `log_event()` functions remain compatibility API. New strategy/session code should prefer explicit `EventBus` injection. Do not use structured events for diagnostic logging.
 

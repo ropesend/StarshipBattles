@@ -1,8 +1,6 @@
-# Strategy Layer System - Balanced Compact Agent Reference
+# Strategy Layer System
 
-> ALT2 draft for comparison. Source document unchanged: `docs/systems/strategy_layer.md`.
-> Goal: preserve agent-useful contracts, file locations, invariants, extension recipes, test guardrails, and bug-prone behavior while removing release-note archaeology, repeated prose, and long examples.
-> Checked against the original on 2026-05-07.
+> Last verified: 2026-05-07
 
 System documentation for the turn-based strategy layer.
 
@@ -485,7 +483,7 @@ Stabilizer pattern:
 
 - `game/strategy/services/stabilizer_registry.py` maps ability names + scopes to blocked `OrderType`s.
 - Superweapon handlers call the registry; do not hand-roll scans.
-- Thread `component_registry` through every superweapon handler. Without it, real facilities cannot reveal ability payloads and stabilizers silently fail.
+- Thread `component_registry` through every superweapon handler. Without it, the scanner returns nothing, every stabilizer is silently ineffective, and the UI may still show "Active" while the block never fires. Integration test guards this regression.
 
 System destruction pattern:
 
@@ -627,7 +625,7 @@ Galaxy size contract:
 
 - `GameConfig.system_count` is bounded `1 <= N <= 150`.
 - Default is `DEFAULT_SYSTEM_COUNT = 2`; New Game UI imports this constant.
-- `N = 1`: shared-system mode. All empires start in the one system on distinct planets; no warp lanes; layout retries up to 10 times if too few planets.
+- `N = 1`: shared-system mode. All empires start in the one system on distinct planets; no warp lanes; layout retries up to 10 times (perturbing `galaxy_seed` per attempt) if too few planets, with `Empire.colonies` cleared between attempts. A per-system `next_planet_in_system` counter prevents silent `Planet.owner_id` overwrites; if the planet supply is exhausted, assignment is skipped with a `WARNING` log rather than overwriting another empire's home.
 - `N >= 2`: separated mode. Every empire gets a distinct system; `len(players) > system_count` is invalid.
 - Home systems are distributed by hand-rolled linspace: `round(i * (N - 1) / (E - 1))`.
 - Warp connectivity for `N >= 2` is guaranteed by enumerating all system pairs and building a Kruskal MST; max 150 systems keeps cost trivial.
@@ -644,7 +642,7 @@ Files:
 - `game/strategy/data/race_point_budget.py`
 - `data/homeworld_presets.json`
 
-PROJ-283 replaced ad-hoc `RaceConfig` ideal/tolerance fields with registry-driven preferences. Every habitability axis is one `HabitabilityFactor` in `FACTOR_REGISTRY`; formulas and UI iterate the registry.
+Race environmental preferences are registry-driven: every habitability axis is one `HabitabilityFactor` in `FACTOR_REGISTRY`; formulas and UI iterate the registry. Legacy ad-hoc `RaceConfig` ideal/tolerance fields are gone — see the field-replacement table below.
 
 Core model:
 
@@ -665,8 +663,8 @@ Factor set: 17 total.
 Defaults worth preserving:
 
 - `gas.O2`: setpoint 21000 Pa, tolerance 5000.
-- `gas.N2`: setpoint 79000 Pa, tolerance 20000, because Earth-like defaults need inert diluent.
-- Other gases default setpoint 0 and tolerance 10000.
+- `gas.N2`: setpoint 79000 Pa, tolerance 20000. The non-zero N2 default is load-bearing: without it, an unconfigured Earth-like default race would silently flunk every Earth-like planet (8σ N2 mismatch drags composite score from 1.0 to 0.82).
+- Other gases default setpoint 0 (`"don't want this gas"`) and tolerance 10000.
 - Total weight is 6.8.
 
 Habitability formula:
@@ -681,6 +679,25 @@ Adding a new factor:
 1. Add to `_SCALAR_FACTORS` or `_GAS_FORMULAS` in `habitability_factors.py`.
 2. `calculate_habitability`, `RaceConfig.__post_init__`, race point budget, and `RaceEnvironmentPanel` pick it up automatically.
 3. Homeworld presets can omit it and keep the registry default.
+
+Homeworld preset shape (`data/homeworld_presets.json`, 11 presets):
+
+```json
+{
+  "id": "CONTINENTAL",
+  "name": "Continental",
+  "description": "Earth-like world with varied terrain and temperate climate",
+  "preferences": {
+    "gravity":     { "setpoint": 9.81,    "tolerance": 2.94 },
+    "temperature": { "setpoint": 293.0,   "tolerance": 50.0 },
+    "water":       { "setpoint": 0.6,     "tolerance": 0.2 },
+    "gas.O2":      { "setpoint": 21000.0, "tolerance": 5000.0 },
+    "gas.N2":      { "setpoint": 79000.0, "tolerance": 20000.0 }
+  }
+}
+```
+
+`apply_preset_to_config(preset, race_config)` overlays only listed factors — partial-override semantics so presets stay stable when new factors land in the registry.
 
 Race point budget:
 
@@ -755,7 +772,7 @@ Multi-species resolution:
 
 - `HappinessEngine` and `PopulationEngine` accept optional `race_registry: IRaceRegistry`.
 - With registry, each `pop.race_id` uses its own `RaceConfig`.
-- Without registry, fallback to `empire.race_config` only when `race_id` matches the empire primary race; non-matching species are skipped.
+- Without registry, fallback to `empire.race_config` only when `race_id` matches the empire primary race. When `race_id` does NOT match, the species is gracefully skipped (count and happiness unchanged) — no error, and the empire's primary `RaceConfig` is NOT silently substituted. This closed an earlier dual-return bug where non-primary species silently used the wrong `base_happiness` / `base_reproduction_rate`.
 - `GameSession.race_registry` lazily builds `CachedRaceRegistry(RaceLibrary())` and threads it through `TurnEngine`.
 
 UI:
@@ -801,13 +818,15 @@ Rule: if projection and engine math drift, update both; do not silence tests.
 UI surfaces:
 
 - `PlanetReportPanel` consumes `ColonyDemographicView` for per-species blocks and transposed resource grid.
-- Same render path handles owned and unowned planets; unowned planets show intrinsic deposit/storage rows and blank flow rows.
+- Resource grid shape: one column per resource (icon + 3-letter abbrev header), 8 metric rows: `Qty / Qual / Harvest / Upkeep / Yard / Net / Stored / Cap`. Adding a resource to `data/resources.json` adds a column with no UI code change.
+- Sign convention: harvest as-is, upkeep + yard rendered as drains via negation, net as-is. Net cells are colour-tinted (healthy/critical/zero).
+- Same render path handles owned and unowned planets; unowned planets show intrinsic `Qty / Qual / Stored / Cap` and blank (`-`) flow rows.
 - `EmpireTreasuryPanel` renders "Population Upkeep" from `EmpireEconomySnapshot.total_population_upkeep`, hidden when zero.
 - Uncolonized-planet habitability list scores resident species through `score_planet_for_race`, sorted best-fit first.
 
 ## 10. Universal IAbilitySource Framework
 
-After PROJ-300, any "thing at a hex/system projects effects" uses `IAbilitySource`.
+Any "thing at a hex/system projects effects" uses `IAbilitySource`.
 
 Pipeline:
 
@@ -845,7 +864,7 @@ Storm coordinate frame:
 
 - `StormAbilitySource.system` is set by the provider.
 - `affects_hex(global_hex)` translates local storm coordinates with `system.global_location`.
-- Tests should use non-zero `system.global_location` so local/global bugs are visible.
+- Test fixtures MUST use a non-zero `system.global_location`. With a zero origin, local and global coordinates coincide and a storm-coordinate translation bug will silently pass; three known fixtures rely on this rule.
 
 Combat consumption:
 

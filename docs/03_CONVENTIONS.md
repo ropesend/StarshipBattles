@@ -403,7 +403,7 @@ When replacing a system, delete the old one, update all call sites, and remove o
 
 ### Type Annotations
 
-- Agent/runtime target is Python 3.14. `pyproject.toml` currently declares `requires-python = ">=3.13"`; either way, new/touched code uses modern syntax.
+- Project baseline is Python 3.13+ (`pyproject.toml` declares `requires-python = ">=3.13"`). New/touched code uses modern syntax.
 - Public functions and methods require return annotations.
 - Use modern syntax on new/touched signatures: `int | None`, `list[int]`, `dict[str, T]`.
 - Do not introduce legacy `Optional[int]`, `List[int]`, or `Dict[str, T]` in new code.

@@ -28,6 +28,12 @@ Fixture naming convention:
 - Test UI builders: `Null{Foo}UiBuilder` for silent no-op construction and `Mock{Foo}UiBuilder` when tests assert builder calls.
 - Existing examples live under `tests/fixtures/*_ui_builder.py`.
 
+Production classes already on the two-stage recipe (do not re-retrofit):
+
+- `StrategyModalWindow` (base)
+- `RaceSetupScreen`, `NewGameSetupScreen`
+- `BuildQueueListWindow`, `OrdersWindow`, `FleetReportWindow`, `TransferDialog`
+
 Stale-doc warning: `tests/fixtures/README.md` still describes `ui_widget_factory.py` as "non-UIWindow only" and points at the old blocker. The current authoritative guidance is the factory docstring plus `docs/02_PATTERNS.md` section 33.
 
 ## LLM Background Calls

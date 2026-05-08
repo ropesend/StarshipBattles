@@ -11,10 +11,10 @@
     },
     "claude-discuss-start": {
       "agents": {
-        "claude": 4
+        "claude": 5
       },
-      "count": 4,
-      "last_used": "2026-05-07T03:32:18Z"
+      "count": 5,
+      "last_used": "2026-05-08T02:24:23Z"
     },
     "claude-doc-audit-apply": {
       "agents": {
@@ -60,10 +60,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 8
+        "codex": 9
       },
-      "count": 8,
-      "last_used": "2026-05-07T03:33:01Z"
+      "count": 9,
+      "last_used": "2026-05-08T02:24:50Z"
     },
     "codex-starship-analysis-review": {
       "agents": {
@@ -88,10 +88,10 @@
     },
     "codex-starship-project-system": {
       "agents": {
-        "codex": 2
+        "codex": 3
       },
-      "count": 2,
-      "last_used": "2026-05-07T03:35:01Z"
+      "count": 3,
+      "last_used": "2026-05-08T02:26:25Z"
     },
     "ocode-audit-shrink": {
       "agents": {
@@ -109,10 +109,10 @@
     },
     "ocode-review-request": {
       "agents": {
-        "ocode": 12
+        "ocode": 13
       },
-      "count": 12,
-      "last_used": "2026-05-08T00:43:23Z"
+      "count": 13,
+      "last_used": "2026-05-08T03:25:35Z"
     },
     "ocode-testcoverage-audit": {
       "agents": {

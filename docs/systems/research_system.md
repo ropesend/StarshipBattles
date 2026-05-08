@@ -151,7 +151,7 @@ Event types:
 Helpers:
 
 - `calculate_added_chance(volatility, rp)` returns `0.0` for `rp <= 0` and does not apply node price. Pass effective RP when price matters.
-- `estimate_turns_to_breakthrough(volatility, base_decay, rp)` estimates turns to 50 percent chance and returns infinity when RP or net gain is non-positive.
+- `estimate_turns_to_breakthrough(volatility, base_decay, rp)` returns `0.50 / (added_chance - base_decay)`; returns infinity when RP or net gain is non-positive.
 
 Core invariants:
 

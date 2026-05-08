@@ -76,6 +76,7 @@ Special mappings and warnings:
 - `shield_bonus_add` is a real stat key, but it is mainly used by battle-scoped external stats from `ModifierStack`/strategy effects. Do not confuse those auras with component-born entries in `data/modifiers.json`.
 - For new global `*_mult` stats, add a `StatKey` default first. `apply_modifier_effects()` guards global `multiply` and `add_to_mult` operations against missing or non-numeric keys.
 - A stat only changes an ability if that ability consumes it through `STAT_BINDINGS` or reads it explicitly with `get_effective_stat()`.
+- Strategy-only size/scaling stats (`harvest_rate_mult`, `local_storage_mult`, `production_rate_mult`) are resolved by `game/strategy/services/modifier_resolver.py`, not by `StatKey` or ability `STAT_BINDINGS`. Wire them through that resolver rather than treating them as combat ability stats.
 
 ## Operations
 
@@ -106,6 +107,14 @@ max(a, b)
 `^` is treated as power only in the modifier formula context. `ModifierEffectEvaluator.evaluate_modifier(..., stats_context=...)` can accept extra variables, and `depends_on` is schema-valid metadata, but the standard `Modifier.evaluate_effects()` path does not populate dependency variables. Do not add stat-referencing formulas unless you also add the runtime path and tests that provide the context.
 
 Validate formulas at minimum/default/maximum values. Watch for inverse formulas at or near zero and exponentials over large slider ranges.
+
+Sanity-check a definition with the evaluator:
+
+```python
+errors = ModifierEffectEvaluator.validate_modifier_definition(mod_def)
+if errors:
+    raise AssertionError(errors)
+```
 
 ## Restrictions
 
@@ -161,7 +170,22 @@ Add a normal component modifier:
 - Add/extend a failing test under `tests/regression/modifier_ability_snapshots/`.
 - Add the JSON entry.
 - If the effect uses an existing stat key, no Python code is needed.
-- If the UI needs custom stepping or a facing selector, add `MODIFIER_UI_CONFIG["your_modifier_id"]`.
+- If the UI needs custom stepping or a facing selector, add `MODIFIER_UI_CONFIG["your_modifier_id"]` in `game/ui/screens/builder/modifier_config.py`. Modifiers absent from the dict use `DEFAULT_CONFIG` (linear slider, 0.01 step). Minimal stepped-slider shape:
+
+  ```python
+  MODIFIER_UI_CONFIG = {
+      "your_modifier_id": {
+          "control_type": "linear_stepped",
+          "slider_step": 0.1,
+          "step_buttons": [
+              {"label": "<<", "value": 1.0, "mode": "delta_sub"},
+              {"label": "<",  "value": 0.1, "mode": "delta_sub"},
+              {"label": ">",  "value": 0.1, "mode": "delta_add"},
+              {"label": ">>", "value": 1.0, "mode": "delta_add"},
+          ],
+      },
+  }
+  ```
 
 Add a new stat key:
 

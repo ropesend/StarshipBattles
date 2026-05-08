@@ -372,11 +372,11 @@ Source: `game/simulation/components/abilities/planetary.py`.
 | `WarpFieldStabilizer` | same activation fields | `sector`, `system`; default `system` | Blocks open/close warp point actions in scope when active. |
 | `ResourceHarvestBooster` | `resource_type`, `multiplier=1.0`, `scope`, `stack_group` | `self`, `planet`, `sector`, `system`, `empire`, `allied_empire`; default `planet` | Multiplies matching resource harvest. |
 | `BuildRateBooster` | `multiplier=1.0`, `scope`, `stack_group` | `self`, `planet`, `sector`, `system`, `empire`, `allied_empire`; default `sector` | Multiplies build queue production rates. |
-| `AtmosphereModifier` | `modification_rate=0.0` | `self` | Processes atmosphere kg/turn; pressure conversion depends on planet data. |
-| `QualityImprovement` | `resource_type`, `improvement_rate=0.0` | `self` | Permanent deposit quality increase, capped by engine logic. |
-| `GravityModifier` | activation fields | `self` | Active target gravity reverts on deactivation/destruction. |
-| `WaterModifier` | `modification_rate=0.0` | `self` | Permanent water-coverage change per turn. |
-| `RadiationShield` | activation fields, `max_shielding=1.0` | `self` | Active artificial radiation shielding; reverts when inactive. |
+| `AtmosphereModifier` | `modification_rate=0.0` | `self` | Processes atmosphere kg/turn toward target gas composition. Pressure conversion: `Pa_per_kg = gravity / surface_area`. Multiple facilities stack additively. PERMANENT (persists if facility removed). Run once per turn by `AtmosphereEngine`. |
+| `QualityImprovement` | `resource_type`, `improvement_rate=0.0` | `self` | Permanent deposit quality increase per turn; caps at quality 100. |
+| `GravityModifier` | activation fields | `self` | Target gravity set via `SetGravityTargetCommand`; effect reverts to original on deactivation or facility destruction (NOT permanent). Applied by `PlanetModifierEffectEngine`. |
+| `WaterModifier` | `modification_rate=0.0` | `self` | PERMANENT change to planet water coverage; persists if facility removed. Processed once per turn by `WaterEngine`. |
+| `RadiationShield` | activation fields, `max_shielding=1.0` | `self` | Artificial radiation shielding while active; reverts to zero on deactivation (NOT permanent). `radiation_shielding` is additive with the planet's natural `magnetic_field` in habitability calculations. |
 
 ### Combat Modifiers From Strategic Sources
 
@@ -397,7 +397,7 @@ Source: `planetary.py`; collector: `system_effects_collector.py`; consumers incl
 
 | Key | Parameters | Aggregation | Notes |
 |---|---|---|---|
-| `EnvironmentalDamage` | `rate=0.0`, `damage_type="environmental"`, `scope` | Same `damage_type` MAX, different types SUM | Per-turn hull damage. Known/free-form types include plasma, radiation, thermal, environmental, warp, debris. |
+| `EnvironmentalDamage` | `rate=0.0`, `damage_type="environmental"`, `scope` | Same `damage_type` MAX, different types SUM | Per-turn hull damage. `damage_type` is free-form; known values: `plasma`, `radiation`, `thermal`, `environmental`, `warp`, `debris`. Storms typically use `sector` scope; star intrinsics like neutron-star radiation use `system`. Consumed by `environmental_hazard_engine.process_environmental_tick`. |
 | `FuelDrain` | `rate=0.0`, `scope` | Single group; rates aggregate via rate rules | Per-turn fuel drain. |
 
 Intrinsic source templates can include `chance` in `[0.0, 1.0]`. `game/strategy/services/ability_sources/intrinsic_roll.py::roll_intrinsic_abilities` removes `chance` from emitted runtime data. Missing `chance` consumes no RNG draw, preserving seeded determinism for registries that do not opt in.

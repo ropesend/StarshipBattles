@@ -414,6 +414,101 @@ python Tools/test_sharded/test_sharded.py
 | Strategy modal window | `StrategyModalWindow` with explicit `window_manager` |
 | Read-only component damage panel | `game.ui.panels.ship_detail_panel` grouping pattern |
 
+## Concrete RGB Values (Frequently Guessed)
+
+Names alone are insufficient when an LLM extends the palette without grepping the source. The values below are load-bearing - inline guessing produces visibly off-palette output. Source of truth remains `game/ui/colors.py`; the table here is a guard-rail.
+
+Health and damage:
+
+- `HP_HEALTHY = (0, 255, 0)` - above ~50% HP
+- `HP_DAMAGED = (255, 200, 0)` - middle band
+- `HP_CRITICAL = (255, 50, 50)` - low band
+- `HP_DESTROYED = (100, 100, 100)` - 0% HP
+- `MUTED_GREY = (130, 130, 150)` - manually disabled, not broken
+- `DAMAGE_GRADIENT = [(50,255,50), (100,220,50), (150,180,50), (200,140,50), (230,100,50), (255,60,50)]`
+
+Ship layers (schematic and overlay):
+
+- `LAYER_ARMOR (100,100,100)`, `LAYER_OUTER (200,50,50)`, `LAYER_INNER (50,50,200)`, `LAYER_CORE (220,220,220)`, `LAYER_LABEL (80,80,80)`
+
+Projectiles:
+
+- `PROJECTILE_STANDARD (255,200,50)`, `PROJECTILE_MISSILE (255,50,50)`, `PROJECTILE_BEAM (100,200,255)`, `PROJECTILE_GLOW (255,255,100)`
+
+Resources (visible in HUD bars and panels):
+
+- `RESOURCE_FUEL (255,165,0)`, `RESOURCE_ENERGY (100,200,255)`, `RESOURCE_AMMO (200,200,100)`, `RESOURCE_SHIELD (0,200,255)`, `RESOURCE_BIOMASS (100,255,100)`, `RESOURCE_METALS (192,192,192)`, `RESOURCE_ORGANICS (80,180,80)`, `RESOURCE_VAPORS (100,150,220)`, `RESOURCE_RADIOACTIVES (220,180,50)`, `RESOURCE_EXOTICS (180,80,200)`
+
+Teams (battle/setup):
+
+- Team 1: `TEAM_1_TEXT (100,200,255)`, `TEAM_1_BG (30,50,70)`, `TEAM_1_BANNER_BG (40,60,80)`, `TEAM_1_BORDER (100,150,200)`
+- Team 2: `TEAM_2_TEXT (255,100,100)`, `TEAM_2_BG (70,30,30)`, `TEAM_2_BANNER_BG (80,40,40)`, `TEAM_2_BORDER (200,100,100)`
+
+Ship classes (design report swatches):
+
+- `SHIP_CLASS_FIGHTER (255,150,50)`, `SHIP_CLASS_CORVETTE (100,200,100)`, `SHIP_CLASS_ESCORT (100,150,255)`, `SHIP_CLASS_DESTROYER (255,100,100)`, `SHIP_CLASS_CRUISER (200,100,255)`, `SHIP_CLASS_BATTLESHIP (255,200,50)`, `SHIP_CLASS_CARRIER (150,255,200)`, `SHIP_CLASS_DEFAULT (150,150,150)`
+
+Scene backgrounds:
+
+- `BG_BATTLE (10,10,20)`, `BG_GALAXY (15,20,30)`, `BG_MENU (20,20,30)`
+
+Common UI text (frequently misused):
+
+- `TEXT_LIGHT (220,220,220)`, `TEXT_MUTED (150,150,150)`, `TEXT_DIM (100,100,100)`, `TEXT_ERROR (255,100,100)`, `TEXT_SECONDARY (180,180,180)`, `TEXT_ITEM (200,200,200)`
+
+HUD speed indicators:
+
+- `SPEED_PAUSED (255,100,100)`, `SPEED_SLOWMO (255,200,100)`, `SPEED_FAST (100,255,100)`
+
+Strategy map outlines:
+
+- `HEX_OUTLINE_OCCUPIED (200,60,60)` - red occupied tiles
+- `HEX_OUTLINE_PLAYER_OWNED (220,220,220)` - white player-owned tiles
+- `FLEET_SELECTED (255,255,0)`, `PATH_MOVE (0,255,100)`, `PATH_WARP (255,50,50)`
+
+Planet types (map dots, fallbacks):
+
+- `PLANET_CONTINENTAL (70,130,70)`, `PLANET_ARID (180,140,80)`, `PLANET_PELAGIC (50,80,180)`, `PLANET_MAGMA (200,50,30)`, `PLANET_CRYO (180,200,220)`, `PLANET_BARREN (130,130,130)`, `PLANET_JOVIAN (200,160,100)`, `PLANET_ICE_GIANT (100,150,200)`, `PLANET_TERRESTRIAL (100,150,200)`, `PLANET_GAS_GIANT (200,150,100)`, `PLANET_OCEANIC (50,100,200)`
+
+Star spectrum (visible-band logical colors, not literal physics colors):
+
+- `SPECTRUM_GAMMA (200,0,255)`, `SPECTRUM_XRAY (148,0,211)`, `SPECTRUM_UV (75,0,130)`, `SPECTRUM_BLUE (0,0,255)`, `SPECTRUM_GREEN (0,255,0)`, `SPECTRUM_RED (255,0,0)`, `SPECTRUM_INFRARED (139,0,0)`, `SPECTRUM_MICROWAVE (160,82,45)`, `SPECTRUM_RADIO (128,128,128)`
+
+Modifier impact grid:
+
+- `MODIFIER_BUFF (100,255,100)`, `MODIFIER_DEBUFF (255,100,100)`, `MODIFIER_NEUTRAL (180,180,180)`
+
+Test results:
+
+- `TEST_PASS (80,255,120)`, `TEST_FAIL (255,80,80)`, `TEST_COMPLETE_NEUTRAL (255,200,100)`
+
+## Builder Theme Defaults (Concrete)
+
+`data/builder_theme.json` defaults that production widgets inherit unless overridden:
+
+- `normal_bg #1a1e24`, `hovered_bg #252a32`, `selected_bg #2a3545`, `dark_bg #12151a`, `disabled_bg #15181d`
+- `normal_text #c8d4e8`, `normal_border #3a4555`
+- `filled_bar #4488dd`, `unfilled_bar #252a35`
+- `window.#title_bar` background `#1e2838`
+- `horizontal_slider.#sliding_button` thumb: `#3366aa` normal, `#4488cc` hover
+
+Custom object IDs commonly used in panels:
+
+- `#stat_label` left-aligned muted (`#8899bb`)
+- `#stat_value` right-aligned highlight (`#aaccff`)
+- `#stat_unit` left-aligned dim (`#667799`)
+- `#header_label` bold 16px accent (`#6699cc`)
+
+## Design Principles
+
+1. Depth through value: darker for recessed, lighter for elevated.
+2. Cyan/blue accents are reserved for hover, selection, active focus, and key highlights. Avoid using them for default state.
+3. Borders are thin (1-2px) and muted by default; bright cyan only on hover or selection.
+4. Text contrast: brighter text on darker backgrounds. Reuse existing `TEXT_*` constants instead of inventing new shades.
+5. Corner radius is 3-5px for rounded pygame_gui controls. Match the surrounding selector instead of normalizing globally.
+6. Never inline RGB tuples in UI code; always reference a named constant.
+7. Place new constants under the matching `# === Category ===` comment block in `game/ui/colors.py`.
+
 ## Stale References Fixed Here
 
 - `ShipDetailPanel` is under `game/ui/panels/ship_detail_panel.py`, not `game/ui/screens/ship_detail_panel.py`.

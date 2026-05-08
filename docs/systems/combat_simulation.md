@@ -289,6 +289,8 @@ Ship
 
 List ownership is distinct from behavior managers: `ModifierManager`, `AbilityManager`, `ComponentHealthManager`, and `ComponentResourceManager`.
 
+Cache invalidation: `_components_cache_dirty` and `_weapon_cache_dirty` flags are set on every mutation; readers rebuild the cache lazily. Always use `get_all_components()` / `get_weapon_components_cached()` rather than reaching into the underlying layer dicts — only those accessors honour the dirty flag.
+
 ## Damage Pipeline
 
 `game/simulation/combat/damage_calculator.py::DamageCalculator.apply_damage()` stages:
@@ -303,7 +305,7 @@ Zero or negative damage returns immediately and must not heal or mutate state.
 
 Within a layer, component selection is weighted random by current HP. Components with more HP are more likely to be hit; each selected component absorbs `min(component.current_hp, remaining_damage)`.
 
-After hull damage, finalization runs `ship.recalculate_stats()`, `ship.update_derelict_status()`, and emits `SHIP_DERELICT` if the flag changed.
+After hull damage, finalization runs `ship.recalculate_stats()`, `ship.update_derelict_status()`, and emits `SHIP_DERELICT` if the flag changed. New code paths that mutate component state (HP changes, activation/deactivation, resource flips) must call `recalculate_stats()` before relying on stat reads — derived stats are cached and become stale otherwise.
 
 `CombatEventBus` emits `SHIELD_HIT`, `ARMOR_ABSORBED`, `COMPONENT_HIT`, `COMPONENT_DESTROYED`, `SHIP_DESTROYED`, and `SHIP_DERELICT`; events carry `DamageContext` attacker identity.
 
@@ -337,7 +339,9 @@ Do not recompute these independently in strategy.
 
 - `select_target(ship, candidates)` filters dead/friendly ships and picks the closest enemy.
 - `find_valid_target(ship, primary, secondaries, comp, weapon_ab)` checks range, arc, PDC missile/fighter rules, and seeker range.
-- `calculate_firing_solution(ship, comp, target)` uses direct aim for beams and `solve_lead()` for projectile/seeker intercepts.
+- `calculate_firing_solution(ship, comp, target)` uses direct aim for beams and `solve_lead(pos, vel, t_pos, t_vel, p_speed)` (quadratic intercept; returns `t > 0`) for projectile/seeker intercepts.
+
+PDC weapons can only target missiles and fighters (fighters detected via `vehicle_type == 'Fighter'`). Tag-driven detection only — never branch on a `PDCAbility` class string; use `Component.has_pdc_ability()`.
 
 `WeaponFiringSystem.fire_weapons(ship, context)` iterates components:
 
@@ -358,6 +362,12 @@ Per-tick maintenance in `ShipCombatEngine`:
 
 - Shield regen: `shield_regen_rate / 100` per tick, costing `shield_regen_cost / 100` energy.
 - Repair: `repair_rate / 100` per tick, repairing the component with lowest HP ratio.
+
+Speed and motion units:
+
+- Ship `max_speed = (thrust * 25) / mass` in px/tick.
+- `turn_speed = (raw * 25000) / mass^1.5` in degrees per 100 ticks; `rotate()` divides by 100 each tick.
+- Projectile runtime speed = `projectile_speed / PROJECTILE_SPEED_SCALE` (constant `PROJECTILE_SPEED_SCALE = 100`) in px/tick. A `projectile_speed=20000` field becomes 200 px/tick.
 
 ## Ability System
 

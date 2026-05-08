@@ -130,9 +130,12 @@ Configuration:
 - `game.core.config.LLMConfig`: timeout, retry policy, `MAX_CONCURRENT_CALLS=3`, `DEFAULT_MODEL="deepseek-v4-flash"`, User-Agent.
 - Retry policy: retry 5xx with backoff; never retry 429; SSL verification stays enabled.
 
-Error model: `LLMConfigError`, `LLMNetworkError`, `LLMResponseError`,
-`LLMRateLimited`, `LLMTimeoutError`, `LLMCancelled`, `LLMUnexpectedError`; all
-inherit `LLMException -> GameException`.
+Error model (codes in `game/core/exceptions.py`): `LLMConfigError` (L001),
+`LLMNetworkError` (L002), `LLMResponseError` (L003), `LLMRateLimited` (L004),
+`LLMTimeoutError` (L005), `LLMCancelled` (L006), `LLMUnexpectedError` (no code;
+wraps any non-LLM exception escaping a provider). All inherit
+`LLMException -> GameException`. `DEEPSEEK_API_KEY` is read per request and
+must not be cached on the provider instance, in logs, or in exception context.
 
 Reference consumer: `game/strategy/services/race_description_llm_controller.py`.
 It owns one `LLMBackgroundCall` per generated field, translates `CallStatus`
@@ -361,6 +364,12 @@ Key API:
 - `calculate_fleet_speed_with_strategic_mult(fleet, strategic_mult=1.0) -> float`
 - Module function `get_tick_interval(speed) -> int`
 
+Special cases for `calculate_ship_speed`:
+
+- Planetary complexes, satellites, and stations always return 0 (immobile).
+- Fighters always return 0 (carrier-based, no independent strategic movement).
+- Ships with no `StrategicMovement` ability return 0.
+
 Stale-reference correction: the old environment-object method name
 `calculate_fleet_speed_with_environment` is not current. Callers compute sector
 effects through `SystemEffectsCollector.aggregate_value_or(...)`, then pass the
@@ -427,7 +436,7 @@ orders from component abilities.
 Contract:
 
 - `ORDER_TO_ABILITY_MAP` is derived from the self-registering command registry, not a hardcoded table.
-- Movement order types complete with 0 action ticks.
+- `MOVEMENT_ORDER_TYPES = frozenset({OrderType.MOVE, OrderType.MOVE_TO_FLEET})` complete with 0 action ticks.
 - `ACTIVATE_ABILITY` and `DEACTIVATE_ABILITY` read `ability_name` from `order.target` and use `activation_time` / `deactivation_time`.
 - Fleet orders search ship components; planet action orders search target facility components.
 - Default fallback for unmapped/missing ability time is 1 tick.
@@ -482,10 +491,26 @@ API:
 - `aggregate_multipliers(entries) -> float`: intra-group MAX, inter-group MULTIPLY, default 1.0.
 - `aggregate_rates(entries) -> float`: intra-group MAX, inter-group SUM, default 0.0.
 
-Scopes include `planet`/`self`, `sector`, `system`, `empire`, plus allied/player/enemy
-variants where supported. `require_active=True` filters to components whose
-activation state is functionally active; stabilizer and combat-modifier checks
-use this.
+Scopes resolve to which planets are scanned:
+
+| Scope | Planets scanned |
+|---|---|
+| `planet` / `self` | Target planet only. |
+| `sector` | All empire-owned planets at the target's global hex via `galaxy.get_planet_global_hex` + `galaxy.get_planets_at_global_hex`. |
+| `system` | All empire-owned planets in the target's star system via `galaxy.get_system_of_planet`. |
+| `empire` | All empire colonies. |
+
+`require_active=True` filters to components whose `ComponentActivationState.phase`
+is `ACTIVE`. Stabilizer and combat-modifier checks use this; harvest and build
+boosters use the default `False` because they are always-on.
+
+Registry parameter is critical: facility `design_data` typically stores bare
+component IDs (`{"id": "stellar_stabilizer"}`) and ability data is looked up via
+the component registry. Callers that omit `registries` silently get nothing back,
+even from active stabilizers. The scanner's `_extract_ability` delegates to
+`component_inspector.extract_abilities_from_component`, which accepts either a
+`GameRegistries` or a plain components dict. Component iteration uses
+`iter_keyed_components` from `game.core.patterns.layer_iterator`.
 
 ### IAbilitySource and SystemEffectsCollector
 
@@ -546,10 +571,27 @@ Effect dict shape:
 }
 ```
 
-Stale-reference correction: the legacy AreaEffectManager / EnvironmentalEffects
+Aggregation rules: `aggregate_multipliers` is intra-group MAX, inter-group
+MULTIPLY, default 1.0; `aggregate_rates` is intra-group MAX, inter-group SUM,
+default 0.0. Multiplier-only and rate-only entries must not appear in the same
+group; mixed-kind groups are skipped with a warning. Ownerless sources may not
+declare ownership-aware scopes (`enemy_sector`, `allied_sector`, etc.); offending
+entries are skipped and logged. A component must not declare both combat scopes
+(self/fleet/team) and strategic scopes on the same ability instance.
+
+Intrinsic ability helpers (stars, warp points, archetypes, planets):
+
+- `roll_intrinsic_abilities(template, rng)` in `ability_sources/intrinsic_roll.py` converts `{"min": x, "max": y}` ranges to scalar rolls. Optional per-ability `chance` (default 1.0) gates the ability; on `chance < 1.0` the helper draws `rng.random()` and skips on failure. The `chance` key is stripped from the output. Templates without `chance` consume zero extra RNG draws to keep determinism byte-identical.
+- `format_intrinsic_source_label(entity_name, type_name)` in `ability_sources/labels.py` is the canonical label format.
+
+Stale-reference correction: the legacy `AreaEffectManager` / `EnvironmentalEffects`
 service wording is obsolete. Current effect display and environment behavior
 flow through `ability_iterator`, `SystemEffectsCollector`, and
-`effect_ability_metadata`.
+`effect_ability_metadata`. Storms now declare `abilities: Dict[str, Any]`
+matching the `components.json` shape; overlapping storms multiply per-provider
+(no shared `stack_group`) so two ion storms apply 0.5x · 0.5x = 0.25x shields.
+An adapter package AST guard forbids `get_default_registry_provider()` calls
+inside `ability_sources/`.
 
 Extension recipe for a new strategic effect:
 
@@ -602,13 +644,19 @@ population logic. Do not add parallel hardcoded factor lists.
 
 Point-buy API: `calculate_aptitude_cost`, `calculate_preferences_cost`,
 `calculate_reproduction_cost`, `calculate_total_cost`, `get_remaining_points`,
-`is_within_budget`, `get_aptitude_breakdown`, `get_breakdown`.
+`is_within_budget`, `get_aptitude_breakdown`, `get_breakdown`. Tolerance-deviation
+cost is `_exponential_cost(steps) = 2**steps - 1`. `calculate_reproduction_cost`
+uses linear-in-rate math (not integer steps) so the 0.5% floor returns -5
+exactly. `RaceConfig.preferences` is registry-keyed and is backfilled from
+`FACTOR_REGISTRY` defaults via `__post_init__`. `RaceConfig.base_reproduction_rate
+= 0.03`, `RaceConfig.base_happiness = 0.5`. The default 100-point budget covers
+all three cost categories combined.
 
 ### Colony Demographics Loop
 
 Locations and contracts:
 
-- `ColonySpeciesConfig(food_allocation=1.0, last_consumption_ratios={})`; `last_food_ratio` is `min(last_consumption_ratios.values())`, defaulting to 1.0 for empty dict.
+- `ColonySpeciesConfig(food_allocation=1.0, last_consumption_ratios={})`; `last_food_ratio` is a read-only computed `@property` returning `min(last_consumption_ratios.values())`, defaulting to 1.0 for empty dict (Liebig's Law). `to_dict` emits only `food_allocation`; `from_dict` always resets `last_consumption_ratios` to `{}`. `__post_init__` validates `food_allocation >= 0`. Tests that pre-set `last_food_ratio=X` migrate to `last_consumption_ratios={"organics": X}`.
 - `Planet.get_species_config(race_id)`: lazy-create-and-store species config.
 - `EconomyConfig(population_consumption: dict[str, float])`, `primary_resource`, `load_economy_config(path=None)`, `get_default_economy_config()`, `set_default_economy_config()`.
 - `data/economy.json`: current population consumption data.
@@ -625,11 +673,18 @@ Transient invariant: `ColonySpeciesConfig.last_consumption_ratios` is transient.
 edge-case values for zero population or zero allocation. Saving it would make
 post-load demographic state stale.
 
-Happiness formula: clamped to `[0, 3]`; base happiness times food ratio times
-habitability, plus configured surplus-food bonus when surplus is above 1.0.
+Happiness formula: `pop.happiness = clamp(raw, 0, 3)` where
+`raw = race.base_happiness * cfg.last_food_ratio * habitability` plus a
+surplus-food additive bonus `min(economy.surplus_food_bonus_cap,
+economy.surplus_food_bonus_per_x * (surplus - 1.0))` when `surplus > 1.0`,
+applied before clamp. `HappinessEngine` accepts optional `economy_config` and
+`race_registry` kwargs; both fall back to default lookups when None.
 
-Population formula: logistic growth with habitability-scaled carrying capacity
-and decline when `last_food_ratio < 1.0`.
+Population formula: `growth = (base_reproduction_rate * last_food_ratio) * P *
+(1 - P/K_eff) * happiness + decline_term`, where
+`K_eff = max(1.0, max_population * habitability)` and
+`decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when
+`last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` is a module constant.
 
 UI invariant: `FoodAllocationEditor` is population-driven, not
 facility-ability-gated. It mutates `ColonySpeciesConfig.food_allocation`
@@ -647,11 +702,13 @@ Locations:
 
 Contracts:
 
-- Multiplier is population-weighted mean habitability across resident species.
+- Multiplier is population-weighted mean of `score_planet_for_race(planet, race_for(pop))` across resident species.
 - Uncolonized, zero-population, or all-missing-race cases return 1.0.
-- Missing race IDs are excluded from numerator and denominator.
-- Computed once per colony per turn; cache warms on first read and invalidates at turn boundary.
-- Effective rate is multiplicative: `base_rate * booster_mult * habitability_mult`.
+- Missing race IDs are excluded from BOTH numerator and denominator (not scored as 0) — save-drift defence.
+- Computed once per colony per turn; cache warms on first read and invalidates at turn boundary. Cache fields `_cached_habitability_multiplier` and `_cached_multiplier_turn` are `init=False, compare=False` and are NOT emitted by `to_dict`; post-load planets re-warm on first read.
+- Effective rate is multiplicative: `base_rate * booster_mult * habitability_mult`. Stacks alongside `ResourceHarvestBooster` and `BuildRateBooster` aggregation from `StrategicAbilityScanner`.
+- `HarvestingEngine` and `ProductionEngine` accept optional `race_registry=None`; when None, the habitability hook short-circuits to 1.0 for legacy single-race compatibility.
+- `TurnEngine.process_turn` calls `set_current_turn(session.turn_number)` on both engines before the 100-tick loop, guarded with `getattr` so mock engines do not break.
 - Fleet production queues use 1.0 because they have no planet context.
 
 ### Race Registry
@@ -669,8 +726,11 @@ Invalidation invariant: registry does not watch files. Race editor save should
 call `invalidate(race_id)` when a session registry exists. External race file
 edits require restart.
 
-Companion API: `Empire.resident_species() -> set[str]` returns race IDs with
-count >= 1 on any colony and excludes extinct species.
+Companion API: `Empire.resident_species() -> set[str]` in
+`game/strategy/data/empire.py` returns race IDs with count >= 1 on any colony
+and excludes extinct species. A species with count=0 on colony A but count>=1 on
+colony B is included. Not cached; recomputing is cheap relative to invalidation
+complexity.
 
 ### Planet and Empire Economy Services
 
@@ -683,7 +743,9 @@ default injectable habitability calculator. Its cache lives on the planet's
 transient fields, not on the service.
 
 `PlanetEconomyProjector` (`planet_economy_projector.py`) is the read-only
-per-planet resource flux projector for UI/facade DTOs.
+per-planet resource flux projector for UI/facade DTOs. The historical home of
+`compute_planet_production` was `game/ui/panels/planet_report_panel.py`; the
+current home is here. There is no backward-compat re-export.
 
 Constructor: `PlanetEconomyProjector(*, registries, economy_config, race_registry)`;
 all three are required.

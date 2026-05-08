@@ -143,7 +143,7 @@ Other important fixture modules:
 
 Stale path to avoid: there is no top-level `tests/simulation/`; use `tests/unit/simulation/` or `tests/integration/simulation/`.
 
-Performance gate to preserve: `tests/performance/test_contested_hex_round_budget.py` locks the PROJ-320 combat-dispatch budget. The 5-hex, 3-empire, 2-fleet scenario must stay at no more than 150 dispatches per turn.
+Performance gate to preserve: `tests/performance/test_contested_hex_round_budget.py` locks the per-fleet-tick combat-dispatch budget. The 5-hex, 3-empire, 2-fleet scenario must stay at no more than 150 dispatches per turn.
 
 Known flakes from repo instructions: if 1-4 random failures appear around `test_colony_owner_id_matches_empire` or `test_fleet_operations.py` resource accumulation, rerun before deep triage.
 

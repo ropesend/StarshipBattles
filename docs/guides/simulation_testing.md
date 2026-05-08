@@ -611,7 +611,7 @@ CLI pass but Combat Lab fail:
 
 ## System Requirements
 
-- Python 3.14 project baseline.
+- Python 3.13+ project baseline.
 - `pygame-ce` for UI execution.
 - `scipy` for TOST calculations.
 
