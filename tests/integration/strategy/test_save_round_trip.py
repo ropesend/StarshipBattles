@@ -155,6 +155,60 @@ def test_committed_populated_matches_builder_output() -> None:
 
 
 # ---------------------------------------------------------------------------
+# PROJ-379 Phase 2: cross-process determinism (subprocess + PYTHONHASHSEED).
+# ---------------------------------------------------------------------------
+
+
+def _run_builder_in_subprocess(builder_name: str, hash_seed: str) -> str:
+    """Spawn a fresh Python process with PYTHONHASHSEED, return JSON string from the builder.
+
+    Catches set-iteration regressions that would pass the in-process
+    determinism tests above but vary across processes with random hash seeds.
+    """
+    import os
+    import subprocess
+    import sys
+
+    repo_root = Path(__file__).resolve().parent.parent.parent.parent
+    env = os.environ.copy()
+    env["PYTHONHASHSEED"] = hash_seed
+    result = subprocess.run(
+        [
+            sys.executable, "-c",
+            "import json; "
+            f"from tests.fixtures.saves._build_galaxy_fixture import {builder_name}; "
+            f"print(json.dumps({builder_name}(), indent=2, sort_keys=True))",
+        ],
+        capture_output=True, text=True, env=env, check=True,
+        cwd=str(repo_root),
+    )
+    return result.stdout
+
+
+def test_baseline_byte_deterministic_across_processes() -> None:
+    """PROJ-379 G1: build_baseline() output is byte-identical across processes
+    with varied PYTHONHASHSEED. Catches set-iteration regressions that pass
+    the in-process determinism test but fail under hash randomization.
+    """
+    a = _run_builder_in_subprocess("build_baseline", "0")
+    b = _run_builder_in_subprocess("build_baseline", "12345")
+    c = _run_builder_in_subprocess("build_baseline", "random")
+    assert a == b
+    assert b == c
+
+
+def test_populated_byte_deterministic_across_processes() -> None:
+    """PROJ-379 G1: build_populated() output is byte-identical across processes
+    with varied PYTHONHASHSEED.
+    """
+    a = _run_builder_in_subprocess("build_populated", "0")
+    b = _run_builder_in_subprocess("build_populated", "12345")
+    c = _run_builder_in_subprocess("build_populated", "random")
+    assert a == b
+    assert b == c
+
+
+# ---------------------------------------------------------------------------
 # PROJ-377 Phase 1: golden-save JSON fixture round-trip identity tests.
 # ---------------------------------------------------------------------------
 
