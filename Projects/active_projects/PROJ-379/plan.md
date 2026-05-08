@@ -17,7 +17,7 @@
 |-------|--------|-----------|------------|
 | 1. TDD-first hand-built fixture builder (tests + builder + JSONs + field-coverage guard) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Cross-process determinism (PYTHONHASHSEED + subprocess) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
-| 3. Delete `_capture_baseline.py` + cleanup | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
+| 3. Delete `_capture_baseline.py` + cleanup | Complete | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
 | 4. Closeout + cross-links + review cycle | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | Phase 3 |
 
 ## Current State
