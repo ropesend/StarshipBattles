@@ -262,7 +262,9 @@ Use for repeated image loads, component sprites, race/planet/star images, and ge
 
 ## 12. Configuration Classes
 
-Where: `game/core/config.py`, `game/strategy/data/*_config.py`, `game/ui/screens/builder_utils.py`.
+> **Last verified:** 2026-05-08
+
+Where: `game/core/config.py`, `game/strategy/data/*_config.py`, `game/ui/screens/builder_utils.py`, `game/strategy/config/economy_config.py`.
 
 Contracts:
 - Core config classes (`DisplayConfig`, `AIConfig`, `PhysicsConfig`, `BattleConfig`) are plain classes with class-level attributes. Do not add `@dataclass` decorators.
@@ -271,6 +273,12 @@ Contracts:
 - JSON-backed config modules: `classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`.
 - Config getters use `@lru_cache(maxsize=1)` and late-import `AstrophysicsLoader`; tests must call `get_*_config.cache_clear()` in setup/teardown when overriding data.
 - Fallback catches expected load/shape failures (`ImportError`, file/OS errors, key/type/value errors) and returns defaults.
+
+Three valid singleton-access flavors coexist:
+
+1. **`@lru_cache(maxsize=1)` getters** — used by the JSON-backed configs above. Tests call `.cache_clear()` to swap.
+2. **`DEFAULT_*` dict fallback** — module-level dict consulted when JSON load fails (e.g. `DEFAULT_CLASSIFICATION_CONFIG`).
+3. **Module-accessor pair (`get_default_*` / `set_default_*`)** — a `_default = None` module variable plus paired accessors, currently used by `game/strategy/config/economy_config.py:136-149`. Justification (quoted from the file): "Chose this over `@lru_cache` (as used by `ClassificationConfig`) because CLAUDE.md's module-accessor form gives tests a clean swap API without poking `.cache_clear()`." PROJ-382 Phase 4 (audit U6) elevates this to a documented variant despite being below the usual 3-site bar — the in-code justification is explicit and the variant is intentional rather than accidental.
 
 Use named config instead of inline magic numbers. Use JSON-backed config for gameplay tuning that designers/data should control.
 
@@ -710,6 +718,64 @@ To add a recalculation-time stat ability: define a contributor taking `(ship, co
 
 Boundary:
 - Phase-5 helpers such as `weapons.aggregate_targeting_scores`, `defense.apply_armor_and_repair_scores`, and `defense.init_armor_pool` remain imperative after the Phase-4 physics boundary. Folding them into the registry requires a future design.
+
+## 36. Re-Export Shim
+
+> **Last verified:** 2026-05-08
+
+Where (4 confirmed sites at PROJ-382 verification, 2026-05-07):
+- `game/ui/screens/race_setup_screen.py` (~31 LOC) — re-exports
+  `RaceSetupScreen`, `RaceRandomizer`, `RaceBrowserDialog` from
+  `game/ui/screens/race_setup/`.
+- `game/ui/screens/test_lab/test_run_details.py` (~12 LOC) — re-exports
+  `TestRunDetailsPanel` from `game/ui/screens/test_lab/details/`.
+- `game/simulation/components/component.py:395-405` — re-exports
+  loader symbols from `game/simulation/components/component_loader.py`.
+- `game/strategy/engine/command_handlers.py` — re-exports
+  `BaseCommandHandler` + `CommandHandlerRegistry` from
+  `game/strategy/engine/handlers/base.py`.
+
+Problem the pattern solves:
+- A module is decomposed into a sub-package (or sibling module) but
+  many existing imports still target the original path. Editing every
+  importer in one PR enlarges the change footprint and complicates
+  review/rollback. A thin re-export shim preserves the legacy import
+  path while the canonical implementation moves.
+
+Structure:
+- The shim file is small (≤ ~30 LOC) and contains only `from <new
+  path> import <name>` lines plus an `__all__` listing of the
+  re-exported names.
+- A header docstring identifies the canonical module and the project
+  / migration that introduced the shim.
+- Tests that exercise behavior import from the canonical module; only
+  tests covering the legacy import surface remain on the shim.
+
+When to use:
+- Decomposing a god-module into a sub-package mid-refactor.
+- Renaming a module while letting downstream call sites migrate
+  incrementally (e.g. across multiple PROJs).
+- Promoting an internal symbol to a new canonical home without a
+  hard, repository-wide rename pass in a single change.
+
+When NOT to use:
+- For "compatibility" with old save files or external API consumers
+  outside the repo — Rule 3 (Root Cause Fixes) prohibits compat shims
+  for either. Re-export shims are an internal-migration aid only.
+- To paper over genuinely unmigrated state. The shim is a temporary
+  scaffold tied to a tracked decomposition project; it does not
+  legitimize a permanent two-path import surface.
+- When the canonical home is uncertain. Decide before introducing the
+  shim; otherwise the shim becomes a permanent fixture.
+
+Retirement:
+- Each shim should reference the project responsible for migrating
+  its callers (e.g. PROJ-302 for race_setup, PROJ-382 audit for the
+  command_handlers shim).
+- When the legacy import path has zero remaining call sites under
+  `game/`, delete the shim file in the same PR that removes the last
+  caller. Audit guard: a periodic grep for shim contents is the
+  current detection mechanism; a future audit may add a static check.
 
 ## Critical Naming Reminders
 

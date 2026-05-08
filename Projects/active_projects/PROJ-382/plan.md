@@ -15,8 +15,8 @@
 |-------|--------|-----------|
 | 1. Critical — Facade bypass eradication (Pattern #5) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Major — Pattern #2/#10/#31 + naming + conv | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Minor — CQRS/#7/#12 fixes + doc drift | Active | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Strategic — Pattern doc-adds | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Minor — CQRS/#7/#12 fixes + doc drift | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Strategic — Pattern doc-adds | Active | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. LOC ceiling sweep (5 non-PROJ files) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
