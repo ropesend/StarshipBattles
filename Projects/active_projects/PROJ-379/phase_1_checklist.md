@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** none — first phase
 **Review Mode:** standard
 **Files (planned):**
@@ -21,15 +21,15 @@
 
 ## Reading
 
-- [ ] Read `Projects/active_projects/PROJ-379/plan.md`, `design.md`, `decisions.md` end-to-end.
-- [ ] Read `tests/fixtures/saves/_capture_baseline.py` end-to-end — the file being replaced.
-- [ ] Read `tests/fixtures/galaxy_fixtures.py::make_galaxy_stub` (PROJ-378 starting point).
-- [ ] Read `tests/fixtures/strategy_entities.py` for `create_test_*` factory patterns.
-- [ ] Read `tests/integration/strategy/test_save_round_trip.py` (existing 7 tests + `_build_minimal_planet` at lines 32-40, the `register_planet` + `system.planets.append` pattern at lines 60-61).
-- [ ] Read `game/strategy/data/planet.py` (47-field Planet dataclass).
-- [ ] Read `game/strategy/data/planet_serde.py::planet_to_dict` (the function the AST guard walks).
-- [ ] Read `game/strategy/data/star_system.py` (StarSystem `__init__`, `to_dict`, `from_dict`).
-- [ ] Read `game/strategy/data/galaxy_entity_registry.py:85-89` — `register_planet` assigns ID + indexes; **does NOT append to `system.planets`**. Caller must append explicitly.
+- [x] Read `Projects/active_projects/PROJ-379/plan.md`, `design.md`, `decisions.md` end-to-end.
+- [x] Read `tests/fixtures/saves/_capture_baseline.py` end-to-end — the file being replaced.
+- [x] Read `tests/fixtures/galaxy_fixtures.py::make_galaxy_stub` (PROJ-378 starting point).
+- [x] Read `tests/fixtures/strategy_entities.py` for `create_test_*` factory patterns.
+- [x] Read `tests/integration/strategy/test_save_round_trip.py` (existing 7 tests + `_build_minimal_planet` at lines 32-40, the `register_planet` + `system.planets.append` pattern at lines 60-61).
+- [x] Read `game/strategy/data/planet.py` (47-field Planet dataclass).
+- [x] Read `game/strategy/data/planet_serde.py::planet_to_dict` (the function the AST guard walks).
+- [x] Read `game/strategy/data/star_system.py` (StarSystem `__init__`, `to_dict`, `from_dict`).
+- [x] Read `game/strategy/data/galaxy_entity_registry.py:85-89` — `register_planet` assigns ID + indexes; **does NOT append to `system.planets`**. Caller must append explicitly.
 
 ---
 
@@ -39,8 +39,8 @@
 **File:** `tests/integration/strategy/test_save_round_trip.py`
 **Tests:** `pytest tests/integration/strategy/test_save_round_trip.py::test_baseline_fixture_is_byte_deterministic tests/integration/strategy/test_save_round_trip.py::test_populated_fixture_is_byte_deterministic --override-ini="addopts=" -v`
 
-- [ ] Add import at top: `from tests.fixtures.saves._build_galaxy_fixture import build_baseline, build_populated`. **This will fail at collection** because `_build_galaxy_fixture.py` does not yet exist — confirm the failure mode is `ModuleNotFoundError` or similar, not a deeper bug.
-- [ ] Add `test_baseline_fixture_is_byte_deterministic`:
+- [x] Add import at top: `from tests.fixtures.saves._build_galaxy_fixture import build_baseline, build_populated`. **This will fail at collection** because `_build_galaxy_fixture.py` does not yet exist — confirm the failure mode is `ModuleNotFoundError` or similar, not a deeper bug.
+- [x] Add `test_baseline_fixture_is_byte_deterministic`:
   ```python
   def test_baseline_fixture_is_byte_deterministic() -> None:
       """PROJ-379: re-running build_baseline() in the same process produces byte-identical output."""
@@ -48,8 +48,8 @@
       b = json.dumps(build_baseline(), indent=2, sort_keys=True)
       assert a == b
   ```
-- [ ] Add `test_populated_fixture_is_byte_deterministic` — mirror with `build_populated`.
-- [ ] Add `test_committed_baseline_matches_builder_output`:
+- [x] Add `test_populated_fixture_is_byte_deterministic` — mirror with `build_populated`.
+- [x] Add `test_committed_baseline_matches_builder_output`:
   ```python
   def test_committed_baseline_matches_builder_output() -> None:
       """PROJ-379: the checked-in JSON must equal builder output exactly.
@@ -60,8 +60,8 @@
       generated = json.dumps(build_baseline(), indent=2, sort_keys=True) + "\n"
       assert committed == generated
   ```
-- [ ] Add `test_committed_populated_matches_builder_output` — mirror with populated.
-- [ ] Run focused tests; **verify** all 4 new tests fail (collection error from missing module is acceptable).
+- [x] Add `test_committed_populated_matches_builder_output` — mirror with populated.
+- [x] Run focused tests; **verify** all 4 new tests fail (collection error from missing module is acceptable).
 
 **Notes:** Phase 2 adds a cross-process / `PYTHONHASHSEED=random` subprocess test on top of these in-process checks. The two together cover G1.
 
@@ -69,8 +69,8 @@
 **File:** `tests/integration/strategy/test_golden_fixture_field_coverage.py` (NEW)
 **Tests:** `pytest tests/integration/strategy/test_golden_fixture_field_coverage.py --override-ini="addopts=" -v`
 
-- [ ] Create new file with module docstring referencing PROJ-379 and the `decisions.md` skiplist row.
-- [ ] **Use `planet_to_dict` directly** to compute the emitted-keys set and the per-field default baseline (NOT a `dataclasses.fields()` introspection — see `decisions.md` row "Phase 2 guard pattern: serialized-baseline, not dataclass-defaults" for rationale). Implementation outline:
+- [x] Create new file with module docstring referencing PROJ-379 and the `decisions.md` skiplist row.
+- [x] **Use `planet_to_dict` directly** to compute the emitted-keys set and the per-field default baseline (NOT a `dataclasses.fields()` introspection — see `decisions.md` row "Phase 2 guard pattern: serialized-baseline, not dataclass-defaults" for rationale). Implementation outline:
   ```python
   import json
   from pathlib import Path
@@ -136,7 +136,7 @@
           f"populate them. See PROJ-379 decisions.md."
       )
   ```
-- [ ] Run focused test; **verify** it fails because either (a) the populated fixture file does not yet match the new builder shape, or (b) it asserts on missing fields. Either failure mode is acceptable for TDD red.
+- [x] Run focused test; **verify** it fails because either (a) the populated fixture file does not yet match the new builder shape, or (b) it asserts on missing fields. Either failure mode is acceptable for TDD red.
 
 **Notes:** Notice the path is `parent.parent.parent / "fixtures" / "saves"` — that already starts from `tests/integration/strategy/test_<file>.py` so three `parent` calls land in `tests/`, then `"fixtures" / "saves"` lands in `tests/fixtures/saves/`. (Earlier draft incorrectly added a `"tests"` segment, which would resolve to `tests/tests/fixtures/saves/`. Codex caught this in arc01_002.)
 
@@ -144,16 +144,16 @@
 **File:** `tests/fixtures/saves/_build_galaxy_fixture.py` (NEW)
 **Tests:** Tasks 1.1 + 1.2 tests
 
-- [ ] Create file with module docstring: PROJ-379 closes PROJ-377 MIN-002; hand-built fixtures are deterministic by construction; refer to `Projects/active_projects/PROJ-379/design.md` for rationale.
-- [ ] Imports: `from __future__ import annotations`, `import json`, `from pathlib import Path`, `from game.core.hex_math import HexCoord`, `from game.strategy.data.galaxy import Galaxy`, `from game.strategy.data.planet import Planet, PlanetType`, `from game.strategy.data.star_system import StarSystem, WarpPoint`, `from tests.fixtures.galaxy_fixtures import make_galaxy_stub`.
-- [ ] Define `_FIXTURE_DIR = Path(__file__).resolve().parent`.
-- [ ] Implement `build_baseline() -> dict`:
+- [x] Create file with module docstring: PROJ-379 closes PROJ-377 MIN-002; hand-built fixtures are deterministic by construction; refer to `Projects/active_projects/PROJ-379/design.md` for rationale.
+- [x] Imports: `from __future__ import annotations`, `import json`, `from pathlib import Path`, `from game.core.hex_math import HexCoord`, `from game.strategy.data.galaxy import Galaxy`, `from game.strategy.data.planet import Planet, PlanetType`, `from game.strategy.data.star_system import StarSystem, WarpPoint`, `from tests.fixtures.galaxy_fixtures import make_galaxy_stub`.
+- [x] Define `_FIXTURE_DIR = Path(__file__).resolve().parent`.
+- [x] Implement `build_baseline() -> dict`:
   - `galaxy = make_galaxy_stub(radius=30)`.
   - Hand-build 5 `StarSystem` instances at fixed `HexCoord(q, r)` coordinates with explicit names. `StarSystem.__init__(name, global_location, stars=[])` — empty stars are acceptable for the round-trip baseline (stars are an existing concern; the decorated planet fixture exercises full coverage).
   - Add 4 mutual warp links (MST: A-B, A-C, B-D, C-E) by appending `WarpPoint(destination_id=..., location=HexCoord(...))` to each system's `warp_points` list.
   - Register each system: `galaxy._registry.add_system(system)`.
   - Return `galaxy.to_dict()`.
-- [ ] Run tests from Task 1.1; the in-process determinism tests should now pass for baseline. Round-trip identity test for baseline (`test_round_trip_golden_baseline_fixture`) will fail until JSON is regenerated in Task 1.5.
+- [x] Run tests from Task 1.1; the in-process determinism tests should now pass for baseline. Round-trip identity test for baseline (`test_round_trip_golden_baseline_fixture`) will fail until JSON is regenerated in Task 1.5.
 
 **Notes:** The plan.md decisions.md row "PYTHONHASHSEED-immune build" applies: do NOT iterate any `set` to populate ordered fields. Use lists/tuples explicitly.
 
@@ -161,7 +161,7 @@
 **File:** `tests/fixtures/saves/_build_galaxy_fixture.py`
 **Tests:** Tasks 1.1 + 1.2 tests
 
-- [ ] Implement `build_populated() -> dict`:
+- [x] Implement `build_populated() -> dict`:
   - `galaxy = make_galaxy_stub(radius=50)`.
   - Hand-build 10 `StarSystem` instances at fixed coordinates with explicit names.
   - For 8 of the 10, hand-build 1-2 `Planet` instances. **For each planet:**
@@ -186,10 +186,10 @@
   - Add 6-9 warp links (MST + a few density edges) — explicit `WarpPoint(destination_id, HexCoord(...))` constructor calls.
   - Register systems via `galaxy._registry.add_system`; for each planet, `system.planets.append(planet)` then `galaxy._registry.register_planet(system, planet)`.
   - Return `galaxy.to_dict()`.
-- [ ] **Verify (sanity check before running the AST guard):**
+- [x] **Verify (sanity check before running the AST guard):**
   - `sum(len(s["system"].get("planets", [])) for s in d["systems"])` equals the expected planet count from the builder (catches "registered but not appended" bug).
   - Decorated planet's serialized form has every required non-default value.
-- [ ] Run Task 1.2 field-coverage test; iterate the decorated planet until it passes.
+- [x] Run Task 1.2 field-coverage test; iterate the decorated planet until it passes.
 
 **Notes:**
 
@@ -197,11 +197,11 @@
 **File:** `tests/fixtures/saves/_build_galaxy_fixture.py`
 **Tests:** Tasks 1.1 + 1.2 + existing round-trip identity tests in `test_save_round_trip.py`
 
-- [ ] Add `def main() -> None:` calling `build_baseline()` + `build_populated()`, dumping each via `json.dump(d, f, indent=2, sort_keys=True)` followed by a trailing newline (matching `read_text() == json.dumps(...) + "\n"` shape from Task 1.1's committed-vs-builder test).
-- [ ] Add `if __name__ == "__main__": main()`.
-- [ ] Run: `python tests/fixtures/saves/_build_galaxy_fixture.py`. Both fixture JSONs regenerated.
-- [ ] Run all Phase 1 tests + the existing 5 synthetic round-trip tests in `test_save_round_trip.py`. **Verify:** all 7 existing + 4 new byte-determinism + 1 new field-coverage = 12 tests pass.
-- [ ] **Verify (in-process determinism):** `python tests/fixtures/saves/_build_galaxy_fixture.py && md5sum tests/fixtures/saves/*.json && python tests/fixtures/saves/_build_galaxy_fixture.py && md5sum tests/fixtures/saves/*.json` — hashes match across the two invocations.
+- [x] Add `def main() -> None:` calling `build_baseline()` + `build_populated()`, dumping each via `json.dump(d, f, indent=2, sort_keys=True)` followed by a trailing newline (matching `read_text() == json.dumps(...) + "\n"` shape from Task 1.1's committed-vs-builder test).
+- [x] Add `if __name__ == "__main__": main()`.
+- [x] Run: `python tests/fixtures/saves/_build_galaxy_fixture.py`. Both fixture JSONs regenerated.
+- [x] Run all Phase 1 tests + the existing 5 synthetic round-trip tests in `test_save_round_trip.py`. **Verify:** all 7 existing + 4 new byte-determinism + 1 new field-coverage = 12 tests pass.
+- [x] **Verify (in-process determinism):** `python tests/fixtures/saves/_build_galaxy_fixture.py && md5sum tests/fixtures/saves/*.json && python tests/fixtures/saves/_build_galaxy_fixture.py && md5sum tests/fixtures/saves/*.json` — hashes match across the two invocations.
 
 **Notes:**
 
@@ -209,9 +209,9 @@
 **File:** N/A
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Sharded green; pass count = baseline + 5 (4 byte-determinism in `test_save_round_trip.py` + 1 field-coverage in `test_golden_fixture_field_coverage.py`).
-- [ ] `git status --short` confirms only Phase 1 files dirty.
-- [ ] Commit message: `PROJ-379 phase 1: TDD-first hand-built deterministic golden-save fixture builder`.
+- [x] Sharded green; pass count = baseline + 5 (4 byte-determinism in `test_save_round_trip.py` + 1 field-coverage in `test_golden_fixture_field_coverage.py`).
+- [x] `git status --short` confirms only Phase 1 files dirty.
+- [x] Commit message: `PROJ-379 phase 1: TDD-first hand-built deterministic golden-save fixture builder`.
 
 **Notes:**
 
@@ -219,13 +219,13 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All Phase 1 task checkboxes checked.
-- [ ] `_build_galaxy_fixture.py` exists with `build_baseline`, `build_populated`, `__main__`.
-- [ ] Both JSON fixtures regenerated and committed.
-- [ ] 4 byte-determinism tests + 1 field-coverage test all pass.
-- [ ] Existing 7 round-trip tests in `test_save_round_trip.py` still pass.
-- [ ] Re-running the script produces byte-identical JSON (verified by `md5sum`).
-- [ ] Sharded suite green.
-- [ ] Update status at top of this file to `Complete`.
-- [ ] Update plan.md phase table row to `Complete`.
-- [ ] Update plan.md Current State to point to Phase 2.
+- [x] All Phase 1 task checkboxes checked.
+- [x] `_build_galaxy_fixture.py` exists with `build_baseline`, `build_populated`, `__main__`.
+- [x] Both JSON fixtures regenerated and committed.
+- [x] 4 byte-determinism tests + 1 field-coverage test all pass.
+- [x] Existing 7 round-trip tests in `test_save_round_trip.py` still pass.
+- [x] Re-running the script produces byte-identical JSON (verified by `md5sum`).
+- [x] Sharded suite green.
+- [x] Update status at top of this file to `Complete`.
+- [x] Update plan.md phase table row to `Complete`.
+- [x] Update plan.md Current State to point to Phase 2.

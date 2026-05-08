@@ -11,9 +11,15 @@ The five fixture saves vary across:
 4. 10-system synthetic with planets.
 5. 20-system synthetic with planets + warp lanes.
 
-PROJ-377 Phase 1 adds two checked-in JSON golden-save fixtures (baseline +
-populated) plus matching round-trip identity tests. See PROJ-377 plan.md
-+ decisions.md for the format / seed / capture-script convention.
+PROJ-377 Phase 1 added two checked-in JSON golden-save fixtures (baseline +
+populated) plus matching round-trip identity tests.
+
+PROJ-379 Phase 1 (TDD-first) adds 4 byte-determinism tests targeting the
+new hand-built builder at tests/fixtures/saves/_build_galaxy_fixture.py
+(replaces _capture_baseline.py). The 4 tests fail with ModuleNotFoundError
+at collection until the builder is implemented in Phase 1 Tasks 1.3-1.5.
+
+PROJ-379 Phase 2 adds 2 cross-process subprocess + PYTHONHASHSEED tests.
 """
 from __future__ import annotations
 
@@ -24,6 +30,7 @@ from pathlib import Path
 from game.core.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.planet import Planet, PlanetType
+from tests.fixtures.saves._build_galaxy_fixture import build_baseline, build_populated
 
 
 _FIXTURE_DIR = Path(__file__).resolve().parent.parent.parent / "fixtures" / "saves"
@@ -105,6 +112,46 @@ def test_round_trip_20_systems_planets_warp() -> None:
             pass
     galaxy.generate_warp_lanes()
     _round_trip_assert(galaxy)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-379 Phase 1: byte-determinism + committed-fixture-vs-builder-output.
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_fixture_is_byte_deterministic() -> None:
+    """PROJ-379: re-running build_baseline() in the same process produces byte-identical output.
+
+    Cross-process determinism (against random PYTHONHASHSEED) is asserted by
+    the Phase 2 subprocess tests below; this test is the in-process check.
+    """
+    a = json.dumps(build_baseline(), indent=2, sort_keys=True)
+    b = json.dumps(build_baseline(), indent=2, sort_keys=True)
+    assert a == b
+
+
+def test_populated_fixture_is_byte_deterministic() -> None:
+    """PROJ-379: re-running build_populated() in the same process produces byte-identical output."""
+    a = json.dumps(build_populated(), indent=2, sort_keys=True)
+    b = json.dumps(build_populated(), indent=2, sort_keys=True)
+    assert a == b
+
+
+def test_committed_baseline_matches_builder_output() -> None:
+    """PROJ-379: the checked-in JSON must equal builder output exactly.
+
+    Catches the 'developer changed the builder, forgot to re-commit the JSON' case.
+    """
+    committed = (_FIXTURE_DIR / "galaxy_proj372_baseline.json").read_text()
+    generated = json.dumps(build_baseline(), indent=2, sort_keys=True) + "\n"
+    assert committed == generated
+
+
+def test_committed_populated_matches_builder_output() -> None:
+    """PROJ-379: the checked-in populated JSON must equal builder output exactly."""
+    committed = (_FIXTURE_DIR / "galaxy_proj372_populated.json").read_text()
+    generated = json.dumps(build_populated(), indent=2, sort_keys=True) + "\n"
+    assert committed == generated
 
 
 # ---------------------------------------------------------------------------
