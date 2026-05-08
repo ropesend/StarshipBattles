@@ -1,74 +1,150 @@
-# Pre-commit hooks
+# Pre-commit Hook Card
 
-This repo does not use the `pre-commit` framework — hooks live as raw scripts
-under `.git/hooks/` and each developer installs them on their own checkout
-(`.git/` is not tracked).
+This hook is a raw local Git hook in the checkout's Git hooks directory
+(usually `.git/hooks/`); this guide does not require the `pre-commit`
+framework. The CI copy of the same check is tracked in
+`.github/workflows/agent_coordination.yml`.
 
-## Available hooks
+## Hook Contract
 
-### `lint_test_files`
+`lint_test_files` runs:
 
-Flags any test file under `tests/` that imports zero `game.*` modules.
-Historically these have been files that re-implement production logic locally
-or trivial-pass tests with no real coverage. See
-`Tools/lint_test_files.py` for the linter and
-`Tools/lint_test_files_allowlist.txt` for legitimate exceptions
-(tools tests, infrastructure tests, data fixtures).
+```bash
+python Tools/lint_test_files.py
+```
 
-**Origin:** PROJ-326 Phase 1 (preventive measure surfaced by the PROJ-321
-follow-up review).
+Current behavior:
 
-## Installing the test-file linter as a pre-commit hook
+- Scans Python files under `tests/` by default.
+- Skips `conftest.py`, `__init__.py`, and `__pycache__/`.
+- Flags scanned test files with zero detected `game` imports unless allowlisted.
+- Treats AST parse failures as hard failures.
+- Exits `0` on no violations; exits `1` on violations or parse errors.
+- Uses AST inspection, not regex matching.
+
+Imports that satisfy the check:
+
+- `import game` or `import game.foo`
+- `from game import foo` or `from game.foo import bar`
+- Constant dynamic imports such as `importlib.import_module("game.foo")`
+  or `import_module("game.foo")`
+
+Runtime-built dynamic import names, comments, docstrings, and strings do not
+count. If a test genuinely needs a deferred import, include one constant
+`game` import somewhere or add a narrow allowlist entry with rationale.
+
+## Allowlist
+
+Legitimate exceptions live in `Tools/lint_test_files_allowlist.txt`.
+
+Format:
+
+- One repo-relative path or glob per line.
+- Blank lines and lines starting with `#` are ignored.
+- Inline comments after a path are not supported.
+- Globs use the linter's internal POSIX-style translator, including recursive
+  `**`; do not infer behavior from `pathlib.PurePosixPath.match`.
+
+Only allowlist tests that legitimately do not import `game.*`, such as tooling
+tests, test infrastructure, data fixtures, or tests whose nearest `conftest.py`
+provides the real `game.*` dependency. Do not allowlist tests that reimplement
+production logic locally; delete or rewrite them.
+
+## Install
 
 From the repo root:
 
 ```bash
-# Bash / Git Bash / WSL
-cat > .git/hooks/pre-commit <<'EOF'
+hook_path="$(git rev-parse --git-path hooks/pre-commit)"
+mkdir -p "$(dirname "$hook_path")"
+cat > "$hook_path" <<'EOF'
 #!/bin/sh
-# PROJ-326 zero-game-import test-file linter.
-# Skip on merge / rebase / cherry-pick states where partial trees are normal.
-if [ -f .git/MERGE_HEAD ] || [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
+# Skip transient Git states where partial trees are normal.
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    exit 0
+fi
+if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ] \
+   || [ -f "$(git rev-parse --git-path CHERRY_PICK_HEAD)" ] \
+   || [ -d "$(git rev-parse --git-path rebase-merge)" ] \
+   || [ -d "$(git rev-parse --git-path rebase-apply)" ]; then
     exit 0
 fi
 python Tools/lint_test_files.py
 EOF
-chmod +x .git/hooks/pre-commit
+chmod +x "$hook_path"
 ```
 
 ```powershell
-# PowerShell
+$hookPath = git rev-parse --git-path hooks/pre-commit
+New-Item -ItemType Directory -Force -Path (Split-Path $hookPath) | Out-Null
 @'
 #!/bin/sh
-if [ -f .git/MERGE_HEAD ] || [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    exit 0
+fi
+if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ] \
+   || [ -f "$(git rev-parse --git-path CHERRY_PICK_HEAD)" ] \
+   || [ -d "$(git rev-parse --git-path rebase-merge)" ] \
+   || [ -d "$(git rev-parse --git-path rebase-apply)" ]; then
     exit 0
 fi
 python Tools/lint_test_files.py
-'@ | Set-Content -Path .git/hooks/pre-commit -Encoding ASCII
+'@ | Set-Content -Path $hookPath -Encoding ASCII
 ```
 
-The hook fires on every `git commit`. To bypass for a single commit (rarely
-correct — prefer fixing the root cause) use `git commit --no-verify`.
+The `git rev-parse --git-path ...` form works for both hook installation and
+state checks in normal checkouts and linked worktrees. The old `.git/hooks/...`
+and `.git/MERGE_HEAD` style is stale for worktree-heavy agent flows because
+`.git` may be a pointer file.
 
-## CI integration
+## Run / Skip
 
-Add this step to the relevant workflow under `.github/workflows/`:
+```bash
+python Tools/lint_test_files.py
+python Tools/lint_test_files.py --root tests/
+python Tools/lint_test_files.py --allowlist Tools/lint_test_files_allowlist.txt
+python Tools/lint_test_files.py --strict
+```
+
+`--strict` bypasses the allowlist and is useful for audits. For one intentional
+local commit bypass, use:
+
+```bash
+git commit --no-verify
+```
+
+Prefer fixing the file or allowlist entry; hooks are local and bypassable.
+
+## CI
+
+`.github/workflows/agent_coordination.yml` already runs:
 
 ```yaml
 - name: Lint test files (zero-game-import detector)
   run: python Tools/lint_test_files.py
 ```
 
-The current candidate workflow is `.github/workflows/agent_coordination.yml`.
-The linter has no third-party dependencies — `python` alone is sufficient.
+If the linter or allowlist path changes, update that workflow, this guide, and
+`tests/unit/tools/test_lint_test_files.py` in the same change.
 
-## Notes
+## Extension Recipes
 
-- The linter exits 0 on a clean tree (with the seeded allowlist) — it should
-  not block existing development.
-- New zero-game-import test files added without an allowlist entry will fail
-  the hook. The fix is almost always to delete the file or rewrite it to
-  import what it claims to test; legitimate exceptions go in
-  `Tools/lint_test_files_allowlist.txt` with a comment explaining why.
-- The allowlist supports glob patterns (`**` for recursive matching). See the
-  file header for syntax.
+Adding a legitimate allowlist entry:
+
+1. Put rationale on a `#` comment line above the path.
+2. Add the narrowest repo-relative path or glob.
+3. Run `python Tools/lint_test_files.py`.
+
+Changing the linter contract:
+
+1. Update `Tools/lint_test_files.py`.
+2. Add or adjust focused coverage in `tests/unit/tools/test_lint_test_files.py`.
+3. Run the focused test file and `python Tools/lint_test_files.py`.
+4. Keep CI paths in `.github/workflows/agent_coordination.yml` in sync.
+
+Adding another raw hook command:
+
+1. Keep it deterministic, fast, offline, and read-only unless the command's job
+   is explicitly formatting.
+2. Skip merge, rebase, and cherry-pick states when partial trees are expected.
+3. Add a CI step if the invariant must hold for shared branches.

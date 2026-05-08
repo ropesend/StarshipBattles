@@ -1,1525 +1,550 @@
 # Combat Simulation System
 
-> **Last verified:** 2026-05-04 — PROJ-366: added § 11 "Background Verification" subsection documenting the `ReplayVerificationCoordinator` post-persist pipeline, sidecar schema, settings, no-recursion guarantee, Combat Lab fallback, and production wiring at `app_bootstrap.py` + run-loop shutdown ordering. Earlier same-day pass: PROJ-354A: § 11 documents `REPLAY_SCHEMA_VERSION` bump from `"1.0.0"` → `"2.0.0"` and adds "Per-Component End-State Fidelity" subsection covering the new `ComponentStateSpec.max_hp` and `ComponentStateSpec.status` (`ComponentStatus.name`) fields populated by `_extract_component_states`. Existing v1 replays surface as `version_drift` per `ReplayResolver`. Earlier same-day pass: Coverage backfill (T2-18 / T3-23 / T3-26 / T3-27): added § 11 "Replay Capture & Playback" (PROJ-312); added "Retreat Manager" subsection in § 1 (PROJ-29 SIM-03; clarifies visual-mode wiring vs headless `BoundaryEnforcementPhase`); added "Ship Component Manager" subsection in § 3 (PROJ-240 list-structure owner, distinct from `ModifierManager` / `AbilityManager` / health / resource peers). Earlier same-day pass: doc-audit fix to stale `planetary.py` ability list. 2026-05-02 — PROJ-320 rewrote § 9 "Performance follow-up (out of BUG-126 scope)" as "PROJ-320 (closed)". Per-fleet movement-opportunity combat triggering replaces the legacy per-tick scan; ~10× fewer dispatches at typical contested sectors. Performance regression gate at `tests/performance/test_contested_hex_round_budget.py`. Earlier same-day pass — issue #8: `SimulationBattleResolver` shortcut branches differentiated. The legacy `shortcut_no_capable` branch (both fleets have ships, no team has weapons) now runs the simulator at the truncated `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10` = 2 000 ticks) so the existing replay-capture pipeline records a real (brief) replay; `BattleResult.replay_id` is populated. `sole_survivor` (one team has ≥1 capable ship, the other has 0 ships at start) keeps its shortcut and stays non-replayable, but now ships `BattleResult.replay_unavailable_reason="sole_survivor"` so the Event Log button shows an honest tooltip ("No combat — one side had no ships.") instead of the legacy "older save." wording. Defensive `no_ships` (both fleets empty) keeps the shortcut with `replay_unavailable_reason="no_ships"`. New `max_ticks` kwarg on `build_strategy_battle_spec` swaps BOTH `absolute_max_ticks` AND `end_condition` (to `TickLimitCondition`) — required because the strategy default `TeamEliminatedCondition` cannot fire in a no-weapons battle. Earlier verification (2026-04-29): FEAT-26 documented the `replay_id` plumbing path (`BattleOutcome.replay_id` → `BattleResult.replay_id` → `COMBAT_RESOLVED.details["replay_id"]`); empty-string coercion at the `extract_outcome` seam keeps "no replay" a single signal. BUG-126 contract still current.
+> **Last verified:** 2026-05-08 -- Balanced compact replacement verified against `docs/systems/combat_simulation.md`, the compact alternate, and current source/test paths. Release-note history is intentionally omitted.
 
-System documentation for the real-time combat simulation layer.
+Current reference for the real-time combat simulation layer: battle entry, `BattleSpec`/`BattleOutcome`, ship mechanics, strategy integration, replay capture, and extension rules.
 
----
+## Core Contract
 
-## 0. Unified Entry (PROJ-269 + PROJ-270 — complete)
+Combat simulation is spec-driven. Callers compile domain state into a `BattleSpec`; simulation runs it and emits a `BattleOutcome`.
 
-> **Status:** Implementation complete as of PROJ-270. Every battle (Combat
-> Lab, Battle Setup, Strategy combat) compiles a `BattleSpec` via its
-> context-specific compiler and either:
-> - calls `run_battle(spec) -> BattleOutcome` directly (headless paths), or
-> - hands the spec to `BattleController` which drives a per-frame tick
->   loop for visual mode and calls `extract_outcome(engine, spec)` at
->   battle end to emit a `BattleOutcome`.
->
-> Every live battle produces a `BattleOutcome`. The legacy `BattleMode`
-> enum + `BattleModeHandler` hierarchy + the four `create_*_battle`
-> factories are deleted (PROJ-269). The `engine_ref["engine"] = engine`
-> closure trick Combat Lab used to capture the engine is also deleted
-> (PROJ-270 Phase 2). Validators consume `(BattleOutcome, CombatLabTelemetry)`.
->
-> Acceptance locked by `tests/unit/simulation/test_unified_entry_guard.py`:
-> no direct `engine.start*()` / `BattleEngine(...)` bypasses; no
-> `scenario.setup(engine)` methods; no "Legacy-compatible" markers;
-> `BattleController.run_headless` deleted; `get_outcome()` / `set_spec()`
-> present on `BattleController`. See §1 for the full flow.
+```text
+caller (Combat Lab / Battle Setup / Strategy)
+  -> context-specific spec compiler
+  -> BattleSpec
+  -> run_battle(spec, ai_factory, ship_builder, ...)
+  -> BattleEngine
+  -> BattleOutcome
+  -> optional spec.post_battle_hook(outcome)
+```
 
-`run_battle(spec: BattleSpec) -> BattleOutcome` at
-[`game/simulation/battle_runner.py`](../../game/simulation/battle_runner.py)
-is the target single entry point. Every battle — Combat Lab, Battle Setup,
-Strategy combat — builds a `BattleSpec` via a context-specific compiler and
-hands it here.
+The sanctioned headless entry is `game/simulation/battle_runner.py::run_battle`. It builds a `BattleEngine`, threads `spec.boundary` and `spec.modifier_stack`, starts teams with `engine.start_teams(...)`, drives ticks to completion, attaches telemetry according to `spec.telemetry_level`, extracts the outcome, then invokes the optional post-battle hook.
 
-**DTOs** (introduced in Phase 1):
+Visual battles use `game/simulation/battle_controller.py::BattleController.start_from_spec(spec, ai_factory, ship_builder=None, registry_provider=None, config=None, capture_context=None)`. It routes through the same `start_engine_from_spec` helper that `run_battle` uses, then the UI frame loop calls `controller.update()`. At battle end, `controller.get_outcome()` returns the real extracted `BattleOutcome`.
 
-| File | Contains |
-|------|----------|
-| `game/simulation/battle_spec.py` | `BattleSpec`, `TeamSpec`, `TaskForceSpec`, `SquadronSpec`, `ShipSpec`, `ComponentStateSpec`, `EntryVector`, `CombatPolicies`, `PostBattleHook` |
-| `game/simulation/battle_outcome.py` | `BattleOutcome`, `TeamOutcome`, `ShipOutcome`, `ShipStatus`, `EndReason`, `HitRecord`, `WeaponSummary`, `ShipStats`, `ModifierApplication` |
-| `game/simulation/combat/boundary.py` | `BoundaryRegion` protocol, `RectBoundary`, `CircleBoundary`, `UnboundedRegion`, `ExitPolicy` |
-| `game/simulation/combat/modifier_stack.py` | `ModifierStack`, `ModifierEntry` — source-tagged modifier bundle |
-| `game/simulation/combat/formation.py` | `FormationShape`, `FormationSpec` (resolver lands in Phase 4) |
-| `game/simulation/combat/telemetry.py` | `TelemetryLevel` (MINIMAL / NORMAL / DETAILED; subscribers land in Phase 5) |
+When `ship_builder is None`, both `run_battle` and `BattleController.start_from_spec` require `registry_provider`. Simulation code must not call `get_default_registry_provider()`; non-simulation composition roots may pass `registry_provider=get_default_registry_provider()`.
 
-**Spec compilers** (one per context):
+Do not reintroduce `BattleMode`, `BattleModeHandler`, `create_*_battle` factories, `BattleController.run_headless`, direct production `BattleEngine(...)`/`engine.start*()` entry paths, synthetic fallback outcomes, or scenario `setup(engine)` methods.
 
-| File | Function |
-|------|----------|
-| `combat_lab/spec_compiler.py` | `build_test_battle_spec(scenario, registries)` |
-| `game/ui/screens/battle_setup/spec_compiler.py` | `build_manual_battle_spec(ui_state, registries, ...)` |
-| `game/strategy/combat/spec_compiler.py` | `build_strategy_battle_spec(fleets, sector, system, empires, settings, registries)` |
+## Primary Files
 
-**Engine entry:**
+| Area | Current files |
+|---|---|
+| Spec/outcome DTOs | `game/simulation/battle_spec.py`, `game/simulation/battle_outcome.py` |
+| Runner/controller/config | `game/simulation/battle_runner.py`, `game/simulation/battle_controller.py`, `game/simulation/battle_config.py` |
+| Low-level visual service | `game/simulation/services/battle_service.py` |
+| Engine and end conditions | `game/simulation/systems/battle_engine.py`, `battle_end_conditions.py`, `tick_phase.py` |
+| Boundaries/modifiers/formations/telemetry | `game/simulation/combat/boundary.py`, `modifier_stack.py`, `formation.py`, `telemetry.py` |
+| Combat mechanics | `game/simulation/combat/damage_calculator.py`, `targeting_system.py`, `weapon_firing_system.py`, `fleet_aura_manager.py`, `combat_events.py` |
+| Weapon families | `game/simulation/combat/attack_contract.py`, `weapon_registry.py`, `families/{beam,projectile,seeker,pdc}.py` |
+| Ship entity | `game/simulation/entities/ship.py`, `ship_component_manager.py`, `ship_combat_engine.py`, `ship_stats.py`, `ship_stat_querier.py`, `ship_physics.py`, `ship_validator_helper.py` |
+| Components/abilities | `game/simulation/components/`, `game/simulation/components/abilities/` |
+| Replay | `game/simulation/replay/`, `game/strategy/services/replay_store.py`, `replay_resolver.py`, `replay_verification_coordinator.py` |
+
+## Entry Contexts
+
+| Context | Compiler |
+|---|---|
+| Combat Lab | `combat_lab/spec_compiler.py::build_test_battle_spec(scenario, registries)` |
+| Battle Setup | `game/ui/screens/battle_setup/spec_compiler.py::build_manual_battle_spec(ui_state, registries, ...)` |
+| Strategy | `game/strategy/combat/spec_compiler.py::build_strategy_battle_spec(fleets, sector, system, empires, settings, registries, ...)` |
+
+Each compiler owns its source domain and emits the complete `BattleSpec`: teams, formations, entry vectors, boundary, modifier stack, telemetry level, end condition, seed, and optional post-battle hook. Strategy attaches `game/strategy/combat/post_battle_hook.py::apply_outcome_to_fleets`; Combat Lab and Battle Setup usually do not.
+
+`build_strategy_battle_spec(..., max_ticks=N)` is a paired override: it sets both `absolute_max_ticks=N` and `end_condition=TickLimitCondition(max_ticks=N)`. This is required for weaponless truncated strategy encounters because the default `TeamEliminatedCondition` cannot end a battle where neither side can damage the other.
+
+## Visual Mode
+
+`BattleConfig` is only an operational-options bag for `BattleController`: `seed`, `end_condition`, `absolute_max_ticks`, `return_destination`, `show_results`, `headless`, `start_paused`, `enable_logging`, `allow_retreat`, `allow_reinforcements`, `replay_mode`, `replay_id`, and `captured_telemetry_level`.
+
+Battle identity and variance live on `BattleSpec`, not `BattleConfig`. Removed config-style fields must stay removed: `mode`, `team_modifiers`, `global_modifiers`, `environmental_effects`, `source_fleets`, `per_tick_callback`, `test_scenario`, and `map_bounds`.
+
+`ReturnDestination` is canonical at `game/core/return_destination.py`, with values `BATTLE_SETUP`, `TEST_LAB`, and `STRATEGY`. `game/simulation/battle_config.py` imports it for the dataclass default, but new code should import from `game.core.return_destination` directly.
+
+`BattleScreen` enters through `start_battle(controller)`, consumes a running controller, and shows results from `controller.get_outcome()`. Tests that need a minimal visual battle should use `tests/fixtures/battle.py::make_minimal_spec` plus `BattleController.start_from_spec`.
+
+`BattleService` remains a low-level wrapper around `BattleEngine` for visual controller integration. Its direct `create_battle`/`add_ship`/`start_battle` path is legacy 2-team shaped; the current spec-in path is `BattleController.start_from_spec -> start_engine_from_spec -> BattleService.adopt_started_engine`. Do not use `BattleService` as a new high-level battle entry.
+
+## Spec And Outcome
+
+`BattleSpec` contains frozen DTOs: `TeamSpec`, `TaskForceSpec`, `SquadronSpec`, `ShipSpec`, `ComponentStateSpec`, `EntryVector`, `CombatPolicies`, and `PostBattleHook`.
+
+`BattleOutcome` contains `TeamOutcome`, `ShipOutcome`, `ShipStatus`, `EndReason`, `HitRecord`, `WeaponSummary`, `ShipStats`, and `ModifierApplication`.
+
+Important invariants:
+
+- Every live battle emits a real `BattleOutcome`.
+- `BattleOutcome` does not carry a `winner` field. Engine/service winner queries use `BattleEngine.get_winner()`/`BattleService.get_winner()` (`team_id` or `-1` draw). Strategy maps `BattleOutcome` into `BattleResult.winner`, but strategy treats it as informational.
+- `BattleOutcome.replay_id` is `str | None`; empty strings from `NullCaptureSink` are coerced to `None` during extraction.
+- `BattleOutcome.teams[i].team_id` mirrors `BattleSpec.teams[i].team_id`.
+- Each `ShipSpec.instance_id` should have one matching `ShipOutcome`.
+- `ShipOutcome.components` is the authoritative per-component end state.
+
+Component identity is `(component_id, instance_index)`, so duplicate components on one ship stay independent across specs, outcomes, strategy persistence, and replay.
+
+`ComponentStateSpec` fields are `component_id`, `instance_index`, `current_hp`, `max_hp`, `status`, and `is_active`. `status` is a `ComponentStatus.name` string: `ACTIVE`, `DAMAGED`, `NO_CREW`, `NO_POWER`, `NO_FUEL`, or `NO_AMMO`. There is no component `DESTROYED` enum value; destruction is `current_hp == 0` plus inactive.
+
+## Tick Loop
+
+`BattleEngine` owns ships, AI controllers, projectiles, spatial grid, collision system, combat event bus, aura manager, and deterministic RNG.
+
+Startup:
+
+- Assign team IDs and initialize the team roster.
+- Create AI controllers through injected `IAIControllerFactory`, unless pre-supplied.
+- Initialize `SpatialGrid`, `ProjectileManager`, and `CollisionSystem`.
+- Run `_initialize_ship()` for event bus wiring, component update, stat recalculation, and derelict check.
+- Initialize `FleetAuraManager` with all ships and `spec.modifier_stack`.
+- Seed per-battle RNG.
+
+Per tick:
+
+1. Rebuild the spatial grid with alive ships and active projectiles.
+2. Update AI, ships, components, resources, physics, and fleet auras.
+3. Collect attacks emitted by ships.
+4. Process attacks by typed weapon family or launch request.
+5. Resolve ramming collisions.
+6. Update projectiles for movement, hit detection, and expiration.
+7. Sample telemetry, enforce boundaries, and evaluate end conditions.
+
+`add_ship_mid_battle()` is the only sanctioned path for reinforcements and fighter launch. It assigns an existing team ID, initializes the ship, creates/registers AI, and updates aura membership. Creating a brand-new team mid-battle is not supported.
+
+## Boundary, Retreat, And End Conditions
+
+`BattleSpec.boundary` is a `BoundaryRegion`; `None` means `UnboundedRegion()`. Shapes are `RectBoundary`, `CircleBoundary`, and `UnboundedRegion`, centered on `(0, 0)`.
+
+`BoundaryEnforcementPhase` runs in the tick-phase registry. If an alive ship exits:
+
+| `ExitPolicy` | Effect |
+|---|---|
+| `DESTROY` | Kill via remaining HP damage; outcome status `DESTROYED` |
+| `RETREAT` | Remove from `engine.ships`, append to `engine.retreated_ships`; outcome status `RETREATED` |
+| `BOUNCE` | Clamp to `closest_inside_point` and reflect velocity |
+| `NONE` | No-op |
+
+`game/simulation/managers/retreat_manager.py::RetreatManager` is visual-mode only. Its public API is `request_retreat`, `cancel_retreat`, `update`, `is_retreating`, `get_retreat_state`, and `set_on_ship_escaped`. Edge retreat navigates to the boundary; warp retreat charges over `WARP_CHARGE_TICKS` and may be interruptible. Headless strategy battles use boundary exit policy, not `RetreatManager`.
+
+End conditions implement `IEndCondition` and serialize through `to_dict()` plus `end_condition_from_dict()`: `TeamEliminatedCondition`, `TickLimitCondition`, `TeamIncapacitatedCondition`, `NeverCondition`, `EscapeCondition`, `ShipDestroyedCondition`, `AnyCondition`, and `AllCondition`. `BattleEngine.absolute_max_ticks` is an independent safety ceiling.
+
+For N teams, `TeamEliminatedCondition` fires when at most one team has alive ships; with `check_derelict=True`, derelict ships count as eliminated. `TeamIncapacitatedCondition` fires when at most one team can still fight or move.
+
+## Formations And Teams
+
+`FormationResolver` resolves starting positions from `TaskForceSpec.formation`, team `EntryVector(origin, facing)`, and ship order.
+
+Supported shapes: `LINE_ABREAST`, `LINE_ASTERN`, `WEDGE`, `ECHELON_LEFT`, `ECHELON_RIGHT`, `SCREEN`, `CARRIER_PROTECTED`, and `CUSTOM`.
+
+World-space conversion: local position -> rotate by `facing` degrees counter-clockwise -> translate by `origin` -> clamp to boundary. Each ship angle equals entry-vector facing.
+
+Default formation is chosen from dominant `design_role`: carriers use `CARRIER_PROTECTED`, strike roles use `WEDGE`, defenders use `LINE_ABREAST`, scouts use `LINE_ASTERN`, and mixed/unknown/ties use `LINE_ABREAST`.
+
+All three entry contexts support 2 to 8 teams. The engine itself has no hard team cap, but the UI/spec compilers and `resolve_team_entry_vectors` cap teams at 8. N-team entry vectors preserve the west/east placement for 2 teams and use an inward-facing ring for 3 or more.
+
+AI treats every non-self team as hostile. There are no alliances or enemy-team preferences inside the battle engine.
+
+## Strategy Combat
+
+Strategy conflict resolution makes one `IBattleResolver.resolve_battle(...)` call per contested sector, regardless of how many empires are present. Allied fleets are grouped by `owner_id` into one team by the strategy spec compiler.
 
 ```python
-from game.simulation.battle_runner import run_battle
-
-spec = build_test_battle_spec(scenario, registries)
-outcome = run_battle(
-    spec,
-    ai_factory=AIControllerFactory(),
-    per_tick_callback=on_tick,        # optional — rendering / observation
-)
+IBattleResolver.resolve_battle(
+    fleets,
+    modifiers=None,
+    seed=None,
+    registries=None,
+    environmental_effects=None,
+    empires=None,
+) -> BattleResult
 ```
 
-`ship_builder` is an optional override. Production callers omit it — `run_battle` pulls the default `IShipMaterializer` from ApplicationContext (`InstanceBackedMaterializer` in production; Combat Lab installs `DesignOnlyMaterializer` at `TestRunner.__init__`). Test code passes an explicit stub for isolation. See PROJ-274 + `docs/04_SERVICES.md::ShipMaterializer` for details.
+`BattleResult` carries `winner`, `tick_count`, `team_survivors: dict[int, list[IPostBattleShip]]`, `replay_id`, and `replay_unavailable_reason`. Include empty survivor lists for wiped teams.
 
-All four Phase-1 hooks are wired into the engine:
-- `boundary` — fully enforced as of Phase 3 (per-tick + `ExitPolicy`
-  dispatch via `BoundaryEnforcementPhase`)
-- `formation` — fully resolved at compile time as of Phase 4
-- `telemetry_level` — fully wired as of Phase 5 (see below)
-- `modifier_stack` — wired as of Phase 5.5, retargeted in PROJ-270 Phase 9 + PROJ-271.
-  `run_battle` threads `spec.modifier_stack` onto `BattleEngine.modifier_stack`;
-  at `start_teams`, `FleetAuraManager.initialize(ships, modifier_stack=...)`
-  registers the stack with the aura manager. Each tick `_apply_bonuses`
-  aggregates team-scoped entries into `ship.external_stats: Dict[str, float]`
-  keyed by `entry.effect.stat_key` (two-phase: intra-group MAX, inter-group
-  SUM, respecting `stack_group`). Abilities read this bridge via
-  `Ability.get_effective_stat` (`_mult` keys multiply local × external;
-  `_add` keys sum local + external). Ship-level keys like `shield_bonus_add`
-  are read directly in `ship_stats.py::_apply_aggregated_stats`. The
-  `_entries_from_modifier_source` placeholder path was deleted in PROJ-271
-  Phase 9 — compilers emit only real stat_keys now. `HitLogRecorder`
-  consumes the stack at DETAILED telemetry to populate
-  `HitRecord.modifiers_applied`.
+Strategy does not decide a winner. The compiler-attached `apply_outcome_to_fleets` hook is authoritative: it writes component HP/status back to `ShipInstance.components`, mutates `Fleet.ships` for `SURVIVED`, `DERELICT`, `DESTROYED`, and `RETREATED`, and prunes empty fleets via `EmpireWriteService.prune_empty_fleets`. `_resolve_combat_at_hex` observes post-hook fleet counts and reports destroyed fleet IDs; it does not remove fleets itself.
 
-### Telemetry (Phase 5)
+The `empires={team_id: Empire}` mapping must thread through resolver -> spec compiler -> post-battle hook so empty fleets can be pruned. Test mock resolvers should accept `empires` even when they ignore it.
 
-`BattleSpec.telemetry_level` is an `IntEnum` at
-[game/simulation/combat/telemetry.py](../../game/simulation/combat/telemetry.py)
-with three values: `MINIMAL` (1), `NORMAL` (2), `DETAILED` (3).
-`run_battle` attaches opt-in aggregators based on the level:
+Surviving opposing fleets remain co-located and can re-engage later. Combat triggering is per-fleet movement opportunity: combat fires on ticks where a fleet has a movement opportunity and fails to leave the contested sector. This avoids per-subtick repeated battles while allowing stalemates to continue.
 
-| Level | Attached aggregators | `BattleOutcome` fields populated |
-|-------|----------------------|---------------------------------|
-| `MINIMAL` | (none) | only `end_reason` / `duration_ticks` / `seed` + per-ship `status` / `components` / pose |
-| `NORMAL` | `WeaponSummaryAggregator`, `ShipStatsAggregator` | above + `ShipOutcome.weapons` (per-weapon shots/hits) + `ShipOutcome.stats` (damage / speed / ticks) |
-| `DETAILED` | above + `HitLogRecorder` | above + `ShipOutcome.hits_taken` (one `HitRecord` per damage event) |
+`COMBAT_RESOLVED` event details use:
 
-**How it works:** `_attach_telemetry(engine, spec)` raises
-`engine.combat_events.detail_level` to match the telemetry level so
-the `CombatEventBus` actually emits the events the aggregators subscribe
-to. MINIMAL runs at whatever the bus default is (no new subscribers).
-NORMAL / DETAILED raise the bus level so all damage events reach
-the aggregators.
+- `participating_fleet_ids`
+- `surviving_fleet_ids`
+- `destroyed_fleet_ids`
+- `empire_id` as the lowest participating empire ID for filtering only
+- `replay_id`
+- `replay_unavailable_reason`
 
-**Per-tick sampling:** `ShipStatsAggregator.sample_tick(engine)` is
-called each tick from the tick loop to update peak_speed / ticks_alive
-/ ticks_derelict. Not event-driven because the engine doesn't emit
-"tick complete" events today.
+Do not add back `winner_fleet_id` or `loser_fleet_id`.
 
-**Defaults per context (set by each compiler):**
-- Strategy: `NORMAL`
-- Battle Setup: `NORMAL`
-- Combat Lab: `DETAILED` (individual scenarios may override via
-  `TestMetadata.telemetry_level = "MINIMAL" | "NORMAL" | "DETAILED"`)
+Shortcut behavior:
 
-**Overhead (as of 2026-04-12 reference measurement):** On a 500-tick
-1v1 smoke battle (ships at 1000px, minimal event traffic):
-MINIMAL ≈ NORMAL ≈ DETAILED ≈ 28-30ms. See
-`tests/performance/test_telemetry_overhead.py` for the regression gate
-and `Projects/deep_archive/PROJ-251-300/PROJ-269/decisions.md` for updated
-baselines.
+- `sole_survivor`: one team has combat-capable ships and another starts with no ships; no replay, reason `"sole_survivor"`.
+- `no_ships`: all fleets empty; no replay, reason `"no_ships"`.
+- `truncated_no_capable`: teams have ships but no team can fight; run simulator with `_BRIEF_RUN_TICK_BUDGET` (`_DEFAULT_ABSOLUTE_MAX_TICKS // 10`, currently 2000) and `TickLimitCondition`, producing a real short replay.
 
-**`HitRecord.modifiers_applied`** is populated at DETAILED telemetry by
-`HitLogRecorder` — each record carries the globals plus attacker-team
-entries active at the time of the hit (placeholders were pre-filtered by
-the compiler; PROJ-271 Phase 9 deleted the placeholder path entirely).
-At MINIMAL/NORMAL telemetry the field is an empty tuple.
+Diagnostic INFO logs include branch decisions (`shortcut_sole_survivor`, `shortcut_no_ships`, `truncated_no_capable`, `simulator`), simulator ticks/winner/survivor counts, and conflict-resolution entry/exit summaries. Operators can grep `battle.log` for those branch names.
 
-### Boundary Region (Phase 3)
+## Modifier Stack And External Stats
 
-`BattleEngine.boundary: BoundaryRegion` is enforced every tick by
-`BoundaryEnforcementPhase` at priority 250 (after ship movement,
-before attacks). For each alive ship, the engine calls
-`boundary.contains(ship.position)`; if False, it dispatches to
-`_apply_exit_policy(ship, boundary.exit_policy)` with one of:
+All battle-scoped modifiers enter simulation through `BattleSpec.modifier_stack`; old `BattleConfig.team_modifiers`/`global_modifiers` style fields are gone.
 
-| ExitPolicy | Effect |
-|------------|--------|
-| `DESTROY` | Ship is killed via `combat_engine.take_damage(remaining_hp)`; `ShipStatus.DESTROYED` in outcome |
-| `RETREAT` | Ship removed from `engine.ships` and appended to `engine.retreated_ships`; `ShipStatus.RETREATED` in outcome |
-| `BOUNCE` | Ship position clamped to `boundary.closest_inside_point`; velocity reflected (Rect: flip X/Y, Circle: radial reflect) |
-| `NONE` | No-op — ship may exit freely (unbounded Combat Lab scenarios) |
+`FleetAuraManager` combines ship-provided non-SELF abilities and external `ModifierStack` entries into `ship.external_stats: dict[str, float]`. Stacking is two-phase:
 
-Boundary shapes: `RectBoundary(width, height)`, `CircleBoundary(radius)`,
-`UnboundedRegion()` — all centered on `(0, 0)`.
-`BattleSpec.boundary=None` is equivalent to `UnboundedRegion()`.
+- Within the same `stack_group`, take MAX.
+- Across different groups, SUM.
 
-Retreat is a special case of boundary exit with the `RETREAT` policy
-— no separate retreat mechanic.
+Provider auras and external entries use different top-level buckets. They do not cross-compose even if their `stack_group` strings match.
 
-### Formation System (Phase 4)
+All compilers must map abilities to stat keys through `game/simulation/combat/ability_stat_registry.py`, especially `ABILITY_STAT_REGISTRY`, `emit_entries_for_ability`, `OPPONENT_SCOPES`, and `KNOWN_EXTERNAL_STAT_KEYS`. Unknown external stat keys warn once per `(stat_key, source)` via `FleetAuraManager._log_unknown_stat_key_once`.
 
-Ship positions at battle start are computed by `FormationResolver`
-([game/simulation/combat/formation.py](../../game/simulation/combat/formation.py))
-from three inputs:
+Known strategic mappings:
 
-1. `FormationSpec(shape, spacing, custom_positions=())` carried on
-   `TaskForceSpec.formation`
-2. The team's `EntryVector(origin, facing)` — where the formation
-   anchors in world space
-3. The fleet's ship list (order = position assignment)
+- Storm shield interference -> `shield_capacity_mult`
+- Team `shield_mult` -> `shield_capacity_mult`
+- Team `damage_mult` -> `damage_mult`
+- Flat shield bonus -> `shield_bonus_add`
+- Battle Setup complex abilities (`ShieldModifier`, `DamageModifier`, `ShieldProjection`) -> stat-key entries routed by scope
 
-Supported `FormationShape` values (8 total):
+For N teams, `emit_entries_for_ability(..., num_teams=N)` fans `enemy_*` entries out to every non-owner team.
 
-| Shape | Local-frame pattern (facing = +x) |
-|-------|-----------------------------------|
-| `LINE_ABREAST` | Perpendicular to facing; symmetric around y=0 |
-| `LINE_ASTERN` | Single file along +x: (0,0), (s,0), (2s,0)... |
-| `WEDGE` | Leader at (0,0); each row k behind at (-k·s, ±k·s) |
-| `ECHELON_LEFT` | Diagonal up-left: (-i·s, +i·s) |
-| `ECHELON_RIGHT` | Diagonal down-left: (-i·s, -i·s) |
-| `SCREEN` | Main line x=0 + screen column x=+s |
-| `CARRIER_PROTECTED` | ~n/3 carriers at origin; rest on ring of radius=s |
-| `CUSTOM` | `custom_positions` tuple used verbatim |
+External modifier sources are static for the duration of a battle. They cannot be destroyed or deactivated mid-fight because they are compiled entries, not ship entities. Destructible external modifiers must become real in-battle entities.
 
-World-space pipeline for each ship: local_pos → rotate by `facing` (°, CCW) → translate by `origin` → optional clamp to `boundary.closest_inside_point`. Every ship's `angle = entry_vector.facing`.
+## Shield Formula
 
-Default formation when `TaskForce.formation is None` comes from
-`resolve_default_for_task_force(ships)` — dominant `design_role` bucket:
+`ShipStatsCalculator._apply_aggregated_stats` computes:
 
-| Dominant archetype | Default shape |
-|---------------------|--------------|
-| Carrier (`carrier`) | CARRIER_PROTECTED |
-| Strike (`interceptor`/`assault_ship`/`raider`/`missile_platform`) | WEDGE |
-| Defender (`line_combatant`/`fleet_escort`/`defensive_platform`/`shield_projector`) | LINE_ABREAST |
-| Scout (`scout`/`command_ship`/`sensor_platform`) | LINE_ASTERN |
-| Mixed / unknown roles | LINE_ABREAST (fallback) |
-
-Ties → LINE_ABREAST. Compilers consult `_pick_formation_for_fleet`
-(first explicit `TaskForce.formation` wins, else default).
-
-### N-Team Support (Phase 3)
-
-The engine supports any number of teams. Internal APIs:
-
-| Method | Returns |
-|--------|---------|
-| `engine.teams: Dict[int, List[Ship]]` | Ships grouped by team_id (property, always in sync) |
-| `engine.get_ships_by_team(team_id)` | All ships with that team_id |
-| `engine.get_enemies_of(ship)` | All ships whose `team_id != ship.team_id` (no alliances) |
-| `engine.start_teams(teams: Dict[int, List[Ship]], ...)` | N-team version of `start()` |
-
-`engine.start(team0, team1, ...)` remains a backward-compat 2-team
-wrapper.
-
-`TeamEliminatedCondition` fires when **≤1 team retains alive ships**
-(correct for any N). Equivalent to the old "any team has 0 alive"
-semantic for 2-team battles. `TeamIncapacitatedCondition` analogous.
-
-AI targeting: `AIController._find_enemies_in_radius` filters on
-`obj.team_id != self.ship.get_team_id()` — every non-self team is
-equally hostile. No target preference between teams.
-
-`engine.get_winner()` returns the sole surviving team_id when exactly
-one team is alive; -1 otherwise.
-
-### Combat Lab Scenario Role Tagging (PROJ-278 Phase 4)
-
-`ShipSpec.scenario_role: Optional[str]` is the typed wiring label used by
-Combat Lab scenarios to route materialized ships into the `ships_by_role`
-dict consumed by `scenario.wire_ships(...)`. Battle Setup and Strategy
-specs leave this `None` — the field is only populated by
-[combat_lab/spec_compiler.py](../../combat_lab/spec_compiler.py).
-
-`materialize_spec_ships` ([game/simulation/battle_runner.py](../../game/simulation/battle_runner.py))
-reads the field directly when building `ships_by_role`. The legacy
-`_role_from_instance_id` substring parser was deleted in Phase 4.
-`instance_id` retains a `:role` suffix as a human-readable identity
-disambiguator, but is no longer parsed for role information.
-
-Valid values must match an entry in `combat_lab_role_registry`
-(loaded from [combat_lab/data/scenario_roles.json](../../combat_lab/data/scenario_roles.json)).
-The Combat Lab spec compiler's `_ship_spec` helper validates `scenario_role`
-against the registry at compile time and raises `ValueError` for unregistered
-labels. See [docs/guides/simulation_testing.md](../guides/simulation_testing.md)
-§"2.5 Scenario Role Labels" for the authoring rules.
-
-### Component HP Persistence (Phase 2)
-
-Per-component HP persists across strategy battles via the
-`ShipSpec.components → BattleOutcome.components → ShipInstance.components`
-round-trip. A ship that enters battle with one component at 40% HP is
-reported at ≤40% HP in the outcome, and the `PostBattleHook` writes
-that back to the `ShipInstance` so the NEXT battle's compiled spec
-carries the same damage.
-
-Flow:
-1. `ShipInstance.components: Dict[str, ComponentState]`
-   ([game/core/component_state.py](../../game/core/component_state.py))
-   keyed by `"{component_id}#{instance_index}"` — disambiguates
-   identical components (e.g. three seeker missiles).
-2. `build_strategy_battle_spec(...)` translates each `ComponentState`
-   into a `ComponentStateSpec` on `ShipSpec.components`.
-3. `run_battle(spec, ...)` applies per-component HP after the ship
-   builder runs (`_apply_spec_components_to_ship`), then runs the
-   battle.
-4. `extract_outcome(engine, spec)` reads each Ship's per-component
-   final HP into `ShipOutcome.components` via `_extract_component_states`.
-5. `post_battle_hook(outcome)` (the strategy compiler attaches
-   `apply_outcome_to_fleets` by default) writes per-component HP back
-   into `ShipInstance.components` for survivors, removes destroyed /
-   retreated ships from their fleets, and prunes empty fleets from
-   their empire.
-
-Ships are never "repaired" between battles — component HP only
-decreases over a ship's lifetime unless an explicit repair mechanic
-adjusts it. Repair is a separate future project.
-
-`ShipInstance.components: Dict[str, ComponentState]` is the only
-persistent per-component HP store. The PROJ-269 Phase 2 transition was
-closed out by PROJ-276, which removed the legacy
-`ShipInstance.component_damage: Dict[str, int]` dict along with its
-lossy single-instance semantics (three identical components on one ship
-now track independent HP rather than flattening to one value).
-
----
-
-## 1. Battle Orchestration (post-PROJ-269 unified flow)
-
-### `run_battle(spec) -> BattleOutcome` is the only sanctioned entry
-
-The battle simulator is a **pure engine**: callers compile their own
-domain inputs into a `BattleSpec` via a per-context compiler and hand it
-to `run_battle`. The engine knows nothing about test scenarios, fleet
-hierarchies, or UI screens — it just runs the sim and emits a
-`BattleOutcome`.
-
-**Architecture layers:**
-```
-Caller (Battle Setup / Combat Lab / Strategy)
-  → context-specific spec compiler
-    → BattleSpec (frozen DTO)
-      → run_battle(spec, ai_factory, ship_builder, ...)
-        → BattleEngine (constructed inline; no controller wrapper)
-          → BattleOutcome
-            → spec.post_battle_hook(outcome)  # optional side effects
+```text
+max_shields = sum_i(base_capacity_i * capacity_mult_i * shield_capacity_mult)
+              + shield_bonus_add * shield_capacity_mult
 ```
 
-**Unified entry**:
+`shield_capacity_mult` scales both real shield components and flat shield bonuses. `shield_bonus_add` is read from `ship.external_stats["shield_bonus_add"]`. External team auras do not currently populate per-component `capacity_mult`; do not double-multiply flat bonuses by `capacity_mult`.
 
-```python
-from game.simulation.battle_runner import run_battle
+## Telemetry
 
-spec = build_strategy_battle_spec(fleets, sector=..., empires=..., registries=...)
-outcome = run_battle(
-    spec,
-    ai_factory=AIControllerFactory(),
-    ship_builder=lambda ship_spec: ship_instance.to_ship(...),
-    per_tick_callback=None,           # optional
-    pre_tick_loop_callback=None,      # optional
-)
-```
+`BattleSpec.telemetry_level` is `TelemetryLevel.MINIMAL`, `NORMAL`, or `DETAILED`.
 
-`run_battle` instantiates `BattleEngine` directly, threads
-`spec.boundary` and `spec.modifier_stack` onto it, calls
-`engine.start_teams(...)`, drives the tick loop, attaches telemetry
-aggregators per `spec.telemetry_level`, extracts a `BattleOutcome` via
-`extract_outcome(engine, spec)`, and finally invokes
-`spec.post_battle_hook(outcome)` if one is attached.
+| Level | Aggregators | Outcome fields |
+|---|---|---|
+| `MINIMAL` | none | end reason, duration ticks, seed, per-ship status/components/pose |
+| `NORMAL` | `WeaponSummaryAggregator`, `ShipStatsAggregator` | minimal + weapon summaries and ship stats |
+| `DETAILED` | normal + `HitLogRecorder` | normal + `ShipOutcome.hits_taken` |
 
-### Spec compilers
+`_attach_telemetry(engine, spec)` raises `engine.combat_events.detail_level` so the event bus emits enough events for attached aggregators. `ShipStatsAggregator.sample_tick(engine)` runs once per tick for peak speed and alive/derelict tick counts.
 
-| Context | Compiler | File |
-|---------|----------|------|
-| Combat Lab | `build_test_battle_spec(scenario, registries)` | [`combat_lab/spec_compiler.py`](../../combat_lab/spec_compiler.py) |
-| Battle Setup | `build_manual_battle_spec(ui_state, registries, ...)` | [`game/ui/screens/battle_setup/spec_compiler.py`](../../game/ui/screens/battle_setup/spec_compiler.py) |
-| Strategy combat | `build_strategy_battle_spec(fleets, ...)` | [`game/strategy/combat/spec_compiler.py`](../../game/strategy/combat/spec_compiler.py) |
+Defaults: Strategy `NORMAL`; Battle Setup `NORMAL`; Combat Lab `DETAILED` unless scenario metadata overrides.
 
-Each compiler:
-1. Walks its own domain inputs (TestScenario / BattleSetupState / Fleets).
-2. Emits a `BattleSpec` with the right boundary, formations, modifier stack, telemetry level, and end condition.
-3. Optionally attaches a `PostBattleHook` (strategy attaches `apply_outcome_to_fleets`; Combat Lab and Battle Setup pass None).
+At `DETAILED`, `HitRecord.modifiers_applied` includes global and attacker-team modifier entries active at the time of the hit. At lower levels it is an empty tuple.
 
-### Visual mode (post-PROJ-270)
+## Ship Architecture
 
-`run_battle(spec)` is a blocking-headless call — it runs the tick loop
-to completion. Visual battles (Battle Setup → Battle Screen, Combat Lab
-UI visual run) use a `BattleController` wrapper for per-frame ticking.
-Per **Decision 3**, `run_battle` and the visual-mode path are a single
-architectural contract with two drivers (blocking vs. per-frame) — not
-two competing entry points.
+`Ship` extends `PhysicsBody` and `ShipPhysicsMixin`. It requires explicit `registries: GameRegistries` and auto-equips the default hull component from vehicle-class data.
 
-**PROJ-270 Phase 10 unified entry:** `BattleController.start_from_spec(spec, ai_factory, ship_builder, config=None)` is the single visual-mode
-entry. It routes internally through `start_engine_from_spec` (the exact
-same helper `run_battle` calls) to materialize ships, construct the
-engine, thread `spec.boundary` + `spec.modifier_stack`, and start the
-engine via `engine.start_teams`. The game loop then drives
-`controller.update()` per frame. At battle end, the controller calls
-`extract_outcome(engine, spec)` once and exposes the result via
-`controller.get_outcome()`.
+Key state:
 
-The two production visual call sites (`game/app.py:start_battle`,
-`game/ui/screens/test_lab/screen.py::_switch_to_battle`) are
-single-line `controller.start_from_spec(spec, ...)` calls — no
-hand-rolled `engine.boundary = spec.boundary` / `add_ships` plumbing.
+- `layers: dict[LayerType, LayerData]` with `HULL`, `CORE`, `INNER`, `OUTER`, and `ARMOR`
+- `resources: ResourceRegistry`
+- `is_alive`, `is_derelict`
+- Targeting: `current_target`, `secondary_targets`, `max_targets`
+- Defense: `emissive_armor`, `shield_regenerating_armor`, `current_shields`, `max_shields`
+- Offense/defense scores: `baseline_to_hit_offense`, `total_defense_score`
+- Metadata: `movement_policy`, `targeting_policy`, `design_role`
 
-**PROJ-270 Phase 4.5:** `BattleResultsScreen` (via `extract_battle_results`)
-consumes the `BattleOutcome` from `controller.get_outcome()`, closing
-the "every battle emits a `BattleOutcome` that the UI consumes"
-acceptance criterion.
+Per-ship update sequence:
 
-**PROJ-281 (2026-04-18):** the legacy `BattleScreen.start(team0, team1)`
-test-convenience shim and its `_build_fallback_outcome` outcome
-synthesizer were DELETED. `BattleScreen` now has exactly one entry —
-`start_battle(controller)` consuming a running `BattleController` —
-and every battle produces a real `BattleOutcome` (no synthesis path).
-Tests that need a minimal battle build one via
-[tests/fixtures/battle.py::make_minimal_spec](../../tests/fixtures/battle.py)
-+ `BattleController.start_from_spec`, or call the drop-in
-`start_battle_screen_with_minimal_spec(screen, {0: [ship], 1: [ship]})`
-helper. `BattleController.get_outcome()` is lazy — if the natural
-end-transition hasn't fired yet (e.g. user-initiated force-end via
-the "End Battle" button), it extracts on demand from current engine
-state.
+1. Resource regeneration.
+2. Component consumption/cooldowns.
+3. Arcade physics.
+4. Shield/repair cooldowns through `ShipCombatEngine`.
+5. Weapon firing through `ShipCombatEngine`.
 
-**`BattleConfig`** (post-PROJ-270 reshape) is a thin operational-options
-bag for the visual-mode controller — `seed`, `end_condition`,
-`absolute_max_ticks`, `headless`, `start_paused`, `enable_logging`,
-`allow_retreat`, `allow_reinforcements`, `return_destination`,
-`show_results`. The `BattleMode` enum +
-`BattleModeHandler` strategy hierarchy + `BattleConfig.mode` field +
-`team_modifiers` / `global_modifiers` / `environmental_effects` /
-`source_fleets` / `per_tick_callback` / `test_scenario` / `map_bounds`
-fields are all GONE — variance moved onto `BattleSpec` (including
-arena `boundary`, which is now a `BoundaryRegion` ADT on the spec).
+Delegates:
 
-**`ReturnDestination`** lives at `game/core/return_destination.py`
-(PROJ-270 Phase 5.2 moved it out of the simulation layer — it names
-UI navigation contexts, so the simulation layer should not depend on
-its definition). PROJ-270 Phase 10 deleted the `battle_config.py`
-re-export — all importers now use `game.core.return_destination`
-directly. Values:
-- `BATTLE_SETUP` — return to battle setup screen
-- `TEST_LAB` — return to Combat Lab
-- `STRATEGY` — return to strategy map
-
-### BattleService (Low-Level Abstraction)
-
-**File:** `game/simulation/services/battle_service.py`
-
-Provides a clean interface between UI screens and BattleEngine.
-All operations return `BattleServiceResult` (success/errors/warnings/engine ref).
-
-Lifecycle:
-1. `create_battle(seed, enable_logging, ai_factory)` -- creates BattleEngine
-2. `add_ship(ship, team_id)` -- registers ships to teams (0 or 1)
-3. `start_battle(end_condition, absolute_max_ticks)` -- initializes engine, creates AI controllers
-4. `update()` or `run_ticks(count)` -- advances simulation
-5. `is_battle_over()` / `get_winner()` -- query outcome
-6. `reset()` -- cleanup
-
-### BattleEngine (Tick Loop)
-
-**File:** `game/simulation/systems/battle_engine.py`
-
-BattleEngine owns the simulation state: ships, AI controllers, projectiles, spatial grid.
-
-**`start()` initialization:**
-- Assigns team IDs (0 and 1)
-- Creates AI controllers via injected `IAIControllerFactory` (or accepts pre-created list)
-- Initializes `SpatialGrid`, `ProjectileManager`, `CollisionSystem`
-- Per-ship initialization via `_initialize_ship()`: event bus wiring, component update, stat recalculation, derelict check
-- Initializes `FleetAuraManager` with all ships
-- Seeds RNG for deterministic replays
-
-**`add_ship_mid_battle()` (reinforcements and fighter launch):**
-- Sets team ID, appends to ships list
-- Creates AI controller (via factory or pre-created)
-- Runs the same per-ship initialization as `start()` via `_initialize_ship()`
-- Registers with `FleetAuraManager` via `register_ship()` (scans new ship's abilities, recalculates bonuses)
-- Fighter launch (`LAUNCH` attack type in `update()`) delegates to `add_ship_mid_battle()`
-
-**`update()` tick sequence (per tick):**
-
-The `update()` method is a concise coordinator that delegates to focused helpers:
-
-| Phase | Helper Method | Description |
-|-------|---------------|-------------|
-| 1 | `_rebuild_grid()` | Clear and rebuild spatial grid with alive ships + active projectiles |
-| 2 | `_update_ai_and_ships()` | Update AI controllers, ship physics/weapons/abilities, fleet auras |
-| 3 | `_collect_new_attacks()` | Gather and clear attacks emitted by ships this tick |
-| 4 | `_process_attacks()` | Dispatch by type: PROJECTILE/MISSILE via `_process_projectile_attack()`; BEAM via CollisionSystem; LAUNCH via `_process_launch_attack()` (spawns fighter Ship) |
-| 5 | (inline) | Process ramming collisions (kamikaze ships) |
-| 6 | (inline) | Update projectiles (movement, hit detection, expiration) |
-
-**Fleet Aura System** (`game/simulation/combat/fleet_aura_manager.py`):
-
-`FleetAuraManager` on `BattleEngine` manages abilities with non-SELF scope (fleet, system, empire).
-Initialized at battle start, recalculated every tick. Bonuses removed immediately when provider
-ship is destroyed. Stacking follows two-phase aggregation (same group = MAX, different groups = SUM).
-
-**External modifiers** (PROJ-270 Phase 6.4a + Phase 9, PROJ-271 Phase 7, PROJ-272 Phase 2, PROJ-273):
-per-team and global battle conditions flow into the aura manager via
-`spec.modifier_stack` only — the legacy `BattleConfig.team_modifiers` /
-`global_modifiers` kwargs were deleted. `FleetAuraManager._apply_bonuses`
-writes ALL entries into `ship.external_stats: Dict[str, float]` (not just
-the two hardcoded keys that survived 5.5). `stack_group` is respected via
-two-phase MAX/SUM aggregation (`_aggregate_ability_groups`) — but only
-WITHIN-SOURCE: provider auras (ship-mounted `type(ab).__name__` key) and
-external entries (`effect.stat_key` key) use different top-level buckets
-and DO NOT cross-compose even with matching stack_group. Strategy compiler
-threads `stack_group` through every emission (storm entries share
-`"storm_shield_interference"`; team multipliers share
-`"team{N}_shield_mult"` / `"team{N}_damage_mult"` / `"team{N}_flat_shield"`).
-All compilers route ability->stat_key mappings through the shared
-`ABILITY_STAT_REGISTRY` + `emit_entries_for_ability` helper in
-`game/simulation/combat/ability_stat_registry.py` (PROJ-273 consolidated
-the previously-duplicated `_ABILITY_TO_STAT_KEY` dicts and hand-rolled
-`stat_key="..."` literals). The registry also exports a canonical
-`OPPONENT_SCOPES` constant and a `KNOWN_EXTERNAL_STAT_KEYS` allowlist.
-Unknown stat_keys emit a once-per-(stat_key, source) WARN from
-`FleetAuraManager._log_unknown_stat_key_once` when an entry's stat_key
-isn't in `KNOWN_EXTERNAL_STAT_KEYS` (catches silent-drop bugs).
-Placeholders no longer exist (PROJ-271 Phase 9 deleted
-`_entries_from_modifier_source`).
-
-**Battle math on strategic modifiers** (PROJ-270 Phase 6 Track A + PROJ-271 Track B):
-All strategic modifier sources emit real stat_keys now. Storm hex shield
-interference -> `shield_capacity_mult`. Per-team
-`FleetCombatModifiers.shield_mult`/`damage_mult` -> `shield_capacity_mult`
-/ `damage_mult`. `FleetCombatModifiers.flat_shield_bonus` ->
-`shield_bonus_add` (additive, ship-level). Battle Setup complex toggles
-parse design JSONs, walk components, and map abilities
-(`ShieldModifier`, `DamageModifier`, `ShieldProjection`) to stat_keys
-with scope-driven team routing (`enemy_*` -> opponent team, else ->
-owner team). Pipeline ordering `(base + flat) × mult` is locked in
-`ship_stats.py::_apply_aggregated_stats`. `FleetAuraManager` respects
-`stack_group` on external entries (two-phase MAX within group, SUM
-across groups) per PROJ-271 Phase 7.
-
-**End conditions** (composable via `IEndCondition` protocol):
-
-Leaf conditions:
-- `TeamEliminatedCondition` -- ends when all ships on one team are dead (default)
-- `TickLimitCondition` -- ends after max_ticks reached
-- `TeamIncapacitatedCondition` -- ends when a team cannot fight or move
-- `NeverCondition` -- never ends automatically
-- `EscapeCondition` -- ends when ships escape beyond radius from arena center
-- `ShipDestroyedCondition` -- ends when a named ship is destroyed
-
-Composite conditions:
-- `AnyCondition([...])` -- OR: first child met triggers end
-- `AllCondition([...])` -- AND: all children must be met
-
-All conditions are serializable via `to_dict()` / `end_condition_from_dict()`.
-Safety ceiling (`absolute_max_ticks`) is enforced by `BattleEngine` independently.
-
-**Winner determination:** `get_winner()` returns 0, 1, or -1 (draw).
-
-**Combat Event System** (`game/simulation/combat/combat_events.py`):
-
-`CombatEventBus` on `BattleEngine` emits events during damage resolution:
-- `SHIELD_HIT` -- shield absorbed damage
-- `ARMOR_ABSORBED` -- emissive armor or SRA absorbed damage
-- `COMPONENT_HIT` -- hull component took damage
-- `COMPONENT_DESTROYED` -- component HP reached 0
-- `SHIP_DESTROYED` -- ship was killed
-- `SHIP_DERELICT` -- ship became derelict
-
-Each event carries a `DamageContext` with attacker identity (ship, weapon, damage type).
-Event detail levels (`MINIMAL`, `NORMAL`, `DETAILED`) control granularity for performance.
-
-**Visual Hit Effects** (`game/ui/effects/hit_effects.py`):
-
-`BattleScreen` subscribes to combat events and creates timer-based visual effects:
-- Shield hit: cyan concentric circles (0.2s)
-- Armor/component hit: orange expanding circle + radiating lines (0.15s)
-- Component destroyed: larger orange burst (0.25s)
-- Ship destroyed: white flash + expanding ring (0.4s)
-
-**Battle Results Screen** (`game/ui/screens/battle_results_screen.py`):
-
-Full-screen IScene showing post-battle statistics. Data extracted via
-`extract_battle_results(outcome, return_destination)` in
-`battle_results_data.py`. **PROJ-270 Phase 4.5:** consumes a
-`BattleOutcome` (not a live `BattleEngine`). `ShipOutcome` carries
-display fields (`name`, `ship_class`, `hp`, `max_hp`,
-`current_shields`, `max_shields`) populated by `extract_outcome`
-at battle end. Two-column layout with per-ship HP bars, weapon
-accuracy tables, and team summaries.
-
-### Retreat Manager (PROJ-29 SIM-03)
-
-**File:** `game/simulation/managers/retreat_manager.py`
-
-`RetreatManager` (line 47) owns per-ship retreat state during visual-mode
-battles. It was extracted from `BattleController` by PROJ-29 SIM-03 to
-isolate retreat lifecycle from the controller god-class.
-
-**Public API:**
-
-| Method | Purpose |
-|--------|---------|
-| `request_retreat(ship, ship_id_map, method=EDGE\|WARP) → (ok, error)` | Begin retreat. EDGE navigates the ship to the boundary edge; WARP charges a warp drive over `WARP_CHARGE_TICKS` (interruptible by damage if the ship's component config says so). |
-| `cancel_retreat(ship, ship_id_map) → (ok, error)` | Abort an active retreat. |
-| `update(get_ship_by_id) → None` | Per-tick state machine: advances charge counters, detects edge arrival, fires the escape callback. |
-| `is_retreating(ship, ship_id_map) → bool` | Status query. |
-| `get_retreat_state(ship, ship_id_map) → RetreatState \| None` | Detailed progress (method, target, charge ticks, interruptible flag). |
-| `set_on_ship_escaped(callback) → None` | Hook fired when a ship completes retreat. `BattleController` uses this to remove the ship from the engine and append it to `retreated_ships`. |
-
-`RetreatMethod` (line 31, `Enum`) and `RetreatState` (line 38, frozen
-dataclass) are the supporting types.
-
-**Wiring (visual mode only).** `BattleController.__init__` constructs the
-manager when the spec is configured (`battle_controller.py:132`); the
-controller's tick loop calls `_update_retreats()` (line 558) which
-delegates to `RetreatManager.update()`, gated on `_retreat_allowed()`
-(returns `True` only when `BattleConfig.allow_retreat=True`).
-
-**Headless path uses a different mechanism.** `run_battle()` does not
-construct a `BattleController` — strategy battles bypass it entirely.
-Boundary handling there is the `BoundaryEnforcementPhase`
-(`game/simulation/systems/tick_phase.py:117`, slot 250 in the tick-phase
-registry; PROJ-269 Phase 3 Task 3.1). That phase consults
-`BattleSpec.boundary` (a `BoundaryRegion` ADT — `RectBoundary`,
-`CircleBoundary`, or `UnboundedRegion`) and applies the spec's
-`exit_policy` (e.g. `BoundaryExitPolicy.RETREAT` substitutes for the
-removed `BattleMode.can_retreat` flag — see § 2). `RetreatManager` is
-not part of that path.
-
-**Tests:**
-- `tests/unit/simulation/managers/test_retreat_manager.py` — state
-  machine + callback wiring.
-- `tests/integration/simulation/test_boundary_retreat.py` — bounded vs
-  `UnboundedRegion` behaviour through the headless boundary phase.
-
----
-
-## 2. Battle Modes — REMOVED in PROJ-269 Phase 6
-
-The `BattleModeHandler` Strategy pattern (4 concrete handlers
-dispatched via `get_handler_for_mode(BattleMode)`) was deleted in
-PROJ-269 Phase 6. Variance now lives on `BattleSpec` fields:
-
-| Old mode trait | New `BattleSpec` field / mechanism |
-|----------------|-----------------------------------|
-| `can_retreat` | `BoundaryRegion(exit_policy=RETREAT)` |
-| `can_reinforce` | `BattleConfig.allow_reinforcements` (visual mode only) |
-| `should_clone_ships` | Caller supplies pre-cloned ships in their `ship_builder` |
-| `is_headless_default` | Driver choice: blocking `run_battle(spec, ...)` vs per-frame `BattleController.start_from_spec(spec, ...)` |
-| `apply_results` | `BattleSpec.post_battle_hook` (e.g. `apply_outcome_to_fleets`) |
-
-See [`Projects/deep_archive/PROJ-251-300/PROJ-269/decisions.md`](../../Projects/deep_archive/PROJ-251-300/PROJ-269/decisions.md)
-for the full rationale.
-
----
-
-## 3. Ship Entity Architecture
-
-**Files:**
-- `game/simulation/entities/ship.py` -- `Ship(PhysicsBody, ShipPhysicsMixin)`
-- `game/simulation/entities/ship_combat_engine.py` -- `ShipCombatEngine`
-- `game/simulation/entities/ship_stats.py` -- `ShipStatsCalculator`
-- `game/simulation/entities/ship_stat_querier.py` -- `ShipStatQuerier`
-- `game/simulation/entities/ship_physics.py` -- `ShipPhysicsMixin`
-- `game/simulation/entities/ship_validator_helper.py` -- `ShipValidatorHelper`
-
-### Ship Class
-
-Ship extends `PhysicsBody` (position, velocity, angle) and `ShipPhysicsMixin` (arcade physics).
-
-**Key state:**
-- `layers: Dict[LayerType, LayerData]` -- HULL, CORE, INNER, OUTER, ARMOR
-- `resources: ResourceRegistry` -- fuel, ammo, energy pools
-- `is_alive`, `is_derelict` -- survival state (derelict = no operational weapons AND no engines)
-- `current_target`, `secondary_targets`, `max_targets` -- targeting
-- Defense stats: `emissive_armor`, `shield_regenerating_armor`, `current_shields`, `max_shields`
-- Offense: `baseline_to_hit_offense`, `total_defense_score`
-- Metadata: `movement_policy` + `targeting_policy` (per-ship AI behavior), `design_role` (classification label from `data/design_roles.json`)
-
-**Initialization:** Requires `registries: GameRegistries` (strict DI, PROJ-50).
-Auto-equips default hull component from vehicle class definition.
-
-**`update()` per-tick sequence:**
-1. Update resources (regeneration)
-2. Update components (consumption, cooldowns)
-3. Physics movement (arcade: acceleration toward target speed)
-4. Combat cooldowns (shields, repair) via `combat_engine`
-5. Weapon firing (if trigger pulled) via `combat_engine`
-
-### Delegation Chain
-
-```
+```text
 Ship
-  ├── combat_engine: ShipCombatEngine (lazy)
-  │     ├── _targeting_system: TargetingSystem (shared/stateless)
-  │     ├── _damage_calculator: DamageCalculator (shared/stateless)
-  │     └── _weapon_firing_system: WeaponFiringSystem (shared/stateless)
-  ├── stats_calculator: ShipStatsCalculator (lazy)
-  ├── stat_querier: ShipStatQuerier (lazy)
-  ├── validator_helper: ShipValidatorHelper (lazy)
-  └── resources: ResourceRegistry
+  -> combat_engine: ShipCombatEngine
+       -> TargetingSystem
+       -> DamageCalculator
+       -> WeaponFiringSystem
+  -> stats_calculator: ShipStatsCalculator
+  -> stat_querier: ShipStatQuerier
+  -> validator_helper: ShipValidatorHelper
+  -> component_manager: ShipComponentManager
+  -> resources: ResourceRegistry
 ```
 
-All subsystems are lazy-initialized. `ShipCombatEngine` subsystems (TargetingSystem,
-DamageCalculator, WeaponFiringSystem) are class-level shared instances since they are stateless.
-
-#### Weapon Family Registry (PROJ-359)
-
-`WeaponFiringSystem` no longer dispatches on `comp.has_ability('BeamWeaponAbility')` /
-`'SeekerWeaponAbility'` / `'ProjectileWeaponAbility'` string branches. Instead:
-
-- `game/simulation/combat/attack_contract.py` defines `WeaponFamily` (enum: `BEAM`,
-  `PROJECTILE`, `SEEKER`, `PDC`), the typed `AttackRequest` / `AttackResolution`
-  contract (`BeamResolution`, `ProjectileResolution`, `NoAttack`), the
-  `WeaponHandler` protocol, and `FAMILY_METADATA` (per-family policy: `targets_missiles`,
-  `consumes_pdc_missile_context`).
-- `game/simulation/combat/weapon_registry.py` provides `WEAPON_REGISTRY` (singleton)
-  and `detect_family(component)` (the single point that owns the legacy
-  `comp.has_ability(...)` lookup; PDC is detected before BEAM because a PDC
-  weapon is a Beam weapon with the `pdc` tag).
-- `game/simulation/combat/families/{beam,projectile,seeker,pdc}.py` each
-  implement one `WeaponHandler` and register on import.
+`ShipComponentManager` owns component list structure, per-layer storage, all-component cache, and weapon-only cache. Use its accessors instead of reaching into layer dicts:
 
-`WeaponFiringSystem._create_attack` is now a thin family-dispatcher: build
-`AttackRequest` → `WEAPON_REGISTRY.dispatch(request)` → return resolution.
-`game/engine/collision.py::process_beam_attack` consumes the typed
-`BeamResolution` directly, removing the dict-carrier leak from the engine layer.
-
-**Adding a new weapon family** is one new module under `families/<name>.py`,
-one entry in `FAMILY_METADATA` if it has special targeting behavior, and one
-import in `families/__init__.py` to trigger the registration. **No edits to
-weapon_firing_system, targeting_system, collision, or projectile_manager.**
-The acceptance test
-(`tests/unit/simulation/combat/test_weapon_registry.py::TestExtensibilityAcceptance`)
-codifies this contract.
-
-See `docs/02_PATTERNS.md` § 34 for the full pattern entry.
-
-### Ship Component Manager (PROJ-240)
-
-**File:** `game/simulation/entities/ship_component_manager.py`
-
-`ShipComponentManager` (line 18) owns the **list structure** for a ship's
-components: per-layer storage, the all-components cache, and the
-weapon-only cache. It was extracted from the `Ship` god-class by PROJ-240
-Phase 1 to make component-list management testable in isolation and to
-fix a stale-cache bug (the older invalidation was tick-coupled; PROJ-240
-replaced it with the dirty-flag pattern below).
-
-**Public API:**
-
-| Method | Purpose |
-|--------|---------|
-| `add_component(component, layer_type) → bool` | Validate via `Ship`'s data-driven layer rules; attach; recalculate stats; invalidate caches. |
-| `add_components_bulk(component, layer_type, count) → int` | Batch add — single stat recalc + cache invalidation at the end. Returns the number successfully added. |
-| `remove_component(layer_type, index) → Component \| None` | Pop by index, recalculate, invalidate. |
-| `get_all_components() → List[Component]` | Cached, defensive copy. |
-| `get_weapon_components_cached() → List[Component]` | Weapon-only cache for the AI targeting hot path. |
-| `get_components_by_layer(layer_type) → List[Component]` | Filtered live view. |
-| `iter_components() → Iterator[(LayerType, Component)]` | Lazy iteration over every component with its layer. |
-| `get_components_by_ability(predicate) → List[Component]` | Filter by ability presence; used by stat aggregators. |
-| `find_component_with_index(predicate) → (LayerType, int, Component) \| None` | First match search; returns the layer + index so callers can `remove_component`. |
-| `has_components() → bool` | Empty check. |
-| `clear_non_hull_components() → None` | Reinforcement helper — strip everything except HULL components. |
-
-**Cache invalidation.** Two dirty flags (`_components_cache_dirty`,
-`_weapon_cache_dirty`) are set on every mutation; the next reader rebuilds
-the cache lazily. Callers should use `get_all_components()` /
-`get_weapon_components_cached()` rather than reaching into the underlying
-layer dict — those accessors honour the dirty flag.
-
-**Distinct from peer managers.** `ShipComponentManager` owns the **list**;
-behaviour on components lives in:
-
-- `ModifierManager` — modifier application and queries.
-- `AbilityManager` — ability lookup and aggregation.
-- `ComponentHealthManager` — HP / destroyed-status tracking.
-- `ComponentResourceManager` — per-component resource generation/consumption.
-
-`Ship` delegates to all of these; see the Pattern #5 (Facade/Delegate)
-quick reference in [`02_PATTERNS.md`](../02_PATTERNS.md).
-
-### Component Caching (PROJ-49)
-
-- `_components_cache` -- dirty-flag cache of all components across layers
-- `_weapons_cache` -- per-tick cache for AI targeting hot path
-- Invalidated on add/remove/recalculate
-
-### Shield Stat Pipeline Ordering (PROJ-271 + PROJ-272 Phase 6)
-
-`ShipStatsCalculator._apply_aggregated_stats` computes `ship.max_shields` as:
-
-```
-max_shields = (sum_of_component_capacities) + (shield_bonus_add × shield_capacity_mult)
-```
-
-where each component's capacity is already scaled by per-component `capacity_mult` and the external `shield_capacity_mult` via `ShieldProjection.recalculate`. So the full semantic composition is:
-
-```
-max_shields = sum_i(base_capacity_i × capacity_mult_i × shield_capacity_mult) + shield_bonus_add × shield_capacity_mult
-```
-
-- `base_capacity_i` — the base value of each `ShieldProjection` component on the ship
-- `capacity_mult_i` — per-component local multiplier
-- `shield_capacity_mult` — external team-aura multiplier (storm interference, fleet boosters), applied uniformly to both real components AND the flat bonus
-- `shield_bonus_add` — read directly from `ship.external_stats['shield_bonus_add']` (flat bonus from planet shield-projector auras; compiled via `_complex_to_entries` or `_entries_from_fleet_combat_modifiers`)
+- `add_component(component, layer_type)`
+- `add_components_bulk(component, layer_type, count)`
+- `remove_component(layer_type, index)`
+- `get_all_components()`
+- `get_weapon_components_cached()`
+- `get_components_by_layer(layer_type)`
+- `get_components_by_ability(ability_name, operational_only=True)`
+- `iter_components()`
+- `find_component_with_index(predicate)`
+- `has_components()`
+- `clear_non_hull_components()`
 
-The flat-then-multiply ordering is load-bearing: a planet that grants +500 shield HP and a fleet with a 2× shield aura compose to `(real_components_total) + 500 × 2`, matching the semantic "flat bonus behaves like an extra shield component providing the ability" (PROJ-271 decisions.md). This ordering is locked by `tests/unit/simulation/entities/test_ship_shield_bonus_add.py`.
+List ownership is distinct from behavior managers: `ModifierManager`, `AbilityManager`, `ComponentHealthManager`, and `ComponentResourceManager`.
 
-**PROJ-272 Phase 6 note:** The flat bonus is NOT scaled by `capacity_mult` from external_stats. No current team aura populates `capacity_mult` (it's a per-component stat_key, not a team-aura stat_key), so reading it for flat-bonus scaling was a latent double-multiply. Revisit if a future team-aura produces `capacity_mult`. New ship-level additive stat_keys must follow the same pattern.
+## Damage Pipeline
 
----
+`game/simulation/combat/damage_calculator.py::DamageCalculator.apply_damage()` stages:
 
-## 4. Damage Pipeline
+1. `_absorb_shields()` uses `ship.current_shields`; early return if absorbed.
+2. `_reduce_emissive_armor()` applies flat overflow reduction; early return if absorbed.
+3. `_absorb_regenerating_armor()` absorbs overflow and recharges shields by absorbed amount, capped at `max_shields`; early return if absorbed.
+4. `_distribute_hull_damage()` distributes remaining damage by component layers, outermost first: `ARMOR -> OUTER -> INNER -> CORE -> HULL`.
+5. `_finalize_damage()` recalculates stats, updates derelict status, and emits events.
 
-**File:** `game/simulation/combat/damage_calculator.py` -- `DamageCalculator`
+Zero or negative damage returns immediately and must not heal or mutate state.
 
-Damage flows through 5 stages, each extracted as a focused method:
+Within a layer, component selection is weighted random by current HP. Components with more HP are more likely to be hit; each selected component absorbs `min(component.current_hp, remaining_damage)`.
 
-```
-Incoming Damage
-    │
-    ▼
-[1] _absorb_shields() ──────── Absorbs from shield pool (ship.current_shields)
-    │                          Early return if fully absorbed
-    ▼
-[2] _reduce_emissive_armor() ─ Flat reduction on overflow (ship.emissive_armor)
-    │                          Early return if fully absorbed
-    ▼
-[3] _absorb_regenerating_armor() ─ Absorbs overflow, recharges shields
-    │                          by absorbed amount (capped at max_shields)
-    │                          Early return if fully absorbed
-    ▼
-[4] _distribute_hull_damage() ─ Distributes to components sorted by radius_pct
-    │                          (outermost first: ARMOR → OUTER → INNER → CORE → HULL)
-    ▼
-[5] _finalize_damage() ─────── Recalculate stats, check derelict status, emit events
-```
+After hull damage, finalization runs `ship.recalculate_stats()`, `ship.update_derelict_status()`, and emits `SHIP_DERELICT` if the flag changed.
 
-The `apply_damage()` coordinator calls these stages in sequence with early returns
-preserving the original behavior: if shields or armor fully absorb the hit,
-hull layers are never touched and stats are not recalculated.
+`CombatEventBus` emits `SHIELD_HIT`, `ARMOR_ABSORBED`, `COMPONENT_HIT`, `COMPONENT_DESTROYED`, `SHIP_DESTROYED`, and `SHIP_DERELICT`; events carry `DamageContext` attacker identity.
 
-### Hull Layer Damage Distribution
+Damage pipeline scenario coverage lives in `combat_lab/scenarios/damage_pipeline_scenarios.py`, including PIPELINE-001 through PIPELINE-005 and PIPELINE-007 for shield-regenerating armor recharge-cap overflow.
 
-Within each layer, components are selected by **weighted random** based on
-current HP. Damage absorbed = min(component.current_hp, remaining_damage).
-Components with more HP are more likely to be hit.
+## Operational Status And Resources
 
-**Note:** `apply_damage()` returns immediately for zero or negative damage
-values to prevent invalid state changes (e.g., negative damage healing shields).
+Only active and operational components contribute stats during `recalculate_stats()`. A component is non-operational when constant-trigger `ResourceConsumption` cannot be satisfied, or when it requires command and control but no active `CommandAndControl` provider exists.
 
-After damage reaches hull layers, `_finalize_damage()` runs:
-- `ship.recalculate_stats()` -- updates derived stats (skips non-operational components)
-- `ship.update_derelict_status()` -- functional check: ship is derelict when it has no operational weapons AND no operational engines
-- Emits `SHIP_DERELICT` event if derelict status changed
+Resource storage components always contribute capacity regardless of operational status.
 
-### Pipeline Validation
+`RequiresCommandAndControl` is per-component, not ship-wide. A lost bridge disables C&C-dependent weapons, engines, shields, sensors, ECM, generators, hangars, and repair bays; passive armor, storage, crew quarters, life support, and strategy-only components continue.
 
-The damage pipeline is validated by integration tests in
-`combat_lab/scenarios/damage_pipeline_scenarios.py`:
-- PIPELINE-001 through PIPELINE-005: Pairwise and full pipeline combinations
-- PIPELINE-007: SRA recharge cap overflow (excess recharge above max_shields is wasted)
+`is_derelict` is functional: true when the ship has no operational weapons and no operational engines. It can result from C&C loss, resource depletion, crew shortage, or component destruction. Battle startup runs an initial component update so derelict status is correct before tick 1.
 
-Individual defense stages are also tested in isolation by their respective
-ability test categories (SHIELD-PROJ-*, EMISSIVE-*, SRA-*).
+When `max_shields` decreases, `current_shields` is capped to the new max.
 
-### Component Operational Status and Stats
+Resource aggregation is data-driven through `ShipStatsCalculator._aggregate_resource_abilities()`. It discovers resource types from `ResourceStorage`, `ResourceGeneration`, and `ResourceConsumption`; do not hardcode fuel/energy/ammo assumptions in simulation.
 
-During `recalculate_stats()`, only **active AND operational** components contribute
-stats. A component becomes non-operational when:
-- Its constant-trigger `ResourceConsumption` cannot be satisfied (e.g., shield without energy)
-- It has `RequiresCommandAndControl` but the ship has no active `CommandAndControl` provider (e.g., bridge destroyed)
+Strategy-relevant attributes populated by `ShipStatsCalculator` and read through `calculate_design_stats()`:
 
-Resource storage components always contribute their capacity regardless of
-operational status.
+- `cargo_storage`
+- `pod_storage_mass`
+- `warp_resource_costs`
 
-### RequiresCommandAndControl (Per-Component)
+Do not recompute these independently in strategy.
 
-Individual components declare `RequiresCommandAndControl: true` to indicate they
-need a bridge or command center to function. Each tick, `RequiresCommandAndControl.update()`
-checks if the ship has an active `CommandAndControl` provider. If not, the component
-becomes non-operational — its stats don't contribute (no thrust, no shields, no weapon firing).
+## Targeting, Weapons, And Cooldowns
 
-This is enforced per-component, not ship-wide. A ship that loses its bridge will have
-all C&C-dependent components (weapons, engines, shields, sensors, ECM, generators)
-go non-operational while passive components (armor, storage, crew quarters) continue.
+`TargetingSystem`:
 
-**Production components with RequiresCommandAndControl (24 total):**
-All weapons, shields, engines, thrusters, sensors, ECM, generators, hangars, and repair bays.
-Armor, storage tanks, crew quarters, life support, and strategy-only components are exempt.
+- `select_target(ship, candidates)` filters dead/friendly ships and picks the closest enemy.
+- `find_valid_target(ship, primary, secondaries, comp, weapon_ab)` checks range, arc, PDC missile/fighter rules, and seeker range.
+- `calculate_firing_solution(ship, comp, target)` uses direct aim for beams and `solve_lead()` for projectile/seeker intercepts.
 
-### Derelict Status
+`WeaponFiringSystem.fire_weapons(ship, context)` iterates components:
 
-`is_derelict` is a **functional flag** (not tied to a specific component):
-- `True` when the ship has **no operational weapons AND no operational engines**
-- Used by UI for status display, by battle engine for victory counting, by AI for behavior decisions
-- Can result from C&C loss, resource depletion, crew shortage, or component destruction
+1. Hangar launch for `VehicleLaunch` when a target exists.
+2. Weapon fire when component can afford activation, weapon cooldown passes, and targeting validates.
 
-`BattleEngine.start()` (invoked internally by `run_battle(spec)`) runs an initial component update cycle so that RequiresCommandAndControl
-checks take effect before the first tick. This ensures ships without bridges start
-the battle with correct operational status.
+Weapon dispatch uses the registry:
 
-When `max_shields` decreases (e.g., shield component loses power), `current_shields`
-is capped to the new max — preventing orphaned shield HP from lingering after
-deactivation.
+- `game/simulation/combat/attack_contract.py`: `WeaponFamily` (`BEAM`, `PROJECTILE`, `SEEKER`, `PDC`), `AttackRequest`, `BeamResolution`, `ProjectileResolution`, `NoAttack`, `WeaponHandler`, `FAMILY_METADATA`
+- `game/simulation/combat/weapon_registry.py`: `WEAPON_REGISTRY`, `detect_family(component)`
+- `game/simulation/combat/families/{beam,projectile,seeker,pdc}.py`: one handler per family, registered on import
 
-### Generic Resource Support
+PDC is detected before BEAM because PDC is a Beam-role weapon tagged `pdc`. `WeaponRegistry.dispatch` raises `UnregisteredWeaponFamilyError` when a handler is missing; do not swallow it.
 
-Resource aggregation is fully data-driven. `ShipStatsCalculator._aggregate_resource_abilities()`
-discovers resource types dynamically from component `ResourceStorage`, `ResourceGeneration`,
-and `ResourceConsumption` abilities. Any resource defined in `data/resources.json` works —
-including planetary resources like metals, organics, vapors, radioactives, and exotics.
-No hardcoded fuel/energy/ammo assumptions in the combat simulation layer.
+Add a new weapon family by adding one family module, one `FAMILY_METADATA` entry if needed, and one import in `families/__init__.py`. Do not edit `weapon_firing_system`, `targeting_system`, `collision`, or `projectile_manager` for normal family extension.
 
-### Strategy-Relevant Attributes on Ship
+Per-tick maintenance in `ShipCombatEngine`:
 
-`ShipStatsCalculator` also populates these attributes used by the strategy layer
-(via `calculate_design_stats()` in `game/simulation/entities/ship_design_stats.py`):
+- Shield regen: `shield_regen_rate / 100` per tick, costing `shield_regen_cost / 100` energy.
+- Repair: `repair_rate / 100` per tick, repairing the component with lowest HP ratio.
 
-| Attribute | Type | Source | Description |
-|-----------|------|--------|-------------|
-| `cargo_storage` | `Dict[str, float]` | `CargoStorage` abilities | Cargo capacity by type (passengers, generic) |
-| `pod_storage_mass` | `float` | `PodStorage` abilities (raw dict) | Drop pod mass capacity |
-| `warp_resource_costs` | `Dict[str, float]` | `ResourceConsumption` with `trigger='warp_jump'` | Full warp cost breakdown per resource |
+## Ability System
 
-These are aggregated in `_aggregate_cargo_and_pod_abilities()` and
-`_aggregate_resource_abilities()` (warp costs), and applied in `_apply_aggregated_stats()`.
-The strategy layer reads them through `calculate_design_stats()` — do NOT compute
-these independently.
+`game/simulation/components/abilities/base.py::Ability` exposes:
 
----
+- `layer`: `COMBAT`, `STRATEGIC`, or `BOTH`
+- `scope`: `SELF`, `SECTOR`, `ALLIED_SECTOR`, `SYSTEM`, `ALLIED_SYSTEM`, or `PLANET`
+- `stack_group`
+- `tags`, such as `pdc` or `main_weapon`
+- `get_primary_value()`, `get_effective_stat(stat_key)`, `recalculate()`, `update()`
 
-## 5. Targeting and Firing
+`SimpleMultiplierAbility` is the common base for abilities with one numeric value modified by one stat multiplier.
 
-### TargetingSystem
+Ability aggregation (`game/simulation/entities/ability_aggregator.py::calculate_ability_totals`) is two-phase:
 
-**File:** `game/simulation/combat/targeting_system.py`
+- Within a `stack_group`, take max; components without a group each get a unique group.
+- Across groups, sum numeric abilities; marker abilities are boolean OR.
 
-- `select_target(ship, candidates)` -- filters dead/friendly, returns closest enemy
-- `find_valid_target(ship, primary, secondaries, comp, weapon_ab)` -- validates
-  per-weapon constraints (range, arc, PDC vs missile/fighter, seeker range).
-  PDC weapons can only target missiles and fighters (detected via `vehicle_type == 'Fighter'`)
-- `calculate_firing_solution(ship, comp, target)` -- beam: direct aim; projectile/seeker:
-  lead calculation via `solve_lead()` (quadratic intercept formula)
-- `solve_lead(pos, vel, t_pos, t_vel, p_speed)` -- returns intercept time t > 0
+Ability modules live under `game/simulation/components/abilities/`: `weapons.py`, `defense.py`, `propulsion.py`, `resources.py`, `crew.py`, `markers.py`, `cargo.py`, `superweapons.py`, `harvester.py`, `colonize.py`, and `planetary.py`. Use `docs/systems/ability_reference.md` for exact keys, parameters, data formats, and stat bindings.
 
-### WeaponFiringSystem
+## Protocols
 
-**File:** `game/simulation/combat/weapon_firing_system.py`
+Simulation-internal protocols live in `game/simulation/interfaces/`.
 
-`fire_weapons(ship, context)` iterates all components:
+Entity protocols:
 
-1. **Hangar launch:** Components with `VehicleLaunch` ability auto-launch when target exists
-2. **Weapon fire:** Components with `WeaponAbility` that pass:
-   - `can_afford_activation()` -- resource check
-   - `weapon_ab.can_fire()` -- cooldown check
-   - `find_valid_target()` -- valid target in arc/range
+- `ICombatShip`: name, team, position, velocity, HP, shields, layers, combat engine
+- `IProjectile`: owner, team, position, damage, type, target, turn rate
+- `IPhysicsShip`: thrust/turn/mass/movement attributes
+- `ISerializableShip`: strategic persistence fields
 
-Attack creation by type:
-- **Beam** (`BeamWeaponAbility`): Instant hit dict with damage, range, direction
-- **Seeker** (`SeekerWeaponAbility`): Guided `Projectile` with turn_rate, endurance, HP
-- **Standard projectile** (`ProjectileWeaponAbility`): Ballistic `Projectile` with velocity
+`IComponent` includes id, name, active flag, HP, status, ability instances, modifiers, stats, and ability stats; methods include `get_abilities`, `get_ability`, `has_ability`, `has_pdc_ability`, and `can_afford_activation`.
 
-### ShipCombatEngine Cooldowns
+Ability protocols include `IAbility`, `IWeaponAbility`, `IBeamWeaponAbility`, `ISeekerWeaponAbility`, `IProjectileWeaponAbility`, `IResourceConsumptionAbility`, `IResourceStorageAbility`, `IResourceGenerationAbility`, and `IWarpJumpAbility`.
 
-Per-tick maintenance:
-- **Shield regen:** `shield_regen_rate / 100` per tick, costs `shield_regen_cost / 100` energy
-- **Repair:** `repair_rate / 100` per tick, repairs most-damaged component (by hp_ratio)
+TypeGuards use duck typing for MagicMock compatibility.
 
----
+## UI Visibility
 
-## 6. Ability System
+Battle-scoped modifiers appear in:
 
-**File:** `game/simulation/components/abilities/base.py` -- `Ability` base class
-**Aggregation:** `game/simulation/entities/ability_aggregator.py`
+- `game/ui/screens/battle_results_screen.py::_draw_ship_card`: per-ship `"Shields: current/max"` from `ShipOutcome.current_shields` and `.max_shields`.
+- `game/ui/screens/battle_screen.py::get_active_modifier_labels`: live HUD labels from `FleetAuraManager.get_active_bonuses(team_id)`, formatted as `T{N} {stat_key}={value:.2f} ({source})`.
 
-### Ability Base Class
+`BattleResultsScreen` consumes `BattleOutcome` through `game/ui/screens/battle_results_data.py::extract_battle_results(outcome, return_destination)`. It does not read from a live engine.
 
-All abilities extend `Ability` with:
-- `layer: AbilityLayer` -- COMBAT, STRATEGIC, or BOTH
-- `scope: AbilityScope` -- SELF, SECTOR, ALLIED_SECTOR, SYSTEM, ALLIED_SYSTEM, PLANET
-- `stack_group: Optional[str]` -- grouping key for aggregation
-- `tags: Set[str]` -- categorization (e.g., 'pdc', 'main_weapon')
+Visual hit effects are in `game/ui/effects/hit_effects.py`; `BattleScreen` subscribes to combat events and renders timer-based shield, armor, component, and ship-destroyed effects.
 
-Key methods:
-- `get_primary_value() -> float` -- polymorphic value for aggregation
-- `get_effective_stat(stat_key)` -- checks ability-specific stats then component stats
-- `recalculate()` -- called when modifiers change
-- `update() -> bool` -- per-tick processing
+## Replay ID Plumbing
 
-`SimpleMultiplierAbility` -- common base for abilities with one numeric value
-modified by one stat multiplier (7+ subclasses use this).
+Strategy battle capture stores `output/saves/<save>/replays/replay_<uuid>.json` and records the UUID on `engine.replay_id`.
 
-### Two-Phase Aggregation
-
-**File:** `game/simulation/entities/ability_aggregator.py`
-
-`calculate_ability_totals(components, layer?, scope_filter?)`:
-
-**Phase 1 -- Intra-group (MAX / Redundancy):**
-Within each `stack_group`, take the MAX value. Components without a stack_group
-are each treated as their own group (unique key = component instance).
-
-**Phase 2 -- Inter-group (SUM):**
-Across different groups:
-- **Numeric abilities:** SUM all group contributions (all abilities use SUM)
-- **Marker abilities** (`CommandAndControl`, `Armor`, etc.): Boolean OR (any True = True)
-
-Example: Two sensors in stack_group "basic_sensor" with values 1.2 and 1.5
-contribute MAX(1.2, 1.5) = 1.5. A third sensor in stack_group "advanced_sensor"
-with value 1.3 is in a different group. Inter-group SUM gives total = 1.5 + 1.3 = 2.8.
-
-### Ability Categories
-
-Defined across files in `game/simulation/components/abilities/`:
-
-| File | Abilities |
-|------|-----------|
-| `weapons.py` | WeaponAbility, BeamWeaponAbility, ProjectileWeaponAbility, SeekerWeaponAbility |
-| `defense.py` | ShieldProjection, ShieldRegeneration, EmissiveArmor, ToHitAttackModifier, ToHitDefenseModifier |
-| `propulsion.py` | CombatPropulsion, ManeuveringThruster, WarpJump, StrategicMovement |
-| `resources.py` | ResourceConsumption, ResourceStorage, ResourceGeneration |
-| `crew.py` | CrewCapacity, CrewRequired, LifeSupportCapacity |
-| `markers.py` | CommandAndControl, RequiresCommandAndControl, RequiresCombatMovement, StructuralIntegrity, VehicleLaunchAbility |
-| `cargo.py` | CargoStorage |
-| `superweapons.py` | DestroyPlanet, DestroyStar, OpenWarpPoint, CloseWarpPoint, CreateDysonSphere, SelfDestruct, SuperweaponMarker |
-| `harvester.py` | ResourceHarvesterAbility, LocalStorageAbility, SpaceShipyardAbility |
-| `colonize.py` | ColonizePlanet |
-| `planetary.py` | PlanetaryShieldAbility, StrategicResourceGenerationAbility, GeologicStabilizerAbility, StellarStabilizerAbility, WarpFieldStabilizerAbility, ResourceHarvestBoosterAbility, BuildRateBoosterAbility, AtmosphereModifierAbility, QualityImprovementAbility, ShieldModifierAbility, DamageModifierAbility, GravityModifierAbility, WaterModifierAbility, RadiationShieldAbility, ThrustModifierAbility, StrategicSpeedModifierAbility, EnvironmentalDamageAbility, FuelDrainAbility |
-
-> For complete details on every ability (registry keys, required parameters, data formats, stat bindings), see [ability_reference.md](ability_reference.md).
-
----
-
-## 7. Key Protocols
-
-**Files:** `game/simulation/interfaces/`
-
-### Entity Protocols (`entity_protocols.py`)
-
-| Protocol | Purpose | Key Properties |
-|----------|---------|----------------|
-| `ICombatShip` | Ships in combat | name, team_id, position, velocity, hp, shields, layers, combat_engine |
-| `IProjectile` | Projectiles (missiles, bullets) | owner, team_id, position, damage, type, target, turn_rate |
-| `IPhysicsShip` | Ships with movement | is_thrusting, engine_throttle, mass, turn_speed, turn_throttle, acceleration_rate |
-| `ISerializableShip` | Strategic persistence | total_strategic_movement, warp_max_tonnage, ship_class, warp_energy_cost, vehicle_type, theme_id |
-
-TypeGuard functions: `is_combat_ship()`, `is_projectile()`, `is_physics_ship()`, etc.
-Use duck typing (`hasattr` checks) for MagicMock compatibility.
-
-### Component Protocol (`component_protocols.py`)
-
-`IComponent` -- id, name, is_active, current_hp, ability_instances, modifiers, stats,
-ability_stats. Methods: `get_abilities()`, `get_ability()`, `has_ability()`,
-`has_pdc_ability()`, `can_afford_activation()`.
-
-### Ability Protocols (`ability_protocols.py`)
-
-| Protocol | Extends | Key Properties |
-|----------|---------|----------------|
-| `IAbility` | -- | stack_group, tags |
-| `IWeaponAbility` | IAbility | damage, range, reload_time, firing_arc |
-| `IBeamWeaponAbility` | IWeaponAbility | base_accuracy, accuracy_falloff |
-| `ISeekerWeaponAbility` | IWeaponAbility | projectile_speed, endurance, turn_rate, projectile_hp, projectile_damage |
-| `IProjectileWeaponAbility` | IWeaponAbility | projectile_speed |
-| `IResourceConsumptionAbility` | IAbility | trigger, resource_type, amount |
-| `IResourceStorageAbility` | IAbility | resource_type, max_amount |
-| `IResourceGenerationAbility` | IAbility | resource_type, rate |
-| `IWarpJumpAbility` | IAbility | max_tonnage, energy_cost |
-
-TypeGuard functions: `is_weapon()`, `is_beam_weapon()`, `is_seeker_weapon()`, etc.
-
-All protocols are `@runtime_checkable` and designed for 1:1 mapping to
-C# interfaces / Rust traits.
-
----
-
-## 8. UI Modifier Visibility (PROJ-271 Phase 8)
-
-Battle-scoped modifiers (external `ModifierStack` entries from fleet
-boosters, environmental effects, planet auras) are surfaced to the user
-in two places:
-
-**Results Screen — per-ship shield numbers.**
-[`game/ui/screens/battle_results_screen.py::_draw_ship_card`](../../game/ui/screens/battle_results_screen.py) renders a
-`"Shields: current/max"` row on every ship card. `ShipOutcome.current_shields`
-/ `.max_shields` are set by `extract_outcome` and reflect the full composition
-(base + flat bonuses, scaled by storm/fleet multipliers). A +50 flat bonus
-from a shield-projector aura is visible to the user as the difference between
-buffed and baseline ships.
-
-**Battle Screen — live HUD active-modifier panel.**
-[`game/ui/screens/battle_screen.py::get_active_modifier_labels`](../../game/ui/screens/battle_screen.py) pulls
-from `FleetAuraManager.get_active_bonuses(team_id)` for each team and
-formats `"T{N} {stat_key}={value:.2f} ({source})"` labels. The HUD draws
-the list only when the panel is non-empty. Added in PROJ-271 Phase 8.2
-after round-1 audit flagged that the aura manager's `get_active_bonuses`
-method had zero UI consumers.
-
----
-
-## 9. Multi-Team Battle Support (PROJ-275)
-
-All three entry points — Combat Lab, Battle Setup, Strategy — accept any
-number of teams in `[2, 8]`. The engine itself has always supported N
-teams (§0.N-Team Support above); PROJ-275 closed the remaining compiler,
-UI, and conflict-resolution gaps so that the full stack reaches the
-engine with a proper N-team `BattleSpec`.
-
-**Compilers emit one `TeamSpec` per team.** Both `build_manual_battle_spec`
-(Battle Setup) and `build_strategy_battle_spec` (strategy) iterate their
-input (sides / fleets) and emit `len(input)` `TeamSpec`s. Each team's
-`entry_vector` comes from
-`game.simulation.combat.formation.resolve_team_entry_vectors(team_count)`
-— a ring layout that preserves the legacy (-500, 0) / (+500, 0) west/east
-placement for `team_count == 2` and spreads N≥3 teams evenly around a
-circle with each team facing inward toward the origin.
-
-**Enemy-scope fan-out in the registry helper.**
-`game.simulation.combat.ability_stat_registry.emit_entries_for_ability`
-accepts `num_teams` and fans `enemy_*` scope entries out to every
-non-owner team. With 4 teams and owner=0, an `enemy_system` ability
-produces 3 `ModifierEntry` tuples — one targeting each of teams 1, 2, 3.
-The helper is the shared path for both the Battle Setup and strategy
-compilers; callers only need to pass `num_teams=len(teams)`.
-
-**Single N-team conflict resolution.** The strategy
-`ConflictResolutionEngine._resolve_combat_at_hex` makes ONE call into
-`IBattleResolver.resolve_battle(fleets, modifiers, ...)` per contested
-sector, regardless of how many empires are present. The old sequential
-2-fleet decomposition (`while len(fleets_by_emp) > 1: rng.sample(emp_ids, 2)`)
-has been deleted.
-
-**Strategy-layer combat resolution contract (BUG-126).** The strategy
-layer does **not** assign a winner. After the resolver returns:
-
-* `BattleResult.winner` is informational only — the strategy
-  `ConflictResolutionEngine` does not consume it. The legacy
-  survivor-count tiebreaker that picked a "winner" on draws is gone
-  (`_resolve_winner_team` was deleted).
-* The compiler-attached `PostBattleHook`
-  (`game/strategy/combat/post_battle_hook.py::apply_outcome_to_fleets`)
-  is the authoritative source of truth: it mutates each
-  `Fleet.ships` list to reflect SURVIVED / DERELICT / DESTROYED /
-  RETREATED outcomes and prunes empty fleets from
-  `Empire.fleets` via `EmpireWriteService.prune_empty_fleets`
-  (PROJ-370; lifted out of `post_battle_hook.py`).
-* `_resolve_combat_at_hex` simply observes which fleets ended the
-  battle with zero ships and reports their ids in
-  `ConflictResult.fleets_destroyed` — it no longer calls
-  `empire.remove_fleet` itself.
-* Surviving ships from BOTH sides remain in their fleets at the
-  contested hex. If two co-located fleets both retain ships, combat
-  re-engages on the next strategy tick — the `TurnEngine` runs
-  `TICKS_PER_TURN = 100` sub-ticks per turn and dispatches Phase 4
-  combat each tick. There is no "already fought this turn" guard.
-* For the spec compiler's `PostBattleHook` to prune empty fleets,
-  the `empires={team_id: Empire}` mapping must thread through
-  `IBattleResolver.resolve_battle(empires=...)` →
-  `_build_spec(empires=...)` →
-  `build_strategy_battle_spec(empires=...)`. This is wired through
-  for the production `SimulationBattleResolver`. Mock resolvers in
-  tests must accept the `empires` kwarg even if they ignore it.
-
-**`COMBAT_RESOLVED` event schema (BUG-126 + FEAT-26).** The event payload
-no longer carries `winner_fleet_id` / `loser_fleet_id`. Keys:
-
-* `participating_fleet_ids: List[int]` — every fleet that entered
-  the battle, in team_id order.
-* `surviving_fleet_ids: List[int]` — fleets that retained ≥1 ship.
-* `destroyed_fleet_ids: List[int]` — fleets the hook wiped to zero
-  ships.
-* `empire_id` carries the **lowest** participating empire id (kept
-  for the existing event-log filter column; not a "winning empire"
-  marker).
-* `replay_id: Optional[str]` (FEAT-26) — uuid of the captured replay
-  sidecar at `output/saves/<save>/replays/replay_<uuid>.json`, or
-  `None` for legacy events / `sole_survivor` / `no_ships` shortcuts
-  / runs without a registered capture sink. The Event Log UI reads
-  this to render a per-row Replay button. Older saves with events
-  from before FEAT-26 simply have no `replay_id` key in
-  `Event.details`; `details.get("replay_id")` resolves to `None` and
-  the button renders disabled with the "older save" tooltip.
-* `replay_unavailable_reason: Optional[str]` (issue #8) — when
-  `replay_id` is `None` for a structural reason (not a missing-capture
-  accident), this carries the reason key (`"sole_survivor"` /
-  `"no_ships"`) so the Event Log shows an honest disabled-button
-  tooltip instead of "older save."
-
-Every resolved combat emits exactly one event, even on draws. Old
-clients reading `winner_fleet_id` will silently see `None` — per
-project ERADICATE policy, callers should be migrated to the new
-schema in the same change that introduces them. The event-log UI
-(`EventLogWindow`) reads `category` / `turn` / `system` / `planet` /
-`storm` / `message` for column rendering, plus
-`details["replay_id"]` (FEAT-26) for the Replay action column.
-
-**Diagnostic INFO logging (BUG-126).** Every strategy battle now
-logs its branch decision and post-battle survivor counts at INFO so
-operators can grep `battle.log` for which path each battle took:
-
-* `simulation_adapter.py`:
-  `Strategy battle resolved branch={shortcut_sole_survivor |
-  shortcut_no_ships | truncated_no_capable | simulator}
-  fleets=[Fleet 1, Fleet 2]` (issue #8 split the legacy
-  `shortcut_no_capable` into `shortcut_no_ships` and
-  `truncated_no_capable`)
-* `simulation_adapter.py` (after the simulator runs):
-  `Strategy battle complete: ticks=N simulator_winner=X
-  survivors[team 0=K, team 1=K]`
-* `conflict_resolution_engine.py` on entry:
-  `Combat at HexCoord(q, r): empire 0/Fleet 1(N ships) vs empire 1/Fleet 2(N ships)`
-* `conflict_resolution_engine.py` on exit:
-  `Combat at HexCoord(q, r) resolved: surviving=[1, 2], destroyed=[]`
-
-**Interface shape.** `IBattleResolver.resolve_battle(fleets: Sequence[Fleet],
-modifiers: Optional[Mapping[int, Any]] = None, seed=None, registries=None,
-environmental_effects=None, empires=None) -> BattleResult`. `BattleResult`
-carries `team_survivors: Dict[int, List[IPostBattleShip]]` keyed by team_id
-(one entry per participating team, including empty lists for teams that got
-wiped). The `empires` kwarg (BUG-126) carries the
-`{team_id: Empire}` mapping the spec compiler's `PostBattleHook` needs to
-prune empty fleets.
-
-**PROJ-320 (closed — was the BUG-126 performance follow-up).** Two
-stationary co-located fleets historically re-engaged every sub-tick of
-every turn (~100 battles per turn). PROJ-320 reframed strategy combat
-to per-fleet movement-opportunity triggering: combat fires once per
-fleet per `tick % get_tick_interval(fleet.speed) == 0` tick, gated by
-whether the fleet successfully left the hex on that tick (TurnEngine
-derives `moved_fleet_ids` from a pre/post Phase-3 location diff).
-A speed-6 vs speed-4 stalemate now resolves in 6 + 4 = 10 rounds — a
-~10× reduction at typical contested sectors. Multi-fleet-per-empire
-encounters now have every fleet contributing rounds independently,
-with allied fleets grouped into a single team by the spec compiler
-(`build_strategy_battle_spec` groups by `owner_id` so allies don't
-fight each other). Performance regression gate at
-`tests/performance/test_contested_hex_round_budget.py`. The orthogonal
-"weaponless-fleet simulator runs to `absolute_max_ticks`" issue was
-addressed by issue #8's truncated-run path — `SimulationBattleResolver`
-now passes a `max_ticks=_BRIEF_RUN_TICK_BUDGET` cap when both fleets
-have ships but no team has weapons. Design + decisions log: see
-`Projects/active_projects/PROJ-320/` (or `archived_projects/PROJ-320/`
-post-archive).
-
-**Max teams = 8.** UI cap + ring entry-vector sanity cap. The simulation
-engine has no hard cap; the limit lives in `BattleSetupState`, the two
-spec compilers (`_MIN_TEAMS`/`_MAX_TEAMS = 2/8`), and
-`resolve_team_entry_vectors`.
-
-**`TeamEliminatedCondition`** fires when **≤1 team retains alive ships**
-— correct for any N. The `BattleOutcome.winner` is the sole surviving
-team's `team_id`, or `None` for a total wipe / still-in-progress draw.
-
-**AI targeting** stays the same for all N: every non-self team is hostile
-(`AIController._find_enemies_in_radius` filters on `team_id != self.ship.team_id`).
-No alliances, no target preference between enemy teams.
-
-**Mid-battle reinforcements** join the team specified in their
-`ShipSpec`; the engine adds them to `engine.teams[team_id]` via
-`add_ship_mid_battle`. Mid-battle *team creation* is explicitly NOT
-supported — the team roster is fixed at battle start.
-
-**Mid-battle destruction of external modifier sources is NOT supported.**
-External `ModifierStack` entries (from Battle Setup complex toggles,
-strategy planet auras compiled via `CombatModifierCollector`) are static
-for the duration of the battle. They cannot be destroyed or deactivated
-mid-fight, because they aren't ship entities — they're pre-compiled stack
-entries. A future project that wants destructible external modifiers
-must turn them into real in-battle ship entities (with their own ability
-providers) rather than static stack entries.
-
----
-
-## 10. Replay ID Plumbing (FEAT-26)
-
-PROJ-312 captures every strategy battle to
-`output/saves/<save>/replays/replay_<uuid>.json` and stashes the uuid
-on `engine.replay_id` (set by
-`IReplayCaptureSink.on_battle_started` — see
-[`game/simulation/battle_runner.py`](../../game/simulation/battle_runner.py)
-`start_engine_from_spec`). FEAT-26 surfaces that uuid through every
-layer above so the Event Log can render a per-row Replay button.
-
-**Plumbing path (single source of truth at each seam):**
-
-```
-engine.replay_id  (battle_runner.py:start_engine_from_spec)
-   │
-   ▼  extract_outcome reads engine.replay_id; "" → None coercion
-BattleOutcome.replay_id : Optional[str]
-   │
-   ▼  SimulationBattleResolver.resolve_battle (simulator + truncated branches)
-BattleResult.replay_id : Optional[str]
-BattleResult.replay_unavailable_reason : Optional[str]    ← issue #8
-   │
-   ▼  ConflictResolutionEngine._resolve_combat_at_hex captures both
-   │  fields and forwards via _log_combat_result(replay_id=...,
-   │  replay_unavailable_reason=...)
-EventBus.log_event(... replay_id=..., replay_unavailable_reason=...)
-   │
-   ▼  Event.details=kwargs (auto-persists in saves; no schema change)
-event["details"]["replay_id"]                : Optional[str]
-event["details"]["replay_unavailable_reason"] : Optional[str]    ← issue #8
-   │
-   ▼  EventLogDataSource.get_cell_replay_id(row_index)
-   ▼  EventLogDataSource.get_cell_replay_unavailable_reason(row_index)
-VirtualTable replay_action column → per-row Replay button
-   │  When disabled, _disabled_replay_tooltip() picks an honest
-   │  string from the reason key instead of "older save."
-   ▼  EventLogWindow._handle_replay_click → ReplayResolver.resolve(...)
-   │  graceful-degradation dispatch (UIMessageWindow on missing /
-   │  corrupt / version_drift / registry_drift) + launch callback
-Game.start_replay(record) → BattleConfig(replay_mode=True, ...)
-   → BattleScreen renders the "REPLAY MODE" badge
+```text
+engine.replay_id
+-> BattleOutcome.replay_id
+-> BattleResult.replay_id / replay_unavailable_reason
+-> COMBAT_RESOLVED event details
+-> EventLogDataSource replay cells
+-> EventLogWindow replay click
+-> ReplayResolver.resolve(...)
+-> Game.start_replay(record)
+-> BattleController.start_from_spec(..., replay_mode=True, ship_builder=...)
 ```
 
-**Empty-string canonicalisation.** `NullCaptureSink.on_battle_started`
-returns `""` (no real capture happened); `extract_outcome` coerces
-`""` → `None` so downstream consumers see one signal. Do not propagate
-empty strings further — `ReplayResolver.resolve("")` will report
-`reason="missing"`, which would surface a misleading toast on Event
-Log rows that never had a real replay to begin with.
+`NullCaptureSink.on_battle_started()` returns `""`; `extract_outcome` coerces this to `None`. Do not propagate empty replay IDs.
 
-**Where `replay_id` stays `None`:**
+`replay_id` remains `None` for `sole_survivor`, `no_ships`, paths with `capture_context=None`, Combat Lab/Battle Setup runs without capture context, and legacy event rows.
 
-* `SimulationBattleResolver`'s `sole_survivor` shortcut (one team has
-  any combat-capable ship; the other has 0 ships at battle start).
-  Ships `replay_unavailable_reason="sole_survivor"` so the UI tooltip
-  reads "No combat — one side had no ships." (issue #8).
-* `SimulationBattleResolver`'s `no_ships` defensive shortcut (both
-  fleets have empty ship lists at battle start). Ships
-  `replay_unavailable_reason="no_ships"` (issue #8).
-* Headless paths that pass `capture_context=None` (replay-of-replay
-  playback, deterministic verification tests).
-* Combat Lab + Battle Setup — capture context is not built for these
-  contexts in v1 (loose acceptance scope; tracked for follow-up).
-* Legacy events from saves predating FEAT-26 / issue #8.
+## Replay Capture, Playback, Verification
 
-**Issue #8 — truncated no_capable run.** When both fleets have ships
-but no team is combat-capable (e.g. civilian transports vs damaged-out
-fleet), `SimulationBattleResolver` runs the simulator at the truncated
-`_BRIEF_RUN_TICK_BUDGET` (`game/strategy/combat/spec_compiler.py:_BRIEF_RUN_TICK_BUDGET`,
-2 000 ticks = `_DEFAULT_ABSOLUTE_MAX_TICKS // 10`). This produces a
-real (short) replay so the player can inspect the encounter; ships
-manoeuvre but no shots fire. The truncated path uses
-`build_strategy_battle_spec(..., max_ticks=N)` which sets BOTH
-`absolute_max_ticks=N` AND `end_condition=TickLimitCondition(max_ticks=N)`
-— required because the strategy default `TeamEliminatedCondition`
-cannot fire when neither team has any way to destroy the other.
+Replay is not a separate engine. Playback re-runs `run_battle(spec)` with a frozen seed and reconstructed ship state.
 
----
+Files in `game/simulation/replay/`:
 
-## 11. Replay Capture & Playback (PROJ-312)
+- `replay_serialization.py`: free `to_dict`/`from_dict` pairs for simulation DTOs; `REPLAY_SCHEMA_VERSION = "2.0.0"`.
+- `replay_spec.py`: `ReplaySpec`, `ReplayShipSpec`; JSON-safe mirror of `BattleSpec`.
+- `replay_outcome.py`: `ReplayOutcome`.
+- `replay_record.py`: `ReplayRecord` with spec, outcome, id, timestamp, sector, turn, empires, and component registry hash.
+- `replay_capture.py`: `IReplayCaptureSink`, `NullCaptureSink`, `ReplayCaptureContext`, default sink accessors.
+- `replay_player.py`: `build_replay_ship_builder(record)`, `replay_record_to_spec(record)`, `run_replay_headless(record, ai_factory, ship_builder)`.
 
-The replay system is **not a separate engine.** A replayed battle is the
-same `run_battle(spec)` running with a frozen RNG seed and ship state
-reconstructed from a captured snapshot. The pieces in `game/simulation/replay/`
-package the inputs/outputs of a battle into a JSON-safe record that can be
-re-fed into `run_battle()` later.
+Capture lifecycle:
 
-**Files:** `game/simulation/replay/`
-- `replay_serialization.py` — free-function `to_dict`/`from_dict` pairs for
-  every simulation DTO (boundary, modifier entry, modifier stack,
-  `BattleSpec`, `BattleOutcome`). Defines `REPLAY_SCHEMA_VERSION = "2.0.0"`
-  (bumped from `"1.0.0"` by PROJ-354A — see "Per-Component End-State
-  Fidelity" below). Free functions (not methods) so DTOs stay
-  frozen/hashable.
-- `replay_spec.py` — `ReplaySpec`, `ReplayShipSpec`. JSON-safe mirror of
-  `BattleSpec`. Each `ReplayShipSpec` carries a per-ship `ShipInstance`
-  snapshot so playback is decoupled from current strategy state.
-- `replay_outcome.py` — `ReplayOutcome`. Tags a serialized `BattleOutcome`
-  with the schema version (symmetric to `ReplaySpec`).
-- `replay_record.py` — `ReplayRecord`. Frozen dataclass bundling spec +
-  outcome + capture metadata (id, timestamp, sector, turn, empires,
-  components-registry hash). The exact disk format written by
-  `ReplayStore` (strategy-side; see [strategy_layer.md](strategy_layer.md)).
-- `replay_capture.py` — `IReplayCaptureSink` protocol + `NullCaptureSink`
-  + `ReplayCaptureContext` DTO. Module-level DI: `get_default_capture_sink()`
-  / `set_default_capture_sink()` / `reset_default_capture_sink()`.
-- `replay_player.py` — playback entry: `build_replay_ship_builder(record)`,
-  `replay_record_to_spec(record)`, `run_replay_headless(record, ai_factory, ship_builder)`.
+1. `start_engine_from_spec` gets the default capture sink.
+2. Sink `on_battle_started(replay_spec, context=ctx)` returns `replay_id`.
+3. Engine stores `engine.replay_id`.
+4. Battle runs.
+5. `extract_outcome` reads/coerces `engine.replay_id`, calls `sink.on_battle_ended(replay_id, outcome)`, and sets `BattleOutcome.replay_id`.
 
-### Capture Lifecycle
+`ReplayCaptureContext` is caller-built. Strategy supplies sector, turn, empires, ship-instance lookup, and component registry hash. Simulation must not know strategy-shaped metadata.
 
+Playback lifecycle:
+
+1. UI resolves `replay_id` through strategy `ReplayResolver`, which gates on schema version and registry hash.
+2. `replay_record_to_spec(record)` rebuilds `BattleSpec`.
+3. `build_replay_ship_builder(record)` reconstructs ships from snapshots via `ShipInstanceSerializer.from_dict()` and `ShipInstance.to_ship(...)`.
+4. Headless playback calls `run_replay_headless(..., capture_context=None)`.
+5. Visual playback calls `BattleController.start_from_spec(..., replay_mode=True, ship_builder=...)`; `BattleScreen` shows replay mode, hides order buttons, and skips post-battle results.
+
+Schema `2.0.0` is current. Old replay schemas surface as `version_drift`, not migrations.
+
+Determinism: simulation, engine, and AI hot paths must use seeded RNG. AST guards forbid unseeded `random.*` and `time.time()` in those layers. New random behavior must accept injected `Random` or seed.
+
+Background verification:
+
+- `game/strategy/services/replay_verification_coordinator.py` subscribes to `ReplayStore.add_on_record_persisted_listener`.
+- It runs a single-worker FIFO queue, materializes ship builders through `game/strategy/services/replay_ship_builder.py`, calls `run_replay_headless(record, capture_context=None)`, runs the pure verifier, and writes sidecars.
+- Sidecars are `replay_<id>.verification.json` beside the replay record. Status values: `PASSED`, `FAILED`, `ERROR`, `SKIPPED_DISABLED`, and `SKIPPED_QUEUE_FULL`.
+- Settings live in `output/settings/replay_settings.json`: `verification_enabled` default `True`, `verification_queue_cap` default `16`.
+- No recursion: verifier playback passes `capture_context=None`, so verification never captures another replay.
+- Combat Lab fallback uses `DesignOnlyMaterializer(load_combat_lab_design)` wired at bootstrap; missing fallback for snapshotless records writes an ERROR sidecar.
+- `RunLoop.run()` shutdown order is LLM calls, replay coordinators, then `pygame.quit()`.
+- `game/simulation/replay/replay_verifier.py` imports only stdlib and `game.simulation.*`; strategy ship-builder reconstruction lives outside simulation.
+
+## Extension Rules
+
+- Add battle entry behavior by extending or creating a context-specific spec compiler, not by bypassing `run_battle`.
+- Add battle-scoped effects by emitting `ModifierEntry` through `ABILITY_STAT_REGISTRY` / `emit_entries_for_ability`; keep `stack_group` explicit.
+- Add ship-provided aura behavior through abilities and `FleetAuraManager`; provider auras are recalculated and removed when the provider ship is destroyed.
+- Add new weapon families through `game/simulation/combat/families/`, `WeaponFamily`, `FAMILY_METADATA`, and registry import only.
+- Add abilities under `game/simulation/components/abilities/`; document exact ability keys and data in the owned docs tree when source docs are allowed to change.
+- Preserve seeded determinism for all replayable combat behavior.
+- Preserve the strategy post-battle hook as the only authoritative fleet mutation path.
+- Preserve component identity by `(component_id, instance_index)`.
+- Do not add compatibility shims or migrations for old save/replay formats; old data may surface as unavailable/version drift.
+
+## Tests And Commands
+
+Focused tests to check when editing combat:
+
+- `tests/unit/simulation/test_battle_runner.py`
+- `tests/unit/simulation/test_battle_runner_di.py`
+- `tests/unit/simulation/test_battle_runner_telemetry.py`
+- `tests/unit/simulation/test_battle_runner_component_hp.py`
+- `tests/unit/simulation/battle_controller/test_start_from_spec.py`
+- `tests/unit/simulation/battle_controller/test_outcome_emission.py`
+- `tests/unit/simulation/battle_controller/test_execution.py`
+- `tests/unit/simulation/test_battle_config.py`
+- `tests/unit/simulation/services/test_battle_service.py`
+- `tests/unit/simulation/systems/test_battle_engine_n_teams.py`
+- `tests/integration/simulation/test_three_team_battle.py`
+- `tests/integration/simulation/test_four_team_battle.py`
+- `tests/unit/simulation/systems/test_exit_policy.py`
+- `tests/integration/simulation/test_boundary_retreat.py`
+- `tests/unit/simulation/managers/test_retreat_manager.py`
+- `tests/unit/simulation/combat/test_weapon_registry.py::TestExtensibilityAcceptance`
+- `tests/unit/simulation/combat/test_ability_stat_registry.py`
+- `tests/unit/simulation/combat/test_fleet_aura_manager_modifier_stack.py`
+- `tests/unit/simulation/combat/test_fleet_aura_unknown_stat_key_warning.py`
+- `tests/unit/simulation/entities/test_ship_component_manager.py`
+- `tests/unit/simulation/entities/test_ship_shield_bonus_add.py`
+- `tests/performance/test_contested_hex_round_budget.py`
+- `tests/performance/test_telemetry_overhead.py`
+- `tests/integration/strategy/test_replay_capture_e2e.py`
+- `tests/integration/ui/test_event_log_replay_e2e.py`
+- `tests/integration/ui/test_replay_visual_launch_e2e.py`
+- `tests/integration/replay/test_capture_pipeline.py`
+- `tests/integration/replay/test_replay_playback.py`
+- `tests/integration/replay/test_replay_resolver.py`
+- `tests/integration/replay/test_replay_store.py`
+- `tests/unit/simulation/replay/test_serialization.py`
+- `tests/unit/simulation/replay/test_replay_player.py`
+- `tests/unit/simulation/replay/test_replay_verifier.py`
+- `tests/unit/simulation/replay/test_replay_verifier_imports.py`
+- `tests/unit/strategy/services/test_replay_store_eviction.py`
+- `tests/unit/strategy/services/test_replay_verification_sidecar.py`
+- `tests/unit/strategy/services/test_replay_verification_coordinator.py`
+- `tests/integration/replay/test_verification_queue_integration.py`
+- `tests/integration/replay/test_headless_visual_equivalence.py`
+- `tests/integration/replay/test_verification_uses_production_materializer.py`
+- `tests/integration/replay/test_combat_lab_verification.py`
+- `tests/unit/test_run_loop_shutdown_ordering.py`
+
+Stale reference corrections in this replacement:
+
+- `tests/unit/simulation/test_unified_entry_guard.py` is not present in the current tree; unified-entry coverage is split across battle runner, controller, and DI tests listed above.
+- `tests/unit/simulation/replay/test_replay_serialization.py` is now `tests/unit/simulation/replay/test_serialization.py`.
+- Strategy replay resolver/store coverage is under `tests/integration/replay/` and `tests/unit/strategy/services/`, not `tests/unit/strategy/test_replay_resolver.py` or `tests/unit/strategy/test_replay_store.py`.
+- `BattleOutcome.winner` is not a current field; use `BattleEngine.get_winner()` or strategy `BattleResult.winner` as appropriate.
+- `ReturnDestination` is canonical in `game/core/return_destination.py`.
+- Component status has no `DESTROYED` enum member.
+
+Commands:
+
+```bash
+pytest tests/path/to/test.py -k test_name
+pytest tests/ --testmon
+python -m combat_lab.run_tests
+python Tools/test_sharded/test_sharded.py
 ```
-start_engine_from_spec(spec, ...)         # battle_runner.py
-   │  (1) sink = get_default_capture_sink()
-   │  (2) replay_id = sink.on_battle_started(replay_spec, context=ctx)
-   │  (3) engine.replay_id = replay_id
-   ▼
-run_battle ticks the engine to completion
-   │
-   ▼
-extract_outcome(engine)                   # battle_runner.py
-   │  reads engine.replay_id; "" → None coercion
-   │  sink.on_battle_ended(replay_id, outcome)
-   ▼
-BattleOutcome.replay_id : Optional[str]   # plumbed onward (see § 10)
-```
-
-`ReplayCaptureContext` is built by the **caller** (`build_strategy_battle_spec`
-adds sector/turn/empires; the components-registry hash is computed via
-`compute_components_registry_hash()`). The simulation layer never knows
-strategy-shaped metadata — the sink owns it.
-
-`NullCaptureSink.on_battle_started` returns `""`, which `extract_outcome`
-coerces to `None`. This is the single-signal canonicalisation documented
-in § 10 ("Empty-string canonicalisation").
-
-### Playback Lifecycle
-
-1. UI resolves a `replay_id` to a `ReplayRecord` via the strategy-side
-   `ReplayResolver` (see [strategy_layer.md](strategy_layer.md) §
-   "Replay Persistence"). Resolver gates on schema version and registry
-   hash; mismatches surface as `version_drift` / `registry_drift`.
-2. `replay_record_to_spec(record)` rebuilds a `BattleSpec` from the
-   serialized graph (boundary, fleets, modifier stack, AI specs).
-3. `build_replay_ship_builder(record)` returns a closure that, for each
-   `ShipSpec.instance_id`, looks up the snapshot blob, calls
-   `ShipInstanceSerializer.from_dict()` (cross-layer late import — see
-   [01_ARCHITECTURE.md](../01_ARCHITECTURE.md) § Late Imports), then
-   `ShipInstance.to_ship(pos, team_id, registries)` to materialise an
-   in-engine `Ship`.
-4. **Headless playback:** `run_replay_headless(record, ai_factory, ship_builder)`
-   calls `run_battle(spec, ship_builder=..., capture_context=None)`. The
-   `None` capture context is critical — it suppresses the sink so the
-   replay does not itself produce a replay (no infinite loop).
-5. **Visual playback:** the UI dispatches to
-   `BattleController.start_from_spec(spec, replay_mode=True, ship_builder=...)`.
-   `BattleScreen` renders a "REPLAY MODE" badge, hides order buttons, and
-   skips the post-battle results transition.
-
-### Per-Component End-State Fidelity (PROJ-354A — schema 2.0.0)
-
-`ComponentStateSpec` (defined in `game/simulation/battle_spec.py`) is the
-frozen DTO that carries each component's persisted state into and out of
-a battle. The replay record's `outcome.data.teams[*].ships[*].components`
-array is a tuple of `ComponentStateSpec` entries, serialized via
-`_component_state_to_dict` in `replay_serialization.py`.
-
-Fields:
-
-| Field | Type | Source at capture | Purpose |
-|-------|------|-------------------|---------|
-| `component_id` | `str` | `Component.id` | Stable design-id for component lookup |
-| `instance_index` | `int` | per-id counter inside the layer walk | Disambiguates duplicate-id components on the same ship |
-| `current_hp` | `float` | `Component.current_hp` | Live HP at battle end |
-| `max_hp` | `float` | `Component.max_hp` | Capacity at battle end (PROJ-354A — needed for verification baseline; mod stack may reshape this) |
-| `status` | `str` | `Component.status.name` | `ComponentStatus.name` — one of `ACTIVE`, `DAMAGED`, `NO_CREW`, `NO_POWER`, `NO_FUEL`, `NO_AMMO`. Serialized as the **name** (string), not the `auto()` numeric value, because `auto()` outputs are not stable across Python versions (Codex correction during PROJ-354A inter-agent discussion). There is no `DESTROYED` enum member; destruction is `current_hp == 0` plus `is_active is False`. |
-| `is_active` | `bool` | `Component.is_active` | Binary operational flag (collapses several status values; kept alongside `status` for backward-compatible reads in the post-battle hook bridge) |
-
-**Capture path:** `_extract_component_states(engine_ship)` in
-`battle_runner.py` walks the live `Ship.layers` after the battle ends and
-emits one `ComponentStateSpec` per component. `_build_ship_outcome` calls
-it; the result tuple becomes `ShipOutcome.components`.
-
-**Schema version migration:** the `max_hp` + `status` addition is
-backward-incompatible for the JSON dict shape, so `REPLAY_SCHEMA_VERSION`
-moves from `"1.0.0"` → `"2.0.0"`. Per project convention (CLAUDE.md
-Rule 3 — no save/replay compat shims), existing v1 replay files surface
-through `ReplayResolver.resolve()` as `version_drift` and the UI gates
-them out (see `replay_resolver.py:103-104`); they are skipped gracefully
-with a "different game version" tooltip rather than migrated in place.
-
-**Why these fields specifically:** PROJ-354B's end-state verifier
-compares the captured live outcome against a re-run replay's outcome
-field-by-field. Without `max_hp`, divergence in mod-induced cap
-reshaping is invisible. Without `status` (which carries 6 distinct
-values where `is_active` collapses to 2), two damage scenarios that
-produce different statuses but the same `is_active` would silently pass.
-
-### Determinism Contract
-
-Replays are byte-stable because the RNG is fully seeded per battle. See
-[`02_PATTERNS.md`](../02_PATTERNS.md) Pattern #18 (Per-Battle RNG, PROJ-252,
-extended by PROJ-312): an AST guard test forbids unseeded `random.*` /
-`time.time()` calls inside `simulation/`, `engine/`, and `ai/` layers. New
-abilities that need randomness must accept an injected `Random` instance
-or `seed` parameter. Adding a non-deterministic source anywhere in the
-hot path will fail CI.
-
-### Test Coverage
-
-| Test | Purpose |
-|------|---------|
-| `tests/integration/simulation/test_replay_playback.py` | Round-trip determinism: capture → serialize → deserialize → re-run → outcome equality. |
-| `tests/integration/simulation/test_replay_capture_e2e.py` | `SimulationBattleResolver` wiring of the capture sink across the simulator + truncated branches. |
-| `tests/integration/strategy/test_event_log_replay_e2e.py` | UI-side button click → resolver → playback dispatch. |
-| `tests/unit/simulation/replay/test_replay_serialization.py` | `to_dict`/`from_dict` round-trips per DTO. |
-| `tests/unit/strategy/test_replay_resolver.py` | Graceful degradation for missing / corrupt / version-drift / registry-drift. |
-| `tests/unit/strategy/test_replay_store.py` | Persistence (atomic write, ring-buffer eviction, settings fallback). |
-
-### Background Verification (PROJ-354B + PROJ-366)
-
-Every persisted replay record is verified asynchronously after capture.
-The `ReplayVerificationCoordinator` (in
-`game/strategy/services/replay_verification_coordinator.py`) is a
-single-worker FIFO queue that:
-
-1. Subscribes to `ReplayStore.add_on_record_persisted_listener` at
-   `coordinator.start()`.
-2. On callback, enqueues the record (or writes a `SKIPPED_QUEUE_FULL`
-   sidecar inline if at cap).
-3. The worker thread pops records FIFO, materializes a ship builder via
-   `build_replay_ship_builder` (production materializer factory in
-   `game/strategy/services/replay_ship_builder.py`), runs
-   `run_replay_headless(record, capture_context=None)`, runs the pure
-   verifier, and writes a sidecar.
-
-**Sidecar schema and file layout:** for each `replay_<id>.json`, a
-sibling `replay_<id>.verification.json` records the verification result.
-Schema is defined in `game/strategy/services/replay_verification_sidecar.py`
-(`VerificationSidecar` dataclass, `REPLAY_VERIFICATION_SCHEMA_VERSION`).
-Status values: `PASSED`, `FAILED`, `ERROR`, `SKIPPED_DISABLED`,
-`SKIPPED_QUEUE_FULL`. Sidecars are deleted alongside their replay record
-(both via explicit `delete()` and ring-buffer eviction).
-
-**Settings:** `output/settings/replay_settings.json` carries
-`verification_enabled` (default `True`) and `verification_queue_cap`
-(default `16`). Loaded by `load_replay_settings()` once at bootstrap and
-shared by both the store and the coordinator (single instance avoids
-divergence between consumers).
-
-**No-recursion guarantee:** `run_replay_headless` passes
-`capture_context=None` so `start_engine_from_spec` skips the capture
-sink. The verifier headless replay cannot itself produce a replay
-record. Pinned by integration test
-`tests/integration/replay/test_verification_queue_integration.py::test_live_battle_produces_passed_sidecar_and_no_recursion`.
-
-**Combat Lab fallback:** Combat Lab captures have
-`ShipSpec.instance_ref=None`, so the captured `ReplaySpec.iter_ship_snapshots()`
-yields `None` for every ship. The coordinator constructor accepts a
-`fallback_ship_builder` callable; production wires it as
-`DesignOnlyMaterializer(load_combat_lab_design)` wrapped in a closure
-that captures the bootstrap-time `registries` (see
-`game/app_bootstrap.py::bootstrap` `_replay_combat_lab_fallback`). When
-no fallback is wired AND the snapshot is missing,
-`build_replay_ship_builder` raises `ValueError` and the coordinator
-writes an ERROR sidecar.
-
-**Production wiring (PROJ-366):** `game/app_bootstrap.py` constructs the
-`ReplayStore`, registers it via `set_default_capture_sink` +
-`set_replay_store`, constructs the `ReplayVerificationCoordinator` with
-the production `AIControllerFactory` + `get_default_registry_provider()`
-+ shared `replay_settings` + Combat Lab fallback adapter, and calls
-`coordinator.start()`. `RunLoop.run()` calls
-`shutdown_all_coordinators(timeout=5.0)` between
-`shutdown_all_calls(timeout=5.0)` (LLM cleanup) and `pygame.quit()`. The
-ordering is pinned by name in
-`tests/unit/test_run_loop_shutdown_ordering.py`.
-
-**Layer compliance:** the verifier (`game/simulation/replay/replay_verifier.py`)
-imports only stdlib + `game.simulation.*`. PROJ-354B audit-remediation
-`27e297815` moved `build_replay_ship_builder` out of the simulation
-layer so the verifier no longer reaches into Strategy. Locked in by
-`tests/unit/simulation/replay/test_replay_verifier_imports.py` (AST
-lint).
-
-| Test | Purpose |
-|------|---------|
-| `tests/integration/replay/test_verification_queue_integration.py` | Live battle → store → coordinator → sidecar PASSED; toggle case → SKIPPED_DISABLED; no-recursion assertion. |
-| `tests/integration/replay/test_headless_visual_equivalence.py` | `run_replay_headless` outcome ≡ `BattleController.start_from_spec` outcome at the spec boundary (no Pygame UI). |
-| `tests/integration/replay/test_verification_uses_production_materializer.py` | Coordinator uses `build_replay_ship_builder` from the source module, not a hand-built test stub. |
-| `tests/integration/replay/test_combat_lab_verification.py` | Combat Lab synthetic record + fallback wired → PASSED; no fallback → ERROR with diagnostic. |
-| `tests/unit/simulation/replay/test_replay_verifier_imports.py` | AST lint: verifier has no `game.strategy.*`/`game.ui.*`/`game.ai.*` imports. |
-| `tests/unit/test_run_loop_shutdown_ordering.py` | `shutdown_all_calls` → `shutdown_all_coordinators` → `pygame.quit()` order pinned by test name. |

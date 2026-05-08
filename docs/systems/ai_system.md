@@ -1,311 +1,247 @@
-# AI System Architecture
-
-> **Last verified:** 2026-04-11
-
-This document describes the combat AI system that controls autonomous ship behavior during battles.
-
----
-
-## Architecture Overview
-
-```
-game/ai/
-  __init__.py                  # Public API exports
-  controller.py                # AIController - per-ship decision loop
-  behaviors.py                 # Movement behavior classes (11 total)
-  spatial_behaviors/            # Spatial positioning system (6 behaviors)
-    __init__.py                  # Factory: create_spatial_behavior()
-    base.py                      # SpatialBehavior ABC + apply_separation()
-    battle_line.py               # Rigid line/wedge/echelon
-    column.py                    # Rigid single-file following
-    screen.py                    # Loose orbit around anchor
-    escort.py                    # Loose close-protection
-    patrol_zone.py               # Loose zone coverage
-    free_maneuver.py             # No spatial constraints
-  group_target_coordinator.py  # Focus fire, reserves, flagship succession
-  policy_manager.py            # PolicyManager (via ApplicationContext) - loads targeting/movement policies
-  target_evaluator.py          # TargetEvaluator - scores potential targets
-  combat_utils.py              # Shared helpers (distance, HP, PDC arc checks)
-  ai_factory.py                # AIControllerFactory - two-phase creation
-  protocols.py                 # IGridEntity, IProjectile, IComponentHealth protocols
-  interfaces/
-    __init__.py
-    controllable.py            # IControllable ABC + ShipControllableAdapter
-```
+# AI System Compact Reference
+
+> **Last verified:** 2026-05-08 - Checked `docs/systems/ai_system.md`, the compact ALT source, current `game/ai/`, policy JSON, and relevant AI boundary tests.
+
+Combat AI controls autonomous ship behavior during battles. It lives in `game/ai/`, may depend on Core, Services, Engine, and Simulation, and is injected into Simulation through protocols. Simulation and Strategy code should not import concrete AI classes at module level; UI/app composition roots provide `AIControllerFactory`.
+
+## Architecture
+
+| Area | Files | Responsibility |
+|---|---|---|
+| Public API | `game/ai/__init__.py` | Exports controller, core behaviors, `PolicyManager`, `TargetEvaluator`, `AIControllerFactory`. |
+| Controller | `game/ai/controller.py` | Per-ship tick loop, policy resolution, targeting, behavior selection/execution. |
+| Movement | `game/ai/behaviors.py` | Direct per-ship movement/firing behaviors. |
+| Spatial | `game/ai/spatial_behaviors/` | Group-relative desired-position behaviors plus anti-clumping helpers. |
+| Coordination | `game/ai/group_target_coordinator.py` | Stateless focus fire, reserve commitment, flagship succession. |
+| Policies | `game/ai/policy_manager.py`, `data/*_policies.json` | Lazy-loaded movement, targeting, and group policy presets. |
+| Targeting | `game/ai/target_evaluator.py`, `game/ai/combat_utils.py` | Rule scoring, safe entity helpers, distance/capability/PDC checks. |
+| Boundaries | `game/ai/ai_factory.py`, `game/ai/interfaces/controllable.py`, `game/ai/protocols.py` | Factory DI, `IControllable` adapter, AI-local TypeGuards. |
+
+Layer contracts:
+
+- `BattleEngine` consumes `IAIController` / `IAIControllerFactory` from `game/simulation/interfaces/ai_controller.py`.
+- `AIControllerFactory` lives in `game/ai/` because AI can import Simulation, but Simulation must not import concrete AI classes.
+- Strategy adapters accept an injected AI factory and must not import `game.ai` directly. See `tests/unit/strategy/adapters/test_no_ai_import.py`.
+- N-team battles treat every non-self `team_id` as hostile. `enemy_team_id` is now a legacy hint for factory construction, not the targeting source of truth.
+
+## AIController Tick Flow
+
+`AIController.update()` runs once per live ship per battle tick:
+
+1. Skip dead ships.
+2. Reset engine throttle and turn throttle to `1.0`.
+3. Resolve `ship.get_movement_policy()` and `ship.get_targeting_policy()` through `PolicyManager`.
+4. Keep the current target if alive; otherwise call `find_target()`.
+5. Fill secondary targets when `max_targets > CombatConstants.DEFAULT_MAX_TARGETS`.
+6. If there is no target, disable firing and only continue for no-target behaviors.
+7. Satellites acquire targets but skip movement behavior execution.
+8. Select behavior: flee when HP ratio is at or below positive `retreat_hp_threshold`, otherwise use movement policy `behavior` with default `kite`.
+9. Call `behavior.enter()` on behavior changes, then `behavior.update(target, policy_context)`.
+
+No-target behaviors: `straight_line`, `rotate_only`, `erratic`, `do_nothing`, `stationary_fire`.
+
+Target acquisition:
+
+- Query `BattleTuning.TARGET_QUERY_RADIUS` with `SpatialGrid.query_radius_exact()`.
+- Enemy ships are alive combatants whose `team_id != self.ship.get_team_id()`.
+- Include missiles from `BattleTuning.MISSILE_QUERY_RADIUS` only when a targeting rule uses `pdc_arc` or `missiles_in_pdc_arc`.
+- Build a distance cache once per candidate.
+- Build a capability cache only for ship-like candidates; projectile candidates are intentionally skipped and guarded in `TargetEvaluator`.
+- Sort by score descending and drop `-inf` candidates.
+
+Warnings:
+
+- PDC detection is tag-based. Use `Component.has_pdc_ability()`; do not check for a non-existent `PDCAbility` class string.
+- Candidate lists can contain ships and missiles. Any targeting rule that touches components must guard with `is_combat_ship()`.
+- Target evaluation catches `AttributeError` / `TypeError`, logs context, and skips the broken candidate so combat continues.
+
+## Movement Behaviors
+
+All direct movement behaviors extend `AIBehavior(controller)` and implement `enter()` plus `update(target, strategy)`.
+
+| Key | Behavior | Notes |
+|---|---|---|
+| `kite` | `KiteBehavior` | Smooth range-keeping: radial correction plus tangent orbiting; supports collision avoidance and `throttle_limit`. |
+| `attack_run` | `AttackRunBehavior` | Approach/retreat state machine with hysteresis and `PhysicsConfig.TICK_RATE` timer decrement. |
+| `ram` | `RamBehavior` | Navigate straight to target position; no collision avoidance. |
+| `flee` | `FleeBehavior` | Move away from target; `fire_while_retreating` controls weapon trigger. |
+| `orbit` | `OrbitBehavior` | Circle target at `orbit_distance` using tangent plus radial correction. |
+| `stationary_fire` | `StationaryFireBehavior` | No movement; weapon trigger stays enabled when a target exists. |
+| `do_nothing` | `DoNothingBehavior` | No movement and explicitly disables firing. |
+| `straight_line` | `StraightLineBehavior` | Full thrust in current facing, no rotation. |
+| `rotate_only` | `RotateOnlyBehavior` | Rotate by `rotation_direction`, no thrust. |
+| `erratic` | `ErraticBehavior` | Seeded random turn changes with optional `leash_radius`. |
+
+Movement policy fields currently read by code:
+
+| Field | Used by |
+|---|---|
+| `behavior` | Controller behavior lookup; defaults to `kite`. |
+| `retreat_hp_threshold` | Controller flee override; ignored when threshold is `0` or below. |
+| `engage_distance` | Kite range multiplier: numeric, `max_range`, `optimal_range`, `medium_range`, `short_range`, `point_blank`, or `ram`. |
+| `avoid_collisions` | `KiteBehavior.check_avoidance()` toggle. |
+| `throttle_limit` | `KiteBehavior` throttle cap. |
+| `fire_while_retreating` | `FleeBehavior` weapon trigger. |
+| `attack_run_behavior.approach_distance` | Weapon-range multiplier for attack-run approach. |
+| `attack_run_behavior.retreat_distance` | Weapon-range multiplier before re-approach. |
+| `attack_run_behavior.retreat_duration` | Seconds spent in retreat phase. |
+| `rotation_direction` | `RotateOnlyBehavior`; `1` clockwise, `-1` counter-clockwise. |
+| `turn_interval_min`, `turn_interval_max`, `leash_radius` | `ErraticBehavior`. |
+| `orbit_distance` | `OrbitBehavior`. |
 
-**Layer Rule:** The AI package depends on `game.core` and `game.simulation` but nothing depends on AI. The simulation layer interacts with AI controllers through the `IAIController` protocol.
+Stale-reference correction: `AttackRunBehavior` reads the nested key `attack_run_behavior`, while the current `data/movement_policies.json` `strafe_run` entry stores those knobs under `params`. Until data or code is reconciled with tests, `strafe_run` uses attack-run defaults for approach, retreat, and duration.
 
----
+## Spatial Behaviors
 
-## AIController
+Spatial behaviors compute desired positions for group members. They do not call thrust, rotate, or fire APIs directly; the controller navigates ships toward the returned position.
 
-`AIController` is the per-ship decision-maker, called once per tick by BattleEngine.
+| Type | File | Parameters | Contract |
+|---|---|---|---|
+| `battle_line` | `spatial_behaviors/battle_line.py` | `spacing`, `shape` | Rigid line, wedge, or echelon relative to leader facing. |
+| `column` | `spatial_behaviors/column.py` | `follow_distance` | Rigid single-file following behind a leader. |
+| `screen` | `spatial_behaviors/screen.py` | `radius`, `reactivity` | Loose distribution around an anchor. |
+| `escort` | `spatial_behaviors/escort.py` | `distance` | Close protection around an anchor ship. |
+| `patrol_zone` | `spatial_behaviors/patrol_zone.py` | `zone_center`, `zone_radius` | Distribution inside a circular patrol zone. |
+| `free_maneuver` | `spatial_behaviors/free_maneuver.py` | none | No spatial constraint; ship follows its movement policy. |
 
-### Update Cycle (`update()`)
+`apply_separation(positions, min_separation)` in `spatial_behaviors/base.py` returns adjusted copies and does not mutate inputs. `create_spatial_behavior(behavior_type, **kwargs)` dispatches through the package registry; unknown type strings log a warning and return `FreeManeuverBehavior`.
 
-1. **Alive check** -- dead ships do nothing.
-2. **Throttle reset** -- set engine and turn throttle to 1.0.
-3. **Policy resolution** -- `PolicyManager` resolves `ship.movement_policy` and `ship.targeting_policy` to full policy definitions.
-4. **Target acquisition** -- reuse current target if alive, otherwise call `find_target()`.
-5. **Secondary targets** -- if ship has multiplex tracking (`max_targets > 1`), find additional targets.
-6. **Behavior selection** (see flowchart below).
-7. **Behavior execution** -- call `behavior.update(target, context)`.
+## Policies
 
-### Behavior Selection Flowchart
+`PolicyManager` is managed by `ApplicationContext` and also has module-level `get_default_policy_manager()` lazy access. Loading uses double-checked locking; reads are lock-free after load. Missing policy IDs return safe defaults:
 
-```
-Is HP <= retreat_hp_threshold?
-  YES -> 'flee'
-  NO  -> Use movement policy behavior (default: 'kite')
-```
+- Targeting default: nearest target with weight `100`.
+- Movement default: `kite`, `engage_distance=max_range`, `retreat_hp_threshold=0.1`, `avoid_collisions=True`.
 
-Satellites skip movement entirely after target acquisition.
+Policy files:
 
-### Targeting Pipeline
+| File | Current IDs |
+|---|---|
+| `data/targeting_policies.json` | `standard`, `sniper`, `brawler`, `anti_fighter`, `self_defense`. |
+| `data/movement_policies.json` | `kite_max`, `kite_medium`, `brawl_close`, `strafe_run`, `ramming_speed`, `kite_optimal`, `hold_position`, `flee_panic`, plus `test_*` policies. |
+| `data/group_policies.json` | 21 group presets split across targeting, movement, and retreat axes. |
 
-1. Query spatial grid within `TARGET_QUERY_RADIUS` for alive enemy combatants.
-2. Optionally include enemy missiles within `MISSILE_QUERY_RADIUS` (if strategy has PDC rules).
-3. Pre-compute distance cache and capabilities cache (weapons, PDC) for all candidates.
-4. Score each candidate via `TargetEvaluator.evaluate()` using strategy targeting rules.
-5. Sort by score descending; highest becomes primary target.
-6. For multiplex tracking, repeat excluding primary to fill secondary slots.
+Combat Lab / test movement policies:
 
----
+| Policy ID | Behavior |
+|---|---|
+| `test_stationary` | `stationary_fire` |
+| `test_do_nothing` | `do_nothing` |
+| `test_straight_line` | `straight_line` |
+| `test_rotate_right` | `rotate_only`, direction `1` |
+| `test_rotate_left` | `rotate_only`, direction `-1` |
+| `test_erratic` | `erratic` |
+| `test_erratic_leashed` | `erratic` with `leash_radius=1000` |
 
-## Movement Behavior System
+Group policy status:
 
-All behaviors extend `AIBehavior(controller)` with `enter()` and `update(target, strategy)`.
+- `game.strategy.data.group_policy_registry.GroupPolicyRegistry` loads and validates `data/group_policies.json` using `Paths.GROUP_POLICIES_FILE`.
+- `game.strategy.data.fleet_hierarchy.CombatPolicy` has independent `targeting`, `movement`, and `retreat` axes with parent inheritance.
+- `game.strategy.data.fleet_battle_adapter.FleetBattleAdapter.to_battle_ships()` still maps group movement keys to per-ship movement policies and per-ship `_targeting_policy` overrides.
+- The current unified `BattleSpec` compilers (`game/strategy/combat/spec_compiler.py`, `game/ui/screens/battle_setup/spec_compiler.py`) emit empty `CombatPolicies()` placeholders and do not apply those group-policy axes to materialized ships. Verify the call path before relying on hierarchy policy overrides in `run_battle()`.
 
-### Combat Behaviors (5)
+## Target Evaluation
 
-| Behavior | Key | Description |
-|----------|-----|-------------|
-| **KiteBehavior** | `kite` | Smooth orbital range-keeping. Blends radial (toward/away) and tangential (orbiting) vectors based on distance from optimal range. Ships close in from far away, smoothly transition to orbiting at range, and spiral outward if too close. Never stops or reverses. Supports collision avoidance. |
-| **AttackRunBehavior** | `attack_run` | Two-phase state machine: APPROACH until within range, then RETREAT for `retreat_duration` seconds. Cycles automatically. |
-| **RamBehavior** | `ram` | Navigate straight to target position, no collision avoidance. |
-| **FleeBehavior** | `flee` | Move away from target. `fire_while_retreating` controls whether weapons fire. |
-| **OrbitBehavior** | `orbit` | Circle target at fixed distance using tangent + radial correction vectors. |
+`TargetEvaluator.evaluate(ship, candidate, rules, ...)` returns a numeric score; higher is better. A failed required rule returns `-inf`.
 
-### Utility/Test Behaviors (5)
+| Rule family | Types | Notes |
+|---|---|---|
+| Distance | `nearest`, `farthest`, `distance` | Uses cache when supplied, otherwise safe distance helper. |
+| Mass/size | `mass`, `largest`, `smallest`, `strongest`, `weakest` | Uses candidate `mass`. |
+| Speed | `fastest`, `slowest` | Uses `candidate.velocity.length()`. |
+| Damage | `most_damaged`, `least_damaged` | Uses HP percentage helper. |
+| Capability | `has_weapons`, `least_armor` | Guards projectile candidates before component/layer queries. |
+| PDC | `pdc_arc`, `missiles_in_pdc_arc` | Applies to missile projectiles; uses `is_in_pdc_arc()`. |
 
-| Behavior | Key | Description |
-|----------|-----|-------------|
-| **StationaryFireBehavior** | `stationary_fire` | No movement, weapons fire. For testing and satellites. |
-| **DoNothingBehavior** | `do_nothing` | No movement, no firing. |
-| **StraightLineBehavior** | `straight_line` | Full thrust in initial facing, no rotation. |
-| **RotateOnlyBehavior** | `rotate_only` | Continuous rotation, no thrust. |
-| **ErraticBehavior** | `erratic` | Random direction changes at random intervals. Stress testing. |
+Extension guidance:
 
-### Strategy Parameters Read by Behaviors
+- Add scoring behavior as data-driven rule handling or shared helper predicates, not scenario-specific branches in `AIController`.
+- Keep caches optional and backward-compatible; evaluator paths must work without caches.
+- Never hardcode ability or component class-name lists when tags, registries, protocols, or component methods exist.
 
-- `avoid_collisions` (bool) -- KiteBehavior collision avoidance toggle
-- `engage_distance` (float | `'max_range'` | `'ram'`) -- range multiplier for KiteBehavior
-- `fire_while_retreating` (bool) -- FleeBehavior weapon control
-- `retreat_hp_threshold` (float) -- HP % that triggers flee
-- `attack_run_behavior.approach_distance` (float) -- weapon range multiplier
-- `attack_run_behavior.retreat_distance` (float) -- re-approach distance multiplier
-- `attack_run_behavior.retreat_duration` (float) -- seconds in retreat phase
+## Group Coordination
 
----
+`GroupTargetCoordinator` is stateless.
 
-## Spatial Behavior System
+| Method | Contract |
+|---|---|
+| `select_focus_target(enemies, priority, reference_position=None)` | Filters dead enemies; `strongest`/`largest` choose highest mass, `most_damaged` chooses lowest HP ratio, `nearest` chooses closest to reference or `(0, 0)`. Unknown priority falls back to first alive enemy. |
+| `compute_group_hp_ratio(ships)` | Aggregate bounded current HP divided by aggregate max HP; returns `0.0` when no positive max HP exists. |
+| `should_commit_reserve(main_body_ships, threshold=0.50)` | True when aggregate HP ratio is at or below threshold. |
+| `find_flagship_successor(ships, has_cnc_check)` | Heaviest alive ship passing `has_cnc_check`; returns `None` for leaderless state. |
 
-**Package:** `game/ai/spatial_behaviors/`
+## Integration Boundaries
 
-Spatial behaviors define how ships position relative to an anchor (ship, group centroid, or zone). They replaced the old `ShipFormation` master/follower system.
+`ShipControllableAdapter` implements `IControllable` over a Simulation `Ship`. The adapter surface includes position, velocity, rotation, radius, movement controls, target state, component queries, policy IDs, vehicle type, and all-components access. Do not bypass it from controller or behavior code unless deliberately extending the adapter contract.
 
-Each behavior computes a **target position** for a ship. The AI controller navigates the ship there. Behaviors do NOT control ships directly — they only say "you should be here."
+`AIControllerFactory` current concrete contract:
 
-### Rigid Behaviors (Hold Relative Positions)
+1. Construct with no dependencies.
+2. Call `set_grid(engine.grid)`.
+3. Call `set_rng(engine.rng)`.
+4. Call `create_for_ship(ship, enemy_team_id)` or `create_for_ships(...)`.
 
-| Behavior | Type String | Parameters | Description |
-|----------|-------------|------------|-------------|
-| **BattleLineBehavior** | `battle_line` | `spacing`, `shape` (line/wedge/echelon_left/echelon_right) | Ships hold positions in a line perpendicular to the leader's facing. Shape controls the geometry. |
-| **ColumnBehavior** | `column` | `follow_distance` | Ships trail behind a leader in single file. |
+`BattleEngine.__init__()` sets grid and a pre-seed RNG on the injected factory. `BattleEngine.start_teams()` replaces that with the per-battle seeded `random.Random(seed)` before creating controllers. `create_for_ship()` raises `StateException` when grid or RNG is missing. `ErraticBehavior` requires an explicit `rng` kwarg and must not consume module-level `random`.
 
-Rigid behaviors use **tolerance bands** rather than spring correction — a ship drifting within the tolerance is fine, outside it maneuvers back. This looks more natural than spring oscillation.
+AI-local protocols in `game/ai/protocols.py`:
 
-### Loose Behaviors (Behavioral Zones)
+| Protocol | Surface |
+|---|---|
+| `IGridEntity` | `position`, `is_alive`, `team_id`, `radius` |
+| `IProjectile` | `IGridEntity` plus projectile `type` |
+| `IComponentHealth` | `current_hp`, `max_hp` |
 
-| Behavior | Type String | Parameters | Description |
-|----------|-------------|------------|-------------|
-| **ScreenBehavior** | `screen` | `radius`, `reactivity` (passive/active/aggressive) | Ships distribute evenly around an anchor at a configured radius. Reactivity controls threat response. |
-| **EscortBehavior** | `escort` | `distance` | Ships stay close to an anchor ship, distributing evenly around it. |
-| **PatrolZoneBehavior** | `patrol_zone` | `zone_center`, `zone_radius` | Ships distribute within a circular patrol zone at ~70% of zone radius. |
-| **FreeManeuverBehavior** | `free_maneuver` | (none) | No spatial constraints — ship moves per its movement policy alone. |
+TypeGuards use duck typing via `_has_attrs()` so tests can use mocks without full runtime protocol compliance.
 
-### Anti-Clumping
+## Extension Recipes
 
-`apply_separation(positions, min_separation)` in `base.py` enforces minimum distance between ships in the same group. Ships closer than `min_separation` get pushed apart along their connecting vector. Prevents the "blob of ships" problem.
+Add a direct movement behavior:
 
-### Factory
+1. Implement an `AIBehavior` subclass in `game/ai/behaviors.py`.
+2. Register the behavior key in `AIController.__init__`.
+3. Add or update a movement policy in `data/movement_policies.json`.
+4. Add unit coverage under `tests/unit/ai/`, usually `test_behavior_units.py` or `test_advanced_behaviors.py`.
 
-`create_spatial_behavior(behavior_type, **kwargs)` creates a behavior by type string. Unknown types default to `FreeManeuverBehavior`.
+Add a spatial behavior:
 
----
+1. Add a module under `game/ai/spatial_behaviors/`.
+2. Subclass `SpatialBehavior` and implement `compute_target_position()`.
+3. Export it and register its type string in `spatial_behaviors/__init__.py`.
+4. Cover target positions and anti-clumping interactions under `tests/unit/ai/spatial_behaviors/`.
 
-## Group Target Coordinator
+Add a targeting rule:
 
-**File:** `game/ai/group_target_coordinator.py`
+1. Add the evaluator branch in `game/ai/target_evaluator.py`.
+2. Keep projectile and mock safety by using protocols/TypeGuards.
+3. Add policy JSON only if the rule is meant to be available to content.
+4. Cover required-rule failure, cache/no-cache behavior, and projectile candidates.
 
-Stateless utility for group-level combat decisions. Used by the fleet hierarchy system to coordinate task force / squadron behavior.
+Change AI factory integration:
 
-### Focus Fire
+1. Update `AIControllerFactory` and the `IAIControllerFactory` protocol together.
+2. Preserve `set_grid()` and `set_rng()` setup from `BattleEngine`.
+3. Run factory and determinism tests before touching battle runner flows.
 
-`select_focus_target(enemies, priority, reference_position)` selects one target for the group:
+## Tests And Commands
 
-| Priority | Logic |
-|----------|-------|
-| `strongest` | Highest mass enemy |
-| `most_damaged` | Lowest HP/maxHP ratio |
-| `nearest` | Closest to reference position (group centroid) |
-| `largest` | Highest mass (alias for strongest) |
+Targeted commands:
 
-Dead enemies are automatically filtered. Returns `None` if no valid enemies.
-
-### Reserve Commitment
-
-`should_commit_reserve(main_body_ships, threshold)` returns `True` when the main body's aggregate HP ratio drops to or below the threshold (default 50%).
-
-`compute_group_hp_ratio(ships)` calculates total current HP / total max HP for a group of ships.
-
-### Flagship Succession
-
-`find_flagship_successor(ships, has_cnc_check)` finds the next flagship when the current one is destroyed. Selects the **heaviest alive ship** that passes the `has_cnc_check` callback (checking for `CommandAndControl` ability). Returns `None` if no eligible ship exists (leaderless state).
-
----
-
-## PolicyManager
-
-Service (managed by ApplicationContext) that loads and provides lookup for per-ship targeting and movement policies from JSON data files.
-
-### Data Files (in `data/`)
-
-| File | Contents |
-|------|----------|
-| `targeting_policies.json` | Named targeting policies with scoring rules (standard, sniper, brawler, anti_fighter, self_defense) |
-| `movement_policies.json` | Named movement policies: behavior type, engage_distance, retreat threshold, etc. |
-| `group_policies.json` | Group-level combat policy presets for fleet hierarchy nodes (see Strategy Layer doc) |
-
-### Resolution
-
-Ships reference policies directly via `ship.movement_policy` and `ship.targeting_policy`. The controller resolves these each tick:
-
-```python
-# AIController.get_resolved_policies()
-pm = get_default_policy_manager()
-return {
-    'targeting': pm.get_targeting_policy(ship.get_targeting_policy()),
-    'movement': pm.get_movement_policy(ship.get_movement_policy()),
-}
-```
-
-### Fleet Hierarchy Overrides
-
-At battle time, `FleetBattleAdapter.to_battle_ships()` resolves the fleet hierarchy (Fleet → TaskForce → Squadron → per-ship override) and maps group movement policy keys to per-ship movement policy IDs via `group_policies.json`. This override is applied to the Ship object before battle starts, so the AIController always reads the effective policy.
-
-### Test Policies
-
-Predefined movement policies for Combat Lab scenarios:
-
-| Policy ID | Behavior | Purpose |
-|-----------|----------|---------|
-| `test_stationary` | `stationary_fire` | Stay still, fire at targets |
-| `test_do_nothing` | `do_nothing` | No movement, no firing |
-| `test_straight_line` | `straight_line` | Full thrust in facing direction |
-| `test_rotate_right` | `rotate_only` (dir=1) | Clockwise rotation |
-| `test_rotate_left` | `rotate_only` (dir=-1) | Counter-clockwise rotation |
-| `test_erratic` | `erratic` | Random direction changes |
-| `test_erratic_leashed` | `erratic` | Random movement with leash constraint |
-
-No-target behaviors (execute without an enemy target): `straight_line`, `rotate_only`, `erratic`, `do_nothing`, `stationary_fire`.
-
-**Thread safety:** Data loading is protected by a lock (double-checked locking). Once loaded, reads are lock-free.
-
----
-
-## TargetEvaluator
-
-Static class that scores a candidate target against a list of targeting rules.
-
-### Rule Types
-
-| Category | Rule Types | Scoring Logic |
-|----------|-----------|---------------|
-| **Distance** | `nearest`, `farthest`, `distance` | Score proportional to distance (negated for nearest) |
-| **Mass/Size** | `mass`, `largest`, `smallest`, `strongest`, `weakest` | Score proportional to candidate mass |
-| **Speed** | `fastest`, `slowest` | Score proportional to velocity magnitude |
-| **Damage** | `most_damaged`, `least_damaged` | Score based on HP percentage |
-| **Capability** | `has_weapons`, `least_armor` | Component-based checks |
-| **PDC** | `pdc_arc`, `missiles_in_pdc_arc` | Checks if missile target is within PDC firing arc and range |
-
-Each rule has `weight` (or `factor`), and optionally `required: true`. If a required rule fails, the candidate scores `-inf` and is excluded.
-
-### Performance Optimizations
-
-- **Distance cache:** Distances pre-calculated once per candidate, shared across rules.
-- **Capabilities cache:** Component lookups (weapons, PDC) done once per candidate, not per rule.
-
----
-
-## ShipControllableAdapter
-
-`IControllable` is the abstract interface that decouples AI from `Ship` internals. `ShipControllableAdapter` wraps a `Ship` and delegates all calls.
-
-The interface covers:
-- **Position/movement reads:** `get_position()`, `get_rotation()`, `get_max_speed()`, etc.
-- **Movement controls:** `set_throttle()`, `rotate()`, `thrust_forward()`, `adjust_position()`
-- **Combat:** `get_weapon_range()`, `set_trigger_pulled()`, target management
-- **Identity:** `get_team_id()`, `is_alive()`, `get_movement_policy()`, `get_targeting_policy()`, `get_vehicle_type()`
-
----
-
-## AIControllerFactory
-
-Two-phase initialization pattern:
-
-```
-Phase 1: factory = AIControllerFactory()        # No dependencies
-Phase 2: factory.set_grid(engine.grid)          # Grid available after BattleEngine init
-         controller = factory.create_for_ship(ship, enemy_team_id=1)
+```bash
+pytest tests/unit/ai
+pytest tests/unit/ai/spatial_behaviors
+pytest tests/unit/ai/test_policy_manager.py
+pytest tests/unit/ai/test_target_evaluator_rules.py tests/unit/ai/target_evaluator/test_projectile_candidate_guards.py
+pytest tests/unit/ai/test_capability_cache_pdc.py
+pytest tests/unit/ai/test_ai_n_team_targeting.py
+pytest tests/unit/ai/test_erratic_behavior_seeded.py
+pytest tests/unit/simulation/factories/test_ai_factory.py
+pytest tests/unit/strategy/adapters/test_no_ai_import.py
 ```
 
-The factory:
-1. Wraps each `Ship` in a `ShipControllableAdapter`.
-2. Creates an `AIController(adapter, grid, enemy_team_id)`.
-3. Returns it typed as `IAIController` (simulation-layer protocol).
+Full-suite command:
 
-Raises `StateException` if `set_grid()` was not called before creating controllers.
+```bash
+python Tools/test_sharded/test_sharded.py
+```
 
----
-
-## Protocols (`game/ai/protocols.py`)
-
-Runtime-checkable protocols for type-safe duck typing:
-
-| Protocol | Required Attributes | Used By |
-|----------|-------------------|---------|
-| `IGridEntity` | `position`, `is_alive`, `team_id`, `radius` | Spatial queries, collision |
-| `IProjectile` | extends IGridEntity + `type` | PDC targeting (missile detection) |
-| `IComponentHealth` | `current_hp`, `max_hp` | Damage evaluation |
-
-TypeGuard functions (`is_grid_entity()`, `is_projectile()`, etc.) use duck-typing (`hasattr`) rather than `isinstance()` for compatibility with test mocks.
-
----
-
-## Key Files
-
-| Component | File |
-|-----------|------|
-| AIController | `game/ai/controller.py` |
-| Movement behaviors | `game/ai/behaviors.py` |
-| Spatial behaviors | `game/ai/spatial_behaviors/` (package) |
-| Group coordinator | `game/ai/group_target_coordinator.py` |
-| PolicyManager | `game/ai/policy_manager.py` |
-| TargetEvaluator | `game/ai/target_evaluator.py` |
-| Combat utilities | `game/ai/combat_utils.py` |
-| AIControllerFactory | `game/ai/ai_factory.py` |
-| IControllable + Adapter | `game/ai/interfaces/controllable.py` |
-| AI protocols | `game/ai/protocols.py` |
-| Per-ship policy data | `data/targeting_policies.json`, `data/movement_policies.json` |
-| Group policy data | `data/group_policies.json` |
+Use `python -m combat_lab.run_tests` when AI changes affect Combat Lab scenarios or scenario policies.

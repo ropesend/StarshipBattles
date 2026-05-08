@@ -1,78 +1,70 @@
-# Save / Load System
+# Save / Load Compact Reference
 
-> **Last verified:** 2026-05-04 — Initial coverage backfill (T3-25). Documents `SaveGameService` (PROJ-276 v3.0.0 format), the on-disk turn-based layout, the strict no-migration policy, atomic-write guarantees via `save_json`, and the PROJ-312 replay-store integration hook.
+> **Last verified:** 2026-05-08 - Balanced compact replacement checked against `docs/systems/save_load.md`, the compact alternate, `SaveGameService`, `GameSession` serialization, replay bootstrap wiring, and current save/load tests.
 
----
+`SaveGameService` owns strategy save/load persistence. Saves are disposable, turn-based snapshots of the current `GameSession`; the service supports exactly one current schema and rejects incompatible versions instead of migrating them.
 
-## 1. Overview
+## Scope
 
-**File:** `game/strategy/systems/save_game_service.py`
-**Class:** `SaveGameService` (all methods are `@staticmethod`).
-**Format version:** `SAVE_VERSION = "3.0.0"` — strict match. Old saves
-are rejected with a clear error; saves are **disposable** per
-`CLAUDE.md` Rule 3 / `AGENTS.md`. There is no migration code path.
+| Area | Current contract |
+|---|---|
+| Service | `game/strategy/systems/save_game_service.py::SaveGameService` |
+| Method style | Static methods; module-level replay-store accessors sit beside the class. |
+| Schema version | `SaveGameService.SAVE_VERSION = "3.0.0"`; exact match only. |
+| Save root | `Paths.SAVES_DIR`, normally `output/saves/`. |
+| Snapshot payload | One full `GameSession.to_dict()` per saved turn. |
+| JSON I/O | `game/core/json_utils.py::save_json`, `load_json`, `load_json_required`. |
+| Replay coupling | `game/strategy/services/replay_store.py`, wired in `game/app_bootstrap.py`. |
 
-Saves are **turn-based**: every `process_turn()` writes a new
-`turn_N.json` into the save's `turns/` folder; `save_metadata.json`
-tracks `latest_turn_number`. The same save can be re-loaded at any
-recorded turn.
+`GameSession.to_dict()` currently writes `turn_number`, `save_path`, `config`, `galaxy`, `empires`, `human_player_ids`, and `event_log`. `GameSession.from_dict()` reconstructs config first, resolves registries, rebuilds the turn engine and event bus, loads the galaxy before empires, resolves fleet order references, rebuilds pursuer tracking, and restores active/enemy empire pointers.
 
----
-
-## 2. Public API
+## Public API
 
 All entry points are static methods on `SaveGameService`.
 
-| Method | Signature | Returns |
-|--------|-----------|---------|
-| `save_game` | `(game_session, save_name: Optional[str] = None)` | `(success: bool, message: str, save_path: Optional[str])` |
-| `load_game` | `(save_path: str, turn_number: Optional[int] = None, ai_factory=None)` | `(session: Optional[GameSession], message: str)` |
-| `list_saves` | `()` | `List[dict]` — all saves under `Paths.SAVES_DIR`, sorted newest first. |
-| `list_turns` | `(save_path: str)` | `List[dict]` — turn metadata `(turn_number, filename, timestamp, size)`. |
-| `delete_save` | `(save_path: str)` | `(success: bool, message: str)` |
-| `get_save_info` | `(save_path: str)` | `Optional[dict]` — metadata for one save (or `None` if missing/invalid). |
+| Method | Contract |
+|---|---|
+| `save_game(game_session, save_name: Optional[str] = None)` | Returns `(success: bool, message: str, save_path: Optional[str])`. Reuses `game_session.save_path` when it is a non-empty string; otherwise creates a save folder under `Paths.SAVES_DIR`. On success, sets `game_session.save_path`, writes the current turn file and metadata, then points the replay store at the save folder. |
+| `load_game(save_path: str, turn_number: Optional[int] = None, ai_factory=None)` | Returns `(session: Optional[GameSession], message: str)`. Accepts absolute paths or save-folder names relative to `Paths.SAVES_DIR`. `turn_number=None` loads `latest_turn_number`, falling back to metadata `turn_number`, then `1`. Reconstructed sessions get `session.save_path = resolved_path`. |
+| `list_saves()` | Returns metadata dictionaries for folders under `Paths.SAVES_DIR` whose `save_metadata.json` can be parsed, sorted by metadata `timestamp` descending. Adds `save_name` and `save_path`. It is a UI listing helper, not a full version validator. |
+| `list_turns(save_path: str)` | Returns turns sorted ascending by `turn_number`. Each entry has `turn_number`, `filename`, `path`, `timestamp`, and `size`. |
+| `delete_save(save_path: str)` | Resolves relative paths, deletes the save folder with `shutil.rmtree`, then clears the replay store root. Returns `(success: bool, message: str)`. |
+| `get_save_info(save_path: str)` | Returns raw metadata plus `save_name` and `save_path`, or `None` when metadata cannot be read or parsed. It does not enforce `SAVE_VERSION`. |
 
-`save_game()` reuses `game_session.save_path` if it is set (so repeated
-saves on the same session append turn files). When `save_path` is empty
-and no `save_name` is provided, a timestamped name
-(`<player_name>_<YYYYMMDD_HHMMSS>`) is generated under `Paths.SAVES_DIR`.
+Playable loaded sessions should pass `ai_factory` when combat may occur after load. `GameSession.from_dict(..., ai_factory=None)` is tolerated during reconstruction, but later battle resolution needs an injected AI factory or battle resolver.
 
-`load_game(turn_number=None)` loads the latest turn. Pass an explicit
-`turn_number` to time-travel to an earlier state. The returned
-`GameSession` is fully reconstructed (empires, fleets, planets, orders,
-events, registries) — see `_reconstruct_game_session()` for the path.
-Versioned reconstruction failure (`SAVE_VERSION` mismatch) returns
-`(None, "Incompatible save version: <old> (requires 3.0.0)")`.
+## Disk Layout
 
----
-
-## 3. On-Disk Format
-
-```
+```text
 output/saves/
-└── <player_name>_<YYYYMMDD_HHMMSS>/
-    ├── save_metadata.json       # version, timestamp, latest turn, galaxy params
-    ├── turns/
-    │   ├── turn_1.json          # full GameSession.to_dict() at turn 1
-    │   ├── turn_2.json
-    │   └── …                    # one file per turn processed
-    └── designs/
-        ├── empire_0/            # per-empire design folders (allocated lazily)
-        ├── empire_1/
-        └── …
++-- <player_name>_<YYYYMMDD_HHMMSS>/
+    +-- save_metadata.json
+    +-- turns/
+    |   +-- turn_1.json
+    |   +-- turn_2.json
+    |   +-- ...
+    +-- designs/
+        +-- empire_0/
+        +-- empire_1/
+        +-- ...
 ```
 
-`Paths.SAVES_DIR` resolves to `output/saves/` at the repo root. All
-files are JSON, human-readable, written via `save_json()`.
+Rules:
 
-**`save_metadata.json` shape** (written every `save_game()` call):
+- `turns/turn_N.json` stores the full game-session snapshot for turn `N`.
+- `designs/empire_<id>/` folders are created during save for the current empires; new saves do not copy old temp designs.
+- All save files are human-readable JSON.
+- All save writes must stay on the `save_json()` path.
+
+Current `save_metadata.json` shape:
 
 ```json
 {
   "version": "3.0.0",
-  "save_timestamp": "<ISO 8601>",
+  "timestamp": "<ISO 8601>",
   "player_name": "<first player>",
   "empire_count": 4,
+  "empire_names": ["Terrans", "Romulans"],
   "latest_turn_number": 12,
   "turn_number": 12,
   "galaxy_radius": 25,
@@ -80,102 +72,114 @@ files are JSON, human-readable, written via `save_json()`.
 }
 ```
 
-The `turn_number` field is a duplicate of `latest_turn_number`,
-preserved for backward-compatibility with `list_saves()` consumers.
+`turn_number` duplicates `latest_turn_number` for current list/detail consumers. The current key is `timestamp`; `save_timestamp` is stale.
 
----
+Required load-time metadata fields are `version`, `timestamp`, and `player_name`. Required turn-state fields are `turn_number`, `config`, `galaxy`, and `empires`.
 
-## 4. Atomic Write Guarantee
+## Atomic Persistence
 
-Every JSON file written by the service goes through `save_json()`
-(`game/core/json_utils.py:184`), which writes to a `.tmp` sibling and
-then `os.replace()`s the original file. A crash mid-write leaves either
-the previous valid file or the `.tmp` orphan — never a half-written
-target. This is the same mechanism `ReplayStore` uses for replay
-sidecars and `EventLog` snapshots use for the persisted event log; the
-project-wide invariant is "never a torn JSON write."
+`save_json()` serializes to a sibling `.tmp` file, then replaces the target via `Path.replace()`. The invariant is that a crash can leave the previous valid target or a `.tmp` orphan, but not a torn JSON target.
 
-`load_game()`'s helpers (`_load_json_safe`, `_load_save_metadata`,
-`_load_turn_data`) catch `JSONDecodeError`, `PermissionError`, and
-`OSError` and return `(None, message)` rather than raising — so a
-corrupt file fails the load gracefully, and the rest of the saves on
-disk are unaffected.
+`SaveGameService` load helpers convert read failures into user-facing messages:
 
----
+- `_load_json_safe()` catches `JSONDecodeError`, `FileNotFoundError`, `PermissionError`, and `OSError`.
+- `_load_save_metadata()` resolves relative paths, validates folder shape, checks required metadata fields, and enforces exact `SAVE_VERSION`.
+- `_load_turn_data()` resolves the requested turn file and checks required game-state fields.
+- `_reconstruct_game_session()` catches corrupt or incompatible domain data and returns `"Save file corrupted: ..."` instead of leaking internal exceptions.
 
-## 5. Versioning Policy — No Migration
+Save operations return clean failures for `PermissionError`, `OSError`, and `ValidationException`. Delete/list/info helpers also degrade gracefully on permission and OS errors so one bad save does not break the whole save browser.
 
-`SAVE_VERSION` is checked exact-match in `_is_compatible_version()`.
-There is no migration table, no field-rename shim, no fallback path.
-Bumping the version (e.g. PROJ-276 Phase 5: `2.0.0` → `3.0.0` to drop
-the legacy `component_damage` dict in favor of per-instance
-`components`) immediately invalidates every previously-written save.
+## Versioning
 
-This is intentional. The project rule (`AGENTS.md`, `CLAUDE.md`,
-`docs/03_CONVENTIONS.md` § 6.6) is:
+`_is_compatible_version(save_version)` is an exact equality check against `SaveGameService.SAVE_VERSION`.
 
-> **No save-file migration.** Old saves are disposable. When a system
-> is replaced, remove the old path and update all callers.
+Forbidden:
 
-If the format changes, write a fresh save. The benefit is that schema
-evolution code never accumulates in the codebase — every load path
-deals with exactly one schema.
+- Migration tables.
+- Field-rename shims.
+- Fallback loaders.
+- Compatibility paths for old save formats.
+- Copying legacy temp designs or old save data into new saves.
 
----
+If the persisted schema changes, bump `SAVE_VERSION`, update strict-version tests, and write only the new shape. Old saves are intentionally invalid.
 
-## 6. PROJ-312 Replay Integration
+## Replay Store Coupling
 
-`SaveGameService` participates in the replay system's save-coupling
-contract via two module-level hook helpers:
+`SaveGameService` coordinates with replay sidecar persistence through module-level hooks:
 
-- `_notify_replay_store_save_or_load(save_path)` — fires on every
-  successful `save_game()` / `load_game()`. Calls
-  `ReplayStore.set_save_root(Path(save_path))` so the replay sidecars
-  always live under the active save's `replays/` folder.
-- `_notify_replay_store_save_deleted()` — fires on `delete_save()`.
-  Calls `ReplayStore.clear_save_root()` so subsequent battles do not
-  write replays into a stale folder.
+| Hook | When it runs | Effect |
+|---|---|---|
+| `set_replay_store(store)` / `get_replay_store()` | Process setup and tests | Registers or clears the optional replay store object. |
+| `_notify_replay_store_save_or_load(save_path)` | After successful `save_game()` and `load_game()` | Calls `ReplayStore.set_save_root(Path(save_path))`, so sidecars live under the active save's `replays/` folder. |
+| `_notify_replay_store_save_deleted()` | After successful `delete_save()` | Calls `ReplayStore.clear_save_root()`, preventing later battles from writing into a deleted or stale folder. |
 
-The hook is registered via the module-level
-`set_replay_store(store)` / `get_replay_store()` accessors (lines 33-42).
-`ApplicationContext.create_production` (PROJ-312 Phase 4) wires the
-production `ReplayStore` as part of bootstrap; tests can either pass a
-mock or leave `_replay_store = None` (every notification is a no-op).
+Production wiring happens in `game/app_bootstrap.py`: it constructs `ReplayStore`, installs it as the default replay capture sink, and calls `set_replay_store(replay_store)`. Tests can inject a spy/mock or leave `_replay_store = None`; notifications are no-ops without a store.
 
-Hook errors are logged with `logger.exception` and swallowed
-(`# Intentional broad catch: store hooks must not crash save/load`,
-per `docs/05_ERROR_HANDLING.md` convention). A misbehaving
-`ReplayStore` will not corrupt the save flow.
+Hook failures are logged and swallowed with intentional broad catches because replay sidecars must not crash save/load/delete.
 
-For the read side, see [strategy_layer.md § Replay Persistence](strategy_layer.md);
-for the simulation-side capture/playback engine, see
-[combat_simulation.md § 11 Replay Capture & Playback](combat_simulation.md).
+Related subsystem docs:
 
----
+- Strategy replay persistence: `docs/systems/strategy_layer.md`
+- Simulation replay capture/playback: `docs/systems/combat_simulation.md`
 
-## 7. Test Coverage
+## Extension Guidance
 
-**Unit tests** — `tests/unit/strategy/save_game_service/`:
-- `test_save_load_ops.py` — folder-structure creation (`turns/`,
-  `designs/empire_N/`), per-turn versioning, metadata correctness,
-  strict-version rejection of older `SAVE_VERSION` strings.
-- `test_error_handling.py` — `PermissionError`, `OSError`, corrupt JSON,
-  missing required metadata fields.
-- `test_load_helpers.py` — metadata validation, turn-file resolution,
-  `GameSession` reconstruction edges.
+When adding persisted data:
 
-**Integration tests** — `tests/integration/save_load/` (19 files):
-- `test_full_roundtrip.py` — end-to-end `GameSession` → save → load →
-  identity check (PROJ-223 Phase 5).
-- Per-domain round-trips: `test_save_creation.py`,
-  `test_save_edge_cases.py`, `test_load_restoration.py` cover empires,
-  fleets, planets, galaxy, stars, designs, orders, events, research.
-- `test_resupply_persistence.py`, `test_roundtrip_ships.py` — ship
-  instance + component serialization integrity.
-- `test_reference_integrity.py`, `test_registry_injection.py` — race
-  registry and external data injection during load.
+- Add the field to the owning domain object's `to_dict()` and `from_dict()` pair.
+- Keep the service snapshot model as `GameSession.to_dict()` per turn; do not add parallel persistence paths.
+- Update metadata only for data needed by save listing/detail UI.
+- Use `Paths` constants for paths and `save_json()` for writes.
+- Preserve relative-path handling for public APIs that currently support save-folder names.
+- Preserve replay-store notifications when changing save, load, or delete flow.
+- Preserve graceful failure for corrupt JSON, permission errors, OS errors, and invalid domain data.
+- Add round-trip coverage for the exact serialization path.
+- If changing the schema, bump `SAVE_VERSION` and keep old saves rejected.
 
-The integration suite is the practical contract test for the v3.0.0
-format. New fields added to any `to_dict()` / `from_dict()` pair must
-include a round-trip case here, or the next refactor will lose the
-field silently.
+When changing reconstruction:
+
+- Keep galaxy loading before empire loading so planet/fleet references can resolve.
+- Keep registries resolved before `Empire.from_dict(...)` and turn-engine construction.
+- Keep `event_log` restoration and event-bus wiring aligned with `GameSession.from_dict()`.
+- Preserve fleet order-reference resolution and pursuer-tracker rebuild after empires load.
+
+## Tests And Commands
+
+Targeted commands:
+
+```sh
+pytest tests/unit/strategy/save_game_service/
+pytest tests/integration/save_load/
+pytest tests/unit/ui/test_save_selection.py
+pytest tests/integration/replay/test_replay_store.py -k SaveGameServiceHooks
+```
+
+Canonical full-suite command:
+
+```sh
+python Tools/test_sharded/test_sharded.py
+```
+
+Primary unit coverage:
+
+- `tests/unit/strategy/save_game_service/test_save_load_ops.py` - folder structure, per-turn files, metadata, version rejection, latest/specific turn loading, turn listing.
+- `tests/unit/strategy/save_game_service/test_error_handling.py` - no temp-design migration, logging, friendly errors, path resolution, permission/OS/corrupt JSON handling, delete/list/info failures.
+- `tests/unit/strategy/save_game_service/test_load_helpers.py` - helper-level metadata, turn-data, and reconstruction failure contracts.
+- `tests/unit/ui/test_save_selection.py` - save browser uses `list_saves()`, `list_turns()`, timestamp parsing, latest/specific turn callbacks, delete flow.
+
+Primary integration coverage:
+
+- `tests/integration/save_load/test_full_roundtrip.py` - end-to-end session save/load identity and turn advancement.
+- `tests/integration/save_load/test_live_verification.py` plus `tests/infrastructure/state_snapshot.py` - QA round-trip verifier and deep state comparison.
+- `tests/integration/save_load/test_save_creation.py`, `test_save_edge_cases.py`, `test_load_restoration.py` - save layout, malformed saves, missing turns, relative paths, and restoration basics.
+- `tests/integration/save_load/test_reference_integrity.py`, `test_registry_injection.py` - restored references and registry injection.
+- Domain round trips: `test_roundtrip_config.py`, `test_roundtrip_designs.py`, `test_roundtrip_empire.py`, `test_roundtrip_events.py`, `test_roundtrip_fleet.py`, `test_roundtrip_galaxy.py`, `test_roundtrip_orders.py`, `test_roundtrip_planet.py`, `test_roundtrip_research.py`, `test_roundtrip_ships.py`, `test_roundtrip_stars.py`, and `test_resupply_persistence.py`.
+- Replay lifecycle coupling: `tests/integration/replay/test_replay_store.py::TestSaveGameServiceHooks`.
+
+## Stale Reference Corrections
+
+- Current metadata uses `timestamp`, not `save_timestamp`.
+- Current `list_turns()` entries include `path`.
+- Current production replay wiring lives in `game/app_bootstrap.py`, not `ApplicationContext.create_production()`.
+- Current atomic replacement is implemented with `Path.replace()` after writing `.tmp`.
+- `SAVE_VERSION = "3.0.0"` is authoritative even where older source comments still mention earlier save-format labels.

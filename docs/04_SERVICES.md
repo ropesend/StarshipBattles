@@ -1,151 +1,161 @@
 # Service Layer Architecture
 
-> **Last verified:** 2026-05-04 — Applied doc-audit fixes (1 item: `IRaceRegistry` protocol path → `game/core/protocols/strategy_domain.py`, see Reviews/results/2026-05-04_090303_docs-audit/applied/changes.md). Earlier 2026-04-28 pass: HappinessEngine documents its FEAT-19 surplus-food bonus + `economy_config` kwarg.
+> **Last verified:** 2026-05-08 - Balanced compact rewrite from `docs/04_SERVICES.md` and `AgentCoordination/Scratchpad/reports/04_SERVICES_ALT_compact.md`; reconciled against current service files under `game/services/`, `game/simulation/services/`, `game/strategy/services/`, and `game/ui/screens/builder/`.
 
-## Overview
+Compact reference for service responsibilities, contracts, DI rules, APIs,
+invariants, extension points, warnings, and tests. This removes release-note
+archaeology and repeated examples, but keeps operational contracts agents need.
 
-The Starship Battles codebase uses a service layer pattern to provide clean abstractions between UI components and domain logic. Services act as facades that encapsulate complex operations and provide stable APIs for UI consumption.
+## Service Layers
 
-Services exist in three layers:
-- **Top-level cross-cutting services** (`game/services/`, PROJ-296) -- LLM provider abstraction. Available to every layer; depends on Core only.
-- **Simulation services** (`game/simulation/services/`) -- battle lifecycle, ship design, component modifiers, design loading, registry loading
-- **Strategy services** (`game/strategy/services/`) -- fleet navigation, fleet speed, ship stats, cargo transfers, design costs, area effects, component inspection, action timing, modifier resolution, strategic ability scanning, system effects collection
+Services are facade-style boundaries over domain operations. They keep UI,
+orchestration, and engines from duplicating business logic.
 
----
+- `game/services/`: cross-cutting infrastructure available to all layers; must depend on Core only.
+- `game/simulation/services/`: battle lifecycle, ship materialization, design loading/editing, modifiers, registry reload.
+- `game/strategy/services/`: navigation, movement, cargo, economy projections, ability/effect scanning, replay, mutator/write boundaries, superweapon helpers.
+- `game/ui/...` services: UI-local helpers that can depend upward as normal UI code. They are not cross-cutting services.
 
-## Service Directory
+Placement rule for `game/services/`: Core-only dependencies, used by multiple
+layers or clearly cross-cutting, documented Protocol plus at least one testable
+implementation.
 
-```
-game/services/                      # PROJ-296 — cross-cutting, depends on Core only
-    __init__.py
-    llm/
-        __init__.py                 # Public API re-exports
-        types.py                    # Role, FinishReason, Message, TokenUsage, CompletionResult
-        provider.py                 # LLMProvider Protocol
-        factory.py                  # LLMProviderFactory + register_provider()
-        deepseek.py                 # DeepSeekProvider concrete implementation
-        background.py               # LLMBackgroundCall + shutdown_all_calls
-        defaults.py                 # get/set_default_llm_provider() module-level accessors
+## Directory Map
+
+```text
+game/services/llm/
+  types.py                         Role, FinishReason, Message, TokenUsage, CompletionResult
+  provider.py                      LLMProvider Protocol
+  factory.py                       LLMProviderFactory, register_provider()
+  deepseek.py                      DeepSeekProvider
+  background.py                    LLMBackgroundCall, shutdown_all_calls()
+  defaults.py                      get_default_llm_provider(), set_default_llm_provider()
 
 game/simulation/services/
-    __init__.py
-    battle_service.py           # Battle creation and simulation control
-    design_loader.py            # Load ship designs into Ship objects
-    modifier_service.py         # Low-level component modifier handling
-    registry_loader.py          # Load registry data from disk
-    vehicle_design_service.py   # Ship creation and modification
+  battle_service.py                Visual-mode BattleEngine service
+  design_loader.py                 SimulationDesignLoader
+  modifier_service.py              Low-level component modifier rules
+  registry_loader.py               reload_registries_from_directory()
+  ship_materializer.py             ShipSpec -> Ship materializers
+  vehicle_design_service.py        Ship creation/editing service
 
 game/ui/screens/builder/
-    modifier_logic.py           # ModifierLogicService - builder modifier logic (DI)
-    modifier_utils.py           # copy_modifiers() utility
-    stat_definitions.py         # StatDefinition class
-    stat_getters.py             # Stat value getters, formatters, validators
-    stat_rows_dynamic.py        # Dynamic resource/strategic row generation
-    stats_config.py             # Stats layout loader + re-exports
+  modifier_logic.py                Builder ModifierLogicService
+  modifier_utils.py                copy_modifiers()
+  stat_definitions.py              StatDefinition
+  stat_getters.py                  GETTERS registry and formatters
+  stat_rows_dynamic.py             Dynamic stats rows
+  stats_config.py                  stats_sections loader and SECTION_GENERATORS
 
 game/strategy/services/
-    __init__.py
-    action_time_resolver.py     # Resolve tick-based action times for orders
-    area_effect_manager.py      # Aggregate environmental effects at hex locations
-    cargo_transfer_service.py   # Cargo transfer business logic
-    component_inspector.py      # Inspect design components and abilities
-    design_cost_calculator.py   # Calculate design resource costs
-    fleet_cargo_projector.py    # Project future cargo state from order queue
-    fleet_navigation_service.py # Fleet pathfinding and movement
-    fleet_speed_calculator.py   # Strategic movement speed calculation
-    modifier_resolver.py        # Resolve size_mount modifiers from design_data
-    strategic_ability_scanner.py # Find strategic abilities across spatial scopes
-    system_effects_collector.py  # Aggregate system-scope effects for UI display
-
-game/strategy/data/                # Data models (not services, but consumed via service-like helpers)
-    environmental_preference.py # PROJ-283: EnvironmentalPreference dataclass
-    habitability_factors.py     # PROJ-283: HabitabilityFactor + FACTOR_REGISTRY
-    race_config.py              # PROJ-283: RaceConfig.preferences, base_reproduction_rate, base_happiness
-    race_point_budget.py        # PROJ-283: RacePointBudget.calculate_preferences_cost / calculate_reproduction_cost
-    homeworld_presets.py        # PROJ-283: apply_preset_to_config (registry-native partial overrides)
-
-game/strategy/formulas/
-    habitability.py             # PROJ-283: registry-driven calculate_habitability + score_planet_for_race
+  action_time_resolver.py          Order action/activation time lookup
+  ability_iterator.py              IAbilitySource provider registry
+  ability_sources/                 Facility, storm, fleet, planet, star, warp, archetype adapters
+  cargo_transfer_service.py        Transfer dialog/business logic
+  combat_modifier_collector.py     Pre-battle strategic combat modifiers
+  component_inspector.py           Component/ability inspection utilities
+  deployment_zone_calculator.py    BattleRole -> battlefield positions
+  design_cost_calculator.py        Registry-backed design cost calculation
+  design_validator.py              Strategy design validation
+  effect_ability_display.py        Effect display/grouping helpers
+  effect_ability_metadata.py       Effect metadata registry
+  empire_economy_service.py        UI-safe facade over EmpireEconomyCalculator
+  empire_write_service.py          IEmpireMutator implementation
+  fleet_cargo_projector.py         Project queued cargo transfers
+  fleet_navigation_service.py      Fleet movement and path projection
+  fleet_speed_calculator.py        Strategic movement speed
+  fleet_write_service.py           IFleetMutator implementation
+  galaxy_pathfinding_service.py    Galaxy pathfinding over IGalaxySystemGraph
+  intercept_calculator.py          Chase/intercept point calculation
+  modifier_resolver.py             size_mount modifier resolution
+  planet_economy_projector.py      Per-planet resource flux projection
+  planet_habitability_service.py   Injectable cached habitability calculator
+  planet_query_service.py          Pure queries over Planet facade data
+  planet_write_service.py          IPlanetMutator implementation
+  race_description_llm_controller.py / prompt_builder.py
+  race_resolver.py                 RaceConfig resolution helper
+  replay_resolver.py               Replay id -> saved replay lookup
+  replay_ship_builder.py           Replay playback ship builder
+  replay_store.py                  Battle replay sidecar persistence
+  replay_verification_coordinator.py
+  replay_verification_sidecar.py
+  ship_instance_write_service.py   IShipInstanceMutator implementation
+  stabilizer_registry.py           Stabilizer ability -> blocked superweapon map
+  strategic_ability_scanner.py     Scoped ability queries and stacking
+  superweapon_registry.py          Declarative strategic superweapon table
+  system_destroyer.py              Collect-then-mutate star-system teardown
+  system_effects_collector.py      Sector/system effect aggregation
+  task_group_suggester.py          Fleet hierarchy auto-suggestion
 ```
 
----
+Related data/formula modules:
 
-## Cross-Cutting Services (`game/services/`, PROJ-296)
+- `game/strategy/data/environmental_preference.py`
+- `game/strategy/data/habitability_factors.py`
+- `game/strategy/data/race_config.py`
+- `game/strategy/data/race_point_budget.py`
+- `game/strategy/data/homeworld_presets.py`
+- `game/strategy/data/colony_species_config.py`
+- `game/strategy/formulas/habitability.py`
+- `game/strategy/formulas/colony_output.py`
 
-### LLM Service
+Package-export warning: `game/strategy/services/__init__.py` currently exports
+only `CargoTransferService`. Import most strategy services from their module
+paths. `game/simulation/services/__init__.py` exports the main simulation
+services and result DTOs.
 
-**Location:** `game/services/llm/`
+## Cross-Cutting LLM Service
 
-**Purpose:** Pluggable abstraction over chat-completion LLM providers
-(DeepSeek today; OpenAI / Anthropic / Gemini / local models can be
-added by registering a class with the factory). Used by future race
-description generation and diplomacy AI; designed so consumers don't
-care which provider is in use.
+Location: `game/services/llm/`
 
-**Public API (re-exported from `game.services.llm`):**
+Purpose: provider-neutral chat-completion abstraction. Consumers must depend on
+`LLMProvider`, not `DeepSeekProvider`.
 
-| Symbol | Purpose |
-|--------|---------|
-| `LLMProvider` (Protocol) | Pluggable contract: `complete(messages, **opts) -> CompletionResult`. `@runtime_checkable`. |
-| `LLMProviderFactory.create(name=None)` | Construct the provider named `name` (or `LLM_PROVIDER` env, default `"deepseek"`). Returns `None` if the provider can't initialize (deferred validation). Raises `LLMConfigError` on unknown name. |
-| `register_provider(name, cls)` | Register a `LLMProvider` impl into the factory's dispatch dict. Provider modules call this at import time. |
-| `Role`, `FinishReason` | str-Enums for message role / completion termination reason. |
-| `Message`, `TokenUsage`, `CompletionResult` | Frozen DTOs. |
-| `LLMBackgroundCall` | Worker-thread wrapper for non-blocking `complete()` calls — see Pattern #28 in `docs/02_PATTERNS.md`. Exposes `status`, `result`, `error`, `elapsed_seconds`, `cancel()`. |
-| `CallStatus` | PENDING / RUNNING / DONE / ERROR / CANCELLED. `wait(timeout)` returns True only when one of DONE/ERROR/CANCELLED is reached. ERROR may carry an `LLMUnexpectedError` if the provider raised a non-LLMException (PROJ-321..328 audit S1.1). |
-| `shutdown_all_calls(timeout=5.0)` | Joins in-flight workers; called from `game/app.py` before `pygame.quit()`. |
-| `get_default_llm_provider()` | Returns the application-wide default provider, or `None` when unconfigured. Consumer pattern: `if provider is not None: show_button()`. |
-| `set_default_llm_provider(p)` | Set the slot. Called by `ApplicationContext.create_production()` and by tests. |
+Public API from `game.services.llm`:
 
-**Configuration (env vars):**
+- `LLMProvider`: runtime-checkable Protocol; `complete(messages, **opts) -> CompletionResult`.
+- `LLMProviderFactory.create(name=None)`: name comes from argument, `LLM_PROVIDER`, or default `"deepseek"`. Unknown provider names raise `LLMConfigError`. Known providers that cannot initialize may return `None`.
+- `register_provider(name, cls)`: provider modules register themselves at import time.
+- `Role`, `FinishReason`: string enums.
+- `Message`, `TokenUsage`, `CompletionResult`: frozen DTOs.
+- `LLMBackgroundCall`: worker-thread wrapper; exposes `status`, `result`, `error`, `elapsed_seconds`, `cancel()`, `wait(timeout)`.
+- `CallStatus`: `PENDING`, `RUNNING`, `DONE`, `ERROR`, `CANCELLED`. `wait()` is true only for terminal states.
+- `shutdown_all_calls(timeout=5.0)`: joins in-flight calls before app shutdown.
+- `get_default_llm_provider()` / `set_default_llm_provider(p)`: application default provider slot. UI should gate affordances with `provider is not None`.
 
-- `DEEPSEEK_API_KEY` — required to use the DeepSeek provider. Read
-  per-request, never cached on the provider instance (security).
-- `LLM_PROVIDER` — provider name lookup key. Default `"deepseek"`.
+Configuration:
 
-**Tunable defaults (`game.core.config.LLMConfig`):**
-timeout, retry policy (5xx only, never 429), `MAX_CONCURRENT_CALLS=3`,
-`DEFAULT_MODEL="deepseek-v4-flash"`, User-Agent string.
+- `DEEPSEEK_API_KEY`: required at request time for DeepSeek; read per request, not cached.
+- `LLM_PROVIDER`: provider lookup key.
+- `game.core.config.LLMConfig`: timeout, retry policy, `MAX_CONCURRENT_CALLS=3`, `DEFAULT_MODEL="deepseek-v4-flash"`, User-Agent.
+- Retry policy: retry 5xx with backoff; never retry 429; SSL verification stays enabled.
 
-> DeepSeek's `deepseek-chat` and `deepseek-reasoner` model names are
-> deprecated by the provider. The current generation is `deepseek-v4-flash`
-> (general) and `deepseek-v4-pro` (premium). 1M context window for both.
-> See https://api-docs.deepseek.com/quick_start/pricing.
+Error model: `LLMConfigError`, `LLMNetworkError`, `LLMResponseError`,
+`LLMRateLimited`, `LLMTimeoutError`, `LLMCancelled`, `LLMUnexpectedError`; all
+inherit `LLMException -> GameException`.
 
-**Error model (`game/core/exceptions.py` `LLMException` branch):**
-`LLMConfigError` (L001), `LLMNetworkError` (L002), `LLMResponseError`
-(L003), `LLMRateLimited` (L004), `LLMTimeoutError` (L005),
-`LLMCancelled` (L006), `LLMUnexpectedError` (no code — wraps any non-LLM
-exception escaping a provider; PROJ-321..328 audit S1.1). All inherit
-from `LLMException` → `GameException`.
+Reference consumer: `game/strategy/services/race_description_llm_controller.py`.
+It owns one `LLMBackgroundCall` per generated field, translates `CallStatus`
+to field status, drives Race Setup through `on_change`, and is pygame-free. If
+the screen swaps `race_config`, it must call `controller.set_race_config(new_race)`
+before accepting results.
 
-**Consumers (PROJ-299 onwards):**
-- `RaceDescriptionLLMController` (`game/strategy/services/race_description_llm_controller.py`) —
-  pygame-free state machine that owns one `LLMBackgroundCall` per
-  description field (bio + socio). Translates `CallStatus` →
-  domain-specific `FieldStatus`. Drives the Race Setup Description tab
-  via an `on_change` callback. The canonical reference consumer of
-  Pattern #28 (Background Service Call). When adding a new LLM
-  consumer, copy this shape.
+Extension recipe: implement `LLMProvider.complete(...) -> CompletionResult`,
+raise `LLMException` subclasses for expected provider failures, register via
+`register_provider(name, cls)`, and keep credentials out of instance state,
+logs, exception contexts, and `repr`.
 
-When the screen reassigns its `race_config` (e.g. on Load Race), it
-MUST call `controller.set_race_config(new_race)` so the controller
-writes generation results into the new instance — otherwise the
-results land in an orphaned old instance the UI no longer reads. See
-`_populate_ui_from_config` in `RaceSetupScreen` for the canonical
-sync site.
+## Simulation Services
 
----
+### ShipMaterializer
 
-## Simulation Layer Services
+Location: `game/simulation/services/ship_materializer.py`
 
-### ShipMaterializer (PROJ-274)
+Purpose: convert `ShipSpec` to live `Ship` without duplicating caller-specific
+builder closures.
 
-**Location:** `game/simulation/services/ship_materializer.py`
+Protocol:
 
-**Purpose:** Turn a `ShipSpec` into a live `Ship` without forcing every caller to supply a `ship_builder` closure. Before PROJ-274, six forks of that closure lived across `game/app.py`, Combat Lab services, and test fixtures; ShipMaterializer consolidates them into a protocol + two implementations, registered on ApplicationContext.
-
-**Protocol:**
 ```python
 @runtime_checkable
 class IShipMaterializer(Protocol):
@@ -157,1182 +167,735 @@ class IShipMaterializer(Protocol):
     ) -> Ship: ...
 ```
 
-**Implementations:**
+Implementations:
 
-| Class | Use case | Requires |
-|-------|----------|----------|
-| `InstanceBackedMaterializer` | Strategy, Battle Setup, `game/app.py::start_battle` — callers with a `ShipInstance` already populated | `ship_spec.instance_ref` set to the `ShipInstance` |
-| `DesignOnlyMaterializer(design_loader)` | Combat Lab scenarios — construct ships from JSON by filename | A `design_loader(design_id: str) -> dict` closure |
+- `InstanceBackedMaterializer`: Strategy, Battle Setup, `game/app.py::start_battle`; requires `ship_spec.instance_ref`.
+- `DesignOnlyMaterializer(design_loader)`: Combat Lab; requires `design_loader(design_id: str) -> dict`.
 
-**Module accessors (PROJ-258 pattern):**
+Accessors: `get_default_ship_materializer()` and
+`set_default_ship_materializer(materializer)`.
 
-```python
-from game.simulation.services.ship_materializer import (
-    get_default_ship_materializer,
-    set_default_ship_materializer,
-    InstanceBackedMaterializer,
-    DesignOnlyMaterializer,
-)
+Battle integration:
 
-# Production default (lazy-init): InstanceBackedMaterializer.
-mat = get_default_ship_materializer()
-
-# Combat Lab swaps at TestRunner.__init__:
-set_default_ship_materializer(
-    DesignOnlyMaterializer(design_loader=load_combat_lab_design)
-)
-```
-
-**run_battle integration:**
-
-Both `run_battle(spec, ai_factory=..., ship_builder=None)` and `BattleController.start_from_spec(spec, ..., ship_builder=None)` use the context materializer when no explicit `ship_builder` is supplied. PROJ-306 closure: when `ship_builder is None`, the caller MUST also supply `registry_provider: IRegistryProvider`. The public helper `build_context_ship_builder(registry_provider=...)` in `game/simulation/battle_runner.py` assembles a `(ship_spec, team_id) -> Ship` closure using the default materializer + the explicit provider. Per PROJ-252, Simulation-layer code never resolves the registry provider via global lookup — non-Simulation callers (Strategy adapter, app.py, Combat Lab services) supply it via `get_default_registry_provider()`. Test code keeps the `ship_builder` kwarg for isolation.
-
-**ShipSpec extension:**
-
-`ShipSpec` carries a new `instance_ref: Optional[Any] = None` field. Instance-backed compilers (strategy, battle_setup) set it to the owning `ShipInstance`; Combat Lab leaves it `None`. Typed `Optional[Any]` so the simulation layer doesn't import from strategy.
-
-**Call sites (after migration):**
-
-| Caller | Ship builder supplied? | `registry_provider` supplied? | Materializer used |
-|--------|------------------------|-------------------------------|-------------------|
-| `game/app.py::start_battle` | No | Yes (via `get_default_registry_provider()`) | InstanceBackedMaterializer (default) |
-| `game/strategy/adapters/simulation_adapter.py` | No | Yes | InstanceBackedMaterializer (default) |
-| `combat_lab/services/scenario_run_helper.py` | Yes (role-tagging wrapper around `build_context_ship_builder`) | Yes | Wraps context builder |
-| `game/ui/screens/test_lab/screen.py` | Yes (pre-snapshot via `build_context_ship_builder`) | Yes | DesignOnlyMaterializer |
-| `combat_lab/scenarios/templates.py::ComparisonScenario` | Yes (role-tagging wrapper) | Yes | Wraps context builder |
-| Tests (test_three_team_battle, test_boundary_retreat, etc.) | Yes (explicit stub) | N/A | Override takes priority |
-
----
+- `run_battle(spec, ai_factory=..., ship_builder=None, registry_provider=...)` and `BattleController.start_from_spec(...)` use the default materializer when no explicit `ship_builder` is supplied.
+- If `ship_builder is None`, caller must pass `registry_provider: IRegistryProvider`.
+- `build_context_ship_builder(registry_provider=...)` builds the closure from the default materializer plus explicit registry provider.
+- Simulation code must not resolve registry providers by global lookup. Non-Simulation callers may supply `get_default_registry_provider()`.
+- `ShipSpec.instance_ref: Optional[Any] = None` lets instance-backed compilers pass `ShipInstance` without Simulation importing Strategy.
+- Tests may keep explicit `ship_builder` stubs for isolation.
 
 ### BattleService
 
-**Location:** `game/simulation/services/battle_service.py`
+Location: `game/simulation/services/battle_service.py`
 
-**Purpose:** Abstraction layer between UI and BattleEngine. Manages the full battle lifecycle: creation, ship assignment, simulation execution, and state queries.
+Purpose: visual-mode abstraction around `BattleEngine`. Headless flows use
+`game.simulation.battle_runner.run_battle(spec)` directly. Visual-mode
+`BattleController` uses this service for per-frame ticking and emits
+`BattleOutcome` at battle end, matching the headless DTO contract.
 
-> **PROJ-269 + PROJ-270:** All headless callers route through
-> `game.simulation.battle_runner.run_battle(spec)` — it constructs +
-> drives `BattleEngine` directly, no `BattleService` wrapper. The
-> service is now used only by the visual-mode `BattleController` for
-> per-frame ticking. `BattleController` also emits a `BattleOutcome`
-> at battle end (PROJ-270 Phase 4.4) so visual-mode UI consumes the
-> same DTO contract as headless callers. See `combat_simulation.md`
-> §0–§1 for the spec-compiler-driven flow that replaced the legacy
-> `create_*_battle` factories.
+Dependencies: no constructor args. Internally creates `BattleEngine` and
+`BattleLogger`. AI factory is injected via `create_battle(..., ai_factory=...)`.
 
-**Dependencies:** None (no constructor args). Internally creates `BattleEngine` and `BattleLogger`. AI factory is injected at battle creation time via the `ai_factory` parameter.
+Result DTO:
 
-**Result Object:**
 ```python
 @dataclass
 class BattleServiceResult:
     success: bool
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    engine: Optional[BattleEngine] = None
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    engine: BattleEngine | None = None
 ```
 
-**Key Methods:**
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `create_battle` | `(seed: Optional[int], enable_logging: bool, ai_factory: Optional[IAIControllerFactory] = None) -> BattleServiceResult` | Create a new battle instance with optional seed, logging, and AI factory |
-| `add_ship` | `(ship: Ship, team_id: int) -> BattleServiceResult` | Add a ship to team 0 or 1 (before start only) |
-| `remove_ship` | `(ship: Ship) -> BattleServiceResult` | Remove a ship from the battle (before start only) |
-| `start_battle` | `(end_condition: Optional[IEndCondition], absolute_max_ticks: Optional[int]) -> BattleServiceResult` | Start the simulation with the given end condition |
-| `update` | `() -> BattleServiceResult` | Run one simulation tick |
-| `run_ticks` | `(count: int) -> BattleServiceResult` | Run multiple ticks (stops early if battle ends) |
-| `is_battle_over` | `() -> bool` | Check if the battle has ended |
-| `get_winner` | `() -> Optional[int]` | Get winning team ID (0, 1, -1 for draw, None if no engine) |
-| `get_battle_state` | `() -> Dict[str, Any]` | Get full state dict (tick count, ships, projectiles, etc.) |
-| `get_all_ships` | `() -> List[Ship]` | Get all ships in battle |
-| `get_alive_ships` | `() -> List[Ship]` | Get only living ships |
-| `get_engine` | `() -> Optional[BattleEngine]` | Get the underlying BattleEngine directly |
-| `reset` | `() -> None` | Clear all battle state, close logger |
-
-**Usage:**
-```python
-from game.simulation.services.battle_service import BattleService
-from game.simulation.systems.battle_end_conditions import (
-    TeamEliminatedCondition, TickLimitCondition, AnyCondition,
-)
-
-service = BattleService()
-result = service.create_battle(seed=42, enable_logging=True)
-
-service.add_ship(ship1, team_id=0)
-service.add_ship(ship2, team_id=1)
-
-# Simple: end when a team is eliminated (default)
-service.start_battle()
-
-# Or composable: end when eliminated OR after 10,000 ticks
-service.start_battle(end_condition=AnyCondition([
-    TeamEliminatedCondition(),
-    TickLimitCondition(max_ticks=10000),
-]))
-
-while not service.is_battle_over():
-    service.update()
-
-winner = service.get_winner()
-service.reset()
-```
-
----
+Key API: `create_battle`, `add_ship`, `remove_ship`, `start_battle`,
+`adopt_started_engine`, `update`, `run_ticks`, `is_battle_over`,
+`get_winner`, `get_battle_state`, `get_all_ships`, `get_alive_ships`,
+`get_engine`, `reset`.
 
 ### VehicleDesignService
 
-**Location:** `game/simulation/services/vehicle_design_service.py`
+Location: `game/simulation/services/vehicle_design_service.py`
 
-**Purpose:** High-level operations for ship creation and modification. Abstracts layer management, component validation, class changes, and stat recalculation.
+Purpose: high-level ship creation/modification API over layers, components,
+class changes, validation, and stat recalculation.
 
-**Dependencies:** Requires `GameRegistries` via constructor injection (strict DI, no fallback).
+Dependencies: `VehicleDesignService(registries=GameRegistries)`; strict DI,
+no fallback.
 
-**Result Object:**
+Result DTO:
+
 ```python
 @dataclass
 class DesignResult:
     success: bool
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    ship: Optional[Ship] = None
-    removed_component: Optional[Component] = None
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    ship: Ship | None = None
+    removed_component: Component | None = None
 ```
 
-**Key Methods:**
+Key API: `create_ship`, `add_component`, `add_component_instance`,
+`add_component_bulk`, `remove_component`, `move_component`, `change_class`,
+`validate_design`, `get_available_components`, `get_layer_info`,
+`get_ship_summary`.
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `create_ship` | `(name: str, ship_class: str, theme_id: str = "Federation", x: float = 0.0, y: float = 0.0, color: tuple = (100,100,255), team_id: int = 0) -> DesignResult` | Create a new ship. Only `name` and `ship_class` are required. |
-| `add_component` | `(ship: Ship, component_id: str, layer: LayerType) -> DesignResult` | Create component from registry ID and add to ship |
-| `add_component_instance` | `(ship: Ship, component: Component, layer: LayerType) -> DesignResult` | Add a pre-constructed component instance to ship |
-| `add_component_bulk` | `(ship: Ship, component_id: str, layer: LayerType, count: int) -> DesignResult` | Add multiple copies of a component |
-| `remove_component` | `(ship: Ship, layer: LayerType, index: int) -> DesignResult` | Remove component by layer and index |
-| `move_component` | `(ship: Ship, source_layer: LayerType, index: int, target_layer: LayerType) -> DesignResult` | Move component between layers (atomic remove + re-add, preserves instance). Mass budget is advisory — moves are not blocked by it. |
-| `change_class` | `(ship: Ship, new_class: str, migrate_components: bool = True) -> DesignResult` | Change vehicle class, optionally migrating components (default: migrate) |
-| `validate_design` | `(ship: Ship) -> ValidationResult` | Full design validation |
-| `get_available_components` | `(ship: Ship, layer: LayerType) -> List[str]` | Get component IDs valid for the given layer |
-| `get_layer_info` | `(ship: Ship, layer: LayerType) -> dict` | Get layer details (components, restrictions, radius_pct) |
-| `get_ship_summary` | `(ship: Ship) -> dict` | Get summary of ship stats (mass, hp, speed, validity, etc.) |
+Invariant: `move_component` is atomic remove plus re-add and preserves the
+component instance. Mass budget is advisory for moves.
 
-**Usage:**
-```python
-from game.simulation.services.vehicle_design_service import VehicleDesignService
-from game.core.constants import LayerType
-from game.core.registry import GameRegistries
+`WorkshopViewModel` (`game/ui/screens/workshop_viewmodel.py`) composes this
+service with layer resolution and UI state. Its helpers include
+`resolve_target_layer`, `quick_add_component`, `move_component`,
+`move_component_group`, `resolve_move_target`, and `on_modifier_changed`.
 
-registries = GameRegistries.from_data_files()
-service = VehicleDesignService(registries=registries)
+Stats panel extension:
 
-# Create a ship
-result = service.create_ship(name="USS Enterprise", ship_class="Cruiser", theme_id="Federation")
-if result.success:
-    ship = result.ship
+- Config: `data/stats_sections.json`
+- Getters: `game/ui/screens/builder/stat_getters.py` `GETTERS`
+- Dynamic rows: `game/ui/screens/builder/stat_rows_dynamic.py`
+- Config loader/registry: `game/ui/screens/builder/stats_config.py`
+- Renderer: `game/ui/panels/design_stats_panel.py`
+- Add a stat by adding a getter, registering it, and adding JSON config.
+- Add a section by adding a generator, registering it in `SECTION_GENERATORS`, and adding JSON config.
 
-    # Add components
-    result = service.add_component(ship, "laser_cannon", LayerType.OUTER)
-    result = service.add_component_bulk(ship, "armor_plate", LayerType.ARMOR, count=4)
+### Modifiers
 
-    # Validate
-    validation = service.validate_design(ship)
-    if not validation.is_valid:
-        print(validation.errors)
+`ModifierService` in `game/simulation/services/modifier_service.py` owns
+low-level modifier rules and requires `modifier_registry: dict[str, Any]`.
 
-    # Get summary
-    summary = service.get_ship_summary(ship)
-    print(f"{summary['name']}: {summary['mass']}/{summary['max_mass']}kg")
-```
+`ModifierLogicService` in `game/ui/screens/builder/modifier_logic.py` owns
+builder-specific modifier logic: validation, mandatory modifiers, initial
+values, component constraints such as turret arc limits, and step-button
+snapping. It requires `IRegistryProvider` and creates `ComponentService`
+internally.
 
-#### WorkshopViewModel Higher-Level Operations
+Key `ModifierLogicService` API: `is_modifier_allowed`,
+`get_mandatory_modifiers`, `is_modifier_mandatory`, `get_initial_value`,
+`ensure_mandatory_modifiers`, `get_local_min_max`, `calculate_snap_value`.
 
-The `WorkshopViewModel` (`game/ui/screens/workshop_viewmodel.py`) composes
-`VehicleDesignService` calls with layer resolution and UI state management.
-These are not service methods but ViewModel methods that delegate to the service.
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `resolve_target_layer` | `(component: Component, selected_layer: Optional[LayerType]) -> Optional[LayerType]` | Find best layer for quick-add (innermost valid, or nearest to selection) |
-| `quick_add_component` | `(component_id: str, selected_layer?: LayerType, count?: int) -> bool` | Add component via palette "+" button with auto layer resolution |
-| `move_component` | `(source_layer: LayerType, index: int, target_layer: LayerType) -> bool` | Move single component between layers (remove + re-add instance) |
-| `move_component_group` | `(group_key: str, source_layer: LayerType, target_layer: LayerType) -> bool` | Move all components in a group between layers |
-| `resolve_move_target` | `(component: Component, source_layer: LayerType, direction: str) -> Optional[LayerType]` | Find next valid layer in "up"/"down" direction (skips HULL and invalid layers) |
-| `on_modifier_changed` | `() -> None` | Called after any modifier change — syncs multi-selection, always recalculates ship stats |
-
-#### Stats Panel Configuration
-
-The stats panel is driven by `data/stats_sections.json`. Each section declares visibility
-rules, column placement, and stat definitions. Key files:
-
-| File | Purpose |
-|------|---------|
-| `data/stats_sections.json` | Section definitions, visibility rules, always-visible overrides |
-| `game/ui/screens/builder/stat_getters.py` | Getter functions registered in `GETTERS` dict |
-| `game/ui/screens/builder/stat_rows_dynamic.py` | Dynamic row generators for variable-content sections |
-| `game/ui/screens/builder/stats_config.py` | Config loader, `SECTION_GENERATORS` registry, `resolve_section_visibility()` |
-| `game/ui/panels/design_stats_panel.py` | Panel rendering with collapsible sections |
-
-To add a new stat: add getter to `stat_getters.py`, register in `GETTERS`, add item to section in JSON.
-To add a new section: add generator to `stat_rows_dynamic.py`, register in `SECTION_GENERATORS`, add section to JSON.
-
----
-
-### ModifierService (Simulation Layer)
-
-**Location:** `game/simulation/services/modifier_service.py`
-
-**Purpose:** Low-level modifier operations in the simulation layer -- restriction checking, registry access. Used internally by `ComponentService`.
-
-**Dependencies:** Requires `modifier_registry: Dict[str, Any]` via constructor (strict DI, no fallback).
-
----
-
-### ModifierLogicService (UI Layer)
-
-**Location:** `game/ui/screens/builder/modifier_logic.py`
-
-**Purpose:** Builder-specific modifier logic -- validation, mandatory checks, initial value calculation, component-specific constraints (e.g., turret mount arc limits), and snap calculations for step buttons. Acts as a bridge between UI controls and the underlying `ComponentService`.
-
-**Dependencies:** Requires `IRegistryProvider` via constructor injection (strict DI). Creates a `ComponentService` internally.
-
-**Key Methods:**
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `is_modifier_allowed` | `(mod_id: str, component) -> bool` | Check if modifier is valid for this component (type/ability restrictions) |
-| `get_mandatory_modifiers` | `(component) -> list` | Get list of mandatory modifier IDs for this component |
-| `is_modifier_mandatory` | `(mod_id: str, component) -> bool` | Check if a specific modifier is mandatory |
-| `get_initial_value` | `(mod_id: str, component) -> float` | Get the default value for a newly applied modifier (uses dispatch dict) |
-| `ensure_mandatory_modifiers` | `(component) -> None` | Auto-apply all required modifiers with default values |
-| `get_local_min_max` | `(mod_id: str, component) -> tuple` | Get (min, max) value range, accounting for component constraints |
-| `calculate_snap_value` | `(current, step, direction, min_val, max_val, smart_floor) -> float` | Static. Calculate snap value for step buttons |
-
-**Usage:**
-```python
-from game.ui.screens.builder.modifier_logic import ModifierLogicService
-
-service = ModifierLogicService(registry_provider=context.registries)
-
-# Check allowance and mandatory status
-if service.is_modifier_allowed('turret_mount', weapon):
-    print("Turret mount available")
-
-# Auto-apply all mandatory modifiers
-service.ensure_mandatory_modifiers(weapon)
-
-# Get valid range for turret arc
-min_val, max_val = service.get_local_min_max('turret_mount', weapon)
-print(f"Turret arc: {min_val} to {max_val} degrees")
-```
-
-> **Note:** A deprecated `ModifierLogic` static wrapper class remains in the same file for backward compatibility during transition. New code should use `ModifierLogicService` instances.
-
----
+Warning: the deprecated static `ModifierLogic` wrapper remains for transition.
+New code should use `ModifierLogicService` instances.
 
 ### SimulationDesignLoader
 
-**Location:** `game/simulation/services/design_loader.py`
+Location: `game/simulation/services/design_loader.py`
 
-**Purpose:** Loads ship designs from JSON files or design data dicts and creates Ship simulation entities. Handles the simulation layer concern of instantiating Ship objects with proper stat recalculation.
+Purpose: load ship designs from JSON or dicts and instantiate `Ship` objects
+with stat recalculation.
 
-**Dependencies:** Requires `GameRegistries` via keyword-only constructor argument (strict DI, raises `ValidationException` if None).
+Dependencies: keyword-only `registries: GameRegistries`; strict DI, raises
+`ValidationException` if omitted.
 
-**Key Methods:**
+API:
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `load_ship_from_design_data` | `(design_data: dict, center_x: int, center_y: int) -> Optional[Ship]` | Create a Ship from a design data dict; returns None on error |
-| `load_ship_from_file` | `(file_path: str, width: int = 1920, height: int = 1080) -> Tuple[Optional[Ship], str]` | Load a Ship from a JSON file; returns (Ship or None, message) |
+- `load_ship_from_design_data(design_data, center_x, center_y) -> Ship | None`
+- `load_ship_from_file(file_path, width=1920, height=1080) -> tuple[Ship | None, str]`
 
-**Usage:**
-```python
-from game.simulation.services.design_loader import SimulationDesignLoader
+### Registry Reload
 
-loader = SimulationDesignLoader(registries=registries)
+Location: `game/simulation/services/registry_loader.py`
 
-# From design data dict
-ship = loader.load_ship_from_design_data(design_data, center_x=960, center_y=540)
+Purpose: reload modifiers, components, and vehicle classes from a directory
+without Core importing Simulation.
 
-# From file
-ship, message = loader.load_ship_from_file("designs/cruiser.json")
-if ship:
-    print(f"Loaded: {ship.name}")
-else:
-    print(f"Error: {message}")
-```
-
----
-
-### reload_registries_from_directory (free function)
-
-**Location:** `game/simulation/services/registry_loader.py`
-
-**Purpose:** Reloads all registry data (components, modifiers, vehicle classes) from a directory. Extracted from `RegistryManager` to fix a Core-to-Simulation layer violation.
-
-**Signature:**
 ```python
 def reload_registries_from_directory(
     registry_manager: RegistryManager,
-    data_dir: Union[str, Path],
+    data_dir: str | Path,
     *,
-    registry_provider: IRegistryProvider,  # PROJ-306: required keyword arg
-) -> bool
+    registry_provider: IRegistryProvider,
+) -> bool: ...
 ```
 
-**Behavior:**
-- Clears all existing registry data, then loads modifiers, components, and vehicle classes from JSON files in `data_dir`
-- Checks for `test_`-prefixed file variants first (for test data directories)
-- Returns `True` if directory exists, `False` if directory is invalid
-- Raises `FrozenStateException` if registry is frozen
+Contract:
 
-**PROJ-306:** `registry_provider` is REQUIRED. Per PROJ-252, Simulation-layer code does not resolve the registry provider via global lookup — callers (today: tests only; no production callers) supply it explicitly.
+- Clears existing registry data, then loads JSON registry files.
+- Checks `test_`-prefixed variants first for test data directories.
+- Returns `True` if directory exists, `False` if invalid.
+- Raises `FrozenStateException` if registry is frozen.
+- `registry_provider` is required. Simulation code must not look it up globally.
 
-**Usage:**
-```python
-from game.simulation.services.registry_loader import reload_registries_from_directory
-from game.core.registry import get_default_registry_provider
-
-# Test code (test layer is outside game/simulation/, so global lookup is fine here):
-success = reload_registries_from_directory(
-    registry_manager,
-    "data/",
-    registry_provider=get_default_registry_provider(),
-)
-```
-
----
-
-## Strategy Layer Services
+## Strategy Movement and Fleet Services
 
 ### FleetNavigationService
 
-**Location:** `game/strategy/services/fleet_navigation_service.py`
+Location: `game/strategy/services/fleet_navigation_service.py`
 
-**Purpose:** Single source of truth for all fleet navigation calculations. Both UI path projection and turn execution use the same logic through this service, ensuring consistency.
+Purpose: single source of truth for fleet navigation. UI path projection and
+turn execution use the same service.
 
-**Dependencies:** None (stateless service, no constructor args).
+DTOs:
 
-**Data Types:**
+- `NavigationState(location, path, orders, speed, can_warp)`: immutable snapshot; `from_fleet(cls, fleet)`.
+- `PathSegment(start, end, turn, is_warp)`: projected UI path segment; `to_dict()`.
+- `NavigationStep(next_hex, new_state, order_complete=False)`: result of one navigation step.
 
-```python
-@dataclass(frozen=True)
-class NavigationState:
-    """Immutable snapshot of fleet state for pure-function navigation."""
-    location: HexCoord
-    path: tuple           # tuple[HexCoord, ...]
-    orders: tuple         # tuple[Order, ...]
-    speed: float
-    can_warp: bool
+Key API: `get_destination`, `compute_path`, `compute_next_step`,
+`project_path`, `project_path_as_dicts`, `compute_path_for_warp`,
+`calculate_fleet_next_hex`, plus navigation write methods used through
+`IFleetMutator` (`set_location`, `set_path`).
 
-    @classmethod
-    def from_fleet(cls, fleet: Fleet) -> NavigationState: ...
-
-@dataclass(frozen=True)
-class PathSegment:
-    """One step in a projected path (for UI visualization)."""
-    start: HexCoord
-    end: HexCoord
-    turn: int
-    is_warp: bool
-
-    def to_dict(self) -> dict: ...
-
-@dataclass(frozen=True)
-class NavigationStep:
-    """Result of computing one navigation step."""
-    next_hex: Optional[HexCoord]
-    new_state: NavigationState
-    order_complete: bool = False
-```
-
-**Key Methods:**
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `get_destination` | `(state: NavigationState, order: Order, galaxy) -> Optional[HexCoord]` | Determine target hex for a given order (MOVE, MOVE_TO_FLEET, etc.) |
-| `compute_path` | `(state: NavigationState, destination: HexCoord, galaxy) -> list` | Calculate path from current location to destination |
-| `compute_next_step` | `(state: NavigationState, galaxy) -> NavigationStep` | Pure function: compute next hex and new state without mutation |
-| `project_path` | `(fleet: Fleet, galaxy, max_turns: int = 10, component_registry=None) -> list[PathSegment]` | Project fleet movement over multiple turns (for UI visualization) |
-| `project_path_as_dicts` | `(fleet: Fleet, galaxy, max_turns: int = 10, component_registry=None) -> list[dict]` | Same as project_path but returns list of dicts |
-| `compute_path_for_warp` | `(state: NavigationState, warp_point_hex: HexCoord, galaxy) -> list` | Calculate path to a warp point hex for warp jump navigation |
-| `calculate_fleet_next_hex` | `(fleet: Fleet, galaxy) -> Optional[HexCoord]` | Mutation bridge: compute next hex AND apply state changes to Fleet object |
-
-**Architecture:**
-- **Core (pure, stateless):** `get_destination`, `compute_path`, `compute_next_step` -- operate on immutable `NavigationState`, no side effects
-- **Projection (for UI):** `project_path`, `project_path_as_dicts` -- simulate future movement for visualization
-- **Execution (for TurnEngine):** `calculate_fleet_next_hex` -- wraps pure functions and mutates Fleet object
-
-**Usage:**
-```python
-from game.strategy.services.fleet_navigation_service import FleetNavigationService
-
-nav_service = FleetNavigationService()
-
-# UI: project path for visualization
-segments = nav_service.project_path(fleet, galaxy, max_turns=10)
-for seg in segments:
-    print(f"Turn {seg.turn}: {seg.start} -> {seg.end} (warp={seg.is_warp})")
-
-# Turn execution: get next hex and mutate fleet
-next_hex = nav_service.calculate_fleet_next_hex(fleet, galaxy)
-if next_hex:
-    fleet.location = next_hex
-
-# Pure function usage with NavigationState
-from game.strategy.services.fleet_navigation_service import NavigationState
-state = NavigationState.from_fleet(fleet)
-step = nav_service.compute_next_step(state, galaxy)
-print(f"Next: {step.next_hex}, order_complete={step.order_complete}")
-```
-
----
+Architecture: pure functions operate on `NavigationState`; projection
+simulates future movement; execution wraps pure functions and mutates fleet
+state only at the bridge.
 
 ### FleetSpeedCalculator
 
-**Location:** `game/strategy/services/fleet_speed_calculator.py`
+Location: `game/strategy/services/fleet_speed_calculator.py`
 
-**Purpose:** Calculates strategic movement speed (hexes per turn) for individual ships and fleets. Fleet speed is determined by its slowest combat-capable ship (convoy behavior).
+Purpose: strategic speed in hexes per turn. Fleet speed is the slowest
+combat-capable ship.
 
-**Dependencies:** None (all methods are `@staticmethod`).
+Constants: `K_STRATEGIC=25`, `MAX_HEXES_PER_TURN=10`,
+`MIN_HEXES_PER_TURN=0`, `IMMOBILE_VEHICLE_TYPES={'Planetary Complex',
+'Satellite', 'Station'}`, `CARRIER_BASED_TYPES={'Fighter'}`,
+`BASE_TICKS_PER_MOVEMENT=100`.
 
-**Constants:**
-```python
-K_STRATEGIC = 25           # Movement point to hex conversion factor
-MAX_HEXES_PER_TURN = 10
-MIN_HEXES_PER_TURN = 0
-IMMOBILE_VEHICLE_TYPES = {'Planetary Complex', 'Satellite', 'Station'}
-CARRIER_BASED_TYPES = {'Fighter'}
-BASE_TICKS_PER_MOVEMENT = 100  # Module constant: base ticks per movement step
-```
+Formula: `floor((strategic_movement * K_STRATEGIC) / mass)`, clamped to
+`[0, 10]`.
 
-**Formula:** `hexes = floor((strategic_movement * K_STRATEGIC) / mass)`, clamped to [0, 10].
+Key API:
 
-**Key Methods:**
+- `calculate_ship_speed(ship_instance) -> int`
+- `calculate_fleet_speed(fleet) -> float`
+- `update_fleet_speed(fleet) -> None`
+- `calculate_fleet_speed_with_strategic_mult(fleet, strategic_mult=1.0) -> float`
+- Module function `get_tick_interval(speed) -> int`
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `calculate_ship_speed` | `(ship_instance: ShipInstance) -> int` | Calculate hexes/turn for a single ship from design data |
-| `calculate_fleet_speed` | `(fleet: Fleet) -> float` | Calculate fleet speed as slowest combat-capable ship's speed |
-| `calculate_fleet_speed_with_environment` | `(fleet: Fleet, environmental_effects) -> float` | Calculate fleet speed accounting for environmental effects (e.g., storm strategic_mult) |
-| `update_fleet_speed` | `(fleet: Fleet) -> None` | Update `fleet.speed` in-place from current ship composition |
+Stale-reference correction: the old environment-object method name
+`calculate_fleet_speed_with_environment` is not current. Callers compute sector
+effects through `SystemEffectsCollector.aggregate_value_or(...)`, then pass the
+numeric multiplier to `calculate_fleet_speed_with_strategic_mult`.
 
-**Module-level function:**
+### Pathfinding, Intercept, Deployment, Task Groups
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `get_tick_interval` | `(speed: float) -> int` | Convert fleet speed to tick interval between movement steps, using `BASE_TICKS_PER_MOVEMENT` |
+`GalaxyPathfindingService` (`game/strategy/services/galaxy_pathfinding_service.py`)
+is pathfinding over `IGalaxySystemGraph`. API: `find_path_deep_space`,
+`find_path_interstellar`, `find_hybrid_path`, `find_nearest_system`,
+`get_system_at_hex`, `strip_start_hex`.
 
-**Special cases for `calculate_ship_speed`:**
-- Planetary complexes, satellites, stations: always 0 (immobile)
-- Fighters: always 0 (carrier-based, no independent strategic movement)
-- Ships with no `StrategicMovement` ability: 0
+`InterceptCalculator` (`game/strategy/services/intercept_calculator.py`) holds a
+`GalaxyPathfindingService` and calculates an intercept hex for a fleet or
+`NavigationState` chaser. `project_fleet_path(fleet, galaxy, max_turns=10)` is a
+top-level helper delegating to `FleetNavigationService`.
 
-**Usage:**
-```python
-from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+`DeploymentZoneCalculator` maps `BattleRole` to mirrored team deployment
+positions on the 100000x100000 battlefield. API: `get_zone_center` and
+`compute_positions`.
 
-# Single ship speed
-speed = FleetSpeedCalculator.calculate_ship_speed(ship_instance)
-print(f"Ship speed: {speed} hexes/turn")
+`suggest_task_groups(ships)` in `task_group_suggester.py` groups ships by
+`effective_role` into TaskForces/Squadrons with default combat policies. It is
+one-shot: the player can accept, modify, or discard the suggestion.
 
-# Fleet speed (slowest ship)
-fleet_speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
+## Strategy Design, Cargo, and Action Services
 
-# Update fleet object in-place (call after adding/removing/damaging ships)
-FleetSpeedCalculator.update_fleet_speed(fleet)
-```
+### Ship Design Stats
 
----
+Location: `game/simulation/entities/ship_design_stats.py`
 
-### Ship Design Stats (Unified Stat Calculation)
+Purpose: single source of truth for design stats. Uses `Ship.from_dict()` plus
+`recalculate_stats()` so calculations go through simulation `ShipStatsCalculator`.
 
-**Location:** `game/simulation/entities/ship_design_stats.py`
+Contract:
 
-**Purpose:** Single source of truth for computing ship stats from design JSON. Uses `Ship.from_dict()` + `recalculate_stats()` so all stat calculations go through one code path (the simulation `ShipStatsCalculator` in `game/simulation/entities/ship_stats.py`).
+- `calculate_design_stats(design_data, registries, components=None, component_toggles=None) -> dict`
+- Requires `GameRegistries`.
+- Full `ShipStatsCalculator.calculate()` requires `resource_catalog`; missing catalog raises at calculation time when needed.
+- No `expected_stats` fallback. If `Ship.from_dict()` fails, the error propagates.
 
-**PROJ-254:** No `expected_stats` fallback — if `Ship.from_dict()` fails, the error propagates. Callers must handle exceptions if design data may be invalid.
+Return keys include `max_hp`, `mass`, `resource_storage`, `cargo_storage`,
+`pod_storage_mass`, `resource_consumption_per_hex`,
+`resource_consumption_per_turn`, `warp_resource_costs`,
+`strategic_movement`, `warp_max_tonnage`.
 
-**Dependencies:** Requires `GameRegistries` parameter (strict DI). The underlying `ShipStatsCalculator` requires `resource_catalog` for its `calculate()` method (lazy resolution — raises `TypeError` if omitted). `GameRegistries.__post_init__()` defaults to an empty catalog when not provided, so test code that only calls `calculate_ability_totals()` works without explicit catalog injection.
+Toggles and damage:
 
-**Key Function:**
+- Toggled-off components are excluded before `Ship` creation.
+- Per-instance damage uses `components: dict[str, ComponentState]` keyed by `component_state_key(component_id, instance_index)`.
+- Damage is applied before `recalculate_stats()`, preserving threshold deactivation and crew reallocation behavior.
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `calculate_design_stats` | `(design_data, registries, components=None, component_toggles=None) -> Dict` | Calculate all ship stats from design JSON, respecting per-instance damage and toggles |
-
-**Return dict:**
-```python
-{
-    'max_hp': int,                            # Total HP from all components
-    'mass': float,                            # Total mass (includes hull base mass)
-    'resource_storage': Dict[str, float],     # resource_type -> capacity
-    'cargo_storage': Dict[str, float],        # cargo_type -> capacity
-    'pod_storage_mass': float,                # Mass capacity for drop pods
-    'resource_consumption_per_hex': Dict[str, float],   # per-hex movement costs
-    'resource_consumption_per_turn': Dict[str, float],  # per-turn maintenance costs
-    'warp_resource_costs': Dict[str, float],  # per-warp-jump costs
-    'strategic_movement': float,              # Movement points for strategic map
-    'warp_max_tonnage': int,                  # Max ship mass for warp (0 if damaged)
-}
-```
-
-**Component toggles:** Toggled-off components are excluded from the design before Ship creation, so their stats don't contribute.
-
-**Per-instance damage:** The `components` kwarg accepts a
-`Dict[str, ComponentState]` keyed by
-`component_state_key(component_id, instance_index)` (i.e. `"{id}#{idx}"`).
-Each `ComponentState.current_hp` is applied to the matching Ship
-component before `recalculate_stats()` runs, which then applies the
-simulation's damage model (threshold-based deactivation, crew
-reallocation, etc.). PROJ-276 replaced the old
-`component_damage: Dict[str, int]` param with this per-instance form.
-
-**Usage:**
-```python
-from game.simulation.entities.ship_design_stats import calculate_design_stats
-from game.core.component_state import ComponentState, component_state_key
-
-# Calculate stats for undamaged ship
-stats = calculate_design_stats(design_data, registries)
-print(f"HP: {stats['max_hp']}, Mass: {stats['mass']}")
-
-# Calculate with per-instance damage
-components = {
-    component_state_key('bridge', 0): ComponentState(
-        component_id='bridge', instance_index=0, current_hp=50.0, max_hp=100.0,
-    ),
-    component_state_key('standard_engine', 0): ComponentState(
-        component_id='standard_engine', instance_index=0, current_hp=30.0, max_hp=100.0,
-    ),
-}
-stats = calculate_design_stats(design_data, registries, components=components)
-
-# Check warp capability (lives in component_inspector)
-from game.strategy.services.component_inspector import has_warp_capability
-if has_warp_capability(ship_instance):
-    print("Ship can use warp points")
-```
-
-**Callers:**
-- `ShipInstance.get_calculated_stats()` — primary consumer, caches results
-- `ProductionSpawner._spawn_to_staging_yard()` — mass calculation for staging
-- `Tools/validate_designs/validate_designs.py` — mass consistency checks
-- `Tools/fix_designs/fix_designs.py` — expected_stats recalculation
-
----
+Callers include `ShipInstance.get_calculated_stats()`,
+`ProductionSpawner._spawn_to_staging_yard()`,
+`Tools/validate_designs/validate_designs.py`, and `Tools/fix_designs/fix_designs.py`.
 
 ### ActionTimeResolver
 
-**Location:** `game/strategy/services/action_time_resolver.py`
+Location: `game/strategy/services/action_time_resolver.py`
 
-**Purpose:** Resolves the `action_time` (ticks to complete) for tick-based order execution. Looks up action times from component abilities on fleet ships.
+Purpose: resolve action/activation/deactivation ticks for fleet and planet
+orders from component abilities.
 
-**Dependencies:** None (all methods are `@staticmethod`).
+Contract:
 
-**Module Constants:**
-```python
-ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = {
-    OrderType.COLONIZE: 'ColonizePlanet',
-    OrderType.IMPLODE_PLANET: 'DestroyPlanet',
-    OrderType.STELLERATE_STAR: 'DestroyStar',
-    OrderType.OPEN_WARP_POINT: 'OpenWarpPoint',
-    OrderType.CLOSE_WARP_POINT: 'CloseWarpPoint',
-    OrderType.CREATE_DYSON_SPHERE: 'CreateDysonSphere',
-    OrderType.SELF_DESTRUCT: 'SelfDestruct',
-}
-MOVEMENT_ORDER_TYPES: frozenset  # {OrderType.MOVE, OrderType.MOVE_TO_FLEET}
-```
+- `ORDER_TO_ABILITY_MAP` is derived from the self-registering command registry, not a hardcoded table.
+- Movement order types complete with 0 action ticks.
+- `ACTIVATE_ABILITY` and `DEACTIVATE_ABILITY` read `ability_name` from `order.target` and use `activation_time` / `deactivation_time`.
+- Fleet orders search ship components; planet action orders search target facility components.
+- Default fallback for unmapped/missing ability time is 1 tick.
 
-**Key Methods:**
+API: `ActionTimeResolver.resolve_action_time(entity, order, component_registry=None) -> int`.
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `resolve_action_time` | `(fleet, order, component_registry=None) -> int` | Resolve ticks required: 0 for movement orders, ability's `action_time` for ability-based orders, 1 as default |
+### Cargo, Costs, and Component Inspection
 
-**Usage:**
-```python
-from game.strategy.services.action_time_resolver import ActionTimeResolver
+`CargoTransferService` (`game/strategy/services/cargo_transfer_service.py`) is
+shared transfer business logic. API: `resolve_colonies`, `get_unload_items`,
+`get_load_items`, `get_inventory_items`, `build_transfer_command`. Module
+function `project_fleet_position(fleet) -> HexCoord` walks queued MOVE/WARP
+orders.
 
-ticks = ActionTimeResolver.resolve_action_time(fleet, order, component_registry)
-```
+`FleetCargoProjector.get_projected_cargo(fleet, cargo_type) -> int` projects
+future fleet cargo by applying queued transfer orders.
 
----
+`DesignCostCalculator.calculate_total_cost(design_data, registries) -> dict[str, float]`
+centralizes resource cost calculation. It resolves component costs through
+registry-backed ship loading, handles formula/modifier effects, and applies
+vehicle class `cost_multiplier`.
 
-### CargoTransferService
+`ComponentInspector` (`game/strategy/services/component_inspector.py`) provides
+module-level inspection utilities. Key API: `get_component_abilities`,
+`extract_abilities_from_component`, `iterate_design_components`,
+`iter_facility_ability_entries`, `ship_has_ability`, `find_ship_with_ability`,
+`count_ability`, `list_ship_abilities`, `get_ability_list`,
+`has_warp_capability`.
 
-**Location:** `game/strategy/services/cargo_transfer_service.py`
+Critical registry invariant: facility and ship `design_data` often stores only
+component IDs. Ability checks must resolve through the component registry. Do
+not inspect only inline `comp.get("abilities", {})`; that silently misses
+registry-defined abilities.
 
-**Purpose:** Shared business logic for cargo transfer operations, extracted from UI dialogs into a testable service. Handles colony resolution, population extraction, inventory inspection, and transfer command assembly.
+`get_ability_list` is the canonical normalizer for scalar, dict, and list
+ability forms. `has_warp_capability` uses `get_calculated_stats()` so it
+respects mass, storage, resource cost, and damage state.
 
-**Dependencies:** None (all methods are `@staticmethod`).
-
-**Key Methods:**
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `resolve_colonies` | `(facade, hex_coord, fleet) -> List[PlanetInfo]` | Find colonized planets at a hex, with fallback to fleet location and projected position |
-| `get_unload_items` | `(facade, fleet_id, colonies) -> List[Dict]` | Get items that can be unloaded (dropped) from a fleet |
-| `get_load_items` | `(facade, colonies) -> List[Dict]` | Get items that can be loaded from colonies (population) |
-| `get_inventory_items` | `(obj_info) -> List[Dict]` | Extract inventory items from a FleetInfo or PlanetInfo |
-| `build_transfer_command` | `(fleet_id, planet_id, cargo_type, direction, amount, max_amount, species_id=None) -> IssueTransferCommand` | Build a transfer command (amount=0 means "transfer all") |
-
-**Module-level function:**
-
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `project_fleet_position` | `(fleet) -> HexCoord` | Walk fleet's order queue to find projected position after all MOVE/WARP orders |
-
-**Usage:**
-```python
-from game.strategy.services.cargo_transfer_service import CargoTransferService
-
-colonies = CargoTransferService.resolve_colonies(facade, hex_coord, fleet)
-unload = CargoTransferService.get_unload_items(facade, fleet.id, colonies)
-load = CargoTransferService.get_load_items(facade, colonies)
-
-cmd = CargoTransferService.build_transfer_command(
-    fleet_id=fleet.id, planet_id=colony.planet_id,
-    cargo_type='passengers', direction='load',
-    amount=500, max_amount=1000
-)
-```
-
----
+## Ability, Effect, and Superweapon Services
 
 ### StrategicAbilityScanner
 
-**Location:** `game/strategy/services/strategic_ability_scanner.py`
+Location: `game/strategy/services/strategic_ability_scanner.py`
 
-**Purpose:** Scoped ability queries for the strategy layer. Finds active instances of strategic abilities (stabilizers, harvest boosters, build rate boosters) across spatial scopes (planet, sector, system, empire). Provides aggregation using two-phase stacking (intra-group MAX, inter-group MULTIPLY).
+Purpose: scoped strategic ability queries for stabilizers, harvest boosters,
+build-rate boosters, combat modifiers, and similar effects.
 
-**Dependencies:** None (module-level functions). Uses `iter_keyed_components` from `game.core.patterns.layer_iterator` for component iteration with composite keys.
+API:
 
-**Key Functions:**
+- `find_abilities_at_planet(ability_key, planet, registries=None, require_active=False) -> list[dict]`
+- `find_abilities_in_scope(ability_key, target_planet, galaxy, empire, scope, registries=None, require_active=False) -> list[dict]`
+- `aggregate_multipliers(entries) -> float`: intra-group MAX, inter-group MULTIPLY, default 1.0.
+- `aggregate_rates(entries) -> float`: intra-group MAX, inter-group SUM, default 0.0.
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `find_abilities_at_planet` | `(ability_key, planet, registries=None, require_active=False) -> List[Dict]` | Find all instances of an ability on a planet's operational facilities |
-| `find_abilities_in_scope` | `(ability_key, target_planet, galaxy, empire, scope, registries=None, require_active=False) -> List[Dict]` | Find abilities affecting a planet at a given spatial scope |
-| `aggregate_multipliers` | `(entries) -> float` | Two-phase stacking: intra-group MAX, inter-group MULTIPLY |
+Scopes include `planet`/`self`, `sector`, `system`, `empire`, plus allied/player/enemy
+variants where supported. `require_active=True` filters to components whose
+activation state is functionally active; stabilizer and combat-modifier checks
+use this.
 
-**Scope resolution:** `find_abilities_in_scope` resolves which planets to scan based on the `scope` parameter:
+### IAbilitySource and SystemEffectsCollector
 
-| Scope | Planets scanned |
-|-------|----------------|
-| `planet` / `self` | Target planet only |
-| `sector` | All empire-owned planets at the target's **global hex** (via `galaxy.get_planet_global_hex` + `galaxy.get_planets_at_global_hex`) |
-| `system` | All empire-owned planets in the target's **star system** (via `galaxy.get_system_of_planet`) |
-| `empire` | All empire colonies |
+Locations:
 
-**Activation filtering (`require_active`):** When `True`, only returns abilities from components whose `ComponentActivationState.phase` is `ACTIVE`. Used by `StabilizerRegistry.find_blocking_stabilizer()` to ensure stabilizers must be manually activated before they provide protection. Always-on abilities (harvest boosters, build rate boosters) use the default `False`.
+- Protocol: `IAbilitySource` in `game/core/protocols/strategy_entities.py`
+- Iterator: `game/strategy/services/ability_iterator.py`
+- Adapters: `game/strategy/services/ability_sources/`
+- Collector: `game/strategy/services/system_effects_collector.py`
+- Metadata/display helpers: `effect_ability_metadata.py`, `effect_ability_display.py`
 
-**Registry parameter is critical** — facility `design_data` typically stores bare component IDs
-(`{"id": "stellar_stabilizer"}`) and the ability data is looked up via the component registry.
-Callers that omit the `registries` argument will silently get no abilities back, even from ACTIVE
-stabilizers. The scanner's `_extract_ability` delegates to
-`component_inspector.extract_abilities_from_component`, which accepts either a `GameRegistries`
-or a plain components dict. PROJ-277 regression.
+Purpose: unified pipeline for "things at a hex/system project effects." Current
+providers include facilities, storms, fleets, planets, stars, warp points, and
+system archetypes.
 
-**Used by:** `StabilizerRegistry` (superweapon blocking), `HarvestingEngine` (harvest rate boosters), `build_queue_source` (build rate boosters), `SystemEffectsCollector` (system/sector effect display).
+`IAbilitySource` exposes `source_kind`, `source_label`, `source_id`, `owner_id`,
+`get_abilities()`, `affects_hex(h)`, `affects_system(s)`,
+`get_activation_state(name)`.
 
-### StabilizerRegistry (`game/strategy/services/stabilizer_registry.py`)
+Iterator API:
 
-Data-driven "which stabilizer blocks which superweapon" mapping. `STABILIZERS` is a tuple of
-`StabilizerSpec(ability_name, scopes, blocks)` — one entry per stabilizer ability.
-`find_blocking_stabilizer(order_type, reference_planet, galaxy, empires, component_registry)`
-returns the first matching `StabilizerSpec` with an ACTIVE instance in scope, or `None`.
+- `register_source_provider_at_hex(provider)`
+- `register_source_provider_in_system(provider)`
+- `unregister_source_provider(provider)`
+- `iter_ability_sources_at_hex(system, hex_coord, registries=None, include_system_sources=...)`
+- `iter_ability_sources_in_system(system, registries=None)`
+- `set_fleet_lookups(at_hex=None, in_system=None)` for fleet provider lookup injection.
 
-Adding a new stabilizer or extending an existing one to cover a new superweapon is a single
-edit to `STABILIZERS`. Superweapon handlers call
-`self._check_blocking_stabilizer(order_type, ref_planet, galaxy, empires, component_registry)`
-which delegates to this registry.
+Collector API:
 
-### SystemDestroyer (`game/strategy/services/system_destroyer.py`)
+- `collect_sector_effects(system, hex_coord, empire_id, registries=None) -> list[dict]`
+- `collect_system_effects(system, empire_id, registries=None) -> list[dict]`
+- `find_sector_effect(effects, ability_name, **filters)`
+- `aggregate_value_or(effects, ability_name, default, **filters)`
 
-Centralizes the tear-down of an entire star system for superweapons like `STELLERATE_STAR`.
-Uses a **collect-then-mutate** protocol: `collect_system_contents(system, galaxy, empires)`
-returns an immutable `SystemDestructionPlan` listing every planet, star, and fleet to
-remove, then `destroy_system(plan, galaxy, empires)` applies the removals.
+Effect dict shape:
 
-Fleet inclusion is by hex distance (any fleet within `SYSTEM_RADIUS_HEXES = 50` of the
-system's `global_location`), matching `pathfinding.get_system_at_hex(radius=50)`. This is
-broader than `GalaxySpatialIndex.get_all_fleets_in_system`, which only checked hexes with a
-placed entity — the collect-then-mutate protocol also makes the pre-PROJ-277 ordering bug
-(planets unregistered before fleet scan) structurally impossible.
-
----
-
-### SystemEffectsCollector
-
-**Location:** `game/strategy/services/system_effects_collector.py`
-
-**Purpose:** Aggregates system-scope abilities from empire-owned colonies in a star system for UI display. Handles both activatable abilities (stabilizers with ComponentActivationState) and passive abilities (harvest boosters, build rate boosters, quality improvers).
-
-**Dependencies:** None (module-level function). Uses `strategic_ability_scanner.aggregate_multipliers()` for two-phase stacking.
-
-**Key Function:**
-
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `collect_system_effects` | `(system, empire_id, registries=None) -> List[Dict]` | Collect all system-scope effects grouped by ability type with aggregate status and stacked values |
-
-**Return dict keys:** `ability_name`, `display_name`, `group_key`, `status`, `resource_type`, `aggregate_value`, `providers` (list of facility/planet/component info).
-
----
-
-### DesignCostCalculator
-
-**Location:** `game/strategy/services/design_cost_calculator.py`
-
-**Purpose:** Centralized calculator for design resource costs. Resolves component costs from the registry via Ship loading, handling formula-based values and modifier multipliers. Applies the vehicle class `cost_multiplier` from `vehicleclasses.json` (e.g., Drop Pods use 5x).
-
-**Dependencies:** None (all methods are `@staticmethod`). Accepts `GameRegistries` as a method parameter.
-
-**Key Methods:**
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `calculate_total_cost` | `(design_data, registries) -> Dict[str, float]` | Calculate total resource cost; tries inline costs first, then Ship loading from registry. Applies `cost_multiplier` from vehicle class definition. |
-| `_apply_cost_multiplier` | `(base_cost, design_data, registries) -> Dict[str, float]` | Internal: looks up `cost_multiplier` from `vehicleclasses.json` via the design's `ship_class` and multiplies all resource costs. Default multiplier is 1.0. |
-
-**Usage:**
-```python
-from game.strategy.services.design_cost_calculator import DesignCostCalculator
-
-cost = DesignCostCalculator.calculate_total_cost(design_data, registries)
-```
-
----
-
-### FleetCargoProjector
-
-**Location:** `game/strategy/services/fleet_cargo_projector.py`
-
-**Purpose:** Projects future cargo state by walking the fleet's order queue. Used when queuing transfer orders to determine what cargo the fleet will have after earlier queued orders execute.
-
-**Dependencies:** None (all methods are `@staticmethod`).
-
-**Key Methods:**
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `get_projected_cargo` | `(fleet: Fleet, cargo_type: str) -> int` | Compute projected cargo after all queued orders, applying load/unload deltas |
-
-**Usage:**
-```python
-from game.strategy.services.fleet_cargo_projector import FleetCargoProjector
-
-# Check projected passengers after queued orders
-projected = FleetCargoProjector.get_projected_cargo(fleet, 'passengers')
-```
-
----
-
-### Universal IAbilitySource Framework (PROJ-300)
-
-**Location:** `game/strategy/services/system_effects_collector.py`, `game/strategy/services/ability_iterator.py`, `game/strategy/services/ability_sources/`
-
-**Purpose:** Single, unified pipeline for "things at a hex/system project effects." Replaces the legacy AreaEffectManager + EnvironmentalEffects + StormEffect triad. Storms, planetary facilities, and (post-PROJ-301..305) planets-themselves, stars, warp points, system archetypes, and fleets all flow through one path.
-
-**Architecture:**
-- **`IAbilitySource` protocol** (`game/core/protocols/strategy_entities.py`) — any locatable entity that contributes abilities. Exposes `source_kind`/`source_label`/`source_id`/`owner_id` for UI rendering, `get_abilities()` for the ability dict, and `affects_hex(h)` / `affects_system(s)` / `get_activation_state(name)` for filtering.
-- **Adapters** in `game/strategy/services/ability_sources/`: `FacilityAbilitySource` (wraps a planetary facility), `StormAbilitySource` (wraps a Storm). PROJ-301..305 add planet/star/warp_point/system/fleet adapters.
-- **Iterator** in `ability_iterator.py`: `iter_ability_sources_at_hex(system, hex_coord)` and `iter_ability_sources_in_system(system)` walk a registered list of provider functions and yield IAbilitySource adapters. PROJ-301..305 register their own providers via `register_source_provider_at_hex` / `register_source_provider_in_system` — no central edits needed.
-- **Collector** in `system_effects_collector.py`: `collect_sector_effects(system, hex_coord, empire_id)` and `collect_system_effects(system, empire_id)` walk the iterator output, filter by scope, group, and aggregate per kind (multiplier vs rate).
-- **Aggregation** in `strategic_ability_scanner.py`: `aggregate_multipliers` (intra-MAX, inter-MULTIPLY, default 1.0) and `aggregate_rates` (intra-MAX, inter-SUM, default 0.0).
-
-**Effect dict shape:**
 ```python
 {
-    'ability_name': str,
-    'display_name': str,
-    'group_key': str,
-    'status': 'Active' | 'Inactive' | 'Activating (N)' | 'Deactivating (N)',
-    'resource_type': Optional[str],
-    'damage_type': Optional[str],
-    'kind': 'multiplier' | 'rate',
-    'aggregate_value': float,
-    'providers': [{
-        'source_kind': str,
-        'source_label': str,
-        'source_id': str,
-        'owner_id': Optional[int],
-        'status': str,
-        'is_active': bool,
-        'value': float,
-        'ability_data': dict,
-    }, ...]
+    "ability_name": str,
+    "display_name": str,
+    "group_key": str,
+    "status": str,
+    "resource_type": str | None,
+    "damage_type": str | None,
+    "kind": "multiplier" | "rate",
+    "aggregate_value": float,
+    "providers": [{
+        "source_kind": str,
+        "source_label": str,
+        "source_id": str,
+        "owner_id": int | None,
+        "status": str,
+        "is_active": bool,
+        "value": float,
+        "ability_data": dict,
+    }],
 }
 ```
 
-**Storm migration:** Storms now declare an `abilities: Dict[str, Any]` matching the components.json shape (PROJ-300 v2.0 schema in `data/storms.json`). Five storm types declare ShieldModifier/ThrustModifier/StrategicSpeedModifier/EnvironmentalDamage/FuelDrain. Overlapping storms multiply per-provider (no shared `stack_group`) — two ion storms apply 0.5x · 0.5x = 0.25x shields, locked in by `tests/integration/strategy/test_overlapping_storm_combat.py`.
+Stale-reference correction: the legacy AreaEffectManager / EnvironmentalEffects
+service wording is obsolete. Current effect display and environment behavior
+flow through `ability_iterator`, `SystemEffectsCollector`, and
+`effect_ability_metadata`.
 
-**Helpers:** `find_sector_effect(effects, ability_name, **filters)` and `aggregate_value_or(effects, ability_name, default, **filters)` are convenience wrappers used by movement / hazard / spec_compiler consumers.
+Extension recipe for a new strategic effect:
 
-**Usage:**
+1. Ensure an `IAbilitySource` can expose the ability.
+2. Register a provider with `ability_iterator` if the source type is new.
+3. Add one metadata entry in `effect_ability_metadata.py` for display, value field, kind, grouping, and owner-aware scopes.
+4. Let `SystemEffectsCollector` aggregate. Avoid central collector edits unless the aggregation contract itself changes.
+
+### Stabilizers, Superweapons, System Destruction
+
+`StabilizerRegistry` (`stabilizer_registry.py`) maps stabilizer abilities to
+blocked superweapon orders. `STABILIZERS` is a tuple of
+`StabilizerSpec(ability_name, scopes, blocks)`. Add or extend a stabilizer by
+editing one tuple entry.
+
+`SuperweaponRegistry` (`superweapon_registry.py`) maps strategic superweapon
+orders to declarative `SuperweaponSpec` rows. `SELF_DESTRUCT` is intentionally
+out of this registry. `STELLERATE_STAR` has `ability_name=None` because it
+dispatches through `SystemDestroyer`.
+
+`SystemDestroyer` (`system_destroyer.py`) centralizes collect-then-mutate
+star-system teardown. Fleet inclusion is by hex distance within
+`SYSTEM_RADIUS_HEXES = 50` of `system.global_location`, matching star-system
+radius semantics. Collect first, then mutate, so unregistering planets cannot
+change which fleets are found.
+
+`CombatModifierCollector` (`combat_modifier_collector.py`) collects
+strategic combat modifiers before battle: shield multiplier, damage
+multiplier, and flat shield projection. It scans owner and opponent facilities
+by scope through `StrategicAbilityScanner`, requires active components, and
+aggregates with the same two-phase stacking rules.
+
+## Habitability, Demographics, and Economy
+
+### Race Habitability and Point-Buy
+
+Locations:
+
+- `game/strategy/data/environmental_preference.py`: `EnvironmentalPreference(setpoint, tolerance, min_value, max_value, step)`.
+- `game/strategy/data/habitability_factors.py`: `HabitabilityFactor`, `FACTOR_REGISTRY`, `get_factor(id)`, `iter_scalar_factors()`, `iter_gas_factors()`.
+- `game/strategy/data/race_config.py`: `RaceConfig.preferences`, `base_reproduction_rate=0.03`, `base_happiness=0.5`.
+- `game/strategy/data/race_point_budget.py`: `RacePointBudget`.
+- `game/strategy/data/homeworld_presets.py`: `apply_preset_to_config(preset, race_config)`.
+- `game/strategy/formulas/habitability.py`: `calculate_habitability(planet, race_config) -> float`, `score_planet_for_race(...)`.
+
+Extension invariant: add a habitability axis by registering one
+`HabitabilityFactor` in `FACTOR_REGISTRY`. That axis then participates in
+habitability, race point budget, Race Setup UI, homeworld presets, and
+population logic. Do not add parallel hardcoded factor lists.
+
+Point-buy API: `calculate_aptitude_cost`, `calculate_preferences_cost`,
+`calculate_reproduction_cost`, `calculate_total_cost`, `get_remaining_points`,
+`is_within_budget`, `get_aptitude_breakdown`, `get_breakdown`.
+
+### Colony Demographics Loop
+
+Locations and contracts:
+
+- `ColonySpeciesConfig(food_allocation=1.0, last_consumption_ratios={})`; `last_food_ratio` is `min(last_consumption_ratios.values())`, defaulting to 1.0 for empty dict.
+- `Planet.get_species_config(race_id)`: lazy-create-and-store species config.
+- `EconomyConfig(population_consumption: dict[str, float])`, `primary_resource`, `load_economy_config(path=None)`, `get_default_economy_config()`, `set_default_economy_config()`.
+- `data/economy.json`: current population consumption data.
+- `OrganicsConsumptionEngine.process_consumption(empires) -> None`.
+- `HappinessEngine.process_happiness(empires, galaxy) -> None`.
+- `PopulationEngine`: growth and decline.
+- `FoodAllocationEditor`: player-facing allocation editor.
+
+Turn order: 100-tick loop, then consumption, happiness, population growth,
+quality, atmosphere, water.
+
+Transient invariant: `ColonySpeciesConfig.last_consumption_ratios` is transient.
+`OrganicsConsumptionEngine` must clear and rewrite it every turn, including 1.0
+edge-case values for zero population or zero allocation. Saving it would make
+post-load demographic state stale.
+
+Happiness formula: clamped to `[0, 3]`; base happiness times food ratio times
+habitability, plus configured surplus-food bonus when surplus is above 1.0.
+
+Population formula: logistic growth with habitability-scaled carrying capacity
+and decline when `last_food_ratio < 1.0`.
+
+UI invariant: `FoodAllocationEditor` is population-driven, not
+facility-ability-gated. It mutates `ColonySpeciesConfig.food_allocation`
+directly; this is a player dial, not a replayable order command.
+
+### Colony Economy Multiplier
+
+Locations:
+
+- `game/strategy/formulas/colony_output.py`: `planet_habitability_multiplier(planet, race_registry) -> float`.
+- `game/strategy/services/planet_habitability_service.py`: injectable cached calculator.
+- `game/strategy/data/planet.py`: transient cache fields and facade method.
+- `HarvestingEngine` and `ProductionEngine`: habitability multiplier in harvest/production paths.
+- `TurnEngine`: sets current turn on harvesting and production engines.
+
+Contracts:
+
+- Multiplier is population-weighted mean habitability across resident species.
+- Uncolonized, zero-population, or all-missing-race cases return 1.0.
+- Missing race IDs are excluded from numerator and denominator.
+- Computed once per colony per turn; cache warms on first read and invalidates at turn boundary.
+- Effective rate is multiplicative: `base_rate * booster_mult * habitability_mult`.
+- Fleet production queues use 1.0 because they have no planet context.
+
+### Race Registry
+
+Protocol: `IRaceRegistry` in `game/core/protocols/strategy_domain.py`.
+
+Implementation: `CachedRaceRegistry` in `game/strategy/systems/race_library.py`.
+It wraps `RaceLibrary`, caches hits and misses, has no TTL or locks, and exposes
+`invalidate(race_id=None)`.
+
+Facade: `StrategySessionFacade.get_race_registry() -> IRaceRegistry`
+lazy-constructs and memoizes one session registry.
+
+Invalidation invariant: registry does not watch files. Race editor save should
+call `invalidate(race_id)` when a session registry exists. External race file
+edits require restart.
+
+Companion API: `Empire.resident_species() -> set[str]` returns race IDs with
+count >= 1 on any colony and excludes extinct species.
+
+### Planet and Empire Economy Services
+
+`PlanetQueryService` (`planet_query_service.py`) holds pure queries delegated by
+the `Planet` facade: `active_abilities`, `is_ability_active`,
+`occupied_hexes`, `can_build_type`. These never mutate the planet.
+
+`PlanetHabitabilityService` (`planet_habitability_service.py`) implements the
+default injectable habitability calculator. Its cache lives on the planet's
+transient fields, not on the service.
+
+`PlanetEconomyProjector` (`planet_economy_projector.py`) is the read-only
+per-planet resource flux projector for UI/facade DTOs.
+
+Constructor: `PlanetEconomyProjector(*, registries, economy_config, race_registry)`;
+all three are required.
+
+API: `project(planet) -> dict[str, ResourceProjection]`.
+
+Sub-projections:
+
+- Harvest: delegates to `compute_planet_production(planet, registries)`, then applies habitability.
+- Upkeep: mirrors consumption engine demand; not habitability-scaled.
+- Yard drain: uses `_collect_planet_sources` plus `forecast_queue_turn_spend`; applies habitability to `build_rate` before the forecast walk.
+
+`ResourceProjection` invariant: `net == harvest - upkeep - yard`.
+
+Growth helper: `projected_growth_rate(planet, pop, race_config, cfg) -> float`
+in `game/strategy/formulas/colony_output.py`. It mirrors
+`PopulationEngine._grow_species` without mutation; positive means growth,
+negative means decline. Equivalence test:
+`tests/integration/strategy/test_growth_rate_equivalence.py`.
+
+Facade accessor:
+`StrategySessionFacade.get_colony_demographic_view(planet_id) -> ColonyDemographicView | None`.
+UI should import facade/service data, not engine internals or copied production math.
+
+`EmpireEconomyService` (`empire_economy_service.py`) is the UI-safe facade over
+`EmpireEconomyCalculator`. Constructor mirrors the calculator (`registries`
+required, `economy_config` and `race_registry` optional). API:
+`get_snapshot(empire) -> EmpireEconomySnapshot`. `__all__` intentionally
+excludes `EmpireEconomyCalculator`.
+
+## Replay Services
+
+Strategy-side replay persistence lives in `game/strategy/services/`; replay
+capture/playback DTOs live under `game/simulation/replay/`.
+
+`ReplayStore` (`replay_store.py`) persists battle replay sidecars below the
+active save root. Key API: `set_save_root`, `clear_save_root`, `replay_dir`,
+`on_battle_started`, `on_battle_ended`, `persist`, `list`, `load`,
+`load_or_error`, `delete`, plus post-persist listeners.
+
+`ReplayResolver` maps a replay ID to a persisted replay lookup. Use
+`ReplayResolver.from_registries(...)` when building it from configured
+registries.
+
+`ReplayVerificationCoordinator` subscribes to `ReplayStore` post-persist
+notifications, runs a single-worker FIFO background verifier, writes
+verification sidecars, and exposes `start`, `shutdown`, and `wait_for_idle`.
+Use `shutdown_all_coordinators(timeout=5.0)` at application shutdown.
+
+`replay_verification_sidecar.py` owns
+`REPLAY_VERIFICATION_SCHEMA_VERSION = "1.0.0"`, `VerificationStatus`,
+`VerificationSource`, `VerificationSidecar`, `sidecar_path_for_replay`,
+`write_verification_sidecar`, and `read_verification_sidecar`.
+
+`replay_ship_builder.py` builds a replay playback ship builder from the replay
+record, registries, and materialization context.
+
+Tests and commands:
+
+- Full suite: `python Tools/test_sharded/test_sharded.py`
+- Replay-related focused tests live under `tests/unit/strategy/services/` and `tests/unit/simulation/replay/` where present.
+- Combat Lab replay flows also use `python -m combat_lab.run_tests`.
+
+## Mutator and Write Services
+
+Write services implement the read/write Protocol Pair pattern. Engines receive
+mutator protocols through `TurnEngineConfig.create_default(...)`; production
+constructs the concrete services in `GameSession.__init__`. Data classes expose
+read state; services own cross-class or external writes.
+
+- `FleetWriteService`: `IFleetMutator` for orders, ships, hierarchy, construction queue, display name, policy. Navigation writes delegate to `FleetNavigationService`; without it, `set_location` / `set_path` raise `NotImplementedError`.
+- `PlanetWriteService`: `IPlanetMutator` for populations, facilities, stockpile, staging yard, construction queue, orders, owner/atmosphere/energy/gravity/water/radiation fields. `set_owner_id` does not update `Empire.colonies`; callers must route empire membership through `IEmpireMutator`.
+- `EmpireWriteService`: `IEmpireMutator` for colonies, fleets, storage, built designs, and post-battle empty-fleet pruning.
+- `ShipInstanceWriteService`: `IShipInstanceMutator` for alive/derelict/HP, component replacement plus cache invalidation, cargo/consumables, carried items, toggles, activation states, XP, kills.
+
+Do not bypass mutators from engines or other external writers unless the data
+class is the documented owner of that mutation.
+
+## Design Principles and Invariants
+
+### Dependency Injection
+
+Services needing registries use constructor injection with no fallback:
+
 ```python
-from game.strategy.services.system_effects_collector import (
-    collect_sector_effects, aggregate_value_or,
+VehicleDesignService(registries=game_registries)
+ModifierLogicService(registry_provider=game_registries)
+SimulationDesignLoader(registries=game_registries)
+PlanetEconomyProjector(
+    registries=game_registries,
+    economy_config=economy_config,
+    race_registry=race_registry,
 )
-
-effects = collect_sector_effects(system, fleet.location, empire_id=fleet.owner_id)
-strategic_mult = aggregate_value_or(effects, 'StrategicSpeedModifier', 1.0)
-damage_per_turn = sum(
-    e['aggregate_value'] for e in effects if e['ability_name'] == 'EnvironmentalDamage'
-)
 ```
 
-**Shared helpers for PROJ-301..304** (intrinsic ability sources):
-- `roll_intrinsic_abilities(template, rng)` in `ability_sources/intrinsic_roll.py` — convert `{"min": x, "max": y}` ranges to scalar rolls. Optional per-ability `chance` field (FEAT-15, default `1.0`) gates whether the ability fires; when `chance < 1.0` the helper draws `rng.random()` and skips the ability on failed roll. The `chance` key is stripped from the output. Templates without `chance` consume zero extra RNG draws (preserves byte-identical determinism for stars/warps/archetypes).
-- `format_intrinsic_source_label(entity_name, type_name)` in `ability_sources/labels.py` — canonical label format.
+Passing `None` should raise `TypeError` or `ValidationException`.
 
----
+Stateless services require no constructor args: `BattleService()`,
+`FleetNavigationService()`.
 
-### ComponentInspector (module-level functions)
+Static/module-level logic includes `FleetSpeedCalculator`,
+`ActionTimeResolver`, `DesignCostCalculator`, `CargoTransferService`,
+`FleetCargoProjector`, `ComponentInspector` functions, and
+`calculate_design_stats()`.
 
-**Location:** `game/strategy/services/component_inspector.py`
+### Result Objects
 
-**Purpose:** Utility functions for inspecting ship/facility design components and abilities. Consolidates duplicated component/ability iteration patterns from strategy layer validators.
-
-**Dependencies:** None (all functions are stateless). Accept `component_registry: Dict[str, Any]` as parameter where needed.
-
-**Key Functions:**
-
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `get_component_abilities` | `(comp_def) -> Dict[str, Any]` | Extract abilities dict from a component definition (dict or Component object) |
-| `get_component_type` | `(comp_def) -> str` | Extract component type string from a definition |
-| `get_component_threshold` | `(comp_def, default) -> float` | Extract damage threshold from a definition |
-| `iterate_design_components` | `(design_data, component_registry) -> Iterator[Tuple[dict, Any, dict]]` | Iterate all components in a design, yielding (entry, definition, abilities) |
-| `ship_has_ability` | `(ship, ability_name, component_registry) -> bool` | Check if a ship has a component with a specific ability |
-| `find_ship_with_ability` | `(fleet_ships, ability_name, component_registry) -> Optional[ShipInstance]` | Find first ship in a list with a specific ability |
-| `count_ability` | `(ship, ability_name, component_registry) -> int` | Count components on a ship with a specific ability |
-| `list_ship_abilities` | `(ship, component_registry) -> List[str]` | Get all unique ability names from a ship's components |
-| `get_ability_list` | `(abilities, ability_name) -> List[Dict]` | Normalize ability data to list of dicts (handles single/list/scalar formats) |
-| `has_warp_capability` | `(ship) -> bool` | Check if a ship has functional warp (tonnage, storage, undamaged drive) |
-
-**`get_ability_list`** is the canonical way to extract ability data from component ability dicts. Always use this instead of manually checking `isinstance(val, list)` — it handles all formats: single dicts, lists, and scalar values.
-
-**`has_warp_capability`** checks warp tonnage >= ship mass, and that the ship has enough resource storage for at least one warp jump. Uses `get_calculated_stats()` so it respects damage state.
-
-**Usage:**
-```python
-from game.strategy.services.component_inspector import (
-    ship_has_ability, find_ship_with_ability, iterate_design_components,
-    get_ability_list, has_warp_capability,
-)
-
-# Check if ship can colonize
-if ship_has_ability(ship, 'ColonizePlanet', component_registry):
-    print("Ship has colony pod")
-
-# Find a colonizer in the fleet
-colonizer = find_ship_with_ability(fleet.ships, 'ColonizePlanet', component_registry)
-
-# Iterate all components
-for entry, comp_def, abilities in iterate_design_components(design_data, registry):
-    print(f"Component {entry.get('id')}: {list(abilities.keys())}")
-
-# Normalize ability data (handles single dict, list, or scalar)
-for ability_data in get_ability_list(abilities, 'ResourceConsumption'):
-    print(f"Consumes {ability_data.get('resource')}: {ability_data.get('amount')}")
-
-# Check warp capability
-if has_warp_capability(ship_instance):
-    print("Ship can use warp points")
-```
-
----
-
-### Race Habitability & Point-Buy (PROJ-283)
-
-**Locations:**
-- `game/strategy/data/environmental_preference.py` — `EnvironmentalPreference(setpoint, tolerance, min_value, max_value, step)` dataclass
-- `game/strategy/data/habitability_factors.py` — `HabitabilityFactor` dataclass + module-level `FACTOR_REGISTRY: Dict[str, HabitabilityFactor]` (7 scalar factors + 10 gas factors); `get_factor(id)`, `iter_scalar_factors()`, `iter_gas_factors()` lookup helpers
-- `game/strategy/data/race_config.py` — `RaceConfig.preferences: Dict[str, EnvironmentalPreference]` (registry-keyed, backfilled from `FACTOR_REGISTRY` defaults via `__post_init__`); `RaceConfig.base_reproduction_rate: float = 0.03`; `RaceConfig.base_happiness: float = 0.5`
-- `game/strategy/data/race_point_budget.py` — `RacePointBudget` instance methods: `calculate_aptitude_cost`, `calculate_preferences_cost`, `calculate_reproduction_cost(rate)`, `calculate_total_cost`, `get_remaining_points`, `is_within_budget`, `get_aptitude_breakdown`, `get_breakdown`
-- `game/strategy/data/homeworld_presets.py` — `apply_preset_to_config(preset, race_config)` overlays a preset's partial `preferences` dict onto a race
-- `game/strategy/formulas/habitability.py` — `calculate_habitability(planet, race_config) -> float` iterates `FACTOR_REGISTRY` and combines per-factor scores via weighted geometric mean; `score_planet_for_race(planet, race_config)` is a thin wrapper
-
-**Pattern (PROJ-283):** "Add an axis with one data edit." Adding a `HabitabilityFactor` registration to `FACTOR_REGISTRY` automatically surfaces the factor in `calculate_habitability`, `RacePointBudget`, the race-setup UI panel, the homeworld preset translation, and the population engine — no code changes elsewhere required. Per-factor weights tune the importance of each axis in the weighted-geometric-mean combiner. The `(setpoint, tolerance)` UX contract is universal: setpoint is free, tolerance deviation from the registry default costs `_exponential_cost(steps) = 2^steps - 1`.
-
-**Cost methods:**
-
-| Method | Returns | Notes |
-|--------|---------|-------|
-| `calculate_aptitude_cost(rc)` | int | Sum across the 7 paid aptitudes (Phase 3 dropped `happiness` and `population_growth` — both replaced by `base_*` floats on RaceConfig). |
-| `calculate_preferences_cost(rc)` | int | Sum of per-axis tolerance-deviation costs across all 17 factors. |
-| `calculate_reproduction_cost(rate)` | int | Exponential cost above default 3%; linear refund (2 pts per 1% step) below default down to 0.5% floor. Linear-in-rate math (not integer-step) so the floor returns -5 exactly. |
-| `calculate_total_cost(rc)` | int | Sum of the three above. |
-| `get_remaining_points(rc)` | int | `total_budget − total_cost`. |
-| `get_breakdown(rc)` | Dict[str, int] | Flat per-source breakdown: `aptitude:strength`, `pref:gravity`, `reproduction`, etc. Sum equals `calculate_total_cost(rc)`. |
-
-See [docs/systems/strategy_layer.md §7](systems/strategy_layer.md#7-race-preferences--habitability-proj-283) for the full architecture, weight table, adding-a-factor recipe, and the legacy → new field migration table.
-
-### Colony Demographics Loop (PROJ-284 + PROJ-286)
-
-**Locations:**
-- `game/strategy/data/colony_species_config.py` — `ColonySpeciesConfig(food_allocation: float = 1.0, last_consumption_ratios: Dict[str, float] = {})` per-colony per-species dataclass stored as `Planet.species_configs: Dict[race_id, ColonySpeciesConfig]`. `last_food_ratio` is a read-only computed `@property` returning `min(last_consumption_ratios.values())` with 1.0 fallback when the dict is empty (Liebig's Law aggregation). `to_dict` emits only `food_allocation`; `from_dict` always resets `last_consumption_ratios` to `{}`. `__post_init__` validates `food_allocation >= 0`. `Planet.get_species_config(race_id)` is a lazy-create-and-store helper.
-- `game/strategy/config/economy_config.py` — `EconomyConfig(population_consumption: Dict[str, float])` frozen dataclass with `primary_resource` property (first dict key; used for UI titles). The legacy `population_food_resource` shim was retired by PROJ-291 C2; UI callers read `primary_resource` directly. Loader `load_economy_config(path=None)` + module-accessor singleton (`get_default_economy_config` / `set_default_economy_config`) follows the project `get_default_*` pattern. Graceful fallback to `{"organics": 0.001}` on missing file, malformed JSON, or `population_consumption` present but not a dict.
-- `data/economy.json` — `{"population_consumption": {"organics": 0.001, "metals": 0.0001, "radioactives": 0.00001}}`. Modders add/remove/retune entries; UI primary-resource label auto-derives from `ResourceCatalog.get(economy.primary_resource).name`.
-- `game/strategy/engine/organics_consumption_engine.py` — `OrganicsConsumptionEngine.process_consumption(empires) -> None`. Per species per colony: clears `cfg.last_consumption_ratios`, then iterates `economy.population_consumption.items()` and for each `(resource_id, per_pop_rate)` drains `needed = pop.count * food_allocation * per_pop_rate` from `stockpile[resource_id]`, caps at available, writes `cfg.last_consumption_ratios[resource_id] = supplied / needed` (or 1.0 for zero-need edge cases). Class name kept despite the multi-resource expansion — see PROJ-286 decisions.md for the rename-deferral rationale.
-- `game/strategy/engine/happiness_engine.py` — `HappinessEngine.process_happiness(empires, galaxy) -> None`. Writes `pop.happiness = clamp(raw, 0, 3)` where `raw = race.base_happiness * cfg.last_food_ratio * habitability` plus an additive surplus-food bonus (FEAT-19): when `cfg.last_food_surplus > 1.0` the engine adds `min(economy.surplus_food_bonus_cap, economy.surplus_food_bonus_per_x * (surplus - 1.0))` before clamping. Constructor accepts `economy_config: Optional[EconomyConfig] = None` (falls back to `get_default_economy_config()` if None) and `race_registry: Optional[IRaceRegistry] = None`. The per-base file is otherwise unchanged through PROJ-284/286 — the computed property feeds the MIN-aggregated ratio transparently. Range stays clamp-bounded `[0, 3]` so the surplus bonus participates in the same ceiling.
-- `game/strategy/engine/population_engine.py` — `PopulationEngine._grow_species`: `growth = (base_reproduction_rate * last_food_ratio) * P * (1 - P/K_eff) * happiness + decline_term`, where `K_eff = max(1.0, max_population * habitability)` and `decline_term = -DECLINE_RATE * P * (1 - last_food_ratio)` when `last_food_ratio < 1.0` else 0. `DECLINE_RATE = 0.02` module constant. Source file UNCHANGED between PROJ-284 and PROJ-286.
-- `game/strategy/interfaces/engines.py` — `IOrganicsConsumptionEngine`, `IHappinessEngine` protocols. Both wired onto `TurnEngineConfig` (fields 14 + 15) and `TurnEngine.__init__` kwargs.
-- `game/ui/screens/food_allocation_editor.py` — `FoodAllocationEditor` pygame_gui window with per-species slider (0.0–5.0, step 0.05) + typed input (accepts any non-negative value) + live consumption preview. Title reads `{primary_resource.name} Allocation — {planet.name}` from `EconomyConfig.primary_resource`. Apply callback writes to `planet.get_species_config(race_id).food_allocation`.
-
-**Turn order (post-PROJ-284/286):** `[100-tick loop] → OrganicsConsumptionEngine.process_consumption → HappinessEngine.process_happiness → PopulationEngine.process_population_growth → QualityEngine → AtmosphereEngine → WaterEngine`.
-
-**Transient-field contract:** `ColonySpeciesConfig.last_consumption_ratios` is TRANSIENT. `OrganicsConsumptionEngine` MUST `.clear()` and rewrite it every turn — the engine writes 1.0 per declared resource for zero-population / zero-allocation edge cases so downstream readers (HappinessEngine, PopulationEngine) never see a stale carry-over and the MIN property has an empty-dict fallback of 1.0. Saving it would misrepresent post-load demographic state.
-
-**UI surface:** `FoodAllocationEditor` is opened from `PlanetAbilitiesWindow` via the "Food" button (population-driven — shown when `planet.populations` is non-empty, NOT gated on a facility ability). Routed through `strategy_window_manager._open_planet_editor` → `strategy_event_router._open_food_allocation_editor`. Direct mutation on `ColonySpeciesConfig.food_allocation` (no command class; food allocation is a player-facing dial, not a replayable strategy command).
-
-See PROJ-286 for the evolution from single-resource to multi-resource consumption, and [docs/systems/strategy_layer.md §8](systems/strategy_layer.md#8-colony-demographics-loop-proj-284--proj-286) for the full pipeline, formula derivations, and the "swap the population-consumption dict" recipe.
-
-### Colony Economy Multiplier (PROJ-285)
-
-**Locations:**
-- `game/strategy/formulas/colony_output.py` — `planet_habitability_multiplier(planet, race_registry) -> float` pure helper. Population-weighted mean of `score_planet_for_race(planet, race_for(pop))` across `planet.populations`. Uncolonized planets / missing-race-all-species / zero-total-count return 1.0. Species with missing `race_id` in the registry are excluded from BOTH numerator and denominator (not scored as 0) — save-drift defence.
-- `game/strategy/data/planet.py` — `Planet.get_cached_habitability_multiplier(race_registry, turn) -> float` per-turn cache accessor. Fields `_cached_habitability_multiplier` + `_cached_multiplier_turn` are `init=False, compare=False` and NOT emitted by `to_dict` — post-load planets re-warm on first read.
-- `game/strategy/engine/harvesting_engine.py` — `HarvestingEngine.__init__(registries, race_registry=None)`. When `race_registry` is None (legacy pattern), habitability hook short-circuits to 1.0. New kwarg preserves 850+ lines of pre-PROJ-285 MagicMock-based tests without retargeting. `_get_habitability_mult(colony)` + `set_current_turn(turn)` helpers.
-- `game/strategy/engine/production_engine.py` — `ProductionEngine.__init__(registries, race_registry=None, event_bus=None)`. Same short-circuit behavior. The hook in `_process_queue_tick_dynamic` scales the `production_rate` dict BEFORE the tick-capacity while-loop runs — downstream math honors the multiplier automatically. Fleet queues always get 1.0 (no planet context).
-- `game/strategy/engine/turn_engine.py` — `process_turn` calls `set_current_turn(session.turn_number)` on both harvesting + production engines before the 100-tick loop (guarded with `getattr` so mock engines don't break).
-
-**Turn flow:** Habitability is computed ONCE per colony per turn (first read wins), then reused across all 100 tick iterations of harvest + production. The cache invalidates at each turn boundary when `TurnEngine` bumps the engine's `_current_turn`.
-
-**Stacks alongside:**
-- `ResourceHarvestBooster` aggregation (`aggregate_multipliers` in `game/strategy/services/strategic_ability_scanner.py`) — harvest path.
-- `BuildRateBooster` aggregation (same scanner) — production path.
-
-Multiplicative: `effective_rate = base_rate * booster_mult * habitability_mult`.
-
-See [docs/systems/production_system.md § Habitability Multiplier](systems/production_system.md#habitability-multiplier-proj-285) and [docs/systems/strategy_layer.md §9](systems/strategy_layer.md#9-colony-economy-multiplier-proj-285).
-
-### Race Registry (PROJ-287)
-
-Session-scoped in-memory lookup of `race_id -> RaceConfig`, so UI panels and formulas can resolve species data without hitting the filesystem per call.
-
-**Protocol** — `IRaceRegistry` in `game/core/protocols/strategy_domain.py`:
-- `get_race(race_id: str) -> Optional[RaceConfig]` — one method, narrow on purpose. Iteration/list-all can be added when a concrete consumer needs them.
-
-**Implementation** — `CachedRaceRegistry` in `game/strategy/systems/race_library.py`:
-- Wraps a backing `RaceLibrary` (the existing file-backed loader, unchanged).
-- Caches BOTH hits and `None` results. A repeated lookup of an unknown `race_id` (extinct species, save drift, typo) never re-stats the filesystem.
-- Cache is a plain `Dict[str, Optional[RaceConfig]]` — no TTL, no locks (pygame is single-threaded).
-- `invalidate(race_id=None)` — pass a `race_id` to clear one entry, or call with no args to clear the whole cache.
-
-**Facade accessor** — `StrategySessionFacade.get_race_registry() -> IRaceRegistry`:
-- Lazy-init: constructs `CachedRaceRegistry(RaceLibrary())` on first call and memoizes on `self._race_registry`. One instance per session.
-- Inline imports `RaceLibrary` + `CachedRaceRegistry` inside the accessor to keep the facade's top-level import surface narrow (same convention as the command-dispatch helpers).
-
-**Invalidation discipline** — the cache does NOT auto-detect file changes. The only supported mid-game mutation path is the race editor on save:
-- `RaceSetupScreen.__init__` accepts an optional `race_registry: Optional[IRaceRegistry] = None`.
-- After a successful `race_library.save_race(...)` in `_do_save()`, the screen calls `self.race_registry.invalidate(self.race_config.race_id)` if the registry was supplied.
-- Current callers (pre-game race setup from `game/app.py` and `new_game_setup_screen.py`) pass no registry — invalidation is a no-op because the session doesn't exist yet. Any future mid-game invocation threads `facade.get_race_registry()` through.
-- External file edits during a running session require a game restart. Documented, not enforced.
-
-**Companion API** — `Empire.resident_species() -> Set[str]` in `game/strategy/data/empire.py`:
-- Returns the set of `race_id`s with `count >= 1` on ANY colony in `self.colonies`.
-- Excludes extinct species (count=0 everywhere). A species with count=0 on colony A + count>=1 on colony B is INCLUDED.
-- Not cached — empires have O(10-100) colonies × O(1-5) species, so recomputing is cheap compared to the invalidation complexity caching would require (growth, extinction, colonization).
-- Canonical "species living in this empire" query for per-species UI iteration (consumed by PROJ-289 + PROJ-290).
-
-**Consumers** of `IRaceRegistry`:
-- `PlanetEconomyProjector` — habitability multiplier resolution (PROJ-285 / PROJ-288).
-- `EmpireEconomyCalculator` — delegates to `PlanetEconomyProjector` for population upkeep aggregation (PROJ-290).
-- `PlanetReportPanel` + `PlanetListWindow` — uncolonized-planet habitability display (PROJ-290).
-- `HappinessEngine` — multi-species happiness resolution (PROJ-291 C3). Optional `race_registry=None` preserves legacy single-race behavior. Also accepts optional `economy_config=None` (FEAT-19) — when provided, applies the surplus-food bonus (`+ min(cap, per_x * (surplus - 1.0))`) before clamp; falls back to `get_default_economy_config()` if None.
-- `PopulationEngine` — multi-species reproduction rate resolution (PROJ-291 C3). Optional `race_registry=None` preserves legacy single-race behavior.
-- `TurnEngine` — accepts `race_registry: Optional[IRaceRegistry] = None` kwarg and threads it into `HappinessEngine` + `PopulationEngine` lazy-init (PROJ-291 C3).
-- `GameSession.race_registry` — lazy property constructing the session-scoped `CachedRaceRegistry`; passed to `TurnEngine` at construction time (PROJ-291 C3).
-
-See [docs/01_ARCHITECTURE.md § Key Protocols](01_ARCHITECTURE.md#key-protocols) for the cross-layer protocol table entry.
-
-### Planet Economy Projector (PROJ-288)
-
-Read-only per-planet flux projector — feeds UI panels (PROJ-289 / PROJ-290) so they don't re-derive harvest / upkeep / yard math from the engines each frame.
-
-**Service** — `PlanetEconomyProjector` in `game/strategy/services/planet_economy_projector.py`:
-- Constructor: `PlanetEconomyProjector(*, registries: GameRegistries, economy_config: EconomyConfig, race_registry: IRaceRegistry)` — strict DI, all three required.
-- `project(planet) -> Dict[str, ResourceProjection]` returns one entry per resource that appears in any of the three sub-projections. Empty queues + no harvesters + no upkeep → empty dict.
-- Three sub-projections:
-  - `_project_harvest(planet, habitability)` — delegates to `compute_planet_production(planet, registries)` then scales by habitability (PROJ-285).
-  - `_project_upkeep(planet)` — iterates `planet.populations × economy.population_consumption.items()`, summing `pop.count * cfg.food_allocation * per_pop_rate`. Mirrors `OrganicsConsumptionEngine._process_colony` exactly. Upkeep is NOT habitability-scaled (demand is independent of planet conditions).
-  - `_project_yard_drain(planet, habitability)` — calls `_collect_planet_sources` (`game/strategy/data/build_queue_source.py`) to enumerate the planet's base + shipyard queues, then delegates to `forecast_queue_turn_spend` (`game/strategy/engine/construction_forecast.py`) for each non-empty queue. The forecast helper is the canonical "actual per-turn draw" function — it walks the queue with carry-over capacity, mirroring `ProductionEngine._calculate_tick_expenditure`, and returns the resources each item will actually consume. Habitability is applied to the source's `build_rate` BEFORE the forecast walk, matching `ProductionEngine._process_queue_tick_dynamic`. Resources the queued items don't cost report zero (so the projector and the engine agree on every resource — fixed in BUG-120 2026-04-27, which previously summed yard capacity across all 5 resources regardless of what was queued). Build-rate boosters (system-wide / sector-wide) are NOT factored in — `project(planet)` doesn't carry galaxy/empire context, and v1 takes the planet-in-isolation view.
-
-**DTO** — `ResourceProjection` (frozen dataclass, same module):
-- Fields: `resource_id: str`, `harvest: float`, `upkeep: float`, `yard: float`, `net: float`.
-- Invariant: `net == harvest - upkeep - yard`.
-
-**Pure helper** — `projected_growth_rate(planet, pop, race_config, cfg) -> float` in `game/strategy/formulas/colony_output.py`:
-- Per-capita next-turn growth rate for one species. Multiply by `pop.count` for absolute Δpop.
-- Replicates the math in `PopulationEngine._grow_species` (PROJ-284 Phase 3) WITHOUT mutating state.
-- Sign convention: positive = growth, negative = decline. Floored happiness via `max(0, pop.happiness)` defensively.
-- Equivalence with the engine pinned by `tests/integration/strategy/test_growth_rate_equivalence.py` (12-cell matrix). Drift in either side fails CI.
-
-**Facade DTO + accessor** — `StrategySessionFacade.get_colony_demographic_view(planet_id) -> Optional[ColonyDemographicView]`:
-- Returns `None` for unowned/missing planets. Otherwise bundles per-species + per-resource state for one colony in one immutable read.
-- `ColonyDemographicView` (frozen, `game/strategy/facade/dto/colony_demographic_view.py`):
-  - `planet_id: int`, `planet_name: str`
-  - `species: Tuple[SpeciesDemographicView, ...]` — ordered largest count first; species whose `race_id` cannot be resolved by the registry are silently dropped (save-drift defence).
-  - `resource_projections: Tuple[ResourceProjection, ...]` — directly from the projector.
-  - `total_upkeep: Mapping[str, float]` — sum of per-species upkeep across the colony, used by Treasury / empire-aggregation panels (PROJ-290).
-- `SpeciesDemographicView` (frozen):
-  - `race_id`, `race_name`, `count`, `habitability`, `happiness`, `growth_rate`, `food_ratio`, `food_allocation`.
-
-**Migration note** — `compute_planet_production` previously lived at `game/ui/panels/planet_report_panel.py:498`, a layer violation (UI hosting strategy math). PROJ-288 moved it to `game/strategy/services/planet_economy_projector.py` and updated all callers (`build_queue_panel_factory.py`, `planet_list_window.py`, `strategy_detail_formatter.py`). No backward-compat re-export — call sites import directly from the new location.
-
-See [docs/systems/strategy_layer.md §1 StrategySessionFacade](systems/strategy_layer.md#1-strategysessionfacade) for the facade Query Categories table.
-
-### Empire Economy Service (PROJ-292 M1)
-
-Service-layer facade over `EmpireEconomyCalculator` so UI panels don't import from `game.strategy.engine.*` directly.
-
-**Service** — `EmpireEconomyService` in [game/strategy/services/empire_economy_service.py](../game/strategy/services/empire_economy_service.py):
-- Constructor kwargs mirror the engine-layer calculator: `registries` (required), `economy_config` (optional), `race_registry` (optional).
-- One public method: `get_snapshot(empire) -> EmpireEconomySnapshot`. Internally delegates to `self._calculator.calculate(empire)`.
-- Re-exports `EmpireEconomySnapshot` so UI type annotations don't reach into the engine module.
-- `__all__` explicitly excludes `EmpireEconomyCalculator` — the engine class is an implementation detail; callers that need it must import from `game.strategy.engine.empire_economy_calculator` directly and justify why.
-
-**Consumers:**
-- [game/ui/panels/empire_treasury_panel.py](../game/ui/panels/empire_treasury_panel.py) — imports `EmpireEconomySnapshot` for type annotations.
-- [game/ui/screens/empire_panel_window.py](../game/ui/screens/empire_panel_window.py) — constructs `EmpireEconomyService(...)` and calls `get_snapshot(empire)` when building the Treasury tab. Pre-PROJ-292 this file imported and constructed `EmpireEconomyCalculator` directly — a layer violation flagged by the PROJ-283..290 audit.
-
-**Policy:** future UI code that needs empire-economy data MUST import from `game.strategy.services.empire_economy_service`, never `game.strategy.engine.empire_economy_calculator`. A follow-up project can enforce this via a lint rule or CI grep check.
-
----
-
-## Design Principles
-
-### 1. Strict Dependency Injection
-
-All services that need registries use **constructor injection with no fallback**:
-
-```python
-# Correct
-service = VehicleDesignService(registries=game_registries)
-service = ModifierLogicService(registry_provider=game_registries)
-loader = SimulationDesignLoader(registries=game_registries)
-
-# Raises TypeError or ValidationException
-service = VehicleDesignService(registries=None)
-```
-
-Stateless services require no constructor args:
-```python
-service = BattleService()
-nav_service = FleetNavigationService()
-# Sector/system effects are now functions, not a service:
-# from game.strategy.services.system_effects_collector import collect_sector_effects
-# FleetSpeedCalculator, ActionTimeResolver, DesignCostCalculator use only static methods
-```
-
-### 2. Result Objects
-
-Services return result objects for operations that can fail, rather than raising exceptions:
+Expected validation failures should return result objects rather than raising:
 
 ```python
 @dataclass
 class ServiceResult:
     success: bool
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 ```
 
-**Handling results:**
-```python
-result = service.some_operation()
-if result.success:
-    process(result.data)
-else:
-    for error in result.errors:
-        logger.error(error)
+Unexpected corrupt state, invalid DI, frozen registry mutation, provider/network
+failures, and serialization failures should use the project exception model.
 
-for warning in result.warnings:
-    logger.warning(warning)
+### Layer Rules
+
+- UI may import services.
+- Services may import domain objects within allowed layer direction.
+- Domain objects should not import UI.
+- Simulation code must not use global registry lookup.
+- UI should not directly manipulate domain objects for complex workflows; route through services, facade DTOs, commands, or mutators.
+- `game/services/` must depend on Core only.
+
+### Stale References to Avoid
+
+- Do not reference `game/strategy/services/area_effect_manager.py`; the current path is ability sources plus `SystemEffectsCollector`.
+- Do not use `calculate_fleet_speed_with_environment`; use `calculate_fleet_speed_with_strategic_mult`.
+- Do not hardcode `ORDER_TO_ABILITY_MAP`; it is derived from the self-registering command registry.
+- Do not treat `BuildQueueController` / `BuildQueueRenderer` as strategy services; they are UI classes under `game/ui/`.
+- Do not import `IRaceRegistry` from old protocol paths; current path is `game/core/protocols/strategy_domain.py`.
+- Do not add save-file migration or compatibility shims for old save/replay formats unless a project explicitly changes the no-migration policy.
+
+## Testing
+
+Primary service test locations:
+
+- `tests/unit/services/`
+- `tests/unit/strategy/services/`
+- `tests/unit/simulation/services/`
+- `tests/integration/strategy/` for engine/facade equivalence flows
+
+Common commands:
+
+```bash
+pytest tests/unit/strategy/services/
+pytest tests/unit/simulation/services/
+pytest tests/integration/strategy/test_growth_rate_equivalence.py
+python Tools/test_sharded/test_sharded.py
+python -m combat_lab.run_tests
 ```
 
-### 3. Pure Functions Where Possible
+Testing pattern:
 
-`FleetNavigationService` demonstrates the pattern of separating pure computation from mutation:
-- **Pure core:** `compute_next_step(state, galaxy) -> NavigationStep` -- no side effects
-- **Mutation bridge:** `calculate_fleet_next_hex(fleet, galaxy)` -- wraps pure function, applies changes to Fleet
+- Use strict DI fixtures such as `fresh_registries`, `minimal_registries`, or `mock_registries`.
+- Assert result object `success`, `errors`, `warnings`, and returned domain fields.
+- For pure services, test pure function behavior separately from mutation bridge behavior.
+- For background services, assert terminal statuses and call shutdown helpers.
 
-### 4. Static Methods for Stateless Logic
+## Extension Checklist
 
-`FleetSpeedCalculator`, `ActionTimeResolver`, `DesignCostCalculator`, `CargoTransferService`, and `FleetCargoProjector` are entirely static -- no instance state needed. `ComponentInspector` uses module-level functions rather than a class — including `has_warp_capability()` and `get_ability_list()`. `calculate_design_stats()` is a standalone function in `game/simulation/entities/ship_design_stats.py`.
+Adding a cross-cutting service:
 
----
+1. Confirm it depends only on Core and is useful to multiple layers.
+2. Define a Protocol and at least one testable implementation.
+3. Add factory/default accessors only if lifecycle requires application-wide defaults.
+4. Wire through `ApplicationContext` only when it belongs in the production service graph.
+5. Add focused tests before implementation.
 
-## Layer Separation
+Adding a strategy ability source:
 
-```
-+---------------------------------------------------------+
-|                      UI Layer                           |
-|  (builder_screen.py, battle_scene.py, strategy_screen)  |
-+----------------------------+----------------------------+
-                             | Uses
-                             v
-+---------------------------------------------------------+
-|                   Service Layer                         |
-|  Simulation: BattleService, VehicleDesignService,       |
-|              ModifierService, SimulationDesignLoader,    |
-|              reload_registries_from_directory            |
-|  Strategy:   FleetNavigationService,                    |
-|              FleetSpeedCalculator, ComponentInspector,   |
-|              ActionTimeResolver, CargoTransferService,   |
-|              DesignCostCalculator, FleetCargoProjector,  |
-|              SystemEffectsCollector + ability_sources/   |
-|              BuildQueueController, BuildQueueRenderer    |
-+----------------------------+----------------------------+
-                             | Uses
-                             v
-+---------------------------------------------------------+
-|                   Domain Layer                          |
-|  (Ship, Component, BattleEngine, Fleet, Galaxy)         |
-+---------------------------------------------------------+
-```
+1. Implement or wrap an `IAbilitySource`.
+2. Register a provider with `ability_iterator`.
+3. Ensure `affects_hex`, `affects_system`, and activation state are correct.
+4. Add metadata if the ability should appear in sector/system effect rows.
+5. Let `SystemEffectsCollector` aggregate.
 
-**Rules:**
-- UI can import services
-- Services can import domain objects
-- Domain should NOT import services or UI
-- UI should NOT directly manipulate domain objects for complex operations
+Adding a stabilizer:
 
----
+1. Add one `StabilizerSpec` to `STABILIZERS`.
+2. Include ability name, spatial scopes, and blocked order types.
+3. Ensure the ability is discoverable through component registry lookup.
+4. Add or update tests for active/inactive behavior.
 
-## Testing Services
+Adding a strategic superweapon:
 
-Services are tested in:
-```
-tests/unit/services/                    # Simulation services
-tests/unit/strategy/services/           # Strategy services
-```
+1. Add one `SuperweaponSpec` to `SUPERWEAPONS` unless the weapon is a structural outlier like `SELF_DESTRUCT`.
+2. Wire the dispatcher effect closure.
+3. Add stabilizer coverage when applicable.
+4. Preserve collect-then-mutate behavior for destructive system effects.
 
-**Example Test:**
-```python
-class TestVehicleDesignService:
-    def test_create_ship_returns_valid_ship(self, registries):
-        service = VehicleDesignService(registries=registries)
-        result = service.create_ship(
-            name="Test Ship",
-            ship_class="Escort",
-            theme_id="Federation"
-        )
-        assert result.success is True
-        assert result.ship is not None
-        assert result.ship.name == "Test Ship"
+Adding a habitability axis:
 
-    def test_add_invalid_component_returns_error(self, registries):
-        service = VehicleDesignService(registries=registries)
-        result = service.create_ship("Test", "Escort")
-        ship = result.ship
+1. Add a `HabitabilityFactor` to `FACTOR_REGISTRY`.
+2. Verify race setup, point budget, homeworld presets, habitability formula, and population behavior.
+3. Do not add parallel hardcoded factor lists.
 
-        result = service.add_component(ship, "nonexistent_component", LayerType.OUTER)
-        assert not result.success
-        assert len(result.errors) > 0
-```
+Adding a stat panel value:
 
----
+1. Add a getter in `stat_getters.py`.
+2. Register it in `GETTERS`.
+3. Add the stat entry to `data/stats_sections.json`.
+4. For dynamic rows, add and register a generator in `stat_rows_dynamic.py` / `stats_config.py`.
 
-*Last Updated: April 2026*
+Adding a replay persistence behavior:
+
+1. Add or update replay DTO serialization tests first.
+2. Keep persistence behind `ReplayStore` and lookup behind `ReplayResolver`.
+3. If verification behavior changes, update `ReplayVerificationCoordinator` and sidecar schema deliberately.
+4. Keep replay shutdown deterministic with `shutdown_all_coordinators()`.

@@ -1,662 +1,338 @@
 # Error Handling Guidelines
 
-> **Last verified:** 2026-05-04 — PROJ-321..328 audit added `LLMUnexpectedError` (game/core/exceptions.py:309) for unexpected non-LLM exceptions escaping providers; `code` is intentionally `None` per the class docstring (callers use `isinstance` to discriminate, not `err.code`). PROJ-349 T6.2 annotated the `RaceEnvironmentPanel._update_points_display` broad catch.
+> **Last verified:** 2026-05-07 - Compared the original `docs/05_ERROR_HANDLING.md` with `AgentCoordination/Scratchpad/reports/05_ERROR_HANDLING_ALT_compact.md` and verified current contracts against the source files named below.
 
-Error handling conventions, exception hierarchy, logging standards, and reference patterns for the Starship Battles codebase.
+Compact reference for exception contracts, error codes, logging, JSON persistence, and turn-engine error boundaries. Keep this document operational: preserve current invariants and extension recipes; omit release-note archaeology and repeated prose.
 
-> **Reference Implementation:** `game/core/json_utils.py` demonstrates all patterns described here.
+## Source Files
 
----
+- `game/core/exceptions.py`: custom exception hierarchy.
+- `game/core/error_codes.py`: `ErrorCode` enum.
+- `game/core/json_utils.py`: canonical JSON file helpers.
+- `game/core/validation_helpers.py`: strict `from_dict()` validation helpers.
+- `game/core/event_logging.py`: session-scoped `EventBus` plus module-level compatibility API.
+- `game/strategy/engine/turn_engine.py`: `_time_phase()` and rollback boundary.
+- `game/strategy/engine/turn_state_snapshot.py`: pre-turn snapshot capture, restore, crash dump.
+- `game/strategy/engine/turn_phase_registry.py`: 15 tick phases and 6 end-of-turn phases.
+- `game/strategy/systems/design_library.py`: `DesignLoadResult` result-object pattern.
+- `game/services/llm/` and `game/ui/services/image/`: provider/service error mapping.
 
-## Table of Contents
+## Exception Contract
 
-1. [Exception Hierarchy](#exception-hierarchy)
-2. [Error Codes](#error-codes)
-3. [Logging Levels](#logging-levels)
-4. [JSON Utilities](#json-utilities)
-5. [Patterns to Follow](#patterns-to-follow)
-6. [Anti-Patterns to Avoid](#anti-patterns-to-avoid)
-7. [Quick Reference](#quick-reference)
+All custom exceptions inherit from `GameException`. Every game exception has:
 
----
+- `message`: human-readable diagnostic, exposed through `str(exc)`.
+- `code`: `str | None`, usually `ErrorCode.<NAME>.value`.
+- `context`: `dict`, defaults to `{}` and must contain safe diagnostic fields only.
 
-## Exception Hierarchy
+Do not raise `GameException`, `LLMException`, or `ImageException` directly. Prefer the narrowest domain class. `SimulationException`, `StrategyException`, `ResourceException`, and similar category bases are catch targets unless no narrower class fits.
 
-All custom exceptions are defined in `game/core/exceptions.py`. They inherit from `GameException` and support error codes and context dictionaries.
+Current hierarchy:
 
-### Hierarchy Diagram
-
+```text
+GameException
+  StateException
+    FrozenStateException
+  ValidationException
+  ResourceException
+    MissingResourceException
+  PersistenceException
+  StrategyException
+    EnginePhaseError
+  SimulationException
+    ComponentException
+    FormulaException
+  LLMException
+    LLMConfigError
+    LLMNetworkError
+    LLMResponseError
+    LLMRateLimited
+    LLMTimeoutError
+    LLMCancelled
+    LLMUnexpectedError
+  ImageException
+    ImageConfigError
+    ImageNetworkError
+    ImageResponseError
+    ImageRateLimited
+    ImageTimeoutError
+    ImageCancelled
 ```
-GameException (base - don't raise directly)
-    |
-    +-- StateException
-    |       +-- FrozenStateException
-    |
-    +-- ValidationException
-    |
-    +-- ResourceException
-    |       +-- MissingResourceException
-    |
-    +-- PersistenceException
-    |
-    +-- StrategyException
-    |       +-- EnginePhaseError
-    |
-    +-- SimulationException
-    |       +-- ComponentException
-    |       +-- FormulaException
-    |
-    +-- LLMException                   (PROJ-296)
-            +-- LLMConfigError         (no key / unknown provider)
-            +-- LLMNetworkError        (connection / DNS / SSL / exhausted retries)
-            +-- LLMResponseError       (malformed body or non-2xx other than 429)
-            +-- LLMRateLimited         (429 from provider)
-            +-- LLMTimeoutError        (request exceeded timeout)
-            +-- LLMCancelled           (cancelled via cancel_token)
-            +-- LLMUnexpectedError     (PROJ-321..328 audit S1.1 — wraps any
-                                        non-LLM exception escaping a provider;
-                                        original on __cause__, code is None)
-```
 
-### When to Use Each Exception Type
+Use:
 
-| Exception | Use When |
-|-----------|----------|
-| **GameException** | Base class only -- don't raise directly |
-| **StateException** | Operations attempted on objects in invalid state |
-| **FrozenStateException** | Attempting to modify frozen/immutable objects (combat resolution) |
-| **ValidationException** | Input validation failures, schema violations, out-of-range values |
-| **ResourceException** | Resource-related errors (images, sounds, data files) |
-| **MissingResourceException** | Required resource cannot be found |
-| **PersistenceException** | Save/load failures, file I/O errors, data corruption |
-| **StrategyException** | Strategy-layer errors (turn processing, fleet management, empire operations) |
-| **EnginePhaseError** | Sub-engine phase failed during turn tick processing — triggers rollback |
-| **SimulationException** | Combat simulation engine errors (currently used as catch target and base class only -- not directly raised) |
-| **ComponentException** | Component operations failures, invalid configurations (currently used as catch target and base class only -- not directly raised) |
-| **FormulaException** | Formula parsing/evaluation errors |
-| **LLMException** (PROJ-296) | Base class for LLM service errors -- don't raise directly |
-| **LLMConfigError** | LLM not configured: no API key, unknown provider, or concurrent-call limit reached |
-| **LLMNetworkError** | LLM network failure: connection, DNS, SSL, or exhausted retries on 5xx |
-| **LLMResponseError** | LLM response malformed or non-2xx (other than 429) |
-| **LLMRateLimited** | LLM provider returned 429 — never auto-retried |
-| **LLMTimeoutError** | LLM request exceeded its configured timeout |
-| **LLMUnexpectedError** (PROJ-321..328 audit S1.1) | Provider raised a non-LLMException (e.g., raw `RuntimeError`, third-party HTTP exception not yet mapped). Caught by `LLMBackgroundCall._run()` so `wait()`'s contract holds; original on `__cause__`, type name in `context['original_exception_type']`, `code=None` |
-| **LLMCancelled** | LLM call was cancelled via `cancel_token` |
+- `ValidationException`: bad input, schema violation, missing entity, invalid range.
+- `PersistenceException`: save/load, external serialized data, corrupt save data, snapshot capture failure.
+- `StateException` / `FrozenStateException`: invalid object state or immutable-state mutation.
+- `MissingResourceException` / `ResourceException`: missing required asset or other resource failure.
+- `EnginePhaseError`: turn sub-engine phase failure; triggers rollback when a snapshot exists.
+- `ComponentException`: component configuration or operation failure.
+- `FormulaException`: formula parse/evaluation failure.
+- `LLM*`: LLM provider, factory, or background-call failure.
+- `Image*`: image provider, factory, or background-call failure.
 
-### Exception Attributes
-
-All exceptions support:
-- `message` (str): Human-readable error description
-- `code` (str, optional): Error code for programmatic handling (e.g., "V001")
-- `context` (dict): Additional contextual information (defaults to `{}`)
-
----
+`LLMUnexpectedError` is special: it wraps non-`LLMException` provider escapes in `LLMBackgroundCall._run()`. The original exception is on `__cause__`, `context["original_exception_type"]` contains its type name, and `code` is intentionally `None`. There is no equivalent image unexpected wrapper today; image providers must map third-party failures to `ImageException` subclasses before they cross the provider boundary.
 
 ## Error Codes
 
-Error codes are defined in `game/core/error_codes.py` using the `ErrorCode` enum. Codes follow the format `X###` where X is a category letter and ### is a three-digit number.
+Codes live in `game/core/error_codes.py` as `ErrorCode`. Format is `X###`.
 
-### Validation Codes (V001-V099)
+- Validation: `V001 VALIDATION_FAILED`, `V002 SCHEMA_VALIDATION_ERROR`, `V003 MISSING_ENTITY`, `V004 OUT_OF_RANGE`.
+- State: `S001 STATE_FROZEN`, `S002 NOT_INITIALIZED`, `S003 INVALID_STATE`.
+- Resource: `R001 RESOURCE_NOT_FOUND`, `R002 INVALID_FORMAT`, `R003 RESOURCE_LOAD_FAILED`.
+- Persistence: `P001 SAVE_FAILED`, `P002 LOAD_FAILED`, `P003 CORRUPT_DATA`, `P004 VERSION_MISMATCH`, `P005 IO_ERROR`.
+- Formula: `F001 FORMULA_SYNTAX_ERROR`, `F002 FORMULA_UNDEFINED_VAR`, `F003 EVAL_ERROR`, `F004 FORMULA_GENERAL_ERROR`.
+- Component: `C001 COMPONENT_NOT_FOUND`, `C002 COMPONENT_INVALID`, `C003 MISSING_DEPENDENCY`, `C004 SLOT_OCCUPIED`, `C005 INCOMPATIBLE_COMPONENT`.
+- Turn: `T001 PHASE_FAILED`, `T002 TURN_ROLLBACK`, `T003 SNAPSHOT_FAILED`.
+- LLM: `L001 LLM_CONFIG_MISSING`, `L002 LLM_NETWORK_ERROR`, `L003 LLM_BAD_RESPONSE`, `L004 LLM_RATE_LIMITED`, `L005 LLM_TIMEOUT`, `L006 LLM_CANCELLED`.
+- Image: `I001 IMAGE_CONFIG_MISSING`, `I002 IMAGE_NETWORK_ERROR`, `I003 IMAGE_BAD_RESPONSE`, `I004 IMAGE_RATE_LIMITED`, `I005 IMAGE_TIMEOUT`, `I006 IMAGE_CANCELLED`.
 
-| Code | Name | Description |
-|------|------|-------------|
-| V001 | `VALIDATION_FAILED` | General validation failure |
-| V002 | `SCHEMA_VALIDATION_ERROR` | Schema or structural validation error (missing fields, invalid data structure) |
-| V003 | `MISSING_ENTITY` | Referenced entity does not exist |
-| V004 | `OUT_OF_RANGE` | Value is outside allowed range |
-
-### State Codes (S001-S099)
-
-| Code | Name | Description |
-|------|------|-------------|
-| S001 | `STATE_FROZEN` | Object frozen, cannot modify |
-| S002 | `NOT_INITIALIZED` | Object not properly initialized |
-| S003 | `INVALID_STATE` | Object is in an invalid or unexpected state |
-
-### Resource Codes (R001-R099)
-
-| Code | Name | Description |
-|------|------|-------------|
-| R001 | `RESOURCE_NOT_FOUND` | Resource doesn't exist |
-| R002 | `INVALID_FORMAT` | Resource has invalid or unsupported format |
-| R003 | `RESOURCE_LOAD_FAILED` | Failed to load resource |
-
-### Persistence Codes (P001-P099)
-
-| Code | Name | Description |
-|------|------|-------------|
-| P001 | `SAVE_FAILED` | Failed to save data |
-| P002 | `LOAD_FAILED` | Failed to load data |
-| P003 | `CORRUPT_DATA` | Data corrupted or malformed |
-| P004 | `VERSION_MISMATCH` | Save file version is incompatible |
-| P005 | `IO_ERROR` | File system I/O error occurred |
-
-### Formula Codes (F001-F099)
-
-| Code | Name | Description |
-|------|------|-------------|
-| F001 | `FORMULA_SYNTAX_ERROR` | Formula syntax error |
-| F002 | `FORMULA_UNDEFINED_VAR` | Undefined variable in formula |
-| F003 | `EVAL_ERROR` | Formula runtime evaluation error |
-| F004 | `FORMULA_GENERAL_ERROR` | General formula evaluation failure |
-
-### Turn Processing Codes (T001-T099)
-
-| Code | Name | Description |
-|------|------|-------------|
-| T001 | `PHASE_FAILED` | Sub-engine phase failed during turn processing |
-| T002 | `TURN_ROLLBACK` | Turn was rolled back due to phase failure |
-| T003 | `SNAPSHOT_FAILED` | Failed to create pre-turn state snapshot |
-
-### LLM Service Codes (L001-L099) — PROJ-296
-
-| Code | Name | Description |
-|------|------|-------------|
-| L001 | `LLM_CONFIG_MISSING` | No API key, unknown provider, or concurrent-call limit reached |
-| L002 | `LLM_NETWORK_ERROR` | Connection / DNS / SSL failure or exhausted retries on 5xx |
-| L003 | `LLM_BAD_RESPONSE` | Malformed body or non-2xx response (other than 429) |
-| L004 | `LLM_RATE_LIMITED` | Provider returned 429 — never auto-retried |
-| L005 | `LLM_TIMEOUT` | Request exceeded its configured timeout |
-| L006 | `LLM_CANCELLED` | Request cancelled via `cancel_token` |
-| _(none)_ | `LLMUnexpectedError` | Provider raised a non-LLMException (`RuntimeError`, third-party HTTP exception, etc.). Caught by `LLMBackgroundCall._run()` and wrapped so `wait()`'s terminal-state contract holds. Original on `__cause__`; `code` intentionally `None` (outside the categorized taxonomy). PROJ-321..328 audit S1.1. |
-
-**Logging hygiene rule:** LLM exception `context` dicts must NEVER include
-the API key, the `Authorization` header, the request body, the response
-body, or message contents. Safe fields: `model`, `endpoint`, `status_code`,
-`error_code`, `request_duration_ms`, `attempt`. See PROJ-296 design.md
-§ "Security Model" for the full guardrails.
-
-### Component Codes (C001-C099)
-
-| Code | Name | Description |
-|------|------|-------------|
-| C001 | `COMPONENT_NOT_FOUND` | Component doesn't exist |
-| C002 | `COMPONENT_INVALID` | Component configuration is invalid |
-| C003 | `MISSING_DEPENDENCY` | Required dependency injection parameter not provided |
-| C004 | `SLOT_OCCUPIED` | Component slot is already occupied |
-| C005 | `INCOMPATIBLE_COMPONENT` | Component is not compatible with target |
-
-### Using Error Codes
+Pattern:
 
 ```python
-from game.core.exceptions import ValidationException, ComponentException
-from game.core.error_codes import ErrorCode
-
-# V001 - General validation failure
 raise ValidationException(
-    "Invalid damage value",
-    code=ErrorCode.VALIDATION_FAILED.value,
-    context={"field": "damage", "value": -5}
+    "Component damage value out of range",
+    code=ErrorCode.OUT_OF_RANGE.value,
+    context={"component_id": comp_id, "damage": damage, "max": 100},
 )
-
-# V002 - Schema validation error
-raise ValidationException(
-    "Missing required fields in ship data",
-    code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
-    context={"missing_fields": ["hull_id", "components"]}
-)
-
-# C003 - Missing dependency injection parameter
-raise ComponentException(
-    "Required 'registry_provider' parameter not provided",
-    code=ErrorCode.MISSING_DEPENDENCY.value,
-    context={"expected": "registry_provider", "caller": "ShipLoader"}
-)
-
-# Programmatic handling
-try:
-    load_component(data)
-except ComponentException as e:
-    if e.code == ErrorCode.COMPONENT_INVALID.value:
-        use_default_component()
 ```
 
----
+Add a new `ErrorCode` only when callers need programmatic discrimination or an existing category clearly covers the condition. Otherwise a specific exception type plus context is enough.
 
-## Logging Levels
+## Service Error Hygiene
 
-All production code uses Python's standard logging module:
+LLM and image contexts must never include API keys, `Authorization`, headers, request bodies, response bodies, prompts/messages, generated text, or image bytes. Safe fields include `provider`, `model`, `endpoint`, `status_code`, `error_code`, `request_duration_ms`, `attempt`, `attempts`, `in_flight`, and `max`.
+
+LLM contracts:
+
+- `LLMProvider.complete()` must return `CompletionResult` or raise an `LLMException` subclass.
+- `DeepSeekProvider` reads `DEEPSEEK_API_KEY` per request, redacts `repr`, uses SSL verification and timeouts, retries 5xx only, and never retries 429.
+- `LLMProviderFactory.create()` reads `LLM_PROVIDER` (default `deepseek`). Unknown provider raises `LLMConfigError(L001)` with `provider` and `registered` context. A registered provider constructor raising `LLMConfigError` returns `None` for deferred validation.
+- `LLMBackgroundCall.start()` enforces `LLMConfig.MAX_CONCURRENT_CALLS` via `LLMConfigError(L001)`. `wait()` must observe terminal states only.
+
+Image contracts:
+
+- `ImageProvider.generate_image()` must return `ImageResult` with non-empty bytes or raise an `ImageException` subclass. Providers may return a different size than requested; callers must inspect `result.size`.
+- `OpenAIImageProvider` reads `OPENAI_API_KEY` per request, redacts `repr`, uses `/v1/images/generations` or `/v1/images/edits`, retries 5xx only, and never retries 429.
+- `ImageProviderFactory.create()` reads `IMAGE_PROVIDER` (default `openai`). Unknown provider raises `ImageConfigError(I001)`. A registered provider constructor raising `ImageConfigError` returns `None`, but `OpenAIImageProvider` currently validates the key on `generate_image()`, not construction.
+- `NullImageProvider` always raises `ImageConfigError(I001)` from `generate_image()` and is the test-safe no-network provider.
+
+## Logging Rules
+
+Use standard library logging in production modules:
 
 ```python
 import logging
 logger = logging.getLogger(__name__)
 ```
 
-### logger.debug()
-**Detailed diagnostic information for development and debugging.**
+- `logger.debug()`: diagnostics, state transitions, parameters, expected misses.
+- `logger.info()`: normal notable events, successful initialization, completed save/load.
+- `logger.warning()`: recoverable problem where execution continues with a fallback.
+- `logger.error()`: failed operation, required data missing, corrupt data, unexpected exception.
+- `logger.exception()`: same as error with traceback; use inside an exception handler.
 
-Use for: state transitions, method parameters, intermediate values, expected failures.
+Avoid `print()`, `traceback.print_exc()`, custom logger wrappers such as deleted `game.core.logger`, and silent swallowing. Log at the handling boundary; do not duplicate the same failure at every stack layer.
 
-```python
-logger.debug(f"State changed from {old} to {new}")
-logger.debug(f"scan_designs: pattern={pattern}")
-```
+## Structured Events
 
-### logger.info()
-**Notable events during normal operation.**
+`game/core/event_logging.py` now exposes a session-scoped `EventBus`:
 
-Use for: successful initialization, significant operations complete, system state changes.
+- `EventBus(handler=None)`: owns a per-session handler.
+- `EventBus.log_event(event_type, **kwargs)`: emits structured event data.
+- Handler exceptions are caught with an intentional broad catch and logged so instrumentation cannot crash simulation.
 
-```python
-logger.info(f"Loaded {count} vehicle classes.")
-logger.info(f"Saved game to {filepath}")
-```
+The module-level `set_event_handler()`, `get_event_handler()`, and `log_event()` functions remain compatibility API. New strategy/session code should prefer explicit `EventBus` injection. Do not use structured events for diagnostic logging.
 
-### logger.warning()
-**Recoverable problems where operation continues with fallback.**
+## JSON And Persistence
 
-Use for: missing optional resources, recoverable failures, validation warnings, performance issues.
+Use `game/core/json_utils.py` for normal file-based JSON operations in `game/`.
 
-```python
-logger.warning(f"Portrait not found, using default")
-logger.warning(f"Config load failed, using defaults: {e}")
-```
+`load_json(path, default=..., encoding="utf-8")`:
 
-### logger.error()
-**Failures that prevent operation from completing.**
+- Safe loader for non-critical files.
+- Returns `default` on `FileNotFoundError`, `json.JSONDecodeError`, `PermissionError`, or `OSError`.
+- Logs missing files at debug and other failures at error.
 
-Use for: required files not found, critical operations failed, data corruption, unexpected exceptions.
+`load_json_required(path)`:
 
-```python
-logger.error(f"Asset manifest missing: {path}")
-logger.error(f"Failed to save game: {e}")
-logger.error(f"Unexpected error: {e}\n{traceback.format_exc()}")
-```
+- Strict loader for critical files.
+- Lets `FileNotFoundError` and `json.JSONDecodeError` propagate.
 
-### log_event() (Event System)
-**Structured simulation events for callbacks -- NOT standard logging.**
+`save_json(path, data, indent=2, ensure_ascii=False)`:
 
-Defined in `game/core/event_logging.py`. Events are typed callback invocations for simulation observers (tests, replay systems, analytics). When no handler is registered, `log_event()` is a no-op.
+- Creates parent directories.
+- Writes to `<file>.tmp`, then replaces the target.
+- Returns `True` / `False`.
+- On `PermissionError`, `OSError`, `TypeError`, or `ValueError`, logs and leaves the original file untouched.
 
-```python
-from game.core.event_logging import log_event, set_event_handler
+`deserialize_list(items, deserializer, entity_name, parent_name, strict=False)`:
 
-# Register handler (in GameSession or test fixtures)
-set_event_handler(my_handler)
+- `strict=False`: skip invalid children and log warning.
+- `strict=True`: raise `PersistenceException(P003)` on the first invalid child, chained from the original.
+- Catches `PersistenceException`, `KeyError`, `TypeError`, and `ValueError`.
+- Strategy core `from_dict()` paths use strict child deserialization for state integrity.
 
-# Fire events (from simulation code)
-log_event("damage", ship_id=42, amount=100)
-log_event("weapon_fired", weapon_id="laser", target_id=12)
-```
+`game/core/validation_helpers.py` is the standard `from_dict()` helper layer. `require_keys`, `validate_enum`, `validate_positive`, `validate_non_negative`, `validate_range`, and `safe_from_dict` raise `PersistenceException(P003)` because `from_dict()` is a persistence boundary, not ordinary runtime validation.
 
-Handler lifecycle:
-- Set by `GameSession` during game startup
-- Cleared (set to `None`) in test fixtures via `conftest.py`
-- Handler exceptions are caught and logged to prevent simulation crashes
+`DesignLoadResult` is the result-object pattern for non-critical design library reads:
 
----
+- `success` is `data is not None`.
+- Constructors: `ok`, `not_found`, `corrupt`, `invalid_schema`, `permission_denied`, `io_error`.
+- Current `DesignLibrary.load_design_data()` returns `ok`, `not_found`, `corrupt_json`, `permission_denied`, or `io_error`; it does not currently perform schema validation.
 
-## JSON Utilities
+## Turn Engine Boundary
 
-`game/core/json_utils.py` is the canonical location for all file-based JSON operations. Do NOT use `json.load`/`json.dump` directly for file operations in `game/`.
+Turn processing is fail-fast with snapshot rollback.
 
-### load_json()
+Flow:
 
-Safe loading with default return on failure. Never raises exceptions.
+1. If `session` is provided, `TurnStateSnapshot.capture()` serializes all empires and the galaxy before mutation.
+2. Snapshot capture failure raises `PersistenceException(T003)` from `TurnStateSnapshot.capture()` and `TurnEngine.process_turn()` aborts. It no longer continues with rollback disabled.
+3. The 100-tick loop runs every `DEFAULT_TICK_PHASE_LIST` descriptor through `_time_phase()`: `harvesting`, `resources`, `fuel_gen`, `planet_energy`, `resupply`, `production`, `environmental`, `instant_orders`, `actions`, `planet_actions`, `activation_timers`, `planet_modifier_effects`, `movement_calc`, `movement_apply`, `combat`.
+4. End-of-turn work also routes through `_time_phase()` with `tick=0`: `organics_consumption`, `happiness`, `population_growth`, `quality_improvement`, `atmosphere`, `water_modification`.
+5. `_time_phase()` re-raises existing `EnginePhaseError`, wraps any other exception as `EnginePhaseError(T001)`, logs with `exc_info=True`, records timing, and chains the original with `raise ... from e`.
+6. `process_turn()` catches `EnginePhaseError`, logs the failed tick/phase, writes crash metadata if `snapshot and save_path`, restores state if `snapshot and session`, and re-raises.
+7. `GameSession.process_turn()` catches, logs, and re-raises for UI handling.
 
-```python
-from game.core.json_utils import load_json
+Current `_time_phase()` context keys are `phase_name`, `tick`, `original_error`, and `original_type`. Do not rely on `turn` being present unless the caller added it.
 
-data = load_json("config.json", default={})
-```
+Sub-engines should validate preconditions before mutation with `_validate_tick_inputs()` and raise descriptive `ValidationException`s. The phase boundary will wrap those as `EnginePhaseError`.
 
-Handles: `FileNotFoundError` (returns default, logs debug), `json.JSONDecodeError` (returns default, logs error), `PermissionError` (returns default, logs error), `OSError` (returns default, logs error).
+## Broad Catch Rule
 
-### load_json_required()
-
-Strict loading for critical files. Raises exceptions on failure.
+Prefer narrowed exception types. A broad `except Exception` in production code must be justified on the same line for new or touched code:
 
 ```python
-from game.core.json_utils import load_json_required
-
-data = load_json_required("critical_config.json")
-# Raises FileNotFoundError if file doesn't exist
-# Raises json.JSONDecodeError if JSON is invalid
+except Exception as e:  # Intentional broad catch: <expected failures and why continuing is correct>
 ```
 
-### save_json()
+The reason must say what failures are expected and why fallback, isolation, or fire-and-forget behavior is correct.
 
-Atomic save with automatic parent directory creation. Returns `True`/`False`.
-Writes to a temp file first, then replaces the original — if serialization or
-writing fails the original file is untouched.
+Legitimate broad-catch areas:
 
-```python
-from game.core.json_utils import save_json
+- Third-party callback or subscriber dispatch.
+- Platform-dependent UI initialization such as Tkinter, audio, or GPU.
+- Defensive UI refresh where a redraw failure should not end the session.
+- Telemetry, event emission, replay capture, and sidecar writes that must not poison the host operation.
+- Registry-provider lookups that may run before app initialization in tests or CLI tools.
+- Best-effort metadata/size detection where failure does not invalidate the primary result.
 
-success = save_json("output.json", data, indent=2)
-```
+Invalid reasons:
 
-Handles: `PermissionError` (returns `False`, logs error), `OSError` (returns `False`, logs error), `TypeError` (non-serializable data, returns `False`, logs error, cleans up temp file), `ValueError` (out-of-range floats like `inf`/`NaN`, returns `False`, logs error, cleans up temp file).
+- "general defensive code"
+- "third-party stuff"
+- "legacy"
+- Any vague comment that omits expected failures and continuation rationale.
 
-### deserialize_list()
+Strategy phase work is not a swallow site: raw `Exception` from a phase must become `EnginePhaseError` and re-raise.
 
-Resilient list deserialization that skips invalid items with a warning log. Ensures partial save files can still be loaded.
+## Required Patterns
 
-```python
-from game.core.json_utils import deserialize_list
-
-planets = deserialize_list(
-    data.get('planets', []),
-    Planet.from_dict,
-    entity_name='planet',
-    parent_name=f"StarSystem '{system.name}'"
-)
-# Invalid items are skipped with logger.warning(), not raised
-```
-
-Catches: `PersistenceException`, `KeyError`, `TypeError`, `ValueError`.
-
----
-
-## Patterns to Follow
-
-### Pattern 1: Catch Specific Exceptions
-
-Always catch the most specific exception type possible.
+Catch specific exceptions:
 
 ```python
 try:
     data = json.loads(content)
 except json.JSONDecodeError as e:
-    logger.warning(f"Invalid JSON: {e}")
+    logger.warning("Invalid JSON: %s", e)
     return default
 ```
 
-### Pattern 2: Exception Chaining with `raise from`
-
-Preserve the original cause when re-raising exceptions.
+Preserve causes:
 
 ```python
-try:
-    data = load_json(path)
 except json.JSONDecodeError as e:
     raise PersistenceException(
         f"Failed to parse save file: {path}",
         code=ErrorCode.CORRUPT_DATA.value,
-        context={"path": str(path)}
+        context={"path": str(path)},
     ) from e
 ```
 
-### Pattern 3: Always Log Exceptions
-
-Never silently swallow exceptions. At minimum, log a warning.
+Put actionable IDs and bounds in context:
 
 ```python
-try:
-    result = parse_data(data)
-except ValueError as e:
-    logger.warning(f"Failed to parse data, using default: {e}")
-    result = default_value
-```
-
-### Pattern 4: Include Context in Error Messages
-
-Error messages should include enough context to diagnose the problem.
-
-```python
-logger.error(f"Failed to load design '{design_id}' from '{filepath}': {e}")
-
 raise ValidationException(
-    "Component damage value out of range",
-    code=ErrorCode.OUT_OF_RANGE.value,
-    context={"component_id": comp_id, "damage": damage, "max": 100}
+    "Ship has invalid configuration",
+    code=ErrorCode.VALIDATION_FAILED.value,
+    context={"ship_id": ship.id, "errors": ship.validation_errors},
 )
 ```
 
-### Pattern 5: Graceful Degradation for Non-Critical Operations
+Gracefully degrade only for non-critical operations. Missing optional art can warn and use a missing texture. Corrupt save data, required config, invalid `from_dict()` state, and turn-processing failure should raise.
 
-For non-critical features, prefer graceful degradation over failure.
+## Anti-Patterns
 
-```python
-def get_image(self, category, key):
-    try:
-        return self._load_image(cache_key, file_path)
-    except (FileNotFoundError, pygame.error) as e:
-        logger.warning(f"Failed to load image {file_path}: {e}")
-        return self.get_missing_texture()
+Do not:
+
+- Use bare `except:`.
+- Catch `Exception` without the required justification and logging/wrapping.
+- Raise generic `Exception`.
+- Wrap without `raise from` when preserving a lower-level cause matters.
+- Swallow corrupt persistence data outside an explicit resilient helper such as `deserialize_list(strict=False)`.
+- Use direct JSON file I/O for normal game data instead of `json_utils`.
+- Put secrets, prompts, responses, headers, or image bytes in exception context.
+- Use custom logger wrappers, `print()`, or `traceback.print_exc()` for diagnostics.
+- Add compatibility shims or fallback systems for old save formats.
+
+## Extension Recipes
+
+New failure mode:
+
+1. Choose the narrowest existing exception class.
+2. Reuse an `ErrorCode` if callers need programmatic handling; add one only for a real new category/condition.
+3. Include compact context: entity IDs, paths, phase names, status codes, bounds, attempts.
+4. Chain wrapped exceptions with `raise ... from e`.
+5. Log once at the boundary that handles or converts the failure.
+6. Add focused tests for exception type, code, context, and chaining.
+
+New `from_dict()` method:
+
+1. Use `require_keys()` for required fields.
+2. Use `validate_*()` helpers for enums and numeric constraints.
+3. Use `safe_from_dict()` or `deserialize_list(..., strict=True)` for nested state that must not be skipped.
+4. Raise `PersistenceException(P003)` for corrupt external data.
+
+New turn phase or sub-engine:
+
+1. Validate preconditions before mutation.
+2. Add the descriptor to `turn_phase_registry.py` so the phase runs through `_time_phase()`.
+3. Ensure failure tests assert `EnginePhaseError`, `ErrorCode.PHASE_FAILED.value`, phase context, and rollback behavior when a session snapshot exists.
+
+New LLM provider:
+
+1. Implement `LLMProvider.complete()`.
+2. Map third-party errors to `LLMException` subclasses before returning to callers.
+3. Read credentials per request, redact identity, ignore unknown opts, use timeouts, retry only 5xx, never retry 429.
+4. Register via `register_provider(name, ProviderClass)`.
+
+New image provider:
+
+1. Implement `ImageProvider.generate_image()`.
+2. Return a populated `ImageResult`; never return empty bytes as a sentinel.
+3. Map third-party errors to `ImageException` subclasses inside the provider.
+4. Preserve safe context only, inspect/report actual result size, retry only 5xx, never retry 429.
+5. Register via `register_image_provider(name, ProviderClass)`.
+
+## Verification Commands
+
+Targeted references:
+
+```bash
+pytest tests/unit/core/test_exceptions.py tests/unit/core/test_error_codes.py
+pytest tests/unit/core/test_json_utils.py tests/unit/core/test_validation_helpers.py
+pytest tests/unit/strategy/design_library/test_design_load_result.py
+pytest tests/unit/strategy/turn_engine/test_turn_engine_phase_timing.py
+pytest tests/unit/strategy/turn_engine/test_turn_engine_snapshot_integration.py
+pytest tests/unit/strategy/turn_engine/test_turn_snapshot_capture_failure.py
+pytest tests/unit/services/llm/
+pytest tests/unit/ui/services/image/
 ```
 
-### Pattern 6: Use Custom Exceptions for Domain Errors
+Audit and full suite:
 
-```python
-if not ship.is_valid():
-    raise ValidationException(
-        f"Ship '{ship.name}' has invalid configuration",
-        code=ErrorCode.VALIDATION_FAILED.value,
-        context={"ship_id": ship.id, "errors": ship.validation_errors}
-    )
+```bash
+python Tools/error_audit/error_audit.py
+python Tools/test_sharded/test_sharded.py
 ```
-
----
-
-## Anti-Patterns to Avoid
-
-### 1. Bare `except:` Clauses
-
-```python
-# BAD: Catches SystemExit, KeyboardInterrupt
-try:
-    do_something()
-except:
-    pass
-```
-
-### 2. Catching `Exception` Without Logging
-
-```python
-# BAD: Silent failure hides bugs
-try:
-    result = process(data)
-except Exception:
-    result = None
-```
-
-### 3. Using Generic `raise Exception()`
-
-```python
-# BAD
-raise Exception("Something went wrong")
-
-# GOOD
-raise ValidationException(
-    "Invalid component configuration",
-    code=ErrorCode.COMPONENT_INVALID.value,
-    context={"component_id": comp_id}
-)
-```
-
-### 4. Missing Exception Chaining
-
-```python
-# BAD: Loses original traceback
-except json.JSONDecodeError:
-    raise ValidationException("Invalid JSON")
-
-# GOOD: Preserves original cause
-except json.JSONDecodeError as e:
-    raise ValidationException("Invalid JSON") from e
-```
-
-### 5. Custom Logger Wrappers
-
-```python
-# BAD: Legacy pattern (deleted)
-from game.core.logger import log_info, log_error
-
-# GOOD: Standard library logging
-import logging
-logger = logging.getLogger(__name__)
-logger.info("Message here")
-```
-
-### 6. Direct JSON File I/O
-
-```python
-# BAD: Bypasses json_utils error handling
-import json
-with open("file.json") as f:
-    data = json.load(f)
-
-# GOOD: Use json_utils
-from game.core.json_utils import load_json
-data = load_json("file.json", default={})
-```
-
-### 7. Using print() for Diagnostics
-
-```python
-# BAD
-print(f"DEBUG: processing {item}")
-
-# GOOD
-logger.debug(f"Processing {item}")
-```
-
-### 8. Using traceback.print_exc()
-
-```python
-# BAD: Prints to stdout, not to logs
-except Exception:
-    traceback.print_exc()
-
-# GOOD: Captures stack trace in logs
-except Exception as e:
-    logger.error(f"Unexpected error: {e}\n{traceback.format_exc()}")
-```
-
----
-
-## Intentional Broad Catch Convention
-
-> **Last verified:** 2026-04-27 (PROJ-308)
-
-Prefer narrowed exception types. When a broad `except Exception:` is genuinely necessary, it MUST carry a justification comment.
-
-### Broad Catches
-
-**Format:**
-
-```python
-except Exception:  # Intentional broad catch: <specific reason>
-```
-
-The justification line MUST appear on the same line as the `except` clause OR on the line immediately above it. The reason must say *what* failures are expected and *why* fire-and-forget is correct.
-
-**Legitimate reasons:**
-- Third-party callback dispatch (handler may raise anything)
-- Platform-dependent init (Tkinter, audio, GPU — exception types vary by OS)
-- Defensive UI updates (a failed redraw shouldn't crash the session)
-- Telemetry / event emission (instrumentation must never break the host)
-- Registry-provider lookups that may run before initialization (tests, CLI tools)
-- Save-state / library loads where I/O + JSON + schema-validation errors all need to fall back to a safe default
-
-**Not legitimate (don't write these):**
-- "general defensive code"
-- "third-party stuff"
-- "legacy"
-- any comment that doesn't say *what* failures are expected and *why* fire-and-forget is correct
-
-A broad catch without a justification comment is a code-review failure. See [PROJ-308](../Projects/archived_projects/PROJ-308/) for the audit that established this convention (24 sites triaged 2026-04-27).
-
-**PROJ-251 Changes:** The turn engine's `_time_phase()` no longer swallows exceptions. It wraps them in `EnginePhaseError` and re-raises to halt the turn. The serialization chain (`Fleet.from_dict()`, `Empire.from_dict()`, `OrderSerializer.deserialize_orders()`, `Galaxy.from_dict()`) no longer silently skips corrupt entries — it raises `PersistenceException`. The `_log_empire_state()` debug logging method retains its broad catch (acceptable — logging must not crash the turn).
-
----
-
-## Turn Engine Error Boundary (PROJ-251)
-
-The turn engine uses a snapshot-and-rollback pattern to ensure game state integrity:
-
-1. **Before turn:** `TurnStateSnapshot.capture()` serializes all empires and galaxy via `to_dict()`
-2. **During turn:** 100 ticks processed normally via `_time_phase()` wrappers
-3. **On phase failure:** `_time_phase()` wraps the exception in `EnginePhaseError` and re-raises
-4. **In `process_turn()`:** Catches `EnginePhaseError`, restores state from snapshot, dumps crash file, re-raises
-5. **In `GameSession.process_turn()`:** Catches `EnginePhaseError`, logs, re-raises for UI
-
-```python
-# Turn engine _time_phase wraps and re-raises
-try:
-    result = fn(*args, **kwargs)
-except EnginePhaseError:
-    raise  # Already wrapped
-except Exception as e:
-    raise EnginePhaseError(
-        f"Phase '{key}' failed: {e}",
-        code=ErrorCode.PHASE_FAILED.value,
-        context={"phase_name": key, "tick": self._current_tick}
-    ) from e
-```
-
-Sub-engines should add `_validate_tick_inputs()` methods that raise `ValidationException` with descriptive messages before mutating state. The error boundary will catch and wrap these.
-
----
-
-## Quick Reference
-
-### Decision Tree: Which Exception to Use?
-
-```
-Is it a validation/input error?
-  -> ValidationException
-
-Is it about loading/saving data?
-  -> PersistenceException
-
-Is it about missing files/assets?
-  -> MissingResourceException (if file missing)
-  -> ResourceException (general resource errors)
-
-Is it about object state?
-  -> FrozenStateException (if object is immutable)
-  -> StateException (general state errors)
-
-Is it about combat simulation?
-  -> ComponentException (component-related)
-  -> FormulaException (formula-related)
-  -> SimulationException (general simulation)
-```
-
-### Logging Decision Tree
-
-```
-Is it a fatal error preventing operation?
-  -> logger.error()
-
-Is it a problem with automatic recovery/fallback?
-  -> logger.warning()
-
-Is it normal successful operation?
-  -> logger.info()
-
-Is it diagnostic/debugging information?
-  -> logger.debug()
-
-Is it a structured simulation event (damage, movement, etc.)?
-  -> log_event()  # from game.core.event_logging
-```
-
-### Exception Handler Template
-
-```python
-try:
-    result = risky_operation()
-except SpecificException as e:
-    logger.warning(f"Operation failed: {e}")
-    result = fallback_value
-except AnotherException as e:
-    raise DomainException(
-        f"Failed to complete operation: {e}",
-        code=ErrorCode.RELEVANT_CODE.value,
-        context={"relevant": "data"}
-    ) from e
-```
-
----
-
-## See Also
-
-- `game/core/exceptions.py` -- Exception class definitions
-- `game/core/error_codes.py` -- Error code enumeration
-- `game/core/json_utils.py` -- Reference implementation
-- `game/core/event_logging.py` -- Event logging system
-
-*Last Updated: March 2026*

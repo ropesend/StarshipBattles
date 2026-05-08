@@ -1,45 +1,61 @@
-# QS Complex Design Guide
+# QS Complex Design - Compact Agent Reference
 
-> **Last verified:** 2026-04-11
+> **Last verified:** 2026-05-08 - Balanced from `docs/guides/qs_complex_design.md`, `AgentCoordination/Scratchpad/reports/guides_qs_complex_design_ALT_compact.md`, and current QS design/code paths.
 
-> How to create and manage Quickstart (QS) planetary complex designs.
-> For component abilities, see [ability_reference.md](../systems/ability_reference.md).
-> For the production system, see [production_system.md](../systems/production_system.md).
+Compact reference for shipped Quickstart planetary complex designs. For component ability details, use `docs/systems/ability_reference.md`; for production behavior, use `docs/systems/production_system.md`. Do not read `docs/_ignore/`.
 
----
+## Purpose
 
-## What Is a QS Complex?
+QS complexes are shipped JSON design files for planetary facilities. They are not a separate component model, protocol, or runtime base class. The discriminator is:
 
-QS (Quickstart) complexes are **JSON design files** for planetary facilities. They use
-the standard component/ability system -- there is no special base class or protocol.
-The "QS" prefix is a naming convention for template designs provided with the game.
+```json
+"vehicle_type": "Planetary Complex"
+```
 
-At runtime, a QS complex design becomes a `PlanetaryFacility` instance on a planet,
-loaded via `Ship.from_dict()` for stat calculation.
+At runtime, a design becomes a `PlanetaryFacility` on a planet. Stat calculation and validation use the normal component, modifier, ability, registry, and `Ship.from_dict(..., registries=...)` pipeline.
 
-**Key distinction:** `vehicle_type: "Planetary Complex"` is the only discriminator.
-The same component system that powers ships, fighters, and satellites also powers complexes.
+## Source Files
 
----
+| Path | Use |
+|---|---|
+| `data/designs/qs_*.json` | Shipped QS designs, including complexes and non-complex starter ships |
+| `data/components.json` | Component IDs, ability payloads, costs, and `allowed_vehicle_types` |
+| `data/modifiers.json` | Modifier IDs used by design component entries |
+| `data/design_roles.json` | Role IDs and vehicle-type filters used by design browsing/filtering |
+| `data/vehicleclasses.json` | `ship_class` definitions, max mass, hull ID, and layer config |
+| `data/vehiclelayers.json` | Layer availability, max layer percentages, and placement restrictions |
+| `game/strategy/quickstart_builder.py` | `INITIAL_COMPLEXES`, design copying, homeworld starter spawning |
+| `game/strategy/data/planetary_facility.py` | Runtime facility data model, activation state, fuel storage helpers |
+| `game/strategy/systems/design_library.py` | Design loading/filtering via `DesignLibrary` and `DesignLoadResult` |
+| `game/strategy/engine/production_spawner.py` | Facility creation after colony/fleet construction completion |
+| `game/strategy/services/component_inspector.py` | Canonical registry-backed ability inspection for design data |
+| `game/strategy/services/strategic_ability_scanner.py` | Scoped strategic ability queries and multiplier/rate aggregation |
+| `game/strategy/services/system_effects_collector.py` | UI-facing sector/system effect aggregation |
 
-## Required Components
+## Runtime Contracts
 
-Every functional complex needs these infrastructure components:
+- `ShipSerializer.from_dict(data, registries=...)` requires registries. Do not rely on global registry lookup from simulation code.
+- `PlanetaryFacility` stores the full design dict in `design_data`; component entries normally contain only `id` and `modifiers`.
+- Ability checks against facilities must resolve component IDs through the component registry. Directly checking `comp.get("abilities", {})` misses registry-defined abilities in real design files.
+- `expected_stats` is a verification snapshot. Loading recalculates stats and logs mismatches; tests and `Tools/validate_designs` also compare against it.
+- `vehicle_type` must be exactly `"Planetary Complex"` for complex designs. QS ships and drop pods may share the file shape but are not complexes.
+- `ship_class` must match a key in `data/vehicleclasses.json`. For complexes, current classes are `Planetary Complex (Tier 1)` through `Planetary Complex (Tier 11)`.
 
-| Component | ID | Purpose | Notes |
-|-----------|----|---------|-------|
-| Command Center | `central_complex_command` | `CommandAndControl` ability | Required for operation |
-| Crew Quarters | `crew_quarters` | `CrewCapacity` ability | Scale count to crew needs |
-| Life Support | `life_support` | `LifeSupportCapacity` ability | Must cover crew capacity |
+## Infrastructure
 
-These go in the **CORE** layer. The specialized component(s) that define the complex's
-purpose typically go in **OUTER** (or **INNER** for protected placement).
+Every functional complex needs these in `layers.CORE`:
 
----
+| Component ID | Purpose |
+|---|---|
+| `central_complex_command` | Provides `CommandAndControl`; required for operation |
+| `crew_quarters` | Provides `CrewCapacity`; total capacity must cover crew need |
+| `life_support` | Provides `LifeSupportCapacity`; total capacity must cover crew need |
 
-## JSON Design Structure
+Specialized purpose components normally go in `OUTER`. Use `INNER` only when protected placement is intentional. Current `Planetary_Complex` layer rules block Armor classification from `CORE`, `INNER`, and `OUTER`; armor components belong in `ARMOR`.
 
-**Location:** `data/designs/qs_<name>.json`
+## JSON Skeleton
+
+Create complex designs at `data/designs/qs_<name>.json`.
 
 ```json
 {
@@ -117,27 +133,33 @@ purpose typically go in **OUTER** (or **INNER** for protected placement).
 }
 ```
 
-### Field Reference
+## Field Rules
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | Yes | Display name |
-| `ship_class` | Yes | "Planetary Complex (Tier N)" -- tier is informational |
-| `vehicle_type` | Yes | Must be `"Planetary Complex"` |
-| `theme_id` | Yes | Visual theme (e.g., "Federation") |
-| `team_id` | Yes | Default team (0) |
-| `color` | Yes | RGB color array |
-| `movement_policy` | Yes | Movement behavior key (standard for complexes: `"kite_max"`) |
-| `targeting_policy` | Yes | Targeting rule set (standard for complexes: `"standard"`) |
-| `design_role` | Yes | Classification label from `data/design_roles.json`. Common complex roles: `resource_harvester`, `production_facility`, `planetary_modifier`, `stellar_protector`, `enrichment_facility`, `resupply_depot`, `construction_accelerator`, `defensive_platform` |
-| `layers` | Yes | Component layout (CORE, INNER, OUTER, ARMOR) |
-| `resources` | Yes | Initial resource levels |
-| `expected_stats` | Yes | Cached stat snapshot (recalculated at load) |
-| `_metadata` | No | Tracking metadata |
+Current quickstart tests require `name`, `ship_class`, `vehicle_type`, `layers`, `expected_stats.max_hp`, `expected_stats.mass`, and `_metadata.is_obsolete` / `_metadata.times_built`.
 
-### Component Entry Format
+Use these standard QS fields for all new complex designs:
 
-Each component in a layer is:
+| Field | Rule |
+|---|---|
+| `name` | Display name |
+| `ship_class` | Must match a `data/vehicleclasses.json` key, e.g. `"Planetary Complex (Tier 2)"` |
+| `vehicle_type` | Must be `"Planetary Complex"` |
+| `theme_id` | Visual theme, commonly `"Federation"` |
+| `team_id` | Default team, commonly `0` |
+| `color` | RGB array |
+| `movement_policy` | Complexes commonly use `"kite_max"` |
+| `targeting_policy` | Complexes commonly use `"standard"` |
+| `design_role` | Strongly recommended. Loader defaults to `"general_purpose"` when omitted, but that is usually wrong for complexes. Use a role whose `vehicle_type_filter` allows `"Planetary Complex"` |
+| `layers` | Include `CORE`, `INNER`, `OUTER`, and `ARMOR` keys; empty layer arrays are allowed |
+| `resources` | Initial consumable levels; include `fuel`, `energy`, and `ammo` for QS consistency |
+| `expected_stats` | Cached verification data. Keep at least `max_hp` and `mass` accurate |
+| `_metadata` | Required by QS tests for shipped designs |
+
+Common complex roles: `resource_harvester`, `production_facility`, `planetary_modifier`, `stellar_protector`, `enrichment_facility`, `resupply_depot`, `construction_accelerator`, `defensive_platform`, `research_facility`.
+
+## Component Entry Rules
+
+Layer entries reference component IDs from `data/components.json`:
 
 ```json
 {
@@ -148,146 +170,170 @@ Each component in a layer is:
 }
 ```
 
+Rules:
+
+- Every referenced component must exist in `data/components.json`.
+- Every component used by a complex must include `"Planetary Complex"` in `allowed_vehicle_types`.
+- Do not inline production abilities in shipped design files. Inline ability payloads are supported by helpers for tests/mocks, but real designs should use registry component definitions.
+- Use `data/vehiclelayers.json` restrictions. Do not hardcode component type, classification, or ability name lists in code.
+- `Component.add_modifier` can trigger formula evaluation. When constructing loaded components, attach the component to its ship before applying modifiers so `ship_class_mass` formulas resolve against the correct class.
+
 Common modifiers:
-- `simple_size_mount` -- scales component size/output (1.0 = normal)
-- `hardened_mount` -- increases HP at cost of mass (1.0 = normal)
-- `automation` -- reduces crew requirement (0.0 = no automation)
 
-Components are referenced by their `id` from `data/components.json`. The component
-must have `"Planetary Complex"` in its `allowed_vehicle_types` list.
+| Modifier | Effect |
+|---|---|
+| `simple_size_mount` | Scales component size/output; `1.0` means normal |
+| `hardened_mount` | Increases HP at mass cost; `1.0` means normal |
+| `automation` | Reduces crew requirement; `0.0` means no automation |
 
----
+## Tiers And Mass
 
-## Tier System
+Stale correction: older guide text said tiers were informational only. Current code treats the full `ship_class` string as a vehicle class key, so each complex tier has a real mass budget and hull definition in `data/vehicleclasses.json`.
 
-Tiers are informational labels in the `ship_class` field. They indicate relative
-complexity and cost:
+| Class | Max Mass | Layer Config |
+|---|---:|---|
+| `Planetary Complex (Tier 1)` | 1,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 2)` | 2,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 3)` | 4,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 4)` | 8,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 5)` | 16,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 6)` | 32,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 7)` | 64,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 8)` | 128,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 9)` | 256,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 10)` | 512,000 | `Planetary_Complex` |
+| `Planetary Complex (Tier 11)` | 1,024,000 | `Planetary_Complex` |
 
-| Tier | Typical Use |
-|------|-------------|
-| Tier 1 | Basic facilities: single-purpose harvesters, resupply depots |
-| Tier 2 | Advanced facilities: shipyards, stabilizers, exotic harvesters |
+The tier number is still not parsed separately by QS code; the mechanical contract is the complete `ship_class` lookup.
 
-Tiers have no mechanical effect -- they are purely for player guidance and UI grouping.
+## Strategic Ability Families
 
----
+Complexes commonly use these component ability families. See `game/simulation/components/abilities/planetary.py` and `docs/systems/ability_reference.md` for exact fields.
 
-## Existing QS Complexes
+| Ability | Typical complex use |
+|---|---|
+| `SpaceShipyard` / `PlanetaryYard` | Build queues and construction sources |
+| `ResourceHarvester` / `LocalStorage` / `StagingYard` | Planetary harvesting and storage |
+| `ResourceGeneration` | Facility fuel generation/resupply |
+| `ResourceStorage` | Facility fuel/energy/ammo capacity |
+| `StrategicResourceGeneration` | Per-turn strategy energy/resource generation |
+| `PlanetaryShield` | Activatable planetary defense and energy drain |
+| `GeologicStabilizer`, `StellarStabilizer`, `WarpFieldStabilizer` | Superweapon blocking |
+| `ResourceHarvestBooster`, `BuildRateBooster` | Scoped harvest/build multipliers |
+| `ShieldModifier`, `DamageModifier` | Scoped combat modifiers |
+| `AtmosphereModifier`, `WaterModifier`, `GravityModifier`, `RadiationShield` | Terraforming/environment effects |
+| `QualityImprovement` | Permanent resource quality improvements |
 
-### Initial Complexes (spawned on game start)
+Scope warning: "system" means the whole star system region; "sector" means one hex. Pick the component ability scope deliberately (`sector`, `system`, `allied_sector`, `enemy_system`, etc.) and test the exact scope. A fleet or planet being in the same system is not the same as being at the target sector.
 
-Defined in `game/strategy/quickstart_builder.py:INITIAL_COMPLEXES`:
+## Current Initial Complexes
 
-| Design ID | Purpose | Tier |
-|-----------|---------|------|
-| `qs_complex` | Shipyard (ship construction) | 2 |
-| `qs_metals_complex` | Metals harvesting | 1 |
-| `qs_organics_complex` | Organics harvesting | 1 |
-| `qs_vapors_complex` | Vapors harvesting | 1 |
-| `qs_radioactives_complex` | Radioactives harvesting | 1 |
-| `qs_exotics_complex` | Exotics harvesting | 2 |
-| `qs_resupply_depot` | Fuel synthesis and storage | 1 |
-| `qs_geologic_stabilizer_complex` | Geologic stabilizer + energy | 1 |
+`game/strategy/quickstart_builder.py:INITIAL_COMPLEXES` spawns these on every empire homeworld:
 
-These are the starter facilities every empire's home planet receives.
+| Design ID | Class | Purpose |
+|---|---|---|
+| `qs_complex` | Tier 2 | Shipyard / ship construction |
+| `qs_metals_complex` | Tier 2 | Metals harvesting |
+| `qs_organics_complex` | Tier 2 | Organics harvesting |
+| `qs_vapors_complex` | Tier 2 | Vapors harvesting |
+| `qs_radioactives_complex` | Tier 2 | Radioactives harvesting |
+| `qs_exotics_complex` | Tier 2 | Exotics harvesting |
+| `qs_resupply_depot` | Tier 1 | Fuel synthesis and storage |
+| `qs_geologic_stabilizer_complex` | Tier 1 | Geologic stabilizer plus energy |
 
-### Additional Complexes (player-built)
+## Other Current Complex Designs
 
-| Design ID | Purpose | Tier |
-|-----------|---------|------|
-| `qs_atmosphere_processor_complex` | Atmosphere terraforming | 1 |
-| `qs_enrichment_complex` | Resource quality improvement | 2 |
-| `qs_stellar_stabilizer_complex` | Stellar destruction protection | 2 |
-| `qs_warp_stabilizer_complex` | Warp point manipulation protection | 2 |
-| `qs_system_geologic_stabilizer_complex` | System-wide geologic protection | 2 |
-| `qs_sector_construction_accelerator_complex` | Sector build rate boost | -- |
-| `qs_system_construction_accelerator_complex` | System build rate boost | -- |
-| `qs_system_shield_suppressor_complex` | System shield suppression (enemy) | 2 |
-| `qs_system_shield_booster_complex` | System shield boost (allied) | 2 |
-| `qs_sector_shield_suppressor_complex` | Sector shield suppression (enemy) | 1 |
-| `qs_sector_shield_booster_complex` | Sector shield boost (allied) | 1 |
-| `qs_system_damage_suppressor_complex` | System damage suppression (enemy) | 2 |
-| `qs_system_damage_booster_complex` | System damage boost (allied) | 2 |
-| `qs_sector_damage_suppressor_complex` | Sector damage suppression (enemy) | 1 |
-| `qs_sector_damage_booster_complex` | Sector damage boost (allied) | 1 |
-| `qs_sector_shield_projector_complex` | Sector shield projection (allied) | 1 |
-| `qs_system_shield_projector_complex` | System shield projection (allied) | 2 |
-| `qs_gravity_modifier_complex` | Planet gravity modification | 1 |
-| `qs_water_modifier_complex` | Planet water terraforming | 1 |
-| `qs_radiation_shield_complex` | Planet radiation shielding | 1 |
+Player-built or non-initial QS complex designs currently include:
 
-### Non-Complex QS Designs
+| Design ID | Class | Purpose |
+|---|---|---|
+| `qs_atmosphere_processor_complex` | Tier 1 | Atmosphere terraforming |
+| `qs_enrichment_complex` | Tier 3 | Resource quality improvement |
+| `qs_stellar_stabilizer_complex` | Tier 2 | Stellar destruction protection |
+| `qs_warp_stabilizer_complex` | Tier 2 | Warp point manipulation protection |
+| `qs_system_geologic_stabilizer_complex` | Tier 2 | System-scope geologic protection |
+| `qs_sector_construction_accelerator_complex` | Tier 1 | Sector build-rate boost |
+| `qs_system_construction_accelerator_complex` | Tier 2 | System build-rate boost |
+| `qs_sector_shield_projector_complex` | Tier 1 | Sector shield projection |
+| `qs_system_shield_projector_complex` | Tier 2 | System shield projection |
+| `qs_sector_shield_booster_complex` | Tier 1 | Sector allied shield boost |
+| `qs_system_shield_booster_complex` | Tier 2 | System allied shield boost |
+| `qs_sector_shield_suppressor_complex` | Tier 1 | Sector enemy shield suppression |
+| `qs_system_shield_suppressor_complex` | Tier 2 | System enemy shield suppression |
+| `qs_sector_damage_booster_complex` | Tier 1 | Sector allied damage boost |
+| `qs_system_damage_booster_complex` | Tier 2 | System allied damage boost |
+| `qs_sector_damage_suppressor_complex` | Tier 1 | Sector enemy damage suppression |
+| `qs_system_damage_suppressor_complex` | Tier 2 | System enemy damage suppression |
+| `qs_gravity_modifier_complex` | Tier 1 | Planet gravity modification |
+| `qs_water_modifier_complex` | Tier 1 | Water terraforming |
+| `qs_radiation_shield_complex` | Tier 1 | Planet radiation shielding |
 
-The `data/designs/` directory also contains QS ship designs. These follow the same
-JSON structure but with `vehicle_type: "Ship"` and combat or logistics components.
+## Non-Complex QS Designs
 
-**Combat ships** (used by FleetBattleSetupScreen for battle testing):
+`data/designs/` also contains QS ships, drop pods, and superweapon platforms. They share the design-file shape but are not QS complexes unless `vehicle_type` is `"Planetary Complex"`.
 
-| Design | Class | Role | Key Loadout |
-|--------|-------|------|-------------|
-| `qs_light_combat_escort` | Escort | fleet_escort | Beam weapons, PDC, engine, thruster |
-| `qs_heavy_cruiser` | Cruiser | line_combatant | Beams, railguns, shields, armor |
-| `qs_missile_cruiser` | Cruiser | missile_platform | 6 seeker missiles, PDC, ordnance storage |
-| `qs_battleship` | Battleship | line_combatant | Heavy railguns, lasers, shields, heavy armor |
+Current non-complex QS files include:
 
-**Logistics/utility ships:** `qs_escort` (unarmed), `qs_general_purpose` (shipyard + colony),
-`qs_cargo_freighter` (cargo hauler), `qs_colony_ship`, `qs_colony_drop_pod`,
-superweapon platforms (planet/star destroyer, warp gate, sphere builder).
+`qs_battleship`, `qs_cargo_freighter`, `qs_carrier`, `qs_colony_drop_pod`, `qs_colony_ship`, `qs_escort`, `qs_frigate_gc`, `qs_general_purpose`, `qs_heavy_cruiser`, `qs_light_combat_escort`, `qs_missile_cruiser`, `qs_planet_destroyer`, `qs_recon_picket`, `qs_sphere_builder`, `qs_star_destroyer`, `qs_warp_gate_closer`, `qs_warp_gate_opener`.
 
----
+## Add Or Extend A Complex
 
-## Adding a New QS Complex
+Follow strict TDD for any behavior change: write or identify the failing test first, run it, then implement. For pure data/docs changes, use the validation command before broad tests.
 
-### Step 1: Create the JSON Design
+1. Start from an existing complex in `data/designs/`.
+2. Keep `central_complex_command`, enough `crew_quarters`, and enough `life_support` in `CORE`.
+3. Add specialized component IDs in `OUTER` unless the protection/placement reason points to another layer.
+4. Confirm each specialized component exists in `data/components.json` and allows `"Planetary Complex"`.
+5. Confirm component placement fits `data/vehiclelayers.json`.
+6. Pick a `ship_class` whose mass budget covers the calculated design mass.
+7. Set `design_role` to a role in `data/design_roles.json` that allows `"Planetary Complex"`.
+8. Recalculate/update `expected_stats`, at least `max_hp` and `mass`.
+9. If the complex should spawn on every homeworld, add its design ID to `INITIAL_COMPLEXES` in `game/strategy/quickstart_builder.py` and test quickstart spawning.
+10. If adding a new ability type, update `docs/systems/ability_reference.md` and ability tests.
+11. If adding strategy behavior, update the relevant strategy/system docs and the targeted engine/service tests.
 
-Create `data/designs/qs_<name>.json` following the structure above. Use an existing
-complex as a template -- copy the infrastructure components (command, crew, life support)
-and replace the specialized component(s).
+## Validation And Tests
 
-Set the `design_role` field to an appropriate role from `data/design_roles.json`
-(must be a role that allows `"Planetary Complex"` in `allowed_vehicle_types`).
+Design validation:
 
-Ensure the specialized component exists in `data/components.json` with
-`"Planetary Complex"` in `allowed_vehicle_types`.
+```bash
+python Tools/validate_designs/validate_designs.py
+python Tools/validate_designs/validate_designs.py data/designs/
+```
 
-### Step 2: (Optional) Add to Initial Complexes
+The validator checks component existence, crew housing, life support, layer mass budgets, and `expected_stats.mass` consistency within 0.5.
 
-If the complex should spawn on every empire's home planet at game start, add its
-design ID to `INITIAL_COMPLEXES` in `game/strategy/quickstart_builder.py`.
+Targeted test commands:
 
-### Step 3: Validate
+```bash
+pytest tests/unit/quickstart/test_quickstart_designs.py
+pytest tests/unit/quickstart/test_quickstart_builder.py
+pytest tests/integration/quickstart/test_quickstart_flow.py
+```
 
-The component validation tests in `tests/` automatically check all designs in
-`data/designs/` for valid component IDs, required fields, and resource costs.
-Run the test suite to verify your design passes validation.
+Use additional focused tests based on behavior touched:
 
-### Step 4: Update Documentation
+| Change Area | Useful tests |
+|---|---|
+| Component ability parsing/lookup | `pytest tests/unit/strategy/test_component_inspector.py` |
+| Planetary ability classes | `pytest tests/unit/simulation/components/abilities/test_planetary_abilities.py` |
+| Activatable facilities/shields/stabilizers | `pytest tests/unit/strategy/engine/test_planet_action_engine.py tests/unit/strategy/engine/test_planet_energy_engine.py` |
+| Terraforming modifiers | `pytest tests/unit/strategy/engine/test_atmosphere_engine.py tests/unit/strategy/engine/test_water_engine.py tests/unit/strategy/engine/test_planet_modifier_effect_engine.py` |
+| Harvest/build boosters | `pytest tests/unit/strategy/engine/test_harvesting_engine.py` plus production tests near the touched code |
+| Combat sector/system effects | `pytest tests/unit/strategy/combat/test_spec_compiler.py tests/integration/strategy/combat/test_suppressor_effects.py` |
+| Facility spawning/production | `pytest tests/unit/strategy/engine/test_production_spawner.py tests/unit/strategy/engine/test_production_spawner_staging_yard.py` |
 
-- Add the new ability to [ability_reference.md](../systems/ability_reference.md) if it uses a new ability type
-- Update this guide's complex tables if adding a new QS complex
-- Update [strategy_layer.md](../systems/strategy_layer.md) if the complex introduces new strategy engine behavior
+Run the sharded suite when the change touches shared loading, registries, component stats, strategy turn processing, production, or combat effect routing:
 
----
+```bash
+python Tools/test_sharded/test_sharded.py
+```
 
-## Crew Budget
+## Warnings
 
-Complexes must house and support their crew. Each component declares crew requirements
-via `CrewRequired`, and each `crew_quarters` provides capacity via `CrewCapacity`.
-Life support capacity (`LifeSupportCapacity`) must also cover the crew count.
-
-Rule of thumb: check the crew requirement of your specialized component(s) in
-`components.json` and add enough `crew_quarters` and `life_support` to cover it.
-The `validate-designs` skill can check this automatically.
-
----
-
-## File Locations
-
-| File | Purpose |
-|------|---------|
-| `data/designs/qs_*.json` | QS complex design files |
-| `data/components.json` | Component registry (IDs, abilities, costs) |
-| `game/strategy/quickstart_builder.py` | `INITIAL_COMPLEXES` list, game start spawning |
-| `game/strategy/data/planetary_facility.py` | `PlanetaryFacility` dataclass |
-| `game/strategy/systems/design_library.py` | Design loading (`load_design_data()`) |
-| `game/strategy/engine/production_spawner.py` | Facility spawning on construction completion |
+- Do not create compatibility shims for old save/design shapes. Old saves are disposable.
+- Do not read `docs/_ignore/`.
+- Do not hardcode absolute checkout paths in docs, tooling, skills, or examples.
+- Do not duplicate ability scanning logic. Use `component_inspector`, `strategic_ability_scanner`, `ability_iterator`, or `system_effects_collector` depending on scope.
+- Do not assume `design_role` is enforced by all loaders. It is optional at load time but should be present on new shipped designs so UI filters and classification stay useful.
+- Do not treat complex tier as flavor text. The selected `ship_class` controls vehicle class mass budget and hull.
