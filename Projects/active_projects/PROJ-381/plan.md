@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical — UI error boundary | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major — broad-except hygiene, JSON bypass, cross-layer wrappers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Critical — UI error boundary | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Major — broad-except hygiene, JSON bypass, cross-layer wrappers | Working | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Minor — context enrichment, comment-format, ValueError narrowing, image parity | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220225_error-audit` after independent verification (4 parallel verifier agents)
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 2, working
+**Last Action:** Phase 1 complete — UI error boundary added (B-5 CRITICAL closed); 4 new regression tests pass
+**Next Action:** Begin Phase 2 — broad-except hygiene + JSON bypass + cross-layer wrappers
 **Blockers:** None
 
 ## Overview

@@ -15,6 +15,9 @@ import logging
 from typing import TYPE_CHECKING
 
 import pygame
+import pygame_gui
+
+from game.core.exceptions import EnginePhaseError
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
@@ -119,13 +122,36 @@ class StrategyGameStateManager:
                 self._screen.draw(surface)
                 pygame.display.flip()
 
+        turn_failed = False
         try:
             # Process turn for all empires
             self._screen._facade.process_turn(progress_callback=_on_tick)
+        except EnginePhaseError as e:
+            # PROJ-381 Phase 1 (B-5 CRITICAL): close the UI error boundary.
+            # Before this catch, an `EnginePhaseError` from any sub-engine
+            # phase propagated through `advance_turn` into the pygame
+            # event loop and exited the game via the top-level crash
+            # handler. State rollback already happened inside
+            # `TurnEngine.process_turn`; we only need to surface a modal
+            # to the player so the session continues.
+            turn_failed = True
+            logger.error(
+                "Turn processing failed in phase '%s': %s",
+                e.context.get("phase_name"), e,
+            )
+            self._show_turn_failed_dialog(e)
         finally:
             # Hide the per-tick line once the turn finishes (or aborts).
             self._screen.current_tick = None
             self._screen.total_ticks = None
+
+        if turn_failed:
+            # Rollback already restored pre-turn state in TurnEngine; skip
+            # auto-save and the event-log popup so neither operates on a
+            # half-applied turn. The player retries via the normal "End
+            # Turn" flow once they understand the failure.
+            self._screen.turn_processing = False
+            return []
 
         # Auto-save after turn processing
         # PROJ-208: Use facade.get_save_path() instead of session.save_path
@@ -226,6 +252,51 @@ class StrategyGameStateManager:
         # Update the player indicator after the bulk run completes.
         self._update_player_label()
         return completed
+
+    def _show_turn_failed_dialog(self, error: EnginePhaseError) -> None:
+        """PROJ-381 Phase 1 (B-5): surface a modal for an EnginePhaseError.
+
+        Builds an in-game modal so the player learns the turn was rolled
+        back without crashing the application. Reads `phase_name`, `tick`,
+        and `original_type` out of `error.context` (all populated by
+        `TurnEngine._time_phase`); falls back to "unknown" if the context
+        is missing keys so dialog construction itself never raises.
+        """
+        ctx = error.context or {}
+        phase_name = ctx.get("phase_name", "unknown")
+        tick = ctx.get("tick", "?")
+        original_type = ctx.get("original_type", "Exception")
+
+        manager = getattr(self._screen.ui, "manager", None)
+        if manager is None:
+            # Headless / mocked environment with no UIManager — fall back to
+            # logging so the failure is still observable. This is rare but
+            # allows tests to assert the catch without instantiating
+            # pygame_gui's window.
+            logger.error(
+                "Turn failed but no UIManager available to show dialog "
+                "(phase=%s, tick=%s, original_type=%s)",
+                phase_name, tick, original_type,
+            )
+            return
+
+        body = (
+            "<b>Turn processing failed</b><br><br>"
+            f"Phase: <b>{phase_name}</b><br>"
+            f"Tick: {tick}<br>"
+            f"Cause: {original_type}<br><br>"
+            "Turn has been rolled back &mdash; empire state is preserved."
+        )
+        width = getattr(self._screen.ui, "width", 1920)
+        height = getattr(self._screen.ui, "height", 1080)
+        rect = pygame.Rect(0, 0, 480, 280)
+        rect.center = (width // 2, height // 2)
+        pygame_gui.windows.UIMessageWindow(
+            rect=rect,
+            html_message=body,
+            manager=manager,
+            window_title="Turn Failed",
+        )
 
     def _pump_cancel_events(self) -> None:
         """Pump pygame events looking for Esc / QUIT to set the cancel flag.
