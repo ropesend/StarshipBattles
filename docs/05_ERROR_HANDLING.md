@@ -71,7 +71,7 @@ Use:
 - `LLM*`: LLM provider, factory, or background-call failure.
 - `Image*`: image provider, factory, or background-call failure.
 
-`LLMUnexpectedError` is special: it wraps non-`LLMException` provider escapes in `LLMBackgroundCall._run()`. The original exception is on `__cause__`, `context["original_exception_type"]` contains its type name, and `code` is intentionally `None`. There is no equivalent image unexpected wrapper today; image providers must map third-party failures to `ImageException` subclasses before they cross the provider boundary.
+`LLMUnexpectedError` is special: it wraps non-`LLMException` provider escapes in `LLMBackgroundCall._run()`. The original exception is on `__cause__`, `context["original_exception_type"]` contains its type name, and `code` is intentionally `None`. `ImageUnexpectedError` is the symmetric wrapper for `ImageBackgroundCall._run()` (added in PROJ-381 Phase 2 / B-10): same constructor shape, same `original_exception_type` context key, same intent — keep the worker thread from leaking and `_status` from getting stuck on RUNNING when a provider raises a non-`ImageException` type.
 
 ## Error Codes
 

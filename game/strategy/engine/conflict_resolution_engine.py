@@ -435,7 +435,9 @@ class ConflictResolutionEngine(IConflictEngine):
         )
 
         environmental_effects = self._lookup_environmental_effects(location)
-        modifiers = self._collect_team_modifiers(fleets_by_empire, empire_order)
+        modifiers = self._collect_team_modifiers(
+            fleets_by_empire, empire_order, location=location,
+        )
         seed = self._generate_battle_seed()
         # PROJ-320 Phase 3: one team per empire, so empires_by_team_id has
         # `len(empire_order)` entries (was `len(fleets)` pre-PROJ-320).
@@ -525,6 +527,8 @@ class ConflictResolutionEngine(IConflictEngine):
         self,
         fleets_by_empire: Dict[int, List['Fleet']],
         empire_order: List[int],
+        *,
+        location: Any = None,
     ) -> Optional[Dict[int, Any]]:
         """Collect strategic combat modifiers for each team.
 
@@ -560,8 +564,14 @@ class ConflictResolutionEngine(IConflictEngine):
                     fleet, opponent_fleet, self._galaxy, all_empires,
                     self._registries,
                 )
-        except Exception as e:  # Intentional broad catch: external collector
-            logger.warning(f"Failed to collect combat modifiers: {e}")
+        except Exception as e:  # Intentional broad catch: external collector may raise any type from non-engine empire/system extensions; ERROR-log and proceed with degraded modifier stack so battle still resolves. Hex + empire context included to allow log-side debugging.
+            # PROJ-381 Phase 2 (B-7): demote-to-warning was hiding a real
+            # information loss; promote to error and include hex/empire
+            # context so the log line is actionable.
+            logger.error(
+                "Failed to collect combat modifiers at hex=%s empires=%s: %s",
+                location, empire_order, e,
+            )
             return None
         return modifiers or None
 

@@ -120,7 +120,7 @@ class BattleSetupController:
                         data['_filepath'] = filepath
                         data['_design_id'] = filename.replace('.json', '')
                         designs.append(data)
-                except Exception as e:
+                except Exception as e:  # Intentional broad catch: corrupt design data must not poison the design library scan — log and skip per file.
                     logger.warning(f"Failed to load design {filename}: {e}")
         self._view_model.available_designs = designs
 

@@ -198,6 +198,17 @@ class StrategyException(GameException):
     pass
 
 
+class SessionInitializationError(StrategyException):
+    """Raised when GameSession initialization fails (PROJ-381 Phase 2 B-11).
+
+    Wraps any error escaping ``GameInitializer.initialize`` so the
+    session ends up in a deterministic null-object state (galaxy=None,
+    empires=[]) rather than partially constructed. Preserves the
+    original exception via ``__cause__``.
+    """
+    pass
+
+
 class EnginePhaseError(StrategyException):
     """Exception for sub-engine phase failures during turn processing.
 
@@ -393,6 +404,32 @@ class ImageCancelled(ImageException):
     pass
 
 
+class ImageUnexpectedError(ImageException):
+    """Image provider raised a non-ImageException exception (PROJ-381 Phase 2 B-10).
+
+    Mirror of :class:`LLMUnexpectedError`. Wraps any unexpected,
+    non-Image exception that escapes from a provider's
+    ``generate_image()`` call (`RuntimeError`, third-party HTTP-library
+    exceptions not yet mapped to ``ImageNetworkError``, etc.). The
+    underlying exception is preserved via ``__cause__``; the original
+    exception type is also stored in
+    ``context['original_exception_type']`` for safe logging.
+
+    ``code`` is intentionally ``None`` — the wrapped exception is, by
+    definition, outside the categorized image-error taxonomy. Callers
+    that need to distinguish "something unexpected happened" from a
+    specific known image failure should use ``isinstance(err,
+    ImageUnexpectedError)``.
+
+    Introduced because :class:`ImageBackgroundCall._run()` previously
+    only caught :class:`ImageException` and :class:`ImageCancelled`; any
+    other exception propagated past the inner try/finally with
+    ``_status`` still ``RUNNING``, leaking the worker thread and leaving
+    callers polling forever.
+    """
+    pass
+
+
 # =============================================================================
 # Exports
 # =============================================================================
@@ -413,6 +450,7 @@ __all__ = [
     # Strategy
     'StrategyException',
     'EnginePhaseError',
+    'SessionInitializationError',
     # Simulation
     'SimulationException',
     'ComponentException',
@@ -434,4 +472,5 @@ __all__ = [
     'ImageRateLimited',
     'ImageTimeoutError',
     'ImageCancelled',
+    'ImageUnexpectedError',
 ]

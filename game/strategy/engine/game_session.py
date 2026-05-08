@@ -150,12 +150,28 @@ class GameSession:
         # PROJ-370 review MAJ-002: thread planet_mutator + empire_mutator so
         # GameInitializer's homeworld population seeding + colony reset writes
         # route through the mutator surface (no allowlist exception needed).
+        # PROJ-381 Phase 2 (B-11): wrap so an init failure leaves the
+        # session in a deterministic null-object state rather than
+        # partially constructed (galaxy unset, empires undefined). The
+        # caller still sees the failure via SessionInitializationError.
+        from game.core.exceptions import SessionInitializationError
         from game.strategy.engine.game_initializer import GameInitializer
-        self.galaxy, self.empires = GameInitializer.initialize(
-            config,
-            planet_mutator=self._planet_mutator,
-            empire_mutator=self._empire_mutator,
-        )
+        try:
+            self.galaxy, self.empires = GameInitializer.initialize(
+                config,
+                planet_mutator=self._planet_mutator,
+                empire_mutator=self._empire_mutator,
+            )
+        except Exception as e:  # Intentional broad catch: any init failure must leave the session in a null-object state and re-raise as SessionInitializationError so callers see a typed strategy-layer error.
+            self.galaxy = None
+            self.empires = []
+            self.systems = []
+            self.human_player_ids = []
+            self.active_empire = None
+            raise SessionInitializationError(
+                f"GameSession initialization failed: {e}",
+                context={"original_type": type(e).__name__},
+            ) from e
         self.systems = list(self.galaxy.systems.values())
 
         # Human player IDs based on is_human flag

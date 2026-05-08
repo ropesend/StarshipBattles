@@ -266,3 +266,52 @@ class TestGameSessionActiveEmpire:
         restored = GameSession.from_dict(data)
 
         assert restored.active_empire is restored.empires[0]
+
+
+class TestGameSessionInitializationErrorBoundary:
+    """PROJ-381 Phase 2 (B-11): GameSession.__init__ must wrap
+    GameInitializer.initialize failures so the session lands in a
+    deterministic null-object state rather than partially constructed.
+    """
+
+    def test_initializer_failure_leaves_session_null_object(self, monkeypatch):
+        """When GameInitializer.initialize raises, the session must:
+
+        - Re-raise as SessionInitializationError preserving __cause__.
+        - Land in a deterministic state: galaxy=None, empires=[],
+          systems=[], human_player_ids=[], active_empire=None — never
+          have these attributes "missing" / undefined.
+        """
+        import pytest
+        from game.core.exceptions import (
+            SessionInitializationError,
+            ValidationException,
+        )
+        from game.strategy.engine import game_initializer as gi_module
+
+        def _boom_initialize(*_args, **_kwargs):
+            raise ValidationException("simulated initializer crash")
+
+        monkeypatch.setattr(
+            gi_module.GameInitializer, "initialize", staticmethod(_boom_initialize)
+        )
+
+        config = GameConfig(
+            players=[
+                PlayerConfig(name="A", theme="Federation", color=(255, 0, 0)),
+            ],
+            system_count=4,
+        )
+
+        session = GameSession.__new__(GameSession)
+        with pytest.raises(SessionInitializationError) as exc_info:
+            GameSession.__init__(session, config=config)
+
+        # __cause__ chained.
+        assert isinstance(exc_info.value.__cause__, ValidationException)
+        # Null-object state — every attribute set to a deterministic value.
+        assert session.galaxy is None
+        assert session.empires == []
+        assert session.systems == []
+        assert session.human_player_ids == []
+        assert session.active_empire is None

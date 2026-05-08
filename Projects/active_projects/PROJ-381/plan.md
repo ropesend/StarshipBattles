@@ -14,14 +14,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Critical — UI error boundary | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major — broad-except hygiene, JSON bypass, cross-layer wrappers | Working | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Minor — context enrichment, comment-format, ValueError narrowing, image parity | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. Major — broad-except hygiene, JSON bypass, cross-layer wrappers | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Minor — context enrichment, comment-format, ValueError narrowing, image parity | Working | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 2, working
-**Last Action:** Phase 1 complete — UI error boundary added (B-5 CRITICAL closed); 4 new regression tests pass
-**Next Action:** Begin Phase 2 — broad-except hygiene + JSON bypass + cross-layer wrappers
+**Active Phase:** Phase 3, working
+**Last Action:** Phase 2 complete — broad-except hygiene + JSON bypass + ImageUnexpectedError parity + GameSession init boundary; 70 phase-scoped tests pass. Note: Task 3.11 (ImageBackgroundCall wait/_done_event) was bundled into Phase 2 so it could ship alongside the related B-10 except branch.
+**Next Action:** Begin Phase 3 — context enrichment, comment-format, ValueError narrowing, JSON bypass cleanup
 **Blockers:** None
 
 ## Overview
