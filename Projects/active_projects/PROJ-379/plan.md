@@ -18,11 +18,11 @@
 | 1. TDD-first hand-built fixture builder (tests + builder + JSONs + field-coverage guard) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | — |
 | 2. Cross-process determinism (PYTHONHASHSEED + subprocess) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
 | 3. Delete `_capture_baseline.py` + cleanup | Complete | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
-| 4. Closeout + cross-links + review cycle | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | Phase 3 |
+| 4. Closeout + cross-links + review cycle | Complete | [phase_4_checklist.md](phase_4_checklist.md) | Phase 3 |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Planning complete (Codex peer review applied); awaiting user "Plan Approved" before implementation begins.
+**Active Phase:** All 4 phases complete; OpenCode review + verifier clean; ready for user verification.
 **Last Action:** Codex inter-agent review (`AgentCoordination/Scratchpad/Discussion/20260508T022447Z_proj-379-plan-review/`) flagged 6 issues; all verified with evidence and applied. Specifically: (1) added `phase_state.json` + `findings_ledger.md` for real 03c compliance; (2) restructured Phase 1 as TDD-first (failing tests before builder); (3) fixed `_FIXTURE_PATH` typo (`parent.parent.parent / "fixtures" / "saves"`, no `"tests"` segment); (4) replaced dataclass-defaults introspection with serialized-baseline pattern (`planet_to_dict(_minimal_planet())` is the source of truth); (5) added cross-process `PYTHONHASHSEED` subprocess tests (Phase 2) plus committed-fixture-vs-builder-output staleness check (Phase 1); (6) made `system.planets.append(planet) + register_planet(...)` explicit in Phase 1 Task 1.4. Plan revision recorded at `plans/proj379_revisions_r001.md` in the discussion folder.
 **Next Action:** User confirms "Plan Approved". Implementation starts in a fresh session via "Continue Project" prompt; first task is Phase 1 Task 1.1 (add failing byte-determinism tests).
 **Blockers:** None.
