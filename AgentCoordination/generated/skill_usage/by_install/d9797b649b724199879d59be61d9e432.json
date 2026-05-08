@@ -46,10 +46,24 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 16
+        "codex": 17
       },
-      "count": 16,
-      "last_used": "2026-05-07T04:16:46Z"
+      "count": 17,
+      "last_used": "2026-05-08T02:50:48Z"
+    },
+    "codex-starship-combat-lab": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-08T02:29:45Z"
+    },
+    "codex-starship-performance-profiling": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-08T02:32:46Z"
     },
     "codex-starship-project-system": {
       "agents": {
