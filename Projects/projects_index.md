@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-379 | Deterministic Golden-Save Fixture (PROJ-377 MIN-002) | Planning | 2026-05-07 | 2026-05-07 |
 | PROJ-378 | Galaxy Cleanup Test Pattern Update (post-PROJ-372 facade-delegate) | Planning | 2026-05-06 | 2026-05-06 |
 | PROJ-377 | PROJ-372 Phase 5 Leftovers: Golden-Save Fixture + Pathfinding Shim Sweep | Planning | 2026-05-06 | 2026-05-06 |
 | PROJ-376 | BuildQueueScreen Lifecycle Refactor (PROJ-373 Phase 2 follow-up) | Planning | 2026-05-06 | 2026-05-06 |
