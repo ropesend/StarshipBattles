@@ -8,7 +8,7 @@ PROJ-372 Phase 3: switched from ``_galaxy: Galaxy`` back-pointer to
 """
 from typing import Any, List, Optional, TYPE_CHECKING
 
-from game.core.protocols import is_zone_occupant
+from game.core.protocols import is_planet, is_zone_occupant
 
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
@@ -33,8 +33,9 @@ class GalaxySpatialIndex:
         Auto-routes Planet objects to ``get_system_of_planet`` (planets
         have local coordinates, not global).
         """
-        from game.strategy.data.planet import Planet
-        if isinstance(obj, Planet):
+        # PROJ-382 Phase 2 (Pattern #2): use TypeGuard instead of importing
+        # the concrete strategy.data.Planet class for runtime narrowing.
+        if is_planet(obj):
             return self.get_system_of_planet(obj)
 
         if not hasattr(obj, 'location'):

@@ -284,11 +284,21 @@ def get_colony_types(ship) -> Any:
 
 
 # --- Superweapon Getters ---
+#
+# PROJ-382 Phase 2 (Convention §6.5): the ability list is derived from the
+# canonical SUPERWEAPONS registry; only ``SelfDestruct`` is appended manually
+# because it is intentionally out of the registry (no ability check, no
+# stabilizer block, no galaxy mutation — see superweapon_registry docstring).
+# Display labels remain a UI-side mapping until SuperweaponSpec gains a
+# ``display_name`` field; ``DestroyStar`` -> "Stellerator" cannot be derived
+# from the bare ability name.
 
-_SUPERWEAPON_ABILITIES = [
-    'DestroyPlanet', 'DestroyStar', 'OpenWarpPoint',
-    'CloseWarpPoint', 'CreateDysonSphere', 'SelfDestruct',
-]
+# Note: ``DestroyStar`` is the historical ability name used in component data
+# files; the registry uses ``STELLERATE_STAR`` for the order_type but the
+# component-side ability name is the ``ability_name`` field (which is None for
+# this entry — Stellerator dispatches via system_destroyer rather than an
+# ability).  We still want to count the legacy ability surface here, so we
+# preserve "DestroyStar" as a manual addendum below.
 
 _SUPERWEAPON_LABELS = {
     'DestroyPlanet': 'Planet Imploder',
@@ -299,10 +309,34 @@ _SUPERWEAPON_LABELS = {
     'SelfDestruct': 'Self-Destruct',
 }
 
+
+def _superweapon_ability_names() -> list[str]:
+    """Derive the ability-name list from the SUPERWEAPONS registry.
+
+    Filters out registry rows whose ability_name is None (currently
+    STELLERATE_STAR, which dispatches via system_destroyer), then appends the
+    two non-registry abilities that the UI still tracks:
+
+    * ``DestroyStar`` — legacy component-ability name for the Stellerator;
+      the registry's STELLERATE_STAR row carries ``ability_name=None`` so the
+      derived list misses it. Components in data files still declare this
+      ability for the UI summary count.
+    * ``SelfDestruct`` — intentionally outside SUPERWEAPONS (structural
+      outlier, no stabilizer block) but still surfaced in the UI summary.
+    """
+    from game.strategy.services.superweapon_registry import SUPERWEAPONS
+    names: list[str] = [s.ability_name for s in SUPERWEAPONS if s.ability_name is not None]
+    if 'DestroyStar' not in names:
+        names.append('DestroyStar')
+    if 'SelfDestruct' not in names:
+        names.append('SelfDestruct')
+    return names
+
+
 def get_superweapon_summary(ship) -> Any:
     """Get formatted summary of superweapon capabilities with activation counts."""
     entries = []
-    for ab_name in _SUPERWEAPON_ABILITIES:
+    for ab_name in _superweapon_ability_names():
         count = 0
         for comp in ship.get_all_components():
             if comp.has_ability(ab_name):
@@ -314,8 +348,9 @@ def get_superweapon_summary(ship) -> Any:
 
 def has_superweapons(ship) -> bool:
     """Check if ship has any superweapon abilities."""
+    ability_names = _superweapon_ability_names()
     for comp in ship.get_all_components():
-        for ab_name in _SUPERWEAPON_ABILITIES:
+        for ab_name in ability_names:
             if comp.has_ability(ab_name):
                 return True
     return False

@@ -45,7 +45,7 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     Sets up minimal state for testing business logic.
     """
     from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
     from game.ui.screens.empire_build_queue_viewmodel import EmpireBuildQueueViewModel
 
     if sources is None:
@@ -75,7 +75,7 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.ui_manager = MagicMock()
 
     # MVVM components - ViewModel owns the state
-    win._event_bus = EventBus()
+    win._event_bus = WorkshopEventBus()
     win._viewmodel = EmpireBuildQueueViewModel(win._event_bus, sources)
 
     # Filter manager (for column definitions)

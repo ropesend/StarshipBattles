@@ -45,7 +45,7 @@ def _make_source(queue_id="planet_1_base", display_name="Alpha - Base",
 
 def _make_viewmodel(sources=None):
     """Create EmpireBuildQueueViewModel with test sources."""
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
 
     if sources is None:
         sources = [
@@ -54,7 +54,7 @@ def _make_viewmodel(sources=None):
             _make_source("f1", "Fleet Yard", "fleet", can_build_ships=True),
         ]
 
-    event_bus = EventBus()
+    event_bus = WorkshopEventBus()
     vm = EmpireBuildQueueViewModel(event_bus, sources)
     return vm, event_bus
 

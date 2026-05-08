@@ -29,7 +29,7 @@ from game.strategy.data.build_queue_source import (
     BuildQueueSource,
     collect_all_build_queues_for_empire,
 )
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 from game.ui.screens.empire_build_queue_viewmodel import (
     EmpireBuildQueueViewModel,
     BuildQueueWindowEvents,
@@ -184,7 +184,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
         # --- MVVM components --- (cheap; pure-python, no pygame_gui)
-        self._event_bus = EventBus()
+        self._event_bus = WorkshopEventBus()
         sources = collect_all_build_queues_for_empire(
             empire, registries=facade.get_registries()
         )

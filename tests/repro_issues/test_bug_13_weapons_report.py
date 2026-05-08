@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 from game.ui.screens.builder.weapons_panel import WeaponsReportPanel
 from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
 from game.ui.screens.builder.weapons_renderer import WeaponsRenderer
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 
 class TestBug13Fix:
@@ -29,7 +29,7 @@ class TestBug13Fix:
         self.rect = pygame.Rect(0, 0, 800, 600)
 
         # Create ViewModel directly for testing calculations
-        self.event_bus = EventBus()
+        self.event_bus = WorkshopEventBus()
         self.viewmodel = WeaponsViewModel(self.event_bus)
 
         # Also create panel for integration tests

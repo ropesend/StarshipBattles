@@ -1,7 +1,7 @@
 """ViewModel for BuildQueueScreen.
 
 Manages UI state for build queue screen: selection, queue sources, and category filter.
-Emits events through EventBus for UI updates. No Pygame dependencies.
+Emits events through WorkshopEventBus for UI updates. No Pygame dependencies.
 
 Created as part of PROJ-172 Phase 4.
 """
@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, List, Optional, Set
 
 if TYPE_CHECKING:
     from game.strategy.data.build_queue_source import BuildQueueSource
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 
 class BuildQueueScreenEvents:
@@ -37,13 +37,13 @@ class BuildQueueScreenViewModel:
     No Pygame imports - independently testable.
 
     Args:
-        event_bus: EventBus for emitting state change events.
+        event_bus: WorkshopEventBus for emitting state change events.
         queue_sources: Initial list of BuildQueueSource objects at this hex.
     """
 
     def __init__(
         self,
-        event_bus: 'EventBus',
+        event_bus: 'WorkshopEventBus',
         queue_sources: List['BuildQueueSource'] = None,
     ) -> None:
         self._event_bus = event_bus

@@ -14,18 +14,20 @@ from __future__ import annotations
 import pygame
 import pygame_gui
 from pygame_gui.elements import (
-    UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer,
+    UIPanel, UILabel, UIButton, UIScrollingContainer,
     UITextEntryLine, UIDropDownMenu, UIImage
 )
 from typing import Any, Optional, Callable, List, Dict, Set, TYPE_CHECKING
 from game.strategy.systems.design_library import DesignLibrary
 import logging
 from game.ui.screens.design_image_helper import load_portrait_thumbnail, load_topdown_thumbnail
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.design_metadata import DesignMetadata
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
 class DesignSelectorUiBuilder:
@@ -42,8 +44,14 @@ class DesignSelectorUiBuilder:
         screen._refresh_designs()
 
 
-class DesignSelectorWindow(UIWindow):
-    """Window for selecting ship designs from the design library"""
+class DesignSelectorWindow(StrategyModalWindow):
+    """Window for selecting ship designs from the design library.
+
+    PROJ-382 Phase 2 (Pattern #31): subclasses ``StrategyModalWindow`` so the
+    StrategyEventRouter's modal-tracking sees this window as opaque to
+    background clicks.  Pass ``window_manager=None`` when opened outside the
+    strategy screen (e.g. from the workshop).
+    """
 
     def __init__(self,
                  rect: pygame.Rect,
@@ -52,6 +60,7 @@ class DesignSelectorWindow(UIWindow):
                  mode: str = "load",
                  on_select_callback: Optional[Callable[[str], None]] = None,
                  *,
+                 window_manager: "StrategyWindowManager | None" = None,
                  ui_builder: Optional[DesignSelectorUiBuilder] = None):
         """
         Initialize design selector window.
@@ -62,6 +71,8 @@ class DesignSelectorWindow(UIWindow):
             design_library: DesignLibrary to browse
             mode: "load" (for loading designs) or "target" (for selecting targets)
             on_select_callback: Callback function when design is selected
+            window_manager: PROJ-382 Phase 2 — StrategyWindowManager for modal
+                tracking, or None when opened outside the strategy screen.
             ui_builder: Optional UI builder override (test seam — PROJ-329B).
         """
         # ---- Stage 1: cheap state ----
@@ -118,7 +129,11 @@ class DesignSelectorWindow(UIWindow):
             return
 
         title = "Load Design" if mode == "load" else "Select Target"
-        super().__init__(rect, manager, window_display_title=title, resizable=True)
+        super().__init__(
+            rect, manager,
+            window_display_title=title, resizable=True,
+            window_manager=window_manager,
+        )
 
         # ---- Stage 3: widgets + initial design load ----
         (ui_builder or DesignSelectorUiBuilder()).build(self)

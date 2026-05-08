@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical — Facade bypass eradication (Pattern #5) | Active | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major — Pattern #2/#10/#31 + naming + conv | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Critical — Facade bypass eradication (Pattern #5) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Major — Pattern #2/#10/#31 + naming + conv | Active | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Minor — CQRS/#7/#12 fixes + doc drift | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategic — Pattern doc-adds | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. LOC ceiling sweep (5 non-PROJ files) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1, working
-**Last Action:** Beginning Phase 1: TDD-installing AST static-guard against facade bypass.
-**Next Action:** Tasks 1.1-1.6
+**Active Phase:** Phase 2, working
+**Last Action:** Phase 1 complete — AST static-guard at tests/static_guards/test_facade_bypass_guard.py installed via TDD; facade-bypass dispatch eliminated in build_queue_screen + empire_build_queue_window; StrategyScreen.session privatized.
+**Next Action:** Phase 2 Tasks 2.1-2.9
 **Blockers:** None
 
 ## Overview

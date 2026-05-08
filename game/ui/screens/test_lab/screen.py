@@ -39,7 +39,7 @@ from .test_executor import TestLabExecutor
 from .viewmodel import TestLabViewModel
 from .renderer import TestLabRenderer
 from .screen_input_handler import TestLabInputHandler
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 logger = get_logger(__name__)
 
@@ -126,7 +126,7 @@ class TestLabScreen:
         self.categories = self.registry.get_categories()
 
         # MVVM Components
-        self._event_bus = EventBus()
+        self._event_bus = WorkshopEventBus()
         self._viewmodel = TestLabViewModel(self._event_bus)
         self._renderer = TestLabRenderer()
         self._input_handler = TestLabInputHandler(

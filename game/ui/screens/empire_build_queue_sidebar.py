@@ -18,7 +18,7 @@ from game.ui.filters.filter_state import FilterState
 
 if TYPE_CHECKING:
     from game.ui.screens.empire_build_queue_viewmodel import EmpireBuildQueueViewModel
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 
 # Tri-state filter definitions: (section_header, [(filter_key, label), ...])
@@ -55,7 +55,7 @@ class EmpireBuildQueueSidebar:
         ui_manager: pygame_gui UIManager instance.
         parent_container: UI container (typically sidebar panel).
         viewmodel: EmpireBuildQueueViewModel for state management.
-        event_bus: EventBus for UI event communication.
+        event_bus: WorkshopEventBus for UI event communication.
         columns: Column definition list from filter manager.
     """
 
@@ -64,7 +64,7 @@ class EmpireBuildQueueSidebar:
         ui_manager: Any,
         parent_container: UIPanel,
         viewmodel: EmpireBuildQueueViewModel,
-        event_bus: EventBus,
+        event_bus: WorkshopEventBus,
         columns: List[Dict[str, Any]],
     ) -> None:
         self.ui_manager = ui_manager

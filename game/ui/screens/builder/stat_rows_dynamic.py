@@ -491,10 +491,10 @@ def get_strategic_modifier_rows(ship) -> Any:
 
 def get_superweapon_rows(ship) -> Any:
     """Generate rows for each superweapon type with activation count."""
-    from .stat_getters import _SUPERWEAPON_ABILITIES, _SUPERWEAPON_LABELS
+    from .stat_getters import _superweapon_ability_names, _SUPERWEAPON_LABELS
     rows = []
 
-    for ab_name in _SUPERWEAPON_ABILITIES:
+    for ab_name in _superweapon_ability_names():
         count = 0
         for comp in ship.get_all_components():
             if comp.has_ability(ab_name):

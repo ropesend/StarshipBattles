@@ -1,7 +1,7 @@
 """ViewModel for EmpireBuildQueueWindow.
 
 Manages build queue list state including filtering, selection, and search.
-Emits events through EventBus for UI updates. No Pygame dependencies.
+Emits events through WorkshopEventBus for UI updates. No Pygame dependencies.
 
 Created as part of PROJ-172 Phase 3.
 """
@@ -22,7 +22,7 @@ from game.ui.screens.empire_build_queue_formatter import (
 
 if TYPE_CHECKING:
     from game.strategy.data.build_queue_source import BuildQueueSource
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 
 class BuildQueueWindowEvents:
@@ -62,13 +62,13 @@ class EmpireBuildQueueViewModel:
     No Pygame imports - independently testable.
 
     Args:
-        event_bus: EventBus for emitting state change events.
+        event_bus: WorkshopEventBus for emitting state change events.
         sources: Initial list of BuildQueueSource objects.
     """
 
     def __init__(
         self,
-        event_bus: EventBus,
+        event_bus: WorkshopEventBus,
         sources: List[BuildQueueSource] = None,
     ) -> None:
         self._event_bus = event_bus

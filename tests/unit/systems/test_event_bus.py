@@ -1,7 +1,7 @@
-"""Tests for the EventBus class."""
+"""Tests for the WorkshopEventBus class."""
 import pytest
 from unittest.mock import patch, MagicMock
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 
 class TestEventBus:
@@ -9,7 +9,7 @@ class TestEventBus:
 
     def test_subprocess_communication(self):
         """Basic subscribe and emit works."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         received = []
 
         def handler(data):
@@ -22,7 +22,7 @@ class TestEventBus:
 
     def test_unsubscribe(self):
         """Unsubscribe prevents future callbacks."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         counter = [0]
 
         def handler(data):
@@ -43,7 +43,7 @@ class TestEventBusValidation:
     def test_subscribe_non_callable_raises_validation_exception(self):
         """Subscribing with non-callable raises ValidationException."""
         from game.core.exceptions import ValidationException
-        bus = EventBus()
+        bus = WorkshopEventBus()
         with pytest.raises(ValidationException) as exc_info:
             bus.subscribe("TEST", "not a callback")
         assert "callable" in str(exc_info.value)
@@ -52,20 +52,20 @@ class TestEventBusValidation:
     def test_subscribe_none_raises_validation_exception(self):
         """Subscribing with None raises ValidationException."""
         from game.core.exceptions import ValidationException
-        bus = EventBus()
+        bus = WorkshopEventBus()
         with pytest.raises(ValidationException):
             bus.subscribe("TEST", None)
 
     def test_subscribe_integer_raises_validation_exception(self):
         """Subscribing with integer raises ValidationException."""
         from game.core.exceptions import ValidationException
-        bus = EventBus()
+        bus = WorkshopEventBus()
         with pytest.raises(ValidationException):
             bus.subscribe("TEST", 42)
 
     def test_subscribe_callable_class_instance_works(self):
         """Subscribing with callable class instance works."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
 
         class Handler:
             def __init__(self):
@@ -80,7 +80,7 @@ class TestEventBusValidation:
 
     def test_subscribe_lambda_works(self):
         """Subscribing with lambda works."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         results = []
         bus.subscribe("TEST", lambda d: results.append(d))
         bus.emit("TEST", "value")
@@ -88,7 +88,7 @@ class TestEventBusValidation:
 
     def test_subscribe_method_works(self):
         """Subscribing with bound method works."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
 
         class Receiver:
             def __init__(self):
@@ -107,7 +107,7 @@ class TestEventBusMultipleSubscribers:
 
     def test_multiple_subscribers_receive_events(self):
         """All subscribers receive the event."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         results = []
 
         def handler1(data):
@@ -126,7 +126,7 @@ class TestEventBusMultipleSubscribers:
 
     def test_emit_no_subscribers_no_error(self):
         """Emitting to nonexistent event type doesn't error."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         # Should not raise
         bus.emit("NONEXISTENT_EVENT", {"data": 123})
 
@@ -137,7 +137,7 @@ class TestEventBusErrorHandling:
     @patch('game.ui.screens.builder.event_bus.logger')
     def test_error_in_handler_uses_logger(self, mock_logger):
         """Handler exceptions are logged, not printed."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         received = []
 
         def bad_handler(data):
@@ -163,7 +163,7 @@ class TestEventBusErrorHandling:
 
     def test_handler_exception_does_not_stop_others(self):
         """One failing handler doesn't prevent others from running."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         results = []
 
         def failing_handler(data):
@@ -186,7 +186,7 @@ class TestEventBusDefensiveCopy:
 
     def test_unsubscribe_during_emit_safe(self):
         """Unsubscribing during emit doesn't cause iteration errors."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         results = []
 
         def unsubscribing_handler(data):
@@ -206,7 +206,7 @@ class TestEventBusDefensiveCopy:
 
     def test_subscribe_during_emit_safe(self):
         """Subscribing during emit doesn't cause iteration errors."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         results = []
 
         def new_handler(data):
@@ -234,7 +234,7 @@ class TestEventBusNoneData:
 
     def test_emit_with_none_data(self):
         """Emit with None data works correctly."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         called = [False]
         data_received = ["NOT_SET"]
 
@@ -250,7 +250,7 @@ class TestEventBusNoneData:
 
     def test_emit_without_data_argument(self):
         """Emit without data argument passes None."""
-        bus = EventBus()
+        bus = WorkshopEventBus()
         data_received = ["NOT_SET"]
 
         def handler(data):

@@ -25,7 +25,7 @@ from game.ui.screens.builder import BuilderLeftPanel, BuilderRightPanel, Weapons
 from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
 from game.ui.screens.builder.schematic_view import SchematicView
 from game.ui.screens.builder.interaction_controller import InteractionController
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
 from game.ui.screens.workshop_event_router import WorkshopEventRouter
 from game.ui.screens.workshop_viewmodel import WorkshopViewModel
@@ -66,7 +66,7 @@ class DesignWorkshopScreen:
         self.context = context
         self.on_start_battle = context.on_return  # Use context's callback
 
-        self.event_bus = EventBus()
+        self.event_bus = WorkshopEventBus()
 
         # PROJ-211: Initialize ModifierLogic with registry provider
         ModifierLogic.init_service(context.registries)

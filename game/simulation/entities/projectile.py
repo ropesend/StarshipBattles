@@ -1,8 +1,20 @@
 import logging
+from typing import Any, Callable
 from game.core.math import Vector2, signed_angle_between
 from game.engine.physics import PhysicsBody
-from game.core.event_logging import log_event
 from game.core.constants import AttackType
+
+
+def _default_event_logger(event_type: str, **kwargs: Any) -> None:
+    """PROJ-382 Phase 2 (Pattern #10): default event-log dispatcher.
+
+    Resolved lazily so the projectile module no longer holds a top-level
+    import of ``game.core.event_logging.log_event``.  Tests / production
+    callers may inject a different ``event_logger`` callable through the
+    constructor to redirect telemetry.
+    """
+    from game.core.event_logging import log_event
+    log_event(event_type, **kwargs)
 
 logger = logging.getLogger(__name__)
 from game.core.config import PhysicsConfig
@@ -18,6 +30,13 @@ TURN_COMMITMENT_THRESHOLD_DEG = 45
 class Projectile(PhysicsBody):
     def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs):
         super().__init__(position.x, position.y)
+        # PROJ-382 Phase 2 (Pattern #10): event_logger is the injected callable
+        # for telemetry emission.  Defaults to module-level dispatcher so
+        # untouched call sites preserve behavior; tests + cross-layer callers
+        # may pass a closure.
+        self._event_logger: Callable[..., None] = kwargs.get(
+            "event_logger", _default_event_logger
+        )
         self.id: str = str(id(self))
         self.velocity = velocity
         self.owner = owner
@@ -94,8 +113,8 @@ class Projectile(PhysicsBody):
                  self.status = 'miss'
                  # Log Expiration (Seeker or Timed Projectile)
                  if self.type == AttackType.MISSILE:
-                     log_event("SEEKER_EXPIRE", 
-                               seeker_id=str(id(self)), 
+                     self._event_logger("SEEKER_EXPIRE",
+                               seeker_id=str(id(self)),
                                reason="lifetime",
                                tick=0)
                  return
@@ -113,8 +132,8 @@ class Projectile(PhysicsBody):
             self.status = 'miss'
             # Log Range Expiration
             if self.type == AttackType.MISSILE:
-                log_event("SEEKER_EXPIRE", 
-                          seeker_id=str(id(self)), 
+                self._event_logger("SEEKER_EXPIRE",
+                          seeker_id=str(id(self)),
                           reason="max_range",
                           tick=0)
 

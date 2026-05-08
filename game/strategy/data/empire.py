@@ -100,31 +100,20 @@ class Empire:
         """
         if fleet in self.fleets:
             # PROJ-222: Cancel all pursuer orders before removing fleet
+            # PROJ-382 Phase 2 (Pattern #10): emit only via injected event_bus.
             if hasattr(fleet, 'pursuer_tracker'):
                 cancelled = fleet.pursuer_tracker.notify_target_destroyed()
-                if cancelled:
+                if cancelled and event_bus is not None:
                     from game.strategy.events.event_types import EventType, EventCategory
-                    if event_bus:
-                        for pursuer in cancelled:
-                            event_bus.log_event(
-                                EventType.FLEET_JOIN_CANCELLED,
-                                category=EventCategory.FLEET_OPERATIONS,
-                                empire_id=pursuer.owner_id,
-                                message=f"Fleet {pursuer.id} join order cancelled: target Fleet {fleet.id} destroyed",
-                                fleet_id=pursuer.id,
-                                target_fleet_id=fleet.id,
-                            )
-                    else:
-                        from game.core.event_logging import log_event
-                        for pursuer in cancelled:
-                            log_event(
-                                EventType.FLEET_JOIN_CANCELLED,
-                                category=EventCategory.FLEET_OPERATIONS,
-                                empire_id=pursuer.owner_id,
-                                message=f"Fleet {pursuer.id} join order cancelled: target Fleet {fleet.id} destroyed",
-                                fleet_id=pursuer.id,
-                                target_fleet_id=fleet.id,
-                            )
+                    for pursuer in cancelled:
+                        event_bus.log_event(
+                            EventType.FLEET_JOIN_CANCELLED,
+                            category=EventCategory.FLEET_OPERATIONS,
+                            empire_id=pursuer.owner_id,
+                            message=f"Fleet {pursuer.id} join order cancelled: target Fleet {fleet.id} destroyed",
+                            fleet_id=pursuer.id,
+                            target_fleet_id=fleet.id,
+                        )
 
             self.fleets.remove(fleet)
             if self._galaxy:
