@@ -4,6 +4,20 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-393 | Legacy removal — Test-injection fallbacks + comment cleanups (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-392 | Legacy removal — Misc orphan wrappers + zero-call-site placeholders (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-391 | Legacy removal — Underscore-prefixed legacy pair consolidations (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-390 | Legacy removal — log_event module-level compat shim retirement (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-389 | Legacy removal — score_planet_for_race wrapper migration (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-388 | Legacy removal — ModifierLogic deprecated class wrapper (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-387 | Legacy removal — Galaxy backward-compat property forwarders (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-386 | Legacy removal — Save-format migration eradication (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-385 | Legacy removal — formula_evaluator backward-compat aliases (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-384 | Legacy removal — PROJ-241 deprecated *_static methods (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-383 | Legacy removal — command_handlers.py shim eradication (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-382 | Pattern conformance — Facade integrity, EventBus injection, doc drift, LOC sweep (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-381 | Error handling cleanup — strategy/ui/assets/sim (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-380 | Audit-shrink cleanup 2026-05-07 | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-379 | Deterministic Golden-Save Fixture (PROJ-377 MIN-002) | Planning | 2026-05-07 | 2026-05-07 |
 | PROJ-378 | Galaxy Cleanup Test Pattern Update (post-PROJ-372 facade-delegate) | Planning | 2026-05-06 | 2026-05-06 |
 | PROJ-377 | PROJ-372 Phase 5 Leftovers: Golden-Save Fixture + Pathfinding Shim Sweep | Planning | 2026-05-06 | 2026-05-06 |

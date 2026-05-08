@@ -46,10 +46,31 @@
     },
     "claude-proj-from-audit-shrink": {
       "agents": {
+        "claude": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-08T13:10:15Z"
+    },
+    "claude-proj-from-error-audit": {
+      "agents": {
         "claude": 1
       },
       "count": 1,
-      "last_used": "2026-05-06T03:00:28Z"
+      "last_used": "2026-05-08T13:10:42Z"
+    },
+    "claude-proj-from-legacy-audit": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-08T13:13:36Z"
+    },
+    "claude-proj-from-pattern-audit": {
+      "agents": {
+        "claude": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-08T13:13:06Z"
     },
     "claude-qa-triage-gh": {
       "agents": {
