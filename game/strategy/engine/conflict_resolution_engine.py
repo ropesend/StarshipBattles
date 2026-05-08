@@ -1,30 +1,15 @@
-"""
-ConflictResolutionEngine - Combat Resolution for Strategy Layer
+"""ConflictResolutionEngine — combat resolution for the strategy layer.
 
-PROJ-36: Extracted from TurnEngine to handle combat detection and
-resolution.
-
-Responsibilities:
-- Detect multi-empire conflicts at contested hexes
-- Orchestrate battle resolution via IBattleResolver
-- Report which fleets were wiped (zero ships) post-combat
-
-BUG-126: the strategy layer no longer assigns a winner. Surviving
-ships from BOTH sides remain in their fleets after the battle, and the
-fleet stays on the strategy map. Empty fleets (every ship destroyed)
-are pruned by `EmpireWriteService.prune_empty_fleets` (PROJ-370) — the
-strategy engine just reports their ids in `ConflictResult.fleets_destroyed`.
-
-PROJ-320: combat dispatch is per-fleet on movement-opportunity ticks
-(`tick % get_tick_interval(fleet.speed) == 0`) gated by whether the
-fleet successfully left the hex on that tick. Pre-PROJ-320 the
-`_resolve_conflicts` rebuilt a hex_map from scratch every tick and
-fired combat unconditionally for every contested hex — producing ~100
-battles per turn at any stalemated sector. The new model produces one
-battle per fleet per opportunity (sum-of-speeds), typically 5-30 per
-encounter. See [docs/systems/strategy_layer.md] § Turn Engine and
-[docs/systems/combat_simulation.md] § 9 (PROJ-320 closure note) for
-the design rationale.
+Detects multi-empire conflicts at contested hexes, orchestrates battle
+resolution via ``IBattleResolver``, and reports wiped fleets. PROJ-36:
+extracted from TurnEngine. BUG-126: strategy layer no longer assigns a
+winner — surviving ships remain on the map, and empty fleets are pruned
+by ``EmpireWriteService.prune_empty_fleets``. PROJ-320: combat dispatch
+is per-fleet on movement-opportunity ticks (gated by whether the fleet
+successfully left its hex). PROJ-382 Phase 5: modifier-collection
+helpers extracted to ``conflict_modifier_collection.py``. See
+``docs/systems/strategy_layer.md`` and ``docs/systems/combat_simulation.md``
+for design rationale.
 """
 
 from __future__ import annotations
@@ -121,35 +106,13 @@ class ConflictResolutionEngine(IConflictEngine):
         replay_id: Optional[str] = None,
         replay_unavailable_reason: Optional[str] = None,
     ) -> None:
-        """Log a single combat_resolved event for an N-team battle.
+        """Log a single ``combat_resolved`` event for an N-team battle.
 
-        BUG-126: replaced the legacy winner/loser pairing with a
-        participant-based payload. Every battle emits exactly one
-        event; consumers read `participating_fleet_ids` /
-        `surviving_fleet_ids` / `destroyed_fleet_ids` instead of
-        `winner_fleet_id` / `loser_fleet_id`.
-
-        FEAT-26: `replay_id` (when present) is the uuid of the captured
-        replay sidecar. The kwarg flows into `Event.details["replay_id"]`
-        via `EventBus.log_event(**kwargs)` so the Event Log UI can
-        render a Replay button for this row. None = no captured replay
-        (legacy event from before PROJ-312, sole-survivor shortcut, or
-        capture sink unregistered).
-
-        Issue #8: `replay_unavailable_reason` (when present) is a
-        UI-friendly identifier — see `BattleResult` — that the Event
-        Log button maps to an honest tooltip when `replay_id` is None.
-
-        Args:
-            fleets: All participating fleets, in team_id order.
-            surviving_fleet_ids: Fleet ids that retained ≥1 ship.
-            destroyed_fleet_ids: Fleet ids whose ships list was wiped
-                to empty by the resolver / `PostBattleHook`.
-            location: Hex location of the combat.
-            environmental_effects: Optional sector-effects list from
-                `collect_sector_effects` (PROJ-300).
-            replay_id: Optional uuid of the captured replay sidecar.
-            replay_unavailable_reason: Optional UI tooltip key (issue #8).
+        BUG-126: participant-based payload (no winner/loser).  FEAT-26:
+        ``replay_id`` carries the captured replay sidecar uuid.  Issue #8:
+        ``replay_unavailable_reason`` is the UI tooltip key when no replay
+        was captured.  ``destroyed_fleet_ids`` are wiped-empty fleets;
+        ``surviving_fleet_ids`` retain ≥1 ship.
         """
         # Look up system name for granular event log columns.
         system_name = ""
@@ -503,25 +466,10 @@ class ConflictResolutionEngine(IConflictEngine):
         )
 
     def _lookup_environmental_effects(self, location) -> Optional[Any]:
-        """PROJ-189: Query environmental effects at the combat location.
-
-        PROJ-300: returns the new sector-effects list shape from the unified
-        collector. The spec compiler accepts either the legacy
-        EnvironmentalEffects object (effective during AreaEffectManager
-        deprecation) or this new list. Phase 7 deletes the legacy path.
-        """
-        if self._galaxy is None:
-            return None
-        get_system = getattr(self._galaxy, 'get_system_at_location', None)
-        if get_system is None:
-            return None
-        system = get_system(location)
-        if system is None:
-            return None
-        from game.strategy.services.system_effects_collector import collect_sector_effects
-        return collect_sector_effects(
-            system, location, empire_id=None, registries=self._registries,
-        )
+        """Delegate to ``conflict_modifier_collection.lookup_environmental_effects``
+        (PROJ-382 Phase 5 extraction)."""
+        from game.strategy.engine import conflict_modifier_collection as _mods
+        return _mods.lookup_environmental_effects(self, location)
 
     def _collect_team_modifiers(
         self,
@@ -530,48 +478,10 @@ class ConflictResolutionEngine(IConflictEngine):
         *,
         location: Any = None,
     ) -> Optional[Dict[int, Any]]:
-        """Collect strategic combat modifiers for each team.
-
-        PROJ-320 Phase 3: rewritten to operate on per-empire fleet lists.
-        With per-owner team grouping (spec compiler PROJ-320 Phase 3),
-        team_id corresponds to a position in `empire_order`. Each team's
-        modifier set is computed once using a representative fleet of
-        that empire (the lowest-id one, deterministic) — only the
-        opponent's empire id matters for facility scope queries, so a
-        single representative per side suffices.
-        """
-        if self._galaxy is None:
-            return None
-        all_empires = getattr(self, '_empires', [])
-        modifiers: Dict[int, Any] = {}
-        # Pre-pick one representative fleet per empire for the modifier
-        # collector — sorted by fleet.id for determinism.
-        representatives: Dict[int, 'Fleet'] = {
-            eid: sorted(fleets_by_empire[eid], key=lambda f: f.id)[0]
-            for eid in empire_order
-        }
-        try:
-            from game.strategy.services.combat_modifier_collector import (
-                collect_combat_modifiers,
-            )
-            for team_id, eid in enumerate(empire_order):
-                fleet = representatives[eid]
-                opponent_empires = [other for other in empire_order if other != eid]
-                if not opponent_empires:
-                    continue
-                opponent_fleet = representatives[opponent_empires[0]]
-                modifiers[team_id] = collect_combat_modifiers(
-                    fleet, opponent_fleet, self._galaxy, all_empires,
-                    self._registries,
-                )
-        except Exception as e:  # Intentional broad catch: external collector may raise any type from non-engine empire/system extensions; ERROR-log and proceed with degraded modifier stack so battle still resolves. Hex + empire context included to allow log-side debugging.
-            # PROJ-381 Phase 2 (B-7): demote-to-warning was hiding a real
-            # information loss; promote to error and include hex/empire
-            # context so the log line is actionable.
-            logger.error(
-                "Failed to collect combat modifiers at hex=%s empires=%s: %s",
-                location, empire_order, e,
-            )
-            return None
-        return modifiers or None
+        """Delegate to ``conflict_modifier_collection.collect_team_modifiers``
+        (PROJ-382 Phase 5 extraction)."""
+        from game.strategy.engine import conflict_modifier_collection as _mods
+        return _mods.collect_team_modifiers(
+            self, fleets_by_empire, empire_order, location=location,
+        )
 

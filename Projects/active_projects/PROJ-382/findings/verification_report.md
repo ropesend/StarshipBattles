@@ -84,6 +84,12 @@ User decisions during Phase D included U4, U5, U6 from the UNCERTAIN list and de
 | U5 (`ProductionSpawner` Optional registries) | Pattern #3 is simulation-scoped; strategy-layer Optional DI is permitted but stylistically deviates. | **Include** — Phase 3 Task 3.5. |
 | U6 (Strategy Config Singleton accessor) | Only 1 confirmed use (economy_config); below 3+ undocumented-pattern bar. | **Include** as doc-add — Phase 4 Task 4.2. The variant has explicit in-code justification. |
 
+## Deferred During Implementation (PROJ-382 Phase 5)
+
+| Item | LOC | Reason | Successor |
+|------|-----|--------|-----------|
+| `superweapon_order_processor.py` | 723 | The 5 ``process_*`` superweapon dispatchers each carry per-effect closures (`_precheck` + `_effect`) that close over `self._get_empire_mutator()` / `self._event_bus` / `self._registries`. Extracting them as free functions would either thread the engine reference through every closure (5 files × ~80 LOC) or require introducing a state-bag type — both expand the change footprint without a clear single-responsibility win. The audit's recommendation to "split into a `superweapon_order_processor/` package with one effect closure per kind, registered on the SuperweaponSpec row" is a registry-restructuring project in its own right. | Tracked as a follow-up: register `effect_fn` and `precheck_fn` callables on `SuperweaponSpec` rows, then have a tiny dispatcher walk `find_superweapon_spec(order_type)` once. |
+
 ## Out of Scope
 
 | ID | Reason |

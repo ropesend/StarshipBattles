@@ -849,7 +849,7 @@ class TestFighterLaunchProcessing:
         initial_ship_count = len(engine.ships)
 
         # Mock Ship class to avoid full initialization
-        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
             mock_fighter = Mock()
             mock_fighter.team_id = source_ship.team_id
             mock_fighter.velocity = pygame.math.Vector2(0, 0)
@@ -902,7 +902,7 @@ class TestFighterLaunchProcessing:
 
         source_ship.just_fired_projectiles = [launch_attack]
 
-        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
             mock_fighter = Mock()
             mock_fighter.team_id = source_ship.team_id
             mock_fighter.velocity = pygame.math.Vector2(0, 0)
@@ -955,7 +955,7 @@ class TestFighterLaunchProcessing:
 
         source_ship.just_fired_projectiles = [launch_attack]
 
-        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
             mock_fighter = Mock()
             mock_fighter.team_id = source_ship.team_id  # Must match for enemy_team calc
             mock_fighter.velocity = pygame.math.Vector2(0, 0)
@@ -1003,7 +1003,7 @@ class TestFighterLaunchProcessing:
 
         source_ship.just_fired_projectiles = [launch_attack]
 
-        with patch('game.simulation.systems.battle_engine.Ship'):
+        with patch('game.simulation.systems.attack_processor.Ship'):
             with pytest.raises(ValidationException):
                 engine.update()
 
@@ -1034,7 +1034,7 @@ class TestFighterLaunchProcessing:
 
         source_ship.just_fired_projectiles = [launch_attack]
 
-        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
             mock_fighter = Mock()
             mock_fighter.team_id = 0
             mock_fighter.velocity = pygame.math.Vector2(0, 0)
@@ -1193,7 +1193,7 @@ class TestDictBasedAttackProcessing:
         source_ship.just_fired_projectiles = [launch_dict]
         initial_count = len(engine.ships)
 
-        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
             mock_fighter = Mock()
             mock_fighter.team_id = 0
             mock_fighter.velocity = pygame.math.Vector2(0, 0)
@@ -1290,7 +1290,7 @@ class TestLoggerIntegration:
 
         source_ship.just_fired_projectiles = [launch_attack]
 
-        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
             mock_fighter = Mock()
             mock_fighter.team_id = 0
             mock_fighter.velocity = pygame.math.Vector2(0, 0)

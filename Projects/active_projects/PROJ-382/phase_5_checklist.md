@@ -43,7 +43,19 @@
 - [ ] Extract responsibility-coherent helpers into sibling modules. Note: `threading.local()` reentrancy guard at lines 121-129 is a candidate to retain in the original service or move to a small dedicated helper.
 - [ ] Verify: fleet navigation tests pass; no behavioral change.
 
-### Task 5.4: Decompose `superweapon_order_processor.py` (723 LOC, +223)
+### Task 5.4: Decompose `superweapon_order_processor.py` (723 LOC, +223) — DEFERRED
+
+**Status:** Deferred during implementation (PROJ-382 Phase 5, 2026-05-08).
+
+**Reason:** The 5 `process_*` superweapon dispatchers carry per-effect
+closures (`_precheck` + `_effect`) closing over `self._get_empire_mutator()`,
+`self._event_bus`, `self._registries`.  Extracting them as free functions
+either threads the engine reference through every closure or requires a
+state-bag type — neither has a clean single-responsibility payoff.  The
+audit's "register effect closures on SuperweaponSpec" path is a separate
+registry-restructuring project.  See
+`findings/verification_report.md` "Deferred During Implementation".
+
 **File:** `game/strategy/engine/superweapon_order_processor.py`
 **Pattern:** n/a (LOC ceiling)
 **Tests:** `pytest tests/ -k superweapon --testmon`
