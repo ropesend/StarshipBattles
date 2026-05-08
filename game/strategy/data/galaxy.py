@@ -93,16 +93,6 @@ class Galaxy:
     # PROJ-372: backwards-compat under-prefixed forwarders for the five
     # grandfathered external read sites (movement.py, fleet_navigation_service.py,
     # hex_outlines.py). Phase 3-cleanup work will migrate those to public accessors.
-    def _ensure_state(self) -> 'GalaxyState':
-        """Lazy-create GalaxyState for tests that use ``Galaxy.__new__`` to
-        skip ``__init__`` and then mutate state directly."""
-        state = self.__dict__.get('_state')
-        if state is None:
-            state = GalaxyState(radius=100)
-            self.__dict__['_state'] = state
-            self.__dict__['_registry'] = GalaxyEntityRegistry(state)
-            self.__dict__['_spatial'] = GalaxySpatialIndex(state)
-        return state
 
     @property
     def _global_hex_planets(self) -> Dict[HexCoord, List['Planet']]:
@@ -126,19 +116,19 @@ class Galaxy:
 
     @property
     def _next_planet_id(self) -> int:
-        return self._ensure_state().next_planet_id
+        return self._state.next_planet_id
 
     @_next_planet_id.setter
     def _next_planet_id(self, value: int) -> None:
-        self._ensure_state().next_planet_id = value
+        self._state.next_planet_id = value
 
     @property
     def _next_fleet_id(self) -> int:
-        return self._ensure_state().next_fleet_id
+        return self._state.next_fleet_id
 
     @_next_fleet_id.setter
     def _next_fleet_id(self, value: int) -> None:
-        self._ensure_state().next_fleet_id = value
+        self._state.next_fleet_id = value
 
     # --- Public facade methods (1-line delegations) ---
 
