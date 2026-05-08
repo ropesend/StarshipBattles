@@ -17,13 +17,13 @@
 | 2. Major — Pattern #2/#10/#31 + naming + conv | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Minor — CQRS/#7/#12 fixes + doc drift | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategic — Pattern doc-adds | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. LOC ceiling sweep (5 non-PROJ files) | Active | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. LOC ceiling sweep (5 non-PROJ files) | Complete (4/5; Task 5.4 deferred) | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 3, working
-**Last Action:** Phase 2 complete — TypeGuard + dual-path event-bus + EventBus rename + modal-base + superweapon registry + namespace marker.
-**Next Action:** Phase 3 Tasks 3.1-3.8
+**Active Phase:** All phases complete (closeout).
+**Last Action:** Phase 5 LOC sweep — 4 of 5 files decomposed; Task 5.4 (superweapon_order_processor) deferred per `findings/verification_report.md`.
+**Next Action:** Final regression + closeout commit.
 **Blockers:** None
 
 ## Overview
