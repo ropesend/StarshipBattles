@@ -49,7 +49,6 @@ class BuildQueueScreen:
         self,
         manager: pygame_gui.UIManager,
         build_context=None,  # Planet, Fleet, or BuildContext (legacy positional yard)
-        session=None,
         on_close_callback: Optional[Callable] = None,
         portrait_surface: Optional[pygame.Surface] = None,
         design_library: 'DesignLibrary' = None,
@@ -58,13 +57,19 @@ class BuildQueueScreen:
         galaxy: 'Galaxy' = None,
         empire: 'Empire' = None,
         input_mapper: Optional['InputMapper'] = None,
-        facade=None,
         *,
+        facade,
+        portrait_session=None,
         initial_yard: Optional[Union['object', None]] = None,
     ):
         """Initialize the build queue screen.
 
         PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
+        PROJ-382 Phase 1: ``facade`` is required (keyword-only); the legacy
+        ``session=`` kwarg is gone. ``portrait_session`` (keyword-only) is a
+        narrow handle the BuildQueuePortraitLoader uses solely to read
+        ``active_empire.empire_theme_id`` — it is NOT used for command
+        dispatch. Future work (U1/U2/U3) will replace it with a facade DTO.
 
         PROJ-376 Phase 1: Split into "UI shell" (always runs) + "yard population"
         (only when ``initial_yard`` is provided, or legacy ``build_context`` is
@@ -85,8 +90,10 @@ class BuildQueueScreen:
 
         # ---- Shell block: DI / always-present state. ----------------------
         self.manager = manager
-        self.session = session
-        self.facade = facade  # PROJ-208: For command dispatch
+        self.facade = facade  # PROJ-208/382: required for command dispatch
+        # PROJ-382 Phase 1: legacy ``session`` storage kept ONLY for the
+        # portrait loader (theme lookup); never used for dispatch.
+        self._portrait_session = portrait_session
         self.on_close = on_close_callback
         self.portrait_surface = portrait_surface
         self._mapper = input_mapper
@@ -108,8 +115,10 @@ class BuildQueueScreen:
         self.selected_queue_indices: Set[int] = set()
         self.active_queue_source: Optional[BuildQueueSource] = None
 
-        # Portrait loading — needs design_library + session, both shell-side.
-        self.portrait_loader = BuildQueuePortraitLoader(design_library, session)
+        # Portrait loading — needs design_library + a session-shaped object
+        # for empire-theme lookup. PROJ-382 Phase 1: portrait_session is the
+        # narrow read-only handle (no command dispatch).
+        self.portrait_loader = BuildQueuePortraitLoader(design_library, portrait_session)
 
         # Get screen dimensions (stable across yards; cheap and idempotent).
         screen_size = manager.get_root_container().get_container().get_size()
@@ -182,13 +191,16 @@ class BuildQueueScreen:
         Collaborators (renderer, controller, drag handler) hold references
         INTO ``panels``, so they're reseated together.
         """
+        # PROJ-382 Phase 1: registries pulled from facade; legacy session-shaped
+        # ``portrait_session`` is forwarded to the panel factory for its own
+        # read-only registries / current_empire / turn lookups (deferred U2).
         factory = BuildQueuePanelFactory(
             manager=self.manager,
             build_context=yard,
-            session=self.session,
+            session=self._portrait_session,
             queue_sources=collect_build_queues_at_hex(
                 hex_coord, self.galaxy, self.empire,
-                registries=self.session.registries,
+                registries=self.facade.get_registries(),
             ),
             portrait_loader=self.portrait_loader,
             on_queue_selection_changed=self._on_queue_selection_changed,
@@ -213,7 +225,7 @@ class BuildQueueScreen:
             empire=self.empire,
             on_planet_selection_needed=self._prompt_target_planet,
             add_to_queue_callback=self._dispatch_add_to_queue_command,
-            registries=getattr(self.session, 'registries', None),
+            registries=self.facade.get_registries(),
         )
         # PROJ-208: drag handler wires through controller's add/refresh.
         self.drag_handler = BuildQueueDragHandler(
@@ -271,7 +283,7 @@ class BuildQueueScreen:
             self.portrait_surface = portrait_surface
         self.queue_sources = collect_build_queues_at_hex(
             hex_coord, self.galaxy, self.empire,
-            registries=self.session.registries,
+            registries=self.facade.get_registries(),
         )
         self.selected_queue_indices = {0} if self.queue_sources else set()
         self.active_queue_source = (
@@ -422,11 +434,8 @@ class BuildQueueScreen:
             target_planet_id=target_planet_id,
             queue_id=queue_id,
         )
-        # PROJ-208 Phase 3: Route through facade if available, fallback to session
-        if self.facade:
-            self.facade.handle_command(cmd)
-        else:
-            self.session.handle_command(cmd)
+        # PROJ-382 Phase 1: facade is required; no session fallback.
+        self.facade.handle_command(cmd)
 
     def _dispatch_remove_from_queue_command(self, item_index: int) -> None:
         """Dispatch RemoveFromConstructionQueueCommand through command pipeline.
@@ -459,11 +468,8 @@ class BuildQueueScreen:
             item_index=item_index,
             queue_id=queue_id,
         )
-        # PROJ-208 Phase 3: Route through facade if available, fallback to session
-        if self.facade:
-            self.facade.handle_command(cmd)
-        else:
-            self.session.handle_command(cmd)
+        # PROJ-382 Phase 1: facade is required; no session fallback.
+        self.facade.handle_command(cmd)
 
     def _dispatch_toggle_pause_command(self) -> None:
         """FEAT-17 — flip the active queue source's paused flag.
@@ -495,16 +501,15 @@ class BuildQueueScreen:
             paused=not source.is_paused,
             queue_id=source.queue_id,
         )
-        if self.facade:
-            self.facade.handle_command(cmd)
-        else:
-            self.session.handle_command(cmd)
+        # PROJ-382 Phase 1: facade is required; no session fallback.
+        self.facade.handle_command(cmd)
 
         # Re-collect sources so the active source's `is_paused` reflects the
         # new state, then refresh the button label + queue display.
+        # PROJ-382 Phase 1: registries pulled through facade rather than session.
         self.queue_sources = collect_build_queues_at_hex(
             self.hex_coord, self.galaxy, self.empire,
-            registries=self.session.registries,
+            registries=self.facade.get_registries(),
         )
         # Re-bind the active source by queue_id (same reference may not exist
         # after re-collection — match by identifier).

@@ -31,6 +31,14 @@ class MockSession:
         # PROJ-208: Track commands for test verification
         self.commands_handled = []
 
+    def get_registries(self):
+        """PROJ-382 Phase 1: facade-shaped registries accessor."""
+        return self.registries
+
+    def get_colony_demographic_view(self, planet_id):
+        """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
+        return None
+
     def handle_command(self, cmd):
         """Mock command handler that executes AddToConstructionQueueCommand.
 
@@ -93,7 +101,8 @@ def test_build_queue_screen_initializes(build_queue_screen):
     """Test that BuildQueueScreen creates without crashing."""
     assert build_queue_screen is not None
     assert build_queue_screen.build_context is not None
-    assert build_queue_screen.session is not None
+    # PROJ-382 Phase 1: facade is required; legacy `session` attribute removed.
+    assert build_queue_screen.facade is not None
     assert build_queue_screen.on_close is not None
 
 
@@ -282,13 +291,14 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
     screen_obj = BuildQueueScreen(
         manager,
         planet,
-        session,
         lambda: None,
         design_library=mock_design_library,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
-        empire=empire
+        empire=empire,
+        facade=session,
+        portrait_session=session,
     )
 
     # Should create with design_library injected
@@ -396,13 +406,14 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
     bq_screen = BuildQueueScreen(
         manager,
         planet,
-        session,
         lambda: None,
         design_library=mock_design_library,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
-        empire=empire
+        empire=empire,
+        facade=session,
+        portrait_session=session,
     )
 
     # Should have 2 queue sources: planetary yard + shipyard

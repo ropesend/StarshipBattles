@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
     from game.strategy.engine.commands import Command
     from game.strategy.engine.game_session import GameSession
+    from game.core.registry import GameRegistries
 
 
 class StrategySessionFacade:
@@ -362,6 +363,16 @@ class StrategySessionFacade:
     def get_race_registry(self) -> "IRaceRegistry":
         """Get the session-scoped race registry (PROJ-287)."""
         return self._economy_slice.get_race_registry()
+
+    def get_registries(self) -> "GameRegistries":
+        """Get the session-scoped game registries (PROJ-382 Phase 1).
+
+        UI screens that need to call helpers expecting ``registries=`` (e.g.
+        ``collect_build_queues_at_hex``) pull the bundle through the facade
+        rather than reaching into ``session.registries`` directly.  Read-only
+        access — callers must not mutate the returned object.
+        """
+        return self._session.registries
 
     # --- Event log queries (PROJ-77; BUG-123 per-empire scoping) ---
 

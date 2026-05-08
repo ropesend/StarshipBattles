@@ -34,6 +34,14 @@ class MockSession:
         # PROJ-211: Add registries for DI
         self.registries = registries
 
+    def get_registries(self):
+        """PROJ-382 Phase 1: facade-shaped registries accessor."""
+        return self.registries
+
+    def get_colony_demographic_view(self, planet_id):
+        """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
+        return None
+
     def handle_command(self, cmd):
         """Mock command handler."""
         from game.core.validation import ValidationResult
@@ -117,13 +125,14 @@ def build_queue_screen(ui_manager, mock_design_library, mock_design_loader, mock
     bq_screen = BuildQueueScreen(
         manager,
         planet,
-        session,
         on_close,
         design_library=mock_design_library,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
-        empire=empire
+        empire=empire,
+        facade=session,
+        portrait_session=session,
     )
 
     yield bq_screen

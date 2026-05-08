@@ -92,19 +92,23 @@ class StrategyBuildQueueManager:
         open reflects the manager's current empire context.
         """
         if self._screen.build_queue_screen is None:
+            # PROJ-382 Phase 1: facade-only construction; portrait_session is the
+            # narrow read-only handle the BuildQueuePortraitLoader needs to read
+            # ``active_empire.empire_theme_id``. Galaxy now sourced via the
+            # facade-screen surface rather than session.
             self._screen.build_queue_screen = BuildQueueScreen(
                 self._screen.ui.manager,
                 build_context=None,
-                session=self._screen.session,
                 on_close_callback=self._on_build_queue_close,
                 portrait_surface=portrait_surface,
                 design_library=design_library,
                 design_loader=design_loader,
                 hex_coord=None,
-                galaxy=self._screen.session.galaxy,
+                galaxy=self._screen.galaxy,
                 empire=self._screen.current_empire,
                 input_mapper=self._screen.input_mapper,
                 facade=self._screen.facade,
+                portrait_session=self._screen.session,
                 initial_yard=None,
             )
         else:

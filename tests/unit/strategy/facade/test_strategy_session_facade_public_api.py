@@ -99,6 +99,7 @@ PUBLIC_METHODS: frozenset[str] = frozenset({
     # Demographics / economy / races
     "get_colony_demographic_view",
     "get_race_registry",
+    "get_registries",  # PROJ-382 Phase 1: registries DTO accessor
     # Events
     "get_turn_events",
     "get_all_events",

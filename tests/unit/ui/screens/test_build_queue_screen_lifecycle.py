@@ -48,14 +48,27 @@ class _MockGalaxy:
 
 
 class _MockSession:
+    """Doubles as both a session and a facade for these lifecycle tests
+    (PROJ-382 Phase 1: BuildQueueScreen takes facade= + portrait_session=
+    instead of session=)."""
+
     def __init__(self, galaxy=None, empire=None, registries=None):
         self.savegame_path = "test_savegame"
         self.save_path = "test_savegame"
         self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
+        self.active_empire = self.current_empire
         self.galaxy = galaxy or _MockGalaxy()
         self.registries = registries
         self.commands_handled: list = []
         self.turn = 0
+
+    def get_registries(self):
+        """PROJ-382 Phase 1: facade-shaped registries accessor."""
+        return self.registries
+
+    def get_colony_demographic_view(self, planet_id):
+        """PROJ-382 Phase 1: facade-shaped demographic view stub."""
+        return None
 
     def handle_command(self, cmd):
         self.commands_handled.append(cmd)
@@ -187,7 +200,8 @@ def test_init_with_no_yard_constructs_ui_shell_only(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -219,7 +233,8 @@ def test_open_for_yard_populates_state_for_planet(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -260,7 +275,8 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
     eager = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -273,7 +289,8 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
     lazy = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -310,7 +327,8 @@ def test_open_for_yard_planet_to_fleet_rebuilds_panels(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -348,7 +366,8 @@ def test_open_for_yard_planet_to_planet_does_not_rebuild_panels(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -403,7 +422,8 @@ def test_hide_makes_panels_invisible_but_alive(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -428,7 +448,8 @@ def test_show_after_hide_makes_panels_visible(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -454,7 +475,8 @@ def test_is_visible_reflects_panel_visibility(
     shell = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -484,7 +506,8 @@ def test_hide_kills_planet_selection_window_if_open(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -522,7 +545,8 @@ def test_request_close_hides_and_invokes_on_close(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=on_close,
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -562,7 +586,8 @@ def test_request_close_can_be_re_opened(
     screen = BuildQueueScreen(
         ui_manager,
         build_context=None,
-        session=session_with_planet,
+        facade=session_with_planet,
+        portrait_session=session_with_planet,
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,

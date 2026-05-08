@@ -24,14 +24,29 @@ class MockGalaxy:
 
 
 class MockSession:
+    """Mock that doubles as both a session and a facade for BuildQueueScreen
+    integration tests. PROJ-382 Phase 1: BuildQueueScreen no longer accepts
+    ``session=``; the same instance is now passed as both ``facade=`` (for
+    command dispatch + ``get_registries()``) and ``portrait_session=`` (for
+    the portrait loader's empire-theme lookup)."""
+
     def __init__(self, galaxy=None, empire=None, registries=None):
         self.savegame_path = "test_savegame"
         self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
+        self.active_empire = self.current_empire
         self.galaxy = galaxy or MockGalaxy()
         # PROJ-211: Add registries for DI
         self.registries = registries
         # PROJ-208: Track commands for test verification
         self.commands_handled = []
+
+    def get_registries(self):
+        """PROJ-382 Phase 1: facade-shaped registries accessor."""
+        return self.registries
+
+    def get_colony_demographic_view(self, planet_id):
+        """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
+        return None
 
     def handle_command(self, cmd):
         """Mock command handler that tracks commands for test verification.
@@ -199,16 +214,19 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries,
 
     # Import and create screen with injected dependencies
     from game.ui.screens.build_queue_screen import BuildQueueScreen
+    # PROJ-382 Phase 1: ``session=`` is gone; pass MockSession as both facade
+    # (command dispatch + get_registries) and portrait_session.
     bq_screen = BuildQueueScreen(
         manager,
         planet,
-        session,
-        on_close,
+        on_close_callback=on_close,
         design_library=mock_design_library,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
-        empire=empire
+        empire=empire,
+        facade=session,
+        portrait_session=session,
     )
 
     yield bq_screen

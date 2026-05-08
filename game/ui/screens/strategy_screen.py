@@ -75,15 +75,22 @@ class StrategyScreen:
         self.input_mapper = input_mapper
 
         # Session Management
+        # PROJ-382 Phase 1: ``self._session`` is the private composition-root
+        # handle. External callers should use ``self.facade`` instead. The
+        # public ``session`` property (below) is retained as an audit-residue
+        # delegate while deferred U1/U2/U3 cover the broader UI surface that
+        # still reads ``c.scene.session.<x>``; the AST static-guard at
+        # ``tests/static_guards/test_facade_bypass_guard.py`` blocks the
+        # facade-bypass dispatch path from re-growing.
         if session:
-            self.session = session
+            self._session = session
         else:
             from game.strategy.engine.game_session import GameSession
             from game.ai.ai_factory import AIControllerFactory
-            self.session = GameSession(ai_factory=AIControllerFactory())
+            self._session = GameSession(ai_factory=AIControllerFactory())
 
         # Create facade for UI-to-engine communication
-        self._facade = StrategySessionFacade(self.session)
+        self._facade = StrategySessionFacade(self._session)
 
         # Camera
         self.camera = Camera(
@@ -152,15 +159,15 @@ class StrategyScreen:
 
     @property
     def galaxy(self) -> Any:
-        return self.session.galaxy
+        return self._session.galaxy
 
     @property
     def empires(self) -> Any:
-        return self.session.empires
+        return self._session.empires
 
     @property
     def systems(self) -> Any:
-        return self.session.systems
+        return self._session.systems
 
     @property
     def active_empire(self) -> Any:
@@ -171,15 +178,15 @@ class StrategyScreen:
         `session.active_empire`, which is rotated by
         `StrategyGameStateManager.advance_turn`.
         """
-        return self.session.active_empire
+        return self._session.active_empire
 
     @property
     def enemy_empire(self) -> Any:
-        return self.session.enemy_empire
+        return self._session.enemy_empire
 
     @property
     def human_player_ids(self) -> Any:
-        return self.session.human_player_ids
+        return self._session.human_player_ids
 
     @property
     def current_empire(self) -> Any:
@@ -203,6 +210,28 @@ class StrategyScreen:
         or query game state through the facade pattern.
         """
         return self._facade
+
+    @property
+    def session(self) -> Any:
+        """Audit-residue delegate for legacy ``c.scene.session.<x>`` reads.
+
+        PROJ-382 Phase 1: ``self._session`` is the private composition-root
+        handle. The facade is the canonical UI-to-engine boundary; the AST
+        guard at ``tests/static_guards/test_facade_bypass_guard.py`` blocks
+        any new ``<expr>.session.handle_command(...)`` regression. Existing
+        registries / galaxy / active_empire reads still resolve through this
+        delegate while deferred PROJs (U1/U2/U3) cover the broader migration.
+
+        The setter exists solely so tests may swap in a mock session via
+        ``screen.session = ...``; production code never reassigns the
+        session post-init.
+        """
+        return self._session
+
+    @session.setter
+    def session(self, value: Any) -> None:
+        """PROJ-382 Phase 1: write-through setter for test session swap."""
+        self._session = value
 
     @property
     def input_mode(self) -> Any:

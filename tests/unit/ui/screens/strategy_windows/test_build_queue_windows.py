@@ -86,7 +86,8 @@ def test_empire_build_queue_open_wires_scene_dependencies() -> None:
         window_cls.call_args.kwargs["on_navigate_to_hex"]
         is composer.scene.on_navigate_to_hex_build
     )
-    assert window_cls.call_args.kwargs["session"] is composer.scene.session
+    # PROJ-382 Phase 1: session= kwarg removed; facade is the sole DI handle.
+    assert "session" not in window_cls.call_args.kwargs
     assert window_cls.call_args.kwargs["facade"] is composer.scene.facade
     assert composer.empire_build_queue_window is window_cls.return_value
 

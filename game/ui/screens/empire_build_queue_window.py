@@ -160,8 +160,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         window_manager: "StrategyWindowManager",
         on_close_callback: Optional[Callable] = None,
         on_navigate_to_hex: Optional[Callable] = None,
-        session: Any = None,
-        facade: Any = None,
+        facade: Any,
         ui_builder: Optional["EmpireBuildQueueUiBuilder"] = None,
     ) -> None:
         """Initialize the empire build queue window.
@@ -169,15 +168,15 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
         PROJ-313: Migrated to StrategyModalWindow base class.
         PROJ-329B Phase 2: two-stage construction with ``ui_builder`` test seam.
+        PROJ-382 Phase 1: ``facade`` is required; ``session=`` kwarg removed.
         """
         # ---- Stage 1: cheap state ----
         self.empire = empire
         self.galaxy = galaxy
         self.on_close_callback = on_close_callback
         self.on_navigate_to_hex = on_navigate_to_hex
-        # PROJ-208: Session for command dispatch (facade preferred)
-        self._session = session
-        self._facade = facade  # PROJ-208 Phase 3: For CQRS-compliant command dispatch
+        # PROJ-208 / PROJ-382 Phase 1: command dispatch through facade only.
+        self._facade = facade
 
         # --- Layout constants ---
         self.sidebar_width = UIConfig.SIDEBAR_WIDTH
@@ -187,7 +186,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         # --- MVVM components --- (cheap; pure-python, no pygame_gui)
         self._event_bus = EventBus()
         sources = collect_all_build_queues_for_empire(
-            empire, registries=session.registries
+            empire, registries=facade.get_registries()
         )
         self._viewmodel = EmpireBuildQueueViewModel(self._event_bus, sources)
 
@@ -402,9 +401,9 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         PROJ-208 Phase 3: Prefers facade over session for CQRS consistency.
         """
         # PROJ-208: Use getattr for test compatibility (tests may bypass __init__)
+        # PROJ-382 Phase 1: facade-only dispatch.
         facade = getattr(self, '_facade', None)
-        session = getattr(self, '_session', None)
-        if facade is not None or session is not None:
+        if facade is not None:
             from game.strategy.engine.commands import AddToConstructionQueueCommand, BuildEntityType
             entity = source.owner_entity
             entity_type = BuildEntityType.PLANET if hasattr(entity, 'planet_type') else BuildEntityType.FLEET
@@ -419,13 +418,9 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
                 target_planet_id=item.get('target_planet_id'),
                 queue_id=source.queue_id if source.queue_id else None,
             )
-            # PROJ-208 Phase 3: Route through facade if available, fallback to session
-            if facade:
-                facade.handle_command(cmd)
-            else:
-                session.handle_command(cmd)
+            facade.handle_command(cmd)
         else:
-            # Legacy fallback for tests without session/facade injection
+            # Legacy fallback for tests without facade injection
             source.construction_queue.append(dict(item))
 
     @staticmethod

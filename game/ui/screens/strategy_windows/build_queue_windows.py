@@ -61,7 +61,7 @@ class EmpireBuildQueueRegistrar:
         w, h = int(c.width * 0.9), int(c.height * 0.9)
         rect = pygame.Rect((c.width - w) / 2, (c.height - h) / 2, w, h)
 
-        # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
+        # PROJ-208 Phase 3 / PROJ-382 Phase 1: facade-only construction.
         c.empire_build_queue_window = EmpireBuildQueueWindow(
             rect,
             c.manager,
@@ -70,7 +70,6 @@ class EmpireBuildQueueRegistrar:
             window_manager=c,
             on_close_callback=self._on_closed,
             on_navigate_to_hex=c.scene.on_navigate_to_hex_build,
-            session=c.scene.session,
             facade=c.scene.facade,
         )
 
