@@ -13,7 +13,7 @@ the rect passed to the shell is the clamped one.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import Any, TYPE_CHECKING, Optional
 
 import pygame
 from pygame_gui.elements import UISelectionList, UIButton, UILabel
@@ -106,6 +106,7 @@ class PlanetSelectionWindow(StrategyModalWindow):
         window_title: str = "Select Planet to Colonize",
         list_label: str = "Habitable bodies:",
         show_any_button: bool = True,
+        facade: Any = None,
         ui_builder: Optional[PlanetSelectionUiBuilder] = None,
     ):
         """
@@ -119,6 +120,17 @@ class PlanetSelectionWindow(StrategyModalWindow):
             window_title: Window title text (default: colonization use case).
             list_label: Label text above planet list (default: "Habitable bodies:").
             show_any_button: Whether to show "Any Planet" button (default: True).
+            facade: Optional strategy session facade. PROJ-397 Phase 3
+                Task 3.2: when provided, the per-planet
+                ``PlanetReportPanel`` fetches a fresh
+                ``ColonyDemographicView`` via
+                ``facade.get_colony_demographic_view(planet.id)`` so
+                colonized rows render the indented per-species
+                sub-block (PROJ-289 layout). When ``None`` (e.g. legacy
+                test fixtures), the panel falls back to ``view=None``
+                and PROJ-289's data-rich layout is skipped, but no
+                stale legacy rendering remains in
+                ``format_planet_info``.
             ui_builder: Optional UI builder override (test seam).
         """
         # ---- Stage 1: cheap state ----
@@ -132,6 +144,7 @@ class PlanetSelectionWindow(StrategyModalWindow):
         self.callback = on_selection_callback
         self._list_label = list_label
         self._show_any_button = show_any_button
+        self._facade = facade
         self.current_selection_name = None
 
         # Planet detail panel (PROJ-54)
@@ -192,13 +205,25 @@ class PlanetSelectionWindow(StrategyModalWindow):
                         if portrait_surface and planet.image_rotation:
                             portrait_surface = pygame.transform.rotate(portrait_surface, planet.image_rotation)
 
+                    # PROJ-397 Phase 3 Task 3.2: fetch a fresh
+                    # ``ColonyDemographicView`` so the panel renders the
+                    # PROJ-289 per-species sub-block instead of falling
+                    # back to the legacy single-line layout (which was
+                    # deleted from `format_planet_info` in this phase).
+                    # Uncolonized planets short-circuit before the view
+                    # is consulted, so only the colonized branch needs it.
+                    view = None
+                    if self._facade is not None and planet.owner_id is not None:
+                        view = self._facade.get_colony_demographic_view(planet.id)
+
                     self.planet_detail_panel = PlanetReportPanel(
                         manager=self.ui_manager,
                         rect=pygame.Rect(details_x, details_y, details_width, details_height),
                         planet=planet,
                         container=self,
                         portrait_surface=portrait_surface,
-                        show_complexes=False    # Match strategy UI - no separate complexes column
+                        show_complexes=False,   # Match strategy UI - no separate complexes column
+                        view=view,
                     )
 
                 self.selected_planet = planet

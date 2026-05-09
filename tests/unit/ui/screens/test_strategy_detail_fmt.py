@@ -828,8 +828,15 @@ class TestFormatPlanetInfo:
 
         assert "5k" in result or "6k" in result  # Rounding
 
-    def test_happiness_indicators(self, mock_planet):
-        """Test happiness indicators display."""
+    def test_per_species_block_omitted_when_view_is_none(self, mock_planet):
+        """PROJ-397 Phase 3 Task 3.2: legacy single-line per-species
+        layout (with `[+]/[~]/[-]` markers) was deleted. With ``view=None``
+        the per-species block is omitted entirely; demographic rendering
+        requires a `ColonyDemographicView` from the facade. The
+        `TestPerSpeciesSubBlock` suite at the bottom of this file
+        exercises the modern view-based layout (which uses
+        `_happiness_category` strings like `[Happy]`/`[Neutral]`).
+        """
         mock_planet.owner_id = 1
 
         pop_happy = Mock()
@@ -837,25 +844,19 @@ class TestFormatPlanetInfo:
         pop_happy.happiness = 0.9
         pop_happy.race_id = "Happy"
 
-        pop_neutral = Mock()
-        pop_neutral.count = 1000
-        pop_neutral.happiness = 0.5
-        pop_neutral.race_id = "Neutral"
-
-        pop_unhappy = Mock()
-        pop_unhappy.count = 1000
-        pop_unhappy.happiness = 0.2
-        pop_unhappy.race_id = "Unhappy"
-
-        mock_planet.populations = [pop_happy, pop_neutral, pop_unhappy]
+        mock_planet.populations = [pop_happy]
         mock_planet.max_population = 10000
         mock_planet.facilities = []
 
         result = format_planet_info(mock_planet)
 
-        assert "[+]" in result  # Happy
-        assert "[~]" in result  # Neutral
-        assert "[-]" in result  # Unhappy
+        # The Population summary line still renders.
+        assert "<b>Population:</b>" in result
+        # Legacy per-species markers MUST NOT reappear.
+        assert "[+]" not in result
+        assert "[~]" not in result
+        assert "[-]" not in result
+        assert " - Happy:" not in result
 
     def test_facilities_display(self, mock_planet):
         """Test facilities list display."""
@@ -1438,9 +1439,12 @@ def _make_view(species_views, *, planet_id=42, planet_name="Earth"):
 
 class TestPerSpeciesSubBlock:
 
-    def test_view_none_preserves_legacy_single_line(self):
-        """`view=None` (default) keeps the existing single-line per-species
-        rendering — backward compat for legacy call sites and tests."""
+    def test_view_none_omits_per_species_block(self):
+        """PROJ-397 Phase 3 Task 3.2: the legacy single-line per-species
+        layout was deleted. `view=None` on an owned planet now silently
+        omits the per-species block — callers that want demographic
+        rendering must thread a facade and provide a
+        `ColonyDemographicView`."""
         from game.ui.screens.strategy_detail_fmt import format_planet_info
         planet = _make_basic_planet()
         pop = MagicMock()
@@ -1451,9 +1455,12 @@ class TestPerSpeciesSubBlock:
 
         out = format_planet_info(planet)
 
-        # Legacy line uses ` - {race_id}: {count} [...]` pattern.
-        assert " - human:" in out
-        # Sub-block markers from the new layout must NOT appear.
+        # Higher-level Population summary still renders.
+        assert "<b>Population:</b>" in out
+        # Legacy single-line marker MUST NOT reappear.
+        assert " - human:" not in out
+        # Sub-block markers from the modern PROJ-289 layout also MUST NOT
+        # appear — view is None.
         assert "Habitability:" not in out
         assert "Growth:" not in out
 

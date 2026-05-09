@@ -801,6 +801,8 @@ class BuildQueueScreen:
     def _prompt_target_planet(self, planets, on_selected) -> None:
         """Open planet selection window for complex target planet."""
         rect = pygame.Rect(200, 100, 950, 650)
+        # PROJ-397 Phase 3 Task 3.2: pass the strategy facade so colonized
+        # planets render the PROJ-289 per-species sub-block.
         self.planet_selection_window = PlanetSelectionWindow(
             rect,
             self.manager,
@@ -809,7 +811,8 @@ class BuildQueueScreen:
             window_manager=None,  # PROJ-313: build queue screen has its own modal lifecycle
             window_title="Select Target Planet",
             list_label="Colonies in sector:",
-            show_any_button=False
+            show_any_button=False,
+            facade=self.facade,
         )
         logger.info(f"BuildQueue: Opened planet selection for {len(planets)} colonies")
 
