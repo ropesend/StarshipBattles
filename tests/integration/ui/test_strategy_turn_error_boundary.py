@@ -1,7 +1,7 @@
-"""PROJ-381 / PROJ-395 (B-5 / CRIT-001): UI error boundary regression test.
+"""PROJ-381 / PROJ-395 / PROJ-409 (B-5 / CRIT-001 / MAJ-014): UI error boundary regression test.
 
-Verifies that an `EnginePhaseError` (or facade-wrapped `TurnFailedError`)
-raised from the strategy facade's `process_turn()` is caught by the
+Verifies that a facade-wrapped `TurnFailedError` raised from the
+strategy facade's `process_turn()` is caught by the
 `StrategyGameStateManager` UI boundary, surfaced as a
 `TurnFailedDialog` (a `StrategyModalWindow` subclass that blocks
 strategy-screen input via Pattern #31), and never propagates up to the
@@ -16,6 +16,16 @@ modal tracking — players could click through and continue issuing
 fleet commands. These tests now assert modal registration AND modal
 blocking behavior, not merely dialog instantiation.
 
+PROJ-409 MAJ-014 update: the UI no longer catches raw
+``EnginePhaseError``. The facade is the only converter
+(``StrategySessionFacade.process_turn`` wraps ``EnginePhaseError`` →
+``TurnFailedError``); facade conversion is unit-tested directly by
+``tests/unit/strategy/facade/test_strategy_session_facade.py::
+TestProcessTurnErrorConversion`` (PROJ-408 C-02). These integration
+tests now inject ``TurnFailedError`` to mirror production reality and
+the real-engine test runs the raw ``EnginePhaseError`` through the
+facade conversion before hitting the UI boundary.
+
 Source audits:
 - `Reviews/results/2026-05-07_220225_error-audit/` finding B-5
 - `Reviews/results/2026-05-08_230318_code_proj-381-...` CRIT-001
@@ -28,7 +38,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from game.core.error_codes import ErrorCode
-from game.core.exceptions import EnginePhaseError
+from game.core.exceptions import EnginePhaseError, TurnFailedError
 
 
 def _make_state_manager_with_screen():
@@ -122,17 +132,19 @@ class TestStrategyTurnErrorBoundary:
         assert screen.ui.window_manager.modals == []
 
     def test_engine_phase_error_is_caught_and_modal_dialog_shown(self) -> None:
-        """A facade-raised EnginePhaseError must NOT propagate.
+        """A facade-raised TurnFailedError must NOT propagate.
 
         The boundary surfaces a modal `TurnFailedDialog` instead of
         crashing. PROJ-395: the dialog class must be the modal subclass
         (not a raw UIMessageWindow) and must be threaded the screen's
         ``StrategyWindowManager`` so input-blocking modal tracking
-        applies while the dialog is alive.
+        applies while the dialog is alive. PROJ-409 MAJ-014: the UI
+        only catches ``TurnFailedError`` now (the facade is the sole
+        converter from raw ``EnginePhaseError``).
         """
         manager, screen = _make_state_manager_with_screen()
         screen._facade.get_turn_events.return_value = []
-        err = EnginePhaseError(
+        err = TurnFailedError(
             "Phase 'harvesting' failed: simulated",
             code=ErrorCode.PHASE_FAILED.value,
             context={
@@ -189,7 +201,9 @@ class TestStrategyTurnErrorBoundary:
         """
         manager, screen = _make_state_manager_with_screen()
         screen._facade.get_turn_events.return_value = []
-        err = EnginePhaseError(
+        # PROJ-409 MAJ-014: facade converts EnginePhaseError → TurnFailedError;
+        # the UI only sees the facade-wrapped form.
+        err = TurnFailedError(
             "Phase 'production' failed: simulated",
             code=ErrorCode.PHASE_FAILED.value,
             context={
@@ -247,7 +261,9 @@ class TestStrategyTurnErrorBoundary:
         screen._facade.get_turn_events.return_value = []
         screen.current_tick = 7
         screen.total_ticks = 100
-        screen._facade.process_turn.side_effect = EnginePhaseError(
+        # PROJ-409 MAJ-014: facade converts EnginePhaseError → TurnFailedError;
+        # the UI only sees the facade-wrapped form.
+        screen._facade.process_turn.side_effect = TurnFailedError(
             "phase failed",
             code=ErrorCode.PHASE_FAILED.value,
             context={
@@ -282,12 +298,13 @@ class TestStrategyTurnErrorBoundary:
     def test_unexpected_exception_propagates(self) -> None:
         """PROJ-395 MAJ-007: bare-exception escape contract.
 
-        ``process_full_turn`` catches only ``TurnFailedError`` and
-        ``EnginePhaseError``. A non-strategy exception (e.g.,
-        ``RuntimeError``) raised by the facade is intentionally NOT
-        caught — it propagates to the top-level crash handler. This
-        test pins that contract so a future "broaden the catch"
-        refactor can't silently swallow non-strategy faults.
+        ``process_full_turn`` catches only ``TurnFailedError`` (PROJ-409
+        MAJ-014 removed the defensive raw ``EnginePhaseError`` branch).
+        A non-strategy exception (e.g., ``RuntimeError``) raised by the
+        facade is intentionally NOT caught — it propagates to the
+        top-level crash handler. This test pins that contract so a
+        future "broaden the catch" refactor can't silently swallow
+        non-strategy faults.
         """
         manager, screen = _make_state_manager_with_screen()
         screen._facade.get_turn_events.return_value = []
@@ -337,15 +354,16 @@ class TestRealTurnEngineFailureWiring:
     on a mocked facade — verifying the catch clause but bypassing
     ``_time_phase`` wrapping, snapshot capture, and rollback. This test
     runs the real ``TurnEngine`` with a planted faulty harvesting
-    sub-engine so the entire wrap-and-rollback chain executes; the UI
-    boundary then sees a *real* ``EnginePhaseError`` produced by
-    production code, not a hand-fabricated instance.
+    sub-engine so the entire wrap-and-rollback chain executes; the real
+    ``EnginePhaseError`` is then run through the facade's
+    ``TurnFailedError`` conversion (PROJ-381 Phase 3 / PROJ-409
+    MAJ-014) before hitting the UI boundary, mirroring production.
     """
 
     def test_real_engine_phase_failure_routes_through_ui_boundary(
         self, fresh_registries
     ) -> None:
-        from game.core.exceptions import EnginePhaseError
+        from game.core.exceptions import EnginePhaseError, TurnFailedError
         from game.strategy.data.empire import Empire
         from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
         from tests.fixtures.turn_engine import build_test_turn_engine
@@ -397,11 +415,21 @@ class TestRealTurnEngineFailureWiring:
         assert real_err.context.get("original_type") == "RuntimeError"
 
         # Now thread that real exception through the UI boundary the
-        # same way the production facade would: ``process_turn`` raises
-        # it and ``process_full_turn`` must catch + dialog it.
+        # same way the production facade would: the facade converts
+        # ``EnginePhaseError`` → ``TurnFailedError`` (see
+        # ``StrategySessionFacade.process_turn``), so we mirror that
+        # conversion explicitly here. PROJ-409 MAJ-014: the UI catches
+        # only ``TurnFailedError`` — the facade is the sole converter.
+        wrapped_err = TurnFailedError(
+            message=str(real_err),
+            code=real_err.code,
+            context=dict(real_err.context or {}),
+        )
+        wrapped_err.__cause__ = real_err
+
         manager, screen = _make_state_manager_with_screen()
         screen._facade.get_turn_events.return_value = []
-        screen._facade.process_turn.side_effect = real_err
+        screen._facade.process_turn.side_effect = wrapped_err
 
         with patch("pygame.display.get_surface", return_value=None), \
              patch(
@@ -410,6 +438,8 @@ class TestRealTurnEngineFailureWiring:
             manager.process_full_turn()
 
         mock_dialog.assert_called_once()
-        # The UI boundary received the real, wrapped error — not a
-        # hand-built instance.
-        assert mock_dialog.call_args.kwargs["error"] is real_err
+        # The UI boundary received the facade-wrapped form of the real,
+        # production-produced ``EnginePhaseError``. The wrapper preserves
+        # the original via ``__cause__`` so debugging surfaces remain.
+        assert mock_dialog.call_args.kwargs["error"] is wrapped_err
+        assert mock_dialog.call_args.kwargs["error"].__cause__ is real_err

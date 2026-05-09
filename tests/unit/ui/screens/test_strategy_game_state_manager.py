@@ -192,6 +192,76 @@ class TestProcessFullTurnLegacy:
         screen.on_ui_selection.assert_called_once_with(screen.selected_object)
 
 
+class TestProcessFullTurnErrorBoundary:
+    """PROJ-409 MAJ-014: defensive raw ``EnginePhaseError`` catch removed.
+
+    The facade is the only converter from ``EnginePhaseError`` →
+    ``TurnFailedError`` (see ``StrategySessionFacade.process_turn`` and
+    ``tests/unit/strategy/facade/test_strategy_session_facade.py::
+    TestProcessTurnErrorConversion``). Per CLAUDE.md Rule 4 the UI must
+    not catch a domain-engine exception type as a fallback for a
+    facade-bypass that cannot happen.
+    """
+
+    def test_turn_failed_error_opens_dialog_clears_overlay_skips_autosave(self):
+        """Canonical path: ``TurnFailedError`` is handled — dialog shown,
+        progress overlay cleared, no autosave, no event-log popup."""
+        from game.core.exceptions import TurnFailedError
+
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_save_path.return_value = "/tmp/save.json"
+        screen._facade.get_turn_events.return_value = []
+        # Pre-set tick state so we can verify ``finally`` clears it.
+        screen.current_tick = 42
+        screen.total_ticks = 100
+
+        err = TurnFailedError(
+            message="phase boom",
+            code="S101",
+            context={"phase_name": "test_phase", "tick": 5,
+                     "turn_number": 3, "original_type": "RuntimeError"},
+        )
+        screen._facade.process_turn.side_effect = err
+
+        with patch("pygame.display.get_surface", return_value=None), \
+             patch.object(manager, "_show_turn_failed_dialog") as mock_dialog, \
+             patch("game.strategy.systems.save_game_service.SaveGameService") as MockSGS:
+            manager.process_full_turn()
+
+        # Dialog opened with the error.
+        mock_dialog.assert_called_once_with(err)
+        # Progress overlay cleared by the ``finally`` block.
+        assert screen.current_tick is None
+        assert screen.total_ticks is None
+        # turn_processing flag cleared.
+        assert screen.turn_processing is False
+        # Autosave SKIPPED (rollback already happened in TurnEngine).
+        MockSGS.save_game.assert_not_called()
+        # Event-log popup SKIPPED.
+        screen.ui.open_event_log_with_events.assert_not_called()
+
+    def test_raw_engine_phase_error_propagates_uncaught(self):
+        """Architectural contract: the UI must NOT catch raw
+        ``EnginePhaseError``. The facade is the sole converter; if a code
+        path bypasses the facade and raises raw ``EnginePhaseError``,
+        let it propagate so the bypass is loud, not papered over."""
+        from game.core.exceptions import EnginePhaseError
+
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+
+        engine_err = EnginePhaseError(
+            "raw bypass",
+            code="S101",
+            context={"phase_name": "bypass", "tick": 1},
+        )
+        screen._facade.process_turn.side_effect = engine_err
+
+        with patch("pygame.display.get_surface", return_value=None):
+            with pytest.raises(EnginePhaseError):
+                manager.process_full_turn()
+
+
 class TestProcessFullTurnEmpireFilter:
     """BUG-123: per-empire scoping of the per-turn auto-popup."""
 

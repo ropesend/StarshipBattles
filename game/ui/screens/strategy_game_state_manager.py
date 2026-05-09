@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
-from game.core.exceptions import EnginePhaseError, TurnFailedError
+from game.core.exceptions import TurnFailedError
 from game.ui.screens.turn_failed_dialog import TurnFailedDialog
 
 if TYPE_CHECKING:
@@ -135,24 +135,19 @@ class StrategyGameStateManager:
             # `TurnEngine.process_turn`; we only need to surface a modal
             # to the player so the session continues.
             #
-            # PROJ-381 Phase 3 (B-4): the facade now converts
-            # `EnginePhaseError` to `TurnFailedError` so this UI catch
-            # never sees a domain-engine exception type. The
-            # `EnginePhaseError` branch below stays as a defensive
-            # fallback in case a code path bypasses the facade.
+            # PROJ-381 Phase 3 (B-4): the facade converts
+            # `EnginePhaseError` → `TurnFailedError` so this UI catch
+            # never sees a domain-engine exception type. PROJ-409 MAJ-014
+            # removed the secondary defensive `except EnginePhaseError`
+            # block per CLAUDE.md Rule 4 — the facade is the only
+            # converter and a raw `EnginePhaseError` reaching the UI is a
+            # genuine bug we want to surface, not paper over. Direct
+            # facade-conversion coverage lives in PROJ-408 C-02
+            # (`tests/unit/strategy/facade/test_strategy_session_facade.py`
+            # ::TestProcessTurnErrorConversion).
             turn_failed = True
             logger.error(
                 "Turn processing failed in phase '%s': %s",
-                e.context.get("phase_name"), e,
-            )
-            self._show_turn_failed_dialog(e)
-        except EnginePhaseError as e:
-            # Defensive: if some path bypasses the facade and raises the
-            # raw EnginePhaseError, still surface it rather than crash.
-            turn_failed = True
-            logger.error(
-                "Turn processing failed in phase '%s' (raw EnginePhaseError "
-                "— facade conversion bypassed): %s",
                 e.context.get("phase_name"), e,
             )
             self._show_turn_failed_dialog(e)
@@ -269,10 +264,8 @@ class StrategyGameStateManager:
         self._update_player_label()
         return completed
 
-    def _show_turn_failed_dialog(
-        self, error: TurnFailedError | EnginePhaseError,
-    ) -> None:
-        """PROJ-381 / PROJ-395 (B-5 / CRIT-001): surface a modal for an EnginePhaseError.
+    def _show_turn_failed_dialog(self, error: TurnFailedError) -> None:
+        """PROJ-381 / PROJ-395 (B-5 / CRIT-001): surface a modal for a TurnFailedError.
 
         Builds an in-game modal so the player learns the turn was rolled
         back without crashing the application. Uses
