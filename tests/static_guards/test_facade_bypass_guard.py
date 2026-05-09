@@ -8,9 +8,14 @@ prevents the bypass from silently re-growing.
 
 Two violation classes are caught:
 
-1. **Direct dispatch:** any ``<expr>.session.handle_command(<args>)`` call
-   inside ``game/ui/``.  UI code may only call
-   ``<expr>.facade.handle_command(...)``.
+1. **Direct dispatch:** any ``<expr>.session.handle_command(<args>)`` OR
+   ``<expr>._session.handle_command(<args>)`` call inside ``game/ui/``.
+   UI code may only call ``<expr>.facade.handle_command(...)``.
+
+   PROJ-396 CRIT-001: After PROJ-382 privatized ``self.session`` →
+   ``self._session`` in ``strategy_screen.py``, the guard now matches both
+   the public and private attribute forms so the privatization itself
+   doesn't silently open a syntactic blind spot.
 
 2. **Constructor leakage:** any keyword argument named ``session`` passed to
    ``BuildQueueScreen(...)`` or ``EmpireBuildQueueWindow(...)`` from anywhere
@@ -55,8 +60,15 @@ def _ui_python_files() -> list[Path]:
     return sorted(files)
 
 
+# Attribute names that, when followed by ``.handle_command(...)``, count as a
+# facade-bypass call.  Both the public and the PROJ-382-privatized form are
+# guarded so renaming alone cannot disable the check (PROJ-396 CRIT-001).
+_SESSION_ATTR_NAMES: frozenset[str] = frozenset({"session", "_session"})
+
+
 def _is_session_handle_command(node: ast.Call) -> bool:
-    """Match ``<expr>.session.handle_command(...)`` calls."""
+    """Match ``<expr>.session.handle_command(...)`` or
+    ``<expr>._session.handle_command(...)`` calls."""
     func = node.func
     if not isinstance(func, ast.Attribute):
         return False
@@ -65,7 +77,7 @@ def _is_session_handle_command(node: ast.Call) -> bool:
     inner = func.value
     if not isinstance(inner, ast.Attribute):
         return False
-    return inner.attr == "session"
+    return inner.attr in _SESSION_ATTR_NAMES
 
 
 def _has_session_kwarg(node: ast.Call) -> bool:
@@ -150,3 +162,77 @@ def test_ui_directory_has_python_files() -> None:
     assert "build_queue_screen.py" in names
     assert "empire_build_queue_window.py" in names
     assert "strategy_screen.py" in names
+
+
+def test_no_self_underscore_session_handle_command_in_strategy_screen() -> None:
+    """Defense in depth: ``self._session.handle_command(...)`` MUST NOT exist
+    inside ``strategy_screen.py``.
+
+    PROJ-396 CRIT-001: ``StrategyScreen`` owns the only legitimate
+    ``_session`` field (composition root) and also exposes a writable
+    ``session`` property setter for test mocks.  Both make this file the
+    most-likely site for an accidental private-form facade-bypass call.
+    The directory-wide guard above catches any ``<expr>._session.handle_command``
+    call across ``game/ui/``; this targeted check provides a clear,
+    file-scoped failure message if the violation lands here specifically.
+    """
+    target = UI_DIR / "screens" / "strategy_screen.py"
+    assert target.exists(), f"Expected {target} to exist"
+    tree = ast.parse(target.read_text(encoding="utf-8"), filename=str(target))
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if not isinstance(func, ast.Attribute):
+            continue
+        if func.attr != "handle_command":
+            continue
+        inner = func.value
+        if not isinstance(inner, ast.Attribute):
+            continue
+        if inner.attr != "_session":
+            continue
+        # Inner-most expression must be ``self`` to qualify as the targeted
+        # violation; anything else is already covered by the directory guard.
+        if not isinstance(inner.value, ast.Name) or inner.value.id != "self":
+            continue
+        rel = target.relative_to(REPO_ROOT)
+        pytest.fail(
+            f"PROJ-396 CRIT-001 violation: {rel}:{node.lineno} calls "
+            f"`self._session.handle_command(...)`. The screen must dispatch "
+            f"through `self._facade.handle_command(...)` even from inside "
+            f"the composition root."
+        )
+
+
+def test_guard_matcher_fires_on_private_session_form() -> None:
+    """Positive-control: verify ``_is_session_handle_command`` recognises the
+    PROJ-396 ``_session`` form.
+
+    Without this, a future refactor could accidentally narrow
+    ``_SESSION_ATTR_NAMES`` back to ``{"session"}`` and the directory-scan
+    test would still pass (because no UI file currently violates either form).
+    """
+    public_call = ast.parse("self.session.handle_command(cmd)").body[0].value
+    private_call = ast.parse("self._session.handle_command(cmd)").body[0].value
+    unrelated_call = ast.parse("self.facade.handle_command(cmd)").body[0].value
+    other_method_call = ast.parse("self._session.process_turn()").body[0].value
+
+    assert isinstance(public_call, ast.Call)
+    assert isinstance(private_call, ast.Call)
+    assert isinstance(unrelated_call, ast.Call)
+    assert isinstance(other_method_call, ast.Call)
+
+    assert _is_session_handle_command(public_call), (
+        "Guard must match the public `session.handle_command` form."
+    )
+    assert _is_session_handle_command(private_call), (
+        "PROJ-396 CRIT-001: guard must match the private "
+        "`_session.handle_command` form."
+    )
+    assert not _is_session_handle_command(unrelated_call), (
+        "Guard must NOT match `facade.handle_command` (the legitimate path)."
+    )
+    assert not _is_session_handle_command(other_method_call), (
+        "Guard must NOT match other methods on `_session`; only `handle_command`."
+    )

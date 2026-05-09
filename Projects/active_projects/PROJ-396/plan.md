@@ -3,14 +3,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. CRITICAL — static-guard blind spot + GameSession.from_dict mutators | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. MAJOR — 9 follow-up findings | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. CRITICAL — static-guard blind spot + GameSession.from_dict mutators | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. MAJOR — 9 follow-up findings | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Task 5.4 deferred — `superweapon_order_processor.py` 723 LOC decomp | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Active Phase:** Phase 1
-**Last Action:** Project created from PROJ-382 review (req_20260508_235748_8c0ea0, 2 CRIT + 9 MAJ + 14 MIN + 24 INFO) + Task 5.4 deferred during PROJ-382 implementation
-**Next Action:** Begin Phase 1 (CRITICAL findings)
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete — both CRITICAL findings closed (CRIT-001 static-guard `_session` form + CRIT-002 from_dict mutator restoration). Regression suite (672 tests across static_guards + game_session) green.
+**Next Action:** Begin Phase 2 (9 MAJOR findings)
 
 ## Overview
 PROJ-382 (pattern conformance, 21 audit items + 6 user-included uncertain + 5 LOC ceiling files) shipped across 5 phases. OpenCode review flagged 2 CRITICAL + 9 MAJOR. Plus PROJ-382 deferred Task 5.4 (`superweapon_order_processor.py` 723 LOC decomposition — needs registry-restructuring approach).

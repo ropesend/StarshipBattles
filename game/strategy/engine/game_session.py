@@ -472,11 +472,45 @@ class GameSession:
         # RaceConfig correctly during process_turn.
         # PROJ-369 Phase 3: ditto — `config=` required.
         session._race_registry = None
+
+        # PROJ-396 CRIT-002: deserialized sessions MUST construct the same
+        # mutator services as ``__init__`` (lines 104-123). Without these,
+        # any command handler that pulls ``session.fleet_mutator`` /
+        # ``planet_mutator`` / ``empire_mutator`` / ``ship_mutator`` after
+        # a load raises ``AttributeError``. Mirrors the ctor pattern
+        # exactly so the session is functionally identical regardless of
+        # whether it was constructed or deserialized (Pattern #2 boundary
+        # invariant).
+        from game.strategy.services.fleet_navigation_service import (
+            FleetNavigationService,
+        )
+        from game.strategy.services.fleet_write_service import FleetWriteService
+        from game.strategy.services.planet_write_service import (
+            PlanetWriteService,
+        )
+        from game.strategy.services.empire_write_service import (
+            EmpireWriteService,
+        )
+        from game.strategy.services.ship_instance_write_service import (
+            ShipInstanceWriteService,
+        )
+        session._fleet_nav_service = FleetNavigationService()
+        session._fleet_mutator = FleetWriteService(
+            navigation_service=session._fleet_nav_service,
+        )
+        session._planet_mutator = PlanetWriteService()
+        session._empire_mutator = EmpireWriteService()
+        session._ship_mutator = ShipInstanceWriteService()
+
         _turn_engine_config = TurnEngineConfig.create_default(
             session._registries,
             ai_factory=ai_factory,
             race_registry=session.race_registry,
             event_bus=session._event_bus,
+            fleet_mutator=session._fleet_mutator,
+            planet_mutator=session._planet_mutator,
+            empire_mutator=session._empire_mutator,
+            ship_mutator=session._ship_mutator,
         )
         session.turn_engine = TurnEngine(
             registries=session._registries,
