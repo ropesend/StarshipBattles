@@ -4,6 +4,11 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-399 | Branch hygiene — pre-existing test failures and pytest collection errors (Galaxy._intercept, docs-drift, basename collisions) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-398 | PROJ-380 remediation — 5 review MAJOR findings (consolidation refinements) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-397 | PROJ-393 remediation — review CRITICAL + MAJOR + 3 deferred items (Combat Lab dead vars reclaim, fleet_id field deletion, view=None branch) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-396 | PROJ-382 remediation — review CRITICAL + MAJOR + Task 5.4 deferred (static-guard blind spot, GameSession.from_dict mutators, superweapon_order_processor decomp) | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-395 | PROJ-381 remediation — review CRITICAL + MAJOR findings (B-5 modal, ValidationException registry, test assertions, etc.) | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-394 | PROJ-387 follow-up — Galaxy state public property + guard cleanup | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-393 | Legacy removal — Test-injection fallbacks + comment cleanups (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-392 | Legacy removal — Misc orphan wrappers + zero-call-site placeholders (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
