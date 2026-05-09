@@ -72,11 +72,17 @@ def test_coverage_matrix_matches_method_aliases(tmp_path, monkeypatch) -> None:
     assert coverage["matched_names"] == ["length"]
 
 
-def test_skill_does_not_claim_coverage_json_is_supported() -> None:
+def test_skill_documents_coverage_json_flag() -> None:
+    """`--coverage-json` is now actually implemented in the Phase 1 scanner
+    (`Tools/testcoverage_audit/testcoverage_audit.py` argparse arg
+    `--coverage-json` + `_load_authoritative_coverage`). The SKILL.md must
+    document that flag so agents know it exists. The previous test asserted
+    the opposite ("future extension point") from before the flag landed; user
+    commit e0e9dae08 implemented the flag and removed that disclaimer, leaving
+    the test stale."""
     text = SKILL_PATH.read_text(encoding="utf-8")
 
-    assert "scanner CLI supports `--coverage-json <path>`" not in text
-    assert "future extension point" in text.lower()
+    assert "--coverage-json" in text
 
 
 def test_skill_does_not_create_literal_review_dir() -> None:
