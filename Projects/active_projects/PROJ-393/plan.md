@@ -15,13 +15,13 @@
 |-------|--------|-----------|
 | 1. Minor — comment-only cleanups + doc-tag fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Major — test-injection legacy fallbacks | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Major — backward-compat fields + misc legacy paths | In Progress | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Major — backward-compat fields + misc legacy paths | Complete (3 tasks deferred) | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 3, working
-**Last Action:** Phase 2 complete — scene rename + 4 fallback deletions committed (5471b5984, da008e347)
-**Next Action:** Phase 3 — backward-compat fields + misc legacy paths
+**Active Phase:** Closed — all 3 phases complete (with 3 Phase 3 tasks deferred)
+**Last Action:** Phase 3 commit (8fa9887d3): tasks 3.1, 3.4, 3.6, 3.7 complete; 3.2 partial (tag removal only); 3.3, 3.5 deferred with rationale
+**Next Action:** Project closeout — 3 phases shipped, deferrals logged for follow-up
 **Blockers:** None
 
 ## Overview
@@ -72,6 +72,6 @@ Catch-all project for ~16 small legacy items across the codebase: comment-only d
 - [findings/bundling_decisions.md](findings/bundling_decisions.md) — interactive bundling record (shared across siblings)
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete (3 Phase 3 tasks deferred with rationale in findings/verification_report.md)
+- [x] Phase-scoped focused tests passing (full sharded suite deferred to orchestrator)
 - [ ] User verified
