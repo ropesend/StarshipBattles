@@ -52,6 +52,15 @@ class SeekerHandler:
         speed = seeker_ab.projectile_speed / SimulationConstants.PROJECTILE_SPEED_SCALE
         p_vel = launch_vec * speed + ship.velocity
 
+        # PROJ-405: thread the session EventBus from the AttackRequest into
+        # the Projectile's event_logger so SEEKER_EXPIRE (and future
+        # missile-lifecycle events) reach session subscribers.  When no bus
+        # is present (test/replay paths) Projectile falls back to its no-op
+        # default — production WeaponFiringSystem always supplies one.
+        proj_kwargs: dict[str, object] = {}
+        if request.event_bus is not None:
+            proj_kwargs["event_logger"] = request.event_bus.log_event
+
         projectile = Projectile(
             owner=ship,
             position=Vector2(ship.position),
@@ -66,6 +75,7 @@ class SeekerHandler:
             hp=seeker_ab.projectile_hp,
             to_hit_defense=seeker_ab.to_hit_defense,
             source_weapon=comp,
+            **proj_kwargs,
         )
         return ProjectileResolution(projectile=projectile)
 

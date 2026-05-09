@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Thread EventBus through production constructors | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Thread EventBus through production constructors | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
-**Active Phase:** Phase 1
-**Last Action:** Project skeleton created from REMEDIATION_PLAN B-06
-**Next Action:** Thread EventBus from `BattleState` through the projectile/seeker construction chain so `SEEKER_EXPIRE` actually records.
+**Active Phase:** Phase 1 (complete)
+**Last Action:** Threaded `EventBus` through `TurnEngineConfig` → `SimulationBattleResolver` → `run_battle` → `BattleEngine` → shared `WeaponFiringSystem` → `AttackRequest` → `Projectile.event_logger`. Restored projectiles in `BattleController.set_battle_state` also pick up the engine's bus. New regression at `tests/unit/simulation/test_projectile_event_bus_wiring.py` (4 tests) pins the wiring through `WEAPON_REGISTRY.dispatch`.
+**Next Action:** User verification.
 **Blockers:** None
 
 ## Overview
@@ -48,9 +48,9 @@ PROJ-382 added an `event_logger` kwarg to `Projectile`, but production callers d
 - PROJ-382 review (`Reviews/results/2026-05-09_proj-380-399-implementation-review/PROJ-382_report.md`).
 
 ## Verification
-- [ ] Phase 1 checklist complete
-- [ ] `pytest tests/unit/simulation/entities/test_projectile.py -v` passes
-- [ ] New regression test asserting `SEEKER_EXPIRE` is observed by an EventBus subscriber via the production construction path passes
-- [ ] `rg -n "event_logger|event_bus" game/simulation/` shows the kwarg threaded through every constructor in the chain
-- [ ] `python Projects/scripts/validate_audit_ready.py PROJ-405` passes
+- [x] Phase 1 checklist complete
+- [x] `pytest tests/unit/simulation/entities/test_projectile.py -v` passes
+- [x] New regression test asserting `SEEKER_EXPIRE` is observed by an EventBus subscriber via the production construction path passes
+- [x] `rg -n "event_logger|event_bus" game/simulation/` shows the kwarg threaded through every constructor in the chain
+- [x] `python Projects/scripts/validate_audit_ready.py PROJ-405` passes
 - [ ] User verified

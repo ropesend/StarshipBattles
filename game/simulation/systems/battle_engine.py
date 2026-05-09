@@ -103,6 +103,7 @@ class BattleEngine:
         tick_phases: Optional['TickPhaseRegistry'] = None,
         boundary: Optional[Any] = None,
         modifier_stack: Optional[Any] = None,
+        event_bus: Optional[Any] = None,
     ):
         """
         Create a BattleEngine instance.
@@ -180,6 +181,32 @@ class BattleEngine:
         # PROJ-269 Phase 5.5: modifier stack applied at engine start via
         # the FleetAuraManager pipeline. None = no external modifiers.
         self.modifier_stack = modifier_stack
+
+        # PROJ-405: session EventBus (game.core.event_logging.EventBus).
+        # Distinct from `self.combat_events` (the per-battle CombatEventBus
+        # used by DamageCalculator) — this one is the structured, string-keyed
+        # session bus that GameSession owns.  When provided, it is forwarded
+        # into the shared `WeaponFiringSystem` so projectile/seeker handlers
+        # can thread `Projectile.event_logger=bus.log_event`, surfacing
+        # SEEKER_EXPIRE telemetry that PROJ-382 left silently dropped.
+        self.event_bus = event_bus
+        if event_bus is not None:
+            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
+            from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
+            from game.simulation.combat.targeting_system import TargetingSystem
+
+            # Force creation of the shared firing system so we can hand it
+            # the bus before the first ship fires.  ShipCombatEngine lazily
+            # creates these on first instantiation; do it eagerly here.
+            if ShipCombatEngine._targeting_system is None:
+                ShipCombatEngine._targeting_system = TargetingSystem()
+            if ShipCombatEngine._weapon_firing_system is None:
+                ShipCombatEngine._weapon_firing_system = WeaponFiringSystem(
+                    ShipCombatEngine._targeting_system,
+                    event_bus=event_bus,
+                )
+            else:
+                ShipCombatEngine._weapon_firing_system.set_event_bus(event_bus)
 
     @property
     def projectiles(self) -> List[Any]:

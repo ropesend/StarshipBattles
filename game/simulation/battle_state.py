@@ -542,12 +542,20 @@ class ProjectileState:
             is_alive=proj.is_alive,
         )
 
-    def to_projectile(self, ship_lookup: Dict[str, 'Ship']) -> 'Projectile':
+    def to_projectile(
+        self,
+        ship_lookup: Dict[str, 'Ship'],
+        event_bus: Any = None,
+    ) -> 'Projectile':
         """
         Restore a Projectile from saved state.
 
         Args:
             ship_lookup: Mapping from ship_id to Ship object for owner/target resolution
+            event_bus: Optional session ``EventBus`` (PROJ-405).  When the
+                restored projectile resumes ticking inside a battle, it
+                must emit lifecycle telemetry (``SEEKER_EXPIRE``) on the
+                same bus as freshly-spawned projectiles do.
 
         Returns:
             Projectile instance with restored state
@@ -561,6 +569,10 @@ class ProjectileState:
         # Resolve target ship reference (for missiles)
         target = ship_lookup.get(self.target_ship_id) if self.target_ship_id else None
 
+        proj_kwargs: Dict[str, Any] = {}
+        if event_bus is not None:
+            proj_kwargs["event_logger"] = event_bus.log_event
+
         proj = Projectile(
             owner=owner,
             position=Vector2(self.position[0], self.position[1]),
@@ -573,6 +585,7 @@ class ProjectileState:
             max_speed=self.max_speed,
             target=target,
             hp=self.hp,
+            **proj_kwargs,
         )
 
         # Restore additional state

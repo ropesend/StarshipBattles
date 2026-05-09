@@ -181,7 +181,14 @@ class TurnEngineConfig:
             from game.strategy.adapters.simulation_adapter import (
                 SimulationBattleResolver,
             )
-            battle_resolver = SimulationBattleResolver(ai_factory=ai_factory)
+            # PROJ-405: forward the session EventBus into the resolver so
+            # `run_battle` can thread it down to `BattleEngine` →
+            # `WeaponFiringSystem` → `Projectile.event_logger`, surfacing
+            # SEEKER_EXPIRE telemetry on the bus the rest of the strategy
+            # layer is already listening to.
+            battle_resolver = SimulationBattleResolver(
+                ai_factory=ai_factory, event_bus=event_bus
+            )
 
         order_processor = OrderProcessor(event_bus=event_bus)
 

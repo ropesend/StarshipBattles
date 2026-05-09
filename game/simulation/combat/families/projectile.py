@@ -30,6 +30,16 @@ class ProjectileHandler:
         speed = projectile_ab.projectile_speed / SimulationConstants.PROJECTILE_SPEED_SCALE
         p_vel = aim_vec.normalize() * speed + ship.velocity
 
+        # PROJ-405: thread session EventBus into the Projectile so future
+        # projectile-lifecycle events (e.g. PROJECTILE_HIT once the damage-
+        # event convergence lands per attack_contract.py) are observable.
+        # Non-seeker projectiles don't currently emit events, but the wiring
+        # must be in place so adding one is a one-line change in
+        # `Projectile.update`, not a fresh threading expedition.
+        proj_kwargs: dict[str, object] = {}
+        if request.event_bus is not None:
+            proj_kwargs["event_logger"] = request.event_bus.log_event
+
         projectile = Projectile(
             owner=ship,
             position=Vector2(ship.position),
@@ -40,6 +50,7 @@ class ProjectileHandler:
             proj_type=AttackType.PROJECTILE,
             source_weapon=comp,
             target=target,
+            **proj_kwargs,
         )
         return ProjectileResolution(projectile=projectile)
 

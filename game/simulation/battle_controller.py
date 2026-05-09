@@ -677,10 +677,13 @@ class BattleController:
                     if ship_id:
                         ship_lookup[ship_id] = ship
 
-                # Restore each projectile
+                # Restore each projectile.  PROJ-405: forward the engine's
+                # session EventBus so restored seekers emit SEEKER_EXPIRE
+                # on the same bus as freshly-spawned ones.
+                event_bus = getattr(engine, "event_bus", None)
                 for proj_state in state.projectiles:
                     if proj_state.is_alive:
-                        proj = proj_state.to_projectile(ship_lookup)
+                        proj = proj_state.to_projectile(ship_lookup, event_bus=event_bus)
                         engine.projectiles.append(proj)
 
                 logger.info(f"Restored {len(state.projectiles)} projectiles")

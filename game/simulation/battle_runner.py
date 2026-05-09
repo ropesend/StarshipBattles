@@ -29,7 +29,7 @@ What `run_battle` enforces:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from game.core.math import Vector2
 from game.simulation.battle_outcome import (
@@ -146,6 +146,7 @@ def start_engine_from_spec(
     ai_factory: "IAIControllerFactory",
     ship_builder: Callable[[ShipSpec, int], "Ship"],
     capture_context: "Optional[ReplayCaptureContext]" = None,
+    event_bus: Optional[Any] = None,
 ) -> "tuple[BattleEngine, Dict[str, Ship]]":
     """Construct and start a `BattleEngine` from a `BattleSpec`.
 
@@ -169,6 +170,7 @@ def start_engine_from_spec(
     engine = BattleEngine(
         logger=BattleLogger(enabled=False),
         ai_factory=ai_factory,
+        event_bus=event_bus,
     )
     if spec.boundary is not None:
         engine.boundary = spec.boundary
@@ -262,6 +264,7 @@ def run_battle(
     per_tick_callback: Optional[Callable[["BattleEngine"], None]] = None,
     pre_tick_loop_callback: Optional[Callable[["BattleEngine"], None]] = None,
     capture_context: "Optional[ReplayCaptureContext]" = None,
+    event_bus: Optional[Any] = None,
 ) -> BattleOutcome:
     """Run a fully-specified battle and return its outcome.
 
@@ -323,6 +326,7 @@ def run_battle(
     engine, _ships_by_role = start_engine_from_spec(
         spec, ai_factory=ai_factory, ship_builder=ship_builder,
         capture_context=capture_context,
+        event_bus=event_bus,
     )
 
     # PROJ-269 Phase 5: attach telemetry subscribers based on spec level.

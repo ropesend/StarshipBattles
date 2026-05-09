@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-405 | Tier 1 B-06: Wire EventBus through Projectile/Seeker construction | Planning | 2026-05-09 | 2026-05-09 |
+| PROJ-405 | Tier 1 B-06: Wire EventBus through Projectile/Seeker construction | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-404 | Tier 1 B-05: Eradicate save-format compatibility (Rule 3 follow-on) | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-403 | Tier 1 B-04: Migrate stale _MockGalaxy doubles to GalaxyState | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-402 | Tier 1 B-03: SimulationBattleResolver catch ValidationException | Complete | 2026-05-09 | 2026-05-09 |

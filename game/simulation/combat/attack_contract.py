@@ -41,6 +41,7 @@ from game.core.constants import AttackType
 from game.core.math import Vector2
 
 if TYPE_CHECKING:
+    from game.core.event_logging import EventBus
     from game.simulation.components.component import Component
     from game.simulation.entities.projectile import Projectile
 
@@ -79,6 +80,16 @@ class AttackRequest:
     aim_pos: Vector2
     aim_vec: Vector2
     family: WeaponFamily
+    # PROJ-405: session EventBus threaded through the firing path so handlers
+    # can pass `event_logger=bus.log_event` to constructed `Projectile`s.
+    # Required to surface lifecycle telemetry (SEEKER_EXPIRE, future
+    # PROJECTILE_HIT, etc.) — fixes the PROJ-382 incompletion where the
+    # no-op default on `Projectile` silently dropped events in production.
+    # ``None`` is permitted so test/replay constructions can still build
+    # an `AttackRequest` without spinning up a bus; production callers
+    # (`WeaponFiringSystem`) must always pass the live bus from the
+    # owning `BattleEngine`.
+    event_bus: "EventBus | None" = None
 
 
 # -----------------------------------------------------------------------------

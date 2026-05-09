@@ -62,7 +62,8 @@ class BattleService:
         self,
         seed: Optional[int] = None,
         enable_logging: bool = False,
-        ai_factory: Optional['IAIControllerFactory'] = None
+        ai_factory: Optional['IAIControllerFactory'] = None,
+        event_bus: Optional[Any] = None,
     ) -> BattleServiceResult:
         """
         Create a new battle instance.
@@ -83,7 +84,9 @@ class BattleService:
             logger = BattleLogger(enabled=enable_logging)
             # PROJ-43/PROJ-126: Create engine with optional factory
             # Factory is now injected from callers (UI/strategy layers)
-            self._engine = BattleEngine(logger=logger, ai_factory=ai_factory)
+            self._engine = BattleEngine(
+                logger=logger, ai_factory=ai_factory, event_bus=event_bus,
+            )
             self._team0_ships = []
             self._team1_ships = []
             self._is_started = False

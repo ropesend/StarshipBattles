@@ -26,6 +26,7 @@ from game.simulation.combat.attack_contract import (
 from game.simulation.combat.weapon_registry import WEAPON_REGISTRY, detect_family
 
 if TYPE_CHECKING:
+    from game.core.event_logging import EventBus
     from game.simulation.entities.ship import Ship
     from game.simulation.components.component import Component
     from game.simulation.combat.targeting_system import TargetingSystem
@@ -39,14 +40,34 @@ class WeaponFiringSystem:
     firing weapons and creating attack objects.
     """
 
-    def __init__(self, targeting_system: 'TargetingSystem'):
+    def __init__(
+        self,
+        targeting_system: 'TargetingSystem',
+        event_bus: 'EventBus | None' = None,
+    ):
         """
         Initialize weapon firing system.
 
         Args:
             targeting_system: The targeting system to use for aim calculations
+            event_bus: Optional session ``EventBus`` (PROJ-405).  When set, it
+                is forwarded on every ``AttackRequest`` so weapon-family
+                handlers can wire ``Projectile.event_logger`` to
+                ``bus.log_event``.  ``None`` means tests/replay paths that
+                don't need lifecycle telemetry.
         """
         self._targeting = targeting_system
+        self._event_bus: "EventBus | None" = event_bus
+
+    def set_event_bus(self, event_bus: 'EventBus | None') -> None:
+        """Replace the session ``EventBus`` (PROJ-405).
+
+        ``ShipCombatEngine`` shares one ``WeaponFiringSystem`` instance across
+        all ships in the process; ``BattleEngine`` calls this in ``start()``
+        so the running battle's session bus is the one that gets threaded
+        into newly-spawned projectiles.
+        """
+        self._event_bus = event_bus
 
     def fire_weapons(
         self,
@@ -236,6 +257,9 @@ class WeaponFiringSystem:
             aim_pos=aim_pos,
             aim_vec=aim_vec,
             family=family,
+            # PROJ-405: forward the session EventBus so seeker/projectile
+            # handlers can wire `Projectile.event_logger=bus.log_event`.
+            event_bus=self._event_bus,
         )
         resolution = WEAPON_REGISTRY.dispatch(request)
 

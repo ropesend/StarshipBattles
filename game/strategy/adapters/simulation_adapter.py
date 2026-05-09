@@ -70,15 +70,24 @@ class SimulationBattleResolver(IBattleResolver):
     sequential pairs.
     """
 
-    def __init__(self, ai_factory: 'IAIControllerFactory'):
+    def __init__(
+        self,
+        ai_factory: 'IAIControllerFactory',
+        *,
+        event_bus: Any = None,
+    ):
         """Initialize the battle resolver.
 
         Args:
             ai_factory: AI controller factory (required). Must be
                 injected from a layer that can import `game.ai`
                 (UI or app layer).
+            event_bus: Optional session ``EventBus`` (PROJ-405).  Threaded
+                into ``run_battle`` so projectile/seeker lifecycle events
+                land on the same bus as the rest of strategy telemetry.
         """
         self._ai_factory = ai_factory
+        self._event_bus = event_bus
 
     def resolve_battle(
         self,
@@ -303,6 +312,7 @@ class SimulationBattleResolver(IBattleResolver):
                 ai_factory=self._ai_factory,
                 registry_provider=registries,
                 capture_context=capture_context,
+                event_bus=self._event_bus,
             )
         except (SimulationException, ValidationException) as e:
             fleet_ids = [getattr(f, "id", None) for f in fleet_list]
