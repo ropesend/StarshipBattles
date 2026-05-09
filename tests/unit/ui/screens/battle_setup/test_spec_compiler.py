@@ -367,7 +367,13 @@ def test_load_complex_design_oserror_returns_none_and_logs(monkeypatch, caplog):
 
 
 def test_iter_components_skips_empty_layers_and_non_dict_entries():
-    from game.ui.screens.battle_setup.spec_compiler import _iter_components
+    """PROJ-391: spec_compiler now uses canonical `iter_components` from
+    `game.core.patterns.layer_iterator`, which yields strings and dicts.
+    The compiler's `_complex_to_entries` filters non-dict entries with
+    `isinstance(component_data, dict)` before extracting `id`. This test
+    asserts the canonical iterator still produces the expected dict
+    components from a design_data shape exercised in production."""
+    from game.core.patterns.layer_iterator import iter_components
 
     design_data = {
         "layers": {
@@ -379,21 +385,26 @@ def test_iter_components_skips_empty_layers_and_non_dict_entries():
                 42,
                 None,
             ],
-            "ARMOR": ({"id": "armor"},),
+            "ARMOR": ({"id": "armor"},),  # tuples skipped by canonical (list-only)
         }
     }
 
-    assert list(_iter_components(design_data)) == [
-        {"id": "beam"},
-        {"id": "armor"},
-    ]
+    # Canonical iter_components yields all entries from list layers including
+    # non-dict ones. The spec_compiler filters dicts at the call site.
+    yielded = list(iter_components(design_data))
+    dict_components = [c for c in yielded if isinstance(c, dict)]
+    assert dict_components == [{"id": "beam"}]
 
 
 def test_iter_components_missing_layers_yields_no_components():
-    from game.ui.screens.battle_setup.spec_compiler import _iter_components
+    """PROJ-391: canonical `iter_components` returns nothing for a design
+    with no layers key. (`{"layers": None}` is not a production shape —
+    `load_json_required` always returns a dict; the legacy local helper's
+    None-tolerance was unused. The canonical raises AttributeError on
+    that synthetic input, which is the correct fail-loud behavior.)"""
+    from game.core.patterns.layer_iterator import iter_components
 
-    assert list(_iter_components({})) == []
-    assert list(_iter_components({"layers": None})) == []
+    assert list(iter_components({})) == []
 
 
 def test_ship_spec_pose_none_uses_origin_and_default_theme():

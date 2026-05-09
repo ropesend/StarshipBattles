@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from game.core.json_utils import load_json_required
 from game.core.math import Vector2
 from game.core.paths import Paths
+from game.core.patterns.layer_iterator import iter_components
 from game.simulation.battle_spec import (
     BattleSpec,
     CombatPolicies,
@@ -356,7 +357,9 @@ def _complex_to_entries(
 
     display = complex_data.get("display_name", design_id)
     out: List[Tuple[int, ModifierEntry]] = []
-    for component_data in _iter_components(design_data):
+    for component_data in iter_components(design_data):
+        if not isinstance(component_data, dict):
+            continue
         comp_id = component_data.get("id")
         if not comp_id:
             continue
@@ -414,17 +417,6 @@ def _load_complex_design(design_id: str) -> Optional[Dict[str, Any]]:
             design_id, e,
         )
         return None
-
-
-def _iter_components(design_data: Dict[str, Any]) -> Any:
-    """Yield every `{id: ..., modifiers: ...}` component dict across all layers."""
-    layers = design_data.get("layers") or {}
-    for layer_components in layers.values():
-        if not layer_components:
-            continue
-        for comp in layer_components:
-            if isinstance(comp, dict):
-                yield comp
 
 
 def _extract_scope(ability_name: str, ability_data: Any) -> str:
