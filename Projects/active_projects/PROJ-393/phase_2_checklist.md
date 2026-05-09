@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Remove 5 legacy fallback branches that exist only because tests don't always inject the proper dependencies (or because two scenes haven't migrated to the unified IScene event-handling dispatch). Each task starts by auditing the test side, then deletes the production fallback once injection is universal.
 
 ---

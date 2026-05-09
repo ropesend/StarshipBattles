@@ -385,7 +385,7 @@ class ResearchTreeScene:
             if node:
                 self.control_panel.update_selected_node(node, self.tracker)
 
-    def handle_input(self, dt: float, events: list) -> None:
+    def update_input(self, dt: float, events: list) -> None:
         """
         Handle continuous input (keyboard pan).
 

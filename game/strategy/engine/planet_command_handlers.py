@@ -71,6 +71,8 @@ class IssuePlanetOrderCommandHandler:
         if order_type == OrderType.ACTIVATE_ABILITY:
             if not cmd.ability_name:
                 return ValidationResult.error("ability_name is required for ACTIVATE_ABILITY.")
+            if not cmd.component_key:
+                return ValidationResult.error("component_key is required for ACTIVATE_ABILITY.")
             result = PlanetOrderValidator.validate_activate_ability(
                 planet, cmd.facility_instance_id, cmd.ability_name, component_registry,
                 component_key=cmd.component_key,
@@ -78,6 +80,8 @@ class IssuePlanetOrderCommandHandler:
         elif order_type == OrderType.DEACTIVATE_ABILITY:
             if not cmd.ability_name:
                 return ValidationResult.error("ability_name is required for DEACTIVATE_ABILITY.")
+            if not cmd.component_key:
+                return ValidationResult.error("component_key is required for DEACTIVATE_ABILITY.")
             result = PlanetOrderValidator.validate_deactivate_ability(
                 planet, cmd.facility_instance_id, cmd.ability_name, component_registry,
                 component_key=cmd.component_key,

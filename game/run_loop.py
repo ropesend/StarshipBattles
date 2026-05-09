@@ -200,15 +200,12 @@ class RunLoop:
         router = self._router
 
         # Per-frame input handling (keyboard polling, hover).
+        # Scenes that need per-frame keyboard polling expose update_input(dt, events);
+        # IScene only mandates handle_event/update/draw/handle_resize.
         if self.state == GameState.STRATEGY:
             router.strategy_scene.update_input(frame_time, events)
-        # Legacy scenes that haven't migrated to IScene event handling.
-        elif self.state == GameState.RESEARCH_TREE and \
-                hasattr(router.active_scene, 'handle_input'):
-            router.active_scene.handle_input(frame_time, events)
-        elif self.state == GameState.GALAXY_TEST and \
-                hasattr(router.active_scene, 'handle_input'):
-            router.active_scene.handle_input(frame_time, events)
+        elif self.state in (GameState.RESEARCH_TREE, GameState.GALAXY_TEST):
+            router.active_scene.update_input(frame_time, events)
 
         # Unified update dispatch.
         router.active_scene.update(frame_time)

@@ -208,22 +208,22 @@ class TestDrawOrchestration:
 
 
 class TestHandleInput:
-    """Tests for handle_input continuous-input routing."""
+    """Tests for update_input continuous-input routing."""
 
-    def test_handle_input_routes_to_camera_only_when_mouse_over_canvas(self):
+    def test_update_input_routes_to_camera_only_when_mouse_over_canvas(self):
         with _patched_research_scene() as mocks:
             scene = _make_scene(mocks)
 
             # Mouse over canvas
             with patch('pygame.mouse.get_pos', return_value=(100, 200)):
-                scene.handle_input(0.016, [])
+                scene.update_input(0.016, [])
                 scene.camera.update_input.assert_called_once_with(0.016, [])
 
             scene.camera.update_input.reset_mock()
 
             # Mouse over sidebar
             with patch('pygame.mouse.get_pos', return_value=(1700, 200)):
-                scene.handle_input(0.016, [])
+                scene.update_input(0.016, [])
                 scene.camera.update_input.assert_not_called()
 
 
