@@ -66,7 +66,7 @@ def get_tk_root() -> Optional[tkinter.Tk]:
         logger.warning(f"Tkinter runtime error, dialogs will be unavailable: {e}")
         _available = False
         _tk_root = None
-    except Exception as e:  # Intentional broad catch: Tkinter init is platform-dependent
+    except Exception as e:  # Intentional broad catch: Tkinter Tk() and withdraw() can raise platform-specific subclasses (TclError, _tkinter.TclError, OSError on broken display, ImportError on minimal Python builds without _tkinter); narrow catches above (TclError, RuntimeError) cover the documented cases — this is the safety net for the long tail. Returning None disables Tkinter cleanly so the rest of the UI keeps working without dialog support.
         logger.warning(f"Tkinter initialization failed, dialogs will be unavailable: {e}")
         _available = False
         _tk_root = None
@@ -97,7 +97,7 @@ def reset_tk_root() -> None:
     if _tk_root is not None:
         try:
             _tk_root.destroy()
-        except Exception:  # Intentional broad catch: Tk widget .destroy() raises various TclError subclasses if already destroyed or interpreter is gone
+        except Exception:  # Intentional broad catch: Tk.destroy() raises tkinter.TclError variants when the interpreter is already torn down (common in pytest fixtures), and on some platforms _tkinter raises a bare RuntimeError on double-destroy. Reset is best-effort — swallowing here is correct because the goal (root no longer usable) is achieved either way.
             pass
 
     _tk_root = None
@@ -139,7 +139,7 @@ def open_save_dialog(
             filetypes=filetypes,
             title=title
         )
-    except Exception as e:  # Intentional broad catch: file dialog is platform-dependent
+    except Exception as e:  # Intentional broad catch: filedialog.asksaveasfilename raises tkinter.TclError on Linux when no display is reachable mid-session, OSError if the initial directory is on a removed drive, and per-platform native-dialog errors that aren't documented as a stable type. Returning None falls back to "user cancelled" semantics — the caller already handles None for cancellation.
         logger.warning(f"Save dialog failed: {e}")
         return None
 
@@ -172,7 +172,7 @@ def open_load_dialog(
             filetypes=filetypes,
             title=title
         )
-    except Exception as e:  # Intentional broad catch: file dialog is platform-dependent
+    except Exception as e:  # Intentional broad catch: filedialog.askopenfilename raises tkinter.TclError on display loss mid-session, OSError on inaccessible initialdir, and per-platform native-dialog errors. Returning None matches the "user cancelled" path — same semantics from the caller's perspective.
         logger.warning(f"Open dialog failed: {e}")
         return None
 
@@ -203,7 +203,7 @@ def prompt_string(
             initialvalue=initialvalue,
             parent=root
         )
-    except Exception as e:  # Intentional broad catch: dialog is platform-dependent
+    except Exception as e:  # Intentional broad catch: simpledialog.askstring raises tkinter.TclError if the parent root has been destroyed, RuntimeError if the Tk event loop is in a bad state, and ValueError on malformed encoding. Falling back to initialvalue (or None) is safe because the caller already treats None as "cancelled".
         logger.warning(f"String prompt failed: {e}")
         return initialvalue if initialvalue else None
 
@@ -226,6 +226,6 @@ def copy_to_clipboard(text: str) -> bool:
         root.clipboard_append(text)
         root.update()  # Required to finalize clipboard
         return True
-    except Exception as e:  # Intentional broad catch: clipboard is platform-dependent
+    except Exception as e:  # Intentional broad catch: tkinter.TclError variants on clipboard access (X11 selection contention on Linux, OSError on Windows when another app holds the clipboard, RuntimeError if the root was destroyed). Returning False signals "copy failed" without crashing; the caller can show a status message or fall back to a different mechanism.
         logger.warning(f"Clipboard copy failed (Tkinter): {e}")
         return False

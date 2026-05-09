@@ -25,6 +25,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import EnginePhaseError
 
@@ -277,6 +279,24 @@ class TestStrategyTurnErrorBoundary:
         assert screen.current_tick is None
         assert screen.total_ticks is None
 
+    def test_unexpected_exception_propagates(self) -> None:
+        """PROJ-395 MAJ-007: bare-exception escape contract.
+
+        ``process_full_turn`` catches only ``TurnFailedError`` and
+        ``EnginePhaseError``. A non-strategy exception (e.g.,
+        ``RuntimeError``) raised by the facade is intentionally NOT
+        caught — it propagates to the top-level crash handler. This
+        test pins that contract so a future "broaden the catch"
+        refactor can't silently swallow non-strategy faults.
+        """
+        manager, screen = _make_state_manager_with_screen()
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.process_turn.side_effect = RuntimeError("unexpected")
+
+        with patch("pygame.display.get_surface", return_value=None):
+            with pytest.raises(RuntimeError, match="unexpected"):
+                manager.process_full_turn()
+
     def test_turn_failed_error_is_caught_and_dialog_shown(self) -> None:
         """PROJ-381 Phase 3 (B-4): facade-level TurnFailedError must also
         be caught — the standard production path raises this, not the
@@ -307,3 +327,89 @@ class TestStrategyTurnErrorBoundary:
         kwargs = mock_dialog.call_args.kwargs
         assert kwargs["error"] is err
         assert kwargs["window_manager"] is screen.ui.window_manager
+
+
+class TestRealTurnEngineFailureWiring:
+    """PROJ-395 MAJ-003: drive a real TurnEngine into the UI boundary.
+
+    The previous regression test set
+    ``screen._facade.process_turn.side_effect = EnginePhaseError(...)``
+    on a mocked facade — verifying the catch clause but bypassing
+    ``_time_phase`` wrapping, snapshot capture, and rollback. This test
+    runs the real ``TurnEngine`` with a planted faulty harvesting
+    sub-engine so the entire wrap-and-rollback chain executes; the UI
+    boundary then sees a *real* ``EnginePhaseError`` produced by
+    production code, not a hand-fabricated instance.
+    """
+
+    def test_real_engine_phase_failure_routes_through_ui_boundary(
+        self, fresh_registries
+    ) -> None:
+        from game.core.exceptions import EnginePhaseError
+        from game.strategy.data.empire import Empire
+        from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
+        from tests.fixtures.turn_engine import build_test_turn_engine
+
+        # Real TurnEngine, planted-failure harvester (mirrors
+        # tests/unit/strategy/turn_engine/test_turn_engine_snapshot_integration
+        # ::_make_engine_with_failing_harvester).
+        engine = build_test_turn_engine(
+            fresh_registries, ai_factory=MagicMock()
+        )
+        failing_harvester = MagicMock()
+        failing_harvester.process_harvesting_tick.side_effect = RuntimeError(
+            "planted phase failure"
+        )
+        engine._harvesting_engine = failing_harvester
+
+        # Local mock_empire / mock_galaxy — turn_engine conftest
+        # fixtures aren't visible from tests/integration/ui/.
+        mock_empire = MagicMock(spec=Empire)
+        mock_empire.id = 0
+        mock_empire.name = "Test Empire"
+        mock_empire.fleets = []
+        mock_empire.colonies = []
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {}
+        mock_galaxy.get_planets_at_global_hex = MagicMock(return_value=[])
+        mock_galaxy.get_system_of_planet = MagicMock(return_value=None)
+
+        session = MagicMock()
+        session.turn_number = 3
+
+        # Drive the real engine to confirm production wrapping produces
+        # a real ``EnginePhaseError`` with the documented context.
+        with patch.object(TurnStateSnapshot, "capture", return_value=MagicMock()):
+            with pytest.raises(EnginePhaseError) as exc_info:
+                engine.process_turn(
+                    [mock_empire],
+                    mock_galaxy,
+                    save_path="/tmp/proj395-maj003-fake",
+                    session=session,
+                )
+
+        real_err = exc_info.value
+        assert real_err.context.get("phase_name") is not None
+        assert real_err.context.get("turn_number") == 3
+        # The wrapping chain set ``original_type`` from the original
+        # RuntimeError — this is the bit the UI dialog renders.
+        assert real_err.context.get("original_type") == "RuntimeError"
+
+        # Now thread that real exception through the UI boundary the
+        # same way the production facade would: ``process_turn`` raises
+        # it and ``process_full_turn`` must catch + dialog it.
+        manager, screen = _make_state_manager_with_screen()
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.process_turn.side_effect = real_err
+
+        with patch("pygame.display.get_surface", return_value=None), \
+             patch(
+                "game.ui.screens.strategy_game_state_manager.TurnFailedDialog"
+             ) as mock_dialog:
+            manager.process_full_turn()
+
+        mock_dialog.assert_called_once()
+        # The UI boundary received the real, wrapped error — not a
+        # hand-built instance.
+        assert mock_dialog.call_args.kwargs["error"] is real_err

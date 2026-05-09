@@ -163,6 +163,16 @@ class GameSession:
                 empire_mutator=self._empire_mutator,
             )
         except Exception as e:  # Intentional broad catch: any init failure must leave the session in a null-object state and re-raise as SessionInitializationError so callers see a typed strategy-layer error.
+            # PROJ-395 MAJ-005: surface the failure at ERROR level with
+            # exc_info so the operator log shows the root cause and
+            # traceback. Without this log, the null-object substitution
+            # is invisible to anyone reading the log file — only the
+            # typed re-raise reaches the caller.
+            logger.error(
+                "GameSession initialization failed: %s",
+                e,
+                exc_info=True,
+            )
             self.galaxy = None
             self.empires = []
             self.systems = []

@@ -162,9 +162,14 @@ class BaseCommandHandler:
 
     @staticmethod
     def _resolve_fleet_required(session: 'GameSession', fleet_id: int, empire_id: int = None) -> 'Fleet':
-        """Resolve a fleet by ID, raising ValueError if not found.
+        """Resolve a fleet by ID, raising ValidationException if not found.
 
         Use this when fleet must exist - avoids tuple unpacking boilerplate.
+
+        PROJ-381 Phase 3 (ERR-01-003) replaced the previous bare
+        ``ValueError`` with a structured ``ValidationException`` (codes
+        ``MISSING_ENTITY`` / ``OWNERSHIP_MISMATCH``). PROJ-395 MAJ-012
+        corrects this docstring (which still referenced ``ValueError``).
 
         Args:
             session: The game session with empires and galaxy.
@@ -250,7 +255,11 @@ class BaseCommandHandler:
         Args:
             session: The game session with galaxy.
             planet_id: The planet ID to resolve.
-            required: If True, raise ValueError when not found. If False, return None.
+            required: If True, raise ValidationException(MISSING_ENTITY)
+                when not found. If False, return None. PROJ-381 Phase 3
+                replaced the previous bare ``ValueError`` with a
+                structured ``ValidationException``; PROJ-395 MAJ-012
+                corrects this docstring.
 
         Returns:
             Planet object if found, None if not found and required=False.

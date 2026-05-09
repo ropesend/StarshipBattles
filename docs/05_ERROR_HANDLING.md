@@ -38,7 +38,10 @@ GameException
     MissingResourceException
   PersistenceException
   StrategyException
+    SessionInitializationError
     EnginePhaseError
+    TurnFailedError
+    BattleResolutionError
   SimulationException
     ComponentException
     FormulaException
@@ -57,6 +60,7 @@ GameException
     ImageRateLimited
     ImageTimeoutError
     ImageCancelled
+    ImageUnexpectedError
 ```
 
 Use:
@@ -66,6 +70,10 @@ Use:
 - `StateException` / `FrozenStateException`: invalid object state or immutable-state mutation.
 - `MissingResourceException` / `ResourceException`: missing required asset or other resource failure.
 - `EnginePhaseError`: turn sub-engine phase failure; triggers rollback when a snapshot exists.
+- `TurnFailedError`: facade-level wrapper around `EnginePhaseError` (PROJ-381 B-4) so the UI catches a single strategy-layer type. Properties: `phase_name`, `tick`, `turn_number`, `save_path`, `original_type`, `recoverable`.
+- `BattleResolutionError`: simulation failure during strategy-layer battle resolution (PROJ-381 B-6); context carries `fleet_ids`, `empire_ids`, `hex_coord`.
+- `SessionInitializationError`: `GameSession` constructor failure (PROJ-381 B-11); session lands in deterministic null-object state with `__cause__` preserved.
+- `ImageUnexpectedError`: wraps non-`ImageException` provider escapes in `ImageBackgroundCall._run()`. Symmetric counterpart of `LLMUnexpectedError`.
 - `ComponentException`: component configuration or operation failure.
 - `FormulaException`: formula parse/evaluation failure.
 - `LLM*`: LLM provider, factory, or background-call failure.
@@ -83,7 +91,7 @@ Codes live in `game/core/error_codes.py` as `ErrorCode`. Format is `X###`.
 - Persistence: `P001 SAVE_FAILED`, `P002 LOAD_FAILED`, `P003 CORRUPT_DATA`, `P004 VERSION_MISMATCH`, `P005 IO_ERROR`.
 - Formula: `F001 FORMULA_SYNTAX_ERROR`, `F002 FORMULA_UNDEFINED_VAR`, `F003 EVAL_ERROR`, `F004 FORMULA_GENERAL_ERROR`.
 - Component: `C001 COMPONENT_NOT_FOUND`, `C002 COMPONENT_INVALID`, `C003 MISSING_DEPENDENCY`, `C004 SLOT_OCCUPIED`, `C005 INCOMPATIBLE_COMPONENT`.
-- Turn: `T001 PHASE_FAILED`, `T002 TURN_ROLLBACK`, `T003 SNAPSHOT_FAILED`.
+- Turn: `T001 PHASE_FAILED`, `T002 TURN_ROLLBACK`, `T003 SNAPSHOT_FAILED`, `T004 DUPLICATE_COMMAND`.
 - LLM: `L001 LLM_CONFIG_MISSING`, `L002 LLM_NETWORK_ERROR`, `L003 LLM_BAD_RESPONSE`, `L004 LLM_RATE_LIMITED`, `L005 LLM_TIMEOUT`, `L006 LLM_CANCELLED`.
 - Image: `I001 IMAGE_CONFIG_MISSING`, `I002 IMAGE_NETWORK_ERROR`, `I003 IMAGE_BAD_RESPONSE`, `I004 IMAGE_RATE_LIMITED`, `I005 IMAGE_TIMEOUT`, `I006 IMAGE_CANCELLED`.
 

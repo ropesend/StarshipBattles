@@ -13,8 +13,8 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. CRITICAL — B-5 modal, registry exception, test assertions | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. MAJOR — 14 follow-up findings | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. CRITICAL — B-5 modal, registry exception, test assertions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. MAJOR — 14 follow-up findings | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08

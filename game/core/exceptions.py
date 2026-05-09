@@ -230,17 +230,49 @@ class TurnFailedError(StrategyException):
     The strategy facade re-raises ``EnginePhaseError`` as
     ``TurnFailedError`` so the UI never has to import a domain-engine
     exception type. Preserves the wrapped error via ``__cause__`` and
-    exposes UI-formatted convenience properties.
+    exposes UI-formatted convenience properties read from
+    ``self.context``.
 
-    Attributes mirror EnginePhaseError context: ``phase_name``, ``tick``,
-    ``turn_number``, ``original_type`` are surfaced as properties for the
-    modal dialog rendering.
+    Properties (PROJ-395 MAJ-001 / MAJ-004):
+        phase_name: Failed phase name, or "unknown" if missing.
+        tick: 1-based tick within the failed phase, or "?" if missing.
+        turn_number: Game turn number when the failure occurred, or
+            "?" if missing.
+        save_path: Pre-turn snapshot save path used for rollback, or
+            ``None`` if missing.
+        original_type: Class name of the wrapped exception, or
+            "Exception" if missing.
+        recoverable: True — the player can retry the turn (the facade
+            already restored pre-turn state via snapshot rollback).
+
+    All properties tolerate missing context keys with documented
+    sentinels so dialog rendering never raises.
     """
 
     @property
     def phase_name(self) -> str:
         """Failed phase name, or 'unknown' if missing from context."""
         return self.context.get("phase_name", "unknown")
+
+    @property
+    def tick(self) -> int | str:
+        """1-based tick within the failed phase, or '?' if missing."""
+        return self.context.get("tick", "?")
+
+    @property
+    def turn_number(self) -> int | str:
+        """Game turn number when the failure occurred, or '?' if missing."""
+        return self.context.get("turn_number", "?")
+
+    @property
+    def save_path(self) -> str | None:
+        """Pre-turn snapshot save path used for rollback, or None."""
+        return self.context.get("save_path")
+
+    @property
+    def original_type(self) -> str:
+        """Class name of the wrapped exception, or 'Exception' if missing."""
+        return self.context.get("original_type", "Exception")
 
     @property
     def recoverable(self) -> bool:

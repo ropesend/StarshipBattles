@@ -16,7 +16,11 @@ from threading import Event
 
 import pytest
 
-from game.core.exceptions import ImageException, ImageUnexpectedError
+from game.core.exceptions import (
+    ImageException,
+    ImageNetworkError,
+    ImageUnexpectedError,
+)
 from game.ui.services.image.background import (
     CallStatus,
     ImageBackgroundCall,
@@ -48,6 +52,16 @@ class _SlowSuccessProvider:
         )
 
 
+class _ImageExceptionProvider:
+    """Stub provider that raises a real ImageException subclass."""
+
+    def __init__(self, exc: ImageException) -> None:
+        self._exc = exc
+
+    def generate_image(self, prompt, **kwargs):  # noqa: ANN001
+        raise self._exc
+
+
 class TestImageUnexpectedErrorWrap:
     """B-10: provider escape produces ImageUnexpectedError + ERROR status."""
 
@@ -62,6 +76,38 @@ class TestImageUnexpectedErrorWrap:
         assert isinstance(call.error, ImageUnexpectedError)
         ctx = call.error.context or {}
         assert ctx.get("original_exception_type") == "RuntimeError"
+
+    def test_image_exception_passes_through_unwrapped(self) -> None:
+        """PROJ-395 MAJ-009: a real ImageException subclass raised by
+        the provider must NOT be wrapped as ImageUnexpectedError.
+
+        The B-10 wrap is specifically a safety net for non-strategy
+        exception types (RuntimeError, TypeError, etc.). Provider
+        errors that are already ImageException instances should reach
+        the caller unchanged so callers can branch on the original
+        type / code.
+        """
+        original = ImageNetworkError(
+            "simulated network failure",
+            context={"provider": "stub"},
+        )
+        call = ImageBackgroundCall(
+            _ImageExceptionProvider(original), "test prompt"
+        )
+        call.start()
+        terminal = call.wait(timeout=2.0)
+
+        assert terminal is True
+        assert call.status == CallStatus.ERROR
+        assert isinstance(call.error, ImageException)
+        # The MUST-NOT: we never see the unexpected-wrapper for an
+        # already-typed ImageException.
+        assert not isinstance(call.error, ImageUnexpectedError), (
+            f"ImageException must pass through unwrapped; got "
+            f"{type(call.error).__name__}"
+        )
+        # Identity preserved — the exact instance the provider raised.
+        assert call.error is original
 
 
 class TestWaitParity:

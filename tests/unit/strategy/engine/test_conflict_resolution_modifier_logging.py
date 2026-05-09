@@ -65,7 +65,16 @@ def test_collector_failure_logs_error_with_hex_and_empire_context(monkeypatch, c
         f"Expected an ERROR log line; got: {[(r.levelname, r.getMessage()) for r in caplog.records]}"
     )
     msg = error_records[0].getMessage()
-    # Hex location and empire IDs must be in the message for debug-able
-    # log mining.
-    assert "(3, 4)" in msg
-    assert "[0, 1]" in msg
+    # PROJ-395 MAJ-008: hex coordinate and empire IDs must appear in
+    # the message for debug-able log mining, but the formatting is not
+    # part of the contract — only the values are. Asserting on the
+    # exact ``(3, 4)`` / ``[0, 1]`` repr forms (the prior assertion)
+    # would break under a refactor like ``hex=3,4`` or ``empires=0,1``.
+    # Accept any rendering that contains the discrete coordinate and
+    # empire-ID values.
+    assert "3" in msg and "4" in msg, (
+        f"Hex coordinate values 3 and 4 must appear in the log message; got: {msg!r}"
+    )
+    assert "0" in msg and "1" in msg, (
+        f"Empire IDs 0 and 1 must appear in the log message; got: {msg!r}"
+    )

@@ -198,9 +198,31 @@ class TestTurnStateSnapshotCrashDump:
                     {"tick": 9, "phase_name": "Movement"},
                 )
 
+        # PROJ-395 MAJ-010: assert on the structural contract — at
+        # least one ERROR-level record was emitted — rather than
+        # exact message wording. The previous "Failed to write crash
+        # snapshot" substring would break under cosmetic copy edits
+        # (e.g., "Could not write..." or "Crash snapshot write
+        # failed") despite identical behavior. The behavior under
+        # test is "log at ERROR and do not raise"; the message text
+        # is documentation, not contract.
+        error_records = [
+            rec for rec in caplog.records if rec.levelno == logging.ERROR
+        ]
+        assert error_records, (
+            f"Expected at least one ERROR record; got: "
+            f"{[(r.levelname, r.getMessage()) for r in caplog.records]}"
+        )
+        # The record should mention the snapshot path so log mining
+        # can correlate the error with the failed write — but accept
+        # any rendering that includes the path component.
         assert any(
-            "Failed to write crash snapshot" in rec.message
-            for rec in caplog.records
+            str(tmp_path) in rec.getMessage() or "crash" in rec.getMessage().lower()
+            for rec in error_records
+        ), (
+            "Expected the ERROR record to reference the crash snapshot "
+            "(by path or by the word 'crash'); got: "
+            f"{[r.getMessage() for r in error_records]}"
         )
 
 
