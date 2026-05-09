@@ -139,18 +139,18 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/simulation/systems/battle_end_conditions.py`
 **Tests:** `pytest tests/unit/simulation/systems/test_battle_end_conditions.py` then `pytest tests/integration/simulation/`
 
-- [ ] Add a base method (e.g., `BattleEndCondition._serialize_fields() -> dict`) that subclasses override to declare their fields, plus a base `to_dict` that returns `{"type": cls._TYPE_TAG, **self._serialize_fields()}` and a base `from_dict` classmethod that dispatches by `type` tag
-- [ ] Migrate `TickLimitCondition` to use the base
-- [ ] Migrate `TeamEliminatedCondition` to use the base
-- [ ] Migrate `TeamIncapacitatedCondition` to use the base
-- [ ] Migrate `EscapeCondition` to use the base
-- [ ] Migrate `ShipDestroyedCondition` to use the base
-- [ ] Migrate `NeverCondition` to use the base
-- [ ] Migrate `MassRatioCondition` to use the base
-- [ ] Migrate `AnyCondition` to use the base (note: contains nested condition list — confirm recursion path)
-- [ ] Migrate `AllCondition` to use the base (also nested — confirm recursion path)
-- [ ] Run round-trip serialization tests for every condition type to confirm `to_dict` → `from_dict` is lossless and matches the previous wire format byte-for-byte (or document any necessary save-format migration)
-- [ ] Verify: focused + integration tests pass; no save-file shape changes; LOC delta ≈ −40
+- [x] Added `BattleEndCondition` base with `_TYPE_TAG: str` class attribute, `_serialize_fields() -> dict` hook, and shared `to_dict()` returning `{"type": _TYPE_TAG, **_serialize_fields()}`. `from_dict` stays per-subclass — field-extraction rules vary too much (default values, tuple coercion for `EscapeCondition`, recursion in composites) to capture in a single base. The `end_condition_from_dict()` factory continues to dispatch by `type` tag.
+- [x] Migrated `TickLimitCondition` (now subclasses base; `_serialize_fields` returns `{"max_ticks": ...}`)
+- [x] Migrated `TeamEliminatedCondition`
+- [x] Migrated `TeamIncapacitatedCondition` (no fields → uses default `_serialize_fields` returning `{}`)
+- [x] Migrated `EscapeCondition`
+- [x] Migrated `ShipDestroyedCondition`
+- [x] Migrated `NeverCondition` (no fields)
+- [x] Migrated `MassRatioCondition`
+- [x] Migrated `AnyCondition` (nested: `_serialize_fields` returns `{"conditions": [c.to_dict() for c in self.conditions]}`; `from_dict` recurses via `end_condition_from_dict`)
+- [x] Migrated `AllCondition` (same recursion shape as Any)
+- [x] Round-trip serialization confirmed: tests/unit/simulation/systems/test_battle_end_conditions.py + ..._n_team.py -> 90 passed; the wire format ({"type": tag, ...fields}) is byte-for-byte unchanged (key order is preserved by the dict-merge with `type` first)
+- [x] Verify: tests/unit/simulation/ -> 3729 passed; no save-file shape changes; LOC delta ≈ −15 (`to_dict` shrinks 4 lines per class × 9 classes; the new base adds ~30 lines)
 
 **Notes:** Verified 9 subclasses with 18 near-identical serialization methods. Tagged Complex by audit because of nested-condition recursion in `AnyCondition` / `AllCondition` and the round-trip equivalence requirement. (DUP-X-11)
 

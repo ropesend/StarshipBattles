@@ -85,11 +85,47 @@ class IEndCondition(Protocol):
 
 
 # ============================================================================
+# Base
+# ============================================================================
+
+
+class BattleEndCondition:
+    """Base for the leaf and composite battle-end conditions.
+
+    PROJ-380 DUP-X-11: subclasses set ``_TYPE_TAG`` as a class attribute
+    and implement ``_serialize_fields() -> dict`` returning their
+    per-class payload. The base ``to_dict()`` then produces the standard
+    ``{"type": <tag>, **fields}`` shape.
+
+    ``from_dict`` deliberately stays per-subclass — the field-extraction
+    rules (default values, tuple/list coercion for ``EscapeCondition``,
+    nested-condition recursion for ``AnyCondition`` / ``AllCondition``)
+    are too divergent to capture in a single base implementation.
+    """
+
+    _TYPE_TAG: str = ""  # Subclasses must override.
+
+    def _serialize_fields(self) -> Dict[str, Any]:
+        """Return this condition's serializable fields (without ``type``).
+
+        Default: no extra fields. Subclasses with non-empty payloads
+        override this hook.
+        """
+        return {}
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to ``{"type": _TYPE_TAG, **_serialize_fields()}``."""
+        return {"type": self._TYPE_TAG, **self._serialize_fields()}
+
+
+# ============================================================================
 # Leaf Conditions
 # ============================================================================
 
-class TickLimitCondition:
+class TickLimitCondition(BattleEndCondition):
     """End battle after a fixed number of ticks."""
+
+    _TYPE_TAG = "tick_limit"
 
     def __init__(self, max_ticks: int):
         self.max_ticks = max_ticks
@@ -97,8 +133,8 @@ class TickLimitCondition:
     def is_met(self, ships: List['Ship'], tick: int) -> bool:
         return tick >= self.max_ticks
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {"type": "tick_limit", "max_ticks": self.max_ticks}
+    def _serialize_fields(self) -> Dict[str, Any]:
+        return {"max_ticks": self.max_ticks}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'TickLimitCondition':
@@ -112,7 +148,7 @@ class TickLimitCondition:
         return f"TickLimitCondition(max_ticks={self.max_ticks})"
 
 
-class TeamEliminatedCondition:
+class TeamEliminatedCondition(BattleEndCondition):
     """End battle when ≤1 team has alive ships.
 
     PROJ-269 Phase 3 Task 3.5: generalized from "any team has 0 alive
@@ -125,6 +161,8 @@ class TeamEliminatedCondition:
     Args:
         check_derelict: If True, derelict ships count as eliminated.
     """
+
+    _TYPE_TAG = "team_eliminated"
 
     def __init__(self, check_derelict: bool = False):
         self.check_derelict = check_derelict
@@ -146,11 +184,8 @@ class TeamEliminatedCondition:
         # Fire when only one (or zero) team has alive ships.
         return alive_team_count <= 1
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "type": "team_eliminated",
-            "check_derelict": self.check_derelict,
-        }
+    def _serialize_fields(self) -> Dict[str, Any]:
+        return {"check_derelict": self.check_derelict}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'TeamEliminatedCondition':
@@ -166,7 +201,7 @@ class TeamEliminatedCondition:
         return f"TeamEliminatedCondition({d.lstrip(', ')})"
 
 
-class TeamIncapacitatedCondition:
+class TeamIncapacitatedCondition(BattleEndCondition):
     """End battle when ≤1 team retains combat capability.
 
     PROJ-269 Phase 3 Task 3.5: generalized to N-team semantics. A team
@@ -175,6 +210,8 @@ class TeamIncapacitatedCondition:
     team is still capable (the last team standing, or a full draw).
     For 2-team battles this is equivalent to the previous semantics.
     """
+
+    _TYPE_TAG = "team_incapacitated"
 
     def is_met(self, ships: List['Ship'], tick: int) -> bool:
         if not ships:
@@ -205,9 +242,6 @@ class TeamIncapacitatedCondition:
                 return True
         return False
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {"type": "team_incapacitated"}
-
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'TeamIncapacitatedCondition':
         return cls()
@@ -220,7 +254,7 @@ class TeamIncapacitatedCondition:
         return "TeamIncapacitatedCondition()"
 
 
-class EscapeCondition:
+class EscapeCondition(BattleEndCondition):
     """End battle when ships escape beyond a radius from arena center.
 
     Args:
@@ -229,6 +263,8 @@ class EscapeCondition:
         escape_team: Only check this team (None = any team).
         escape_all_ships: If True, ALL alive ships must escape. If False, ANY ship counts.
     """
+
+    _TYPE_TAG = "escape"
 
     def __init__(
         self,
@@ -263,9 +299,8 @@ class EscapeCondition:
         else:
             return any(_is_outside(s) for s in ships_to_check)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def _serialize_fields(self) -> Dict[str, Any]:
         return {
-            "type": "escape",
             "escape_radius": self.escape_radius,
             "arena_center": list(self.arena_center),
             "escape_team": self.escape_team,
@@ -296,12 +331,14 @@ class EscapeCondition:
         )
 
 
-class ShipDestroyedCondition:
+class ShipDestroyedCondition(BattleEndCondition):
     """End battle when a named ship is destroyed.
 
     Uses ship name (case-sensitive) for matching. If the named ship is
     not found in the battle, the condition is never met.
     """
+
+    _TYPE_TAG = "ship_destroyed"
 
     def __init__(self, ship_name: str):
         self.ship_name = ship_name
@@ -312,8 +349,8 @@ class ShipDestroyedCondition:
             for s in ships
         )
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {"type": "ship_destroyed", "ship_name": self.ship_name}
+    def _serialize_fields(self) -> Dict[str, Any]:
+        return {"ship_name": self.ship_name}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ShipDestroyedCondition':
@@ -327,18 +364,17 @@ class ShipDestroyedCondition:
         return f"ShipDestroyedCondition(ship_name='{self.ship_name}')"
 
 
-class NeverCondition:
+class NeverCondition(BattleEndCondition):
     """Never end the battle automatically.
 
     Used for sandbox/manual testing. The safety ceiling on BattleEngine
     still applies.
     """
 
+    _TYPE_TAG = "never"
+
     def is_met(self, ships: List['Ship'], tick: int) -> bool:
         return False
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {"type": "never"}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'NeverCondition':
@@ -352,7 +388,7 @@ class NeverCondition:
         return "NeverCondition()"
 
 
-class MassRatioCondition:
+class MassRatioCondition(BattleEndCondition):
     """End battle when one side's fighting mass drops below a threshold ratio.
 
     Fighting mass excludes dead and derelict ships. Battle ends when:
@@ -361,6 +397,8 @@ class MassRatioCondition:
     Args:
         threshold: Ratio below which battle ends (default 0.10 = 10%).
     """
+
+    _TYPE_TAG = "mass_ratio"
 
     def __init__(self, threshold: float = 0.10):
         self.threshold = threshold
@@ -381,8 +419,8 @@ class MassRatioCondition:
         ratio = min(team0_mass, team1_mass) / max(team0_mass, team1_mass)
         return ratio < self.threshold
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {"type": "mass_ratio", "threshold": self.threshold}
+    def _serialize_fields(self) -> Dict[str, Any]:
+        return {"threshold": self.threshold}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'MassRatioCondition':
@@ -400,8 +438,10 @@ class MassRatioCondition:
 # Composite Conditions
 # ============================================================================
 
-class AnyCondition:
+class AnyCondition(BattleEndCondition):
     """OR composite: met when ANY child condition is met."""
+
+    _TYPE_TAG = "any"
 
     def __init__(self, conditions: List[IEndCondition]):
         self.conditions = list(conditions)
@@ -409,11 +449,8 @@ class AnyCondition:
     def is_met(self, ships: List['Ship'], tick: int) -> bool:
         return any(c.is_met(ships, tick) for c in self.conditions)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "type": "any",
-            "conditions": [c.to_dict() for c in self.conditions],
-        }
+    def _serialize_fields(self) -> Dict[str, Any]:
+        return {"conditions": [c.to_dict() for c in self.conditions]}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'AnyCondition':
@@ -431,8 +468,10 @@ class AnyCondition:
         return f"AnyCondition({self.conditions!r})"
 
 
-class AllCondition:
+class AllCondition(BattleEndCondition):
     """AND composite: met when ALL child conditions are met."""
+
+    _TYPE_TAG = "all"
 
     def __init__(self, conditions: List[IEndCondition]):
         self.conditions = list(conditions)
@@ -440,11 +479,8 @@ class AllCondition:
     def is_met(self, ships: List['Ship'], tick: int) -> bool:
         return all(c.is_met(ships, tick) for c in self.conditions)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "type": "all",
-            "conditions": [c.to_dict() for c in self.conditions],
-        }
+    def _serialize_fields(self) -> Dict[str, Any]:
+        return {"conditions": [c.to_dict() for c in self.conditions]}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'AllCondition':
