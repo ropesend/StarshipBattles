@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Reconcile audit-readiness records + projects_index status | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Reconcile audit-readiness records + projects_index status | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
-**Active Phase:** Phase 1
-**Last Action:** Project skeleton created from REMEDIATION_PLAN Tier 2 (A-01..A-10)
-**Next Action:** Reconcile audit-readiness records + index status across the 14 affected projects.
+**Active Phase:** Closeout
+**Last Action:** Phase 1 complete. All 20 PROJ-380..399 projects now PASS `validate_audit_ready.py` (was 13/20 before; 7 of those 13 were Index-warning-only). 14 audit-failing projects (A-01..A-09) reconciled — phase checklists ticked, manifests populated where skeletal, plan Quick Status / Current State updated. A-10 index sweep flipped 20 rows from `Planning` → `Complete`. PROJ-395 honestly records MAJ-013/MAJ-014 deferrals → PROJ-409 (Wave 5). PROJ-397 Phase 3 fleet_id text now reflects implemented Path B.
+**Next Action:** Awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -59,7 +59,7 @@ The independent review of PROJ-380..399 found that, while most projects landed t
 - For each project, the verification report at `Projects/active_projects/PROJ-3XX/findings/verification_report.md` contains the actually-shipped state.
 
 ## Verification
-- [ ] Phase 1 checklist complete
-- [ ] `python Projects/scripts/validate_audit_ready.py PROJ-XXX` PASSED for every PROJ-380..399 (20 invocations)
-- [ ] `Projects/projects_index.md` shows `Complete` for every PROJ-380..399
+- [x] Phase 1 checklist complete
+- [x] `python Projects/scripts/validate_audit_ready.py PROJ-XXX` PASSED for every PROJ-380..399 (20/20; matrix recorded in `findings/audit_baseline.md`)
+- [x] `Projects/projects_index.md` shows `Complete` for every PROJ-380..399
 - [ ] User verified

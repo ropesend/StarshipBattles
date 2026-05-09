@@ -31,6 +31,36 @@ Command: `python Projects/scripts/validate_audit_ready.py PROJ-XXX` for XXX in 3
 
 Pass count: **13 / 20** (the 13 are Index-Planning-warning-only).
 
-## After reconciliation
+## After reconciliation (2026-05-09, post-PROJ-406)
 
-(Populated by Task 1.12.)
+| Project | Result | Errors | Notes |
+|---------|--------|--------|-------|
+| PROJ-380 | PASSED | 0 | Index now `Complete` |
+| PROJ-381 | PASSED | 0 | Index now `Complete` |
+| PROJ-382 | PASSED | 0 | All 5 phases ticked; Phase 5 Task 5.4 closed via PROJ-396 |
+| PROJ-383 | PASSED | 0 | Index now `Complete` |
+| PROJ-384 | PASSED | 0 | Stale blocker text cleared; verification rows ticked |
+| PROJ-385 | PASSED | 0 | Index now `Complete` |
+| PROJ-386 | PASSED | 0 | Index now `Complete` |
+| PROJ-387 | PASSED | 0 | Index now `Complete` |
+| PROJ-388 | PASSED | 0 | Index now `Complete` |
+| PROJ-389 | PASSED | 0 | Phase 1 ticked; manifest extended with 4 test files + 3 docs |
+| PROJ-390 | PASSED | 0 | Index now `Complete` |
+| PROJ-391 | PASSED | 0 | Index now `Complete` |
+| PROJ-392 | PASSED | 0 | Index now `Complete` |
+| PROJ-393 | PASSED | 0 | All 3 phases ticked; Tasks 3.2/3.3/3.5 closed via PROJ-397 |
+| PROJ-394 | PASSED | 0 | Index now `Complete` |
+| PROJ-395 | PASSED | 0 | Phase 2 honest closure: 12/14 + 2 deferred → PROJ-409 |
+| PROJ-396 | PASSED | 0 | All phases ticked; sharded baseline corrected to 19815/19811 |
+| PROJ-397 | PASSED | 0 | All 3 phases ticked; Phase 3 fleet_id text reflects implemented Path B |
+| PROJ-398 | PASSED | 0 | Phase 1 ticked; manifest populated from commits c6e0113ec/e14d7f1ce/6744b44e1 |
+| PROJ-399 | PASSED | 0 | Phase 1 ticked; sharded baseline refreshed to post-Wave-1 |
+
+Pass count: **20 / 20**.
+
+`Projects/projects_index.md` now shows `Complete` for every PROJ-380..399 row (20 flips, A-10 swept).
+
+## Genuine blockers raised
+
+None — all 14 affected projects could be honestly reconciled to Complete (with PROJ-395 documenting the 2 deferrals to PROJ-409).
+

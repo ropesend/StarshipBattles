@@ -4,33 +4,33 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-406 | Tier 2: audit-readiness reconciliation across 14 PROJ-380..399 projects | Planning | 2026-05-09 | 2026-05-09 |
+| PROJ-406 | Tier 2: audit-readiness reconciliation across 14 PROJ-380..399 projects | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-405 | Tier 1 B-06: Wire EventBus through Projectile/Seeker construction | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-404 | Tier 1 B-05: Eradicate save-format compatibility (Rule 3 follow-on) | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-403 | Tier 1 B-04: Migrate stale _MockGalaxy doubles to GalaxyState | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-402 | Tier 1 B-03: SimulationBattleResolver catch ValidationException | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-401 | Tier 1 B-02: Passenger-load validator missing species_id rejection | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-400 | Tier 1 B-01: NewGameSetupScreen deleted-wrapper call | Complete | 2026-05-09 | 2026-05-09 |
-| PROJ-399 | Branch hygiene — pre-existing test failures and pytest collection errors (Galaxy._intercept, docs-drift, basename collisions) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-398 | PROJ-380 remediation — 5 review MAJOR findings (consolidation refinements) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-397 | PROJ-393 remediation — review CRITICAL + MAJOR + 3 deferred items (Combat Lab dead vars reclaim, fleet_id field deletion, view=None branch) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-396 | PROJ-382 remediation — review CRITICAL + MAJOR + Task 5.4 deferred (static-guard blind spot, GameSession.from_dict mutators, superweapon_order_processor decomp) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-395 | PROJ-381 remediation — review CRITICAL + MAJOR findings (B-5 modal, ValidationException registry, test assertions, etc.) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-394 | PROJ-387 follow-up — Galaxy state public property + guard cleanup | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-393 | Legacy removal — Test-injection fallbacks + comment cleanups (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-392 | Legacy removal — Misc orphan wrappers + zero-call-site placeholders (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-391 | Legacy removal — Underscore-prefixed legacy pair consolidations (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-390 | Legacy removal — log_event module-level compat shim retirement (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-389 | Legacy removal — score_planet_for_race wrapper migration (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-388 | Legacy removal — ModifierLogic deprecated class wrapper (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-387 | Legacy removal — Galaxy backward-compat property forwarders (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-386 | Legacy removal — Save-format migration eradication (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-385 | Legacy removal — formula_evaluator backward-compat aliases (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-384 | Legacy removal — PROJ-241 deprecated *_static methods (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-383 | Legacy removal — command_handlers.py shim eradication (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-382 | Pattern conformance — Facade integrity, EventBus injection, doc drift, LOC sweep (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-381 | Error handling cleanup — strategy/ui/assets/sim (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
-| PROJ-380 | Audit-shrink cleanup 2026-05-07 | Planning | 2026-05-08 | 2026-05-08 |
+| PROJ-399 | Branch hygiene — pre-existing test failures and pytest collection errors (Galaxy._intercept, docs-drift, basename collisions) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-398 | PROJ-380 remediation — 5 review MAJOR findings (consolidation refinements) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-397 | PROJ-393 remediation — review CRITICAL + MAJOR + 3 deferred items (Combat Lab dead vars reclaim, fleet_id field deletion, view=None branch) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-396 | PROJ-382 remediation — review CRITICAL + MAJOR + Task 5.4 deferred (static-guard blind spot, GameSession.from_dict mutators, superweapon_order_processor decomp) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-395 | PROJ-381 remediation — review CRITICAL + MAJOR findings (B-5 modal, ValidationException registry, test assertions, etc.) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-394 | PROJ-387 follow-up — Galaxy state public property + guard cleanup | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-393 | Legacy removal — Test-injection fallbacks + comment cleanups (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-392 | Legacy removal — Misc orphan wrappers + zero-call-site placeholders (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-391 | Legacy removal — Underscore-prefixed legacy pair consolidations (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-390 | Legacy removal — log_event module-level compat shim retirement (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-389 | Legacy removal — score_planet_for_race wrapper migration (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-388 | Legacy removal — ModifierLogic deprecated class wrapper (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-387 | Legacy removal — Galaxy backward-compat property forwarders (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-386 | Legacy removal — Save-format migration eradication (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-385 | Legacy removal — formula_evaluator backward-compat aliases (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-384 | Legacy removal — PROJ-241 deprecated *_static methods (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-383 | Legacy removal — command_handlers.py shim eradication (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-382 | Pattern conformance — Facade integrity, EventBus injection, doc drift, LOC sweep (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-381 | Error handling cleanup — strategy/ui/assets/sim (2026-05-07) | Complete | 2026-05-08 | 2026-05-08 |
+| PROJ-380 | Audit-shrink cleanup 2026-05-07 | Complete | 2026-05-08 | 2026-05-08 |
 | PROJ-379 | Deterministic Golden-Save Fixture (PROJ-377 MIN-002) | Planning | 2026-05-07 | 2026-05-07 |
 | PROJ-378 | Galaxy Cleanup Test Pattern Update (post-PROJ-372 facade-delegate) | Planning | 2026-05-06 | 2026-05-06 |
 | PROJ-377 | PROJ-372 Phase 5 Leftovers: Golden-Save Fixture + Pathfinding Shim Sweep | Planning | 2026-05-06 | 2026-05-06 |
