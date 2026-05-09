@@ -1,0 +1,12 @@
+{
+  "request_id": "req_20260509_015902_916201",
+  "review_dir": "Reviews/results/2026-05-09_015904_code_proj-380-audit-shrink-cleanup-3-phases-11-verified_req-req_20260509_015902_916201",
+  "report_path": "Reviews/results/2026-05-09_015904_code_proj-380-audit-shrink-cleanup-3-phases-11-verified_req-req_20260509_015902_916201/report.md",
+  "findings": {
+    "critical": 0,
+    "major": 5,
+    "minor": 8,
+    "info": 30
+  },
+  "completed_at": "2026-05-09T02:00:00Z"
+}
