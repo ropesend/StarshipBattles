@@ -7,9 +7,9 @@ Owns:
     - `add_move_order_if_needed` (chain-aware MOVE auto-queue helper)
 
 Extracted from the monolithic `command_handlers.py` in PROJ-309 sub-phase 3.5
-(2026-04-27). Sibling modules in `game.strategy.engine.handlers/*` import
-`BaseCommandHandler` from here; external callers continue to use the
-`game.strategy.engine.command_handlers` shim.
+(2026-04-27). PROJ-383 (2026-05-08) deleted the transitional
+`command_handlers.py` re-export shim; all callers now import directly from
+`game.strategy.engine.handlers/*`.
 """
 from __future__ import annotations
 
