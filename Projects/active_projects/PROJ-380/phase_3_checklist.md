@@ -32,10 +32,10 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/strategy/data/fleet_consumable_aggregator.py`
 **Tests:** `pytest tests/unit/strategy/data/test_fleet_consumable_aggregator.py` (or whichever fleet-cargo tests exist)
 
-- [ ] Add private helper `_distribute_cargo_to_fleet(self, cargo_type, amount, ship_method)` that iterates `self._fleet.ships`, calls `ship_method(...)` per ship, accumulates total, and applies the `if amount <= 0: return 0` guard
-- [ ] Replace `load_cargo_to_fleet` (lines 291–315) body with a one-liner: `return self._distribute_cargo_to_fleet(cargo_type, amount, lambda ship, t, a: ship.load_cargo(t, a))` (or equivalent passing the bound method)
-- [ ] Replace `unload_cargo_from_fleet` (lines 317–341) body identically using `ship.unload_cargo`
-- [ ] Verify: focused tests pass; load/unload behave identically; LOC delta ≈ −18
+- [x] Add private helper `_distribute_cargo_to_fleet(self, cargo_type, amount, ship_method)` that iterates `self._fleet.ships`, calls `ship_method(...)` per ship, accumulates total, and applies the `if amount <= 0: return 0` guard
+- [x] Replace `load_cargo_to_fleet` body with `return self._distribute_cargo_to_fleet(cargo_type, amount, lambda ship, t, a: ship.load_cargo(t, a))`
+- [x] Replace `unload_cargo_from_fleet` body identically using `ship.unload_cargo`
+- [x] Verify: focused tests pass (61/61 in test_fleet_consumable_aggregator.py); LOC delta ≈ −18
 
 **Notes:** Verification confirmed the two methods are perfect mirrors differing only in ship-method name. (DUP-X-06)
 
