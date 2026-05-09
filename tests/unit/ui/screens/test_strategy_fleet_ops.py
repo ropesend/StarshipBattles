@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
 from game.ui.screens.strategy_fleet_ops import FleetOperations
@@ -74,8 +74,8 @@ def test_fleet_ops_occupied_hex_prompts_choice() -> None:
     target = _fleet_info(fleet_id=99, owner_id=3)
     facade.get_fleets_at_hex.return_value = [target]
 
-    with patch("game.ui.screens.strategy_fleet_ops.pixel_to_hex", return_value=target_hex):
-        result = ops.handle_move_designation(10, 20, selected)
+    ops.scene.camera.hex_at_screen.return_value = target_hex
+    result = ops.handle_move_designation(10, 20, selected)
 
     assert result == {
         "type": "choice",
@@ -91,8 +91,8 @@ def test_handle_move_designation_executes_move_when_target_is_selected_fleet() -
     facade.get_fleets_at_hex.return_value = [_fleet_info(fleet_id=1)]
     ops.execute_move = MagicMock(return_value={"type": "success", "fleet": selected})
 
-    with patch("game.ui.screens.strategy_fleet_ops.pixel_to_hex", return_value=target_hex):
-        result = ops.handle_move_designation(10, 20, selected)
+    ops.scene.camera.hex_at_screen.return_value = target_hex
+    result = ops.handle_move_designation(10, 20, selected)
 
     ops.execute_move.assert_called_once_with(selected, target_hex)
     assert result == {"type": "success", "fleet": selected}
@@ -156,8 +156,8 @@ def test_handle_join_designation_filters_to_same_owner_non_self_targets() -> Non
     ]
     ops.execute_join = MagicMock(return_value={"type": "success", "fleet": selected})
 
-    with patch("game.ui.screens.strategy_fleet_ops.pixel_to_hex", return_value=HexCoord(0, 0)):
-        result = ops.handle_join_designation(10, 20, selected)
+    ops.scene.camera.hex_at_screen.return_value = HexCoord(0, 0)
+    result = ops.handle_join_designation(10, 20, selected)
 
     ops.execute_join.assert_called_once_with(selected, valid)
     assert result == {"type": "success", "fleet": selected}
@@ -169,8 +169,8 @@ def test_handle_join_designation_returns_choice_for_multiple_valid_targets() -> 
     valid_targets = [_fleet_info(fleet_id=2, owner_id=7), _fleet_info(fleet_id=3, owner_id=7)]
     facade.get_fleets_at_hex.return_value = valid_targets
 
-    with patch("game.ui.screens.strategy_fleet_ops.pixel_to_hex", return_value=HexCoord(0, 0)):
-        result = ops.handle_join_designation(10, 20, selected)
+    ops.scene.camera.hex_at_screen.return_value = HexCoord(0, 0)
+    result = ops.handle_join_designation(10, 20, selected)
 
     assert result == {"type": "choice", "fleets": valid_targets}
 

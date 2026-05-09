@@ -6,8 +6,11 @@ for the viewport. Using pygame's Vector2 is appropriate here since this module
 only operates within the UI layer and integrates directly with pygame rendering.
 The core Vector2 class is designed for layer-agnostic simulation code.
 """
-from typing import List, Optional, Tuple, Any
+from typing import List, Optional, Tuple, Any, TYPE_CHECKING
 import pygame
+
+if TYPE_CHECKING:
+    from game.core.hex_math import HexCoord
 
 
 class Camera:
@@ -143,10 +146,30 @@ class Camera:
         """Convert screen coordinates to world coordinates."""
         # Remove Viewport Offset first to get coordinate relative to Viewport
         local_pos = pygame.math.Vector2(screen_pos) - pygame.math.Vector2(self.offset_x, self.offset_y)
-        
+
         screen_center = pygame.math.Vector2(self.width / 2, self.height / 2)
         offset = local_pos - screen_center
         return self.position + (offset / self.zoom)
+
+    def hex_at_screen(self, screen_x: int, screen_y: int, hex_size: float) -> 'HexCoord':
+        """Return the hex coordinate under the given screen pixel.
+
+        Convenience for the very common 2-step ``screen_to_world`` →
+        ``pixel_to_hex`` pattern in strategy-screen click handlers
+        (PROJ-380, DUP-X-08).
+
+        Args:
+            screen_x: Screen x in pixels (typically a mouse-event ``mx``).
+            screen_y: Screen y in pixels (typically a mouse-event ``my``).
+            hex_size: World-space hex size; passed through to
+                :func:`game.core.hex_math.pixel_to_hex`.
+
+        Returns:
+            The :class:`~game.core.hex_math.HexCoord` under that screen pixel.
+        """
+        from game.core.hex_math import pixel_to_hex  # local import: hex_math is core, camera is UI
+        world_pos = self.screen_to_world((screen_x, screen_y))
+        return pixel_to_hex(world_pos.x, world_pos.y, hex_size)
 
     def fit_objects(self, objects: List[Any]) -> None:
         """Adjust camera to fit all objects in view."""

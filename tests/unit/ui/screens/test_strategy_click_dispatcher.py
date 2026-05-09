@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pygame
 
@@ -13,12 +13,17 @@ from game.ui.screens.strategy_click_dispatcher import ClickModeDispatcher
 class _IdentityCamera:
     def __init__(self, *, zoom: float = 1.0) -> None:
         self.zoom = zoom
+        # PROJ-380 DUP-X-08: tests set this directly to control resolved hex.
+        self.hex_at_screen_return = HexCoord(0, 0)
 
     def world_to_screen(self, world_pos: pygame.math.Vector2) -> pygame.math.Vector2:
         return pygame.math.Vector2(world_pos.x, world_pos.y)
 
     def screen_to_world(self, _screen_pos: tuple[int, int]) -> SimpleNamespace:
         return SimpleNamespace(x=0.0, y=0.0)
+
+    def hex_at_screen(self, _x: int, _y: int, _hex_size: float) -> HexCoord:
+        return self.hex_at_screen_return
 
 
 def _planet(
@@ -123,11 +128,8 @@ def test_resolve_click_target_returns_planet_logical_hex_when_visual_hit() -> No
     dispatcher = _dispatcher(scene)
     dispatcher._hit_test_planets = MagicMock(return_value=planet)
 
-    with patch(
-        "game.ui.screens.strategy_click_dispatcher.pixel_to_hex",
-        return_value=HexCoord(99, 99),
-    ):
-        target_hex = dispatcher._resolve_click_target(100, 200)
+    scene.camera.hex_at_screen_return = HexCoord(99, 99)
+    target_hex = dispatcher._resolve_click_target(100, 200)
 
     assert target_hex == HexCoord(13, 2)
     dispatcher._hit_test_planets.assert_called_once_with(100, 200, system)
@@ -143,8 +145,8 @@ def test_resolve_click_target_returns_raw_hex_when_zoom_too_low() -> None:
     dispatcher = _dispatcher(scene)
     dispatcher._hit_test_planets = MagicMock()
 
-    with patch("game.ui.screens.strategy_click_dispatcher.pixel_to_hex", return_value=raw_hex):
-        target_hex = dispatcher._resolve_click_target(100, 200)
+    scene.camera.hex_at_screen_return = raw_hex
+    target_hex = dispatcher._resolve_click_target(100, 200)
 
     assert target_hex == raw_hex
     dispatcher._hit_test_planets.assert_not_called()
@@ -168,11 +170,8 @@ def test_handle_picking_prioritizes_hit_tested_planet_in_shared_hex() -> None:
     dispatcher = _dispatcher(scene)
     dispatcher._hit_test_planets = MagicMock(return_value=hit_planet)
 
-    with patch(
-        "game.ui.screens.strategy_click_dispatcher.pixel_to_hex",
-        return_value=HexCoord(0, 0),
-    ):
-        dispatcher._handle_picking(100, 200)
+    scene.camera.hex_at_screen_return = HexCoord(0, 0)
+    dispatcher._handle_picking(100, 200)
 
     sector_contents = scene.ui.show_sector_info.call_args.args[1]
     assert sector_contents[0] is hit_planet
@@ -196,11 +195,8 @@ def test_handle_picking_clears_detail_for_empty_space() -> None:
     )
     dispatcher = _dispatcher(scene)
 
-    with patch(
-        "game.ui.screens.strategy_click_dispatcher.pixel_to_hex",
-        return_value=HexCoord(5, 5),
-    ):
-        dispatcher._handle_picking(100, 200)
+    scene.camera.hex_at_screen_return = HexCoord(5, 5)
+    dispatcher._handle_picking(100, 200)
 
     scene.ui.show_system_info.assert_called_once_with(None, [])
     scene.ui.show_detailed_report.assert_called_once_with(None, None)
@@ -319,8 +315,8 @@ def test_edit_move_left_click_completes_order_with_resolved_hex() -> None:
     dispatcher, _handler = _dispatcher_with_handler(scene, input_mode="EDIT_MOVE")
     new_hex = HexCoord(8, 9)
 
-    with patch("game.ui.screens.strategy_click_dispatcher.pixel_to_hex", return_value=new_hex):
-        handled = dispatcher.dispatch_click(100, 200, 1)
+    scene.camera.hex_at_screen_return = new_hex
+    handled = dispatcher.dispatch_click(100, 200, 1)
 
     assert handled is True
     scene.complete_edit_move.assert_called_once_with(new_hex)

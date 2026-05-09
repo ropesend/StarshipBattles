@@ -45,11 +45,11 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/ui/screens/strategy_superweapons.py`, plus the camera module (proposed `game/ui/camera.py` — confirm path during implementation), and 4 caller files: `strategy_fleet_ops.py`, `strategy_click_dispatcher.py`, `strategy_colonization.py`, `strategy_input_handler.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_superweapons.py` then `pytest tests/ --testmon`
 
-- [ ] Add `Camera.hex_at_screen(screen_x: int, screen_y: int) -> HexCoord` that wraps the existing `screen_to_world` + `pixel_to_hex(world_pos.x, world_pos.y, hex_size)` 2-step
-- [ ] Add `_check_fleet_ability(fleet, ability_name, error_msg)` validator helper at an appropriate strategy-UI location (record location in **Notes**)
-- [ ] Replace the 5 designation handlers in `strategy_superweapons.py` (lines 78-83, 134-139, 180-185, 236-241, 280-285) to use both helpers
-- [ ] Replace remaining `pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)` call sites: 2 in `strategy_fleet_ops.py`, 2 in `strategy_click_dispatcher.py`, 1 in `strategy_colonization.py`, 1 in `strategy_input_handler.py` (11 sites total across 5 files)
-- [ ] Verify: focused tests pass; `pytest tests/ --testmon` green; LOC delta ≈ −15
+- [x] Added `Camera.hex_at_screen(screen_x, screen_y, hex_size) -> HexCoord` wrapping `screen_to_world` + `pixel_to_hex` (hex_size kept as a parameter — Camera is layer-agnostic and shouldn't depend on game hex_size)
+- [x] Added module-level `_check_fleet_ability(fleet, ability_name, error_msg)` in `strategy_superweapons.py` (kept local to file — the only caller; no need to elevate to a shared module)
+- [x] Replaced the 5 designation handlers in `strategy_superweapons.py` to use both helpers
+- [x] Replaced remaining `pixel_to_hex(world_pos.x, world_pos.y, ...)` sites: 2 in `strategy_click_dispatcher.py`, 2 in `strategy_fleet_ops.py`, 1 in `strategy_colonization.py`, 1 in `strategy_input_handler.py`. Removed 4 now-dead `from game.core.hex_math import pixel_to_hex` imports. `strategy_render/grid.py` retains its import (different shape — operates on world coords directly).
+- [x] Verify: focused tests pass (2945 passed, 1 skipped across `tests/unit/ui/screens/`); LOC delta ≈ −15 (5 designation sites + 6 misc sites - 1 helper added)
 
 **Notes:** Verified `Camera.hex_at_screen` and `_check_fleet_ability` do not already exist. Audit-claimed 11 `pixel_to_hex` sites confirmed. (DUP-X-08)
 

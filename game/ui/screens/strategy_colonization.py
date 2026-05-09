@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any
 import logging
 
 logger = logging.getLogger(__name__)
-from game.core.hex_math import pixel_to_hex
 from game.core.protocols import is_planet
 from game.strategy.engine.commands import IssueColonizeCommand, QueueColonizeMissionCommand
 
@@ -156,8 +155,7 @@ class ColonizationSystem:
         if not fleet:
             return None
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         target_system = self._get_system_at_hex(target_hex)
         if not target_system:

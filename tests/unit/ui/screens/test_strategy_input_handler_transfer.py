@@ -82,16 +82,15 @@ class TestStrategyInputHandlerTransfer:
         # Mock camera and hex resolution
         mock_scene.camera.screen_to_world.return_value = pygame.math.Vector2(100, 100)
 
-        with patch('game.ui.screens.strategy_click_dispatcher.pixel_to_hex') as mock_pixel_to_hex:
-            target_hex = HexCoord(3, 4)
-            mock_pixel_to_hex.return_value = target_hex
+        target_hex = HexCoord(3, 4)
+        mock_scene.camera.hex_at_screen = MagicMock(return_value=target_hex)
 
-            # Simulate left click
-            result = handler.handle_click(200, 300, 1)
+        # Simulate left click
+        result = handler.handle_click(200, 300, 1)
 
-            assert result is True
-            mock_scene.ui.open_transfer_dialog.assert_called_once_with(mock_fleet, target_hex)
-            assert handler.input_mode == 'SELECT'
+        assert result is True
+        mock_scene.ui.open_transfer_dialog.assert_called_once_with(mock_fleet, target_hex)
+        assert handler.input_mode == 'SELECT'
 
     def test_transfer_mode_right_click_cancels_to_select(self, mock_scene, mapper):
         """In TRANSFER mode, right click cancels back to SELECT mode."""
@@ -160,17 +159,16 @@ class TestDropCargoMode:
         # Mock camera and hex resolution
         mock_scene.camera.screen_to_world.return_value = pygame.math.Vector2(100, 100)
 
-        with patch('game.ui.screens.strategy_click_dispatcher.pixel_to_hex') as mock_pixel_to_hex:
-            target_hex = HexCoord(3, 4)
-            mock_pixel_to_hex.return_value = target_hex
+        target_hex = HexCoord(3, 4)
+        mock_scene.camera.hex_at_screen = MagicMock(return_value=target_hex)
 
-            result = handler.handle_click(200, 300, 1)
+        result = handler.handle_click(200, 300, 1)
 
-            assert result is True
-            mock_scene.ui.open_cargo_quick_dialog.assert_called_once_with(
-                mock_fleet, target_hex, 'unload'
-            )
-            assert handler.input_mode == 'SELECT'
+        assert result is True
+        mock_scene.ui.open_cargo_quick_dialog.assert_called_once_with(
+            mock_fleet, target_hex, 'unload'
+        )
+        assert handler.input_mode == 'SELECT'
 
     def test_drop_cargo_mode_right_click_cancels(self, mock_scene, mapper):
         """In DROP_CARGO mode, right click cancels back to SELECT mode."""
@@ -239,17 +237,16 @@ class TestLoadCargoMode:
         # Mock camera and hex resolution
         mock_scene.camera.screen_to_world.return_value = pygame.math.Vector2(100, 100)
 
-        with patch('game.ui.screens.strategy_click_dispatcher.pixel_to_hex') as mock_pixel_to_hex:
-            target_hex = HexCoord(5, 6)
-            mock_pixel_to_hex.return_value = target_hex
+        target_hex = HexCoord(5, 6)
+        mock_scene.camera.hex_at_screen = MagicMock(return_value=target_hex)
 
-            result = handler.handle_click(250, 350, 1)
+        result = handler.handle_click(250, 350, 1)
 
-            assert result is True
-            mock_scene.ui.open_cargo_quick_dialog.assert_called_once_with(
-                mock_fleet, target_hex, 'load'
-            )
-            assert handler.input_mode == 'SELECT'
+        assert result is True
+        mock_scene.ui.open_cargo_quick_dialog.assert_called_once_with(
+            mock_fleet, target_hex, 'load'
+        )
+        assert handler.input_mode == 'SELECT'
 
     def test_load_cargo_mode_right_click_cancels(self, mock_scene, mapper):
         """In LOAD_CARGO mode, right click cancels back to SELECT mode."""

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Optional, Any
-from game.core.hex_math import pixel_to_hex
 from game.strategy.engine.commands import IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand
 from game.strategy.facade.dto.fleet_dto import FleetInfo
 
@@ -88,8 +87,7 @@ class FleetOperations:
             logger.warning("Fleet is building - cancel BUILD order first to move.")
             return {'type': 'error', 'message': 'Fleet is building - cancel BUILD order first'}
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         target_fleet_info = self.get_fleet_at_hex(target_hex)
 
@@ -172,8 +170,7 @@ class FleetOperations:
         if not selected_fleet:
             return None
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         all_fleets = self.facade.get_fleets_at_hex(target_hex)
 

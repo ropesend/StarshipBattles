@@ -11,8 +11,6 @@ from typing import TYPE_CHECKING, Optional, Any
 
 import pygame
 
-from game.core.hex_math import pixel_to_hex
-
 if TYPE_CHECKING:
     from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
@@ -485,8 +483,7 @@ class ClickModeDispatcher:
             HexCoord: The logical hex coordinate to use for targeting.
         """
         # 1. Raw conversion
-        world_pos = self.scene.camera.screen_to_world((mx, my))
-        raw_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+        raw_hex = self.scene.camera.hex_at_screen(mx, my, self.scene.hex_size)
 
         # 2. Check for system context
         # Use existing logic to find system (handles radius search)
@@ -509,8 +506,7 @@ class ClickModeDispatcher:
             mx: Screen x coordinate of click.
             my: Screen y coordinate of click.
         """
-        world_pos = self.scene.camera.screen_to_world((mx, my))
-        hex_clicked = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+        hex_clicked = self.scene.camera.hex_at_screen(mx, my, self.scene.hex_size)
 
         clicked_system = self.scene._get_system_at_hex(hex_clicked)
         sector_contents = []
