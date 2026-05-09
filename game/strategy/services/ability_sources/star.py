@@ -43,14 +43,28 @@ class StarAbilitySource:
         return dict(getattr(self.star, 'intrinsic_abilities', None) or {})
 
     def affects_hex(self, hex_coord) -> bool:
-        """Stars project sector-scope abilities at the star's own hex.
+        """Whether this star's abilities apply at the queried (global) hex.
+
+        Returns True in two cases:
+
+        1. Sector-scope: the star's own global hex matches ``hex_coord`` —
+           any sector-scope ability fires there.
+        2. System-scope: the star declares at least one ability with a
+           system-shaped scope (``system``, ``allied_system``,
+           ``player_system``, ``enemy_system``). System-scope abilities
+           apply at every hex of the system, so the source must surface
+           wherever the system's hexes are queried.
 
         Operates in the GLOBAL galaxy-map frame; local entity coordinates are
-        translated via `system.global_location`.
+        translated via ``system.global_location``.
 
-        System-scope abilities are picked up by the system iterator (iterator
-        passes hex_coord=None for system-wide queries). This method only
-        guards sector-scope filtering at the collector level.
+        The collector still filters by scope (``_SECTOR_SCOPES`` /
+        ``_SYSTEM_SCOPES``), so widening this predicate to "yes for
+        system-scope" does not leak system abilities into sector queries —
+        it only ensures the source is *visible* to system-scope queries
+        that arrive via a hex query path. PROJ-398, FND-041: this fold-in
+        lets ``_star_provider`` use the shared ``_iter_hex_filtered_sources``
+        skeleton.
         """
         star_loc = getattr(self.star, 'location', None)
         sys_loc = getattr(self.system, 'global_location', None) or getattr(self.system, 'location', None)
@@ -60,7 +74,22 @@ class StarAbilitySource:
             star_global = sys_loc + star_loc
         except TypeError:
             return False
-        return hex_coord == star_global
+        if hex_coord == star_global:
+            return True
+        return self._has_system_scope_ability()
+
+    def _has_system_scope_ability(self) -> bool:
+        """Whether any intrinsic ability on the star has a system-shaped scope."""
+        abilities = getattr(self.star, 'intrinsic_abilities', None)
+        if not abilities:
+            return False
+        system_scopes = {'system', 'allied_system', 'player_system', 'enemy_system'}
+        for entry in abilities.values():
+            entries = entry if isinstance(entry, list) else [entry]
+            for e in entries:
+                if isinstance(e, dict) and e.get('scope') in system_scopes:
+                    return True
+        return False
 
     def affects_system(self, system) -> bool:
         return system is self.system

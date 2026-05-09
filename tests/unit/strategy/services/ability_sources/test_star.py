@@ -117,6 +117,76 @@ def test_affects_hex_returns_false_when_locations_cannot_be_added():
     assert src.affects_hex(HexCoord(20, 20)) is False
 
 
+def test_affects_hex_returns_true_for_system_scope_ability_at_any_hex():
+    """PROJ-398 / FND-041: star declaring a system-scope ability is visible
+    at every hex of the system, not just the star's own hex.
+
+    This widening lets `_star_provider` use the shared
+    `_iter_hex_filtered_sources` skeleton.
+    """
+    abilities_with_system_scope = {
+        "RadiationField": {"rate": 0.3, "scope": "system"},
+    }
+    src = StarAbilitySource(
+        star=_MockStar(
+            location=HexCoord(0, 0),
+            intrinsic_abilities=abilities_with_system_scope,
+        ),
+        system=_MockSystem(global_location=HexCoord(20, 20)),
+    )
+    # Star's global hex is (20, 20); a hex elsewhere in the system still
+    # gets True because of the system-scope ability.
+    assert src.affects_hex(HexCoord(99, 99)) is True
+    assert src.affects_hex(HexCoord(20, 20)) is True
+
+
+def test_affects_hex_returns_true_for_allied_system_scope():
+    """system-shaped scopes (`allied_system` etc.) all qualify."""
+    abilities = {"Buff": {"scope": "allied_system"}}
+    src = StarAbilitySource(
+        star=_MockStar(
+            location=HexCoord(0, 0),
+            intrinsic_abilities=abilities,
+        ),
+        system=_MockSystem(global_location=HexCoord(20, 20)),
+    )
+    assert src.affects_hex(HexCoord(50, 50)) is True
+
+
+def test_affects_hex_supports_list_valued_ability_entries():
+    """When intrinsic_abilities maps name -> list of dicts (multi-instance
+    declaration), system-scope detection still works."""
+    abilities = {
+        "MultiInstance": [
+            {"scope": "sector"},
+            {"scope": "system"},
+        ],
+    }
+    src = StarAbilitySource(
+        star=_MockStar(
+            location=HexCoord(0, 0),
+            intrinsic_abilities=abilities,
+        ),
+        system=_MockSystem(global_location=HexCoord(20, 20)),
+    )
+    assert src.affects_hex(HexCoord(99, 99)) is True
+
+
+def test_affects_hex_returns_false_when_only_sector_scope_and_hex_mismatches():
+    """Star with sector-scope-only abilities at a non-matching hex returns False."""
+    abilities = {"LocalEffect": {"scope": "sector"}}
+    src = StarAbilitySource(
+        star=_MockStar(
+            location=HexCoord(0, 0),
+            intrinsic_abilities=abilities,
+        ),
+        system=_MockSystem(global_location=HexCoord(20, 20)),
+    )
+    # Star's global hex is (20, 20) — a different hex returns False.
+    assert src.affects_hex(HexCoord(99, 99)) is False
+    assert src.affects_hex(HexCoord(20, 20)) is True
+
+
 def test_affects_system_matches_only_parent_system():
     system = _MockSystem()
     src = StarAbilitySource(star=_MockStar(), system=system)
