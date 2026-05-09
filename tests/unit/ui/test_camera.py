@@ -113,6 +113,59 @@ class TestCameraTransformations:
         assert roundtrip.y == pytest.approx(original.y, abs=0.1)
 
 
+class TestCameraHexAtScreen:
+    """Test Camera.hex_at_screen integration with screen_to_world + pixel_to_hex.
+
+    PROJ-398 / FND-012: every other test of `hex_at_screen` mocks the method;
+    these tests exercise the real `screen_to_world -> pixel_to_hex` chain so
+    regressions in the viewport math are caught.
+    """
+
+    def test_hex_at_screen_origin_camera_returns_origin_hex(self):
+        """Camera at world origin: clicking screen center returns the origin hex."""
+        from game.core.hex_math import HexCoord, pixel_to_hex
+
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(0, 0)
+        camera.zoom = 1.0
+
+        # Clicking screen center -> world (0, 0) -> pixel_to_hex(0, 0, 10)
+        hex_coord = camera.hex_at_screen(400, 300, 10)
+
+        expected = pixel_to_hex(0, 0, 10)
+        assert isinstance(hex_coord, HexCoord)
+        assert hex_coord == expected
+
+    def test_hex_at_screen_offset_click_resolves_via_world_transform(self):
+        """A non-center click should round-trip through world coords + pixel_to_hex."""
+        from game.core.hex_math import pixel_to_hex
+
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(1000, 2000)
+        camera.zoom = 0.5
+
+        screen_x, screen_y = 500, 400
+        hex_coord = camera.hex_at_screen(screen_x, screen_y, 10)
+
+        world_pos = camera.screen_to_world((screen_x, screen_y))
+        expected = pixel_to_hex(world_pos.x, world_pos.y, 10)
+        assert hex_coord == expected
+
+    def test_hex_at_screen_respects_camera_offset(self):
+        """offset_x/offset_y must propagate through hex_at_screen."""
+        from game.core.hex_math import pixel_to_hex
+
+        camera = Camera(800, 600, offset_x=150, offset_y=75)
+        camera.position = pygame.math.Vector2(0, 0)
+        camera.zoom = 1.0
+
+        # Screen center accounting for offset
+        screen_x, screen_y = 400 + 150, 300 + 75
+        hex_coord = camera.hex_at_screen(screen_x, screen_y, 10)
+
+        assert hex_coord == pixel_to_hex(0, 0, 10)
+
+
 class TestCameraFitObjects:
     """Test camera fit_objects functionality."""
 
