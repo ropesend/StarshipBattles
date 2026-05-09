@@ -203,38 +203,63 @@ class TestWindowInitialization:
         win = _make_window(on_navigate=cb)
         assert win.on_navigate_to_hex is cb
 
-    def test_constructor_requires_facade(self):
-        """PROJ-397 F-05: ``facade`` MUST be a required keyword-only param.
+    def test_add_item_to_source_routes_command_through_facade(self):
+        """PROJ-408 C-01: `_add_item_to_source` MUST dispatch
+        ``AddToConstructionQueueCommand`` through ``self._facade.handle_command``.
 
-        The static guard at ``tests/static_guards/test_facade_bypass_guard.py``
-        blocks ``self.session.handle_command(...)`` text, but does NOT
-        validate that ``facade`` is structurally required on the
-        ``EmpireBuildQueueWindow`` constructor. If ``facade`` were
-        reverted to ``facade: Any = None``, the static guard would not
-        catch it. This test exercises the real constructor signature
-        (introspection only — no widget construction) so a regression
-        defaulting ``facade`` to ``None`` would fail here.
+        Replaces a prior PROJ-397 F-05 introspection-only test that asserted
+        the constructor accepted a required ``facade`` kwarg without ever
+        constructing or exercising the class. This test:
+
+        1. Constructs an ``EmpireBuildQueueWindow`` (via the suite's
+           ``_make_window`` helper, which wires a ``MagicMock`` facade with
+           a real ``handle_command`` mock).
+        2. Calls ``_add_item_to_source`` — the real production code path
+           that PROJ-393 Task 2.5 narrowed to facade-only dispatch.
+        3. Asserts the facade received exactly one command, that the
+           command type is ``AddToConstructionQueueCommand``, and that
+           the command carries the design_id, category, and queue_id
+           threaded from the source/item.
+
+        A regression that re-introduces the deleted "no facade injected"
+        in-place mutation fallback (PROJ-393 Task 2.5), or that bypasses
+        the facade by mutating ``source.construction_queue`` directly,
+        would fail here because ``handle_command`` would not be called.
         """
-        import inspect
-
-        from game.ui.screens.empire_build_queue_window import (
-            EmpireBuildQueueWindow,
+        from game.strategy.engine.commands import (
+            AddToConstructionQueueCommand,
+            BuildEntityType,
         )
 
-        sig = inspect.signature(EmpireBuildQueueWindow.__init__)
-        facade_param = sig.parameters.get("facade")
-        assert facade_param is not None, (
-            "EmpireBuildQueueWindow.__init__ must accept a `facade` kwarg"
+        source = _make_source(
+            queue_id="planet_1_base",
+            display_name="Alpha - Base",
+            can_build_ships=True,
+            queue_items=[],
         )
-        assert facade_param.kind == inspect.Parameter.KEYWORD_ONLY, (
-            "`facade` must be keyword-only (after `*,`)"
+        # Give owner_entity a stable id and the planet_type marker the
+        # production code reads to choose BuildEntityType.PLANET.
+        source.owner_entity.id = 42
+        source.owner_entity.planet_type = "rocky"
+
+        win = _make_window(sources=[source])
+        item = {"design_id": "frigate-mk1", "target_planet_id": None}
+
+        win._add_item_to_source(source, item, item_type="ship")
+
+        # Facade must have been invoked exactly once.
+        assert win._facade.handle_command.call_count == 1, (
+            "Production code must dispatch via the facade, not mutate "
+            "construction_queue in place. PROJ-393 Task 2.5 deleted the "
+            "no-facade fallback path."
         )
-        assert facade_param.default is inspect.Parameter.empty, (
-            "`facade` must be required (no default). PROJ-382 Phase 1 "
-            "made facade required to enforce CQRS dispatch; reverting it "
-            "to Optional would re-introduce the session-bypass risk that "
-            "PROJ-393 Task 2.5 closed."
-        )
+        (cmd,), _ = win._facade.handle_command.call_args
+        assert isinstance(cmd, AddToConstructionQueueCommand)
+        assert cmd.design_id == "frigate-mk1"
+        assert cmd.category == "ship"
+        assert cmd.queue_id == "planet_1_base"
+        assert cmd.entity_id == 42
+        assert cmd.entity_type == BuildEntityType.PLANET
 
 
 # =======================================================================
