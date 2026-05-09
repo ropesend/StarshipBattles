@@ -3,12 +3,12 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Pre-existing failures + collection errors | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Pre-existing failures + collection errors | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Active Phase:** Phase 1
-**Last Action:** Project created to capture pre-existing failures observed during PROJ-380..393 orchestration
-**Next Action:** Begin Phase 1
+**Active Phase:** Phase 1 closeout
+**Last Action:** All 5 items resolved; sharded suite reports 19803 tests | 19799 passed | 0 failed | 0 errors | 4 skipped
+**Next Action:** Awaiting user verification
 
 ## Overview
 The Stage 1/2/3 sharded suites and the final closeout suite consistently surfaced 3 failures + 4 collection errors that pre-date this orchestration run. None were introduced by PROJ-380..393. Multiple agents independently flagged them during the run (PROJ-380, PROJ-386, PROJ-389, PROJ-391, PROJ-392 reports). This project closes them.
@@ -24,7 +24,8 @@ The Stage 1/2/3 sharded suites and the final closeout suite consistently surface
 - `test_components.py`, `test_panel_factory.py`, `test_stat_getters.py`, `test_workshop_data_loader.py` — duplicate basenames in `tests/unit/{ui,workshop}/` cause pytest cache pollution. Fix by adding `__init__.py` to disambiguate as packages.
 
 ## Verification
-- [ ] `python Tools/test_sharded/test_sharded.py` returns ZERO failures + ZERO collection errors
+- [x] `python Tools/test_sharded/test_sharded.py` returns ZERO failures + ZERO collection errors
+      (19803 tests | 19799 passed | 0 failed | 0 errors | 4 skipped)
 - [ ] User verified
 
 _Source: observed during PROJ-380..393 sharded suite checkpoints (Stage 1, Stage 2, Stage 3)_
