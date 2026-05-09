@@ -31,7 +31,12 @@ def test_galaxy_round_trip_post_phase_4() -> None:
 def test_pathfinder_attached_after_init() -> None:
     galaxy = Galaxy(radius=10)
     assert galaxy._pathfinder is not None
-    assert galaxy._intercept is not None
+    # PROJ-372 remediation MIN-001 (commit 1bc94a07e) deleted
+    # `Galaxy._intercept`: the pathfinding shim's `_intercept_for(galaxy)`
+    # helper always constructs a fresh `InterceptCalculator` per call to
+    # preserve test-patch transparency. Routing through a cached
+    # `galaxy._intercept` would defeat that, so the attribute is gone by
+    # design and is not part of the post-Phase-4 facade contract.
 
 
 def test_pathfinder_callable_through_facade() -> None:
