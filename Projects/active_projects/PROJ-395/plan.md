@@ -14,13 +14,13 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. CRITICAL — B-5 modal, registry exception, test assertions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. MAJOR — 14 follow-up findings | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. MAJOR — 14 follow-up findings | Complete (12 closed, 2 deferred) | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from PROJ-381 review (req_20260508_230317_779973, 3 CRITICAL + 14 MAJOR + 18 MINOR + 7 INFO)
-**Next Action:** Begin Phase 1 (CRITICAL findings)
+**Active Phase:** Closeout
+**Last Action:** Phase 1 (3 CRIT) + Phase 2 (12 of 14 MAJOR) closed across commits 59ee0442e + 793f592e0. MAJ-013 (EventBus shim) and MAJ-014 (defensive EnginePhaseError catch) deferred — see commit messages.
+**Next Action:** Final closeout commit + user verification of focused tests.
 **Blockers:** None
 
 ## Overview

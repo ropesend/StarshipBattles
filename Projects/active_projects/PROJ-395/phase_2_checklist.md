@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (12 closed in commit 793f592e0; MAJ-013 + MAJ-014 deferred — see commit message)
 **Objective:** Close the 14 MAJOR findings from the PROJ-381 review. Each is a focused, well-scoped follow-up; many are doc/test/comment polish.
 
 ---
