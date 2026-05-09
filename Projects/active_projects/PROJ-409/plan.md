@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Investigate + close MAJ-013 and MAJ-014 | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Investigate + close MAJ-013 and MAJ-014 | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
 **Active Phase:** Phase 1
-**Last Action:** Project skeleton created
-**Next Action:** Investigate MAJ-013 + MAJ-014 origins; decide ratify-as-won't-fix vs actively close.
+**Last Action:** Phase 1 complete. MAJ-014 actively deleted in commit `c0ff79f92` (defensive raw `EnginePhaseError` catch removed; integration + unit test contracts updated). MAJ-013 ratified — investigation found PROJ-390 already retired the module-level EventBus shim; the PROJ-395 reviewer simply did not pick up the prior closure. See `decisions.md`.
+**Next Action:** User verification + final closeout commit.
 **Blockers:** None
 
 ## Overview
@@ -44,9 +44,9 @@ PROJ-395's review documented two MAJOR findings that the original project deferr
 - PROJ-395 verification report (if it exists).
 
 ## Verification
-- [ ] Phase 1 checklist complete
-- [ ] MAJ-013 closure documented (active deletion or ratified won't-fix)
-- [ ] MAJ-014 catch removed; new regression test passes
-- [ ] `pytest tests/unit/ui/screens/test_strategy_game_state_manager.py -v` passes
-- [ ] `python Projects/scripts/validate_audit_ready.py PROJ-409` passes
+- [x] Phase 1 checklist complete
+- [x] MAJ-013 closure documented (ratified — already actively closed by PROJ-390)
+- [x] MAJ-014 catch removed; new regression test passes
+- [x] `pytest tests/unit/ui/screens/test_strategy_game_state_manager.py -v` passes (24/24)
+- [x] `python Projects/scripts/validate_audit_ready.py PROJ-409` passes
 - [ ] User verified
