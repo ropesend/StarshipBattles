@@ -540,6 +540,7 @@ class TestBaseCommandHandler:
         PROJ-381 Phase 3 (ERR-01-003): bare ValueError replaced with
         structured ValidationException so handlers can branch on `code`.
         """
+        from game.core.error_codes import ErrorCode
         from game.core.exceptions import ValidationException
         from game.strategy.engine.handlers import BaseCommandHandler
 
@@ -551,10 +552,17 @@ class TestBaseCommandHandler:
         with pytest.raises(ValidationException) as exc_info:
             handler._resolve_fleet_required(mock_session, 999)
 
+        # PROJ-395 CRIT-003: assert on `code` and `context` so a
+        # regression that drops the ErrorCode is detected — string-only
+        # assertions would let it pass undetected. Pattern mirrored
+        # from tests/unit/strategy/engine/test_base_command_handler.py.
         assert "Fleet not found" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.MISSING_ENTITY.value
+        assert exc_info.value.context.get("fleet_id") == 999
 
     def test_resolve_fleet_required_validates_ownership(self):
         """_resolve_fleet_required raises ValidationException when owner_id doesn't match."""
+        from game.core.error_codes import ErrorCode
         from game.core.exceptions import ValidationException
         from game.strategy.engine.handlers import BaseCommandHandler
 
@@ -572,7 +580,14 @@ class TestBaseCommandHandler:
         with pytest.raises(ValidationException) as exc_info:
             handler._resolve_fleet_required(mock_session, 1, empire_id=99)
 
+        # PROJ-395 CRIT-003: assert on `code` and `context` so a
+        # regression that drops the ErrorCode is detected — string-only
+        # assertions would let it pass undetected. Pattern mirrored
+        # from tests/unit/strategy/engine/test_base_command_handler.py.
         assert "does not belong" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.OWNERSHIP_MISMATCH.value
+        assert exc_info.value.context.get("fleet_id") == 1
+        assert exc_info.value.context.get("empire_id") == 99
 
     def test_resolve_planet_optional_returns_planet_when_found(self):
         """_resolve_planet_optional returns planet when found."""
@@ -606,6 +621,7 @@ class TestBaseCommandHandler:
 
     def test_resolve_planet_optional_raises_when_not_found_and_required(self):
         """_resolve_planet_optional raises ValidationException when not found and required=True."""
+        from game.core.error_codes import ErrorCode
         from game.core.exceptions import ValidationException
         from game.strategy.engine.handlers import BaseCommandHandler
 
@@ -617,7 +633,13 @@ class TestBaseCommandHandler:
         with pytest.raises(ValidationException) as exc_info:
             handler._resolve_planet_optional(mock_session, 999, required=True)
 
+        # PROJ-395 CRIT-003: assert on `code` and `context` so a
+        # regression that drops the ErrorCode is detected — string-only
+        # assertions would let it pass undetected. Pattern mirrored
+        # from tests/unit/strategy/engine/test_base_command_handler.py.
         assert "Planet not found" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.MISSING_ENTITY.value
+        assert exc_info.value.context.get("planet_id") == 999
 
 
 class TestCommandHelpers:

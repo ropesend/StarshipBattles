@@ -15,9 +15,9 @@ import logging
 from typing import TYPE_CHECKING
 
 import pygame
-import pygame_gui
 
 from game.core.exceptions import EnginePhaseError, TurnFailedError
+from game.ui.screens.turn_failed_dialog import TurnFailedDialog
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
@@ -272,13 +272,17 @@ class StrategyGameStateManager:
     def _show_turn_failed_dialog(
         self, error: TurnFailedError | EnginePhaseError,
     ) -> None:
-        """PROJ-381 Phase 1 (B-5): surface a modal for an EnginePhaseError.
+        """PROJ-381 / PROJ-395 (B-5 / CRIT-001): surface a modal for an EnginePhaseError.
 
         Builds an in-game modal so the player learns the turn was rolled
-        back without crashing the application. Reads `phase_name`, `tick`,
-        and `original_type` out of `error.context` (all populated by
-        `TurnEngine._time_phase`); falls back to "unknown" if the context
-        is missing keys so dialog construction itself never raises.
+        back without crashing the application. Uses
+        :class:`TurnFailedDialog` (a :class:`StrategyModalWindow`
+        subclass) so the dialog blocks strategy-screen input — Pattern
+        #31 modal tracking — preventing fleet commands or another
+        end-turn click while the error is visible. The dialog reads
+        ``phase_name``, ``tick``, ``turn_number``, and ``original_type``
+        from ``error.context`` and falls back to placeholders when keys
+        are absent so construction never raises.
         """
         ctx = error.context or {}
         phase_name = ctx.get("phase_name", "unknown")
@@ -298,22 +302,22 @@ class StrategyGameStateManager:
             )
             return
 
-        body = (
-            "<b>Turn processing failed</b><br><br>"
-            f"Phase: <b>{phase_name}</b><br>"
-            f"Tick: {tick}<br>"
-            f"Cause: {original_type}<br><br>"
-            "Turn has been rolled back &mdash; empire state is preserved."
-        )
         width = getattr(self._screen.ui, "width", 1920)
         height = getattr(self._screen.ui, "height", 1080)
         rect = pygame.Rect(0, 0, 480, 280)
         rect.center = (width // 2, height // 2)
-        pygame_gui.windows.UIMessageWindow(
+        # CRIT-001: thread the StrategyWindowManager through so the
+        # dialog auto-registers with iter_live_modals(). Falls back to
+        # None when the screen's UI mock omits ``window_manager`` (the
+        # dialog still constructs but does not participate in modal
+        # tracking — acceptable in headless tests; production always
+        # has a real manager).
+        window_manager = getattr(self._screen.ui, "window_manager", None)
+        TurnFailedDialog(
             rect=rect,
-            html_message=body,
             manager=manager,
-            window_title="Turn Failed",
+            error=error,
+            window_manager=window_manager,
         )
 
     def _pump_cancel_events(self) -> None:

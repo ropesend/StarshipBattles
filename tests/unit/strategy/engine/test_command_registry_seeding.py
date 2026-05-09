@@ -117,9 +117,20 @@ def test_round_trip_reset_then_seed() -> None:
 # ---------------------------------------------------------------------------
 
 def test_explicit_duplicate_registration_raises() -> None:
+    """PROJ-395 CRIT-002: duplicate registration now raises
+    ``ValidationException(DUPLICATE_COMMAND)`` so callers catching
+    ``ValidationException`` from registration cover this path too.
+    """
+    from game.core.error_codes import ErrorCode
+    from game.core.exceptions import ValidationException
+
     first = next(iter(command_registry.all()))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationException) as exc:
         command_registry.register(first)  # default replace=False
+    assert exc.value.code == ErrorCode.DUPLICATE_COMMAND.value
+    assert exc.value.context.get("command_name") == first.command_class.__name__
+    assert exc.value.context.get("existing_handler") == first.handler_class.__name__
+    assert exc.value.context.get("duplicate_handler") == first.handler_class.__name__
 
 
 def test_explicit_duplicate_registration_with_replace_succeeds() -> None:

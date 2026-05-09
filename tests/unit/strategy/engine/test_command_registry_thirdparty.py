@@ -108,12 +108,21 @@ def test_third_party_command_does_not_pollute_other_tests() -> None:
 def test_replace_flag_required_for_replacing_a_default(caplog) -> None:
     """Re-registering an existing command without ``replace=True`` raises;
     with ``replace=True`` it succeeds and emits a WARNING.
+
+    PROJ-395 CRIT-002: the duplicate guard now raises
+    ``ValidationException(DUPLICATE_COMMAND)`` instead of a bare
+    ``ValueError``.
     """
+    from game.core.error_codes import ErrorCode
+    from game.core.exceptions import ValidationException
+
     first = next(iter(command_registry.all()))
 
-    # Without replace=True — ValueError.
-    with pytest.raises(ValueError):
+    # Without replace=True — ValidationException(DUPLICATE_COMMAND).
+    with pytest.raises(ValidationException) as exc:
         command_registry.register(first)
+    assert exc.value.code == ErrorCode.DUPLICATE_COMMAND.value
+    assert exc.value.context.get("command_name") == first.command_class.__name__
 
     # With replace=True — succeeds + warns.
     snapshot = dict(command_registry._specs)

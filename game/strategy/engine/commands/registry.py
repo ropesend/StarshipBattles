@@ -38,6 +38,8 @@ from typing import TYPE_CHECKING, Callable, Iterable, Type, TypeVar
 # can decorate plain marker classes without forcing the full handler protocol.
 _HandlerT = TypeVar("_HandlerT", bound=type)
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
 from game.strategy.data.order_types import OrderType
 
 if TYPE_CHECKING:
@@ -182,15 +184,34 @@ class CommandRegistry:
 
         Args:
             spec: The CommandSpec to register.
-            replace: If False (default), raise :class:`ValueError` when
-                a spec is already registered for ``spec.command_class``.
-                If True, overwrite the existing entry and emit a WARNING.
+            replace: If False (default), raise
+                :class:`ValidationException` (code
+                ``ErrorCode.DUPLICATE_COMMAND``) when a spec is already
+                registered for ``spec.command_class``. If True,
+                overwrite the existing entry and emit a WARNING.
+
+        Raises:
+            ValidationException: When the command class is already
+                registered and ``replace=False``. PROJ-395 CRIT-002
+                replaced the previous bare ``ValueError`` so callers
+                catching ``ValidationException`` (the canonical
+                registration-failure type used by ``CommandSpec``)
+                also catch duplicate-registration failures.
         """
         name = spec.command_class.__name__
         if name in self._specs and not replace:
-            raise ValueError(
-                f"Command {name!r} already registered. Pass replace=True "
-                f"to override (e.g. for mod overlays)."
+            existing = self._specs[name]
+            raise ValidationException(
+                message=(
+                    f"Command {name!r} already registered. Pass "
+                    "replace=True to override (e.g. for mod overlays)."
+                ),
+                code=ErrorCode.DUPLICATE_COMMAND.value,
+                context={
+                    "command_name": name,
+                    "existing_handler": existing.handler_class.__name__,
+                    "duplicate_handler": spec.handler_class.__name__,
+                },
             )
         if name in self._specs and replace:
             logger.warning(

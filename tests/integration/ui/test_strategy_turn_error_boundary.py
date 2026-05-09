@@ -1,18 +1,29 @@
-"""PROJ-381 Phase 1 (B-5 CRITICAL): UI error boundary regression test.
+"""PROJ-381 / PROJ-395 (B-5 / CRIT-001): UI error boundary regression test.
 
-Verifies that an `EnginePhaseError` raised from the strategy facade's
-`process_turn()` is caught by the StrategyGameStateManager UI boundary,
-surfaced as a modal error dialog, and never propagates up to the pygame
-event loop where the top-level crash handler would exit the game.
+Verifies that an `EnginePhaseError` (or facade-wrapped `TurnFailedError`)
+raised from the strategy facade's `process_turn()` is caught by the
+`StrategyGameStateManager` UI boundary, surfaced as a
+`TurnFailedDialog` (a `StrategyModalWindow` subclass that blocks
+strategy-screen input via Pattern #31), and never propagates up to the
+pygame event loop where the top-level crash handler would exit the
+game.
 
-Source audit: `Reviews/results/2026-05-07_220225_error-audit/` finding B-5.
+PROJ-395 CRIT-001 update: the dialog must inherit from
+`StrategyModalWindow` so it auto-registers with
+`StrategyWindowManager.register_modal`. The earlier implementation
+constructed a raw `pygame_gui.windows.UIMessageWindow`, bypassing
+modal tracking — players could click through and continue issuing
+fleet commands. These tests now assert modal registration AND modal
+blocking behavior, not merely dialog instantiation.
+
+Source audits:
+- `Reviews/results/2026-05-07_220225_error-audit/` finding B-5
+- `Reviews/results/2026-05-08_230318_code_proj-381-...` CRIT-001
 """
 
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import EnginePhaseError
@@ -21,10 +32,13 @@ from game.core.exceptions import EnginePhaseError
 def _make_state_manager_with_screen():
     """Build a StrategyGameStateManager wired against a mock screen.
 
-    Mirrors `tests/unit/ui/screens/test_strategy_game_state_manager.py`
-    `_make_game_state_manager` so behaviour parity is easy to confirm.
+    The mock screen's ``ui.window_manager`` is a real-style stub with a
+    ``register_modal`` / ``unregister_modal`` API so tests can assert
+    modal registration without spinning up the full UI stack.
     """
-    from game.ui.screens.strategy_game_state_manager import StrategyGameStateManager
+    from game.ui.screens.strategy_game_state_manager import (
+        StrategyGameStateManager,
+    )
 
     mock_screen = MagicMock()
     mock_screen.session = MagicMock()
@@ -33,6 +47,30 @@ def _make_state_manager_with_screen():
     mock_screen.ui.manager = MagicMock()
     mock_screen.ui.width = 1920
     mock_screen.ui.height = 1080
+
+    # Real-style modal-tracking stub. ``register_modal`` appends; we
+    # read this list back in tests to assert blocking behavior.
+    registered_modals: list = []
+
+    class _StubWindowManager:
+        def __init__(self) -> None:
+            self.modals = registered_modals
+
+        def register_modal(self, w) -> None:
+            self.modals.append(w)
+
+        def unregister_modal(self, w) -> None:
+            try:
+                self.modals.remove(w)
+            except ValueError:
+                pass
+
+        def iter_live_modals(self):
+            self.modals[:] = [w for w in self.modals if w.alive()]
+            yield from self.modals
+
+    mock_screen.ui.window_manager = _StubWindowManager()
+
     mock_screen.turn_processing = False
     mock_screen.current_player_index = 0
     mock_screen.selected_object = None
@@ -59,15 +97,11 @@ def _make_state_manager_with_screen():
 
 
 class TestStrategyTurnErrorBoundary:
-    """B-5 (CRITICAL) — engine phase failure must surface a modal, not crash.
+    """B-5 (CRITICAL) — engine phase failure must surface a *modal*, not crash.
 
-    The four scenarios below cover:
-    (a) Baseline — no failure, no dialog.
-    (b) `EnginePhaseError` from facade is caught and a modal dialog appears.
-    (c) The failure path leaves snapshot/rollback context observable
-        (turn_number / phase identifiers survive on the raised exception).
-    (d) The `finally` block in `process_full_turn` runs in BOTH success and
-        error paths — `current_tick`/`total_ticks` are cleared after either.
+    PROJ-395 CRIT-001 strengthens the regression: dialog must be a
+    `StrategyModalWindow` subclass and must register with the window
+    manager so strategy-screen input is blocked while the dialog is alive.
     """
 
     def test_baseline_success_does_not_open_error_dialog(self) -> None:
@@ -76,18 +110,23 @@ class TestStrategyTurnErrorBoundary:
         screen._facade.get_turn_events.return_value = []
 
         with patch("pygame.display.get_surface", return_value=None), \
-             patch("pygame_gui.windows.UIMessageWindow") as mock_msg:
+             patch(
+                "game.ui.screens.strategy_game_state_manager.TurnFailedDialog"
+             ) as mock_dialog:
             manager.process_full_turn()
 
-        mock_msg.assert_not_called()
+        mock_dialog.assert_not_called()
+        # No modal registered on the success path.
+        assert screen.ui.window_manager.modals == []
 
-    def test_engine_phase_error_is_caught_and_dialog_shown(self) -> None:
+    def test_engine_phase_error_is_caught_and_modal_dialog_shown(self) -> None:
         """A facade-raised EnginePhaseError must NOT propagate.
 
-        The boundary surfaces a modal dialog instead of crashing. The
-        regression target is the missing UI-level except clause: before
-        the fix, this exception bubbles past process_full_turn through
-        advance_turn into the pygame event loop and exits the game.
+        The boundary surfaces a modal `TurnFailedDialog` instead of
+        crashing. PROJ-395: the dialog class must be the modal subclass
+        (not a raw UIMessageWindow) and must be threaded the screen's
+        ``StrategyWindowManager`` so input-blocking modal tracking
+        applies while the dialog is alive.
         """
         manager, screen = _make_state_manager_with_screen()
         screen._facade.get_turn_events.return_value = []
@@ -97,6 +136,7 @@ class TestStrategyTurnErrorBoundary:
             context={
                 "phase_name": "harvesting",
                 "tick": 42,
+                "turn_number": 5,
                 "original_error": "ValueError: simulated",
                 "original_type": "ValueError",
             },
@@ -104,26 +144,102 @@ class TestStrategyTurnErrorBoundary:
         screen._facade.process_turn.side_effect = err
 
         with patch("pygame.display.get_surface", return_value=None), \
-             patch("pygame_gui.windows.UIMessageWindow") as mock_msg:
+             patch(
+                "game.ui.screens.strategy_game_state_manager.TurnFailedDialog"
+             ) as mock_dialog:
             # Must not raise — boundary swallows EnginePhaseError.
             manager.process_full_turn()
 
-        mock_msg.assert_called_once()
-        call_kwargs = mock_msg.call_args.kwargs
-        body = call_kwargs.get("html_message", "")
-        # The modal must reflect the failed phase + original-error type.
-        assert "harvesting" in body
-        assert "ValueError" in body
-        # And the rollback reassurance line is present.
-        assert "rolled back" in body.lower() or "preserved" in body.lower()
+        mock_dialog.assert_called_once()
+        call_kwargs = mock_dialog.call_args.kwargs
+        # The window-manager kwarg must be the stub from the screen so
+        # the dialog auto-registers via Pattern #31.
+        assert call_kwargs["window_manager"] is screen.ui.window_manager
+        # The error context is forwarded so the dialog can render
+        # phase/tick/turn information.
+        assert call_kwargs["error"] is err
+        assert call_kwargs["manager"] is screen.ui.manager
+
+    def test_dialog_class_is_strategy_modal_subclass(self) -> None:
+        """CRIT-001: the dialog must inherit from StrategyModalWindow.
+
+        Static structural assertion: a future refactor that swaps the
+        modal back to ``UIMessageWindow`` would silently regress
+        Pattern #31. This test fails the moment that happens.
+        """
+        from game.ui.screens.strategy_modal_window import StrategyModalWindow
+        from game.ui.screens.turn_failed_dialog import TurnFailedDialog
+
+        assert issubclass(TurnFailedDialog, StrategyModalWindow)
+
+    def test_dialog_registers_with_window_manager_blocking_input(self) -> None:
+        """End-to-end: when ``_show_turn_failed_dialog`` constructs a
+        ``TurnFailedDialog``, the dialog must appear in
+        ``window_manager.iter_live_modals()`` so
+        ``StrategyEventRouter.has_modal_open()`` returns True.
+
+        This is the modal-blocking behavior assertion that the previous
+        ``UIMessageWindow``-based implementation could not satisfy. We
+        replace ``TurnFailedDialog`` with a stand-in class that mimics
+        the ``StrategyModalWindow`` registration contract (registers in
+        ``__init__``, exposes ``alive()``) without pulling in pygame_gui
+        widget construction.
+        """
+        manager, screen = _make_state_manager_with_screen()
+        screen._facade.get_turn_events.return_value = []
+        err = EnginePhaseError(
+            "Phase 'production' failed: simulated",
+            code=ErrorCode.PHASE_FAILED.value,
+            context={
+                "phase_name": "production",
+                "tick": 50,
+                "turn_number": 7,
+                "original_type": "RuntimeError",
+            },
+        )
+        screen._facade.process_turn.side_effect = err
+
+        recorded: dict = {}
+
+        class _ModalStandIn:
+            """Minimal stand-in matching StrategyModalWindow registration."""
+
+            def __init__(self, *, rect, manager, error, window_manager) -> None:
+                self._alive = True
+                self._window_manager = window_manager
+                recorded["instance"] = self
+                if window_manager is not None:
+                    window_manager.register_modal(self)
+
+            def alive(self) -> bool:
+                return self._alive
+
+            def kill(self) -> None:
+                if self._window_manager is not None:
+                    self._window_manager.unregister_modal(self)
+                self._alive = False
+
+        with patch("pygame.display.get_surface", return_value=None), \
+             patch(
+                "game.ui.screens.strategy_game_state_manager.TurnFailedDialog",
+                _ModalStandIn,
+             ):
+            manager.process_full_turn()
+
+        # Dialog instance is the live modal in the window manager —
+        # ``has_modal_open()`` semantics are satisfied, so strategy-screen
+        # input is blocked.
+        live_modals = list(screen.ui.window_manager.iter_live_modals())
+        assert recorded["instance"] in live_modals
+        assert len(live_modals) >= 1
 
     def test_failure_path_clears_per_tick_progress_overlay(self) -> None:
         """The finally block must run in the error path too.
 
-        `current_tick` / `total_ticks` are wired by the per-tick callback.
-        If the finally block stops running because exception handling
-        drifted, the "Tick N / 100" overlay would persist after the
-        exception was caught — a stale-UI bug.
+        ``current_tick`` / ``total_ticks`` are wired by the per-tick
+        callback. If the finally block stops running because exception
+        handling drifted, the "Tick N / 100" overlay would persist
+        after the exception was caught — a stale-UI bug.
         """
         manager, screen = _make_state_manager_with_screen()
         screen._facade.get_turn_events.return_value = []
@@ -132,11 +248,17 @@ class TestStrategyTurnErrorBoundary:
         screen._facade.process_turn.side_effect = EnginePhaseError(
             "phase failed",
             code=ErrorCode.PHASE_FAILED.value,
-            context={"phase_name": "production", "tick": 7, "original_type": "RuntimeError"},
+            context={
+                "phase_name": "production",
+                "tick": 7,
+                "original_type": "RuntimeError",
+            },
         )
 
         with patch("pygame.display.get_surface", return_value=None), \
-             patch("pygame_gui.windows.UIMessageWindow"):
+             patch(
+                "game.ui.screens.strategy_game_state_manager.TurnFailedDialog"
+             ):
             manager.process_full_turn()
 
         assert screen.current_tick is None
@@ -149,8 +271,7 @@ class TestStrategyTurnErrorBoundary:
         screen.current_tick = 7
         screen.total_ticks = 100
 
-        with patch("pygame.display.get_surface", return_value=None), \
-             patch("pygame_gui.windows.UIMessageWindow"):
+        with patch("pygame.display.get_surface", return_value=None):
             manager.process_full_turn()
 
         assert screen.current_tick is None
@@ -170,16 +291,19 @@ class TestStrategyTurnErrorBoundary:
             context={
                 "phase_name": "production",
                 "tick": 12,
+                "turn_number": 3,
                 "original_type": "RuntimeError",
             },
         )
         screen._facade.process_turn.side_effect = err
 
         with patch("pygame.display.get_surface", return_value=None), \
-             patch("pygame_gui.windows.UIMessageWindow") as mock_msg:
+             patch(
+                "game.ui.screens.strategy_game_state_manager.TurnFailedDialog"
+             ) as mock_dialog:
             manager.process_full_turn()
 
-        mock_msg.assert_called_once()
-        body = mock_msg.call_args.kwargs.get("html_message", "")
-        assert "production" in body
-        assert "RuntimeError" in body
+        mock_dialog.assert_called_once()
+        kwargs = mock_dialog.call_args.kwargs
+        assert kwargs["error"] is err
+        assert kwargs["window_manager"] is screen.ui.window_manager

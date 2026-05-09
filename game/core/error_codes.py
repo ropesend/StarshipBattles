@@ -167,6 +167,10 @@ class ErrorCode(Enum):
     SNAPSHOT_FAILED = "T003"
     """Failed to create pre-turn state snapshot."""
 
+    DUPLICATE_COMMAND = "T004"
+    """A CommandSpec is already registered for this command class
+    (PROJ-395 CRIT-002). Caller can pass ``replace=True`` to override."""
+
     # =========================================================================
     # LLM Service Codes (L001-L099) - PROJ-296
     # =========================================================================
