@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
-from game.strategy.engine.command_handlers import ColonizeCommandHandler, ColonizeMissionCommandHandler
+from game.strategy.engine.handlers import ColonizeCommandHandler, ColonizeMissionCommandHandler
 from game.strategy.engine.order_processor import OrderProcessor
 from game.core.hex_math import HexCoord
 

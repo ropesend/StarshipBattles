@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import Mock, MagicMock, patch, PropertyMock
 
 from game.core.hex_math import HexCoord
-from game.strategy.engine.command_handlers import (
+from game.strategy.engine.handlers import (
     CommandHandlerRegistry,
     ColonizeCommandHandler,
     MoveCommandHandler,
@@ -518,7 +518,7 @@ class TestBaseCommandHandler:
 
     def test_resolve_fleet_required_returns_fleet_when_found(self):
         """_resolve_fleet_required returns fleet when found."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_fleet = Mock()
@@ -541,7 +541,7 @@ class TestBaseCommandHandler:
         structured ValidationException so handlers can branch on `code`.
         """
         from game.core.exceptions import ValidationException
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_session = Mock()
@@ -556,7 +556,7 @@ class TestBaseCommandHandler:
     def test_resolve_fleet_required_validates_ownership(self):
         """_resolve_fleet_required raises ValidationException when owner_id doesn't match."""
         from game.core.exceptions import ValidationException
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_fleet = Mock()
@@ -576,7 +576,7 @@ class TestBaseCommandHandler:
 
     def test_resolve_planet_optional_returns_planet_when_found(self):
         """_resolve_planet_optional returns planet when found."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_planet = Mock()
@@ -593,7 +593,7 @@ class TestBaseCommandHandler:
 
     def test_resolve_planet_optional_returns_none_when_not_found_and_not_required(self):
         """_resolve_planet_optional returns None when not found and required=False."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_session = Mock()
@@ -607,7 +607,7 @@ class TestBaseCommandHandler:
     def test_resolve_planet_optional_raises_when_not_found_and_required(self):
         """_resolve_planet_optional raises ValidationException when not found and required=True."""
         from game.core.exceptions import ValidationException
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_session = Mock()
@@ -625,7 +625,7 @@ class TestCommandHelpers:
 
     def test_add_move_order_if_needed_no_move_when_at_target(self):
         """add_move_order_if_needed does not add move when fleet at target."""
-        from game.strategy.engine.command_handlers import add_move_order_if_needed
+        from game.strategy.engine.handlers import add_move_order_if_needed
 
         mock_fleet = Mock()
 
@@ -645,7 +645,7 @@ class TestCommandHelpers:
 
     def test_add_move_order_if_needed_adds_move_when_not_at_target(self):
         """add_move_order_if_needed adds MOVE order when fleet not at target."""
-        from game.strategy.engine.command_handlers import add_move_order_if_needed
+        from game.strategy.engine.handlers import add_move_order_if_needed
         from game.strategy.data.order_types import OrderType
 
         mock_fleet = Mock()
@@ -674,7 +674,7 @@ class TestCommandHelpers:
 
     def test_add_move_order_if_needed_returns_error_when_no_path(self):
         """add_move_order_if_needed returns error when no path found."""
-        from game.strategy.engine.command_handlers import add_move_order_if_needed
+        from game.strategy.engine.handlers import add_move_order_if_needed
 
         mock_fleet = Mock()
 

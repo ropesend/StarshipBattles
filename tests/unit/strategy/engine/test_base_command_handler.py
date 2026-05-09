@@ -9,7 +9,7 @@ from unittest.mock import Mock, MagicMock
 
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import ValidationException
-from game.strategy.engine.command_handlers import BaseCommandHandler
+from game.strategy.engine.handlers import BaseCommandHandler
 
 
 class TestResolveFleet:

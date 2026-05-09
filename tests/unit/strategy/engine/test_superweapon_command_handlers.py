@@ -577,7 +577,7 @@ class TestHandlerRegistration:
 
     def test_all_handlers_registered(self):
         """All 11 superweapon handlers are registered in default registry."""
-        from game.strategy.engine.command_handlers import create_default_registry
+        from game.strategy.engine.handlers import create_default_registry
 
         registry = create_default_registry()
 

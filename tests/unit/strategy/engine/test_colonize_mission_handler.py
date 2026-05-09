@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import MagicMock, PropertyMock
 
 from game.core.validation import ValidationResult
-from game.strategy.engine.command_handlers import ColonizeMissionCommandHandler
+from game.strategy.engine.handlers import ColonizeMissionCommandHandler
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord

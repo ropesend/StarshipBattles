@@ -14,7 +14,7 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.commands import IssueWarpCommand
-from game.strategy.engine.command_handlers import WarpCommandHandler
+from game.strategy.engine.handlers import WarpCommandHandler
 from game.core.validation import ValidationResult
 
 

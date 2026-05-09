@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import Mock, MagicMock
 
 from game.strategy.engine.commands import IssueBuildOrderCommand, CommandType
-from game.strategy.engine.command_handlers import (
+from game.strategy.engine.handlers import (
     BuildOrderCommandHandler,
 )
 from game.strategy.data.order_types import Order, OrderType
@@ -151,7 +151,7 @@ class TestRemoveBuildOrderCommand:
     def test_handler_removes_build_orders(self):
         """Handler should call fleet.remove_orders_by_type(BUILD) (PROJ-222: uses Fleet API)."""
         from game.strategy.engine.commands import RemoveBuildOrderCommand
-        from game.strategy.engine.command_handlers import RemoveBuildOrderCommandHandler
+        from game.strategy.engine.handlers import RemoveBuildOrderCommandHandler
 
         handler = RemoveBuildOrderCommandHandler()
         session = Mock()
@@ -172,7 +172,7 @@ class TestRemoveBuildOrderCommand:
     def test_handler_does_nothing_if_no_build_order(self):
         """Handler should succeed even if no BUILD order exists."""
         from game.strategy.engine.commands import RemoveBuildOrderCommand
-        from game.strategy.engine.command_handlers import RemoveBuildOrderCommandHandler
+        from game.strategy.engine.handlers import RemoveBuildOrderCommandHandler
 
         handler = RemoveBuildOrderCommandHandler()
         session = Mock()
@@ -217,7 +217,7 @@ class TestBuildOrderHandlerRegistration:
 
     def test_build_order_handler_registered(self):
         """IssueBuildOrderCommand dispatches without `Unknown command type`."""
-        from game.strategy.engine.command_handlers import create_default_registry
+        from game.strategy.engine.handlers import create_default_registry
 
         registry = create_default_registry()
         assert not self._dispatch_returns_unknown_error(
@@ -226,7 +226,7 @@ class TestBuildOrderHandlerRegistration:
 
     def test_remove_build_order_handler_registered(self):
         """RemoveBuildOrderCommand dispatches without `Unknown command type`."""
-        from game.strategy.engine.command_handlers import create_default_registry
+        from game.strategy.engine.handlers import create_default_registry
 
         registry = create_default_registry()
         assert not self._dispatch_returns_unknown_error(
