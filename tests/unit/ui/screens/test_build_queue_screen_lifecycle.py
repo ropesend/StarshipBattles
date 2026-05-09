@@ -50,7 +50,8 @@ class _MockGalaxy:
 class _MockSession:
     """Doubles as both a session and a facade for these lifecycle tests
     (PROJ-382 Phase 1: BuildQueueScreen takes facade= + portrait_session=
-    instead of session=)."""
+    instead of session=.  PROJ-396 MAJ-002: portrait_session was retired in
+    favor of theme_id_supplier — these tests pass ``lambda: "Federation"``)."""
 
     def __init__(self, galaxy=None, empire=None, registries=None):
         self.savegame_path = "test_savegame"
@@ -69,6 +70,14 @@ class _MockSession:
     def get_colony_demographic_view(self, planet_id):
         """PROJ-382 Phase 1: facade-shaped demographic view stub."""
         return None
+
+    def get_turn_number(self) -> int:
+        """PROJ-396 MAJ-003: facade-shaped turn-number accessor."""
+        return self.turn
+
+    def get_save_path(self):
+        """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
+        return self.save_path
 
     def handle_command(self, cmd):
         self.commands_handled.append(cmd)
@@ -201,7 +210,7 @@ def test_init_with_no_yard_constructs_ui_shell_only(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -234,7 +243,7 @@ def test_open_for_yard_populates_state_for_planet(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -276,7 +285,7 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -290,7 +299,7 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -328,7 +337,7 @@ def test_open_for_yard_planet_to_fleet_rebuilds_panels(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -367,7 +376,7 @@ def test_open_for_yard_planet_to_planet_does_not_rebuild_panels(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -424,7 +433,7 @@ def test_hide_makes_panels_invisible_but_alive(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -450,7 +459,7 @@ def test_show_after_hide_makes_panels_visible(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -477,7 +486,7 @@ def test_is_visible_reflects_panel_visibility(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -508,7 +517,7 @@ def test_hide_kills_planet_selection_window_if_open(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -547,7 +556,7 @@ def test_request_close_hides_and_invokes_on_close(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=on_close,
         design_library=design_library_mock,
         design_loader=design_loader_mock,
@@ -588,7 +597,7 @@ def test_request_close_can_be_re_opened(
         ui_manager,
         build_context=None,
         facade=session_with_planet,
-        portrait_session=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
         design_library=design_library_mock,
         design_loader=design_loader_mock,

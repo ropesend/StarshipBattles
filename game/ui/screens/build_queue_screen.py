@@ -59,17 +59,19 @@ class BuildQueueScreen:
         input_mapper: Optional['InputMapper'] = None,
         *,
         facade,
-        portrait_session=None,
+        theme_id_supplier: Optional[Callable[[], str]] = None,
         initial_yard: Optional[Union['object', None]] = None,
     ):
         """Initialize the build queue screen.
 
         PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
         PROJ-382 Phase 1: ``facade`` is required (keyword-only); the legacy
-        ``session=`` kwarg is gone. ``portrait_session`` (keyword-only) is a
-        narrow handle the BuildQueuePortraitLoader uses solely to read
-        ``active_empire.empire_theme_id`` — it is NOT used for command
-        dispatch. Future work (U1/U2/U3) will replace it with a facade DTO.
+        ``session=`` kwarg is gone.
+        PROJ-396 MAJ-002: ``portrait_session`` (a renamed full-session
+        backdoor) replaced by ``theme_id_supplier`` — a zero-arg callable
+        returning the active empire's ``empire_theme_id`` string.  The
+        screen no longer holds a reference to anything session-shaped
+        outside the facade.
 
         PROJ-376 Phase 1: Split into "UI shell" (always runs) + "yard population"
         (only when ``initial_yard`` is provided, or legacy ``build_context`` is
@@ -91,9 +93,15 @@ class BuildQueueScreen:
         # ---- Shell block: DI / always-present state. ----------------------
         self.manager = manager
         self.facade = facade  # PROJ-208/382: required for command dispatch
-        # PROJ-382 Phase 1: legacy ``session`` storage kept ONLY for the
-        # portrait loader (theme lookup); never used for dispatch.
-        self._portrait_session = portrait_session
+        # PROJ-396 MAJ-002: replaced ``portrait_session`` (a renamed
+        # full-session backdoor) with a narrow zero-arg callable returning
+        # the active empire's ``empire_theme_id`` string.  Falls back to a
+        # constant supplier when omitted.
+        self._theme_id_supplier: Callable[[], str] = (
+            theme_id_supplier
+            if theme_id_supplier is not None
+            else lambda: "Federation"
+        )
         self.on_close = on_close_callback
         self.portrait_surface = portrait_surface
         self._mapper = input_mapper
@@ -115,10 +123,11 @@ class BuildQueueScreen:
         self.selected_queue_indices: Set[int] = set()
         self.active_queue_source: Optional[BuildQueueSource] = None
 
-        # Portrait loading — needs design_library + a session-shaped object
-        # for empire-theme lookup. PROJ-382 Phase 1: portrait_session is the
-        # narrow read-only handle (no command dispatch).
-        self.portrait_loader = BuildQueuePortraitLoader(design_library, portrait_session)
+        # Portrait loading — needs design_library + a narrow theme-id
+        # supplier for empire-theme lookup (PROJ-396 MAJ-002).
+        self.portrait_loader = BuildQueuePortraitLoader(
+            design_library, self._theme_id_supplier
+        )
 
         # Get screen dimensions (stable across yards; cheap and idempotent).
         screen_size = manager.get_root_container().get_container().get_size()
@@ -191,13 +200,13 @@ class BuildQueueScreen:
         Collaborators (renderer, controller, drag handler) hold references
         INTO ``panels``, so they're reseated together.
         """
-        # PROJ-382 Phase 1: registries pulled from facade; legacy session-shaped
-        # ``portrait_session`` is forwarded to the panel factory for its own
-        # read-only registries / current_empire / turn lookups (deferred U2).
+        # PROJ-382 Phase 1: registries pulled from facade.
+        # PROJ-396 MAJ-003: ``session`` parameter dropped; the factory now
+        # routes registries / turn through the facade and reads the empire
+        # from the explicit ``empire`` kwarg.
         factory = BuildQueuePanelFactory(
             manager=self.manager,
             build_context=yard,
-            session=self._portrait_session,
             queue_sources=collect_build_queues_at_hex(
                 hex_coord, self.galaxy, self.empire,
                 registries=self.facade.get_registries(),
@@ -206,6 +215,7 @@ class BuildQueueScreen:
             on_queue_selection_changed=self._on_queue_selection_changed,
             portrait_surface=portrait_surface,
             facade=self.facade,  # PROJ-292 H1: enables per-species sub-block
+            empire=self.empire,
         )
         self.panels = factory.create_all_panels(format_empire_resources)
         self._queue_selector = self.panels.queue_selector

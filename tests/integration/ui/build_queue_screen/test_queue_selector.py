@@ -51,6 +51,14 @@ class MockSession:
         """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
         return None
 
+    def get_turn_number(self) -> int:
+        """PROJ-396 MAJ-003: facade-shaped turn-number accessor."""
+        return 0
+
+    def get_save_path(self):
+        """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
+        return self.savegame_path
+
     def handle_command(self, cmd):
         return ValidationResult()
 
@@ -124,7 +132,7 @@ def build_queue_screen(ui_manager, mock_design_library, mock_design_loader, mock
         galaxy=galaxy,
         empire=empire,
         facade=session,
-        portrait_session=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     manager.update(0.1)
@@ -256,7 +264,7 @@ def test_multiple_queue_sources_create_buttons(ui_manager):
         galaxy=galaxy,
         empire=empire,
         facade=session,
-        portrait_session=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # Should have 2 sources: planet base queue + shipyard facility queue
@@ -312,7 +320,7 @@ def test_multi_select_sets_active_to_none(ui_manager):
         galaxy=galaxy,
         empire=empire,
         facade=session,
-        portrait_session=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # Manually add a second queue source to test multi-select behavior
@@ -389,7 +397,7 @@ def test_queue_display_shows_active_source_items(ui_manager):
         galaxy=galaxy,
         empire=empire,
         facade=session,
-        portrait_session=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # Add items to the active queue source

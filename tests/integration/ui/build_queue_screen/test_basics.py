@@ -39,6 +39,14 @@ class MockSession:
         """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
         return None
 
+    def get_turn_number(self) -> int:
+        """PROJ-396 MAJ-003: facade-shaped turn-number accessor."""
+        return 0
+
+    def get_save_path(self):
+        """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
+        return self.savegame_path
+
     def handle_command(self, cmd):
         """Mock command handler that executes AddToConstructionQueueCommand.
 
@@ -298,7 +306,7 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
         galaxy=galaxy,
         empire=empire,
         facade=session,
-        portrait_session=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # Should create with design_library injected
@@ -413,7 +421,7 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
         galaxy=galaxy,
         empire=empire,
         facade=session,
-        portrait_session=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # Should have 2 queue sources: planetary yard + shipyard

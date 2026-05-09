@@ -230,8 +230,22 @@ class StrategyScreen:
 
     @session.setter
     def session(self, value: Any) -> None:
-        """PROJ-382 Phase 1: write-through setter for test session swap."""
+        """Write-through setter for test session swap.
+
+        PROJ-382 Phase 1 introduced this setter so tests can swap in a mock
+        session via ``screen.session = ...``.
+
+        PROJ-396 MAJ-001: writing ``_session`` alone left ``self._facade``
+        pointing at the original session — every subsequent
+        ``screen.facade.handle_command(...)`` then dispatched through the
+        stale session while ``screen.galaxy`` / ``empires`` / ``active_empire``
+        read from the new one (split-brain). The setter now rebuilds the
+        facade in lockstep so both halves of the screen stay coherent
+        regardless of whether tests swap via ``screen.session = ...`` or
+        production constructs the screen normally.
+        """
         self._session = value
+        self._facade = StrategySessionFacade(value)
 
     @property
     def input_mode(self) -> Any:

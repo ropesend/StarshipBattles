@@ -26,9 +26,10 @@ class MockGalaxy:
 class MockSession:
     """Mock that doubles as both a session and a facade for BuildQueueScreen
     integration tests. PROJ-382 Phase 1: BuildQueueScreen no longer accepts
-    ``session=``; the same instance is now passed as both ``facade=`` (for
-    command dispatch + ``get_registries()``) and ``portrait_session=`` (for
-    the portrait loader's empire-theme lookup)."""
+    ``session=``; the same instance is now passed as ``facade=`` (for
+    command dispatch + ``get_registries()``).
+    PROJ-396 MAJ-002: ``portrait_session=`` retired in favor of a narrow
+    ``theme_id_supplier=`` callable; tests pass ``lambda: "Federation"``."""
 
     def __init__(self, galaxy=None, empire=None, registries=None):
         self.savegame_path = "test_savegame"
@@ -47,6 +48,14 @@ class MockSession:
     def get_colony_demographic_view(self, planet_id):
         """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
         return None
+
+    def get_turn_number(self) -> int:
+        """PROJ-396 MAJ-003: facade-shaped turn-number accessor."""
+        return 0
+
+    def get_save_path(self):
+        """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
+        return self.savegame_path
 
     def handle_command(self, cmd):
         """Mock command handler that tracks commands for test verification.
@@ -214,8 +223,9 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries,
 
     # Import and create screen with injected dependencies
     from game.ui.screens.build_queue_screen import BuildQueueScreen
-    # PROJ-382 Phase 1: ``session=`` is gone; pass MockSession as both facade
-    # (command dispatch + get_registries) and portrait_session.
+    # PROJ-382 Phase 1: ``session=`` is gone; pass MockSession as facade
+    # (command dispatch + get_registries).
+    # PROJ-396 MAJ-002: portrait_session replaced by narrow theme_id_supplier.
     bq_screen = BuildQueueScreen(
         manager,
         planet,
@@ -226,7 +236,7 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries,
         galaxy=galaxy,
         empire=empire,
         facade=session,
-        portrait_session=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     yield bq_screen

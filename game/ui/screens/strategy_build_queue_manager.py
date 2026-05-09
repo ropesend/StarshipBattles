@@ -74,6 +74,18 @@ class StrategyBuildQueueManager:
         """
         self._screen = screen
 
+    def _active_theme_id(self) -> str:
+        """Resolve the active empire's ``empire_theme_id`` (PROJ-396 MAJ-002).
+
+        Zero-arg supplier passed to ``BuildQueuePortraitLoader`` so the
+        loader has no reference to the session.  Returns ``"Federation"``
+        when the active empire / theme cannot be resolved (matches the
+        prior loader fallback).
+        """
+        empire = self._screen.current_empire
+        theme = getattr(empire, "empire_theme_id", None) if empire else None
+        return theme or "Federation"
+
     def _open_build_queue(
         self,
         yard,
@@ -92,10 +104,10 @@ class StrategyBuildQueueManager:
         open reflects the manager's current empire context.
         """
         if self._screen.build_queue_screen is None:
-            # PROJ-382 Phase 1: facade-only construction; portrait_session is the
-            # narrow read-only handle the BuildQueuePortraitLoader needs to read
-            # ``active_empire.empire_theme_id``. Galaxy now sourced via the
-            # facade-screen surface rather than session.
+            # PROJ-382 Phase 1: facade-only construction.
+            # PROJ-396 MAJ-002: BuildQueuePortraitLoader no longer takes a
+            # session — pass a narrow zero-arg supplier for the active
+            # empire's ``empire_theme_id`` instead.
             self._screen.build_queue_screen = BuildQueueScreen(
                 self._screen.ui.manager,
                 build_context=None,
@@ -108,7 +120,7 @@ class StrategyBuildQueueManager:
                 empire=self._screen.current_empire,
                 input_mapper=self._screen.input_mapper,
                 facade=self._screen.facade,
-                portrait_session=self._screen.session,
+                theme_id_supplier=self._active_theme_id,
                 initial_yard=None,
             )
         else:
@@ -126,7 +138,7 @@ class StrategyBuildQueueManager:
             screen.design_library = design_library
             screen.design_loader = design_loader
             screen.portrait_loader = BuildQueuePortraitLoader(
-                design_library, self._screen.session
+                design_library, self._active_theme_id
             )
 
         self._screen.build_queue_screen.open_for_yard(
@@ -144,15 +156,17 @@ class StrategyBuildQueueManager:
                 # Get planet portrait from asset system
                 portrait_surface = self._screen._get_object_asset(planet)
 
-                # PROJ-40: Create dependencies for DI injection
-                savegame_path = self._screen.session.save_path
+                # PROJ-40: Create dependencies for DI injection.
+                # PROJ-396 MAJ-004: route save_path / galaxy through facade
+                # / screen properties instead of reaching into the session.
+                savegame_path = self._screen.facade.get_save_path()
                 empire_id = planet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
                 # PROJ-211: Pass registries explicitly
                 design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
                 # PROJ-69: Calculate hex coord for multi-queue discovery
-                parent_sys = self._screen.session.galaxy.get_system_of_planet(planet)
+                parent_sys = self._screen.galaxy.get_system_of_planet(planet)
                 hex_coord = parent_sys.global_location + planet.location if parent_sys else None
 
                 self._open_build_queue(
@@ -251,8 +265,9 @@ class StrategyBuildQueueManager:
         # Get portrait from asset system
         portrait_surface = self._screen._get_object_asset(entity)
 
-        # Create dependencies for DI injection
-        savegame_path = self._screen.session.save_path
+        # Create dependencies for DI injection.
+        # PROJ-396 MAJ-004: save_path via facade.
+        savegame_path = self._screen.facade.get_save_path()
         empire_id = self._screen.current_empire.id
         design_library = DesignLibrary(savegame_path, empire_id)
         # PROJ-211: Pass registries explicitly
@@ -275,8 +290,9 @@ class StrategyBuildQueueManager:
                 # Get fleet portrait from asset system
                 portrait_surface = self._screen._get_object_asset(fleet)
 
-                # Create dependencies for DI injection
-                savegame_path = self._screen.session.save_path
+                # Create dependencies for DI injection.
+                # PROJ-396 MAJ-004: save_path via facade.
+                savegame_path = self._screen.facade.get_save_path()
                 empire_id = fleet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
                 # PROJ-211: Pass registries explicitly

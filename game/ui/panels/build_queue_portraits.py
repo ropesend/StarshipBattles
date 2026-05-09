@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import TYPE_CHECKING, Optional, Dict
+from typing import TYPE_CHECKING, Callable, Optional, Dict
 
 import pygame
 
@@ -74,16 +74,28 @@ class BuildQueuePortraitLoader:
     - Generating colored placeholder icons when images not found
     """
 
-    def __init__(self, design_library: DesignLibrary, session):
-        """
-        Initialize the portrait loader.
+    def __init__(
+        self,
+        design_library: DesignLibrary,
+        theme_id_supplier: Callable[[], str],
+    ) -> None:
+        """Initialize the portrait loader.
 
         Args:
-            design_library: DesignLibrary for looking up designs
-            session: Game session with active_empire for theme lookup
+            design_library: DesignLibrary for looking up designs.
+            theme_id_supplier: Zero-arg callable returning the current empire's
+                ``empire_theme_id`` string. The loader resolves the theme on
+                every render so hotseat empire-rotation is reflected without
+                rebinding the loader.
+
+        PROJ-396 MAJ-002: replaced the full-session ``session`` parameter
+        (a Pattern #5 facade-bypass backdoor renamed ``portrait_session=``
+        at the call site) with a narrow callable that returns only the
+        single string the loader actually needs. The class no longer
+        holds a reference to anything mutable beyond ``design_library``.
         """
         self.design_library = design_library
-        self.session = session
+        self._theme_id_supplier = theme_id_supplier
 
     def load_design_portrait(self, design, size: int) -> Optional[pygame.Surface]:
         """
@@ -96,10 +108,11 @@ class BuildQueuePortraitLoader:
         Returns:
             Scaled pygame.Surface or None if not found
         """
-        # Get theme from session's active empire
-        theme = "Federation"  # Default
-        if hasattr(self.session, 'active_empire') and hasattr(self.session.active_empire, 'empire_theme_id'):
-            theme = self.session.active_empire.empire_theme_id
+        # PROJ-396 MAJ-002: theme is supplied by a narrow zero-arg callable.
+        try:
+            theme = self._theme_id_supplier() or "Federation"
+        except (AttributeError, KeyError):  # missing empire / theme: fall back.
+            theme = "Federation"
 
         ship_class = getattr(design, 'ship_class', 'Unknown')
         if not isinstance(ship_class, str):

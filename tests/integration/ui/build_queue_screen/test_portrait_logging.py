@@ -39,6 +39,14 @@ class MockSession:
         """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
         return None
 
+    def get_turn_number(self) -> int:
+        """PROJ-396 MAJ-003: facade-shaped turn-number accessor."""
+        return 0
+
+    def get_save_path(self):
+        """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
+        return self.savegame_path
+
     def handle_command(self, cmd):
         """Mock command handler."""
         return ValidationResult()
@@ -94,7 +102,7 @@ class TestBuildQueuePortraitLogging:
             galaxy=galaxy,
             empire=empire,
             facade=session,
-            portrait_session=session,
+            theme_id_supplier=lambda: "Federation",
         )
 
         # Create mock design
@@ -164,7 +172,7 @@ class TestBuildQueuePortraitLogging:
             galaxy=galaxy,
             empire=empire,
             facade=session,
-            portrait_session=session,
+            theme_id_supplier=lambda: "Federation",
         )
 
         mock_design = MagicMock()

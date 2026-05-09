@@ -996,3 +996,36 @@ class TestScreenResizeHandling:
         assert screen.screen_height == 2160
         # UI should have been called 4 times
         assert mocks['ui'].handle_resize.call_count == 4
+
+
+class TestSessionSetterFacadeRebuild:
+    """PROJ-396 MAJ-001 — ``screen.session = ...`` rebuilds the facade.
+
+    Before MAJ-001, the setter wrote ``self._session`` but left
+    ``self._facade`` pointing at the original session, producing a
+    split-brain state where commands dispatched through the stale facade
+    while reads (galaxy/empires/active_empire) came from the new session.
+    """
+
+    def test_session_setter_rebuilds_facade_around_new_session(self) -> None:
+        from game.ui.screens.strategy_screen import StrategyScreen
+
+        screen = StrategyScreen.__new__(StrategyScreen)
+        original_session = MagicMock(name="original_session")
+        screen._session = original_session
+
+        with patch(
+            "game.ui.screens.strategy_screen.StrategySessionFacade",
+        ) as facade_cls:
+            original_facade = MagicMock(name="original_facade")
+            new_facade = MagicMock(name="new_facade")
+            facade_cls.side_effect = [original_facade, new_facade]
+            screen._facade = facade_cls(original_session)
+            assert screen._facade is original_facade
+
+            new_session = MagicMock(name="new_session")
+            screen.session = new_session
+
+            assert screen._session is new_session
+            assert screen._facade is new_facade
+            facade_cls.assert_called_with(new_session)

@@ -132,13 +132,3 @@ class RadiationShieldAbility(Ability):
         ]
 
 
-# PROJ-300 — Environmental / storm-style abilities. Strategic-layer multipliers
-# and rates that flow through `system_effects_collector` and the unified
-# IAbilitySource framework.
-
-_STORM_SCOPES = [
-    AbilityScope.SELF, AbilityScope.SECTOR, AbilityScope.ALLIED_SECTOR,
-    AbilityScope.PLAYER_SECTOR, AbilityScope.ENEMY_SECTOR,
-    AbilityScope.SYSTEM, AbilityScope.ALLIED_SYSTEM,
-    AbilityScope.PLAYER_SYSTEM, AbilityScope.ENEMY_SYSTEM,
-]

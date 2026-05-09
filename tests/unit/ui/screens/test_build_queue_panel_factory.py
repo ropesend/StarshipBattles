@@ -29,16 +29,21 @@ def _make_factory():
     build_context.name = "Earth"
     factory.build_context = build_context
 
-    factory.session = MagicMock()
-    factory.session.registries = MagicMock()
+    # PROJ-396 MAJ-003: factory.session removed; registries / turn route
+    # through facade. ``_empire`` replaces the previous session reach-through.
+    factory._empire = MagicMock()
+    factory._empire.resource_pool = MagicMock()
 
     factory.portrait_surface = None
     factory.screen_height = 900
     factory.screen_width = 1600
 
     # PROJ-292 H1: facade provides `get_colony_demographic_view(planet.id)`.
+    # PROJ-396 MAJ-003: facade also provides get_registries / get_turn_number.
     factory._facade = MagicMock()
     factory._facade.get_colony_demographic_view = MagicMock(return_value=None)
+    factory._facade.get_registries = MagicMock(return_value=MagicMock())
+    factory._facade.get_turn_number = MagicMock(return_value=0)
     return factory
 
 
@@ -69,12 +74,16 @@ class TestViewThreading:
         )
         factory._facade.get_colony_demographic_view.assert_called_once_with(123)
 
-    def test_no_facade_falls_back_to_view_none(self):
-        """If the factory was constructed without a facade (legacy
-        caller), `view=None` is passed — panel renders without the
-        sub-block. No exception raised."""
+    def test_uncolonized_planet_passes_view_none(self):
+        """Uncolonized planets (``owner_id is None``) skip the facade
+        lookup and render with ``view=None`` — the per-species sub-block
+        only applies to colonized planets.
+
+        PROJ-396 MAJ-003: replaces the now-impossible
+        ``test_no_facade_falls_back_to_view_none`` (facade is a required
+        ctor kwarg post-MAJ-003)."""
         factory = _make_factory()
-        factory._facade = None
+        factory.build_context.owner_id = None
 
         with patch(
             "game.ui.screens.build_queue_panel_factory.PlanetReportPanel"
@@ -87,6 +96,7 @@ class TestViewThreading:
         mock_panel_cls.assert_called_once()
         kwargs = mock_panel_cls.call_args.kwargs
         assert kwargs.get("view") is None
+        factory._facade.get_colony_demographic_view.assert_not_called()
 
     def test_fleet_context_does_not_invoke_facade_or_panel(self):
         """When the build context is a fleet (no planet rendering),
@@ -128,10 +138,12 @@ class TestScopedFastPanelObjectId:
 
         factory = BuildQueuePanelFactory.__new__(BuildQueuePanelFactory)
         factory.manager = MagicMock()
-        factory.session = MagicMock()
-        factory.session.registries = MagicMock()
-        factory.session.current_empire = None
-        factory.session.turn = 0
+        # PROJ-396 MAJ-003: factory has no .session field; facade is the
+        # canonical surface for registries / turn.
+        factory._facade = MagicMock()
+        factory._facade.get_registries = MagicMock(return_value=MagicMock())
+        factory._facade.get_turn_number = MagicMock(return_value=0)
+        factory._empire = None
 
         build_context = MagicMock()
         build_context.context_type = "fleet"  # avoid PlanetReportPanel branch
@@ -148,7 +160,6 @@ class TestScopedFastPanelObjectId:
         factory.portrait_loader.load_resource_icons.return_value = {}
         factory.portrait_surface = None
         factory.on_queue_selection_changed = MagicMock()
-        factory._facade = None
 
         factory.screen_width = 1600
         factory.screen_height = 900

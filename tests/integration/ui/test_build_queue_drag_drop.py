@@ -37,6 +37,14 @@ class MockSession:
         """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
         return None
 
+    def get_turn_number(self) -> int:
+        """PROJ-396 MAJ-003: facade-shaped turn-number accessor."""
+        return 0
+
+    def get_save_path(self):
+        """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
+        return self.save_path
+
     def handle_command(self, cmd):
         """Mock command handler that executes queue commands.
 
@@ -182,7 +190,7 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries,
         galaxy=galaxy,
         empire=empire,
         facade=session,
-        portrait_session=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # CRITICAL: Update manager to calculate rects

@@ -721,7 +721,7 @@ Boundary:
 
 ## 36. Re-Export Shim
 
-> **Last verified:** 2026-05-08
+> **Last verified:** 2026-05-08 (PROJ-396 MAJ-006: Pattern #5 facade-bypass prohibition added)
 
 Where (4 confirmed sites at PROJ-382 verification, 2026-05-07):
 - `game/ui/screens/race_setup_screen.py` (~31 LOC) — re-exports
@@ -767,6 +767,14 @@ When NOT to use:
   legitimize a permanent two-path import surface.
 - When the canonical home is uncertain. Decide before introducing the
   shim; otherwise the shim becomes a permanent fixture.
+- To create a public import surface that bypasses a Facade
+  (Pattern #5). PROJ-382 Phase 1 specifically eradicated facade-bypass
+  paths from `BuildQueueScreen` and `EmpireBuildQueueWindow`; a
+  re-export shim that exposes internal delegate symbols the Facade
+  is supposed to hide reopens the same hole under a new name.
+  Facade-bypass sites must route through the Facade — never through a
+  re-export shim, a renamed kwarg (e.g. `portrait_session=`), or any
+  other indirection that re-exposes the underlying session/object.
 
 Retirement:
 - Each shim should reference the project responsible for migrating

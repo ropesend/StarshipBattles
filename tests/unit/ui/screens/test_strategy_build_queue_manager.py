@@ -8,14 +8,20 @@ from unittest.mock import MagicMock, patch
 
 
 def _make_build_queue_manager():
-    """Create a StrategyBuildQueueManager with mocked screen dependency."""
+    """Create a StrategyBuildQueueManager with mocked screen dependency.
+
+    PROJ-396 MAJ-004: ``StrategyBuildQueueManager`` no longer reads
+    ``screen.session.{save_path,galaxy}`` — those reads are routed
+    through ``screen.facade.get_save_path()`` and ``screen.galaxy``
+    respectively.  The mock screen exposes both surfaces.
+    """
     from game.ui.screens.strategy_build_queue_manager import StrategyBuildQueueManager
 
     # Create mock screen
     mock_screen = MagicMock()
-    mock_screen.session = MagicMock()
-    mock_screen.session.galaxy = MagicMock()
+    mock_screen.galaxy = MagicMock()  # PROJ-396 MAJ-004
     mock_screen.facade = MagicMock()  # PROJ-212: facade for command dispatch
+    mock_screen.facade.get_save_path = MagicMock(return_value="test_savegame")
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.selected_object = None
@@ -25,8 +31,7 @@ def _make_build_queue_manager():
     # Setup empire mocking
     empire = MagicMock()
     empire.id = 0
-    mock_screen.session.empires = [empire]
-    mock_screen.session.human_player_ids = [0]
+    empire.empire_theme_id = "Federation"
     mock_screen.current_player_index = 0
 
     # Property mock for current_empire
@@ -64,7 +69,7 @@ class TestOnBuildYardClick:
         mock_planet.name = "Test Planet"
         screen.selected_object = mock_planet
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.session.galaxy.get_system_of_planet.return_value = None
+        screen.galaxy.get_system_of_planet.return_value = None
 
         # Pre-populate the cached screen — simulate a prior open.
         cached_screen = MagicMock()
@@ -110,7 +115,7 @@ class TestOnBuildYardClick:
         mock_planet.name = "Test Planet"
         screen.selected_object = mock_planet
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.session.galaxy.get_system_of_planet.return_value = None
+        screen.galaxy.get_system_of_planet.return_value = None
 
         # PROJ-208: is_planet uses Protocol isinstance, need to patch it for mocks
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
@@ -134,7 +139,7 @@ class TestOnBuildYardClick:
         mock_planet.name = "Test Planet"
         screen.selected_object = mock_planet
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.session.galaxy.get_system_of_planet.return_value = None
+        screen.galaxy.get_system_of_planet.return_value = None
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
