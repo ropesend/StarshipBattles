@@ -5,7 +5,7 @@ Handles Planet Imploder, Stellerator, Warp Point manipulation, Dyson Sphere, and
 Extracted following ColonizationSystem pattern for consistency.
 
 Cross-layer imports (acceptable for UI):
-- pixel_to_hex: Runtime - coordinate conversion for command targeting
+- Camera.hex_at_screen: Runtime - coordinate conversion for command targeting
 - QueueImplodePlanetMissionCommand, etc.: Runtime - UI issues commands
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """

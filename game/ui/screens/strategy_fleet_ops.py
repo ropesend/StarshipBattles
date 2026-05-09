@@ -5,7 +5,7 @@ Handles move, join, and intercept commands.
 Extracted from StrategyScreen to reduce file size and improve testability.
 
 Cross-layer imports (acceptable for UI):
-- pixel_to_hex: Runtime - coordinate conversion for command targeting
+- Camera.hex_at_screen: Runtime - coordinate conversion for command targeting
 - IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand: Runtime (local) - UI issues commands
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """

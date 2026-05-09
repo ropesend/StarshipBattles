@@ -64,7 +64,8 @@ class Galaxy:
         self._spatial = GalaxySpatialIndex(self._state)
         self._pathfinder = GalaxyPathfindingService(self)
 
-    # --- State property forwarders (preserve public + grandfathered private API) ---
+    # --- State property forwarders (public read-only access to GalaxyState) ---
+    # PROJ-394 removed the 5 spatial private forwarders; new readers use ``Galaxy.state``.
 
     @property
     def state(self) -> GalaxyState:
