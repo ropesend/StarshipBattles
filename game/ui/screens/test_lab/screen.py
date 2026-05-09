@@ -324,44 +324,15 @@ class TestLabScreen:
         return filtered
 
     def reset_selection(self) -> None:
-        """Capture results from visual test and preserve selection.
+        """Preserve test selection on return from battle.
 
-        Called when returning from battle. Stores test results if the test
-        completed, but keeps the test selected so the user can see the
-        results in the Test Details panel.
+        Called when returning from a Combat Lab visual run. The
+        ``self.battle_scene.test_scenario`` capture path was retired in
+        PROJ-397 (the dead-var sweep) — visual-run results are now
+        recorded directly by the test framework in `_run_single_tick`,
+        not lifted off the BattleScreen here. This method now only
+        preserves the selected_test_id so the row stays highlighted.
         """
-        # Store results from completed visual test
-        if self.selected_test_id and hasattr(self.battle_scene, 'test_scenario'):
-            scenario = self.battle_scene.test_scenario
-            # Only capture results if test actually completed (not if user exited early)
-            if scenario and self.battle_scene.test_completed:
-                # Ensure results dict exists
-                if not hasattr(scenario, 'results') or scenario.results is None:
-                    scenario.results = {}
-
-                # Ensure essential fields are populated
-                if 'passed' not in scenario.results:
-                    scenario.results['passed'] = getattr(scenario, 'passed', False)
-                if 'ticks_run' not in scenario.results:
-                    scenario.results['ticks_run'] = self.battle_scene.test_tick_count
-
-                logger.debug(f"Storing visual test results for {self.selected_test_id}")
-                self.registry.update_last_run_results(self.selected_test_id, scenario.results)
-
-                # Add to persistent test history
-                self.test_history.add_run(self.selected_test_id, scenario.results)
-
-                # Refresh results panel if it exists
-                if self._viewmodel.results_panel:
-                    self._viewmodel.results_panel.set_test(self.selected_test_id)
-
-        # Clear battle scene test state
-        if hasattr(self.battle_scene, 'test_completed'):
-            self.battle_scene.test_completed = False
-        if hasattr(self.battle_scene, 'test_scenario'):
-            self.battle_scene.test_scenario = None
-
-        # Keep selected_test_id so the test remains visually selected
         logger.debug(f"Returned from battle, test selection preserved: {self.selected_test_id}")
 
     def _on_back(self) -> None:

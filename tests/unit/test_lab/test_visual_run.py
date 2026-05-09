@@ -20,11 +20,7 @@ class TestVisualRunFlow:
         battle_scene.engine = Mock()
         battle_scene.engine.ships = []
         battle_scene.sim_paused = False
-        battle_scene.test_mode = False
         battle_scene.headless_mode = True
-        battle_scene.test_scenario = None
-        battle_scene.test_tick_count = 0
-        battle_scene.test_completed = False
         battle_scene.camera = Mock()
         battle_scene._battle_service = Mock()
 
@@ -252,11 +248,7 @@ class TestSceneTransitionCallbacks:
         battle_scene.engine = Mock()
         battle_scene.engine.ships = []
         battle_scene.sim_paused = False
-        battle_scene.test_mode = False
         battle_scene.headless_mode = True
-        battle_scene.test_scenario = None
-        battle_scene.test_tick_count = 0
-        battle_scene.test_completed = False
         battle_scene.camera = Mock()
         battle_scene._battle_service = Mock()
         return battle_scene
@@ -438,57 +430,11 @@ class TestBattleScreenDrawsInTestMode:
                 assert mock_draw_ship.call_count == 2
 
 
-class TestUpdateBattleVisualWithTestMode:
-    """Tests that update_battle_visual properly handles test mode."""
-
-    @pytest.fixture
-    def mock_battle_scene_test_mode(self):
-        """Create a mock BattleScreen in test mode."""
-        scene = Mock()
-        scene.sim_tick_counter = 0
-        scene.sim_paused = False  # Unpaused to run simulation
-        scene.sim_speed_multiplier = 1.0
-        scene.headless_mode = False
-        scene.test_mode = True
-        scene.test_scenario = Mock()
-        scene.test_tick_count = 0
-        scene.test_completed = False
-        scene.is_battle_over.return_value = False
-        scene.ships = [Mock()]  # Has ships
-        scene.tick_rate_count = 0
-        scene.tick_rate_timer = 0.0
-        scene.current_tick_rate = 0
-
-        # Camera
-        scene.camera = Mock()
-        scene.camera.zoom = 1.0
-
-        # UI
-        scene.ui = Mock()
-        scene.ui.seeker_panel = Mock()
-        scene.ui.seeker_panel.rect = Mock()
-        scene.ui.seeker_panel.rect.width = 200
-
-        # Engine
-        scene.engine = Mock()
-
-        return scene
-
-    def test_update_calls_scenario_update(self, mock_battle_scene_test_mode):
-        """BattleScreen.update() should call test_scenario.update() in test mode."""
-        from game.ui.screens.battle_screen import BattleScreen
-
-        scene = mock_battle_scene_test_mode
-
-        # Create a minimal callable update that triggers scenario update
-        # The real update method checks test_mode and calls scenario.update
-        scene.test_scenario.update = Mock()
-
-        # Simulate what update() does in test mode
-        if scene.test_mode and scene.test_scenario and not scene.test_completed:
-            scene.test_tick_count += 1
-            scene.test_scenario.update(scene.engine)
-
-        # Verify scenario.update was called
-        scene.test_scenario.update.assert_called_once_with(scene.engine)
-        assert scene.test_tick_count == 1
+# PROJ-397 Phase 1: deleted `TestUpdateBattleVisualWithTestMode`. The class
+# verified fictional behaviour — it manually simulated a `if self.test_mode`
+# branch inside its own assertion and never invoked the real
+# `BattleScreen.update()`. Production `update()` has no test_mode branch
+# (it dispatches solely on `headless_mode`), so the test was a tautology
+# on a Mock. The associated `test_mode` / `test_scenario` /
+# `test_tick_count` / `test_completed` BattleScreen instance vars were
+# deleted in the same phase.

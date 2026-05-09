@@ -346,10 +346,6 @@ def create_mock_battle_screen(engine: Mock = None) -> Mock:
     scene.engine = engine
     scene.headless_mode = False
     scene.sim_paused = True
-    scene.test_mode = False
-    scene.test_scenario = None
-    scene.test_tick_count = 0
-    scene.test_completed = False
     scene.camera = Mock()
     scene.camera.fit_objects = Mock()
     return scene

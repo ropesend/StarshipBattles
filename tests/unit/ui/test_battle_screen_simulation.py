@@ -80,7 +80,6 @@ class TestBattleScreenSimulationLifecycle:
         )
 
         assert self.scene.headless_mode is False
-        assert self.scene.headless_start_time is None
         self.scene.camera.fit_objects.assert_called_once()
 
     def test_start_assigns_correct_team_ids(self):

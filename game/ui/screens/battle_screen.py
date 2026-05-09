@@ -114,15 +114,9 @@ class BattleScreen:
         # Accumulator for time-accurate simulation (moved from Game)
         self._accumulator = 0.0
 
-        # NOQA: legacy-retained — Combat Lab instance vars kept for
-        # back-compat with older visual test scenarios. Removal tracked
-        # in follow-up to PROJ-270 Phase 10.
+        # Headless-mode flag drives `_update_headless()` (no rendering, fast
+        # ticks). Set from `BattleConfig.headless` in `start_battle`.
         self.headless_mode = False
-        self.headless_start_time = None
-        self.test_mode = False
-        self.test_scenario = None
-        self.test_tick_count = 0
-        self.test_completed = False
 
         # Visual hit effects
         self.hit_effects: list = []
@@ -486,9 +480,6 @@ class BattleScreen:
 
     def is_battle_over(self) -> Any:
         """Check if the battle has ended."""
-        # In test mode, battle is over when scenario completes
-        if self.test_mode and self.test_scenario is None and self.test_tick_count > 0:
-            return True  # Test has completed
         return self._battle_service.is_battle_over()
 
     def get_winner(self) -> Any:
@@ -675,13 +666,4 @@ class BattleScreen:
 
     def print_headless_summary(self) -> None:
         """Print summary of headless battle results."""
-        # Skip summary for test mode - test framework handles results
-        if self.test_mode:
-            logger.info(f"Headless test complete: {self.sim_tick_counter} ticks")
-            return
-
-        # For normal headless battles, print summary if UI supports it
-        if hasattr(self.ui, 'print_headless_summary'):
-            self.ui.print_headless_summary(self.headless_start_time, self.sim_tick_counter)
-        else:
-            logger.info(f"Headless battle complete: {self.sim_tick_counter} ticks")
+        logger.info(f"Headless battle complete: {self.sim_tick_counter} ticks")
