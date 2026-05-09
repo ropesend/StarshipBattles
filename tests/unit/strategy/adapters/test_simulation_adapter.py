@@ -374,7 +374,12 @@ class TestSimulationAdapterBattleContextPreservation:
     must be re-raised as BattleResolutionError carrying fleet_ids and
     hex_coord context so crash dumps capture the situation."""
 
-    def test_simulation_exception_wrapped_with_battle_context(self):
+    def test_validation_exception_wrapped_with_battle_context(self):
+        """PROJ-402: `run_battle` raises `ValidationException` for invalid
+        `ShipSpec.components` (battle_runner.py:640-652). The wrapper must
+        catch it (not just `SimulationException`) so the battle context
+        survives into crash dumps. This is the originally-required B-6
+        regression that PROJ-381 substituted."""
         import pytest
 
         from game.core.exceptions import BattleResolutionError, ValidationException
@@ -388,10 +393,37 @@ class TestSimulationAdapterBattleContextPreservation:
         fleet2.owner_id = 9
         fleet2.hex_coord = (3, 4)
 
-        # ValidationException is a SimulationException? No — it's a
-        # GameException sibling. The B-6 wrap catches SimulationException
-        # only. Use a real SimulationException subclass.
-        from game.core.exceptions import SimulationException
+        boom = ValidationException("invalid component")
+
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            side_effect=boom,
+        ):
+            with pytest.raises(BattleResolutionError) as exc_info:
+                resolver.resolve_battle([fleet1, fleet2])
+
+        ctx = exc_info.value.context or {}
+        assert ctx.get("fleet_ids") == [1, 2]
+        assert ctx.get("empire_ids") == [7, 9]
+        assert ctx.get("hex_coord") == (3, 4)
+        assert ctx.get("original_type") == "ValidationException"
+        assert exc_info.value.__cause__ is boom
+
+    def test_simulation_exception_wrapped_with_battle_context(self):
+        """Coverage for the existing `SimulationException` path — must not
+        regress when the catch tuple is widened."""
+        import pytest
+
+        from game.core.exceptions import BattleResolutionError, SimulationException
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet1.owner_id = 7
+        fleet1.hex_coord = (3, 4)
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet2.owner_id = 9
+        fleet2.hex_coord = (3, 4)
 
         class _BoomSim(SimulationException):
             pass

@@ -285,11 +285,18 @@ class SimulationBattleResolver(IBattleResolver):
         capture_context = self._build_capture_context(
             fleet_list, registries=registries
         )
-        # PROJ-381 Phase 3 (B-6): wrap SimulationException so battle
-        # context (fleet IDs, hex coord, empire IDs) survives into crash
-        # dumps. Re-raise as `BattleResolutionError` preserving
-        # `from e` chaining.
-        from game.core.exceptions import BattleResolutionError, SimulationException
+        # PROJ-381 Phase 3 (B-6) / PROJ-402: wrap both SimulationException
+        # and ValidationException so battle context (fleet IDs, hex coord,
+        # empire IDs) survives into crash dumps. `run_battle` raises
+        # `ValidationException` for invalid `ShipSpec.components`
+        # (battle_runner.py:640-652); without this, those failures bypass
+        # the wrapper entirely. Re-raise as `BattleResolutionError`
+        # preserving `from e` chaining.
+        from game.core.exceptions import (
+            BattleResolutionError,
+            SimulationException,
+            ValidationException,
+        )
         try:
             outcome = run_battle(
                 spec,
@@ -297,7 +304,7 @@ class SimulationBattleResolver(IBattleResolver):
                 registry_provider=registries,
                 capture_context=capture_context,
             )
-        except SimulationException as e:
+        except (SimulationException, ValidationException) as e:
             fleet_ids = [getattr(f, "id", None) for f in fleet_list]
             empire_ids = [getattr(f, "owner_id", None) for f in fleet_list]
             hex_coord = next(

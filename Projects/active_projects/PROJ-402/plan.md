@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Widen catch tuple + restore originally-required test | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Widen catch tuple + restore originally-required test | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
-**Active Phase:** Phase 1
-**Last Action:** Project skeleton created from REMEDIATION_PLAN B-03
-**Next Action:** Widen catch tuple + replace substituted test with the originally-required `ValidationException` injection
+**Active Phase:** Closeout
+**Last Action:** Phase 1 complete — catch tuple widened to `(SimulationException, ValidationException)`; canonical regression test restored (`test_validation_exception_wrapped_with_battle_context`); existing `SimulationException` coverage retained.
+**Next Action:** Awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -42,9 +42,9 @@ PROJ-381 Phase 3 Task 3.10 was supposed to ensure `SimulationBattleResolver` pre
 - PROJ-381 review (`Reviews/results/2026-05-09_proj-380-399-implementation-review/PROJ-381_report.md`)
 
 ## Verification
-- [ ] Phase 1 checklist complete
-- [ ] New `ValidationException`-injection regression test passes
-- [ ] Existing `SimulationException`-injection test still passes (both cases must be covered)
-- [ ] `pytest tests/unit/strategy/adapters/test_simulation_adapter.py -v` clean
-- [ ] `python Projects/scripts/validate_audit_ready.py PROJ-402` passes
+- [x] Phase 1 checklist complete
+- [x] New `ValidationException`-injection regression test passes
+- [x] Existing `SimulationException`-injection test still passes (both cases must be covered)
+- [x] `pytest tests/unit/strategy/adapters/test_simulation_adapter.py -v` clean (19 passed)
+- [x] `python Projects/scripts/validate_audit_ready.py PROJ-402` passes
 - [ ] User verified
