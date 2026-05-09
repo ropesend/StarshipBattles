@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 import re
 
 from game.core.exceptions import ValidationException
+from game.ui.screens.new_game_setup_controller import NewGameSetupController
 
 
 class TestNewGameSetupValidation:
@@ -19,7 +20,7 @@ class TestNewGameSetupValidation:
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
         # Test the static validation method
-        is_valid, error = NewGameSetupScreen.validate_save_name("")
+        is_valid, error = NewGameSetupController.validate_save_name("")
         assert not is_valid
         assert "empty" in error.lower()
 
@@ -27,7 +28,7 @@ class TestNewGameSetupValidation:
         """Whitespace-only save name rejected."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        is_valid, error = NewGameSetupScreen.validate_save_name("   ")
+        is_valid, error = NewGameSetupController.validate_save_name("   ")
         assert not is_valid
         assert "empty" in error.lower()
 
@@ -37,7 +38,7 @@ class TestNewGameSetupValidation:
 
         valid_names = ["MyGame", "Game 1", "Test_Game", "Campaign-2026"]
         for name in valid_names:
-            is_valid, error = NewGameSetupScreen.validate_save_name(name)
+            is_valid, error = NewGameSetupController.validate_save_name(name)
             assert is_valid, f"'{name}' should be valid: {error}"
 
     def test_save_name_invalid_characters_rejected(self):
@@ -46,7 +47,7 @@ class TestNewGameSetupValidation:
 
         invalid_names = ["Game/1", "Test\\Game", "My:Game", "Game?Name", "Test*Game", "Game<>"]
         for name in invalid_names:
-            is_valid, error = NewGameSetupScreen.validate_save_name(name)
+            is_valid, error = NewGameSetupController.validate_save_name(name)
             assert not is_valid, f"'{name}' should be invalid"
 
 
@@ -73,14 +74,14 @@ class TestNewGameSetupValidationUniqueness:
         """Unique save name accepted."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        is_valid, error = NewGameSetupScreen.validate_save_name("NewUniqueName", self.saves_folder)
+        is_valid, error = NewGameSetupController.validate_save_name("NewUniqueName", self.saves_folder)
         assert is_valid
 
     def test_save_name_duplicate_rejected(self):
         """Duplicate save name rejected."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        is_valid, error = NewGameSetupScreen.validate_save_name("ExistingGame", self.saves_folder)
+        is_valid, error = NewGameSetupController.validate_save_name("ExistingGame", self.saves_folder)
         assert not is_valid
         assert "exists" in error.lower()
 
@@ -330,14 +331,14 @@ class TestNewGameSetupDefaultSaveName:
         """Default save name starts with 'save game'."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        name = NewGameSetupScreen.generate_default_save_name()
+        name = NewGameSetupController.generate_default_save_name()
         assert name.startswith("save game ")
 
     def test_default_save_name_contains_timestamp(self):
         """Default save name contains a date-time timestamp."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        name = NewGameSetupScreen.generate_default_save_name()
+        name = NewGameSetupController.generate_default_save_name()
         # Should match pattern: "save game YYYY-MM-DD HHMM"
         assert re.match(r"save game \d{4}-\d{2}-\d{2} \d{4}$", name), \
             f"Expected 'save game YYYY-MM-DD HHMM' pattern, got: '{name}'"
@@ -346,8 +347,8 @@ class TestNewGameSetupDefaultSaveName:
         """Default save name passes save name validation."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        name = NewGameSetupScreen.generate_default_save_name()
-        is_valid, error = NewGameSetupScreen.validate_save_name(name)
+        name = NewGameSetupController.generate_default_save_name()
+        is_valid, error = NewGameSetupController.validate_save_name(name)
         assert is_valid, f"Default save name '{name}' failed validation: {error}"
 
 

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 def renderer():
     """Create a StrategyRenderer with mocked dependencies."""
     scene = MagicMock()
-    with patch('game.assets.asset_manager.get_asset_manager'):
+    with patch('game.assets.asset_manager.get_default_asset_manager'):
         from game.ui.screens.strategy_renderer import StrategyRenderer
         return StrategyRenderer(scene)
 

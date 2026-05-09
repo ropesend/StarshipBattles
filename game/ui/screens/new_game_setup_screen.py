@@ -48,7 +48,7 @@ Two-stage ``__init__`` per PROJ-325 PoC + PROJ-328 Phase A:
 from __future__ import annotations
 
 import logging
-from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
+from typing import Callable, List, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
@@ -699,25 +699,12 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self._controller.on_cancel_clicked()
 
     # ------------------------------------------------------------------
-    # Static methods — kept on the class for back-compat with existing
-    # callers / tests (``NewGameSetupScreen.validate_save_name(...)`` /
-    # ``NewGameSetupScreen.build_game_config(...)``). Delegate to the
-    # controller, where the canonical implementation now lives.
+    # Static methods — back-compat surface for existing callers / tests.
+    # PROJ-392 dropped the ``validate_save_name`` /
+    # ``generate_default_save_name`` shims; call
+    # ``NewGameSetupController.validate_save_name(...)`` /
+    # ``NewGameSetupController.generate_default_save_name(...)`` directly.
     # ------------------------------------------------------------------
-
-    @staticmethod
-    def validate_save_name(
-        name: str, saves_folder: Optional[str] = None
-    ) -> Tuple[bool, str]:
-        """Validate a save name. See
-        ``NewGameSetupController.validate_save_name``."""
-        return NewGameSetupController.validate_save_name(name, saves_folder)
-
-    @staticmethod
-    def generate_default_save_name() -> str:
-        """Generate a default save name with current timestamp. See
-        ``NewGameSetupController.generate_default_save_name``."""
-        return NewGameSetupController.generate_default_save_name()
 
     @staticmethod
     def get_player_count_options() -> List[int]:

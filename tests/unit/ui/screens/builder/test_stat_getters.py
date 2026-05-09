@@ -163,7 +163,7 @@ def test_basic_stat_getters_read_ship_fields_and_ability_totals() -> None:
     )
 
     assert stat_getters.get_mass_display(ship) == 123.5
-    assert stat_getters.get_crew_required(ship) == 9
+    assert stat_getters.get_total_crew_requirement(ship) == 9
     assert stat_getters.get_crew_capacity(ship) == 0
     assert stat_getters.get_life_support(ship) == 6
     assert stat_getters.get_max_targets(ship) == 3

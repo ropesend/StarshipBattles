@@ -577,11 +577,6 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         return get_system_name(source, self.galaxy)
 
     @staticmethod
-    def _get_sector_text(source: BuildQueueSource) -> str:
-        """Return sector/hex coordinate text for a queue source."""
-        return get_sector_text(source)
-
-    @staticmethod
     def _get_turns_left_text(source: BuildQueueSource) -> str:
         """Return turns remaining for the first item in queue."""
         from game.ui.screens.empire_build_queue_formatter import get_turns_left_text

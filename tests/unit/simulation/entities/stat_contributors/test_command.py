@@ -1,7 +1,8 @@
 """
 Unit tests for the command stat contributor.
 
-Covers ``priority_sort_key`` (component priority for crew allocation),
+Covers ``lookup_crew_priority`` (component priority for crew allocation,
+canonical API in ``stat_contributors.registry``),
 ``track_multiplex`` (max_targets propagation), and the crew/life-support
 allocation phase.
 """
@@ -14,6 +15,9 @@ import pytest
 from game.core.constants import CombatConstants
 from game.simulation.components.component_constants import ComponentStatus
 from game.simulation.entities.stat_contributors import command
+from game.simulation.entities.stat_contributors.registry import (
+    lookup_crew_priority,
+)
 
 
 def _make_comp_with_abilities(*has_ability_names: str):
@@ -24,27 +28,27 @@ def _make_comp_with_abilities(*has_ability_names: str):
     return comp
 
 
-class TestPrioritySortKey:
+class TestLookupCrewPriority:
     def test_command_is_top_priority(self):
         bridge = _make_comp_with_abilities("CommandAndControl")
-        assert command.priority_sort_key(bridge) == 0
+        assert lookup_crew_priority(bridge) == 0
 
     def test_engines_outrank_weapons(self):
         engine = _make_comp_with_abilities("CombatPropulsion")
         thruster = _make_comp_with_abilities("ManeuveringThruster")
-        assert command.priority_sort_key(engine) == 1
-        assert command.priority_sort_key(thruster) == 1
+        assert lookup_crew_priority(engine) == 1
+        assert lookup_crew_priority(thruster) == 1
 
     def test_weapons_above_other_systems(self):
         weapon = _make_comp_with_abilities("WeaponAbility")
         other = _make_comp_with_abilities()
-        assert command.priority_sort_key(weapon) == 2
-        assert command.priority_sort_key(other) == 3
+        assert lookup_crew_priority(weapon) == 2
+        assert lookup_crew_priority(other) == 3
 
     def test_command_wins_when_component_has_multiple_priorities(self):
         """A bridge that ALSO has weapons should still sort to bridge priority."""
         hybrid = _make_comp_with_abilities("CommandAndControl", "WeaponAbility")
-        assert command.priority_sort_key(hybrid) == 0
+        assert lookup_crew_priority(hybrid) == 0
 
 
 class TestTrackMultiplex:
@@ -96,7 +100,7 @@ def _make_crew_required_ability(amount: int):
 def _make_active_comp(*, crew_required: int = 0):
     comp = MagicMock()
     comp.is_active = True
-    comp.has_ability = lambda name: False  # ensures priority_sort_key returns 3
+    comp.has_ability = lambda name: False  # ensures lookup_crew_priority returns 3
     comp.get_abilities = lambda name: (
         [_make_crew_required_ability(crew_required)] if name == "CrewRequired" and crew_required else []
     )

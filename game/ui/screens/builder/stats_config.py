@@ -10,7 +10,8 @@ Public API (all re-exported for backward compatibility):
 - resolve_section_visibility: Visibility resolver
 - get_logistics_rows, get_construction_rows: Dynamic row generators
 - get_strategic_rows, has_strategic_abilities: Strategic section
-- get_crew_required: Crew requirement getter
+- get_total_crew_requirement: Crew requirement getter (registered under
+  the legacy ``'get_crew_required'`` dispatch key for JSON layout files)
 """
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 from .stat_definitions import StatDefinition, SectionDefinition  # noqa: F401
 from .stat_getters import (  # noqa: F401
     GETTERS, FORMATTERS, VALIDATORS, UNITS,
-    get_crew_required, get_resource_consumption, get_resource_storage,
+    get_total_crew_requirement, get_resource_consumption, get_resource_storage,
     get_resource_generation, get_resource_endurance, get_resource_replenish,
     get_resource_max_usage,
     fmt_time, fmt_multiply, fmt_decimal, fmt_score, fmt_targeting,

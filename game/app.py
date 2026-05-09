@@ -230,9 +230,9 @@ class Game:
     def test_lab_scene(self, value: Any) -> None: self._route_set('test_lab_scene', value)
 
     @property
-    def _menu_scene(self) -> Any: return self._route_get('_menu_scene')
-    @_menu_scene.setter
-    def _menu_scene(self, value: Any) -> None: self._route_set('_menu_scene', value)
+    def menu_scene(self) -> Any: return self._route_get('_menu_scene')
+    @menu_scene.setter
+    def menu_scene(self, value: Any) -> None: self._route_set('_menu_scene', value)
 
     @property
     def menu_ui_manager(self) -> Any: return self._route_get('menu_ui_manager')
@@ -446,7 +446,7 @@ class Game:
                 self.start_replay(record)
         elif action == "quit_to_menu":
             logger.info("Returning to main menu from strategy")
-            self._switch_scene(GameState.MENU, self._menu_scene)
+            self._switch_scene(GameState.MENU, self.menu_scene)
         elif action == "quit_game":
             logger.info("Quitting game from strategy menu")
             self.running = False
@@ -485,7 +485,7 @@ class Game:
     def _handle_test_lab_action(self, action: str, **kwargs: Any) -> None:
         """Handle scene actions from TestLabScreen."""
         if action == "return_to_menu":
-            self._switch_scene(GameState.MENU, self._menu_scene)
+            self._switch_scene(GameState.MENU, self.menu_scene)
         elif action == "start_test_battle":
             self._switch_scene(GameState.BATTLE, self.battle_scene)
 

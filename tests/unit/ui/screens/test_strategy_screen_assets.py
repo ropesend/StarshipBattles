@@ -60,7 +60,7 @@ class TestLoadAssets:
         emp_b = MagicMock(id=2)
         screen.empires = [emp_a, emp_b]
         screen._race_loader.load_all_empire_assets.side_effect = lambda e: f"assets-{e.id}"
-        with patch("game.assets.asset_manager.get_asset_manager") as mock_get:
+        with patch("game.assets.asset_manager.get_default_asset_manager") as mock_get:
             mock_am = MagicMock()
             mock_get.return_value = mock_am
             assets.load_assets(screen)
@@ -76,7 +76,7 @@ class TestGetObjectAsset:
 
     def test_unknown_object_returns_none(self):
         screen = _make_screen()
-        with patch("game.assets.asset_manager.get_asset_manager", return_value=self._patched_am()):
+        with patch("game.assets.asset_manager.get_default_asset_manager", return_value=self._patched_am()):
             result = assets.get_object_asset(screen, MagicMock(spec=[]))
         assert result is None
 
@@ -84,7 +84,7 @@ class TestGetObjectAsset:
         screen = _make_screen()
         am = self._patched_am()
         am.load_star_image.return_value = "STAR_IMG"
-        with patch("game.assets.asset_manager.get_asset_manager", return_value=am), \
+        with patch("game.assets.asset_manager.get_default_asset_manager", return_value=am), \
              patch("game.ui.screens.strategy_screen_assets.is_star", return_value=True), \
              patch("game.ui.screens.strategy_screen_assets.is_planet", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_warp_point", return_value=False), \
@@ -97,7 +97,7 @@ class TestGetObjectAsset:
         screen = _make_screen()
         am = self._patched_am()
         am.load_star_image.return_value = "MISSING"
-        with patch("game.assets.asset_manager.get_asset_manager", return_value=am), \
+        with patch("game.assets.asset_manager.get_default_asset_manager", return_value=am), \
              patch("game.ui.screens.strategy_screen_assets.is_star", return_value=True), \
              patch("game.ui.screens.strategy_screen_assets.is_planet", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_warp_point", return_value=False), \
@@ -109,7 +109,7 @@ class TestGetObjectAsset:
         screen = _make_screen()
         am = self._patched_am()
         am.load_planet_image.return_value = "RAW_IMG"
-        with patch("game.assets.asset_manager.get_asset_manager", return_value=am), \
+        with patch("game.assets.asset_manager.get_default_asset_manager", return_value=am), \
              patch("game.ui.screens.strategy_screen_assets.is_star", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_planet", return_value=True), \
              patch("game.ui.screens.strategy_screen_assets.is_warp_point", return_value=False), \
@@ -124,7 +124,7 @@ class TestGetObjectAsset:
         screen = _make_screen()
         am = self._patched_am()
         am.load_planet_image.side_effect = OSError("boom")
-        with patch("game.assets.asset_manager.get_asset_manager", return_value=am), \
+        with patch("game.assets.asset_manager.get_default_asset_manager", return_value=am), \
              patch("game.ui.screens.strategy_screen_assets.is_star", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_planet", return_value=True), \
              patch("game.ui.screens.strategy_screen_assets.is_warp_point", return_value=False), \
@@ -136,7 +136,7 @@ class TestGetObjectAsset:
         screen = _make_screen()
         am = self._patched_am()
         am.get_random_from_group.return_value = "WARP_IMG"
-        with patch("game.assets.asset_manager.get_asset_manager", return_value=am), \
+        with patch("game.assets.asset_manager.get_default_asset_manager", return_value=am), \
              patch("game.ui.screens.strategy_screen_assets.is_star", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_planet", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_warp_point", return_value=True), \
@@ -149,7 +149,7 @@ class TestGetObjectAsset:
         screen = _make_screen()
         screen.empire_assets = {7: {"fleet": "FLEET_IMG"}}
         am = self._patched_am()
-        with patch("game.assets.asset_manager.get_asset_manager", return_value=am), \
+        with patch("game.assets.asset_manager.get_default_asset_manager", return_value=am), \
              patch("game.ui.screens.strategy_screen_assets.is_star", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_planet", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_warp_point", return_value=False), \
@@ -161,7 +161,7 @@ class TestGetObjectAsset:
         screen = _make_screen()
         screen.empire_assets = {}
         am = self._patched_am()
-        with patch("game.assets.asset_manager.get_asset_manager", return_value=am), \
+        with patch("game.assets.asset_manager.get_default_asset_manager", return_value=am), \
              patch("game.ui.screens.strategy_screen_assets.is_star", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_planet", return_value=False), \
              patch("game.ui.screens.strategy_screen_assets.is_warp_point", return_value=False), \

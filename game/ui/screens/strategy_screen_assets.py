@@ -42,9 +42,9 @@ def focus_on_player_home(screen: "StrategyScreen") -> None:
 
 def load_assets(screen: "StrategyScreen") -> None:
     """Load visual assets using AssetManager and RaceAssetLoader."""
-    from game.assets.asset_manager import get_asset_manager
+    from game.assets.asset_manager import get_default_asset_manager
 
-    am = get_asset_manager()
+    am = get_default_asset_manager()
     am.load_manifest()
 
     for emp in screen.empires:
@@ -53,9 +53,9 @@ def load_assets(screen: "StrategyScreen") -> None:
 
 def get_object_asset(screen: "StrategyScreen", obj) -> Any:
     """Resolve the visual asset for a data object."""
-    from game.assets.asset_manager import get_asset_manager
+    from game.assets.asset_manager import get_default_asset_manager
 
-    am = get_asset_manager()
+    am = get_default_asset_manager()
 
     if is_star(obj):
         if obj.image_id:

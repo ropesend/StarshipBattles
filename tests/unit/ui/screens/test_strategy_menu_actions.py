@@ -275,7 +275,7 @@ class TestAppStrategyActionHandler:
         game.height = 1080
         game.running = True
         game.strategy_scene = MagicMock()
-        game._menu_scene = MagicMock()
+        game.menu_scene = MagicMock()
 
         return game
 
@@ -305,7 +305,7 @@ class TestAppStrategyActionHandler:
         from game.core.constants import GameState
         game._handle_strategy_action("quit_to_menu")
 
-        game._switch_scene.assert_called_once_with(GameState.MENU, game._menu_scene)
+        game._switch_scene.assert_called_once_with(GameState.MENU, game.menu_scene)
 
     def test_quit_game_handler(self):
         """'quit_game' action should set running to False."""

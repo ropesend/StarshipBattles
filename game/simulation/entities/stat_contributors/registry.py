@@ -12,8 +12,9 @@ component.
 Two registries:
 
 1. ``CREW_PRIORITY_REGISTRY`` — list of (ability_name, priority) pairs.
-   The ``command.priority_sort_key`` consults this to decide crew-allocation
-   order. Lower priority value = served first. Default fallback = 3.
+   ``command.allocate_crew_and_life_support`` consults this via
+   ``lookup_crew_priority`` to decide crew-allocation order. Lower priority
+   value = served first. Default fallback = 3.
 
 2. ``STAT_CONTRIBUTOR_REGISTRY`` — the unified Phase-3 pipeline. Each entry
    binds an ``ability_name`` to a callable

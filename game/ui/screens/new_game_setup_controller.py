@@ -157,13 +157,11 @@ class NewGameSetupController:
         and return WITHOUT firing the callback or killing the window."""
         save_name = self._screen.save_name_input.get_text().strip()
 
-        # Dispatch through the screen's class so existing tests that
-        # patch ``NewGameSetupScreen.validate_save_name`` keep working
-        # (the screen exposes the static method as a thin shim
-        # delegating back here; tests pre-PROJ-328 patched the screen
-        # surface and that path must continue to function).
-        validator = type(self._screen).validate_save_name
-        is_valid, error = validator(save_name, Paths.SAVES_DIR)
+        # PROJ-392: callers go through the controller directly; the
+        # screen-level shim was removed.
+        is_valid, error = NewGameSetupController.validate_save_name(
+            save_name, Paths.SAVES_DIR
+        )
         if not is_valid:
             self._screen.error_label.set_text(error)
             return
@@ -231,9 +229,9 @@ class NewGameSetupController:
         return pygame.Rect(x, y, width, height)
 
     # ------------------------------------------------------------------
-    # Static-method API (kept here so ``NewGameSetupScreen`` can keep
-    # exposing them via thin shims for back-compat with existing tests
-    # that call ``NewGameSetupScreen.validate_save_name(...)`` etc.)
+    # Static-method API — canonical home for save-name validation /
+    # default-save-name generation. PROJ-392 dropped the ``NewGameSetupScreen``
+    # static shims; tests and production call these directly.
     # ------------------------------------------------------------------
 
     @staticmethod

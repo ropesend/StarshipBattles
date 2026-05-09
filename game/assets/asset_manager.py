@@ -345,9 +345,3 @@ def set_default_asset_manager(manager: AssetManager) -> None:
     """Set the module-level AssetManager instance."""
     global _default_asset_manager
     _default_asset_manager = manager
-
-
-# Global Accessor (convenience alias)
-def get_asset_manager() -> AssetManager:
-    """Get the default AssetManager instance."""
-    return get_default_asset_manager()

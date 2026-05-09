@@ -33,11 +33,6 @@ if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
 
 
-def priority_sort_key(c: "Component") -> int:
-    """Sort key for the resource-allocation phase (lower = higher priority)."""
-    return lookup_crew_priority(c)
-
-
 def contribute_multiplex_tracking(
     ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
@@ -66,7 +61,7 @@ def allocate_crew_and_life_support(
 
     - ``ship.crew_onboard`` / ``ship.crew_required`` / ``ship.max_targets``
     - ``ship.max_mass_budget``
-    - Sorts ``component_pool`` in place by ``priority_sort_key``
+    - Sorts ``component_pool`` in place by ``lookup_crew_priority``
     - Deactivates components that can't be crewed (sets
       ``ComponentStatus.NO_CREW``)
     """
@@ -80,7 +75,7 @@ def allocate_crew_and_life_support(
 
     effective_crew = min(available_crew, available_life_support)
 
-    component_pool.sort(key=priority_sort_key)
+    component_pool.sort(key=lookup_crew_priority)
 
     for comp in component_pool:
         if not comp.is_active:

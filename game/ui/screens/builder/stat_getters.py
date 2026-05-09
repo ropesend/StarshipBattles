@@ -33,10 +33,15 @@ def fmt_targeting(val) -> Any:
     return "Single" if val == 1 else f"Multi ({val})"
 
 
-# --- Helpers ---
+# --- Getters / Helpers ---
 
-def _get_total_crew_requirement(ship) -> Any:
-    """Get total crew requirement from CrewRequired ability."""
+def get_total_crew_requirement(ship) -> Any:
+    """Get total crew requirement from CrewRequired ability.
+
+    Public helper used by validators and registered as the
+    ``'get_crew_required'`` dispatch entry (dispatch key kept stable for
+    JSON layouts; PROJ-392 dropped the trivial wrapper).
+    """
     return ship.get_ability_total('CrewRequired')
 
 
@@ -46,13 +51,13 @@ def mass_validator(ship, val) -> tuple:
     return (ship.mass_limits_ok, "✓" if ship.mass_limits_ok else "✗")
 
 def crew_validator(ship, val) -> tuple:
-    req = _get_total_crew_requirement(ship)
+    req = get_total_crew_requirement(ship)
     if val >= req:
         return (True, "✓")
     return (False, f"✗ Miss {req - val}")
 
 def life_support_validator(ship, val) -> tuple:
-    req = _get_total_crew_requirement(ship)
+    req = get_total_crew_requirement(ship)
     if val >= req:
         return (True, "✓")
     return (False, f"✗ -{req - val}")
@@ -62,9 +67,6 @@ def life_support_validator(ship, val) -> tuple:
 
 def get_mass_display(ship) -> Any:
     return ship.mass
-
-def get_crew_required(ship) -> Any:
-    return _get_total_crew_requirement(ship)
 
 def get_crew_capacity(ship) -> Any:
     return max(0, ship.get_ability_total('CrewCapacity'))
@@ -391,7 +393,7 @@ def fmt_text(val) -> Any:
 
 GETTERS = {
     'get_mass_display': get_mass_display,
-    'get_crew_required': get_crew_required,
+    'get_crew_required': get_total_crew_requirement,
     'get_crew_capacity': get_crew_capacity,
     'get_life_support': get_life_support,
     'get_max_targets': get_max_targets,

@@ -85,8 +85,8 @@ class StrategyRenderer:
         self.scene = scene
 
         # Cache asset manager reference
-        from game.assets.asset_manager import get_asset_manager
-        self._asset_manager = get_asset_manager()
+        from game.assets.asset_manager import get_default_asset_manager
+        self._asset_manager = get_default_asset_manager()
 
         # Background layer (owns its scaled-surface cache)
         self._background = BackgroundLayer(self._asset_manager)

@@ -52,7 +52,7 @@ def mock_scene():
 @pytest.fixture
 def renderer(mock_scene):
     """Create a StrategyRenderer with mocked dependencies."""
-    with patch('game.assets.asset_manager.get_asset_manager') as mock_am:
+    with patch('game.assets.asset_manager.get_default_asset_manager') as mock_am:
         mock_am.return_value = MagicMock()
         from game.ui.screens.strategy_renderer import StrategyRenderer
         return StrategyRenderer(mock_scene)
@@ -67,7 +67,7 @@ class TestRendererInitialization:
 
     def test_init_stores_scene_reference(self, mock_scene):
         """__init__ should store the scene reference."""
-        with patch('game.assets.asset_manager.get_asset_manager'):
+        with patch('game.assets.asset_manager.get_default_asset_manager'):
             from game.ui.screens.strategy_renderer import StrategyRenderer
             r = StrategyRenderer(mock_scene)
 
@@ -76,7 +76,7 @@ class TestRendererInitialization:
     def test_init_caches_asset_manager(self, mock_scene):
         """__init__ should cache asset manager reference."""
         mock_am = MagicMock()
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_am):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_am):
             from game.ui.screens.strategy_renderer import StrategyRenderer
             r = StrategyRenderer(mock_scene)
 
