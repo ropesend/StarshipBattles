@@ -242,33 +242,41 @@ class SelfDestructCommandHandler(BaseCommandHandler):
 # Mission Command Handlers (Move + Action)
 # =============================================================================
 
-@command_spec(
-    command_class=QueueImplodePlanetMissionCommand,
-    order_type=None,
-    category='superweapon',
-    execution_model='mission',
-    facade_helper_name='dispatch_queue_implode_planet_mission',
-)
-class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
-    """Handler for QueueImplodePlanetMissionCommand."""
+class MissionCommandHandler(BaseCommandHandler):
+    """Template base for the 5 superweapon "queue mission" handlers.
 
-    def execute(self, session: 'GameSession', cmd: 'QueueImplodePlanetMissionCommand') -> ValidationResult:
-        """Handle QueueImplodePlanetMissionCommand - queues MOVE + IMPLODE_PLANET."""
+    PROJ-380 DUP-X-01: captures the shared 5-step skeleton — resolve
+    fleet → subclass validates and builds target → bail on invalid →
+    auto-queue MOVE → emit validated action order. Subclasses set
+    ``_ORDER_TYPE`` / ``_ORDER_LABEL`` class attributes and implement
+    ``_validate_mission(session, fleet, cmd) -> (ValidationResult, target)``.
+    The ``target`` returned is the second positional arg passed to
+    ``_emit_validated_order`` (a planet, ``None``, or a target dict, varies).
+    """
+
+    # Subclasses must set these.
+    _ORDER_TYPE: OrderType
+    _ORDER_LABEL: str
+
+    def _validate_mission(
+        self,
+        session: 'GameSession',
+        fleet: Any,
+        cmd: Any,
+    ) -> tuple[ValidationResult, Any]:
+        """Subclass hook returning ``(validation_result, target)``."""
+        raise NotImplementedError
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         # 1. Resolve fleet
         fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
 
-        # 2. Resolve planet
-        planet, error = self._resolve_planet(session, cmd.planet_id)
-        if error:
-            return error
+        # 2. Subclass-supplied validation + target construction
+        result, target = self._validate_mission(session, fleet, cmd)
 
-        # 3. Validate ability
-        result = SuperweaponValidator.validate_implode_planet(
-            session.galaxy, fleet, planet,
-            component_registry=session.registries.components
-        )
+        # 3. Bail on invalid validation
         if not result.is_valid:
             return result
 
@@ -277,10 +285,42 @@ class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
         if not move_result.is_valid:
             return move_result
 
-        # 5. Queue IMPLODE_PLANET order (PROJ-375 review MIN-001)
+        # 5. Queue the action order
         return self._emit_validated_order(
-            fleet, OrderType.IMPLODE_PLANET, planet, result, "IMPLODE_PLANET mission",
+            fleet, self._ORDER_TYPE, target, result, self._ORDER_LABEL,
         )
+
+
+@command_spec(
+    command_class=QueueImplodePlanetMissionCommand,
+    order_type=None,
+    category='superweapon',
+    execution_model='mission',
+    facade_helper_name='dispatch_queue_implode_planet_mission',
+)
+class ImplodePlanetMissionCommandHandler(MissionCommandHandler):
+    """Handler for QueueImplodePlanetMissionCommand."""
+
+    _ORDER_TYPE = OrderType.IMPLODE_PLANET
+    _ORDER_LABEL = "IMPLODE_PLANET mission"
+
+    def _validate_mission(
+        self,
+        session: 'GameSession',
+        fleet: Any,
+        cmd: 'QueueImplodePlanetMissionCommand',
+    ) -> tuple[ValidationResult, Any]:
+        # Resolve planet — but planet errors must short-circuit through
+        # execute(). Re-raise as ValidationException so the base catches.
+        planet, error = self._resolve_planet(session, cmd.planet_id)
+        if error:
+            # Surface the planet-resolution error directly via the result.
+            return error, None
+        result = SuperweaponValidator.validate_implode_planet(
+            session.galaxy, fleet, planet,
+            component_registry=session.registries.components,
+        )
+        return result, planet
 
 
 @command_spec(
@@ -290,33 +330,23 @@ class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
     execution_model='mission',
     facade_helper_name='dispatch_queue_stellerate_star_mission',
 )
-class StellerateStarMissionCommandHandler(BaseCommandHandler):
+class StellerateStarMissionCommandHandler(MissionCommandHandler):
     """Handler for QueueStellerateStarMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: 'QueueStellerateStarMissionCommand') -> ValidationResult:
-        """Handle QueueStellerateStarMissionCommand - queues MOVE + STELLERATE_STAR."""
-        # 1. Resolve fleet
-        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
-        if error:
-            return error
+    _ORDER_TYPE = OrderType.STELLERATE_STAR
+    _ORDER_LABEL = "STELLERATE_STAR mission"
 
-        # 2. Validate ability
+    def _validate_mission(
+        self,
+        session: 'GameSession',
+        fleet: Any,
+        cmd: 'QueueStellerateStarMissionCommand',
+    ) -> tuple[ValidationResult, Any]:
         result = SuperweaponValidator.validate_stellerate_star(
             session.galaxy, fleet,
-            component_registry=session.registries.components
+            component_registry=session.registries.components,
         )
-        if not result.is_valid:
-            return result
-
-        # 3. Setup move
-        move_result = add_move_order_if_needed(session, fleet, cmd.target_hex)
-        if not move_result.is_valid:
-            return move_result
-
-        # 4. Queue STELLERATE_STAR order (PROJ-375 Task 2.4)
-        return self._emit_validated_order(
-            fleet, OrderType.STELLERATE_STAR, None, result, "STELLERATE_STAR mission",
-        )
+        return result, None
 
 
 @command_spec(
@@ -326,38 +356,29 @@ class StellerateStarMissionCommandHandler(BaseCommandHandler):
     execution_model='mission',
     facade_helper_name='dispatch_queue_open_warp_point_mission',
 )
-class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
+class OpenWarpPointMissionCommandHandler(MissionCommandHandler):
     """Handler for QueueOpenWarpPointMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: 'QueueOpenWarpPointMissionCommand') -> ValidationResult:
-        """Handle QueueOpenWarpPointMissionCommand - queues MOVE + OPEN_WARP_POINT."""
-        # 1. Resolve fleet
-        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
-        if error:
-            return error
+    _ORDER_TYPE = OrderType.OPEN_WARP_POINT
+    _ORDER_LABEL = "OPEN_WARP_POINT mission"
 
-        # 2. Validate ability (skip location check — fleet will move there first)
+    def _validate_mission(
+        self,
+        session: 'GameSession',
+        fleet: Any,
+        cmd: 'QueueOpenWarpPointMissionCommand',
+    ) -> tuple[ValidationResult, Any]:
+        # Validate ability (skip location check — fleet will move there first)
         result = SuperweaponValidator.validate_open_warp_point(
             session.galaxy, fleet, cmd.target_system_name,
             component_registry=session.registries.components,
-            skip_location_check=True
+            skip_location_check=True,
         )
-        if not result.is_valid:
-            return result
-
-        # 3. Setup move
-        move_result = add_move_order_if_needed(session, fleet, cmd.target_hex)
-        if not move_result.is_valid:
-            return move_result
-
-        # 4. Queue OPEN_WARP_POINT order with target dict (PROJ-375 Task 2.4)
         target_dict = {
             'target_hex': cmd.target_hex,
-            'target_system_name': cmd.target_system_name
+            'target_system_name': cmd.target_system_name,
         }
-        return self._emit_validated_order(
-            fleet, OrderType.OPEN_WARP_POINT, target_dict, result, "OPEN_WARP_POINT mission",
-        )
+        return result, target_dict
 
 
 @command_spec(
@@ -367,39 +388,29 @@ class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
     execution_model='mission',
     facade_helper_name='dispatch_queue_close_warp_point_mission',
 )
-class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
+class CloseWarpPointMissionCommandHandler(MissionCommandHandler):
     """Handler for QueueCloseWarpPointMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: 'QueueCloseWarpPointMissionCommand') -> ValidationResult:
-        """Handle QueueCloseWarpPointMissionCommand - queues MOVE + CLOSE_WARP_POINT."""
-        # 1. Resolve fleet
-        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
-        if error:
-            return error
+    _ORDER_TYPE = OrderType.CLOSE_WARP_POINT
+    _ORDER_LABEL = "CLOSE_WARP_POINT mission"
 
-        # 2. Validate ability (skip location check — fleet will move there first)
+    def _validate_mission(
+        self,
+        session: 'GameSession',
+        fleet: Any,
+        cmd: 'QueueCloseWarpPointMissionCommand',
+    ) -> tuple[ValidationResult, Any]:
+        # Validate ability (skip location check — fleet will move there first)
         result = SuperweaponValidator.validate_close_warp_point(
             session.galaxy, fleet, cmd.warp_point_destination_id,
             component_registry=session.registries.components,
-            skip_location_check=True
+            skip_location_check=True,
         )
-        if not result.is_valid:
-            return result
-
-        # 3. Setup move
-        move_result = add_move_order_if_needed(session, fleet, cmd.target_hex)
-        if not move_result.is_valid:
-            return move_result
-
-        # 4. Queue CLOSE_WARP_POINT order with target sector for execution-time validation
-        # (PROJ-375 Task 2.4)
         target_dict = {
             'destination_id': cmd.warp_point_destination_id,
             'target_hex': {'q': cmd.target_hex.q, 'r': cmd.target_hex.r},
         }
-        return self._emit_validated_order(
-            fleet, OrderType.CLOSE_WARP_POINT, target_dict, result, "CLOSE_WARP_POINT mission",
-        )
+        return result, target_dict
 
 
 @command_spec(
@@ -409,33 +420,23 @@ class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
     execution_model='mission',
     facade_helper_name='dispatch_queue_create_dyson_sphere_mission',
 )
-class CreateDysonSphereMissionCommandHandler(BaseCommandHandler):
+class CreateDysonSphereMissionCommandHandler(MissionCommandHandler):
     """Handler for QueueCreateDysonSphereMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: 'QueueCreateDysonSphereMissionCommand') -> ValidationResult:
-        """Handle QueueCreateDysonSphereMissionCommand - queues MOVE + CREATE_DYSON_SPHERE."""
-        # 1. Resolve fleet
-        fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
-        if error:
-            return error
+    _ORDER_TYPE = OrderType.CREATE_DYSON_SPHERE
+    _ORDER_LABEL = "CREATE_DYSON_SPHERE mission"
 
-        # 2. Validate ability
+    def _validate_mission(
+        self,
+        session: 'GameSession',
+        fleet: Any,
+        cmd: 'QueueCreateDysonSphereMissionCommand',
+    ) -> tuple[ValidationResult, Any]:
         result = SuperweaponValidator.validate_create_dyson_sphere(
             session.galaxy, fleet,
-            component_registry=session.registries.components
+            component_registry=session.registries.components,
         )
-        if not result.is_valid:
-            return result
-
-        # 3. Setup move
-        move_result = add_move_order_if_needed(session, fleet, cmd.target_hex)
-        if not move_result.is_valid:
-            return move_result
-
-        # 4. Queue CREATE_DYSON_SPHERE order (PROJ-375 Task 2.4)
-        return self._emit_validated_order(
-            fleet, OrderType.CREATE_DYSON_SPHERE, None, result, "CREATE_DYSON_SPHERE mission",
-        )
+        return result, None
 
 
 def register(registry: CommandRegistry) -> None:

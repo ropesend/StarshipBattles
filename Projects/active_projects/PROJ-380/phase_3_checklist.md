@@ -86,14 +86,14 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/strategy/engine/superweapon_command_handlers.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py` then `pytest tests/integration/strategy/`
 
-- [ ] Implement a `MissionCommandHandler` template class (or a parameterizable base) within the same module accepting `validator_fn`, `order_type`, and optional `target_dict_fn`; it must implement the shared 4-step `execute` skeleton (resolve fleet → validate ability → add move if needed → emit validated order)
-- [ ] Refactor `ImplodePlanetMissionCommandHandler` (lines 252–283) — note: it requires a planet-resolution extra step; ensure that's expressible in the template (add an optional `pre_validate_fn` if needed)
-- [ ] Refactor `StellerateStarMissionCommandHandler` (lines 293–319)
-- [ ] Refactor `OpenWarpPointMissionCommandHandler` (lines 329–360) — uses `target_dict_fn`
-- [ ] Refactor `CloseWarpPointMissionCommandHandler` (lines 370–402) — uses `target_dict_fn`
-- [ ] Refactor `CreateDysonSphereMissionCommandHandler` (lines 412–438)
-- [ ] Confirm all 5 handlers remain registered correctly in `register()` (lines 443–455) and dispatch tests still pass
-- [ ] Verify: focused + integration tests pass; LOC delta ≈ −60
+- [x] Implemented `MissionCommandHandler(BaseCommandHandler)` template class in the same module — uses a `_validate_mission` hook returning `(ValidationResult, target)` plus `_ORDER_TYPE` / `_ORDER_LABEL` class attributes. The template's `execute` does the shared 5-step (fleet → validate → bail → move → emit). Planet resolution for ImplodePlanet is folded into its `_validate_mission` (returns the planet-error result directly when it fails)
+- [x] Refactored `ImplodePlanetMissionCommandHandler` (planet-resolution + validate inside `_validate_mission`)
+- [x] Refactored `StellerateStarMissionCommandHandler`
+- [x] Refactored `OpenWarpPointMissionCommandHandler` (target_dict)
+- [x] Refactored `CloseWarpPointMissionCommandHandler` (target_dict)
+- [x] Refactored `CreateDysonSphereMissionCommandHandler`
+- [x] All 5 handlers remain in `register()` unchanged (still extend BaseCommandHandler via the new MissionCommandHandler subclass)
+- [x] Verify: tests/unit/strategy/engine/test_superweapon_command_handlers.py -> 24 passed; tests/integration/strategy/ -> 504 passed (1 pre-existing unrelated failure in test_save_round_trip_phase4.py::test_pathfinder_attached_after_init excluded). LOC delta ≈ −33 (subclass code shrinks; template adds ~50)
 
 **Notes:** All 5 handlers register via `@command_spec` + `CommandRegistry`; the consolidation must not break that wiring. `MissionCommandHandler` does not already exist. (DUP-X-01)
 
