@@ -59,10 +59,10 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/ui/screens/event_log_data_source.py`
 **Tests:** `pytest tests/unit/ui/screens/test_event_log_data_source.py` (or the closest equivalent)
 
-- [ ] Add private helper `_get_cell_detail(self, row_index: int, detail_key: str) -> Optional[Any]` implementing the shared 4-step pattern: `get_event_at_index` → None-check → category-check `combat` → return `event.get("details", {}).get(detail_key)`
-- [ ] Replace `get_cell_replay_id` (line 150) body with `return self._get_cell_detail(row_index, "replay_id")`
-- [ ] Replace `get_cell_replay_unavailable_reason` (line 172) body with `return self._get_cell_detail(row_index, "replay_unavailable_reason")` (confirm exact key name during implementation)
-- [ ] Verify: focused tests pass; LOC delta ≈ −12
+- [x] Added private `_get_cell_detail(self, row_index, detail_key) -> Optional[Any]` implementing the shared 4-step pattern with falsy→None coercion (preserves both callers' behaviour where empty strings became `None`)
+- [x] Replaced `get_cell_replay_id` body with `return self._get_cell_detail(row_index, "replay_id")`
+- [x] Replaced `get_cell_replay_unavailable_reason` body with `return self._get_cell_detail(row_index, "replay_unavailable_reason")`
+- [x] Verify: 95 passed in test_event_log_data_source.py + test_event_log_replay_button.py; LOC delta ≈ −12
 
 **Notes:** Two methods, identical guard sequence verified. `_get_cell_detail` does not already exist. (DUP-X-09)
 

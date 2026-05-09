@@ -147,6 +147,26 @@ class EventLogDataSource(ITableDataSource):
 
         return ""
 
+    def _get_cell_detail(self, row_index: int, detail_key: str) -> Optional[Any]:
+        """Return ``event["details"][detail_key]`` for a combat row, else ``None``.
+
+        Shared 4-step lookup for combat-only detail accessors (PROJ-380,
+        DUP-X-09):
+
+        1. ``get_event_at_index(row_index)`` → ``None`` if out of bounds.
+        2. Drop the row if its category isn't ``"combat"``.
+        3. Look up ``detail_key`` in ``event["details"]``.
+        4. Coerce empty/falsy values to ``None`` (callers want ``None``
+           for "missing or empty", not ``""``).
+        """
+        event = self.get_event_at_index(row_index)
+        if event is None:
+            return None
+        if event.get("category") != "combat":
+            return None
+        value = event.get("details", {}).get(detail_key)
+        return value if value else None
+
     def get_cell_replay_id(self, row_index: int) -> Optional[str]:
         """FEAT-26: return the captured replay's uuid for this row, if any.
 
@@ -161,13 +181,7 @@ class EventLogDataSource(ITableDataSource):
         Returns:
             The replay uuid string, or None when no replay is available.
         """
-        event = self.get_event_at_index(row_index)
-        if event is None:
-            return None
-        if event.get("category") != "combat":
-            return None
-        replay_id = event.get("details", {}).get("replay_id")
-        return replay_id if replay_id else None
+        return self._get_cell_detail(row_index, "replay_id")
 
     def get_cell_replay_unavailable_reason(
         self, row_index: int
@@ -185,13 +199,7 @@ class EventLogDataSource(ITableDataSource):
         Log button uses the returned key to render a more helpful
         tooltip than the generic "older save" wording.
         """
-        event = self.get_event_at_index(row_index)
-        if event is None:
-            return None
-        if event.get("category") != "combat":
-            return None
-        reason = event.get("details", {}).get("replay_unavailable_reason")
-        return reason if reason else None
+        return self._get_cell_detail(row_index, "replay_unavailable_reason")
 
     def get_event_at_index(self, row_index: int) -> Optional[Dict[str, Any]]:
         """Get event at given row index in filtered list.
