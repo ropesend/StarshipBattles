@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Add validator rejection + regression | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Add validator rejection + regression | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
-**Active Phase:** Phase 1
-**Last Action:** Project skeleton created from REMEDIATION_PLAN B-02
-**Next Action:** Implement validator change + add regression test
+**Active Phase:** Closeout
+**Last Action:** Phase 1 complete — `MISSING_SPECIES_ID` rejection added, regression test landed, broader transfer/passenger suite (326 tests) green
+**Next Action:** User verification
 **Blockers:** None
 
 ## Overview

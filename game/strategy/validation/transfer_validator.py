@@ -189,6 +189,17 @@ class TransferValidator:
         # For passengers, check fleet has cargo capacity
         # PROJ-210: Use fleet.resources delegate for cargo operations
         if cargo_type == "passengers":
+            # PROJ-401 (B-02): species_id is required for passenger LOAD.
+            # PROJ-393 deleted the executor's first-species fallback in
+            # transfer_branches.py:101-111, so a missing species_id no-ops at
+            # runtime. Validation must reject the same shape so orders are not
+            # queued only to silently transfer 0 at execution time.
+            if species_id is None:
+                return ValidationResult.error(
+                    f"Passenger load on {planet.name} requires a species selection.",
+                    code="MISSING_SPECIES_ID"
+                )
+
             capacity = fleet.resources.get_fleet_cargo_capacity("passengers")
             # Use projected cargo if provided (accounts for earlier queued orders)
             current = projected_cargo if projected_cargo is not None else fleet.resources.get_fleet_cargo_current("passengers")
