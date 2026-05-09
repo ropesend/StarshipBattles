@@ -397,6 +397,7 @@ def test_drag_handler_reset_state_clears_all_5_fields():
         on_add_to_queue=MagicMock(),
         on_refresh_queue=MagicMock(),
         on_refresh_design_report=MagicMock(),
+        on_remove_from_queue=MagicMock(),
     )
     handler.dragged_item = {"design_id": "x"}
     handler.drag_preview = MagicMock()

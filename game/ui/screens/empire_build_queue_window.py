@@ -395,33 +395,29 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
     def _add_item_to_source(
         self, source: BuildQueueSource, item: Dict[str, Any], item_type: str
     ) -> None:
-        """Add item to a source's queue via command or direct append.
+        """Add item to a source's queue via the facade command bus.
 
-        PROJ-208: Routes through AddToConstructionQueueCommand when session available.
-        PROJ-208 Phase 3: Prefers facade over session for CQRS consistency.
+        PROJ-208: Routes through AddToConstructionQueueCommand.
+        PROJ-208 Phase 3: facade over session for CQRS consistency.
+        PROJ-382 Phase 1: ``facade`` is required at construction; PROJ-393
+        deletes the legacy "no facade injected" fallback that mutated
+        ``source.construction_queue`` in-place.
         """
-        # PROJ-208: Use getattr for test compatibility (tests may bypass __init__)
-        # PROJ-382 Phase 1: facade-only dispatch.
-        facade = getattr(self, '_facade', None)
-        if facade is not None:
-            from game.strategy.engine.commands import AddToConstructionQueueCommand, BuildEntityType
-            entity = source.owner_entity
-            entity_type = BuildEntityType.PLANET if hasattr(entity, 'planet_type') else BuildEntityType.FLEET
-            entity_id = getattr(entity, 'id', 0)
-            design_id = item.get('design_id', '')
-            cmd = AddToConstructionQueueCommand(
-                entity_id=entity_id,
-                entity_type=entity_type,
-                design_id=design_id,
-                category=item_type,
-                index=None,  # Append
-                target_planet_id=item.get('target_planet_id'),
-                queue_id=source.queue_id if source.queue_id else None,
-            )
-            facade.handle_command(cmd)
-        else:
-            # Legacy fallback for tests without facade injection
-            source.construction_queue.append(dict(item))
+        from game.strategy.engine.commands import AddToConstructionQueueCommand, BuildEntityType
+        entity = source.owner_entity
+        entity_type = BuildEntityType.PLANET if hasattr(entity, 'planet_type') else BuildEntityType.FLEET
+        entity_id = getattr(entity, 'id', 0)
+        design_id = item.get('design_id', '')
+        cmd = AddToConstructionQueueCommand(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            design_id=design_id,
+            category=item_type,
+            index=None,  # Append
+            target_planet_id=item.get('target_planet_id'),
+            queue_id=source.queue_id if source.queue_id else None,
+        )
+        self._facade.handle_command(cmd)
 
     @staticmethod
     def _source_can_build_type(source: BuildQueueSource, item_type: str) -> bool:

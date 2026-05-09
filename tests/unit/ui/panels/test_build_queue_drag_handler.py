@@ -66,8 +66,15 @@ def _make_design_button(design_id: str, abs_rect: pygame.Rect):
     return btn
 
 
-def _make_handler(*, with_remove_callback: bool = False):
-    """Build a handler with all callbacks as MagicMocks."""
+def _make_handler(*, with_remove_callback: bool = True):
+    """Build a handler with all callbacks as MagicMocks.
+
+    PROJ-393 made ``on_remove_from_queue`` a required arg; the
+    ``with_remove_callback=False`` flavor that legacy tests used to exercise
+    the construction-queue direct-pop fallback is gone, so the kwarg now
+    just toggles whether the callback mock is attached vs replaced. Kept
+    the kwarg for ABI parity with existing call sites that pass True.
+    """
     portrait_loader = MagicMock()
     portrait_loader.load_design_portrait.return_value = pygame.Surface((48, 48))
     portrait_loader.load_queue_item_portrait.return_value = pygame.Surface((48, 48))
@@ -78,7 +85,7 @@ def _make_handler(*, with_remove_callback: bool = False):
     on_add = MagicMock()
     on_refresh_q = MagicMock()
     on_refresh_dr = MagicMock()
-    on_remove = MagicMock() if with_remove_callback else None
+    on_remove = MagicMock()
 
     handler = BuildQueueDragHandler(
         portrait_loader=portrait_loader,
@@ -152,33 +159,9 @@ class TestConstructorDefaults:
         # mutated in-place — removal is the caller's responsibility.
         assert queue == [{'design_id': 'Frigate', 'type': 'ship', 'turns_remaining': 3}]
 
-    def test_drag_from_queue_falls_back_to_direct_pop_without_callback(self):
-        """When constructed WITHOUT on_remove_from_queue, a queue-pickup
-        drag pops the item from ``construction_queue`` directly (legacy
-        fallback at build_queue_drag_handler.py:195-197).
-
-        PROJ-346 strengthening: was a constructor tautology
-        (``h._on_remove_from_queue is None`` after passing None in
-        __init__). Now pin the actual fallback branch behaviour.
-        """
-        h = _make_handler(with_remove_callback=False)
-        h.drag_start_pos = (50, 50)
-        h._pending_queue_index = 0
-
-        queue = [{'design_id': 'Frigate', 'type': 'ship', 'turns_remaining': 3}]
-        result = h.handle_mouse_motion(
-            _mm_event(pos=(70, 70), buttons=(1, 0, 0)),
-            queue,
-            multi_select_active=False,
-        )
-
-        assert result is True
-        # Fallback: queue mutated in-place since no callback exists.
-        assert queue == []
-        # Picked-up state populated for the drop handler.
-        assert h.dragged_item is not None
-        assert h.dragged_item['design_id'] == 'Frigate'
-        assert h.dragged_item['source'] == 'queue'
+    # PROJ-393: deleted test_drag_from_queue_falls_back_to_direct_pop_without_callback
+    # alongside the legacy direct-pop fallback in build_queue_drag_handler.py.
+    # on_remove_from_queue is now a required constructor arg.
 
 
 # ===========================================================================
@@ -358,15 +341,8 @@ class TestMouseMotionThreshold:
         assert h.dragged_item is not None
         assert h.dragged_item["design_id"] == "A"
 
-    def test_motion_above_threshold_legacy_pops_directly_when_no_callback(self):
-        h = _make_handler(with_remove_callback=False)
-        self._seed_pending(h, idx=0)
-        queue = [{"design_id": "A", "type": "ship", "turns_remaining": 3}]
-        result = h.handle_mouse_motion(_mm_event((112, 100)), queue)
-        assert result is True
-        # Legacy path: handler pops directly
-        assert len(queue) == 0
-        assert h.dragged_item["design_id"] == "A"
+    # PROJ-393: deleted test_motion_above_threshold_legacy_pops_directly_when_no_callback
+    # alongside the production legacy fallback (on_remove_from_queue is now required).
 
     def test_motion_above_threshold_with_invalid_index_skips_pop(self):
         h = _make_handler(with_remove_callback=True)

@@ -103,8 +103,33 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.sidebar_panel = MagicMock()
     win.row_elements = []
 
-    # PROJ-208: Session for command dispatch (None = fallback to direct append)
-    win._session = None
+    # PROJ-208 / PROJ-393: facade is the only command-dispatch surface.
+    # The old None-session fallback that mutated source.construction_queue
+    # in-place was deleted; the test facade mock simulates that behavior so
+    # existing assertions on `source.construction_queue` keep working.
+    def _fake_handle_command(cmd):
+        # Locate the source whose queue_id (or owner_entity.id for fleet/planet)
+        # matches the command, and append.
+        from game.strategy.engine.commands import AddToConstructionQueueCommand
+        if isinstance(cmd, AddToConstructionQueueCommand):
+            for src in sources:
+                if cmd.queue_id is not None and src.queue_id == cmd.queue_id:
+                    src.construction_queue.append({
+                        "design_id": cmd.design_id,
+                        "type": cmd.category,
+                        "target_planet_id": cmd.target_planet_id,
+                    })
+                    return MagicMock(is_valid=True)
+                if cmd.queue_id is None and getattr(src.owner_entity, "id", None) == cmd.entity_id:
+                    src.construction_queue.append({
+                        "design_id": cmd.design_id,
+                        "type": cmd.category,
+                        "target_planet_id": cmd.target_planet_id,
+                    })
+                    return MagicMock(is_valid=True)
+        return MagicMock(is_valid=True)
+    win._facade = MagicMock()
+    win._facade.handle_command = MagicMock(side_effect=_fake_handle_command)
 
     # Column manager (Phase 3 sorting/reordering) - now TableColumnManager
     win._column_manager = MagicMock()

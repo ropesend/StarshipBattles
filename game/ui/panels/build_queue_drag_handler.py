@@ -50,7 +50,7 @@ class BuildQueueDragHandler:
         on_add_to_queue: Callable[[str, Optional[float], str, Optional[int]], None],
         on_refresh_queue: Callable[[], None],
         on_refresh_design_report: Callable[[str], None],
-        on_remove_from_queue: Optional['RemoveFromQueueCallback'] = None,
+        on_remove_from_queue: 'RemoveFromQueueCallback',
     ):
         """
         Initialize the drag handler.
@@ -61,7 +61,7 @@ class BuildQueueDragHandler:
             on_add_to_queue: Callback(design_id, turns, category, index) to add item to queue
             on_refresh_queue: Callback to refresh queue display after reorder
             on_refresh_design_report: Callback(design_id) to update design report on selection
-            on_remove_from_queue: PROJ-208 callback(item_index) to dispatch RemoveFromConstructionQueueCommand
+            on_remove_from_queue: PROJ-208 callback(item_index) to dispatch RemoveFromConstructionQueueCommand. Required (PROJ-393 removed legacy fallback).
         """
         self.portrait_loader = portrait_loader
         self.design_library = design_library
@@ -204,12 +204,8 @@ class BuildQueueDragHandler:
                 design_id = item.get('design_id', 'Unknown')
                 item_type = item.get('type', 'ship')
 
-                # Remove item: use command callback if available, else fall back to direct pop
-                if self._on_remove_from_queue is not None:
-                    self._on_remove_from_queue(idx)
-                else:
-                    # Legacy fallback for tests without command injection
-                    construction_queue.pop(idx)
+                # Remove item via the required command callback.
+                self._on_remove_from_queue(idx)
 
                 # Load portrait icon for drag preview
                 portrait = self.portrait_loader.load_queue_item_portrait(design_id, item_type, 48)

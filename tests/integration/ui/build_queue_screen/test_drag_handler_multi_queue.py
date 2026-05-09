@@ -29,7 +29,8 @@ def drag_handler():
         design_library=design_library,
         on_add_to_queue=MagicMock(),
         on_refresh_queue=MagicMock(),
-        on_refresh_design_report=MagicMock()
+        on_refresh_design_report=MagicMock(),
+        on_remove_from_queue=MagicMock(),
     )
     return handler
 
