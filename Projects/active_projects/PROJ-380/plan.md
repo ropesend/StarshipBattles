@@ -14,14 +14,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Dead imports | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Dead functions (deprecated statics) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Dead functions (deprecated statics) | Complete (superseded) | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Duplication consolidation | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1 — working
-**Last Action:** Verified post-merge state; Phase 2 fully superseded by PROJ-384 (commit 6398bb1da)
-**Next Action:** Execute Phase 1 task DCV-01
+**Active Phase:** Phase 3 — Not Started (Phases 1 & 2 done)
+**Last Action:** Phase 2 marked superseded by PROJ-384 (commit 6398bb1da deleted all 6 *_static ModifierManager methods)
+**Next Action:** Execute Phase 3 tasks in order (3.1 → 3.9)
 **Blockers:** None
 
 ## Overview
