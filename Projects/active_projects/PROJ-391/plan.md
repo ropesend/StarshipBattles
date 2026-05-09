@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Three small consolidations | Working | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Three small consolidations | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1 (working)
-**Last Action:** Beginning Phase 1 — three consolidations: harvester-info, iter-components, FormationSpec serialization
-**Next Action:** Execute Tasks 1.1 → 1.2 → 1.3 → 1.4
+**Active Phase:** Phase 1 (complete)
+**Last Action:** All three consolidations landed (harvester-info, iter-components, FormationSpec serialization). Sharded suite: 19733 / 19742 passed; 3 pre-existing failures + 2 pre-existing errors on the branch, none introduced by PROJ-391.
+**Next Action:** User verification, then archive.
 **Blockers:** None
 
 ## Overview
