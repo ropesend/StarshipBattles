@@ -204,7 +204,7 @@ class FormulaEvaluator:
     """Unified formula evaluation with configurable context.
 
     Uses an AST tree walker for safe evaluation (no eval()).
-    Replaces both module-level evaluate_math_formula() and
+    Replaces both the legacy module-level math-formula functions and
     ModifierEffectEvaluator.evaluate_formula().
 
     Usage:
@@ -402,12 +402,3 @@ class FormulaEvaluator:
         except FormulaException as e:
             logger.warning(f"Formula evaluation failed for '{formula}': {e}")
             return default
-
-
-# =============================================================================
-# Backward-compatible aliases for existing test imports
-# =============================================================================
-
-evaluate_math_formula = FormulaEvaluator.evaluate
-safe_evaluate_math_formula = FormulaEvaluator.safe_evaluate
-validate_formula = FormulaEvaluator.validate

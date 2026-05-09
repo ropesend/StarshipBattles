@@ -1,19 +1,24 @@
-"""PROJ-372: AST guard preventing direct reads of Galaxy private indexes.
+"""PROJ-372 / PROJ-387 / PROJ-394: AST guard against reintroducing
+Galaxy private-index forwarders.
 
-The five private indexes — `_global_hex_planets`, `_global_hex_zones`,
-`_zone_to_system`, `_planet_to_system`, `_global_hex_warp_points` — are
-legacy compatibility properties. All call sites must go through public
-methods on Galaxy, the relevant service, or GalaxyState's non-underscore
-indexes.
+PROJ-372 Phase 3 extracted ``GalaxyState`` and renamed the five spatial
+indexes — ``_global_hex_planets``, ``_global_hex_zones``,
+``_zone_to_system``, ``_planet_to_system``, ``_global_hex_warp_points`` —
+to their non-underscore counterparts on ``GalaxyState``. The original
+underscore-prefixed names lived on as ``@property`` forwarders on
+``Galaxy`` for the five grandfathered external read sites.
 
-Phase 3 introduced `GalaxyState` and renamed the indexes (dropped the
-leading underscore). This guard now pins the old underscore names as
-compatibility-only surfaces that external callers must not read, except
-for the explicit grandfathered sites tracked below.
+PROJ-387 deleted those five forwarders entirely after migrating every
+caller to ``galaxy._state.<field>``. PROJ-394 then promoted access to a
+public ``Galaxy.state`` property and migrated remaining callers to
+``galaxy.state.<field>``.
 
-The walker scans every `*.py` under `game/` and asserts no
-`Attribute(value=Name|Attribute(...), attr='_global_hex_planets')` etc.
-appears in disallowed files.
+This guard now defends against any reintroduction of the legacy
+underscore names: the walker scans every ``*.py`` under ``game/`` and
+asserts no ``Attribute(attr='_global_hex_planets')`` etc. appears
+anywhere. ``GRANDFATHERED_EXTERNAL_READS`` is intentionally empty after
+PROJ-394; it is preserved as the API for surfacing future grandfathered
+reads if any are ever needed.
 """
 from __future__ import annotations
 
@@ -39,18 +44,9 @@ RESTRICTED_ATTRS = frozenset(
 # so they do not need an allowlist entry.
 ALLOWED_FILES = frozenset()
 
-# PROJ-372 Phase 0 discovery: five external read sites the architect's
-# initial review missed. Captured here so today's baseline ships green;
-# each tuple is precise so new reads still fail.
-GRANDFATHERED_EXTERNAL_READS = frozenset(
-    {
-        ("game/strategy/engine/handlers/movement.py", "_global_hex_warp_points"),
-        ("game/strategy/services/fleet_navigation_service.py", "_global_hex_warp_points"),
-        ("game/ui/screens/strategy_render/hex_outlines.py", "_global_hex_warp_points"),
-        ("game/ui/screens/strategy_render/hex_outlines.py", "_global_hex_planets"),
-        ("game/ui/screens/strategy_render/hex_outlines.py", "_global_hex_zones"),
-    }
-)
+# PROJ-394 emptied this after PROJ-387 deleted the forwarders. Kept as
+# the API for surfacing future grandfathered reads if any are ever needed.
+GRANDFATHERED_EXTERNAL_READS: frozenset[tuple[str, str]] = frozenset()
 
 
 def _iter_py_files(root: Path):

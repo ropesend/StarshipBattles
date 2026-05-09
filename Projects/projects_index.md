@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-394 | PROJ-387 follow-up — Galaxy state public property + guard cleanup | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-393 | Legacy removal — Test-injection fallbacks + comment cleanups (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-392 | Legacy removal — Misc orphan wrappers + zero-call-site placeholders (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-391 | Legacy removal — Underscore-prefixed legacy pair consolidations (2026-05-07) | Planning | 2026-05-08 | 2026-05-08 |

@@ -81,11 +81,11 @@ class TestGalaxyUnregisterPlanet:
 
         # Register manually (simulating galaxy.register_planet)
         planet.id = 1
-        galaxy._state.next_planet_id = 2
+        galaxy.state.next_planet_id = 2
         galaxy.planets_by_id[planet.id] = planet
-        galaxy._planet_to_system[planet] = system
+        galaxy.state.planet_to_system[planet] = system
         global_hex = system.global_location + planet.location
-        galaxy._global_hex_planets[global_hex] = [planet]
+        galaxy.state.global_hex_planets[global_hex] = [planet]
         system.planets.append(planet)
         galaxy.systems[system.global_location] = system
         galaxy.name_map[system.name] = system
@@ -106,7 +106,7 @@ class TestGalaxyUnregisterPlanet:
 
         galaxy.unregister_planet(planet)
 
-        assert planet not in galaxy._planet_to_system
+        assert planet not in galaxy.state.planet_to_system
 
     def test_unregister_planet_removes_from_global_hex_planets(self, galaxy_with_planet):
         """Planet should be removed from _global_hex_planets dict."""
@@ -116,7 +116,7 @@ class TestGalaxyUnregisterPlanet:
         galaxy.unregister_planet(planet)
 
         # Should either be empty list or key removed
-        planets_at_hex = galaxy._global_hex_planets.get(global_hex, [])
+        planets_at_hex = galaxy.state.global_hex_planets.get(global_hex, [])
         assert planet not in planets_at_hex
 
     def test_unregister_planet_removes_from_system_planets_list(self, galaxy_with_planet):

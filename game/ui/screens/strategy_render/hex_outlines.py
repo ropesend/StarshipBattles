@@ -31,7 +31,7 @@ class HexOutlineLayer:
         result = {}
 
         # 1. Planets (from spatial index)
-        for global_hex, planets in r.galaxy._global_hex_planets.items():
+        for global_hex, planets in r.galaxy.state.global_hex_planets.items():
             has_player = False
             has_non_player = False
             for planet in planets:
@@ -42,7 +42,7 @@ class HexOutlineLayer:
             result[global_hex] = (has_player, has_non_player)
 
         # 2. Zones (stars, Dyson Spheres, storms)
-        for global_hex, zones in r.galaxy._global_hex_zones.items():
+        for global_hex, zones in r.galaxy.state.global_hex_zones.items():
             entry = result.get(global_hex, (False, False))
             zone_has_player = entry[0]
             zone_has_non_player = entry[1]
@@ -54,7 +54,7 @@ class HexOutlineLayer:
             result[global_hex] = (zone_has_player, zone_has_non_player)
 
         # 3. Warp points (always non-player)
-        for global_hex in r.galaxy._global_hex_warp_points:
+        for global_hex in r.galaxy.state.global_hex_warp_points:
             entry = result.get(global_hex, (False, False))
             result[global_hex] = (entry[0], True)
 

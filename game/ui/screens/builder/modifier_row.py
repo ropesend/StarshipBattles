@@ -9,7 +9,7 @@ from typing import Any
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider, UIPanel
-from .modifier_logic import ModifierLogic, ModifierLogicService
+from .modifier_logic import ModifierLogicService
 
 
 class ModifierControlRow:
@@ -39,7 +39,7 @@ class ModifierControlRow:
     """
 
     def __init__(self, manager, container, width, mod_id, mod_def, config, on_change_callback,
-                 modifier_logic=None):
+                 modifier_logic: ModifierLogicService):
         """Initialize the modifier control row.
 
         Args:
@@ -67,7 +67,7 @@ class ModifierControlRow:
         self.mod_def = mod_def
         self.config = config
         self.on_change_callback = on_change_callback
-        self._logic = modifier_logic if modifier_logic is not None else ModifierLogic
+        self._logic = modifier_logic
 
         self.ui_elements = [] # Keep track for destruction
         self.buttons = {} # Map button -> data

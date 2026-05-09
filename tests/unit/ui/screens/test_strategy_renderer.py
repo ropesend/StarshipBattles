@@ -931,9 +931,9 @@ def _setup_outline_scene(mock_scene):
     mock_scene.session = MagicMock()
     mock_scene.session.active_empire = MagicMock(id=0)
     mock_scene.session.turn_number = 1
-    mock_scene.galaxy._global_hex_planets = {}
-    mock_scene.galaxy._global_hex_zones = {}
-    mock_scene.galaxy._global_hex_warp_points = {}
+    mock_scene.galaxy.state.global_hex_planets = {}
+    mock_scene.galaxy.state.global_hex_zones = {}
+    mock_scene.galaxy.state.global_hex_warp_points = {}
     mock_scene.empires = []
 
 
@@ -949,7 +949,7 @@ class TestHexOutlineDataCollection:
         _setup_outline_scene(mock_scene)
         hex_coord = MagicMock()
         planet = MagicMock(owner_id=None)
-        mock_scene.galaxy._global_hex_planets = {hex_coord: [planet]}
+        mock_scene.galaxy.state.global_hex_planets = {hex_coord: [planet]}
 
         result = renderer._build_hex_outline_data()
         assert result[hex_coord] == (False, True)
@@ -958,7 +958,7 @@ class TestHexOutlineDataCollection:
         _setup_outline_scene(mock_scene)
         hex_coord = MagicMock()
         planet = MagicMock(owner_id=0)
-        mock_scene.galaxy._global_hex_planets = {hex_coord: [planet]}
+        mock_scene.galaxy.state.global_hex_planets = {hex_coord: [planet]}
 
         result = renderer._build_hex_outline_data()
         assert result[hex_coord] == (True, False)
@@ -967,7 +967,7 @@ class TestHexOutlineDataCollection:
         _setup_outline_scene(mock_scene)
         hex_coord = MagicMock()
         planet = MagicMock(owner_id=1)
-        mock_scene.galaxy._global_hex_planets = {hex_coord: [planet]}
+        mock_scene.galaxy.state.global_hex_planets = {hex_coord: [planet]}
 
         result = renderer._build_hex_outline_data()
         assert result[hex_coord] == (False, True)
@@ -977,7 +977,7 @@ class TestHexOutlineDataCollection:
         hex_coord = MagicMock()
         player_planet = MagicMock(owner_id=0)
         enemy_planet = MagicMock(owner_id=1)
-        mock_scene.galaxy._global_hex_planets = {hex_coord: [player_planet, enemy_planet]}
+        mock_scene.galaxy.state.global_hex_planets = {hex_coord: [player_planet, enemy_planet]}
 
         result = renderer._build_hex_outline_data()
         assert result[hex_coord] == (True, True)
@@ -986,7 +986,7 @@ class TestHexOutlineDataCollection:
         _setup_outline_scene(mock_scene)
         hex_coord = MagicMock()
         star = MagicMock(spec=[])  # No owner_id attribute
-        mock_scene.galaxy._global_hex_zones = {hex_coord: [star]}
+        mock_scene.galaxy.state.global_hex_zones = {hex_coord: [star]}
 
         result = renderer._build_hex_outline_data()
         assert result[hex_coord] == (False, True)
@@ -994,7 +994,7 @@ class TestHexOutlineDataCollection:
     def test_warp_point_marked_non_player(self, renderer, mock_scene):
         _setup_outline_scene(mock_scene)
         hex_coord = MagicMock()
-        mock_scene.galaxy._global_hex_warp_points = {hex_coord: MagicMock()}
+        mock_scene.galaxy.state.global_hex_warp_points = {hex_coord: MagicMock()}
 
         result = renderer._build_hex_outline_data()
         assert result[hex_coord] == (False, True)
@@ -1032,7 +1032,7 @@ class TestHexOutlineDataCollection:
         _setup_outline_scene(mock_scene)
         hex_coord = MagicMock()
         planet = MagicMock(owner_id=None)
-        mock_scene.galaxy._global_hex_planets = {hex_coord: [planet]}
+        mock_scene.galaxy.state.global_hex_planets = {hex_coord: [planet]}
         fleet = MagicMock(owner_id=0, location=hex_coord)
         empire = MagicMock(fleets=[fleet])
         mock_scene.empires = [empire]

@@ -95,10 +95,10 @@
     },
     "ocode-review-request": {
       "agents": {
-        "ocode": 24
+        "ocode": 27
       },
-      "count": 24,
-      "last_used": "2026-05-05T11:11:14Z"
+      "count": 27,
+      "last_used": "2026-05-08T23:20:05Z"
     },
     "skill-creator": {
       "agents": {

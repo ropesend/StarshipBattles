@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate consumer + delete ModifierLogic class | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate consumer + delete ModifierLogic class | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1 (Complete)
+**Last Action:** Migrated all consumers (`ModifierEditorPanel`, `ModifierControlRow`, `ComponentDetailPanel`) to required constructor-injected `ModifierLogicService`; deleted `ModifierLogic` static wrapper from `game/ui/screens/builder/modifier_logic.py`; removed `ModifierLogic.init_service` call from `workshop_screen.py`; migrated 7 test files. Sharded suite: 19084 passed / 3 pre-existing failures (no new failures); `validate_phase.py PROJ-388 1` PASSED.
+**Next Action:** Awaiting user verification.
 **Blockers:** None
 
 ## Overview

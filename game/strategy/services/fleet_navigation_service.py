@@ -312,7 +312,7 @@ class FleetNavigationService:
             Global HexCoord of the exit warp point, or None if not found
         """
         # Look up source system from warp point index
-        source_system = galaxy._global_hex_warp_points.get(warp_point_hex)
+        source_system = galaxy.state.global_hex_warp_points.get(warp_point_hex)
         if not source_system:
             logger.warning(f"No warp point found at {warp_point_hex}")
             return None

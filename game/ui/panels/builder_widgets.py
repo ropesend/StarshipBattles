@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
-from game.ui.screens.builder.modifier_logic import ModifierLogic, ModifierLogicService
+from game.ui.screens.builder.modifier_logic import ModifierLogicService
 from game.ui.screens.builder.modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG
 from game.ui.screens.builder.modifier_row import ModifierControlRow
 
@@ -31,7 +31,7 @@ class ModifierEditorPanel:
 
     def __init__(self, manager, container, width, on_change_callback,
                  *, registries: 'GameRegistries',
-                 modifier_logic: 'ModifierLogicService | None' = None):
+                 modifier_logic: ModifierLogicService):
         """
         Initialize the ModifierEditorPanel.
 
@@ -41,7 +41,7 @@ class ModifierEditorPanel:
             width: Panel width
             on_change_callback: Callback when modifier changes
             registries: GameRegistries instance (required)
-            modifier_logic: ModifierLogicService instance (optional, falls back to static ModifierLogic)
+            modifier_logic: ModifierLogicService instance (required, constructor injection)
         """
         self.manager = manager
         self.container = container
@@ -49,9 +49,7 @@ class ModifierEditorPanel:
         self.on_change_callback = on_change_callback
         self._registries = registries
         self._modifier_logic = modifier_logic
-
-        # Resolve modifier logic: prefer injected instance, fall back to static
-        self._logic = modifier_logic if modifier_logic is not None else ModifierLogic
+        self._logic = modifier_logic
 
         # State
         self.editing_component = None

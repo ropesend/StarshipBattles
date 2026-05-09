@@ -37,7 +37,7 @@ class TestWarpOrderCommand:
         source_system.warp_points = [warp_point]
 
         session.galaxy = MagicMock()
-        session.galaxy._global_hex_warp_points = {HexCoord(10, 5): source_system}
+        session.galaxy.state.global_hex_warp_points = {HexCoord(10, 5): source_system}
 
         # BUG-125: align active_empire with the test fleet's owner (0).
         session.active_empire = MagicMock(id=0)
@@ -163,7 +163,7 @@ class TestWarpOrderNavigation:
         dest_system.warp_points = [dest_wp]
 
         galaxy = MagicMock()
-        galaxy._global_hex_warp_points = {HexCoord(10, 5): source_system}
+        galaxy.state.global_hex_warp_points = {HexCoord(10, 5): source_system}
         galaxy.get_system_by_name = MagicMock(return_value=dest_system)
         galaxy.systems = {
             source_system.global_location: source_system,

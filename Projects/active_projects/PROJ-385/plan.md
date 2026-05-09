@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate test imports + delete aliases | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate test imports + delete aliases | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
 **Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Action:** Phase 1 complete — migrated 3 test files to canonical `FormulaEvaluator.*` API and deleted the 3 backward-compat aliases from `game/core/formula_evaluator.py`. Full sharded suite: 19084 passed, 3 pre-existing unrelated failures.
+**Next Action:** Project verification (run `validate_phase.py PROJ-385 1`, then user-verify and close out)
 **Blockers:** None
 
 ## Overview

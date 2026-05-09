@@ -125,6 +125,9 @@ def _make_row(
     logic: MagicMock | None = None,
     mod_def=None,
 ) -> ModifierControlRow:
+    # PROJ-388: ``modifier_logic`` is required (constructor injection); when a
+    # test does not need a configured logic mock, fall back to a fresh
+    # ``MagicMock`` so non-logic-related code paths still work.
     return ModifierControlRow(
         manager=MagicMock(),
         container=MagicMock(),
@@ -133,7 +136,7 @@ def _make_row(
         mod_def=mod_def or _mod_def(),
         config=config,
         on_change_callback=callback or MagicMock(),
-        modifier_logic=logic,
+        modifier_logic=logic if logic is not None else MagicMock(),
     )
 
 

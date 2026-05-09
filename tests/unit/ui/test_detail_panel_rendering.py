@@ -65,7 +65,15 @@ class TestDetailPanelRendering:
 
         # Create the panel under test
         self.panel_rect = pygame.Rect(0, 0, 300, 600)
-        self.panel = self.ComponentDetailPanel(self.mock_manager, self.panel_rect)
+        # PROJ-388: ComponentDetailPanel requires a ModifierLogicService instance
+        # (constructor injection — the deprecated ``ModifierLogic`` static
+        # wrapper has been removed).
+        self.mock_modifier_logic = MagicMock()
+        self.panel = self.ComponentDetailPanel(
+            self.mock_manager,
+            self.panel_rect,
+            modifier_logic=self.mock_modifier_logic,
+        )
 
         # Reset mock calls from init
         self.MockUITextBox.reset_mock()
@@ -221,14 +229,13 @@ class TestDetailPanelRendering:
 
         mock_comp.modifiers = [mock_mod1, mock_mod2]
 
-        # Patch ModifierLogic to simulate one mandatory and one optional modifier
-        with patch('game.ui.screens.builder.detail_panel.ModifierLogic.is_modifier_mandatory') as mock_is_mandatory:
-            # Side effect: True for turbo_boost, False for heavy_plating
-            def side_effect(mod_id, comp):
-                return mod_id == "turbo_boost"
-            mock_is_mandatory.side_effect = side_effect
+        # PROJ-388: Configure injected ModifierLogicService mock to simulate
+        # one mandatory and one optional modifier.
+        def side_effect(mod_id, comp):
+            return mod_id == "turbo_boost"
+        self.mock_modifier_logic.is_modifier_mandatory.side_effect = side_effect
 
-            self.panel.show_component(mock_comp)
+        self.panel.show_component(mock_comp)
 
         # Verify html_text was set and rebuild was called (new API)
         self.panel.stats_text_box.rebuild.assert_called()

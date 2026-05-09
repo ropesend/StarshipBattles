@@ -1,23 +1,26 @@
 """Regression test: MANDATORY_MODIFIERS must live only in ModifierService.
 
-Fix 7: ModifierLogic previously defined an identical MANDATORY_MODIFIERS list,
-creating a silent sync hazard. The duplicate was removed; ModifierService is now
-the sole owner. This test catches any regression where the constant is re-added
-to ModifierLogic.
+Fix 7: ModifierLogic (now ModifierLogicService) previously defined an identical
+MANDATORY_MODIFIERS list, creating a silent sync hazard. The duplicate was
+removed; ModifierService is now the sole owner. This test catches any regression
+where the constant is re-added to the UI-layer service.
+
+PROJ-388: ``ModifierLogic`` static wrapper deleted; assertion now targets
+``ModifierLogicService`` (the canonical instance-based service).
 """
 from game.simulation.services.modifier_service import ModifierService
-from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.screens.builder.modifier_logic import ModifierLogicService
 
 
-def test_modifier_logic_has_no_own_mandatory_modifiers_constant():
-    """ModifierLogic must not define MANDATORY_MODIFIERS itself.
+def test_modifier_logic_service_has_no_own_mandatory_modifiers_constant():
+    """ModifierLogicService must not define MANDATORY_MODIFIERS itself.
 
-    The constant belongs to ModifierService. If someone re-adds it to
-    ModifierLogic the values can silently diverge, which is exactly the
+    The constant belongs to ModifierService. If someone re-adds it to the
+    UI-layer service the values can silently diverge, which is exactly the
     bug this fix addresses.
     """
-    assert 'MANDATORY_MODIFIERS' not in ModifierLogic.__dict__, (
-        "ModifierLogic must not define its own MANDATORY_MODIFIERS constant. "
+    assert 'MANDATORY_MODIFIERS' not in ModifierLogicService.__dict__, (
+        "ModifierLogicService must not define its own MANDATORY_MODIFIERS constant. "
         "Use ModifierService.MANDATORY_MODIFIERS as the single source of truth."
     )
 

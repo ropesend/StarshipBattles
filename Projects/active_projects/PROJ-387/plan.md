@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate 3 readers + delete 5 forwarders | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate 3 readers + delete 5 forwarders | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1 (Complete)
+**Last Action:** Migrated 3 production readers (`engine/handlers/movement.py`, `services/fleet_navigation_service.py`, `ui/screens/strategy_render/hex_outlines.py`) + 4 affected test files to `galaxy._state.<field>`; deleted 5 backward-compat forwarders on `Galaxy`. Sharded suite: 19084 passed, 3 failed (matches pre-existing baseline; zero new failures).
+**Next Action:** Awaiting user verification
 **Blockers:** None
 
 ## Overview
@@ -37,9 +37,9 @@ Removes 5 backward-compat property forwarders on `Galaxy` (`_global_hex_*`, `_pl
 | Component | File Path |
 |-----------|-----------|
 | Production target | `game/strategy/data/galaxy.py` |
-| External reader | (one of) `game/strategy/data/movement.py`, `game/strategy/services/fleet_navigation_service.py`, `game/ui/screens/strategy_render/hex_outlines.py` |
-| External reader | (continued) |
-| External reader | (continued) |
+| External reader | `game/strategy/engine/handlers/movement.py` |
+| External reader | `game/strategy/services/fleet_navigation_service.py` |
+| External reader | `game/ui/screens/strategy_render/hex_outlines.py` |
 
 ## Related Documents
 - [design.md](design.md) — source audit, cluster identity, severity breakdown
