@@ -3,14 +3,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. CRITICAL — reclaim 4 BattleScreen Combat Lab dead vars | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. MAJOR — 6 follow-up findings | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Deferred items — fleet_id field, view=None branch | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. CRITICAL — reclaim 4 BattleScreen Combat Lab dead vars | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. MAJOR — 6 follow-up findings | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Deferred items — fleet_id field, view=None branch | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Active Phase:** Phase 1
-**Last Action:** Project created from PROJ-393 review (req_20260509_002246_bca19e, 1 CRIT + 6 MAJ + 8 MIN + 4 INFO) + 3 deferred items from PROJ-393 implementation
-**Next Action:** Begin Phase 1 (Combat Lab dead-var reclaim)
+**Active Phase:** Closeout
+**Last Action:** All 3 phases complete. Commits: a5ef5e74a (Phase 1), 6b8ee8c8f (Phase 2), 53b621303 (Phase 3).
+**Next Action:** Final closeout commit + user verification.
 
 ## Overview
 PROJ-393 (test-injection legacy fallbacks + comment cleanups, 16 items across 3 phases) deferred 3 items. The OpenCode review confirmed the LEG-03-023 deferral was a post-hoc rationalization — 4 of 6 BattleScreen Combat Lab vars are actually dead code. Plus 6 MAJOR findings.
