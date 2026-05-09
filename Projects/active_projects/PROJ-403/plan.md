@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Replace `_MockGalaxy` fixtures with canonical `GalaxyState` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Replace `_MockGalaxy` fixtures with canonical `GalaxyState` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
-**Active Phase:** Phase 1
-**Last Action:** Project skeleton created from REMEDIATION_PLAN B-04
-**Next Action:** Replace `_MockGalaxy` test doubles in 2 unit test files; verify production callers pass `galaxy.state`.
+**Active Phase:** Phase 1 (Complete)
+**Last Action:** Migrated `_MockGalaxy` → real `GalaxyState` in both test files; broad selector `pytest tests/unit/strategy/data/ -k galaxy -q` shows 192 passed (was 36 failed / 21 passed on the focused selector).
+**Next Action:** Awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -48,8 +48,8 @@ PROJ-387/394 migrated production `Galaxy` private-state forwarders to a public `
 - PROJ-387/394 reviews (in `Reviews/results/2026-05-09_proj-380-399-implementation-review/`).
 
 ## Verification
-- [ ] Phase 1 checklist complete
-- [ ] `pytest tests/unit/strategy/data/test_galaxy_entity_registry.py tests/unit/strategy/data/test_galaxy_spatial_index.py -v` — 0 failures
-- [ ] `pytest tests/unit/strategy/data/ -k galaxy -q` — 0 failures (the broad selector PROJ-394's checklist asserted)
-- [ ] `python Projects/scripts/validate_audit_ready.py PROJ-403` passes
+- [x] Phase 1 checklist complete
+- [x] `pytest tests/unit/strategy/data/test_galaxy_entity_registry.py tests/unit/strategy/data/test_galaxy_spatial_index.py -v` — 0 failures (57 passed; was 36 failed / 21 passed)
+- [x] `pytest tests/unit/strategy/data/ -k galaxy -q` — 0 failures (192 passed)
+- [x] `python Projects/scripts/validate_audit_ready.py PROJ-403` passes
 - [ ] User verified

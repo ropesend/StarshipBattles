@@ -6,7 +6,7 @@
 |----|-------|--------|---------|--------------|
 | PROJ-405 | Tier 1 B-06: Wire EventBus through Projectile/Seeker construction | Planning | 2026-05-09 | 2026-05-09 |
 | PROJ-404 | Tier 1 B-05: Eradicate save-format compatibility (Rule 3 follow-on) | Planning | 2026-05-09 | 2026-05-09 |
-| PROJ-403 | Tier 1 B-04: Migrate stale _MockGalaxy doubles to GalaxyState | Planning | 2026-05-09 | 2026-05-09 |
+| PROJ-403 | Tier 1 B-04: Migrate stale _MockGalaxy doubles to GalaxyState | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-402 | Tier 1 B-03: SimulationBattleResolver catch ValidationException | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-401 | Tier 1 B-02: Passenger-load validator missing species_id rejection | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-400 | Tier 1 B-01: NewGameSetupScreen deleted-wrapper call | Complete | 2026-05-09 | 2026-05-09 |
