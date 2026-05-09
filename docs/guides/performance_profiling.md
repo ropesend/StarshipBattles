@@ -88,7 +88,7 @@ On Windows, avoid tests whose main behavior is spawning subprocesses. Scalene wr
 
 Loop: find the first stable hotspot that explains the symptom, classify it, confirm the target layer, protect the behavior or contract with a focused test, fix the root cause, rerun the same test/profile, and record before/after notes when the result should be durable.
 
-Do not optimize from one noisy run. Repeat enough times to distinguish stable hotspots from test-load variance.
+Do not optimize from a single profile. Re-run enough times to separate stable hotspots from test-load variance / noise.
 
 ## Internal Profiler
 

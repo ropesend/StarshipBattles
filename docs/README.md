@@ -47,7 +47,7 @@ notes, not project documentation.
 | QS complexes | `docs/guides/qs_complex_design.md` |
 | Simulation tests | `docs/guides/simulation_testing.md` |
 | Test infrastructure | `docs/guides/testing_infrastructure.md` |
-| Profiling | `docs/guides/performance_profiling.md` |
+| Profiling | [performance_profiling.md](guides/performance_profiling.md) |
 
 ## Layer Contract
 
