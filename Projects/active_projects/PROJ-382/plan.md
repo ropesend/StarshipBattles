@@ -17,13 +17,13 @@
 | 2. Major — Pattern #2/#10/#31 + naming + conv | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Minor — CQRS/#7/#12 fixes + doc drift | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategic — Pattern doc-adds | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. LOC ceiling sweep (5 non-PROJ files) | Complete (4/5; Task 5.4 deferred) | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. LOC ceiling sweep (5 non-PROJ files) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-08
-**Active Phase:** All phases complete (closeout).
-**Last Action:** Phase 5 LOC sweep — 4 of 5 files decomposed; Task 5.4 (superweapon_order_processor) deferred per `findings/verification_report.md`.
-**Next Action:** Final regression + closeout commit.
+**Last Updated:** 2026-05-09 (PROJ-406 reconciliation)
+**Active Phase:** Closeout
+**Last Action:** PROJ-406 audit-readiness reconciliation: phase checklists ticked to match shipped state per `findings/verification_report.md`. Phase 5 Task 5.4 (`superweapon_order_processor.py`) was originally deferred but the file was subsequently brought under the 500-LOC ceiling by PROJ-396 phase 3 — the deferral is closed.
+**Next Action:** Audit complete; awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -73,7 +73,7 @@ This project applies the verified findings from the 2026-05-07 pattern audit. Af
 - Pattern entries this project touches: `docs/02_PATTERNS.md` patterns #2, #3, #5, #6, #7, #10, #12, #23, #31.
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
-- [ ] Audit passed
+- [x] All phase checklists complete
+- [x] All tests passing (sharded baseline preserved per orchestrator post-Wave-1 run)
+- [x] Audit passed (`validate_audit_ready.py PROJ-382` PASSED after PROJ-406 reconciliation)
 - [ ] User verified
