@@ -15,13 +15,13 @@
 |-------|--------|-----------|
 | 1. Dead imports | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Dead functions (deprecated statics) | Complete (superseded) | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Duplication consolidation | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Duplication consolidation | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 3 — Not Started (Phases 1 & 2 done)
-**Last Action:** Phase 2 marked superseded by PROJ-384 (commit 6398bb1da deleted all 6 *_static ModifierManager methods)
-**Next Action:** Execute Phase 3 tasks in order (3.1 → 3.9)
+**Active Phase:** All phases complete
+**Last Action:** Phase 3 closeout — all 9 tasks landed (3.1 ProviderFactory, 3.2 cargo distributor, 3.3 hex_at_screen + ability validator, 3.4 _get_cell_detail, 3.5 _format_result_error, 3.6 MissionCommandHandler, 3.7 _cancel_input_mode, 3.8 _iter_hex_filtered_sources, 3.9 BattleEndCondition base)
+**Next Action:** Awaiting user review/verification
 **Blockers:** None
 
 ## Overview
@@ -68,7 +68,7 @@ Created from the audit-shrink review at `Reviews/results/2026-05-07_220215_audit
 - [findings/source_audit.md](findings/source_audit.md) - Pointer to the originating audit-shrink review
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing (focused suites green per-task; tests/unit/ui/screens/ 2945 passed; tests/unit/simulation/ 3729 passed; tests/integration/simulation/ 14 passed; tests/integration/strategy/ 504 passed excluding 1 pre-existing unrelated Galaxy._intercept failure in test_save_round_trip_phase4.py)
 - [ ] Audit passed
 - [ ] User verified

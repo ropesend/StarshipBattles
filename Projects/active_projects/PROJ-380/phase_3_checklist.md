@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Consolidate the 9 verified CRITICAL/MAJOR duplications identified by audit `2026-05-07_220215_audit_shrink` that survived independent verification.
 
 Implementation order in this phase: do the lowest-risk Simple-effort items first (DUP-X-02, DUP-X-06, DUP-X-08, DUP-X-09, DUP-X-10), then Medium-effort items (DUP-X-01, DUP-X-07, DUP-X-12), then the Complex item (DUP-X-11). Each task is independently shippable; tests must pass after each.
@@ -158,9 +158,9 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
 
 _Source audit: `Reviews/results/2026-05-07_220215_audit_shrink/`. See [findings/source_audit.md](findings/source_audit.md) for the link._
