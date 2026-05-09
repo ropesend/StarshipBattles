@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-405 | Tier 1 B-06: Wire EventBus through Projectile/Seeker construction | Planning | 2026-05-09 | 2026-05-09 |
+| PROJ-404 | Tier 1 B-05: Eradicate save-format compatibility (Rule 3 follow-on) | Planning | 2026-05-09 | 2026-05-09 |
+| PROJ-403 | Tier 1 B-04: Migrate stale _MockGalaxy doubles to GalaxyState | Planning | 2026-05-09 | 2026-05-09 |
+| PROJ-402 | Tier 1 B-03: SimulationBattleResolver catch ValidationException | Planning | 2026-05-09 | 2026-05-09 |
+| PROJ-401 | Tier 1 B-02: Passenger-load validator missing species_id rejection | Planning | 2026-05-09 | 2026-05-09 |
+| PROJ-400 | Tier 1 B-01: NewGameSetupScreen deleted-wrapper call | Planning | 2026-05-09 | 2026-05-09 |
 | PROJ-399 | Branch hygiene — pre-existing test failures and pytest collection errors (Galaxy._intercept, docs-drift, basename collisions) | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-398 | PROJ-380 remediation — 5 review MAJOR findings (consolidation refinements) | Planning | 2026-05-08 | 2026-05-08 |
 | PROJ-397 | PROJ-393 remediation — review CRITICAL + MAJOR + 3 deferred items (Combat Lab dead vars reclaim, fleet_id field deletion, view=None branch) | Planning | 2026-05-08 | 2026-05-08 |
