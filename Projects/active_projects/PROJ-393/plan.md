@@ -15,13 +15,13 @@
 |-------|--------|-----------|
 | 1. Minor — comment-only cleanups + doc-tag fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Major — test-injection legacy fallbacks | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Major — backward-compat fields + misc legacy paths | Complete (3 tasks deferred) | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Major — backward-compat fields + misc legacy paths | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-08
-**Active Phase:** Closed — all 3 phases complete (with 3 Phase 3 tasks deferred)
-**Last Action:** Phase 3 commit (8fa9887d3): tasks 3.1, 3.4, 3.6, 3.7 complete; 3.2 partial (tag removal only); 3.3, 3.5 deferred with rationale
-**Next Action:** Project closeout — 3 phases shipped, deferrals logged for follow-up
+**Last Updated:** 2026-05-09 (PROJ-406 reconciliation)
+**Active Phase:** Closeout
+**Last Action:** PROJ-406 reconciliation: original Phase 3 deferrals (Tasks 3.2 fleet_id, 3.3 view=None, 3.5 BattleScreen Combat Lab vars) are all closed by PROJ-397 follow-on work — Tasks 3.5 via PROJ-397 Phase 1, Tasks 3.2/3.3 via PROJ-397 Phase 3.
+**Next Action:** Audit complete; awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -72,6 +72,7 @@ Catch-all project for ~16 small legacy items across the codebase: comment-only d
 - [findings/bundling_decisions.md](findings/bundling_decisions.md) — interactive bundling record (shared across siblings)
 
 ## Verification
-- [x] All phase checklists complete (3 Phase 3 tasks deferred with rationale in findings/verification_report.md)
-- [x] Phase-scoped focused tests passing (full sharded suite deferred to orchestrator)
+- [x] All phase checklists complete (Phase 3 deferrals all closed by PROJ-397; see phase_3_checklist.md tasks 3.2/3.3/3.5)
+- [x] Phase-scoped focused tests passing (full sharded suite cleared by orchestrator post-Wave-1)
+- [x] Audit passed (`validate_audit_ready.py PROJ-393` PASSED after PROJ-406 reconciliation)
 - [ ] User verified

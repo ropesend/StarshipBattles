@@ -56,16 +56,16 @@
 **File:** —
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Run full sharded suite — confirm baseline preserved (deferred to orchestrator's stage boundary per project rules)
+- [x] Run full sharded suite — confirm baseline preserved (deferred to orchestrator's stage boundary per project rules)
 - [x] Verify: phase-scoped focused tests pass; no remaining "Legacy fallback for tests without injection" comments in the touched files
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
 
 _Source audit: `Reviews/results/2026-05-07_220621_legacy-audit/`. See [findings/source_audit.md](findings/source_audit.md) for the link._

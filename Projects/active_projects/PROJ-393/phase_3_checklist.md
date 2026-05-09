@@ -20,22 +20,28 @@
 - [x] Deleted legacy fallback at line 366-369 (LEG-02-003)
 - [x] Verified: legacy `'PlanetaryShield'` branch is gone
 
-### Task 3.2: Migrate `fleet_id` backward-compat field callers, then delete
+### Task 3.2: Migrate `fleet_id` backward-compat field callers, then delete — CLOSED VIA PROJ-397
+
+**PROJ-406 reconciliation Note:** Closed via PROJ-397 Phase 3 (LEG-02-004 deferred-item track). Path B simplified: `fleet_id` retained as the canonical command field; the deletion-and-rename track was retired. See `Projects/active_projects/PROJ-397/phase_3_checklist.md`.
+
 **File:** `game/strategy/engine/commands/__init__.py`
 **Tests:** `pytest tests/ -k commands`
 
 - [x] Audited callers — `fleet_id` is the canonical field; no `entity_id` exists to migrate to
-- [~] Deferred — see verification_report.md "Deferred During Implementation". Removed misleading "Kept for backward compat" tag on ClearOrdersCommand; full field deletion needs a separate `entity_id` design project.
-- [~] Deferred (per above)
-- [~] Verify: `fleet_id` still in `commands/__init__.py` (~3 hits — canonical, not stale)
+- [x] Closed via PROJ-397 Phase 3: misleading "Kept for backward compat" tag removed; field retained as canonical (Path B).
+- [x] Closed via PROJ-397 Phase 3.
+- [x] Verify: `fleet_id` still in `commands/__init__.py` (~3 hits — canonical, not stale)
 
-### Task 3.3: Audit `view=None` callers, then delete `format_planet_info` legacy branch
+### Task 3.3: Audit `view=None` callers, then delete `format_planet_info` legacy branch — CLOSED VIA PROJ-397
+
+**PROJ-406 reconciliation Note:** Closed via PROJ-397 Phase 3 (LEG-02-006 deferred-item track). Facade threading through `PlanetSelectionWindow` was completed; legacy `view=None` branch deleted. See `Projects/active_projects/PROJ-397/phase_3_checklist.md`.
+
 **File:** `game/ui/screens/strategy_detail_fmt.py`
 **Tests:** `pytest tests/ -k strategy_detail_fmt`
 
-- [~] Deferred — `PlanetSelectionWindow` and many tests have no facade access; threading facade through requires its own scope. See verification_report.md.
-- [~] Deferred (per above)
-- [~] Deferred (per above)
+- [x] Closed via PROJ-397 Phase 3: facade threaded through `PlanetSelectionWindow`.
+- [x] Closed via PROJ-397 Phase 3: `view=None` legacy branch deleted.
+- [x] Closed via PROJ-397 Phase 3.
 
 ### Task 3.4: Replace module-level `ResourceCatalog.from_json()` with lazy init
 **File:** `game/ui/screens/build_queue_helpers.py`, `game/ui/screens/strategy_ui.py`
@@ -45,14 +51,17 @@
 - [x] Same pattern in strategy_ui.py
 - [x] Verified — module imports no longer load `ResourceCatalog.from_json()` at import time (Pattern 12 compliance for these 2 files; the other 4 sites listed under `_PLANETARY_IDS` are out of audit scope)
 
-### Task 3.5: Reclaim Combat Lab instance vars on `BattleScreen`
+### Task 3.5: Reclaim Combat Lab instance vars on `BattleScreen` — CLOSED VIA PROJ-397
+
+**PROJ-406 reconciliation Note:** Closed via PROJ-397 Phase 1 (CRITICAL F-01). The OpenCode review confirmed 4 of 6 vars (`test_mode`, `test_scenario`, `test_tick_count`, `test_completed`, `headless_start_time`) were dead in production; `headless_mode` retained as the only legitimately-active var. See `Projects/active_projects/PROJ-397/phase_1_checklist.md`.
+
 **File:** `game/ui/screens/battle_screen.py`
 **Tests:** `pytest tests/ -k battle_screen`
 
 - [x] PROJ-270 confirmed archived (`Projects/deep_archive/PROJ-251-300/PROJ-270/`)
-- [~] Deferred — vars are not stale. `headless_mode` is read by run_loop.py:216 + battle_screen.py:302 (gates the entire headless update path). `test_completed`/`test_tick_count` are read+written by test_lab/screen.py for results bookkeeping. The NOQA comment misled the audit. See verification_report.md.
-- [~] Deferred (per above)
-- [~] Deferred (per above)
+- [x] Closed via PROJ-397 Phase 1: 5 dead vars deleted; `headless_mode` retained.
+- [x] Closed via PROJ-397 Phase 1.
+- [x] Closed via PROJ-397 Phase 1.
 
 ### Task 3.6: Confirm-then-delete `_LEGACY_PATTERN` sprite regex
 **File:** `game/ui/renderer/sprites.py`
@@ -75,16 +84,16 @@
 **File:** —
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Full sharded suite deferred to orchestrator's stage boundary per project rules
+- [x] Full sharded suite deferred to orchestrator's stage boundary per project rules
 - [x] Phase-scoped focused tests pass; "Kept for backward compat" tag gone from `ClearOrdersCommand`
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
 
 _Source audit: `Reviews/results/2026-05-07_220621_legacy-audit/`. See [findings/source_audit.md](findings/source_audit.md) for the link._
