@@ -54,7 +54,7 @@ from game.simulation.combat.boundary import (
     RectBoundary,
     UnboundedRegion,
 )
-from game.simulation.combat.formation import FormationShape, FormationSpec
+from game.simulation.combat.formation import FormationSpec
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
 from game.simulation.components.modifier_effects import ModifierEffect
@@ -184,33 +184,14 @@ def modifier_stack_from_dict(data: Optional[Dict[str, Any]]) -> Optional[Modifie
 
 
 # ---------------------------------------------------------------------------
-# Formation  (used by TaskForceSpec)
+# Formation (used by TaskForceSpec) — PROJ-391 Task 1.3
+#
+# (De)serialization moved onto `FormationSpec` itself per Pattern #17
+# (Serializable Protocol). The previous duck-typed fallback that
+# accepted non-FormationSpec inputs is gone — every spec compiler in
+# production produces a real `FormationSpec`, and the field's `object`
+# typing on `TaskForceSpec` is a vestige slated for tightening.
 # ---------------------------------------------------------------------------
-
-
-def _formation_to_dict(formation: Any) -> Dict[str, Any]:
-    """Serialize a FormationSpec. The field is typed ``object`` on
-    TaskForceSpec, so accept duck-typed inputs that lack ``shape``/``spacing``
-    by coercing to a no-op shape — but in practice every spec compiler
-    produces a real ``FormationSpec``."""
-    if isinstance(formation, FormationSpec):
-        return {
-            "shape": formation.shape.value,
-            "spacing": float(formation.spacing),
-            "custom_positions": [_vec_to_list(p) for p in formation.custom_positions],
-        }
-    # Fallback for legacy / mock formations: store nothing identifying.
-    return {"shape": FormationShape.LINE_ASTERN.value, "spacing": 0.0, "custom_positions": []}
-
-
-def _formation_from_dict(data: Dict[str, Any]) -> FormationSpec:
-    return FormationSpec(
-        shape=FormationShape(data["shape"]),
-        spacing=float(data["spacing"]),
-        custom_positions=tuple(
-            _list_to_vec(p) for p in data.get("custom_positions", [])
-        ),
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -308,18 +289,29 @@ def _squadron_spec_from_dict(data: Dict[str, Any]) -> SquadronSpec:
 
 
 def _task_force_spec_to_dict(tf: TaskForceSpec) -> Dict[str, Any]:
+    # PROJ-391 Task 1.3: `tf.formation` is typed `object` on TaskForceSpec
+    # (a Phase 1 vestige), but every production spec compiler emits a real
+    # `FormationSpec`. Call its canonical `to_dict` directly.
+    formation = tf.formation
+    formation_dict = (
+        formation.to_dict() if isinstance(formation, FormationSpec) else None
+    )
     return {
         "task_force_id": tf.task_force_id,
-        "formation": _formation_to_dict(tf.formation),
+        "formation": formation_dict,
         "policies": _combat_policies_to_dict(tf.policies),
         "squadrons": [_squadron_spec_to_dict(sq) for sq in tf.squadrons],
     }
 
 
 def _task_force_spec_from_dict(data: Dict[str, Any]) -> TaskForceSpec:
+    formation_data = data.get("formation")
+    formation: Any = (
+        FormationSpec.from_dict(formation_data) if formation_data is not None else None
+    )
     return TaskForceSpec(
         task_force_id=data["task_force_id"],
-        formation=_formation_from_dict(data["formation"]),
+        formation=formation,
         policies=_combat_policies_from_dict(data["policies"]),
         squadrons=tuple(_squadron_spec_from_dict(sq) for sq in data["squadrons"]),
     )

@@ -36,10 +36,10 @@
 **File:** `game/simulation/combat/formation.py`, `game/strategy/data/task_force.py`, `game/simulation/replay/replay_serialization.py`
 **Tests:** `pytest tests/ -k formation`
 
-- [ ] On `FormationSpec` (in `formation.py`): add `to_dict(self) -> dict` and `@classmethod from_dict(cls, data: dict) -> FormationSpec` per Pattern 17 (Serializable Protocol). Ensure both branches that exist today (`float(p[0])` in `task_force.py` vs `_vec_to_list` in `replay_serialization.py`) are reconciled into one canonical serialization (LEG-01-017)
-- [ ] In `task_force.py:125-142`: delete `_formation_to_dict`/`_formation_from_dict`; rewrite call sites to use `FormationSpec.to_dict()` / `FormationSpec.from_dict()`
-- [ ] In `replay_serialization.py:191-213`: delete `_formation_to_dict`/`_formation_from_dict`; rewrite call sites to use the canonical methods. If the layer needs `_vec_to_list` semantics, fold that logic into `FormationSpec.to_dict()` so both layers share it
-- [ ] Verify: `grep -rn "_formation_to_dict\|_formation_from_dict" .` returns zero hits
+- [x] On `FormationSpec` (in `formation.py`): add `to_dict(self) -> dict` and `@classmethod from_dict(cls, data: dict) -> FormationSpec` per Pattern 17 (Serializable Protocol). Ensure both branches that exist today (`float(p[0])` in `task_force.py` vs `_vec_to_list` in `replay_serialization.py`) are reconciled into one canonical serialization (LEG-01-017)
+- [x] In `task_force.py:125-142`: delete `_formation_to_dict`/`_formation_from_dict`; rewrite call sites to use `FormationSpec.to_dict()` / `FormationSpec.from_dict()`
+- [x] In `replay_serialization.py:191-213`: delete `_formation_to_dict`/`_formation_from_dict`; rewrite call sites to use the canonical methods. If the layer needs `_vec_to_list` semantics, fold that logic into `FormationSpec.to_dict()` so both layers share it
+- [x] Verify: `grep -rn "_formation_to_dict\|_formation_from_dict" .` returns zero hits
 
 ### Task 1.4: Final regression
 **File:** —

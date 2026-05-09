@@ -330,16 +330,32 @@ class TestSerializationPrivateHelpers:
 
         assert result is vector
 
-    def test_formation_to_dict_falls_back_for_non_formation_object(self):
-        from game.simulation.replay.replay_serialization import _formation_to_dict
+    def test_task_force_spec_serializes_non_formation_object_as_none(self):
+        """PROJ-391 Task 1.3: the legacy `_formation_to_dict` fallback that
+        coerced non-FormationSpec inputs into a `LINE_ASTERN`/`spacing=0`
+        dict has been dropped (Pattern #17 — `to_dict`/`from_dict` live
+        on the type itself; non-FormationSpec inputs are not supported).
 
-        result = _formation_to_dict(object())
+        The replay-layer `_task_force_spec_to_dict` now stores `None` for
+        non-FormationSpec formations instead of a synthetic placeholder.
+        Every production spec compiler emits a real `FormationSpec`, so
+        this branch exists only to guard the `TaskForceSpec.formation:
+        object` typing vestige.
+        """
+        from game.simulation.replay.replay_serialization import (
+            _task_force_spec_to_dict,
+        )
 
-        assert result == {
-            "shape": FormationShape.LINE_ASTERN.value,
-            "spacing": 0.0,
-            "custom_positions": [],
-        }
+        tf = TaskForceSpec(
+            task_force_id="tf-test",
+            formation=object(),  # non-FormationSpec — vestige of object-typed slot
+            policies=CombatPolicies(),
+            squadrons=(),
+        )
+
+        result = _task_force_spec_to_dict(tf)
+
+        assert result["formation"] is None
 
 
 # ---------------------------------------------------------------------------
