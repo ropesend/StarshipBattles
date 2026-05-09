@@ -18,11 +18,11 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/services/llm/factory.py`, `game/ui/services/image/factory.py` (and a new shared base — proposed `game/services/_provider_factory.py` or a generic function in an existing services helper module — pick the location that aligns best with existing layering, document it in **Notes**)
 **Tests:** `pytest tests/unit/services/llm/test_factory.py tests/unit/ui/services/image/test_factory.py`
 
-- [ ] Decide and record the new module location for the shared base (e.g., `game/services/provider_factory.py`)
-- [ ] Implement the shared `ProviderFactory.create(...)` (or generic function) accepting `provider_dict`, `env_var`, `default`, `error_class`, `config_error_class`
-- [ ] Refactor `LLMProviderFactory.create` (`game/services/llm/factory.py:52-87`) to delegate to the shared base; preserve `LLM_PROVIDER` env var, `deepseek` default, and `LLMConfigError` exception
-- [ ] Refactor `ImageProviderFactory.create` (`game/ui/services/image/factory.py:47-79`) to delegate to the shared base; preserve `IMAGE_PROVIDER` env var, `openai` default, and `ImageConfigError` exception
-- [ ] Verify: focused tests pass; `pytest tests/ --testmon` green; LOC delta ≈ −25
+- [x] Decide and record the new module location for the shared base — chose `game/services/provider_factory.py` (services layer, both factories already depend on `game.services.*` or compatible)
+- [x] Implement the shared `resolve_provider(...)` generic function accepting `providers`, `env_var`, `default`, `config_error_cls`, `error_code`, `label`
+- [x] Refactor `LLMProviderFactory.create` to delegate to `resolve_provider`; preserves `LLM_PROVIDER` env var, `deepseek` default, `LLMConfigError`
+- [x] Refactor `ImageProviderFactory.create` to delegate to `resolve_provider`; preserves `IMAGE_PROVIDER` env var, `openai` default, `ImageConfigError`
+- [x] Verify: focused tests pass (15/15 across both test_factory.py files); LOC delta = −34 (LLM) + −24 (image) + 90 (new shared) = +32 net but eliminates duplication; the shared module's overhead is mostly docstring
 
 **Notes:** Both factories already use module-scoped `_PROVIDERS` dicts and identical error-handling structure (verified). No existing `ProviderFactory` symbol — extraction target is free.
 

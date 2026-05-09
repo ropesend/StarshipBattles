@@ -26,12 +26,12 @@ Provider classes register themselves at import time:
 Per `docs/03_CONVENTIONS.md` §6.5, dispatch is a dict, not an if/elif
 chain — adding a provider is a one-line registration.
 """
-import os
 from typing import Dict, Optional, Type
 
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import LLMConfigError
 from game.services.llm.provider import LLMProvider
+from game.services.provider_factory import resolve_provider
 
 _PROVIDERS: Dict[str, Type[LLMProvider]] = {}
 
@@ -65,26 +65,15 @@ class LLMProviderFactory:
             Exception: Any other exception from the provider's
                 constructor propagates unchanged.
         """
-        if name is None:
-            name = os.environ.get("LLM_PROVIDER", "deepseek")
-
-        provider_cls = _PROVIDERS.get(name)
-        if provider_cls is None:
-            raise LLMConfigError(
-                f"Unknown LLM provider {name!r}. "
-                f"Registered providers: {sorted(_PROVIDERS)}",
-                code=ErrorCode.LLM_CONFIG_MISSING.value,
-                context={
-                    "provider": name,
-                    "registered": sorted(_PROVIDERS),
-                },
-            )
-
-        try:
-            return provider_cls()
-        except LLMConfigError:
-            # Deferred validation: consumer checks `if provider is not None`.
-            return None
+        return resolve_provider(
+            name,
+            providers=_PROVIDERS,
+            env_var="LLM_PROVIDER",
+            default="deepseek",
+            config_error_cls=LLMConfigError,
+            error_code=ErrorCode.LLM_CONFIG_MISSING.value,
+            label="LLM provider",
+        )
 
 
 __all__ = ["LLMProviderFactory", "register_provider"]

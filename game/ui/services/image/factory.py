@@ -21,11 +21,11 @@ Provider classes register at import time::
 """
 from __future__ import annotations
 
-import os
 from typing import Optional, Type
 
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import ImageConfigError
+from game.services.provider_factory import resolve_provider
 from game.ui.services.image.provider import ImageProvider
 
 _PROVIDERS: dict[str, Type[ImageProvider]] = {}
@@ -57,26 +57,15 @@ class ImageProviderFactory:
                 to a provider that isn't registered. The exception's
                 ``context`` includes ``provider`` and ``registered``.
         """
-        if name is None:
-            name = os.environ.get("IMAGE_PROVIDER", "openai")
-
-        provider_cls = _PROVIDERS.get(name)
-        if provider_cls is None:
-            raise ImageConfigError(
-                f"Unknown image provider {name!r}. "
-                f"Registered providers: {sorted(_PROVIDERS)}",
-                code=ErrorCode.IMAGE_CONFIG_MISSING.value,
-                context={
-                    "provider": name,
-                    "registered": sorted(_PROVIDERS),
-                },
-            )
-
-        try:
-            return provider_cls()
-        except ImageConfigError:
-            # Deferred validation: consumer checks `if provider is not None`.
-            return None
+        return resolve_provider(
+            name,
+            providers=_PROVIDERS,
+            env_var="IMAGE_PROVIDER",
+            default="openai",
+            config_error_cls=ImageConfigError,
+            error_code=ErrorCode.IMAGE_CONFIG_MISSING.value,
+            label="image provider",
+        )
 
 
 __all__ = ["ImageProviderFactory", "register_image_provider"]
