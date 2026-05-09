@@ -15,18 +15,14 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 import logging
 
-from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 
 logger = logging.getLogger(__name__)
-from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.galaxy import Galaxy, WarpPoint
-from game.strategy.events.event_types import EventType, EventCategory
-from game.strategy.services.superweapon_registry import (
-    SuperweaponSpec,
-    find_superweapon_spec,
-)
+from game.strategy.data.planet import Planet
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.events.event_types import EventCategory
+from game.strategy.services.superweapon_registry import SuperweaponSpec
 from game.strategy.validation.superweapon_validator import SuperweaponValidator
 from game.strategy.data.pathfinding import get_system_at_hex
 
@@ -331,6 +327,18 @@ class SuperweaponOrderProcessor:
             **event_kwargs,
         )
 
+    @staticmethod
+    def _get_system_at_hex(galaxy, location):  # type: ignore[no-untyped-def]
+        """Resolve the star system at ``location`` (or None).
+
+        Thin pass-through to ``game.strategy.data.pathfinding.get_system_at_hex``
+        kept on the processor so handler modules share a single patch surface
+        for tests: patching
+        ``game.strategy.engine.superweapon_order_processor.get_system_at_hex``
+        affects this method's lookup, which is the only callsite handlers use.
+        """
+        return get_system_at_hex(galaxy, location)
+
     def _stabilizer_target_label(
         self, spec: SuperweaponSpec, order, fleet, galaxy
     ) -> str:
@@ -347,40 +355,31 @@ class SuperweaponOrderProcessor:
             return f"System {system.name}"
         return "System"
 
+    # ------------------------------------------------------------------
+    # Per-superweapon dispatch wrappers.
+    #
+    # PROJ-396 Phase 3 (ex Task 5.4): the 5 ``process_*`` bodies live in
+    # ``game.strategy.engine.superweapon_handlers`` as free functions
+    # taking ``processor`` (this instance) as an explicit first parameter
+    # — the closures previously closed over ``self`` for
+    # ``self._event_bus`` / ``self._get_empire_mutator()`` /
+    # ``self.execute_superweapon(...)`` etc. The wrappers below preserve
+    # the public method shape that ``order_processor`` calls.
+    # ------------------------------------------------------------------
+
     def process_implode_planet(
         self,
         fleet: Fleet,
         empire: 'Empire',
         galaxy: Galaxy,
         empires: List['Empire'],
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> SuperweaponResult:
-        """Process an IMPLODE_PLANET order via spec-driven dispatch.
-
-        Destroys the target planet; ship preserved for reuse.
-        """
-        spec = find_superweapon_spec(OrderType.IMPLODE_PLANET)
-
-        def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
-            target_planet = order.target
-            # Remove planet from colony list if owned (iterate all empires
-            # to catch enemy planets).
-            if target_planet.owner_id is not None:
-                # PROJ-370 Phase 4: route through IEmpireMutator.
-                mutator = self._get_empire_mutator()
-                for emp in empires:
-                    mutator.remove_colony(emp, target_planet)
-            galaxy.unregister_planet(target_planet)
-            return {
-                "event_message": f"Planet {target_planet.name} destroyed",
-                "log_message": f"Planet {target_planet.name} destroyed by fleet {fleet.id}",
-                "planet_id": target_planet.id,
-                "planet_name": target_planet.name,
-            }
-
-        return self.execute_superweapon(
-            fleet, empire, galaxy, empires, spec, _effect, component_registry
+        """Destroys the target planet; ship preserved for reuse."""
+        from game.strategy.engine.superweapon_handlers import (
+            process_implode_planet as _impl,
         )
+        return _impl(self, fleet, empire, galaxy, empires, component_registry)
 
     def process_stellerate_star(
         self,
@@ -388,51 +387,14 @@ class SuperweaponOrderProcessor:
         empire: 'Empire',
         galaxy: Galaxy,
         empires: List['Empire'],
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> SuperweaponResult:
-        """Process a STELLERATE_STAR order via spec-driven dispatch.
-
-        Suicide weapon: destroys all stars and planets in the system and
-        destroys ALL fleets within the 50-hex system radius (including the
-        acting fleet) via SystemDestroyer. Warp points preserved.
-
-        Spec ``ability_name=None``; the ability-ship lookup is skipped.
-        Spec ``consume_ship=True``; the dispatcher emits the STAR_DESTROYED
-        event ad-hoc and skips ``_finalize_superweapon`` (the fleet is
-        already gone, and the order MUST stay un-popped to match the
-        pre-refactor semantics pinned by Phase 1 characterization tests).
-        """
-        spec = find_superweapon_spec(OrderType.STELLERATE_STAR)
-
-        def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
-            if get_system_at_hex(galaxy, fleet.location) is None:
-                return SuperweaponResult(success=False, message="Fleet not at a star system")
-            return None
-
-        def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
-            system = get_system_at_hex(galaxy, fleet.location)
-            system_name = system.name
-
-            # PROJ-277: SystemDestroyer collects-then-mutates so every fleet
-            # within the 50-hex radius is destroyed.
-            from game.strategy.services.system_destroyer import (
-                collect_system_contents,
-                destroy_system,
-            )
-            plan = collect_system_contents(system, galaxy, empires)
-            destroy_system(plan, galaxy, empires, event_bus=self._event_bus)
-
-            return {
-                "event_message": f"Star system {system_name} destroyed",
-                "log_message": f"Star system {system_name} stellerated by fleet {fleet.id}",
-                "system_name": system_name,
-                "location_name": system_name,
-            }
-
-        return self.execute_superweapon(
-            fleet, empire, galaxy, empires, spec, _effect, component_registry,
-            precheck_fn=_precheck,
+        """Suicide weapon: destroys all stars/planets in the system and
+        every fleet within the 50-hex system radius."""
+        from game.strategy.engine.superweapon_handlers import (
+            process_stellerate_star as _impl,
         )
+        return _impl(self, fleet, empire, galaxy, empires, component_registry)
 
     def process_open_warp_point(
         self,
@@ -440,68 +402,14 @@ class SuperweaponOrderProcessor:
         empire: 'Empire',
         galaxy: Galaxy,
         empires: List['Empire'] = None,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> SuperweaponResult:
-        """Process an OPEN_WARP_POINT order via spec-driven dispatch.
-
-        Creates bidirectional warp points between current system and target
-        system. Ship preserved for reuse.
-        """
-        spec = find_superweapon_spec(OrderType.OPEN_WARP_POINT)
-
-        def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
-            if get_system_at_hex(galaxy, fleet.location) is None:
-                return SuperweaponResult(success=False, message="Fleet not at a star system")
-            # Pre-refactor parity: target-system existence is validated
-            # BEFORE ability-ship lookup, so "Target system not found" beats
-            # "No ship with OpenWarpPoint ability" when both would fail.
-            target_system_name = order.target.get('target_system_name', '')
-            if galaxy.name_map.get(target_system_name) is None:
-                return SuperweaponResult(
-                    success=False,
-                    message=f"Target system '{target_system_name}' not found",
-                )
-            return None
-
-        def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
-            params = order.target  # dispatcher already validated isinstance(dict)
-            target_system_name = params.get('target_system_name', '')
-
-            current_system = get_system_at_hex(galaxy, fleet.location)
-            target_system = galaxy.name_map[target_system_name]
-
-            # Calculate warp point locations.
-            # Near-end: at fleet's local position within current system.
-            fleet_local = fleet.location - current_system.global_location
-            near_wp = WarpPoint(target_system.name, fleet_local)
-
-            # Far-end: direction from target back toward current, scaled to
-            # typical orbit distance (6 hexes).
-            direction_q = current_system.global_location.q - target_system.global_location.q
-            direction_r = current_system.global_location.r - target_system.global_location.r
-            dist = max(abs(direction_q), abs(direction_r), 1)
-            orbit_distance = 6
-            far_q = round(direction_q / dist * orbit_distance)
-            far_r = round(direction_r / dist * orbit_distance)
-            far_wp = WarpPoint(current_system.name, HexCoord(far_q, far_r))
-
-            current_system.warp_points.append(near_wp)
-            target_system.warp_points.append(far_wp)
-
-            return {
-                "event_message": f"Warp point opened to {target_system.name}",
-                "log_message": (
-                    f"Warp point opened between {current_system.name} "
-                    f"and {target_system.name}"
-                ),
-                "source_system": current_system.name,
-                "target_system": target_system.name,
-            }
-
-        return self.execute_superweapon(
-            fleet, empire, galaxy, empires or [], spec, _effect, component_registry,
-            precheck_fn=_precheck,
+        """Creates bidirectional warp points between current and target
+        system. Ship preserved for reuse."""
+        from game.strategy.engine.superweapon_handlers import (
+            process_open_warp_point as _impl,
         )
+        return _impl(self, fleet, empire, galaxy, empires, component_registry)
 
     def process_close_warp_point(
         self,
@@ -509,73 +417,13 @@ class SuperweaponOrderProcessor:
         empire: 'Empire',
         galaxy: Galaxy,
         empires: List['Empire'] = None,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> SuperweaponResult:
-        """Process a CLOSE_WARP_POINT order via spec-driven dispatch.
-
-        Removes both ends of the warp link; ship preserved for reuse.
-        Strictly validates the fleet is at the exact warp-point sector
-        (hex) — not just the right system — to defend against reordered
-        moves that would close the wrong warp point.
-        """
-        spec = find_superweapon_spec(OrderType.CLOSE_WARP_POINT)
-
-        def _parse_close_target(target):
-            """Parse target into (destination_id, expected_hex). Legacy
-            back-compat: a plain string target was the pre-PROJ-228 form.
-            """
-            if isinstance(target, dict):
-                destination_id = target.get('destination_id', '')
-                hex_data = target.get('target_hex')
-                expected_hex = HexCoord(hex_data['q'], hex_data['r']) if hex_data else None
-            else:
-                destination_id = target
-                expected_hex = None
-            return destination_id, expected_hex
-
-        def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
-            destination_id, _expected_hex = _parse_close_target(order.target)
-            if not destination_id:
-                return SuperweaponResult(success=False, message="No destination specified")
-            if get_system_at_hex(galaxy, fleet.location) is None:
-                return SuperweaponResult(success=False, message="Fleet not at a star system")
-            return None
-
-        def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
-            destination_id, expected_hex = _parse_close_target(order.target)
-            current_system = get_system_at_hex(galaxy, fleet.location)
-
-            # Strict sector-level validation: fleet must be AT the warp
-            # point hex, not just somewhere in the system.
-            if expected_hex and fleet.location != expected_hex:
-                logger.warning(
-                    f"Fleet {fleet.id}: Expected to be at sector {expected_hex} but is at "
-                    f"sector {fleet.location}, canceling CLOSE_WARP_POINT order"
-                )
-                return SuperweaponResult(
-                    success=False,
-                    message=(
-                        f"Fleet is at sector {fleet.location} but order targets "
-                        f"warp point at sector {expected_hex}"
-                    ),
-                )
-
-            galaxy.remove_warp_link(current_system.name, destination_id)
-
-            return {
-                "event_message": f"Warp point to {destination_id} closed",
-                "log_message": (
-                    f"Warp point closed between {current_system.name} "
-                    f"and {destination_id}"
-                ),
-                "source_system": current_system.name,
-                "target_system": destination_id,
-            }
-
-        return self.execute_superweapon(
-            fleet, empire, galaxy, empires or [], spec, _effect, component_registry,
-            precheck_fn=_precheck,
+        """Removes both ends of a warp link; ship preserved for reuse."""
+        from game.strategy.engine.superweapon_handlers import (
+            process_close_warp_point as _impl,
         )
+        return _impl(self, fleet, empire, galaxy, empires, component_registry)
 
     def process_create_dyson_sphere(
         self,
@@ -583,98 +431,14 @@ class SuperweaponOrderProcessor:
         empire: 'Empire',
         galaxy: Galaxy,
         empires: List['Empire'],
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> SuperweaponResult:
-        """Process a CREATE_DYSON_SPHERE order via spec-driven dispatch.
-
-        Removes star and nearby planets (within zone radius), creates a
-        Dyson Sphere planet at system center using the race's ideal
-        environmental conditions (or sensible defaults). Ship preserved.
-        """
-        spec = find_superweapon_spec(OrderType.CREATE_DYSON_SPHERE)
-
-        def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
-            system = get_system_at_hex(galaxy, fleet.location)
-            if system is None:
-                return SuperweaponResult(success=False, message="Fleet not at a star system")
-            if not system.stars:
-                return SuperweaponResult(success=False, message="System has no stars")
-            return None
-
-        def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
-            system = get_system_at_hex(galaxy, fleet.location)
-            primary_star = system.stars[0]
-            star_loc = primary_star.location
-
-            # Remove planets within zone radius (radius_hexes=6 -> 91 hexes,
-            # center + 5 rings).
-            dyson_radius = 5
-            planets_to_remove = [
-                planet for planet in system.planets
-                if hex_distance(planet.location, star_loc) <= dyson_radius
-            ]
-            mutator = self._get_empire_mutator()
-            for planet in planets_to_remove:
-                if planet.owner_id is not None:
-                    # PROJ-370 Phase 4: route through IEmpireMutator.
-                    for emp in empires:
-                        mutator.remove_colony(emp, planet)
-                galaxy.unregister_planet(planet)
-
-            system.stars = []
-
-            # PROJ-283 Phase 4: registry-driven preferences.
-            race = empire.race_config if empire else None
-            if race:
-                prefs = race.preferences
-                gravity = prefs["gravity"].setpoint
-                temperature = prefs["temperature"].setpoint
-                water = prefs["water"].setpoint
-                atmosphere = {
-                    factor_id.split(".", 1)[1]: pref.setpoint
-                    for factor_id, pref in prefs.items()
-                    if factor_id.startswith("gas.") and pref.setpoint > 0
-                }
-            else:
-                gravity = 9.81  # 1g
-                temperature = 288.0  # ~15°C
-                water = 0.3
-                atmosphere = {"O2": 21000.0, "N2": 79000.0}  # Earth-like (Pa)
-
-            dyson = Planet(
-                name=f"Dyson Sphere ({system.name})",
-                location=HexCoord(0, 0),
-                orbit_distance=0,
-                mass=2e30,
-                radius=1.5e11,
-                surface_area=1e18,
-                density=1.0,
-                surface_gravity=gravity,
-                surface_pressure=101325.0,
-                surface_temperature=temperature,
-                surface_water=water,
-                atmosphere=atmosphere,
-                tectonic_activity=0.0,
-                magnetic_field=1.0,
-                planet_type=PlanetType.DYSON_SPHERE,
-                image_id="Sphereworld_Portrait.png",
-                radius_hexes=6,
-            )
-            system.planets.append(dyson)
-            galaxy.register_planet(system, dyson)
-
-            return {
-                "event_message": f"Dyson Sphere created in {system.name}",
-                "log_message": f"Dyson Sphere created in {system.name}",
-                "system_name": system.name,
-                "planet_id": dyson.id,
-                "planet_name": dyson.name,
-            }
-
-        return self.execute_superweapon(
-            fleet, empire, galaxy, empires, spec, _effect, component_registry,
-            precheck_fn=_precheck,
+        """Removes star and nearby planets, creates a Dyson Sphere planet
+        at system center. Ship preserved for reuse."""
+        from game.strategy.engine.superweapon_handlers import (
+            process_create_dyson_sphere as _impl,
         )
+        return _impl(self, fleet, empire, galaxy, empires, component_registry)
 
     # PROJ-368 Phase 4: process_self_destruct DELETED. SELF_DESTRUCT now
     # routes through SelfDestructHandler at game.strategy.engine.
