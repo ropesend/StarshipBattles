@@ -103,17 +103,17 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/ui/screens/strategy_click_dispatcher.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_click_dispatcher.py` then `pytest tests/integration/ui/`
 
-- [ ] Implement `_handle_input_mode_click(self, mx, my, button, mode_name, left_click_action, *, on_cancel: Optional[Callable] = None)` that handles the shared right-click cancel branch (`button == 3`: log, reset `input_mode = 'SELECT'`, optionally invoke `on_cancel` for handlers that need extra cleanup, return True)
-- [ ] Refactor `_handle_move_mode_click` (lines 125–128) to delegate
-- [ ] Refactor `_handle_join_mode_click` (lines 156–159) to delegate
-- [ ] Refactor `_handle_colonize_mode_click` (lines 198–201) to delegate
-- [ ] Refactor `_handle_transfer_mode_click` (lines 213–216) to delegate
-- [ ] Refactor `_handle_drop_cargo_mode_click` (lines 241–244) to delegate
-- [ ] Refactor `_handle_load_cargo_mode_click` (lines 255–258) to delegate
-- [ ] Refactor `_handle_warp_target_click` (lines 277–280) to delegate
-- [ ] Refactor `_handle_superweapon_click` (lines 297–300) to delegate
-- [ ] Refactor `_handle_edit_move_click` (lines 225–230) to delegate via the `on_cancel` callback that resets `_edit_move_ghost_hex`, `_edit_move_order_index`, `_edit_move_fleet`
-- [ ] Verify: all click-mode tests pass; right-click cancel still works in every mode; LOC delta ≈ −24
+- [x] Narrowed scope: the audit's claim of "9 handlers sharing left-click+right-click skeleton" was overstated — left-click bodies diverge significantly across the 9 handlers (each does something different: prompt move/intercept choice, queue colonize mission, open transfer dialog, etc.). Only the right-click cancel block (3 lines) is truly duplicated. Extracted a `_cancel_input_mode(*, on_cancel=None) -> bool` helper rather than the wider `_handle_input_mode_click(...)`. This is cleaner — the left-click logic stays where it belongs, while the cancel block is consolidated.
+- [x] Replaced the right-click branch in `_handle_move_mode_click`
+- [x] Replaced the right-click branch in `_handle_join_mode_click`
+- [x] Replaced the right-click branch in `_handle_colonize_mode_click`
+- [x] Replaced the right-click branch in `_handle_transfer_mode_click`
+- [x] Replaced the right-click branch in `_handle_drop_cargo_mode_click`
+- [x] Replaced the right-click branch in `_handle_load_cargo_mode_click`
+- [x] Replaced the right-click branch in `_handle_warp_target_click`
+- [x] Replaced the right-click branch in `_handle_superweapon_click`
+- [x] Refactored `_handle_edit_move_click` via the `on_cancel` callback that resets `_edit_move_ghost_hex`, `_edit_move_order_index`, `_edit_move_fleet`
+- [x] Verify: tests/unit/ui/screens/test_strategy_click_dispatcher.py -> 13 passed; tests/unit/ui/screens/ -> 2945 passed; LOC delta ≈ −16 (8 × 3-line block → 1-line; edit-move 5 lines → 5 lines via callback; +30 line helper)
 
 **Notes:** Verification flagged `_handle_edit_move_click` as DIVERGENT (extra state-var resets) — the `on_cancel` parameter is the agreed accommodation. Audit's claim of "full clones" for cargo/transfer handlers was overstated; only the right-click block duplicates. (DUP-X-07)
 

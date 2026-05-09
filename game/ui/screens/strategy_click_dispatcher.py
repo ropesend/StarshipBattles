@@ -7,7 +7,7 @@ Extracted from StrategyInputHandler for router decomposition (PROJ-173 Phase 3).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional, Any
+from typing import TYPE_CHECKING, Optional, Any, Callable
 
 import pygame
 
@@ -80,6 +80,37 @@ class ClickModeDispatcher:
             return handler(mx, my, button)
         return False
 
+    def _cancel_input_mode(self, *, on_cancel: Optional[Callable[[], None]] = None) -> bool:
+        """Reset ``input_mode`` to ``'SELECT'`` and return ``True``.
+
+        Shared right-click-cancel branch for the 9 mode handlers
+        (PROJ-380, DUP-X-07). All handlers share an identical 3-line
+        cancel block:
+
+            self.input_mode = 'SELECT'
+            logger.debug("Input Mode: SELECT")
+            return True
+
+        ``_handle_edit_move_click`` additionally clears
+        ``_edit_move_ghost_hex`` / ``_edit_move_order_index`` /
+        ``_edit_move_fleet`` — that handler passes those resets via the
+        ``on_cancel`` callback, run *before* the mode flip so callers
+        observe a coherent state.
+
+        Args:
+            on_cancel: Optional zero-arg callable to run before resetting
+                ``input_mode`` (e.g. for divergent state cleanup).
+
+        Returns:
+            Always ``True`` — every caller's right-click branch ends
+            with ``return True``.
+        """
+        if on_cancel is not None:
+            on_cancel()
+        self.input_mode = 'SELECT'
+        logger.debug("Input Mode: SELECT")
+        return True
+
     # =========================================================================
     # Mode Click Handlers
     # =========================================================================
@@ -121,9 +152,7 @@ class ClickModeDispatcher:
             return True
 
         elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
+            return self._cancel_input_mode()
 
         return False
 
@@ -152,9 +181,7 @@ class ClickModeDispatcher:
             return True
 
         elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
+            return self._cancel_input_mode()
 
         return False
 
@@ -194,9 +221,7 @@ class ClickModeDispatcher:
             return True
 
         elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
+            return self._cancel_input_mode()
 
         return False
 
@@ -209,9 +234,7 @@ class ClickModeDispatcher:
             self.input_mode = 'SELECT'
             return True
         elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
+            return self._cancel_input_mode()
         return False
 
     def _handle_edit_move_click(self, mx: int, my: int, button: int) -> bool:
@@ -221,11 +244,12 @@ class ClickModeDispatcher:
             self.scene.complete_edit_move(new_hex)
             return True
         elif button == 3:  # Right click — cancel edit, restore SELECT mode
-            self.scene._edit_move_ghost_hex = None
-            self.scene._edit_move_order_index = None
-            self.scene._edit_move_fleet = None
-            self.input_mode = 'SELECT'
-            return True
+            def _clear_edit_state() -> None:
+                self.scene._edit_move_ghost_hex = None
+                self.scene._edit_move_order_index = None
+                self.scene._edit_move_fleet = None
+
+            return self._cancel_input_mode(on_cancel=_clear_edit_state)
         return False
 
     def _handle_drop_cargo_mode_click(self, mx: int, my: int, button: int) -> bool:
@@ -237,9 +261,7 @@ class ClickModeDispatcher:
             self.input_mode = 'SELECT'
             return True
         elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
+            return self._cancel_input_mode()
         return False
 
     def _handle_load_cargo_mode_click(self, mx: int, my: int, button: int) -> bool:
@@ -251,9 +273,7 @@ class ClickModeDispatcher:
             self.input_mode = 'SELECT'
             return True
         elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
+            return self._cancel_input_mode()
         return False
 
     def _handle_warp_target_click(self, mx: int, my: int, button: int) -> bool:
@@ -273,9 +293,7 @@ class ClickModeDispatcher:
                     logger.warning("Warp order failed: %s", msg)
             return True
         elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
+            return self._cancel_input_mode()
         return False
 
     def _handle_superweapon_click(
@@ -293,9 +311,7 @@ class ClickModeDispatcher:
                 self.input_mode = 'SELECT'
             return True
         elif button == 3:  # Right click cancels
-            self.input_mode = 'SELECT'
-            logger.debug("Input Mode: SELECT")
-            return True
+            return self._cancel_input_mode()
         return False
 
     def _handle_implode_planet_click(self, mx: int, my: int, button: int) -> bool:
