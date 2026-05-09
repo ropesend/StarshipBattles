@@ -108,12 +108,9 @@ def reset_game_state(monkeypatch, request):
 
         # PROJ-181: _default_registries removed - no cleanup needed
 
-        # Reset event handler to prevent test pollution
-        try:
-            from game.core.event_logging import set_event_handler
-            set_event_handler(None)
-        except Exception:
-            pass
+        # PROJ-390: module-level event handler global was retired; each
+        # GameSession owns its own EventBus, so there's nothing to reset
+        # at process scope between tests.
 
         # PROJ-258: Profiler is DI-managed — no module-level cleanup needed
 

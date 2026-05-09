@@ -10,25 +10,32 @@ This is NOT standard diagnostic logging. For diagnostic logging, use:
 Events are typed callback invocations for simulation observers (e.g., tests,
 replay systems, analytics). They carry structured data, not free-form messages.
 
-Usage:
-    from game.core.event_logging import log_event, set_event_handler
+Usage (PROJ-390): every event source takes an injected ``EventBus`` instance.
+``GameSession`` constructs the bus and threads it through to engines, handlers,
+and data classes that need to emit events::
 
-    # Register handler (typically in GameSession or test fixtures)
-    set_event_handler(my_handler)
-
-    # Fire events (from simulation code)
-    log_event("damage", ship_id=42, amount=100)
+    bus = EventBus(my_handler)              # owned by GameSession
+    engine = SomeEngine(event_bus=bus)      # constructor injection
+    engine.do_thing()                       # emits via bus.log_event(...)
 
 Lifecycle:
-    - Handler is set by GameSession during game startup
-    - Handler is cleared (set to None) in test fixtures via conftest.py
-    - When no handler is registered, log_event() is a no-op
-    - Handler exceptions are caught and logged to prevent simulation crashes
+    - Each ``GameSession`` creates its own ``EventBus`` (session-scoped).
+    - Test fixtures create their own ``EventBus`` directly when needed.
+    - Buses with no handler silently drop events.
+    - Handler exceptions are caught and logged to prevent simulation crashes.
+
+History:
+    PROJ-252 introduced the session-scoped ``EventBus`` class.
+    PROJ-382 migrated the bulk of producers to constructor-injected event_bus.
+    PROJ-390 retired the module-level ``log_event`` / ``set_event_handler`` /
+    ``get_event_handler`` compatibility shim — only the ``EventBus`` class
+    remains.
 """
 import logging
 from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
+
 
 class EventBus:
     """Session-scoped event bus for structured simulation events (PROJ-252).
@@ -52,37 +59,3 @@ class EventBus:
             self._handler(event_type, **kwargs)
         except Exception:  # Intentional broad catch: third-party event handler may raise anything; instrumentation must never crash the simulation
             logger.exception(f"Event handler error for {event_type}")
-
-
-# ---------------------------------------------------------------------------
-# Module-level compatibility API
-# ---------------------------------------------------------------------------
-# The functions below maintain backward compatibility while code is migrated
-# to use explicit EventBus instances. New code should prefer EventBus directly.
-
-_event_handler: Optional[Callable[..., Any]] = None
-
-
-def set_event_handler(handler: Optional[Callable[..., Any]]) -> None:
-    """Register a callback for structured events."""
-    global _event_handler
-    _event_handler = handler
-
-
-def get_event_handler() -> Optional[Callable[..., Any]]:
-    """Get the current event handler (for testing/introspection)."""
-    return _event_handler
-
-
-def log_event(event_type: str, **kwargs: Any) -> None:
-    """Fire a structured event through the registered handler.
-
-    Handler exceptions are caught and logged to prevent simulation code
-    from crashing due to event handler bugs.
-    """
-    if _event_handler is None:
-        return
-    try:
-        _event_handler(event_type, **kwargs)
-    except Exception:  # Intentional broad catch: third-party event handler may raise anything; instrumentation must never crash the simulation
-        logger.exception(f"Event handler error for {event_type}")

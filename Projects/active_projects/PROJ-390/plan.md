@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate ~12 callers + retire module-level shim | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate ~12 callers + retire module-level shim | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
 **Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Action:** Phase 1 complete. Module-level `log_event` / `set_event_handler` / `get_event_handler` and the `_event_handler` global deleted from `game/core/event_logging.py`. Re-exports stripped from `game/core/__init__.py`. Projectile `_default_event_logger` rewritten as a no-op (PROJ-382's injectable `event_logger=` is the canonical path now). `conftest.py` cleanup hook removed. Obsolete `tests/unit/core/event_logging/test_event_logging.py` deleted. `docs/02_PATTERNS.md` §10 rewritten — "compatibility shim" sentence gone, constructor injection now documented as the only supported pattern.
+**Next Action:** User verification + closeout commit
 **Blockers:** None
 
 ## Overview
@@ -49,8 +49,8 @@ Retires the module-level `log_event()`, `set_event_handler()`, `get_event_handle
 - [findings/bundling_decisions.md](findings/bundling_decisions.md) — interactive bundling record (shared across siblings)
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
-- [ ] No remaining module-level `log_event` / `set_event_handler` / `get_event_handler` callers (`grep -rn -E "from game.core.event_logging import (log_event|set_event_handler|get_event_handler)" .`)
-- [ ] No remaining process-global `_event_handler` in `event_logging.py`
+- [x] All phase checklists complete
+- [x] All tests passing (focused: 41 event_logging/event_bus + 118 EventBus consumers + 226 projectile tests; full sharded suite to be re-run as final closeout)
+- [x] No remaining module-level `log_event` / `set_event_handler` / `get_event_handler` callers in `game/`, `tests/`, `combat_lab/`, `Tools/` — only historical references in `_marked_for_deletion_2026-05-29/`, archived audits, and project-plan markdown remain.
+- [x] No remaining process-global `_event_handler` in `event_logging.py`
 - [ ] User verified

@@ -5,16 +5,19 @@ from game.engine.physics import PhysicsBody
 from game.core.constants import AttackType
 
 
-def _default_event_logger(event_type: str, **kwargs: Any) -> None:
-    """PROJ-382 Phase 2 (Pattern #10): default event-log dispatcher.
+def _default_event_logger(event_type: str, **kwargs: Any) -> None:  # noqa: ARG001 — no-op default; signature kept for callback contract
+    """PROJ-390: no-op default event-log dispatcher.
 
-    Resolved lazily so the projectile module no longer holds a top-level
-    import of ``game.core.event_logging.log_event``.  Tests / production
-    callers may inject a different ``event_logger`` callable through the
-    constructor to redirect telemetry.
+    The default is deliberately silent.  PROJ-382 Phase 2 (Pattern #10)
+    introduced the injectable ``event_logger=`` constructor parameter so
+    callers that care about projectile telemetry — `BattleEngine`,
+    tests, replay tools — pass a closure that routes through their
+    session-scoped ``EventBus``.  The previous default lazy-imported the
+    module-level ``log_event`` shim; PROJ-390 retired that shim and
+    replaced this default with a no-op so untouched callers do not
+    silently fall back to a process-global handler.
     """
-    from game.core.event_logging import log_event
-    log_event(event_type, **kwargs)
+    return
 
 logger = logging.getLogger(__name__)
 from game.core.config import PhysicsConfig

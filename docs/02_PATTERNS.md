@@ -2,7 +2,7 @@
 
 Balanced compact derivative of `docs/02_PATTERNS.md` and
 `AgentCoordination/Scratchpad/reports/02_PATTERNS_ALT_compact.md`.
-Source doc last verified 2026-05-06. This version removes release-note
+Source doc last verified 2026-05-08. This version removes release-note
 archaeology, preserves current contracts and extension recipes, and fixes the
 stale pattern count to 35.
 
@@ -244,7 +244,7 @@ Workshop event bus contract:
 Strategy/core event logging:
 - `game/core/event_logging.py::EventBus` is separate structured event logging for simulation/strategy events.
 - Each `GameSession` creates its own event bus to avoid process-global mutable state.
-- Module-level `log_event()` is a compatibility shim; new code should prefer explicit `EventBus` injection.
+- Constructor injection is the only supported pattern: every event-emitting engine, handler, or data class takes an `event_bus: EventBus` parameter (or, for projectiles, an `event_logger=` callable that closes over a session-scoped bus). PROJ-390 retired the module-level `log_event()` / `set_event_handler()` / `get_event_handler()` compatibility shim — there is no fallback path.
 
 ## 11. Surface Caching
 
