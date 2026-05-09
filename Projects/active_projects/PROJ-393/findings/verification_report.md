@@ -68,6 +68,38 @@ None for this bundle.
 - The `# NOQA: legacy-retained` comment misled the audit; PROJ-270's archive doesn't mean these are dead, just that *the cleanup is unscheduled*. The real refactor (route Combat Lab visual mode through a non-attribute-stuffing mechanism) is non-trivial and out of PROJ-393's scope.
 - Recommendation: file a follow-up project (`PROJ-39x: Combat Lab BattleScreen attribute reclaim`) that designs the proper extraction, with full test_lab integration coverage. PROJ-393 only handles "true legacy" code; this one is "in-flight without a clear owner."
 
+## Stage-Boundary Regressions (Closeout Followup)
+
+The orchestrator's stage-boundary sharded run after PROJ-393's closeout
+commit caught 3 test regressions that the phase-scoped focused tests in
+the original execution missed. All 3 were caused by the production
+fallback removals; in each case the test still exercised the deleted
+fallback path via implicit defaults.
+
+| Test | Failure cause | Fix |
+|---|---|---|
+| `tests/unit/strategy/engine/test_transfer_order.py::TestOrderProcessorTransfer::test_process_transfer_load_passengers_from_colony` | Called passenger LOAD without `species_id`, hit the deleted Legacy/Default first-species fallback (LEG-04-004), got `amount_transferred=0`. | Added `species_id='human'` to the order params (matches the planet's single SpeciesPopulation race_id). |
+| `tests/unit/strategy/engine/test_transfer_order.py::TestOrderProcessorTransfer::test_transfer_partial_amount` | Same root cause as above. | Same fix — explicit `species_id='human'`. |
+| `tests/integration/ui/build_queue_screen/test_drag_handler_multi_queue.py::test_mouse_motion_pops_from_queue_source` | Asserted `len(construction_queue) == 1` after drag-pickup, but the deleted in-place `construction_queue.pop(idx)` fallback (LEG-03-006) means the canonical path now relies on the injected `on_remove_from_queue` callback to actually mutate the queue. The fixture's `MagicMock()` callback was a no-op. | Reworked the fixture to inject a closure that pops from `single_queue_source.construction_queue`, simulating production's command-dispatch semantics. |
+
+### Lesson — test-side audit gap
+
+The Phase 2/3 checklists called for grepping `tests/` for the affected
+constructor or function before deleting the production fallback. That
+audit ran successfully for the build_queue_drag_handler and
+empire_build_queue_window cases, but missed two failure shapes:
+
+1. `test_drag_handler_multi_queue.py` already passed `on_remove_from_queue=MagicMock()` (added during the original Phase 2 fix), so it appeared migrated — but the `MagicMock` no-op left the assertion `len(queue) == 1` unsatisfiable. The right migration was to inject a real list-mutator, not just a Mock.
+2. `test_transfer_order.py` exercises `OrderProcessor` end-to-end with real planet/fleet builders, and the order params dict simply omitted `species_id` rather than naming it. A `species_id` text grep didn't surface this site, and the phase-scoped focused tests (`pytest -k "transfer_branches or transfer_handler"`) didn't reach this integration-shaped path.
+
+The phase-scoped focused tests passed because they target the
+unit-level handler/branch files, not the broader order-processor
+integration tests. The stage-boundary sharded suite was the right
+safety net here. **Future audit step:** when deleting a production
+fallback that supplies an implicit default, also grep test fixtures
+for params dicts / Mock injection sites that omit the now-required
+field.
+
 ## Implementation Notes
 
 ### Phase 1, Task 1.1 (LEG-02-017) — `PROJ-258` references in `game/context.py`
