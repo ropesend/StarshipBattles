@@ -10,7 +10,7 @@ Compact reference for exception contracts, error codes, logging, JSON persistenc
 - `game/core/error_codes.py`: `ErrorCode` enum.
 - `game/core/json_utils.py`: canonical JSON file helpers.
 - `game/core/validation_helpers.py`: strict `from_dict()` validation helpers.
-- `game/core/event_logging.py`: session-scoped `EventBus` plus module-level compatibility API.
+- `game/core/event_logging.py`: session-scoped `EventBus` (PROJ-252; PROJ-390 retired the module-level compatibility shim).
 - `game/strategy/engine/turn_engine.py`: `_time_phase()` and rollback boundary.
 - `game/strategy/engine/turn_state_snapshot.py`: pre-turn snapshot capture, restore, crash dump.
 - `game/strategy/engine/turn_phase_registry.py`: 15 tick phases and 6 end-of-turn phases.
@@ -144,14 +144,15 @@ Avoid `print()`, `traceback.print_exc()`, custom logger wrappers such as deleted
 
 ## Structured Events
 
-`game/core/event_logging.py` now exposes a session-scoped `EventBus`:
+`game/core/event_logging.py` exposes a session-scoped `EventBus` class (PROJ-252):
 
 - `EventBus(handler=None)`: owns a per-session handler.
-- `EventBus.log_event(event_type, **kwargs)`: emits structured event data.
+- `EventBus.set_handler(handler)`: replace the handler on this bus.
+- `EventBus.log_event(event_type, **kwargs)`: emits structured event data through the bus's handler.
 - Handler exceptions are caught with an intentional broad catch and logged so instrumentation cannot crash simulation.
 - When no handler is registered, `log_event()` is a no-op. Tests rely on this; do not raise on missing handler.
 
-The module-level `set_event_handler()`, `get_event_handler()`, and `log_event()` functions remain compatibility API. New strategy/session code should prefer explicit `EventBus` injection. Do not use structured events for diagnostic logging.
+Constructor injection is the only supported path: `GameSession` constructs the bus and threads it through to engines, handlers, and data classes that need to emit events (or, for projectiles, an `event_logger=` callable that closes over a session-scoped bus). PROJ-390 retired the module-level `log_event()` / `set_event_handler()` / `get_event_handler()` compatibility shim — there is no fallback path. Do not use structured events for diagnostic logging.
 
 ## JSON And Persistence
 

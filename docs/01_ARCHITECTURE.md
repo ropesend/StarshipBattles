@@ -93,7 +93,7 @@ Important modules:
 - `registry.py`: `GameRegistries`, `RegistryManager`, `DefaultRegistryProvider`, `TestRegistryProvider`.
 - `exceptions.py`: 27 exception classes, including strategy, LLM, and image-service hierarchies.
 - `error_codes.py`: `ErrorCode`.
-- `event_logging.py`: `EventBus`, event handler accessors, `log_event`.
+- `event_logging.py`: session-scoped `EventBus` class (constructor-injected; PROJ-390 retired the module-level shim).
 - `formula_evaluator.py`: AST-based formula evaluation.
 - `validation.py`: `ValidationResult`, `IValidationRule`.
 - `paths.py`: file/path constants.

@@ -7,3 +7,5 @@
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-05-09 | Project initialized | Starting point for Tier 3: stale docs + architecture wording sweep (D-01..D-09) |
+| 2026-05-09 | D-03 reconciliation: 05_ERROR_HANDLING.md | Live `EventBus` (`game/core/event_logging.py`) only exposes `__init__(handler=None)`, `set_handler(handler)`, and `log_event(event_type, **kwargs)`. The module-level `log_event` / `set_event_handler` / `get_event_handler` shim was retired by PROJ-390 and the file no longer defines those functions. Doc previously stated the shim "remains compatibility API"; replaced with the session-scoped, constructor-injected pattern matching `02_PATTERNS.md` §6 EventBus and the module's own docstring. Also corrected the Source Files line and renamed `set_event_handler` to the live method name `set_handler`. |
+| 2026-05-09 | D-03 reconciliation: 01_ARCHITECTURE.md line 96 | Was: "`EventBus`, event handler accessors, `log_event`." That implied the module-level accessors still exist. Replaced with: "session-scoped `EventBus` class (constructor-injected; PROJ-390 retired the module-level shim)." |
