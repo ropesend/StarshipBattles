@@ -323,3 +323,118 @@ class TestBug115CancelAfterModalLeak:
             NewGameSetupScreen.process_event(screen, event)
 
         on_start.assert_called_once()
+
+
+# =============================================================================
+# PROJ-400 — Regression: production _create_ui() construction path
+# =============================================================================
+
+
+class TestCreateUiConstructionPath:
+    """PROJ-400 (Tier 1 B-01): cover the production widget-construction
+    path so any future ``self.<deleted-static>()`` call inside
+    ``_create_ui()`` is caught by tests instead of crashing the live
+    "New Game" UI.
+
+    PROJ-392 deleted ``NewGameSetupScreen.generate_default_save_name``
+    (a static wrapper) but missed an unmigrated production caller at
+    ``new_game_setup_screen.py:348``. The bypass-init test fixture
+    (``MockNewGameSetupUiBuilder``) skips ``_create_ui`` entirely, so
+    none of the existing ~30 ``test_new_game_setup_extended`` tests
+    exercised the bug. This class drives ``_create_ui`` directly with
+    ``pygame_gui.elements`` patched out, so the real method body runs
+    end-to-end and any missing-static blind spot is surfaced.
+    """
+
+    def _build_screen_for_create_ui(self):
+        """Construct a bypass-init screen with the cheap delegates wired
+        but no widget tree; ``_create_ui`` will populate the widget
+        slots itself when invoked."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+        from tests.fixtures.new_game_setup_ui_builder import (
+            NullNewGameSetupUiBuilder,
+        )
+
+        with bypass_init(NewGameSetupScreen):
+            screen = make_ui_widget(
+                NewGameSetupScreen,
+                rect=pygame.Rect(0, 0, 650, 600),
+                manager=MagicMock(name="ui_manager"),
+                on_start_callback=MagicMock(name="on_start_callback"),
+                on_cancel_callback=MagicMock(name="on_cancel_callback"),
+                ui_builder=NullNewGameSetupUiBuilder(),
+            )
+
+        # Mock the UIWindow container surface that _create_ui reads.
+        container = MagicMock(name="container")
+        container.get_size.return_value = (640, 600)
+        screen.get_container = MagicMock(return_value=container)
+        return screen
+
+    def test_create_ui_completes_without_attribute_error(self):
+        """``_create_ui()`` must run end-to-end without
+        ``AttributeError``. Pre-fix this fails at line 348 with
+        ``'NewGameSetupScreen' object has no attribute
+        'generate_default_save_name'``.
+        """
+        screen = self._build_screen_for_create_ui()
+
+        # Patch every pygame_gui.elements constructor to a MagicMock so
+        # the real _create_ui body executes without instantiating live
+        # widgets.
+        with patch("game.ui.screens.new_game_setup_screen.pygame_gui.elements") as elements:
+            elements.UILabel.side_effect = lambda **kw: MagicMock(name="UILabel")
+            elements.UITextEntryLine.side_effect = lambda **kw: MagicMock(
+                name="UITextEntryLine"
+            )
+            elements.UIDropDownMenu.side_effect = lambda **kw: MagicMock(
+                name="UIDropDownMenu"
+            )
+            elements.UIHorizontalSlider.side_effect = lambda **kw: MagicMock(
+                name="UIHorizontalSlider"
+            )
+            elements.UIButton.side_effect = lambda **kw: MagicMock(name="UIButton")
+
+            # The real assertion: this call must not raise.
+            screen._create_ui()
+
+        # And the save-name input must have been seeded with the
+        # canonical default-save-name value.
+        screen.save_name_input.set_text.assert_called_once()
+        seeded = screen.save_name_input.set_text.call_args[0][0]
+        assert isinstance(seeded, str) and seeded.startswith("save game ")
+
+    def test_create_ui_uses_controller_default_save_name(self):
+        """The default save-name source is
+        ``NewGameSetupController.generate_default_save_name`` — the
+        canonical static method PROJ-392 migrated all other callers to.
+        """
+        from game.ui.screens.new_game_setup_controller import (
+            NewGameSetupController,
+        )
+
+        screen = self._build_screen_for_create_ui()
+
+        sentinel = "sentinel-default-save-name"
+        with patch("game.ui.screens.new_game_setup_screen.pygame_gui.elements") as elements, \
+             patch.object(
+                 NewGameSetupController,
+                 "generate_default_save_name",
+                 return_value=sentinel,
+             ) as gen:
+            elements.UILabel.side_effect = lambda **kw: MagicMock(name="UILabel")
+            elements.UITextEntryLine.side_effect = lambda **kw: MagicMock(
+                name="UITextEntryLine"
+            )
+            elements.UIDropDownMenu.side_effect = lambda **kw: MagicMock(
+                name="UIDropDownMenu"
+            )
+            elements.UIHorizontalSlider.side_effect = lambda **kw: MagicMock(
+                name="UIHorizontalSlider"
+            )
+            elements.UIButton.side_effect = lambda **kw: MagicMock(name="UIButton")
+
+            screen._create_ui()
+
+        gen.assert_called_once()
+        screen.save_name_input.set_text.assert_called_once_with(sentinel)

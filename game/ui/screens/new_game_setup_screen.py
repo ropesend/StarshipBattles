@@ -345,7 +345,9 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             container=container,
             placeholder_text="Enter save name...",
         )
-        self.save_name_input.set_text(self.generate_default_save_name())
+        self.save_name_input.set_text(
+            NewGameSetupController.generate_default_save_name()
+        )
         y_offset += 45
 
         # Player count label and dropdown.

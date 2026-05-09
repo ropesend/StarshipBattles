@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Fix call site + add coverage | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Fix call site + add coverage | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
-**Active Phase:** Phase 1
-**Last Action:** Project skeleton created from REMEDIATION_PLAN B-01
-**Next Action:** Implement Phase 1 (single phase, single file fix + regression test)
+**Active Phase:** Closeout
+**Last Action:** Phase 1 complete — `_create_ui()` now calls `NewGameSetupController.generate_default_save_name()`; regression test class `TestCreateUiConstructionPath` (2 tests) added; focused suite 104 passed.
+**Next Action:** User verification of "New Game" UI launch. Awaiting confirmation to archive.
 **Blockers:** None
 
 ## Overview
