@@ -2,7 +2,6 @@
 Tests for QuickstartBuilder - Factory for creating pre-configured game sessions.
 
 Tests cover:
-- Fixture path functions (get_quickstart_fixtures_dir, get_quickstart_races_dir, get_quickstart_designs_dir)
 - QuickstartBuilder.load_test_race (valid, missing, invalid JSON)
 - QuickstartBuilder.build_1p_config (returns GameConfig, player count, is_human, prefix, defaults)
 - QuickstartBuilder.build_2p_config (player count, both human)
@@ -16,32 +15,12 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from game.strategy.quickstart_builder import (
-    get_quickstart_races_dir,
-    get_quickstart_designs_dir,
     QuickstartBuilder,
     INITIAL_COMPLEXES,
 )
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.design_library import DesignLoadResult
-
-
-class TestStarterDataPathFunctions:
-    """Tests for starter data directory path functions."""
-
-    def test_get_quickstart_races_dir_returns_path(self):
-        """get_quickstart_races_dir returns a Path under data/."""
-        result = get_quickstart_races_dir()
-
-        assert isinstance(result, Path)
-        assert result.name == "races"
-
-    def test_get_quickstart_designs_dir_returns_path(self):
-        """get_quickstart_designs_dir returns a Path under data/."""
-        result = get_quickstart_designs_dir()
-
-        assert isinstance(result, Path)
-        assert result.name == "designs"
 
 
 class TestQuickstartBuilderLoadTestRace:
@@ -145,7 +124,7 @@ class TestQuickstartBuilderCopyDesigns:
         source_dir.mkdir()
 
         with patch(
-            "game.strategy.quickstart_builder.get_quickstart_designs_dir",
+            "game.strategy.quickstart_builder.Paths.get_starter_designs_dir",
             return_value=source_dir
         ):
             result = QuickstartBuilder.copy_quickstart_designs(str(tmp_path / "save"), [1])
@@ -162,7 +141,7 @@ class TestQuickstartBuilderCopyDesigns:
         save_path.mkdir()
 
         with patch(
-            "game.strategy.quickstart_builder.get_quickstart_designs_dir",
+            "game.strategy.quickstart_builder.Paths.get_starter_designs_dir",
             return_value=source_dir
         ):
             result = QuickstartBuilder.copy_quickstart_designs(str(save_path), [1, 2])
@@ -182,7 +161,7 @@ class TestQuickstartBuilderCopyDesigns:
         save_path.mkdir()
 
         with patch(
-            "game.strategy.quickstart_builder.get_quickstart_designs_dir",
+            "game.strategy.quickstart_builder.Paths.get_starter_designs_dir",
             return_value=source_dir
         ):
             result = QuickstartBuilder.copy_quickstart_designs(str(save_path), [1])
@@ -202,7 +181,7 @@ class TestQuickstartBuilderCopyDesigns:
         save_path.mkdir()
 
         with patch(
-            "game.strategy.quickstart_builder.get_quickstart_designs_dir",
+            "game.strategy.quickstart_builder.Paths.get_starter_designs_dir",
             return_value=source_dir
         ):
             with patch("shutil.copy2", side_effect=OSError("Permission denied")):

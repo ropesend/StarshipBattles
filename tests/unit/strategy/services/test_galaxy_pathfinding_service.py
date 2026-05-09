@@ -109,11 +109,11 @@ def test_find_nearest_system() -> None:
     assert svc.find_nearest_system(HexCoord(11, 0)) is c
 
 
-def test_find_path_deep_space_static() -> None:
-    """No graph required for deep-space path."""
-    path = GalaxyPathfindingService.find_path_deep_space(
-        HexCoord(0, 0), HexCoord(3, 0),
-    )
+def test_find_path_deep_space_via_hex_linedraw() -> None:
+    """Deep-space pathfinding now uses ``hex_linedraw`` directly (PROJ-392)."""
+    from game.core.hex_math import hex_linedraw
+
+    path = hex_linedraw(HexCoord(0, 0), HexCoord(3, 0))
     assert path[0] == HexCoord(0, 0)
     assert path[-1] == HexCoord(3, 0)
 
@@ -125,12 +125,11 @@ def test_strip_start_hex_static() -> None:
     assert stripped == [HexCoord(1, 0), HexCoord(2, 0)]
 
 
-def test_pathfinding_shim_forwards_to_service() -> None:
-    """Phase 4 shims must produce identical results to direct service calls."""
+def test_pathfinding_shim_forwards_to_hex_linedraw() -> None:
+    """Phase 4 shim must produce identical results to direct ``hex_linedraw`` (PROJ-392)."""
+    from game.core.hex_math import hex_linedraw
     from game.strategy.data.pathfinding import find_path_deep_space
 
     shim_path = find_path_deep_space(HexCoord(0, 0), HexCoord(2, 0))
-    direct_path = GalaxyPathfindingService.find_path_deep_space(
-        HexCoord(0, 0), HexCoord(2, 0),
-    )
+    direct_path = hex_linedraw(HexCoord(0, 0), HexCoord(2, 0))
     assert shim_path == direct_path

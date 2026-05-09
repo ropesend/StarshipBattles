@@ -38,10 +38,8 @@ def strip_start_hex(current_location: HexCoord, path: Optional[PathT]) -> Option
 
 
 def find_path_deep_space(start: HexCoord, end: HexCoord) -> List[HexCoord]:
-    from game.strategy.services.galaxy_pathfinding_service import (
-        GalaxyPathfindingService,
-    )
-    return GalaxyPathfindingService.find_path_deep_space(start, end)
+    from game.core.hex_math import hex_linedraw
+    return hex_linedraw(start, end)
 
 
 def _pathfinder_for(galaxy):

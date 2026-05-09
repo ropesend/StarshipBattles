@@ -36,16 +36,6 @@ INITIAL_COMPLEXES = [
 ]
 
 
-def get_quickstart_races_dir() -> Path:
-    """Return the starter races data directory."""
-    return Paths.get_starter_races_dir()
-
-
-def get_quickstart_designs_dir() -> Path:
-    """Return the starter designs data directory."""
-    return Paths.get_starter_designs_dir()
-
-
 class QuickstartBuilder:
     """Factory for creating pre-configured game sessions."""
 
@@ -60,7 +50,7 @@ class QuickstartBuilder:
         Returns:
             RaceConfig if found, None otherwise
         """
-        race_path = get_quickstart_races_dir() / race_filename
+        race_path = Paths.get_starter_races_dir() / race_filename
         if not race_path.exists():
             logger.error(f"Quickstart race not found: {race_path}")
             return None
@@ -225,7 +215,7 @@ class QuickstartBuilder:
         Returns:
             True if successful, False otherwise
         """
-        designs_source = get_quickstart_designs_dir()
+        designs_source = Paths.get_starter_designs_dir()
         if not designs_source.exists():
             logger.error(f"Quickstart designs directory not found: {designs_source}")
             return False

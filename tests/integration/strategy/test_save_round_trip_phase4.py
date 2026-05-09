@@ -35,10 +35,11 @@ def test_pathfinder_attached_after_init() -> None:
 
 
 def test_pathfinder_callable_through_facade() -> None:
-    """Smoke check: real Galaxy + pathfinder produces a deep-space path."""
+    """Smoke check: real Galaxy + pathfinder produces a hybrid path."""
     from game.core.hex_math import HexCoord
 
     galaxy = Galaxy(radius=10)
-    path = galaxy._pathfinder.find_path_deep_space(HexCoord(0, 0), HexCoord(2, 0))
+    path = galaxy._pathfinder.find_hybrid_path(HexCoord(0, 0), HexCoord(2, 0))
+    assert path is not None
     assert path[0] == HexCoord(0, 0)
     assert path[-1] == HexCoord(2, 0)

@@ -52,15 +52,12 @@ from game.ui.screens.strategy_render.systems import (
     draw_star as _layer_draw_star,
     draw_system_details as _layer_draw_system_details,
     draw_systems as _layer_draw_systems,
-    load_star_image as _layer_load_star_image,
 )
 from game.ui.screens.strategy_render.dyson_spheres import (
     draw_dyson_spheres as _layer_draw_dyson_spheres,
-    load_dyson_sphere_image as _layer_load_dyson_sphere_image,
 )
 from game.ui.screens.strategy_render.planets import (
     draw_planet_sprite as _layer_draw_planet_sprite,
-    load_planet_v3_image as _layer_load_planet_v3_image,
 )
 from game.ui.screens.strategy_render.storms import (
     draw_storms as _layer_draw_storms,
@@ -214,9 +211,6 @@ class StrategyRenderer:
     def _draw_systems(self, screen) -> None:
         _layer_draw_systems(self, screen)
 
-    def _load_star_image(self, star) -> Any:
-        return _layer_load_star_image(self, star)
-
     def _draw_colony_marker(self, screen, sys, world_pos) -> None:
         _layer_draw_colony_marker(self, screen, sys, world_pos)
 
@@ -237,12 +231,6 @@ class StrategyRenderer:
 
     def _draw_planet_sprite(self, screen, planet, center_pos, size) -> None:
         _layer_draw_planet_sprite(self, screen, planet, center_pos, size)
-
-    def _load_planet_v3_image(self, image_id) -> Any:
-        return _layer_load_planet_v3_image(self, image_id)
-
-    def _load_dyson_sphere_image(self) -> Any:
-        return _layer_load_dyson_sphere_image(self)
 
     def _draw_fleets(self, screen) -> None:
         _layer_draw_fleets(self, screen)

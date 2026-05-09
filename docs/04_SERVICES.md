@@ -378,9 +378,11 @@ numeric multiplier to `calculate_fleet_speed_with_strategic_mult`.
 ### Pathfinding, Intercept, Deployment, Task Groups
 
 `GalaxyPathfindingService` (`game/strategy/services/galaxy_pathfinding_service.py`)
-is pathfinding over `IGalaxySystemGraph`. API: `find_path_deep_space`,
+is pathfinding over `IGalaxySystemGraph`. API:
 `find_path_interstellar`, `find_hybrid_path`, `find_nearest_system`,
-`get_system_at_hex`, `strip_start_hex`.
+`get_system_at_hex`, `strip_start_hex`. Straight-line deep-space paths
+use ``hex_linedraw`` (`game.core.hex_math`) directly; the legacy
+`find_path_deep_space` static was removed in PROJ-392.
 
 `InterceptCalculator` (`game/strategy/services/intercept_calculator.py`) holds a
 `GalaxyPathfindingService` and calculates an intercept hex for a fleet or

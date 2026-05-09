@@ -6,7 +6,6 @@ to give pathfinding a stub-able protocol surface
 without instantiating a full Galaxy.
 
 Public API:
-- ``find_path_deep_space(start, end)`` — straight-line hex path.
 - ``find_path_interstellar(start_system, end_system)`` — A* over warp lanes.
 - ``find_hybrid_path(start_hex, end_hex, fleet=None, can_warp=None)`` —
   combined deep-space + warp-network path.
@@ -57,11 +56,6 @@ class GalaxyPathfindingService:
                 return path[1:]
             return list(path[1:])
         return path
-
-    @staticmethod
-    def find_path_deep_space(start: HexCoord, end: HexCoord) -> List[HexCoord]:
-        """Straight-line hex path. No obstacles."""
-        return hex_linedraw(start, end)
 
     def find_path_interstellar(
         self,
@@ -168,17 +162,17 @@ class GalaxyPathfindingService:
 
         # Same system -> deep space only.
         if start_sys and end_sys and start_sys == end_sys:
-            return self.find_path_deep_space(start_hex, end_hex)
+            return hex_linedraw(start_hex, end_hex)
 
         # Cannot warp -> direct hex path.
         if not can_use_warp:
-            return self.find_path_deep_space(start_hex, end_hex)
+            return hex_linedraw(start_hex, end_hex)
 
         # Interstellar with warp.
         if start_sys and end_sys:
             sys_path = self.find_path_interstellar(start_sys, end_sys)
             if not sys_path:
-                return self.find_path_deep_space(start_hex, end_hex)
+                return hex_linedraw(start_hex, end_hex)
 
             full_path: List[HexCoord] = []
             current_hex = start_hex
@@ -193,7 +187,7 @@ class GalaxyPathfindingService:
                 )
                 if target_wp:
                     wp_global = curr_sys.global_location + target_wp.location
-                    segment = self.find_path_deep_space(current_hex, wp_global)
+                    segment = hex_linedraw(current_hex, wp_global)
                     if segment:
                         full_path.extend(segment)
 
@@ -209,9 +203,9 @@ class GalaxyPathfindingService:
                         full_path.append(next_sys.global_location)
                         current_hex = next_sys.global_location
 
-            final_segment = self.find_path_deep_space(current_hex, end_hex)
+            final_segment = hex_linedraw(current_hex, end_hex)
             if final_segment:
                 full_path.extend(final_segment)
             return full_path
 
-        return self.find_path_deep_space(start_hex, end_hex)
+        return hex_linedraw(start_hex, end_hex)
