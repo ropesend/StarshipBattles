@@ -258,7 +258,6 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self.btn_randomize: Optional[pygame_gui.elements.UIButton] = None
         self.btn_randomize_all: Optional[pygame_gui.elements.UIButton] = None
         self.error_label: Optional[pygame_gui.elements.UILabel] = None
-        self.name_input = None  # legacy attr (Identity panel replaced this)
         self.ship_preview_scroll: Optional[
             pygame_gui.elements.UIScrollingContainer
         ] = None

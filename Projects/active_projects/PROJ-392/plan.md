@@ -13,14 +13,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical — zero-call-site quick deletions | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major — inline-and-delete + small migrations | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Critical — zero-call-site quick deletions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Major — inline-and-delete + small migrations | Active | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete — 3 zero-call-site deletions landed (LEG-01-001 / LEG-02-007 / LEG-03-025); 14 test readers of `expanded_ships` migrated to `_expanded_ids` after audit's "0 readers" claim was found incorrect
+**Next Action:** Begin Phase 2 tasks (9 inline-and-delete + small migrations)
 **Blockers:** None
 
 ## Overview

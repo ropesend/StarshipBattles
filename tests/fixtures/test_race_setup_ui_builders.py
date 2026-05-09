@@ -58,7 +58,6 @@ def test_mock_builder_populates_widget_slots():
     assert screen.btn_load is not None
     # Misc widget refs
     assert screen.error_label is not None
-    assert screen.name_input is not None
     assert screen.ship_preview_scroll is not None
     # Tab + step collections
     assert len(screen.step_panels) == 7

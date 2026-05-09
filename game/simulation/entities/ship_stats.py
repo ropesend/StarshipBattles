@@ -499,7 +499,3 @@ class ShipStatsCalculator:
     def calculate_ability_totals(self, components: List["Component"]) -> Dict[str, Any]:
         """Total values for all abilities. Delegates to ``ability_aggregator``."""
         return calculate_ability_totals(components)
-
-    # Legacy module-internal helper preserved for code that imported it directly.
-    def _priority_sort_key(self, c: "Component") -> int:
-        return _cmd.priority_sort_key(c)

@@ -282,7 +282,7 @@ class TestShipStatsPanel:
         panel._ship_banner_rects = {"Hero": (40, 65)}
         result = panel.handle_click(10, 50)
         assert result is True
-        assert "Hero" in panel.expanded_ships
+        assert "Hero" in panel._expanded_ids
 
     def test_handle_click_with_shift_returns_focus_ship_tuple(self, battle_panels_module):
         mod, mock_pygame = battle_panels_module
@@ -299,7 +299,7 @@ class TestShipStatsPanel:
         result = panel.handle_click(10, 50)
         assert result == ("focus_ship", "Hero")
         # Expansion NOT toggled in shift-click path
-        assert "Hero" not in panel.expanded_ships
+        assert "Hero" not in panel._expanded_ids
 
     def test_handle_click_outside_any_banner_returns_false(self, battle_panels_module):
         mod, _ = battle_panels_module
@@ -323,7 +323,7 @@ class TestShipStatsPanel:
         # Screen y=70 → rel_y=70+50=120 → hits [110, 135)
         result = panel.handle_click(10, 70)
         assert result is True
-        assert "Hero" in panel.expanded_ships
+        assert "Hero" in panel._expanded_ids
 
 
 # ===========================================================================

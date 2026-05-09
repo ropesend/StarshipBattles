@@ -89,7 +89,6 @@ class ShipStatsPanel(ExpandableIdPanel):
     """
     def __init__(self, scene, x, y, w, h):
         super().__init__(scene, x, y, w, h)
-        self.expanded_ships = self._expanded_ids  # Backward-compatible alias
         self.scroll = ScrollState()
         self.content_height = 0
         self._ship_banner_rects = {}  # ship_id -> (y_start, y_end) recorded during draw

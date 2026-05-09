@@ -182,7 +182,7 @@ class TestShipStatsPanelExtended:
         panel.handle_click(10, 50)
 
         # Should track by ship name (fallback ID)
-        assert "Expandable" in panel.expanded_ships
+        assert "Expandable" in panel._expanded_ids
 
     def test_get_ship_id_with_dto_id(self):
         """Test _get_ship_id() uses .id attribute for DTOs."""
@@ -206,7 +206,7 @@ class TestShipStatsPanelExtended:
 
         assert not panel._is_expanded(ship)
 
-        panel.expanded_ships.add("test_id")
+        panel._expanded_ids.add("test_id")
         assert panel._is_expanded(ship)
 
     def test_toggle_expanded_adds_and_removes(self):
@@ -219,11 +219,11 @@ class TestShipStatsPanelExtended:
 
         # Add
         panel._toggle_expanded(ship)
-        assert "toggle_id" in panel.expanded_ships
+        assert "toggle_id" in panel._expanded_ids
 
         # Remove
         panel._toggle_expanded(ship)
-        assert "toggle_id" not in panel.expanded_ships
+        assert "toggle_id" not in panel._expanded_ids
 
     def test_handle_click_returns_false_for_miss(self):
         """Test handle_click returns False for clicks outside ship entries."""

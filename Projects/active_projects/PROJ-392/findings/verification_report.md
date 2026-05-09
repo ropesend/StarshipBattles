@@ -39,3 +39,8 @@ None for this bundle.
 ## Out of Scope
 
 None for this bundle. UNCERTAIN-excluded items (LEG-01-008, LEG-03-012, LEG-03-013) are recorded in the shared [bundling_decisions.md](bundling_decisions.md).
+
+## Implementation-Time Corrections
+
+- **LEG-03-025** (`expanded_ships` alias): audit's "0 readers" was wrong. There are 14 test reads of `panel.expanded_ships` against `ShipStatsPanel` across 3 test files (`test_battle_panels.py`, `test_battle_panels_extended.py`, `test_battle_panels_characterization.py`). The production line `self.ui.expanded_ships = set()` in `battle_screen.py:163` is unrelated — it sets an attribute on `BattleUI`, not `ShipStatsPanel`. Resolution: deleted the alias and migrated the 14 test usages to `panel._expanded_ids` (the canonical inherited attribute from `ExpandableIdPanel`).
+- **LEG-02-007** (`name_input = None` placeholder): audit's "0 readers" was technically correct for production code, but 2 test fixtures (`tests/fixtures/race_setup_ui_builders.py`, `tests/fixtures/test_race_setup_ui_builders.py`) mocked / asserted the attribute. Cleaned both alongside the production deletion.

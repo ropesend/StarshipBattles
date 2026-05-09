@@ -81,7 +81,6 @@ class MockRaceSetupUiBuilder:
 
         # Misc widget refs.
         screen.error_label = MagicMock(name="error_label")
-        screen.name_input = MagicMock(name="name_input")
         screen.ship_preview_scroll = MagicMock(name="ship_preview_scroll")
 
         # Renderer-internal widget refs that legacy tests reach into via
