@@ -7,7 +7,7 @@ explicit ``processor`` parameter (Option B / state-bag approach).
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy
@@ -27,8 +27,8 @@ def process_implode_planet(
     fleet: Fleet,
     empire: "Empire",
     galaxy: Galaxy,
-    empires: List["Empire"],
-    component_registry: Optional[Dict[str, Any]] = None,
+    empires: list["Empire"],
+    component_registry: dict[str, Any] | None = None,
 ) -> "SuperweaponResult":
     """Process an IMPLODE_PLANET order via spec-driven dispatch.
 

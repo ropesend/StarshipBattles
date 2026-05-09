@@ -5,7 +5,7 @@ system. Ship preserved for reuse.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
@@ -26,8 +26,8 @@ def process_open_warp_point(
     fleet: Fleet,
     empire: "Empire",
     galaxy: Galaxy,
-    empires: Optional[List["Empire"]] = None,
-    component_registry: Optional[Dict[str, Any]] = None,
+    empires: list["Empire"] | None = None,
+    component_registry: dict[str, Any] | None = None,
 ) -> "SuperweaponResult":
     """Process an OPEN_WARP_POINT order via spec-driven dispatch."""
     from game.strategy.engine.superweapon_order_processor import SuperweaponResult

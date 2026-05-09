@@ -7,7 +7,7 @@ acting fleet) via SystemDestroyer. Warp points preserved.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy
@@ -29,8 +29,8 @@ def process_stellerate_star(
     fleet: Fleet,
     empire: "Empire",
     galaxy: Galaxy,
-    empires: List["Empire"],
-    component_registry: Optional[Dict[str, Any]] = None,
+    empires: list["Empire"],
+    component_registry: dict[str, Any] | None = None,
 ) -> "SuperweaponResult":
     """Process a STELLERATE_STAR order via spec-driven dispatch.
 

@@ -6,7 +6,7 @@ conditions (or sensible defaults). Ship preserved.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import Fleet
@@ -28,8 +28,8 @@ def process_create_dyson_sphere(
     fleet: Fleet,
     empire: "Empire",
     galaxy: Galaxy,
-    empires: List["Empire"],
-    component_registry: Optional[Dict[str, Any]] = None,
+    empires: list["Empire"],
+    component_registry: dict[str, Any] | None = None,
 ) -> "SuperweaponResult":
     """Process a CREATE_DYSON_SPHERE order via spec-driven dispatch."""
     from game.strategy.engine.superweapon_order_processor import SuperweaponResult

@@ -8,7 +8,7 @@ the wrong warp point.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _parse_close_target(target: Any) -> Tuple[str, Optional[HexCoord]]:
+def _parse_close_target(target: Any) -> tuple[str, HexCoord | None]:
     """Parse target into ``(destination_id, expected_hex)``.
 
     Legacy back-compat: a plain string target was the pre-PROJ-228 form.
@@ -48,8 +48,8 @@ def process_close_warp_point(
     fleet: Fleet,
     empire: "Empire",
     galaxy: Galaxy,
-    empires: Optional[List["Empire"]] = None,
-    component_registry: Optional[Dict[str, Any]] = None,
+    empires: list["Empire"] | None = None,
+    component_registry: dict[str, Any] | None = None,
 ) -> "SuperweaponResult":
     """Process a CLOSE_WARP_POINT order via spec-driven dispatch."""
     from game.strategy.engine.superweapon_order_processor import SuperweaponResult

@@ -20,7 +20,7 @@ once.
 from __future__ import annotations
 
 import os
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 from game.core.exceptions import GameException
 
@@ -28,7 +28,7 @@ T = TypeVar("T")
 
 
 def resolve_provider(
-    name: Optional[str],
+    name: str | None,
     *,
     providers: dict[str, type[T]],
     env_var: str,
@@ -36,7 +36,7 @@ def resolve_provider(
     config_error_cls: type[GameException],
     error_code: str,
     label: str,
-) -> Optional[T]:
+) -> T | None:
     """Resolve and instantiate the named provider, mirroring the shared contract.
 
     Args:
