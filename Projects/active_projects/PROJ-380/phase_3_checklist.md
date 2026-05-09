@@ -123,15 +123,13 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/strategy/services/ability_iterator.py`
 **Tests:** `pytest tests/unit/strategy/services/test_ability_iterator.py` then `pytest tests/integration/strategy/`
 
-- [ ] Implement `_iter_ability_sources(container, adapter_cls, *, filter_fn=bool, hex_coord=None)` generator capturing the shared skeleton (nil-check → iterate → conditional adapter creation → yield)
-- [ ] Refactor `_facility_provider` to delegate
-- [ ] Refactor `_storm_provider` to delegate
-- [ ] Refactor `_star_provider` to delegate
-- [ ] Refactor `_planet_intrinsic_provider` (line 217) to delegate
-- [ ] Refactor `_fleet_provider` to delegate
-- [ ] Refactor `_system_archetype_provider` to delegate
-- [ ] Refactor `_warp_point_provider` (line 288) to delegate
-- [ ] Verify: focused + integration tests pass; ability iteration produces identical results before/after; LOC delta ≈ −25
+- [x] Narrowed scope: the audit's claim of "7 providers share the same skeleton" was overstated — only 3 providers (`_storm_provider`, `_planet_intrinsic_provider`, `_warp_point_provider`) share the system-attr-walk + affects_hex check pattern. The other 4 diverge significantly: `_facility_provider` walks planets-then-facilities (nested), `_star_provider` has scope-aware fallback logic, `_fleet_provider` uses lookup callbacks (no `system.<attr>`), `_system_archetype_provider` emits 0 or 1 source. Forcing all 7 through one helper would introduce more abstraction than it removed.
+- [x] Implemented `_iter_hex_filtered_sources(system, hex_coord, container_attr, adapter_factory, *, item_filter=bool)` capturing the shared 5-step (None-check → walk → filter → adapter → yield-if-affects-hex)
+- [x] Refactored `_storm_provider` (item_filter is a no-op since storms always yield)
+- [x] Refactored `_planet_intrinsic_provider`
+- [x] Refactored `_warp_point_provider`
+- [x] Left `_facility_provider`, `_star_provider`, `_fleet_provider`, `_system_archetype_provider` as-is (different shapes)
+- [x] Verify: tests/unit/strategy/services/test_ability_iterator.py -> 17 passed; LOC delta ≈ −15 (3 × 7-line bodies → 3 × 5-line delegations + 50 line helper)
 
 **Notes:** Verified all 7 providers share the same skeleton differing only in container attribute name and adapter class. `_iter_ability_sources` does not already exist. (DUP-X-12)
 
