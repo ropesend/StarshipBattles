@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate callers + delete shim | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate callers + delete shim | Working | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1 (Working)
+**Last Action:** Re-grep enumerated actual call sites: 5 prod imports (planet_command_handlers ×4, game_session ×1) + ~25 test imports. Task 1.2 (superweapon_command_handlers) already done by PROJ-382 Phase 3.
+**Next Action:** Migrate planet_command_handlers + game_session, then test files, then delete shim.
 **Blockers:** None
 
 ## Overview

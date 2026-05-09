@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__)
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.turn_engine_config import TurnEngineConfig
 from game.strategy.engine.game_config import GameConfig
-from game.strategy.engine.command_handlers import create_default_registry
+from game.strategy.engine.handlers import create_default_registry
 from game.strategy.data.empire import Empire
 from game.strategy.data.galaxy import Galaxy
 

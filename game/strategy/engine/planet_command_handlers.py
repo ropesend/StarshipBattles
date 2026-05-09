@@ -52,7 +52,7 @@ class IssuePlanetOrderCommandHandler:
         Returns:
             ValidationResult indicating success or failure.
         """
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers.base import BaseCommandHandler
 
         # 1. Resolve + authorize (PROJ-375 DUP-X-01)
         planet, error = BaseCommandHandler._resolve_player_planet(session, cmd.planet_id)
@@ -124,7 +124,7 @@ class ClearPlanetOrdersCommandHandler:
     """Handler for ClearPlanetOrdersCommand."""
 
     def execute(self, session: 'GameSession', cmd: 'ClearPlanetOrdersCommand') -> ValidationResult:
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers.base import BaseCommandHandler
 
         planet, error = BaseCommandHandler._resolve_player_planet(session, cmd.planet_id)
         if error:
@@ -146,7 +146,7 @@ class DeletePlanetOrderCommandHandler:
     """Handler for DeletePlanetOrderCommand."""
 
     def execute(self, session: 'GameSession', cmd: 'DeletePlanetOrderCommand') -> ValidationResult:
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers.base import BaseCommandHandler
 
         planet, error = BaseCommandHandler._resolve_player_planet(session, cmd.planet_id)
         if error:
@@ -182,7 +182,7 @@ def _apply_planet_environmental_target(
         set_log: Log message for the "set" branch (planet name prepended).
         clear_log: Log message for the "clear" branch.
     """
-    from game.strategy.engine.command_handlers import BaseCommandHandler
+    from game.strategy.engine.handlers.base import BaseCommandHandler
 
     planet, error = BaseCommandHandler._resolve_player_planet(session, planet_id)
     if error:
