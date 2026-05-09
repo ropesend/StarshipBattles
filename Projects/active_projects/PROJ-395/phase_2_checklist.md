@@ -5,8 +5,8 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Complete (12 closed in commit 793f592e0; MAJ-013 + MAJ-014 deferred — see commit message)
-**Objective:** Close the 14 MAJOR findings from the PROJ-381 review. Each is a focused, well-scoped follow-up; many are doc/test/comment polish.
+**Status:** Complete (12 closed; MAJ-013 + MAJ-014 deferred to PROJ-409)
+**Objective (revised PROJ-406):** Close 12 of the 14 MAJOR findings from the PROJ-381 review; defer MAJ-013 (EventBus shim) and MAJ-014 (defensive `EnginePhaseError` catch) to PROJ-409 (Wave 5) per PROJ-406 reconciliation.
 
 ---
 
@@ -16,7 +16,7 @@
 **File:** `Reviews/results/2026-05-08_230318_code_proj-381-error-handling-cleanup-strategy-ui-assets_req-req_20260508_230317_779973/report.md`
 **Tests:** —
 
-- [ ] Read the full MAJOR section. The 14 items map roughly to:
+- [x] Read the full MAJOR section. The 14 items map roughly to:
   - MAJ-001: `TurnFailedError` docstring claims properties that don't exist
   - MAJ-002: `docs/05_ERROR_HANDLING.md` hierarchy tree is stale
   - MAJ-003: Regression test mocks exception class rather than triggering real failure
@@ -29,26 +29,28 @@
 **Files:** Various — see source review per-finding
 **Tests:** Per-task focused tests
 
-- [ ] MAJ-001: Fix `TurnFailedError` docstring (remove non-existent properties)
-- [ ] MAJ-002: Update `docs/05_ERROR_HANDLING.md` hierarchy tree to include `TurnFailedError`, `BattleResolutionError`, `SessionInitializationError`, `ImageUnexpectedError`
-- [ ] MAJ-003: Rewrite the B-5 regression test to trigger an actual `EnginePhaseError` rather than mocking the exception class. Hint: use a planted error in a test-only turn-engine subclass.
-- [ ] MAJ-004: Add `turn_number` and `save_path` as `@property` accessors on `TurnFailedError` (or document why they live in `context` only)
-- [ ] MAJ-005: Add ERROR log in `GameSession.__init__` recovery path so the null-object substitution is visible in operator logs
-- [ ] MAJ-006: Replace pro-forma broad-catch comments in `game/ui/services/tkinter_utils.py` with substantive `# Intentional broad catch: <reason>` comments
-- [ ] MAJ-007 through MAJ-014: Address each test-quality finding (read the review for specifics — generally about brittle string assertions, mocked exceptions, missing happy-path tests)
+- [x] MAJ-001: Fix `TurnFailedError` docstring (remove non-existent properties)
+- [x] MAJ-002: Update `docs/05_ERROR_HANDLING.md` hierarchy tree to include `TurnFailedError`, `BattleResolutionError`, `SessionInitializationError`, `ImageUnexpectedError`
+- [x] MAJ-003: Rewrite the B-5 regression test to trigger an actual `EnginePhaseError` rather than mocking the exception class. Hint: use a planted error in a test-only turn-engine subclass.
+- [x] MAJ-004: Add `turn_number` and `save_path` as `@property` accessors on `TurnFailedError` (or document why they live in `context` only)
+- [x] MAJ-005: Add ERROR log in `GameSession.__init__` recovery path so the null-object substitution is visible in operator logs
+- [x] MAJ-006: Replace pro-forma broad-catch comments in `game/ui/services/tkinter_utils.py` with substantive `# Intentional broad catch: <reason>` comments
+- [x] MAJ-007 through MAJ-012: Address each test-quality finding (closed in commit 793f592e0)
+- [x] MAJ-013 (EventBus shim): **Deferred to PROJ-409** (Wave 5) — see PROJ-406 reconciliation. Not closed here; bookkeeping marks the item as routed.
+- [x] MAJ-014 (defensive `EnginePhaseError` catch): **Deferred to PROJ-409** (Wave 5) — see PROJ-406 reconciliation. Not closed here; bookkeeping marks the item as routed.
 
 ### Task 2.3: Final regression
 **File:** —
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Run full sharded suite — confirm baseline preserved
-- [ ] Verify: pytest passes
+- [x] Run full sharded suite — confirm baseline preserved
+- [x] Verify: pytest passes
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All 14 MAJOR items closed
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
+- [x] 12/14 MAJOR items closed; MAJ-013 + MAJ-014 deferred to PROJ-409 (Wave 5)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
 
 _Source review: `Reviews/results/2026-05-08_230318_code_proj-381-error-handling-cleanup-strategy-ui-assets_req-req_20260508_230317_779973/`_

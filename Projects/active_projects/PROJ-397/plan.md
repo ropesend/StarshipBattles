@@ -8,9 +8,11 @@
 | 3. Deferred items — fleet_id field, view=None branch | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
+**Last Updated:** 2026-05-09 (PROJ-406 reconciliation)
 **Active Phase:** Closeout
-**Last Action:** All 3 phases complete. Commits: a5ef5e74a (Phase 1), 6b8ee8c8f (Phase 2), 53b621303 (Phase 3).
-**Next Action:** Final closeout commit + user verification.
+**Last Action:** All 3 phases complete. Commits: a5ef5e74a (Phase 1 F-01), 6b8ee8c8f (Phase 2 F-02..F-07), 53b621303 (Phase 3 Task 3.2 view=None). Phase 3 Task 3.1 originally framed as "Full `fleet_id` deletion" was implemented as Path B simplification (delete forward-dead `entity_type`; retain `fleet_id` as canonical) — the original deletion-track text contradicted the shipped decision and is now reconciled.
+**Next Action:** Audit complete; awaiting user verification.
+**Blockers:** None
 
 ## Overview
 PROJ-393 (test-injection legacy fallbacks + comment cleanups, 16 items across 3 phases) deferred 3 items. The OpenCode review confirmed the LEG-03-023 deferral was a post-hoc rationalization — 4 of 6 BattleScreen Combat Lab vars are actually dead code. Plus 6 MAJOR findings.
@@ -43,8 +45,10 @@ See review for the full list. Themes likely include test-injection fallback gaps
 | `PlanetSelectionWindow` (facade thread) | (TBD per Phase 3) |
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing (sharded suite cleared post-Wave-1 by orchestrator)
+- [x] Audit passed (`validate_audit_ready.py PROJ-397` PASSED after PROJ-406 reconciliation)
 - [ ] User verified
+- F-05 follow-up (literal `TypeError`-on-instantiation test) deferred to PROJ-408 C-01 (Wave 4).
 
 _Source review: `Reviews/results/2026-05-09_002247_code_proj-393-test-injection-legacy-fallbacks-comment-c_req-req_20260509_002246_bca19e/`_

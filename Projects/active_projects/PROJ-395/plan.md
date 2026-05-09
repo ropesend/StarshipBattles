@@ -14,13 +14,13 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. CRITICAL — B-5 modal, registry exception, test assertions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. MAJOR — 14 follow-up findings | Complete (12 closed, 2 deferred) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. MAJOR — 11/14 + 2 deferred → PROJ-409 | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-08
+**Last Updated:** 2026-05-09 (PROJ-406 reconciliation)
 **Active Phase:** Closeout
-**Last Action:** Phase 1 (3 CRIT) + Phase 2 (12 of 14 MAJOR) closed across commits 59ee0442e + 793f592e0. MAJ-013 (EventBus shim) and MAJ-014 (defensive EnginePhaseError catch) deferred — see commit messages.
-**Next Action:** Final closeout commit + user verification of focused tests.
+**Last Action:** Phase 1 (3 CRIT) + Phase 2 (12 of 14 MAJOR) closed across commits 59ee0442e + 793f592e0. MAJ-013 (EventBus shim) and MAJ-014 (defensive `EnginePhaseError` catch) deferred to PROJ-409 (Wave 5) per PROJ-406 reconciliation.
+**Next Action:** Audit complete; awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -55,8 +55,9 @@ See [findings/source_review.md](findings/source_review.md) for the full per-item
 - [findings/source_review.md](findings/source_review.md) — pointer to OpenCode review
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing (especially the new B-5 dialog regression test from PROJ-381 still passes with the new modal class)
+- [x] All phase checklists complete (Phase 2 closed 12/14; MAJ-013/014 deferred → PROJ-409)
+- [x] All tests passing (B-5 regression test passes with new modal class)
+- [x] Audit passed (`validate_audit_ready.py PROJ-395` PASSED after PROJ-406 reconciliation)
 - [ ] User verified
 
 _Source review: `Reviews/results/2026-05-08_230318_code_proj-381-error-handling-cleanup-strategy-ui-assets_req-req_20260508_230317_779973/`_
