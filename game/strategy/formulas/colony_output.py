@@ -2,7 +2,7 @@
 
 Pure-function helpers that compute economy-side modifiers from colony
 state. Currently just `planet_habitability_multiplier` — a
-population-weighted mean of `score_planet_for_race` across every
+population-weighted mean of `calculate_habitability` across every
 species on the colony. Multiplies into harvest rate
 (`HarvestingEngine._harvest_resource`) and production rate
 (`ProductionEngine._process_queue_tick_dynamic`) so hostile planets
@@ -24,7 +24,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from game.strategy.formulas.habitability import score_planet_for_race
+from game.strategy.formulas.habitability import calculate_habitability
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
@@ -44,7 +44,7 @@ def planet_habitability_multiplier(
     """Return the population-weighted mean habitability across the colony.
 
     Formula:
-        mult = Σ (pop.count * score_planet_for_race(planet, race)) / Σ pop.count
+        mult = Σ (pop.count * calculate_habitability(planet, race)) / Σ pop.count
 
     Edge cases (all return 1.0 — no habitability penalty):
     - Planet has no `populations` attribute (malformed object / non-Planet).
@@ -92,7 +92,7 @@ def planet_habitability_multiplier(
         if race_config is None:
             continue
 
-        score = score_planet_for_race(planet, race_config)
+        score = calculate_habitability(planet, race_config)
         weighted_sum += count * score
         total_weight += count
 
@@ -149,7 +149,7 @@ def projected_growth_rate(
         return 0.0
 
     last_food_ratio = cfg.last_food_ratio
-    habitability = score_planet_for_race(planet, race_config)
+    habitability = calculate_habitability(planet, race_config)
     K_eff = max(1.0, planet.max_population * habitability)
 
     effective_r = race_config.base_reproduction_rate * last_food_ratio

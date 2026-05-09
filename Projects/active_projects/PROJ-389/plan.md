@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate 6 callers + delete wrapper | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate 6 callers + delete wrapper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** —
+**Last Action:** Phase 1 complete — all 6 callers migrated, wrapper deleted, dual re-export dropped, 4 test files + 3 live docs updated alongside
+**Next Action:** Awaiting user verification
 **Blockers:** None
 
 ## Overview

@@ -105,7 +105,7 @@ class EconomySlice:
         # mirroring the pattern used by the command-dispatch helpers and by
         # `get_race_registry` (PROJ-287).
         from game.strategy.formulas.colony_output import projected_growth_rate
-        from game.strategy.formulas.habitability import score_planet_for_race
+        from game.strategy.formulas.habitability import calculate_habitability
         from game.strategy.services.planet_economy_projector import (
             PlanetEconomyProjector,
         )
@@ -154,7 +154,7 @@ class EconomySlice:
                 race_id=pop.race_id,
                 race_name=display_name,
                 count=pop.count,
-                habitability=score_planet_for_race(planet, race_config),
+                habitability=calculate_habitability(planet, race_config),
                 happiness=pop.happiness,
                 growth_rate=projected_growth_rate(planet, pop, race_config, cfg),
                 food_ratio=cfg.last_food_ratio,

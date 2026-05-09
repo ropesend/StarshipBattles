@@ -635,7 +635,7 @@ Locations:
 - `game/strategy/data/race_config.py`: `RaceConfig.preferences`, `base_reproduction_rate=0.03`, `base_happiness=0.5`.
 - `game/strategy/data/race_point_budget.py`: `RacePointBudget`.
 - `game/strategy/data/homeworld_presets.py`: `apply_preset_to_config(preset, race_config)`.
-- `game/strategy/formulas/habitability.py`: `calculate_habitability(planet, race_config) -> float`, `score_planet_for_race(...)`.
+- `game/strategy/formulas/habitability.py`: `calculate_habitability(planet, race_config) -> float`.
 
 Extension invariant: add a habitability axis by registering one
 `HabitabilityFactor` in `FACTOR_REGISTRY`. That axis then participates in
@@ -702,7 +702,7 @@ Locations:
 
 Contracts:
 
-- Multiplier is population-weighted mean of `score_planet_for_race(planet, race_for(pop))` across resident species.
+- Multiplier is population-weighted mean of `calculate_habitability(planet, race_for(pop))` across resident species.
 - Uncolonized, zero-population, or all-missing-race cases return 1.0.
 - Missing race IDs are excluded from BOTH numerator and denominator (not scored as 0) — save-drift defence.
 - Computed once per colony per turn; cache warms on first read and invalidates at turn boundary. Cache fields `_cached_habitability_multiplier` and `_cached_multiplier_turn` are `init=False, compare=False` and are NOT emitted by `to_dict`; post-load planets re-warm on first read.

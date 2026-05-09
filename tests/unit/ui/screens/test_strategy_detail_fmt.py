@@ -1149,7 +1149,7 @@ class TestUncolonizedHabitabilityForEmpire:
       provided.
     - One line per `empire.resident_species()` entry: ` - {name}: {score}/100`.
     - Sorted DESCENDING by score (best-fit first).
-    - Score = `int(round(score_planet_for_race(planet, race_config) * 100))`.
+    - Score = `int(round(calculate_habitability(planet, race_config) * 100))`.
     - race_id with `registry.get_race(id) == None` is silently skipped.
     - Empty resident_species set → returns `""` (section omitted).
     """
@@ -1172,7 +1172,7 @@ class TestUncolonizedHabitabilityForEmpire:
         empire = self._mock_empire(set())
         registry = Mock()
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.5,
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1184,7 +1184,7 @@ class TestUncolonizedHabitabilityForEmpire:
         registry = Mock()
         registry.get_race.return_value = self._mock_race("Humans")
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.94,
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1205,7 +1205,7 @@ class TestUncolonizedHabitabilityForEmpire:
 
         scores = {"human": 0.80, "voidari": 0.30, "ghost": 0.55}
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             side_effect=lambda planet, race: scores[
                 next(rid for rid, r in races.items() if r is race)
             ],
@@ -1230,7 +1230,7 @@ class TestUncolonizedHabitabilityForEmpire:
 
         registry.get_race.side_effect = _resolve
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.5,
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1248,7 +1248,7 @@ class TestUncolonizedHabitabilityForEmpire:
         registry.get_race.return_value = self._mock_race("Humans")
 
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.047,  # rounds to 5
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1260,7 +1260,7 @@ class TestUncolonizedHabitabilityForEmpire:
         registry = Mock()
         registry.get_race.return_value = self._mock_race("Humans")
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.0,
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1289,7 +1289,7 @@ class TestFormatPlanetInfoUncolonizedHabitabilitySection:
         registry.get_race.return_value = race
 
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.73,
         ):
             result = format_planet_info(mock_planet, empire=empire, race_registry=registry)
@@ -1311,7 +1311,7 @@ class TestFormatPlanetInfoUncolonizedHabitabilitySection:
         registry.get_race.return_value = race
 
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.73,
         ):
             result = format_planet_info(mock_planet, empire=empire, race_registry=registry)

@@ -822,7 +822,7 @@ UI surfaces:
 - Sign convention: harvest as-is, upkeep + yard rendered as drains via negation, net as-is. Net cells are colour-tinted (healthy/critical/zero).
 - Same render path handles owned and unowned planets; unowned planets show intrinsic `Qty / Qual / Stored / Cap` and blank (`-`) flow rows.
 - `EmpireTreasuryPanel` renders "Population Upkeep" from `EmpireEconomySnapshot.total_population_upkeep`, hidden when zero.
-- Uncolonized-planet habitability list scores resident species through `score_planet_for_race`, sorted best-fit first.
+- Uncolonized-planet habitability list scores resident species through `calculate_habitability`, sorted best-fit first.
 
 ## 10. Universal IAbilitySource Framework
 

@@ -17,7 +17,7 @@ from game.core.constants import EARTH_MASS
 from game.core.string_utils import display_name
 from game.ui.utils.formatters import format_compact_number, format_signed_float
 from game.strategy.data.order_types import OrderType
-from game.strategy.formulas.habitability import score_planet_for_race
+from game.strategy.formulas.habitability import calculate_habitability
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
     is_warp_point, is_sector_environment, is_storm
@@ -91,7 +91,7 @@ def format_uncolonized_habitability_for_empire(
     species resident in the viewing empire on this uncolonized planet
     (PROJ-290 Phase 2).
 
-    Score = `int(round(score_planet_for_race(planet, race_config) * 100))`.
+    Score = `int(round(calculate_habitability(planet, race_config) * 100))`.
     List is sorted DESCENDING (best-fit first). Each entry reads as
     ` - {display_name}: {score}/100`. Empty resident-species set returns
     `""` so the caller can unconditionally concatenate.
@@ -126,7 +126,7 @@ def format_uncolonized_habitability_for_empire(
         race_config = race_registry.get_race(race_id)
         if race_config is None:
             continue
-        score = int(round(score_planet_for_race(planet, race_config) * 100))
+        score = int(round(calculate_habitability(planet, race_config) * 100))
         name = (
             getattr(race_config, "race_name", None)
             or getattr(race_config, "name", None)

@@ -3,7 +3,7 @@
 The helper returns the population-weighted mean habitability across all
 species on a planet:
 
-    multiplier = Σ (pop.count * score_planet_for_race(planet, race_for(pop))) / Σ pop.count
+    multiplier = Σ (pop.count * calculate_habitability(planet, race_for(pop))) / Σ pop.count
 
 Uncolonized planets (no populations) return 1.0 — a lifeless extractor
 base pays no habitability penalty. Species with missing race_config
@@ -119,7 +119,7 @@ class TestUncolonized:
 class TestSingleSpecies:
     def test_ideal_planet_yields_high_multiplier(self):
         """Earth-default-prefs race on an Earth-like planet -> habitability
-        score around 0.94 (verified by `score_planet_for_race` elsewhere)."""
+        score around 0.94 (verified by `calculate_habitability` elsewhere)."""
         from game.strategy.formulas.colony_output import planet_habitability_multiplier
         pop = SpeciesPopulation(race_id="human", count=1000, happiness=0.5)
         planet = _earth_like(populations=[pop])
@@ -159,7 +159,7 @@ class TestPopulationWeighted:
         assert 0.9 < mult <= 1.0
 
     def test_weighted_average_monkey_patched_scores(self, monkeypatch):
-        """Pin the arithmetic: patch `score_planet_for_race` to return
+        """Pin the arithmetic: patch `calculate_habitability` to return
         fixed values per race so we can assert the weighted-sum math
         directly without depending on `FACTOR_REGISTRY` tuning."""
         import game.strategy.formulas.colony_output as mod
@@ -180,7 +180,7 @@ class TestPopulationWeighted:
                 return 0.2
             return 0.0
 
-        monkeypatch.setattr(mod, "score_planet_for_race", fake_score)
+        monkeypatch.setattr(mod, "calculate_habitability", fake_score)
 
         mult = planet_habitability_multiplier(planet, registry)
         # 0.7 * 1.0 + 0.3 * 0.2 = 0.76
@@ -207,7 +207,7 @@ class TestZeroCountSpeciesExcluded:
                 return 0.5
             return 0.0  # ghost would score 0, but it's zero-count -> skipped
 
-        monkeypatch.setattr(mod, "score_planet_for_race", fake_score)
+        monkeypatch.setattr(mod, "calculate_habitability", fake_score)
 
         mult = planet_habitability_multiplier(planet, registry)
         # Only human contributes: weighted avg = 0.5.
@@ -233,7 +233,7 @@ class TestMissingRaceConfig:
         def fake_score(planet_arg, race_config):
             return 0.8
 
-        monkeypatch.setattr(mod, "score_planet_for_race", fake_score)
+        monkeypatch.setattr(mod, "calculate_habitability", fake_score)
 
         mult = planet_habitability_multiplier(planet, registry)
         # Only human counts: 700 * 0.8 / 700 = 0.8.

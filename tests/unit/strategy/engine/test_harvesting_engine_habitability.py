@@ -210,7 +210,7 @@ class TestHabitabilityHookApplied:
         assert planet.stockpile["metals"] == pytest.approx(1.0)
 
     def test_multi_species_population_weighted(self, monkeypatch):
-        """Pin the math: patch `score_planet_for_race` so the weighted
+        """Pin the math: patch `calculate_habitability` so the weighted
         mean is deterministic. 70/30 split with scores 1.0 / 0.5 yields
         0.85 multiplier -> 0.85 * 1.0/tick = 0.85/tick harvest."""
         import game.strategy.formulas.colony_output as co_mod
@@ -225,7 +225,7 @@ class TestHabitabilityHookApplied:
         def fake_score(planet_arg, rc):
             return 1.0 if rc is race_a else 0.5
 
-        monkeypatch.setattr(co_mod, "score_planet_for_race", fake_score)
+        monkeypatch.setattr(co_mod, "calculate_habitability", fake_score)
 
         race_registry = _StubRegistry({"a": race_a, "b": race_b})
         engine = HarvestingEngine(

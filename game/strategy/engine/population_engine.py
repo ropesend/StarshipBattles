@@ -21,7 +21,7 @@ Reads `ColonySpeciesConfig.last_food_ratio` (written by
 from typing import TYPE_CHECKING, Optional
 
 from game.strategy.interfaces.engines import IPopulationEngine
-from game.strategy.formulas.habitability import score_planet_for_race
+from game.strategy.formulas.habitability import calculate_habitability
 from game.strategy.services.race_resolver import resolve_race_config
 
 if TYPE_CHECKING:
@@ -136,7 +136,7 @@ class PopulationEngine(IPopulationEngine):
         last_food_ratio = cfg.last_food_ratio
 
         # Effective carrying capacity = max_population * habitability
-        habitability = score_planet_for_race(colony, race_config)
+        habitability = calculate_habitability(colony, race_config)
         effective_capacity = max(1.0, colony.max_population * habitability)
 
         # PROJ-284 Phase 3: effective reproduction rate scales with food.
