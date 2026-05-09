@@ -72,11 +72,11 @@ Implementation order in this phase: do the lowest-risk Simple-effort items first
 **File:** `game/ui/screens/strategy_fleet_ops.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_fleet_ops.py` (or closest equivalent)
 
-- [ ] Add module-private helper `_format_result_error(result, operation: str) -> str` returning the standardized warning string `result.message if result else 'Unknown'` plus the operation tag, and emitting the `logger.warning(...)` itself OR returning the string for callers to log (pick one and document)
-- [ ] Replace the duplicated block at line 127 (in `execute_move`) with a call to the helper
-- [ ] Replace the duplicated block at line 153 (in `execute_intercept`) with a call to the helper
-- [ ] Replace the duplicated block at line 216 (in `execute_join`) with a call to the helper
-- [ ] Verify: focused tests pass; LOC delta ≈ −8
+- [x] Added module-private `_format_result_error(result, operation) -> dict` that emits the WARNING log AND returns the full `{'type': 'error', 'message': msg}` payload (so callers `return _format_result_error(result, "Move")`)
+- [x] Replaced the duplicated block in `execute_move`
+- [x] Replaced the duplicated block in `execute_intercept`
+- [x] Replaced the duplicated block in `execute_join`
+- [x] Verify: tests/unit/ui/screens/test_strategy_fleet_ops.py -> 13 passed; LOC delta ≈ −8
 
 **Notes:** Audit's claim of additional sites in `strategy_click_dispatcher.py:274` and `strategy_superweapons.py` was NOT confirmed during verification — scope is limited to the 3 fleet_ops sites. (DUP-X-10, scope-reduced)
 

@@ -22,6 +22,27 @@ if TYPE_CHECKING:
     from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
 
+def _format_result_error(result: Any, operation: str) -> dict:
+    """Build the standard ``{'type': 'error', 'message': msg}`` payload + warning log.
+
+    Shared error path for ``execute_move`` / ``execute_intercept`` /
+    ``execute_join`` (PROJ-380, DUP-X-10, scope-reduced to fleet_ops).
+    Logs ``"<operation> failed: <msg>"`` at WARNING and returns the dict.
+    ``msg`` is ``result.message`` when a result is present, else ``"Unknown"``.
+
+    Args:
+        result: The (optional) command result; ``None`` is permitted.
+        operation: Human-readable verb tag (e.g. ``"Move"``, ``"Intercept"``,
+            ``"Join Fleet"``) used in the warning log.
+
+    Returns:
+        ``{'type': 'error', 'message': msg}``.
+    """
+    msg = result.message if result else 'Unknown'
+    logger.warning(f"{operation} failed: {msg}")
+    return {'type': 'error', 'message': msg}
+
+
 class FleetOperations:
     """Handles fleet movement commands."""
 
@@ -122,9 +143,7 @@ class FleetOperations:
             if result and result.is_valid:
                 return {'type': 'success', 'fleet': fleet}
             else:
-                msg = result.message if result else 'Unknown'
-                logger.warning(f"Move failed: {msg}")
-                return {'type': 'error', 'message': msg}
+                return _format_result_error(result, "Move")
         else:
             logger.warning("Move failed: No path (Unreachable)")
             return {'type': 'error', 'message': 'Unreachable'}
@@ -148,9 +167,7 @@ class FleetOperations:
         if result and result.is_valid:
             return {'type': 'success', 'fleet': fleet}
         else:
-            msg = result.message if result else 'Unknown'
-            logger.warning(f"Intercept Failed: {msg}")
-            return {'type': 'error', 'message': msg}
+            return _format_result_error(result, "Intercept")
 
     def handle_join_designation(self, mx, my, selected_fleet) -> Any:
         """
@@ -210,6 +227,4 @@ class FleetOperations:
         if result and result.is_valid:
             return {'type': 'success', 'fleet': fleet}
         else:
-            msg = result.message if result else 'Unknown'
-            logger.warning(f"Join Fleet Failed: {msg}")
-            return {'type': 'error', 'message': msg}
+            return _format_result_error(result, "Join Fleet")
