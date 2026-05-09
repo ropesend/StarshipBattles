@@ -82,23 +82,52 @@ fallback path via implicit defaults.
 | `tests/unit/strategy/engine/test_transfer_order.py::TestOrderProcessorTransfer::test_transfer_partial_amount` | Same root cause as above. | Same fix — explicit `species_id='human'`. |
 | `tests/integration/ui/build_queue_screen/test_drag_handler_multi_queue.py::test_mouse_motion_pops_from_queue_source` | Asserted `len(construction_queue) == 1` after drag-pickup, but the deleted in-place `construction_queue.pop(idx)` fallback (LEG-03-006) means the canonical path now relies on the injected `on_remove_from_queue` callback to actually mutate the queue. The fixture's `MagicMock()` callback was a no-op. | Reworked the fixture to inject a closure that pops from `single_queue_source.construction_queue`, simulating production's command-dispatch semantics. |
 
+### Round 2 — Stage 2 sharded suite catches 2 more siblings
+
+The Stage 2 sharded suite caught 2 additional sibling regressions in
+`tests/unit/strategy/engine/test_order_processor_transfer.py` — same
+LEG-04-004 root cause, different test file:
+
+| Test | Failure cause | Fix |
+|---|---|---|
+| `test_process_transfer_load_population_auto_resolves_colony_at_fleet_hex` (line 102) | `LOAD_POPULATION` order without `species_id`, hit deleted Legacy/Default first-species fallback. | Added `species_id='humans'` (matches the colony's single SpeciesPopulation race_id). |
+| `test_process_transfer_load_passengers_caps_by_population_count` (line 256) | Same root cause. | Same fix — explicit `species_id='humans'`. |
+
+After the round-2 fix I ran a wider sweep across `tests/integration/`,
+`tests/unit/strategy/`, and `tests/unit/ui/` for `cargo_type=passengers`
++ `direction=load` patterns. All other matches are safe:
+
+- `tests/integration/colonization/test_explicit_orders.py` (lines 57, 79, 99): patches `_dispatch_load_planet_passengers` via `patch.object`, or returns empty `get_planets_at_global_hex`; never reaches the species_id check.
+- `tests/integration/strategy/transfer/test_transfer_validation.py`: calls `TransferValidator.validate` directly, upstream of the species_id check.
+- `tests/unit/strategy/engine/test_command_registry_contract.py`: serializer round-trips, no order execution.
+- `tests/unit/strategy/services/test_fleet_cargo_projector.py`: projector math, no order execution.
+- `tests/unit/ui/screens/test_orders_window.py`, `test_fleet_orders_refresh.py`: order-display string formatting, no execution.
+- `tests/unit/strategy/engine/order_handlers/test_transfer_handler.py::test_bug_70_no_owned_colony_skips_silently` (line 477): empty `get_planets_at_global_hex` short-circuits before the species_id check.
+- `tests/unit/strategy/facade/test_facade_dispatch.py:43`: dispatch-routing test, no order execution.
+
+No other live passenger-LOAD-without-species_id sites identified.
+
+Cross-validation: full transfer/passengers/load_population scope
+(`pytest -k "transfer or load_population or passengers"`) shows
+324 tests passing post-round-2 fix.
+
 ### Lesson — test-side audit gap
 
 The Phase 2/3 checklists called for grepping `tests/` for the affected
 constructor or function before deleting the production fallback. That
 audit ran successfully for the build_queue_drag_handler and
-empire_build_queue_window cases, but missed two failure shapes:
+empire_build_queue_window cases, but missed three failure shapes:
 
 1. `test_drag_handler_multi_queue.py` already passed `on_remove_from_queue=MagicMock()` (added during the original Phase 2 fix), so it appeared migrated — but the `MagicMock` no-op left the assertion `len(queue) == 1` unsatisfiable. The right migration was to inject a real list-mutator, not just a Mock.
-2. `test_transfer_order.py` exercises `OrderProcessor` end-to-end with real planet/fleet builders, and the order params dict simply omitted `species_id` rather than naming it. A `species_id` text grep didn't surface this site, and the phase-scoped focused tests (`pytest -k "transfer_branches or transfer_handler"`) didn't reach this integration-shaped path.
+2. `test_transfer_order.py` (round 1) and `test_order_processor_transfer.py` (round 2) exercise `OrderProcessor` end-to-end with real planet/fleet builders, and the order params dict simply omitted `species_id` rather than naming it. A `species_id` text grep didn't surface these sites because they don't mention the field at all.
+3. The phase-scoped focused tests (`pytest -k "transfer_branches or transfer_handler"`) target the unit-level handler/branch files, not the broader OrderProcessor integration files.
 
-The phase-scoped focused tests passed because they target the
-unit-level handler/branch files, not the broader order-processor
-integration tests. The stage-boundary sharded suite was the right
-safety net here. **Future audit step:** when deleting a production
-fallback that supplies an implicit default, also grep test fixtures
-for params dicts / Mock injection sites that omit the now-required
-field.
+The stage-boundary sharded suite was the right safety net for both
+rounds. **Future audit step:** when deleting a production fallback
+that supplies an implicit default, also grep test fixtures for
+positively-shaped patterns (e.g. `cargo_type.*passengers` or order
+params dicts that include `direction=load`) — i.e. find tests that
+might omit the now-required field, not just tests that name it.
 
 ## Implementation Notes
 

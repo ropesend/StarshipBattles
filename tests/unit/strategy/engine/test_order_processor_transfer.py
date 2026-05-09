@@ -99,7 +99,10 @@ def test_process_transfer_load_population_auto_resolves_colony_at_fleet_hex():
     fleet.resources.get_fleet_cargo_current.return_value = 0
     fleet.resources.load_cargo_to_fleet = MagicMock()
 
-    params = {"direction": "load", "cargo_type": "passengers", "amount": 5}
+    # PROJ-393 (LEG-04-004): species_id is now required for passenger LOAD;
+    # the colony has a single "humans" population so we name it explicitly.
+    params = {"direction": "load", "cargo_type": "passengers", "amount": 5,
+              "species_id": "humans"}
     fleet.get_current_order.return_value = Order(OrderType.LOAD_POPULATION, params)
 
     with patch(
@@ -253,8 +256,9 @@ def test_process_transfer_load_passengers_caps_by_population_count():
     fleet.resources.load_cargo_to_fleet = MagicMock()
     fleet.get_current_order.return_value = Order(
         OrderType.TRANSFER,
+        # PROJ-393 (LEG-04-004): species_id is now required for passenger LOAD.
         {"direction": "load", "cargo_type": "passengers", "amount": 50,
-         "planet_id": planet.id},
+         "planet_id": planet.id, "species_id": "humans"},
     )
 
     with patch(
