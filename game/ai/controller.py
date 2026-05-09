@@ -53,7 +53,6 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.engine.spatial import SpatialGrid
-    from game.simulation.interfaces.ai_controller import IControllableShip
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +82,7 @@ _NO_TARGET_BEHAVIORS = frozenset({
 class AIController:
     def __init__(
         self,
-        ship: 'IControllableShip',
+        ship: 'ShipControllableAdapter',
         grid: 'SpatialGrid',
         enemy_team_id: int,
         *,
