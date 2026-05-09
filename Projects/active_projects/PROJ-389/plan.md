@@ -16,10 +16,10 @@
 | 1. Migrate 6 callers + delete wrapper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-08
-**Active Phase:** —
-**Last Action:** Phase 1 complete — all 6 callers migrated, wrapper deleted, dual re-export dropped, 4 test files + 3 live docs updated alongside
-**Next Action:** Awaiting user verification
+**Last Updated:** 2026-05-09 (PROJ-406 reconciliation)
+**Active Phase:** Closeout
+**Last Action:** Phase 1 complete — all 6 production callers migrated, wrapper deleted, dual re-export dropped. Migration extended beyond the original 6-caller estimate to also cover 4 test files (`test_happiness_engine.py`, `test_colony_output.py`, `test_harvesting_engine_habitability.py`, `test_strategy_detail_fmt.py`) and 3 live docs (`colony_demographic_view.py` docstring, `docs/04_SERVICES.md`, `docs/systems/strategy_layer.md`) so the wrapper deletion would not break their imports/monkeypatch targets — recorded in phase_1_checklist.md "Out-of-band cleanup" and reconciled in the manifest.
+**Next Action:** Awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -53,7 +53,8 @@ Migrates 6 production callers of `score_planet_for_race` to the canonical `calcu
 - [findings/bundling_decisions.md](findings/bundling_decisions.md) — interactive bundling record (shared across siblings)
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
-- [ ] No remaining references to `score_planet_for_race` (`grep -rn "score_planet_for_race" .`)
+- [x] All phase checklists complete
+- [x] All tests passing (focused 226-test suite passed; full sharded baseline cleared post-Wave-1)
+- [x] No remaining references to `score_planet_for_race` in production / tests / live docs (only history-preserving artifacts under `Reviews/`, `Projects/`, `_marked_for_deletion_*/` retain references)
+- [x] Audit passed (`validate_audit_ready.py PROJ-389` PASSED after PROJ-406 reconciliation)
 - [ ] User verified

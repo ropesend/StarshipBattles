@@ -6,9 +6,11 @@
 | 1. Pre-existing failures + collection errors | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Active Phase:** Phase 1 closeout
-**Last Action:** All 5 items resolved; sharded suite reports 19803 tests | 19799 passed | 0 failed | 0 errors | 4 skipped
-**Next Action:** Awaiting user verification
+**Last Updated:** 2026-05-09 (PROJ-406 reconciliation)
+**Active Phase:** Closeout
+**Last Action:** All 5 items resolved (3 pre-existing failures + 4 collection errors). Sharded suite (post-Wave-1, 2026-05-09): 19815 tests | 19811 passed | 0 failed | 0 errors | 4 skipped — replaces the earlier 19803/19799 snapshot taken at PROJ-399 Phase 1 closure (commit `fd4a23068`).
+**Next Action:** Awaiting user verification.
+**Blockers:** None
 
 ## Overview
 The Stage 1/2/3 sharded suites and the final closeout suite consistently surfaced 3 failures + 4 collection errors that pre-date this orchestration run. None were introduced by PROJ-380..393. Multiple agents independently flagged them during the run (PROJ-380, PROJ-386, PROJ-389, PROJ-391, PROJ-392 reports). This project closes them.

@@ -16,11 +16,11 @@
 | 1. Delete deprecated `*_static` methods | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-08
-**Active Phase:** Phase 1 (Complete — code-side)
-**Last Action:** All 12 deprecated `*_static` methods deleted from `ability_manager.py` (-57 LOC) and `modifier_manager.py` (-109 LOC, including unused `GameRegistries` TYPE_CHECKING import); 3 test methods in `test_ability_manager.py` migrated to instance API. Focused regression: `pytest tests/ -k "ability_manager or modifier_manager"` → 63 passed. Stale comment block in `test_modifier_manager.py` updated to attribute removal to PROJ-384.
-**Next Action:** **Commit blocked** — working tree contains 6 unresolved merge-conflicted files unrelated to PROJ-384 (`Tracking/bugs/active/BUG-124.md`, `Tracking/debug_plan.md`, `Tracking/feature_plan.md`, `Tracking/features/active/FEAT-27.md`, `Tracking/features/active/FEAT-28.md`, `docs/systems/strategy_layer.md`). Per CLAUDE.md "don't revert unrelated user changes," these need user resolution before any commit can proceed. PROJ-384 staged changes are ready (`git status --short` shows `M` on both target files + plan.md + checklist).
-**Blockers:** Pre-existing unresolved merge in working tree blocks `git commit`.
+**Last Updated:** 2026-05-09 (PROJ-406 reconciliation)
+**Active Phase:** Closeout
+**Last Action:** All 12 deprecated `*_static` methods deleted from `ability_manager.py` (-57 LOC) and `modifier_manager.py` (-109 LOC, including unused `GameRegistries` TYPE_CHECKING import); 3 test methods in `test_ability_manager.py` migrated to instance API. Focused regression: `pytest tests/ -k "ability_manager or modifier_manager"` → 63 passed. Full sharded suite cleared by orchestrator post-Wave-1 (baseline preserved). The pre-existing unresolved-merge blocker that previously blocked `git commit` was resolved out-of-band; PROJ-384 changes were committed.
+**Next Action:** Audit complete; awaiting user verification.
+**Blockers:** None
 
 ## Overview
 Deletes 12 deprecated `@staticmethod` methods (166 LOC total) on `AbilityManager` and `ModifierManager` left over from the PROJ-241 instance-API migration. Verified zero production callers; only 3 test methods + 1 internal self-reference remain. Quick-win deletion: ships in a single PR.
@@ -49,7 +49,8 @@ Deletes 12 deprecated `@staticmethod` methods (166 LOC total) on `AbilityManager
 - [findings/bundling_decisions.md](findings/bundling_decisions.md) — interactive bundling record (shared across siblings)
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing (`python Tools/test_sharded/test_sharded.py`)
-- [ ] No remaining references to any of the 12 deleted method names (`grep -rn "_static\b" game/simulation/components/{ability,modifier}_manager.py`)
+- [x] All phase checklists complete
+- [x] All tests passing (`python Tools/test_sharded/test_sharded.py` baseline preserved post-Wave-1)
+- [x] No remaining references to any of the 12 deleted method names (`grep -rn "_static\b" game/simulation/components/{ability,modifier}_manager.py` returns zero hits)
+- [x] Audit passed (`validate_audit_ready.py PROJ-384` PASSED after PROJ-406 reconciliation)
 - [ ] User verified
