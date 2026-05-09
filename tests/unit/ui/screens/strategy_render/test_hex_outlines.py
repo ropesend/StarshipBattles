@@ -16,9 +16,11 @@ def _renderer_context() -> SimpleNamespace:
     session = SimpleNamespace(active_empire=active_empire, turn_number=7)
     scene = SimpleNamespace(session=session)
     galaxy = SimpleNamespace(
-        _global_hex_planets={},
-        _global_hex_zones={},
-        _global_hex_warp_points={},
+        state=SimpleNamespace(
+            global_hex_planets={},
+            global_hex_zones={},
+            global_hex_warp_points={},
+        ),
     )
     camera = SimpleNamespace(
         world_to_screen=lambda pos: pygame.math.Vector2(pos.x, pos.y),
@@ -41,15 +43,15 @@ def test_build_data_combines_player_and_non_player_occupancy() -> None:
     shared_hex = HexCoord(2, 3)
     fleet_hex = HexCoord(5, 0)
 
-    renderer.galaxy._global_hex_planets[shared_hex] = [
+    renderer.galaxy.state.global_hex_planets[shared_hex] = [
         SimpleNamespace(owner_id=1),
         SimpleNamespace(owner_id=2),
     ]
-    renderer.galaxy._global_hex_zones[shared_hex] = [
+    renderer.galaxy.state.global_hex_zones[shared_hex] = [
         SimpleNamespace(owner_id=1),
         object(),
     ]
-    renderer.galaxy._global_hex_warp_points = {shared_hex}
+    renderer.galaxy.state.global_hex_warp_points = {shared_hex}
     renderer.empires = [
         SimpleNamespace(fleets=[SimpleNamespace(location=fleet_hex, owner_id=1)]),
         SimpleNamespace(fleets=[SimpleNamespace(location=fleet_hex, owner_id=2)]),

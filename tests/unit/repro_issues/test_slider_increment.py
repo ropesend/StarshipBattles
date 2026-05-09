@@ -71,6 +71,7 @@ class TestSliderIncrement:
             MockSlider.return_value = mock_slider_instance
 
             # Create the row (note: parameter order per ModifierControlRow.__init__)
+            # PROJ-388: ModifierControlRow now requires a ModifierLogicService.
             row = ModifierControlRow(
                 manager=manager,
                 container=container,
@@ -78,7 +79,8 @@ class TestSliderIncrement:
                 mod_id='range_mount',
                 mod_def=mock_mod_def,
                 config=config,
-                on_change_callback=None
+                on_change_callback=None,
+                modifier_logic=MagicMock(),
             )
 
             # Build UI to trigger slider creation

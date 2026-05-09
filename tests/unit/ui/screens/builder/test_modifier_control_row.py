@@ -32,7 +32,8 @@ def row(mock_mod_def):
         mod_id='test_mod',
         mod_def=mock_mod_def,
         config={},
-        on_change_callback=MagicMock()
+        on_change_callback=MagicMock(),
+        modifier_logic=MagicMock(),
     )
 
 

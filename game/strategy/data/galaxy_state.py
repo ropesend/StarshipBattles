@@ -11,9 +11,10 @@ and making delegates unit-testable without constructing a real
 
 Field renames: leading-underscore dict fields drop the underscore on
 the state object (``_global_hex_planets`` -> ``global_hex_planets``).
-``Galaxy`` re-exposes the under-prefixed names as ``@property``
-forwarders for backwards-compat with the five grandfathered external
-read sites.
+PROJ-387 deleted the five legacy underscore-prefixed ``@property``
+forwarders that briefly bridged the rename. Cross-module readers now
+go through ``Galaxy.state`` (a public ``@property`` returning this
+``GalaxyState`` instance) introduced by PROJ-394.
 """
 from __future__ import annotations
 
@@ -35,8 +36,11 @@ class GalaxyState:
     """Owns all mutable state historically held on ``Galaxy``.
 
     Services receive an instance of this class and read/write its
-    fields directly. The ``Galaxy`` facade exposes the same surface
-    via ``@property`` forwarders for external readers.
+    fields directly. The ``Galaxy`` facade exposes this object as
+    ``Galaxy.state`` (PROJ-394) for cross-module readers; the public
+    Galaxy attributes (``radius``, ``systems``, ``name_map``,
+    ``planets_by_id``, ``fleets_by_id``) remain as thin
+    ``@property`` forwarders onto these fields.
     """
 
     radius: int

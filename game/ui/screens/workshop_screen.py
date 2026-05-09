@@ -37,7 +37,7 @@ from game.ui.screens.workshop_ship_io import WorkshopShipIO
 from game.ui.screens.workshop_data_reloader import WorkshopDataReloader
 from game.ui.colors import COLORS
 from game.ui.screens.builder.detail_panel import ComponentDetailPanel
-from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.screens.builder.modifier_logic import ModifierLogicService
 from game.ui.services.vehicle_class_service import VehicleClassService
 
 logger = logging.getLogger(__name__)
@@ -68,11 +68,7 @@ class DesignWorkshopScreen:
 
         self.event_bus = WorkshopEventBus()
 
-        # PROJ-211: Initialize ModifierLogic with registry provider
-        ModifierLogic.init_service(context.registries)
-
-        # Instance-based service (used by panels that accept it)
-        from game.ui.screens.builder.modifier_logic import ModifierLogicService
+        # Instance-based service injected into panels via constructor (strict DI).
         self._modifier_logic = ModifierLogicService(context.registries)
 
         # PROJ-43: UI service adapters for ship I/O and design loading

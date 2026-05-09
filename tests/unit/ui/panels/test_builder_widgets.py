@@ -48,6 +48,7 @@ def panel(patched_pygame_gui_elements):
         width=300,
         on_change_callback=on_change,
         registries=registries,
+        modifier_logic=MagicMock(),
     )
     p.on_change_callback = on_change  # Expose for assertions.
     return p

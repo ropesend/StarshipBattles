@@ -24,11 +24,21 @@ from game.strategy.engine.handlers.movement import (
 )
 
 
+class _FakeGalaxyState:
+    def __init__(self) -> None:
+        self.global_hex_warp_points: dict = {}
+
+
 class _FakeGalaxy:
     def __init__(self) -> None:
         self.systems = {}
-        self._global_hex_warp_points = {}
+        self._state = _FakeGalaxyState()
         self.get_planet_global_hex = MagicMock()
+
+    @property
+    def state(self) -> _FakeGalaxyState:
+        """Public accessor mirroring real ``Galaxy.state`` (PROJ-394)."""
+        return self._state
 
 
 class _FakeSession:
@@ -314,7 +324,7 @@ def test_warp_at_warp_point_queues_warp_only() -> None:
     warp_hex = HexCoord(1, 0)
     fleet = _make_fleet(location=warp_hex)
     session = _FakeSession([fleet])
-    session.galaxy._global_hex_warp_points[warp_hex] = object()
+    session.galaxy.state.global_hex_warp_points[warp_hex] = object()
 
     result = WarpCommandHandler().execute(
         session,
@@ -330,7 +340,7 @@ def test_warp_returns_move_validation_failure_without_queuing_warp() -> None:
     warp_hex = HexCoord(3, 0)
     fleet = _make_fleet(location=HexCoord(0, 0))
     session = _FakeSession([fleet])
-    session.galaxy._global_hex_warp_points[warp_hex] = object()
+    session.galaxy.state.global_hex_warp_points[warp_hex] = object()
 
     with patch(
         "game.strategy.engine.handlers.base.find_hybrid_path",
@@ -350,7 +360,7 @@ def test_warp_off_warp_point_auto_queues_move_then_warp() -> None:
     warp_hex = HexCoord(3, 0)
     fleet = _make_fleet(location=HexCoord(0, 0))
     session = _FakeSession([fleet])
-    session.galaxy._global_hex_warp_points[warp_hex] = object()
+    session.galaxy.state.global_hex_warp_points[warp_hex] = object()
 
     result = WarpCommandHandler().execute(
         session,

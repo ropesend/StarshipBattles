@@ -67,6 +67,11 @@ class Galaxy:
     # --- State property forwarders (preserve public + grandfathered private API) ---
 
     @property
+    def state(self) -> GalaxyState:
+        """Public access to the underlying ``GalaxyState``. Use this instead of ``_state`` for cross-module reads."""
+        return self._state
+
+    @property
     def radius(self) -> int:
         return self._state.radius
 
@@ -89,30 +94,6 @@ class Galaxy:
     @property
     def fleets_by_id(self) -> Dict[int, 'Fleet']:
         return self._state.fleets_by_id
-
-    # PROJ-372: backwards-compat under-prefixed forwarders for the five
-    # grandfathered external read sites (movement.py, fleet_navigation_service.py,
-    # hex_outlines.py). Phase 3-cleanup work will migrate those to public accessors.
-
-    @property
-    def _global_hex_planets(self) -> Dict[HexCoord, List['Planet']]:
-        return self._state.global_hex_planets
-
-    @property
-    def _global_hex_zones(self) -> Dict[HexCoord, list]:
-        return self._state.global_hex_zones
-
-    @property
-    def _global_hex_warp_points(self) -> Dict[HexCoord, 'StarSystem']:
-        return self._state.global_hex_warp_points
-
-    @property
-    def _planet_to_system(self) -> Dict['Planet', 'StarSystem']:
-        return self._state.planet_to_system
-
-    @property
-    def _zone_to_system(self) -> Dict[int, 'StarSystem']:
-        return self._state.zone_to_system
 
     @property
     def _next_planet_id(self) -> int:
@@ -299,8 +280,8 @@ class Galaxy:
         validate_positive(data['radius'], 'radius', 'Galaxy')
 
         galaxy = cls(radius=data['radius'])
-        galaxy._state.next_planet_id = data.get('_next_planet_id', 1)
-        galaxy._state.next_fleet_id = data.get('_next_fleet_id', 1)
+        galaxy.state.next_planet_id = data.get('_next_planet_id', 1)
+        galaxy.state.next_fleet_id = data.get('_next_fleet_id', 1)
 
         for i, sys_entry in enumerate(data.get('systems', [])):
             try:

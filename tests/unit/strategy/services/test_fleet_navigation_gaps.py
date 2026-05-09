@@ -31,7 +31,7 @@ class TestResolveWarpExit:
     def test_returns_none_when_warp_point_hex_not_in_index(self):
         service = FleetNavigationService()
         galaxy = MagicMock()
-        galaxy._global_hex_warp_points = {}  # nothing registered
+        galaxy.state.global_hex_warp_points = {}  # nothing registered
         result = service._resolve_warp_exit(HexCoord(10, 5), galaxy)
         assert result is None
 
@@ -47,7 +47,7 @@ class TestResolveWarpExit:
         source_system.name = "Source"
 
         galaxy = MagicMock()
-        galaxy._global_hex_warp_points = {warp_point_hex: source_system}
+        galaxy.state.global_hex_warp_points = {warp_point_hex: source_system}
 
         result = service._resolve_warp_exit(warp_point_hex, galaxy)
         assert result is None
@@ -66,7 +66,7 @@ class TestResolveWarpExit:
         source_system.name = "Source"
 
         galaxy = MagicMock()
-        galaxy._global_hex_warp_points = {warp_point_hex: source_system}
+        galaxy.state.global_hex_warp_points = {warp_point_hex: source_system}
         galaxy.get_system_by_name = MagicMock(return_value=None)
 
         result = service._resolve_warp_exit(warp_point_hex, galaxy)
@@ -92,7 +92,7 @@ class TestResolveWarpExit:
         dest_system.warp_points = []  # no reciprocal
 
         galaxy = MagicMock()
-        galaxy._global_hex_warp_points = {warp_point_hex: source_system}
+        galaxy.state.global_hex_warp_points = {warp_point_hex: source_system}
         galaxy.get_system_by_name = MagicMock(return_value=dest_system)
 
         result = service._resolve_warp_exit(warp_point_hex, galaxy)

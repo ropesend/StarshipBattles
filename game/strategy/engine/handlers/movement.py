@@ -239,7 +239,7 @@ class WarpCommandHandler(BaseCommandHandler):
 
         # 3. Validate warp point exists at target hex
         warp_point_hex = cmd.warp_point_hex
-        source_system = session.galaxy._global_hex_warp_points.get(warp_point_hex)
+        source_system = session.galaxy.state.global_hex_warp_points.get(warp_point_hex)
         if not source_system:
             return ValidationResult.error(
                 f"No warp point at {warp_point_hex}."

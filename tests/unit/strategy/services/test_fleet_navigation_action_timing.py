@@ -61,7 +61,7 @@ class TestProjectPathActionTiming:
 
         # Create mock galaxy that returns path for second MOVE
         mock_galaxy = MagicMock()
-        mock_galaxy._global_hex_warp_points = {}
+        mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
             'game.strategy.services.fleet_navigation_service.find_hybrid_path'
@@ -119,7 +119,7 @@ class TestProjectPathActionTiming:
         fleet.can_use_warp = MagicMock(return_value=False)
 
         mock_galaxy = MagicMock()
-        mock_galaxy._global_hex_warp_points = {}
+        mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
             'game.strategy.services.fleet_navigation_service.find_hybrid_path'
@@ -177,7 +177,7 @@ class TestProjectPathActionTiming:
         fleet.can_use_warp = MagicMock(return_value=False)
 
         mock_galaxy = MagicMock()
-        mock_galaxy._global_hex_warp_points = {}
+        mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
             'game.strategy.services.fleet_navigation_service.find_hybrid_path'
@@ -253,7 +253,7 @@ class TestProjectPathActionTimingEdgeCases:
         fleet.can_use_warp = MagicMock(return_value=False)
 
         mock_galaxy = MagicMock()
-        mock_galaxy._global_hex_warp_points = {}
+        mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
             'game.strategy.services.fleet_navigation_service.find_hybrid_path'
@@ -296,7 +296,7 @@ class TestProjectPathActionTimingEdgeCases:
         fleet.can_use_warp = MagicMock(return_value=False)
 
         mock_galaxy = MagicMock()
-        mock_galaxy._global_hex_warp_points = {}
+        mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
             'game.strategy.services.fleet_navigation_service.find_hybrid_path'
@@ -365,7 +365,7 @@ class TestProjectPathWarpOrders:
         mock_dest_system.warp_points = [mock_dest_wp]
         mock_dest_system.name = 'DestSystem'
 
-        mock_galaxy._global_hex_warp_points = {warp_point_hex: mock_system}
+        mock_galaxy.state.global_hex_warp_points = {warp_point_hex: mock_system}
         mock_galaxy.get_system_by_name = MagicMock(return_value=mock_dest_system)
 
         with patch(
@@ -419,7 +419,7 @@ class TestProjectPathWarpOrders:
         mock_dest_wp.destination_id = 'SourceSystem'
         mock_dest.warp_points = [mock_dest_wp]
 
-        mock_galaxy._global_hex_warp_points = {warp_point_hex: mock_system}
+        mock_galaxy.state.global_hex_warp_points = {warp_point_hex: mock_system}
         mock_galaxy.get_system_by_name = MagicMock(return_value=mock_dest)
 
         segments = service.project_path(fleet, mock_galaxy, max_turns=5)
@@ -460,7 +460,7 @@ class TestProjectPathPathfindingFailure:
         fleet.can_use_warp = MagicMock(return_value=False)
 
         mock_galaxy = MagicMock()
-        mock_galaxy._global_hex_warp_points = {}
+        mock_galaxy.state.global_hex_warp_points = {}
 
         call_count = 0
 
@@ -500,7 +500,7 @@ class TestProjectPathPathfindingFailure:
         fleet.can_use_warp = MagicMock(return_value=False)
 
         mock_galaxy = MagicMock()
-        mock_galaxy._global_hex_warp_points = {}
+        mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
             'game.strategy.services.fleet_navigation_service.find_hybrid_path',

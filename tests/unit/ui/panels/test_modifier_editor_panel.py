@@ -28,6 +28,7 @@ def modifier_panel():
         width=300,
         on_change_callback=MagicMock(),
         registries=registries,
+        modifier_logic=MagicMock(),
     )
     return panel
 

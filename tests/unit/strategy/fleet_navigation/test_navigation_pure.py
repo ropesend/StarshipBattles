@@ -114,7 +114,7 @@ class TestWarpOrderNavigation:
         dest_system.warp_points = [dest_warp_point]
 
         galaxy = MagicMock()
-        galaxy._global_hex_warp_points = {warp_point_hex: source_system}
+        galaxy.state.global_hex_warp_points = {warp_point_hex: source_system}
         galaxy.get_system_by_name = MagicMock(return_value=dest_system)
 
         # compute_path_for_warp should return path including exit hex
@@ -165,7 +165,7 @@ class TestWarpOrderNavigation:
         dest_system.warp_points = [dest_warp_point]
 
         galaxy = MagicMock()
-        galaxy._global_hex_warp_points = {warp_point_hex: source_system}
+        galaxy.state.global_hex_warp_points = {warp_point_hex: source_system}
         galaxy.get_system_by_name = MagicMock(return_value=dest_system)
 
         # compute_next_step should calculate warp transit
