@@ -322,6 +322,65 @@ def test_edit_move_left_click_completes_order_with_resolved_hex() -> None:
     scene.complete_edit_move.assert_called_once_with(new_hex)
 
 
+def test_transfer_left_click_opens_transfer_dialog_via_shared_helper() -> None:
+    """PROJ-398 FND-032: TRANSFER routes through _handle_dialog_mode_click."""
+    fleet = SimpleNamespace(id=1)
+    new_hex = HexCoord(2, 3)
+    scene = _click_scene(selected_fleet=fleet)
+    scene.camera.hex_at_screen_return = new_hex
+    dispatcher, handler = _dispatcher_with_handler(scene, input_mode="TRANSFER")
+
+    handled = dispatcher.dispatch_click(100, 200, 1)
+
+    assert handled is True
+    scene.ui.open_transfer_dialog.assert_called_once_with(fleet, new_hex)
+    assert handler.input_mode == "SELECT"
+
+
+def test_drop_cargo_left_click_opens_cargo_dialog_with_unload() -> None:
+    """PROJ-398 FND-031: DROP_CARGO routes through shared helper with 'unload'."""
+    fleet = SimpleNamespace(id=1)
+    new_hex = HexCoord(2, 3)
+    scene = _click_scene(selected_fleet=fleet)
+    scene.camera.hex_at_screen_return = new_hex
+    dispatcher, handler = _dispatcher_with_handler(scene, input_mode="DROP_CARGO")
+
+    handled = dispatcher.dispatch_click(100, 200, 1)
+
+    assert handled is True
+    scene.ui.open_cargo_quick_dialog.assert_called_once_with(fleet, new_hex, 'unload')
+    assert handler.input_mode == "SELECT"
+
+
+def test_load_cargo_left_click_opens_cargo_dialog_with_load() -> None:
+    """PROJ-398 FND-031: LOAD_CARGO routes through shared helper with 'load'."""
+    fleet = SimpleNamespace(id=1)
+    new_hex = HexCoord(2, 3)
+    scene = _click_scene(selected_fleet=fleet)
+    scene.camera.hex_at_screen_return = new_hex
+    dispatcher, handler = _dispatcher_with_handler(scene, input_mode="LOAD_CARGO")
+
+    handled = dispatcher.dispatch_click(100, 200, 1)
+
+    assert handled is True
+    scene.ui.open_cargo_quick_dialog.assert_called_once_with(fleet, new_hex, 'load')
+    assert handler.input_mode == "SELECT"
+
+
+def test_dialog_mode_right_click_cancels_via_shared_helper() -> None:
+    """PROJ-398: right-click in TRANSFER/DROP/LOAD goes through _cancel_input_mode."""
+    for mode in ("TRANSFER", "DROP_CARGO", "LOAD_CARGO"):
+        scene = _click_scene(selected_fleet=SimpleNamespace(id=1))
+        dispatcher, handler = _dispatcher_with_handler(scene, input_mode=mode)
+
+        handled = dispatcher.dispatch_click(100, 200, 3)
+
+        assert handled is True, f"right-click in {mode} should be handled"
+        assert handler.input_mode == "SELECT", f"right-click in {mode} should reset to SELECT"
+        scene.ui.open_transfer_dialog.assert_not_called()
+        scene.ui.open_cargo_quick_dialog.assert_not_called()
+
+
 def test_edit_move_right_click_cancels_and_clears_edit_state() -> None:
     scene = _click_scene(selected_fleet=SimpleNamespace(id=1))
     dispatcher, handler = _dispatcher_with_handler(scene, input_mode="EDIT_MOVE")

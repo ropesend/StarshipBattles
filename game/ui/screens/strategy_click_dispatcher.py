@@ -225,17 +225,57 @@ class ClickModeDispatcher:
 
         return False
 
-    def _handle_transfer_mode_click(self, mx: int, my: int, button: int) -> bool:
-        """Handle click in TRANSFER mode."""
+    def _handle_dialog_mode_click(
+        self,
+        mx: int,
+        my: int,
+        button: int,
+        dialog_method_name: str,
+        *extra_args: Any,
+    ) -> bool:
+        """Shared skeleton for "click hex -> open dialog -> SELECT" modes.
+
+        Consolidates TRANSFER, DROP_CARGO, and LOAD_CARGO (PROJ-398, FND-031
+        + FND-032). All three follow the identical pattern:
+
+            target_hex = resolve_click_target(mx, my)
+            fleet = scene.selected_fleet
+            scene.ui.<dialog_method>(fleet, target_hex, *extra_args)
+            input_mode = 'SELECT'
+            return True
+
+        Right-click cancels via the shared ``_cancel_input_mode`` helper.
+
+        Args:
+            mx: Mouse x screen coordinate.
+            my: Mouse y screen coordinate.
+            button: Mouse button (1=left, 3=right).
+            dialog_method_name: Name of the ``self.scene.ui`` method to call
+                (e.g. ``'open_transfer_dialog'``,
+                ``'open_cargo_quick_dialog'``).
+            *extra_args: Additional positional args appended after
+                ``(fleet, target_hex)`` (e.g. the cargo operation string).
+
+        Returns:
+            True when the click was handled (left or right click); False for
+            other buttons.
+        """
         if button == 1:  # Left Click
             target_hex = self._resolve_click_target(mx, my)
             fleet = self.scene.selected_fleet
-            self.scene.ui.open_transfer_dialog(fleet, target_hex)
+            dialog_method = getattr(self.scene.ui, dialog_method_name)
+            dialog_method(fleet, target_hex, *extra_args)
             self.input_mode = 'SELECT'
             return True
         elif button == 3:  # Right click cancels
             return self._cancel_input_mode()
         return False
+
+    def _handle_transfer_mode_click(self, mx: int, my: int, button: int) -> bool:
+        """Handle click in TRANSFER mode."""
+        return self._handle_dialog_mode_click(
+            mx, my, button, 'open_transfer_dialog',
+        )
 
     def _handle_edit_move_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in EDIT_MOVE mode — select new destination for an existing MOVE order."""
@@ -254,27 +294,15 @@ class ClickModeDispatcher:
 
     def _handle_drop_cargo_mode_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in DROP_CARGO mode."""
-        if button == 1:  # Left Click
-            target_hex = self._resolve_click_target(mx, my)
-            fleet = self.scene.selected_fleet
-            self.scene.ui.open_cargo_quick_dialog(fleet, target_hex, 'unload')
-            self.input_mode = 'SELECT'
-            return True
-        elif button == 3:  # Right click cancels
-            return self._cancel_input_mode()
-        return False
+        return self._handle_dialog_mode_click(
+            mx, my, button, 'open_cargo_quick_dialog', 'unload',
+        )
 
     def _handle_load_cargo_mode_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in LOAD_CARGO mode."""
-        if button == 1:  # Left Click
-            target_hex = self._resolve_click_target(mx, my)
-            fleet = self.scene.selected_fleet
-            self.scene.ui.open_cargo_quick_dialog(fleet, target_hex, 'load')
-            self.input_mode = 'SELECT'
-            return True
-        elif button == 3:  # Right click cancels
-            return self._cancel_input_mode()
-        return False
+        return self._handle_dialog_mode_click(
+            mx, my, button, 'open_cargo_quick_dialog', 'load',
+        )
 
     def _handle_warp_target_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in WARP_TARGET mode — issue warp order to clicked warp point."""
