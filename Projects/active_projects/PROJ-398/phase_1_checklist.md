@@ -1,7 +1,14 @@
 # Phase 1: MAJOR follow-ups
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Close the 5 MAJOR findings from the PROJ-380 OpenCode review.
+
+## Closed Findings
+- **FND-012** (Camera.hex_at_screen integration test): closed by `c6e0113ec`. 3 new tests in `TestCameraHexAtScreen` exercise the real `screen_to_world -> pixel_to_hex` chain (origin, zoom+offset position, viewport offset propagation).
+- **FND-017** (`handle_colonize_designation` no coverage): closed by `c6e0113ec`. 4 new tests in `TestHandleColonizeDesignation` covering fleet=None, no-system-at-hex, no-colonizable-planets, and unowned-planet prompt path.
+- **FND-031** (DROP_CARGO/LOAD_CARGO identical bodies): closed by `e14d7f1ce`. Extracted `_handle_dialog_mode_click(mx, my, button, dialog_method_name, *extra_args)`.
+- **FND-032** (TRANSFER same skeleton): closed by `e14d7f1ce`. Same parameterized helper covers all 3 modes; widened narrowing was the recommended action.
+- **FND-041** (`_star_provider` over-conservatively excluded): closed by `6744b44e1`. Scope-aware fallback moved into `StarAbilitySource.affects_hex` (now also returns True for system-shaped scopes); `_star_provider` reduced to 5-line delegation to `_iter_hex_filtered_sources`. 4 of 7 providers now share the skeleton.
 
 ---
 

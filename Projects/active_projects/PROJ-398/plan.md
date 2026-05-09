@@ -3,12 +3,12 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. MAJOR follow-ups | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. MAJOR follow-ups | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Active Phase:** Phase 1
-**Last Action:** Project created from PROJ-380 review (req_20260509_015902_916201, 0 CRIT + 5 MAJ + 8 MIN + 30 INFO)
-**Next Action:** Begin Phase 1
+**Active Phase:** Closeout
+**Last Action:** All 5 MAJOR findings closed across 3 commits
+**Next Action:** User verification
 
 ## Overview
 PROJ-380 (audit-shrink, 11 verified items + Phase 2 obsoletion + 9 Phase 3 consolidations) shipped in 12 commits. The OpenCode review had **0 CRITICAL** (good — agent's narrowing decisions held up) and 5 MAJOR follow-ups, mostly around the two narrowing calls (DUP-X-07, DUP-X-12) and the new ProviderFactory consolidation.
