@@ -264,7 +264,7 @@ class TestGetHarvesterInfo:
 
     def test_inline_harvester_returned(self):
         """Inline ResourceHarvester ability is returned."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         comp = {
             'id': 'mining_facility',
@@ -283,7 +283,7 @@ class TestGetHarvesterInfo:
 
     def test_non_dict_returns_none(self):
         """Non-dict component returns None."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         result = _get_harvester_info("not_a_dict", None)
 
@@ -291,7 +291,7 @@ class TestGetHarvesterInfo:
 
     def test_no_abilities_returns_none(self):
         """Component without abilities key returns None (falls to registry lookup)."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         comp = {'id': 'basic_component'}
         registries = MagicMock()

@@ -336,7 +336,7 @@ class TestGetHarvesterInfo:
 
     def test_inline_abilities(self):
         """Test extracts harvester from inline abilities."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         comp = {
             'id': 'harvester_01',
@@ -356,7 +356,7 @@ class TestGetHarvesterInfo:
 
     def test_no_harvester_ability(self):
         """Test returns None when no harvester ability."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         comp = {
             'id': 'weapon_01',
@@ -371,7 +371,7 @@ class TestGetHarvesterInfo:
 
     def test_registry_fallback(self):
         """Test falls back to registry lookup."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         comp = {'id': 'harvester_01'}
 
@@ -393,7 +393,7 @@ class TestGetHarvesterInfo:
 
     def test_non_dict_returns_none(self):
         """Test returns None for non-dict input."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         result = _get_harvester_info("not a dict", None)
 

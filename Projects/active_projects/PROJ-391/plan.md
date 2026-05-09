@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Three small consolidations | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Three small consolidations | Working | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1 (working)
+**Last Action:** Beginning Phase 1 — three consolidations: harvester-info, iter-components, FormationSpec serialization
+**Next Action:** Execute Tasks 1.1 → 1.2 → 1.3 → 1.4
 **Blockers:** None
 
 ## Overview

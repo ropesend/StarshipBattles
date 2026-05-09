@@ -44,10 +44,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict
 
+from game.core.patterns.layer_iterator import iter_components
+from game.strategy.engine.harvesting_engine import get_harvester_info
 from game.strategy.formulas.colony_output import planet_habitability_multiplier
-from game.strategy.services.component_inspector import get_component_abilities
 
 if TYPE_CHECKING:
     from game.core.protocols import IPlanet, IFacility, IRaceRegistry
@@ -216,40 +217,24 @@ def compute_planet_production(
     for facility in planet.facilities:
         if not facility.is_operational:
             continue
-        design_data = facility.design_data
-        for layer_data in design_data.get("layers", {}).values():
-            if not isinstance(layer_data, list):
+        for comp in iter_components(facility.design_data):
+            harvester = get_harvester_info(comp, registries)
+            if harvester is None:
                 continue
-            for comp in layer_data:
-                harvester = _get_harvester_info(comp, registries)
-                if harvester:
-                    res_type = harvester.get("resource_type", "")
-                    base_rate = harvester.get("base_harvest_rate", 0.0)
-                    if res_type and base_rate > 0:
-                        quality = planet.deposits.get(res_type, {}).get("quality", 0.0)
-                        rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
+            # PROJ-391: canonical helper returns dict | list | None.
+            # Normalize to a list of harvester entries (single dict
+            # represents one ResourceHarvester instance; a list represents
+            # multiple instances on the same component).
+            entries = [harvester] if isinstance(harvester, dict) else harvester
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                res_type = entry.get("resource_type", "")
+                base_rate = entry.get("base_harvest_rate", 0.0)
+                if res_type and base_rate > 0:
+                    quality = planet.deposits.get(res_type, {}).get("quality", 0.0)
+                    rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
     return rates
-
-
-def _get_harvester_info(comp: Any, registries: Optional["GameRegistries"]) -> Optional[dict]:
-    """Extract `ResourceHarvester` ability dict from a component entry.
-
-    Checks inline abilities first; falls back to registry lookup when
-    the component is referenced only by id.
-    """
-    if isinstance(comp, dict):
-        harvester = comp.get("abilities", {}).get("ResourceHarvester")
-        if isinstance(harvester, dict):
-            return harvester
-        comp_id = comp.get("id")
-        if comp_id and registries is not None:
-            comp_def = registries.components.get(comp_id)
-            if comp_def is not None:
-                abilities = get_component_abilities(comp_def)
-                harvester = abilities.get("ResourceHarvester")
-                if isinstance(harvester, dict):
-                    return harvester
-    return None
 
 
 __all__ = [
