@@ -137,10 +137,10 @@ class TestModifierManagerStatSummary:
             assert summary['mass_mult']['net_value'] == pytest.approx(2.0 * 1.25, abs=0.01)
 
 
-# NOTE: TestModifierManagerStandalone removed in PROJ-322 Task 1.3
-# (S02-CAT4-001). The deprecated `add_modifier_static` / `remove_modifier_static`
-# / `get_modifier_static` static-method wrappers are already covered by the
-# instance-method tests above.
+# NOTE: deprecated `*_static` wrappers (add_modifier_static / remove_modifier_static
+# / get_modifier_static / get_all_effects_static / get_stat_summary_static /
+# remove_modifier_inplace) were deleted in PROJ-384. Their behavior is fully
+# covered by the instance-method tests above.
 
 
 class TestStatefulModifierManagerConstruction:
