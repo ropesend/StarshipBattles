@@ -64,7 +64,7 @@ Authoring rule: external callers use `StrategySessionFacade`, not slices. Facade
 
 ## 2. Command Dispatch
 
-**File:** `game/strategy/engine/command_handlers.py`
+**Files:** `game/strategy/engine/handlers/` (canonical package; PROJ-383 retired the legacy `command_handlers.py` shim)
 
 Flow:
 
@@ -86,7 +86,7 @@ Two registries cooperate:
 | Registry | File | Purpose |
 |----------|------|---------|
 | `CommandRegistry` | `game/strategy/engine/commands/registry.py` | Metadata registry. One `CommandSpec` per Command DTO; single source of truth for runtime handlers, `OrderType` frozensets, action-time ability map, facade helper names, and serializer codecs. |
-| `CommandHandlerRegistry` | `game/strategy/engine/command_handlers.py` | Runtime registry of instantiated handlers. `dispatch(command_name, session, cmd)` calls the handler's `execute`. |
+| `CommandHandlerRegistry` | `game/strategy/engine/handlers/base.py` | Runtime registry of instantiated handlers. `dispatch(command_name, session, cmd)` calls the handler's `execute`. |
 
 Self-registering command metadata:
 

@@ -126,7 +126,7 @@ Canonical metadata: `game/strategy/engine/commands/registry.py`
 - `seed_default_commands(command_registry)` imports handler modules and calls their `register()` functions.
 - `game/strategy/engine/handlers/registry_factory.py::create_default_registry()` builds the runtime `CommandHandlerRegistry` from `command_registry.all()`.
 
-Stale path correction: `game/strategy/engine/commands/specs.py` was deleted. Do not add entries there. `game/strategy/engine/command_handlers.py` is a transitional re-export shim for the decomposed `handlers/` package; do not add new symbols to the shim.
+Stale path correction: `game/strategy/engine/commands/specs.py` was deleted. Do not add entries there. The former `game/strategy/engine/command_handlers.py` re-export shim was removed in PROJ-383; new code imports `BaseCommandHandler` and `CommandHandlerRegistry` from `game/strategy/engine/handlers/base.py` directly.
 
 Command authorization invariant: command DTOs do not carry trusted empire identity. Fleet and planet handlers resolve ownership from `session.active_empire` through `_resolve_player_fleet()` / `_resolve_player_planet()`.
 
@@ -403,7 +403,7 @@ pytest tests/integration/colonization/test_explicit_orders.py
 
 - `game/strategy/engine/commands/specs.py` no longer exists; use `commands/registry.py`.
 - `COMMAND_SPECS` is now `tuple(command_registry.all())` in tests, not a production tuple literal.
-- `game/strategy/engine/command_handlers.py` is a transitional re-export shim; canonical command handlers are under `game/strategy/engine/handlers/`.
+- `game/strategy/engine/command_handlers.py` was deleted in PROJ-383; canonical command handlers live under `game/strategy/engine/handlers/`.
 - `OrderProcessor` no longer owns large private execution helpers; live logic is in `game/strategy/engine/order_handlers/`.
 - `ACTIVATE_ABILITY` and `DEACTIVATE_ABILITY` are action-category members for consistency but are handled by `PlanetActionEngine`, not the order-handler registry.
 - Planet ability order progress no longer lives on `Order.execution_progress`; orders initiate `ComponentActivationState`, then `ComponentActivationEngine` ticks it.

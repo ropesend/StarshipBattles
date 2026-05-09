@@ -165,9 +165,8 @@ Use for UI-to-strategy communication and any new operation that mutates strategy
 Where:
 - Canonical `BaseCommandHandler` + `CommandHandlerRegistry`:
   `game/strategy/engine/handlers/base.py`. The legacy
-  `game/strategy/engine/command_handlers.py` is a transitional re-export
-  shim (see "Re-Export Shim" pattern entry); new code imports from
-  `handlers/base.py` directly.
+  `game/strategy/engine/command_handlers.py` re-export shim was removed
+  (PROJ-383); all imports must target `handlers/base.py` directly.
 - Self-registering command metadata: `game/strategy/engine/commands/registry.py`.
 - UI command handlers: `game/strategy/engine/handlers/`.
 - Order action handlers: `game/strategy/engine/order_handlers/`.
@@ -731,9 +730,9 @@ Where (4 confirmed sites at PROJ-382 verification, 2026-05-07):
   `TestRunDetailsPanel` from `game/ui/screens/test_lab/details/`.
 - `game/simulation/components/component.py:395-405` — re-exports
   loader symbols from `game/simulation/components/component_loader.py`.
-- `game/strategy/engine/command_handlers.py` — re-exports
-  `BaseCommandHandler` + `CommandHandlerRegistry` from
-  `game/strategy/engine/handlers/base.py`.
+- (Removed PROJ-383) `game/strategy/engine/command_handlers.py` —
+  the transitional re-export shim is deleted; all callers import
+  from `game/strategy/engine/handlers/base.py` directly.
 
 Problem the pattern solves:
 - A module is decomposed into a sub-package (or sibling module) but
@@ -748,8 +747,7 @@ Structure:
   re-exported names.
 - A header docstring identifies the canonical module and the project
   / migration that introduced the shim.
-- Tests that exercise behavior import from the canonical module; only
-  tests covering the legacy import surface remain on the shim.
+- Tests that exercise behavior import from the canonical module.
 
 When to use:
 - Decomposing a god-module into a sub-package mid-refactor.
@@ -778,8 +776,8 @@ When NOT to use:
 
 Retirement:
 - Each shim should reference the project responsible for migrating
-  its callers (e.g. PROJ-302 for race_setup, PROJ-382 audit for the
-  command_handlers shim).
+  its callers (e.g. PROJ-302 for race_setup; PROJ-383 retired the
+  former command_handlers shim).
 - When the legacy import path has zero remaining call sites under
   `game/`, delete the shim file in the same PR that removes the last
   caller. Audit guard: a periodic grep for shim contents is the

@@ -369,7 +369,7 @@ Command dataclasses live in `game/strategy/engine/commands/__init__.py`:
 
 Handlers live in `game/strategy/engine/handlers/construction_queue.py`.
 The old broad reference to `game/strategy/engine/command_handlers.py` is stale
-for construction queue work.
+for construction queue work; that shim was deleted in PROJ-383.
 
 Add flow:
 
