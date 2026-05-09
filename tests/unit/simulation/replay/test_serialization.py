@@ -330,32 +330,22 @@ class TestSerializationPrivateHelpers:
 
         assert result is vector
 
-    def test_task_force_spec_serializes_non_formation_object_as_none(self):
-        """PROJ-391 Task 1.3: the legacy `_formation_to_dict` fallback that
-        coerced non-FormationSpec inputs into a `LINE_ASTERN`/`spacing=0`
-        dict has been dropped (Pattern #17 — `to_dict`/`from_dict` live
-        on the type itself; non-FormationSpec inputs are not supported).
+    def test_task_force_spec_rejects_non_formation_spec(self):
+        """PROJ-407 D-08: ``TaskForceSpec.formation`` is ``FormationSpec | None``.
 
-        The replay-layer `_task_force_spec_to_dict` now stores `None` for
-        non-FormationSpec formations instead of a synthetic placeholder.
-        Every production spec compiler emits a real `FormationSpec`, so
-        this branch exists only to guard the `TaskForceSpec.formation:
-        object` typing vestige.
+        Previously the replay layer silently dropped non-``FormationSpec``
+        formations to ``None`` — a Phase 1 vestige of the ``object``-typed
+        slot. The slot is now strict: constructing a ``TaskForceSpec`` with
+        a non-``FormationSpec`` formation raises ``TypeError`` at the
+        boundary, before any serialization happens.
         """
-        from game.simulation.replay.replay_serialization import (
-            _task_force_spec_to_dict,
-        )
-
-        tf = TaskForceSpec(
-            task_force_id="tf-test",
-            formation=object(),  # non-FormationSpec — vestige of object-typed slot
-            policies=CombatPolicies(),
-            squadrons=(),
-        )
-
-        result = _task_force_spec_to_dict(tf)
-
-        assert result["formation"] is None
+        with pytest.raises(TypeError, match="FormationSpec"):
+            TaskForceSpec(
+                task_force_id="tf-test",
+                formation=object(),  # not a FormationSpec — must raise
+                policies=CombatPolicies(),
+                squadrons=(),
+            )
 
 
 # ---------------------------------------------------------------------------

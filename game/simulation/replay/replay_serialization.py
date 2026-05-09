@@ -289,13 +289,11 @@ def _squadron_spec_from_dict(data: Dict[str, Any]) -> SquadronSpec:
 
 
 def _task_force_spec_to_dict(tf: TaskForceSpec) -> Dict[str, Any]:
-    # PROJ-391 Task 1.3: `tf.formation` is typed `object` on TaskForceSpec
-    # (a Phase 1 vestige), but every production spec compiler emits a real
-    # `FormationSpec`. Call its canonical `to_dict` directly.
-    formation = tf.formation
-    formation_dict = (
-        formation.to_dict() if isinstance(formation, FormationSpec) else None
-    )
+    # PROJ-407 D-08: ``TaskForceSpec.formation`` is now strictly typed
+    # ``FormationSpec | None``; the prior ``isinstance`` fallback that
+    # silently dropped invalid formations to ``None`` is gone — the type
+    # contract enforces the precondition at construction.
+    formation_dict = tf.formation.to_dict() if tf.formation is not None else None
     return {
         "task_force_id": tf.task_force_id,
         "formation": formation_dict,

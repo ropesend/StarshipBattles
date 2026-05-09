@@ -23,17 +23,22 @@ from game.simulation.battle_spec import (
     TaskForceSpec,
     TeamSpec,
 )
+from game.simulation.combat.formation import FormationShape, FormationSpec
 from game.simulation.systems.battle_end_conditions import TeamEliminatedCondition
 
 
 # ---------------------------------------------------------------------------
 # Placeholder values for fields whose real types land in sibling Phase 1 tasks.
-# Task 1.2 lands BoundaryRegion; Task 1.3 ModifierStack; Task 1.4 FormationSpec;
-# Task 1.5 TelemetryLevel. For the DTO-shape contract in Task 1.1 we pass plain
-# sentinel objects — the dataclasses carry whatever is handed to them.
+# Task 1.2 lands BoundaryRegion; Task 1.3 ModifierStack; Task 1.5 TelemetryLevel.
+# For the DTO-shape contract in Task 1.1 we pass plain sentinel objects — the
+# dataclasses carry whatever is handed to them. PROJ-407 D-08 tightened
+# ``TaskForceSpec.formation`` to ``FormationSpec | None``, so that field uses
+# a real ``FormationSpec`` here (a free-maneuver default) instead of a sentinel.
 # ---------------------------------------------------------------------------
 _SENTINEL_MODIFIER_STACK = object()
-_SENTINEL_FORMATION = object()
+_SENTINEL_FORMATION = FormationSpec(
+    shape=FormationShape.LINE_ABREAST, spacing=100.0
+)
 _SENTINEL_TELEMETRY = object()
 
 
@@ -174,6 +179,23 @@ def test_task_force_spec_fields():
     for field in ("task_force_id", "formation", "policies", "squadrons"):
         assert hasattr(tf, field)
     assert isinstance(tf.squadrons, tuple)
+
+
+def test_task_force_spec_rejects_non_formation_spec():
+    """PROJ-407 D-08: ``TaskForceSpec.formation`` is now ``FormationSpec | None``.
+
+    Previously typed as ``object`` (a Phase 1 vestige), the slot silently
+    accepted arbitrary values and replay serialization dropped invalid
+    formations to ``None``. The contract is now strict — constructing a
+    ``TaskForceSpec`` with an unknown formation shape raises ``TypeError``.
+    """
+    with pytest.raises(TypeError, match="FormationSpec"):
+        TaskForceSpec(
+            task_force_id="tf-bad",
+            formation=object(),  # not a FormationSpec
+            policies=CombatPolicies(),
+            squadrons=(),
+        )
 
 
 def test_team_spec_fields():
