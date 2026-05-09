@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Delete remaining save-format fallbacks + add negative tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Delete remaining save-format fallbacks + add negative tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
-**Active Phase:** Phase 1
-**Last Action:** Project skeleton created from REMEDIATION_PLAN B-05
-**Next Action:** Delete two surviving save-format compat surfaces; route raw `KeyError` through `require_keys()`; add negative tests.
+**Active Phase:** Phase 1 (complete)
+**Last Action:** Deleted `resource_levels` rename fallback in `ship_instance_serializer.py`; routed missing `components` through `require_keys()` (raises `PersistenceException`); deleted `*_complex_toggles` legacy tolerance + docstring framing in `BattleSetupSide.from_dict` and routed both keys through `require_keys()`. Deleted the "Legacy saves... Don't crash" test. Added 4 negative regression tests + 1 positive canonical-shape test. Focused unit suite (34 tests) + integration suites (15 tests) + replay/strategy tests (693 tests) all green.
+**Next Action:** Awaiting user smoke / closeout commit.
 **Blockers:** None
 
 ## Overview
@@ -52,9 +52,9 @@ PROJ-386 deleted the four named save-migration targets, but the same touched fil
 - CLAUDE.md Rule 3 (no save-migration code).
 
 ## Verification
-- [ ] Phase 1 checklist complete
-- [ ] `pytest tests/unit/strategy/ship_instance/test_ship_instance_serializer.py tests/unit/ui/screens/test_battle_setup_state.py -v` — passes including new positive + negative tests
-- [ ] `pytest tests/integration/save_load/test_roundtrip_ships.py -v` — round-trip still passes
-- [ ] `pytest tests/integration/ui/test_battle_setup_three_sides.py -v` — passes
+- [x] Phase 1 checklist complete
+- [x] `pytest tests/unit/strategy/ship_instance/test_ship_instance_serializer.py tests/unit/ui/screens/test_battle_setup_state.py -v` — passes including new positive + negative tests
+- [x] `pytest tests/integration/save_load/test_roundtrip_ships.py -v` — round-trip still passes
+- [x] `pytest tests/integration/ui/test_battle_setup_three_sides.py -v` — passes
 - [ ] `python Projects/scripts/validate_audit_ready.py PROJ-404` passes
 - [ ] User verified

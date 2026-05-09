@@ -111,6 +111,41 @@ class TestFromDict:
         instance = ShipInstanceSerializer.from_dict(data, registries=mock_registries)
         assert instance._registries is mock_registries
 
+    def test_missing_components_raises_persistence_exception(self):
+        """PROJ-404: missing `components` key routes through require_keys() and
+        raises PersistenceException, not raw KeyError."""
+        data = {
+            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            # No 'components' key
+        }
+        with pytest.raises(PersistenceException):
+            ShipInstanceSerializer.from_dict(data)
+
+    def test_legacy_resource_levels_field_is_not_accepted(self):
+        """PROJ-404 / Rule 3: the `resource_levels` rename fallback is
+        deleted. A legacy payload that supplies only `resource_levels`
+        deserializes with empty consumables (it is treated as if the field
+        were absent), not silently mapped to `consumable_levels`."""
+        data = {
+            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            'components': {},
+            'resource_levels': {'fuel': 99.0, 'energy': 99.0},
+        }
+        instance = ShipInstanceSerializer.from_dict(data)
+        # Legacy field is ignored — does NOT populate consumable_levels.
+        assert instance.consumable_levels == {}
+
+    def test_canonical_consumable_levels_round_trip(self):
+        """PROJ-404: positive regression — current canonical shape using
+        `consumable_levels` deserializes correctly."""
+        data = {
+            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            'components': {},
+            'consumable_levels': {'fuel': 75.0, 'energy': 50.0},
+        }
+        instance = ShipInstanceSerializer.from_dict(data)
+        assert instance.consumable_levels == {'fuel': 75.0, 'energy': 50.0}
+
 
 class TestClone:
     def test_clone_produces_new_instance_id(self, full_ship):

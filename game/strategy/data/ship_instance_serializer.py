@@ -84,7 +84,11 @@ class ShipInstanceSerializer:
         """
         from game.strategy.data.ship_instance import ShipInstance
 
-        require_keys(data, ['instance_id', 'design_id', 'name', 'owner_id'], 'ShipInstance')
+        require_keys(
+            data,
+            ['instance_id', 'design_id', 'name', 'owner_id', 'components'],
+            'ShipInstance',
+        )
 
         # Validate non-negative numeric fields (if present in data)
         if data.get('current_hp') is not None:
@@ -103,7 +107,7 @@ class ShipInstanceSerializer:
             owner_id=data['owner_id'],
             design_data=data.get('design_data', {}),
             current_hp=data.get('current_hp'),
-            consumable_levels=data.get('consumable_levels', data.get('resource_levels', {})),
+            consumable_levels=data.get('consumable_levels', {}),
             component_toggles=data.get('component_toggles', {}),
             activation_states=data.get('activation_states', {}),
             cargo_contents=data.get('cargo_contents', {}),

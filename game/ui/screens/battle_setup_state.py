@@ -11,6 +11,7 @@ import uuid
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
+from game.core.validation_helpers import require_keys
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -114,8 +115,17 @@ class BattleSetupSide:
         data: Dict[str, Any],
         registries: Optional['GameRegistries'] = None,
     ) -> 'BattleSetupSide':
-        """Deserialize from save/load. Tolerates legacy saves that lack the
-        `*_complex_toggles` fields (pre-PROJ-282 Phase 2) — defaults empty."""
+        """Deserialize from save/load.
+
+        Requires the canonical PROJ-282 Phase 2 shape: both
+        `system_complex_toggles` and `sector_complex_toggles` keys must
+        be present. Missing keys raise `PersistenceException`.
+        """
+        require_keys(
+            data,
+            ['system_complex_toggles', 'sector_complex_toggles'],
+            'BattleSetupSide',
+        )
         side = cls(team_id=data.get("team_id", 0))
 
         for fleet_entry in data.get("fleets", []):
@@ -126,8 +136,8 @@ class BattleSetupSide:
 
         side.system_complexes = data.get("system_complexes", [])
         side.sector_complexes = data.get("sector_complexes", [])
-        side.system_complex_toggles = dict(data.get("system_complex_toggles", {}))
-        side.sector_complex_toggles = dict(data.get("sector_complex_toggles", {}))
+        side.system_complex_toggles = dict(data["system_complex_toggles"])
+        side.sector_complex_toggles = dict(data["sector_complex_toggles"])
         return side
 
 

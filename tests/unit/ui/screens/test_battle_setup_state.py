@@ -220,8 +220,10 @@ class TestBattleSetupSideComplexToggles:
             "qs_sector_shield_suppressor_complex": True
         }
 
-    def test_from_dict_defaults_missing_toggle_fields_to_empty(self):
-        """Legacy saves (pre-Phase-2) won't have the new keys. Don't crash."""
+    def test_from_dict_rejects_missing_system_complex_toggles(self):
+        """PROJ-404 / Rule 3: legacy-tolerance branch is deleted. A payload
+        that omits `system_complex_toggles` raises PersistenceException."""
+        from game.core.exceptions import PersistenceException
         from game.ui.screens.battle_setup_state import BattleSetupSide
 
         legacy_data = {
@@ -229,11 +231,28 @@ class TestBattleSetupSideComplexToggles:
             "fleets": [],
             "system_complexes": [],
             "sector_complexes": [],
-            # No system_complex_toggles / sector_complex_toggles
+            "sector_complex_toggles": {},
+            # No system_complex_toggles
         }
-        side = BattleSetupSide.from_dict(legacy_data)
-        assert side.system_complex_toggles == {}
-        assert side.sector_complex_toggles == {}
+        with pytest.raises(PersistenceException):
+            BattleSetupSide.from_dict(legacy_data)
+
+    def test_from_dict_rejects_missing_sector_complex_toggles(self):
+        """PROJ-404 / Rule 3: legacy-tolerance branch is deleted. A payload
+        that omits `sector_complex_toggles` raises PersistenceException."""
+        from game.core.exceptions import PersistenceException
+        from game.ui.screens.battle_setup_state import BattleSetupSide
+
+        legacy_data = {
+            "team_id": 0,
+            "fleets": [],
+            "system_complexes": [],
+            "sector_complexes": [],
+            "system_complex_toggles": {},
+            # No sector_complex_toggles
+        }
+        with pytest.raises(PersistenceException):
+            BattleSetupSide.from_dict(legacy_data)
 
     def test_toggle_roundtrip_through_to_dict_from_dict(self):
         from game.ui.screens.battle_setup_state import BattleSetupSide
