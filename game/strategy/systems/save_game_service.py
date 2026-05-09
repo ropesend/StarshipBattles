@@ -64,11 +64,6 @@ def _notify_replay_store_save_deleted() -> None:
 class SaveGameService:
     """Manages saving and loading complete game state"""
 
-    # PROJ-276 Phase 5: bumped from "2.0.0" to "3.0.0" — removed the
-    # legacy `component_damage` dict from ShipInstance saves in favor
-    # of the per-instance `components` dict. Old saves are rejected
-    # with a clear message (see _is_compatible_version); saves are
-    # disposable per CLAUDE.md.
     SAVE_VERSION = "3.0.0"
 
     @staticmethod

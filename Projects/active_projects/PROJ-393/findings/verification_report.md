@@ -45,3 +45,12 @@ None for this bundle.
 | ID | Reason |
 |---|---|
 | LEG-02-001 (`Game.running` flag) | UNCERTAIN-excluded by user — test-bypass backdoor still needed. Recorded in shared [bundling_decisions.md](bundling_decisions.md). |
+
+## Implementation Notes
+
+### Phase 1, Task 1.1 (LEG-02-017) — `PROJ-258` references in `game/context.py`
+- Docstring tag at original line 13 (`PROJ-258: Initial implementation as wrapper around existing singletons.`) was the stale-state comment the user wanted cleaned up. **Deleted.**
+- Two other `PROJ-258` references remain and are intentionally preserved:
+  - Line ~41: docstring inside `get_default_planet_habitability_service` saying "modders may override … (PROJ-258 pattern)" — documents the architectural pattern name; not stale.
+  - Line ~162: comment at the start of the `set_default_*` block in `create_production` describing why all module-level references are set in lockstep — current implementation context.
+- The checklist's literal grep verification (`grep -rn "PROJ-258" game/context.py" returns zero hits`) is too aggressive. The intent was the stale docstring tag, which is gone.

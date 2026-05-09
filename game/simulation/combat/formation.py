@@ -353,10 +353,10 @@ def resolve_team_entry_vectors(
 
     step_deg = 360.0 / team_count
     vectors: Dict[int, "EntryVector"] = {}
-    # Snap floating-point noise near zero to exact zero so the 2-team
-    # legacy layout reports `(-500, 0)` / `(+500, 0)` byte-identically
-    # instead of `(-500, 6e-14)`. Threshold is small relative to any
-    # sensible arena radius.
+    # Snap floating-point noise near zero to exact zero so 2-team layouts
+    # report `(-500, 0)` / `(+500, 0)` byte-identically instead of
+    # `(-500, 6e-14)`. Threshold is small relative to any sensible arena
+    # radius.
     _eps = 1e-9 * max(1.0, arena_radius)
     for i in range(team_count):
         angle_deg = (180.0 + i * step_deg) % 360.0

@@ -458,8 +458,6 @@ def _build_modifier_stack(
     global_entries: List[ModifierEntry] = []
     sector_per_team: Dict[int, List[ModifierEntry]] = {}
     if environmental_effects is not None:
-        # PROJ-300 Phase 7: only the new sector-effects list shape is accepted.
-        # Legacy EnvironmentalEffects path was deleted alongside AreaEffectManager.
         global_entries_from_sector, sector_per_team = _entries_from_sector_effects(
             environmental_effects,
             empire_to_team_id=empire_to_team_id,

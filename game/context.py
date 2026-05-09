@@ -10,7 +10,6 @@ the instance lifetime.
 Placed at game/ package level (outside any layer) to avoid upward
 dependencies from Core to UI/AI. Factory methods use late imports.
 
-PROJ-258: Initial implementation as wrapper around existing singletons.
 PROJ-372 (Phase 0): added module-level habitability service accessors so
 modders can swap `IHabitabilityCalculator` without monkey-patching. Phase
 0 ships with the accessors returning ``None``; Phase 2 wires the real

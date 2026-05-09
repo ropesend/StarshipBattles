@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Minor — comment-only cleanups + doc-tag fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Minor — comment-only cleanups + doc-tag fixes | In Progress | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Major — test-injection legacy fallbacks | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Major — backward-compat fields + misc legacy paths | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1, working
+**Last Action:** Beginning Phase 1 — 4 comment cleanups in one pass
+**Next Action:** Apply 4 edits, run sanity test, commit
 **Blockers:** None
 
 ## Overview
