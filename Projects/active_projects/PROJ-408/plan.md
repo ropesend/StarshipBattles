@@ -3,13 +3,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Add direct unit coverage for the gaps PROJ-380..399 reviews flagged | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Add direct unit coverage for the gaps PROJ-380..399 reviews flagged | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-09
-**Active Phase:** Phase 1
-**Last Action:** Project skeleton created from REMEDIATION_PLAN Tier 4 (C-01..C-06)
-**Next Action:** Add the 3 missing direct unit tests (C-01, C-02, C-04). C-03 → Wave 5; C-05/C-06 already shipped in Wave 1.
+**Active Phase:** Phase 1 (Complete)
+**Last Action:** Landed direct unit coverage for C-01, C-02, C-04 (1 + 5 + 5 = 11 new tests). Confirmed C-05 (PROJ-404) and C-06 (PROJ-401) tests still pass. C-03 deferred to PROJ-409.
+**Next Action:** User verification.
 **Blockers:** None
 
 ## Overview
@@ -56,8 +56,8 @@ The PROJ-380..399 review flagged 6 coverage gaps (C-01..C-06). Two of them (C-05
 - C-04: PROJ-397 review.
 
 ## Verification
-- [ ] Phase 1 checklist complete
-- [ ] All 3 new tests pass (and confirm RED before fix-equivalent — for coverage tests, that's "exercise the code path and assert behavior").
-- [ ] Focused suites for affected modules pass
-- [ ] `python Projects/scripts/validate_audit_ready.py PROJ-408` passes
+- [x] Phase 1 checklist complete
+- [x] All new tests pass (1 C-01 + 5 C-02 + 5 C-04 = 11 added; replaced 1 introspection-only F-05 test).
+- [x] Focused suites for affected modules pass (118 + 324 + 23 = 465 passed across the three modules).
+- [x] `python Projects/scripts/validate_audit_ready.py PROJ-408` passes
 - [ ] User verified
