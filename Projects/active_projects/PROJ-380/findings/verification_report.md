@@ -41,3 +41,27 @@ Each row is a **potential false positive in `ocode-audit-shrink`**.
 | ID | Question for human reviewer | Recommended next step |
 |----|-----------------------------|-----------------------|
 | DUP-X-03 | Of the five `*Ability.__init__` classes the audit named (`ShieldModifierAbility`, `DamageModifierAbility`, `QualityImprovementAbility`, `RadiationShieldAbility` — *not* `SystemShieldingAbility` as the audit labelled it — and `ThrustModifierAbility`), only 2 are true twins. The remaining 3 use the same `if isinstance(data, dict):` guard but extract different field sets (2–4 fields, different defaults). Should we (a) consolidate only the 2 true twins for ≈ 12 LOC, (b) introduce a `_parse_data_fields(data, field_specs)` helper that all 5 use for ≈ 25 LOC, or (c) skip and rely on a future `SimpleMultiplierAbility` / `StaticValueAbility` base-class refactor? | Discuss with the user whether the 5 abilities should converge on a declarative `field_specs` schema (option b) or stay diverged (option c). Avoid (a) — partial consolidation would create an inconsistent pattern across one file. |
+
+---
+
+## Closeout — round 2 (2026-05-08)
+
+After Stage-2 sharded suite ran post-merge of PROJ-380, **4 test regressions** surfaced in `tests/integration/ui/test_colonization_facade.py::TestHandleColonizeDesignationPodFiltering`. The Phase 3.3 sweep migrated the 5 known test files that monkey-patched the now-removed module-level `pixel_to_hex` import, but **missed one integration test file** that used a try/finally module-attribute swap (different shape from the 5 caught earlier — those used `with patch(...)` or `@patch(...)` decorators, easier to grep for).
+
+Failing tests (all in the `TestHandleColonizeDesignationPodFiltering` class):
+1. `test_designation_ignores_pod_count_at_command_time`
+2. `test_designation_matching_pod_succeeds`
+3. `test_designation_no_pods_still_prompts`
+4. `test_designation_mixed_types_filters_correctly`
+
+All failed at `original_pixel_to_hex = colonization_module.pixel_to_hex` with `AttributeError: module 'game.ui.screens.strategy_colonization' has no attribute 'pixel_to_hex'` — the import was correctly removed by Phase 3.3, but this test wasn't migrated.
+
+**Fix:** replaced the 4 try/finally `colonization_module.pixel_to_hex` swap blocks with `mock_camera.hex_at_screen.return_value = HexCoord(10, 10)` (each test already had a `mock_camera` fixture; the production module now calls `camera.hex_at_screen` per Phase 3.3). 26/26 tests in the file pass after the fix.
+
+**Wider sweep:** ran `grep -rn "pixel_to_hex" tests/`. Other matches are legitimate:
+- `tests/unit/core/test_hex_math_core.py` and `test_hex_math_strategy.py` — these test the actual `pixel_to_hex` function in `game.core.hex_math`, untouched.
+- `tests/unit/ui/screens/strategy_render/test_grid_and_storms.py` and `test_grid_cache.py` — patch `game.ui.screens.strategy_render.grid.pixel_to_hex`. `grid.py` still imports `pixel_to_hex` (Phase 3.3 deliberately left it alone — different shape, world-coord based, not a screen→hex conversion).
+
+No further callsites needed migration. Ran `tests/integration/ui/` + `tests/unit/ui/` together — 4879 passed, 2 skipped, 1 pre-existing pytest collection error (`test_panel_factory.py` __pycache__ collision, unrelated to PROJ-380).
+
+**Lesson:** the original Phase 3.3 sweep relied on focused-test execution (`tests/unit/ui/screens/`) plus a UI-only grep. It should have been `tests/` (full tree). Integration-test directory escaped the original sweep, and the try/finally swap pattern in this file didn't show up in `with patch(...)` / `@patch(...)` searches.
