@@ -42,6 +42,7 @@ def _make_window(
     window_title="Select Planet to Colonize",
     list_label="Habitable bodies:",
     show_any_button=True,
+    facade=None,
 ):
     """Construct a real ``PlanetSelectionWindow`` under ``bypass_init``."""
     if rect is None:
@@ -61,6 +62,7 @@ def _make_window(
             list_label=list_label,
             show_any_button=show_any_button,
             ui_builder=ui_builder,
+            facade=facade,
         )
 
 
@@ -207,3 +209,137 @@ class TestUpdateButtonDispatch:
 
         callback.assert_called_once_with(None)
         mock_kill.assert_called_once()
+
+
+class TestFacadeThreading:
+    """PROJ-408 C-04 / PROJ-397 Phase 3 Task 3.2:
+    ``PlanetSelectionWindow`` MUST thread the optional ``facade`` kwarg
+    into ``update()`` and use it to fetch a fresh
+    ``ColonyDemographicView`` for colonized planets so the
+    ``PlanetReportPanel`` renders the PROJ-289 per-species sub-block
+    instead of legacy fallback layout.
+
+    The PROJ-397 review flagged this path as covered only by UI-level
+    tests at the boundary, never by a direct unit test on the window
+    itself. These tests pin the threading in isolation.
+    """
+
+    def _colonized_planet(self, name="Earth", planet_id=7):
+        p = _planet(name)
+        p.id = planet_id
+        p.owner_id = 1   # colonized
+        return p
+
+    def _uncolonized_planet(self, name="Mars", planet_id=11):
+        p = _planet(name)
+        p.id = planet_id
+        p.owner_id = None
+        return p
+
+    def _arrange_for_panel_creation(self, window, planet):
+        """Wire the window so ``update()`` falls into the
+        ``PlanetReportPanel`` creation branch for the given planet."""
+        # Make selection_list report a fresh selection.
+        window.selection_list.get_single_selection.return_value = planet.name
+        # Set both pre-seed slots to a different value so the "selection
+        # changed" + "planet changed" branches both fire.
+        window.current_selection_name = None
+        window.selected_planet = None
+        # ``bypass_init`` does not run UIWindow.__init__, so ``self.rect``
+        # is unset. Production reads ``self.rect.width`` / ``.height``
+        # in the panel-creation branch — provide a Stage-1-equivalent
+        # rect directly. (The PROJ-325 PoC finding 1 noted by the
+        # other tests in this module is the same constraint; those
+        # tests skip the branch instead of arranging for it.)
+        window._rect = pygame.Rect(0, 0, 1000, 700)
+
+    def test_facade_stored_on_construction(self):
+        """The ``facade`` kwarg lives on ``self._facade`` after
+        construction (Stage-1 cheap-state assignment)."""
+        facade = MagicMock(name="StrategySessionFacade")
+        window = _make_window(
+            [self._colonized_planet()],
+            facade=facade,
+        )
+        assert window._facade is facade
+
+    def test_facade_default_is_none_when_omitted(self):
+        """Omitting ``facade`` leaves ``self._facade`` as None — legacy
+        fixtures continue to work but the PROJ-289 layout is skipped."""
+        window = _make_window([self._colonized_planet()])
+        assert window._facade is None
+
+    def test_update_fetches_demographic_view_for_colonized_planet(self):
+        """When the selection changes to a colonized planet, ``update()``
+        calls ``facade.get_colony_demographic_view(planet.id)`` and
+        threads the result into ``PlanetReportPanel(..., view=...)``."""
+        sentinel_view = MagicMock(name="ColonyDemographicView")
+        facade = MagicMock(name="StrategySessionFacade")
+        facade.get_colony_demographic_view = MagicMock(return_value=sentinel_view)
+
+        earth = self._colonized_planet("Earth", planet_id=7)
+        window = _make_window([earth], facade=facade)
+        self._arrange_for_panel_creation(window, earth)
+
+        # Patch dependencies the panel-creation branch reaches into:
+        # PlanetReportPanel constructor, asset manager, and the parent
+        # UIWindow.update.
+        with patch(
+            "game.ui.screens.planet_selection_window.PlanetReportPanel"
+        ) as mock_panel_cls, patch(
+            "game.ui.screens.planet_selection_window.get_default_asset_manager"
+        ), patch("pygame_gui.elements.UIWindow.update", return_value=None):
+            window.update(0.016)
+
+        # PROJ-397 contract: facade is consulted with the planet id.
+        facade.get_colony_demographic_view.assert_called_once_with(7)
+
+        # The fetched view is threaded into the report panel — proves
+        # the result actually flows through the production path,
+        # not just that the facade was called.
+        assert mock_panel_cls.call_count == 1
+        _, panel_kwargs = mock_panel_cls.call_args
+        assert panel_kwargs["view"] is sentinel_view
+        assert panel_kwargs["planet"] is earth
+
+    def test_update_skips_facade_for_uncolonized_planet(self):
+        """Uncolonized planets short-circuit before the facade is
+        consulted (production comment at line 213-214)."""
+        facade = MagicMock(name="StrategySessionFacade")
+        facade.get_colony_demographic_view = MagicMock()
+
+        mars = self._uncolonized_planet("Mars", planet_id=11)
+        window = _make_window([mars], facade=facade)
+        self._arrange_for_panel_creation(window, mars)
+
+        with patch(
+            "game.ui.screens.planet_selection_window.PlanetReportPanel"
+        ) as mock_panel_cls, patch(
+            "game.ui.screens.planet_selection_window.get_default_asset_manager"
+        ), patch("pygame_gui.elements.UIWindow.update", return_value=None):
+            window.update(0.016)
+
+        facade.get_colony_demographic_view.assert_not_called()
+        # Panel still created, but with view=None.
+        assert mock_panel_cls.call_count == 1
+        _, panel_kwargs = mock_panel_cls.call_args
+        assert panel_kwargs["view"] is None
+
+    def test_update_passes_view_none_when_facade_is_none(self):
+        """Legacy callers without a facade still get a panel, with
+        ``view=None`` — the data-rich PROJ-289 layout is skipped but no
+        legacy fallback rendering remains."""
+        earth = self._colonized_planet("Earth", planet_id=7)
+        window = _make_window([earth], facade=None)
+        self._arrange_for_panel_creation(window, earth)
+
+        with patch(
+            "game.ui.screens.planet_selection_window.PlanetReportPanel"
+        ) as mock_panel_cls, patch(
+            "game.ui.screens.planet_selection_window.get_default_asset_manager"
+        ), patch("pygame_gui.elements.UIWindow.update", return_value=None):
+            window.update(0.016)
+
+        assert mock_panel_cls.call_count == 1
+        _, panel_kwargs = mock_panel_cls.call_args
+        assert panel_kwargs["view"] is None
