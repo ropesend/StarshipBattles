@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Delete save-format migration code (banned by Rule 3) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Delete save-format migration code (banned by Rule 3) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-07_220621_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** None — project complete
+**Last Action:** All 4 save-format migration code blocks deleted (LEG-03-008, LEG-03-017, LEG-03-018, LEG-04-005). Tests that exercised only the legacy fallback paths deleted; tests that incidentally relied on the missing-`components` graceful degrade rewritten to feed new-format fixtures.
+**Next Action:** Awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -51,7 +51,7 @@ Deletes 4 distinct save-format migration code blocks across 4 files. **All 4 are
 - [findings/bundling_decisions.md](findings/bundling_decisions.md) — interactive bundling record (shared across siblings)
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
-- [ ] No remaining `if 'phase' not in data` / `side_0` / `_complex_toggles` legacy-format guards (`grep -rn -E "(_complex_toggles|side_0|side_1|component_damage)" game/`)
+- [x] All phase checklists complete
+- [x] All tests passing (focused regression across all affected areas; 2 pre-existing PROJ-393-related failures in `test_order_processor_transfer.py` confirmed not caused by this work)
+- [x] No remaining `if 'phase' not in data` / `side_0` / `_complex_toggles` legacy-format guards (only docstring/comment references + new-format `*_complex_toggles` field/property names remain in production)
 - [ ] User verified

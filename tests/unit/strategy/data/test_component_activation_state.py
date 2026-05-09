@@ -231,19 +231,3 @@ class TestSerialization:
         assert restored.ability_name == "StellarStabilizer"
         assert restored.energy_drain_rate == 50.0
 
-    def test_backward_compat_active_true(self):
-        """Old format {'active': True} should map to ACTIVE."""
-        data = {'active': True}
-        restored = ComponentActivationState.from_dict(data)
-        assert restored.phase == ActivationPhase.ACTIVE
-
-    def test_backward_compat_active_false(self):
-        """Old format {'active': False} should map to INACTIVE."""
-        data = {'active': False}
-        restored = ComponentActivationState.from_dict(data)
-        assert restored.phase == ActivationPhase.INACTIVE
-
-    def test_backward_compat_empty_dict(self):
-        """Empty dict should map to INACTIVE."""
-        restored = ComponentActivationState.from_dict({})
-        assert restored.phase == ActivationPhase.INACTIVE

@@ -21,13 +21,14 @@ def make_valid_fleet_data():
     }
 
 
-def make_valid_ship_data(instance_id='ship-001'):
+def make_valid_ship_data(instance_id: str = 'ship-001') -> dict:
     """Create minimal valid ShipInstance data."""
     return {
         'instance_id': instance_id,
         'design_id': 'design-001',
         'name': 'USS Enterprise',
         'owner_id': 'empire-001',
+        'components': {},
     }
 
 

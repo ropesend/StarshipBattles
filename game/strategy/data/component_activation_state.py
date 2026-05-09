@@ -134,19 +134,7 @@ class ComponentActivationState:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ComponentActivationState':
-        """Deserialize from dict.
-
-        Handles backward compatibility with old format:
-        - {'active': True} → ACTIVE phase
-        - {'active': False} → INACTIVE phase
-        - {} → INACTIVE phase
-        """
-        if 'phase' not in data:
-            # Backward compat: old format was just {'active': bool}
-            active = data.get('active', False)
-            return cls(
-                phase=ActivationPhase.ACTIVE if active else ActivationPhase.INACTIVE,
-            )
+        """Deserialize from dict. Requires `phase` field; raises KeyError if missing."""
         return cls(
             phase=ActivationPhase(data['phase']),
             progress_ticks=data.get('progress_ticks', 0),

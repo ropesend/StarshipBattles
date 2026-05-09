@@ -57,10 +57,9 @@ class ShipInstanceSerializer:
         if ship.role_override is not None:
             data['role_override'] = ship.role_override
         # PROJ-269 Phase 2: per-component persistent state.
-        if ship.components:
-            data['components'] = {
-                key: cs.to_dict() for key, cs in ship.components.items()
-            }
+        data['components'] = {
+            key: cs.to_dict() for key, cs in ship.components.items()
+        }
         return data
 
     @staticmethod
@@ -97,8 +96,6 @@ class ShipInstanceSerializer:
         if data.get('battles_survived') is not None:
             validate_non_negative(data['battles_survived'], 'battles_survived', 'ShipInstance')
 
-        # PROJ-276 Phase 5: legacy `component_damage` key in old saves
-        # is silently ignored — saves are disposable per CLAUDE.md.
         instance = ShipInstance(
             instance_id=data['instance_id'],
             design_id=data['design_id'],
@@ -125,17 +122,12 @@ class ShipInstanceSerializer:
         instance.role_override = data.get('role_override')
 
         # PROJ-269 Phase 2: restore per-component persistent state.
-        # Missing key defaults to empty — legacy saves without
-        # `components` gracefully degrade (CLAUDE.md "saves are disposable").
         from game.core.component_state import ComponentState as _ComponentState
-        raw_components = data.get('components', {})
-        if raw_components:
-            instance.components = {
-                key: _ComponentState.from_dict(cs_data)
-                for key, cs_data in raw_components.items()
-            }
-        else:
-            instance.components = {}
+        raw_components = data['components']
+        instance.components = {
+            key: _ComponentState.from_dict(cs_data)
+            for key, cs_data in raw_components.items()
+        }
 
         return instance
 

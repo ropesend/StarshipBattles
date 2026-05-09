@@ -537,8 +537,7 @@ class BattleSetupController:
         """Load state from a specific path (test-friendly hook).
 
         Replaces `self._state` entirely — subsequent mutations land on the
-        freshly-loaded instance. Legacy `_complex_toggles` top-level keys
-        (pre-Phase-2) are migrated onto per-side toggle dicts.
+        freshly-loaded instance.
         """
         data = load_json(filepath, default=None)
         if not data:
@@ -546,25 +545,6 @@ class BattleSetupController:
 
         registries = _get_registries()
         self._state = BattleSetupState.from_dict(data, registries=registries)
-
-        # Legacy toggle migration.
-        legacy = data.get('_complex_toggles', {}) or {}
-        for key_str, val in legacy.items():
-            parts = key_str.split('_', 2)
-            if len(parts) != 3:
-                continue
-            try:
-                side_id = int(parts[0])
-            except ValueError:
-                continue
-            scope = parts[1]
-            design_id = parts[2]
-            if side_id < 0 or side_id >= len(self._state.sides):
-                continue
-            if scope == "system":
-                self._state.sides[side_id].system_complex_toggles[design_id] = bool(val)
-            elif scope == "sector":
-                self._state.sides[side_id].sector_complex_toggles[design_id] = bool(val)
 
         self._view_model.active_side = 0
         self._view_model.active_fleet_index = 0

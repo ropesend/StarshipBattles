@@ -104,6 +104,7 @@ class TestShipInstanceFromDictWithRegistries:
             'name': 'Test Ship',
             'owner_id': 0,
             'design_data': basic_design_data,
+            'components': {},
         }
 
         ship = ShipInstance.from_dict(data, registries=mock_registries)
@@ -118,6 +119,7 @@ class TestShipInstanceFromDictWithRegistries:
             'name': 'Test Ship',
             'owner_id': 0,
             'design_data': basic_design_data,
+            'components': {},
         }
 
         ship = ShipInstance.from_dict(data)

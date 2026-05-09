@@ -7,13 +7,14 @@ from game.core.exceptions import PersistenceException
 from game.strategy.data.ship_instance import ShipInstance
 
 
-def make_valid_ship_data():
+def make_valid_ship_data() -> dict:
     """Create minimal valid ShipInstance data."""
     return {
         'instance_id': 'ship-001',
         'design_id': 'design-001',
         'name': 'USS Enterprise',
         'owner_id': 'empire-001',
+        'components': {},
     }
 
 

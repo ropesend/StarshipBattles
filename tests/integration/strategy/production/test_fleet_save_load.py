@@ -49,6 +49,7 @@ class TestFleetConstructionQueueSaveLoad:
                 'name': name,
                 'owner_id': 0,
                 'design_data': mock.design_data,
+                'components': {},
             }
             return mock
         return _make

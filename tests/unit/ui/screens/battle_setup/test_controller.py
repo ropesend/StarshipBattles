@@ -634,43 +634,6 @@ class TestReturnToMenu:
         controller.return_to_menu()
 
 
-class TestSaveLoadLegacyMigration:
-    def test_load_migrates_legacy_top_level_complex_toggles(self, tmp_path):
-        """Legacy saves (pre-Phase-2) stored `_complex_toggles` at top level
-        with flat string keys. Controller.load_setup must migrate them onto
-        per-side `*_complex_toggles` dicts."""
-        from game.core.json_utils import save_json
-        from game.ui.screens.battle_setup.controller import BattleSetupController
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-        from game.ui.screens.battle_setup_state import BattleSetupState
-
-        # Build a minimal legacy save file.
-        state = BattleSetupState()
-        state.side_0.create_fleet("Fleet Alpha")
-        state.side_1.create_fleet("Fleet Beta")
-        data = state.to_dict()
-        data["_complex_toggles"] = {
-            "0_system_qs_system_shield_booster_complex": True,
-            "1_sector_qs_sector_damage_booster_complex": True,
-        }
-        save_path = tmp_path / "legacy.json"
-        save_json(str(save_path), data)
-
-        controller = BattleSetupController(
-            state=BattleSetupState(),
-            view_model=BattleSetupViewModel(),
-            on_change=MagicMock(),
-        )
-        controller._load_from_path(str(save_path))
-
-        assert controller._state.sides[0].system_complex_toggles.get(
-            "qs_system_shield_booster_complex"
-        ) is True
-        assert controller._state.sides[1].sector_complex_toggles.get(
-            "qs_sector_damage_booster_complex"
-        ) is True
-
-
 class TestNTeamBattleLaunch:
     """PROJ-282 Phase 11 Task 11.4: end-to-end verification that
     Controller.add_side() + chained state/ship setup + start_battle

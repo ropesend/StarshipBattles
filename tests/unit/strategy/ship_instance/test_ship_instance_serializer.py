@@ -68,19 +68,6 @@ class TestToDict:
         data = ShipInstanceSerializer.to_dict(full_ship)
         assert 'component_damage' not in data
 
-    def test_from_dict_ignores_legacy_component_damage_key(self):
-        """Old saves containing `component_damage` load without error;
-        the key is simply ignored. Per CLAUDE.md saves-are-disposable
-        policy we don't migrate — but we must not crash."""
-        data = {
-            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
-            # Legacy key from a pre-PROJ-276 save; should be ignored.
-            'component_damage': {'laser_1': 5, 'shield_2': 10},
-        }
-        # Should not raise.
-        instance = ShipInstanceSerializer.from_dict(data)
-        assert instance.components == {}
-
     def test_cargo_contents_omitted_when_empty(self):
         """to_dict does not include cargo_contents key when empty."""
         ship = ShipInstance(
@@ -119,6 +106,7 @@ class TestFromDict:
         mock_registries = MagicMock()
         data = {
             'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            'components': {},
         }
         instance = ShipInstanceSerializer.from_dict(data, registries=mock_registries)
         assert instance._registries is mock_registries
