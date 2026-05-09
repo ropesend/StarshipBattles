@@ -9,6 +9,7 @@ PROJ-329C Phase 3: two-stage construction with ``ui_builder`` test seam
 """
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any, Optional, TYPE_CHECKING
 import pygame
 from game.core.resources import ResourceCatalog
@@ -21,7 +22,11 @@ from game.ui.screens.data_list_window_mixin import DataListWindowMixin
 if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
-_PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
+
+@lru_cache(maxsize=1)
+def _get_planetary_ids() -> tuple[str, ...]:
+    """PROJ-397 F-07: lazy-load planetary resource IDs (was module-level)."""
+    return tuple(d.id for d in ResourceCatalog.from_json().by_display_group("planetary"))
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
 from game.ui.config import UIConfig
@@ -295,7 +300,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
             {'id': 'pressure', 'width': 100, 'title': 'Press (atm)', 'attr': 'total_pressure_atm', 'fmt': "{:.2f}", 'visible': False},
             {'id': 'population', 'width': 120, 'title': 'Population', 'func': lambda p: _format_population(p), 'visible': False},
         ]
-        for res in _PLANETARY_IDS:
+        for res in _get_planetary_ids():
             self.columns.append({
                 'id': f'res_{res}',
                 'width': 110,

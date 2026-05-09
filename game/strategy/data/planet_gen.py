@@ -11,10 +11,16 @@ from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
+from functools import lru_cache
+
 from game.core.resources import ResourceCatalog
 from game.strategy.data.planet import Planet, PlanetType
 
-_PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
+
+@lru_cache(maxsize=1)
+def _get_planetary_ids() -> tuple[str, ...]:
+    """PROJ-397 F-07: lazy-load planetary resource IDs (was module-level)."""
+    return tuple(d.id for d in ResourceCatalog.from_json().by_display_group("planetary"))
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 from game.core.hex_math import HexCoord, hex_ring, hex_circle_filled
 from game.strategy.data.physics import calculate_incident_radiation
@@ -569,7 +575,7 @@ class PlanetGenerator:
 
         type_name = planet_type.name
 
-        for res in _PLANETARY_IDS:
+        for res in _get_planetary_ids():
             # Quantity: proportional to mass, calibrated so Earth-mass = baseline
             r_qty = random.random()
             qty_norm = (size_factor * cfg.qty_determinism) + (r_qty * cfg.qty_randomness)

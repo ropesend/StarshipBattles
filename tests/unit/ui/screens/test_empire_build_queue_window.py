@@ -203,6 +203,39 @@ class TestWindowInitialization:
         win = _make_window(on_navigate=cb)
         assert win.on_navigate_to_hex is cb
 
+    def test_constructor_requires_facade(self):
+        """PROJ-397 F-05: ``facade`` MUST be a required keyword-only param.
+
+        The static guard at ``tests/static_guards/test_facade_bypass_guard.py``
+        blocks ``self.session.handle_command(...)`` text, but does NOT
+        validate that ``facade`` is structurally required on the
+        ``EmpireBuildQueueWindow`` constructor. If ``facade`` were
+        reverted to ``facade: Any = None``, the static guard would not
+        catch it. This test exercises the real constructor signature
+        (introspection only — no widget construction) so a regression
+        defaulting ``facade`` to ``None`` would fail here.
+        """
+        import inspect
+
+        from game.ui.screens.empire_build_queue_window import (
+            EmpireBuildQueueWindow,
+        )
+
+        sig = inspect.signature(EmpireBuildQueueWindow.__init__)
+        facade_param = sig.parameters.get("facade")
+        assert facade_param is not None, (
+            "EmpireBuildQueueWindow.__init__ must accept a `facade` kwarg"
+        )
+        assert facade_param.kind == inspect.Parameter.KEYWORD_ONLY, (
+            "`facade` must be keyword-only (after `*,`)"
+        )
+        assert facade_param.default is inspect.Parameter.empty, (
+            "`facade` must be required (no default). PROJ-382 Phase 1 "
+            "made facade required to enforce CQRS dispatch; reverting it "
+            "to Optional would re-introduce the session-bypass risk that "
+            "PROJ-393 Task 2.5 closed."
+        )
+
 
 # =======================================================================
 # Source Display Tests

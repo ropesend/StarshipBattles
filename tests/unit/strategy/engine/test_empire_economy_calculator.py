@@ -1090,7 +1090,7 @@ class TestTreasuryTotalIncludesUpkeep:
         upkeep term is absent from the summation at lines 147-150 of
         `empire_economy_calculator.py`."""
         from game.strategy.data.species_population import SpeciesPopulation
-        from game.strategy.engine.empire_economy_calculator import _PLANETARY_IDS
+        from game.strategy.engine.empire_economy_calculator import _get_planetary_ids
 
         populations = [
             SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
@@ -1117,7 +1117,7 @@ class TestTreasuryTotalIncludesUpkeep:
         assert snapshot.total_population_upkeep.get("organics", 0.0) > 0.0
         assert snapshot.total_population_upkeep.get("metals", 0.0) > 0.0
 
-        for r in _PLANETARY_IDS:
+        for r in _get_planetary_ids():
             expected = (
                 snapshot.tribute_expenses.get(r, 0.0)
                 + snapshot.construction_expenses_ships.get(r, 0.0)
@@ -1137,7 +1137,7 @@ class TestTreasuryTotalIncludesUpkeep:
         also lower by the upkeep amount. With the bug present, net is
         overstated by exactly the per-resource upkeep value."""
         from game.strategy.data.species_population import SpeciesPopulation
-        from game.strategy.engine.empire_economy_calculator import _PLANETARY_IDS
+        from game.strategy.engine.empire_economy_calculator import _get_planetary_ids
 
         colony = self._colony_with_populations(populations=[
             SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
@@ -1156,7 +1156,7 @@ class TestTreasuryTotalIncludesUpkeep:
         )
         snapshot = calculator.calculate(empire)
 
-        for r in _PLANETARY_IDS:
+        for r in _get_planetary_ids():
             expected_net = snapshot.total_production.get(r, 0.0) - (
                 snapshot.tribute_expenses.get(r, 0.0)
                 + snapshot.construction_expenses_ships.get(r, 0.0)

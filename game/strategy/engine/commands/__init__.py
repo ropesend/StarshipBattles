@@ -95,17 +95,15 @@ class QueueColonizeMissionCommand(Command):
 
 @dataclass
 class ClearOrdersCommand(Command):
-    """Command to clear all orders from a fleet or planet.
+    """Command to clear all orders from a fleet.
 
-    PROJ-238: Renamed from ClearFleetOrdersCommand. The ``entity_type``
-    field was added for future planet support, but the handler currently
-    only resolves ``fleet_id``. The "Kept for backward compat" tag is
-    removed (PROJ-393): ``fleet_id`` IS the canonical field — no
-    `entity_id` parallel exists. A future project may unify on
-    ``entity_id``/``entity_type`` and migrate the ~20 call sites.
+    Strictly handles the fleet path. The planet path has its own
+    dedicated command, ``ClearPlanetOrdersCommand`` (see
+    ``orders_window_ctrl.py``), so no entity_type discriminator is
+    needed here. The forward-dead ``entity_type: str = "fleet"`` field
+    was removed by PROJ-397 (review F-04) — no handler ever read it.
     """
     fleet_id: int
-    entity_type: str = "fleet"  # "fleet" or "planet" (handler uses fleet path only)
 
 
 @dataclass
@@ -284,25 +282,30 @@ class SplitFleetCommand(Command):
 
 @dataclass
 class DeleteOrderCommand(Command):
-    """Command to remove a specific order from a fleet's or planet's order queue.
+    """Command to remove a specific order from a fleet's order queue.
 
-    PROJ-238: Renamed from DeleteFleetOrderCommand.
+    Strictly handles the fleet path. The planet path has its own
+    dedicated command, ``DeletePlanetOrderCommand``. The forward-dead
+    ``entity_type: str = "fleet"`` field was removed by PROJ-397
+    (review F-04).
     """
     fleet_id: int
     order_index: int
-    entity_type: str = "fleet"
 
 
 @dataclass
 class ReorderOrderCommand(Command):
-    """Command to move an order up or down in the queue.
+    """Command to move a fleet order up or down in the queue.
 
-    PROJ-238: Renamed from ReorderFleetOrderCommand.
+    Strictly handles the fleet path (no equivalent planet command
+    exists yet — see ``orders_window_ctrl.py:reorder_order_callback``
+    planet branch which is currently a no-op). The forward-dead
+    ``entity_type: str = "fleet"`` field was removed by PROJ-397
+    (review F-04).
     """
     fleet_id: int
     order_index: int
     direction: int
-    entity_type: str = "fleet"
 
 
 # =============================================================================

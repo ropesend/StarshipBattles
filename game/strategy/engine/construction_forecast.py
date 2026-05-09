@@ -10,12 +10,17 @@ Used by:
 - BUG-98: Per-item "next turn" column values in build queue UI
 """
 
+from functools import lru_cache
 from typing import Dict, List
 
 from game.core.resources import ResourceCatalog
 from game.strategy.engine.production_math import find_limiting_resource_ticks
 
-_PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
+
+@lru_cache(maxsize=1)
+def _get_planetary_ids() -> tuple[str, ...]:
+    """PROJ-397 F-07: lazy-load planetary resource IDs (was module-level)."""
+    return tuple(d.id for d in ResourceCatalog.from_json().by_display_group("planetary"))
 
 
 def forecast_queue_turn_spend(
@@ -38,7 +43,7 @@ def forecast_queue_turn_spend(
         Items beyond production capacity get all-zero dicts.
     """
     if not queue or not build_rate:
-        return [{r: 0.0 for r in _PLANETARY_IDS} for _ in queue]
+        return [{r: 0.0 for r in _get_planetary_ids()} for _ in queue]
 
     remaining_capacity = 1.0  # Fraction of turn remaining
     result: List[Dict[str, float]] = []
@@ -46,14 +51,14 @@ def forecast_queue_turn_spend(
     for item in queue:
         if remaining_capacity <= 0.0001:
             # No capacity left — zero spend for remaining items
-            result.append({r: 0.0 for r in _PLANETARY_IDS})
+            result.append({r: 0.0 for r in _get_planetary_ids()})
             continue
 
         total_cost = item.get("total_cost", {})
         resources_consumed = item.get("resources_consumed", {})
 
         if not total_cost:
-            result.append({r: 0.0 for r in _PLANETARY_IDS})
+            result.append({r: 0.0 for r in _get_planetary_ids()})
             continue
 
         # Calculate remaining cost per resource
@@ -65,7 +70,7 @@ def forecast_queue_turn_spend(
 
         if not remaining_cost:
             # Item already complete — zero spend, no capacity consumed
-            result.append({r: 0.0 for r in _PLANETARY_IDS})
+            result.append({r: 0.0 for r in _get_planetary_ids()})
             continue
 
         # Find limiting resource (PROJ-233: shared formula, ticks_per_turn=1 for turns)
@@ -73,7 +78,7 @@ def forecast_queue_turn_spend(
             remaining_cost, build_rate, ticks_per_turn=1
         )
         if turns_needed is None or turns_needed <= 0:
-            result.append({r: 0.0 for r in _PLANETARY_IDS})
+            result.append({r: 0.0 for r in _get_planetary_ids()})
             continue
 
         # How much of the turn this item uses
@@ -81,7 +86,7 @@ def forecast_queue_turn_spend(
 
         # Calculate per-resource spend for this item
         item_spend = {}
-        for res in _PLANETARY_IDS:
+        for res in _get_planetary_ids():
             rate = build_rate.get(res, 0.0)
             rem = remaining_cost.get(res, 0.0)
             spend = rate * turns_to_spend
