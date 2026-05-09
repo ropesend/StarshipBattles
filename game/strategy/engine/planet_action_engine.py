@@ -350,23 +350,29 @@ class PlanetActionEngine(IPlanetActionEngine):
         return any(f.instance_id == facility_id for f in planet.facilities)
 
     def _find_target_facility(self, planet: 'Planet', order: 'Order') -> Optional[Any]:
-        """Find the target facility for an order."""
+        """Find the target facility for an order.
+
+        PROJ-393: removed the legacy non-dict-target shield fallback. Orders
+        must now carry a dict target with at least ``ability_name`` (and
+        ideally ``facility_instance_id``). Non-dict targets resolve to None
+        and the order is treated as un-actionable.
+        """
         target = order.target
-        if isinstance(target, dict):
-            facility_id = target.get('facility_instance_id')
-            if facility_id:
-                for f in planet.facilities:
-                    if f.instance_id == facility_id:
-                        return f
-            # Fallback: find first facility with the target ability
-            ability_name = target.get('ability_name', 'PlanetaryShield')
+        if not isinstance(target, dict):
+            return None
+
+        facility_id = target.get('facility_instance_id')
+        if facility_id:
+            for f in planet.facilities:
+                if f.instance_id == facility_id:
+                    return f
+
+        # Fall back to first facility with the named ability.
+        ability_name = target.get('ability_name')
+        if ability_name:
             for f in planet.facilities:
                 if self._find_ability_component_id(f, ability_name):
                     return f
-        # Legacy fallback: find first facility with shield ability
-        for f in planet.facilities:
-            if self._find_ability_component_id(f, 'PlanetaryShield'):
-                return f
         return None
 
     def _find_ability_component_id(self, facility, ability_name: str) -> Optional[str]:

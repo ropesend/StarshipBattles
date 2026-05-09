@@ -14,14 +14,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Minor — comment-only cleanups + doc-tag fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major — test-injection legacy fallbacks | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Major — backward-compat fields + misc legacy paths | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. Major — test-injection legacy fallbacks | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Major — backward-compat fields + misc legacy paths | In Progress | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 2, working
-**Last Action:** Phase 1 complete — 4 comment cleanups committed (a23948b9d)
-**Next Action:** Phase 2 — test-injection legacy fallbacks
+**Active Phase:** Phase 3, working
+**Last Action:** Phase 2 complete — scene rename + 4 fallback deletions committed (5471b5984, da008e347)
+**Next Action:** Phase 3 — backward-compat fields + misc legacy paths
 **Blockers:** None
 
 ## Overview

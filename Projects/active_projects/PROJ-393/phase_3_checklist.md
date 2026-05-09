@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Remove 7 legacy code paths of varying shapes — backward-compat fields, hardcoded fallbacks, module-level side-effect calls, and tracked-elsewhere instance vars whose tracker (PROJ-270) has been archived. Tasks are independent and can run in parallel.
 
 ---

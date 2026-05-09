@@ -98,22 +98,29 @@ class _TransferDispatchMixin:
         if not planet.populations:
             return 0
 
-        # If species_id provided, find that specific species
-        if species_id:
-            pop = next((p for p in planet.populations if p.race_id == species_id), None)
-            if not pop:
-                return 0
-        else:
-            # Legacy/Default: use first species
-            pop = planet.populations[0]
+        # PROJ-393: species_id is now required; the legacy
+        # 'default to first species' fallback is gone. UI surfaces a
+        # species selection in the cargo dialog, and the order serializer
+        # requires it.
+        if not species_id:
+            logger.warning(
+                "TransferHandler: passenger LOAD on %s missing species_id; "
+                "no transfer performed (legacy first-species fallback removed in PROJ-393)",
+                planet.name,
+            )
+            return 0
+
+        pop = next((p for p in planet.populations if p.race_id == species_id), None)
+        if not pop:
+            return 0
 
         to_load = min(to_load, pop.count)
 
         # Subtract from colony
         pop.count -= to_load
 
-        # Add to fleet cargo
-        # TODO: If we ever track species in fleet cargo, use species_id here
+        # Add to fleet cargo. Cargo system tracks "passengers" as a single
+        # bucket; species_id is consumed here for source-side accounting only.
         fleet.resources.load_cargo_to_fleet("passengers", to_load)
 
         return to_load

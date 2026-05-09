@@ -451,7 +451,8 @@ def test_bug_70_load_population_auto_resolves_owned_colony():
 
     fleet.get_current_order.return_value = Order(
         OrderType.LOAD_POPULATION,
-        {"direction": "load", "cargo_type": "passengers", "amount": 5},
+        # PROJ-393: species_id is now required; legacy first-species fallback removed.
+        {"direction": "load", "cargo_type": "passengers", "amount": 5, "species_id": "humans"},
     )
     with patch(
         "game.strategy.validation.TransferValidator.validate",

@@ -46,6 +46,28 @@ None for this bundle.
 |---|---|
 | LEG-02-001 (`Game.running` flag) | UNCERTAIN-excluded by user — test-bypass backdoor still needed. Recorded in shared [bundling_decisions.md](bundling_decisions.md). |
 
+## Deferred During Implementation
+
+### Phase 3, Task 3.2 (LEG-02-004) — `fleet_id: int  # Kept for backward compat` field
+- **Reason:** The audit said "migrate callers to `entity_id`/`entity_type`, then delete `fleet_id`". There is no `entity_id` field on these DTOs to migrate to — only `fleet_id` (canonical, used by handlers) and `entity_type` (declared but unused by handlers). 20+ test sites + 1 production site use `fleet_id=` keyword.
+- **Action taken:** Removed the misleading `# Kept for backward compat; use entity_id for new code` tag from `ClearOrdersCommand` (the only of the 3 commands that actually carried it). Updated docstring to explain real state and flag this as future work.
+- **Action deferred:** Adding `entity_id` and migrating all callers is a real but separate scope-of-design refactor (likely a sibling of PROJ-238 follow-up).
+
+### Phase 3, Task 3.3 (LEG-02-006) — `format_planet_info` `view=None` branch
+- **Reason:** `PlanetSelectionWindow` (`game/ui/screens/planet_selection_window.py:195`) constructs a `PlanetReportPanel` without `view=`, so the panel's internal `format_planet_info` call goes through the legacy branch. PlanetSelectionWindow has no facade access in its `__init__` — only a `planets` list, manager, callbacks. Threading facade through requires touching the call sites (colonization workflow, strategy_event_router) and migrating tests; well beyond a "delete a fallback" cleanup.
+- **Action deferred:** PROJ-289-style facade plumbing into PlanetSelectionWindow (and its construction chain). Audit also showed many tests pass `format_planet_info(mock_planet)` with no view — these would all need migration too.
+- The branch is also defensively useful for any future caller that legitimately can't supply demographic data (e.g. galaxy-generation preview screens).
+
+### Phase 3, Task 3.5 (LEG-03-023) — `BattleScreen` Combat Lab instance vars
+- **Reason:** Vars are not stale; they are actively used by production code, not just legacy back-compat.
+- **Evidence:**
+  - `headless_mode`: read by `game/run_loop.py:216`, `battle_screen.py:302` (gates the entire headless update path), `battle_screen.py:157` (set from `controller.config.headless`).
+  - `test_completed`: read+written by `game/ui/screens/test_lab/screen.py:337,348,360` and `battle_screen.py` test-completion bookkeeping.
+  - `test_tick_count`: read by `test_lab/screen.py:346` for results recording.
+  - `test_mode`, `test_scenario`: read by `battle_screen.py:490` `is_battle_over` test-mode shortcut.
+- The `# NOQA: legacy-retained` comment misled the audit; PROJ-270's archive doesn't mean these are dead, just that *the cleanup is unscheduled*. The real refactor (route Combat Lab visual mode through a non-attribute-stuffing mechanism) is non-trivial and out of PROJ-393's scope.
+- Recommendation: file a follow-up project (`PROJ-39x: Combat Lab BattleScreen attribute reclaim`) that designs the proper extraction, with full test_lab integration coverage. PROJ-393 only handles "true legacy" code; this one is "in-flight without a clear owner."
+
 ## Implementation Notes
 
 ### Phase 1, Task 1.1 (LEG-02-017) — `PROJ-258` references in `game/context.py`

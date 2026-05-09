@@ -404,15 +404,15 @@ class TestPlanetActionEngine:
         assert len(planet.orders) == 0
         assert "cannot deactivate PlanetaryShield" in caplog.text
 
-    def test_find_target_facility_legacy_non_dict_target_uses_shield_fallback(self):
-        """Legacy non-dict targets resolve to the first shield-capable facility."""
+    def test_find_target_facility_non_dict_target_returns_none(self):
+        """PROJ-393: non-dict targets are no longer auto-resolved to a shield."""
         engine = PlanetActionEngine()
         no_shield = _make_facility("fac-1", {"layers": {"OUTER": [{"id": "plain"}]}})
         shield = _make_facility("fac-2", _shield_design())
         planet = _make_planet(facilities=[no_shield, shield])
         order = Order(OrderType.ACTIVATE_ABILITY, target=None)
 
-        assert engine._find_target_facility(planet, order) is shield
+        assert engine._find_target_facility(planet, order) is None
 
     def test_find_target_facility_returns_none_when_no_facility_has_ability(self):
         """Ability fallback returns None when no facility can satisfy the target."""

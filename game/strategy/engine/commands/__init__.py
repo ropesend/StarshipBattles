@@ -97,10 +97,15 @@ class QueueColonizeMissionCommand(Command):
 class ClearOrdersCommand(Command):
     """Command to clear all orders from a fleet or planet.
 
-    PROJ-238: Renamed from ClearFleetOrdersCommand. Uses entity_id + entity_type.
+    PROJ-238: Renamed from ClearFleetOrdersCommand. The ``entity_type``
+    field was added for future planet support, but the handler currently
+    only resolves ``fleet_id``. The "Kept for backward compat" tag is
+    removed (PROJ-393): ``fleet_id`` IS the canonical field — no
+    `entity_id` parallel exists. A future project may unify on
+    ``entity_id``/``entity_type`` and migrate the ~20 call sites.
     """
-    fleet_id: int  # Kept for backward compat; use entity_id for new code
-    entity_type: str = "fleet"  # "fleet" or "planet"
+    fleet_id: int
+    entity_type: str = "fleet"  # "fleet" or "planet" (handler uses fleet path only)
 
 
 @dataclass
