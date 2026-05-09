@@ -14,13 +14,13 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Critical — zero-call-site quick deletions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major — inline-and-delete + small migrations | Active | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Major — inline-and-delete + small migrations | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-08
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete — 3 zero-call-site deletions landed (LEG-01-001 / LEG-02-007 / LEG-03-025); 14 test readers of `expanded_ships` migrated to `_expanded_ids` after audit's "0 readers" claim was found incorrect
-**Next Action:** Begin Phase 2 tasks (9 inline-and-delete + small migrations)
+**Active Phase:** None — all phases complete
+**Last Action:** Phase 2 complete — 9 inline-and-delete / small migrations landed; full sharded suite 19729/19740 (5 pre-existing failures + 2 pre-existing collection errors, all confirmed unrelated by stash-and-rerun)
+**Next Action:** Awaiting user verification
 **Blockers:** None
 
 ## Overview
@@ -72,6 +72,6 @@ Catch-all project for orphan legacy wrappers across the codebase that don't belo
 - [findings/bundling_decisions.md](findings/bundling_decisions.md) — interactive bundling record (shared across siblings)
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing (sharded baseline preserved: 19729/19740; 5 pre-existing failures + 2 pre-existing collection errors all confirmed unrelated)
 - [ ] User verified

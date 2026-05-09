@@ -230,7 +230,7 @@ class TestOnStartClicked:
         screen.player_count = 1
         screen.empire_name_inputs[0].get_text.return_value = "Empire One"
 
-        with patch.object(type(screen), 'validate_save_name', return_value=(True, "")):
+        with patch('game.ui.screens.new_game_setup_controller.NewGameSetupController.validate_save_name', return_value=(True, "")):
             screen._on_start_clicked()
 
         screen.on_start_callback.assert_called_once()
@@ -243,7 +243,7 @@ class TestOnStartClicked:
         race = _make_race_config(name="Klingon Empire")
         screen.player_races[0] = race
 
-        with patch.object(type(screen), 'validate_save_name', return_value=(True, "")):
+        with patch('game.ui.screens.new_game_setup_controller.NewGameSetupController.validate_save_name', return_value=(True, "")):
             screen._on_start_clicked()
 
         # The config passed to callback should use the race name.
