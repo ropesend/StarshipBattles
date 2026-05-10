@@ -219,3 +219,55 @@ class TestButtonClickHandling:
         result = gallery.handle_button_click(other_btn)
 
         assert result is False
+
+
+# =============================================================================
+# Issue #11: cross-instance theme thumbnail cache
+# =============================================================================
+
+
+class TestIssue11ThemeModuleCache:
+    """Issue #11: ``_discover_assets`` must reuse decoded 40px ship-class
+    thumbnails across gallery instances via a module-level cache,
+    eliminating the per-open 18-image scale on dialog reopen."""
+
+    def test_discover_assets_uses_module_level_cache_across_instances(
+        self, mock_race_config
+    ):
+        """Two gallery instances share the theme thumbnail dict — second
+        open does no ``pygame.transform.scale`` calls."""
+        from unittest.mock import patch
+
+        from game.ui.panels import race_theme_gallery as rtg
+
+        rtg._clear_thumbnail_caches()
+
+        gallery_a = _bypass_init_gallery(mock_race_config)
+        first_pass = gallery_a._discover_assets()
+
+        # The first pass already populated the module cache. The second
+        # construction must not re-scale any image.
+        with patch("pygame.transform.scale") as mock_scale:
+            gallery_b = _bypass_init_gallery(mock_race_config)
+            second_pass = gallery_b._discover_assets()
+            mock_scale.assert_not_called()
+
+        assert second_pass is first_pass
+
+    def test_clear_thumbnail_caches_resets_module_state(self, mock_race_config):
+        """The reset helper exists and lets tests/fixtures wipe state."""
+        from unittest.mock import patch
+
+        from game.ui.panels import race_theme_gallery as rtg
+
+        gallery = _bypass_init_gallery(mock_race_config)
+        gallery._discover_assets()
+
+        rtg._clear_thumbnail_caches()
+
+        with patch("pygame.transform.scale", wraps=__import__("pygame").transform.scale) as wrapped:
+            gallery2 = _bypass_init_gallery(mock_race_config)
+            gallery2._discover_assets()
+            # Reset means a real scale must run again on at least one
+            # theme entry.
+            assert wrapped.called

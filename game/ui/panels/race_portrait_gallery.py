@@ -26,6 +26,21 @@ if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
 
 
+# Issue #11: module-level thumbnail cache shared across gallery instances.
+# Mirrors the ShipThemeManager singleton pattern (PROJ-314).
+_PORTRAIT_THUMBNAIL_CACHE: Optional[List[Tuple[str, pygame.Surface]]] = None
+
+
+def _clear_thumbnail_caches() -> None:
+    """Reset the module-level portrait thumbnail cache.
+
+    Test fixtures call this between runs. Production code never calls
+    this — assets are static at runtime.
+    """
+    global _PORTRAIT_THUMBNAIL_CACHE
+    _PORTRAIT_THUMBNAIL_CACHE = None
+
+
 class RacePortraitGallery(BaseGallery):
     """
     Gallery panel for selecting race portraits.
@@ -104,10 +119,12 @@ class RacePortraitGallery(BaseGallery):
         Returns:
             List of (portrait_id, thumbnail_surface) tuples
         """
-        if self._asset_cache is not None:
-            return self._asset_cache
+        global _PORTRAIT_THUMBNAIL_CACHE
+        if _PORTRAIT_THUMBNAIL_CACHE is not None:
+            self._asset_cache = _PORTRAIT_THUMBNAIL_CACHE
+            return _PORTRAIT_THUMBNAIL_CACHE
 
-        portraits = []
+        portraits: List[Tuple[str, pygame.Surface]] = []
         portraits_dir = os.path.join(Paths.ASSET_DIR, "Images", "Race Portraits")
 
         if not os.path.exists(portraits_dir):
@@ -127,6 +144,7 @@ class RacePortraitGallery(BaseGallery):
                     logger.error(f"Failed to load portrait {entry.path}: {e}")
 
         portraits.sort(key=lambda x: x[0])
+        _PORTRAIT_THUMBNAIL_CACHE = portraits
         self._asset_cache = portraits
         logger.debug(f"Discovered {len(portraits)} portraits")
         return portraits

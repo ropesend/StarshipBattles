@@ -247,7 +247,9 @@ Strategy/core event logging:
 
 ## 11. Surface Caching
 
-Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`.
+> **Last verified:** 2026-05-10 — Issue #11: race-setup galleries now share thumbnails via module-level caches.
+
+Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`, `game/ui/panels/race_flag_gallery.py`, `game/ui/panels/race_portrait_gallery.py`, `game/ui/panels/race_theme_gallery.py`.
 
 Contract:
 - Cache loaded/scaled pygame surfaces by stable asset key and dimensions.
@@ -255,6 +257,7 @@ Contract:
 - Use fallback/missing textures through asset managers rather than ad hoc loads.
 - Component derivative images are generated/refreshed by asset tooling from the tracked 1024px source set.
 - Individual UI panels may keep local `Dict[str, Surface]` caches with `invalidate_cache()` methods for rotated text and scaled surfaces.
+- Cross-instance thumbnail caches use a module-level singleton + `_clear_thumbnail_caches()` reset hook (mirrors `ShipThemeManager.clear()`). Used by `RaceFlagGallery`, `RacePortraitGallery`, `RaceThemeGallery` so re-opening Setup Species reuses decoded thumbnails instead of re-scanning + re-decoding 28 × 2048-px portraits and 18 ship-theme thumbs every time.
 - Do not cache color fills or line drawing; they are fast and position-dependent.
 
 Use for repeated image loads, component sprites, race/planet/star images, and generated derivatives.

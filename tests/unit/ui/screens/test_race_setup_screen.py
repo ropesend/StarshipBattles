@@ -1362,6 +1362,157 @@ class TestBug115CloseButtonInvokesCancel:
 # ===========================================================================
 
 
+# ===========================================================================
+# Issue #11: lazy panel construction
+# ===========================================================================
+
+
+class TestIssue11LazyPanelConstruction:
+    """Issue #11: heavy galleries (flag/portrait/theme) must NOT be
+    constructed during ``RaceSetupScreen.__init__``. They're built on
+    first ``_show_step(<their tab>)`` activation (or when
+    ``randomize_all`` materialises them explicitly)."""
+
+    def test_create_step_panels_only_invokes_summary_factory(self):
+        """``_create_step_panels`` calls only the Summary factory eagerly.
+        The other six factories are deferred until tab activation."""
+        from unittest.mock import patch, MagicMock
+
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.ui.screens.race_setup import panel_factory
+
+        # Build a screen via bypass + NullRaceSetupUiBuilder so we control
+        # the test's panel-factory invocation manually below.
+        screen, _ = _make_race_setup_screen()
+        # Reset the step_panels and gallery slots to mimic a fresh build.
+        screen.step_panels = []
+        screen._flag_gallery = None
+        screen._portrait_gallery = None
+        screen._theme_gallery = None
+        screen._identity_panel = None
+        screen._environment_panel = None
+        screen._aptitudes_panel = None
+        screen._description_panel = None
+
+        container = MagicMock()
+        container.get_size.return_value = (800, 600)
+        with patch.object(panel_factory, "create_summary_panel") as summ, \
+             patch.object(panel_factory, "create_identity_panel") as ident, \
+             patch.object(panel_factory, "create_visuals_panel") as vis, \
+             patch.object(panel_factory, "create_ships_panel") as ships, \
+             patch.object(panel_factory, "create_environment_panel") as env, \
+             patch.object(panel_factory, "create_aptitudes_panel") as apt, \
+             patch.object(panel_factory, "create_descriptions_panel") as desc, \
+             patch("pygame_gui.elements.UIPanel"):
+            RaceSetupScreen._create_step_panels(screen, container, 800, 50, 400)
+
+        summ.assert_called_once()
+        ident.assert_not_called()
+        vis.assert_not_called()
+        ships.assert_not_called()
+        env.assert_not_called()
+        apt.assert_not_called()
+        desc.assert_not_called()
+
+    def test_show_step_materialises_target_tab_on_first_activation(self):
+        """``_show_step`` materialises the target tab's factory on its
+        first activation (lazy build) and does NOT re-run it on
+        subsequent activations."""
+        from unittest.mock import MagicMock
+
+        from game.ui.screens.race_setup_screen import RaceSetupScreen
+
+        screen, _ = _make_race_setup_screen()
+        screen._flag_gallery = None
+        screen._portrait_gallery = None
+
+        # Seed _deferred_panel_factories as ``_create_step_panels`` would
+        # have done in production. Use a sentinel factory we can spy on.
+        vis_factory = MagicMock(name="create_visuals_panel")
+        screen._deferred_panel_factories = {screen.TAB_VISUALS: vis_factory}
+
+        RaceSetupScreen._show_step(screen, screen.TAB_VISUALS)
+        vis_factory.assert_called_once()
+
+        # Second activation must NOT re-invoke the factory.
+        RaceSetupScreen._show_step(screen, screen.TAB_VISUALS)
+        vis_factory.assert_called_once()
+
+    def test_randomize_all_materialises_visuals_and_ships_panels(self):
+        """``randomize_all`` needs the galleries to read asset pools and
+        apply selections. With lazy construction, it must force-build
+        Visuals + Ships before iterating their galleries — otherwise the
+        master Randomize button silently no-ops on first click."""
+        from unittest.mock import patch, MagicMock
+
+        from game.strategy.data.race_config import RaceConfig
+        from game.strategy.data.environmental_preference import (
+            EnvironmentalPreference,
+        )
+
+        screen, _ = _make_race_setup_screen()
+        # Pretend the galleries haven't been built yet (lazy state).
+        screen._flag_gallery = None
+        screen._portrait_gallery = None
+        screen._theme_gallery = None
+
+        new_config = RaceConfig()
+        screen.race_config = new_config
+        screen._controller.race_config = new_config
+        screen._renderer.refresh_ship_preview = MagicMock()
+        screen._controller.populate_ui_from_config = MagicMock()
+
+        # Seed _deferred_panel_factories with spy factories that attach
+        # the gallery mocks ``randomize_all`` then iterates.
+        def vis_factory(s, _panel=None):
+            s._flag_gallery = MagicMock()
+            s._flag_gallery._discover_assets.return_value = [("flag_a",)]
+            s._portrait_gallery = MagicMock()
+            s._portrait_gallery._discover_assets.return_value = [("p_a.jpg",)]
+
+        def ships_factory(s, _panel=None):
+            s._theme_gallery = MagicMock()
+            s._theme_gallery._discover_assets.return_value = [("Federation",)]
+
+        vis_spy = MagicMock(side_effect=vis_factory)
+        ships_spy = MagicMock(side_effect=ships_factory)
+        screen._deferred_panel_factories = {
+            screen.TAB_VISUALS: vis_spy,
+            screen.TAB_SHIPS: ships_spy,
+        }
+
+        fake_pref = EnvironmentalPreference(
+            setpoint=9.81, tolerance=2.0,
+            min_value=0.1, max_value=30.0, step=0.98,
+        )
+        fake_all = {
+            "race_name": "X", "race_name_plural": "Xs", "leader_name": "L",
+            "physical_type": "H", "government_type": "E",
+            "government_organization": "A", "leader_title": "T",
+            "society_type": "S", "faction_name": "F",
+            "flag_id": "flag_a", "portrait_id": "p_a.jpg",
+            "theme_id": "Federation", "homeworld_type": "CONTINENTAL",
+            "preferences": {"gravity": fake_pref},
+            "base_reproduction_rate": 0.05, "base_happiness": 0.7,
+            "aptitudes": {
+                "strength": 50, "intelligence": 50, "constitution": 50,
+                "dexterity": 50, "tolerance_other_species": 50,
+                "cooperation": 50, "conflict_tolerance": 50,
+            },
+        }
+
+        with patch(
+            "game.ui.screens.race_setup.controller.RaceRandomizer"
+        ) as mock_rand:
+            mock_rand.randomize_all.return_value = fake_all
+            screen._controller.randomize_all()
+
+        vis_spy.assert_called_once()
+        ships_spy.assert_called_once()
+        assert screen.race_config.flag_id == "flag_a"
+        assert screen.race_config.theme_id == "Federation"
+
+
 class TestBug118SummaryRefreshOnPopulate:
     """BUG-118: `populate_ui_from_config` must call `_summary_panel.refresh()`.
 
