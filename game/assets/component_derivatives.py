@@ -51,15 +51,22 @@ def ensure_component_derivatives(
     generated = 0
     skipped = 0
 
+    sizes_tuple = tuple(sizes)
     source_paths = sorted(source_dir.glob(f"{MASTER_SIZE}Portrait_Comp_*.png"))
     for source_path in source_paths:
-        source_hash = _sha256(source_path)
         source_key = source_path.name
         source_entry = manifest["sources"].setdefault(source_key, {})
+        source_stat = source_path.stat()
+
+        if _source_fast_path_hit(root, source_path, source_entry, sizes_tuple, source_stat):
+            skipped += len(sizes_tuple)
+            continue
+
+        source_hash = _sha256(source_path)
         previous_hash = source_entry.get("sha256")
 
         with Image.open(source_path).convert("RGBA") as master:
-            for size in sizes:
+            for size in sizes_tuple:
                 target_dir = root / f"Components {size}"
                 target_path = target_dir / component_filename(source_path.name, size)
                 needs_generation = (
@@ -75,6 +82,8 @@ def ensure_component_derivatives(
                     skipped += 1
 
         source_entry["sha256"] = source_hash
+        source_entry["size"] = source_stat.st_size
+        source_entry["mtime_ns"] = source_stat.st_mtime_ns
 
     manifest["sizes"] = list(sizes)
     manifest["source_dir"] = str(source_dir)
@@ -116,6 +125,36 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _source_fast_path_hit(
+    root: Path,
+    source_path: Path,
+    source_entry: dict,
+    sizes: tuple[int, ...],
+    source_stat: os.stat_result,
+) -> bool:
+    """Return True when the manifest already records this source up-to-date.
+
+    A hit means we can skip SHA hashing and PIL decode entirely. We trust the
+    manifest's recorded size+mtime as a proxy for "content unchanged" — a
+    cheap stat is enough; a content-changing edit (or git checkout) updates
+    mtime, which forces the slow path.
+    """
+    if not source_entry.get("sha256"):
+        return False
+    if source_entry.get("size") != source_stat.st_size:
+        return False
+    if source_entry.get("mtime_ns") != source_stat.st_mtime_ns:
+        return False
+    for size in sizes:
+        target = root / f"Components {size}" / component_filename(source_path.name, size)
+        try:
+            if target.stat().st_size <= 0:
+                return False
+        except FileNotFoundError:
+            return False
+    return True
 
 
 def _has_expected_size(path: Path, size: int) -> bool:

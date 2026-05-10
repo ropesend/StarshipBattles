@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -80,3 +81,66 @@ def test_regenerates_when_master_hash_changes(tmp_path: Path) -> None:
     assert target.stat().st_mtime_ns > first_mtime
     with Image.open(target).convert("RGBA") as image:
         assert image.getpixel((0, 0))[:3] == (0, 255, 0)
+
+
+def test_fast_path_skips_sha_and_decode_when_mtime_unchanged(tmp_path: Path) -> None:
+    root = tmp_path / "Components"
+    _write_master(root / "Components 1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
+
+    ensure_component_derivatives(root, sizes=(64,))
+
+    def _boom(*_args, **_kwargs):
+        raise AssertionError("must not be called on the cached-hit fast path")
+
+    with (
+        patch("game.assets.component_derivatives._sha256", side_effect=_boom),
+        patch("game.assets.component_derivatives.Image.open", side_effect=_boom),
+    ):
+        second = ensure_component_derivatives(root, sizes=(64,))
+
+    assert second.generated == 0
+    assert second.skipped == 1
+
+
+def test_fast_path_invalidated_when_source_mtime_changes(tmp_path: Path) -> None:
+    root = tmp_path / "Components"
+    master = root / "Components 1024" / "1024Portrait_Comp_001.png"
+    _write_master(master, (255, 0, 0, 255))
+
+    ensure_component_derivatives(root, sizes=(64,))
+
+    stat = master.stat()
+    new_mtime = stat.st_mtime_ns + 5_000_000_000
+    os.utime(master, ns=(new_mtime, new_mtime))
+
+    calls: list[Path] = []
+    from game.assets import component_derivatives as cd_module
+
+    real_sha256 = cd_module._sha256
+
+    def _tracking_sha256(path: Path) -> str:
+        calls.append(path)
+        return real_sha256(path)
+
+    with patch.object(cd_module, "_sha256", side_effect=_tracking_sha256):
+        result = ensure_component_derivatives(root, sizes=(64,))
+
+    assert calls, "mtime change must invalidate the fast path and force a rehash"
+    assert result.generated == 0
+    assert result.skipped == 1
+
+
+def test_fast_path_invalidated_when_target_missing(tmp_path: Path) -> None:
+    root = tmp_path / "Components"
+    _write_master(root / "Components 1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
+
+    ensure_component_derivatives(root, sizes=(64, 128))
+
+    missing = root / "Components 64" / "64Portrait_Comp_001.png"
+    missing.unlink()
+
+    result = ensure_component_derivatives(root, sizes=(64, 128))
+
+    assert result.generated == 1
+    assert result.skipped == 1
+    assert missing.exists()
