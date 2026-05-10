@@ -48,42 +48,58 @@
 
 ---
 
-### Task 3.3: Fix `BuildQueueDragHandler.reset_state()` if Phase 1 confirmed gap [Simple — conditional]
-**File:** `game/ui/panels/build_queue_drag_handler.py:88–101`
-**Tests:** Phase 1 Task 1.1 test passes after this change.
+### Task 3.3: DROPPED — `selected_design` already cleared [Simple]
+**File:** (no edit)
+**Tests:** Phase 1 Task 1.1 lock test must stay green.
 
-- [ ] **Conditional**: only if Phase 1 Task 1.1 verified `selected_design` is NOT cleared by `reset_state()`.
-- [ ] Add `self.selected_design = None` to the body of `reset_state()`.
-- [ ] If Task 1.1 found it's already cleared (transitively via another mechanism), skip this task and the regression test from 1.1 locks in the existing behavior.
+> **Dropped per Codex review (arc01-002):** `BuildQueueDragHandler.reset_state()` line 101 already sets `self.selected_design = None`. Phase 1 Task 1.1 writes a locking regression to prevent future refactors from dropping this. No production change in this phase.
+
+- [ ] Verify Phase 1 Task 1.1 lock test passes.
 
 **Notes:**
 
 ---
 
-### Task 3.4: Fix `BuildQueueSelector` container visibility [Medium]
+### Task 3.4: Fix `BuildQueueSelector` container visibility [Medium — possibly drop]
 **File:** `game/ui/screens/build_queue_selector.py:50–134` and possibly `build_queue_screen.py:369–373`
-**Tests:** Phase 1 Task 1.7 test passes.
+**Tests:** Phase 1 Task 1.7 test must pass.
 
-- [ ] Read `BuildQueueSelector.refresh()` (lines 89–134) and `BuildQueueScreen.show()` (lines 369–373) carefully to confirm the swarm's diagnosis: when the screen was previously hidden, the selector's `UIScrollingContainer` is not re-shown when `refresh()` adds new buttons, so buttons are added to a hidden container.
-- [ ] Pick the smallest fix that addresses the root cause:
+> **Possibly redundant per Codex review (arc01-002):** the missing-yard-selector symptom may be caused by the cached `BuildQueueScreen.empire` ref filtering as the prior empire (which the Phase 4 rebind fixes), not by container visibility. Run Phase 1 Task 1.7 *after* Phase 4 lands. If green, this task is unnecessary; if still red, container visibility is the secondary cause.
+
+- [ ] Run Phase 1 Task 1.7 test against the codebase with Phases 2–4 landed but no container-visibility change. If GREEN: skip this task, document in plan.md that the symptom was a pure consequence of the empire cache; close out.
+- [ ] If still RED: read `BuildQueueSelector.refresh()` (lines 89–134) and `BuildQueueScreen.show()` (lines 369–373) and pick the smallest fix:
   - **Option 1 (preferred):** in `BuildQueueScreen.show()`, propagate `show()` to known child containers including the selector's container.
   - **Option 2:** in `BuildQueueSelector.refresh()`, ensure the selector's container is shown before populating buttons.
-- [ ] Verify Phase 1 Task 1.7 test passes.
 - [ ] Add a `# PROJ-410:` comment near the fix site.
 
 **Notes:**
 
 ---
 
-### Task 3.5: Run scenarios (a), (b), (d), (e), and yard-selector and verify pass [Simple]
+### Task 3.6: Zero-source yard switch — explicit controller reset [Simple]
+**File:** `game/ui/screens/build_queue_screen.py:317–324` (or `game/ui/panels/build_queue_controller.py:120–143` if a new method is added)
+**Tests:** Phase 1 Task 1.9 test passes.
+
+> **Added per Codex review (arc01-002 point 4):** `open_for_yard()` only calls `controller.set_active_queue()` when source is non-None. Zero-source yards leave controller refs populated with the prior yard's data.
+
+- [ ] In `BuildQueueScreen.open_for_yard()` after the existing `set_active_queue()` branch (~lines 317–324), add an `else` (or unconditional) reset path: when `self.active_queue_source is None`, call `self.controller.set_selected_queues([])` (which clears `active_queue_source` per `build_queue_controller.py:132–143`). Alternative: add a dedicated `controller.clear_queue_selection()` if the API surface needs it; prefer the existing setter for minimal scope expansion.
+- [ ] Add a `# PROJ-410:` comment.
+- [ ] Verify Phase 1 Task 1.9 test passes.
+
+**Notes:**
+
+---
+
+### Task 3.5: Run scenarios (a), (b), (d), (e), yard-selector, and zero-source and verify pass [Simple]
 **File:** (verification only)
-**Tests:** `pytest tests/unit/ui/screens/test_build_queue_screen_lifecycle.py tests/integration/ui/build_queue_screen/test_queue_selector.py tests/unit/ui/components/table/test_virtual_table.py -v`
+**Tests:** `pytest tests/unit/ui/screens/test_build_queue_screen_lifecycle.py tests/integration/ui/build_queue_screen/test_queue_selector.py tests/unit/ui/components/table/test_virtual_table.py tests/unit/ui/panels/test_build_queue_controller.py -v`
 
 - [ ] Phase 1 Task 1.2 test passes (yard switch identical geometry).
 - [ ] Phase 1 Task 1.3 test passes (close + reopen).
 - [ ] Phase 1 Task 1.5 test passes (ship-yard ↔ planetary-yard).
 - [ ] Phase 1 Task 1.6 test passes (button-press after switch — already passing from Phase 2 Task 2.4 if test lives in test_virtual_table.py).
-- [ ] Phase 1 Task 1.7 test passes (yard-selector visible on second player).
+- [ ] Phase 1 Task 1.9 test passes (zero-source yard switch).
+- [ ] Phase 1 Task 1.7 (yard-selector visible) — passes if the empire-rebind from Phase 4 isn't yet landed and Task 3.4 was kept; otherwise expected to pass after Phase 4.
 - [ ] Phase 1 Task 1.4 (turn-boundary) and 1.8 (save/load) intentionally still fail — they land in Phase 4.
 - [ ] `TestRowPoolReuseGuard` and `TestSecondClickReuse` still green.
 

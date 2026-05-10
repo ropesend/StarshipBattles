@@ -12,6 +12,7 @@
 - MUST NOT call `.kill()` on any widget — `TestRowPoolReuseGuard` lock-in.
 - MUST NOT modify `_pool_dims_changed()` or the pool-rebuild geometry check.
 - The dirty flag MUST be ephemeral (cleared after one `update_visible_rows()` re-render).
+- **Note**: `BuildQueueRenderer.refresh_queue_display()` already calls `force_update()` (`build_queue_renderer.py:161-164`), which resets scroll/count sentinels (`virtual_table.py:555-558`). The actual BQ fix relies on the cache-nulling path of `invalidate_widget_caches()`, not the gated guard from Task 2.3. The dirty flag is still worth adding — it covers generic VirtualTable consumers and expresses data-identity state cleanly. (Codex review, arc01-002.)
 
 ---
 
@@ -62,14 +63,15 @@
 
 ---
 
-### Task 2.4: Re-bind action button row indices on dirty refresh [Complex]
-**File:** `game/ui/components/table/virtual_table.py` — inside `update_visible_rows()` per-row mapping (~lines 332–423) and `check_action_button_press()` (lines 503–531)
+### Task 2.4: Verify dynamic row-index mapping handles cross-yard refresh [Simple]
+**File:** `game/ui/components/table/virtual_table.py` — `update_visible_rows()` per-row mapping (~lines 332–339) and `check_action_button_press()` (lines 503–531)
 **Tests:** `pytest tests/unit/ui/components/table/test_virtual_table.py -k button_press` (Phase 1 Task 1.6 test) now passes.
 
-- [ ] Read the action-button construction site in `_rebuild_row_pool()` (~lines 244–265) carefully to determine HOW row index is captured by handlers — closure over `row_index` at construction, or read from `row.get("row_index")` at click time?
-- [ ] If handlers capture via closure: refactor so handlers read `row.get("row_index")` at click time (lookup, not closure). Pool rows become truly index-agnostic.
-- [ ] In `update_visible_rows()`, when dirty re-render runs, ensure each pool row's `row_index` is updated to the new data row before any click can fire.
-- [ ] Add unit test (or extend Phase 1 Task 1.6 test): invalidate + new data; click `+` button on visible row 0; verify handler observes the new data's row 0 design id, not the old.
+> **Simplified from [Complex] per Codex review (arc01-002):** the existing code already reads `row.get("row_index", -1)` at click time (`virtual_table.py:516-524`), and `_rebuild_row_pool()` does NOT capture index in a closure. The existing test at `test_virtual_table.py:725-764` already locks this behavior. **No closure refactor needed** — only verify and add cross-yard regression coverage.
+
+- [ ] Verify by reading source: `_rebuild_row_pool()` (~lines 244–265) attaches buttons to `row["actions_dict"]`; the click path through `check_action_button_press()` (lines 503–531) maps button → row → `row.get("row_index", -1)`. Confirm no closure capture of `row_index` anywhere.
+- [ ] Verify `update_visible_rows()` updates `row["row_index"] = data_idx` for every visible row on every refresh (~lines 336–339). This already executes during dirty re-render — the dirty flag's job is just to FORCE the re-render via the gated guard from Task 2.3.
+- [ ] Add cross-yard regression: invalidate + push different data; visible row 0 click → handler receives the new data's row 0 (existing test at lines 725-764 is the locked baseline; this adds the cross-yard angle).
 - [ ] Confirm Phase 1 Task 1.6 test passes.
 
 **Notes:**

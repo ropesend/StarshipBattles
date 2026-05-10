@@ -29,12 +29,12 @@ Eight Phase B Explore agents reviewed the proposed B+C+A design. Detailed report
 
 ### Architecture
 - `VirtualTable.invalidate_widget_caches()` belongs on the component itself; `virtual_table.py` is at 607 LOC (over the 500 ceiling but pre-existing; PROJ-410 adds ~10–12 lines).
-- `StrategySessionFacade` has no callback/subscribe surface; only `process_turn(progress_callback=...)` exists. Manager polling `facade.get_active_empire()` is more consistent with the existing read-only accessor pattern than introducing a new event API.
+- `StrategySessionFacade` has no callback/subscribe surface; only `process_turn(progress_callback=...)` exists. Manager polling `self._screen.current_empire.id` (existing `StrategyScreen` property at `strategy_screen.py:192`; no new facade method) is more consistent with the existing read-only accessor pattern than introducing a new event API.
 - PROJ-382 facade-bypass guard is unaffected; bypass = direct session calls, not new facade methods.
 - Pattern #11 (Surface Caching) endorses `invalidate_cache()` methods on components owning local caches — the new method follows precedent.
 
 ### Key Patterns to Reuse
-- **Pattern #5 (Facade/Delegate)** — manager polls `facade.get_active_empire()`; UI never touches strategy state directly.
+- **Pattern #5 (Facade/Delegate)** — manager polls `self._screen.current_empire.id` (existing `StrategyScreen` property at `strategy_screen.py:192`; no new facade method); UI never touches strategy state directly.
 - **Pattern #8 (MVVM, Build Queue collaborators)** — the canonical split (`BuildQueueController`, `BuildQueueRenderer`, `BuildQueuePanelFactory`, `BuildQueueDragHandler`) is preserved; invalidation responsibility lives in the renderer (data) and the screen (lifecycle).
 - **Pattern #11 (Surface Caching)** — extend with cross-context invalidation note; document the new method as the canonical example.
 - **Pattern #33 (UI Widget Test Factory)** — reuse `make_ui_widget` / `bypass_init` for new tests.
@@ -42,9 +42,9 @@ Eight Phase B Explore agents reviewed the proposed B+C+A design. Detailed report
 ### Dependencies & Risks
 1. **PROJ-373 phase 3 perf lock** — `TestRowPoolReuseGuard` asserts widget `.kill()` call counts. Invalidation MUST NOT call `.kill()`. Mitigation: only null cache attributes; do not rebuild the pool.
 2. **PROJ-376 phase 2 perf budget** — `<0.5s` repeat-open. Mitigation: invalidation cost is ~1–2 ms (Performance Analyst measured ~30 rows × ~16 widgets); next re-render ~6–15 ms; well within budget.
-3. **Save/load mid-session leaks stale empire/planet refs into the cached screen.** New finding from Risk Assessor. Mitigation: `StrategyScreen.session` setter calls `on_active_player_changed()` after facade rebind.
+3. **Save/load mid-session leaks stale empire/planet refs into the cached screen.** Originally surfaced by Risk Assessor as a need for a `StrategyScreen.session` setter hook. **Codex review (arc01-002) corrected this**: the production load path constructs a brand-new `StrategyScreen` via `screen_router.py:324-344`; the `session` setter is test-only and never fires in production. **Final mitigation:** Phase 1 Task 1.8 asserts the production guarantee that `_on_load_game()` produces a fresh screen with `_build_queue.build_queue_screen is None`. No setter hook needed.
 4. **Permanent dirty flag would cause per-frame re-render** (~10–20% FPS drop). Mitigation: ephemeral flag — clear after first re-render in `update_visible_rows()`.
-5. **`drag_handler.selected_design` reset claim is ambiguous.** Triage and Test Impact Analyst report it's not reset; Yard-Selector Investigator reports it is. Mitigation: verify in Phase 1 Task 1.1 before landing or skipping the fix in Phase 3 Task 3.3.
+5. **`drag_handler.selected_design` reset claim was ambiguous.** Triage and one swarm agent reported it not cleared; Yard-Selector Investigator reported it is. **Codex review (arc01-002) confirmed it IS cleared** at `build_queue_drag_handler.py:101`. Phase 1 Task 1.1 writes a locking regression to prevent future regressions. Phase 3 Task 3.3 dropped.
 6. **B-hook fires on every queue mutation** (~1–2 ms redundant when contents unchanged). Acceptable for now per Performance Analyst; deferred generation-counter optimization noted in decisions.md.
 
 ### Opportunities Discovered
@@ -60,16 +60,23 @@ See [decisions.md](decisions.md) for the full log with rationale.
 ```
 +-----------------------------------------------------+
 |  StrategyBuildQueueManager._open_build_queue()       |
-|    - polls facade.get_active_empire()               |
-|    - if changed: screen.on_active_player_changed()  |   <- A-hook (turn boundary)
-|    - then screen.open_for_yard(...)                 |
+|    current_id = self._screen.current_empire.id      |
+|    if current_id != self._last_active_empire_id:    |   <- A-hook
+|        cached_screen.on_active_player_changed()     |       (player-change
+|    cached_screen.empire = self._screen.current_empire        flush)
+|    cached_screen.galaxy = self._screen.galaxy       |   <- A-hook
+|    cached_screen.facade = self._screen.facade       (rebind, every
+|    self._last_active_empire_id = current_id         |       open)
+|    cached_screen.open_for_yard(...)                 |
 +--------------------------+--------------------------+
                            |
                            v
 +-----------------------------------------------------+
 |  BuildQueueScreen.open_for_yard()                    |
 |    - resets controller queue refs                   |
-|    - resets drag_handler.selected_design            |   <- C-hook (lifecycle)
+|      (incl. ZERO-source path, new Task 3.6)         |   <- C-hook (lifecycle)
+|    - drag_handler.reset_state() (selected_design    |
+|      already cleared per Codex; locked by 1.1)      |
 |    - calls _refresh_queue_display()                 |
 +--------------------------+--------------------------+
                            |
@@ -78,6 +85,7 @@ See [decisions.md](decisions.md) for the full log with rationale.
 |  BuildQueueRenderer.refresh_queue_display()          |
 |    - data_source.set_queue(...)                     |
 |    - virtual_table.invalidate_widget_caches()       |   <- B-hook (content)
+|    - virtual_table.force_update()  (already there)  |
 |    - virtual_table.update_visible_rows()            |
 +--------------------------+--------------------------+
                            |
@@ -85,17 +93,21 @@ See [decisions.md](decisions.md) for the full log with rationale.
 +-----------------------------------------------------+
 |  VirtualTable.update_visible_rows()                  |
 |    - early-return guard now also checks             |
-|      _data_identity_dirty                            |
+|      _data_identity_dirty (defense-in-depth;        |
+|       force_update() is the BQ-specific trigger)    |
 |    - re-renders all visible rows on first pass      |
+|    - row["row_index"] = data_idx for each visible   |
+|      row (ALREADY present; click handlers read this |
+|      at click time per check_action_button_press()) |
 |    - clears _data_identity_dirty (ephemeral)        |
-|    - re-binds row indices for action buttons        |
 +-----------------------------------------------------+
 
-Save/load:
-  StrategyScreen.session setter
-    - rebinds facade
-    - calls build_queue_screen.on_active_player_changed()
-    - resets manager._last_active_empire_id
+Save/load — production guarantee (no setter hook needed):
+  ScreenRouter._on_load_game()  (game/screen_router.py:324-344)
+    - constructs a brand-new StrategyScreen(session=game_session, ...)
+    - replaces strategy_scene wholesale
+    - new screen has _build_queue.build_queue_screen == None
+    - Phase 1 Task 1.8 asserts this guarantee
 ```
 
 ## Constraints Summary
@@ -106,5 +118,5 @@ Save/load:
 | `<0.5s` repeat-open | PROJ-376 phase 2 | Invalidation overhead ~7–17 ms; well within budget |
 | Facade-bypass guard | PROJ-382 phase 1 | All new code routes through facade read accessors and `handle_command` |
 | Validation cache survives yard switches | PROJ-373 phase 1 | Untouched; lives on controller, not on table or panels |
-| Manager reuse semantics | PROJ-376 phase 2 | Manager continues to reuse the cached screen instance; A-hook just calls a method on it |
-| Pattern #5 facade contract | docs/02_PATTERNS.md | Manager polls `facade.get_active_empire()`; no new event surface |
+| Manager reuse semantics | PROJ-376 phase 2 | Manager continues to reuse the cached screen instance; A-hook just calls a method on it AND rebinds `empire`/`galaxy`/`facade` before each `open_for_yard()` |
+| Pattern #5 facade contract | docs/02_PATTERNS.md | Manager polls `self._screen.current_empire.id` (existing property at `strategy_screen.py:192`); no new facade event surface, no new facade accessor |
