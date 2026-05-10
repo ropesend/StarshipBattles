@@ -181,11 +181,22 @@ def test_router_blocks_clicks_inside_any_modal_in_iter_live_modals() -> None:
     assert router._is_blocking_ui_element_at(900, 600) is True
 
 
-def test_editor_does_not_block_click_outside_rect() -> None:
-    """Click outside the editor's rect should pass through to the map."""
+def test_editor_blocks_click_outside_rect_under_full_modality() -> None:
+    """Click outside the editor's rect must be blocked (issue #12).
+
+    Renamed/inverted from the prior ``test_editor_does_not_block_click_outside_rect``
+    as part of issue #12. The previous contract (rect-coincident block,
+    gutter pass-through) is intentionally replaced with full modality:
+    any live ``StrategyModalWindow`` blocks ALL background clicks
+    regardless of click position relative to the window's rect.
+
+    The rename leaves a discoverable archaeology trail for future agents
+    grepping for the old name — see Anti-Reversion Notes in the issue #12
+    investigation.
+    """
     router, _editor = _make_router_with_editor((800, 500, 400, 300))
 
-    assert router._is_blocking_ui_element_at(100, 100) is False
+    assert router._is_blocking_ui_element_at(100, 100) is True
 
 
 def test_dead_editor_does_not_block() -> None:

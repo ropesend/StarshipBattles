@@ -1,6 +1,6 @@
 # UI Style Guide Compact Reference
 
-> **Last verified:** 2026-05-08 - Balanced compact replacement verified against `docs/06_UI_STYLE_GUIDE.md`, `AgentCoordination/Scratchpad/reports/06_UI_STYLE_GUIDE_ALT_compact.md`, and current UI source paths.
+> **Last verified:** 2026-05-10 — issue #12: Strategy Modal Windows section gained one sentence on full modality (any live subclass blocks ALL background clicks and top-bar buttons regardless of click position).
 
 Audience: LLM agents working on Starship Battles UI. This is the compact current-system reference for color constants, pygame_gui theme usage, strategy modal windows, read-only component-status rendering, and UI style extension points.
 
@@ -76,6 +76,7 @@ Contracts:
 - Strategy-only modal constructors must require `window_manager` as an explicit keyword and must not default it to `None`.
 - Cross-screen reusable windows may type `window_manager: "StrategyWindowManager | None"`, but callers still pass it explicitly. Use `None` only from non-strategy callers.
 - The manager still exposes legacy slot attributes for registrar convenience and public API stability. New modal tracking goes through the live modal list.
+- Full modality (issue #12): while any subclass instance is live, the strategy event router blocks ALL background clicks (hex grid AND top-bar buttons) regardless of click position relative to the window's rect. There is no per-window opt-out.
 
 Test-only bypass invariant:
 

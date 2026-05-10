@@ -114,7 +114,16 @@ class TestLoadDialogBlocksStrategyInput:
             "Load dialog must block strategy input via iter_live_modals"
         )
 
-    def test_click_at_dialog_rect_is_blocked(self):
+    def test_click_anywhere_is_blocked_under_full_modality(self):
+        """Live load-dialog blocks clicks anywhere on screen (issue #12).
+
+        Renamed/inverted from ``test_click_at_dialog_rect_is_blocked`` as
+        part of issue #12. The previous test pinned the rect-coincident
+        contract: inside-rect=blocked, outside-rect=pass-through. Under
+        full modality, any live StrategyModalWindow blocks ALL background
+        clicks regardless of click position; the rect is no longer
+        consulted by the router for live-list windows.
+        """
         wm = _make_window_manager()
         router = _make_router(wm)
 
@@ -122,17 +131,19 @@ class TestLoadDialogBlocksStrategyInput:
         dialog.alive = MagicMock(return_value=True)
         # Override the rect descriptor (assigning ``self.rect`` on a
         # bypassed instance is unsafe — it mutates pygame_gui's blit_data)
-        # via an object-level shadow that ``_is_blocking_ui_element_at``
-        # reads through duck typing.
+        # via an object-level shadow. Even though the router no longer
+        # reads the rect for live-list windows, we keep the rect override
+        # here so the test exercise stays close to production shape.
         type(dialog).rect = property(lambda self: _Rect(100, 100, 600, 500))
         try:
             wm.register_modal(dialog)
 
-            # Click inside the dialog rect.
+            # Click inside the dialog rect — blocked.
             assert router._is_blocking_ui_element_at(400, 350) is True
 
-            # Click on the map area, far from the dialog.
-            assert router._is_blocking_ui_element_at(1500, 1000) is False
+            # Click on the map area, far from the dialog — blocked under
+            # full modality (was: pass-through under the old contract).
+            assert router._is_blocking_ui_element_at(1500, 1000) is True
         finally:
             # Restore so other tests in the same module/class don't see
             # a synthetic ``rect`` property on the class.

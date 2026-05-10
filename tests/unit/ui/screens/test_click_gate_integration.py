@@ -163,24 +163,30 @@ class TestClickGateIntegration:
 
         assert result is False
 
-    def test_map_click_blocked_by_fleet_orders_window(self):
-        """Click blocked when fleet_orders_window is open at that position.
+    def test_map_click_blocked_by_any_live_modal_under_full_modality(self):
+        """Click blocked whenever any StrategyModalWindow is live (issue #12).
 
-        PROJ-313: fleet_orders_window migrated to StrategyModalWindow;
-        registration is via iter_live_modals rather than a slot field.
+        Renamed/inverted from ``test_map_click_blocked_by_fleet_orders_window``
+        as part of issue #12. Under full modality, the router no longer
+        consults the modal's rect — any live modal in ``iter_live_modals()``
+        is sufficient to block the click. The dropped
+        ``window.rect.collidepoint.assert_called_with(...)`` assertion was
+        pinning the obsolete rect-coincident contract.
         """
         router, ui, wm = _create_strategy_event_router()
 
-        # Create a window that is alive and contains the click point
+        # A live modal is registered; whether the click happens to be
+        # inside its rect is intentionally irrelevant under full modality.
         window = _create_mock_window(alive=True, rect_contains=True)
         wm._modals_for_test.append(window)
 
-        mx, my = 600, 400  # Map area, but window rect contains this point
+        mx, my = 600, 400
 
         result = router.handle_click(mx, my, 1)
 
-        assert result is True, "Click should be blocked by fleet_orders_window"
-        window.rect.collidepoint.assert_called_with((mx, my))
+        assert result is True, (
+            "Issue #12: any live StrategyModalWindow must block clicks"
+        )
 
     def test_map_click_blocked_by_planet_list_window(self):
         """Click blocked when planet_list_window is open at that position."""
@@ -292,21 +298,31 @@ class TestClickGateIntegration:
 
         assert result is False
 
-    def test_multiple_windows_check_all(self):
-        """All blocking windows are checked when determining if click is blocked."""
+    def test_multiple_windows_block_under_full_modality_regardless_of_rect_coincidence(self):
+        """Multiple live modals block clicks regardless of rect (issue #12).
+
+        Renamed/inverted from ``test_multiple_windows_check_all`` as part
+        of issue #12. The previous test pinned the rect-pass-through
+        contract: "click passes through if not inside ANY window's rect".
+        Under full modality, the live-list membership alone is sufficient
+        to block; rect coincidence is no longer consulted.
+        """
         router, ui, wm = _create_strategy_event_router()
 
-        # Create multiple windows, all alive but none containing click point
+        # Multiple live modals, none containing the click point under their
+        # rect — under full modality this no longer matters.
         wm.fleet_orders_window = _create_mock_window(alive=True, rect_contains=False)
-        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=False))  # PROJ-313 migrated
-        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=False))  # PROJ-313 migrated
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=False))
+        wm._modals_for_test.append(_create_mock_window(alive=True, rect_contains=False))
 
         mx, my = 500, 400
 
         result = router.handle_click(mx, my, 1)
 
-        # Click should pass through since it's not inside any window
-        assert result is False
+        assert result is True, (
+            "Issue #12: any live StrategyModalWindow must block clicks "
+            "outside its rect (full modality)."
+        )
 
     def test_first_matching_window_blocks(self):
         """First window that contains the click point blocks it."""

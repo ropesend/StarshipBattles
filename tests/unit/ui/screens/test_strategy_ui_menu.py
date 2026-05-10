@@ -27,6 +27,11 @@ def _make_strategy_ui():
     manager = MagicMock()
 
     ui.scene = scene
+    # Issue #12: _handle_button_pressed consults has_modal_open(), which
+    # inspects scene.build_queue_screen. A stray truthy MagicMock here
+    # would make every button-press test in this module behave as if a
+    # modal is open and short-circuit dispatch.
+    scene.build_queue_screen = None
     ui.width = 1920
     ui.height = 1080
     ui.manager = manager
