@@ -52,12 +52,18 @@ def _discover_resources(ship) -> Any:
     Returns sorted list: fuel, energy, ammo first, then others alphabetically.
     """
     resource_order = ["fuel", "energy", "ammo"]
-    res_names = set(ship.resources.get_resource_names())
+    try:
+        res_names = set(ship.resources.get_resource_names())
+    except (TypeError, AttributeError):
+        res_names = set()
 
     for stat_type in ['consumption', 'generation']:
         for res in resource_order:
-            val = ship.get_resource_stat(res, stat_type)
-            if val > 0:
+            try:
+                val = ship.get_resource_stat(res, stat_type)
+            except (TypeError, AttributeError):
+                val = 0
+            if isinstance(val, (int, float)) and val > 0:
                 res_names.add(res)
 
     res_names = list(res_names)
@@ -197,10 +203,15 @@ def _get_strategic_abilities(ship) -> dict:
     shipyard_info = {}
     staging_capacity = 0.0
 
-    for layer_type in ship.layers:
-        layer = ship.layers[layer_type]
-        for comp in layer.components:
-            for ability in comp.ability_instances:
+    try:
+        layers = ship.layers
+        layer_items = layers.values()
+    except (TypeError, AttributeError):
+        layer_items = []
+
+    for layer in layer_items:
+        for comp in getattr(layer, 'components', []):
+            for ability in getattr(comp, 'ability_instances', []):
                 cls_name = type(ability).__name__
 
                 if cls_name == 'ResourceHarvesterAbility':
@@ -397,7 +408,7 @@ def get_planetary_engineering_rows(ship) -> Any:
                         id=f"planetary_{ab_name.lower()}", label=label,
                         getter=rate_getter, formatter="{:.2f}", unit=unit
                     ))
-                break
+                    break
 
     return rows
 
@@ -480,10 +491,10 @@ def get_strategic_modifier_rows(ship) -> Any:
 
 def get_superweapon_rows(ship) -> Any:
     """Generate rows for each superweapon type with activation count."""
-    from .stat_getters import _SUPERWEAPON_ABILITIES, _SUPERWEAPON_LABELS
+    from .stat_getters import _superweapon_ability_names, _SUPERWEAPON_LABELS
     rows = []
 
-    for ab_name in _SUPERWEAPON_ABILITIES:
+    for ab_name in _superweapon_ability_names():
         count = 0
         for comp in ship.get_all_components():
             if comp.has_ability(ab_name):

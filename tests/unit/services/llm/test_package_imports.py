@@ -1,14 +1,6 @@
 """Smoke imports for the new game.services.llm package (PROJ-296)."""
 
 
-def test_services_package_importable():
-    import game.services  # noqa: F401
-
-
-def test_llm_package_importable():
-    import game.services.llm  # noqa: F401
-
-
 def test_llm_package_exports_phase_2_symbols():
     """After Phase 2, the public API includes types + protocol."""
     from game.services.llm import (

@@ -26,7 +26,7 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.data.species_population import SpeciesPopulation
-from game.strategy.formulas.habitability import score_planet_for_race
+from game.strategy.formulas.habitability import calculate_habitability
 
 
 # ---------------------------------------------------------------------------
@@ -140,7 +140,7 @@ class TestHappinessIdealPlanet:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab)
 
     def test_ideal_planet_food_ratio_two_amplifies_happiness(self, engine):
@@ -157,7 +157,7 @@ class TestHappinessIdealPlanet:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         # base * ratio * hab + capped bonus = 0.5 * 2.0 * ~0.94 + 0.20.
         assert pop.happiness == pytest.approx(0.5 * 2.0 * hab + 0.20)
 
@@ -173,7 +173,7 @@ class TestHappinessHostilePlanet:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         assert hab < 0.1, "test setup: hostile planet must be near zero"
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab)
         assert pop.happiness < 0.1
@@ -225,7 +225,7 @@ class TestHappinessSurplusBonus:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab)
 
     def test_surplus_partial_below_cap(self):
@@ -242,7 +242,7 @@ class TestHappinessSurplusBonus:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         expected = 0.5 * 1.0 * hab + 0.07
         assert pop.happiness == pytest.approx(expected)
 
@@ -260,7 +260,7 @@ class TestHappinessSurplusBonus:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab + 0.20)
 
     def test_surplus_above_cap_clamps(self):
@@ -277,7 +277,7 @@ class TestHappinessSurplusBonus:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab + 0.20)
 
     def test_starving_at_high_alloc_no_bonus(self):
@@ -296,7 +296,7 @@ class TestHappinessSurplusBonus:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         # Base term uses last_food_ratio=0.5, no bonus added.
         assert pop.happiness == pytest.approx(0.5 * 0.5 * hab)
 
@@ -314,7 +314,7 @@ class TestHappinessSurplusBonus:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         assert pop.happiness == pytest.approx(0.5 * 0.25 * hab)
 
     def test_multi_resource_min_drives_surplus(self):
@@ -332,7 +332,7 @@ class TestHappinessSurplusBonus:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         # base × MIN ratio × hab + bonus(0.04)
         assert pop.happiness == pytest.approx(0.5 * 0.6 * hab + 0.04)
 
@@ -351,7 +351,7 @@ class TestHappinessSurplusBonus:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         # bonus = min(0.30, 0.50 × 0.4) = min(0.30, 0.20) = 0.20
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab + 0.20)
 
@@ -460,7 +460,7 @@ class TestHappinessMultiSpecies:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race_human)
+        hab = calculate_habitability(planet, race_human)
         assert pop_human.happiness == pytest.approx(0.5 * 1.0 * hab)
         assert pop_alien.happiness == pytest.approx(0.8 * 0.25 * hab)
         # Sanity: independent — alien was lower before the run, higher after.
@@ -488,7 +488,7 @@ class TestHappinessEngineEdgeCases:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         assert pop.happiness == pytest.approx(0.5 * 1.0 * hab)
         assert pop.happiness != 0.99  # overwritten
 
@@ -532,7 +532,7 @@ class TestMultiResourceStarvation:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race)
+        hab = calculate_habitability(planet, race)
         assert pop.happiness == pytest.approx(0.5 * 0.5 * hab)
 
 
@@ -610,8 +610,8 @@ class TestMultiSpeciesViaRegistry:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab_human = score_planet_for_race(planet, race_human)
-        hab_voidari = score_planet_for_race(planet, race_voidari)
+        hab_human = calculate_habitability(planet, race_human)
+        hab_voidari = calculate_habitability(planet, race_voidari)
         assert pop_human.happiness == pytest.approx(0.5 * 1.0 * hab_human)
         assert pop_voidari.happiness == pytest.approx(0.8 * 1.0 * hab_voidari)
         # Sanity: the two values MUST differ — proves the registry
@@ -641,7 +641,7 @@ class TestMultiSpeciesViaRegistry:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race_human)
+        hab = calculate_habitability(planet, race_human)
         assert pop_human.happiness == pytest.approx(0.5 * 1.0 * hab)
         # Unknown race pre-call happiness is preserved.
         assert pop_ghost.happiness == pytest.approx(0.42)
@@ -672,7 +672,7 @@ class TestMultiSpeciesViaRegistry:
 
         engine.process_happiness([empire], galaxy=None)
 
-        hab = score_planet_for_race(planet, race_human)
+        hab = calculate_habitability(planet, race_human)
         assert pop_human.happiness == pytest.approx(0.5 * 1.0 * hab)
         # Voidari is NOT updated — the tightened legacy fallback returns
         # None for non-primary species instead of returning the empire's

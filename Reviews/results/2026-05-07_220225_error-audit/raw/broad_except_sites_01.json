@@ -1,0 +1,92 @@
+[
+  {
+    "file": "game/services/llm/background.py",
+    "line": 285,
+    "context": "except Exception as e:  # PROJ-321..328 audit S1.1: catch unexpected non-LLM provider exceptions; preserves wait() contract",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/battle_controller.py",
+    "line": 444,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash visual-mode battle end",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/entities/ship_serialization.py",
+    "line": 109,
+    "context": "except Exception as e:  # Intentional broad catch: diagnostic logging before re-raise",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/adapters/simulation_adapter.py",
+    "line": 435,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash a battle",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/formulas/colony_output.py",
+    "line": 85,
+    "context": "except Exception as e:",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/race_description_llm_controller.py",
+    "line": 308,
+    "context": "except Exception as e:  # Intentional broad catch: UI callbacks must not crash the controller",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_verification_sidecar.py",
+    "line": 126,
+    "context": "except Exception:  # Intentional broad catch: sidecar write must not crash worker",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_verification_sidecar.py",
+    "line": 149,
+    "context": "except Exception:  # Intentional broad catch: corrupt sidecars must be skipped, not raised",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/ability_sources/fleet.py",
+    "line": 111,
+    "context": "except Exception:  # Intentional broad catch: ship-impl errors don't poison iteration",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/build_queue_controller.py",
+    "line": 260,
+    "context": "except Exception:  # Intentional broad catch: design validation traverses arbitrary registry/save data; queue panel must remain usable on validator failure",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/system_tree_panel.py",
+    "line": 463,
+    "context": "except Exception:  # Intentional broad catch: effect collection traverses save/registry data; tree panel must not crash on display",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/system_tree_panel.py",
+    "line": 478,
+    "context": "except Exception:  # Intentional broad catch: effect collection traverses empire/registry/save data \u2014 many drift-failure modes; tree panel must not crash on display",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/system_tree_panel.py",
+    "line": 493,
+    "context": "except Exception:  # Intentional broad catch: effect collection traverses empire/registry/save data \u2014 many drift-failure modes; tree panel must not crash on display",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_fleet_command_router.py",
+    "line": 259,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized; ability-button handler falls back to no registry",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/battle_setup/fleet_hierarchy_editor.py",
+    "line": 190,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized (tests) or partially loaded; None signals \"no registries\" to callers",
+    "has_comment": false
+  }
+]

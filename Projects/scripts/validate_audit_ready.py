@@ -31,6 +31,120 @@ class ValidationResult:
         return len(self.errors) == 0
 
 
+def _validate_03c_audit_gate(project_id: str, result: "ValidationResult") -> None:
+    """Apply the 03c rigorous final audit gate (Projects/protocols/03c).
+
+    Hard-fails if ANY of:
+      1. A finding has status `open` or `addressed_pending_review`.
+      2. A `deferred_until_phase` finding's target phase is at or before the
+         latest clean coverage and unresolved.
+      3. The latest clean review's `coverage_set` does not include all
+         non-skipped phases.
+      4. The project branch tip SHA differs from the audited SHA.
+
+    No-op for legacy projects without `phase_state.json`.
+    """
+    state_path = (
+        Path(__file__).resolve().parent.parent / "active_projects" / project_id / "phase_state.json"
+    )
+    if not state_path.exists():
+        return  # legacy project, no 03c gate applies
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        from phase_workflow import state as state_mod
+    except ImportError:
+        result.errors.append(
+            "03c gate: cannot import phase_workflow.state — "
+            "Projects/scripts/phase_workflow/ is missing or broken"
+        )
+        return
+
+    try:
+        s = state_mod.load_state(state_path)
+    except (ValueError, OSError) as e:
+        result.errors.append(f"03c gate: cannot load phase_state.json: {e}")
+        return
+
+    # Rule 1: no open or addressed-pending findings.
+    blocking_statuses = {"open", "addressed_pending_review"}
+    blocking = [
+        (fid, f["status"], f.get("summary", ""))
+        for fid, f in s["findings"].items()
+        if f["status"] in blocking_statuses
+    ]
+    if blocking:
+        for fid, status, summary in blocking[:5]:
+            result.errors.append(
+                f"03c gate: finding {fid} status={status} ({summary[:80]})"
+            )
+        if len(blocking) > 5:
+            result.errors.append(f"03c gate: ... and {len(blocking) - 5} more open findings")
+
+    # Identify latest clean review.
+    clean_reviews = [
+        r for r in s["reviews"].values()
+        if r["result_status"] == "completed_clean" and r.get("superseded_by") is None
+    ]
+    latest_clean = (
+        max(clean_reviews, key=lambda r: r["review_sequence"]) if clean_reviews else None
+    )
+
+    # Rule 2: deferred-until-phase target reached but unresolved.
+    if latest_clean:
+        latest_coverage = set(latest_clean["coverage_set"])
+        for fid, f in s["findings"].items():
+            if f["status"] != "deferred_until_phase":
+                continue
+            target = f.get("deferred_until_phase")
+            if target and target in latest_coverage:
+                result.errors.append(
+                    f"03c gate: finding {fid} deferred to {target} (now covered) but unresolved"
+                )
+    else:
+        result.errors.append("03c gate: no clean cumulative review on record")
+
+    # Rule 3: every non-skipped phase covered by the latest clean review.
+    if latest_clean:
+        non_skipped = {
+            pid for pid, p in s["phases"].items()
+            if p["status"] != "scrapped"
+        }
+        latest_coverage = set(latest_clean["coverage_set"])
+        missing = sorted(non_skipped - latest_coverage)
+        if missing:
+            result.errors.append(
+                f"03c gate: phases never in a clean review: {', '.join(missing)}"
+            )
+
+    # Rule 4: project tip SHA matches audited SHA.
+    if latest_clean:
+        # We don't shell out to git here; phase_complete records merge SHAs.
+        # Latest committed phase merge_sha should equal the latest clean review's tip.
+        committed_phases = [
+            p for p in s["phases"].values()
+            if p.get("merged_into_project_at_sha")
+        ]
+        if committed_phases:
+            latest_merge_sha = max(
+                committed_phases,
+                key=lambda p: p.get("merged_into_project_at_sha", ""),
+            )["merged_into_project_at_sha"]
+            if latest_merge_sha and latest_merge_sha != latest_clean["project_tip_sha"]:
+                result.errors.append(
+                    f"03c gate: project tip ({latest_merge_sha[:8]}) differs from "
+                    f"latest clean review SHA ({latest_clean['project_tip_sha'][:8]}); "
+                    f"unreviewed work on project branch"
+                )
+
+    if not blocking and latest_clean and not result.errors:
+        result.passes.append(
+            f"03c gate: clean. Latest review={latest_clean['review_sequence']} "
+            f"covers {len(latest_clean['coverage_set'])} phases at "
+            f"SHA {latest_clean['project_tip_sha'][:8]}"
+        )
+
+
 def validate_audit_ready(project_id: str, run_tests: bool = False) -> ValidationResult:
     """Validate that a project is ready for audit."""
     result = ValidationResult()
@@ -40,6 +154,9 @@ def validate_audit_ready(project_id: str, run_tests: bool = False) -> Validation
     except FileNotFoundError as e:
         result.errors.append(str(e))
         return result
+
+    # 03c rigorous audit gate (no-op for legacy projects).
+    _validate_03c_audit_gate(project_id, result)
 
     # Check 1: All phases complete or deferred
     for phase in project_data.phases:

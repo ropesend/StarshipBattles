@@ -11,6 +11,7 @@ import uuid
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
+from game.core.validation_helpers import require_keys
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -114,8 +115,17 @@ class BattleSetupSide:
         data: Dict[str, Any],
         registries: Optional['GameRegistries'] = None,
     ) -> 'BattleSetupSide':
-        """Deserialize from save/load. Tolerates legacy saves that lack the
-        `*_complex_toggles` fields (pre-PROJ-282 Phase 2) — defaults empty."""
+        """Deserialize from save/load.
+
+        Requires the canonical PROJ-282 Phase 2 shape: both
+        `system_complex_toggles` and `sector_complex_toggles` keys must
+        be present. Missing keys raise `PersistenceException`.
+        """
+        require_keys(
+            data,
+            ['system_complex_toggles', 'sector_complex_toggles'],
+            'BattleSetupSide',
+        )
         side = cls(team_id=data.get("team_id", 0))
 
         for fleet_entry in data.get("fleets", []):
@@ -126,8 +136,8 @@ class BattleSetupSide:
 
         side.system_complexes = data.get("system_complexes", [])
         side.sector_complexes = data.get("sector_complexes", [])
-        side.system_complex_toggles = dict(data.get("system_complex_toggles", {}))
-        side.sector_complex_toggles = dict(data.get("sector_complex_toggles", {}))
+        side.system_complex_toggles = dict(data["system_complex_toggles"])
+        side.sector_complex_toggles = dict(data["sector_complex_toggles"])
         return side
 
 
@@ -256,18 +266,9 @@ class BattleSetupState:
     def to_dict(self) -> Dict[str, Any]:
         """Serialize the full setup for save/load.
 
-        PROJ-275: new format writes `sides: [side0_dict, side1_dict, ...]`.
-        Legacy `side_0` / `side_1` keys are ALSO emitted for backcompat
-        with any external consumers still reading the old shape.
+        PROJ-275: writes `sides: [side0_dict, side1_dict, ...]`.
         """
-        sides_list = [side.to_dict() for side in self.sides]
-        out: Dict[str, Any] = {"sides": sides_list}
-        # Legacy keys preserved for the 2-side case; omitted when N > 2
-        # since `side_0`/`side_1` alone would silently drop the extra sides.
-        if len(self.sides) == 2:
-            out["side_0"] = sides_list[0]
-            out["side_1"] = sides_list[1]
-        return out
+        return {"sides": [side.to_dict() for side in self.sides]}
 
     @classmethod
     def from_dict(
@@ -275,26 +276,12 @@ class BattleSetupState:
         data: Dict[str, Any],
         registries: Optional['GameRegistries'] = None,
     ) -> 'BattleSetupState':
-        """Deserialize from save/load. Supports both new `sides` list and
-        legacy `side_0`/`side_1` shapes."""
-        # Prefer new N-side format.
-        if "sides" in data and isinstance(data["sides"], list):
-            sides_raw = data["sides"]
-            count = max(MIN_SIDES, min(MAX_SIDES, len(sides_raw)))
-            state = cls(side_count=count)
-            for i, side_data in enumerate(sides_raw[:count]):
-                state.sides[i] = BattleSetupSide.from_dict(
-                    side_data, registries=registries
-                )
-            return state
-        # Legacy 2-side format.
-        state = cls(side_count=2)
-        if "side_0" in data:
-            state.sides[0] = BattleSetupSide.from_dict(
-                data["side_0"], registries=registries
-            )
-        if "side_1" in data:
-            state.sides[1] = BattleSetupSide.from_dict(
-                data["side_1"], registries=registries
+        """Deserialize from save/load. Requires the N-side `sides` list."""
+        sides_raw = data["sides"]
+        count = max(MIN_SIDES, min(MAX_SIDES, len(sides_raw)))
+        state = cls(side_count=count)
+        for i, side_data in enumerate(sides_raw[:count]):
+            state.sides[i] = BattleSetupSide.from_dict(
+                side_data, registries=registries
             )
         return state

@@ -161,53 +161,6 @@ def _make_selector_window(design_library=None, mode="load", on_select_callback=N
     return window, mocks
 
 
-# --- Initialization Tests ---
-
-class TestDesignSelectorWindowInit:
-    """Tests for initialization and mode handling."""
-
-    def test_init_load_mode_stores_mode(self):
-        """Test init with load mode stores mode correctly."""
-        window, _ = _make_selector_window(mode="load")
-
-        assert window.mode == "load"
-
-    def test_init_target_mode_stores_mode(self):
-        """Test init with target mode stores mode correctly."""
-        window, _ = _make_selector_window(mode="target")
-
-        assert window.mode == "target"
-
-    def test_init_stores_design_library_reference(self):
-        """Test init stores design_library reference."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
-
-        assert window.design_library is library
-
-    def test_init_stores_callback(self):
-        """Test init stores on_select_callback."""
-        callback = MagicMock()
-        window, _ = _make_selector_window(on_select_callback=callback)
-
-        assert window.on_select_callback is callback
-
-    def test_init_empty_filter_state(self):
-        """Test init has empty filter state."""
-        window, _ = _make_selector_window()
-
-        assert window.filter_name == ""
-        assert window.filter_ship_class is None
-        assert window.filter_vehicle_type is None
-        assert window.show_obsolete is False
-
-    def test_init_no_selected_design(self):
-        """Test init has no selected design."""
-        window, _ = _make_selector_window()
-
-        assert window.selected_design_id is None
-
-
 # --- Filtering Tests ---
 
 class TestDesignSelectorFiltering:
@@ -659,3 +612,51 @@ class TestDesignSelectorIntegration:
         window.show_obsolete = True
         window._refresh_designs()
         assert len(window.filtered_designs) == 2
+
+
+# ---------------------------------------------------------------------------
+# PROJ-347 T4.3c: Pattern §33 widget-ref placeholders
+# ---------------------------------------------------------------------------
+
+class TestDesignSelectorWindowWidgetPlaceholders:
+    """PROJ-347 T4.3c — Pattern §33 widget-ref placeholders.
+
+    ``process_event`` reads ``apply_filters_button``, ``obsolete_button``,
+    ``select_button``, ``cancel_button``, ``name_search_entry``,
+    ``class_dropdown``, ``type_dropdown``. Stage 1 must set these to
+    ``None`` before the bypass guard so a Null-builder test can
+    construct via ``bypass_init`` without subsequent AttributeError.
+    """
+
+    def _make_window(self, *, ui_builder):
+        from game.ui.screens.design_selector_window import DesignSelectorWindow
+        from tests.fixtures.ui_widget_factory import bypass_init
+
+        rect = pygame.Rect(0, 0, 800, 600)
+        with bypass_init(DesignSelectorWindow):
+            return DesignSelectorWindow(
+                rect,
+                MagicMock(name="ui_manager"),
+                _make_design_library(),
+                mode="load",
+                on_select_callback=MagicMock(name="on_select_callback"),
+                ui_builder=ui_builder,
+            )
+
+    def test_null_builder_leaves_widget_placeholders_as_none(self):
+        from tests.fixtures.design_selector_window_ui_builder import (
+            NullDesignSelectorWindowUiBuilder,
+        )
+        window = self._make_window(
+            ui_builder=NullDesignSelectorWindowUiBuilder()
+        )
+        for slot in (
+            "sidebar_panel", "name_search_entry", "class_dropdown",
+            "type_dropdown", "obsolete_button", "apply_filters_button",
+            "main_panel", "scroll_container", "select_button",
+            "cancel_button",
+        ):
+            assert getattr(window, slot) is None, (
+                f"Pattern §33 placeholder {slot!r} should be None under "
+                f"Null builder; got {getattr(window, slot)!r}"
+            )

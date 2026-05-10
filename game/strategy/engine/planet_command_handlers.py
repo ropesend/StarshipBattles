@@ -10,19 +10,35 @@ from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
 from game.strategy.data.order_types import OrderType, Order
+from game.strategy.engine.commands import (
+    ClearPlanetOrdersCommand,
+    DeletePlanetOrderCommand,
+    IssuePlanetOrderCommand,
+    SetAtmosphereTargetCommand,
+    SetGravityTargetCommand,
+    SetRadiationShieldTargetCommand,
+    SetWaterTargetCommand,
+)
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.validation.planet_order_validator import PlanetOrderValidator
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
-    from game.strategy.engine.commands import (
-        IssuePlanetOrderCommand,
-        ClearPlanetOrdersCommand,
-        DeletePlanetOrderCommand,
-    )
 
 
+@command_spec(
+    command_class=IssuePlanetOrderCommand,
+    order_type=None,  # Routes to ACTIVATE/DEACTIVATE_ABILITY at handle time
+    category='planet',
+    execution_model='planet',
+    facade_helper_name='dispatch_issue_planet_order',
+)
 class IssuePlanetOrderCommandHandler:
     """Handler for IssuePlanetOrderCommand."""
 
@@ -36,16 +52,12 @@ class IssuePlanetOrderCommandHandler:
         Returns:
             ValidationResult indicating success or failure.
         """
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers.base import BaseCommandHandler
 
-        # 1. Resolve planet
-        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
+        # 1. Resolve + authorize (PROJ-375 DUP-X-01)
+        planet, error = BaseCommandHandler._resolve_player_planet(session, cmd.planet_id)
         if error:
             return error
-
-        # 2. Validate ownership
-        if planet.owner_id != session.active_empire.id:
-            return ValidationResult.error("Planet does not belong to this empire.")
 
         # 3. Parse order type
         try:
@@ -59,6 +71,8 @@ class IssuePlanetOrderCommandHandler:
         if order_type == OrderType.ACTIVATE_ABILITY:
             if not cmd.ability_name:
                 return ValidationResult.error("ability_name is required for ACTIVATE_ABILITY.")
+            if not cmd.component_key:
+                return ValidationResult.error("component_key is required for ACTIVATE_ABILITY.")
             result = PlanetOrderValidator.validate_activate_ability(
                 planet, cmd.facility_instance_id, cmd.ability_name, component_registry,
                 component_key=cmd.component_key,
@@ -66,6 +80,8 @@ class IssuePlanetOrderCommandHandler:
         elif order_type == OrderType.DEACTIVATE_ABILITY:
             if not cmd.ability_name:
                 return ValidationResult.error("ability_name is required for DEACTIVATE_ABILITY.")
+            if not cmd.component_key:
+                return ValidationResult.error("component_key is required for DEACTIVATE_ABILITY.")
             result = PlanetOrderValidator.validate_deactivate_ability(
                 planet, cmd.facility_instance_id, cmd.ability_name, component_registry,
                 component_key=cmd.component_key,
@@ -97,36 +113,44 @@ class IssuePlanetOrderCommandHandler:
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=ClearPlanetOrdersCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name='dispatch_clear_planet_orders',
+)
 class ClearPlanetOrdersCommandHandler:
     """Handler for ClearPlanetOrdersCommand."""
 
     def execute(self, session: 'GameSession', cmd: 'ClearPlanetOrdersCommand') -> ValidationResult:
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers.base import BaseCommandHandler
 
-        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
+        planet, error = BaseCommandHandler._resolve_player_planet(session, cmd.planet_id)
         if error:
             return error
-
-        if planet.owner_id != session.active_empire.id:
-            return ValidationResult.error("Planet does not belong to this empire.")
 
         planet.clear_orders()
         logger.info(f"Planet {planet.name}: all orders cleared")
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=DeletePlanetOrderCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name='dispatch_delete_planet_order',
+)
 class DeletePlanetOrderCommandHandler:
     """Handler for DeletePlanetOrderCommand."""
 
     def execute(self, session: 'GameSession', cmd: 'DeletePlanetOrderCommand') -> ValidationResult:
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers.base import BaseCommandHandler
 
-        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
+        planet, error = BaseCommandHandler._resolve_player_planet(session, cmd.planet_id)
         if error:
             return error
-
-        if planet.owner_id != session.active_empire.id:
-            return ValidationResult.error("Planet does not belong to this empire.")
 
         if cmd.order_index < 0 or cmd.order_index >= len(planet.orders):
             return ValidationResult.error("Invalid order index.")
@@ -136,85 +160,144 @@ class DeletePlanetOrderCommandHandler:
         return ValidationResult.success()
 
 
+def _apply_planet_environmental_target(
+    session: 'GameSession',
+    planet_id: int,
+    attribute: str,
+    value,
+    set_log: str,
+    clear_log: str,
+) -> ValidationResult:
+    """Shared body for the 4 SetXTarget handlers (PROJ-375 Cluster 5).
+
+    Resolves + authorizes the planet, sets the named attribute, and emits a
+    set/clear log line. Returns success or the resolution error.
+
+    Args:
+        session: Active game session.
+        planet_id: Planet ID from the command.
+        attribute: Planet attribute name to assign (e.g. 'atmosphere_target').
+        value: Value to assign — set-vs-clear is decided by the call site
+            (atmosphere uses `dict(...)` always, others may pass None).
+        set_log: Log message for the "set" branch (planet name prepended).
+        clear_log: Log message for the "clear" branch.
+    """
+    from game.strategy.engine.handlers.base import BaseCommandHandler
+
+    planet, error = BaseCommandHandler._resolve_player_planet(session, planet_id)
+    if error:
+        return error
+
+    setattr(planet, attribute, value)
+    is_clear = (value is None) or (isinstance(value, dict) and not value)
+    logger.info(f"Planet {planet.name}: {clear_log if is_clear else set_log}")
+    return ValidationResult.success()
+
+
+@command_spec(
+    command_class=SetAtmosphereTargetCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name='dispatch_set_atmosphere_target',
+)
 class SetAtmosphereTargetCommandHandler:
     """Handler for SetAtmosphereTargetCommand."""
 
     def execute(self, session: 'GameSession', cmd: 'SetAtmosphereTargetCommand') -> ValidationResult:
-        from game.strategy.engine.command_handlers import BaseCommandHandler
-
-        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
-        if error:
-            return error
-
-        if planet.owner_id != session.active_empire.id:
-            return ValidationResult.error("Planet does not belong to this empire.")
-
-        planet.atmosphere_target = dict(cmd.atmosphere_target)
-        if cmd.atmosphere_target:
-            logger.info(f"Planet {planet.name}: atmosphere target set ({len(cmd.atmosphere_target)} gases)")
-        else:
-            logger.info(f"Planet {planet.name}: atmosphere target cleared")
-        return ValidationResult.success()
+        target = dict(cmd.atmosphere_target) if cmd.atmosphere_target else {}
+        gases = len(target)
+        return _apply_planet_environmental_target(
+            session, cmd.planet_id,
+            attribute='atmosphere_target',
+            value=target,
+            set_log=f"atmosphere target set ({gases} gases)",
+            clear_log="atmosphere target cleared",
+        )
 
 
+@command_spec(
+    command_class=SetGravityTargetCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    # No facade helper today.
+    facade_helper_name=None,
+)
 class SetGravityTargetCommandHandler:
     """Handler for SetGravityTargetCommand."""
 
     def execute(self, session: 'GameSession', cmd: 'SetGravityTargetCommand') -> ValidationResult:
-        from game.strategy.engine.command_handlers import BaseCommandHandler
-
-        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
-        if error:
-            return error
-
-        if planet.owner_id != session.active_empire.id:
-            return ValidationResult.error("Planet does not belong to this empire.")
-
-        planet.gravity_target = cmd.gravity_target
-        if cmd.gravity_target is not None:
-            logger.info(f"Planet {planet.name}: gravity target set to {cmd.gravity_target:.2f} m/s²")
-        else:
-            logger.info(f"Planet {planet.name}: gravity target cleared")
-        return ValidationResult.success()
+        return _apply_planet_environmental_target(
+            session, cmd.planet_id,
+            attribute='gravity_target',
+            value=cmd.gravity_target,
+            set_log=(
+                f"gravity target set to {cmd.gravity_target:.2f} m/s²"
+                if cmd.gravity_target is not None else ""
+            ),
+            clear_log="gravity target cleared",
+        )
 
 
+@command_spec(
+    command_class=SetWaterTargetCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name=None,
+)
 class SetWaterTargetCommandHandler:
     """Handler for SetWaterTargetCommand."""
 
     def execute(self, session: 'GameSession', cmd: 'SetWaterTargetCommand') -> ValidationResult:
-        from game.strategy.engine.command_handlers import BaseCommandHandler
-
-        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
-        if error:
-            return error
-
-        if planet.owner_id != session.active_empire.id:
-            return ValidationResult.error("Planet does not belong to this empire.")
-
-        planet.water_target = cmd.water_target
-        if cmd.water_target is not None:
-            logger.info(f"Planet {planet.name}: water target set to {cmd.water_target:.2f}")
-        else:
-            logger.info(f"Planet {planet.name}: water target cleared")
-        return ValidationResult.success()
+        return _apply_planet_environmental_target(
+            session, cmd.planet_id,
+            attribute='water_target',
+            value=cmd.water_target,
+            set_log=(
+                f"water target set to {cmd.water_target:.2f}"
+                if cmd.water_target is not None else ""
+            ),
+            clear_log="water target cleared",
+        )
 
 
+@command_spec(
+    command_class=SetRadiationShieldTargetCommand,
+    order_type=None,
+    category='planet',
+    execution_model='instant',
+    facade_helper_name=None,
+)
 class SetRadiationShieldTargetCommandHandler:
     """Handler for SetRadiationShieldTargetCommand."""
 
     def execute(self, session: 'GameSession', cmd: 'SetRadiationShieldTargetCommand') -> ValidationResult:
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        return _apply_planet_environmental_target(
+            session, cmd.planet_id,
+            attribute='radiation_shielding_target',
+            value=cmd.shielding_target,
+            set_log=(
+                f"radiation shielding target set to {cmd.shielding_target:.2f}"
+                if cmd.shielding_target is not None else ""
+            ),
+            clear_log="radiation shielding target cleared",
+        )
 
-        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
-        if error:
-            return error
 
-        if planet.owner_id != session.active_empire.id:
-            return ValidationResult.error("Planet does not belong to this empire.")
-
-        planet.radiation_shielding_target = cmd.shielding_target
-        if cmd.shielding_target is not None:
-            logger.info(f"Planet {planet.name}: radiation shielding target set to {cmd.shielding_target:.2f}")
-        else:
-            logger.info(f"Planet {planet.name}: radiation shielding target cleared")
-        return ValidationResult.success()
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (
+        IssuePlanetOrderCommandHandler,
+        ClearPlanetOrdersCommandHandler,
+        DeletePlanetOrderCommandHandler,
+        SetAtmosphereTargetCommandHandler,
+        SetGravityTargetCommandHandler,
+        SetWaterTargetCommandHandler,
+        SetRadiationShieldTargetCommandHandler,
+    ):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))

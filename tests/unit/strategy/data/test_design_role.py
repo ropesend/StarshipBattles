@@ -257,8 +257,8 @@ class TestShipInstanceRole:
         assert restored.role_override == "interceptor"
         assert restored.effective_role == "interceptor"
 
-    def test_role_absent_from_old_saves(self):
-        """Ships from old saves (no role fields) deserialize cleanly."""
+    def test_role_absent_from_save_dict(self) -> None:
+        """When `design_role`/`role_override` keys are absent, both default to None."""
         from game.strategy.data.ship_instance import ShipInstance
 
         data = {
@@ -267,6 +267,7 @@ class TestShipInstanceRole:
             "name": "Test Ship",
             "owner_id": 0,
             "design_data": {},
+            "components": {},
         }
 
         ship = ShipInstance.from_dict(data)

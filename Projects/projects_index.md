@@ -4,48 +4,47 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-320 | Strategic Combat Round Budget | Planning | 2026-05-02 | 2026-05-02 |
-| PROJ-319 | Audit-shrink cleanup 2026-05-02 | Planning | 2026-05-02 | 2026-05-02 |
-| PROJ-318 | PROJ-314 Closeout Remediations | Complete | 2026-04-28 | 2026-04-28 |
-| PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | Awaiting User Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-315 | Fleet Report Component Damage Panel | Awaiting User Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-314 | Unify Ship Theme Loader Schema | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-313 | Strategy Modal Window Base Class Refactor | Awaiting Verification | 2026-04-28 | 2026-04-28 |
-| PROJ-312 | Add Battle Replay System | Plan Approved | 2026-04-27 | 2026-04-27 |
-| PROJ-310 | Deep Nesting Investigative Review | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-305 | Fleet Strategic-Layer Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-304 | Star System Archetype Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-303 | Warp Point Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-302 | Star Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-301 | Planet Intrinsic Ability Sources | Planning | 2026-04-26 | 2026-04-26 |
-| PROJ-300 | Universal IAbilitySource Framework + Storm/Facility Migration | Planning | 2026-04-26 | 2026-04-26 |
+| PROJ-410 | Build Queue Widget Cache Invalidation | Planning | 2026-05-10 | 2026-05-10 |
+| PROJ-409 | Tier 5: closeout MAJ-013 EventBus shim + MAJ-014 raw EnginePhaseError catch | Complete | 2026-05-09 | 2026-05-09 |
+| PROJ-408 | Tier 4: coverage gaps from PROJ-380..399 review (C-01..C-06) | Complete | 2026-05-09 | 2026-05-09 |
+| PROJ-407 | Tier 3: stale docs + architecture wording sweep (D-01..D-09) | Complete | 2026-05-09 | 2026-05-09 |
+| PROJ-406 | Tier 2: audit-readiness reconciliation across 14 PROJ-380..399 projects | Complete | 2026-05-09 | 2026-05-09 |
+| PROJ-405 | Tier 1 B-06: Wire EventBus through Projectile/Seeker construction | Complete | 2026-05-09 | 2026-05-09 |
+| PROJ-404 | Tier 1 B-05: Eradicate save-format compatibility (Rule 3 follow-on) | Complete | 2026-05-09 | 2026-05-09 |
+| PROJ-403 | Tier 1 B-04: Migrate stale _MockGalaxy doubles to GalaxyState | Complete | 2026-05-09 | 2026-05-09 |
+| PROJ-402 | Tier 1 B-03: SimulationBattleResolver catch ValidationException | Complete | 2026-05-09 | 2026-05-09 |
+| PROJ-401 | Tier 1 B-02: Passenger-load validator missing species_id rejection | Complete | 2026-05-09 | 2026-05-09 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
-| PROJ-311 | Return Type Annotation Backfill and Convention | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-308 | Broad Exception Handler Justifications | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-307 | Documentation Freshness Timestamps | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-306 | Battle Simulation DI Cleanup (PROJ-274 closure) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-298 | FleetOrder Rename Cleanup | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-297 | Code Review Cleanup - Quick Wins | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-299 | Race Description Generator (LLM) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-296 | LLM Service Foundation | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | Archived | 2026-04-26 | 2026-04-27 |
-| PROJ-292 | Audit High + Major Cleanup (PROJ-283..290 Closeout) | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-291 | Audit Critical Fixes (PROJ-283..290 Sign-off Blocker) | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-290 | Empire Treasury + Uncolonized Habitability UI | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-289 | Planet Report Panel Per-Species + Per-Resource UI | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-288 | Colony Output Projection Helpers | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-287 | Race Registry Facade + Empire.resident_species | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-286 | Multi-Resource Population Consumption | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-285 | Habitability-to-Production Economy Hook | Archived | 2026-04-18 | 2026-04-26 |
-| PROJ-284 | Colony Demographics Loop (Organics, Happiness, Population Growth Rework) | Archived | 2026-04-18 | 2026-04-26 |
+| PROJ-400 | Tier 1 B-01: NewGameSetupScreen deleted-wrapper call | Archived | 2026-05-09 | 2026-05-10 |
+| PROJ-399 | Branch hygiene — pre-existing test failures and pytest collection errors (Galaxy._intercept, docs-drift, basename collisions) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-398 | PROJ-380 remediation — 5 review MAJOR findings (consolidation refinements) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-397 | PROJ-393 remediation — review CRITICAL + MAJOR + 3 deferred items (Combat Lab dead vars reclaim, fleet_id field deletion, view=None branch) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-396 | PROJ-382 remediation — review CRITICAL + MAJOR + Task 5.4 deferred (static-guard blind spot, GameSession.from_dict mutators, superweapon_order_processor decomp) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-395 | PROJ-381 remediation — review CRITICAL + MAJOR findings (B-5 modal, ValidationException registry, test assertions, etc.) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-394 | PROJ-387 follow-up — Galaxy state public property + guard cleanup | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-393 | Legacy removal — Test-injection fallbacks + comment cleanups (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-392 | Legacy removal — Misc orphan wrappers + zero-call-site placeholders (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-391 | Legacy removal — Underscore-prefixed legacy pair consolidations (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-390 | Legacy removal — log_event module-level compat shim retirement (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-389 | Legacy removal — score_planet_for_race wrapper migration (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-388 | Legacy removal — ModifierLogic deprecated class wrapper (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-387 | Legacy removal — Galaxy backward-compat property forwarders (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-386 | Legacy removal — Save-format migration eradication (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-385 | Legacy removal — formula_evaluator backward-compat aliases (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-384 | Legacy removal — PROJ-241 deprecated *_static methods (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-383 | Legacy removal — command_handlers.py shim eradication (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-382 | Pattern conformance — Facade integrity, EventBus injection, doc drift, LOC sweep (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-381 | Error handling cleanup — strategy/ui/assets/sim (2026-05-07) | Archived | 2026-05-08 | 2026-05-10 |
+| PROJ-354B | Replay Background Verification Coordinator (Phase B of replay verification consensus plan r003 - pure verifier + queue + sidecar; depends on PROJ-354A and on production sink wiring) | Archived | 2026-05-04 | 2026-05-05 |
+| PROJ-354A | Replay Component End-State Fidelity (Phase A of replay verification consensus plan r003 - capture-side; max_hp + status fields; schema bump) | Archived | 2026-05-04 | 2026-05-05 |
+| PROJ-353A | Closeout follow-up - Tooling and test-quality polish (T6.8 + Tier-7 + Codex audit-remediation R1/R2/R3 per 20260505T034007Z) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-352A | Closeout follow-up - UI cleanup (T6.6 Strategy load dialog modal tracking + T4.7 NewGameSetup builder docstring) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-351A | Closeout follow-up - Engine layer cleanup (T6.3 ActionExecutionEngine DI + T6.4 PlanetAbilities registry scan) | Archived | 2026-05-04 | 2026-05-04 |
+| PROJ-329A | UIWindow retrofit fast wins + inventory + deferral docs (Phase 2: 3 retrofits, +31 tests) | Archived | 2026-05-04 | 2026-05-04 |
 
 ---
 

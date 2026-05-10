@@ -35,10 +35,15 @@ from game.ui.screens.race_validator import RaceValidator  # noqa: F401
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 
 from game.ui.screens.race_setup import panel_factory
-from game.ui.screens.race_setup.controller import RaceSetupController
-from game.ui.screens.race_setup.input_handler import RaceSetupInputHandler
-from game.ui.screens.race_setup.llm_dialog_service import LLMDialogService
-from game.ui.screens.race_setup.renderer import RaceSetupRenderer
+from game.ui.screens.race_setup.controller import RaceSetupController  # noqa: F401  (re-export for tests)
+from game.ui.screens.race_setup.delegate_factory import (
+    DefaultRaceSetupDelegateFactory,
+    RaceSetupDelegates,
+)
+from game.ui.screens.race_setup.input_handler import RaceSetupInputHandler  # noqa: F401  (re-export for tests)
+from game.ui.screens.race_setup.llm_dialog_service import LLMDialogService  # noqa: F401  (re-export for tests)
+from game.ui.screens.race_setup.renderer import RaceSetupRenderer  # noqa: F401  (re-export for tests)
+from game.ui.screens.race_setup.ui_builder import RaceSetupUiBuilder
 from game.ui.screens.race_setup.view_model import (
     TAB_APTITUDES,
     TAB_DESCRIPTIONS,
@@ -79,6 +84,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         on_cancel_callback: Callable[[], None],
         race_to_edit: Optional[RaceConfig] = None,
         race_registry: Optional["IRaceRegistry"] = None,
+        *,
+        ui_builder: Optional[RaceSetupUiBuilder] = None,
+        delegate_factory: Optional[DefaultRaceSetupDelegateFactory] = None,
     ):
         """Create race setup wizard window.
 
@@ -92,7 +100,68 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                 When supplied, a successful save invalidates the cached
                 entry for the saved race so the next ``get_race`` call
                 re-reads from disk. Pre-game launches pass None.
+            ui_builder: PROJ-325 Phase 3 — UI builder seam. Defaults to
+                ``RaceSetupUiBuilder`` (production widget construction).
+                Tests can pass ``NullRaceSetupUiBuilder`` /
+                ``MockRaceSetupUiBuilder`` from
+                ``tests/fixtures/race_setup_ui_builders.py``.
+            delegate_factory: PROJ-325 Phase 3 — delegate-factory seam.
+                Defaults to ``DefaultRaceSetupDelegateFactory`` (the
+                production MVVM wiring). Tests can pass a custom factory
+                to substitute any delegate.
+
+        Two-stage construction (PROJ-325 Phase 3):
+
+        1. Cheap state + delegate construction runs *before* the
+           ``bypass_init`` guard, so test instances built under
+           ``with bypass_init(RaceSetupScreen):`` still have real
+           delegates (``_view_model``, ``_controller``, etc.) populated.
+        2. The ``UIWindow`` shell + widget tree run *after* the guard.
+           Bypassed instances skip the heavy ``pygame_gui`` calls.
+
+        See ``Projects/active_projects/PROJ-325/findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md``
+        for the full rationale.
         """
+        # ---- Stage 1: cheap state + widget-ref placeholders + delegates ----
+        self._init_state(
+            rect=rect,
+            on_complete_callback=on_complete_callback,
+            on_cancel_callback=on_cancel_callback,
+            race_to_edit=race_to_edit,
+            race_registry=race_registry,
+        )
+        self._init_widget_refs()
+        self._delegates: RaceSetupDelegates = (
+            delegate_factory or DefaultRaceSetupDelegateFactory()
+        ).build(self)
+        # Mirror delegate refs to the legacy attribute names so callers
+        # / tests that read ``screen._view_model`` etc. keep working.
+        self._view_model = self._delegates.view_model
+        self._renderer = self._delegates.renderer
+        self._controller = self._delegates.controller
+        self._input_handler = self._delegates.input_handler
+        self._llm_service = self._delegates.llm_service
+
+        # ---- Stage 2: UIWindow shell (skipped under bypass_init) ----
+        # PROJ-324 Phase 1: opt-in test escape hatch — see
+        # StrategyModalWindow.__init__ for full rationale. PROJ-325
+        # Phase 3 moved the guard from the first executable statement to
+        # *after* cheap state + delegate setup so bypassed instances are
+        # useful (not bare).
+        if getattr(type(self), 'bypass_init', False):
+            self.ui_manager = manager
+            self._window_init_bypassed = True
+            # Stage 3 (test branch): give the (test-supplied) builder a
+            # chance to populate widget slots without a real UIWindow
+            # shell. Production builds would not pass a ``ui_builder``;
+            # tests pass ``NullRaceSetupUiBuilder`` (no-op) or
+            # ``MockRaceSetupUiBuilder`` (MagicMock-populated slots).
+            # When no builder is supplied under bypass, leave slots at
+            # their ``_init_widget_refs`` placeholders.
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
+
         super().__init__(
             rect,
             manager,
@@ -100,25 +169,77 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             object_id="#race_setup_window",
             resizable=False,
         )
+        # PROJ-347 T4.6: mirror StrategyModalWindow base — production
+        # paths set ``_window_init_bypassed = False`` so the flag is
+        # always defined (tests and call sites can rely on it without
+        # ``getattr(..., False)`` everywhere).
+        self._window_init_bypassed = False
 
-        # Working race configuration.
+        # ---- Stage 3 (production): widget tree ----
+        (ui_builder or RaceSetupUiBuilder()).build(self)
+        self._show_step(self._view_model.current_step)
+
+    # ------------------------------------------------------------------
+    # PROJ-325 Phase 3 — two-stage construction helpers
+    # ------------------------------------------------------------------
+
+    def _init_state(
+        self,
+        *,
+        rect: pygame.Rect,
+        on_complete_callback: Callable[[RaceConfig], None],
+        on_cancel_callback: Callable[[], None],
+        race_to_edit: Optional[RaceConfig],
+        race_registry: Optional["IRaceRegistry"],
+    ) -> None:
+        """Assign cheap state — no pygame_gui widget construction.
+
+        Called from ``__init__`` *before* the ``bypass_init`` guard so
+        test-mode instances see the same race_config / library / asset
+        loader / callback wiring as production. Stays cheap: only Python
+        object construction (no live pygame display required).
+
+        Note: ``rect`` is intentionally NOT assigned to ``self.rect``
+        here. ``pygame_gui``'s ``GUISprite`` base class implements
+        ``rect`` as a descriptor that mutates ``self.blit_data`` on
+        write — and ``blit_data`` is initialized by the
+        ``pygame.sprite.Sprite.__init__`` chain that ``bypass_init``
+        skips. In production, ``super().__init__`` (called by Stage 2
+        of ``__init__``) assigns ``self.rect`` for us. Tests still
+        pass ``rect`` for parity with the production constructor.
+        Pattern-discovery flagged for PROJ-328: the consensus plan's
+        headline sketch wrote ``self.rect = rect`` in the bypass branch,
+        but that fails for ``UIWindow`` subclasses; sibling refactors
+        will need to either drop the assignment (as here) or use
+        ``object.__setattr__`` / a direct ``self._rect`` write.
+        """
+        del rect  # see docstring — not assignable on a bypassed UIWindow
+        # Working race configuration. Controller is the writeable owner;
+        # the screen mirrors for backwards-compat with tests/callers that
+        # read ``screen.race_config`` / ``screen.is_editing``.
         if race_to_edit:
-            race_config = race_to_edit
-            is_editing = True
+            self.race_config = race_to_edit
+            self.is_editing = True
         else:
-            race_config = RaceConfig()
-            is_editing = False
-        # Mirror onto the screen for backwards-compat with tests that
-        # read `screen.race_config` / `screen.is_editing`. Controller is
-        # the writeable owner.
-        self.race_config = race_config
-        self.is_editing = is_editing
+            self.race_config = RaceConfig()
+            self.is_editing = False
 
         self.race_library = RaceLibrary()
         self.race_registry = race_registry
         self._asset_loader = RaceAssetLoader()
 
-        # Panel references — populated by the factory dispatch below.
+        # Backwards-compat: existing tests / code read these directly.
+        self.on_complete_callback = on_complete_callback
+        self.on_cancel_callback = on_cancel_callback
+
+    def _init_widget_refs(self) -> None:
+        """Assign every widget slot to ``None`` / empty container.
+
+        Per the consensus refactor plan: prefer explicit placeholder
+        initialization over lazy properties. Bypassed instances are then
+        honest — widget tree absent, cheap delegates present.
+        """
+        # Panel references — populated by the production UI builder.
         self._summary_panel = None
         self._identity_panel = None
         self._environment_panel = None
@@ -128,7 +249,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._portrait_gallery = None
         self._theme_gallery = None
 
-        # UI element references built in `_create_ui()`.
+        # UI element references built in ``_create_ui()`` / by the builder.
         self.step_panels: List = []
         self.tab_buttons: List = []
         self.btn_cancel: Optional[pygame_gui.elements.UIButton] = None
@@ -137,34 +258,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self.btn_randomize: Optional[pygame_gui.elements.UIButton] = None
         self.btn_randomize_all: Optional[pygame_gui.elements.UIButton] = None
         self.error_label: Optional[pygame_gui.elements.UILabel] = None
-        self.name_input = None  # legacy attr (Identity panel replaced this)
-        self.ship_preview_scroll: Optional[pygame_gui.elements.UIScrollingContainer] = None
-
-        # ---- Delegate construction ----
-        self._view_model = RaceSetupViewModel(is_editing=is_editing)
-        self._renderer = RaceSetupRenderer(screen=self)
-        self._controller = RaceSetupController(
-            screen=self,
-            view_model=self._view_model,
-            renderer=self._renderer,
-            race_config=race_config,
-            race_library=self.race_library,
-            race_registry=race_registry,
-            on_complete_callback=on_complete_callback,
-            on_cancel_callback=on_cancel_callback,
-        )
-        self._llm_service = LLMDialogService(
-            view_model=self._view_model,
-            renderer=self._renderer,
-        )
-        self._input_handler = RaceSetupInputHandler(screen=self)
-
-        # Backwards-compat: existing tests / code read these directly.
-        self.on_complete_callback = on_complete_callback
-        self.on_cancel_callback = on_cancel_callback
-
-        self._create_ui()
-        self._show_step(self._view_model.current_step)
+        self.ship_preview_scroll: Optional[
+            pygame_gui.elements.UIScrollingContainer
+        ] = None
 
     # ------------------------------------------------------------------
     # Backwards-compat property shims

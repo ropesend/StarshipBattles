@@ -1,3 +1,16 @@
+"""Tests for AI behaviors that involve spatial reasoning.
+
+PROJ-323 Task 5.11: vector arithmetic in test bodies is intentional and
+acceptable for spatial behavior tests. Each test documents the expected
+geometry inline (e.g. "ship at 1000, target at origin, expect tangential
+movement"). The fixture below describes the standard scenario:
+  - ship at origin (0, 0)
+  - max weapon range 1000 units
+  - target far away at (2000, 0) by default, repositioned per test
+
+This is intentionally accepted as documented intent (CAT-12 finding marked
+"acceptable for spatial behavior tests"). No further refactor needed.
+"""
 import pytest
 from unittest.mock import MagicMock
 import pygame
@@ -7,6 +20,10 @@ from game.ai.behaviors import KiteBehavior, AttackRunBehavior, OrbitBehavior
 
 @pytest.fixture
 def advanced_setup():
+    """Standard spatial-test scenario: ship at origin, target at (2000, 0).
+
+    See module docstring for geometry conventions used by tests in this file.
+    """
     mock_controller = MagicMock()
     ship = mock_controller.ship
     ship.position = pygame.math.Vector2(0, 0)

@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import Mock, MagicMock, patch, PropertyMock
 
 from game.core.hex_math import HexCoord
-from game.strategy.engine.command_handlers import (
+from game.strategy.engine.handlers import (
     CommandHandlerRegistry,
     ColonizeCommandHandler,
     MoveCommandHandler,
@@ -88,20 +88,12 @@ class TestCommandHandlerRegistry:
 
 
 class TestColonizeCommandHandler:
-    """Tests for ColonizeCommandHandler."""
+    """Tests for ColonizeCommandHandler.
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = ColonizeCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, planet_id=1)
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    `test_fleet_not_found` consolidated into the parametrized
+    `test_fleet_id_handler_returns_failure_when_fleet_not_found` at the
+    end of this module (PROJ-325 Phase 2 Task 2.1).
+    """
 
     def test_valid_colonize_creates_order(self):
         """Valid colonize adds order to fleet."""
@@ -137,20 +129,12 @@ class TestColonizeCommandHandler:
 
 
 class TestMoveCommandHandler:
-    """Tests for MoveCommandHandler."""
+    """Tests for MoveCommandHandler.
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = MoveCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, target_hex=(0, 0))
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    `test_fleet_not_found` consolidated into the parametrized
+    `test_fleet_id_handler_returns_failure_when_fleet_not_found` at the
+    end of this module (PROJ-325 Phase 2 Task 2.1).
+    """
 
     def test_unreachable_target(self):
         """Returns failure when path not found."""
@@ -204,20 +188,14 @@ class TestMoveCommandHandler:
 
 
 class TestInterceptCommandHandler:
-    """Tests for InterceptCommandHandler."""
+    """Tests for InterceptCommandHandler.
 
-    def test_fleet_not_found(self):
-        """Returns failure when source fleet not found."""
-        handler = InterceptCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, target_fleet_id=2)
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    `test_fleet_not_found` (source-fleet lookup) consolidated into the
+    parametrized `test_fleet_id_handler_returns_failure_when_fleet_not_found`
+    at the end of this module (PROJ-325 Phase 2 Task 2.1).
+    `test_target_fleet_not_found` (target-fleet lookup) is distinct and
+    remains here.
+    """
 
     def test_target_fleet_not_found(self):
         """Returns failure when target fleet not found."""
@@ -297,16 +275,20 @@ class TestJoinCommandHandler:
         assert mock_fleet.add_order.call_count == 2
 
 
+def _make_session_with_real_fleets(fleet, target):
+    """Helper: create a mock session that returns real Fleet objects via
+    `_get_fleet_by_id`. Shared by Join and Intercept handler tests."""
+    mock_session = Mock()
+    mock_session.active_empire = Mock(id=0)
+    lookup = {fleet.id: fleet, target.id: target}
+    mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
+    return mock_session
+
+
 class TestJoinCommandHandlerPursuerTracking:
     """Tests for JoinCommandHandler pursuer registration and validation (PROJ-222)."""
 
-    def _make_session_with_real_fleets(self, fleet, target):
-        """Helper: create mock session that returns real Fleet objects."""
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        lookup = {fleet.id: fleet, target.id: target}
-        mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
-        return mock_session
+    _make_session_with_real_fleets = staticmethod(_make_session_with_real_fleets)
 
     def test_join_registers_pursuer(self):
         fleet = Fleet("f1", 0, HexCoord(0, 0))
@@ -345,12 +327,7 @@ class TestJoinCommandHandlerPursuerTracking:
 class TestInterceptCommandHandlerPursuerTracking:
     """Tests for InterceptCommandHandler pursuer registration and validation (PROJ-222)."""
 
-    def _make_session_with_real_fleets(self, fleet, target):
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        lookup = {fleet.id: fleet, target.id: target}
-        mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
-        return mock_session
+    _make_session_with_real_fleets = staticmethod(_make_session_with_real_fleets)
 
     def test_intercept_registers_pursuer(self):
         fleet = Fleet("f1", 0, HexCoord(0, 0))
@@ -376,20 +353,12 @@ class TestInterceptCommandHandlerPursuerTracking:
 
 
 class TestColonizeMissionCommandHandler:
-    """Tests for ColonizeMissionCommandHandler."""
+    """Tests for ColonizeMissionCommandHandler.
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = ColonizeMissionCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, planet_id=None, target_hex=(0, 0))
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    `test_fleet_not_found` consolidated into the parametrized
+    `test_fleet_id_handler_returns_failure_when_fleet_not_found` at the
+    end of this module (PROJ-325 Phase 2 Task 2.1).
+    """
 
     def test_no_path_found(self):
         """Returns failure when no path to target."""
@@ -418,20 +387,12 @@ class TestColonizeMissionCommandHandler:
 
 
 class TestClearOrdersCommandHandler:
-    """Tests for ClearOrdersCommandHandler."""
+    """Tests for ClearOrdersCommandHandler.
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = ClearOrdersCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999)
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    `test_fleet_not_found` consolidated into the parametrized
+    `test_fleet_id_handler_returns_failure_when_fleet_not_found` at the
+    end of this module (PROJ-325 Phase 2 Task 2.1).
+    """
 
     def test_clears_orders_and_path(self):
         """Valid clear calls fleet.clear_orders() (PROJ-222: uses Fleet API)."""
@@ -456,52 +417,26 @@ class TestClearOrdersCommandHandler:
 
 
 class TestTransferCommandHandler:
-    """Tests for TransferCommandHandler."""
+    """Tests for TransferCommandHandler.
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = TransferCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999)
+    `test_fleet_not_found` consolidated into the parametrized
+    `test_fleet_id_handler_returns_failure_when_fleet_not_found` at the
+    end of this module (PROJ-325 Phase 2 Task 2.1).
+    """
 
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
-
-    def test_fleet_owner_not_found(self):
-        """Returns failure when fleet owner empire not found.
-
-        BUG-125: aligning active_empire with the fleet's owner_id passes
-        the authorization gate; the owner-empire-lookup failure is then
-        the next branch reached.
-        """
-        handler = TransferCommandHandler()
-
-        mock_fleet = Mock()
-        mock_fleet.owner_id = 99
-        mock_fleet.id = 1
-        mock_fleet.ships = []
-        mock_fleet.location = (0, 0)
-
-        mock_session = Mock()
-        # active_empire matches fleet owner so auth passes; empires list
-        # is empty so the owner-not-found branch fires.
-        mock_session.active_empire = Mock(id=99)
-        mock_session._get_fleet_by_id.return_value = mock_fleet
-        mock_session.empires = []
-
-        mock_cmd = Mock(fleet_id=1)
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet owner not found" in result.message
+    # PROJ-343 T1.1: `test_fleet_owner_not_found` was deleted. It pinned
+    # an unreachable "Fleet owner not found" error path — the now-removed
+    # `owning_empire = session.empires[fleet.owner_id]` lookup whose
+    # variable was never used. `_resolve_player_fleet` already enforces
+    # ownership at the auth gate via active_empire.
 
     def test_planet_not_found(self):
-        """Returns failure when planet not found."""
+        """Returns failure when planet not found.
+
+        PROJ-343 T1.1: command must explicitly set target_fleet_id=None for
+        the planet-target branch to fire. Prior to the fix the handler
+        unconditionally resolved planet_id; now it branches on target_fleet_id.
+        """
         handler = TransferCommandHandler()
 
         mock_fleet = Mock()
@@ -522,7 +457,7 @@ class TestTransferCommandHandler:
         mock_session.empires = [mock_empire]
         mock_session._get_planet_by_id.return_value = None
 
-        mock_cmd = Mock(fleet_id=1, planet_id=999)
+        mock_cmd = Mock(fleet_id=1, planet_id=999, target_fleet_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -583,7 +518,7 @@ class TestBaseCommandHandler:
 
     def test_resolve_fleet_required_returns_fleet_when_found(self):
         """_resolve_fleet_required returns fleet when found."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_fleet = Mock()
@@ -600,22 +535,36 @@ class TestBaseCommandHandler:
         assert fleet is mock_fleet
 
     def test_resolve_fleet_required_raises_when_not_found(self):
-        """_resolve_fleet_required raises ValueError when fleet not found."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        """_resolve_fleet_required raises ValidationException(MISSING_ENTITY) when fleet not found.
+
+        PROJ-381 Phase 3 (ERR-01-003): bare ValueError replaced with
+        structured ValidationException so handlers can branch on `code`.
+        """
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import ValidationException
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_session = Mock()
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = None
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             handler._resolve_fleet_required(mock_session, 999)
 
+        # PROJ-395 CRIT-003: assert on `code` and `context` so a
+        # regression that drops the ErrorCode is detected — string-only
+        # assertions would let it pass undetected. Pattern mirrored
+        # from tests/unit/strategy/engine/test_base_command_handler.py.
         assert "Fleet not found" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.MISSING_ENTITY.value
+        assert exc_info.value.context.get("fleet_id") == 999
 
     def test_resolve_fleet_required_validates_ownership(self):
-        """_resolve_fleet_required raises when owner_id doesn't match."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        """_resolve_fleet_required raises ValidationException when owner_id doesn't match."""
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import ValidationException
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_fleet = Mock()
@@ -628,14 +577,21 @@ class TestBaseCommandHandler:
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             handler._resolve_fleet_required(mock_session, 1, empire_id=99)
 
+        # PROJ-395 CRIT-003: assert on `code` and `context` so a
+        # regression that drops the ErrorCode is detected — string-only
+        # assertions would let it pass undetected. Pattern mirrored
+        # from tests/unit/strategy/engine/test_base_command_handler.py.
         assert "does not belong" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.OWNERSHIP_MISMATCH.value
+        assert exc_info.value.context.get("fleet_id") == 1
+        assert exc_info.value.context.get("empire_id") == 99
 
     def test_resolve_planet_optional_returns_planet_when_found(self):
         """_resolve_planet_optional returns planet when found."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_planet = Mock()
@@ -652,7 +608,7 @@ class TestBaseCommandHandler:
 
     def test_resolve_planet_optional_returns_none_when_not_found_and_not_required(self):
         """_resolve_planet_optional returns None when not found and required=False."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_session = Mock()
@@ -664,18 +620,26 @@ class TestBaseCommandHandler:
         assert planet is None
 
     def test_resolve_planet_optional_raises_when_not_found_and_required(self):
-        """_resolve_planet_optional raises ValueError when not found and required=True."""
-        from game.strategy.engine.command_handlers import BaseCommandHandler
+        """_resolve_planet_optional raises ValidationException when not found and required=True."""
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import ValidationException
+        from game.strategy.engine.handlers import BaseCommandHandler
 
         handler = BaseCommandHandler()
         mock_session = Mock()
         mock_session.active_empire = Mock(id=0)
         mock_session._get_planet_by_id.return_value = None
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             handler._resolve_planet_optional(mock_session, 999, required=True)
 
+        # PROJ-395 CRIT-003: assert on `code` and `context` so a
+        # regression that drops the ErrorCode is detected — string-only
+        # assertions would let it pass undetected. Pattern mirrored
+        # from tests/unit/strategy/engine/test_base_command_handler.py.
         assert "Planet not found" in str(exc_info.value)
+        assert exc_info.value.code == ErrorCode.MISSING_ENTITY.value
+        assert exc_info.value.context.get("planet_id") == 999
 
 
 class TestCommandHelpers:
@@ -683,7 +647,7 @@ class TestCommandHelpers:
 
     def test_add_move_order_if_needed_no_move_when_at_target(self):
         """add_move_order_if_needed does not add move when fleet at target."""
-        from game.strategy.engine.command_handlers import add_move_order_if_needed
+        from game.strategy.engine.handlers import add_move_order_if_needed
 
         mock_fleet = Mock()
 
@@ -703,7 +667,7 @@ class TestCommandHelpers:
 
     def test_add_move_order_if_needed_adds_move_when_not_at_target(self):
         """add_move_order_if_needed adds MOVE order when fleet not at target."""
-        from game.strategy.engine.command_handlers import add_move_order_if_needed
+        from game.strategy.engine.handlers import add_move_order_if_needed
         from game.strategy.data.order_types import OrderType
 
         mock_fleet = Mock()
@@ -732,7 +696,7 @@ class TestCommandHelpers:
 
     def test_add_move_order_if_needed_returns_error_when_no_path(self):
         """add_move_order_if_needed returns error when no path found."""
-        from game.strategy.engine.command_handlers import add_move_order_if_needed
+        from game.strategy.engine.handlers import add_move_order_if_needed
 
         mock_fleet = Mock()
 
@@ -758,20 +722,12 @@ class TestCommandHelpers:
 # =============================================================================
 
 class TestSplitFleetCommandHandler:
-    """Tests for SplitFleetCommandHandler (PROJ-208 Phase 1)."""
+    """Tests for SplitFleetCommandHandler (PROJ-208 Phase 1).
 
-    def test_fleet_not_found(self):
-        """Returns failure when source fleet not found."""
-        handler = SplitFleetCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, ship_instance_ids=['ship-1'])
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    `test_fleet_not_found` consolidated into the parametrized
+    `test_fleet_id_handler_returns_failure_when_fleet_not_found` at the
+    end of this module (PROJ-325 Phase 2 Task 2.1).
+    """
 
     def test_no_ships_specified(self):
         """Returns failure when no ships specified for split."""
@@ -923,20 +879,12 @@ class TestSplitFleetCommandHandler:
 
 
 class TestDeleteOrderCommandHandler:
-    """Tests for DeleteOrderCommandHandler (PROJ-208 Phase 1)."""
+    """Tests for DeleteOrderCommandHandler (PROJ-208 Phase 1).
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = DeleteOrderCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, order_index=0)
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    `test_fleet_not_found` consolidated into the parametrized
+    `test_fleet_id_handler_returns_failure_when_fleet_not_found` at the
+    end of this module (PROJ-325 Phase 2 Task 2.1).
+    """
 
     def test_invalid_order_index_negative(self):
         """Returns failure for negative order index."""
@@ -1028,20 +976,12 @@ class TestDeleteOrderCommandHandler:
 
 
 class TestReorderOrderCommandHandler:
-    """Tests for ReorderOrderCommandHandler (PROJ-208 Phase 1)."""
+    """Tests for ReorderOrderCommandHandler (PROJ-208 Phase 1).
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = ReorderOrderCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(fleet_id=999, order_index=0, direction=1)
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    `test_fleet_not_found` consolidated into the parametrized
+    `test_fleet_id_handler_returns_failure_when_fleet_not_found` at the
+    end of this module (PROJ-325 Phase 2 Task 2.1).
+    """
 
     def test_invalid_order_index(self):
         """Returns failure for invalid order index."""
@@ -1131,6 +1071,23 @@ class TestReorderOrderCommandHandler:
         assert not result.is_valid
         assert "Cannot move order" in result.message
 
+    @staticmethod
+    def _wire_mutator(mock_session) -> None:
+        """PROJ-370 Phase 2: handlers route through ``session.fleet_mutator``.
+
+        Configure the mock mutator's ``swap_orders`` and ``set_path`` to
+        perform the real list mutation on the fleet, so existing assertions
+        on ``mock_fleet.orders`` / ``mock_fleet.path`` continue to work.
+        """
+        def _swap(fleet, a, b):
+            fleet.orders[a], fleet.orders[b] = fleet.orders[b], fleet.orders[a]
+
+        def _set_path(fleet, new_path):
+            fleet.path = new_path
+
+        mock_session.fleet_mutator.swap_orders.side_effect = _swap
+        mock_session.fleet_mutator.set_path.side_effect = _set_path
+
     def test_move_order_down_swaps_positions(self):
         """Moving order down swaps with next order."""
         handler = ReorderOrderCommandHandler()
@@ -1147,6 +1104,7 @@ class TestReorderOrderCommandHandler:
         mock_fleet.path = []
 
         mock_session = Mock()
+        self._wire_mutator(mock_session)
 
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -1174,6 +1132,7 @@ class TestReorderOrderCommandHandler:
         mock_fleet.path = []
 
         mock_session = Mock()
+        self._wire_mutator(mock_session)
 
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -1200,6 +1159,7 @@ class TestReorderOrderCommandHandler:
         mock_fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
 
         mock_session = Mock()
+        self._wire_mutator(mock_session)
 
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -1230,6 +1190,7 @@ class TestReorderOrderCommandHandler:
         mock_fleet.path = original_path.copy()
 
         mock_session = Mock()
+        self._wire_mutator(mock_session)
 
         mock_session.active_empire = Mock(id=0)
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -1272,26 +1233,9 @@ class TestAddToConstructionQueueCommandHandler:
         assert not result.is_valid
         assert "Planet not found" in result.message
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = AddToConstructionQueueCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(
-            entity_id=999,
-            entity_type="fleet",
-            design_id="scout",
-            category="ship",
-            index=None,
-            target_planet_id=None,
-            queue_id=None  # PROJ-208: Required for _resolve_queue
-        )
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    # `test_fleet_not_found` consolidated into the parametrized
+    # `test_construction_queue_handler_returns_failure_when_fleet_not_found`
+    # at the end of this module (PROJ-325 Phase 2 Task 2.1).
 
     def test_invalid_entity_type(self):
         """Returns failure for invalid entity type."""
@@ -1555,18 +1499,9 @@ class TestRemoveFromConstructionQueueCommandHandler:
         assert not result.is_valid
         assert "Planet not found" in result.message
 
-    def test_fleet_not_found(self):
-        """Returns failure when fleet not found."""
-        handler = RemoveFromConstructionQueueCommandHandler()
-        mock_session = Mock()
-        mock_session.active_empire = Mock(id=0)
-        mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(entity_id=999, entity_type="fleet", item_index=0, queue_id=None)
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    # `test_fleet_not_found` consolidated into the parametrized
+    # `test_construction_queue_handler_returns_failure_when_fleet_not_found`
+    # at the end of this module (PROJ-325 Phase 2 Task 2.1).
 
     def test_invalid_index_negative(self):
         """Returns failure for negative index."""
@@ -1898,3 +1833,108 @@ class TestReorderConstructionQueueCommandHandler:
         assert mock_facility.construction_queue == [fac_item2, fac_item1]
         # Base queue unchanged
         assert mock_planet.construction_queue == [base_item]
+
+
+# =============================================================================
+# PROJ-325 Phase 2 Task 2.1 (resolves PROJ-323 Task 3.34 deferral):
+# fleet_not_found two-group parametrize across 11 handler classes.
+#
+# The original 11 per-class tests were near-identical: build the handler,
+# stub `_get_fleet_by_id` to return None, dispatch the command, assert the
+# "Fleet not found" failure. The genuine split is the command-shape
+# interface boundary: 9 handlers use `fleet_id=...` on the command, 2
+# construction-queue handlers use `entity_id=...,entity_type="fleet"`.
+# Two parametrize groups preserve that interface boundary while
+# collapsing the duplicated assertion logic.
+# =============================================================================
+
+
+def _fleet_id_handler_cases():
+    """Group A: handlers whose command DTO carries `fleet_id=<int>`.
+
+    Each tuple is (handler_cls, command_kwargs) where command_kwargs are
+    the per-handler extra fields needed beyond `fleet_id=999`.
+    """
+    return [
+        (ColonizeCommandHandler, {"planet_id": 1}),
+        (MoveCommandHandler, {"target_hex": (0, 0)}),
+        (InterceptCommandHandler, {"target_fleet_id": 2}),
+        (ColonizeMissionCommandHandler, {"planet_id": None, "target_hex": (0, 0)}),
+        (ClearOrdersCommandHandler, {}),
+        (TransferCommandHandler, {}),
+        (SplitFleetCommandHandler, {"ship_instance_ids": ["ship-1"]}),
+        (DeleteOrderCommandHandler, {"order_index": 0}),
+        (ReorderOrderCommandHandler, {"order_index": 0, "direction": 1}),
+    ]
+
+
+@pytest.mark.parametrize(
+    "handler_cls,extra_cmd_kwargs",
+    [pytest.param(*case, id=case[0].__name__) for case in _fleet_id_handler_cases()],
+)
+def test_fleet_id_handler_returns_failure_when_fleet_not_found(
+    handler_cls, extra_cmd_kwargs,
+):
+    """All fleet_id-keyed handlers fail with 'Fleet not found' when the
+    fleet lookup returns None."""
+    handler = handler_cls()
+    mock_session = Mock()
+    mock_session.active_empire = Mock(id=0)
+    mock_session._get_fleet_by_id.return_value = None
+    mock_cmd = Mock(fleet_id=999, **extra_cmd_kwargs)
+
+    result = handler.execute(mock_session, mock_cmd)
+
+    assert not result.is_valid
+    assert "Fleet not found" in result.message
+
+
+def _construction_queue_entity_id_handler_cases():
+    """Group B: construction-queue handlers whose command DTO carries
+    `entity_id=<int>, entity_type="fleet"` instead of `fleet_id`.
+
+    Each tuple is (handler_cls, command_kwargs) where command_kwargs are
+    the per-handler extra fields needed beyond `entity_id=999,
+    entity_type="fleet"`.
+    """
+    return [
+        (
+            AddToConstructionQueueCommandHandler,
+            {
+                "design_id": "scout",
+                "category": "ship",
+                "index": None,
+                "target_planet_id": None,
+                "queue_id": None,
+            },
+        ),
+        (
+            RemoveFromConstructionQueueCommandHandler,
+            {"item_index": 0, "queue_id": None},
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "handler_cls,extra_cmd_kwargs",
+    [
+        pytest.param(*case, id=case[0].__name__)
+        for case in _construction_queue_entity_id_handler_cases()
+    ],
+)
+def test_construction_queue_handler_returns_failure_when_fleet_not_found(
+    handler_cls, extra_cmd_kwargs,
+):
+    """Construction-queue handlers (which use entity_id/entity_type rather
+    than fleet_id) fail with 'Fleet not found' when entity_type='fleet'
+    and the fleet lookup returns None."""
+    handler = handler_cls()
+    mock_session = Mock()
+    mock_session.active_empire = Mock(id=0)
+    mock_session._get_fleet_by_id.return_value = None
+    mock_cmd = Mock(entity_id=999, entity_type="fleet", **extra_cmd_kwargs)
+
+    result = handler.execute(mock_session, mock_cmd)
+
+    assert not result.is_valid
+    assert "Fleet not found" in result.message

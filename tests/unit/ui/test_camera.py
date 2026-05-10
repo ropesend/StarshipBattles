@@ -1,4 +1,10 @@
-"""Tests for Camera class viewport and coordinate transformations."""
+"""Tests for Camera class viewport and coordinate transformations.
+
+PROJ-322 Task 2.20 (S02-CAT5-001): the 8 per-class pygame.init autouse
+fixtures collapsed into one module-scoped autouse fixture.
+SDL_VIDEODRIVER='dummy' is set by the repo conftest, but we keep an
+explicit fall-back here for runs that bypass that conftest.
+"""
 import pytest
 import sys
 import os
@@ -7,6 +13,14 @@ from unittest.mock import patch
 
 
 from game.ui.renderer.camera import Camera
+
+
+@pytest.fixture(autouse=True, scope='module')
+def _camera_module_pygame_init():
+    """Initialise pygame once for the whole test_camera module."""
+    os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+    pygame.init()
+    yield
 
 
 class MockTarget:
@@ -18,11 +32,6 @@ class MockTarget:
 
 class TestCameraBasics:
     """Test basic camera initialization and properties."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_camera_initialization(self):
         """Camera should initialize with correct dimensions."""
@@ -44,11 +53,6 @@ class TestCameraBasics:
 
 class TestCameraTransformations:
     """Test coordinate transformation functions."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_world_to_screen_center(self):
         """World origin should map to screen center when camera at origin."""
@@ -109,13 +113,61 @@ class TestCameraTransformations:
         assert roundtrip.y == pytest.approx(original.y, abs=0.1)
 
 
+class TestCameraHexAtScreen:
+    """Test Camera.hex_at_screen integration with screen_to_world + pixel_to_hex.
+
+    PROJ-398 / FND-012: every other test of `hex_at_screen` mocks the method;
+    these tests exercise the real `screen_to_world -> pixel_to_hex` chain so
+    regressions in the viewport math are caught.
+    """
+
+    def test_hex_at_screen_origin_camera_returns_origin_hex(self):
+        """Camera at world origin: clicking screen center returns the origin hex."""
+        from game.core.hex_math import HexCoord, pixel_to_hex
+
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(0, 0)
+        camera.zoom = 1.0
+
+        # Clicking screen center -> world (0, 0) -> pixel_to_hex(0, 0, 10)
+        hex_coord = camera.hex_at_screen(400, 300, 10)
+
+        expected = pixel_to_hex(0, 0, 10)
+        assert isinstance(hex_coord, HexCoord)
+        assert hex_coord == expected
+
+    def test_hex_at_screen_offset_click_resolves_via_world_transform(self):
+        """A non-center click should round-trip through world coords + pixel_to_hex."""
+        from game.core.hex_math import pixel_to_hex
+
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(1000, 2000)
+        camera.zoom = 0.5
+
+        screen_x, screen_y = 500, 400
+        hex_coord = camera.hex_at_screen(screen_x, screen_y, 10)
+
+        world_pos = camera.screen_to_world((screen_x, screen_y))
+        expected = pixel_to_hex(world_pos.x, world_pos.y, 10)
+        assert hex_coord == expected
+
+    def test_hex_at_screen_respects_camera_offset(self):
+        """offset_x/offset_y must propagate through hex_at_screen."""
+        from game.core.hex_math import pixel_to_hex
+
+        camera = Camera(800, 600, offset_x=150, offset_y=75)
+        camera.position = pygame.math.Vector2(0, 0)
+        camera.zoom = 1.0
+
+        # Screen center accounting for offset
+        screen_x, screen_y = 400 + 150, 300 + 75
+        hex_coord = camera.hex_at_screen(screen_x, screen_y, 10)
+
+        assert hex_coord == pixel_to_hex(0, 0, 10)
+
+
 class TestCameraFitObjects:
     """Test camera fit_objects functionality."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_fit_objects_centers_camera(self):
         """fit_objects should center camera on objects."""
@@ -160,11 +212,6 @@ class TestCameraFitObjects:
 
 class TestCameraZoomAnimation:
     """Test zoom animation and anchor stability."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_zoom_anchor_stability_during_animation(self):
         """World point under anchor screen position should stay constant during zoom."""
@@ -234,11 +281,6 @@ class TestCameraZoomAnimation:
 class TestCameraTargetFollowing:
     """Test camera target following behavior."""
 
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-
     def test_dead_target_following(self):
         """Camera should still follow dead target's position."""
         camera = Camera(800, 600)
@@ -255,11 +297,6 @@ class TestCameraTargetFollowing:
 
 class TestCameraOffsetPropagation:
     """Test offset_x/offset_y in coordinate transforms."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_world_to_screen_with_offset(self):
         """world_to_screen should account for offset_x/offset_y."""
@@ -301,11 +338,6 @@ class TestCameraOffsetPropagation:
 
 class TestCameraEdgeCases:
     """Test edge cases for camera behavior."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
 
     def test_very_large_world_coordinates(self):
         """Camera should handle very large world coordinates."""

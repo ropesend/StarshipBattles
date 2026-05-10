@@ -10,11 +10,61 @@ the instance lifetime.
 Placed at game/ package level (outside any layer) to avoid upward
 dependencies from Core to UI/AI. Factory methods use late imports.
 
-PROJ-258: Initial implementation as wrapper around existing singletons.
+PROJ-372 (Phase 0): added module-level habitability service accessors so
+modders can swap `IHabitabilityCalculator` without monkey-patching. Phase
+0 ships with the accessors returning ``None``; Phase 2 wires the real
+``PlanetHabitabilityService`` default.
 """
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
-__all__ = ['ApplicationContext']
+if TYPE_CHECKING:
+    from game.strategy.data.galaxy_protocols import IHabitabilityCalculator
+
+__all__ = [
+    'ApplicationContext',
+    'get_default_planet_habitability_service',
+    'set_default_planet_habitability_service',
+]
+
+
+# PROJ-372: module-level habitability-calculator slot. Phase 2 wires
+# the real default below at module-import time. Tests / mods may
+# override via ``set_default_planet_habitability_service``.
+_default_planet_habitability_service: Optional['IHabitabilityCalculator'] = None
+
+
+def get_default_planet_habitability_service() -> Optional['IHabitabilityCalculator']:
+    """Return the registered habitability calculator (or None).
+
+    Phase 2 wires the real default at import time, so the typical
+    return is a ``PlanetHabitabilityService``. Modders may override via
+    ``set_default_planet_habitability_service`` (PROJ-258 pattern).
+    """
+    return _default_planet_habitability_service
+
+
+def set_default_planet_habitability_service(
+    svc: Optional['IHabitabilityCalculator'],
+) -> None:
+    """Register the global habitability calculator. Pass None to clear."""
+    global _default_planet_habitability_service
+    _default_planet_habitability_service = svc
+
+
+# PROJ-372 Phase 2: install the default habitability service at module
+# import time. Late import keeps this module light when only the class
+# definition is needed (tests / circular-import edge cases).
+def _install_default_habitability_service() -> None:
+    global _default_planet_habitability_service
+    if _default_planet_habitability_service is not None:
+        return
+    from game.strategy.services.planet_habitability_service import (
+        PlanetHabitabilityService,
+    )
+    _default_planet_habitability_service = PlanetHabitabilityService()
+
+
+_install_default_habitability_service()
 
 
 class ApplicationContext:

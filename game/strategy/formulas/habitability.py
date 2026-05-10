@@ -11,10 +11,6 @@ Public API:
     `calculate_habitability(planet, race_config) -> float`
         Top-level scoring function. Iterates `FACTOR_REGISTRY` and combines
         per-factor scores via a weighted geometric mean.
-    `score_planet_for_race(planet, race_config) -> float`
-        Thin convenience wrapper kept for source-stability of existing
-        callers (currently `PopulationEngine`). Delegates to
-        `calculate_habitability`.
 
 Numerical floor: per-factor scores are clipped to >= 1e-10 before `log()`.
 With v2's total weight 6.8, this gives a single weight-1.0 factor at 0
@@ -94,12 +90,3 @@ def calculate_habitability(planet: 'Planet', race_config: 'RaceConfig') -> float
 
     composite = math.exp(log_sum / weight_sum)
     return max(0.0, min(1.0, composite))
-
-
-def score_planet_for_race(planet: 'Planet', race_config: 'RaceConfig') -> float:
-    """Convenience wrapper around `calculate_habitability`.
-
-    Kept as a separate name for source-stability of callers
-    (currently `PopulationEngine`). Identical behaviour.
-    """
-    return calculate_habitability(planet, race_config)

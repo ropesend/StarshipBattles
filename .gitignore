@@ -26,6 +26,7 @@ collect_log*.txt
 
 # Sharded test runner timing data
 .test_durations.json
+.test_file_duration_history.json
 
 # Personal development tools
 VibeCodingHotkeys.ahk
@@ -49,6 +50,9 @@ AgentCoordination/local/
 # by Tools/agent_coordination/log_skill_usage.py on every skill invocation.
 # Tracking it produces meaningless merge conflicts on every parallel-checkout merge.
 AgentCoordination/generated/skill_usage/summary.json
+# Test baseline summary is derived from the canonical baseline and per-install
+# verification receipts.
+AgentCoordination/generated/test_baseline/summary.json
 # Per-checkout state for the OpenCode review system (PID, log, payload temp/failed dirs).
 AgentCoordination/opencodereview/local/
 # Scratchpad: agent transient working area. Contents are local-only and may be
@@ -100,3 +104,7 @@ assets/Images/Components/Components 64/*
 # PROJ-314: ship-portrait regeneration manifest (per-run, ephemeral).
 Tools/regenerate_ship_portraits/last_run.json
 AgentCoordination/generated/skill_usage/summary.json
+
+# 03c phase-aware execution worktrees and review checkouts
+.worktrees/
+AgentCoordination/opencodereview/local/worktrees/

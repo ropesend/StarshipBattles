@@ -9,6 +9,7 @@ pytest-xdist
 radon>=6.0.0   # Complexity / maintainability metrics
 vulture>=2.10  # Dead code detection
 scalene>=2.2.1 # CPU/memory/copy profiling for performance investigations
+tiktoken>=0.12.0  # Token counting for Tools/loc
 
 # Image processing (Tools/)
 Pillow>=10.0.0

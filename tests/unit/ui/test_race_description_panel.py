@@ -3,10 +3,43 @@ Unit tests for RaceDescriptionPanel.
 
 PROJ-12 Phase 4: TDD tests written before extraction.
 Tests the race description panel functionality.
+
+PROJ-322 Task 5.2 (APC-001-F02): the legacy `RaceDescriptionPanel.__new__` +
+`patch.object(__init__, ...)` blocks have been replaced with the shared
+`make_ui_widget` factory routed through a module-scope `_bypass_init_panel`
+helper.
 """
 
 import pytest
 from unittest.mock import MagicMock, patch
+
+from tests.fixtures.ui_widget_factory import make_ui_widget
+
+
+def _bypass_init_panel(race_config=None):
+    """Build a `RaceDescriptionPanel` via the shared `make_ui_widget` factory.
+
+    Replaces the inline `__new__` + `patch.object(__init__, ...)` blocks
+    that wired ~10 attrs per test. The factory mocks every
+    `pygame_gui.elements.UI*` class for the duration of `__init__`, so
+    `_create_content` runs but is bounded; the production attribute
+    initialization (`self.race_config = race_config`,
+    `self.bio_text_box = pygame_gui...UITextEntryBox(...)`, etc.) all runs
+    normally with mocked elements.
+
+    Tests typically then overwrite `panel.bio_text_box` /
+    `panel.socio_text_box` with controlled `MagicMock` instances before
+    exercising the method under test.
+
+    PROJ-322 Task 5.2 / APC-001-F02.
+    """
+    if race_config is None:
+        race_config = MagicMock()
+        race_config.bio_description = ""
+        race_config.socio_description = ""
+    from game.ui.panels.race_description_panel import RaceDescriptionPanel
+
+    return make_ui_widget(RaceDescriptionPanel, race_config=race_config)
 
 
 # =============================================================================
@@ -38,19 +71,12 @@ class TestRaceDescriptionPanelCreation:
 
     def test_race_description_panel_has_text_box_references(self):
         """RaceDescriptionPanel has expected text box reference attributes."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.bio_text_box = None
-            panel.bio_char_label = None
-            panel.socio_text_box = None
-            panel.socio_char_label = None
-
-            assert hasattr(panel, 'bio_text_box')
-            assert hasattr(panel, 'bio_char_label')
-            assert hasattr(panel, 'socio_text_box')
-            assert hasattr(panel, 'socio_char_label')
+        assert hasattr(panel, 'bio_text_box')
+        assert hasattr(panel, 'bio_char_label')
+        assert hasattr(panel, 'socio_text_box')
+        assert hasattr(panel, 'socio_char_label')
 
     def test_race_description_panel_has_max_length_constant(self):
         """RaceDescriptionPanel has MAX_LENGTH constant."""
@@ -70,59 +96,47 @@ class TestCharacterCountUpdates:
 
     def test_update_char_counts_updates_bio_label(self):
         """update_char_counts updates biological description character count."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
+        panel.bio_text_box = MagicMock()
+        panel.bio_text_box.get_text.return_value = "Test text"  # 9 chars
+        panel.bio_char_label = MagicMock()
+        panel.socio_text_box = None
+        panel.socio_char_label = None
 
-            panel.bio_text_box = MagicMock()
-            panel.bio_text_box.get_text.return_value = "Test text"  # 9 chars
-            panel.bio_char_label = MagicMock()
+        panel.update_char_counts()
 
-            panel.socio_text_box = None
-            panel.socio_char_label = None
-
-            panel.update_char_counts()
-
-            panel.bio_char_label.set_text.assert_called_with("9/5000")
+        panel.bio_char_label.set_text.assert_called_with("9/5000")
 
     def test_update_char_counts_updates_socio_label(self):
         """update_char_counts updates sociological description character count."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
+        panel.bio_text_box = None
+        panel.bio_char_label = None
+        panel.socio_text_box = MagicMock()
+        panel.socio_text_box.get_text.return_value = "A longer test text"  # 18 chars
+        panel.socio_char_label = MagicMock()
 
-            panel.bio_text_box = None
-            panel.bio_char_label = None
+        panel.update_char_counts()
 
-            panel.socio_text_box = MagicMock()
-            panel.socio_text_box.get_text.return_value = "A longer test text"  # 18 chars
-            panel.socio_char_label = MagicMock()
-
-            panel.update_char_counts()
-
-            panel.socio_char_label.set_text.assert_called_with("18/5000")
+        panel.socio_char_label.set_text.assert_called_with("18/5000")
 
     def test_update_char_counts_handles_empty_text(self):
         """update_char_counts handles empty text correctly."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel()
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
+        panel.bio_text_box = MagicMock()
+        panel.bio_text_box.get_text.return_value = ""
+        panel.bio_char_label = MagicMock()
+        panel.socio_text_box = MagicMock()
+        panel.socio_text_box.get_text.return_value = ""
+        panel.socio_char_label = MagicMock()
 
-            panel.bio_text_box = MagicMock()
-            panel.bio_text_box.get_text.return_value = ""
-            panel.bio_char_label = MagicMock()
+        panel.update_char_counts()
 
-            panel.socio_text_box = MagicMock()
-            panel.socio_text_box.get_text.return_value = ""
-            panel.socio_char_label = MagicMock()
-
-            panel.update_char_counts()
-
-            panel.bio_char_label.set_text.assert_called_with("0/5000")
-            panel.socio_char_label.set_text.assert_called_with("0/5000")
+        panel.bio_char_label.set_text.assert_called_with("0/5000")
+        panel.socio_char_label.set_text.assert_called_with("0/5000")
 
 
 # =============================================================================
@@ -134,56 +148,44 @@ class TestConfigurationUpdates:
 
     def test_update_config_reads_bio_text_box(self, mock_race_config):
         """update_config reads biological description from text box."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.race_config = mock_race_config
+        panel.bio_text_box = MagicMock()
+        panel.bio_text_box.get_text.return_value = "New bio description"
+        panel.socio_text_box = None
 
-            panel.bio_text_box = MagicMock()
-            panel.bio_text_box.get_text.return_value = "New bio description"
-            panel.socio_text_box = None
+        panel.update_config()
 
-            panel.update_config()
-
-            assert mock_race_config.bio_description == "New bio description"
+        assert mock_race_config.bio_description == "New bio description"
 
     def test_update_config_reads_socio_text_box(self, mock_race_config):
         """update_config reads sociological description from text box."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.race_config = mock_race_config
+        panel.bio_text_box = None
+        panel.socio_text_box = MagicMock()
+        panel.socio_text_box.get_text.return_value = "New socio description"
 
-            panel.bio_text_box = None
-            panel.socio_text_box = MagicMock()
-            panel.socio_text_box.get_text.return_value = "New socio description"
+        panel.update_config()
 
-            panel.update_config()
-
-            assert mock_race_config.socio_description == "New socio description"
+        assert mock_race_config.socio_description == "New socio description"
 
     def test_update_config_enforces_max_length(self, mock_race_config):
         """update_config enforces the MAX_LENGTH char limit (5000 post-PROJ-299)."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.race_config = mock_race_config
+        # Create text longer than MAX_LENGTH=5000 chars
+        long_text = "A" * 6000
 
-            # Create text longer than MAX_LENGTH=5000 chars
-            long_text = "A" * 6000
+        panel.bio_text_box = MagicMock()
+        panel.bio_text_box.get_text.return_value = long_text
+        panel.socio_text_box = MagicMock()
+        panel.socio_text_box.get_text.return_value = long_text
 
-            panel.bio_text_box = MagicMock()
-            panel.bio_text_box.get_text.return_value = long_text
-            panel.socio_text_box = MagicMock()
-            panel.socio_text_box.get_text.return_value = long_text
+        panel.update_config()
 
-            panel.update_config()
-
-            assert len(mock_race_config.bio_description) == 5000
-            assert len(mock_race_config.socio_description) == 5000
+        assert len(mock_race_config.bio_description) == 5000
+        assert len(mock_race_config.socio_description) == 5000
 
 
 # =============================================================================
@@ -195,80 +197,69 @@ class TestLoadingFromConfig:
 
     def test_set_from_config_updates_bio_text_box(self, mock_race_config):
         """set_from_config updates biological text box from config."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        mock_race_config.bio_description = "Loaded bio text"
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.race_config = mock_race_config
-            mock_race_config.bio_description = "Loaded bio text"
+        panel.bio_text_box = MagicMock()
+        panel.bio_char_label = MagicMock()
+        panel.socio_text_box = None
+        panel.socio_char_label = None
 
-            panel.bio_text_box = MagicMock()
-            panel.bio_char_label = MagicMock()
-            panel.socio_text_box = None
-            panel.socio_char_label = None
+        panel.set_from_config()
 
-            panel.set_from_config()
-
-            panel.bio_text_box.set_text.assert_called_with("Loaded bio text")
+        panel.bio_text_box.set_text.assert_called_with("Loaded bio text")
 
     def test_set_from_config_updates_socio_text_box(self, mock_race_config):
         """set_from_config updates sociological text box from config."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        mock_race_config.socio_description = "Loaded socio text"
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.race_config = mock_race_config
-            mock_race_config.socio_description = "Loaded socio text"
+        panel.bio_text_box = None
+        panel.bio_char_label = None
+        panel.socio_text_box = MagicMock()
+        panel.socio_char_label = MagicMock()
 
-            panel.bio_text_box = None
-            panel.bio_char_label = None
-            panel.socio_text_box = MagicMock()
-            panel.socio_char_label = MagicMock()
+        panel.set_from_config()
 
-            panel.set_from_config()
-
-            panel.socio_text_box.set_text.assert_called_with("Loaded socio text")
+        panel.socio_text_box.set_text.assert_called_with("Loaded socio text")
 
     def test_set_from_config_handles_empty_descriptions(self, mock_race_config):
         """set_from_config handles empty/None descriptions."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        # Construct with valid empty strings so _create_content's
+        # len(race_config.bio_description) doesn't choke; override to the
+        # test's intended values (one None) AFTER construction.
+        mock_race_config.bio_description = ""
+        mock_race_config.socio_description = ""
+        panel = _bypass_init_panel(race_config=mock_race_config)
+        mock_race_config.bio_description = ""
+        mock_race_config.socio_description = None
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.race_config = mock_race_config
-            mock_race_config.bio_description = ""
-            mock_race_config.socio_description = None
+        panel.bio_text_box = MagicMock()
+        panel.bio_char_label = MagicMock()
+        panel.socio_text_box = MagicMock()
+        panel.socio_char_label = MagicMock()
 
-            panel.bio_text_box = MagicMock()
-            panel.bio_char_label = MagicMock()
-            panel.socio_text_box = MagicMock()
-            panel.socio_char_label = MagicMock()
+        panel.set_from_config()
 
-            panel.set_from_config()
-
-            panel.bio_text_box.set_text.assert_called_with("")
-            panel.socio_text_box.set_text.assert_called_with("")
+        panel.bio_text_box.set_text.assert_called_with("")
+        panel.socio_text_box.set_text.assert_called_with("")
 
     def test_set_from_config_updates_char_counts(self, mock_race_config):
         """set_from_config calls update_char_counts after setting text."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel(race_config=mock_race_config)
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *args, **kwargs: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.race_config = mock_race_config
+        panel.bio_text_box = MagicMock()
+        panel.bio_text_box.get_text.return_value = "test"
+        panel.bio_char_label = MagicMock()
+        panel.socio_text_box = MagicMock()
+        panel.socio_text_box.get_text.return_value = "test"
+        panel.socio_char_label = MagicMock()
 
-            panel.bio_text_box = MagicMock()
-            panel.bio_text_box.get_text.return_value = "test"
-            panel.bio_char_label = MagicMock()
-            panel.socio_text_box = MagicMock()
-            panel.socio_text_box.get_text.return_value = "test"
-            panel.socio_char_label = MagicMock()
+        panel.set_from_config()
 
-            panel.set_from_config()
-
-            # Should update char counts after setting text
-            panel.bio_char_label.set_text.assert_called()
-            panel.socio_char_label.set_text.assert_called()
+        # Should update char counts after setting text
+        panel.bio_char_label.set_text.assert_called()
+        panel.socio_char_label.set_text.assert_called()
 
 
 # =============================================================================
@@ -282,40 +273,36 @@ class TestProj299ControllerIntegration:
     def test_attach_controller_creates_button_attributes(self):
         """attach_controller() creates btn_generate_bio/socio, btn_cancel_bio/socio,
         btn_re_roll_bio/socio, lbl_bio_status, lbl_socio_status attributes."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
+        panel = _bypass_init_panel()
+        # Override the text boxes / char labels with plain MagicMocks so
+        # attach_controller's internal access patterns are deterministic.
+        panel.bio_text_box = MagicMock()
+        panel.socio_text_box = MagicMock()
+        panel.bio_char_label = MagicMock()
+        panel.socio_char_label = MagicMock()
+        panel._controller = None
 
-        with patch.object(RaceDescriptionPanel, '__init__', lambda self, *a, **k: None):
-            panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-            panel.panel = MagicMock()
-            panel.ui_manager = MagicMock()
-            panel.bio_text_box = MagicMock()
-            panel.socio_text_box = MagicMock()
-            panel.bio_char_label = MagicMock()
-            panel.socio_char_label = MagicMock()
-            panel._controller = None
+        controller = MagicMock()
+        with patch('pygame_gui.elements.UIButton', MagicMock()), \
+             patch('pygame_gui.elements.UILabel', MagicMock()):
+            panel.attach_controller(controller)
 
-            controller = MagicMock()
-            with patch('pygame_gui.elements.UIButton', MagicMock()), \
-                 patch('pygame_gui.elements.UILabel', MagicMock()):
-                panel.attach_controller(controller)
-
-            assert panel._controller is controller
-            assert hasattr(panel, 'btn_generate_bio')
-            assert hasattr(panel, 'btn_cancel_bio')
-            assert hasattr(panel, 'btn_re_roll_bio')
-            assert hasattr(panel, 'btn_generate_socio')
-            assert hasattr(panel, 'btn_cancel_socio')
-            assert hasattr(panel, 'btn_re_roll_socio')
-            assert hasattr(panel, 'lbl_bio_status')
-            assert hasattr(panel, 'lbl_socio_status')
+        assert panel._controller is controller
+        assert hasattr(panel, 'btn_generate_bio')
+        assert hasattr(panel, 'btn_cancel_bio')
+        assert hasattr(panel, 'btn_re_roll_bio')
+        assert hasattr(panel, 'btn_generate_socio')
+        assert hasattr(panel, 'btn_cancel_socio')
+        assert hasattr(panel, 'btn_re_roll_socio')
+        assert hasattr(panel, 'lbl_bio_status')
+        assert hasattr(panel, 'lbl_socio_status')
 
     def _make_panel_with_widgets(self):
-        """Helper: panel skeleton with all widgets mocked."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
-
-        panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-        panel.panel = MagicMock()
-        panel.ui_manager = MagicMock()
+        """Helper: factory-built panel + all controller-side widget mocks
+        wired in. The factory's `_create_content` populated the text boxes /
+        char labels as Mocks but the test wants its own controlled MagicMocks
+        to assert `assert_called` against."""
+        panel = _bypass_init_panel()
         panel.bio_text_box = MagicMock()
         panel.socio_text_box = MagicMock()
         panel.bio_char_label = MagicMock()
@@ -480,14 +467,10 @@ class TestUpdateTicksElapsedTimer:
     label was never repainted while RUNNING. update() is the per-frame pump."""
 
     def _make_panel_with_widgets(self, lbl_initial_text: str = ""):
-        """Helper: panel skeleton with widgets + a UILabel-like status mock
-        whose `text` attribute mirrors what `set_text(...)` was last called
-        with. Required so the idempotence guard can compare correctly."""
-        from game.ui.panels.race_description_panel import RaceDescriptionPanel
-
-        panel = RaceDescriptionPanel.__new__(RaceDescriptionPanel)
-        panel.panel = MagicMock()
-        panel.ui_manager = MagicMock()
+        """Helper: factory-built panel + a UILabel-like status mock whose
+        `text` attribute mirrors what `set_text(...)` was last called with.
+        Required so the idempotence guard can compare correctly."""
+        panel = _bypass_init_panel()
 
         def _make_label(initial: str):
             lbl = MagicMock()

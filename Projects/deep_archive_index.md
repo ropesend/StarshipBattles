@@ -281,3 +281,93 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-281 | BattleScreen Legacy Fallback Removal (migrate start(team0,team1) tests) | 2026-04-26 | PROJ-251-300 |
 | PROJ-282 | FleetBattleSetupScreen MVVM Decomposition | 2026-04-26 | PROJ-251-300 |
 | PROJ-283 | Race Setup & Habitability Foundation | 2026-04-26 | PROJ-251-300 |
+| PROJ-284 | Colony Demographics Loop (Organics, Happiness, Population Growth Rework) | 2026-04-26 | PROJ-251-300 |
+| PROJ-285 | Habitability-to-Production Economy Hook | 2026-04-26 | PROJ-251-300 |
+| PROJ-286 | Multi-Resource Population Consumption | 2026-04-26 | PROJ-251-300 |
+| PROJ-287 | Race Registry Facade + Empire.resident_species | 2026-04-26 | PROJ-251-300 |
+| PROJ-288 | Colony Output Projection Helpers | 2026-04-26 | PROJ-251-300 |
+| PROJ-289 | Planet Report Panel Per-Species + Per-Resource UI | 2026-04-26 | PROJ-251-300 |
+| PROJ-290 | Empire Treasury + Uncolonized Habitability UI | 2026-04-26 | PROJ-251-300 |
+| PROJ-291 | Audit Critical Fixes (PROJ-283..290 Sign-off Blocker) | 2026-04-26 | PROJ-251-300 |
+| PROJ-292 | Audit High + Major Cleanup (PROJ-283..290 Closeout) | 2026-04-26 | PROJ-251-300 |
+| PROJ-293 | Habitability Factor Display Refactor (UI Label Overflow) | 2026-04-27 | PROJ-251-300 |
+| PROJ-294 | QA Observer Path Bootstrap (ModuleNotFoundError fix) | 2026-04-27 | PROJ-251-300 |
+| PROJ-295 | Python 3.11+ Upgrade (Google EOL Track) | 2026-04-27 | PROJ-251-300 |
+| PROJ-296 | LLM Service Foundation | 2026-04-27 | PROJ-251-300 |
+| PROJ-297 | Code Review Cleanup - Quick Wins | 2026-04-27 | PROJ-251-300 |
+| PROJ-298 | FleetOrder Rename Cleanup | 2026-04-27 | PROJ-251-300 |
+| PROJ-299 | Race Description Generator (LLM) | 2026-04-27 | PROJ-251-300 |
+| PROJ-300 | Universal IAbilitySource Framework + Storm/Facility Migration | 2026-05-04 | PROJ-251-300 |
+| PROJ-301 | Planet Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-302 | Star Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-303 | Warp Point Intrinsic Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-304 | Star System Archetype Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-305 | Fleet Strategic-Layer Ability Sources | 2026-05-04 | PROJ-301-350 |
+| PROJ-306 | Battle Simulation DI Cleanup (PROJ-274 closure) | 2026-04-27 | PROJ-301-350 |
+| PROJ-307 | Documentation Freshness Timestamps | 2026-04-27 | PROJ-301-350 |
+| PROJ-308 | Broad Exception Handler Justifications | 2026-04-27 | PROJ-301-350 |
+| PROJ-309 | Top-10 File Decomposition and 500-LOC Convention | 2026-05-04 | PROJ-301-350 |
+| PROJ-310 | Deep Nesting Investigative Review | 2026-05-04 | PROJ-301-350 |
+| PROJ-311 | Return Type Annotation Backfill and Convention | 2026-04-27 | PROJ-301-350 |
+| PROJ-312 | Add Battle Replay System | 2026-05-04 | PROJ-301-350 |
+| PROJ-313 | Strategy Modal Window Base Class Refactor | 2026-05-04 | PROJ-301-350 |
+| PROJ-314 | Unify Ship Theme Loader Schema | 2026-05-04 | PROJ-301-350 |
+| PROJ-315 | Fleet Report Component Damage Panel | 2026-05-04 | PROJ-301-350 |
+| PROJ-316 | PROJ-313 Remediation: Audit-Readiness and Structural Tightening | 2026-05-04 | PROJ-301-350 |
+| PROJ-317 | PROJ-315 Remediation: Damage Display Correctness and Audit Readiness | 2026-05-04 | PROJ-301-350 |
+| PROJ-318 | PROJ-314 Closeout Remediations | 2026-05-04 | PROJ-301-350 |
+| PROJ-319 | Audit-shrink cleanup 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-320 | Strategic Combat Round Budget | 2026-05-04 | PROJ-301-350 |
+| PROJ-321 | Test review P0 dead-trivial cleanup 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-322 | Test review P1 brittle-bloated remediation 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-323 | Test review P2 opportunistic polish 2026-05-02 | 2026-05-04 | PROJ-301-350 |
+| PROJ-324 | Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals | 2026-05-04 | PROJ-301-350 |
+| PROJ-325 | PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision | 2026-05-04 | PROJ-301-350 |
+| PROJ-326 | Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard | 2026-05-04 | PROJ-301-350 |
+| PROJ-327 | Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope | 2026-05-04 | PROJ-301-350 |
+| PROJ-328 | UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on) | 2026-05-04 | PROJ-301-350 |
+| PROJ-331 | Test coverage - combat / save-load (44 tests + 4 review-fix tests, 4 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-332 | Test coverage - turn engine (31 tests, 7 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-333 | Test coverage - per-turn processing engines (94 tests, 8 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-334 | Test coverage - algorithmic correctness (pathfinding + galaxy generation, 36 tests + audit) | 2026-05-04 | PROJ-301-350 |
+| PROJ-335 | Test coverage - strategy data layer batch (77 tests, 5 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-336 | Test coverage - strategy services (51 tests, 4 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-337 | Test coverage - UI research subsystem (60 tests, 3 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-338 | Test coverage - UI panels high-risk characterization (143 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-339 | Test coverage - UI panels mid-risk characterization (29 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-340 | Test coverage - UI services + utility characterization (45 tests, 6 files) | 2026-05-04 | PROJ-301-350 |
+| PROJ-341 | Test coverage - strategy engine residual coverage (superweapon_order_processor, environmental_hazard_engine, action_execution_engine) | 2026-05-04 | PROJ-301-350 |
+| PROJ-342 | Drop self.game handle from TestLab UI | 2026-05-04 | PROJ-301-350 |
+| PROJ-343 | Closeout Sprint 1 - Production behavior bug fixes from PROJ-321..341 review (all 5 Tier-1 defects fixed including T1.3-combat per Codex review 2026-05-05) | 2026-05-04 | PROJ-301-350 |
+| PROJ-344 | Closeout Sprint 2 - Doc and test misalignments from PROJ-321..341 review | 2026-05-04 | PROJ-301-350 |
+| PROJ-345 | Closeout Sprint 3 - PROJ-333 critical coverage gaps from review | 2026-05-04 | PROJ-301-350 |
+| PROJ-346 | Closeout Sprint 4 - Vacuous test purges from PROJ-331/338/339/340 review | 2026-05-04 | PROJ-301-350 |
+| PROJ-347 | Closeout Sprint 5 - Pattern 33 placeholder gaps and Stage-1 purity from review (T4.7 deferred for user decision) | 2026-05-04 | PROJ-301-350 |
+| PROJ-348 | Closeout Sprint 6 - Controller boundary cleanup from PROJ-329C review (T5.1/T5.3/T5.4 fixed; T5.2 declined as not-a-defect) | 2026-05-04 | PROJ-301-350 |
+| PROJ-349 | Closeout Sprint 7 - Documentation drift and convention violations from review (T6.2/T6.7 + audit-update; T6.5 declined; T6.1/T6.3/T6.4/T6.6/T6.8 + Tier-7 deferred for user direction) | 2026-05-04 | PROJ-301-350 |
+| PROJ-350 | Combat Lab Registry Class Identity Fix | 2026-05-05 | PROJ-301-350 |
+| PROJ-356 | AI PDC Capability Cache — Replace Non-Existent Class Check (review 2026-05-04 finding #9) | 2026-05-05 | PROJ-351-400 |
+| PROJ-357 | Fleet Aura Provider Identity — Bind to Component, Not Class (review 2026-05-04 finding #2) | 2026-05-05 | PROJ-351-400 |
+| PROJ-358 | Battle Runner — Validate Spec Components, No Silent Drift (review 2026-05-04 finding #7) | 2026-05-05 | PROJ-351-400 |
+| PROJ-359 | Typed Weapon Execution Contract — Replace String/Class Dispatch (review 2026-05-04 finding #4) | 2026-05-05 | PROJ-351-400 |
+| PROJ-360 | ShipStatsCalculator Decompose by Stat Domain (review 2026-05-04 finding #5) | 2026-05-05 | PROJ-351-400 |
+| PROJ-361 | Battle resolver registry threading (PROJ-306 follow-on; review finding #1) | 2026-05-05 | PROJ-351-400 |
+| PROJ-362 | Strategic effects metadata registry + `_aggregate` decomposition (review finding #2) | 2026-05-05 | PROJ-351-400 |
+| PROJ-363 | Declarative command/order spec registry (review finding #4) | 2026-05-05 | PROJ-351-400 |
+| PROJ-364 | Superweapon spec table refactor (review finding #5; depends on PROJ-363) | 2026-05-05 | PROJ-351-400 |
+| PROJ-365 | TurnEngine phase descriptor registry (review finding #3) | 2026-05-05 | PROJ-351-400 |
+| PROJ-366 | Production replay sink wiring + verification coordinator bootstrap (PROJ-354B Phases 5-6 unblock) | 2026-05-05 | PROJ-351-400 |
+| PROJ-367 | Unified Stat Contributor Extension Surface (typed abilities + registry-as-pipeline) | 2026-05-05 | PROJ-351-400 |
+| PROJ-368 | Strategy: OrderProcessor Decomposition (handler-per-order-type) | 2026-05-10 | PROJ-351-400 |
+| PROJ-369 | Strategy: TurnEngine Decomposition (phase-aware ITickPhase migration completion) | 2026-05-10 | PROJ-351-400 |
+| PROJ-370 | Strategy: Data Layer Boundary Protocols (separate model from mutation) | 2026-05-10 | PROJ-351-400 |
+| PROJ-371 | Strategy: Command Dispatch Registry (replace hardcoded specs.py table) | 2026-05-10 | PROJ-351-400 |
+| PROJ-372 | Strategy: Galaxy/Planet/Star God-Class Decomposition (facade-delegate pattern) | 2026-05-10 | PROJ-351-400 |
+| PROJ-373 | Build queue open latency | 2026-05-10 | PROJ-351-400 |
+| PROJ-374 | Strategy grid surface cache | 2026-05-10 | PROJ-351-400 |
+| PROJ-375 | Audit-shrink cleanup 2026-05-05 | 2026-05-10 | PROJ-351-400 |
+| PROJ-376 | BuildQueueScreen Lifecycle Refactor (PROJ-373 Phase 2 follow-up) | 2026-05-10 | PROJ-351-400 |
+| PROJ-377 | PROJ-372 Phase 5 Leftovers: Golden-Save Fixture + Pathfinding Shim Sweep | 2026-05-10 | PROJ-351-400 |
+| PROJ-378 | Galaxy Cleanup Test Pattern Update (post-PROJ-372 facade-delegate) | 2026-05-10 | PROJ-351-400 |
+| PROJ-379 | Deterministic Golden-Save Fixture (PROJ-377 MIN-002) | 2026-05-10 | PROJ-351-400 |
+| PROJ-380 | Audit-shrink cleanup 2026-05-07 | 2026-05-10 | PROJ-351-400 |

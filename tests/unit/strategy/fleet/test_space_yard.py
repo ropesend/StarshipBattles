@@ -6,6 +6,45 @@ from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 
 
+@pytest.fixture
+def make_ship_with_yard(fresh_registries):
+    """Module-level factory for a ShipInstance mock with a space_shipyard
+    component, shared by `TestFleetHasSpaceShipyard` and
+    `TestFleetCanBuildType`. Consolidated in PROJ-322 Task 1.15
+    (S09-CAT4-004 / HLP-003).
+    """
+    from game.strategy.data.ship_instance import ShipInstance
+
+    def _make(name="Yard Ship", has_yard=True, is_combat_capable=True):
+        mock = MagicMock(spec=ShipInstance)
+        mock.name = name
+        mock.is_combat_capable.return_value = is_combat_capable
+        mock._registries = fresh_registries  # PROJ-211: DI compliance
+
+        if has_yard:
+            mock.design_data = {
+                'name': name,
+                'vehicle_type': 'Ship',
+                'layers': {
+                    'core': [
+                        {'id': 'space_shipyard', 'name': 'Fleet Space Yard'}
+                    ]
+                }
+            }
+        else:
+            mock.design_data = {
+                'name': name,
+                'vehicle_type': 'Ship',
+                'layers': {
+                    'core': [
+                        {'id': 'reactor', 'name': 'Reactor'}
+                    ]
+                }
+            }
+        return mock
+    return _make
+
+
 class TestFleetConstructionQueue:
     """Test cases for fleet construction_queue field."""
 
@@ -87,40 +126,8 @@ class TestFleetHasSpaceShipyard:
     PROJ-211: Updated to set _registries on mocks for DI compliance.
     """
 
-    @pytest.fixture
-    def make_ship_with_yard(self, fresh_registries):
-        """Factory for creating ship with space_shipyard component."""
-        from game.strategy.data.ship_instance import ShipInstance
-
-        def _make(name="Yard Ship", has_yard=True, is_combat_capable=True):
-            mock = MagicMock(spec=ShipInstance)
-            mock.name = name
-            mock.is_combat_capable.return_value = is_combat_capable
-            # PROJ-211: Set _registries for DI compliance
-            mock._registries = fresh_registries
-
-            if has_yard:
-                mock.design_data = {
-                    'name': name,
-                    'vehicle_type': 'Ship',
-                    'layers': {
-                        'core': [
-                            {'id': 'space_shipyard', 'name': 'Fleet Space Yard'}
-                        ]
-                    }
-                }
-            else:
-                mock.design_data = {
-                    'name': name,
-                    'vehicle_type': 'Ship',
-                    'layers': {
-                        'core': [
-                            {'id': 'reactor', 'name': 'Reactor'}
-                        ]
-                    }
-                }
-            return mock
-        return _make
+    # NOTE: `make_ship_with_yard` lives at module scope (top of file)
+    # since PROJ-322 Task 1.15.
 
     def test_fleet_without_yard_returns_false(self, basic_fleet, make_mock_ship):
         """Test fleet without yard ship returns False."""
@@ -191,39 +198,8 @@ class TestFleetCanBuildType:
         basic_fleet.ships.append(yard_ship)
         return basic_fleet
 
-    @pytest.fixture
-    def make_ship_with_yard(self, fresh_registries):
-        """Factory for creating ship with space_shipyard component."""
-        from game.strategy.data.ship_instance import ShipInstance
-
-        def _make(name="Yard Ship", has_yard=True, is_combat_capable=True):
-            mock = MagicMock(spec=ShipInstance)
-            mock.name = name
-            mock.is_combat_capable.return_value = is_combat_capable
-            mock._registries = fresh_registries  # PROJ-211: DI compliance
-
-            if has_yard:
-                mock.design_data = {
-                    'name': name,
-                    'vehicle_type': 'Ship',
-                    'layers': {
-                        'core': [
-                            {'id': 'space_shipyard', 'name': 'Fleet Space Yard'}
-                        ]
-                    }
-                }
-            else:
-                mock.design_data = {
-                    'name': name,
-                    'vehicle_type': 'Ship',
-                    'layers': {
-                        'core': [
-                            {'id': 'reactor', 'name': 'Reactor'}
-                        ]
-                    }
-                }
-            return mock
-        return _make
+    # NOTE: `make_ship_with_yard` lives at module scope (top of file)
+    # since PROJ-322 Task 1.15.
 
     def test_fleet_with_yard_can_build_ships(self, fleet_with_yard):
         """Test fleet with yard can build ships (PROJ-210: via capabilities)."""

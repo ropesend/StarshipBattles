@@ -144,67 +144,45 @@ class TestPlanetDataSourceCellValueFunc:
         assert result == "1.00"
 
 
+# PROJ-323 Task 3.43: helper factories for attr-extraction parametrized tests.
+def _make_simple_planet():
+    planet = Mock()
+    planet.name = "Terra Nova"
+    return planet
+
+
+def _make_dotted_planet():
+    planet = Mock()
+    planet.planet_type = Mock()
+    planet.planet_type.name = "Continental"
+    return planet
+
+
+def _make_empty_planet():
+    return Mock(spec=[])  # No attributes
+
+
 class TestPlanetDataSourceCellValueAttr:
     """Test PlanetDataSource with attr column type."""
 
-    def test_attr_simple_attribute(self):
-        """get_cell_value extracts simple attribute."""
+    @pytest.mark.parametrize("planet_factory,col_id,col_attr,expected", [
+        pytest.param(_make_simple_planet, "name", "name", "Terra Nova", id="simple_attr"),
+        pytest.param(_make_dotted_planet, "type", "planet_type.name", "Continental", id="dotted_path"),
+        pytest.param(_make_empty_planet, "missing", "nonexistent", "?", id="missing_attr"),
+        pytest.param(_make_empty_planet, "type", "planet_type.name", "?", id="missing_intermediate"),
+    ])
+    def test_attr_extraction(self, planet_factory, col_id, col_attr, expected):
+        """get_cell_value extracts attribute (or returns '?' when missing)."""
         from game.ui.screens.planet_data_source import PlanetDataSource
 
-        planet = Mock()
-        planet.name = "Terra Nova"
+        planet = planet_factory()
         columns = [
-            {"id": "name", "width": 150, "title": "Name", "attr": "name", "visible": True},
+            {"id": col_id, "width": 100, "title": col_id, "attr": col_attr, "visible": True},
         ]
         ds = PlanetDataSource(columns, Mock(), Mock())
         ds.update_data([planet])
 
-        result = ds.get_cell_value(0, "name")
-        assert result == "Terra Nova"
-
-    def test_attr_dotted_path(self):
-        """get_cell_value extracts dotted attribute path."""
-        from game.ui.screens.planet_data_source import PlanetDataSource
-
-        planet = Mock()
-        planet.planet_type = Mock()
-        planet.planet_type.name = "Continental"
-        columns = [
-            {"id": "type", "width": 100, "title": "Type", "attr": "planet_type.name", "visible": True},
-        ]
-        ds = PlanetDataSource(columns, Mock(), Mock())
-        ds.update_data([planet])
-
-        result = ds.get_cell_value(0, "type")
-        assert result == "Continental"
-
-    def test_attr_missing_returns_question_mark(self):
-        """get_cell_value returns '?' for missing attributes."""
-        from game.ui.screens.planet_data_source import PlanetDataSource
-
-        planet = Mock(spec=[])  # No attributes
-        columns = [
-            {"id": "missing", "width": 100, "title": "Missing", "attr": "nonexistent", "visible": True},
-        ]
-        ds = PlanetDataSource(columns, Mock(), Mock())
-        ds.update_data([planet])
-
-        result = ds.get_cell_value(0, "missing")
-        assert result == "?"
-
-    def test_attr_dotted_path_missing_intermediate(self):
-        """get_cell_value returns '?' for missing intermediate attributes."""
-        from game.ui.screens.planet_data_source import PlanetDataSource
-
-        planet = Mock(spec=[])  # No attributes
-        columns = [
-            {"id": "type", "width": 100, "title": "Type", "attr": "planet_type.name", "visible": True},
-        ]
-        ds = PlanetDataSource(columns, Mock(), Mock())
-        ds.update_data([planet])
-
-        result = ds.get_cell_value(0, "type")
-        assert result == "?"
+        assert ds.get_cell_value(0, col_id) == expected
 
 
 class TestPlanetDataSourceCellValueFmt:

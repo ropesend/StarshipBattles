@@ -85,13 +85,7 @@ class TestResearchSceneModuleLocation:
         # Verify the module path
         assert 'game.ui.research' in ResearchTreeScene.__module__
 
-    def test_camera_import_is_direct(self):
-        """ResearchTreeScene can now import Camera directly (PROJ-147 fix)."""
-        import game.ui.research.research_scene as module
-
-        # Read the source to verify Camera is imported directly
-        source = open(module.__file__).read()
-
-        # The module should have a direct import of Camera since it's in the UI layer
-        assert 'from game.ui.renderer.camera import Camera' in source, \
-            "Camera should be directly imported since module is in UI layer"
+    # NOTE: `test_camera_import_is_direct` removed in PROJ-322 Task 3.6
+    # (S06-CAT6-001 / APC-002-F06). The behavioural DI tests above
+    # already cover Camera injection — the source-text check was a
+    # brittle string-grep on the production module.

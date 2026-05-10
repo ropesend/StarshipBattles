@@ -1,0 +1,2766 @@
+{
+  "total": 460,
+  "stale": [],
+  "all": [
+    {
+      "doc": "docs/README.md",
+      "line": 4,
+      "proj": "PROJ-321",
+      "current_status": "Test review P0 dead-trivial cleanup 2026-05-02"
+    },
+    {
+      "doc": "docs/README.md",
+      "line": 46,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 3,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 3,
+      "proj": "PROJ-314",
+      "current_status": "Unify Ship Theme Loader Schema"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 3,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 36,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 68,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 82,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 94,
+      "proj": "PROJ-314",
+      "current_status": "Unify Ship Theme Loader Schema"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 94,
+      "proj": "PROJ-274",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 96,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 124,
+      "proj": "PROJ-309",
+      "current_status": "Top-10 File Decomposition and 500-LOC Convention"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 126,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 126,
+      "proj": "PROJ-314",
+      "current_status": "Unify Ship Theme Loader Schema"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 133,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 137,
+      "proj": "PROJ-259",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 162,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 162,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 162,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 162,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 164,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 167,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 167,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 173,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 174,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 175,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 175,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 175,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 175,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 184,
+      "proj": "PROJ-287",
+      "current_status": "Race Registry Facade + Empire.resident_species"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 217,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 217,
+      "proj": "PROJ-314",
+      "current_status": "Unify Ship Theme Loader Schema"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 222,
+      "proj": "PROJ-113",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 245,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 255,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 257,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 259,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 259,
+      "proj": "PROJ-306",
+      "current_status": "Battle Simulation DI Cleanup (PROJ-274 closure)"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 259,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 281,
+      "proj": "PROJ-309",
+      "current_status": "Top-10 File Decomposition and 500-LOC Convention"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 305,
+      "proj": "PROJ-287",
+      "current_status": "Race Registry Facade + Empire.resident_species"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 327,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 402,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 432,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 436,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 443,
+      "proj": "PROJ-306",
+      "current_status": "Battle Simulation DI Cleanup (PROJ-274 closure)"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 445,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 3,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 3,
+      "proj": "PROJ-327",
+      "current_status": "Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 3,
+      "proj": "PROJ-318",
+      "current_status": "PROJ-314 Closeout Remediations"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 40,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 42,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 43,
+      "proj": "PROJ-327",
+      "current_status": "Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 44,
+      "proj": "PROJ-322",
+      "current_status": "Test review P1 brittle-bloated remediation 2026-05-02"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 44,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 44,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 44,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 48,
+      "proj": "PROJ-258",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 139,
+      "proj": "PROJ-297",
+      "current_status": "Code Review Cleanup - Quick Wins"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 150,
+      "proj": "PROJ-309",
+      "current_status": "Top-10 File Decomposition and 500-LOC Convention"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 295,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 307,
+      "proj": "PROJ-237",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 482,
+      "proj": "PROJ-241",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 814,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1025,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1052,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1052,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1109,
+      "proj": "PROJ-253",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1209,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1209,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1216,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1217,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1218,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1232,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1250,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1268,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1284,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1308,
+      "proj": "PROJ-259",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1322,
+      "proj": "PROJ-259",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1333,
+      "proj": "PROJ-259",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1348,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1348,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1360,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1371,
+      "proj": "PROJ-272",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1386,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1386,
+      "proj": "PROJ-273",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1386,
+      "proj": "PROJ-275",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1392,
+      "proj": "PROJ-273",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1393,
+      "proj": "PROJ-275",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1394,
+      "proj": "PROJ-275",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1399,
+      "proj": "PROJ-275",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1407,
+      "proj": "PROJ-273",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1419,
+      "proj": "PROJ-273",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1449,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1497,
+      "proj": "PROJ-299",
+      "current_status": "Race Description Generator (LLM)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1568,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1582,
+      "proj": "PROJ-305",
+      "current_status": "Fleet Strategic-Layer Ability Sources"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1588,
+      "proj": "PROJ-306",
+      "current_status": "Battle Simulation DI Cleanup (PROJ-274 closure)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1595,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1596,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1597,
+      "proj": "PROJ-302",
+      "current_status": "Star Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1603,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1605,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1608,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1619,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1640,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1651,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1676,
+      "proj": "PROJ-327",
+      "current_status": "Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1685,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1686,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1687,
+      "proj": "PROJ-322",
+      "current_status": "Test review P1 brittle-bloated remediation 2026-05-02"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1687,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1719,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1719,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1724,
+      "proj": "PROJ-327",
+      "current_status": "Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1730,
+      "proj": "PROJ-327",
+      "current_status": "Test runtime reduction - virtual_table @patch sweep + mutable-mock fixture rescope"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1730,
+      "proj": "PROJ-322",
+      "current_status": "Test review P1 brittle-bloated remediation 2026-05-02"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1735,
+      "proj": "PROJ-322",
+      "current_status": "Test review P1 brittle-bloated remediation 2026-05-02"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1735,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1735,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1735,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1743,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1747,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1748,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1748,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1753,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1754,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1755,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1768,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1793,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1793,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1793,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1796,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1827,
+      "proj": "PROJ-322",
+      "current_status": "Test review P1 brittle-bloated remediation 2026-05-02"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1828,
+      "proj": "PROJ-322",
+      "current_status": "Test review P1 brittle-bloated remediation 2026-05-02"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1829,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1829,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1833,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1833,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1833,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1836,
+      "proj": "PROJ-324",
+      "current_status": "Test infra unblock - UIWindow + LLMBackgroundCall + 14 deferrals"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1836,
+      "proj": "PROJ-325",
+      "current_status": "PROJ-323 corrections + Task 3.34 parametrize + RaceSetupScreen decision"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1836,
+      "proj": "PROJ-328",
+      "current_status": "UIWindow MVVM refactor - apply two-stage pattern to 6 subclasses (PROJ-325 PoC follow-on)"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 110,
+      "proj": "PROJ-237",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 121,
+      "proj": "PROJ-238",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 192,
+      "proj": "PROJ-309",
+      "current_status": "Top-10 File Decomposition and 500-LOC Convention"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 194,
+      "proj": "PROJ-282",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 206,
+      "proj": "PROJ-282",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 259,
+      "proj": "PROJ-256",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 426,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 466,
+      "proj": "PROJ-255",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 486,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 534,
+      "proj": "PROJ-295",
+      "current_status": "Python 3.11+ Upgrade (Google EOL Track)"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 546,
+      "proj": "PROJ-311",
+      "current_status": "Return Type Annotation Backfill and Convention"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 562,
+      "proj": "PROJ-307",
+      "current_status": "Documentation Freshness Timestamps"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 566,
+      "proj": "PROJ-314",
+      "current_status": "Unify Ship Theme Loader Schema"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 619,
+      "proj": "PROJ-314",
+      "current_status": "Unify Ship Theme Loader Schema"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 628,
+      "proj": "PROJ-314",
+      "current_status": "Unify Ship Theme Loader Schema"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 650,
+      "proj": "PROJ-314",
+      "current_status": "Unify Ship Theme Loader Schema"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 672,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 10,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 19,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 61,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 62,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 63,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 64,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 65,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 68,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 73,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 95,
+      "proj": "PROJ-321",
+      "current_status": "Test review P0 dead-trivial cleanup 2026-05-02"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 119,
+      "proj": "PROJ-321",
+      "current_status": "Test review P0 dead-trivial cleanup 2026-05-02"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 122,
+      "proj": "PROJ-299",
+      "current_status": "Race Description Generator (LLM)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 142,
+      "proj": "PROJ-274",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 146,
+      "proj": "PROJ-274",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 167,
+      "proj": "PROJ-258",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 188,
+      "proj": "PROJ-306",
+      "current_status": "Battle Simulation DI Cleanup (PROJ-274 closure)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 188,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 214,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 214,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 219,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 479,
+      "proj": "PROJ-306",
+      "current_status": "Battle Simulation DI Cleanup (PROJ-274 closure)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 489,
+      "proj": "PROJ-306",
+      "current_status": "Battle Simulation DI Cleanup (PROJ-274 closure)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 489,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 654,
+      "proj": "PROJ-254",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 688,
+      "proj": "PROJ-276",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 835,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 861,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 932,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 936,
+      "proj": "PROJ-301",
+      "current_status": "Planet Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 940,
+      "proj": "PROJ-301",
+      "current_status": "Planet Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 941,
+      "proj": "PROJ-301",
+      "current_status": "Planet Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 969,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 986,
+      "proj": "PROJ-301",
+      "current_status": "Planet Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1048,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1058,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1073,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1073,
+      "proj": "PROJ-286",
+      "current_status": "Multi-Resource Population Consumption"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1077,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1079,
+      "proj": "PROJ-286",
+      "current_status": "Multi-Resource Population Consumption"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1080,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1081,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1081,
+      "proj": "PROJ-286",
+      "current_status": "Multi-Resource Population Consumption"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1085,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1091,
+      "proj": "PROJ-286",
+      "current_status": "Multi-Resource Population Consumption"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1093,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1098,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1112,
+      "proj": "PROJ-287",
+      "current_status": "Race Registry Facade + Empire.resident_species"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1139,
+      "proj": "PROJ-289",
+      "current_status": "Planet Report Panel Per-Species + Per-Resource UI"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1139,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1142,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1142,
+      "proj": "PROJ-288",
+      "current_status": "Colony Output Projection Helpers"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1143,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1144,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1145,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1146,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1147,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1148,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1152,
+      "proj": "PROJ-288",
+      "current_status": "Colony Output Projection Helpers"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1154,
+      "proj": "PROJ-289",
+      "current_status": "Planet Report Panel Per-Species + Per-Resource UI"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1154,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1160,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1170,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1180,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1184,
+      "proj": "PROJ-288",
+      "current_status": "Colony Output Projection Helpers"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1188,
+      "proj": "PROJ-292",
+      "current_status": "Audit High + Major Cleanup (PROJ-283..290 Closeout)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1200,
+      "proj": "PROJ-292",
+      "current_status": "Audit High + Major Cleanup (PROJ-283..290 Closeout)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1200,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 3,
+      "proj": "PROJ-308",
+      "current_status": "Broad Exception Handler Justifications"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 49,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 56,
+      "proj": "PROJ-321",
+      "current_status": "Test review P0 dead-trivial cleanup 2026-05-02"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 77,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 83,
+      "proj": "PROJ-321",
+      "current_status": "Test review P0 dead-trivial cleanup 2026-05-02"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 151,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 161,
+      "proj": "PROJ-321",
+      "current_status": "Test review P0 dead-trivial cleanup 2026-05-02"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 166,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 531,
+      "proj": "PROJ-308",
+      "current_status": "Broad Exception Handler Justifications"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 559,
+      "proj": "PROJ-308",
+      "current_status": "Broad Exception Handler Justifications"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 559,
+      "proj": "PROJ-308",
+      "current_status": "Broad Exception Handler Justifications"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 561,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 565,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 3,
+      "proj": "PROJ-315",
+      "current_status": "Fleet Report Component Damage Panel"
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 3,
+      "proj": "PROJ-316",
+      "current_status": "PROJ-313 Remediation: Audit-Readiness and Structural Tightening"
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 11,
+      "proj": "PROJ-313",
+      "current_status": "Strategy Modal Window Base Class Refactor"
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 684,
+      "proj": "PROJ-315",
+      "current_status": "Fleet Report Component Damage Panel"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 3,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1088,
+      "proj": "PROJ-238",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1581,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1582,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1583,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1584,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1630,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1641,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1664,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1672,
+      "proj": "PROJ-301",
+      "current_status": "Planet Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1673,
+      "proj": "PROJ-302",
+      "current_status": "Star Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1674,
+      "proj": "PROJ-303",
+      "current_status": "Warp Point Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1675,
+      "proj": "PROJ-304",
+      "current_status": "Star System Archetype Ability Sources"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1676,
+      "proj": "PROJ-305",
+      "current_status": "Fleet Strategic-Layer Ability Sources"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 3,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 3,
+      "proj": "PROJ-240",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 3,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 3,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 9,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 9,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 11,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 21,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 23,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 69,
+      "proj": "PROJ-274",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 76,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 76,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 86,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 126,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 126,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 132,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 223,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 276,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 277,
+      "proj": "PROJ-276",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 284,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 340,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 349,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 364,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 369,
+      "proj": "PROJ-281",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 383,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 395,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 397,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 459,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 459,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 459,
+      "proj": "PROJ-272",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 459,
+      "proj": "PROJ-273",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 474,
+      "proj": "PROJ-273",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 481,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 484,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 484,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 496,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 542,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 581,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 596,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 600,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 610,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 610,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 610,
+      "proj": "PROJ-251",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 610,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 665,
+      "proj": "PROJ-240",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 671,
+      "proj": "PROJ-240",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 673,
+      "proj": "PROJ-240",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 715,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 715,
+      "proj": "PROJ-272",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 734,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 736,
+      "proj": "PROJ-272",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1005,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1023,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1029,
+      "proj": "PROJ-275",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1033,
+      "proj": "PROJ-275",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1151,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1153,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1169,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1169,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1203,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1280,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1361,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1362,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 5,
+      "proj": "PROJ-187",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 131,
+      "proj": "PROJ-222",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 185,
+      "proj": "PROJ-233",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 291,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 295,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 295,
+      "proj": "PROJ-286",
+      "current_status": "Multi-Resource Population Consumption"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 295,
+      "proj": "PROJ-288",
+      "current_status": "Colony Output Projection Helpers"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 295,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 346,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 346,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 355,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "line": 3,
+      "proj": "PROJ-276",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "line": 3,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "line": 110,
+      "proj": "PROJ-276",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "line": 126,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "line": 141,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "line": 169,
+      "proj": "PROJ-223",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 3,
+      "proj": "PROJ-309",
+      "current_status": "Top-10 File Decomposition and 500-LOC Convention"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 3,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 3,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 3,
+      "proj": "PROJ-308",
+      "current_status": "Broad Exception Handler Justifications"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 28,
+      "proj": "PROJ-254",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 34,
+      "proj": "PROJ-231",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 57,
+      "proj": "PROJ-287",
+      "current_status": "Race Registry Facade + Empire.resident_species"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 58,
+      "proj": "PROJ-288",
+      "current_status": "Colony Output Projection Helpers"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 60,
+      "proj": "PROJ-309",
+      "current_status": "Top-10 File Decomposition and 500-LOC Convention"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 65,
+      "proj": "PROJ-309",
+      "current_status": "Top-10 File Decomposition and 500-LOC Convention"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 71,
+      "proj": "PROJ-254",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 229,
+      "proj": "PROJ-253",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 238,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 314,
+      "proj": "PROJ-308",
+      "current_status": "Broad Exception Handler Justifications"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 392,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 394,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 415,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 419,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 433,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 444,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 458,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 480,
+      "proj": "PROJ-276",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 481,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 648,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 663,
+      "proj": "PROJ-222",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 711,
+      "proj": "PROJ-238",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 723,
+      "proj": "PROJ-238",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 745,
+      "proj": "PROJ-237",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 876,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 894,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 915,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 915,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 921,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 925,
+      "proj": "PROJ-275",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 929,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 929,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 932,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 936,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 939,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 942,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 942,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 951,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 964,
+      "proj": "PROJ-275",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 967,
+      "proj": "PROJ-271",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 979,
+      "proj": "PROJ-273",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1027,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1056,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1069,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1243,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1359,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1361,
+      "proj": "PROJ-312",
+      "current_status": "Add Battle Replay System"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1536,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1538,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1659,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1696,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1705,
+      "proj": "PROJ-299",
+      "current_status": "Race Description Generator (LLM)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1709,
+      "proj": "PROJ-296",
+      "current_status": "LLM Service Foundation"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1714,
+      "proj": "PROJ-299",
+      "current_status": "Race Description Generator (LLM)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1718,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1718,
+      "proj": "PROJ-286",
+      "current_status": "Multi-Resource Population Consumption"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1736,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1736,
+      "proj": "PROJ-286",
+      "current_status": "Multi-Resource Population Consumption"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1757,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1757,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1765,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1767,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1769,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1771,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1771,
+      "proj": "PROJ-287",
+      "current_status": "Race Registry Facade + Empire.resident_species"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1771,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1781,
+      "proj": "PROJ-291",
+      "current_status": "Audit Critical Fixes (PROJ-283..290 Sign-off Blocker)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1807,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1809,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1816,
+      "proj": "PROJ-283",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1816,
+      "proj": "PROJ-284",
+      "current_status": "Colony Demographics Loop (Organics, Happiness, Population Growth Rework)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1816,
+      "proj": "PROJ-285",
+      "current_status": "Habitability-to-Production Economy Hook"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1818,
+      "proj": "PROJ-288",
+      "current_status": "Colony Output Projection Helpers"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1820,
+      "proj": "PROJ-288",
+      "current_status": "Colony Output Projection Helpers"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1824,
+      "proj": "PROJ-289",
+      "current_status": "Planet Report Panel Per-Species + Per-Resource UI"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1824,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1832,
+      "proj": "PROJ-289",
+      "current_status": "Planet Report Panel Per-Species + Per-Resource UI"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1836,
+      "proj": "PROJ-288",
+      "current_status": "Colony Output Projection Helpers"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1836,
+      "proj": "PROJ-292",
+      "current_status": "Audit High + Major Cleanup (PROJ-283..290 Closeout)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1839,
+      "proj": "PROJ-292",
+      "current_status": "Audit High + Major Cleanup (PROJ-283..290 Closeout)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1839,
+      "proj": "PROJ-292",
+      "current_status": "Audit High + Major Cleanup (PROJ-283..290 Closeout)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1841,
+      "proj": "PROJ-290",
+      "current_status": "Empire Treasury + Uncolonized Habitability UI"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1843,
+      "proj": "PROJ-286",
+      "current_status": "Multi-Resource Population Consumption"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1847,
+      "proj": "PROJ-287",
+      "current_status": "Race Registry Facade + Empire.resident_species"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1847,
+      "proj": "PROJ-289",
+      "current_status": "Planet Report Panel Per-Species + Per-Resource UI"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1850,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1852,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1852,
+      "proj": "PROJ-301",
+      "current_status": "Planet Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1872,
+      "proj": "PROJ-301",
+      "current_status": "Planet Intrinsic Ability Sources"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1881,
+      "proj": "PROJ-300",
+      "current_status": "Universal IAbilitySource Framework + Storm/Facility Migration"
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 259,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 284,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 285,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 63,
+      "proj": "PROJ-238",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 64,
+      "proj": "PROJ-237",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 93,
+      "proj": "PROJ-237",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/pre_commit_hooks.md",
+      "line": 18,
+      "proj": "PROJ-326",
+      "current_status": "Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard"
+    },
+    {
+      "doc": "docs/guides/pre_commit_hooks.md",
+      "line": 18,
+      "proj": "PROJ-321",
+      "current_status": "Test review P0 dead-trivial cleanup 2026-05-02"
+    },
+    {
+      "doc": "docs/guides/pre_commit_hooks.md",
+      "line": 29,
+      "proj": "PROJ-326",
+      "current_status": "Test linter + SystemTreePanel coverage + StrategySessionFacade contract guard"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 7,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 36,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 41,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 133,
+      "proj": "PROJ-280",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 214,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 220,
+      "proj": "PROJ-278",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 290,
+      "proj": "PROJ-279",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 296,
+      "proj": "PROJ-279",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 330,
+      "proj": "PROJ-279",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 378,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 380,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 380,
+      "proj": "PROJ-270",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 594,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 605,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 629,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 728,
+      "proj": "PROJ-001",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 821,
+      "proj": "PROJ-277",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 3,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 162,
+      "proj": "PROJ-320",
+      "current_status": "Strategic Combat Round Budget"
+    }
+  ]
+}

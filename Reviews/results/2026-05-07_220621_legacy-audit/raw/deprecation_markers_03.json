@@ -1,0 +1,55 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 179,
+  "total_findings": 8,
+  "findings": [
+    {
+      "file": "game/simulation/combat/formation.py",
+      "line": 357,
+      "marker": "# legacy",
+      "context": "    # legacy layout reports `(-500, 0)` / `(+500, 0)` byte-identically"
+    },
+    {
+      "file": "game/strategy/combat/spec_compiler.py",
+      "line": 462,
+      "marker": "# Legacy",
+      "context": "        # Legacy EnvironmentalEffects path was deleted alongside AreaEffectManager."
+    },
+    {
+      "file": "game/strategy/validation/planet_order_validator.py",
+      "line": 66,
+      "marker": "# Legacy",
+      "context": "            # Legacy fallback: check by ability_name (backward compatibility)"
+    },
+    {
+      "file": "game/strategy/validation/planet_order_validator.py",
+      "line": 113,
+      "marker": "# Legacy",
+      "context": "            # Legacy fallback: check by ability_name"
+    },
+    {
+      "file": "game/ui/panels/build_queue_drag_handler.py",
+      "line": 211,
+      "marker": "# Legacy",
+      "context": "                    # Legacy fallback for tests without command injection"
+    },
+    {
+      "file": "game/ui/screens/empire_build_queue_window.py",
+      "line": 428,
+      "marker": "# Legacy",
+      "context": "            # Legacy fallback for tests without session/facade injection"
+    },
+    {
+      "file": "game/ui/screens/battle_setup/controller.py",
+      "line": 550,
+      "marker": "# Legacy",
+      "context": "        # Legacy toggle migration."
+    },
+    {
+      "file": "game/ui/screens/builder/modifier_logic.py",
+      "line": 177,
+      "marker": "# Deprecated",
+      "context": "# Deprecated: ModifierLogic static wrapper"
+    }
+  ]
+}

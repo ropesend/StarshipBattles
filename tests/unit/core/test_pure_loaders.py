@@ -22,7 +22,16 @@ def _make_minimal_registries():
 
 @pytest.fixture(autouse=True)
 def reset_registry():
-    """Reset registry state before and after each test."""
+    """Reset registry state before and after each test.
+
+    PROJ-322 Task 2.4: kept at function scope. The plan-review claim
+    that 'tests only read' was incorrect — multiple tests verify the
+    global registry remains EMPTY after the pure loader returns, which
+    requires per-test reset. Module-scope rescoping causes
+    `test_*_does_not_modify_registry` failures because earlier tests in
+    the file legitimately populate the registry (e.g.
+    `test_pure_load_with_inheritance`, `test_load_components_data_returns_dict`).
+    """
     set_default_registry_manager(RegistryManager())
     yield
     set_default_registry_manager(RegistryManager())

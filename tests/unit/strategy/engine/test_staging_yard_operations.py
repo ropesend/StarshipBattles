@@ -6,14 +6,16 @@ _unload_pod_to_staging_yard() which had zero test coverage.
 """
 
 import pytest
+from game.strategy.data.order_types import OrderType
 from unittest.mock import MagicMock
 
-from game.strategy.engine.order_processor import OrderProcessor
+from game.strategy.engine.order_handlers.transfer import TransferHandler
 
 
 @pytest.fixture
 def processor():
-    return OrderProcessor()
+    # PROJ-368 Phase 4: staging yard ops live on TransferHandler.
+    return TransferHandler()
 
 
 def _make_pod(name="Continental Drop Pod", mass=500):
@@ -62,7 +64,7 @@ class TestLoadPodFromStagingYard:
         planet = _make_planet_with_yard(pods=[pod])
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._load_pod_from_staging_yard(fleet, planet)
+        result = processor._dispatch_drop_pod_load(fleet, planet)
 
         assert result == 1
         assert len(ship.carried_items) == 1
@@ -76,7 +78,7 @@ class TestLoadPodFromStagingYard:
         planet = _make_planet_with_yard(pods=[wrong_pod, right_pod])
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._load_pod_from_staging_yard(fleet, planet, pod_name="Target Pod")
+        result = processor._dispatch_drop_pod_load(fleet, planet, pod_name="Target Pod")
 
         assert result == 1
         assert ship.carried_items[0]["name"] == "Target Pod"
@@ -91,7 +93,7 @@ class TestLoadPodFromStagingYard:
         planet = _make_planet_with_yard(pods=pods)
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._load_pod_from_staging_yard(fleet, planet, amount=2)
+        result = processor._dispatch_drop_pod_load(fleet, planet, amount=2)
 
         assert result == 2
         assert len(ship.carried_items) == 2
@@ -104,7 +106,7 @@ class TestLoadPodFromStagingYard:
         planet = _make_planet_with_yard(pods=pods)
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._load_pod_from_staging_yard(fleet, planet, amount=0)
+        result = processor._dispatch_drop_pod_load(fleet, planet, amount=0)
 
         assert result == 3
         assert len(ship.carried_items) == 3
@@ -116,7 +118,7 @@ class TestLoadPodFromStagingYard:
         planet = _make_planet_with_yard(pods=[pod])
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._load_pod_from_staging_yard(fleet, planet)
+        result = processor._dispatch_drop_pod_load(fleet, planet)
 
         assert result == 0
         assert len(planet.staging_yard) == 1  # Pod still there
@@ -129,7 +131,7 @@ class TestLoadPodFromStagingYard:
         planet = _make_planet_with_yard(pods=[pod])
         fleet = _make_fleet(ships=[ship1, ship2])
 
-        result = processor._load_pod_from_staging_yard(fleet, planet)
+        result = processor._dispatch_drop_pod_load(fleet, planet)
 
         assert result == 1
         assert len(ship1.carried_items) == 0
@@ -151,7 +153,7 @@ class TestUnloadPodToStagingYard:
         planet = _make_planet_with_yard()
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._unload_pod_to_staging_yard(fleet, planet)
+        result = processor._dispatch_drop_pod_unload(fleet, planet)
 
         assert result == 1
         planet.add_to_staging_yard.assert_called_once_with(pod)
@@ -165,7 +167,7 @@ class TestUnloadPodToStagingYard:
         planet = _make_planet_with_yard()
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._unload_pod_to_staging_yard(fleet, planet, pod_name="Target Pod")
+        result = processor._dispatch_drop_pod_unload(fleet, planet, pod_name="Target Pod")
 
         assert result == 1
         # Wrong pod still on ship
@@ -179,7 +181,7 @@ class TestUnloadPodToStagingYard:
         planet = _make_planet_with_yard()
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._unload_pod_to_staging_yard(fleet, planet, amount=0)
+        result = processor._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
         assert result == 3
         assert len(ship.carried_items) == 0
@@ -191,7 +193,7 @@ class TestUnloadPodToStagingYard:
         planet = _make_planet_with_yard()
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._unload_pod_to_staging_yard(fleet, planet, amount=2)
+        result = processor._dispatch_drop_pod_unload(fleet, planet, amount=2)
 
         assert result == 2
         assert len(ship.carried_items) == 3
@@ -205,7 +207,7 @@ class TestUnloadPodToStagingYard:
         planet = _make_planet_with_yard()
         fleet = _make_fleet(ships=[ship1, ship2])
 
-        result = processor._unload_pod_to_staging_yard(fleet, planet, amount=0)
+        result = processor._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
         assert result == 2
         assert len(ship1.carried_items) == 0
@@ -219,7 +221,7 @@ class TestUnloadPodToStagingYard:
         planet.add_to_staging_yard.return_value = False  # Yard refuses
         fleet = _make_fleet(ships=[ship])
 
-        result = processor._unload_pod_to_staging_yard(fleet, planet)
+        result = processor._dispatch_drop_pod_unload(fleet, planet)
 
         assert result == 0
         assert len(ship.carried_items) == 1  # Pod still on ship

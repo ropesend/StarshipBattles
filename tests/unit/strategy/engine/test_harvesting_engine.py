@@ -142,12 +142,17 @@ def _make_mock_registries(harvesters=None):
 # Tests
 # ===========================================================================
 
+
+def _make_engine(registries=None):
+    """Module-level helper. Promoted from per-class duplicates to dedupe."""
+    from game.strategy.engine.harvesting_engine import HarvestingEngine
+    return HarvestingEngine(registries=registries or _make_mock_registries())
+
+
 class TestHarvestingEngine:
     """Tests for HarvestingEngine.process_harvesting_tick() - PROJ-161 per-tick only."""
 
-    def _make_engine(self, registries=None):
-        from game.strategy.engine.harvesting_engine import HarvestingEngine
-        return HarvestingEngine(registries=registries or _make_mock_registries())
+    _make_engine = staticmethod(_make_engine)
 
     def _process_full_turn(self, engine, empires):
         """Helper to simulate full turn (100 ticks) of harvesting."""
@@ -514,9 +519,7 @@ def _make_storage_facility(
 class TestStorageAggregation:
     """Tests for HarvestingEngine.recalculate_storage()."""
 
-    def _make_engine(self, registries=None):
-        from game.strategy.engine.harvesting_engine import HarvestingEngine
-        return HarvestingEngine(registries=registries or _make_mock_registries())
+    _make_engine = staticmethod(_make_engine)
 
     def test_single_storage_facility(self):
         """Single storage facility sets colony max_stockpile and empire max_storage."""
@@ -683,6 +686,128 @@ class TestStorageAggregation:
         assert planet.max_stockpile["metals"] == pytest.approx(10000.0)
         assert empire.max_storage["metals"] == pytest.approx(10000.0)
 
+    def test_staging_yard_capacity_sums_inline_entries(self):
+        """Staging-yard capacity contributes to colony max_staging_mass."""
+        facility = PlanetaryFacility(
+            instance_id="stage-001",
+            design_id="drop_pod_yard",
+            name="Drop Pod Yard",
+            design_data={
+                "layers": {
+                    "core": [
+                        {
+                            "id": "stage_a",
+                            "abilities": {
+                                "StagingYard": {"capacity_mass": 400.0},
+                            },
+                        },
+                        {
+                            "id": "stage_b",
+                            "abilities": {
+                                "StagingYard": [
+                                    {"capacity_mass": 75.0},
+                                    {"capacity_mass": 25.0},
+                                ],
+                            },
+                        },
+                    ]
+                }
+            },
+        )
+        planet = _make_planet(facilities=[facility])
+        empire = _make_empire(colonies=[planet])
+
+        engine = self._make_engine()
+        engine.recalculate_storage([empire])
+
+        assert planet.max_staging_mass == pytest.approx(500.0)
+
+    def test_staging_yard_capacity_resolves_registry_component_ids(self):
+        """Staging-yard capacity works for production design_data component IDs."""
+        facility = PlanetaryFacility(
+            instance_id="stage-002",
+            design_id="drop_pod_yard",
+            name="Drop Pod Yard",
+            design_data={"layers": {"core": ["stage_registry"]}},
+        )
+        planet = _make_planet(facilities=[facility])
+        empire = _make_empire(colonies=[planet])
+        regs = _make_mock_registries()
+        regs.components.get = lambda comp_id: {
+            "abilities": {"StagingYard": {"capacity_mass": 750.0}}
+        } if comp_id == "stage_registry" else None
+
+        engine = self._make_engine(registries=regs)
+        engine.recalculate_storage([empire])
+
+        assert planet.max_staging_mass == pytest.approx(750.0)
+
+
+class TestHarvestBoosters:
+    """Tests for ResourceHarvestBooster scope/resource filtering."""
+
+    _make_engine = staticmethod(_make_engine)
+
+    def test_harvest_booster_returns_one_without_empire_or_galaxy(self):
+        engine = self._make_engine()
+        colony = object()
+
+        assert engine._get_harvest_booster_mult(colony, "metals", empire=None) == 1.0
+
+        engine._galaxy = None
+        assert engine._get_harvest_booster_mult(colony, "metals", empire=object()) == 1.0
+
+    def test_harvest_booster_filters_resource_and_aggregates_all_scopes(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        engine = self._make_engine()
+        colony = object()
+        galaxy = object()
+        empire = object()
+        engine._galaxy = galaxy
+        entries_by_scope = {
+            "planet": [
+                {"resource_type": "metals", "value": 2.0, "stack_group": "planet"},
+                {"resource_type": "organics", "value": 99.0},
+            ],
+            "sector": [{"resource_type": "metals", "value": 1.5}],
+            "system": [],
+            "empire": [{"resource_type": "metals", "value": 1.25}],
+        }
+        calls = []
+        captured = {}
+
+        def _find(ability_name, query_colony, query_galaxy, query_empire, scope, *, registries):
+            calls.append((ability_name, query_colony, query_galaxy, query_empire, scope, registries))
+            return entries_by_scope[scope]
+
+        def _aggregate(entries):
+            captured["entries"] = list(entries)
+            return 3.75
+
+        monkeypatch.setattr(
+            "game.strategy.services.strategic_ability_scanner.find_abilities_in_scope",
+            _find,
+        )
+        monkeypatch.setattr(
+            "game.strategy.services.strategic_ability_scanner.aggregate_multipliers",
+            _aggregate,
+        )
+
+        result = engine._get_harvest_booster_mult(colony, "metals", empire)
+
+        assert result == pytest.approx(3.75)
+        assert [call[4] for call in calls] == ["planet", "sector", "system", "empire"]
+        assert all(call[0] == "ResourceHarvestBooster" for call in calls)
+        assert all(call[1] is colony and call[2] is galaxy and call[3] is empire for call in calls)
+        assert all(call[5] is engine._registries for call in calls)
+        assert captured["entries"] == [
+            entries_by_scope["planet"][0],
+            entries_by_scope["sector"][0],
+            entries_by_scope["empire"][0],
+        ]
+
 
 # ===========================================================================
 # Per-Tick Harvesting Tests (PROJ-161)
@@ -691,9 +816,7 @@ class TestStorageAggregation:
 class TestPerTickHarvesting:
     """Tests for HarvestingEngine.process_harvesting_tick() - PROJ-161."""
 
-    def _make_engine(self, registries=None):
-        from game.strategy.engine.harvesting_engine import HarvestingEngine
-        return HarvestingEngine(registries=registries or _make_mock_registries())
+    _make_engine = staticmethod(_make_engine)
 
     def test_single_tick_harvests_one_hundredth(self):
         """Single tick extracts 1/100th of per-turn harvest rate."""

@@ -57,6 +57,39 @@ class FormationSpec:
     spacing: float
     custom_positions: Tuple[Vector2, ...] = field(default_factory=tuple)
 
+    # ------------------------------------------------------------------
+    # Serializable Protocol (Pattern #17 — `docs/02_PATTERNS.md §17`)
+    # ------------------------------------------------------------------
+    # PROJ-391 Task 1.3: canonical (de)serialization lives on the type
+    # itself rather than as duplicated free functions in
+    # `task_force.py` and `replay_serialization.py`. Both legacy
+    # implementations produced identical output (`float(p.x)`/`float(p.y)`
+    # is the same as `_vec_to_list(v)`). The replay-layer fallback for
+    # non-FormationSpec inputs is dropped — every spec compiler in the
+    # codebase produces a real `FormationSpec`.
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize this formation to a JSON-safe dict (Pattern #17)."""
+        return {
+            "shape": self.shape.value,
+            "spacing": float(self.spacing),
+            "custom_positions": [
+                [float(p.x), float(p.y)] for p in self.custom_positions
+            ],
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "FormationSpec":
+        """Reconstruct a `FormationSpec` from its `to_dict` form (Pattern #17)."""
+        return cls(
+            shape=FormationShape(data["shape"]),
+            spacing=float(data.get("spacing", FormationResolver.DEFAULT_SPACING)),
+            custom_positions=tuple(
+                Vector2(float(p[0]), float(p[1]))
+                for p in data.get("custom_positions", [])
+            ),
+        )
+
 
 class FormationResolver:
     """Deterministic (formation, entry_vector, boundary, ships) → per-ship pose.
@@ -353,10 +386,10 @@ def resolve_team_entry_vectors(
 
     step_deg = 360.0 / team_count
     vectors: Dict[int, "EntryVector"] = {}
-    # Snap floating-point noise near zero to exact zero so the 2-team
-    # legacy layout reports `(-500, 0)` / `(+500, 0)` byte-identically
-    # instead of `(-500, 6e-14)`. Threshold is small relative to any
-    # sensible arena radius.
+    # Snap floating-point noise near zero to exact zero so 2-team layouts
+    # report `(-500, 0)` / `(+500, 0)` byte-identically instead of
+    # `(-500, 6e-14)`. Threshold is small relative to any sensible arena
+    # radius.
     _eps = 1e-9 * max(1.0, arena_radius)
     for i in range(team_count):
         angle_deg = (180.0 + i * step_deg) % 360.0

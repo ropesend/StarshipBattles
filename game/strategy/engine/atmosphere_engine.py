@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from typing import Dict, List, TYPE_CHECKING
 
-from game.core.patterns.layer_iterator import iter_components
+from game.strategy.services.component_inspector import iter_facility_ability_entries
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -23,8 +23,17 @@ logger = logging.getLogger(__name__)
 class AtmosphereEngine:
     """Engine for processing per-turn atmosphere modification."""
 
-    def __init__(self, registries=None):
+    def __init__(self, registries=None, planet_mutator=None):
         self._registries = registries
+        self._planet_mutator = planet_mutator
+
+    def _get_planet_mutator(self):
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
 
     def _validate_tick_inputs(self, empires) -> None:
         """PROJ-251: Validate preconditions before mutating state."""
@@ -65,15 +74,10 @@ class AtmosphereEngine:
         for facility in getattr(colony, 'facilities', []):
             if not getattr(facility, 'is_operational', True):
                 continue
-            for comp in iter_components(facility.design_data):
-                am_data = self._extract_atmo_modifier(comp)
-                if am_data is None:
-                    continue
-                if isinstance(am_data, list):
-                    for entry in am_data:
-                        total_rate_kg += entry.get('modification_rate', 0.0)
-                else:
-                    total_rate_kg += am_data.get('modification_rate', 0.0)
+            for _comp, entry in iter_facility_ability_entries(
+                facility, 'AtmosphereModifier', self._registries
+            ):
+                total_rate_kg += entry.get('modification_rate', 0.0)
 
         if total_rate_kg <= 0:
             return
@@ -130,18 +134,10 @@ class AtmosphereEngine:
             new_pa = max(0.0, current_pa + actual_pa_change)
             atmosphere[gas] = new_pa
 
-        # Update planet atmosphere reference (in case it was empty)
-        colony.atmosphere = atmosphere
+        # Update planet atmosphere reference (in case it was empty).
+        # PROJ-370 Phase 3: route through IPlanetMutator.
+        self._get_planet_mutator().set_atmosphere(colony, atmosphere)
 
         # Update surface_pressure as sum of all partial pressures
         total_pressure = sum(atmosphere.values())
         colony.surface_pressure = total_pressure
-
-    def _extract_atmo_modifier(self, comp) -> dict | list | None:
-        """Extract AtmosphereModifier ability data from a component entry."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-        abilities = extract_abilities_from_component(comp, self._registries)
-        data = abilities.get('AtmosphereModifier')
-        if isinstance(data, (dict, list)):
-            return data
-        return None

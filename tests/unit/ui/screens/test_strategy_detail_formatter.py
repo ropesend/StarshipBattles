@@ -110,13 +110,17 @@ class TestShowDetailedReport:
         system.primary_star.spectrum.microwave = 1e-6
         system.primary_star.spectrum.radio = 1e-9
 
-        with patch('game.ui.screens.strategy_detail_formatter.is_star_system', return_value=True):
-            with patch('game.ui.screens.strategy_detail_formatter.is_star', return_value=False):
-                with patch('game.ui.screens.strategy_detail_formatter.is_planet', return_value=False):
-                    with patch('game.ui.screens.strategy_detail_formatter.is_fleet', return_value=False):
-                        with patch('game.ui.screens.strategy_detail_formatter.is_warp_point', return_value=False):
-                            with patch('game.ui.screens.strategy_detail_formatter.is_sector_environment', return_value=False):
-                                formatter.show_detailed_report(system)
+        # PROJ-323 Task 2.26: flattened 6-level nested patch via patch.multiple
+        with patch.multiple(
+            'game.ui.screens.strategy_detail_formatter',
+            is_star_system=Mock(return_value=True),
+            is_star=Mock(return_value=False),
+            is_planet=Mock(return_value=False),
+            is_fleet=Mock(return_value=False),
+            is_warp_point=Mock(return_value=False),
+            is_sector_environment=Mock(return_value=False),
+        ):
+            formatter.show_detailed_report(system)
 
         assert formatter.current_selection is system
         formatter.graph_image.show.assert_called()
@@ -332,7 +336,7 @@ class TestGetHarvesterInfo:
 
     def test_inline_abilities(self):
         """Test extracts harvester from inline abilities."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         comp = {
             'id': 'harvester_01',
@@ -352,7 +356,7 @@ class TestGetHarvesterInfo:
 
     def test_no_harvester_ability(self):
         """Test returns None when no harvester ability."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         comp = {
             'id': 'weapon_01',
@@ -367,7 +371,7 @@ class TestGetHarvesterInfo:
 
     def test_registry_fallback(self):
         """Test falls back to registry lookup."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         comp = {'id': 'harvester_01'}
 
@@ -389,7 +393,7 @@ class TestGetHarvesterInfo:
 
     def test_non_dict_returns_none(self):
         """Test returns None for non-dict input."""
-        from game.strategy.services.planet_economy_projector import _get_harvester_info
+        from game.strategy.engine.harvesting_engine import get_harvester_info as _get_harvester_info
 
         result = _get_harvester_info("not a dict", None)
 

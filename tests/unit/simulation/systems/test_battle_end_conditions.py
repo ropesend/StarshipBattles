@@ -20,6 +20,7 @@ from game.simulation.systems.battle_end_conditions import (
     EscapeCondition,
     ShipDestroyedCondition,
     NeverCondition,
+    MassRatioCondition,
     AnyCondition,
     AllCondition,
     end_condition_from_dict,
@@ -537,51 +538,73 @@ class TestDeserialization:
 
 
 # ============================================================================
+# Debug Representations
+# ============================================================================
+
+@pytest.mark.parametrize(
+    "condition, expected",
+    [
+        (TickLimitCondition(max_ticks=100), "TickLimitCondition(max_ticks=100)"),
+        (
+            TeamEliminatedCondition(check_derelict=True),
+            "TeamEliminatedCondition(check_derelict=True)",
+        ),
+        (TeamIncapacitatedCondition(), "TeamIncapacitatedCondition()"),
+        (
+            EscapeCondition(escape_radius=500.0, escape_team=1),
+            "EscapeCondition(radius=500.0, center=(0.0, 0.0), team=1, all_ships=False)",
+        ),
+        (
+            ShipDestroyedCondition(ship_name="Flagship"),
+            "ShipDestroyedCondition(ship_name='Flagship')",
+        ),
+        (NeverCondition(), "NeverCondition()"),
+        (MassRatioCondition(threshold=0.25), "MassRatioCondition(threshold=0.25)"),
+        (
+            AnyCondition([TickLimitCondition(max_ticks=5)]),
+            "AnyCondition([TickLimitCondition(max_ticks=5)])",
+        ),
+        (
+            AllCondition([NeverCondition()]),
+            "AllCondition([NeverCondition()])",
+        ),
+    ],
+)
+def test_condition_repr_contract(condition, expected):
+    """Debug reprs should identify the condition type and key configuration."""
+    assert repr(condition) == expected
+
+
+# ============================================================================
 # Protocol Conformance
 # ============================================================================
 
+# PROJ-323 Task 3.20: collapsed 3 duplicate parametrize blocks into shared constant.
+_END_CONDITION_CASES = [
+    (TickLimitCondition, {"max_ticks": 100}),
+    (TeamEliminatedCondition, {}),
+    (TeamIncapacitatedCondition, {}),
+    (EscapeCondition, {"escape_radius": 5000.0}),
+    (ShipDestroyedCondition, {"ship_name": "Test"}),
+    (NeverCondition, {}),
+    (AnyCondition, {"conditions": []}),
+    (AllCondition, {"conditions": []}),
+]
+
+
+@pytest.mark.parametrize("cls,kwargs", _END_CONDITION_CASES)
 class TestProtocolConformance:
     """All condition classes implement IEndCondition."""
 
-    @pytest.mark.parametrize("cls,kwargs", [
-        (TickLimitCondition, {"max_ticks": 100}),
-        (TeamEliminatedCondition, {}),
-        (TeamIncapacitatedCondition, {}),
-        (EscapeCondition, {"escape_radius": 5000.0}),
-        (ShipDestroyedCondition, {"ship_name": "Test"}),
-        (NeverCondition, {}),
-        (AnyCondition, {"conditions": []}),
-        (AllCondition, {"conditions": []}),
-    ])
     def test_isinstance_check(self, cls, kwargs):
         cond = cls(**kwargs)
         assert isinstance(cond, IEndCondition)
 
-    @pytest.mark.parametrize("cls,kwargs", [
-        (TickLimitCondition, {"max_ticks": 100}),
-        (TeamEliminatedCondition, {}),
-        (TeamIncapacitatedCondition, {}),
-        (EscapeCondition, {"escape_radius": 5000.0}),
-        (ShipDestroyedCondition, {"ship_name": "Test"}),
-        (NeverCondition, {}),
-        (AnyCondition, {"conditions": []}),
-        (AllCondition, {"conditions": []}),
-    ])
     def test_has_description(self, cls, kwargs):
         cond = cls(**kwargs)
         assert isinstance(cond.description, str)
         assert len(cond.description) > 0
 
-    @pytest.mark.parametrize("cls,kwargs", [
-        (TickLimitCondition, {"max_ticks": 100}),
-        (TeamEliminatedCondition, {}),
-        (TeamIncapacitatedCondition, {}),
-        (EscapeCondition, {"escape_radius": 5000.0}),
-        (ShipDestroyedCondition, {"ship_name": "Test"}),
-        (NeverCondition, {}),
-        (AnyCondition, {"conditions": []}),
-        (AllCondition, {"conditions": []}),
-    ])
     def test_to_dict_has_type(self, cls, kwargs):
         cond = cls(**kwargs)
         data = cond.to_dict()

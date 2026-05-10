@@ -1,0 +1,32 @@
+[
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 179,
+    "content": "engine.replay_id: Optional[str] = None  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 189,
+    "content": "engine.replay_id = replay_id  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 50,
+    "content": "_replay_store.set_save_root(_Path(save_path))  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 59,
+    "content": "_replay_store.clear_save_root()  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/ui/panels/ship_detail_panel.py",
+    "line": 593,
+    "content": "label._proj315_color = color  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/ui/panels/ship_detail_panel.py",
+    "line": 594,
+    "content": "label._proj315_strike = strike  # type: ignore[attr-defined]"
+  }
+]

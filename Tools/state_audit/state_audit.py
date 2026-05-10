@@ -300,6 +300,8 @@ def run(force_output_dir: str | None = None) -> str:
     all_random_seeds: list[dict] = []
     get_default_count = 0
     ctx_access_count = 0
+    per_file_get_default: dict[str, int] = {}
+    per_file_ctx: dict[str, int] = {}
 
     for filepath in files:
         result = scan_file(filepath)
@@ -312,6 +314,8 @@ def run(force_output_dir: str | None = None) -> str:
         all_random_seeds.extend(result["random_seed_sites"])
         get_default_count += len(result["get_default_calls"])
         ctx_access_count += len(result["ctx_accesses"])
+        per_file_get_default[result["file"]] = len(result["get_default_calls"])
+        per_file_ctx[result["file"]] = len(result["ctx_accesses"])
 
     with open(os.path.join(raw_dir, "singleton_sites.json"), "w", encoding="utf-8") as f:
         json.dump(all_singleton_defs, f, indent=2)
@@ -336,6 +340,34 @@ def run(force_output_dir: str | None = None) -> str:
     manifest = _generate_manifest(rel_files, output_dir)
     with open(os.path.join(raw_dir, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
+
+    # Per-shard filtered copies (each shard's files determine which findings belong to it).
+    for sid, shard_info in manifest["shards"].items():
+        shard_files = set(shard_info["files"])
+
+        def _filter(items: list[dict]) -> list[dict]:
+            return [it for it in items if it.get("file") in shard_files]
+
+        with open(os.path.join(raw_dir, f"singleton_sites_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(all_singleton_defs), f, indent=2)
+        with open(os.path.join(raw_dir, f"module_mutables_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(all_module_mutables), f, indent=2)
+        with open(os.path.join(raw_dir, f"global_usages_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(all_global_usages), f, indent=2)
+        with open(os.path.join(raw_dir, f"class_mutable_defaults_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(all_class_mutable_defaults), f, indent=2)
+        with open(os.path.join(raw_dir, f"random_seed_sites_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(all_random_seeds), f, indent=2)
+
+        shard_get_default = sum(per_file_get_default.get(p, 0) for p in shard_files)
+        shard_ctx = sum(per_file_ctx.get(p, 0) for p in shard_files)
+        shard_ratio = {
+            "get_default_calls": shard_get_default,
+            "ctx_accesses": shard_ctx,
+            "ratio_ctx_percent": round(shard_ctx * 100 / max(shard_get_default + shard_ctx, 1), 1),
+        }
+        with open(os.path.join(raw_dir, f"ctx_usage_ratio_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(shard_ratio, f, indent=2)
 
     print(f"  Singleton definitions:     {len(all_singleton_defs)}")
     print(f"  Module-level mutables:     {len(all_module_mutables)}")

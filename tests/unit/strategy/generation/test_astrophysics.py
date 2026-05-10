@@ -1,8 +1,26 @@
 """
 Tests for astrophysics JSON loading and validation.
+
+PROJ-322 Task 2.10 (S04-CAT5-002): the 5 per-class `loader` fixtures
+were collapsed into a single module-scoped `loader` fixture. The disk
+load now runs once per module rather than once per test.
 """
 import pytest
 from pathlib import Path
+
+
+@pytest.fixture(scope='module')
+def loader():
+    """Module-scoped AstrophysicsLoader. Data is read-only — no test
+    mutates the returned dict, so module scope is safe."""
+    from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
+    return AstrophysicsLoader()
+
+
+@pytest.fixture(scope='module')
+def astrophysics_data(loader):
+    """Module-scoped result of `loader.load()`."""
+    return loader.load()
 
 
 class TestAstrophysicsLoader:
@@ -94,17 +112,10 @@ class TestAstrophysicsLoader:
 class TestMassDistributions:
     """Tests for mass distribution parameters."""
 
-    @pytest.fixture
-    def loader(self):
-        """Create loader instance."""
-        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
-        return AstrophysicsLoader()
-
-    @pytest.fixture
-    def mass_distributions(self, loader):
-        """Load mass distributions."""
-        data = loader.load()
-        return data["mass_distributions"]
+    @pytest.fixture(scope='class')
+    def mass_distributions(self, astrophysics_data):
+        """Mass distributions slice from the module-scoped data."""
+        return astrophysics_data["mass_distributions"]
 
     def test_rocky_has_log_normal_params(self, mass_distributions):
         """Rocky distribution should have log-normal parameters."""
@@ -131,17 +142,10 @@ class TestMassDistributions:
 class TestOrbitZones:
     """Tests for orbit zone parameters."""
 
-    @pytest.fixture
-    def loader(self):
-        """Create loader instance."""
-        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
-        return AstrophysicsLoader()
-
-    @pytest.fixture
-    def orbit_zones(self, loader):
-        """Load orbit zones."""
-        data = loader.load()
-        return data["orbit_zones"]
+    @pytest.fixture(scope='class')
+    def orbit_zones(self, astrophysics_data):
+        """Orbit zones slice from the module-scoped data."""
+        return astrophysics_data["orbit_zones"]
 
     def test_hot_zone_has_temperature_threshold(self, orbit_zones):
         """Hot zone should have a temperature threshold."""
@@ -164,17 +168,10 @@ class TestOrbitZones:
 class TestHabitableZone:
     """Tests for habitable zone calculations."""
 
-    @pytest.fixture
-    def loader(self):
-        """Create loader instance."""
-        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
-        return AstrophysicsLoader()
-
-    @pytest.fixture
-    def habitable_zone(self, loader):
-        """Load habitable zone config."""
-        data = loader.load()
-        return data["habitable_zone"]
+    @pytest.fixture(scope='class')
+    def habitable_zone(self, astrophysics_data):
+        """Habitable zone slice from the module-scoped data."""
+        return astrophysics_data["habitable_zone"]
 
     def test_factors_are_positive(self, habitable_zone):
         """HZ factors should be positive."""
@@ -189,17 +186,10 @@ class TestHabitableZone:
 class TestAtmosphereRetention:
     """Tests for atmosphere retention parameters."""
 
-    @pytest.fixture
-    def loader(self):
-        """Create loader instance."""
-        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
-        return AstrophysicsLoader()
-
-    @pytest.fixture
-    def atm_retention(self, loader):
-        """Load atmosphere retention config."""
-        data = loader.load()
-        return data["atmosphere_retention"]
+    @pytest.fixture(scope='class')
+    def atm_retention(self, astrophysics_data):
+        """Atmosphere-retention slice from the module-scoped data."""
+        return astrophysics_data["atmosphere_retention"]
 
     def test_has_escape_velocity_thresholds(self, atm_retention):
         """Should have escape velocity thresholds for gas retention."""
@@ -221,21 +211,13 @@ class TestAtmosphereRetention:
 class TestClassificationThresholds:
     """Tests for planet classification thresholds."""
 
-    @pytest.fixture
-    def loader(self):
-        """Create loader instance."""
-        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
-        return AstrophysicsLoader()
-
-    def test_contains_classification_section(self, loader):
+    def test_contains_classification_section(self, astrophysics_data):
         """Verify classification thresholds section exists."""
-        data = loader.load()
-        assert "classification" in data
+        assert "classification" in astrophysics_data
 
-    def test_classification_has_mass_thresholds(self, loader):
+    def test_classification_has_mass_thresholds(self, astrophysics_data):
         """Verify mass thresholds for planet classification."""
-        data = loader.load()
-        classification = data["classification"]
+        classification = astrophysics_data["classification"]
 
         assert "mass_thresholds" in classification
         thresholds = classification["mass_thresholds"]
@@ -244,10 +226,9 @@ class TestClassificationThresholds:
         assert "dwarf_max" in thresholds  # Upper limit for dwarf planets
         assert "giant_min" in thresholds  # Lower limit for gas giants
 
-    def test_classification_has_temperature_thresholds(self, loader):
+    def test_classification_has_temperature_thresholds(self, astrophysics_data):
         """Verify temperature thresholds for planet classification."""
-        data = loader.load()
-        classification = data["classification"]
+        classification = astrophysics_data["classification"]
 
         assert "temperature_thresholds" in classification
         thresholds = classification["temperature_thresholds"]

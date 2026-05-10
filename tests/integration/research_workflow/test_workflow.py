@@ -50,15 +50,25 @@ class TestFullResearchWorkflow:
             assert state.current_chance > initial_chance
 
     def test_multiple_turns_lead_to_breakthrough(self, simple_tech_tree, tracker):
-        """Sustained investment eventually leads to breakthrough."""
+        """Sustained investment eventually leads to breakthrough.
+
+        PROJ-323 Task 5.4: seed RNG so the assertion is deterministic.
+        With a seeded RNG, the (>=1 breakthrough) outcome is exact (no flake).
+        Verified against random.Random(42) at investment=200 over 100 turns.
+        """
+        from unittest.mock import patch
+        import random
+
         tracker.set_allocation('root_tech', 200)  # High investment
 
         breakthroughs = 0
-        for _ in range(100):
-            events = ResearchService.process_turn(simple_tech_tree, tracker)
-            breakthroughs += sum(1 for e in events if e['event'] == 'breakthrough')
+        seeded_rng = random.Random(42)
+        with patch('game.research.systems.research_service.random.Random', return_value=seeded_rng):
+            for _ in range(100):
+                events = ResearchService.process_turn(simple_tech_tree, tracker)
+                breakthroughs += sum(1 for e in events if e['event'] == 'breakthrough')
 
-        # With high investment over 100 turns, should have at least one breakthrough
+        # With seeded RNG: deterministic, no flake.
         assert breakthroughs >= 1
 
     def test_breakthrough_unlocks_dependent_node(self, simple_tech_tree, tracker):

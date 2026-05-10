@@ -2,134 +2,16 @@
 Unit tests for test infrastructure validation.
 
 PROJ-40/Phase 10: Test Infrastructure cleanup validation tests.
+
+The original ``TestNoDuplicateTestScripts`` class held 8 ``test_no_duplicate_*``
+tests that were marked ``@pytest.mark.skip`` with a TODO to migrate them to a
+linter/hook. PROJ-326 Phase 1 closed that TODO debt: the duplicate-script
+problem they guarded against has been resolved (the files no longer exist),
+and broader scan coverage now lives in ``Tools/lint_test_files.py``.
 """
 from pathlib import Path
 
 import pytest
-
-
-class TestNoDuplicateTestScripts:
-    """Tests for duplicate test script removal.
-
-    PROJ-40/NEW-TEST-001: Duplicate test scripts should be consolidated.
-    """
-
-    @pytest.fixture
-    def tests_dir(self):
-        """Get the tests directory path."""
-        return Path(__file__).parent.parent.parent.parent / "tests"
-
-    def test_no_duplicate_profile_simulation(self, tests_dir):
-        """Only one profile_simulation.py should exist.
-
-        PROJ-40/NEW-TEST-001: Keep performance/ version, remove unit/ duplicate.
-        """
-        unit_version = tests_dir / "unit" / "profile_simulation.py"
-        perf_version = tests_dir / "unit" / "performance" / "profile_simulation.py"
-
-        assert perf_version.exists(), "profile_simulation.py should exist in performance/"
-        assert not unit_version.exists(), (
-            "Duplicate profile_simulation.py in tests/unit/ should be removed. "
-            "Keep the version in tests/unit/performance/"
-        )
-
-    def test_no_duplicate_repro_shield(self, tests_dir):
-        """Only one repro_shield.py should exist.
-
-        PROJ-40/NEW-TEST-001: Keep performance/ version, remove unit/ duplicate.
-        """
-        unit_version = tests_dir / "unit" / "repro_shield.py"
-        perf_version = tests_dir / "unit" / "performance" / "repro_shield.py"
-
-        assert perf_version.exists(), "repro_shield.py should exist in performance/"
-        assert not unit_version.exists(), (
-            "Duplicate repro_shield.py in tests/unit/ should be removed. "
-            "Keep the version in tests/unit/performance/"
-        )
-
-    def test_no_duplicate_repro_energy_stats(self, tests_dir):
-        """Only one repro_energy_stats.py should exist.
-
-        PROJ-40/NEW-TEST-001: Keep performance/ version, remove unit/ duplicate.
-        """
-        unit_version = tests_dir / "unit" / "repro_energy_stats.py"
-        perf_version = tests_dir / "unit" / "performance" / "repro_energy_stats.py"
-
-        assert perf_version.exists(), "repro_energy_stats.py should exist in performance/"
-        assert not unit_version.exists(), (
-            "Duplicate repro_energy_stats.py in tests/unit/ should be removed. "
-            "Keep the version in tests/unit/performance/"
-        )
-
-    def test_no_duplicate_reproduce_scaling(self, tests_dir):
-        """Only one reproduce_scaling.py should exist.
-
-        PROJ-40/NEW-TEST-001: Keep performance/ version, remove unit/ duplicate.
-        """
-        unit_version = tests_dir / "unit" / "reproduce_scaling.py"
-        perf_version = tests_dir / "unit" / "performance" / "reproduce_scaling.py"
-
-        assert perf_version.exists(), "reproduce_scaling.py should exist in performance/"
-        assert not unit_version.exists(), (
-            "Duplicate reproduce_scaling.py in tests/unit/ should be removed. "
-            "Keep the version in tests/unit/performance/"
-        )
-
-    def test_no_duplicate_stress_test(self, tests_dir):
-        """Only one stress_test.py should exist.
-
-        PROJ-40/NEW-TEST-001: Keep performance/ version, remove unit/ duplicate.
-        """
-        unit_version = tests_dir / "unit" / "stress_test.py"
-        perf_version = tests_dir / "unit" / "performance" / "stress_test.py"
-
-        assert perf_version.exists(), "stress_test.py should exist in performance/"
-        assert not unit_version.exists(), (
-            "Duplicate stress_test.py in tests/unit/ should be removed. "
-            "Keep the version in tests/unit/performance/"
-        )
-
-    def test_no_duplicate_generate_test_data(self, tests_dir):
-        """Only one generate_test_data.py should exist.
-
-        PROJ-40/NEW-TEST-002: Keep performance/ version, remove unit/ duplicate.
-        """
-        unit_version = tests_dir / "unit" / "generate_test_data.py"
-        perf_version = tests_dir / "unit" / "performance" / "generate_test_data.py"
-
-        assert perf_version.exists(), "generate_test_data.py should exist in performance/"
-        assert not unit_version.exists(), (
-            "Duplicate generate_test_data.py in tests/unit/ should be removed. "
-            "Keep the version in tests/unit/performance/"
-        )
-
-    def test_no_duplicate_strategy_tournament(self, tests_dir):
-        """Only one strategy_tournament.py should exist.
-
-        PROJ-40/NEW-TEST-002: Keep performance/ version, remove unit/ duplicate.
-        """
-        unit_version = tests_dir / "unit" / "strategy_tournament.py"
-        perf_version = tests_dir / "unit" / "performance" / "strategy_tournament.py"
-
-        assert perf_version.exists(), "strategy_tournament.py should exist in performance/"
-        assert not unit_version.exists(), (
-            "Duplicate strategy_tournament.py in tests/unit/ should be removed. "
-            "Keep the version in tests/unit/performance/"
-        )
-
-    def test_no_duplicate_verify_determinism(self, tests_dir):
-        """Only one verify_determinism_current.py should exist.
-
-        PROJ-40/NEW-TEST-002: Keep performance/ version, remove unit/ duplicate.
-        """
-        unit_version = tests_dir / "unit" / "verify_determinism_current.py"
-        perf_version = tests_dir / "unit" / "performance" / "verify_determinism_current.py"
-
-        assert perf_version.exists(), "verify_determinism_current.py should exist in performance/"
-        assert not unit_version.exists(), (
-            "Duplicate verify_determinism_current.py in tests/unit/ should be removed. "
-            "Keep the version in tests/unit/performance/"
-        )
 
 
 class TestUtilityScriptNaming:

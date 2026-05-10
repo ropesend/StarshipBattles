@@ -17,7 +17,6 @@ from game.ui.config import UIConfig
 from game.ui.screens.strategy_fleet_command_router import FleetCommandRouter
 from game.ui.screens.strategy_click_dispatcher import ClickModeDispatcher
 from game.ui.screens.strategy_ui_action_router import UIActionRouter
-from game.core.hex_math import pixel_to_hex
 
 class StrategyInputHandler:
     """Routes input events for strategy scene.
@@ -51,8 +50,14 @@ class StrategyInputHandler:
         Args:
             event: Pygame event to process
         """
-        # If build queue screen is open, route events to it first
-        if self.scene.build_queue_screen is not None:
+        # If build queue screen is open, route events to it first.
+        # PROJ-376 Phase 2: gate on is_visible() — the manager caches the
+        # screen across opens, so "instance exists" no longer implies
+        # "currently displayed".
+        if (
+            self.scene.build_queue_screen is not None
+            and self.scene.build_queue_screen.is_visible()
+        ):
             self.scene.build_queue_screen.handle_event(event)
             return
 
@@ -203,5 +208,4 @@ class StrategyInputHandler:
 
         # Hover Logic
         mx, my = pygame.mouse.get_pos()
-        world_pos = self.scene.camera.screen_to_world((mx, my))
-        self.scene.hover_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+        self.scene.hover_hex = self.scene.camera.hex_at_screen(mx, my, self.scene.hex_size)

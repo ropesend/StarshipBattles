@@ -58,23 +58,6 @@ class TestProductionQueue:
         assert item["type"] == "ship"
         assert item["turns_remaining"] == 1
 
-    def test_production_progress(self, production_setup):
-        """Verify turns decrement and items complete."""
-        planet = production_setup['planet']
-        planet.add_production("Colony Ship", 1)
-
-        # Process Turn 1 (Should complete it)
-        # Note: TurnEngine needs to process production now.
-        # We need a dummy 'galaxy' or just pass None if not needed yet,
-        # but spawning a fleet might require Galaxy context for location?
-        # For now, let's assume Fleet spawn location is just planet global location.
-        # But Planet lacks global location context in isolation.
-        # We might need to mock Galaxy or pass global offset.
-
-        # Workaround: Manually handle spawn logic in Engine or Mock it?
-        # Let's see how TurnEngine handles it.
-        pass
-
     def test_build_queue_dict_format(self, production_setup):
         """Verify new queue format with type/design_id/turns."""
         planet = production_setup['planet']

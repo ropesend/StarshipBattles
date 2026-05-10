@@ -145,15 +145,18 @@ class TestTickProcessing:
         # PROJ-36: Set up mock resource engine
         turn_engine._resource_engine = MagicMock()
 
-        # PROJ-36: Use movement_engine directly (wrapper removed)
-        with patch.object(turn_engine.movement_engine, 'calculate_next_hex') as mock_calc:
-            mock_calc.return_value = None
+        # PROJ-322 Task 3.13 (S05-CAT6-003 / APC-003-F04): inject a
+        # fake movement_engine via attribute replacement instead of
+        # patching the dispatch internal `calculate_next_hex`.
+        fake_movement = MagicMock()
+        fake_movement.calculate_next_hex.return_value = None
+        turn_engine._movement_engine = fake_movement  # backing field of read-only property
 
-            # Tick 10 should trigger movement check (10 % 10 == 0)
-            turn_engine._process_tick(10, [mock_empire], mock_galaxy)
+        # Tick 10 should trigger movement check (10 % 10 == 0)
+        turn_engine._process_tick(10, [mock_empire], mock_galaxy)
 
-            # Tick 5 should also check but still call calculate_next_hex
-            turn_engine._process_tick(5, [mock_empire], mock_galaxy)
+        # Tick 5 should also check but still call calculate_next_hex
+        turn_engine._process_tick(5, [mock_empire], mock_galaxy)
 
     def test_zero_speed_fleet_never_moves(self, turn_engine, mock_empire, mock_galaxy):
         """Fleet with zero speed never moves."""
@@ -173,12 +176,14 @@ class TestTickProcessing:
         turn_engine._conflict_engine = MagicMock()
         turn_engine._resource_engine = MagicMock()
 
-        # PROJ-36: Use movement_engine directly (wrapper removed)
-        with patch.object(turn_engine.movement_engine, 'calculate_next_hex') as mock_calc:
-            for tick in range(1, 11):  # Check first 10 ticks
-                turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
+        # PROJ-322 Task 3.13 (S05-CAT6-003): inject fake movement_engine.
+        fake_movement = MagicMock()
+        turn_engine._movement_engine = fake_movement  # backing field of read-only property
 
-            mock_calc.assert_not_called()
+        for tick in range(1, 11):  # Check first 10 ticks
+            turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
+
+        fake_movement.calculate_next_hex.assert_not_called()
 
     def test_movement_consumes_resources(self, turn_engine, mock_empire, mock_galaxy):
         """Movement consumes fleet resources."""

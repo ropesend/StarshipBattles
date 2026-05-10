@@ -7,6 +7,7 @@ from enum import Enum
 from unittest.mock import MagicMock
 from game.strategy.engine.commands import IssueColonizeCommand, CommandType
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.core.validation import ValidationResult
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
@@ -35,7 +36,7 @@ def create_mock_fleet_with_colony_pod(fleet_id, location, planet_type_str="CONTI
 
 class TestCommands:
     def test_issue_colonize_command_validation_success(self, fresh_registries):
-        turn_engine = TurnEngine(registries=fresh_registries)
+        turn_engine = build_test_turn_engine(fresh_registries)
         galaxy = MagicMock(spec=Galaxy)
 
         # PROJ-55: Use fleet with colony pod matching planet type
@@ -73,7 +74,7 @@ class TestCommands:
         assert res.errors == []
 
     def test_issue_colonize_command_validation_fail_owned(self, fresh_registries):
-        turn_engine = TurnEngine(registries=fresh_registries)
+        turn_engine = build_test_turn_engine(fresh_registries)
         galaxy = MagicMock(spec=Galaxy)
         fleet = MagicMock(spec=Fleet)
         fleet.id = 101
@@ -105,7 +106,7 @@ class TestCommands:
         assert res.error_code == "ALREADY_OWNED"
 
     def test_issue_colonize_command_validation_fail_location(self, fresh_registries):
-        turn_engine = TurnEngine(registries=fresh_registries)
+        turn_engine = build_test_turn_engine(fresh_registries)
         galaxy = MagicMock(spec=Galaxy)
         fleet = MagicMock(spec=Fleet)
         fleet.id = 101
@@ -137,7 +138,7 @@ class TestCommands:
         assert res.error_code == "WRONG_LOCATION"
 
     def test_issue_colonize_command_any_planet(self, fresh_registries):
-        turn_engine = TurnEngine(registries=fresh_registries)
+        turn_engine = build_test_turn_engine(fresh_registries)
         galaxy = MagicMock(spec=Galaxy)
         fleet = MagicMock(spec=Fleet)
         fleet.id = 101
@@ -185,17 +186,6 @@ class TestCommands:
         res = turn_engine.validate_colonize_order(galaxy, fleet, None)
         assert not res.is_valid
         assert res.error_code == "NO_CANDIDATES"
-
-
-class TestGameSessionCommands:
-    def test_handle_command(self):
-        # Mock Session logic
-        # Ideally we test GameSession class but it has complex init.
-        # We can implement a partial mock or just test the dispatch logic if we extracted it.
-        # Given we modified GameSession, let's try to mock it properly if possible or just rely on TurnEngine tests
-        # since GameSession just delegates.
-        # But we added `handle_command` in GameSession.
-        pass
 
 
 class TestIssueInterceptCommand:

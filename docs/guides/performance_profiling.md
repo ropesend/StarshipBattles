@@ -1,44 +1,37 @@
 # Performance Profiling
 
-Use this guide when investigating Starship Battles performance with Scalene. Profiling is evidence gathering; it does not relax architecture, TDD, dependency, or maintainability rules.
+> **Last verified:** 2026-05-08 - Checked against `Tools/profiling/run_scalene.py`, `Tools/profiling/README.md`, `game/core/profiling.py`, and the profiling workflow tests.
 
-## Policy
+Use Scalene for evidence, not permission to bypass engineering rules. Write or identify a failing or characterization test first, profile a repeatable scenario, fix root causes only, and rerun the same test/profile before claiming improvement. Do not add compatibility shims, hidden globals, cross-layer imports, monkey patches, benchmark-only branches, or duplicate profiling paths.
 
-- Write or identify a failing/characterization test before changing behavior.
-- Profile a repeatable scenario before optimizing.
-- Do not optimize from a single profile. Re-run enough times to separate stable hotspots from noise.
-- Prefer root-cause fixes: algorithmic improvements, scoped caching with clear invalidation, reduced duplicate work, and fewer unnecessary allocations or copies.
-- Do not add compatibility shims, hidden globals, cross-layer imports, monkey patches, or special-case benchmark paths.
-- Keep profiles and notes out of source control unless they are small, intentional documentation artifacts.
+## Wrapper Contract
 
-## Tooling
+- Wrapper: `Tools/profiling/run_scalene.py`; it is a developer tool and is not imported by production code.
+- Output: `output/profiles/scalene/` as JSON, ignored by git.
+- Notes template: `Tools/profiling/workflows/profile-pass-template.md`.
+- Dependency: `scalene>=2.2.1` from `requirements-dev.txt`.
+- Root discovery walks upward from the script until it finds `game/` and `data/`; do not replace this with machine-specific paths.
+- Default `--profile-only` is `game,combat_lab`, keeping Scalene focused on project code.
+- Default output names are `<timestamp>-<scenario>-<mode>.json`; use `--timestamp` for comparable reruns.
+- Default profiles are reduced hotspot views; use `--no-reduced-profile` only when line coverage matters.
+- `--dry-run` prints the exact Scalene command and output path without executing it.
+- If Scalene is missing, the wrapper exits with code `2` and points to `pip install -r requirements-dev.txt`.
 
-Scalene is a dev dependency in `requirements-dev.txt`. Install it through the project venv:
+Setup:
 
 ```powershell
-.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
 ```
 
-The wrapper lives at `Tools/profiling/run_scalene.py`. It writes profile JSON files under `output/profiles/scalene/`, which is ignored by git.
+## Commands
 
-## How Scalene Helps
+Dry-run first when constructing a new pass:
 
-Scalene samples execution rather than tracing every call. It reports line-level and function-level CPU data, with time split into Python, native/library, and system/I/O categories. In full mode it also reports memory growth, likely leaks, and copy volume.
+```powershell
+python Tools/profiling/run_scalene.py pytest --mode cpu --pytest-target tests/path/to/test.py --pytest-filter test_name --dry-run
+```
 
-Use the split to decide what kind of fix is reasonable:
-
-| Signal | Meaning | Typical action |
-|--------|---------|----------------|
-| Python time | Our Python code is doing repeated or expensive work | Improve algorithm, data structure, caching boundary, or loop shape |
-| Native time | C/native library calls dominate | Reduce call count, conversions, surface work, or array churn |
-| System time | I/O, waiting, sleeping, or OS work dominates | Batch or defer I/O, remove accidental blocking |
-| Memory growth | Allocations accumulate | Reuse objects, narrow lifetimes, fix ownership |
-| Copy volume | Data is copied across Python/native boundaries | Avoid conversions and duplicate buffers |
-
-## Standard Pass
-
-Start CPU-only:
+CPU mode is the standard first pass:
 
 ```powershell
 python Tools/profiling/run_scalene.py pytest --mode cpu --pytest-target tests/performance
@@ -47,11 +40,19 @@ python Tools/profiling/run_scalene.py app --mode cpu
 python Tools/profiling/run_scalene.py combat-lab --mode cpu
 ```
 
-Use full mode only after CPU results suggest allocation, leak, or copying questions:
+Use full mode only after CPU results raise allocation, leak, or copy-volume questions:
 
 ```powershell
 python Tools/profiling/run_scalene.py app --mode full
 python Tools/profiling/run_scalene.py pytest --mode full --pytest-target tests/path/to/test.py --pytest-filter test_name
+```
+
+Pass scenario-specific arguments after `--`:
+
+```powershell
+python Tools/profiling/run_scalene.py pytest --mode cpu --pytest-target tests/unit -- --maxfail=1
+python Tools/profiling/run_scalene.py app --mode cpu -- --force-resolution
+python Tools/profiling/run_scalene.py combat-lab --mode cpu -- --filter smoke
 ```
 
 Render results:
@@ -63,38 +64,68 @@ python -m scalene view output/profiles/scalene/<profile>.json --cli
 
 ## Scenario Selection
 
-Prefer focused scenarios:
+Prefer narrow, deterministic scenarios:
 
-- Battle simulation: use a single deterministic battle test or a Combat Lab scenario.
-- Strategy turns: profile a test or script that processes a representative turn.
-- Galaxy generation: profile one fixed-size generation path.
-- UI startup or rendering: profile `launcher.py` only when the workflow needs real Pygame behavior.
-- Asset processing: profile the relevant `Tools/` script directly or create a targeted test first.
+- Battle simulation: one deterministic battle test or Combat Lab scenario.
+- Strategy turns: a representative turn-processing test or script.
+- Galaxy generation: one fixed-size generation path such as `tests/performance/bench_galaxy_planet_star.py`.
+- UI startup/rendering: `app` scenario uses `launcher.py`; override with `--entrypoint` only when profiling a different real-Pygame path.
+- Asset processing: profile the relevant `Tools/` script or add a targeted test first.
 
-Avoid starting with the full suite. Full-suite profiling usually measures pytest and setup overhead more than game behavior.
+Avoid profiling the full suite first; it usually measures pytest and setup overhead more than game behavior. The pytest scenario adds `-n 0` unless xdist is explicitly requested, because Scalene profiles process trees and pytest-xdist makes output noisy. Use `--allow-xdist` only for a multiprocessing investigation.
 
-The pytest scenario adds `-n 0` by default. Scalene profiles a process tree, while pytest-xdist fans work out to worker processes; disabling xdist keeps profile output focused and avoids worker bootstrap issues on paths with spaces. Use `--allow-xdist` only for an explicit multiprocessing investigation.
+On Windows, avoid tests whose main behavior is spawning subprocesses. Scalene wraps the Python executable during profiled runs, so subprocess harness tests can fail for reasons unrelated to game performance.
 
-On Windows, avoid choosing tests whose main behavior is spawning subprocesses. Scalene temporarily wraps the Python executable for profiled runs, and subprocess-focused tests can fail for reasons unrelated to the game code. Profile the underlying game workflow directly instead.
+## Interpretation
 
-## Interpreting Results
+| Signal | Meaning | Typical action |
+|--------|---------|----------------|
+| Python time | Project Python code repeats or does expensive work | Improve algorithm, data shape, cache boundary, or loop |
+| Native time | C/native library calls dominate | Reduce call count, conversions, surface work, or array churn |
+| System time | I/O, waiting, sleeping, or OS work dominates | Batch/defer I/O and remove accidental blocking |
+| Memory growth | Allocations accumulate | Reuse objects, narrow lifetimes, or fix ownership |
+| Copy volume | Data crosses Python/native boundaries too often | Avoid conversions and duplicate buffers |
 
-1. Find the first hotspot that explains the symptom.
-2. Classify it as Python, native, system, memory, or copy-volume dominated.
-3. Check whether the hotspot belongs to the layer you plan to change.
-4. Add or update a test that protects the intended behavior or performance-sensitive contract.
-5. Implement the smallest maintainable root-cause fix.
-6. Re-run the focused test and repeat the same profiling scenario.
-7. Record the before/after result in the ticket, project, or `Reviews/results/` when the finding is durable.
+Loop: find the first stable hotspot that explains the symptom, classify it, confirm the target layer, protect the behavior or contract with a focused test, fix the root cause, rerun the same test/profile, and record before/after notes when the result should be durable.
 
-Use `Tools/profiling/workflows/profile-pass-template.md` for notes.
+Do not optimize from a single profile. Re-run enough times to separate stable hotspots from test-load variance / noise.
 
-## Relationship To Internal Profiling
+## Internal Profiler
 
-`game/core/profiling.py` remains useful for named in-game action timing and UI-visible profiling state. Scalene answers a different question: which source lines, allocations, native calls, and copies dominate a repeatable run. Use the internal profiler to identify broad app actions and Scalene to investigate specific implementation hotspots.
+`game/core/profiling.py` is for named in-game action timing and UI-visible profiling state. `Profiler` is created through `ApplicationContext` or explicit tests, while `set_default_profiler()` supports `profile_action()` and `profile_block()` convenience hooks. Records contain `name`, `duration_ms`, `timestamp`, and `metadata`; `save_history()` writes via `game.core.json_utils` to `Paths.PROFILING_HISTORY`.
 
-## References
+Use the internal profiler to identify broad actions and startup phases. Use Scalene to find source-line/function CPU, allocation, native-call, and copy-volume hotspots. Startup instrumentation writes greppable names like `startup: <subphase>` into `ctx.profiler.records` and `[startup] <subphase>: X.XXs` log lines.
 
-- Scalene PyPI: https://pypi.org/project/scalene/
-- Scalene GitHub: https://github.com/plasma-umass/scalene
-- Scalene paper: https://arxiv.org/abs/2006.03879
+## Extension Recipes
+
+Add a new wrapper scenario:
+
+1. Add `_build_<scenario>_command(args) -> ProfileCommand` in `Tools/profiling/run_scalene.py`.
+2. Add a subparser in `_build_parser()` and call `_add_common_args()` so `--mode`, `--output-dir`, `--profile-only`, `--timestamp`, `--no-reduced-profile`, and `--dry-run` stay consistent.
+3. Route it in `build_command()` and use a stable scenario name for output files.
+4. Add or update `tests/unit/tools/test_scalene_profiling_workflow.py`.
+5. Update `Tools/profiling/README.md`, this guide, and the repo-local profiling skill if the workflow changes.
+
+Add a durable performance gate:
+
+1. Prefer deterministic count/contract assertions over exact wall-clock thresholds.
+2. Put broad perf gates under `tests/performance/`; put behavior-preserving characterization tests near the layer they protect.
+3. If timing is unavoidable, keep thresholds loose, document variance, and print measured values for visibility.
+4. Run the focused test directly before using it as a profiling target.
+
+Add internal action timing:
+
+1. Use `ctx.profiler` at composition roots or `profile_block()` / `profile_action()` for named spans.
+2. Keep names stable and grep-friendly.
+3. Include metadata only when it helps correlate user-visible scenarios.
+4. Do not add internal timing as a substitute for a Scalene pass when line-level hotspot evidence is needed.
+
+## Verification Commands
+
+```powershell
+python Tools/profiling/run_scalene.py pytest --mode cpu --pytest-target tests/unit/core --pytest-filter sample_case --timestamp 20260428T000000 --dry-run
+pytest tests/unit/tools/test_scalene_profiling_workflow.py
+pytest tests/unit/core/profiling tests/unit/test_app_bootstrap_profiling.py
+pytest tests/performance
+```
+

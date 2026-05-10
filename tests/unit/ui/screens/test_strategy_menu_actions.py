@@ -19,8 +19,11 @@ def _make_strategy_screen():
     """
     from game.ui.screens.strategy_screen import StrategyScreen
 
-    with patch.object(StrategyScreen, '__init__', lambda self, *a, **kw: None):
-        screen = StrategyScreen.__new__(StrategyScreen)
+    # PROJ-327 Phase 4: bypass-init via __new__ only (no need to patch
+    # __init__ to a no-op — __new__ skips it entirely). This file's tests
+    # only exercise menu-action routing and do not touch the 8 sub-object
+    # slots, so MockStrategyScreenComposition is not needed here.
+    screen = StrategyScreen.__new__(StrategyScreen)
 
     scene_callback = MagicMock()
     ui_mock = MagicMock()
@@ -272,7 +275,7 @@ class TestAppStrategyActionHandler:
         game.height = 1080
         game.running = True
         game.strategy_scene = MagicMock()
-        game._menu_scene = MagicMock()
+        game.menu_scene = MagicMock()
 
         return game
 
@@ -302,7 +305,7 @@ class TestAppStrategyActionHandler:
         from game.core.constants import GameState
         game._handle_strategy_action("quit_to_menu")
 
-        game._switch_scene.assert_called_once_with(GameState.MENU, game._menu_scene)
+        game._switch_scene.assert_called_once_with(GameState.MENU, game.menu_scene)
 
     def test_quit_game_handler(self):
         """'quit_game' action should set running to False."""
@@ -322,3 +325,22 @@ class TestAppStrategyActionHandler:
         game._handle_strategy_action("open_builder", context_data={"empire": MagicMock()})
 
         game.start_builder.assert_called_once()
+
+    def test_launch_replay_handler_calls_start_replay(self):
+        """'launch_replay' action should delegate to Game.start_replay (PROJ-368)."""
+        game = self._make_game()
+        game.start_replay = MagicMock()
+        record = MagicMock()
+
+        game._handle_strategy_action("launch_replay", record=record)
+
+        game.start_replay.assert_called_once_with(record)
+
+    def test_launch_replay_handler_no_record_is_noop(self):
+        """'launch_replay' without a record kwarg should be a no-op (PROJ-368)."""
+        game = self._make_game()
+        game.start_replay = MagicMock()
+
+        game._handle_strategy_action("launch_replay")
+
+        game.start_replay.assert_not_called()

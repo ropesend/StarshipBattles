@@ -200,10 +200,19 @@ class TestActionTimeResolverDefaults:
         OrderType.LOAD_POPULATION,
         OrderType.UNLOAD_POPULATION,
         OrderType.JOIN_FLEET,
-        OrderType.WARP,
     ])
     def test_default_action_time_orders(self, order_type, mock_component_registry):
-        """Orders without ability-based action_time default to 1."""
+        """Orders without ability-based action_time default to 1.
+
+        PROJ-371 Phase 2 (silent-drift cleanup): ``OrderType.WARP`` was
+        removed from this parametrize. The previous local
+        ``MOVEMENT_ORDER_TYPES`` frozenset at action_time_resolver.py:48
+        omitted ``WARP`` (silently drifted from the canonical set in
+        ``data/order_types.py:58-62``); this test pinned the buggy
+        behavior. The canonical movement set includes ``WARP``, so the
+        resolver now returns 0 for it (handled by the movement engine,
+        not the action engine).
+        """
         ship = MagicMock()
         ship.design_data = {'layers': {'core': []}}
         fleet = MagicMock(spec=Fleet)
@@ -215,6 +224,27 @@ class TestActionTimeResolverDefaults:
         )
 
         assert result == 1
+
+
+    def test_warp_returns_0_movement_engine_handled(self, mock_component_registry):
+        """WARP is a movement order — resolver short-circuits to 0.
+
+        PROJ-371 Phase 2: corrects silent drift between the (buggy)
+        local frozenset and the canonical ``MOVEMENT_ORDER_TYPES`` in
+        ``data/order_types.py``. WARP is now handled consistently as
+        movement.
+        """
+        ship = MagicMock()
+        ship.design_data = {'layers': {'core': []}}
+        fleet = MagicMock(spec=Fleet)
+        fleet.ships = [ship]
+        order = Order(OrderType.WARP, target=None)
+
+        result = ActionTimeResolver.resolve_action_time(
+            fleet, order, mock_component_registry
+        )
+
+        assert result == 0
 
     def test_move_returns_0(self, mock_component_registry):
         """MOVE order returns 0 (handled by movement engine, not action engine)."""
@@ -243,6 +273,96 @@ class TestActionTimeResolverDefaults:
         result = ActionTimeResolver.resolve_action_time(
             fleet, order, mock_component_registry
         )
+
+        assert result == 1
+
+
+class TestActionTimeResolverPlanetAbilities:
+    """Tests for generic planet ability activation/deactivation timing."""
+
+    def _planet_with_facilities(self):
+        active_facility = MagicMock()
+        active_facility.instance_id = "shield-facility"
+        active_facility.is_operational = True
+        active_facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'shield_generator',
+                    'abilities': {
+                        'PlanetaryShield': {
+                            'activation_time': 50,
+                            'deactivation_time': 10,
+                        }
+                    },
+                }]
+            }
+        }
+
+        inactive_facility = MagicMock()
+        inactive_facility.instance_id = "inactive-facility"
+        inactive_facility.is_operational = False
+        inactive_facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'inactive_generator',
+                    'abilities': {
+                        'PlanetaryShield': {
+                            'activation_time': 99,
+                            'deactivation_time': 88,
+                        }
+                    },
+                }]
+            }
+        }
+
+        planet = MagicMock()
+        planet.facilities = [inactive_facility, active_facility]
+        return planet
+
+    def test_activate_ability_uses_planet_activation_time(self):
+        planet = self._planet_with_facilities()
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={'ability_name': 'PlanetaryShield'},
+        )
+
+        result = ActionTimeResolver.resolve_action_time(planet, order, {})
+
+        assert result == 50
+
+    def test_deactivate_ability_uses_planet_deactivation_time(self):
+        planet = self._planet_with_facilities()
+        order = Order(
+            OrderType.DEACTIVATE_ABILITY,
+            target={'ability_name': 'PlanetaryShield'},
+        )
+
+        result = ActionTimeResolver.resolve_action_time(planet, order, {})
+
+        assert result == 10
+
+    def test_activate_ability_missing_name_defaults_to_one(self):
+        planet = self._planet_with_facilities()
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={'facility_instance_id': 'shield-facility'},
+        )
+
+        result = ActionTimeResolver.resolve_action_time(planet, order, {})
+
+        assert result == 1
+
+    def test_activate_ability_filters_by_facility_instance_id(self):
+        planet = self._planet_with_facilities()
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={
+                'ability_name': 'PlanetaryShield',
+                'facility_instance_id': 'inactive-facility',
+            },
+        )
+
+        result = ActionTimeResolver.resolve_action_time(planet, order, {})
 
         assert result == 1
 

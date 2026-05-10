@@ -15,7 +15,7 @@ from game.ui.screens.build_queue_viewmodel import (
     BuildQueueScreenViewModel,
     BuildQueueScreenEvents,
 )
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 
 # ---------------------------------------------------------------------------
@@ -24,8 +24,8 @@ from game.ui.screens.builder.event_bus import EventBus
 
 @pytest.fixture
 def event_bus():
-    """Create a fresh EventBus for each test."""
-    return EventBus()
+    """Create a fresh WorkshopEventBus for each test."""
+    return WorkshopEventBus()
 
 
 @pytest.fixture

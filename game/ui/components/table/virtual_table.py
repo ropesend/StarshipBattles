@@ -97,6 +97,11 @@ class VirtualTable:
         self._last_scroll_pct: float = -1.0
         self._last_row_count: int = -1
 
+        # PROJ-373 Phase 3: cache last-rebuild dimensions so subsequent
+        # rebuild_row_pool() calls can skip the (~1.5s) tear-down/rebuild
+        # when the pool is already correctly sized.
+        self._last_pool_dims: Optional[Tuple[int, int]] = None
+
         # Build UI
         self._build_containers()
         self._header = TableHeader(
@@ -140,8 +145,45 @@ class VirtualTable:
             anchors={"left": "right", "right": "right", "top": "top", "bottom": "bottom"},
         )
 
+    def _pool_dims_changed(self) -> bool:
+        """PROJ-373 Phase 3: True if list-panel dims changed since last build.
+
+        Compares the current cache fingerprint against ``self._last_pool_dims``.
+        A no-op rebuild when the fingerprint is unchanged keeps the existing
+        widget pool alive and saves ~1.5s of widget tear-down/recreate per
+        yard switch (when reached via the public ``rebuild_row_pool()`` entry
+        point).
+
+        Cache fingerprint contents (PROJ-373 review MAJ-001 + MAJ-002):
+            - ``panel_rect.height`` — drives ``visible_rows`` count.
+            - ``panel_rect.width`` — row backgrounds are sized to it
+              (``virtual_table.py`` row-bg rect uses ``panel_rect.width``);
+              a width-only resize must invalidate.
+            - ``self._row_height``.
+            - Visible-column fingerprint as ``((col_id, col_width), …)`` —
+              ``column_manager.toggle_column()`` and ``swap_column()`` mutate
+              the visible-column list without changing panel dimensions, and
+              every production caller of ``rebuild_row_pool()``
+              (``data_list_window_mixin``, ``event_log_window``,
+              ``fleet_report_window``, ``empire_build_queue_window``)
+              expects the rebuild to reflect the new column set.
+        """
+        panel_rect = self._list_view_panel.get_relative_rect()
+        visible_cols = self._column_manager.get_visible_columns()
+        col_fp = tuple((c["id"], c.get("width", 100)) for c in visible_cols)
+        current = (panel_rect.height, panel_rect.width, self._row_height, col_fp)
+        return self._last_pool_dims != current
+
     def _rebuild_row_pool(self) -> None:
-        """Build the row pool for virtual scrolling."""
+        """Build the row pool for virtual scrolling.
+
+        PROJ-373 Phase 3: Early-return when dimensions are unchanged AND a
+        pool already exists. The constructor calls this once with no prior
+        pool, so the first invocation always builds.
+        """
+        if self._row_pool and not self._pool_dims_changed():
+            return
+
         # Clear existing rows
         for row in self._row_pool:
             if "bg" in row and row["bg"]:
@@ -161,6 +203,12 @@ class VirtualTable:
         visible_rows = max(1, (panel_rect.height // self._row_height) + 2)
 
         visible_cols = self._column_manager.get_visible_columns()
+        # PROJ-373 Phase 3: cache the fingerprint this pool was built for.
+        # Must match the tuple shape in `_pool_dims_changed`.
+        col_fp = tuple((c["id"], c.get("width", 100)) for c in visible_cols)
+        self._last_pool_dims = (
+            panel_rect.height, panel_rect.width, self._row_height, col_fp,
+        )
 
         for i in range(visible_rows):
             y = i * self._row_height
@@ -495,7 +543,13 @@ class VirtualTable:
         self._header.rebuild()
 
     def rebuild_row_pool(self) -> None:
-        """Public method to rebuild the row pool."""
+        """Public method to rebuild the row pool.
+
+        Note: Reads ``_list_view_panel.get_relative_rect()`` for dimension
+        fingerprinting. Callers MUST ensure pygame_gui has completed its
+        layout pass before calling — typically by running ``manager.update(0.0)``
+        beforehand. PROJ-373 review MIN-003.
+        """
         self._rebuild_row_pool()
 
     def force_update(self) -> None:

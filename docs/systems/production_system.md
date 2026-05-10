@@ -1,377 +1,528 @@
-# Production System
+# Production System - Compact Agent Reference
 
-> **Last verified:** 2026-04-27 — FEAT-17: per-yard `construction_queue_paused` flag; gate added at the top of `process_construction_tick`; `BuildQueueSource.is_paused` propagation skips paused yards in Treasury + Planet-detail forecasts.
+> **Last verified:** 2026-05-08 - Balanced against `docs/systems/production_system.md`, the compact ALT draft, and current production/queue/spawn code paths.
 
-This document describes the unified construction/production system: build queues, tick-based resource consumption, turn estimation, and item spawning. The same `ProductionEngine` algorithm handles all build contexts — planet base queues (complexes), planet shipyard facility queues (ships), and fleet space yard queues (ships and complexes).
+This is the strategy-layer construction pipeline. Players queue designs in the
+Build Queue UI; `ProductionEngine` consumes local resources over 100 ticks per
+turn; `ProductionSpawner` materializes completed items. One queue algorithm
+handles planet base yards, planet shipyard facilities, and fleet space yards.
 
----
+Core invariant: `Planet`, `Fleet`, and `PlanetaryFacility` own queue data only.
+They do not process production. Queue ticking, affordability, progress updates,
+completion, and spawn dispatch belong to `ProductionEngine` and
+`ProductionSpawner`.
 
-## Overview
+## Build Contexts
 
-Players design items in the Workshop (ships, complexes, satellites, fighters), queue them for construction via the Build Queue UI, and `ProductionEngine` consumes resources per tick (100 ticks/turn) until completion. The system is context-agnostic: one algorithm processes all queue types with parameterized production rates and context-specific spawning.
+| Context | Queue | Builds | Rate source | Requirement |
+|---|---|---|---|---|
+| Planet base queue | `Planet.construction_queue` | Complexes and drop pods only by policy/UI; engine stops on non-complex queue head | `planetary_yard` default rates, size scaled in queue discovery | Operational facility with `PlanetaryYard` ability |
+| Planet shipyard facility | `PlanetaryFacility.construction_queue` | Ships, fighters, satellites, complexes | Facility `SpaceShipyard` rates or defaults, size/bonus scaled | `facility.is_shipyard` |
+| Fleet space yard | `Fleet.construction_queue` | Ships, fighters, satellites, complexes | `space_shipyard` default rate times yard count in engine | Fleet has BUILD order and `fleet.capabilities.has_space_shipyard` |
 
-### Build Contexts
+Default rates are loaded from `data/production_rates.json` via
+`game/strategy/data/build_queue_source.py`:
 
-| Context | Queue Source | Can Build | Production Rate | Requirement |
-|---------|-------------|-----------|-----------------|-------------|
-| Planet base queue | `planet.construction_queue` | Complexes only | `planetary_yard` (2000/resource/turn) | Facility with `PlanetaryYard` ability |
-| Planet shipyard facility | `facility.construction_queue` | Ships + complexes | Per-facility rate (default 30000, with bonus) | `SpaceShipyard` ability on facility |
-| Fleet space yard | `fleet.construction_queue` | Ships + complexes | `space_shipyard` rate × yard count | `SpaceShipyard` ability on fleet ship |
+| Yard | Per-turn rate for metals, organics, radioactives, vapors, exotics |
+|---|---|
+| `planetary_yard` | 2000 each |
+| `space_shipyard` | 30000 each |
 
-### User Workflow
+Rates are per turn. `ProductionEngine` divides by `TICKS_PER_TURN == 100`
+when calculating per-tick spend.
 
-```
-1. Design item in Workshop (ship hull, planetary complex, fighter, satellite)
-2. Queue item at a build location via Build Queue UI
-3. turns_remaining pre-calculated using estimate_build_turns() (limiting-resource formula)
-4. ProductionEngine consumes resources per tick (100 ticks/turn)
-5. When resource cost fully consumed, item spawns:
-   - Complex → PlanetaryFacility on planet
-   - Ship from planet shipyard → new Fleet at planet
-   - Ship from fleet yard → added to existing fleet
-   - Complex from fleet yard → PlanetaryFacility on planet at fleet's hex
-6. Shipyard facilities enable ship construction at that colony
-```
+## Main Flow
 
----
+1. A design is created or loaded by the Workshop/design library.
+2. UI or facade dispatches `AddToConstructionQueueCommand`.
+3. `AddToConstructionQueueCommandHandler` resolves the actual queue, validates
+   the design, calculates total cost, and initializes `turns_remaining`.
+4. `TurnEngine.process_turn()` runs 100 sub-ticks; phase `0e` calls
+   `ProductionEngine.process_construction_tick(...)`.
+5. The engine consumes resources from the build location, updates
+   `resources_consumed`, and completes items when every cost is paid.
+6. `ProductionSpawner` creates facilities, fleets, ships, or staging-yard items.
 
-## Architecture
+## Key Data Shapes
 
-### Layer Separation
-
-- **Strategy layer:** `ProductionEngine`, `BuildQueueSource`, `PlanetaryFacility`, queue data on Planet/Fleet
-- **UI layer:** `BuildQueueScreen` / `EmpireBuildQueueWindow` manage queue display and category filtering
-- **Simulation layer:** Component abilities (`ResourceHarvesterAbility`, `SpaceShipyardAbility`)
-
-### Key Design Principles
-
-1. **Unified algorithm** -- one `_process_queue_tick_dynamic()` handles all queue types
-2. **Parameterized behavior** -- production rate and spawning context vary, not the algorithm
-3. **Tick-based production** -- resources consumed dynamically each tick, not turn-counting
-4. **Facilities are instances** -- each has a UUID, design_data, and operational status
-5. **Parallel construction** -- each shipyard facility has its own queue processed independently
-6. **Data holders, not processors** -- Planet, Fleet, and PlanetaryFacility hold queue lists; ProductionEngine processes them
-
----
-
-## Data Models
-
-### PlanetaryFacility
-
-**File:** `game/strategy/data/planetary_facility.py`
+`PlanetaryFacility` lives in `game/strategy/data/planetary_facility.py`:
 
 ```python
-@dataclass
-class PlanetaryFacility:
-    instance_id: str              # UUID
-    design_id: str                # Reference to design file
-    name: str                     # Facility name
-    design_data: Dict[str, Any]   # Full complex design JSON
-    is_operational: bool = True
-    construction_queue: List[Dict[str, Any]] = field(default_factory=list)
-    consumable_levels: Dict[str, float] = field(default_factory=dict)
+PlanetaryFacility(
+    instance_id: str,
+    design_id: str,
+    name: str,
+    design_data: dict,
+    is_operational: bool = True,
+    construction_queue: list[dict] = [],
+    construction_queue_paused: bool = False,
+    consumable_levels: dict[str, float] = {},
+    component_states: dict[str, dict] = {},
+)
 ```
 
-Key properties and methods:
-- `is_shipyard` -- checks design_data for `space_shipyard` component or `SpaceShipyard` ability
-- `get_fuel_storage()` / `add_fuel()` / `withdraw_fuel()` -- fuel resource management
-- `get_max_fuel_storage(registries)` -- scans components for `ResourceStorage` abilities
-- `from_dict(data)` -- deserialization with required key validation
+Important contracts:
 
-### Planet Integration
+- `to_dict()` / `from_dict()` persist queue, pause flag, consumables, and
+  component activation state.
+- `is_shipyard` returns true only for operational facilities whose design data
+  contains component id `space_shipyard` or inline `SpaceShipyard`.
+- Fuel helpers are `get_fuel_storage()`, `get_max_fuel_storage(registries)`,
+  `add_fuel(amount, registries)`, and `withdraw_fuel(amount)`.
+- Facility component activation state uses `ComponentActivationState`; the
+  legacy `set_component_active()` / `is_component_active()` wrappers still
+  translate to that model.
 
-`Planet.facilities` is a list of `PlanetaryFacility`. The `has_space_shipyard` property checks all operational facilities for a shipyard component.
-
-### Construction Queue Item Format
+Queue item format created by `AddToConstructionQueueCommandHandler`:
 
 ```python
 {
-    "design_id": "mining_complex_mk1",
-    "type": "complex",             # or "ship", "fighter", "satellite"
-    "total_cost": {"metals": 50, "organics": 10},
-    "resources_consumed": {"metals": 0, "organics": 0},
-    "turns_remaining": 2.5         # Pre-calculated at queue-add time, updated each tick
+    "design_id": "design_key",
+    "type": "ship" | "fighter" | "satellite" | "complex" | "drop_pod",
+    "turns_remaining": 0.75,
+    "total_cost": {"metals": 50.0},
+    "resources_consumed": {"metals": 0.0},
+    "target_planet_id": 12,  # optional, fleet-built complexes
 }
 ```
 
-`turns_remaining` is pre-calculated when the item is added to the queue using
-`estimate_build_turns()` from `build_queue_source.py`, which applies the same
-limiting-resource formula as `ProductionEngine`. This ensures the UI shows a
-correct estimate immediately, before the first production tick recalculates it.
+`total_cost` is mandatory for production ticks. If a queue item lacks it,
+`ProductionEngine._validate_queue_item()` logs a warning and skips the item.
+`resources_consumed` persists partial progress and is not reset by pausing.
 
----
+## Queue Discovery and Rates
 
-## Production Model (Tick-Based)
+File: `game/strategy/data/build_queue_source.py`.
 
-**Files:**
-- `game/strategy/engine/production_engine.py` -- queue processing and resource consumption
-- `game/strategy/engine/production_spawner.py` -- entity spawning on completion
-- `game/strategy/engine/production_math.py` -- shared limiting-resource formula
+`BuildQueueSource` is the consumer-facing descriptor used by UI, command
+helpers, and forecasts:
 
-Production uses dynamic resource consumption per tick, not turn-counting.
-
-### Per-Turn Flow (100 ticks)
-
-```
-TurnEngine.process_turn()
-  |
-  +-- 100-tick subturn loop:
-        |
-        ProductionEngine.process_construction_tick(tick, empires, galaxy)
-          |
-          For each empire:
-            1. Base queue (complexes only) -- planetary yard rate
-            2. Facility queues (each shipyard independently) -- per-facility rate
-            3. Fleet queues (if fleet has space yards) -- rate * yard count
+```python
+BuildQueueSource(
+    queue_id: str,
+    display_name: str,
+    owner_entity: Any,          # Planet or Fleet
+    construction_queue: list,   # reference to the real queue list
+    can_build_ships: bool,
+    can_build_complexes: bool,
+    context_type: "planet" | "fleet",
+    build_rate: dict[str, float],
+    planet_id: int | None = None,
+    is_paused: bool = False,
+)
 ```
 
-### Per-Yard Pause Flag (FEAT-17)
+Authoritative helpers:
 
-Each of the three yard types carries an independent `construction_queue_paused: bool` flag on its owning entity:
+- `collect_build_queues_at_hex(hex_coord, galaxy, empire, registries=None)`
+- `collect_all_build_queues_for_empire(empire, registries=None)`
+- `get_production_rate_for_queue(entity, queue_id)`
+- `estimate_build_turns(total_cost, production_rate)`
+- `get_default_production_rates(yard_type)`
+- `forecast_queue_turn_spend(queue, build_rate)` in
+  `game/strategy/engine/construction_forecast.py`
+- `colony_has_planetary_yard(colony, registries=None)`
 
-| Yard | Owner | Flag location |
-|------|-------|---------------|
-| Planetary yard (base queue) | `Planet` | `Planet.construction_queue_paused` |
-| Shipyard facility queue | `PlanetaryFacility` | `PlanetaryFacility.construction_queue_paused` |
-| Fleet space-yard queue | `Fleet` | `Fleet.construction_queue_paused` |
+Do not duplicate turn-estimate or forecast logic in UI, commands, or economy
+projections.
 
-`process_construction_tick` checks this flag at each of its three iteration sites and skips ticking that queue when paused — no resource draw, no `resources_consumed` increment, no shortage logging. The queue list itself is unaffected: add/remove/reorder still work via the construction-queue commands. The currently-progressing item retains its `resources_consumed` while paused; unpausing resumes from that saved progress on the next tick.
+Current rate-modifier boundaries:
 
-Toggle is dispatched via `SetBuildQueuePausedCommand` (entity_id + entity_type + paused + optional facility queue_id) routed through the standard command pipeline. The handler resolves the queue *owner* via `BaseCommandHandler._resolve_queue_owner` (sibling to `_resolve_queue`) and flips the flag.
+- `resolve_size_multiplier(comp)` applies `simple_size_mount` scaling for
+  `PlanetaryYard` and `SpaceShipyard` components.
+- `SpaceShipyard` ability data may define `production_rates` and
+  `construction_speed_bonus`; `_get_facility_production_rates()` applies both.
+- `BuildRateBooster` is applied by `_collect_planet_sources()` when both
+  `galaxy` and `empire` context are provided. `collect_all_build_queues_for_empire()`
+  currently does not pass those context args, and `ProductionEngine` resolves
+  rates directly rather than through `BuildQueueSource`.
+- Habitability scaling is applied inside `ProductionEngine` only when that
+  engine was constructed with a `race_registry`.
 
-Forecast helpers — `EmpireEconomyCalculator._aggregate_construction_expenses` (Treasury) and `PlanetEconomyProjector._project_yard_drain` (Planet detail "Yard" row) — also skip paused queues so the forecasted drain matches what the engine will actually consume next turn. The skip is at the iteration site; `forecast_queue_turn_spend` itself remains a pure function of (queue, build_rate). Propagation to those helpers happens via `BuildQueueSource.is_paused`, populated by `_collect_planet_sources` / `_collect_fleet_sources` from the owning entity at collection time.
+Those boundaries matter: do not document booster or habitability effects as
+unconditional engine behavior unless the caller path actually injects the
+needed context.
 
-AI controllers do not toggle pause — the flag is player-driven; defaults to `False` everywhere.
+## Production Tick Flow
 
-### Dynamic Resource Consumption Algorithm
+Files:
 
-Each tick, `_process_queue_tick_dynamic()` processes the head of each queue:
+- `game/strategy/engine/production_engine.py`
+- `game/strategy/engine/production_math.py`
+- `game/strategy/engine/production_spawner.py`
+- `game/strategy/engine/construction_forecast.py`
 
-1. **Validate** -- check type constraints (complex-only queue, fleet location).
-2. **Calculate remaining cost** -- `total_cost - resources_consumed` per resource.
-3. **Find limiting resource** -- resource requiring the most ticks at current production rate.
-4. **Calculate tick expenditure** -- `min(available_capacity, ticks_needed)`.
-5. **Check affordability** -- `planet.has_stockpile(cost_this_step)` for planet construction, `fleet.has_cargo_resources()` for fleet construction.
-6. **Consume resources** -- deduct from local stockpile (planet) or cargo (fleet), add to `resources_consumed`.
-7. **Check completion** -- if all `resources_consumed >= total_cost`, spawn the item.
-8. **Carry-over** -- remaining tick capacity continues to next queue item (mid-tick completion).
+Entry point:
 
-Items can complete mid-turn when their full resource cost is consumed. Multiple items can complete in a single turn if the first finishes early.
+```python
+ProductionEngine.process_construction_tick(
+    tick: int,
+    empires: list[Empire],
+    galaxy: Galaxy | None,
+    save_path: str | None = None,
+) -> None
+```
 
-### Production Rates
+`ProductionEngine.__init__(*, registries, event_bus=None, race_registry=None)`
+requires `registries`; `registries=None` raises `ValidationException`.
+Before mutating state, `_validate_tick_inputs()` requires every empire to have
+a non-`None` `resource_pool`.
 
-Production rates are per-turn (divided by 100 for per-tick). Rates come from `BuildQueueSource`:
-- `"planetary_yard"` -- default rate for base colony queue, scaled by PlanetaryYard component's `simple_size_mount` modifier
-- Per-facility rates for shipyard queues, scaled by SpaceShipyard component's `simple_size_mount` modifier
-- `"fleet_space_yard"` -- rate for fleet construction, multiplied by yard count
+Per empire, the engine processes:
 
-**Size mount scaling:** Production rates are multiplied by the `simple_size_mount` modifier value on the yard component. A planetary yard at size 0.2 produces at 20% of the base rate (e.g., 400/resource/turn instead of 2000). Resolution is handled by `modifier_resolver.resolve_size_multiplier()` in `game/strategy/services/modifier_resolver.py`.
+1. Planet base queues that are non-empty, unpaused, and backed by an operational
+   `PlanetaryYard`.
+2. Each unpaused operational shipyard facility queue independently.
+3. Fleet queues only when `fleet.is_building` is true and
+   `fleet.capabilities.has_space_shipyard` is true.
 
-### Constants
+Constants:
 
-| Constant | Value | Defined In | Purpose |
-|----------|-------|------------|---------|
-| `TICKS_PER_TURN` | 100 | `turn_engine.py` (imported by ProductionEngine) | Ticks per game turn |
-| `TICK_CAPACITY_EPSILON` | 0.0001 | `production_engine.py` | Minimum tick capacity to continue |
-| `COMPLETION_EPSILON` | 0.001 | `production_engine.py` | Float tolerance for completion check |
-| `MAX_QUEUE_ITERATIONS` | 10 | `production_engine.py` | Safety limit per tick |
+- `TICKS_PER_TURN = 100` from `game/strategy/engine/turn_engine.py`
+- `TICK_CAPACITY_EPSILON = 0.0001`
+- `COMPLETION_EPSILON = 0.001`
+- `MAX_QUEUE_ITERATIONS = 10` per queue tick safety cap
 
----
+Important queue behavior:
+
+- Planet base queue runs with `is_complex_only=True`; a non-complex head item
+  returns `STOP`, leaving the queue in place.
+- Invalid non-dict items return `SKIP` and are removed.
+- Fleet-built complexes require `galaxy` and at least one planet at the
+  fleet's current global hex; otherwise the queue stops for that tick.
+- Multiple completions can happen in one tick because unused tick capacity
+  carries to the next queue head.
+- Shortages log at most one `RESOURCE_SHORTAGE` production event per item per
+  turn via `_shortage_logged`; flags are cleared on tick 1.
+
+## Tick Expenditure Formula
+
+Single-source helper:
+
+```python
+find_limiting_resource_ticks(
+    remaining_cost,
+    rate_per_turn,
+    ticks_per_turn=100,
+)
+```
+
+For each required resource:
+
+```text
+rate_per_tick = rate_per_turn[resource] / ticks_per_turn
+ticks_needed = remaining_cost[resource] / rate_per_tick
+max_ticks_needed = max(ticks_needed for all required resources)
+```
+
+If any required resource has no positive rate, the helper returns `None` and
+the queue stops.
+
+Within one production tick:
+
+```text
+ticks_to_spend = min(tick_capacity, max_ticks_needed)
+cost_this_step[resource] =
+    min(rate_per_turn[resource] / 100 * ticks_to_spend, remaining_cost[resource])
+```
+
+The engine checks affordability, consumes resources, subtracts tick capacity,
+updates `turns_remaining`, and completes the item when every consumed amount is
+within `COMPLETION_EPSILON` of its total.
+
+Forecasting uses the same helper with `ticks_per_turn=1`, treating one turn as
+capacity `1.0`.
+
+## Resource Sources
+
+Production consumes resources at the build location:
+
+- Planet contexts use `Planet.context_type == "planet"`,
+  `has_stockpile()`, `consume_from_stockpile()`, and `get_stockpile()`.
+- Fleet contexts use `Fleet.context_type == "fleet"`,
+  `has_cargo_resources()`, `consume_cargo_resource()`, and
+  `get_cargo_resource()`.
+- Empire pool is only a fallback when the build context has no recognized
+  `context_type`.
+
+Do not reintroduce the old "empire pool pays for everything" assumption.
+
+## Pause Contract
+
+Each yard owner carries its own `construction_queue_paused: bool`:
+
+| Queue | Owner field |
+|---|---|
+| Planetary base queue | `Planet.construction_queue_paused` |
+| Facility shipyard queue | `PlanetaryFacility.construction_queue_paused` |
+| Fleet space-yard queue | `Fleet.construction_queue_paused` |
+
+When paused, the engine skips the queue entirely: no resource draw, no
+`resources_consumed` change, no shortage logging. Queue CRUD still works, and
+existing progress resumes after unpause.
+
+Toggle command:
+
+```python
+SetBuildQueuePausedCommand(
+    entity_id: int,
+    entity_type: BuildEntityType,  # "planet" or "fleet"
+    paused: bool,
+    queue_id: str | None = None,
+)
+```
+
+Handler: `SetBuildQueuePausedCommandHandler` in
+`game/strategy/engine/handlers/construction_queue.py`. It resolves the queue
+owner with `BaseCommandHandler._resolve_queue_owner()`. Fleet pause mutation
+routes through `session.fleet_mutator.set_construction_queue_paused(...)`;
+planet and facility owners set the flag directly.
+
+`BuildQueueSource.is_paused` is a snapshot populated during queue collection.
+Treasury, planet-detail forecasts, and Empire Build Queue status should read
+that field rather than reaching back through `owner_entity`.
 
 ## Spawning
 
-**File:** `game/strategy/engine/production_spawner.py`
+`ProductionEngine._complete_item()` removes the queue head and delegates:
 
-PROJ-233: Spawning logic is in `ProductionSpawner`, a separate class from `ProductionEngine`. `ProductionEngine._complete_item()` delegates to `ProductionSpawner.spawn_completed_item()`, which dispatches based on item type and build context:
-
-| Item Type | Build Context | Spawner Method | Result |
-|-----------|---------------|----------------|--------|
-| Complex | Planet base queue | `_create_and_place_facility()` | `PlanetaryFacility` on planet |
-| Ship/Satellite | Planet shipyard | `_spawn_ship()` | New `Fleet` at planet |
-| Fighter | Planet shipyard | `_spawn_to_staging_yard()` | Planet staging yard |
-| Drop Pod | Planet base queue | `_spawn_to_staging_yard()` | Planet staging yard |
-
-**Staging yard transfer:** Players transfer pods from staging yard to ships via the Transfer dialog (T key). Pods are discrete `carried_items`, not bulk cargo.
-| Ship/Satellite | Fleet yard | `_spawn_fleet_ship()` | Added to existing fleet |
-| Complex | Fleet yard | `_spawn_fleet_complex()` | `PlanetaryFacility` on planet at fleet's hex |
-
-### Complex Spawning (`_create_and_place_facility` / `_spawn_fleet_complex`)
-
-1. Load design_data from `DesignLibrary(save_path, empire_id)`.
-2. Create `PlanetaryFacility` with UUID, design_data, `is_operational=True`.
-3. Append to `planet.facilities` (fleet variant finds planet at fleet's hex).
-4. Log `COMPLEX_BUILT` event.
-
-### Ship Spawning (`_spawn_ship` / `_spawn_fleet_ship`)
-
-1. Load design_data from `DesignLibrary`.
-2. Create `ShipInstance` via `ShipInstance.create()`.
-3. Planet variant: create new `Fleet` at planet location, add ship, register via `empire.add_fleet()`.
-4. Fleet variant: add ship directly to existing fleet.
-5. Log `SHIP_BUILT` event.
-
-### Mass Calculation
-
-Mass is calculated by `calculate_design_stats()` (`game/simulation/entities/ship_design_stats.py`), which uses `Ship.from_dict()` + `recalculate_stats()` as the single source of truth for all ship stats including mass. The production spawner delegates to this function.
-
----
-
-## Design Validation
-
-`DesignValidator` (`game/strategy/services/design_validator.py`) validates designs before build queue insertion. Checks crew housing, life support, and component existence. Invalid designs are blocked from the build queue.
-
----
-
-## Planetary Complex Components
-
-Six components restricted to `"Planetary Complex"` vehicle type, defined in `data/components.json`:
-
-| Component | Ability |
-|-----------|---------|
-| `metal_harvester` | `ResourceHarvesterAbility` (metals) |
-| `organic_harvester` | `ResourceHarvesterAbility` (organics) |
-| `vapor_harvester` | `ResourceHarvesterAbility` (vapors) |
-| `radioactive_harvester` | `ResourceHarvesterAbility` (radioactives) |
-| `exotic_harvester` | `ResourceHarvesterAbility` (exotics) |
-| `space_shipyard` | `SpaceShipyardAbility` |
-
-**Ability classes:** `game/simulation/components/abilities/harvester.py`
-
----
-
-## UI
-
-### BuildQueueScreen
-
-**File:** `game/ui/screens/build_queue_screen.py`
-
-Full-screen UI with a multi-column refactored layout designed for high-density information and filtering:
-
-- **Left Column (600px width):**
-    - **Context Report:** Planet details (population, production rates, complexes) or fleet info (top).
-    - **Categories & Roles Filter Panel:** Scrollable vertical lists for category filtering (Ships, Complexes, etc.) and design role filtering (Any, Line Combatant, etc.).
-    - **Build Yards Selector:** Scrollable list of available build yards at the current location (Planetary Yard, Shipyards, etc.) to switch between active queues.
-- **Available Designs (580px width):**
-    - Scrollable list of designs filtered by the selected category and role.
-    - Each design row includes a **"+" button** to instantly add it to the active build queue.
-- **Build Queue Panel:**
-    - `VirtualTable` displaying the active queue.
-    - **Leftmost Controls:** Each row includes **"+" / "-"** buttons to adjust quantity and **"Up" / "Down"** arrows for immediate reordering. The original "Actions" column has been removed in favor of these integrated controls.
-    - Display columns: Order, Item Name, Turns, Per-turn spend, and Remaining cost.
-- **Design Report (Far Right):**
-    - Detailed breakdown of stats, abilities, and costs for the selected design.
-
-Accessed from the strategy screen via the "Build Yard" button on owned planets or the keyboard shortcut. All columns support vertical scrollbars via `UIScrollingContainer` when content exceeds visible bounds.
-
----
-
-## Queue Discovery and Rate Resolution
-
-**File:** `game/strategy/data/build_queue_source.py`
-
-`BuildQueueSource` is a dataclass that abstracts away the origin of a queue (planet base, facility, fleet). The UI and command handlers work with `BuildQueueSource` objects rather than distinguishing entity types directly.
-
-### Key Functions
-
-| Function | Purpose |
-|----------|---------|
-| `collect_build_queues_at_hex()` | All queue sources at a hex for an empire |
-| `collect_all_build_queues_for_empire()` | All queue sources across entire empire |
-| `get_production_rate_for_queue(entity, queue_id)` | Rate for a specific queue (used by command handler) |
-| `estimate_build_turns(total_cost, rate)` | Limiting-resource turn estimate (single source of truth) |
-| `get_default_production_rates(yard_type)` | Load rates from `data/production_rates.json` |
-| `forecast_queue_turn_spend(queue, build_rate)` (`game/strategy/engine/construction_forecast.py`) | Per-item per-turn resource spend for a queue. The canonical "actual draw" function — mirrors `ProductionEngine._calculate_tick_expenditure × 100`. Consumed by `EmpireEconomyCalculator._aggregate_construction_expenses` (Treasury) and `PlanetEconomyProjector._project_yard_drain` (Planet detail "Yard" row). |
-
-**Note:** `estimate_build_turns()` and `get_production_rate_for_queue()` are the authoritative utilities for turn estimation. The command handler delegates to these — do not duplicate this logic elsewhere. For "what will this queue actually consume next turn?" use `forecast_queue_turn_spend` — both Treasury and Planet detail UI flow through it (BUG-120 fix 2026-04-27 unified Planet detail onto this helper after years of summing yard capacity instead).
-
-**FEAT-17:** `BuildQueueSource.is_paused` is populated by `_collect_planet_sources` / `_collect_fleet_sources` from the owner's `construction_queue_paused`. Read this on the source rather than reaching back through `owner_entity` — the source is the consumer-facing contract.
-
----
-
-## Habitability Multiplier (PROJ-285)
-
-A colony's harvest AND production rates scale with how livable the planet is for its resident species. Hostile worlds produce slowly; ideal worlds produce at full rate.
-
-> **PROJ-290 UI hooks:** the Empire Treasury shows aggregated populace upkeep as a dedicated "Population Upkeep" expense row (hidden on fresh game); the planet detail panel shows a 0-100 habitability score per resident species when the selected planet is uncolonized. Both surfaces share PROJ-286's `EconomyConfig.population_consumption` + PROJ-288's `PlanetEconomyProjector` as their source data. See [strategy_layer.md § Treasury & Planet Detail UI Integration (PROJ-290)](strategy_layer.md#treasury--planet-detail-ui-integration-proj-290).
-
-### Formula
-
-```
-effective_rate = base_rate * booster_mult * habitability_mult
+```python
+ProductionSpawner.spawn_completed_item(
+    item,
+    empire,
+    colony_or_fleet,
+    galaxy,
+    save_path,
+    tick,
+)
 ```
 
-`habitability_mult` comes from `planet_habitability_multiplier(planet, race_registry)` in `game/strategy/formulas/colony_output.py` — a **population-weighted mean** of `score_planet_for_race(planet, race_config)` across every species on the colony:
+Dispatch:
 
+| Item/context | Spawner path | Result |
+|---|---|---|
+| Planet complex | `_create_and_place_facility()` | Adds `PlanetaryFacility` to planet |
+| Planet `drop_pod` or `fighter` | `_spawn_to_staging_yard()` | Adds discrete staging-yard item to planet |
+| Planet ship/satellite/other | `_spawn_ship()` | Creates a new `Fleet` at planet location |
+| Fleet complex | `_spawn_fleet_complex()` then `_create_and_place_facility()` | Adds facility to a planet at fleet hex, honoring optional `target_planet_id` |
+| Fleet ship/fighter/satellite/other | `_spawn_fleet_ship()` | Adds `ShipInstance` to existing fleet |
+
+Design loading uses `DesignLibrary(save_path, empire.id)`. Ship creation uses
+`ShipInstance.create(..., registries=self._registries)`, and successful ship
+creation increments the design library built count.
+
+Facility placement routes through `PlanetWriteService` via
+`ProductionSpawner._get_planet_mutator().add_facility(planet, facility)`.
+Do not append directly to `planet.facilities` in new spawn code.
+
+Mass for staging-yard items is calculated through
+`calculate_design_stats(design_data, registries)` in
+`game/simulation/entities/ship_design_stats.py`, preserving the simulation
+`Ship` path as the single source of truth for stats.
+
+Events:
+
+- Complex completion logs `EventType.COMPLEX_BUILT`.
+- Ship completion logs `EventType.SHIP_BUILT`.
+- Event location fields use galaxy/system lookup when available.
+
+## Habitability
+
+Formula intent:
+
+```text
+effective_rate = base_rate * habitability_mult
+habitability_mult = sum(pop.count * score_for_pop_race) / sum(pop.count)
 ```
-mult = Σ (pop.count * score_planet_for_race(planet, race_for(pop))) / Σ pop.count
+
+Current production-code contract:
+
+- `ProductionEngine._get_habitability_mult(owner)` returns `1.0` unless
+  `race_registry` is injected and the owner exposes
+  `get_cached_habitability_multiplier`.
+- Fleets always receive multiplier `1.0`.
+- `Planet.get_cached_habitability_multiplier(race_registry, turn)` delegates
+  to `get_default_planet_habitability_service()` or a default
+  `PlanetHabitabilityService`.
+- The cache fields on `Planet` are transient and are not serialized.
+- `TurnEngine` calls `set_current_turn(session.turn_number)` on production and
+  harvesting engines when the method exists.
+
+Formula edge cases live in `game/strategy/formulas/colony_output.py`:
+uncolonized planets, zero-population colonies, and missing race configs return
+or effectively preserve `1.0`; zero-count species and missing race IDs are
+excluded from numerator and denominator.
+
+Warning: current `TurnEngineConfig.create_default()` threads `race_registry` to
+population/happiness engines but constructs `ProductionEngine` with registries
+and event bus only. Tests and custom wiring can inject production
+`race_registry`; do not assume all production ticks are habitability-scaled.
+
+## Commands and Validation
+
+Command dataclasses live in `game/strategy/engine/commands/__init__.py`:
+
+- `AddToConstructionQueueCommand`
+- `RemoveFromConstructionQueueCommand`
+- `ReorderConstructionQueueCommand`
+- `SetBuildQueuePausedCommand`
+
+Handlers live in `game/strategy/engine/handlers/construction_queue.py`.
+The old broad reference to `game/strategy/engine/command_handlers.py` is stale
+for construction queue work; that shim was deleted in PROJ-383.
+
+Add flow:
+
+1. Resolve planet/fleet with `_resolve_build_entity(session, entity_id, entity_type)`.
+2. Resolve the actual queue with `_resolve_queue(entity, queue_id)`.
+3. Validate insert index.
+4. Validate design through `DesignValidator(session.registries)` when design
+   data is available. Errors and warnings block insertion.
+5. Calculate cost with
+   `DesignCostCalculator.calculate_total_cost(load_result.data, session.registries)`.
+6. Resolve queue rate with `get_production_rate_for_queue(...)`.
+7. Initialize `turns_remaining` with `estimate_build_turns(...)`.
+8. Insert or append the queue item.
+
+Remove/reorder use the same queue resolution path and validate indexes.
+
+## UI Surfaces
+
+Primary UI files:
+
+- `game/ui/screens/build_queue_screen.py`
+- `game/ui/screens/empire_build_queue_window.py`
+- `game/ui/panels/build_queue_controller.py`
+- `game/ui/components/table/virtual_table.py`
+- `game/ui/screens/transfer_dialog.py`
+
+The Build Queue UI works with `BuildQueueSource`, not direct planet/fleet
+branching. It supports yard selection, available-design filtering, queue
+quantity/reorder controls, per-item turns, per-turn spend, remaining cost, and
+pause/resume.
+
+`BuildQueueScreen._dispatch_toggle_pause_command()` flips the active source's
+pause state, dispatches `SetBuildQueuePausedCommand`, and recollects sources so
+`is_paused` reflects the mutated owner. The renderer refreshes the pause button
+label on selection and queue refresh.
+
+Staging-yard pods/items are discrete `carried_items`, not bulk cargo. Transfer
+to ships happens through the Transfer dialog.
+
+## Components and Abilities
+
+Key ability implementations:
+
+- Yard and harvester abilities:
+  `game/simulation/components/abilities/harvester.py`
+- Component data: `data/components.json`
+- Shared ability scanning/stacking:
+  `game/strategy/services/strategic_ability_scanner.py`
+- Size mount scaling:
+  `game/strategy/services/modifier_resolver.py`
+
+Current notable production-related component IDs in `data/components.json`:
+
+| ID | Role |
+|---|---|
+| `metal_harvester`, `organic_harvester`, `vapor_harvester`, `radioactive_harvester`, `exotic_harvester` | Resource harvesting components |
+| `resource_vault_metals`, `resource_vault_organics`, `resource_vault_vapors`, `resource_vault_radioactives`, `resource_vault_exotics` | Local storage |
+| `space_shipyard` | Shipyard facility or ship component |
+| `planetary_yard_module`, `starter_colony_hub` | Planetary yard providers |
+| `build_rate_booster_sector`, `build_rate_booster_system` | Build-rate booster examples |
+
+Warning: designs often store component IDs rather than inline abilities.
+`colony_has_planetary_yard()` handles registry lookup for `PlanetaryYard`.
+`PlanetaryFacility.is_shipyard` currently detects only component id
+`space_shipyard` or inline `SpaceShipyard`; a new registry-only shipyard
+component needs that central detection contract updated.
+
+## Extension Recipes
+
+Adding a new build context:
+
+1. Add a data holder with `construction_queue`,
+   `construction_queue_paused`, resource access methods, and a clear
+   `context_type`.
+2. Extend queue discovery to emit `BuildQueueSource` with a live queue-list
+   reference.
+3. Add central rate resolution in `build_queue_source.py` or a sibling helper.
+4. Reuse `_process_queue_tick_dynamic`; do not fork the tick algorithm.
+5. Add spawn behavior to `ProductionSpawner` only if completion materializes a
+   new entity type.
+6. Add command-handler queue resolution support if existing `_resolve_queue()`
+   and `_resolve_queue_owner()` cannot find the new queue.
+
+Adding a new yard ability or component:
+
+1. Prefer data-driven component abilities and shared properties over hardcoded
+   type lists.
+2. Put component definitions in `data/components.json`.
+3. Ensure queue discovery, rate resolution, and shipyard/yard detection all
+   use the same central contract.
+4. Use registry lookup for ability checks when designs store component IDs.
+5. Keep formulas in `production_math.py` and rates in
+   `build_queue_source.py` / `data/production_rates.json`.
+
+Adding a new completion item type:
+
+1. Keep the queue `type` stable; `ProductionSpawner` normalizes by lowercasing
+   and replacing spaces with underscores.
+2. Decide whether the result is a fleet ship, staging-yard item, facility, or
+   new entity class.
+3. Route only spawn dispatch through `ProductionSpawner`; the consumption
+   algorithm should not care about the new type except for validation
+   constraints.
+4. If stats or mass are needed, use
+   `calculate_design_stats(design_data, registries)`.
+
+## Testing and Commands
+
+Targeted tests for production work:
+
+- `pytest tests/unit/strategy/production_engine/`
+- `pytest tests/unit/strategy/engine/test_production_engine_queue.py`
+- `pytest tests/unit/strategy/engine/test_production_engine_consumption.py`
+- `pytest tests/unit/strategy/engine/test_set_build_queue_paused_command.py`
+- `pytest tests/unit/strategy/data/test_build_queue_source.py`
+- `pytest tests/unit/strategy/data/test_construction_queue_paused_persistence.py`
+- `pytest tests/unit/strategy/data/test_facility_construction_queue.py`
+- `pytest tests/unit/ui/panels/test_build_queue_controller.py`
+- `pytest tests/integration/strategy/production/`
+- `pytest tests/integration/strategy/test_projector_drain_matches_engine.py`
+
+Full suite:
+
+```bash
+python Tools/test_sharded/test_sharded.py
 ```
 
-Larger species count proportionally more. If a colony is 70% Species-A (habitability 1.0) and 30% Species-B (habitability 0.2), the multiplier is `0.7 * 1.0 + 0.3 * 0.2 = 0.76`.
-
-### Edge cases
-
-| Situation | Multiplier |
-|-----------|-----------|
-| Uncolonized planet (no populations) | 1.0 (no penalty; automated extractors run at full rate) |
-| Every species has `count == 0` | 1.0 (functionally uncolonized) |
-| Every species' `race_id` missing from registry | 1.0 (save-drift defence; preserves the empire's economy rather than silently collapsing it) |
-| Species with `count == 0` | Excluded from BOTH numerator and denominator |
-| Species whose `race_id` isn't in registry | Excluded from BOTH numerator and denominator (NOT scored as 0) |
-| Fleet-based production queues | 1.0 (no planet context — fleet yards operate in space) |
-
-### Per-turn caching
-
-Populations only change at turn boundaries (population growth runs after the 100-tick loop). Computing the multiplier once per colony per turn — not once per tick per resource per colony — saves O(species × resources × ticks) CPU. The cache lives on `Planet`:
-
-- `Planet._cached_habitability_multiplier: Optional[float]` (default `None`)
-- `Planet._cached_multiplier_turn: int` (default `-1`)
-- `Planet.get_cached_habitability_multiplier(race_registry, turn) -> float`
-
-Both fields are `init=False`, `repr=False`, `compare=False`, and NOT emitted by `to_dict`. Post-load planets start with a cold cache and recompute on their first read.
-
-`TurnEngine.process_turn` calls `set_current_turn(session.turn_number)` on both `HarvestingEngine` and `ProductionEngine` at turn start, invalidating the per-turn key for every colony simultaneously.
-
-### Stacking with boosters
-
-Habitability multiplies **alongside** existing `BuildRateBooster` and `ResourceHarvestBooster` aggregation (`aggregate_multipliers` in `game/strategy/services/strategic_ability_scanner.py`). The three factors multiply:
-
-```
-final = base_rate * booster_mult(stacked) * habitability_mult
-```
-
-No change to the booster aggregation logic itself.
-
-### Backward compatibility
-
-Both engines default `race_registry=None` — legacy callers (and 850+ lines of MagicMock-based pre-PROJ-285 tests) take this path and get multiplier=1.0, preserving the pre-PROJ-285 formula byte-for-byte. Habitability only applies when the engine is explicitly constructed with a race registry and the colony exposes `get_cached_habitability_multiplier`.
-
-### Related files
-
-- `game/strategy/formulas/colony_output.py` — `planet_habitability_multiplier` helper
-- `game/strategy/data/planet.py` — per-turn cache + accessor method
-- `game/strategy/engine/harvesting_engine.py` — harvest hook via `_get_habitability_mult`
-- `game/strategy/engine/production_engine.py` — production hook: scales `production_rate` dict before tick-capacity math
-- `game/strategy/engine/turn_engine.py` — calls `set_current_turn(session.turn_number)` at turn start
-- `game/strategy/formulas/habitability.py` — underlying `score_planet_for_race` (PROJ-283, registry-driven via `FACTOR_REGISTRY`)
-
----
+For docs-only edits, a narrow sanity check is usually enough; production-code
+changes should run the relevant targeted tests before the full sharded suite.
 
 ## Key Files
 
-| Component | File |
-|-----------|------|
-| ProductionEngine | `game/strategy/engine/production_engine.py` |
-| ProductionSpawner | `game/strategy/engine/production_spawner.py` |
-| Production math (shared formula) | `game/strategy/engine/production_math.py` |
-| BuildQueueSource & utilities | `game/strategy/data/build_queue_source.py` |
-| PlanetaryFacility | `game/strategy/data/planetary_facility.py` |
-| Planet (facilities list) | `game/strategy/data/planet.py` |
-| Fleet (construction_queue) | `game/strategy/data/fleet.py` |
-| Command handlers | `game/strategy/engine/command_handlers.py` |
-| BuildQueueScreen | `game/ui/screens/build_queue_screen.py` |
-| EmpireBuildQueueWindow | `game/ui/screens/empire_build_queue_window.py` |
-| Harvester abilities | `game/simulation/components/abilities/harvester.py` |
+| Concern | File |
+|---|---|
+| Production ticking | `game/strategy/engine/production_engine.py` |
+| Spawning | `game/strategy/engine/production_spawner.py` |
+| Shared limiting-resource formula | `game/strategy/engine/production_math.py` |
+| Forecast spend | `game/strategy/engine/construction_forecast.py` |
+| Queue discovery/rates | `game/strategy/data/build_queue_source.py` |
+| Planet facility data | `game/strategy/data/planetary_facility.py` |
+| Planet queue/stockpile/staging | `game/strategy/data/planet.py` |
+| Fleet queue/cargo | `game/strategy/data/fleet.py` |
+| Queue command handlers | `game/strategy/engine/handlers/construction_queue.py` |
+| Queue commands | `game/strategy/engine/commands/__init__.py` |
+| Turn engine phase loop | `game/strategy/engine/turn_engine.py` |
+| Turn engine config | `game/strategy/engine/turn_engine_config.py` |
+| UI screen | `game/ui/screens/build_queue_screen.py` |
+| Empire queue window | `game/ui/screens/empire_build_queue_window.py` |
+| Build queue controller | `game/ui/panels/build_queue_controller.py` |
+| Yard/harvester abilities | `game/simulation/components/abilities/harvester.py` |
 | Component definitions | `data/components.json` |
 | Production rates | `data/production_rates.json` |
-| DesignLibrary | `game/strategy/systems/design_library.py` |
-| Design cost calculator | `game/strategy/services/design_cost_calculator.py` |
+| Design library | `game/strategy/systems/design_library.py` |
+| Design costs | `game/strategy/services/design_cost_calculator.py` |
+| Design validation | `game/strategy/services/design_validator.py` |
+| Habitability service | `game/strategy/services/planet_habitability_service.py` |

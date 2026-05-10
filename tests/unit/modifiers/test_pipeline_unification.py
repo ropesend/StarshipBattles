@@ -3,6 +3,15 @@ Tests for Phase 4: Pipeline Unification
 
 Verifies that the single recalculate() path works correctly after
 removing duplicate stat application code from _apply_base_stats().
+
+PROJ-322 Task 4.1 (S11-CAT7-001): these tests are intentionally
+coupled to the production `data/components.json` balance values
+(railgun energy consumption, beam_weapon ability bindings, etc.).
+That coupling is acceptable here because the tests act as
+data-contract tests for the modifier pipeline — they verify that
+real component data flows through the stat-binding pipeline without
+duplicate application. Changes to component balance values may
+require updating the asserted numbers below.
 """
 import pytest
 

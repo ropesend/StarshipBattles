@@ -284,12 +284,20 @@ class TestSearchFiltering:
     """Tests for search/filter functionality."""
 
     def test_filter_races_by_name_returns_matches(self, mock_race_library):
-        """Filtering races by name returns matching races."""
+        """Filtering races by name returns matching races.
+
+        PROJ-323 Task 5.26: replaced inline `if hasattr(...)/else` branching
+        with pytest.skip when _filter_races is not present, so the test
+        asserts the actual filtering behavior or skips cleanly.
+        """
         from game.ui.screens.race_browser_dialog import RaceBrowserDialog
 
         with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
             dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
             dialog.race_library = mock_race_library
+
+            if not hasattr(dialog, '_filter_races'):
+                pytest.skip("RaceBrowserDialog has no _filter_races method")
 
             # Mock races
             race1 = MagicMock()
@@ -301,17 +309,11 @@ class TestSearchFiltering:
 
             mock_race_library.get_all_races.return_value = [race1, race2, race3]
 
-            # If dialog has filter method, test it
-            # Otherwise test the expected behavior
-            if hasattr(dialog, '_filter_races'):
-                result = dialog._filter_races("Federation")
-                # Should match races containing "Federation"
-                assert race1 in result
-                assert race3 in result
-                assert race2 not in result
-            else:
-                # Dialog may not have filtering implemented - just verify races load
-                assert mock_race_library.get_all_races() is not None
+            result = dialog._filter_races("Federation")
+            # Should match races containing "Federation"
+            assert race1 in result
+            assert race3 in result
+            assert race2 not in result
 
     def test_empty_search_shows_all_races(self, mock_race_library):
         """Empty search filter shows all races."""

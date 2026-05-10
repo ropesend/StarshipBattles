@@ -1,0 +1,61 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 188,
+  "total_findings": 9,
+  "findings": [
+    {
+      "file": "game/app.py",
+      "line": 124,
+      "marker": "# Legacy",
+      "context": "        # Legacy `running` flag \u2014 read by `_handle_strategy_action(\"quit_game\")`"
+    },
+    {
+      "file": "game/run_loop.py",
+      "line": 205,
+      "marker": "# Legacy",
+      "context": "        # Legacy scenes that haven't migrated to IScene event handling."
+    },
+    {
+      "file": "game/strategy/engine/planet_action_engine.py",
+      "line": 366,
+      "marker": "# Legacy",
+      "context": "        # Legacy fallback: find first facility with shield ability"
+    },
+    {
+      "file": "game/strategy/engine/commands/__init__.py",
+      "line": 102,
+      "marker": "# Kept for backward compat",
+      "context": "    fleet_id: int  # Kept for backward compat; use entity_id for new code"
+    },
+    {
+      "file": "game/strategy/systems/save_game_service.py",
+      "line": 68,
+      "marker": "# legacy",
+      "context": "    # legacy `component_damage` dict from ShipInstance saves in favor"
+    },
+    {
+      "file": "game/ui/screens/strategy_detail_fmt.py",
+      "line": 254,
+      "marker": "# Legacy",
+      "context": "                # Legacy single-line layout \u2014 preserved for callers that"
+    },
+    {
+      "file": "game/ui/screens/strategy_detail_fmt.py",
+      "line": 256,
+      "marker": "# legacy",
+      "context": "                # legacy tests, pre-PROJ-289 panels)."
+    },
+    {
+      "file": "game/ui/screens/race_setup/screen.py",
+      "line": 261,
+      "marker": "# legacy",
+      "context": "        self.name_input = None  # legacy attr (Identity panel replaced this)"
+    },
+    {
+      "file": "game/ui/screens/test_lab/dialogs.py",
+      "line": 256,
+      "marker": "# Old",
+      "context": "            # Old value (strikethrough)"
+    }
+  ]
+}

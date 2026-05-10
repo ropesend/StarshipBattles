@@ -1,0 +1,1233 @@
+{
+  "_next_fleet_id": 1,
+  "_next_planet_id": 18,
+  "radius": 50,
+  "systems": [
+    {
+      "coord": {
+        "q": 0,
+        "r": 0
+      },
+      "system": {
+        "global_location": {
+          "q": 0,
+          "r": 0
+        },
+        "name": "Beta-1",
+        "planets": [
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 1,
+            "image_id": "_fixture_planet_1.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": 0
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-1 I",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "CONTINENTAL",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          },
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 2,
+            "image_id": "_fixture_planet_2.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 3,
+              "r": -1
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-1 II",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "BARREN",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-2",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": 0
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Beta-3",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 1
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Beta-8",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 0,
+              "r": 2
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": 12,
+        "r": -6
+      },
+      "system": {
+        "global_location": {
+          "q": 12,
+          "r": -6
+        },
+        "name": "Beta-2",
+        "planets": [
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 3,
+            "image_id": "_fixture_planet_3.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 1,
+              "r": 1
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-2 I",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "PELAGIC",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          },
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 4,
+            "image_id": "_fixture_planet_4.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -1,
+              "r": 2
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-2 II",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "JOVIAN",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-1",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 0
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Beta-4",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": 1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": -10,
+        "r": 4
+      },
+      "system": {
+        "global_location": {
+          "q": -10,
+          "r": 4
+        },
+        "name": "Beta-3",
+        "planets": [
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 5,
+            "image_id": "_fixture_planet_5.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": 0
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-3 I",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "ARID",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          },
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 6,
+            "image_id": "_fixture_planet_6.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 1
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-3 II",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "CRYOPLANET",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-1",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": -1
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Beta-5",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -1,
+              "r": -2
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": 20,
+        "r": 5
+      },
+      "system": {
+        "global_location": {
+          "q": 20,
+          "r": 5
+        },
+        "name": "Beta-4",
+        "planets": [
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 7,
+            "image_id": "_fixture_planet_7.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 1,
+              "r": -1
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-4 I",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "CONTINENTAL",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          },
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 8,
+            "image_id": "_fixture_planet_8.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": 1
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-4 II",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "MAGMA",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-2",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": -1
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Beta-6",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": -1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": -15,
+        "r": -8
+      },
+      "system": {
+        "global_location": {
+          "q": -15,
+          "r": -8
+        },
+        "name": "Beta-5",
+        "planets": [
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 9,
+            "image_id": "_fixture_planet_9.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 0
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-5 I",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "BARREN",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          },
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 10,
+            "image_id": "_fixture_planet_10.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 0,
+              "r": -2
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-5 II",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "ICE_GIANT",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-3",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 1,
+              "r": 2
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Beta-7",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -1,
+              "r": 2
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Beta-9",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": -1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": 25,
+        "r": -10
+      },
+      "system": {
+        "global_location": {
+          "q": 25,
+          "r": -10
+        },
+        "name": "Beta-6",
+        "planets": [
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 11,
+            "image_id": "_fixture_planet_11.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": 0
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-6 I",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "PELAGIC",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          },
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 12,
+            "image_id": "_fixture_planet_12.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -1,
+              "r": 1
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-6 II",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "ARID",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-4",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 1
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Beta-10",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -1,
+              "r": 1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": -20,
+        "r": 12
+      },
+      "system": {
+        "global_location": {
+          "q": -20,
+          "r": 12
+        },
+        "name": "Beta-7",
+        "planets": [
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 13,
+            "image_id": "_fixture_planet_13.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 1,
+              "r": 0
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-7 I",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "CRYOPLANET",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          },
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 14,
+            "image_id": "_fixture_planet_14.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -1,
+              "r": -1
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-7 II",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "PLANETOID",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-5",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 1,
+              "r": -2
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": 8,
+        "r": 18
+      },
+      "system": {
+        "global_location": {
+          "q": 8,
+          "r": 18
+        },
+        "name": "Beta-8",
+        "planets": [
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 15,
+            "image_id": "_fixture_planet_15.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": -1
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-8 I",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "CONTINENTAL",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          },
+          {
+            "atmosphere": {},
+            "atmosphere_target": {},
+            "construction_queue": [],
+            "construction_queue_paused": false,
+            "density": 5515.0,
+            "deposits": {},
+            "energy": 0.0,
+            "energy_capacity": 0.0,
+            "energy_generation": 0.0,
+            "facilities": [],
+            "gravity_original": null,
+            "gravity_target": null,
+            "id": 16,
+            "image_id": "_fixture_planet_16.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 2
+            },
+            "magnetic_field": 1.0,
+            "mass": 5.97e+24,
+            "max_staging_mass": 0.0,
+            "max_stockpile": {},
+            "name": "Beta-8 II",
+            "orbit_distance": 1,
+            "orbit_parent_name": null,
+            "orders": [],
+            "owner_id": null,
+            "planet_type": "JOVIAN",
+            "populations": [],
+            "radiation_shielding": 0.0,
+            "radiation_shielding_target": null,
+            "radius": 6371000.0,
+            "radius_hexes": 0,
+            "species_configs": {},
+            "staging_yard": [],
+            "stockpile": {},
+            "surface_area": 510000000000000.0,
+            "surface_gravity": 9.81,
+            "surface_pressure": 101325.0,
+            "surface_temperature": 288.0,
+            "surface_water": 0.5,
+            "tectonic_activity": 0.5,
+            "water_target": null
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-1",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 0,
+              "r": -2
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": -5,
+        "r": -20
+      },
+      "system": {
+        "global_location": {
+          "q": -5,
+          "r": -20
+        },
+        "name": "Beta-9",
+        "planets": [
+          {
+            "atmosphere": {
+              "argon": 0.01,
+              "nitrogen": 0.78,
+              "oxygen": 0.21
+            },
+            "atmosphere_target": {
+              "argon": 0.01,
+              "nitrogen": 0.74,
+              "oxygen": 0.25
+            },
+            "construction_queue": [
+              {
+                "design_id": "test_ship",
+                "turns_remaining": 5.0,
+                "type": "ship"
+              }
+            ],
+            "construction_queue_paused": true,
+            "density": 5243.0,
+            "deposits": {
+              "metals": {
+                "deep": 25.0,
+                "shallow": 50.0,
+                "surface": 100.0
+              },
+              "organics": {
+                "deep": 0.0,
+                "shallow": 30.0,
+                "surface": 60.0
+              }
+            },
+            "energy": 50.0,
+            "energy_capacity": 200.0,
+            "energy_generation": 10.0,
+            "facilities": [
+              {
+                "component_states": {},
+                "construction_queue": [],
+                "construction_queue_paused": false,
+                "consumable_levels": {
+                  "fuel": 50.0
+                },
+                "design_data": {
+                  "category": "complex",
+                  "layers": []
+                },
+                "design_id": "test_complex",
+                "instance_id": "fixture-facility-uuid-0001",
+                "is_operational": true,
+                "name": "Test Complex"
+              }
+            ],
+            "gravity_original": 8.87,
+            "gravity_target": 9.81,
+            "id": 17,
+            "image_id": "_fixture_planet_17.png",
+            "image_rotation": 0.0,
+            "intrinsic_abilities": {
+              "ResearchBonus": 0.1
+            },
+            "location": {
+              "q": 1,
+              "r": 0
+            },
+            "magnetic_field": 0.4,
+            "mass": 4.87e+24,
+            "max_staging_mass": 500.0,
+            "max_stockpile": {
+              "metals": 1000.0,
+              "organics": 500.0
+            },
+            "name": "Beta-9 I (decorated)",
+            "orbit_distance": 3,
+            "orbit_parent_name": "Decorated Star",
+            "orders": [
+              {
+                "target": {
+                  "type": "dict",
+                  "value": {
+                    "ability": "test_ability"
+                  }
+                },
+                "type": "ACTIVATE_ABILITY"
+              }
+            ],
+            "owner_id": 1,
+            "planet_type": "CONTINENTAL",
+            "populations": [
+              {
+                "count": 1000000,
+                "happiness": 0.6,
+                "race_id": "human"
+              }
+            ],
+            "radiation_shielding": 25.0,
+            "radiation_shielding_target": 50.0,
+            "radius": 6052000.0,
+            "radius_hexes": 2,
+            "species_configs": {
+              "human": {
+                "food_allocation": 1.5
+              }
+            },
+            "staging_yard": [
+              {
+                "design_id": "test_ship",
+                "mass": 100.0,
+                "ready_at_turn": 5
+              }
+            ],
+            "stockpile": {
+              "metals": 250.0,
+              "organics": 75.0
+            },
+            "surface_area": 460000000000000.0,
+            "surface_gravity": 8.87,
+            "surface_pressure": 9200000.0,
+            "surface_temperature": 737.0,
+            "surface_water": 0.3,
+            "tectonic_activity": 0.7,
+            "water_target": 0.5
+          }
+        ],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-5",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": 18,
+        "r": -18
+      },
+      "system": {
+        "global_location": {
+          "q": 18,
+          "r": -18
+        },
+        "name": "Beta-10",
+        "planets": [],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Beta-6",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 1,
+              "r": -1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    }
+  ]
+}

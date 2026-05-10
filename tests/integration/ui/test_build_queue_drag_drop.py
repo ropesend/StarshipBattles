@@ -29,6 +29,22 @@ class MockSession:
         # PROJ-208: Track commands for test verification
         self.commands_handled = []
 
+    def get_registries(self):
+        """PROJ-382 Phase 1: facade-shaped registries accessor."""
+        return self.registries
+
+    def get_colony_demographic_view(self, planet_id):
+        """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
+        return None
+
+    def get_turn_number(self) -> int:
+        """PROJ-396 MAJ-003: facade-shaped turn-number accessor."""
+        return 0
+
+    def get_save_path(self):
+        """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
+        return self.save_path
+
     def handle_command(self, cmd):
         """Mock command handler that executes queue commands.
 
@@ -167,13 +183,14 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries,
     bq_screen = BuildQueueScreen(
         manager,
         planet,
-        session,
         on_close,
         design_library=mock_design_library,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
-        empire=empire
+        empire=empire,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # CRITICAL: Update manager to calculate rects

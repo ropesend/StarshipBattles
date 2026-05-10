@@ -1,0 +1,20 @@
+{
+  "request_id": "req_20260505_070825_e838b1",
+  "review_dir": "Reviews/results/2026-05-05_070827_code_proj-364-review-superweapon-spec-table-refactor_req-req_20260505_070825_e838b1",
+  "report_path": "Reviews/results/2026-05-05_070827_code_proj-364-review-superweapon-spec-table-refactor_req-req_20260505_070825_e838b1/report.md",
+  "findings": {
+    "critical": 0,
+    "major": 2,
+    "minor": 2,
+    "nit": 2
+  },
+  "completed_at": "2026-05-05T07:15:00Z",
+  "verification": {
+    "instruction_01_5_superweapons": "PASS",
+    "instruction_02_self_destruct_excluded": "PASS",
+    "instruction_03_precheck_fn_justified": "PASS",
+    "instruction_04_loc_target": "ACCEPTED",
+    "instruction_05_dyson_event_missing_fields": "MAJ-001",
+    "instruction_06_phase2_in_head_tested": "PASS"
+  }
+}

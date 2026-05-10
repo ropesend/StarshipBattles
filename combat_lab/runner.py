@@ -60,7 +60,7 @@ class TestRunner:
         PROJ-274: switches the default ship materializer to
         `DesignOnlyMaterializer` backed by `load_combat_lab_design`. Covers
         both the CLI entry point (`python -m combat_lab.run_tests`) and the
-        UI entry point (`TestExecutionService`) — both instantiate a
+        UI entry point (`TestLabExecutor`) — both instantiate a
         `TestRunner` before scenario execution, so this is the single
         install point.
         """
@@ -85,9 +85,9 @@ class TestRunner:
         ``get_default_ship_materializer()`` call (see
         ``ship_materializer.py`` docstring).
 
-        In-game callers (``TestLabExecutor``, ``TestExecutionService``)
-        must call this after test execution completes so the override
-        does not leak into non-Combat-Lab flows (e.g. Battle Setup).
+        In-game callers (``TestLabExecutor``) must call this after test
+        execution completes so the override does not leak into
+        non-Combat-Lab flows (e.g. Battle Setup).
         CLI entry points (``run_tests.py``) run in their own process
         and do not need cleanup.
         """

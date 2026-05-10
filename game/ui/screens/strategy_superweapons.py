@@ -5,7 +5,7 @@ Handles Planet Imploder, Stellerator, Warp Point manipulation, Dyson Sphere, and
 Extracted following ColonizationSystem pattern for consistency.
 
 Cross-layer imports (acceptable for UI):
-- pixel_to_hex: Runtime - coordinate conversion for command targeting
+- Camera.hex_at_screen: Runtime - coordinate conversion for command targeting
 - QueueImplodePlanetMissionCommand, etc.: Runtime - UI issues commands
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, List, Optional, Any
 import logging
 
 logger = logging.getLogger(__name__)
-from game.core.hex_math import pixel_to_hex
 from game.strategy.engine.commands import (
     IssueSelfDestructCommand,
     QueueImplodePlanetMissionCommand,
@@ -28,6 +27,32 @@ from game.strategy.engine.commands import (
 if TYPE_CHECKING:
     from game.strategy.facade.strategy_session_facade import StrategySessionFacade
     from game.strategy.data.fleet import Fleet
+
+
+def _check_fleet_ability(
+    fleet: 'Fleet', ability_name: str, error_msg: str
+) -> Optional[dict]:
+    """Validate fleet has ``ability_name``; return an error dict or ``None`` on success.
+
+    Shared validator for the 5 superweapon designation handlers (PROJ-380,
+    DUP-X-08). Logs a warning at the call site and returns the standard
+    ``{'type': 'error', 'message': ...}`` shape so callers can ``return``
+    the result directly when the check fails.
+
+    Args:
+        fleet: Fleet to validate.
+        ability_name: Capability ability name (e.g. ``"DestroyPlanet"``).
+        error_msg: Human-readable message used both for the warning log
+            and the returned error dict.
+
+    Returns:
+        ``None`` when the fleet has the ability; otherwise an error dict
+        with ``type='error'`` and ``message=error_msg``.
+    """
+    if not fleet.capabilities.has_ability(ability_name):
+        logger.warning(error_msg + ".")
+        return {'type': 'error', 'message': error_msg}
+    return None
 
 
 class SuperweaponOperations:
@@ -74,13 +99,11 @@ class SuperweaponOperations:
         if not fleet:
             return None
 
-        # Check fleet has DestroyPlanet ability
-        if not fleet.capabilities.has_ability("DestroyPlanet"):
-            logger.warning("Fleet has no Planet Imploder component.")
-            return {'type': 'error', 'message': 'Fleet has no Planet Imploder component'}
+        err = _check_fleet_ability(fleet, "DestroyPlanet", "Fleet has no Planet Imploder component")
+        if err is not None:
+            return err
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         # Find planets at hex
         planets = self.galaxy.get_planets_at_global_hex(target_hex)
@@ -130,13 +153,11 @@ class SuperweaponOperations:
         if not fleet:
             return None
 
-        # Check fleet has DestroyStar ability
-        if not fleet.capabilities.has_ability("DestroyStar"):
-            logger.warning("Fleet has no Stellerator component.")
-            return {'type': 'error', 'message': 'Fleet has no Stellerator component'}
+        err = _check_fleet_ability(fleet, "DestroyStar", "Fleet has no Stellerator component")
+        if err is not None:
+            return err
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         # Find system at hex
         system = self._get_system_at_hex(target_hex)
@@ -176,13 +197,11 @@ class SuperweaponOperations:
         if not fleet:
             return None
 
-        # Check fleet has OpenWarpPoint ability
-        if not fleet.capabilities.has_ability("OpenWarpPoint"):
-            logger.warning("Fleet has no Quantum Tunneling Inducer component.")
-            return {'type': 'error', 'message': 'Fleet has no Quantum Tunneling Inducer component'}
+        err = _check_fleet_ability(fleet, "OpenWarpPoint", "Fleet has no Quantum Tunneling Inducer component")
+        if err is not None:
+            return err
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         # Get current system for filtering
         current_system = self._get_system_at_hex(target_hex)
@@ -232,13 +251,11 @@ class SuperweaponOperations:
         if not fleet:
             return None
 
-        # Check fleet has CloseWarpPoint ability
-        if not fleet.capabilities.has_ability("CloseWarpPoint"):
-            logger.warning("Fleet has no Quantum Tunneling Disruptor component.")
-            return {'type': 'error', 'message': 'Fleet has no Quantum Tunneling Disruptor component'}
+        err = _check_fleet_ability(fleet, "CloseWarpPoint", "Fleet has no Quantum Tunneling Disruptor component")
+        if err is not None:
+            return err
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         # Find warp point at hex
         warp_point = self._get_warp_point_at_hex(target_hex)
@@ -276,13 +293,11 @@ class SuperweaponOperations:
         if not fleet:
             return None
 
-        # Check fleet has CreateDysonSphere ability
-        if not fleet.capabilities.has_ability("CreateDysonSphere"):
-            logger.warning("Fleet has no Dyson Sphere Constructor component.")
-            return {'type': 'error', 'message': 'Fleet has no Dyson Sphere Constructor component'}
+        err = _check_fleet_ability(fleet, "CreateDysonSphere", "Fleet has no Dyson Sphere Constructor component")
+        if err is not None:
+            return err
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         # Find system at hex
         system = self._get_system_at_hex(target_hex)

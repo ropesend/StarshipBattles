@@ -29,7 +29,7 @@ from game.strategy.data.build_queue_source import (
     BuildQueueSource,
     collect_all_build_queues_for_empire,
 )
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 from game.ui.screens.empire_build_queue_viewmodel import (
     EmpireBuildQueueViewModel,
     BuildQueueWindowEvents,
@@ -58,6 +58,76 @@ class BatchAddResult:
     """
     added: int
     skipped: int
+
+
+class EmpireBuildQueueUiBuilder:
+    """Production widget builder. Constructs sidebar_panel, sidebar
+    component, main_panel, virtual_table, wires event-bus subscribers,
+    and triggers the initial _refresh_list. Reads Stage-1 MVVM state.
+    """
+
+    def build(self, screen: "EmpireBuildQueueWindow") -> None:
+        rect = screen.rect
+        manager = screen.ui_manager
+
+        # --- UI Containers ---
+        # Sidebar panel
+        screen.sidebar_panel = UIPanel(
+            relative_rect=pygame.Rect(0, 0, screen.sidebar_width, rect.height - 50),
+            manager=manager,
+            container=screen,
+            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
+        )
+
+        # Sidebar component (owns filter UI)
+        screen._sidebar = EmpireBuildQueueSidebar(
+            ui_manager=manager,
+            parent_container=screen.sidebar_panel,
+            viewmodel=screen._viewmodel,
+            event_bus=screen._event_bus,
+            columns=screen._filter_mgr.columns,
+        )
+
+        # Main content area
+        main_w = rect.width - screen.sidebar_width - 10
+        screen.main_panel = UIPanel(
+            relative_rect=pygame.Rect(screen.sidebar_width, 0, main_w, rect.height - 50),
+            manager=manager,
+            container=screen,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
+        )
+
+        # --- VirtualTable components ---
+        screen._data_source = BuildQueueDataSource(
+            screen._viewmodel, screen._filter_mgr, screen.galaxy
+        )
+        screen._column_manager = TableColumnManager(screen._filter_mgr.columns)
+        screen._selection = MultiSelect()
+        screen._virtual_table = VirtualTable(
+            screen.main_panel,
+            manager,
+            screen._data_source,
+            screen._column_manager,
+            screen._selection,
+            row_height=screen.row_height,
+            header_height=screen.header_height,
+        )
+
+        # Store reference for scroll wheel handling
+        screen.scroll_bar = screen._virtual_table.scroll_bar
+
+        # Subscribe to ViewModel events
+        screen._event_bus.subscribe(
+            BuildQueueWindowEvents.FILTERS_APPLIED,
+            lambda _: screen._on_filters_applied(),
+        )
+        screen._event_bus.subscribe(
+            BuildQueueWindowEvents.SELECTION_CHANGED,
+            lambda _: screen._on_selection_changed(),
+        )
+
+        # Initial population
+        screen._refresh_list()
 
 
 class EmpireBuildQueueWindow(StrategyModalWindow):
@@ -90,14 +160,54 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         window_manager: "StrategyWindowManager",
         on_close_callback: Optional[Callable] = None,
         on_navigate_to_hex: Optional[Callable] = None,
-        session: Any = None,
-        facade: Any = None,
+        facade: Any,
+        ui_builder: Optional["EmpireBuildQueueUiBuilder"] = None,
     ) -> None:
         """Initialize the empire build queue window.
 
         PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
         PROJ-313: Migrated to StrategyModalWindow base class.
+        PROJ-329B Phase 2: two-stage construction with ``ui_builder`` test seam.
+        PROJ-382 Phase 1: ``facade`` is required; ``session=`` kwarg removed.
         """
+        # ---- Stage 1: cheap state ----
+        self.empire = empire
+        self.galaxy = galaxy
+        self.on_close_callback = on_close_callback
+        self.on_navigate_to_hex = on_navigate_to_hex
+        # PROJ-208 / PROJ-382 Phase 1: command dispatch through facade only.
+        self._facade = facade
+
+        # --- Layout constants ---
+        self.sidebar_width = UIConfig.SIDEBAR_WIDTH
+        self.header_height = UIConfig.HEADER_HEIGHT
+        self.row_height = UIConfig.ROW_HEIGHT_LARGE
+
+        # --- MVVM components --- (cheap; pure-python, no pygame_gui)
+        self._event_bus = WorkshopEventBus()
+        sources = collect_all_build_queues_for_empire(
+            empire, registries=facade.get_registries()
+        )
+        self._viewmodel = EmpireBuildQueueViewModel(self._event_bus, sources)
+
+        # --- Filter Manager (for column definitions) ---
+        self._filter_mgr = BuildQueueFilterManager()
+
+        # MAJ-001 fix (review req_20260504_220257_d0b194): Pattern §33
+        # widget-ref placeholders. Initialized to None here so that a
+        # NullEmpireBuildQueueWindowUiBuilder test can safely call kill()
+        # without AttributeError on `self._virtual_table.kill()` etc.
+        # The production builder overwrites these in Stage 3.
+        self.sidebar_panel = None
+        self.main_panel = None
+        self._sidebar = None
+        self._virtual_table = None
+        self.scroll_bar = None
+        self._data_source = None
+        self._column_manager = None
+        self._selection = None
+
+        # ---- Stage 2: shell ----
         super().__init__(
             rect, manager,
             window_display_title="Empire Build Yards",
@@ -105,85 +215,13 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
             window_manager=window_manager,
         )
 
-        self.empire = empire
-        self.galaxy = galaxy
-        self.on_close_callback = on_close_callback
-        self.on_navigate_to_hex = on_navigate_to_hex
-        # PROJ-208: Session for command dispatch (facade preferred)
-        self._session = session
-        self._facade = facade  # PROJ-208 Phase 3: For CQRS-compliant command dispatch
+        # ---- Stage 3: widgets ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
 
-        # --- Layout constants ---
-        self.sidebar_width = UIConfig.SIDEBAR_WIDTH
-        self.header_height = UIConfig.HEADER_HEIGHT
-        self.row_height = UIConfig.ROW_HEIGHT_LARGE
-
-        # --- MVVM components ---
-        self._event_bus = EventBus()
-        sources = collect_all_build_queues_for_empire(empire, registries=session.registries)
-        self._viewmodel = EmpireBuildQueueViewModel(self._event_bus, sources)
-
-        # --- Filter Manager (for column definitions) ---
-        self._filter_mgr = BuildQueueFilterManager()
-
-        # --- UI Containers ---
-        # Sidebar panel
-        self.sidebar_panel = UIPanel(
-            relative_rect=pygame.Rect(0, 0, self.sidebar_width, rect.height - 50),
-            manager=manager,
-            container=self,
-            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
-        )
-
-        # Sidebar component (owns filter UI)
-        self._sidebar = EmpireBuildQueueSidebar(
-            ui_manager=manager,
-            parent_container=self.sidebar_panel,
-            viewmodel=self._viewmodel,
-            event_bus=self._event_bus,
-            columns=self._filter_mgr.columns,
-        )
-
-        # Main content area
-        main_w = rect.width - self.sidebar_width - 10
-        self.main_panel = UIPanel(
-            relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 50),
-            manager=manager,
-            container=self,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
-        )
-
-        # --- VirtualTable components ---
-        self._data_source = BuildQueueDataSource(
-            self._viewmodel, self._filter_mgr, self.galaxy
-        )
-        self._column_manager = TableColumnManager(self._filter_mgr.columns)
-        self._selection = MultiSelect()
-        self._virtual_table = VirtualTable(
-            self.main_panel,
-            manager,
-            self._data_source,
-            self._column_manager,
-            self._selection,
-            row_height=self.row_height,
-            header_height=self.header_height,
-        )
-
-        # Store reference for scroll wheel handling
-        self.scroll_bar = self._virtual_table.scroll_bar
-
-        # Subscribe to ViewModel events
-        self._event_bus.subscribe(
-            BuildQueueWindowEvents.FILTERS_APPLIED,
-            lambda _: self._on_filters_applied()
-        )
-        self._event_bus.subscribe(
-            BuildQueueWindowEvents.SELECTION_CHANGED,
-            lambda _: self._on_selection_changed()
-        )
-
-        # Initial population
-        self._refresh_list()
+        (ui_builder or EmpireBuildQueueUiBuilder()).build(self)
 
     # -----------------------------------------------------------------------
     # Public API facade (delegates to ViewModel)
@@ -357,37 +395,29 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
     def _add_item_to_source(
         self, source: BuildQueueSource, item: Dict[str, Any], item_type: str
     ) -> None:
-        """Add item to a source's queue via command or direct append.
+        """Add item to a source's queue via the facade command bus.
 
-        PROJ-208: Routes through AddToConstructionQueueCommand when session available.
-        PROJ-208 Phase 3: Prefers facade over session for CQRS consistency.
+        PROJ-208: Routes through AddToConstructionQueueCommand.
+        PROJ-208 Phase 3: facade over session for CQRS consistency.
+        PROJ-382 Phase 1: ``facade`` is required at construction; PROJ-393
+        deletes the legacy "no facade injected" fallback that mutated
+        ``source.construction_queue`` in-place.
         """
-        # PROJ-208: Use getattr for test compatibility (tests may bypass __init__)
-        facade = getattr(self, '_facade', None)
-        session = getattr(self, '_session', None)
-        if facade is not None or session is not None:
-            from game.strategy.engine.commands import AddToConstructionQueueCommand, BuildEntityType
-            entity = source.owner_entity
-            entity_type = BuildEntityType.PLANET if hasattr(entity, 'planet_type') else BuildEntityType.FLEET
-            entity_id = getattr(entity, 'id', 0)
-            design_id = item.get('design_id', '')
-            cmd = AddToConstructionQueueCommand(
-                entity_id=entity_id,
-                entity_type=entity_type,
-                design_id=design_id,
-                category=item_type,
-                index=None,  # Append
-                target_planet_id=item.get('target_planet_id'),
-                queue_id=source.queue_id if source.queue_id else None,
-            )
-            # PROJ-208 Phase 3: Route through facade if available, fallback to session
-            if facade:
-                facade.handle_command(cmd)
-            else:
-                session.handle_command(cmd)
-        else:
-            # Legacy fallback for tests without session/facade injection
-            source.construction_queue.append(dict(item))
+        from game.strategy.engine.commands import AddToConstructionQueueCommand, BuildEntityType
+        entity = source.owner_entity
+        entity_type = BuildEntityType.PLANET if hasattr(entity, 'planet_type') else BuildEntityType.FLEET
+        entity_id = getattr(entity, 'id', 0)
+        design_id = item.get('design_id', '')
+        cmd = AddToConstructionQueueCommand(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            design_id=design_id,
+            category=item_type,
+            index=None,  # Append
+            target_planet_id=item.get('target_planet_id'),
+            queue_id=source.queue_id if source.queue_id else None,
+        )
+        self._facade.handle_command(cmd)
 
     @staticmethod
     def _source_can_build_type(source: BuildQueueSource, item_type: str) -> bool:
@@ -547,11 +577,6 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         return get_system_name(source, self.galaxy)
 
     @staticmethod
-    def _get_sector_text(source: BuildQueueSource) -> str:
-        """Return sector/hex coordinate text for a queue source."""
-        return get_sector_text(source)
-
-    @staticmethod
     def _get_turns_left_text(source: BuildQueueSource) -> str:
         """Return turns remaining for the first item in queue."""
         from game.ui.screens.empire_build_queue_formatter import get_turns_left_text
@@ -562,8 +587,14 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
     # -----------------------------------------------------------------------
 
     def kill(self) -> None:
-        """Clean up and invoke close callback."""
-        self._virtual_table.kill()
+        """Clean up and invoke close callback.
+
+        MAJ-001 fix (review req_20260504_220257_d0b194): guard against
+        None _virtual_table to support Null-builder tests that bypass
+        Stage 3 widget construction.
+        """
+        if self._virtual_table is not None:
+            self._virtual_table.kill()
         if self.on_close_callback:
             self.on_close_callback()
         super().kill()

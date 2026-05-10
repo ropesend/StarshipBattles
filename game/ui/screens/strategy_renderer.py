@@ -38,7 +38,7 @@ from game.ui.screens.strategy_render.fleets import (
     draw_fleet_path as _layer_draw_fleet_path,
     draw_fleets as _layer_draw_fleets,
 )
-from game.ui.screens.strategy_render.grid import draw_grid as _layer_draw_grid
+from game.ui.screens.strategy_render.grid import GridLayer
 from game.ui.screens.strategy_render.hex_outlines import (
     HexOutlineLayer,
     draw_inner_hex as _layer_draw_inner_hex,
@@ -52,15 +52,12 @@ from game.ui.screens.strategy_render.systems import (
     draw_star as _layer_draw_star,
     draw_system_details as _layer_draw_system_details,
     draw_systems as _layer_draw_systems,
-    load_star_image as _layer_load_star_image,
 )
 from game.ui.screens.strategy_render.dyson_spheres import (
     draw_dyson_spheres as _layer_draw_dyson_spheres,
-    load_dyson_sphere_image as _layer_load_dyson_sphere_image,
 )
 from game.ui.screens.strategy_render.planets import (
     draw_planet_sprite as _layer_draw_planet_sprite,
-    load_planet_v3_image as _layer_load_planet_v3_image,
 )
 from game.ui.screens.strategy_render.storms import (
     draw_storms as _layer_draw_storms,
@@ -88,8 +85,8 @@ class StrategyRenderer:
         self.scene = scene
 
         # Cache asset manager reference
-        from game.assets.asset_manager import get_asset_manager
-        self._asset_manager = get_asset_manager()
+        from game.assets.asset_manager import get_default_asset_manager
+        self._asset_manager = get_default_asset_manager()
 
         # Background layer (owns its scaled-surface cache)
         self._background = BackgroundLayer(self._asset_manager)
@@ -103,6 +100,9 @@ class StrategyRenderer:
 
         # Hex outline layer (owns its turn-keyed cache)
         self._hex_outlines = HexOutlineLayer()
+
+        # Grid layer (owns its property-keyed surface cache, PROJ-374)
+        self._grid = GridLayer()
 
     # -- Back-compat shims for tests that read these as instance attributes --
     @property
@@ -191,7 +191,7 @@ class StrategyRenderer:
         self._background.draw(screen, viewport_rect, self._settings.background_brightness)
 
     def _draw_grid(self, screen) -> None:
-        _layer_draw_grid(self, screen)
+        self._grid.draw(self, screen)
 
     def _draw_hex_outlines(self, screen) -> None:
         self._hex_outlines.draw(self, screen)
@@ -210,9 +210,6 @@ class StrategyRenderer:
 
     def _draw_systems(self, screen) -> None:
         _layer_draw_systems(self, screen)
-
-    def _load_star_image(self, star) -> Any:
-        return _layer_load_star_image(self, star)
 
     def _draw_colony_marker(self, screen, sys, world_pos) -> None:
         _layer_draw_colony_marker(self, screen, sys, world_pos)
@@ -234,12 +231,6 @@ class StrategyRenderer:
 
     def _draw_planet_sprite(self, screen, planet, center_pos, size) -> None:
         _layer_draw_planet_sprite(self, screen, planet, center_pos, size)
-
-    def _load_planet_v3_image(self, image_id) -> Any:
-        return _layer_load_planet_v3_image(self, image_id)
-
-    def _load_dyson_sphere_image(self) -> Any:
-        return _layer_load_dyson_sphere_image(self)
 
     def _draw_fleets(self, screen) -> None:
         _layer_draw_fleets(self, screen)

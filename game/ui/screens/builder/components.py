@@ -86,17 +86,11 @@ class ComponentListItem:
         # Dynamic Mass Calculation
         display_mass = component.mass
         if ship_context:
-            # Clone to avoid modifying template state
+            # Clone to avoid mutating the palette template, attach the
+            # workshop ship so ship_class_mass formulas resolve, then
+            # recalc to reflect the design's mass budget in the label.
             temp_comp = component.clone()
-            # Mock ship attributes needed for context
-            class MockShip:
-                def __init__(self, mass_budget):
-                    self.max_mass_budget = mass_budget
-
-            # Use real ship's max_mass_budget (always present on Ship after __init__)
-            budget = ship_context.max_mass_budget
-
-            temp_comp.ship = MockShip(budget)
+            temp_comp.ship = ship_context
             temp_comp.recalculate_stats()
             display_mass = temp_comp.mass
 
@@ -144,18 +138,18 @@ class ComponentListItem:
             ab = c.get_ability('ShieldProjection')
             lines.append(f"Shield: {ab.capacity}")
             
-        if c.has_ability('PowerGenerator'):
-            ab = c.get_ability('PowerGenerator')
-            lines.append(f"Power: +{ab.generation_rate}/s")
+        if c.has_ability('ResourceGeneration'):
+            ab = c.get_ability('ResourceGeneration')
+            lines.append(f"Power: +{ab.rate}/s")
             
         # Generic Ability Listing (Fallback for others)
-        shown_abilities = {'WeaponAbility', 'CombatPropulsion', 'ManeuveringThruster', 'ShieldProjection', 'PowerGenerator', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility'}
+        shown_abilities = {'WeaponAbility', 'CombatPropulsion', 'ManeuveringThruster', 'ShieldProjection', 'ResourceGeneration', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility'}
         
         if c.abilities:
-            for k, v in c.abilities.items():
-                if k not in shown_abilities and k in c.ability_instances:
+            for k in c.abilities:
+                if k not in shown_abilities and c.has_ability(k):
                     # Just show name for uncategorized abilities
-                     lines.append(f"- {k}")
+                    lines.append(f"- {k}")
 
         return "<br>".join(lines)
 

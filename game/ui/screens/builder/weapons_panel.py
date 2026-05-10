@@ -17,7 +17,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIVerticalScrollBar
 
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel, WeaponsEvents
 from game.ui.screens.builder.weapons_renderer import WeaponsRenderer
 from game.ui.screens.builder.weapons_input_handler import WeaponsInputHandler
@@ -44,7 +44,7 @@ class WeaponsReportPanel:
         self.rect = rect
 
         # MVVM components
-        self._event_bus = EventBus()
+        self._event_bus = WorkshopEventBus()
         self._viewmodel = WeaponsViewModel(self._event_bus)
         self._renderer = WeaponsRenderer(sprite_mgr)
         self._input_handler = WeaponsInputHandler()

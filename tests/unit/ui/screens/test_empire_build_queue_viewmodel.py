@@ -45,7 +45,7 @@ def _make_source(queue_id="planet_1_base", display_name="Alpha - Base",
 
 def _make_viewmodel(sources=None):
     """Create EmpireBuildQueueViewModel with test sources."""
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
 
     if sources is None:
         sources = [
@@ -54,32 +54,9 @@ def _make_viewmodel(sources=None):
             _make_source("f1", "Fleet Yard", "fleet", can_build_ships=True),
         ]
 
-    event_bus = EventBus()
+    event_bus = WorkshopEventBus()
     vm = EmpireBuildQueueViewModel(event_bus, sources)
     return vm, event_bus
-
-
-# ===========================================================================
-# Event Constants Tests
-# ===========================================================================
-
-class TestBuildQueueWindowEvents:
-    """Event constants should be defined."""
-
-    def test_sources_changed_event_exists(self):
-        """SOURCES_CHANGED event constant exists."""
-        assert hasattr(BuildQueueWindowEvents, 'SOURCES_CHANGED')
-        assert BuildQueueWindowEvents.SOURCES_CHANGED
-
-    def test_selection_changed_event_exists(self):
-        """SELECTION_CHANGED event constant exists."""
-        assert hasattr(BuildQueueWindowEvents, 'SELECTION_CHANGED')
-        assert BuildQueueWindowEvents.SELECTION_CHANGED
-
-    def test_filters_applied_event_exists(self):
-        """FILTERS_APPLIED event constant exists."""
-        assert hasattr(BuildQueueWindowEvents, 'FILTERS_APPLIED')
-        assert BuildQueueWindowEvents.FILTERS_APPLIED
 
 
 # ===========================================================================

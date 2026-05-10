@@ -8,9 +8,49 @@ Covers:
 - Update method
 - Cycle detection call
 """
-import pytest
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
+
 import pygame
+
+
+def _make_default_tree():
+    tree = MagicMock()
+    tree.nodes = {}
+    tree.get_max_depth.return_value = 0
+    tree.validate_requirements.return_value = []
+    return tree
+
+
+def _make_default_tracker(seed=12345):
+    tracker = MagicMock()
+    tracker.session_seed = seed
+    return tracker
+
+
+@contextmanager
+def _patched_research_scene():
+    """Patch the standard set of research_scene attributes used by ResearchTreeScene.
+
+    PROJ-323 Task 2.10: deduplicates the 6-patch nesting that previously
+    appeared in every test in this module.
+    """
+    patches = {
+        'TechTree': patch('game.ui.research.research_scene.TechTree'),
+        'Tracker': patch('game.ui.research.research_scene.ResearchTracker'),
+        'Camera': patch('game.ui.research.research_scene.Camera'),
+        'pygame_gui': patch('game.ui.research.research_scene.pygame_gui'),
+        'Renderer': patch('game.ui.research.research_scene.ResearchRenderer'),
+        'Panel': patch('game.ui.research.research_scene.ResearchControlPanel'),
+    }
+    started = {name: p.start() for name, p in patches.items()}
+    try:
+        started['TechTree'].load_from_json.return_value = _make_default_tree()
+        started['Tracker'].return_value = _make_default_tracker()
+        yield started
+    finally:
+        for p in patches.values():
+            p.stop()
 
 
 class TestNodePositionDetection:
@@ -18,23 +58,7 @@ class TestNodePositionDetection:
 
     def test_node_at_position_returns_node_id(self):
         """Returns node ID when position is inside a node."""
-        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
-             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.ui.research.research_scene.Camera'), \
-             patch('game.ui.research.research_scene.pygame_gui'), \
-             patch('game.ui.research.research_scene.ResearchRenderer'), \
-             patch('game.ui.research.research_scene.ResearchControlPanel'):
-
-            mock_tree = MagicMock()
-            mock_tree.nodes = {}
-            mock_tree.get_max_depth.return_value = 0
-            mock_tree.validate_requirements.return_value = []
-            MockTechTree.load_from_json.return_value = mock_tree
-
-            mock_tracker = MagicMock()
-            mock_tracker.session_seed = 12345
-            MockTracker.return_value = mock_tracker
-
+        with _patched_research_scene():
             from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
@@ -49,23 +73,7 @@ class TestNodePositionDetection:
 
     def test_node_at_position_returns_none_for_empty_space(self):
         """Returns None when position is not on any node."""
-        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
-             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.ui.research.research_scene.Camera'), \
-             patch('game.ui.research.research_scene.pygame_gui'), \
-             patch('game.ui.research.research_scene.ResearchRenderer'), \
-             patch('game.ui.research.research_scene.ResearchControlPanel'):
-
-            mock_tree = MagicMock()
-            mock_tree.nodes = {}
-            mock_tree.get_max_depth.return_value = 0
-            mock_tree.validate_requirements.return_value = []
-            MockTechTree.load_from_json.return_value = mock_tree
-
-            mock_tracker = MagicMock()
-            mock_tracker.session_seed = 12345
-            MockTracker.return_value = mock_tracker
-
+        with _patched_research_scene():
             from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
@@ -80,23 +88,7 @@ class TestNodePositionDetection:
 
     def test_node_at_position_respects_boundaries(self):
         """Position detection respects node width and height."""
-        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
-             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.ui.research.research_scene.Camera'), \
-             patch('game.ui.research.research_scene.pygame_gui'), \
-             patch('game.ui.research.research_scene.ResearchRenderer'), \
-             patch('game.ui.research.research_scene.ResearchControlPanel'):
-
-            mock_tree = MagicMock()
-            mock_tree.nodes = {}
-            mock_tree.get_max_depth.return_value = 0
-            mock_tree.validate_requirements.return_value = []
-            MockTechTree.load_from_json.return_value = mock_tree
-
-            mock_tracker = MagicMock()
-            mock_tracker.session_seed = 12345
-            MockTracker.return_value = mock_tracker
-
+        with _patched_research_scene():
             from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
@@ -126,25 +118,9 @@ class TestResizeHandling:
 
     def test_resize_updates_dimensions(self):
         """Resize updates screen and canvas dimensions."""
-        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
-             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.ui.research.research_scene.Camera') as MockCamera, \
-             patch('game.ui.research.research_scene.pygame_gui'), \
-             patch('game.ui.research.research_scene.ResearchRenderer'), \
-             patch('game.ui.research.research_scene.ResearchControlPanel'):
-
-            mock_tree = MagicMock()
-            mock_tree.nodes = {}
-            mock_tree.get_max_depth.return_value = 0
-            mock_tree.validate_requirements.return_value = []
-            MockTechTree.load_from_json.return_value = mock_tree
-
-            mock_tracker = MagicMock()
-            mock_tracker.session_seed = 12345
-            MockTracker.return_value = mock_tracker
-
+        with _patched_research_scene() as mocks:
             mock_camera_instance = MagicMock()
-            MockCamera.return_value = mock_camera_instance
+            mocks['Camera'].return_value = mock_camera_instance
 
             from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
@@ -161,26 +137,13 @@ class TestCameraCentering:
 
     def test_center_camera_with_nodes(self):
         """Camera centers on middle of node bounding box."""
-        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
-             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.ui.research.research_scene.Camera') as MockCamera, \
-             patch('game.ui.research.research_scene.pygame_gui'), \
-             patch('game.ui.research.research_scene.ResearchRenderer'), \
-             patch('game.ui.research.research_scene.ResearchControlPanel'):
-
-            mock_tree = MagicMock()
-            mock_tree.nodes = {}
-            mock_tree.get_max_depth.return_value = 0
-            mock_tree.get_nodes_at_depth.return_value = []
-            mock_tree.validate_requirements.return_value = []
-            MockTechTree.load_from_json.return_value = mock_tree
-
-            mock_tracker = MagicMock()
-            mock_tracker.session_seed = 12345
-            MockTracker.return_value = mock_tracker
+        with _patched_research_scene() as mocks:
+            tree = _make_default_tree()
+            tree.get_nodes_at_depth.return_value = []
+            mocks['TechTree'].load_from_json.return_value = tree
 
             mock_camera_instance = MagicMock()
-            MockCamera.return_value = mock_camera_instance
+            mocks['Camera'].return_value = mock_camera_instance
 
             from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
@@ -194,29 +157,15 @@ class TestCameraCentering:
             scene._center_camera()
 
             # Expected center: ((100+500)/2, (200+400)/2) = (300, 300)
-            set_position = mock_camera_instance.position
             # The position should be set (we check it was assigned)
             assert mock_camera_instance.position is not None
 
     def test_center_camera_with_no_nodes(self):
         """Camera centering with empty positions doesn't crash."""
-        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
-             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.ui.research.research_scene.Camera'), \
-             patch('game.ui.research.research_scene.pygame_gui'), \
-             patch('game.ui.research.research_scene.ResearchRenderer'), \
-             patch('game.ui.research.research_scene.ResearchControlPanel'):
-
-            mock_tree = MagicMock()
-            mock_tree.nodes = {}
-            mock_tree.get_max_depth.return_value = 0
-            mock_tree.get_nodes_at_depth.return_value = []
-            mock_tree.validate_requirements.return_value = []
-            MockTechTree.load_from_json.return_value = mock_tree
-
-            mock_tracker = MagicMock()
-            mock_tracker.session_seed = 12345
-            MockTracker.return_value = mock_tracker
+        with _patched_research_scene() as mocks:
+            tree = _make_default_tree()
+            tree.get_nodes_at_depth.return_value = []
+            mocks['TechTree'].load_from_json.return_value = tree
 
             from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
@@ -233,28 +182,12 @@ class TestUpdateMethod:
 
     def test_update_calls_camera_update(self):
         """Update method calls camera update with delta time."""
-        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
-             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.ui.research.research_scene.Camera') as MockCamera, \
-             patch('game.ui.research.research_scene.pygame_gui') as mock_gui, \
-             patch('game.ui.research.research_scene.ResearchRenderer'), \
-             patch('game.ui.research.research_scene.ResearchControlPanel'):
-
-            mock_tree = MagicMock()
-            mock_tree.nodes = {}
-            mock_tree.get_max_depth.return_value = 0
-            mock_tree.validate_requirements.return_value = []
-            MockTechTree.load_from_json.return_value = mock_tree
-
-            mock_tracker = MagicMock()
-            mock_tracker.session_seed = 12345
-            MockTracker.return_value = mock_tracker
-
+        with _patched_research_scene() as mocks:
             mock_camera_instance = MagicMock()
-            MockCamera.return_value = mock_camera_instance
+            mocks['Camera'].return_value = mock_camera_instance
 
             mock_ui_manager = MagicMock()
-            mock_gui.UIManager.return_value = mock_ui_manager
+            mocks['pygame_gui'].UIManager.return_value = mock_ui_manager
 
             from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
@@ -283,8 +216,6 @@ class TestCycleDetectionCall:
 
         PROJ-40/NEW-RES-005: Scene should validate for cycles.
         """
-        from unittest.mock import MagicMock, patch
-
         # Mock the dependencies
         mock_tree = MagicMock()
         mock_tree.nodes = {'test': MagicMock()}
@@ -301,8 +232,8 @@ class TestCycleDetectionCall:
                     scene.tech_tree = mock_tree
 
                     # Manually call the validation logic (simulating __init__)
-                    errors = mock_tree.validate_requirements()
-                    cycle_errors = mock_tree.detect_cycles()
+                    mock_tree.validate_requirements()
+                    mock_tree.detect_cycles()
 
                     # Verify detect_cycles was callable
                     mock_tree.detect_cycles.assert_called_once()
@@ -312,8 +243,6 @@ class TestCycleDetectionCall:
 
         PROJ-40/NEW-RES-005: When cycles are found, they should be logged.
         """
-        from unittest.mock import MagicMock, patch
-
         mock_tree = MagicMock()
         mock_tree.detect_cycles.return_value = [
             "Cycle detected: A -> B -> A",

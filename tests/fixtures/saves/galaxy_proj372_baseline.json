@@ -1,0 +1,169 @@
+{
+  "_next_fleet_id": 1,
+  "_next_planet_id": 1,
+  "radius": 30,
+  "systems": [
+    {
+      "coord": {
+        "q": 0,
+        "r": 0
+      },
+      "system": {
+        "global_location": {
+          "q": 0,
+          "r": 0
+        },
+        "name": "Alpha-1",
+        "planets": [],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Alpha-2",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": 0
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Alpha-3",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": 10,
+        "r": -5
+      },
+      "system": {
+        "global_location": {
+          "q": 10,
+          "r": -5
+        },
+        "name": "Alpha-2",
+        "planets": [],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Alpha-1",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": 0
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Alpha-4",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": 1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": -8,
+        "r": 6
+      },
+      "system": {
+        "global_location": {
+          "q": -8,
+          "r": 6
+        },
+        "name": "Alpha-3",
+        "planets": [],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Alpha-1",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 2,
+              "r": -1
+            },
+            "warp_type": "stable"
+          },
+          {
+            "destination_id": "Alpha-5",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -1,
+              "r": -1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": 15,
+        "r": 5
+      },
+      "system": {
+        "global_location": {
+          "q": 15,
+          "r": 5
+        },
+        "name": "Alpha-4",
+        "planets": [],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Alpha-2",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": -2,
+              "r": -1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    },
+    {
+      "coord": {
+        "q": -12,
+        "r": -4
+      },
+      "system": {
+        "global_location": {
+          "q": -12,
+          "r": -4
+        },
+        "name": "Alpha-5",
+        "planets": [],
+        "stars": [],
+        "storms": [],
+        "warp_points": [
+          {
+            "destination_id": "Alpha-3",
+            "intrinsic_abilities": {},
+            "location": {
+              "q": 1,
+              "r": 1
+            },
+            "warp_type": "stable"
+          }
+        ]
+      }
+    }
+  ]
+}

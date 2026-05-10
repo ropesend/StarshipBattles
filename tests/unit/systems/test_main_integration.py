@@ -16,6 +16,27 @@ def cleanup():
     patch.stopall()
 
 
+@pytest.fixture(autouse=True)
+def _drain_replay_globals():
+    """PROJ-366 Phase 2: drain coordinator threads + reset module globals
+    after every Game-instantiation test.
+
+    `Game.__init__` calls `bootstrap()` which now constructs and starts
+    a non-daemon `ReplayVerificationCoordinator` worker thread. Without
+    cleanup, this thread leaks across tests and blocks pytest exit.
+    """
+    yield
+    from game.simulation.replay.replay_capture import reset_default_capture_sink
+    from game.strategy.services.replay_verification_coordinator import (
+        shutdown_all_coordinators,
+    )
+    from game.strategy.systems.save_game_service import set_replay_store
+
+    shutdown_all_coordinators(timeout=5.0)
+    reset_default_capture_sink()
+    set_replay_store(None)
+
+
 class TestMainIntegration:
     """
     Smoke tests to verify that the main application entry point and key modules
@@ -26,13 +47,11 @@ class TestMainIntegration:
     def test_import_main(self, cleanup):
         """Test that main.py can be imported without ImportError."""
         try:
-            from game import app
+            from game import app  # noqa: F401
         except ImportError as e:
             pytest.fail(f"Failed to import main.py: {e}")
         except Exception as e:
-            # Main might fail on init due to pygame headless issues, but we want to catch ImportErrors primarily/
-            # However, if it fails due to display, that's fine for this specific test case regarding BATTLE_LOG
-            print(f"Warning: main.py raised exception during import (likely pygame init): {e}")
+            pytest.skip(f"main.py raised non-import exception (likely pygame init): {e}")
 
     def test_game_instantiation(self, cleanup):
         """Test that the Game class can be instantiated."""

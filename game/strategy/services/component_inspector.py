@@ -16,6 +16,7 @@ __all__ = [
     "get_component_type",
     "get_component_threshold",
     "iterate_design_components",
+    "iter_facility_ability_entries",
     "ship_has_ability",
     "find_ship_with_ability",
     "count_ability",
@@ -297,6 +298,61 @@ def get_ability_list(
     if isinstance(val, dict):
         return [val]
     return [{'value': val}]
+
+
+def iter_facility_ability_entries(
+    facility: Any,
+    ability_name: str,
+    registries: Any = None,
+) -> Iterator[Tuple[Any, Dict[str, Any]]]:
+    """Iterate (component, ability_entry) pairs for one ability on a facility.
+
+    PROJ-375 Task 2.1: consolidates the iterate→extract→read-field pattern that
+    was hand-rolled in 8+ engines. Walks the facility's design_data layers via
+    `iter_components`, resolves each component's abilities (inline OR via
+    registry lookup), and yields one normalized dict entry per ability instance.
+
+    Normalization rules for the ability data shape:
+    - dict        -> yielded once as-is.
+    - list[dict]  -> yielded once per element.
+    - list of non-dicts (rare) -> each element wrapped as `{"value": x}`.
+    - scalar      -> wrapped as `{"value": x}` and yielded once.
+    - missing / None -> yields nothing for that component.
+
+    The component is yielded alongside the entry so callers that need
+    component-level metadata (e.g. `resolve_size_multiplier(comp)`) get it
+    without a second lookup.
+
+    Args:
+        facility: Object exposing a `design_data` dict (PlanetaryFacility,
+            ShipDesign, or any test mock with `design_data`).
+        ability_name: Ability key to extract (e.g. "WaterModifier",
+            "ResourceHarvester", "PlanetaryShield").
+        registries: Optional `GameRegistries` (with `.components`) or a
+            plain dict acting as the component registry — passed through
+            to `extract_abilities_from_component` for ID-based lookups.
+
+    Yields:
+        Tuples of `(component_entry, ability_entry_dict)`.
+    """
+    # Local import keeps this module free of strategy-engine imports.
+    from game.core.patterns.layer_iterator import iter_components
+
+    for comp in iter_components(facility.design_data):
+        abilities = extract_abilities_from_component(comp, registries)
+        data = abilities.get(ability_name)
+        if data is None:
+            continue
+        if isinstance(data, dict):
+            yield comp, data
+        elif isinstance(data, list):
+            for entry in data:
+                if isinstance(entry, dict):
+                    yield comp, entry
+                else:
+                    yield comp, {"value": entry}
+        else:
+            yield comp, {"value": data}
 
 
 def has_warp_capability(ship: Any) -> bool:

@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from game.strategy.data.galaxy import Galaxy, StarSystem
     from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
-    from game.strategy.data.stars import StarGenerator
+    from game.strategy.generation.star_generator import StarGenerator
     from game.strategy.data.planet_gen import PlanetGenerator
     from game.strategy.data.naming import NameRegistry
     from game.strategy.generation.planet_image_registry import PlanetImageRegistry
@@ -219,14 +219,14 @@ class GalaxySystemGenerator:
 # caches below. Returns the parsed JSON (optionally narrowed to a sub-key) or
 # an empty dict if the file is missing.
 def _load_json_or_empty(path_value: Any, dict_key: Optional[str] = None) -> Dict[str, Any]:
-    from pathlib import Path
-    import json
+    # PROJ-381 Phase 3 (ERR-04-003 + ERR-04-008): route through
+    # canonical json_utils so missing-file / corrupt-JSON / OSError
+    # all collapse into the same default-{} graceful-degradation
+    # contract. Drops the manual `path.exists()` guard since
+    # `load_json` already handles missing files.
+    from game.core.json_utils import load_json
 
-    path = Path(path_value)
-    if not path.exists():
-        return {}
-    with path.open('r', encoding='utf-8') as f:
-        data = json.load(f)
+    data = load_json(path_value, default={})
     if dict_key is None:
         return data
     return data.get(dict_key, {})

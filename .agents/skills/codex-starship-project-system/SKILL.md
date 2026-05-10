@@ -18,9 +18,10 @@ Use the shared project protocols and scripts. Skills are entry points; protocol 
 
 - Start a new project: `Projects/protocols/01_initialize_project.md`.
 - Read/use project plans: `Projects/protocols/02_plan_protocol.md`.
-- Continue autonomous project work: `Projects/protocols/03a_continue_working.md`.
-- Coordinate parallel project work: `Projects/protocols/03b_parallel_projects.md` only when the user explicitly asks for parallel/delegated agent work and the current Codex client supports it.
-- Audit a project: `Projects/protocols/04_audit_project.md`.
+- Continue autonomous project work: `Projects/protocols/03a_continue_working.md` (the canonical TDD inner loop).
+- Phase-aware execution with cumulative reviews: `Projects/protocols/03c_phase_aware_execution.md`. Used when the project's `plan.md` carries the `**Execution Protocol:** 03c-phase-aware-execution` marker. 03c wraps 03a as the inner loop and adds project-branch lifecycle, phase DAG eligibility, SHA-pinned cumulative reviews via `phase_complete.py`, and `phase_state.json` as authoritative state. Phase workers may write only their own phase checklist, code, tests, and `.agent_reports/proj-phase-session/{PROJ-ID}/{phase-id}/`; coordinator owns `plan.md`, `manifest.md`, `phase_state.json`, `findings_ledger.md`.
+- Coordinate parallel project work: `Projects/protocols/03b_parallel_projects.md` only when the user explicitly asks for parallel/delegated agent work and the current Codex client supports it. 03b is inter-project parallelism; 03c handles intra-project phase parallelism inside a single 03b worker's worktree.
+- Audit a project: `Projects/protocols/04_audit_project.md`. For 03c projects, this is the **rigorous final cumulative gate** (no merge to `main` until clean) — see the audit-readiness rules in `validate_audit_ready.py`.
 - Close/archive a project: `Projects/protocols/05_close_project.md`.
 - Revise a completed project: `Projects/protocols/06_revise_project.md`.
 - Extract a phase into a new project: `Projects/protocols/07_extract_phase.md`.

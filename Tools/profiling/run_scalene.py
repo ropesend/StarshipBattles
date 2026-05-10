@@ -176,8 +176,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if importlib.util.find_spec("scalene") is None:
         print(
-            "Scalene is not installed. Run: .venv\\Scripts\\Activate.ps1; "
-            "python -m pip install -r requirements-dev.txt",
+            "Scalene is not installed. Run: pip install -r requirements-dev.txt",
             file=sys.stderr,
         )
         return 2

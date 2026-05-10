@@ -82,7 +82,7 @@ class TestRaceFlagLoading:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -110,7 +110,7 @@ class TestRaceFlagLoading:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -133,7 +133,7 @@ class TestRaceFlagLoading:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -165,7 +165,7 @@ class TestThemeFlagLoading:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -189,7 +189,7 @@ class TestThemeFlagLoading:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -226,7 +226,7 @@ class TestFlagPrecedence:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -252,7 +252,7 @@ class TestFlagPrecedence:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -282,7 +282,7 @@ class TestMissingAssets:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -307,7 +307,7 @@ class TestMissingAssets:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 
@@ -352,7 +352,7 @@ class TestMultipleEmpires:
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
-        with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
+        with patch('game.assets.asset_manager.get_default_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
                 StrategyScreen._load_assets(scene)
 

@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import MagicMock, PropertyMock
 
 from game.core.validation import ValidationResult
-from game.strategy.engine.command_handlers import ColonizeMissionCommandHandler
+from game.strategy.engine.handlers import ColonizeMissionCommandHandler
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
@@ -103,13 +103,11 @@ def make_mock_session(fleet, planet=None, component_registry=None):
 
 
 def make_component_registry():
-    """Create a component registry with colony pod definitions."""
+    """Create a component registry with colony pod definitions.
+
+    PROJ-323 Task 4.9: removed duplicate 'colony_pod' key (was line 113-117).
+    """
     return {
-        'colony_pod': {
-            'abilities': {
-                'ColonizePlanet': True
-            }
-        },
         'colony_pod': {
             'abilities': {
                 'ColonizePlanet': True

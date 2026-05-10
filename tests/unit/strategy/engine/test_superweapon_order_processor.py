@@ -13,6 +13,16 @@ from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.stars import Star, StarType
 
 
+# PROJ-368 Phase 4: SELF_DESTRUCT was lifted from SuperweaponOrderProcessor
+# to SelfDestructHandler. Tests that called process_self_destruct now route
+# through the handler with the same arguments and field shape.
+def _lift_self_destruct(processor, fleet, empire, galaxy):
+    from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
+    handler = SelfDestructHandler(event_bus=getattr(processor, "_event_bus", None))
+    return handler.execute_action_order(fleet, empire, galaxy)
+
+
+
 @pytest.fixture
 def mock_galaxy():
     """Create a mock galaxy with systems."""
@@ -926,7 +936,7 @@ class TestProcessSelfDestruct:
         empire = MagicMock()
 
         # Act
-        processor.process_self_destruct(mock_fleet, empire, mock_galaxy)
+        _lift_self_destruct(processor, mock_fleet, empire, mock_galaxy)
 
         # Assert
         remove_calls = [call[0][0] for call in mock_fleet.remove_ship.call_args_list]
@@ -957,7 +967,7 @@ class TestProcessSelfDestruct:
         empire = MagicMock()
         empire.id = 0
 
-        processor.process_self_destruct(mock_fleet, empire, mock_galaxy)
+        _lift_self_destruct(processor, mock_fleet, empire, mock_galaxy)
 
         from game.strategy.events.event_types import EventType, EventCategory
         assert len(captured) == 1

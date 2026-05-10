@@ -9,6 +9,31 @@ from game.strategy.generation.placement_strategies import (
 from game.strategy.generation.density.density_map import DensityMap
 from game.strategy.generation.density.primitives.radial import RadialPrimitive
 
+
+def _bfs_visited_names(galaxy: Galaxy) -> set[str]:
+    """BFS over warp graph from an arbitrary system; returns set of visited
+    system names. Empty set when galaxy has no systems.
+
+    PROJ-323 Task 5.6: extracted from test_graph_connectivity.
+    """
+    if not galaxy.systems:
+        return set()
+    start_node = next(iter(galaxy.systems.values()))
+    visited = {start_node.name}
+    queue = [start_node]
+    while queue:
+        current = queue.pop(0)
+        for wp in current.warp_points:
+            # O(N) lookup for target obj, irrelevant for test size
+            target = next(
+                (s for s in galaxy.systems.values() if s.name == wp.destination_id),
+                None,
+            )
+            if target and target.name not in visited:
+                visited.add(target.name)
+                queue.append(target)
+    return visited
+
 class TestGalaxyGen:
     def test_galaxy_init(self):
         g = Galaxy(radius=1000)
@@ -71,27 +96,10 @@ class TestGalaxyGen:
         """Verify that the generated galaxy is fully connected (no isolated islands)."""
         g = Galaxy(radius=1000)
         g.generate_systems(count=20, min_dist=50)
-        g.generate_warp_lanes() # New explicit step or auto? User request implies part of generation.
-        # Assuming generate_systems might need to call lanes, or separate.
-        # Let's say we call generating lanes manually for tested control.
-        
-        # BFS Traversal
-        if not g.systems:
-            return
-            
-        start_node = next(iter(g.systems.values()))
-        visited = {start_node.name}
-        queue = [start_node]
-        
-        while queue:
-            current = queue.pop(0)
-            for wp in current.warp_points:
-                # O(N) lookup for target obj, irrelevant for test size
-                target = next((s for s in g.systems.values() if s.name == wp.destination_id), None)
-                if target and target.name not in visited:
-                    visited.add(target.name)
-                    queue.append(target)
-        
+        g.generate_warp_lanes()
+
+        visited = _bfs_visited_names(g)
+
         assert len(visited) == len(g.systems), f"Graph not connected! Visited {len(visited)}/{len(g.systems)}"
 
     def test_minimum_warp_points(self):

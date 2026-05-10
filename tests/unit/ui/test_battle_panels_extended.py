@@ -33,35 +33,52 @@ class MockRect:
         return self
 
 
+def _install_battle_panels_pygame_mock(test_obj, *, with_keys: bool = False,
+                                       scene_attrs: dict | None = None):
+    """Shared setup helper for battle-panels-extended test classes.
+
+    Installs a MagicMock pygame, reloads `game.ui.panels.battle_panels`
+    against it, and exposes `self.module`, `self.mock_pygame` and
+    `self.mock_scene`. Returns the active `patch.dict` so the caller can
+    stop it on teardown.
+
+    PROJ-322 Task 1.17 (S11-CAT4-001): consolidates 3 copy-pasted
+    `setup_mocks` blocks into one helper.
+    """
+    mock_pygame = MagicMock()
+    mock_pygame.K_LSHIFT = 1
+    mock_pygame.K_RSHIFT = 2
+    mock_pygame.SRCALPHA = 0
+    mock_pygame.Rect = MockRect
+
+    modules_patcher = patch.dict(sys.modules, {'pygame': mock_pygame})
+    modules_patcher.start()
+
+    from game.ui.panels import battle_panels
+    import importlib
+    importlib.reload(battle_panels)
+    test_obj.module = battle_panels
+    test_obj.mock_scene = MagicMock()
+    if scene_attrs:
+        for k, v in scene_attrs.items():
+            setattr(test_obj.mock_scene, k, v)
+    if with_keys:
+        mock_keys = {mock_pygame.K_LSHIFT: False, mock_pygame.K_RSHIFT: False}
+        mock_pygame.key.get_pressed.return_value = mock_keys
+    test_obj.mock_pygame = mock_pygame
+    return modules_patcher
+
+
 class TestShipStatsPanelExtended:
     """Extended tests for ShipStatsPanel."""
 
     @pytest.fixture(autouse=True)
     def setup_mocks(self):
         """Set up mocks and patch pygame."""
-        mock_pygame = MagicMock()
-        mock_pygame.K_LSHIFT = 1
-        mock_pygame.K_RSHIFT = 2
-        mock_pygame.SRCALPHA = 0
-        mock_pygame.Rect = MockRect
-
-        modules_patcher = patch.dict(sys.modules, {'pygame': mock_pygame})
-        modules_patcher.start()
-
-        from game.ui.panels import battle_panels
-        import importlib
-        importlib.reload(battle_panels)
-        self.module = battle_panels
-        self.mock_scene = MagicMock()
-        self.mock_scene.ships = []
-
-        mock_keys = {mock_pygame.K_LSHIFT: False, mock_pygame.K_RSHIFT: False}
-        mock_pygame.key.get_pressed.return_value = mock_keys
-
-        self.mock_pygame = mock_pygame
-
+        modules_patcher = _install_battle_panels_pygame_mock(
+            self, with_keys=True, scene_attrs={'ships': []},
+        )
         yield
-
         modules_patcher.stop()
 
     def create_mock_ship(self, team_id, name="Ship"):
@@ -165,7 +182,7 @@ class TestShipStatsPanelExtended:
         panel.handle_click(10, 50)
 
         # Should track by ship name (fallback ID)
-        assert "Expandable" in panel.expanded_ships
+        assert "Expandable" in panel._expanded_ids
 
     def test_get_ship_id_with_dto_id(self):
         """Test _get_ship_id() uses .id attribute for DTOs."""
@@ -189,7 +206,7 @@ class TestShipStatsPanelExtended:
 
         assert not panel._is_expanded(ship)
 
-        panel.expanded_ships.add("test_id")
+        panel._expanded_ids.add("test_id")
         assert panel._is_expanded(ship)
 
     def test_toggle_expanded_adds_and_removes(self):
@@ -202,11 +219,11 @@ class TestShipStatsPanelExtended:
 
         # Add
         panel._toggle_expanded(ship)
-        assert "toggle_id" in panel.expanded_ships
+        assert "toggle_id" in panel._expanded_ids
 
         # Remove
         panel._toggle_expanded(ship)
-        assert "toggle_id" not in panel.expanded_ships
+        assert "toggle_id" not in panel._expanded_ids
 
     def test_handle_click_returns_false_for_miss(self):
         """Test handle_click returns False for clicks outside ship entries."""
@@ -225,25 +242,8 @@ class TestSeekerMonitorPanelExtended:
     @pytest.fixture(autouse=True)
     def setup_mocks(self):
         """Set up mocks and patch pygame."""
-        mock_pygame = MagicMock()
-        mock_pygame.K_LSHIFT = 1
-        mock_pygame.K_RSHIFT = 2
-        mock_pygame.SRCALPHA = 0
-        mock_pygame.Rect = MockRect
-
-        modules_patcher = patch.dict(sys.modules, {'pygame': mock_pygame})
-        modules_patcher.start()
-
-        from game.ui.panels import battle_panels
-        import importlib
-        importlib.reload(battle_panels)
-        self.module = battle_panels
-        self.mock_scene = MagicMock()
-
-        self.mock_pygame = mock_pygame
-
+        modules_patcher = _install_battle_panels_pygame_mock(self)
         yield
-
         modules_patcher.stop()
 
     def create_mock_seeker(self, status='active', seeker_id=None):
@@ -402,25 +402,8 @@ class TestBattleControlPanelExtended:
     @pytest.fixture(autouse=True)
     def setup_mocks(self):
         """Set up mocks and patch pygame."""
-        mock_pygame = MagicMock()
-        mock_pygame.K_LSHIFT = 1
-        mock_pygame.K_RSHIFT = 2
-        mock_pygame.SRCALPHA = 0
-        mock_pygame.Rect = MockRect
-
-        modules_patcher = patch.dict(sys.modules, {'pygame': mock_pygame})
-        modules_patcher.start()
-
-        from game.ui.panels import battle_panels
-        import importlib
-        importlib.reload(battle_panels)
-        self.module = battle_panels
-        self.mock_scene = MagicMock()
-
-        self.mock_pygame = mock_pygame
-
+        modules_patcher = _install_battle_panels_pygame_mock(self)
         yield
-
         modules_patcher.stop()
 
     def test_handle_click_no_rects_set_returns_false(self):

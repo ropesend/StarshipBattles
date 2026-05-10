@@ -9,6 +9,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
@@ -141,7 +142,7 @@ class TestTurnProcessesFuelGeneration:
     def test_turn_processes_fuel_generation(self):
         """Processing one turn generates fuel at facilities with synthesizers."""
         registries = _make_mock_registries(fuel_gen_amount=300.0)
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         facility = _make_fuel_facility(fuel_level=0.0, has_synthesizer=True)
         colony = _make_colony_planet(owner_id=0, facilities=[facility])
@@ -158,7 +159,7 @@ class TestTurnProcessesFuelGeneration:
     def test_full_turn_accumulates_fuel(self):
         """Processing a full turn (100 ticks) generates full turn's fuel."""
         registries = _make_mock_registries(fuel_gen_amount=300.0)
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         facility = _make_fuel_facility(fuel_level=0.0, has_synthesizer=True)
         colony = _make_colony_planet(owner_id=0, facilities=[facility])
@@ -179,7 +180,7 @@ class TestTurnProcessesFleetResupply:
     def test_turn_processes_fleet_resupply(self):
         """Fleet at colony location with fuel in facility gets resupplied."""
         registries = _make_mock_registries(fuel_gen_amount=0.0)
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         location = HexCoord(3, 4)
 
@@ -236,8 +237,8 @@ class TestTurnProcessesFleetResupply:
             lambda *a, **kw: (call_order.append("movement"), [])[1]
         )
 
-        engine = TurnEngine(
-            registries=registries,
+        engine = build_test_turn_engine(
+            registries,
             resupply_engine=mock_resupply,
             movement_engine=mock_movement,
         )
@@ -258,7 +259,7 @@ class TestFullTurnResupplyAndMovement:
         registries = _make_mock_registries(
             fuel_gen_amount=100.0, fuel_tank_amount=1000.0
         )
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         location = HexCoord(5, 5)
 

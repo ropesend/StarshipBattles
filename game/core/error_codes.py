@@ -71,6 +71,9 @@ class ErrorCode(Enum):
     OUT_OF_RANGE = "V004"
     """Value is outside allowed range."""
 
+    OWNERSHIP_MISMATCH = "V005"
+    """Entity exists but does not belong to the requesting empire (PROJ-381)."""
+
     # =========================================================================
     # State Codes (S001-S099)
     # =========================================================================
@@ -163,6 +166,10 @@ class ErrorCode(Enum):
 
     SNAPSHOT_FAILED = "T003"
     """Failed to create pre-turn state snapshot."""
+
+    DUPLICATE_COMMAND = "T004"
+    """A CommandSpec is already registered for this command class
+    (PROJ-395 CRIT-002). Caller can pass ``replace=True`` to override."""
 
     # =========================================================================
     # LLM Service Codes (L001-L099) - PROJ-296

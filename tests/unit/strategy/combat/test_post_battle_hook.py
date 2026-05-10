@@ -7,6 +7,7 @@ ShipInstance / Fleet / Empire graph:
   - Retreated ships: remove from parent fleet (MVP — see decisions.md)
   - Empty fleets pruned from their owning empire
 """
+from types import SimpleNamespace
 from typing import Dict, List
 
 import pytest
@@ -75,12 +76,16 @@ def _make_ship_outcome(
                 component_id="bridge",
                 instance_index=0,
                 current_hp=bridge_hp,
+                max_hp=100.0,
+                status="ACTIVE",
                 is_active=True,
             ),
             ComponentStateSpec(
                 component_id="laser_cannon",
                 instance_index=0,
                 current_hp=10.0,
+                max_hp=100.0,
+                status="ACTIVE",
                 is_active=True,
             ),
         ),
@@ -321,6 +326,131 @@ def test_missing_empires_param_does_not_crash(two_fleets):
     assert fleet_a.ships == []
 
 
+def test_orphan_ship_outcome_is_logged_and_skipped(two_fleets, caplog):
+    fleet_a, fleet_b = two_fleets
+    original_ids = [ship.instance_id for ship in fleet_a.ships]
+    outcome = _make_outcome({
+        0: [
+            _make_ship_outcome(
+                instance_id="not-in-any-fleet",
+                status=ShipStatus.DESTROYED,
+            )
+        ],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    assert [ship.instance_id for ship in fleet_a.ships] == original_ids
+    assert "no ShipInstance matches" in caplog.text
+
+
+def test_unknown_ship_status_is_logged_and_skipped(two_fleets, caplog):
+    fleet_a, fleet_b = two_fleets
+    target = fleet_a.ships[0]
+    outcome = _make_outcome({
+        0: [
+            _make_ship_outcome(
+                instance_id=target.instance_id,
+                status="mystery_status",
+            )
+        ],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    assert target in fleet_a.ships
+    assert "unknown ShipStatus" in caplog.text
+
+
+def test_empty_fleet_prune_ignores_missing_empire(two_fleets):
+    fleet_a, fleet_b = two_fleets
+    outcomes_team0 = [
+        _make_ship_outcome(instance_id=s.instance_id, status=ShipStatus.DESTROYED)
+        for s in list(fleet_a.ships)
+    ]
+    outcome = _make_outcome({
+        0: outcomes_team0,
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+        empires={},
+    )
+
+    assert fleet_a.ships == []
+
+
+def test_empty_fleet_prune_ignores_empire_without_fleets(two_fleets):
+    fleet_a, fleet_b = two_fleets
+    outcomes_team0 = [
+        _make_ship_outcome(instance_id=s.instance_id, status=ShipStatus.DESTROYED)
+        for s in list(fleet_a.ships)
+    ]
+    outcome = _make_outcome({
+        0: outcomes_team0,
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+        empires={0: SimpleNamespace()},
+    )
+
+    assert fleet_a.ships == []
+
+
+def test_empty_fleet_prune_logs_valueerror_during_removal(two_fleets, caplog):
+    fleet_a, fleet_b = two_fleets
+    outcomes_team0 = [
+        _make_ship_outcome(instance_id=s.instance_id, status=ShipStatus.DESTROYED)
+        for s in list(fleet_a.ships)
+    ]
+    outcome = _make_outcome({
+        0: outcomes_team0,
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    class _RemovalFails(list):
+        def remove(self, item):
+            raise ValueError("already removed")
+
+    empire = SimpleNamespace(fleets=_RemovalFails([fleet_a]))
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+        empires={0: empire},
+    )
+
+    assert "not found on empire while pruning" in caplog.text
+
+
 # ---------------------------------------------------------------------------
 # build_strategy_battle_spec attaches a live hook (not the Phase-1 no-op)
 # ---------------------------------------------------------------------------
@@ -368,3 +498,143 @@ def test_strategy_spec_post_battle_hook_applies_outcome(
     assert fleet_a.ships[0].components[bridge_key].current_hp == pytest.approx(
         42.0, abs=0.5
     )
+
+
+# ---------------------------------------------------------------------------
+# PROJ-354A audit remediation (MAJ-001/002/003): outcome.max_hp is preferred
+# over the pre-battle snapshot, so modifier-shaped caps survive write-back.
+# ---------------------------------------------------------------------------
+
+
+def test_apply_survivor_outcome_uses_outcome_max_hp_over_pre_battle(two_fleets):
+    """`_apply_survivor_outcome` should source `max_hp` from the outcome's
+    `ComponentStateSpec`, not the pre-battle ShipInstance snapshot, so that
+    modifier-reshaped caps captured by `_extract_component_states` are
+    preserved on the persistent strategy-side `ComponentState`. Per
+    MAJ-001/MAJ-003 of the PROJ-354A OpenCode review.
+    """
+    fleet_a, fleet_b = two_fleets
+    survivor = fleet_a.ships[0]
+    bridge_key = component_state_key("bridge", 0)
+    pre_max = survivor.components[bridge_key].max_hp
+    assert pre_max > 0.0
+
+    # Outcome reports a different (modifier-shaped) max_hp than the
+    # pre-battle snapshot. The hook must adopt the outcome value.
+    reshaped_max = pre_max + 25.0
+    ship_outcome = ShipOutcome(
+        instance_id=survivor.instance_id,
+        status=ShipStatus.SURVIVED,
+        final_position=Vector2(0, 0),
+        final_angle=0.0,
+        final_velocity=Vector2(0, 0),
+        components=(
+            ComponentStateSpec(
+                component_id="bridge",
+                instance_index=0,
+                current_hp=42.0,
+                max_hp=reshaped_max,
+                status="DAMAGED",
+                is_active=True,
+            ),
+            ComponentStateSpec(
+                component_id="laser_cannon",
+                instance_index=0,
+                current_hp=100.0,
+                max_hp=100.0,
+                status="ACTIVE",
+                is_active=True,
+            ),
+        ),
+        weapons=(),
+        hits_taken=(),
+        stats=ShipStats(
+            total_damage_taken=0.0,
+            peak_speed=0.0,
+            ticks_derelict=0,
+            ticks_alive=0,
+        ),
+    )
+    outcome = _make_outcome({
+        0: [ship_outcome],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    assert survivor.components[bridge_key].max_hp == pytest.approx(
+        reshaped_max
+    ), "max_hp must come from outcome.cs.max_hp, not pre-battle snapshot"
+    assert survivor.components[bridge_key].current_hp == pytest.approx(42.0)
+
+
+def test_apply_survivor_outcome_falls_back_to_prior_max_hp_when_outcome_zero(
+    two_fleets,
+):
+    """When the outcome reports `max_hp == 0.0` (treated as missing), fall
+    back to the pre-battle snapshot. Defensive guard against any code path
+    that produces a zero/missing max_hp on the outcome side.
+    """
+    fleet_a, fleet_b = two_fleets
+    survivor = fleet_a.ships[0]
+    bridge_key = component_state_key("bridge", 0)
+    pre_max = survivor.components[bridge_key].max_hp
+    assert pre_max > 0.0
+
+    ship_outcome = ShipOutcome(
+        instance_id=survivor.instance_id,
+        status=ShipStatus.SURVIVED,
+        final_position=Vector2(0, 0),
+        final_angle=0.0,
+        final_velocity=Vector2(0, 0),
+        components=(
+            ComponentStateSpec(
+                component_id="bridge",
+                instance_index=0,
+                current_hp=30.0,
+                max_hp=0.0,  # missing/unknown
+                status="ACTIVE",
+                is_active=True,
+            ),
+            ComponentStateSpec(
+                component_id="laser_cannon",
+                instance_index=0,
+                current_hp=100.0,
+                max_hp=0.0,
+                status="ACTIVE",
+                is_active=True,
+            ),
+        ),
+        weapons=(),
+        hits_taken=(),
+        stats=ShipStats(
+            total_damage_taken=0.0,
+            peak_speed=0.0,
+            ticks_derelict=0,
+            ticks_alive=0,
+        ),
+    )
+    outcome = _make_outcome({
+        0: [ship_outcome],
+        1: [_make_ship_outcome(
+            instance_id=fleet_b.ships[0].instance_id,
+            status=ShipStatus.SURVIVED,
+        )],
+    })
+
+    apply_outcome_to_fleets(
+        outcome,
+        fleets_by_team_id={0: [fleet_a], 1: [fleet_b]},
+    )
+
+    assert survivor.components[bridge_key].max_hp == pytest.approx(pre_max), (
+        "Zero max_hp on the outcome should fall back to the pre-battle "
+        "snapshot rather than zeroing out the persistent ComponentState."
+    )
+    assert survivor.components[bridge_key].current_hp == pytest.approx(30.0)

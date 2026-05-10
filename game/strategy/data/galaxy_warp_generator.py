@@ -125,43 +125,29 @@ class GalaxyWarpGenerator:
     def _build_edge_candidates(
         self,
         systems: List['StarSystem'],
-        spatial_index,
-        k_neighbors: int
     ) -> List[tuple]:
-        """Build sorted (dist, i, j) edge list using k-nearest neighbors.
+        """Build sorted (dist, i, j) edge list over all unique system pairs.
 
-        Computes edges via k-nearest neighbor queries on the spatial index,
-        deduplicates, calculates distances, and returns sorted by distance.
+        ``GameConfig.MAX_SYSTEM_COUNT`` is 150, so all-pairs generation is at
+        most 11,175 edges — trivial. Exact enumeration replaces the previous
+        k-nearest-based approximation, which could leave far-apart systems
+        isolated whenever the spatial index's expansion heuristic terminated
+        before reaching them. Tie-breaking by ``(i, j)`` keeps MST output
+        deterministic for a given system order.
 
         Args:
             systems: Ordered list of star systems (index = system ID).
-            spatial_index: SpatialIndex populated with system coordinates.
-            k_neighbors: Number of nearest neighbors to consider per system.
 
         Returns:
-            List of (distance, i, j) tuples sorted by distance ascending.
+            List of ``(distance, i, j)`` tuples sorted by ``(distance, i, j)``.
         """
-        edge_set = set()  # Avoid duplicates
-        for i, sys in enumerate(systems):
-            neighbors = spatial_index.get_k_nearest(
-                sys.global_location,
-                k=k_neighbors,
-                exclude_coord=sys.global_location
-            )
-            for neighbor_coord, j in neighbors:
-                if i < j:
-                    edge_set.add((i, j))
-                else:
-                    edge_set.add((j, i))
-
-        # Convert to edge list with distances
-        edges = []
-        for i, j in edge_set:
-            dist = hex_distance(systems[i].global_location, systems[j].global_location)
-            edges.append((dist, i, j))
-
-        # Sort by distance (asc)
-        edges.sort(key=lambda x: x[0])
+        edges: List[tuple] = []
+        for i in range(len(systems)):
+            loc_i = systems[i].global_location
+            for j in range(i + 1, len(systems)):
+                dist = hex_distance(loc_i, systems[j].global_location)
+                edges.append((dist, i, j))
+        edges.sort(key=lambda e: (e[0], e[1], e[2]))
         return edges
 
     def _apply_mst_edges(
@@ -327,21 +313,19 @@ class GalaxyWarpGenerator:
     def generate_warp_lanes(
         self,
         galaxy: 'Galaxy',
-        k_neighbors: int = 20,
         region_classifier: 'Optional[RegionClassifier]' = None,
         inter_region_mode: str = 'normal',
         rng: Optional[random.Random] = None,
     ) -> None:
         """Generate warp lanes ensuring connectivity (MST) and adding density.
 
-        Uses spatial indexing with k-nearest neighbors for O(n*k) performance
-        instead of O(n²) all-pairs computation.
+        Uses an exact all-pairs sorted edge list as MST input. With
+        ``MAX_SYSTEM_COUNT=150`` this is at most ~11k pairs — well below the
+        cost of the k-nearest approximation it replaces, and connectivity
+        is guaranteed regardless of how sparse the system layout is.
 
         Args:
             galaxy: Galaxy instance to generate warp lanes for.
-            k_neighbors: Number of nearest neighbors to consider per system.
-                         Higher values = more edges to consider, slower but
-                         potentially better connectivity. Default 20.
             region_classifier: Optional RegionClassifier for region-aware
                          warp lane generation. If provided, inter-region
                          connections are penalized based on inter_region_mode.
@@ -350,19 +334,12 @@ class GalaxyWarpGenerator:
                          - 'limited': Allow 1-2 inter-region links per region pair
                          - 'minimal': Only allow MST-required inter-region links
         """
-        from game.strategy.data.spatial_index import SpatialIndex
-
         systems = list(galaxy.systems.values())
         if len(systems) < 2:
             return
 
-        # Build spatial index for efficient neighbor lookup
-        spatial_index = SpatialIndex(cell_size=500)
-        for i, sys in enumerate(systems):
-            spatial_index.add(sys.global_location, i)
-
-        # 1. Build sorted edge candidates via k-nearest neighbors
-        edges = self._build_edge_candidates(systems, spatial_index, k_neighbors)
+        # 1. Build sorted edge candidates over all unique system pairs.
+        edges = self._build_edge_candidates(systems)
 
         # 2. Apply MST for guaranteed connectivity
         self._apply_mst_edges(systems, edges)
@@ -381,17 +358,15 @@ _WARP_POINT_TYPES_CACHE = None
 def _load_warp_point_types() -> dict:
     global _WARP_POINT_TYPES_CACHE
     if _WARP_POINT_TYPES_CACHE is None:
-        from pathlib import Path
-        import json
+        # PROJ-381 Phase 3 (ERR-04-004): route through canonical
+        # json_utils so missing-file / corrupt-JSON / OSError all
+        # collapse into the same default-{} graceful-degradation
+        # contract. Drops the manual `path.exists()` guard.
+        from game.core.json_utils import load_json
         from game.core.paths import Paths
 
-        path = Path(Paths.WARP_POINT_TYPES_FILE)
-        if path.exists():
-            with path.open('r', encoding='utf-8') as f:
-                data = json.load(f)
-            _WARP_POINT_TYPES_CACHE = data.get('warp_point_types', {})
-        else:
-            _WARP_POINT_TYPES_CACHE = {}
+        data = load_json(Paths.WARP_POINT_TYPES_FILE, default={})
+        _WARP_POINT_TYPES_CACHE = data.get('warp_point_types', {})
     return _WARP_POINT_TYPES_CACHE
 
 

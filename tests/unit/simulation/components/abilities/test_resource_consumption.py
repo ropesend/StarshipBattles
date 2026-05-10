@@ -24,6 +24,7 @@ from game.simulation.components.abilities.ui_colors import (
     HINT_WARP_ENERGY,
     HINT_PROJECTILE_SPEED,
     HINT_DEFAULT,
+    HINT_ACCURACY,
 )
 
 
@@ -398,6 +399,31 @@ class TestResourceConsumptionEdgeCases:
 
         assert result is False
 
+    def test_constant_trigger_nonexistent_resource_zero_cost_succeeds(self, mock_component_with_ship, resource_registry):
+        """Constant trigger with a missing resource succeeds when amount is zero."""
+        mock_component_with_ship.ship.resources = resource_registry
+        data = {
+            'resource': 'nonexistent_resource',
+            'amount': 0.0,
+            'trigger': 'constant'
+        }
+        ability = ResourceConsumption(mock_component_with_ship, data)
+
+        result = ability.update()
+
+        assert result is True
+
+    def test_constant_trigger_without_registry_succeeds(self, mock_component):
+        """A decoupled constant consumer without a registry is a no-op."""
+        data = {
+            'resource': 'fuel',
+            'amount': 10.0,
+            'trigger': 'constant'
+        }
+        ability = ResourceConsumption(mock_component, data)
+
+        assert ability.update() is True
+
     def test_no_ship_reference(self, mock_component):
         """Consumption fails gracefully when no ship reference."""
         mock_component.ship = None
@@ -411,6 +437,17 @@ class TestResourceConsumptionEdgeCases:
         result = ability.check_and_consume()
 
         assert result is False
+
+    def test_check_available_without_registry_returns_false(self, mock_component):
+        """Availability checks fail when no registry can be resolved."""
+        data = {
+            'resource': 'fuel',
+            'amount': 10.0,
+            'trigger': 'activation'
+        }
+        ability = ResourceConsumption(mock_component, data)
+
+        assert ability.check_available() is False
 
     def test_no_resources_on_ship(self, mock_component):
         """Consumption fails gracefully when ship has no resources."""
@@ -436,50 +473,33 @@ class TestResourceConsumptionEdgeCases:
 class TestMultipleResourceTypes:
     """Tests for handling different resource types."""
 
-    def test_fuel_consumption(self, mock_component_with_ship, resource_registry):
-        """Test consuming fuel resource."""
+    # PROJ-323 Task 3.14: 3 nearly-identical resource consumption tests parametrized.
+    @pytest.mark.parametrize("resource,amount,expected_remaining", [
+        pytest.param('fuel', 25.0, 75.0, id='fuel'),
+        pytest.param('energy', 30.0, 20.0, id='energy'),
+        pytest.param('ammo', 5.0, 15.0, id='ammo'),
+    ])
+    def test_resource_consumption(
+        self,
+        mock_component_with_ship,
+        resource_registry,
+        resource,
+        amount,
+        expected_remaining,
+    ):
+        """Test consuming each supported resource type."""
         mock_component_with_ship.ship.resources = resource_registry
         data = {
-            'resource': 'fuel',
-            'amount': 25.0,
-            'trigger': 'activation'
+            'resource': resource,
+            'amount': amount,
+            'trigger': 'activation',
         }
         ability = ResourceConsumption(mock_component_with_ship, data)
 
         result = ability.check_and_consume()
 
         assert result is True
-        assert resource_registry.get_value('fuel') == 75.0
-
-    def test_energy_consumption(self, mock_component_with_ship, resource_registry):
-        """Test consuming energy resource."""
-        mock_component_with_ship.ship.resources = resource_registry
-        data = {
-            'resource': 'energy',
-            'amount': 30.0,
-            'trigger': 'activation'
-        }
-        ability = ResourceConsumption(mock_component_with_ship, data)
-
-        result = ability.check_and_consume()
-
-        assert result is True
-        assert resource_registry.get_value('energy') == 20.0
-
-    def test_ammo_consumption(self, mock_component_with_ship, resource_registry):
-        """Test consuming ammo resource."""
-        mock_component_with_ship.ship.resources = resource_registry
-        data = {
-            'resource': 'ammo',
-            'amount': 5.0,
-            'trigger': 'activation'
-        }
-        ability = ResourceConsumption(mock_component_with_ship, data)
-
-        result = ability.check_and_consume()
-
-        assert result is True
-        assert resource_registry.get_value('ammo') == 15.0
+        assert resource_registry.get_value(resource) == expected_remaining
 
     def test_multiple_consumptions_different_resources(self, mock_component_with_ship, resource_registry):
         """Test multiple abilities consuming different resources."""
@@ -800,6 +820,14 @@ class TestResourceGeneration:
         assert ability.rate == 10.0
         assert ability._base_rate == 10.0
 
+    def test_generation_init_defaults(self, mock_component):
+        """ResourceGeneration defaults missing resource and rate fields."""
+        ability = ResourceGeneration(mock_component, {})
+
+        assert ability.resource_type == ''
+        assert ability.rate == 0.0
+        assert ability._base_rate == 0.0
+
     def test_generation_recalculate_with_energy_gen_mult(self, mock_component):
         """ResourceGeneration recalculate applies energy_gen_mult."""
         mock_component.stats = {'energy_gen_mult': 2.0}
@@ -816,6 +844,32 @@ class TestResourceGeneration:
         ability = ResourceGeneration(mock_component, data)
 
         assert ability.get_primary_value() == 10.0
+
+    def test_generation_sync_data_partial_update_preserves_resource(self, mock_component):
+        """Dict sync keeps the existing resource when only amount changes."""
+        ability = ResourceGeneration(mock_component, {'resource': 'energy', 'amount': 10.0})
+
+        ability.sync_data({'amount': 4.5})
+
+        assert ability.resource_type == 'energy'
+        assert ability.rate == 4.5
+        assert ability._base_rate == 4.5
+
+    def test_generation_ui_rows_energy_color(self, mock_component):
+        """Energy generation uses the energy color hint."""
+        ability = ResourceGeneration(mock_component, {'resource': 'energy', 'amount': 10.0})
+
+        rows = ability.get_ui_rows()
+
+        assert rows == [{'label': 'Energy Gen', 'value': '10.0/s', 'color_hint': HINT_ACCURACY}]
+
+    def test_generation_ui_rows_unknown_resource_default_color(self, mock_component):
+        """Unknown generated resources use the default color hint."""
+        ability = ResourceGeneration(mock_component, {'resource': 'coolant', 'amount': 2.5})
+
+        rows = ability.get_ui_rows()
+
+        assert rows == [{'label': 'Coolant Gen', 'value': '2.5/s', 'color_hint': HINT_DEFAULT}]
 
 
 # =============================================================================

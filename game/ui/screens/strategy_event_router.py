@@ -54,8 +54,14 @@ class StrategyEventRouter:
         if self.ui.menu_panel:
             return True
 
-        # Check for build queue screen
-        if self.ui.scene.build_queue_screen is not None:
+        # Check for build queue screen.
+        # PROJ-376 Phase 2: gate on is_visible() — the cached screen
+        # persists across opens; the modal-block semantics here mean
+        # "is the build queue currently the focused overlay?".
+        if (
+            self.ui.scene.build_queue_screen is not None
+            and self.ui.scene.build_queue_screen.is_visible()
+        ):
             return True
 
         # PROJ-313 Phases 3-6: all strategy modal windows migrated to

@@ -10,8 +10,6 @@ logger = logging.getLogger(__name__)
 
 # Matches filenames like "64Portrait_Comp_001.png" or "2048Portrait_Comp_019.png"
 _PORTRAIT_PATTERN = re.compile(r"(\d+)Portrait_Comp_(\d+)\.\w+$")
-# Matches legacy filenames like "Comp_001.bmp"
-_LEGACY_PATTERN = re.compile(r"Comp_(\d+)\.\w+$")
 
 _default_sprite_manager: Optional['SpriteManager'] = None
 
@@ -71,15 +69,10 @@ class SpriteManager:
 
             index = -1
             try:
-                # Try portrait pattern: {resolution}Portrait_Comp_{number}.{ext}
+                # Match canonical pattern: {resolution}Portrait_Comp_{number}.{ext}
                 match = _PORTRAIT_PATTERN.match(f)
                 if match:
                     index = int(match.group(2))
-                else:
-                    # Try legacy pattern: Comp_{number}.{ext}
-                    match = _LEGACY_PATTERN.match(f)
-                    if match:
-                        index = int(match.group(1))
 
                 if index < 0: continue
 

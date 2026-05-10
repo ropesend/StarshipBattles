@@ -19,13 +19,22 @@ class VehicleLaunchAbility(Ability):
 
     def _parse_attrs(self, data: Any) -> None:
         """Parse data attributes; called from __init__ and sync_data so
-        formula-driven attributes refresh on data updates."""
+        formula-driven attributes refresh on data updates.
+
+        PROJ-367 Phase 1: ``max_launch_mass`` is now a typed attribute (was
+        previously read from the raw abilities dict by the hangar
+        contributor). Additive — not modifier-scaled — so STAT_BINDINGS is
+        unchanged.
+        """
         if not isinstance(data, dict):
             data = {}
         self.fighter_class = data.get('fighter_class', 'Fighter (Small)')
         self.capacity = data.get('capacity', 0)
         self._base_capacity = self.capacity
         self.cycle_time = data.get('cycle_time', 5.0)
+        # PROJ-367 Phase 1: typed `max_launch_mass`; consumed by the hangar
+        # contributor at `stat_contributors/launch.py`.
+        self.max_launch_mass = data.get('max_launch_mass', 0.0)
 
     def recalculate(self) -> None:
         # Apply capacity mult
@@ -120,3 +129,91 @@ class StructuralIntegrity(Ability):
 
     def get_ui_rows(self) -> List[Dict[str, Any]]:
         return [{'label': 'Structural Integrity', 'value': 'Yes', 'color_hint': HINT_CREW_CAP}]
+
+
+# ---------------------------------------------------------------------------
+# PROJ-367 Phase 1: typed ability classes for previously-untyped abilities.
+#
+# These three classes replace `comp.abilities.get("MultiplexTracking"/"VehicleStorage"/"PodStorage", ...)`
+# raw-dict reads in the Phase-3 stat-aggregation path. The `Armor` ability
+# stays exclusively `has_ability`-based (marker idiom).
+# ---------------------------------------------------------------------------
+
+
+class MultiplexTrackingAbility(Ability):
+    """Tracking-multiplex ability — increases ``ship.max_targets``.
+
+    Production data shape is a scalar (e.g. ``"MultiplexTracking": 10``);
+    a dict shape (``{"slots": 10}``) is also accepted as a forward-compat
+    hedge. PROJ-367 Phase 1 (closes EXT-07).
+    """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # No multiplier — direct read.
+
+    def _parse_attrs(self, data: Any) -> None:
+        """Parse `slots` from scalar or dict data."""
+        if isinstance(data, dict):
+            self.slots = int(data.get('slots', 0))
+        elif isinstance(data, (int, float)):
+            self.slots = int(data)
+        else:
+            self.slots = 0
+
+    def get_primary_value(self) -> float:
+        return float(self.slots)
+
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
+        return [{'label': 'Targets', 'value': str(self.slots), 'color_hint': HINT_NEUTRAL}]
+
+
+class VehicleStorageAbility(Ability):
+    """Vehicle (fighter) storage capacity — additive into ``ship.fighter_capacity``.
+
+    Production data shape is a scalar (e.g. ``"VehicleStorage": 50``); dict
+    shape (``{"capacity": 50}``) is accepted as a forward-compat hedge.
+    PROJ-367 Phase 1 (closes EXT-07).
+
+    No STAT_BINDINGS — storage is additive, not modifier-scaled.
+    """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def _parse_attrs(self, data: Any) -> None:
+        if isinstance(data, dict):
+            self.capacity = int(data.get('capacity', 0))
+        elif isinstance(data, (int, float)):
+            self.capacity = int(data)
+        else:
+            self.capacity = 0
+
+    def get_primary_value(self) -> float:
+        return float(self.capacity)
+
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
+        return [{'label': 'Vehicle Storage', 'value': str(self.capacity), 'color_hint': HINT_NEUTRAL}]
+
+
+class PodStorageAbility(Ability):
+    """Pod (colony / drop pod) mass-capacity — additive into ``ship.pod_storage_mass``.
+
+    Production data shape is a dict (``{"capacity_mass": 5000}``, see
+    ``data/components.json:2396-2397``); a scalar shape is also accepted.
+    Single attribute only — no ``pod_class``. PROJ-367 Phase 1 (closes
+    EXT-07; verified at ``docs/systems/ability_reference.md:768-786``).
+    """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def _parse_attrs(self, data: Any) -> None:
+        if isinstance(data, dict):
+            self.capacity_mass = float(data.get('capacity_mass', 0.0))
+        elif isinstance(data, (int, float)):
+            self.capacity_mass = float(data)
+        else:
+            self.capacity_mass = 0.0
+
+    def get_primary_value(self) -> float:
+        return float(self.capacity_mass)
+
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
+        return [{'label': 'Pod Capacity', 'value': f"{self.capacity_mass:g} mass", 'color_hint': HINT_NEUTRAL}]

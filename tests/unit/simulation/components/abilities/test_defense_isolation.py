@@ -360,169 +360,74 @@ class TestShieldRegeneration:
 # ToHitAttackModifier Tests
 # =============================================================================
 
-class TestToHitAttackModifier:
-    """Tests for ToHitAttackModifier ability class."""
+# PROJ-323 Task 3.13: ToHitAttackModifier and ToHitDefenseModifier near-identical
+# test classes collapsed into one parametrized class.
+@pytest.mark.parametrize("ability_cls,label,color_hint", [
+    pytest.param(ToHitAttackModifier, 'Targeting', HINT_DAMAGE, id='ToHitAttackModifier'),
+    pytest.param(ToHitDefenseModifier, 'Evasion', HINT_EVASION, id='ToHitDefenseModifier'),
+])
+class TestToHitModifier:
+    """Tests for ToHitAttackModifier and ToHitDefenseModifier ability classes."""
 
-    def test_init_with_positive_value(self, mock_component):
-        """Initialize with positive value."""
-        ability = ToHitAttackModifier(mock_component, 5)
-
+    def test_init_with_positive_value(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, 5)
         assert ability.value == 5.0
         assert ability._base_value == 5.0
 
-    def test_init_with_negative_value(self, mock_component):
-        """Initialize with negative value."""
-        ability = ToHitAttackModifier(mock_component, -3)
-
+    def test_init_with_negative_value(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, -3)
         assert ability.value == -3.0
         assert ability._base_value == -3.0
 
-    def test_init_with_zero(self, mock_component):
-        """Initialize with zero value."""
-        ability = ToHitAttackModifier(mock_component, 0)
-
+    def test_init_with_zero(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, 0)
         assert ability.value == 0.0
         assert ability._base_value == 0.0
 
-    def test_init_with_dict_value(self, mock_component):
-        """Initialize with dict containing 'value' key."""
-        data = {'value': 10}
-        ability = ToHitAttackModifier(mock_component, data)
-
+    def test_init_with_dict_value(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, {'value': 10})
         assert ability.value == 10.0
+
+    def test_recalculate_is_no_op(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, 5)
+        ability.recalculate()
+        assert ability.value == 5.0
+
+    def test_get_ui_rows_positive_value(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, 5)
+        rows = ability.get_ui_rows()
+        assert len(rows) == 1
+        assert rows[0]['label'] == label
+        assert rows[0]['value'] == '+5.0'
+        assert rows[0]['color_hint'] == color_hint
+
+    def test_get_ui_rows_negative_value(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, -3)
+        rows = ability.get_ui_rows()
+        assert rows[0]['value'] == '-3.0'
+
+    def test_get_ui_rows_zero_value(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, 0)
+        rows = ability.get_ui_rows()
+        assert rows[0]['value'] == '+0.0'
+
+    def test_get_primary_value(self, mock_component, ability_cls, label, color_hint):
+        ability = ability_cls(mock_component, 7)
+        assert ability.get_primary_value() == 7.0
+        assert isinstance(ability.get_primary_value(), float)
+
+    def test_stat_bindings_empty(self, ability_cls, label, color_hint):
+        """STAT_BINDINGS is empty - no modifier stats consumed."""
+        assert len(ability_cls.STAT_BINDINGS) == 0
+
+
+class TestToHitAttackModifierExtras:
+    """Tests for ToHitAttackModifier-specific behavior."""
 
     def test_init_with_float_value(self, mock_component):
         """Initialize with float preserves decimal precision."""
         ability = ToHitAttackModifier(mock_component, 2.5)
-
         assert ability.value == 2.5
-
-    def test_recalculate_is_no_op(self, mock_component):
-        """recalculate does not change value (no bindings)."""
-        ability = ToHitAttackModifier(mock_component, 5)
-
-        ability.recalculate()
-
-        assert ability.value == 5.0
-
-    def test_get_ui_rows_positive_value(self, mock_component):
-        """get_ui_rows shows + sign for positive values."""
-        ability = ToHitAttackModifier(mock_component, 5)
-
-        rows = ability.get_ui_rows()
-
-        assert len(rows) == 1
-        assert rows[0]['label'] == 'Targeting'
-        assert rows[0]['value'] == '+5.0'
-        assert rows[0]['color_hint'] == HINT_DAMAGE
-
-    def test_get_ui_rows_negative_value(self, mock_component):
-        """get_ui_rows shows - sign for negative values."""
-        ability = ToHitAttackModifier(mock_component, -3)
-
-        rows = ability.get_ui_rows()
-
-        assert rows[0]['value'] == '-3.0'
-
-    def test_get_ui_rows_zero_value(self, mock_component):
-        """get_ui_rows shows + sign for zero (>= 0 check)."""
-        ability = ToHitAttackModifier(mock_component, 0)
-
-        rows = ability.get_ui_rows()
-
-        assert rows[0]['value'] == '+0.0'
-
-    def test_get_primary_value(self, mock_component):
-        """get_primary_value returns current value."""
-        ability = ToHitAttackModifier(mock_component, 7)
-
-        assert ability.get_primary_value() == 7.0
-        assert isinstance(ability.get_primary_value(), float)
-
-    def test_stat_bindings_empty(self):
-        """STAT_BINDINGS is empty - no modifier stats consumed."""
-        assert len(ToHitAttackModifier.STAT_BINDINGS) == 0
-
-
-# =============================================================================
-# ToHitDefenseModifier Tests
-# =============================================================================
-
-class TestToHitDefenseModifier:
-    """Tests for ToHitDefenseModifier ability class."""
-
-    def test_init_with_positive_value(self, mock_component):
-        """Initialize with positive value."""
-        ability = ToHitDefenseModifier(mock_component, 8)
-
-        assert ability.value == 8.0
-        assert ability._base_value == 8.0
-
-    def test_init_with_negative_value(self, mock_component):
-        """Initialize with negative value."""
-        ability = ToHitDefenseModifier(mock_component, -5)
-
-        assert ability.value == -5.0
-        assert ability._base_value == -5.0
-
-    def test_init_with_zero(self, mock_component):
-        """Initialize with zero value."""
-        ability = ToHitDefenseModifier(mock_component, 0)
-
-        assert ability.value == 0.0
-
-    def test_init_with_dict_value(self, mock_component):
-        """Initialize with dict containing 'value' key."""
-        data = {'value': 12}
-        ability = ToHitDefenseModifier(mock_component, data)
-
-        assert ability.value == 12.0
-
-    def test_recalculate_is_no_op(self, mock_component):
-        """recalculate does not change value (no bindings)."""
-        ability = ToHitDefenseModifier(mock_component, 8)
-
-        ability.recalculate()
-
-        assert ability.value == 8.0
-
-    def test_get_ui_rows_positive_value(self, mock_component):
-        """get_ui_rows shows + sign for positive values."""
-        ability = ToHitDefenseModifier(mock_component, 10)
-
-        rows = ability.get_ui_rows()
-
-        assert len(rows) == 1
-        assert rows[0]['label'] == 'Evasion'
-        assert rows[0]['value'] == '+10.0'
-        assert rows[0]['color_hint'] == HINT_EVASION
-
-    def test_get_ui_rows_negative_value(self, mock_component):
-        """get_ui_rows shows - sign for negative values."""
-        ability = ToHitDefenseModifier(mock_component, -7)
-
-        rows = ability.get_ui_rows()
-
-        assert rows[0]['value'] == '-7.0'
-
-    def test_get_ui_rows_zero_value(self, mock_component):
-        """get_ui_rows shows + sign for zero."""
-        ability = ToHitDefenseModifier(mock_component, 0)
-
-        rows = ability.get_ui_rows()
-
-        assert rows[0]['value'] == '+0.0'
-
-    def test_get_primary_value(self, mock_component):
-        """get_primary_value returns current value."""
-        ability = ToHitDefenseModifier(mock_component, 15)
-
-        assert ability.get_primary_value() == 15.0
-        assert isinstance(ability.get_primary_value(), float)
-
-    def test_stat_bindings_empty(self):
-        """STAT_BINDINGS is empty - no modifier stats consumed."""
-        assert len(ToHitDefenseModifier.STAT_BINDINGS) == 0
 
 
 # =============================================================================

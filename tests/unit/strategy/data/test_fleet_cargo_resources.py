@@ -3,46 +3,29 @@ Tests for fleet cargo resource methods used by fleet construction.
 
 Phase 6: Fleet-bound shipyards draw construction resources from
 fleet cargo (cargo_contents across ships) instead of empire pool.
+
+PROJ-322 Task 6.3 (DUP-003): the per-file `_make_ship` cargo mock helper
+has been replaced by a shared `make_cargo_mock_ship` factory at
+`tests.fixtures.cargo_mock_ship`. This file's `_make_ship` is now a thin
+alias for compatibility with the existing test bodies.
 """
 import pytest
-from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
+from tests.fixtures.cargo_mock_ship import make_cargo_mock_ship
 
 
 def _make_ship(cargo_capacity=None, cargo_contents=None):
-    """Create a mock ship with cargo capacity and contents."""
-    ship = MagicMock()
-    ship.cargo_contents = dict(cargo_contents or {})
-    _cap = dict(cargo_capacity or {})
+    """Thin alias over the shared `make_cargo_mock_ship` factory.
 
-    def get_cargo_capacity(cargo_type):
-        return _cap.get(cargo_type, 0)
-
-    def get_current_cargo(cargo_type):
-        return ship.cargo_contents.get(cargo_type, 0)
-
-    def load_cargo(cargo_type, amount):
-        space = _cap.get(cargo_type, 0) - ship.cargo_contents.get(cargo_type, 0)
-        actual = min(amount, max(0, space))
-        if actual > 0:
-            ship.cargo_contents[cargo_type] = ship.cargo_contents.get(cargo_type, 0) + actual
-        return actual
-
-    def unload_cargo(cargo_type, amount):
-        current = ship.cargo_contents.get(cargo_type, 0)
-        actual = min(amount, current)
-        if actual > 0:
-            ship.cargo_contents[cargo_type] = current - actual
-        return actual
-
-    ship.get_cargo_capacity = get_cargo_capacity
-    ship.get_current_cargo = get_current_cargo
-    ship.load_cargo = load_cargo
-    ship.unload_cargo = unload_cargo
-    ship.is_combat_capable = True
-    return ship
+    Kept for compatibility with the existing test bodies in this file;
+    new tests should import `make_cargo_mock_ship` directly.
+    """
+    return make_cargo_mock_ship(
+        cargo_capacity=cargo_capacity,
+        cargo_contents=cargo_contents,
+    )
 
 
 def _make_fleet(ships=None):

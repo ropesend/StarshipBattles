@@ -24,36 +24,86 @@ from tests.fixtures.ships import create_test_ship
 # Fixtures
 # =============================================================================
 
-@pytest.fixture
-def mock_ship(fresh_registries):
-    """Create a basic ship for testing."""
+# =============================================================================
+# PROJ-327 Phase 2 Task 2.19: scope-rescope notes
+#
+# Original PROJ-322 deferral cited: "many tests mutate the mock ship
+# (set_modifier, change attributes) before asserting on round-trip identity."
+# That rationale was incorrect at re-audit time: a grep across this file
+# finds ZERO attribute writes against `mock_ship`, `mock_ship_with_special_chars`,
+# or `minimal_ship`. Tests only call `mock_ship.to_dict()` (read-only) and
+# read `.name`, `.ship_class`, `.layers`, etc. Round-trip tests construct
+# a NEW ship via `Ship.from_dict(...)` from the dict, which doesn't touch
+# the fixture instance.
+#
+# `minimal_ship` was never used (zero references). Deleted as dead code.
+#
+# `mock_ship` and `mock_ship_with_special_chars` rescoped to module. The
+# underlying `fresh_registries` is replaced with `session_registries` (which
+# is read-only and shared) so that the module-scoped fixtures can construct
+# without re-loading the registry catalog 54 times.
+# =============================================================================
+
+
+@pytest.fixture(scope="module")
+def mock_ship(session_registries):
+    """Basic ship for testing. Module-scoped: every test in this file calls
+    `mock_ship.to_dict()` (read-only); none mutate the ship (PROJ-327 Phase 2
+    Task 2.19)."""
     return create_test_ship(
         name="TestShip",
         add_bridge=True,
         add_engine=True,
         add_weapons=1,
-        registries=fresh_registries
+        registries=session_registries
     )
 
 
-@pytest.fixture
-def mock_ship_with_special_chars(fresh_registries):
-    """Create a ship with special characters in name."""
+@pytest.fixture(scope="module")
+def mock_ship_with_special_chars(session_registries):
+    """Ship with special characters in name. Module-scoped: only
+    `test_save_ship_sanitizes_filename` consumes it, read-only
+    (PROJ-327 Phase 2 Task 2.19)."""
     return create_test_ship(
         name="Test Ship @#$%^&*()!",
         add_bridge=True,
-        registries=fresh_registries
+        registries=session_registries
     )
 
 
-@pytest.fixture
-def minimal_ship(fresh_registries):
-    """Create a minimal ship with only hull."""
-    return create_test_ship(
-        name="MinimalShip",
-        add_crew=False,  # No crew components
-        registries=fresh_registries
-    )
+@pytest.fixture(autouse=True)
+def _assert_module_ships_unmutated(request):
+    """Mutation guard for the module-scoped `mock_ship` and
+    `mock_ship_with_special_chars` fixtures.
+
+    The module-scope rescope (PROJ-327 Phase 2 Task 2.19) relies on every
+    test treating these ships as read-only. If a future test mutates a
+    shared ship, later tests in the same module see corrupted state.
+    This fixture snapshots the `to_dict()` of any module-scoped ship the
+    current test consumes, runs the test, then asserts the snapshot is
+    byte-identical post-test.
+
+    The check is fixture-name-driven (not deep-recursive on every Ship in
+    the module) so it adds ~0 overhead to tests that don't request the
+    module-scoped fixtures.
+    """
+    snapshots: dict[str, dict] = {}
+    for fixture_name in ("mock_ship", "mock_ship_with_special_chars"):
+        if fixture_name in request.fixturenames:
+            ship = request.getfixturevalue(fixture_name)
+            snapshots[fixture_name] = ship.to_dict()
+
+    yield
+
+    for fixture_name, before in snapshots.items():
+        after = request.getfixturevalue(fixture_name).to_dict()
+        assert before == after, (
+            f"Module-scoped fixture `{fixture_name}` was mutated during "
+            f"test `{request.node.nodeid}`. Module-scope sharing requires "
+            f"strictly read-only access — see PROJ-327 Phase 2 Task 2.19 "
+            f"and the file header note. Either treat the ship as immutable "
+            f"or re-scope this fixture back to function-scope."
+        )
 
 
 @pytest.fixture
@@ -649,8 +699,15 @@ class TestShipIOEdgeCases:
         loaded_ship = Ship.from_dict(loaded_data, registries=fresh_registries)
         assert loaded_ship is not None
 
-    def test_load_ship_ignores_unknown_component_ids(self, fresh_registries, tmp_path):
-        """Load should skip unknown component IDs without error."""
+    def test_load_ship_raises_for_unknown_component_ids(self, fresh_registries, tmp_path):
+        """Load should raise ValidationException for unknown component IDs.
+
+        PROJ-358 audit remediation (CQ-01): unknown ids previously silently
+        absorbed; the contract now is a loud ValidationException so save/registry
+        drift cannot mask itself.
+        """
+        from game.core.exceptions import ValidationException
+
         ship_data = {
             "name": "UnknownComponentShip",
             "ship_class": "Escort",
@@ -669,9 +726,10 @@ class TestShipIOEdgeCases:
         with open(load_file, 'r') as f:
             loaded_data = json.load(f)
 
-        # Should not raise
-        loaded_ship = Ship.from_dict(loaded_data, registries=fresh_registries)
-        assert loaded_ship is not None
+        with pytest.raises(ValidationException) as exc_info:
+            Ship.from_dict(loaded_data, registries=fresh_registries)
+        assert exc_info.value.context["component_id"] == "nonexistent_component_12345"
+        assert exc_info.value.context["layer"] == "CORE"
 
     def test_default_ships_folder_is_configurable(self):
         """ShipIO.default_ships_folder should be configurable."""

@@ -1,6 +1,7 @@
 """Turn engine component tests - auto-disable logic and toggle integration."""
 import logging
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.core.registry import GameRegistries
 from unittest.mock import MagicMock
 
@@ -30,7 +31,7 @@ class TestAutoDisableLogic:
             vehicle_classes={},
             resources={}
         )
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         # Create ship with a component that has per_turn energy consumption
         ship = create_mock_ship_instance(
@@ -80,7 +81,7 @@ class TestAutoDisableLogic:
             vehicle_classes={},
             resources={}
         )
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         ship = create_mock_ship_instance(
             design_data={
@@ -111,7 +112,7 @@ class TestAutoDisableLogic:
             vehicle_classes={},
             resources={}
         )
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         ship = create_mock_ship_instance(
             design_data={
@@ -149,7 +150,7 @@ class TestAutoDisableLogic:
             vehicle_classes={},
             resources={}
         )
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         # Mixed layer formats
         ship = create_mock_ship_instance(
@@ -191,7 +192,7 @@ class TestAutoDisableLogic:
             vehicle_classes={},
             resources={}
         )
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         ship = create_mock_ship_instance(
             design_data={
@@ -238,7 +239,7 @@ class TestAutoDisableLogic:
             vehicle_classes={},
             resources={}
         )
-        engine = TurnEngine(registries=registries)
+        engine = build_test_turn_engine(registries)
 
         ship = create_mock_ship_instance(
             name="TestCruiser",

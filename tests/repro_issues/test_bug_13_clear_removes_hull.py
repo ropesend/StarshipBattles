@@ -62,7 +62,7 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     gui = DesignWorkshopScreen.__new__(DesignWorkshopScreen)
 
     # Setup minimal required state - MVVM architecture requires viewmodel
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
     from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 
     # Create registries for DI - use fresh_registries components (PROJ-195)
@@ -78,7 +78,7 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
         registries=registries
     )
 
-    gui.event_bus = EventBus()
+    gui.event_bus = WorkshopEventBus()
     gui.viewmodel = WorkshopViewModel(gui.event_bus, 1280, 720, context=context)
 
     # Setup ship via viewmodel with DI registries

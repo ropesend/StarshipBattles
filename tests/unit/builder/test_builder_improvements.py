@@ -22,25 +22,6 @@ def pygame_window(fresh_registries):
 
 
 class TestBuilderImprovements:
-    def test_image_scale_factor(self, pygame_window):
-        """
-        Verify that the image scaling logic uses the 2.5x factor.
-        """
-        window, registries = pygame_window
-        # We can't easily inspect local variables inside _draw_schematic without inspecting the Draw calls.
-        # But we can verify it doesn't crash.
-
-        # Real Builder with Real UI Manager
-        context = WorkshopContext.standalone(tech_preset_name="default", registries=registries)
-        builder = DesignWorkshopScreen(1200, 800, context)
-        builder._create_ui()
-
-        # Test Draw
-        try:
-            builder.draw(window)
-        except Exception as e:
-            pytest.fail(f"draw crashed: {e}")
-
     def test_loading_sync(self, pygame_window):
         """
         Test that loading a ship updates the dropdowns.

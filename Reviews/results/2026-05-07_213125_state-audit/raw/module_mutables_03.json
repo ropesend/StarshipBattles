@@ -1,0 +1,345 @@
+[
+  {
+    "file": "game/ai/interfaces/__init__.py",
+    "line": 20,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/patterns/__init__.py",
+    "line": 14,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/protocols/strategy_mutators.py",
+    "line": 30,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/protocols/__init__.py",
+    "line": 97,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/engine/__init__.py",
+    "line": 29,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/research/systems/__init__.py",
+    "line": 4,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ResearchService']"
+  },
+  {
+    "file": "game/services/llm/defaults.py",
+    "line": 42,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"get_default_llm_provider\", \"set_default_llm_provider\"]"
+  },
+  {
+    "file": "game/services/llm/factory.py",
+    "line": 90,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"LLMProviderFactory\", \"register_provider\"]"
+  },
+  {
+    "file": "game/services/llm/types.py",
+    "line": 89,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/services/llm/__init__.py",
+    "line": 32,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/__init__.py",
+    "line": 89,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/combat/boundary.py",
+    "line": 215,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/components/abilities/ui_colors.py",
+    "line": 54,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/managers/__init__.py",
+    "line": 12,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['RetreatManager', 'RetreatState', 'RetreatMethod', 'BattleStateManager']"
+  },
+  {
+    "file": "game/simulation/replay/replay_player.py",
+    "line": 79,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/replay/replay_record.py",
+    "line": 93,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ReplayRecord\"]"
+  },
+  {
+    "file": "game/simulation/replay/replay_serialization.py",
+    "line": 631,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/replay/replay_spec.py",
+    "line": 197,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ReplaySpec\", \"ReplayShipSpec\", \"ShipInstanceLookup\"]"
+  },
+  {
+    "file": "game/simulation/replay/replay_verifier.py",
+    "line": 222,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/replay/__init__.py",
+    "line": 55,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/validation/__init__.py",
+    "line": 22,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 51,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/data/planet_serde.py",
+    "line": 26,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"planet_to_dict\", \"planet_from_dict_kwargs\"]"
+  },
+  {
+    "file": "game/strategy/data/star_system.py",
+    "line": 16,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"WarpPoint\", \"StarSystem\"]"
+  },
+  {
+    "file": "game/strategy/engine/command_handlers.py",
+    "line": 53,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/__init__.py",
+    "line": 33,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/events/__init__.py",
+    "line": 6,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"Event\", \"EventCategory\", \"EventLog\", \"EventType\"]"
+  },
+  {
+    "file": "game/strategy/facade/__init__.py",
+    "line": 8,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['StrategySessionFacade']"
+  },
+  {
+    "file": "game/strategy/facade/dto/__init__.py",
+    "line": 16,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/formulas/colony_output.py",
+    "line": 37,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"planet_habitability_multiplier\", \"projected_growth_rate\"]"
+  },
+  {
+    "file": "game/strategy/formulas/__init__.py",
+    "line": 12,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/generation/density/__init__.py",
+    "line": 18,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/generation/density/primitives/__init__.py",
+    "line": 15,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/generation/loaders/__init__.py",
+    "line": 7,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['GalaxyLayoutsLoader']"
+  },
+  {
+    "file": "game/strategy/services/empire_write_service.py",
+    "line": 23,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"EmpireWriteService\"]"
+  },
+  {
+    "file": "game/strategy/services/fleet_write_service.py",
+    "line": 35,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"FleetWriteService\"]"
+  },
+  {
+    "file": "game/strategy/services/galaxy_pathfinding_service.py",
+    "line": 30,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"GalaxyPathfindingService\"]"
+  },
+  {
+    "file": "game/strategy/services/planet_query_service.py",
+    "line": 27,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PlanetQueryService\"]"
+  },
+  {
+    "file": "game/strategy/services/superweapon_registry.py",
+    "line": 127,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/validation/__init__.py",
+    "line": 22,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ColonizeValidator', 'PlanetOrderValidator', 'TransferValidator', 'SuperweaponValidator']"
+  },
+  {
+    "file": "game/ui/__init__.py",
+    "line": 19,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/interfaces/__init__.py",
+    "line": 18,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/cargo_quick_dialog_controller.py",
+    "line": 131,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"CargoQuickDialogController\"]"
+  },
+  {
+    "file": "game/ui/screens/planet_list_controller.py",
+    "line": 48,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PlanetListController\"]"
+  },
+  {
+    "file": "game/ui/screens/race_setup_screen.py",
+    "line": 31,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"RaceSetupScreen\", \"RaceBrowserDialog\", \"RaceRandomizer\"]"
+  },
+  {
+    "file": "game/ui/screens/transfer_controller.py",
+    "line": 323,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ConfirmResult\", \"TransferController\"]"
+  },
+  {
+    "file": "game/ui/screens/race_setup/delegate_factory.py",
+    "line": 87,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"RaceSetupDelegates\", \"DefaultRaceSetupDelegateFactory\"]"
+  },
+  {
+    "file": "game/ui/screens/test_lab/__init__.py",
+    "line": 22,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['TestLabScreen', 'TestLabDataExtractor', 'get_test_data_dir']"
+  },
+  {
+    "file": "game/ui/screens/test_lab/details/__init__.py",
+    "line": 17,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"TestRunDetailsPanel\"]"
+  }
+]

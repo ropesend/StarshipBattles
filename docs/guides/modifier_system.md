@@ -1,53 +1,69 @@
-# Modifier System Architecture
+# Modifier System Compact Reference
 
-> **Last verified:** 2026-04-13
+> **Last verified:** 2026-05-08 - Compared `docs/guides/modifier_system.md` with `AgentCoordination/Scratchpad/reports/guides_modifier_system_ALT_compact.md` and checked the live source files listed below.
 
-> Overview of the V2 modifier system with formula-based effects.
-> For a complete catalog of all abilities and their stat bindings, see [ability_reference.md](../systems/ability_reference.md).
+Modifiers are data-driven stat adjustments. Abilities are behavior classes that consume the adjusted stats.
 
-## Core Concepts
+- Component-born modifiers persist as component state: modifier id plus parameter value.
+- Battle-scoped auras flow through `BattleSpec.modifier_stack` and rebuild `ship.external_stats` every battle.
+- Strategy production/harvesting scaling can resolve selected modifier effects from design-data entries without materializing a combat component.
 
-### Modifiers vs Abilities
+## Current Paths
 
-- **Modifiers**: Data-driven multipliers/adjustments that affect component stats (mass, HP, damage, etc.)
-- **Abilities**: Behavior classes (WeaponAbility, ShieldProjection, etc.) that consume stats and implement game logic
+```text
+Component-born modifiers
+data/modifiers.json
+  -> ModifierEffectEvaluator.evaluate_modifier()
+  -> list[ModifierEffect]
+  -> apply_modifier_effects()
+  -> Component.stats / Component.ability_stats
+  -> Ability.recalculate()
+  -> Ability.get_effective_stat()
 
-### Data Flow
+Battle-scoped team/global modifiers
+spec compiler emits ModifierEntry into ModifierStack
+  -> FleetAuraManager.initialize(ships, modifier_stack=stack)
+  -> FleetAuraManager._apply_bonuses()
+  -> ship.external_stats[stat_key]
+  -> Ability.get_effective_stat() for ability-level keys
+  -> ShipStatsCalculator._apply_aggregated_stats() for ship-level keys
 
-Modifiers reach ability/ship math via TWO parallel paths — component-born
-modifiers (left) and battle-scoped team auras (right):
-
-```
-Component-born modifiers                   Battle-scoped team auras
-(persistent ship state)                    (rebuilt each battle from ModifierStack)
-
-JSON Modifier Definition                   spec compilers emit ModifierEntry
-         |                                          |
-ModifierEffectEvaluator.evaluate_modifier()         v
-         |                                  FleetAuraManager._apply_bonuses
-List[ModifierEffect]                                |
-         |                                  ship.external_stats[stat_key]: float
-apply_modifier_effects()                            |
-         |                                          +--------------------------+
-Component.stats / Component.ability_stats                                      |
-         |                                                                     |
-Ability.recalculate() via STAT_BINDINGS <----- composed in              read directly in
-                                               Ability.get_effective_stat      ship_stats._apply_aggregated_stats
-                                               (per-ability keys,              (ship-level keys,
-                                                e.g. damage_mult)                e.g. shield_bonus_add)
+Strategy design-data size scaling
+design component entry with simple_size_mount
+  -> game/strategy/services/modifier_resolver.py
+  -> resolve_stat_from_size_mount(comp_entry, stat_key, registries)
 ```
 
-Component-born modifiers live on `component.stats` and survive
-serialization; battle-scoped team auras live on `ship.external_stats`
-and are NEVER serialized (they are recomputed from
-`ModifierStack` each battle). See patterns 24 (External-Stats Bridge)
-and 25 (Scope-Driven Team Routing) in [02_PATTERNS.md](../02_PATTERNS.md).
+Key invariant: component-born modifier applications persist as id/value pairs; `component.stats` and `component.ability_stats` are component-local runtime state derived from those applications. `ship.external_stats` is battle-scoped composition and must not be serialized as ship state.
 
-## Architecture Components
+## Files
 
-### 1. Modifier Definition (JSON)
+| Path | Role |
+|---|---|
+| `data/modifiers.json` | Canonical component modifier definitions. `modifiers_v2.json` and v1 backup files are deleted and guarded by tests. |
+| `game/simulation/components/modifier_effects.py` | `ModifierEffect`, `ModifierEffectEvaluator`, `ModifierEffect.from_dict()` for replay round-trip. |
+| `game/simulation/components/modifiers.py` | `apply_modifier_effects()`, operation stacking, special key mappings, default stat dict. |
+| `game/simulation/components/modifier_schema.py` | V2 structural validation. |
+| `game/simulation/components/modifier_introspection.py` | UI summaries and tooltips. |
+| `game/simulation/components/component_constants.py` | `Modifier` definition object and `ApplicationModifier`. |
+| `game/simulation/components/component_stats_calculator.py` | Component recalculation phases and modifier application. |
+| `game/simulation/components/modifier_manager.py` | Stateful component modifier list, add/remove/query, effect summaries. |
+| `game/simulation/components/abilities/stat_keys.py` | `StatKey`, `AbilityStatBinding`, default stat dictionary source of truth. |
+| `game/simulation/components/abilities/base.py` | Ability base class, `STAT_BINDINGS`, `get_effective_stat()`. |
+| `game/simulation/combat/modifier_stack.py` | `ModifierEntry`, `ModifierStack`; carried by `BattleSpec`. |
+| `game/simulation/combat/fleet_aura_manager.py` | Converts `ModifierStack` entries into `ship.external_stats`. |
+| `game/simulation/combat/ability_stat_registry.py` | Shared combat ability class -> external stat key mapping. |
+| `game/simulation/entities/ship_stats.py` | Ship-level reads for `shield_bonus_add` and `shield_capacity_mult`. |
+| `game/simulation/services/modifier_service.py` | Strict-DI service for UI/application validation, defaults, local min/max. |
+| `game/ui/services/component_service.py` | UI-layer facade for component/modifier registry access. |
+| `game/ui/screens/builder/modifier_config.py` | Builder UI parameter controls and defaults. |
+| `game/strategy/services/modifier_resolver.py` | Strategy-layer size-mount stat resolver. |
+| `game/strategy/combat/spec_compiler.py` | Strategy battle compiler; emits `ModifierStack`. |
+| `game/ui/screens/battle_setup/spec_compiler.py` | Manual battle setup compiler; emits `ModifierStack`. |
 
-V2 format stored in `data/modifiers.json`:
+## Modifier Definition
+
+Modifiers use V2 formula definitions in `data/modifiers.json`.
 
 ```json
 {
@@ -72,162 +88,217 @@ V2 format stored in `data/modifiers.json`:
 }
 ```
 
-### 2. ModifierEffect (dataclass)
+Effect fields:
 
-A single evaluated effect ready to apply:
+- Required by schema: `stat`, `formula`.
+- Optional: `operation` (`multiply`, `add`, `add_to_mult`, `set`; default `multiply`), `target_ability`, `depends_on`.
+- `target_ability` writes into `component.ability_stats[target_ability]`; untargeted effects write into `component.stats`.
+
+Restrictions caveat: `modifier_schema.py` validates `allow_abilities`, `deny_abilities`, and `require_mode`, but the current runtime service checks only `allow_types`, `deny_types`, and `allow_abilities`. `ModifierManager.add_modifier()` checks only type restrictions. Do not assume `deny_abilities` or `require_mode` are enforced without adding tests and implementation.
+
+## ModifierEffect
+
+`ModifierEffect` is the evaluated unit.
 
 ```python
 @dataclass
 class ModifierEffect:
-    stat_key: str               # "damage_mult", "hp_mult", etc.
-    value: float                # Evaluated value (e.g., 1.5)
-    operation: str              # "multiply", "add", "set"
-    target_ability: Optional[str]  # None = all abilities; "WeaponAbility" for targeted
+    stat_key: str
+    value: float
+    operation: str
+    target_ability: str | None
     source_modifier_id: str
     source_modifier_name: str
-    formula_str: str            # Original formula for UI display
-    param_value: float          # Param value used for evaluation
+    formula_str: str
+    param_value: float
 ```
 
-### 3. ModifierEffectEvaluator
+Methods:
 
-Evaluates formulas and produces ModifierEffect instances:
+- `describe() -> str`: display text such as `damage_mult x1.50`.
+- `is_targeted() -> bool`: true when `target_ability` is set.
+- `to_dict() -> dict`: replay/introspection shape.
+- `from_dict(data) -> ModifierEffect`: reconstructs the `to_dict()` form for replay serialization.
+
+## Formula Evaluation
+
+Use `ModifierEffectEvaluator`; do not hand-evaluate formulas.
+
+Supported syntax comes from `FormulaEvaluator.MODIFIER_CONTEXT` plus the safe math namespace:
+
+- `param`
+- `param ^ 2` and `2 ^ param` (`^` is translated to power for modifier formulas)
+- `1.0 + param * 0.5`
+- `1.0 / param`
+- `sqrt(param)`, `ln(param)`, `log10(param)`, `abs(param)`
+- `min(a, b)`, `max(a, b)`, `round(...)`, and other whitelisted math functions
+
+API:
 
 ```python
-effects = ModifierEffectEvaluator.evaluate_modifier(mod_def, param_value=2.0)
-# Returns list of ModifierEffect with evaluated values
+ModifierEffectEvaluator.evaluate_formula(formula: str, context: dict[str, float]) -> float
+ModifierEffectEvaluator.evaluate_modifier(
+    mod_def: dict,
+    param_value: float,
+    stats_context: dict[str, float] | None = None,
+) -> list[ModifierEffect]
+ModifierEffectEvaluator.validate_formula(formula: str) -> list[str]
+ModifierEffectEvaluator.validate_modifier_definition(mod_def: dict) -> list[str]
 ```
 
-Supported formula syntax:
-- `param` - Direct value
-- `param ^ 2` - Power
-- `2 ^ param` - Exponential
-- `1.0 + param * 0.5` - Linear
-- `1.0 + 0.514 * ln(1.0 + param / 30.0)` - Logarithmic
-- `1.0 / param` - Inverse
-- `sqrt(param)` - Square root
-- `min(a, b)` / `max(a, b)` - Min/max
-- References to other stats via `stats_context` (e.g., `mass_mult - 1.0`)
+Failure behavior:
 
-### 4. STAT_BINDINGS (Ability System)
+- `evaluate_formula()` raises `FormulaException`.
+- `evaluate_modifier()` catches `FormulaException`, logs an error, and falls back to the raw `param_value` for that effect.
+- `validate_formula()` currently allows only `param` plus safe functions. `evaluate_modifier(..., stats_context=...)` can evaluate formulas that reference prior stats, but loader validation will flag those names unless validation is extended.
+- `load_modifiers_data()` logs a warning for schema failures but still loads the modifier when `Modifier(...)` can be constructed.
 
-Abilities declare which stats they consume via STAT_BINDINGS:
+## Stat Keys
+
+`get_default_stat_multipliers()` delegates to `StatKey.create_default_stats_dict()`. Defaults are:
+
+- Multipliers default to `1.0`: `mass_mult`, `hp_mult`, `damage_mult`, `range_mult`, `cost_mult`, `thrust_mult`, `turn_mult`, `strategic_mult`, `energy_gen_mult`, `capacity_mult`, `shield_capacity_mult`, `crew_capacity_mult`, `life_support_capacity_mult`, `consumption_mult`, `reload_mult`, `endurance_mult`, `projectile_hp_mult`, `projectile_damage_mult`, `crew_req_mult`.
+- Additive stats default to `0.0`: `mass_add`, `arc_add`, `accuracy_add`, `projectile_stealth_level`, `shield_bonus_add`.
+- Set/override stats default to `None`: `arc_set`.
+- `properties` defaults to `{}` for dynamic component properties.
+
+Special mappings in `apply_modifier_effects()`:
+
+- `projectile_stealth_add` with `operation: "add"` maps to internal `projectile_stealth_level`.
+- `facing_angle` with `operation: "set"` writes to `stats["properties"]["facing_angle"]`; weapon abilities sync it from component properties.
+- Multiplicative and `add_to_mult` global effects are ignored if the target stat is absent or non-numeric.
+- Unknown operations log a warning and do not mutate the stat.
+
+Strategy-only size effects currently include `harvest_rate_mult`, `local_storage_mult`, and `production_rate_mult`. They are resolved by `game/strategy/services/modifier_resolver.py`, not by `StatKey` or ability `STAT_BINDINGS`.
+
+## Ability Binding
+
+Abilities consume modifier stats through `STAT_BINDINGS`.
 
 ```python
 class WeaponAbility(Ability):
     STAT_BINDINGS = [
-        AbilityStatBinding(StatKey.DAMAGE_MULT, 'damage', 'multiply', '_base_damage'),
-        AbilityStatBinding(StatKey.RANGE_MULT, 'range', 'multiply', '_base_range'),
-        AbilityStatBinding(StatKey.RELOAD_MULT, 'reload_time', 'multiply', '_base_reload'),
+        AbilityStatBinding(StatKey.DAMAGE_MULT, "damage", "multiply", "_base_damage"),
+        AbilityStatBinding(StatKey.RANGE_MULT, "range", "multiply", "_base_range"),
+        AbilityStatBinding(StatKey.RELOAD_MULT, "reload_time", "multiply", "_base_reload"),
     ]
 ```
 
-When `ability.recalculate()` is called, bindings automatically apply stats.
+`Ability.get_effective_stat(stat_key, default)` checks:
 
-### 5. Component.stats / Component.ability_stats
+1. `component.ability_stats[ability_class_name][stat_key]`
+2. `component.stats[stat_key]`
+3. `ship.external_stats[stat_key]`, when attached to a ship and the field is a real dict
 
-- `component.stats`: Global stats affecting all abilities
-- `component.ability_stats`: Dict keyed by ability class name for targeted effects
+When both local and external values exist:
 
-```python
-# ability.get_effective_stat() checks ability_stats first, then falls back to stats
-```
+- `_mult` keys multiply.
+- `_add` keys add.
+- Unknown key shapes use the external value as an override.
 
-## File Locations
+Current consumers include weapons, shields, propulsion, cargo, resources, crew, and marker capacity. Add a new stat by adding or reusing a `StatKey`, adding `AbilityStatBinding` to the consuming ability, and adding focused tests.
 
-| File | Purpose |
-|------|---------|
-| `game/simulation/components/modifier_effects.py` | ModifierEffect, ModifierEffectEvaluator |
-| `game/simulation/components/modifiers.py` | apply_modifier_effects(), get_default_stat_multipliers(), calculate_stat_multipliers() |
-| `game/simulation/components/abilities/stat_keys.py` | StatKey enum, AbilityStatBinding |
-| `game/simulation/components/modifier_schema.py` | V2 format validation |
-| `game/simulation/components/modifier_introspection.py` | UI introspection utilities |
-| `game/simulation/components/component_constants.py` | Modifier, ApplicationModifier classes |
-| `game/simulation/components/abilities/base.py` | Ability base class, STAT_BINDINGS |
-| `game/simulation/services/modifier_service.py` | ModifierService (validation, mandatory modifiers, value constraints) |
-| `data/modifiers.json` | Modifier definitions |
+## Stacking
 
-## Targeted Effects
+Component-born effects stack inside the accumulated stats dictionary:
 
-Modifiers can target specific abilities:
+- `multiply`: existing value times effect value; missing key becomes effect value.
+- `add`: existing value plus effect value; missing key becomes effect value.
+- `add_to_mult`: existing value plus effect value; missing key becomes `1.0 + effect value`.
+- `set`: overwrite current value.
 
-```json
-{
-  "effects": [
-    {"stat": "damage_mult", "formula": "1.5", "target_ability": "ProjectileWeaponAbility"},
-    {"stat": "damage_mult", "formula": "1.2", "target_ability": "BeamWeaponAbility"}
-  ]
-}
-```
+Targeted effects stack only under `component.ability_stats[target_ability]`. Untargeted effects stack under `component.stats`.
 
-This allows one modifier to affect different abilities differently. Targeted effects are stored in `component.ability_stats[target_ability]` rather than the global `component.stats` dict.
+Component recalculation order:
 
-## UI Integration
+1. Reset/evaluate component and ability formulas.
+2. Re-instantiate ability objects from the refreshed ability data.
+3. Calculate modifier stats through `apply_modifier_effects()`.
+4. Store `component.stats`.
+5. Apply mass/HP/cost/properties and call `ability.recalculate()`.
 
-### ModifierIntrospection
+## Battle-Scoped Modifiers
 
-Provides UI-friendly data:
+`ModifierStack` is the only current external battle modifier carrier.
 
 ```python
-# Get modifier effects preview (what abilities does this modifier affect?)
-affects = ModifierIntrospection.get_modifier_affects(mod_def, component, param_value)
+@dataclass(frozen=True)
+class ModifierEntry:
+    source: str
+    stack_group: str | None
+    effect: ModifierEffect
 
-# Get component modifier summary (all applied modifiers and their effects)
-summary = ModifierIntrospection.get_component_modifier_summary(component)
-
-# Get ability-level summary (base vs current for each stat binding)
-ability_summary = ModifierIntrospection.get_ability_modifier_summary(ability)
-
-# Generate display-ready stat entries for UI rendering
-stats = ModifierIntrospection.generate_ability_stats_display(ability)
+@dataclass(frozen=True)
+class ModifierStack:
+    per_team: Mapping[int, tuple[ModifierEntry, ...]]
+    global_: tuple[ModifierEntry, ...]
 ```
 
-### Tooltip Generation
+`FleetAuraManager.initialize(ships, modifier_stack=stack)` is the current entry point. The legacy `config.team_modifiers` / `config.global_modifiers` branch is gone.
+
+Aggregation rules:
+
+- `per_team[team_id]` applies only to that team.
+- `global_` applies to all teams.
+- Same `stack_group` takes max; different groups sum.
+- `stack_group=None` becomes a unique group, preserving independent contribution.
+- `0.0` values are preserved; they can mean a real suppressor such as `damage_mult=0.0`.
+- Placeholder entries with empty or `placeholder` stat keys are skipped and logged once per source.
+- Unknown external stat keys are logged once per `(stat_key, source)` but still recorded.
+
+Known external stat keys live in `KNOWN_EXTERNAL_STAT_KEYS` in `game/simulation/combat/ability_stat_registry.py`. Compiler-emitted combat abilities currently map through `ABILITY_STAT_REGISTRY`:
+
+- `ShieldProjection` -> `shield_bonus_add` (`add`, `value`)
+- `ShieldModifier` -> `shield_capacity_mult` (`multiply`, `multiplier`)
+- `DamageModifier` -> `damage_mult` (`multiply`, `multiplier`)
+- `ThrustModifier` -> `thrust_mult` (`multiply`, `multiplier`)
+
+Ship-level shield math consumes `(base + shield_bonus_add) * shield_capacity_mult`. Do not read `capacity_mult` for the flat shield bonus path.
+
+## Services and UI
+
+`ModifierService` is strict-DI:
 
 ```python
-tooltip = ModifierIntrospection.generate_modifier_tooltip(mod_def, param_value, component)
+service = ModifierService(modifier_registry=registries.modifiers)
+service.is_modifier_allowed("turret_mount", component)
+service.ensure_mandatory_modifiers(component)
 ```
 
-### Modifier UI Config
+Surface:
 
-`game/ui/screens/builder/modifier_config.py` defines per-modifier UI controls:
+- `__init__(modifier_registry: dict[str, Any])`; `None` raises `ValidationException`.
+- `is_modifier_allowed(mod_id, component) -> bool`
+- `get_mandatory_modifiers(component) -> list`
+- `is_modifier_mandatory(mod_id, component) -> bool`
+- `get_initial_value(mod_id, component) -> float`
+- `ensure_mandatory_modifiers(component) -> None`
+- `get_local_min_max(mod_id, component) -> tuple`
+
+Important current behavior:
+
+- `ModifierService.MANDATORY_MODIFIERS` is the single source for the UI ownership constant; do not duplicate it in UI logic.
+- `get_mandatory_modifiers()` currently returns every allowed modifier in the registry, not only the four ids in `MANDATORY_MODIFIERS`.
+- Special neutral initial values: `simple_size_mount`, `hardened_mount`, and `efficiency_mount` -> `1.0`; `range_mount`, `facing`, and `precision_mount` -> `0.0`.
+- Any modifier with an `arc_set` effect defaults to the component base firing arc and clamps local minimum to that base arc.
+- `Component.add_modifier()` delegates to `ModifierManager`, which replaces same-id modifiers and recalculates stats. It does not run full ability restriction enforcement; use `ModifierService` or `ComponentService` for UI/application validation.
+
+`ModifierIntrospection` owns UI summary logic:
 
 ```python
-MODIFIER_UI_CONFIG = {
-    'simple_size_mount': {
-        'control_type': 'linear_stepped',
-        'step_buttons': [
-            {'label': '<<<', 'value': 5.0, 'mode': 'delta_sub'},
-            ...
-        ],
-        'slider_step': 0.1,
-    },
-    'turret_mount': { ... },
-    'facing': { 'control_type': 'facing_selector', ... },
-    ...
-}
+ModifierIntrospection.get_modifier_affects(mod_def, component, param_value)
+ModifierIntrospection.get_component_modifier_summary(component)
+ModifierIntrospection.get_ability_modifier_summary(ability)
+ModifierIntrospection.generate_ability_stats_display(ability)
+ModifierIntrospection.generate_modifier_tooltip(mod_def, param_value, component)
 ```
 
-## Formula Validation
+Builder controls live in `MODIFIER_UI_CONFIG`; modifiers not listed use `DEFAULT_CONFIG`.
 
-Formulas are validated on load:
+## Persistence
 
-```python
-errors = ModifierEffectEvaluator.validate_formula("param ^ 2")  # Returns []
-errors = ModifierEffectEvaluator.validate_formula("invalid_var")  # Returns error list
-```
+Component modifiers serialize only application identity and value:
 
-Full modifier definition validation:
-
-```python
-errors = ModifierEffectEvaluator.validate_modifier_definition(mod_def)
-if errors:
-    print(f"Invalid modifier: {errors}")
-```
-
-## Save/Load Compatibility
-
-Applied modifiers are saved as:
 ```json
 {
   "modifiers": [
@@ -236,298 +307,75 @@ Applied modifiers are saved as:
 }
 ```
 
-On load, effects are re-evaluated from the current modifier definitions.
+On load, component-born effects are re-evaluated from current `data/modifiers.json`.
 
-## API Reference
+Do not serialize evaluated component `ModifierEffect` lists as persistent component state. Do not serialize `ship.external_stats` in ship saves or post-battle ship state. Tests inspect `ShipSerializer.to_dict()` to keep `external_stats` out.
 
-### apply_modifier_effects
+Replay serialization is different: `BattleSpec.modifier_stack` is replay data and round-trips through `game/simulation/replay/replay_serialization.py` using `ModifierEffect.to_dict()` / `from_dict()`.
 
-```python
-def apply_modifier_effects(
-    modifier_def,
-    value: float,
-    stats: dict,
-    component=None
-) -> None:
-    """Apply the effects of a single modifier to the stats dictionary.
+## Extension Recipes
 
-    All modifiers use V2 format with formula-based effects.
+Add a component-born modifier:
 
-    Args:
-        modifier_def: The Modifier definition object (has evaluate_effects method).
-        value: The current value of the modifier application (slider/param value).
-        stats: Dictionary containing accumulated multipliers and properties
-               (from get_default_stat_multipliers()).
-        component: Optional reference to the component. Required for targeted
-                   effects that write to component.ability_stats.
-    """
+1. Add a V2 entry to `data/modifiers.json`.
+2. Write the failing test first. Use formula tests for math, snapshot tests for component behavior, and service tests for restriction/default behavior.
+3. Use `effects` formulas and validate with `ModifierEffectEvaluator.validate_modifier_definition()` or schema tests.
+4. Use `allow_types`, `deny_types`, and `allow_abilities` for currently enforced runtime restrictions. Add implementation/tests before relying on `deny_abilities` or `require_mode`.
+5. Add `target_ability` only when the effect must apply to one ability class.
+6. Add UI config only when default slider behavior is insufficient.
+7. If the modifier affects a new stat, add or confirm `StatKey`, defaults, and `AbilityStatBinding`.
+8. If the modifier is strategy-only size scaling, wire/read it through `modifier_resolver.py` rather than pretending it is an ability stat.
+
+Add a new ability-consumed stat:
+
+1. Add a `StatKey` member and confirm `create_default_stats_dict()` default.
+2. Add `AbilityStatBinding` on each consuming ability.
+3. Add modifier effects using that stat key.
+4. Add tests under `tests/unit/modifiers/` and the affected ability/component tests.
+5. Verify the ability recalculates via `get_effective_stat()`, not manual stat mutation.
+
+Add a battle-scoped aura/stat:
+
+1. Add or update `ABILITY_STAT_REGISTRY` if emitted by spec compilers.
+2. Add the stat key to `KNOWN_EXTERNAL_STAT_KEYS`.
+3. Ensure a downstream reader exists: `Ability.get_effective_stat()` for ability-level stats or `ShipStatsCalculator._apply_aggregated_stats()` for ship-level stats.
+4. Update both relevant spec compiler paths when needed: strategy and battle setup.
+5. Test `ModifierStack -> FleetAuraManager -> external_stats -> reader` end to end.
+
+## Tests and Commands
+
+Targeted tests:
+
+```bash
+pytest tests/unit/modifiers/test_modifier_effect_evaluator.py
+pytest tests/unit/modifiers/test_formula_validation.py
+pytest tests/unit/modifiers/test_modifier_json_schema.py
+pytest tests/unit/modifiers/test_multi_ability_effects.py
+pytest tests/unit/simulation/services/test_modifier_service.py
+pytest tests/unit/simulation/combat/test_fleet_aura_manager_modifier_stack.py
+pytest tests/unit/simulation/combat/test_ability_stat_registry.py
+pytest tests/unit/simulation/entities/test_ship_external_stats_serialization_guard.py
+pytest tests/regression/modifier_ability_snapshots/
+pytest tests/unit/strategy/services/test_modifier_resolver.py
 ```
 
-### calculate_stat_multipliers
+Broader commands:
 
-```python
-def calculate_stat_multipliers(
-    modifier_entries: list,
-    modifier_registry: dict
-) -> dict:
-    """Calculate stat multipliers from a list of modifier entries.
-
-    Pure function - no side effects, no object state needed.
-
-    Args:
-        modifier_entries: List of dicts with 'id' and 'value' keys
-                         e.g., [{'id': 'simple_size_mount', 'value': 20.0}]
-        modifier_registry: Dict mapping modifier IDs to Modifier definitions
-
-    Returns:
-        Dict of stat_key -> value (multipliers, additive values, etc.)
-    """
+```bash
+pytest tests/ --testmon
+python Tools/test_sharded/test_sharded.py
 ```
 
-### get_default_stat_multipliers
+## Invariants
 
-```python
-def get_default_stat_multipliers() -> dict:
-    """Return default stat multipliers dictionary.
-
-    Canonical list of all supported modifier stats. Returns:
-        {
-            'mass_mult': 1.0,          # Multiplicative (default 1.0)
-            'hp_mult': 1.0,
-            'damage_mult': 1.0,
-            'range_mult': 1.0,
-            'cost_mult': 1.0,
-            'thrust_mult': 1.0,
-            'turn_mult': 1.0,
-            'strategic_mult': 1.0,
-            'energy_gen_mult': 1.0,
-            'capacity_mult': 1.0,
-            'shield_capacity_mult': 1.0,
-            'crew_capacity_mult': 1.0,
-            'life_support_capacity_mult': 1.0,
-            'consumption_mult': 1.0,
-            'reload_mult': 1.0,
-            'endurance_mult': 1.0,
-            'projectile_hp_mult': 1.0,
-            'projectile_damage_mult': 1.0,
-            'crew_req_mult': 1.0,
-            'mass_add': 0.0,           # Additive (default 0.0)
-            'arc_add': 0.0,
-            'accuracy_add': 0.0,
-            'projectile_stealth_level': 0.0,
-            'arc_set': None,           # Set/override (default None)
-            'properties': {},
-        }
-    """
-```
-
-### ModifierEffectEvaluator
-
-```python
-class ModifierEffectEvaluator:
-    @staticmethod
-    def evaluate_formula(formula: str, context: Dict[str, float]) -> float:
-        """Evaluate a formula string with the given context.
-
-        Args:
-            formula: Formula string (e.g., "param ^ 2", "1.0 + param * 0.5")
-            context: Dictionary of variable values (e.g., {'param': 2.0})
-
-        Returns:
-            Evaluated result as float
-
-        Raises:
-            FormulaException: If formula cannot be evaluated
-        """
-
-    @classmethod
-    def evaluate_modifier(
-        cls,
-        mod_def: Dict[str, Any],
-        param_value: float,
-        stats_context: Optional[Dict[str, float]] = None
-    ) -> List[ModifierEffect]:
-        """Evaluate a modifier definition with a given parameter value.
-
-        Args:
-            mod_def: Modifier definition dict with 'effects' key
-            param_value: The parameter value to evaluate formulas with
-            stats_context: Optional dict of already-computed stats for
-                           dependency resolution (e.g., referencing mass_mult
-                           in another formula)
-
-        Returns:
-            List of ModifierEffect instances with evaluated values
-        """
-
-    @classmethod
-    def validate_formula(cls, formula: str) -> List[str]:
-        """Validate a formula string for syntax and allowed variables.
-
-        Args:
-            formula: Formula string (e.g., "param ^ 2", "1.0 + param * 0.5")
-
-        Returns:
-            Empty list if valid, list of error messages if invalid
-        """
-
-    @classmethod
-    def validate_modifier_definition(cls, mod_def: Dict[str, Any]) -> List[str]:
-        """Validate all formulas in a modifier definition.
-
-        Args:
-            mod_def: Modifier definition dict
-
-        Returns:
-            List of error messages (empty if valid)
-        """
-```
-
-### ModifierEffect
-
-```python
-@dataclass
-class ModifierEffect:
-    stat_key: str               # Target stat (e.g., "damage_mult", "hp_mult")
-    value: float                # Evaluated numeric value
-    operation: str              # "multiply", "add", "add_to_mult", or "set"
-    target_ability: Optional[str]  # Ability class name for targeted effects, or None
-    source_modifier_id: str     # ID of the source modifier definition
-    source_modifier_name: str   # Display name of the source modifier
-    formula_str: str            # Original formula string for UI display
-    param_value: float          # Parameter value used in evaluation
-
-    def describe(self) -> str:
-        """Human-readable description (e.g., 'damage_mult x1.50')."""
-
-    def is_targeted(self) -> bool:
-        """Returns True if this effect targets a specific ability."""
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization/introspection."""
-```
-
-### ModifierIntrospection
-
-```python
-class ModifierIntrospection:
-    @staticmethod
-    def get_modifier_affects(
-        mod_def: dict, component: Component, param_value: Optional[float] = None
-    ) -> dict:
-        """Determine what abilities a modifier affects on a given component.
-
-        Returns:
-            {
-                'abilities': ['ProjectileWeaponAbility', ...],
-                'effects_preview': ['damage_mult x1.50', ...],
-                'affected_stats': ['damage_mult', ...],
-                'targeted_abilities': ['ProjectileWeaponAbility', ...],
-            }
-        """
-
-    @staticmethod
-    def get_component_modifier_summary(component: Component) -> dict:
-        """Get summary of all modifiers applied to a component.
-
-        Returns:
-            {
-                'component_id': 'railgun',
-                'component_name': 'Railgun',
-                'applied_modifiers': [{'id': ..., 'name': ..., 'param_value': ..., 'effects': [...]}],
-                'total_stats': {'mass_mult': 2.0, ...}
-            }
-        """
-
-    @staticmethod
-    def get_ability_modifier_summary(ability: Ability) -> dict:
-        """Get summary of how modifiers affect a specific ability.
-
-        Returns:
-            {
-                'ability_class': 'ProjectileWeaponAbility',
-                'stats': [{'attribute': 'damage', 'base': 100.0, 'current': 150.0, ...}]
-            }
-        """
-
-    @staticmethod
-    def generate_ability_stats_display(ability: Ability) -> List[dict]:
-        """Generate display-ready stat entries showing base vs current values.
-
-        Returns:
-            [{'label': 'Damage', 'attribute': 'damage', 'base': 100.0,
-              'current': 150.0, 'modified': True, 'change_percent': 50.0,
-              'display_text': '150.0 (base: 100.0, +50%)'}]
-        """
-
-    @staticmethod
-    def generate_modifier_tooltip(
-        mod_def: dict, param_value: float, component: Optional[Component] = None
-    ) -> str:
-        """Generate a human-readable tooltip for a modifier.
-
-        Returns:
-            Formatted multi-line string describing modifier effects
-        """
-```
-
-### ModifierService
-
-```python
-class ModifierService:
-    """Service for component modifier operations (validation, mandatory modifiers, value constraints).
-
-    Usage:
-        service = ModifierService(modifier_registry=registries.modifiers)
-        if service.is_modifier_allowed('turret_mount', component):
-            service.ensure_mandatory_modifiers(component)
-    """
-
-    MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']
-
-    def __init__(self, modifier_registry: Dict[str, Any]):
-        """Initialize with modifier registry (required, strict DI)."""
-
-    def is_modifier_allowed(self, mod_id: str, component) -> bool:
-        """Check if a modifier is allowed for the given component."""
-
-    def get_mandatory_modifiers(self, component) -> list:
-        """Returns list of modifier IDs that are mandatory for this component."""
-
-    def is_modifier_mandatory(self, mod_id: str, component) -> bool:
-        """Check if a specific modifier is mandatory for this component."""
-
-    def get_initial_value(self, mod_id: str, component) -> float:
-        """Get the initial/default value for a newly applied modifier."""
-
-    def ensure_mandatory_modifiers(self, component) -> None:
-        """Auto-apply all mandatory modifiers that are missing from the component."""
-
-    def get_local_min_max(self, mod_id: str, component) -> tuple:
-        """Returns (min, max) for a modifier, accounting for component-specific constraints."""
-```
-
-### Modifier (Definition Class)
-
-```python
-class Modifier:
-    """Definition of a modifier loaded from JSON.
-
-    Attributes:
-        id: Unique modifier ID
-        name: Display name
-        description: Human-readable description
-        restrictions: Dict of allow/deny rules
-        readonly: Whether the modifier is read-only
-        effects: List of effect dicts from JSON
-        min_val: Minimum parameter value
-        max_val: Maximum parameter value
-        default_val: Default parameter value
-    """
-
-    def create_modifier(self, value=None) -> ApplicationModifier:
-        """Create an ApplicationModifier instance from this definition."""
-
-    def evaluate_effects(self, param_value: float) -> List[ModifierEffect]:
-        """Evaluate all effects with the given parameter value."""
-```
+- Simulation code receives registries through DI; do not add global registry lookup inside simulation logic.
+- `data/modifiers.json` is the canonical modifier data file.
+- Modifier behavior is formula/data driven. Avoid hardcoded ability-name or component-type lists except in shared registries meant to be the source of truth.
+- Component-born modifier state persists as id/value pairs, not evaluated effects.
+- `ship.external_stats` is transient, reset by `FleetAuraManager.initialize()`, cleared for dead ships, and excluded from ship serialization.
+- `ModifierStack` may be serialized as replay spec data; that does not make `external_stats` persistent state.
+- Targeted effects write to `component.ability_stats`; untargeted effects write to `component.stats`.
+- Abilities consume stats through `STAT_BINDINGS` and `Ability.get_effective_stat()`.
+- Formula validation belongs in `ModifierEffectEvaluator` / `modifier_schema.py`.
+- UI summaries belong in `ModifierIntrospection`; UI access to registries goes through injected services.
+- No save-file migration or compatibility shims for old modifier formats.

@@ -400,8 +400,9 @@ def test_allied_scope_routes_to_owner():
 
 def _iter_design_components(design_data):
     """Yield every `{id: ..., abilities: ...}` component dict across all
-    layers of a design JSON. Mirrors the helper in
-    `battle_setup/spec_compiler.py::_iter_components`.
+    layers of a design JSON. Local copy retained because this test runs
+    against raw on-disk design JSON where `layers` may be missing entirely
+    (the canonical `iter_components` requires a dict-shaped `layers` key).
     """
     layers = design_data.get("layers") or {}
     for layer_components in layers.values():

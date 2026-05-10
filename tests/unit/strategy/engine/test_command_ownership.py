@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.engine.command_handlers import BaseCommandHandler
+from game.strategy.engine.handlers import BaseCommandHandler
 from game.strategy.engine.commands import (
     IssueColonizeCommand,
     IssueMoveCommand,

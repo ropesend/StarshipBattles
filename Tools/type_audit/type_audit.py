@@ -44,7 +44,7 @@ sys.path.insert(0, PROJECT_ROOT)
 
 MYPIQ_CONFIG = """
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 warn_return_any = true
 warn_unused_ignores = true
 show_error_codes = true
@@ -126,10 +126,17 @@ class _TypeScanner(ast.NodeVisitor):
             return "TYPE_CHECKING" in parts
         return False
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        is_method = self._current_class is not None
+    def _is_any_type(self, node: ast.expr) -> bool:
+        if isinstance(node, ast.Name) and node.id == "Any":
+            return True
+        if isinstance(node, ast.Attribute) and node.attr == "Any":
+            return True
+        if isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name) and node.value.id == "Any":
+            return True
+        return False
+
+    def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
         is_dunder = node.name.startswith("__") and node.name.endswith("__")
-        is_private = node.name.startswith("_")
 
         if node.returns is None:
             if not is_dunder:
@@ -140,7 +147,7 @@ class _TypeScanner(ast.NodeVisitor):
                     "class": self._current_class,
                     "layer": self.layer,
                 })
-        elif isinstance(node.returns, ast.Name) and node.returns.id == "Any":
+        elif self._is_any_type(node.returns):
             self.any_returns.append({
                 "file": _rel(self.filepath),
                 "line": node.lineno,
@@ -150,7 +157,7 @@ class _TypeScanner(ast.NodeVisitor):
             })
 
         for arg in node.args.args:
-            if arg.annotation and isinstance(arg.annotation, ast.Name) and arg.annotation.id == "Any":
+            if arg.annotation and self._is_any_type(arg.annotation):
                 self.any_annotations.append({
                     "file": _rel(self.filepath),
                     "line": node.lineno,
@@ -160,6 +167,12 @@ class _TypeScanner(ast.NodeVisitor):
                 })
 
         self.generic_visit(node)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_function(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_function(node)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         prev = self._current_class
@@ -387,16 +400,54 @@ def run(force_output_dir: str | None = None, skip_mypy: bool = False) -> str:
     with open(os.path.join(raw_dir, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
 
+    # Per-shard filtered copies of the AST scan outputs.
+    # any_heatmap.json is global (not split). mypy is split below after it runs.
+    for sid, shard_info in manifest["shards"].items():
+        shard_files = set(shard_info["files"])
+
+        def _filter(items: list[dict]) -> list[dict]:
+            return [it for it in items if it.get("file") in shard_files]
+
+        with open(os.path.join(raw_dir, f"any_returns_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(any_returns_flat), f, indent=2)
+        with open(os.path.join(raw_dir, f"missing_returns_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(all_missing), f, indent=2)
+        with open(os.path.join(raw_dir, f"type_ignore_sites_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(all_ignores), f, indent=2)
+        with open(os.path.join(raw_dir, f"cast_usage_{sid}.json"), "w", encoding="utf-8") as f:
+            json.dump(_filter(all_casts), f, indent=2)
+
     if not skip_mypy:
         print("Running mypy strict-mode...")
         mypy_result = run_mypy(raw_dir)
         with open(os.path.join(raw_dir, "mypy_report.json"), "w", encoding="utf-8") as f:
             json.dump(mypy_result, f, indent=2)
         print(f"  mypy: {mypy_result['status']} ({mypy_result['error_count']} errors)")
+
+        # Per-shard mypy reports — filter errors by file membership.
+        # mypy reports paths relative to cwd (PROJECT_ROOT) using OS separators; normalise to forward-slash.
+        for sid, shard_info in manifest["shards"].items():
+            shard_files = set(shard_info["files"])
+            shard_errors = []
+            for err in mypy_result.get("errors", []):
+                err_file = err.get("file", "").replace("\\", "/")
+                if err_file in shard_files:
+                    shard_errors.append(err)
+            shard_report = {
+                "status": mypy_result.get("status"),
+                "exit_code": mypy_result.get("exit_code"),
+                "error_count": len(shard_errors),
+                "errors": shard_errors,
+            }
+            with open(os.path.join(raw_dir, f"mypy_report_{sid}.json"), "w", encoding="utf-8") as f:
+                json.dump(shard_report, f, indent=2)
     else:
         print("  mypy: SKIPPED (--skip-mypy)")
         with open(os.path.join(raw_dir, "mypy_report.json"), "w", encoding="utf-8") as f:
             json.dump({"status": "skipped"}, f)
+        for sid in manifest["shards"]:
+            with open(os.path.join(raw_dir, f"mypy_report_{sid}.json"), "w", encoding="utf-8") as f:
+                json.dump({"status": "skipped"}, f)
 
     print(f"  -> Any returns:      {len(any_returns_flat)}")
     print(f"  Missing returns:     {len(all_missing)}")

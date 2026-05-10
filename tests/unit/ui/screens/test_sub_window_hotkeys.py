@@ -2,13 +2,21 @@
 
 Verifies that OrdersWindow, BuildQueueScreen, TransferDialog,
 and BuildQueueListWindow accept input_mapper and dispatch hotkey actions.
+
+PROJ-328 Phase A Task A.6 (PROJ-322 Task 5.16 — non-Orders portion):
+The OrdersWindow + BuildQueueListWindow hotkey clusters now use the
+two-stage bypass_init pattern (after Tasks A.2 and A.3 landed those
+classes' refactors). The BuildQueueScreen cluster is unchanged
+(BuildQueueScreen isn't a UIWindow subclass, no bypass_init
+applies). The TransferDialog cluster is left as-is — Phase C scope
+will rewrite it alongside the deep TransferDialog split.
 """
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock, call
+from unittest.mock import MagicMock, patch
 import pygame
 
-from game.core.input_actions import InputAction, KeyBinding
 from game.ui.services.input_mapper import InputMapper
+from tests.fixtures.ui_widget_factory import bypass_init
 
 
 # -----------------------------------------------------------------------
@@ -34,30 +42,35 @@ def _keydown(key, mod=0):
 # =======================================================================
 
 class TestFleetOrdersWindowHotkeys:
-    """OrdersWindow should accept input_mapper and dispatch hotkey actions."""
+    """OrdersWindow should accept input_mapper and dispatch hotkey actions.
 
-    @patch('game.ui.screens.orders_window.pygame_gui')
-    def _make_window(self, mapper, mock_pgui):
-        """Create a OrdersWindow with mocks."""
+    PROJ-328 Phase A Task A.6: Migrated to bypass_init +
+    MockOrdersUiBuilder so the constructed window is a real
+    OrdersWindow with the cheap-state delegates (_mapper,
+    _order_describer) populated honestly. ``btn_clear`` comes from
+    the Mock builder.
+    """
+
+    def _make_window(self, mapper):
+        """Create an OrdersWindow under bypass_init."""
         from game.ui.screens.orders_window import OrdersWindow
+        from tests.fixtures.orders_ui_builder import MockOrdersUiBuilder
 
         mock_fleet = MagicMock()
         mock_fleet.id = 1
+        mock_fleet.name = "Test Fleet"
         mock_fleet.orders = []
         mock_fleet.construction_queue = []
 
-        # Patch UIWindow.__init__ to avoid real pygame_gui
-        with patch.object(OrdersWindow, '__init__', lambda self, *a, **kw: None):
-            win = OrdersWindow.__new__(OrdersWindow)
-
-        # Set up minimal state
-        win.fleet = mock_fleet
-        win.deleted_history = []
-        win._mapper = mapper
-        win.btn_undo = MagicMock()
-        win.btn_clear = MagicMock()
-        win.rows = []
-        win.ui_manager = MagicMock()
+        with bypass_init(OrdersWindow):
+            win = OrdersWindow(
+                pygame.Rect(0, 0, 400, 500),
+                MagicMock(name="ui_manager"),
+                mock_fleet,
+                window_manager=None,
+                input_mapper=mapper,
+                ui_builder=MockOrdersUiBuilder(),
+            )
         return win
 
     def test_accepts_input_mapper_param(self, mapper):
@@ -119,7 +132,7 @@ class TestBuildQueueScreenHotkeys:
         screen.selected_queue_indices = {0}
         screen.active_queue_source = MagicMock()
         screen.build_context = MagicMock()
-        screen._close = MagicMock()
+        screen._request_close = MagicMock()
         screen._refresh_items_list = MagicMock()
         screen._refresh_queue_display = MagicMock()
         # Bind the real method
@@ -127,11 +140,11 @@ class TestBuildQueueScreenHotkeys:
         return screen
 
     def test_escape_closes_screen(self, mapper):
-        """ESC triggers _close() via InputMapper."""
+        """ESC triggers _request_close() via InputMapper (PROJ-376 Phase 2 rename)."""
         screen = self._make_screen(mapper)
         event = _keydown(pygame.K_ESCAPE)
         screen._handle_keydown(event)
-        screen._close.assert_called_once()
+        screen._request_close.assert_called_once()
 
     def test_key_1_selects_complexes(self, mapper):
         """Key 1 switches to Complexes category."""
@@ -190,7 +203,7 @@ class TestBuildQueueScreenHotkeys:
         screen = self._make_screen(None)
         event = _keydown(pygame.K_ESCAPE)
         screen._handle_keydown(event)
-        screen._close.assert_not_called()
+        screen._request_close.assert_not_called()
 
     def test_close_button_tooltip(self, mapper):
         """Close button shows Esc tooltip."""
@@ -220,24 +233,50 @@ class TestBuildQueueScreenHotkeys:
 # =======================================================================
 
 class TestTransferDialogHotkeys:
-    """TransferDialog should accept input_mapper and dispatch hotkey actions."""
+    """TransferDialog should accept input_mapper and dispatch hotkey actions.
+
+    PROJ-328 Phase C: migrated to bypass_init + MockTransferUiBuilder
+    so the constructed dialog is a real TransferDialog with cheap-state
+    delegates (view_model, _controller, _renderer, _mapper) populated
+    honestly. Widget slots come from the Mock builder.
+    """
 
     def _make_dialog(self, mapper):
-        """Create a minimal TransferDialog with mapper."""
+        """Create a real TransferDialog under bypass_init."""
         from game.ui.screens.transfer_dialog import TransferDialog
+        from tests.fixtures.transfer_ui_builder import MockTransferUiBuilder
 
-        dialog = MagicMock(spec=TransferDialog)
-        dialog._mapper = mapper
-        dialog.btn_confirm = MagicMock()
-        dialog.btn_cancel = MagicMock()
-        dialog._on_confirm = MagicMock()
-        dialog.kill = MagicMock()
-        dialog._handle_keydown = TransferDialog._handle_keydown.__get__(dialog, TransferDialog)
+        scene = MagicMock(name="scene")
+        scene.facade = MagicMock(name="facade")
+        # Empty hex — populate_initial_data invoked by Mock builder
+        # finds nothing.
+        scene.facade.get_fleets_at_hex.return_value = []
+        scene.facade.get_planets_at_hex.return_value = []
+        scene.facade.get_fleet.return_value = None
+        scene.facade.get_planet.return_value = None
+
+        source_fleet = MagicMock(name="source_fleet")
+        source_fleet.id = 1
+        source_fleet.fleet_id = 1
+        source_fleet.configure_mock(name="Source Fleet")
+
+        with bypass_init(TransferDialog):
+            dialog = TransferDialog(
+                pygame.Rect(0, 0, 600, 500),
+                MagicMock(name="ui_manager"),
+                source_fleet,
+                (0, 0),
+                scene,
+                window_manager=None,
+                input_mapper=mapper,
+                ui_builder=MockTransferUiBuilder(),
+            )
         return dialog
 
     def test_enter_confirms(self, mapper):
-        """Enter triggers _issue_order via InputMapper."""
+        """Enter triggers _on_confirm via InputMapper."""
         dialog = self._make_dialog(mapper)
+        dialog._on_confirm = MagicMock()
         event = _keydown(pygame.K_RETURN)
         dialog._handle_keydown(event)
         dialog._on_confirm.assert_called_once()
@@ -245,6 +284,7 @@ class TestTransferDialogHotkeys:
     def test_escape_cancels(self, mapper):
         """ESC triggers kill() via InputMapper."""
         dialog = self._make_dialog(mapper)
+        dialog.kill = MagicMock()
         event = _keydown(pygame.K_ESCAPE)
         dialog._handle_keydown(event)
         dialog.kill.assert_called_once()
@@ -252,6 +292,7 @@ class TestTransferDialogHotkeys:
     def test_no_mapper_ignores_hotkeys(self):
         """Without mapper, _handle_keydown does nothing."""
         dialog = self._make_dialog(None)
+        dialog._on_confirm = MagicMock()
         event = _keydown(pygame.K_RETURN)
         dialog._handle_keydown(event)
         dialog._on_confirm.assert_not_called()
@@ -259,9 +300,6 @@ class TestTransferDialogHotkeys:
     def test_confirm_button_tooltip(self, mapper):
         """Confirm button shows Enter tooltip."""
         dialog = self._make_dialog(mapper)
-        dialog._apply_tooltips = MagicMock()
-        from game.ui.screens.transfer_dialog import TransferDialog
-        dialog._apply_tooltips = TransferDialog._apply_tooltips.__get__(dialog, TransferDialog)
         dialog._apply_tooltips()
         tooltip_text = dialog.btn_confirm.set_tooltip.call_args[0][0]
         assert "Enter" in tooltip_text
@@ -269,8 +307,6 @@ class TestTransferDialogHotkeys:
     def test_cancel_button_tooltip(self, mapper):
         """Cancel button shows Esc tooltip."""
         dialog = self._make_dialog(mapper)
-        from game.ui.screens.transfer_dialog import TransferDialog
-        dialog._apply_tooltips = TransferDialog._apply_tooltips.__get__(dialog, TransferDialog)
         dialog._apply_tooltips()
         tooltip_text = dialog.btn_cancel.set_tooltip.call_args[0][0]
         assert "Esc" in tooltip_text
@@ -281,16 +317,35 @@ class TestTransferDialogHotkeys:
 # =======================================================================
 
 class TestBuildQueueListWindowHotkeys:
-    """BuildQueueListWindow should accept input_mapper and handle ESC."""
+    """BuildQueueListWindow should accept input_mapper and handle ESC.
+
+    PROJ-328 Phase A Task A.6: Migrated to bypass_init + null builder
+    so the constructed window is a real BuildQueueListWindow with
+    cheap-state populated; kill() is patched out per-test to avoid
+    the (mock-row-label) cleanup chain.
+    """
 
     def _make_window(self, mapper):
-        """Create a minimal BuildQueueListWindow with mapper."""
+        """Create a real BuildQueueListWindow under bypass_init."""
         from game.ui.screens.build_queue_list_window import BuildQueueListWindow
+        from tests.fixtures.build_queue_list_ui_builder import (
+            NullBuildQueueListUiBuilder,
+        )
 
-        win = MagicMock(spec=BuildQueueListWindow)
-        win._mapper = mapper
+        empire = MagicMock()
+        empire.colonies = []
+        empire.fleets = []
+        with bypass_init(BuildQueueListWindow):
+            win = BuildQueueListWindow(
+                pygame.Rect(0, 0, 400, 300),
+                MagicMock(name="ui_manager"),
+                empire,
+                window_manager=None,
+                input_mapper=mapper,
+                ui_builder=NullBuildQueueListUiBuilder(),
+            )
+        # Spy kill so we can assert without entering the real cleanup.
         win.kill = MagicMock()
-        win._handle_keydown = BuildQueueListWindow._handle_keydown.__get__(win, BuildQueueListWindow)
         return win
 
     def test_escape_closes(self, mapper):

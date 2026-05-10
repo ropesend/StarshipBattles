@@ -198,6 +198,17 @@ class StrategyException(GameException):
     pass
 
 
+class SessionInitializationError(StrategyException):
+    """Raised when GameSession initialization fails (PROJ-381 Phase 2 B-11).
+
+    Wraps any error escaping ``GameInitializer.initialize`` so the
+    session ends up in a deterministic null-object state (galaxy=None,
+    empires=[]) rather than partially constructed. Preserves the
+    original exception via ``__cause__``.
+    """
+    pass
+
+
 class EnginePhaseError(StrategyException):
     """Exception for sub-engine phase failures during turn processing.
 
@@ -209,6 +220,72 @@ class EnginePhaseError(StrategyException):
         tick (int): Which tick (1-100) the failure occurred on
         turn (int): Which turn number
         original_error (str): String representation of the original exception
+    """
+    pass
+
+
+class TurnFailedError(StrategyException):
+    """Facade-level wrapper around an EnginePhaseError (PROJ-381 Phase 3 B-4).
+
+    The strategy facade re-raises ``EnginePhaseError`` as
+    ``TurnFailedError`` so the UI never has to import a domain-engine
+    exception type. Preserves the wrapped error via ``__cause__`` and
+    exposes UI-formatted convenience properties read from
+    ``self.context``.
+
+    Properties (PROJ-395 MAJ-001 / MAJ-004):
+        phase_name: Failed phase name, or "unknown" if missing.
+        tick: 1-based tick within the failed phase, or "?" if missing.
+        turn_number: Game turn number when the failure occurred, or
+            "?" if missing.
+        save_path: Pre-turn snapshot save path used for rollback, or
+            ``None`` if missing.
+        original_type: Class name of the wrapped exception, or
+            "Exception" if missing.
+        recoverable: True — the player can retry the turn (the facade
+            already restored pre-turn state via snapshot rollback).
+
+    All properties tolerate missing context keys with documented
+    sentinels so dialog rendering never raises.
+    """
+
+    @property
+    def phase_name(self) -> str:
+        """Failed phase name, or 'unknown' if missing from context."""
+        return self.context.get("phase_name", "unknown")
+
+    @property
+    def tick(self) -> int | str:
+        """1-based tick within the failed phase, or '?' if missing."""
+        return self.context.get("tick", "?")
+
+    @property
+    def turn_number(self) -> int | str:
+        """Game turn number when the failure occurred, or '?' if missing."""
+        return self.context.get("turn_number", "?")
+
+    @property
+    def save_path(self) -> str | None:
+        """Pre-turn snapshot save path used for rollback, or None."""
+        return self.context.get("save_path")
+
+    @property
+    def original_type(self) -> str:
+        """Class name of the wrapped exception, or 'Exception' if missing."""
+        return self.context.get("original_type", "Exception")
+
+    @property
+    def recoverable(self) -> bool:
+        """Whether the user can retry the turn (always True for now)."""
+        return True
+
+
+class BattleResolutionError(StrategyException):
+    """Wrapper around a SimulationException raised during battle resolution
+    (PROJ-381 Phase 3 B-6).
+
+    Carries fleet IDs, hex coordinate, and empire IDs in ``context`` so a
+    crash dump captures the situation that triggered the failure.
     """
     pass
 
@@ -306,6 +383,31 @@ class LLMCancelled(LLMException):
     pass
 
 
+class LLMUnexpectedError(LLMException):
+    """LLM provider raised a non-LLMException exception (PROJ-321..328 audit S1.1).
+
+    Wraps any unexpected, non-LLM exception that escapes from a
+    provider's `complete()` call (`RuntimeError`, `KeyError`,
+    third-party HTTP-library exceptions not yet mapped to
+    `LLMNetworkError`, etc.). The underlying exception is preserved
+    via `__cause__`; the original exception type is also stored in
+    `context['original_exception_type']` for safe logging.
+
+    `code` is intentionally `None` — the wrapped exception is, by
+    definition, outside the categorized LLM-error taxonomy. Callers
+    that need to distinguish "something unexpected happened" from a
+    specific known LLM failure should use `isinstance(err,
+    LLMUnexpectedError)`.
+
+    Introduced because `LLMBackgroundCall._run()` previously only
+    caught `LLMException` and `LLMCancelled`; any other exception
+    propagated past the inner try/finally with `_status` still
+    `RUNNING`, violating the `wait()` API contract that returns
+    True only for terminal state (DONE/ERROR/CANCELLED).
+    """
+    pass
+
+
 # =============================================================================
 # Image Service Exceptions (PROJ-314)
 # =============================================================================
@@ -368,6 +470,32 @@ class ImageCancelled(ImageException):
     pass
 
 
+class ImageUnexpectedError(ImageException):
+    """Image provider raised a non-ImageException exception (PROJ-381 Phase 2 B-10).
+
+    Mirror of :class:`LLMUnexpectedError`. Wraps any unexpected,
+    non-Image exception that escapes from a provider's
+    ``generate_image()`` call (`RuntimeError`, third-party HTTP-library
+    exceptions not yet mapped to ``ImageNetworkError``, etc.). The
+    underlying exception is preserved via ``__cause__``; the original
+    exception type is also stored in
+    ``context['original_exception_type']`` for safe logging.
+
+    ``code`` is intentionally ``None`` — the wrapped exception is, by
+    definition, outside the categorized image-error taxonomy. Callers
+    that need to distinguish "something unexpected happened" from a
+    specific known image failure should use ``isinstance(err,
+    ImageUnexpectedError)``.
+
+    Introduced because :class:`ImageBackgroundCall._run()` previously
+    only caught :class:`ImageException` and :class:`ImageCancelled`; any
+    other exception propagated past the inner try/finally with
+    ``_status`` still ``RUNNING``, leaking the worker thread and leaving
+    callers polling forever.
+    """
+    pass
+
+
 # =============================================================================
 # Exports
 # =============================================================================
@@ -388,6 +516,9 @@ __all__ = [
     # Strategy
     'StrategyException',
     'EnginePhaseError',
+    'SessionInitializationError',
+    'TurnFailedError',
+    'BattleResolutionError',
     # Simulation
     'SimulationException',
     'ComponentException',
@@ -400,6 +531,7 @@ __all__ = [
     'LLMRateLimited',
     'LLMTimeoutError',
     'LLMCancelled',
+    'LLMUnexpectedError',
     # Image Service (PROJ-314)
     'ImageException',
     'ImageConfigError',
@@ -408,4 +540,5 @@ __all__ = [
     'ImageRateLimited',
     'ImageTimeoutError',
     'ImageCancelled',
+    'ImageUnexpectedError',
 ]

@@ -7,7 +7,6 @@ If the turn fails partway through, the snapshot is used to restore state.
 Uses to_dict()/from_dict() round-trip for serialization, reusing the
 existing tested infrastructure.
 """
-import json
 import logging
 import os
 import time
@@ -16,6 +15,7 @@ from typing import Any, Dict, List, Optional
 
 from game.core.exceptions import PersistenceException
 from game.core.error_codes import ErrorCode
+from game.core.json_utils import save_json
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class TurnStateSnapshot:
         try:
             empire_dicts = [e.to_dict() for e in empires]
             galaxy_dict = galaxy.to_dict()
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: any to_dict() failure must become SNAPSHOT_FAILED PersistenceException for the turn rollback contract.
             raise PersistenceException(
                 f"Failed to capture turn state snapshot: {e}",
                 code=ErrorCode.SNAPSHOT_FAILED.value,
@@ -125,10 +125,12 @@ class TurnStateSnapshot:
             "system_count": len(self.galaxy_dict.get("systems", [])),
         }
 
-        try:
-            os.makedirs(save_path, exist_ok=True)
-            with open(filepath, 'w') as f:
-                json.dump(crash_data, f, indent=2)
+        # PROJ-381 Phase 3 (ERR-02-005): route through save_json so the
+        # write is atomic (temp file + rename) — a crash mid-write no
+        # longer leaves a partial snapshot file on disk. save_json
+        # handles parent-directory creation internally so the prior
+        # os.makedirs call is redundant.
+        if save_json(filepath, crash_data, indent=2):
             logger.info(f"Crash snapshot written to {filepath}")
-        except (OSError, TypeError) as e:
-            logger.error(f"Failed to write crash snapshot to {filepath}: {e}")
+        else:
+            logger.error(f"Failed to write crash snapshot to {filepath}")

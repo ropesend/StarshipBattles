@@ -249,7 +249,15 @@ class TestCacheStable:
 
     def test_production_habitability_scales_drain(self):
         """Phase 3 end-to-end: ideal planet production tick consumes
-        significantly more metals per tick than hostile planet."""
+        significantly more metals per tick than hostile planet.
+
+        PROJ-323 Task 5.7: kept current form. Calling the private
+        _process_queue_tick_dynamic is intentional — the public
+        TurnEngine.process_full_turn includes too many side effects
+        (events, AI, notifications) for a focused production-rate
+        comparison. The private call is the narrowest API that exercises
+        the habitability multiplier in production drain.
+        """
         from unittest.mock import MagicMock as _MM
 
         race_registry = _StubRegistry({"human": _human_race()})

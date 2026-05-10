@@ -12,7 +12,8 @@ Exceptions (game.core.exceptions):
     ResourceException, MissingResourceException, PersistenceException,
     SimulationException, ComponentException, FormulaException,
     LLMException, LLMConfigError, LLMNetworkError, LLMResponseError,
-    LLMRateLimited, LLMTimeoutError, LLMCancelled (PROJ-296)
+    LLMRateLimited, LLMTimeoutError, LLMCancelled,
+    LLMUnexpectedError (PROJ-296 + PROJ-321..328 audit S1.1)
 
 Error Codes (game.core.error_codes):
     ErrorCode
@@ -31,7 +32,7 @@ Resources (game.core.resources):
     ResourceCatalog, ResourceDefinition
 
 Event Logging (game.core.event_logging):
-    log_event, set_event_handler, get_event_handler
+    EventBus  (PROJ-390 retired the module-level log_event shim)
 
 Validation (game.core.validation):
     ValidationResult, IValidationRule
@@ -71,6 +72,7 @@ from game.core.exceptions import (
     LLMRateLimited,
     LLMTimeoutError,
     LLMCancelled,
+    LLMUnexpectedError,
 )
 
 # Error Codes (PROJ-45)
@@ -97,13 +99,10 @@ from game.core.constants import (
     CombatConstants,
 )
 
-# Event Logging (PROJ-175)
-from game.core.event_logging import (
-    EventBus,
-    log_event,
-    set_event_handler,
-    get_event_handler,
-)
+# Event Logging (PROJ-175). PROJ-390 retired the module-level
+# log_event/set_event_handler/get_event_handler shim; only the
+# session-scoped EventBus class remains and is re-exported here.
+from game.core.event_logging import EventBus
 
 # Validation
 from game.core.validation import ValidationResult, IValidationRule
@@ -148,6 +147,8 @@ __all__ = [
     # LLM Service Exceptions (PROJ-296)
     'LLMException', 'LLMConfigError', 'LLMNetworkError', 'LLMResponseError',
     'LLMRateLimited', 'LLMTimeoutError', 'LLMCancelled',
+    # PROJ-321..328 audit S1.1: wraps non-LLM provider exceptions in LLMBackgroundCall
+    'LLMUnexpectedError',
     # Error Codes (PROJ-45)
     'ErrorCode',
     # Math
@@ -159,8 +160,8 @@ __all__ = [
     # Constants
     'GameState', 'LayerType', 'AttackType', 'LayerDefaults', 'CombatConstants',
     # PLANET_RESOURCES removed — use ResourceCatalog from game.core.resources
-    # Event Logging
-    'log_event', 'set_event_handler', 'get_event_handler',
+    # Event Logging (PROJ-390: only EventBus remains)
+    'EventBus',
     # Validation
     'ValidationResult', 'IValidationRule',
     # Configuration (UIConfig moved to game.ui.config - PROJ-113)

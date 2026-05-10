@@ -120,10 +120,11 @@ class ScreenRouter:
             scene_callback=scene_callbacks.strategy,
             input_mapper=self.input_mapper,
         )
-        # NB: TestLabScreen still asks for `self` (the legacy "Game" handle)
-        # in its first arg. The router stands in for that role here.
         self.test_lab_scene = TestLabScreen(
-            self, scene_callback=scene_callbacks.test_lab
+            self.width,
+            self.height,
+            battle_scene=self.battle_scene,
+            scene_callback=scene_callbacks.test_lab,
         )
 
         # Optionally-instantiated scenes (created on demand).
@@ -464,6 +465,7 @@ class ScreenRouter:
         *,
         headless: bool = False,
         config: Optional[Any] = None,
+        ship_builder: Optional[Any] = None,
     ) -> None:
         """Start a battle from a compiled `BattleSpec` (PROJ-270 Phase 3).
 
@@ -474,6 +476,12 @@ class ScreenRouter:
         ignored (the caller has already set the right operational
         flags). When omitted, the original default-config build path
         runs unchanged.
+
+        PROJ-368: ``ship_builder`` (optional) lets the replay-launch path
+        supply a snapshot-backed materializer for replay specs whose
+        ``ShipSpec.instance_ref`` is ``None``. When omitted, the
+        controller falls back to the context materializer (the live
+        path used by manual battles and quickstart).
         """
         from game.ai.ai_factory import AIControllerFactory
         from game.simulation.battle_config import BattleConfig
@@ -501,6 +509,7 @@ class ScreenRouter:
         controller.start_from_spec(
             spec,
             ai_factory=AIControllerFactory(),
+            ship_builder=ship_builder,
             registry_provider=get_default_registry_provider(),
             config=config,
         )

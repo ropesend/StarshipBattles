@@ -1,0 +1,31 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 185,
+  "total_findings": 4,
+  "findings": [
+    {
+      "file": "game/strategy/engine/conflict_resolution_engine.py",
+      "line": 416,
+      "marker": "# legacy",
+      "context": "        # legacy `_rng_resolve_empty_fleets` only existed to keep"
+    },
+    {
+      "file": "game/strategy/engine/order_handlers/transfer_branches.py",
+      "line": 107,
+      "marker": "# Legacy",
+      "context": "            # Legacy/Default: use first species"
+    },
+    {
+      "file": "game/ui/screens/battle_setup_state.py",
+      "line": 265,
+      "marker": "# Legacy",
+      "context": "        # Legacy keys preserved for the 2-side case; omitted when N > 2"
+    },
+    {
+      "file": "game/ui/screens/battle_setup_state.py",
+      "line": 290,
+      "marker": "# Legacy",
+      "context": "        # Legacy 2-side format."
+    }
+  ]
+}

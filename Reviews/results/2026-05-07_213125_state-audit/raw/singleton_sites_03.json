@@ -1,0 +1,32 @@
+[
+  {
+    "file": "game/ai/policy_manager.py",
+    "line": 23,
+    "variable": "_default_policy_manager",
+    "context": "_default_policy_manager: Optional['PolicyManager'] = None"
+  },
+  {
+    "file": "game/core/profiling.py",
+    "line": 17,
+    "variable": "_default_profiler",
+    "context": "_default_profiler: Optional['Profiler'] = None"
+  },
+  {
+    "file": "game/services/llm/defaults.py",
+    "line": 17,
+    "variable": "_default_llm_provider",
+    "context": "_default_llm_provider: Optional[LLMProvider] = None"
+  },
+  {
+    "file": "game/ui/renderer/sprites.py",
+    "line": 16,
+    "variable": "_default_sprite_manager",
+    "context": "_default_sprite_manager: Optional['SpriteManager'] = None"
+  },
+  {
+    "file": "game/ui/services/game_settings.py",
+    "line": 22,
+    "variable": "_default_game_settings",
+    "context": "_default_game_settings: Optional['GameSettings'] = None"
+  }
+]

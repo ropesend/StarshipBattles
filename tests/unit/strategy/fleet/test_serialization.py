@@ -32,6 +32,7 @@ class TestFleetSerialization:
             'name': 'Destroyer',
             'owner_id': 1,
             'design_data': {'name': 'Destroyer', 'vehicle_type': 'Ship'},
+            'components': {},
         }
         d = {
             'id': 'f1',

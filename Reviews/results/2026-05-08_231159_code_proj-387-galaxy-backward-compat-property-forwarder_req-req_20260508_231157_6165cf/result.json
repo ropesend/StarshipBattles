@@ -1,0 +1,55 @@
+{
+  "request_id": "req_20260508_231157_6165cf",
+  "review_dir": "Reviews/results/2026-05-08_231159_code_proj-387-galaxy-backward-compat-property-forwarder_req-req_20260508_231157_6165cf",
+  "report_path": "Reviews/results/2026-05-08_231159_code_proj-387-galaxy-backward-compat-property-forwarder_req-req_20260508_231157_6165cf/report.md",
+  "findings": {
+    "critical": 0,
+    "major": 2,
+    "minor": 3,
+    "info": 10
+  },
+  "completed_at": "2026-05-08T23:20:00Z",
+  "recommendation": "APPROVE_WITH_FOLLOW_UP",
+  "findings_by_id": {
+    "FND-001": {
+      "severity": "MAJ",
+      "title": "Stale grandfathered entries in test_galaxy_state_encapsulation.py defeat guard test purpose",
+      "file": "tests/unit/strategy/data/test_galaxy_state_encapsulation.py",
+      "line": 45,
+      "fingerprint": "sha256:8a3f5c2e1d4b6a7f9c0e1d2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
+      "phase_attributed_to": "phase_1"
+    },
+    "FND-002": {
+      "severity": "MAJ",
+      "title": "_state.<field> access trades one private API for another; incomplete encapsulation fix",
+      "file": "game/strategy/engine/handlers/movement.py",
+      "line": 242,
+      "fingerprint": "sha256:9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+      "phase_attributed_to": "phase_1"
+    },
+    "FND-003": {
+      "severity": "MIN",
+      "title": "Guard test docstring out of date after forwarder deletion",
+      "file": "tests/unit/strategy/data/test_galaxy_state_encapsulation.py",
+      "line": 3,
+      "fingerprint": "sha256:1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1",
+      "phase_attributed_to": "phase_1"
+    },
+    "FND-004": {
+      "severity": "MIN",
+      "title": "galaxy_state.py docstring references deleted forwarder architecture",
+      "file": "game/strategy/data/galaxy_state.py",
+      "line": 13,
+      "fingerprint": "sha256:2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c",
+      "phase_attributed_to": "phase_1"
+    },
+    "FND-005": {
+      "severity": "MIN",
+      "title": "Plan Key Files table references wrong file path",
+      "file": "Projects/active_projects/PROJ-387/plan.md",
+      "line": 40,
+      "fingerprint": "sha256:3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d",
+      "phase_attributed_to": "phase_1"
+    }
+  }
+}

@@ -32,6 +32,32 @@ def _generate_id() -> str:
     return f"req_{now:%Y%m%d}_{now:%H%M%S}_{suffix}"
 
 
+def _render_checkout_block(checkout: dict[str, object]) -> str:
+    """Render the optional 03c checkout block (SHA-pinned review)."""
+    lines = ["## Checkout", ""]
+    for key in ("mode", "ref", "sha", "worktree_path"):
+        if key in checkout:
+            lines.append(f"- **{key}:** {checkout[key]}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _render_coverage_block(coverage: dict[str, object]) -> str:
+    """Render the optional 03c coverage block (cumulative-review metadata)."""
+    lines = ["## Coverage", ""]
+    for key in ("project_id", "review_sequence", "project_tip_sha", "focus_phase", "review_mode"):
+        if key in coverage:
+            lines.append(f"- **{key}:** {coverage[key]}")
+    cov_set = coverage.get("coverage_set")
+    if isinstance(cov_set, list):
+        coverage_str = ", ".join(str(x) for x in cov_set)
+    else:
+        coverage_str = str(cov_set or "")
+    lines.append(f"- **coverage_set:** {coverage_str}")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def _render_body(payload: dict[str, object]) -> str:
     parent_line = f"**Parent:** {payload['parent']}\n" if payload.get("parent") else ""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -51,6 +77,15 @@ def _render_body(payload: dict[str, object]) -> str:
     )
     if payload.get("context"):
         body += f"\n## Context\n\n{payload['context']}\n"
+
+    checkout = payload.get("checkout")
+    if isinstance(checkout, dict):
+        body += "\n" + _render_checkout_block(checkout)
+
+    coverage = payload.get("coverage")
+    if isinstance(coverage, dict):
+        body += "\n" + _render_coverage_block(coverage)
+
     body += f"\n## Expected Deliverable\n\n{payload.get('expected_deliverable', 'Report + result.json sidecar.')}\n"
     return body
 

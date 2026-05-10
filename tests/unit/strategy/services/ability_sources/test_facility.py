@@ -1,5 +1,6 @@
 """Tests for FacilityAbilitySource (PROJ-300 Phase 3)."""
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 from typing import Any, Dict, List
 
 from game.core.protocols import IAbilitySource, is_ability_source
@@ -91,6 +92,42 @@ def test_get_abilities_lists_collisions():
     abilities = src.get_abilities()
     assert isinstance(abilities["ShieldModifier"], list)
     assert len(abilities["ShieldModifier"]) == 2
+
+
+def test_get_activation_state_returns_first_owning_component_state():
+    fac = _facility_with_components([
+        {"id": "booster", "abilities": {"ResourceHarvestBooster": {"multiplier": 1.5}}},
+        {"id": "shield", "abilities": {"PlanetaryShield": {"capacity": 100}}},
+    ])
+    fac.activation_states["CORE:1:shield"] = {"active": True}
+
+    src = FacilityAbilitySource(facility=fac, planet=_MockPlanet())
+
+    assert src.get_activation_state("PlanetaryShield") == {"active": True}
+
+
+def test_get_activation_state_returns_none_without_state_getter():
+    facility = SimpleNamespace(
+        design_data={
+            "layers": {
+                "CORE": [
+                    {"id": "shield", "abilities": {"PlanetaryShield": {"capacity": 100}}},
+                ],
+            },
+        }
+    )
+    src = FacilityAbilitySource(facility=facility, planet=_MockPlanet())
+
+    assert src.get_activation_state("PlanetaryShield") is None
+
+
+def test_get_activation_state_returns_none_when_ability_missing():
+    fac = _facility_with_components([
+        {"id": "booster", "abilities": {"ResourceHarvestBooster": {"multiplier": 1.5}}},
+    ])
+    src = FacilityAbilitySource(facility=fac, planet=_MockPlanet())
+
+    assert src.get_activation_state("PlanetaryShield") is None
 
 
 def test_satisfies_iability_source_protocol():

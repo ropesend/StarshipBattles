@@ -31,6 +31,23 @@ def _drop_pod_item(design_id="test_pod", name="Test Pod"):
     }
 
 
+def _make_planet(planet_type_name: str, name: str = "Test Planet"):
+    """Thin alias over the shared `make_mock_planet` factory.
+
+    Resolves the local `MockPlanetType` enum value before delegating;
+    this preserves the historical `_make_planet("CONTINENTAL")` calling
+    convention while routing through `tests.fixtures.mock_planet`.
+
+    PROJ-322 Task 6.7 / HLP-004 (originally promoted in PROJ-323 Task 1.21).
+    """
+    from tests.fixtures.mock_planet import make_mock_planet
+
+    return make_mock_planet(
+        name=name,
+        planet_type=MockPlanetType[planet_type_name],
+    )
+
+
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -225,6 +242,26 @@ class TestColonizeValidatorEdgeCases:
 
         assert result.is_valid is False
         assert result.error_code == "WRONG_LOCATION"
+
+    def test_validate_specific_planet_requires_exact_sector_not_same_system(
+        self, mock_galaxy, mock_fleet, mock_planet
+    ):
+        """A target planet in the same system but a different sector is not colocated."""
+        from game.strategy.validation import ColonizeValidator
+
+        system = MagicMock()
+        system.planets = [mock_planet]
+        mock_galaxy.get_system_at_location.return_value = system
+        mock_galaxy.get_planets_at_global_hex.return_value = []
+        mock_galaxy.get_zones_at_global_hex.return_value = []
+        mock_fleet.location = HexCoord(10, 10)
+        mock_planet.location = HexCoord(11, 10)
+
+        result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_planet)
+
+        assert result.is_valid is False
+        assert result.error_code == "WRONG_LOCATION"
+        mock_galaxy.get_planets_at_global_hex.assert_called_once_with(mock_fleet.location)
 
     def test_fleet_moved_between_validation_and_execution(self, mock_galaxy, mock_fleet, mock_planet):
         """Validation reflects current fleet location, not cached location."""
@@ -603,6 +640,48 @@ class TestColonizeValidatorColonyPods:
 
         assert result.is_valid is True
 
+    def test_validate_drop_pod_availability_reports_committed_pod_exhaustion(
+        self, mock_ship_with_ice_dwarf_pod, mock_planet_ice_dwarf
+    ):
+        """Execution-time helper rejects when every carried pod is committed."""
+        from game.strategy.validation import ColonizeValidator
+        from game.strategy.data.order_types import OrderType
+
+        existing_order = MagicMock()
+        existing_order.type = OrderType.COLONIZE
+        existing_order.target = mock_planet_ice_dwarf
+
+        fleet = MagicMock()
+        fleet.ships = [mock_ship_with_ice_dwarf_pod]
+        fleet.orders = [existing_order]
+
+        result = ColonizeValidator._validate_drop_pod_availability(fleet)
+
+        assert result is not None
+        assert result.is_valid is False
+        assert result.error_code == "COLONY_POD_EXHAUSTED"
+
+    def test_validate_drop_pod_availability_skip_chain_check_ignores_committed_orders(
+        self, mock_ship_with_ice_dwarf_pod, mock_planet_ice_dwarf
+    ):
+        """skip_chain_check only requires that at least one pod is carried."""
+        from game.strategy.validation import ColonizeValidator
+        from game.strategy.data.order_types import OrderType
+
+        existing_order = MagicMock()
+        existing_order.type = OrderType.COLONIZE
+        existing_order.target = mock_planet_ice_dwarf
+
+        fleet = MagicMock()
+        fleet.ships = [mock_ship_with_ice_dwarf_pod]
+        fleet.orders = [existing_order]
+
+        result = ColonizeValidator._validate_drop_pod_availability(
+            fleet, skip_chain_check=True
+        )
+
+        assert result is None
+
 
 # =============================================================================
 # Test: Zone Colonization (PROJ-139)
@@ -750,28 +829,7 @@ class TestColonizeValidatorAnyPlanetPods:
         """Create a mock component registry (kept for API compatibility)."""
         return {}
 
-    def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
-        """Create a mock planet of the given type."""
-        from enum import Enum
-        from game.strategy.data.planet import Planet
-
-        planet = MagicMock(spec=Planet)
-        planet.name = name
-        planet.owner_id = None
-        planet.location = HexCoord(0, 0)
-        planet.planet_type = MockPlanetType[planet_type_name]
-        planet.deposits = {}
-        planet.id = 1
-        planet.populations = []
-        planet.max_population = 1000
-        planet.facilities = []
-        planet.atmosphere = {}
-        planet.surface_gravity = 9.8
-        planet.surface_temperature = 300.0
-        planet.orbit_distance = 1
-        planet.radius_hexes = 0
-        planet.image_id = ""
-        return planet
+    _make_planet = staticmethod(_make_planet)
 
     def _make_ship_with_pod(self, pod_type: str):
         """Create a mock ship with a drop pod in carried_items."""
@@ -887,30 +945,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         """Create a mock component registry (kept for API compatibility)."""
         return {}
 
-    def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
-        """Create a mock planet of the given type."""
-        from enum import Enum
-        from game.strategy.data.planet import Planet
-
-        # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
-        planet = MagicMock(spec=Planet)
-        planet.name = name
-        planet.owner_id = None
-        planet.location = HexCoord(0, 0)
-        planet.planet_type = MockPlanetType[planet_type_name]
-        planet.deposits = {}
-        # PROJ-193: Required IPlanet properties
-        planet.id = 1
-        planet.populations = []
-        planet.max_population = 1000
-        planet.facilities = []
-        planet.atmosphere = {}
-        planet.surface_gravity = 9.8
-        planet.surface_temperature = 300.0
-        planet.orbit_distance = 1
-        planet.radius_hexes = 0
-        planet.image_id = ""
-        return planet
+    _make_planet = staticmethod(_make_planet)
 
     def test_overcommit_succeeds_at_command_time(self, mock_component_registry):
         """Validation succeeds even with overcommitted pods — pod check deferred to execution."""

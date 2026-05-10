@@ -61,6 +61,101 @@ class TestGetPlanetFolderForSize:
             asset_manager._get_planet_folder_for_size(999)
 
 
+class TestStarAssets:
+    """Test star image resolution and core metadata helpers."""
+
+    def test_init_loads_existing_star_metadata(self):
+        """Existing star metadata JSON is loaded during construction."""
+        metadata = {
+            "blue.png": {
+                "centerX": 0.45,
+                "centerY": 0.55,
+                "radiusCore": 0.2,
+                "radiusCorona": 0.4,
+            }
+        }
+
+        with patch("game.assets.asset_manager.os.path.exists", return_value=True), \
+                patch("game.assets.asset_manager.load_json", return_value=metadata):
+            manager = AssetManager()
+
+        assert manager.star_metadata == metadata
+
+    def test_init_keeps_empty_star_metadata_when_file_missing(self):
+        """Missing star metadata leaves the metadata cache empty."""
+        with patch("game.assets.asset_manager.os.path.exists", return_value=False), \
+                patch("game.assets.asset_manager.load_json") as mock_load:
+            manager = AssetManager()
+
+        mock_load.assert_not_called()
+        assert manager.star_metadata == {}
+
+    def test_get_star_core_info_returns_metadata_or_default(self, asset_manager):
+        """Core metadata lookup falls back to normalized defaults."""
+        custom = {
+            "centerX": 0.4,
+            "centerY": 0.6,
+            "radiusCore": 0.22,
+            "radiusCorona": 0.38,
+        }
+        asset_manager.star_metadata = {"custom.png": custom}
+
+        assert asset_manager.get_star_core_info("custom.png") == custom
+        assert asset_manager.get_star_core_info("missing.png") == {
+            "centerX": 0.5,
+            "centerY": 0.5,
+            "radiusCore": 0.25,
+            "radiusCorona": 0.35,
+        }
+
+    def test_get_star_asset_key_for_type_uses_manifest_and_yellow_fallback(self, asset_manager):
+        """Star type mapping reads manifest data and defaults to yellow."""
+        asset_manager.manifest = {
+            "star_type_assets": {
+                "RED_GIANT": "red",
+            }
+        }
+
+        assert asset_manager.get_star_asset_key_for_type("RED_GIANT") == "red"
+        assert asset_manager.get_star_asset_key_for_type("UNKNOWN_TYPE") == "yellow"
+
+    def test_get_star_folder_for_size_returns_known_directories(self, asset_manager):
+        """Star image sizes map to the configured Stars folders."""
+        assert asset_manager._get_star_folder_for_size(128) == Paths.STARS_128_DIR
+        assert asset_manager._get_star_folder_for_size(256) == Paths.STARS_256_DIR
+        assert asset_manager._get_star_folder_for_size(512) == Paths.STARS_512_DIR
+        assert asset_manager._get_star_folder_for_size(1024) == Paths.STARS_1024_DIR
+
+    def test_get_star_folder_for_size_rejects_invalid_size(self, asset_manager):
+        """Unsupported star image sizes raise a ResourceException."""
+        with pytest.raises(ResourceException, match="Invalid star image size"):
+            asset_manager._get_star_folder_for_size(2048)
+
+    def test_load_star_image_falls_back_to_next_higher_resolution(self, asset_manager):
+        """Missing lower-resolution star image falls back to the next size."""
+        valid_surface = pygame.Surface((4, 4))
+
+        with patch.object(asset_manager, "_get_star_folder_for_size", return_value="/stars") as mock_folder, \
+                patch.object(asset_manager, "load_external_image") as mock_load:
+            mock_load.side_effect = [
+                asset_manager.get_missing_texture(),
+                valid_surface,
+            ]
+
+            result = asset_manager.load_star_image("star.png", requested_size=129)
+
+        assert result is valid_surface
+        assert [call.args[0] for call in mock_folder.call_args_list] == [256, 512]
+
+    def test_load_star_image_returns_missing_texture_after_loader_errors(self, asset_manager):
+        """Loader errors are swallowed per-resolution before returning the placeholder."""
+        with patch.object(asset_manager, "_get_star_folder_for_size", return_value="/stars"), \
+                patch.object(asset_manager, "load_external_image", side_effect=RuntimeError("boom")):
+            result = asset_manager.load_star_image("star.png", requested_size=512)
+
+        assert result is asset_manager.get_missing_texture()
+
+
 class TestLoadPlanetImage:
     """Test load_planet_image() method with fallback chain."""
 

@@ -25,6 +25,12 @@ class TestTransferValidatorRobustness:
         planet.owner_id = 0
         planet.location = HexCoord(2, 2) # Local hex in system
         planet.total_population = 100
+        # Default species so passenger LOAD validation has something to match.
+        # PROJ-401: validator now requires species_id on passenger LOAD.
+        pop = MagicMock()
+        pop.race_id = "humans"
+        pop.count = 100
+        planet.populations = [pop]
         return planet
     
     @pytest.fixture
@@ -45,9 +51,10 @@ class TestTransferValidatorRobustness:
         with patch('game.core.protocols.is_planet', return_value=True):
             with patch('game.core.protocols.is_fleet', return_value=False):
                 result = TransferValidator.validate(
-                    mock_galaxy, mock_fleet, mock_planet, "passengers", "load", 50
+                    mock_galaxy, mock_fleet, mock_planet, "passengers", "load", 50,
+                    species_id="humans",
                 )
-        
+
         # Assert
         assert result.is_valid, f"Validation failed: {result.message}"
 
@@ -56,14 +63,40 @@ class TestTransferValidatorRobustness:
         # Setup: Galaxy resolves a DIFFERENT system (or None)
         mock_galaxy.get_system_at_location.return_value = MagicMock() # Some other system
         mock_galaxy.systems = {(100,100): MagicMock()}
-        
+
         # Act
         with patch('game.core.protocols.is_planet', return_value=True):
             with patch('game.core.protocols.is_fleet', return_value=False):
                 result = TransferValidator.validate(
                     mock_galaxy, mock_fleet, mock_planet, "passengers", "load", 50
                 )
-        
+
         # Assert
         assert not result.is_valid
         assert "not at Test Planet's system" in result.message
+
+    def test_validate_rejects_passenger_load_with_missing_species_id(
+        self, mock_galaxy, mock_fleet, mock_planet
+    ):
+        """PROJ-401 (B-02): Passenger LOAD must reject when species_id is None.
+
+        After PROJ-393 deleted the executor's first-species fallback in
+        `transfer_branches.py`, a passenger LOAD with `species_id=None` is a
+        runtime no-op. Validation must reject the same shape so orders cannot
+        be queued only to silently transfer 0 at execution time.
+        """
+        with patch('game.core.protocols.is_planet', return_value=True):
+            with patch('game.core.protocols.is_fleet', return_value=False):
+                result = TransferValidator.validate(
+                    mock_galaxy,
+                    mock_fleet,
+                    mock_planet,
+                    cargo_type="passengers",
+                    direction="load",
+                    amount=50,
+                    species_id=None,
+                    skip_location_check=True,
+                )
+
+        assert not result.is_valid
+        assert result.error_code == "MISSING_SPECIES_ID"

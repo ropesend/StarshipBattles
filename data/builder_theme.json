@@ -69,6 +69,17 @@
             "border_width": "1"
         }
     },
+    "panel.@fast_panel": {
+        "colours": {
+            "dark_bg": "#14181f",
+            "normal_bg": "#1a1e26",
+            "normal_border": "#2a3545"
+        },
+        "misc": {
+            "shape": "rectangle",
+            "border_width": "1"
+        }
+    },
     "selection_list": {
         "misc": {
             "shape": "rectangle",

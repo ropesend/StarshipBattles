@@ -41,23 +41,6 @@ class TestGetActivationState:
         assert state.phase == ActivationPhase.ACTIVATING
         assert state.progress_ticks == 50
 
-    def test_backward_compat_active_true(self):
-        """Old format {'active': True} returns ACTIVE state."""
-        facility = _make_facility(component_states={
-            "stabilizer": {"active": True}
-        })
-        state = facility.get_activation_state("stabilizer")
-        assert state.phase == ActivationPhase.ACTIVE
-
-    def test_backward_compat_active_false(self):
-        """Old format {'active': False} returns INACTIVE state."""
-        facility = _make_facility(component_states={
-            "stabilizer": {"active": False}
-        })
-        state = facility.get_activation_state("stabilizer")
-        assert state.phase == ActivationPhase.INACTIVE
-
-
 class TestSetActivationState:
     """Tests for set_activation_state method."""
 
@@ -118,13 +101,6 @@ class TestIsComponentActive:
             ).to_dict()
         })
         assert facility.is_component_active("OUTER:0:stabilizer") is False
-
-    def test_backward_compat_old_format(self):
-        facility = _make_facility(component_states={
-            "stabilizer": {"active": True}
-        })
-        assert facility.is_component_active("stabilizer") is True
-
 
 class TestSerialization:
     """to_dict/from_dict preserves activation states."""

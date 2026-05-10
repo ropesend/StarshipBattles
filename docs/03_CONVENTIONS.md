@@ -1,553 +1,439 @@
 # Conventions
 
-> **Last verified:** 2026-04-28 — Removed §10 Dev-Mode CLI Flag: FEAT-20's revised scope (Run 10 Turns button always-visible) ERADICATED the `--dev` flag plumbing, leaving zero consumers. §11 Ship Theme Asset Conventions (PROJ-314) unchanged.
+> **Last verified:** 2026-05-08 - Balanced compact convention pass; restored current contracts, paths, invariants, and commands while removing release-note archaeology.
 
-This document defines the naming, coding, file organization, and testing conventions for Starship Battles. Follow these rules when adding or modifying code.
+Compact convention reference for Starship Battles. Use this with `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` before coding.
 
----
+## Naming Rules
 
-## 1. Naming Conventions
+### Battle vs Combat
 
-### 1.1 Battle vs Combat
+- **Battle** means full simulation orchestration, engagement state, resolution, and high-level APIs. Examples: `BattleEngine`, `BattleService`, `BattleController`, `BattleState`, `BattleResult`.
+- **Combat** means entity-level per-ship or per-component behavior. Examples: `ShipCombatEngine`, `CombatPropulsion`, `CombatConstants`.
+- Use **Battle** for systems that manage an overall engagement. Use **Combat** for per-ship or per-component mechanics.
 
-These terms are **not interchangeable**. They indicate scope.
+### Screen vs Scene
 
-| Term | Scope | Examples |
-|------|-------|----------|
-| **Battle** | Simulation orchestration: full engagements, state, resolution | `BattleEngine`, `BattleService`, `BattleController`, `BattleState`, `BattleResult` |
-| **Combat** | Entity-level behavior: per-ship, per-tick mechanics | `ShipCombatEngine`, `CombatPropulsion`, `CombatConstants` |
+- **Screen** means major game state: `BattleScreen`, `StrategyScreen`, `DesignWorkshopScreen`, `BuildQueueScreen`, `FleetBattleSetupScreen`, `TestLabScreen`, `NewGameSetupScreen`, `RaceSetupScreen`, `GalaxyTestScreen`.
+- `FleetBattleSetupScreen` is aliased as `BattleSetupScreen` by `game/screen_router.py`.
+- **Scene** means menu/minor state: `MenuScene`, `KeybindingsScene`.
+- Do not introduce `BattleScene` or `StrategyScene`.
 
-**Rule:** Creating a system that manages the overall engagement? Use **Battle**. Adding per-ship or per-component behavior? Use **Combat**.
+### Builder vs Workshop
 
-### 1.2 Screen vs Scene
+- **Builder** panels are reusable UI internals under `game/ui/screens/builder/`: `left_panel.py`, `right_panel.py`, `schematic_view.py`, `detail_panel.py`, `weapons_panel.py`.
+- **Workshop** is the top-level design screen family directly under `game/ui/screens/`: `workshop_screen.py` (`DesignWorkshopScreen`), `workshop_viewmodel.py`, `workshop_context.py`, `workshop_event_router.py`, `workshop_data_loader.py`, `workshop_data_reloader.py`, `workshop_ship_io.py`.
+- Workshop files do not live in a `workshop/` subdirectory.
 
-Major game states use **Screen**. Minor/modal states use **Scene**.
+### Star System vs Sector
 
-| Suffix | Usage | Actual classes |
-|--------|-------|----------------|
-| **Screen** | Major game states: battle, strategy, workshop, setup | `BattleScreen`, `StrategyScreen`, `DesignWorkshopScreen`, `BuildQueueScreen`, `FleetBattleSetupScreen` (aliased as `BattleSetupScreen` in app.py), `TestLabScreen`, `NewGameSetupScreen`, `RaceSetupScreen`, `GalaxyTestScreen` |
-| **Scene** | Minor overlays: menus, settings | `MenuScene`, `KeybindingsScene` |
+- **Star system/system** means a circular map region centered on a star. Data type: `StarSystem`.
+- **Sector** means one addressable galaxy hex. Data type: `HexCoord`.
+- A system boundary has radius 50 hexes from `system.global_location`, defined by `get_system_at_hex()` in `game/strategy/data/pathfinding.py`; systems are placed at least 400 hexes apart center-to-center.
+- A system contains many sectors: central star, orbiting planets, warp points, and storms each occupy specific sectors.
+- Entities inside a system store local coordinates. Convert with `global_hex = system.global_location + entity.location`.
+- `fleet.location`, `warp_point.location`, and `planet.location` are sectors. `system.global_location` is the system origin sector in global coordinates.
+- Validate fleet position at sector precision for orders targeting a planet, warp point, or location. Being in the right system is not enough.
 
-- **DO:** Name new major game states with `Screen`.
-- **DON'T:** Use `Scene` for anything that occupies the full display as a primary game state.
-- **DON'T:** Use `BattleScene` or `StrategyScene` -- these do not exist.
+### Handler Names
 
-### 1.3 Builder vs Workshop
+- Prefix input handlers by screen/context: `StrategyInputHandler`, `TestLabInputHandler`, `WeaponsInputHandler`.
+- Current files: `game/ui/screens/strategy_input_handler.py`, `game/ui/screens/test_lab/screen_input_handler.py`, `game/ui/screens/builder/weapons_input_handler.py`.
+- `game/core/input_handler.py` does not exist. Core owns `game/core/input_actions.py`.
 
-| Term | Layer | Location |
-|------|-------|----------|
-| **Builder** | Internal panels (reusable UI components) | `game/ui/screens/builder/` |
-| **Workshop** | Top-level screen that composes Builder panels | `game/ui/screens/workshop_*.py` |
+### MVVM and UI Decomposition Names
 
-Builder panels live in `game/ui/screens/builder/` (e.g., `left_panel.py`, `right_panel.py`, `schematic_view.py`, `detail_panel.py`, `weapons_panel.py`).
+- `*_viewmodel.py` / `*_view_model.py`: screen state, events, and business logic without Pygame. Examples: `workshop_viewmodel.py`, `build_queue_viewmodel.py`, `transfer_view_model.py`.
+- `*_controller.py`: facade queries and command emission boundary. Examples: `transfer_controller.py`, `new_game_setup_controller.py`.
+- `*_renderer.py`: `pygame_gui` widget construction, update, and destruction.
+- `*_ui_builder.py`: per-class UI builder protocol; pair with `Null{Foo}UiBuilder` and `Mock{Foo}UiBuilder` fixtures.
+- `*_context.py`: shared data context between panels.
+- `*_event_router.py`: event dispatch between UI components.
+- `*_data_loader.py`: data loading coordination.
+- The `controller` / `renderer` / `ui_builder` split follows compositional construction and the UI widget factory/two-stage UIWindow retrofit in `docs/02_PATTERNS.md`.
+- UI builder test fixtures live under `tests/fixtures/` with the same base name, for example `tests/fixtures/transfer_ui_builder.py`.
 
-Workshop files live directly in `game/ui/screens/` (**not** a `workshop/` subdirectory): `workshop_screen.py` (class: `DesignWorkshopScreen`), `workshop_viewmodel.py`, `workshop_context.py`, `workshop_event_router.py`, `workshop_data_loader.py`, `workshop_data_reloader.py`, `workshop_ship_io.py`.
+### Ability Module Names
 
-### 1.4 Star System vs Sector
+All ability modules live in `game/simulation/components/abilities/`.
 
-These terms describe **different spatial granularities** on the galaxy hex map. They are not interchangeable.
+- `__init__.py`: registry and public exports.
+- `base.py`: ability base classes.
+- `cargo.py`: `CargoStorage`.
+- `colonize.py`: `ColonizePlanet`.
+- `crew.py`: `CrewCapacity`, `LifeSupportCapacity`, `CrewRequired`.
+- `defense.py`: `ShieldProjection`, `ShieldRegeneration`, `EmissiveArmor`, `ToHit*Modifier`.
+- `harvester.py`: `ResourceHarvesterAbility`, `SpaceShipyardAbility`, `LocalStorageAbility`.
+- `markers.py`: `VehicleLaunchAbility`, `CommandAndControl`, `StructuralIntegrity`.
+- `propulsion.py`: `CombatPropulsion`, `ManeuveringThruster`, `StrategicMovement`, `WarpJump`.
+- `resources.py`: component-level `ResourceConsumption`, `ResourceStorage`, `ResourceGeneration`; `game/core/resources.py` owns `ResourceCatalog`.
+- `stat_keys.py`: `StatKey`, `AbilityStatBinding`.
+- `planetary.py`: `PlanetaryShieldAbility`, `StrategicResourceGenerationAbility`.
+- `superweapons.py`: star, planet, warp-point, and strategic effects.
+- `ui_colors.py`: UI hint color constants.
+- `weapons.py`: `WeaponAbility`, `BeamWeaponAbility`, and related weapon abilities.
 
-| Term | Scope | Data Type | Examples |
-|------|-------|-----------|----------|
-| **Star system** | A circular region of the galaxy map (radius 50 hexes / 101 hexes across) centered on a star, containing all planets, warp points, and storms within its boundary | `StarSystem` | `galaxy.get_system_at_location()`, `system.name`, `system.global_location` |
-| **Sector** | A single hex coordinate on the galaxy map — the smallest addressable location | `HexCoord` | `fleet.location`, `warp_point.location`, `planet.location` |
-
-**Star system spatial properties:**
-- **Center:** `system.global_location` — the origin hex in global galaxy coordinates.
-- **Boundary:** Circular, radius 50 hexes from center. Defined by `get_system_at_hex()` in `game/strategy/data/pathfinding.py` (`radius=50`). Any sector within 50 hexes of a system center belongs to that system.
-- **Separation:** Systems are placed at least 400 hexes apart (center to center), ensuring no overlap.
-- **Contents:** Stars (with their own `radius_hexes` for multi-hex visual footprint), planets (at orbital distances up to ~20 hexes), warp points, and storms — each at a specific sector within the system.
-- **Coordinate duality:** Entities within a system store **local** coordinates (offset from system center). Convert to global: `global_hex = system.global_location + entity.location`.
-
-**Key distinctions:**
-- A system contains **many sectors**. A star system's hexes include the central star, orbiting planets, and warp points — each at a different sector (hex).
-- A system can have **multiple warp points in different sectors**. Validating "fleet is in the right system" is not sufficient when targeting a specific warp point — you must validate the fleet is in the correct **sector**.
-- `fleet.location` is always a **sector** (specific hex). `system.global_location` is the system's **origin sector** (center hex).
-- When an order targets a specific location (warp point, planet), store the **sector** (`HexCoord`) for execution-time validation, not just the system name.
-
-**Rule:** Use **star system** (or just **system**) when referring to the entire region (e.g., "fleet is in the Alpha system"). Use **sector** when referring to a specific hex coordinate (e.g., "fleet is at the warp point's sector"). When validating fleet position for an order, always validate at **sector** precision.
-
-### 1.5 Handler Naming
-
-Input handlers are prefixed with their screen/context name:
-
-| Class | File |
-|-------|------|
-| `StrategyInputHandler` | `game/ui/screens/strategy_input_handler.py` |
-| `TestLabInputHandler` | `game/ui/screens/test_lab/test_lab_input_handler.py` |
-| `WeaponsInputHandler` | `game/ui/screens/builder/weapons_input_handler.py` |
-
-- **DON'T:** Reference `InputHandler` at `game/core/input_handler.py` -- it does not exist.
-- **DO:** The core layer has `input_actions.py` (`game/core/input_actions.py`), not an input handler.
-
-### 1.6 MVVM Pattern Files
-
-Complex screens use Model-View-ViewModel:
-
-| Suffix | Purpose | Example |
-|--------|---------|---------|
-| `*_viewmodel.py` | Screen state, events, business logic (no Pygame) | `workshop_viewmodel.py`, `build_queue_viewmodel.py` |
-| `*_context.py` | Shared data context between panels | `workshop_context.py` |
-| `*_event_router.py` | Event dispatch between UI components | `workshop_event_router.py`, `strategy_event_router.py` |
-| `*_data_loader.py` | Data loading coordination | `workshop_data_loader.py` |
-
-### 1.7 Ability Module Names
-
-All ability modules live in `game/simulation/components/abilities/`:
-
-```
-__init__.py       # Registry and public exports
-base.py           # Ability base class
-cargo.py          # CargoStorage
-colonize.py       # ColonizePlanet
-crew.py           # CrewCapacity, LifeSupportCapacity, CrewRequired
-defense.py        # ShieldProjection, ShieldRegeneration, EmissiveArmor, ToHit*Modifier
-harvester.py      # ResourceHarvesterAbility, SpaceShipyardAbility, LocalStorageAbility
-markers.py        # VehicleLaunchAbility, CommandAndControl, StructuralIntegrity
-propulsion.py     # CombatPropulsion, ManeuveringThruster, StrategicMovement, WarpJump
-resources.py      # ResourceConsumption, ResourceStorage, ResourceGeneration (component abilities; see also game/core/resources.py for ResourceCatalog)
-stat_keys.py      # StatKey, AbilityStatBinding
-planetary.py      # PlanetaryShieldAbility, StrategicResourceGenerationAbility (PROJ-237/238)
-superweapons.py   # DestroyPlanet, DestroyStar, OpenWarpPoint, CloseWarpPoint, etc.
-ui_colors.py      # HINT_SHIELD_CAP, HINT_DAMAGE, etc. (UI hint color constants)
-weapons.py        # WeaponAbility, BeamWeaponAbility, etc.
-```
-
-- **DO:** Import abilities from the package, not individual files:
-  ```python
-  from game.simulation.components.abilities import CombatPropulsion, WeaponAbility
-  ```
-
-### 1.8 Order System Names (PROJ-238)
-
-`FleetOrder` was renamed to `Order` to support both fleet and planet orders.
-`PlanetOrderType` was merged into the unified `OrderType` enum.
-
-| Old Name | New Name | Notes |
-|----------|----------|-------|
-| `FleetOrder` | `Order` | `from game.strategy.data.order_types import Order` |
-| `PlanetOrderType` | merged into `OrderType` | `ACTIVATE_ABILITY`, `DEACTIVATE_ABILITY` added (generic ability toggles) |
-| `FleetOrderProcessor` | `OrderProcessor` | Old module deleted; import from `order_processor.py` |
-| `FleetOrderSerializer` | `OrderSerializer` | Old module deleted; import from `order_serializer.py` |
-| `FleetOrdersWindow` | `OrdersWindow` | Old module deleted; import from `orders_window.py` |
-
-Old backward compatibility alias modules have been deleted. All code must use
-the new names and import paths directly.
-
----
-
-## 2. File Organization
-
-### 2.1 Layer Structure
-
-| Layer | Path | Dependencies |
-|-------|------|-------------|
-| **Core** | `game/core/` | None (foundation layer) |
-| **Services** | `game/services/` | Core only |
-| **Assets** | `game/assets/` | Core, Services |
-| **Engine** | `game/engine/` | Core, Services (spatial, collision utilities) |
-| **Simulation** | `game/simulation/` | Core, Services, Engine (no UI, no Pygame) |
-| **Research** | `game/research/` | Core, Services |
-| **Strategy** | `game/strategy/` | Core, Services, Engine, Simulation |
-| **AI** | `game/ai/` | Core, Services, Engine, Simulation |
-| **UI** | `game/ui/` | All layers (top-level) |
-
-- **DO:** Respect dependency direction. Simulation must never import from UI.
-- **DON'T:** Import Pygame in simulation or strategy code.
-
-### 2.2 Where New Files Go
-
-| You are adding... | Put it in... |
-|-------------------|-------------|
-| A new ship ability | `game/simulation/components/abilities/` (new file or extend existing) |
-| A new component modifier | `game/simulation/components/` |
-| A new battle system | `game/simulation/systems/` |
-| A new strategy system | `game/strategy/systems/` |
-| A new UI screen | `game/ui/screens/` |
-| A new builder panel | `game/ui/screens/builder/` |
-| JSON game data | `data/` (root level) |
-| Starter ship/complex designs | `data/designs/` (`qs_*.json`) |
-| Starter race configurations | `data/races/` (`qs_*.json`) |
-
-### 2.3 File Size
-
-Production-source files under `game/` should remain **below 500 lines**. When a file approaches or crosses 500 LOC, that's a signal it has accreted multiple responsibilities and needs to be split.
-
-**Current baseline:** historical production files already exceed this limit.
-Do not use that as precedent for new work. When touching an over-limit file,
-prefer extracting the changed responsibility into a cohesive helper/module or
-creating a follow-up cleanup ticket if the requested change cannot safely
-absorb the refactor.
-
-**When a file crosses 500 LOC:**
-
-1. **Diagnose:** Has the file accreted multiple responsibilities? Almost always yes once it crosses this threshold.
-2. **Split:** Extract cohesive sub-modules. The split direction depends on the file — by render layer, by domain, by concern, etc. Avoid arbitrary "first half / second half" splits — each sub-module should have one reason to change.
-3. **Preserve API:** Use a re-export shim (the original module re-exports from the new sub-modules) when many callers exist; full caller migration when few. The choice is per-file.
-
-**Subpackage vs flat:** Use a subpackage (directory with `__init__.py`) when there are 3+ closely related files that form a logical unit (e.g., `builder/`, `battle_controller/`). Keep it flat when files are loosely related.
-
-**Test files are exempt.** Long test files (under `tests/`, `combat_lab/`, etc.) are often legitimate — do not apply the 500-line rule to them.
-
-See PROJ-309 for the audit that established this rule and the decomposition of the original top-10 files.
-
-### 2.4 UI Screen Line Budget (PROJ-282)
-
-UI screen classes (anything implementing `IScene`) should stay **under 300 lines**.
-
-Several existing UI screen modules are above this soft limit. Treat them as
-decomposition candidates: new UI behavior should go into controller,
-view-model, renderer, input-handler, or data-source collaborators rather than
-growing the screen class further.
-
-Logic for mutation, derived view state, rendering, and event handling should
-live in sibling delegate classes following the **MVVM pattern** established by
-`TestLabScreen` ([game/ui/screens/test_lab/](../game/ui/screens/test_lab/)) and
-`FleetBattleSetupScreen` ([game/ui/screens/battle_setup/](../game/ui/screens/battle_setup/)) post-PROJ-282:
-
-- **Controller** — mutations on the data model, save/load, lifecycle, battle launch
-- **ViewModel** — selection + derived view state (pure data, no pygame imports)
-- **Renderer** — pygame_gui element construction (often split into per-panel builders)
-- **InputHandler** — pygame_gui event dispatch (button/dropdown → controller calls)
-- **Helpers** — domain-specific sub-services (e.g. `FleetHierarchyEditor` for TF/SQ CRUD)
-
-If you find yourself adding a method to a screen class that is over 300 lines,
-stop and identify which delegate it belongs in.
-
-Sibling delegate classes should also aim for ≤300 lines. A Controller over 300
-lines is a review signal — not a blocker — that the mutation surface may
-warrant a sub-service extraction. Concentrated single-responsibility code (e.g.
-a controller with 15+ mutation methods + save/load + battle launch) can legitimately
-exceed 300; the rule exists to make rebloat visible, not to enforce a brittle cap.
-
-**This is a soft limit.** The goal is to give reviewers grounds to push back on
-drift. When a file grows past 300 lines, expect to justify why — not to pass
-a gate.
-
----
-
-## 3. Import Conventions
-
-Imports follow a three-group ordering, separated by blank lines:
+Import abilities from the package, not individual submodules:
 
 ```python
-# 1. Standard library
+from game.simulation.components.abilities import CombatPropulsion, WeaponAbility
+```
+
+### Order System Names
+
+Use the unified order API:
+
+- `Order` from `game.strategy.data.order_types`.
+- `OrderType`, including generic ability toggles such as `ACTIVATE_ABILITY` and `DEACTIVATE_ABILITY`.
+- `OrderProcessor` from `order_processor.py`.
+- `OrderSerializer` from `order_serializer.py`.
+- `OrdersWindow` from `orders_window.py`.
+
+Old fleet-only names and compatibility alias modules are deleted. Do not reintroduce `FleetOrder`, `PlanetOrderType`, `FleetOrderProcessor`, `FleetOrderSerializer`, or `FleetOrdersWindow`.
+
+## File Organization
+
+### Layer Dependencies
+
+| Layer | Path | Allowed dependencies |
+|---|---|---|
+| Core | `game/core/` | Standard library only |
+| Services | `game/services/` | Core only |
+| Assets | `game/assets/` | Core, Services |
+| Engine | `game/engine/` | Core, Services |
+| Simulation | `game/simulation/` | Core, Services, Engine |
+| Research | `game/research/` | Core, Services |
+| Strategy | `game/strategy/` | Core, Services, Engine, Simulation |
+| AI | `game/ai/` | Core, Services, Engine, Simulation |
+| UI | `game/ui/` | All layers |
+
+Rules:
+
+- Respect downward dependency flow.
+- Core must not import game layers. Services must not import any game layer except Core.
+- Simulation must not import Strategy, AI, UI, or Pygame.
+- Strategy must not import UI or Pygame.
+- Engine must not import Simulation, Strategy, AI, or UI.
+- Assets must not import UI, Strategy, Simulation, Research, AI, or Engine.
+
+### New File Placement
+
+- Cross-cutting service used by 2+ layers: `game/services/`, with a documented protocol and testable implementation.
+- Layer-local service: `game/<layer>/services/`.
+- New ship ability: `game/simulation/components/abilities/`.
+- New component modifier: `game/simulation/components/`.
+- New battle system: `game/simulation/systems/`.
+- New strategy system: `game/strategy/systems/`.
+- New UI screen: `game/ui/screens/`.
+- New builder panel: `game/ui/screens/builder/`.
+- JSON game data: `data/`.
+- Starter ship/complex designs: `data/designs/qs_*.json`.
+- Starter race configs: `data/races/qs_*.json`.
+
+### File Size
+
+- Production files under `game/` should stay below 500 LOC.
+- Test files under `tests/`, `combat_lab/`, and similar test-only areas are exempt.
+- If a production file approaches or exceeds 500 LOC, split by cohesive responsibility rather than by arbitrary line ranges.
+- Preserve public API with a re-export shim only when many callers exist; migrate callers directly when few.
+- Use a subpackage when 3+ closely related files form a logical unit. Keep flat layout for loosely related files.
+- Existing over-limit files are not precedent for new growth.
+
+### UI Screen Budget
+
+- Classes implementing `IScene` should stay under 300 LOC.
+- Add UI behavior to controllers, view models, renderers, input handlers, data sources, or helpers instead of growing large screen classes.
+- Delegate classes should also aim for 300 LOC. A larger controller is a review signal and needs clear single-responsibility justification.
+- For 4K UI work, minimum supported resolution is 2560x1600; the game is optimized for 3840x2160.
+
+## Import, Path, and Asset Conventions
+
+### Imports
+
+Use three import groups separated by blank lines:
+
+```python
 import logging
 import os
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-# 2. Third-party
 import pygame
 
-# 3. Game modules
+from game.core.config import BattleTuning, PhysicsConfig
 from game.core.math import Vector2
-from game.core.config import PhysicsConfig, BattleTuning
 from game.simulation.entities.ship import Ship
 ```
 
-Additional rules:
-- **DO:** Use `from __future__ import annotations` when needed for forward references.
-- **DO:** Use `TYPE_CHECKING` blocks for imports only needed by type checkers:
-  ```python
-  from typing import TYPE_CHECKING
-  if TYPE_CHECKING:
-      from game.core.registry import GameRegistries
-  ```
-- **DON'T:** Use wildcard imports (`from module import *`).
-- **DO:** Import abilities from the abilities package, not from individual submodules.
+Rules:
 
-### 3.1 File Path Convention (PROJ-256)
+- Use `from __future__ import annotations` when needed for forward references.
+- Put type-only imports under `if TYPE_CHECKING:`.
+- Do not use wildcard imports.
+- Import abilities from `game.simulation.components.abilities`, not individual ability files.
 
-All file/directory paths in production code must use constants from `game.core.paths.Paths`. Never hardcode paths like `"data/components.json"` or `os.path.join("assets", "ShipThemes", ...)`.
+### Production Paths
+
+- Production code must use `game.core.paths.Paths` constants for repo file paths.
+- Do not hardcode paths such as `"data/components.json"` or `os.path.join("assets", "ShipThemes", ...)`.
+- For path default arguments, use `None` and resolve inside the body.
+- Tests may use relative paths to test-specific data.
+- CLI scripts with explicit path arguments such as `--output` are exempt.
 
 ```python
-# WRONG
-path = os.path.join(os.getcwd(), "data", "components.json")
-path = os.path.join("assets", "ShipThemes", theme, "Portraits", filename)
-
-# RIGHT
 from game.core.paths import Paths
+
 path = Paths.COMPONENTS_FILE
-path = os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits", filename)
+theme_dir = os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits")
 ```
 
-For functions with path defaults, use `None` with body resolution:
-```python
-def load_data(file_path=None):
-    if file_path is None:
-        file_path = Paths.COMPONENTS_FILE
-```
+### Agent and Tool Paths
 
-**Exceptions:** Test files may use relative paths to test-specific data directories. Scripts with CLI `--output` arguments are also exempt.
+Reusable agent instructions, skills, protocols, daemon prompts, and coordination scripts must not embed developer-machine checkout roots such as `C:\Dev2\StarshipBattles`.
 
-### 3.2 Image Asset Format Convention
+Use:
 
-**All image assets must use PNG format.** This is the standard for the project going forward.
+- Repo-relative paths when commands run from repo root.
+- Runtime repo-root discovery by walking upward to sentinels such as `game/`, `data/`, and `AGENTS.md`.
+- Script-relative discovery via `Path(__file__).resolve()` for repo-local tools.
+- `<repo-root>` placeholders in illustrative docs.
 
-- **New assets:** Must be `.png`. Do not introduce new `.jpg`, `.jpeg`, or `.webp` files.
-- **Existing `.jpg` files:** Should be transitioned to `.png` when touched or as part of asset work. Do not convert them all at once — migrate them when working in the area.
-- **Code that loads images:** Should accept `.png` as the primary format. Filter conditions that accept multiple formats (e.g., `.endswith(('.png', '.jpg'))`) are acceptable for backward compatibility during the transition, but new code should construct filenames with `.png`.
+Hardcoded checkout paths are allowed only in ignored machine-local files or historical examples explicitly marked non-reusable. `docs/_ignore/` is personal notes, not project documentation.
 
-**Component images** follow a resolution-based directory structure under `assets/Images/Components/`:
+### Image Assets
+
+- New image assets must be PNG. Do not add new `.jpg`, `.jpeg`, or `.webp`.
+- Existing JPG assets should migrate to PNG only when touched or during focused asset work.
+- New code should construct PNG filenames. Temporary multi-format filters are acceptable during transition.
+
+Component images live under `assets/Images/Components/`:
 
 | Directory | Resolution | Filename pattern | Usage |
-|-----------|-----------|-----------------|-------|
+|---|---:|---|---|
 | `Components 64/` | 64x64 | `64Portrait_Comp_{NNN}.png` | SpriteManager tile grid |
 | `Components 128/` | 128x128 | `128Portrait_Comp_{NNN}.png` | Small icons |
 | `Components 256/` | 256x256 | `256Portrait_Comp_{NNN}.png` | Medium thumbnails |
 | `Components 512/` | 512x512 | `512Portrait_Comp_{NNN}.png` | Large thumbnails |
-| `Components 1024/` | 1024x1024 | `1024Portrait_Comp_{NNN}.png` | High-res display |
+| `Components 1024/` | 1024x1024 | `1024Portrait_Comp_{NNN}.png` | Tracked source-of-truth set |
 | `Components 2048/` | 2048x2048 | `2048Portrait_Comp_{NNN}.png` | Detail panel portraits |
 
-The filename prefix matches the actual resolution of the images in that directory. Use `Paths.COMPONENTS_64_DIR` through `Paths.COMPONENTS_2048_DIR` for path constants.
+Contracts:
 
-`Components 1024/` is the tracked source-of-truth set. The `2048`, `512`, `256`, `128`, and `64` directories are generated derivatives and must not be committed. Runtime startup calls `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load; it creates missing derivatives and refreshes stale derivatives when a 1024 source hash changes. The hash manifest lives at `assets/Images/Components/.component_derivatives_manifest.json` and is intentionally ignored.
+- Use `Paths.COMPONENTS_64_DIR` through `Paths.COMPONENTS_2048_DIR`.
+- `Components 1024/` is tracked source. `2048`, `512`, `256`, `128`, and `64` are generated derivatives and must not be committed.
+- Startup runs `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load.
+- Derivative hash manifest: `assets/Images/Components/.component_derivatives_manifest.json`; it is intentionally ignored.
 
----
+## Test Conventions
 
-## 4. Test Conventions
+### Strict TDD
 
-### 4.1 Directory Mirroring
+Write or identify the failing test first, run it to confirm failure, then implement. For documentation-only replacement work, use a focused validation command that fails before the file/content exists, then re-run it after writing.
 
-Test files mirror the source structure:
+### Test Layout
 
-| Source | Test |
-|--------|------|
-| `game/simulation/systems/battle_engine.py` | `tests/unit/simulation/systems/` |
-| `game/ui/screens/strategy_screen.py` | `tests/unit/ui/screens/test_strategy_screen.py` |
-| `game/simulation/components/abilities/defense.py` | `tests/unit/simulation/components/abilities/` |
+Tests mirror source structure:
 
-Test file names: `test_<source_file_name>.py`
+- `game/simulation/systems/battle_engine.py` -> `tests/unit/simulation/systems/`
+- `game/ui/screens/strategy_screen.py` -> `tests/unit/ui/screens/test_strategy_screen.py`
+- `game/simulation/components/abilities/defense.py` -> `tests/unit/simulation/components/abilities/`
 
-### 4.2 conftest.py Hierarchy
+Test file names use `test_<source_file_name>.py`.
 
-The project uses a layered conftest structure:
+### conftest Hierarchy and Fixtures
 
-| File | Scope | Provides |
-|------|-------|----------|
-| `tests/conftest.py` | Root | `session_registries`, `fresh_registries`, `minimal_registries`, `mock_registries`, `ship_factory`, global ship data loading |
-| `tests/unit/conftest.py` | Unit tests | Unit-specific fixtures |
-| `tests/unit/<layer>/conftest.py` | Per-layer | Layer-specific fixtures (e.g., `tests/unit/combat/conftest.py`) |
-| `tests/integration/<domain>/conftest.py` | Per-domain | Integration scenario fixtures |
+- `conftest.py`: repo-root autouse isolation. It force-sets `SDL_VIDEODRIVER=dummy`, owns `reset_game_state`, clears singleton/module state, hydrates registries from the session cache, and restores pygame/font state per test.
+- `tests/conftest.py`: shared data fixtures including `session_registries`, `fresh_registries`, `minimal_registries`, `mock_registries`, and `ship_factory`.
+- `tests/unit/conftest.py`: unit-wide fixtures.
+- `tests/unit/<layer>/conftest.py`: layer-specific fixtures.
+- `tests/integration/<domain>/conftest.py`: integration scenario fixtures.
 
-- **DO:** Put shared fixtures in the nearest common ancestor conftest.
-- **DON'T:** Duplicate fixtures across conftest files.
+Fixture contracts:
 
-### 4.3 Fixture Naming
+- `session_registries`: session-scoped loaded registries, read-only.
+- `fresh_registries`: function-scoped deep copy for isolation.
+- `minimal_registries`: empty registries for pure unit tests.
+- `mock_registries`: alias/minimal registries with mock data.
+- `ship_factory`: helper for ships from `fresh_registries`.
 
-Standard fixture names from root conftest:
+Put shared fixtures in the nearest common ancestor conftest. Do not duplicate fixtures.
 
-| Fixture | Scope | Purpose |
-|---------|-------|---------|
-| `session_registries` | session | Loaded once, shared across all tests (read-only) |
-| `fresh_registries` | function | Deep copy per test for isolation |
-| `minimal_registries` | function | Empty registries for pure unit tests |
-| `mock_registries` | function | Minimal registries with mock data |
-| `ship_factory` | function | Helper to create ships from fresh registries |
-
-### 4.4 Test Commands
+### Test Commands
 
 ```bash
-pytest tests/ --testmon              # Incremental (fast, runs only affected tests)
-pytest tests/path/to/test.py         # Targeted single file
-python Tools/test_sharded/test_sharded.py        # Full suite with sharded parallel runner
-pytest tests/ --cov=game -n 12       # Full suite with coverage
+pytest tests/ --testmon
+pytest tests/path/to/test.py -k test_name
+python Tools/test_sharded/test_sharded.py
+python -m combat_lab.run_tests
+pytest tests/ --cov=game -n 12
 ```
 
----
+`python Tools/test_sharded/test_sharded.py` is the canonical full-suite runner. If a small number of known-isolation/resource flakes appear, re-run before triaging.
 
-## 5. JSON Data Conventions
+## JSON Data Conventions
 
-### 5.1 Component Data (`data/components.json`)
+### Components
 
-Components are defined in a top-level `"components"` array. Each entry has:
+`data/components.json` has a top-level `"components"` array. Each component requires a unique snake_case `id`. `mass` and `hp` may be numbers or formulas prefixed with `=`. `abilities` maps ability class names to `true`, a number, a formula string, or `{"value": N}`. `allowed_vehicle_types` restricts valid vehicles.
+
+Example shape:
 
 ```json
 {
-    "id": "bridge",
-    "name": "Bridge",
-    "type": "Bridge",
-    "mass": "=50 * sqrt(ship_class_mass / 1000)",
-    "hp": "=200 * sqrt(ship_class_mass / 1000)",
-    "allowed_vehicle_types": ["Ship"],
-    "sprite_index": 4,
-    "abilities": {
-        "CommandAndControl": true,
-        "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"
-    },
-    "major_classification": "Crewsupport",
-    "construction_cost": {
-        "metals": 80,
-        "organics": 20
-    }
+  "id": "bridge",
+  "name": "Bridge",
+  "type": "Bridge",
+  "mass": "=50 * sqrt(ship_class_mass / 1000)",
+  "hp": "=200 * sqrt(ship_class_mass / 1000)",
+  "allowed_vehicle_types": ["Ship"],
+  "sprite_index": 4,
+  "abilities": {
+    "CommandAndControl": true,
+    "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"
+  },
+  "major_classification": "Crewsupport",
+  "construction_cost": {
+    "metals": 80,
+    "organics": 20
+  }
 }
 ```
 
-Key rules:
-- `id` is the unique component identifier (snake_case).
-- `mass` and `hp` can be formulas (prefixed with `=`) or plain numbers.
-- `abilities` maps ability class names to `true`, a number, or `{"value": N}` format.
-- `allowed_vehicle_types` restricts which vehicle types can equip the component.
+### Static Data Files
 
-### 5.2 Static Game Data
+- `data/components.json`: component definitions.
+- `data/modifiers.json`: component modifier definitions.
+- `data/vehicleclasses.json`: vehicle class definitions.
+- `data/resources.json`: unified resource catalog.
+- `data/homeworld_presets.json`: homeworld presets.
+- `data/race_names.json`: race name pools.
+- `data/targeting_policies.json`: per-ship AI targeting rules.
+- `data/movement_policies.json`: movement behavior presets.
+- `data/group_policies.json`: group combat policy presets.
+- `data/design_roles.json`: 27 design role definitions loaded by `RoleRegistry` through `game/strategy/data/design_role_registry.py::get_default_design_role_registry`; layered with `mods/*/design_roles.json` and `output/design_roles_overlay.json`.
 
-| File | Contents |
-|------|----------|
-| `data/homeworld_presets.json` | Homeworld planet configuration presets |
-| `data/race_names.json` | Generated race name pools |
-| `data/components.json` | All component definitions |
-| `data/targeting_policies.json` | Targeting rule sets for per-ship AI (standard, sniper, brawler, anti_fighter, self_defense) |
-| `data/movement_policies.json` | Movement behavior presets for per-ship AI (kite_max, brawl_close, strafe_run, etc.) |
-| `data/group_policies.json` | Group-level combat policy presets (targeting, movement, retreat — 21 presets for fleet hierarchy) |
-| `data/design_roles.json` | Design role definitions (27 roles) with vehicle type restrictions — loaded by `RoleRegistry` via `game/strategy/data/design_role_registry.py::get_default_design_role_registry` (PROJ-278). Layered: base + `mods/*/design_roles.json` + `output/design_roles_overlay.json` |
+### Starter Designs and Races
 
-### 5.3 Starter Designs and Races
+- Quickstart starter designs live in `data/designs/` and new starter files use the `qs_` prefix. Some legacy/non-QS design fixtures still exist; do not use them as a naming precedent.
+- Required starter design fields include `name`, `ship_class`, `vehicle_type`, `design_role`, `layers`, `expected_stats`, and `_metadata`.
+- Validate designs with `python Tools/validate_designs/validate_designs.py`.
+- Add special design tests in `tests/unit/quickstart/test_quickstart_designs.py`.
+- Starting complexes must be listed in `INITIAL_COMPLEXES` in `game/strategy/quickstart_builder.py`.
+- Starter races live in `data/races/qs_*.json` and require `race_id`, `name`, `flag_id`, `portrait_id`, `theme_id`, homeworld/environment preferences, and aptitudes.
+- Add starter race tests in `tests/unit/quickstart/test_quickstart_races.py`.
+- User-created races save to `output/races/`.
 
-Starter designs (`data/designs/`) and starter races (`data/races/`) are shipped game data used by both quickstart and normal new games. All files use the `qs_` prefix.
+Combat QS ship designs used for battle setup testing include:
 
-**Adding a new starter design:**
-1. Create `data/designs/qs_<name>.json` with required fields: `name`, `ship_class`, `vehicle_type`, `design_role`, `layers`, `expected_stats`, `_metadata`
-2. Run `python Tools/validate_designs/validate_designs.py` to validate
-3. Add tests in `tests/unit/quickstart/test_quickstart_designs.py` if the design has special requirements
-4. If the design is a starting complex (auto-built on homeworld), add its design_id to `INITIAL_COMPLEXES` in `game/strategy/quickstart_builder.py`
+- `qs_light_combat_escort.json`: escort with beam weapons and PDC (`fleet_escort`).
+- `qs_heavy_cruiser.json`: cruiser with beams, railguns, shields, armor (`line_combatant`).
+- `qs_missile_cruiser.json`: cruiser with seeker missiles and PDC (`missile_platform`).
+- `qs_battleship.json`: battleship with heavy railguns, lasers, shields, armor (`line_combatant`).
 
-**Combat QS ship designs** (for battle setup testing):
-- `qs_light_combat_escort.json` — Escort with beam weapons and PDC (fleet_escort)
-- `qs_heavy_cruiser.json` — Cruiser with beams, railguns, shields, armor (line_combatant)
-- `qs_missile_cruiser.json` — Cruiser with 6 seeker missiles and PDC (missile_platform)
-- `qs_battleship.json` — Battleship with heavy railguns, lasers, shields, armor (line_combatant)
+### Simulation Test Data
 
-**Adding a new starter race:**
-1. Create `data/races/qs_<name>.json` with required fields: `race_id`, `name`, `flag_id`, `portrait_id`, `theme_id`, homeworld/environment preferences, and aptitudes
-2. Add tests in `tests/unit/quickstart/test_quickstart_races.py`
+Test-specific Combat Lab data lives in `combat_lab/data/`:
 
-**Note:** `data/races/` holds shipped starter races. User-created races are saved to `output/races/`.
+- `components.json`: test-only components.
+- `ships/`: test ship definitions.
+- `schemas/`: JSON schemas; verify against actual data before relying on them.
 
-### 5.4 Simulation Test Data
+## Code Quality
 
-Test-specific data lives in `combat_lab/data/`:
-- `components.json` -- Test-only components (e.g., `TestS_2L` class ships)
-- `ships/` -- Test ship JSON definitions
-- `schemas/` -- JSON schemas (may be outdated; verify against actual data before use)
+### Type Hints and Docstrings
 
----
+- Add type hints to all function signatures when touching code.
+- Every public function/method requires a return type.
+- Public APIs need docstrings.
+- Trivial getters/setters and test functions usually do not need docstrings.
+- Constructors and hot-path engine/controller methods should have full annotations.
 
-## 6. Code Quality Rules
+### Function Shape
 
-### 6.1 Type Hints and Docstrings
+- Target functions under 50 LOC.
+- Maximum nesting target is 3 levels.
+- Prefer helpers and early returns to deeply nested logic.
 
-- **DO:** Add type hints to all function signatures.
-- **DO:** Add docstrings to public APIs.
-- **DON'T:** Add docstrings to trivial getters/setters or test functions.
-- **PRIORITY (PROJ-255):** Constructors and hot-path methods in engine/controller code must have full annotations. Use `TYPE_CHECKING` imports to avoid circular dependencies.
+### Preferred Decisions
 
-### 6.2 Function Size and Nesting
+- Root-cause refactor over quick fix.
+- Named constants over magic numbers.
+- Specific exceptions over broad catches.
+- Dependency injection over singletons.
+- Data-driven lookups over hardcoded type/class-name lists.
+- Shared abstractions over copy-paste only when they remove real duplication or clarify ownership.
 
-- **Target:** Functions under 50 lines.
-- **Maximum nesting:** 3 levels. Extract helper functions or use early returns to flatten.
+### Error Handling
 
-### 6.3 Preferred Patterns
+- Sub-engines validate preconditions before mutation via `_validate_tick_inputs()`.
+- Serialization `from_dict()` methods propagate corrupt-data errors as `PersistenceException`.
+- Strategy-layer `except Exception` must wrap and re-raise via `EnginePhaseError`, not return `None`.
+- Any `except Exception` must carry `# Intentional broad catch: <reason>` on the same line.
+- Design library uses `DesignLoadResult` objects for non-critical file loading.
+- Full rules live in `docs/05_ERROR_HANDLING.md`.
 
-| Prefer | Over |
-|--------|------|
-| Proper refactor | Quick fix |
-| Root cause fix | Workaround |
-| Named constants | Magic numbers |
-| Specific exceptions | Broad `except` catches |
-| Dependency injection | Singletons |
-| Extract abstraction | Copy-paste |
-| Clean-sheet design | Design compromise |
-| Data-driven lookups | Hardcoded type/class name lists |
+### No Hardcoded Type Lists
 
-### 6.4 Error Handling Conventions (PROJ-251)
-
-- **Sub-engines must validate preconditions** before mutating state via `_validate_tick_inputs()`
-- **Serialization `from_dict()` methods propagate errors**, not swallow them — corrupt data raises `PersistenceException`
-- **`except Exception` in strategy layer** must wrap and re-raise via `EnginePhaseError`, not return `None`
-- **Design library** uses `DesignLoadResult` result objects for non-critical file loading (not exceptions)
-
-See `docs/05_ERROR_HANDLING.md` for the full error handling reference.
-
-### 6.5 No Hardcoded Type Lists
-
-**Never hardcode lists of ability names, component types, or class names** to control behavior. Instead, search data structures generically or use registry lookups.
+Do not hardcode lists of ability names, component types, or class names to control behavior. Prefer generic data inspection, registry metadata, shared properties, or protocols.
 
 ```python
-# WRONG — breaks when a new weapon type is added:
-_WEAPON_NAMES = ['BeamWeaponAbility', 'ProjectileWeaponAbility', 'SeekerWeaponAbility']
-for name in _WEAPON_NAMES:
-    if name in abilities: ...
+# Wrong
+_WEAPON_NAMES = ["BeamWeaponAbility", "ProjectileWeaponAbility", "SeekerWeaponAbility"]
 
-# RIGHT — searches all abilities for the relevant property:
+# Right
 for ab_data in abilities.values():
-    if isinstance(ab_data, dict) and 'firing_arc' in ab_data: ...
+    if isinstance(ab_data, dict) and "firing_arc" in ab_data:
+        ...
 ```
 
-If code needs to distinguish types, use a shared property or protocol — not a list of class name strings.
+### System Migration
 
-### 6.5 System Migration
+When replacing a system, delete the old one, update all call sites, and remove old data files. Do not add fallback paths or compatibility layers. Save files are disposable; do not write save migrations.
 
-When a new system replaces an old one, **eradicate the old system completely**. Delete old code, update all call sites, remove old data files. No fallback paths, no backward compatibility layers. Save files are disposable -- never write migration code for save data.
+## Python Style and Type Annotations
 
----
+### Python Style
 
-## 7. Python Style
+- Module logger: `logger = logging.getLogger(__name__)`.
+- Constants: `ALL_CAPS`.
+- Classes: `PascalCase`.
+- Functions, methods, and files: `snake_case`.
+- Private members: single leading underscore.
+- One substantial primary class per file.
+- File names should match the primary class when applicable, for example `battle_engine.py` contains `BattleEngine`.
 
-- **Logging:** `logger = logging.getLogger(__name__)` at module level.
-- **Constants:** `ALL_CAPS` for module-level constants.
-- **Classes:** `PascalCase`. One primary class per file when the class is substantial.
-- **Functions/methods:** `snake_case`.
-- **Private members:** Single underscore prefix (`_private_method`).
-- **File names:** `snake_case`, matching the primary class (`battle_engine.py` contains `BattleEngine`).
+### Type Annotations
 
----
+- Project baseline is Python 3.13+ (`pyproject.toml` declares `requires-python = ">=3.13"`). New/touched code uses modern syntax.
+- Public functions and methods require return annotations.
+- Use modern syntax on new/touched signatures: `int | None`, `list[int]`, `dict[str, T]`.
+- Do not introduce legacy `Optional[int]`, `List[int]`, or `Dict[str, T]` in new code.
+- Annotate no-return-value functions as `-> None`.
+- `__init__` and other dunders are exempt.
+- Use `from __future__ import annotations` or string annotations for forward references.
+- Do not invent precision: if code returns `Any`, annotate `Any`.
+- Parameter annotations are encouraged where they improve clarity.
+- Prefer `Protocol` from `game.core.protocols.*` over concrete types when only duck-typed surface is needed.
 
-## 8. Type Annotations
+## Documentation Freshness
 
-### Return types (required)
-Every public function/method must carry a return-type annotation.
+Files under `docs/` must carry a timestamp directly below the H1:
 
-- **Modern syntax for new or touched signatures:** `int | None`, `list[int]`, `dict[str, T]` — not `Optional[int]`/`List[int]`/`Dict[str, T]`. Python 3.13+ baseline (PROJ-295) means new code does not need legacy syntax. Existing legacy annotations remain cleanup backlog; do not expand them when editing a file.
-- **No `return` statement:** annotate `-> None` explicitly
-- **`__init__` and other dunders:** exempt per PEP 484
-- **Forward references:** add `from __future__ import annotations` at the top of the file if needed (or use string literals in the annotation)
-- **Don't lie:** if the function returns `Any`, annotate `Any`. Don't make up a more specific type the code doesn't enforce
-
-### Parameter types (encouraged)
-Parameter annotations are encouraged but not project-wide-mandatory yet. Add them where they improve clarity.
-
-### Generics and protocols
-Prefer `Protocol` (from `game.core.protocols.*`) over concrete types when the function only needs duck-typed surface. Use `TypeVar` for generic helpers.
-
-See PROJ-311 for the audit that established the return-type requirement.
-
----
-
-## 9. Documentation Freshness
-
-Every file under `docs/` must carry a verification timestamp directly below its H1:
-
-> **Last verified:** YYYY-MM-DD — <one-sentence summary of what was verified>
+```markdown
+> **Last verified:** YYYY-MM-DD - <one-sentence summary>
+```
 
 Rules:
-- **Date format:** `YYYY-MM-DD` (ISO 8601)
-- **"Verified" means:** the maintainer read the file and confirmed it matches current code/behavior — not that they made a cosmetic edit
-- **Bump the date when:** you substantively edit the doc, or you re-read it and confirm current accuracy
-- **Don't bump:** for typo/formatting fixes that don't reflect any verification work
 
-See PROJ-307 for the backfill that established this convention.
+- Use ISO date format: `YYYY-MM-DD`.
+- "Verified" means the maintainer confirmed the doc matches current code/behavior.
+- Bump the date for substantive edits or real re-verification.
+- Do not bump for cosmetic-only changes.
 
----
+## Ship Theme Assets
 
-## 10. Ship Theme Asset Conventions (PROJ-314)
+### Canonical Theme Schema
 
-Every ship-theme directory under `assets/ShipThemes/<Theme>/` must
-declare its skin and portrait art via a single `theme.json` file in the
-canonical schema below. The legacy `images:` schema (flat
-`{class: path}` map) and the hardcoded `<Class>_Portrait.jpg` filename
-convention have both been retired.
-
-### 10.1 Canonical `theme.json` schema
+Every `assets/ShipThemes/<Theme>/` directory declares art through `theme.json`. Legacy flat image maps and hardcoded portrait filenames are retired.
 
 ```json
 {
@@ -555,72 +441,66 @@ convention have both been retired.
   "name": "Federation",
   "description": "...",
   "image_sizes": {
-    "skin":     [2048, 2048],
+    "skin": [2048, 2048],
     "portrait": [2048, 2048]
   },
   "assets": {
     "Battleship": {
-      "skin":     "Skins/battleship.png",
+      "skin": "Skins/battleship.png",
       "portrait": "Portraits/battleship.png",
-      "scale":    1.0
+      "scale": 1.0
     }
   }
 }
 ```
 
-- `schema_version: 1` is required. Unknown versions log a warning and
-  the loader continues (forward compatibility).
-- `name` is the human-readable theme name shown in Race Setup.
-- `description` is a free-form string, also fed to the AI portrait-
-  regenerator (`Tools/regenerate_ship_portraits/`) as theme-style
-  context for `gpt-image-2`.
-- `image_sizes.skin` and `image_sizes.portrait` are `[width, height]`
-  arrays. The loader compares declared vs. actual via PIL and logs a
-  warning on mismatch (it does NOT reject the asset).
-- `assets` keys MUST exactly match
-  `game.core.ship_classes.SHIP_CLASSES_WITH_VISUAL_THEMES` (display
-  form: `"Light Cruiser"`, `"Fighter (Medium)"`, etc.). Extras log a
-  warning, missing entries log info.
+Contracts:
+
+- `schema_version: 1` is required.
+- Unknown versions log a warning and the loader continues.
+- `name` is shown in Race Setup.
+- `description` is free-form and also feeds `Tools/regenerate_ship_portraits/` as theme-style context.
+- `image_sizes.skin` and `image_sizes.portrait` are `[width, height]`; mismatches log warnings but do not reject assets.
+- `assets` keys must exactly match the 19 display-form classes in `game.core.ship_classes.SHIP_CLASSES_WITH_VISUAL_THEMES`.
 - `assets[<class>].skin` is required.
-- `assets[<class>].portrait` is OPTIONAL. When absent or pointing at a
-  missing file, `ShipThemeManager.get_portrait_image()` returns the
-  synthetic placeholder Surface (consistent with `load_image()`).
+- `assets[<class>].portrait` is optional; missing portraits use the synthetic placeholder surface.
 - `assets[<class>].scale` defaults to `1.0`.
 
-### 10.2 Image format and resolution
+### Ship Theme Image Rules
 
-- All ship-theme assets are PNG only (per §5 / `docs/03_CONVENTIONS.md`
-  §285–288). JPG is not supported.
-- Standard resolution is **2048×2048 square**, exposed as
-  `Paths.SHIP_THEMES_TARGET_SIZE` (PROJ-314 Phase 1).
+- Ship-theme assets are PNG only.
+- Standard size is 2048x2048 square, exposed as `Paths.SHIP_THEMES_TARGET_SIZE`.
+- Filenames must be `lowercase_with_underscores.png`.
+- Skin and portrait basenames must match for each ship class, for example `Skins/battle_cruiser.png` and `Portraits/battle_cruiser.png`.
 
-### 10.3 Filename rules
+### Adding a Theme
 
-- Filenames MUST be `lowercase_with_underscores.png`.
-- Skin and portrait basenames MUST match per ship class (e.g.
-  `Skins/battle_cruiser.png` and `Portraits/battle_cruiser.png`). This
-  removes the cross-platform case-sensitivity hazard that broke Linux
-  CI on mixed-case Federation/Klingons/Romulans/Atlantians filenames
-  prior to PROJ-314.
+1. Create `assets/ShipThemes/<NewTheme>/Skins/` and `assets/ShipThemes/<NewTheme>/Portraits/`.
+2. Add 19 lowercase PNG skins, one per canonical ship class.
+3. Optionally add 19 portraits with matching basenames, or run `python -m Tools.regenerate_ship_portraits.cli --theme <NewTheme>`.
+4. Author `theme.json`.
+5. Audit with `python -m Tools.regenerate_ship_portraits.audit --theme <NewTheme>`.
+6. Run `pytest tests/integration/ui/test_race_setup_ships_smoke.py`.
 
-### 10.4 Adding a new theme
+## Git Branch Conventions
 
-1. Create `assets/ShipThemes/<NewTheme>/`,
-   `<NewTheme>/Skins/`, `<NewTheme>/Portraits/`.
-2. Place 19 lowercase_with_underscores `.png` skins (one per canonical
-   ship class).
-3. Optionally place 19 portraits with the same basenames; or run the
-   regenerator CLI:
+### Standard Prefixes
 
-   ```sh
-   python -m Tools.regenerate_ship_portraits.cli --theme <NewTheme>
-   ```
+- `feature/`: feature work.
+- `cleanup/`: cleanup/refactor.
+- `claude/`, `codex/`, `copilot/`: per-agent branches.
+- `worktree-agent-*`: legacy auto-named worktree branches; do not adopt for new work.
 
-4. Author `theme.json` in the canonical schema above.
-5. Run `python -m Tools.regenerate_ship_portraits.audit
-   --theme <NewTheme>` to verify there are no coverage / casing / size
-   gaps.
-6. Run the integration smoke test:
-   `pytest tests/integration/ui/test_race_setup_ships_smoke.py`.
+### Phase-Aware Project Branches
 
-Established by PROJ-314.
+- `proj/{PROJ-ID}/main`: project trunk; carries plan and code from execution start to final merge.
+- `proj/{PROJ-ID}/{phase-id}`: one branch per phase, for example `proj/PROJ-300/phase_1`.
+- `tmp/{PROJ-ID}/integrate-{phase-id}-{shortsha}`: ephemeral integration branch for sibling-aware testing.
+
+The `/main` suffix is required because Git refs cannot simultaneously have `proj/{PROJ-ID}` as a file-like branch and `proj/{PROJ-ID}/{phase}` as child branches under the same namespace.
+
+Worktree paths:
+
+- `.worktrees/phases/{PROJ-ID}/{phase-id}/`
+- `.worktrees/integration/{PROJ-ID}-{phase-id}-{shortsha}/`
+- `AgentCoordination/opencodereview/local/worktrees/{request-id}/`

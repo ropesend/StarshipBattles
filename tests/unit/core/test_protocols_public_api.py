@@ -72,6 +72,11 @@ PUBLIC_PROTOCOL_SYMBOLS = (
     "is_resource_holder",
     # Persistence (1)
     "ISerializable",
+    # Strategy mutator protocols (PROJ-370) (4)
+    "IFleetMutator",
+    "IPlanetMutator",
+    "IEmpireMutator",
+    "IShipInstanceMutator",
 )
 
 
@@ -106,13 +111,15 @@ def test_private_but_imported_symbol_importable(symbol: str) -> None:
 
 
 def test_full_count_matches_decomposition_design() -> None:
-    """Symbol count matches the design doc (45 public + 1 private-but-public = 46 total).
+    """Symbol count matches the design doc (49 public + 1 private-but-public = 50 total).
 
     PROJ-300 added IAbilitySource + is_ability_source (45 = original 43 + 2).
+    PROJ-370 added IFleetMutator/IPlanetMutator/IEmpireMutator/IShipInstanceMutator
+    (49 = 45 + 4).
     """
-    assert len(PUBLIC_PROTOCOL_SYMBOLS) == 45, (
+    assert len(PUBLIC_PROTOCOL_SYMBOLS) == 49, (
         "If you added a new protocol or TypeGuard, update PUBLIC_PROTOCOL_SYMBOLS "
-        "and the count here. PROJ-300 brought the count to 45."
+        "and the count here. PROJ-370 brought the count to 49."
     )
     assert len(PRIVATE_BUT_PUBLICLY_IMPORTED) == 1
 

@@ -1,0 +1,21 @@
+{
+  "group": "G4",
+  "label": "root agent docs",
+  "total": 2,
+  "dead_refs": [
+    {
+      "doc": "AGENTS.md",
+      "line": 24,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "CLAUDE.md",
+      "line": 60,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    }
+  ]
+}

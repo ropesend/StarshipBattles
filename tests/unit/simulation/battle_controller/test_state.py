@@ -40,7 +40,23 @@ class TestBattleControllerStateSaveLoad:
             assert result is mock_state
 
     def test_load_state_restores_battle(self, controller, mock_service):
-        """load_state restores battle from BattleState."""
+        """load_state restores battle from BattleState.
+
+        Also pins PROJ-331 OBSERVATION-B: load_state defaults
+        `_retreat_manager.boundary` to `UnboundedRegion()` when the
+        restored config carries no boundary (battle_controller.py:130-131).
+        MAJ-003 fix (review req_20260504_213455_95a42d).
+
+        PROJ-346 strengthening: the ``isinstance(boundary, UnboundedRegion)``
+        assertion is tautological vs. the production hardcode at
+        battle_controller.py:638 (``RetreatManager(boundary=UnboundedRegion())``);
+        see PROJ-346 OBSERVATION-A in decisions.md. We retain it as a
+        regression marker for the hardcode AND add a behavioural pin on
+        seed restoration so a refactor that drops state-restore wiring
+        still fails this test.
+        """
+        from game.simulation.combat.boundary import UnboundedRegion
+
         # Create a mock BattleState
         mock_state = Mock()
         mock_state.seed = 12345
@@ -60,7 +76,11 @@ class TestBattleControllerStateSaveLoad:
         restored_ship = Mock()
         restored_ship.id = "runtime-ship-id"
         mock_state_manager = Mock()
-        mock_state_manager.restore_config_from_state.return_value = BattleConfig()
+        # restore_config_from_state returns a BattleConfig() — its `.boundary`
+        # is None by default, which triggers the UnboundedRegion fallback.
+        restored_config = BattleConfig()
+        restored_config.seed = 12345
+        mock_state_manager.restore_config_from_state.return_value = restored_config
         mock_state_manager.extract_ships_from_state.return_value = (
             [restored_ship],
             {restored_ship.id: "state-ship-id"},
@@ -77,6 +97,22 @@ class TestBattleControllerStateSaveLoad:
             registries=controller._registries,
         )
         mock_service.add_ship.assert_called_with(restored_ship, 0)
+        # restore_config_from_state was invoked with the state — pins the
+        # config-restore round-trip end-to-end (not the production hardcode).
+        mock_state_manager.restore_config_from_state.assert_called_once_with(mock_state)
+        # The restored config (seed=12345) is the one the controller adopted.
+        assert controller._config is restored_config
+        assert controller._config.seed == 12345
+        # MAJ-003 fix: pin OBSERVATION-B boundary default contract. This is
+        # a tautology vs. the hardcode at battle_controller.py:638 and is
+        # retained as a regression marker per PROJ-346 OBSERVATION-A.
+        assert isinstance(
+            controller._retreat_manager.boundary,
+            UnboundedRegion,
+        ), (
+            "PROJ-331 OBSERVATION-B: load_state must default boundary to "
+            "UnboundedRegion when the restored config has no boundary set."
+        )
 
     def test_load_state_handles_error(self, controller):
         """load_state handles errors gracefully.
@@ -147,3 +183,156 @@ class TestBattleControllerGetResults:
             results = controller.get_results()
 
             assert mock_escaped_state in results.escaped_ships
+
+
+class TestBattleControllerLoadStateProjectiles:
+    """PROJ-331 Phase 2a: pin load_state projectile-restore path.
+
+    Characterization tests — they describe what current production does
+    when restoring projectiles via `BattleState.projectiles` -> engine.
+    """
+
+    def _build_load_state_setup(self, controller, mock_service, *,
+                                 projectiles, ship_id="runtime-ship",
+                                 save_id="state-ship-id"):
+        """Wire a controller for load_state with `projectiles` attached."""
+        mock_state = Mock()
+        mock_state.seed = 12345
+        mock_state.end_condition_data = {"type": "team_eliminated"}
+        mock_state.allow_retreat = False
+        mock_state.allow_reinforcements = False
+        mock_state.ships = {save_id: Mock(team_id=0)}
+        mock_state.tick_count = 0
+        mock_state.projectiles = projectiles
+        controller._registries = Mock(name="registries")
+
+        engine_ship = Mock()
+        engine_ship.id = ship_id
+
+        mock_engine = Mock()
+        mock_engine.ships = [engine_ship]
+        mock_engine.projectiles = []
+        mock_service.get_engine.return_value = mock_engine
+
+        restored_ship = Mock()
+        restored_ship.id = ship_id
+        mock_state_manager = Mock()
+        mock_state_manager.restore_config_from_state.return_value = BattleConfig()
+        mock_state_manager.extract_ships_from_state.return_value = (
+            [restored_ship],
+            {restored_ship.id: save_id},
+        )
+        controller._state_manager = mock_state_manager
+        return mock_state, mock_engine, engine_ship
+
+    def test_load_state_restores_alive_projectiles_only(self, controller, mock_service):
+        """Only `proj_state.is_alive == True` entries get restored."""
+        alive_a = Mock()
+        alive_a.is_alive = True
+        alive_a.to_projectile = Mock(return_value=Mock(name="proj_a"))
+        alive_b = Mock()
+        alive_b.is_alive = True
+        alive_b.to_projectile = Mock(return_value=Mock(name="proj_b"))
+        dead = Mock()
+        dead.is_alive = False
+        dead.to_projectile = Mock(return_value=Mock(name="proj_dead"))
+
+        mock_state, mock_engine, _ = self._build_load_state_setup(
+            controller, mock_service,
+            projectiles=[alive_a, alive_b, dead],
+        )
+
+        result = controller.load_state(mock_state)
+
+        assert result.success is True
+        assert len(mock_engine.projectiles) == 2
+        # Dead projectile's to_projectile is never invoked.
+        dead.to_projectile.assert_not_called()
+        alive_a.to_projectile.assert_called_once()
+        alive_b.to_projectile.assert_called_once()
+
+    def test_load_state_resolves_projectile_owner_via_ship_id_map(
+        self, controller, mock_service,
+    ):
+        """`to_projectile` receives `ship_lookup={save_id: engine_ship}`."""
+        alive = Mock()
+        alive.is_alive = True
+        alive.to_projectile = Mock(return_value=Mock())
+
+        mock_state, _, engine_ship = self._build_load_state_setup(
+            controller, mock_service,
+            projectiles=[alive], ship_id="runtime-ship",
+            save_id="save_id_1",
+        )
+
+        result = controller.load_state(mock_state)
+
+        assert result.success is True
+        # to_projectile called with a single dict arg containing
+        # save_id -> engine_ship.
+        call_args = alive.to_projectile.call_args
+        ship_lookup = call_args.args[0]
+        assert ship_lookup == {"save_id_1": engine_ship}
+
+
+class TestRequireRegistriesForStateRestore:
+    """PROJ-331 Phase 2a: pin `_require_registries_for_state_restore` gate."""
+
+    def test_require_registries_returns_none_for_empty_state_when_registries_unset(
+        self, controller,
+    ):
+        """state_count=0 + registries=None: returns None, no raise."""
+        controller._registries = None
+        result = controller._require_registries_for_state_restore(state_count=0)
+        assert result is None
+
+    def test_require_registries_raises_validation_exception_for_nonempty_state_when_registries_unset(
+        self, controller,
+    ):
+        """state_count>0 + registries=None: raises ValidationException(MISSING_DEPENDENCY)."""
+        from game.core.exceptions import ValidationException
+        controller._registries = None
+        with pytest.raises(ValidationException) as exc_info:
+            controller._require_registries_for_state_restore(state_count=3)
+        # MISSING_DEPENDENCY = "C003"
+        assert exc_info.value.code == "C003"
+
+
+class TestExtractOutcomeOnBattleEndSwallowsCaptureExceptions:
+    """PROJ-331 OBSERVATION-C (MAJ-002 fix from review req_20260504_213455_95a42d).
+
+    Pins the broad-except at battle_controller.py:445 — when
+    `get_default_capture_sink().on_battle_ended` raises, _extract_outcome_on_battle_end
+    must still set self._outcome and complete normally. A refactor that
+    removes the catch (or changes its scope) should fail this test.
+    """
+
+    def test_outcome_is_set_when_capture_sink_raises(self, controller, mock_service):
+        """Capture-sink exception MUST NOT prevent _outcome from being set."""
+        # _spec only needs to be non-None for the early-return guard at
+        # battle_controller.py:432 to fall through. Mock is sufficient —
+        # production reads engine.replay_id, not spec fields, on this path.
+        controller._spec = Mock(name="battle_spec")
+
+        mock_engine = Mock()
+        mock_engine.replay_id = "test-replay-id"
+        mock_service.get_engine.return_value = mock_engine
+
+        sentinel_outcome = Mock(name="extracted_outcome")
+        with patch(
+            "game.simulation.battle_runner.extract_outcome",
+            return_value=sentinel_outcome,
+        ), patch(
+            "game.simulation.replay.get_default_capture_sink",
+        ) as mock_sink_factory:
+            mock_sink = Mock()
+            mock_sink.on_battle_ended.side_effect = RuntimeError("sink broke")
+            mock_sink_factory.return_value = mock_sink
+
+            # Must not raise.
+            controller._extract_outcome_on_battle_end()
+
+        assert controller._outcome is sentinel_outcome, (
+            "PROJ-331 OBSERVATION-C: _extract_outcome_on_battle_end must "
+            "still set self._outcome even when on_battle_ended raises."
+        )

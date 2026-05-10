@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from typing import List, TYPE_CHECKING
 
-from game.core.patterns.layer_iterator import iter_components
+from game.strategy.services.component_inspector import iter_facility_ability_entries
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -50,15 +50,10 @@ class WaterEngine:
         for facility in getattr(colony, 'facilities', []):
             if not getattr(facility, 'is_operational', True):
                 continue
-            for comp in iter_components(facility.design_data):
-                wm_data = self._extract_water_modifier(comp)
-                if wm_data is None:
-                    continue
-                if isinstance(wm_data, list):
-                    for entry in wm_data:
-                        total_rate += entry.get('modification_rate', 0.0)
-                else:
-                    total_rate += wm_data.get('modification_rate', 0.0)
+            for _comp, entry in iter_facility_ability_entries(
+                facility, 'WaterModifier', self._registries
+            ):
+                total_rate += entry.get('modification_rate', 0.0)
 
         if total_rate <= 0:
             return
@@ -76,12 +71,3 @@ class WaterEngine:
 
         new_water = max(0.0, min(1.0, current + actual_change))
         colony.surface_water = new_water
-
-    def _extract_water_modifier(self, comp) -> dict | list | None:
-        """Extract WaterModifier ability data from a component entry."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-        abilities = extract_abilities_from_component(comp, self._registries)
-        data = abilities.get('WaterModifier')
-        if isinstance(data, (dict, list)):
-            return data
-        return None

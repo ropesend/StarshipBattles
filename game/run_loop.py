@@ -84,6 +84,21 @@ class RunLoop:
         from game.services.llm.background import shutdown_all_calls
         shutdown_all_calls(timeout=5.0)
 
+        # PROJ-366 Phase 2: drain background replay-verification work
+        # before pygame teardown. Order is `shutdown_all_calls` first
+        # because the current code has no LLM dependency in the verifier
+        # path (AIControllerFactory constructs local AI controllers
+        # directly per `game/ai/ai_factory.py:21-29,83-110`); preserving
+        # the existing LLM shutdown invariant before adding the
+        # coordinator drain. If a future verifier path invokes LLM work,
+        # revisit this order. The ordering test in
+        # `test_run_loop_shutdown_ordering.py` pins the invariant by name
+        # so any future flip is loud.
+        from game.strategy.services.replay_verification_coordinator import (
+            shutdown_all_coordinators,
+        )
+        shutdown_all_coordinators(timeout=5.0)
+
         pygame.quit()
 
     # ------------------------------------------------------------------
@@ -185,15 +200,12 @@ class RunLoop:
         router = self._router
 
         # Per-frame input handling (keyboard polling, hover).
+        # Scenes that need per-frame keyboard polling expose update_input(dt, events);
+        # IScene only mandates handle_event/update/draw/handle_resize.
         if self.state == GameState.STRATEGY:
             router.strategy_scene.update_input(frame_time, events)
-        # Legacy scenes that haven't migrated to IScene event handling.
-        elif self.state == GameState.RESEARCH_TREE and \
-                hasattr(router.active_scene, 'handle_input'):
-            router.active_scene.handle_input(frame_time, events)
-        elif self.state == GameState.GALAXY_TEST and \
-                hasattr(router.active_scene, 'handle_input'):
-            router.active_scene.handle_input(frame_time, events)
+        elif self.state in (GameState.RESEARCH_TREE, GameState.GALAXY_TEST):
+            router.active_scene.update_input(frame_time, events)
 
         # Unified update dispatch.
         router.active_scene.update(frame_time)

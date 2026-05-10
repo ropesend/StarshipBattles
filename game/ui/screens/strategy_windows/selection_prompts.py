@@ -42,9 +42,14 @@ class SelectionPromptRegistrar:
 
         rect = pygame.Rect(x, y, width, height)
         # PROJ-54: PlanetSelectionWindow uses PlanetReportPanel internally.
+        # PROJ-397 Phase 3 Task 3.2: pass the strategy facade so the
+        # internal planet detail panel can fetch ColonyDemographicView
+        # for colonized planets (replaces the deleted legacy
+        # `view=None` branch in format_planet_info).
         c.planet_selection_window = PlanetSelectionWindow(
             rect, c.manager, planets, on_select,
             window_manager=c,
+            facade=c.scene.facade,
         )
 
     def open_system(self, systems, current_system, on_selected: Callable) -> None:

@@ -1,0 +1,27 @@
+{
+  "install_id": "4506e9b5aa2b408684d50cf275155b85",
+  "schema_version": 1,
+  "skills": {
+    "ocode-docs-audit": {
+      "agents": {
+        "ocode": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-04T16:16:16Z"
+    },
+    "ocode-error-audit": {
+      "agents": {
+        "ocode": 5
+      },
+      "count": 5,
+      "last_used": "2026-05-04T16:25:42Z"
+    },
+    "ocode-type-audit": {
+      "agents": {
+        "ocode": 4
+      },
+      "count": 4,
+      "last_used": "2026-05-04T16:26:35Z"
+    }
+  }
+}

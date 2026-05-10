@@ -2,7 +2,7 @@
 WeaponsViewModel - MVVM ViewModel for Weapons Report Panel.
 
 Owns all weapon data and calculations. No Pygame dependencies.
-Emits events via EventBus when state changes.
+Emits events via WorkshopEventBus when state changes.
 
 PROJ-172: Extracted from WeaponsReportPanel for better separation of concerns.
 """
@@ -13,7 +13,7 @@ import logging
 from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
     from game.core.protocols import ICombatShip
 
 logger = logging.getLogger(__name__)
@@ -47,12 +47,12 @@ class WeaponsViewModel:
     INTEREST_POINTS_RANGE = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
     INTEREST_POINTS_ACCURACY = [0.99, 0.80, 0.60, 0.40, 0.20, 0.01]
 
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus: WorkshopEventBus):
         """
         Initialize the ViewModel.
 
         Args:
-            event_bus: EventBus for emitting state change notifications
+            event_bus: WorkshopEventBus for emitting state change notifications
         """
         self.event_bus = event_bus
 

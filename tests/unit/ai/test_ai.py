@@ -121,20 +121,6 @@ class TestAIController:
         # Kamikaze always fires
         assert ai_setup['ship1'].comp_trigger_pulled is True
 
-    def test_navigate_to_rotates_ship(self, ai_setup):
-        """Navigation should rotate ship toward target."""
-        ai_setup['ship1'].angle = 0  # Facing right
-        target_pos = pygame.math.Vector2(0, 1000)  # Target is below
-
-        # Navigate should rotate ship toward target
-        initial_angle = ai_setup['ship1'].angle
-        ai_setup['ai'].navigate_to(target_pos)
-
-        # Angle should change (rotating toward down/90 degrees)
-        # Can't assert exact value due to turn speed limits
-        # Just verify rotation happened if angle diff was > 5
-        pass  # Rotation logic verified visually in game
-
     def test_check_avoidance_returns_none_when_clear(self, ai_setup):
         """Avoidance check should return None when no obstacles nearby."""
         # Move ship2 far away
@@ -226,10 +212,24 @@ class TestAIStrategyStates:
         assert strategy_setup['ai'].current_behavior.attack_state == 'approach'
 
     def test_attack_run_transitions_to_retreat(self, strategy_setup):
-        """Attack run should transition to retreat when close."""
-        strategy_setup['ship'].movement_policy = 'move_attack_run'
-        strategy_setup['ship'].position = pygame.math.Vector2(0, 0)
-        strategy_setup['target'].position = pygame.math.Vector2(150, 0)  # Very close
+        """Attack run should transition to retreat when close.
+
+        PROJ-322 Task 3.2 (S01-CAT6-001): position the target a fraction
+        of the ship's actual weapon_range away (instead of hardcoding
+        the 150-unit value), so the test no longer breaks when the
+        approach_distance constant is tuned.
+        """
+        ship = strategy_setup['ship']
+        ship.movement_policy = 'move_attack_run'
+        ship.position = pygame.math.Vector2(0, 0)
+
+        weapon_range = getattr(ship, 'weapon_range', None) or 1000
+        # Place target well inside the retreat threshold (a quarter of
+        # weapon range is comfortably below any reasonable approach
+        # distance the AI uses).
+        strategy_setup['target'].position = pygame.math.Vector2(
+            weapon_range * 0.25, 0,
+        )
 
         strategy_setup['ai'].update()
         # After being very close, should switch to retreat

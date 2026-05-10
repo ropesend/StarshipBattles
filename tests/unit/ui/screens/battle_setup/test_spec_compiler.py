@@ -8,6 +8,8 @@ Covers:
   into `ModifierStack.per_team` (do NOT mutate ships)
 - `telemetry_level` defaults to NORMAL
 """
+from types import SimpleNamespace
+
 import pytest
 
 from game.ui.screens.battle_setup.spec_compiler import build_manual_battle_spec
@@ -342,6 +344,87 @@ def test_compiler_empty_ui_state_yields_empty_teams(session_registries):
             s for tf in team.fleet_hierarchy for sq in tf.squadrons for s in sq.ships
         ]
         assert ships == []
+
+
+# ---------------------------------------------------------------------------
+# Branch-level helper coverage
+# ---------------------------------------------------------------------------
+
+
+def test_load_complex_design_oserror_returns_none_and_logs(monkeypatch, caplog):
+    from game.ui.screens.battle_setup import spec_compiler
+
+    monkeypatch.setattr(spec_compiler.os.path, "exists", lambda _path: True)
+
+    def raise_oserror(_path):
+        raise OSError("cannot read")
+
+    monkeypatch.setattr(spec_compiler, "load_json_required", raise_oserror)
+
+    caplog.set_level("WARNING", logger=spec_compiler.__name__)
+    assert spec_compiler._load_complex_design("broken_complex") is None
+    assert "failed to load design 'broken_complex'" in caplog.text
+
+
+def test_iter_components_skips_empty_layers_and_non_dict_entries():
+    """PROJ-391: spec_compiler now uses canonical `iter_components` from
+    `game.core.patterns.layer_iterator`, which yields strings and dicts.
+    The compiler's `_complex_to_entries` filters non-dict entries with
+    `isinstance(component_data, dict)` before extracting `id`. This test
+    asserts the canonical iterator still produces the expected dict
+    components from a design_data shape exercised in production."""
+    from game.core.patterns.layer_iterator import iter_components
+
+    design_data = {
+        "layers": {
+            "CORE": None,
+            "INNER": [],
+            "OUTER": [
+                {"id": "beam"},
+                "not-a-component",
+                42,
+                None,
+            ],
+            "ARMOR": ({"id": "armor"},),  # tuples skipped by canonical (list-only)
+        }
+    }
+
+    # Canonical iter_components yields all entries from list layers including
+    # non-dict ones. The spec_compiler filters dicts at the call site.
+    yielded = list(iter_components(design_data))
+    dict_components = [c for c in yielded if isinstance(c, dict)]
+    assert dict_components == [{"id": "beam"}]
+
+
+def test_iter_components_missing_layers_yields_no_components():
+    """PROJ-391: canonical `iter_components` returns nothing for a design
+    with no layers key. (`{"layers": None}` is not a production shape —
+    `load_json_required` always returns a dict; the legacy local helper's
+    None-tolerance was unused. The canonical raises AttributeError on
+    that synthetic input, which is the correct fail-loud behavior.)"""
+    from game.core.patterns.layer_iterator import iter_components
+
+    assert list(iter_components({})) == []
+
+
+def test_ship_spec_pose_none_uses_origin_and_default_theme():
+    from game.ui.screens.battle_setup.spec_compiler import _ship_spec_from_instance
+
+    ship = SimpleNamespace(
+        instance_id="ship-1",
+        design_id="design-1",
+        name="No Pose",
+        design_data=None,
+    )
+
+    spec = _ship_spec_from_instance(ship, pose=None)
+
+    assert spec.instance_id == "ship-1"
+    assert spec.position.x == 0.0
+    assert spec.position.y == 0.0
+    assert spec.angle == 0.0
+    assert spec.theme_id == "Federation"
+    assert spec.instance_ref is ship
 
 
 # ---------------------------------------------------------------------------

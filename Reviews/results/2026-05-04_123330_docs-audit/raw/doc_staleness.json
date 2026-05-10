@@ -1,0 +1,170 @@
+[
+  {
+    "doc": "docs/README.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/01_ARCHITECTURE.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/02_PATTERNS.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/03_CONVENTIONS.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/04_SERVICES.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/05_ERROR_HANDLING.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/06_UI_STYLE_GUIDE.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/ability_reference.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/ai_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/combat_simulation.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/orders_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/production_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/research_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/resource_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/save_load.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/strategy_layer.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/adding_abilities.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/adding_modifiers.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/component_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/modifier_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/performance_profiling.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/pre_commit_hooks.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/qs_complex_design.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/simulation_testing.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/testing_infrastructure.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "AGENTS.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "CLAUDE.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": ".agents/CODEX.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  }
+]

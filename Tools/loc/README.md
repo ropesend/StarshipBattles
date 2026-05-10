@@ -8,7 +8,10 @@ Provides a quick overview of project size and test-to-source ratio. Useful for t
 
 ## Requirements
 
-No additional dependencies beyond the base project.
+Requires `tiktoken`, installed via `requirements-dev.txt`, for exact token counts.
+If it is missing, the tool exits without a traceback and prints a `python -m pip
+install -r "<repo-root>/requirements-dev.txt"` command based on the checkout that
+contains `Tools/loc/loc.py`.
 
 ## Usage
 

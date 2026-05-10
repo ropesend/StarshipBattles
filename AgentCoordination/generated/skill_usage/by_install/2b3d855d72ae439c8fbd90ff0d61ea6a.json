@@ -2,12 +2,26 @@
   "install_id": "2b3d855d72ae439c8fbd90ff0d61ea6a",
   "schema_version": 1,
   "skills": {
+    "claude-delegate-review": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-03T19:11:42Z"
+    },
     "claude-discuss-start": {
       "agents": {
         "claude": 7
       },
       "count": 7,
       "last_used": "2026-05-03T16:50:44Z"
+    },
+    "claude-proj-from-test-review": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-03T17:52:58Z"
     },
     "codex-discuss-respond": {
       "agents": {
@@ -25,10 +39,10 @@
     },
     "ocode-review-request": {
       "agents": {
-        "ocode": 1
+        "ocode": 4
       },
-      "count": 1,
-      "last_used": "2026-05-03T14:22:22Z"
+      "count": 4,
+      "last_used": "2026-05-03T19:23:24Z"
     },
     "skill-creator": {
       "agents": {

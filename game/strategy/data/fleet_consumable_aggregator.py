@@ -288,6 +288,42 @@ class FleetConsumableAggregator:
             total += ship.get_current_cargo(cargo_type)
         return total
 
+    def _distribute_cargo_to_fleet(
+        self,
+        cargo_type: str,
+        amount: int,
+        ship_method: Callable[['ShipInstance', str, int], int],
+    ) -> int:
+        """Iterate ships, calling ``ship_method`` per ship until ``amount`` is exhausted.
+
+        Shared skeleton for :meth:`load_cargo_to_fleet` and
+        :meth:`unload_cargo_from_fleet` (PROJ-380, DUP-X-06).
+
+        Args:
+            cargo_type: Type of cargo to move.
+            amount: Total amount to move; values <= 0 short-circuit to 0.
+            ship_method: A callable ``(ship, cargo_type, remaining) -> moved``
+                — typically a bound ``ship.load_cargo`` or ``ship.unload_cargo``.
+
+        Returns:
+            Actual amount moved (may be less than requested when ships are
+            capacity-limited or out of cargo).
+        """
+        if amount <= 0:
+            return 0
+
+        remaining = amount
+        total_moved = 0
+
+        for ship in self._fleet.ships:
+            if remaining <= 0:
+                break
+            moved = ship_method(ship, cargo_type, remaining)
+            total_moved += moved
+            remaining -= moved
+
+        return total_moved
+
     def load_cargo_to_fleet(self, cargo_type: str, amount: int) -> int:
         """
         Load cargo to the fleet, distributing across ships with capacity.
@@ -299,20 +335,9 @@ class FleetConsumableAggregator:
         Returns:
             Actual amount loaded (may be less than requested if capacity limited).
         """
-        if amount <= 0:
-            return 0
-
-        remaining = amount
-        total_loaded = 0
-
-        for ship in self._fleet.ships:
-            if remaining <= 0:
-                break
-            loaded = ship.load_cargo(cargo_type, remaining)
-            total_loaded += loaded
-            remaining -= loaded
-
-        return total_loaded
+        return self._distribute_cargo_to_fleet(
+            cargo_type, amount, lambda ship, t, a: ship.load_cargo(t, a)
+        )
 
     def unload_cargo_from_fleet(self, cargo_type: str, amount: int) -> int:
         """
@@ -325,17 +350,6 @@ class FleetConsumableAggregator:
         Returns:
             Actual amount unloaded (may be less than requested if not enough cargo).
         """
-        if amount <= 0:
-            return 0
-
-        remaining = amount
-        total_unloaded = 0
-
-        for ship in self._fleet.ships:
-            if remaining <= 0:
-                break
-            unloaded = ship.unload_cargo(cargo_type, remaining)
-            total_unloaded += unloaded
-            remaining -= unloaded
-
-        return total_unloaded
+        return self._distribute_cargo_to_fleet(
+            cargo_type, amount, lambda ship, t, a: ship.unload_cargo(t, a)
+        )

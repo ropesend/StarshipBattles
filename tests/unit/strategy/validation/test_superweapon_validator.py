@@ -343,6 +343,45 @@ class TestValidateOpenWarpPoint:
         assert result.is_valid is False
         assert "exist" in result.message.lower()
 
+    def test_invalid_missing_target_system_name(
+        self, mock_galaxy, mock_fleet, mock_system, mock_component_registry
+    ):
+        """Invalid: A blank target system name cannot resolve to a destination."""
+        from game.strategy.validation import SuperweaponValidator
+
+        ship = make_ship_with_component("ship1", "qti_drive")
+        mock_fleet.ships = [ship]
+        mock_fleet.location = mock_system.global_location
+
+        mock_galaxy.get_system_at_location.return_value = mock_system
+        mock_galaxy.name_map = {"Test System": mock_system}
+
+        result = SuperweaponValidator.validate_open_warp_point(
+            mock_galaxy, mock_fleet, "", mock_component_registry
+        )
+
+        assert result.is_valid is False
+        assert "exist" in result.message.lower()
+
+    def test_invalid_open_warp_point_not_at_star_system(
+        self, mock_galaxy, mock_fleet, mock_component_registry
+    ):
+        """Invalid: Location check rejects open-warp commands outside a system."""
+        from game.strategy.validation import SuperweaponValidator
+
+        ship = make_ship_with_component("ship1", "qti_drive")
+        mock_fleet.ships = [ship]
+        mock_fleet.location = HexCoord(99, 99)
+        mock_galaxy.get_system_at_location.return_value = None
+        mock_galaxy.name_map = {"Target System": MagicMock()}
+
+        result = SuperweaponValidator.validate_open_warp_point(
+            mock_galaxy, mock_fleet, "Target System", mock_component_registry
+        )
+
+        assert result.is_valid is False
+        assert "system" in result.message.lower()
+
     def test_invalid_warp_link_already_exists(
         self, mock_galaxy, mock_fleet, mock_system, mock_component_registry
     ):
@@ -448,6 +487,48 @@ class TestValidateCloseWarpPoint:
 
         assert result.is_valid is False
         assert "warp point" in result.message.lower()
+
+    def test_invalid_close_warp_point_requires_exact_sector(
+        self, mock_galaxy, mock_fleet, mock_system, mock_component_registry
+    ):
+        """A matching warp point elsewhere in the system is not at fleet location."""
+        from game.strategy.validation import SuperweaponValidator
+
+        ship = make_ship_with_component("ship1", "qtd_device")
+        mock_fleet.ships = [ship]
+
+        warp_point = MagicMock()
+        warp_point.destination_id = "Other System"
+        warp_point.location = HexCoord(2, 0)
+        mock_system.warp_points = [warp_point]
+
+        mock_fleet.location = mock_system.global_location + HexCoord(3, 0)
+        mock_galaxy.get_system_at_location.return_value = mock_system
+
+        result = SuperweaponValidator.validate_close_warp_point(
+            mock_galaxy, mock_fleet, "Other System", mock_component_registry
+        )
+
+        assert result.is_valid is False
+        assert "warp point" in result.message.lower()
+
+    def test_invalid_close_warp_point_not_at_star_system(
+        self, mock_galaxy, mock_fleet, mock_component_registry
+    ):
+        """Invalid: Location check rejects close-warp commands outside a system."""
+        from game.strategy.validation import SuperweaponValidator
+
+        ship = make_ship_with_component("ship1", "qtd_device")
+        mock_fleet.ships = [ship]
+        mock_fleet.location = HexCoord(99, 99)
+        mock_galaxy.get_system_at_location.return_value = None
+
+        result = SuperweaponValidator.validate_close_warp_point(
+            mock_galaxy, mock_fleet, "Other System", mock_component_registry
+        )
+
+        assert result.is_valid is False
+        assert "system" in result.message.lower()
 
     def test_invalid_no_ability(
         self, mock_galaxy, mock_fleet, mock_system, mock_component_registry

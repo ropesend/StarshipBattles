@@ -55,6 +55,21 @@ def _mock_fleet(**kwargs):
     return fleet
 
 
+@pytest.fixture
+def _mock_race_registry():
+    """Stub race registry used by upkeep / harvest tests.
+
+    `.get_race(*) -> None` so the projector's harvest + yard paths
+    (which consult habitability via `race_registry.get_race`)
+    short-circuit cleanly to 1.0. Upkeep projection does NOT consult
+    `race_registry` at all — this fixture exists only because the
+    projector constructor requires one.
+    """
+    stub = Mock()
+    stub.get_race.return_value = None
+    return stub
+
+
 class TestEmpireEconomySnapshot:
     """Tests for EmpireEconomySnapshot dataclass."""
 
@@ -823,17 +838,6 @@ class TestPopulationUpkeepAggregation:
             "radioactives": 0.00001,
         })
 
-    @pytest.fixture
-    def _mock_race_registry(self):
-        """Stub with `.get_race(*) -> None` so the projector's harvest +
-        yard paths (which consult habitability via `race_registry.get_race`)
-        short-circuit cleanly to 1.0. Upkeep projection does NOT consult
-        race_registry at all — this fixture exists only because the
-        projector constructor requires one."""
-        stub = Mock()
-        stub.get_race.return_value = None
-        return stub
-
     def _colony_with_populations(self, populations):
         """Build a real Planet so `get_species_config` lazy-creates
         `ColonySpeciesConfig` entries with the default `food_allocation=1.0`."""
@@ -1061,12 +1065,6 @@ class TestTreasuryTotalIncludesUpkeep:
             "metals": 0.0001,
         })
 
-    @pytest.fixture
-    def _mock_race_registry(self):
-        stub = Mock()
-        stub.get_race.return_value = None
-        return stub
-
     def _colony_with_populations(self, populations):
         from game.core.hex_math import HexCoord
         from game.strategy.data.planet import Planet, PlanetType
@@ -1092,7 +1090,7 @@ class TestTreasuryTotalIncludesUpkeep:
         upkeep term is absent from the summation at lines 147-150 of
         `empire_economy_calculator.py`."""
         from game.strategy.data.species_population import SpeciesPopulation
-        from game.strategy.engine.empire_economy_calculator import _PLANETARY_IDS
+        from game.strategy.engine.empire_economy_calculator import _get_planetary_ids
 
         populations = [
             SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
@@ -1119,7 +1117,7 @@ class TestTreasuryTotalIncludesUpkeep:
         assert snapshot.total_population_upkeep.get("organics", 0.0) > 0.0
         assert snapshot.total_population_upkeep.get("metals", 0.0) > 0.0
 
-        for r in _PLANETARY_IDS:
+        for r in _get_planetary_ids():
             expected = (
                 snapshot.tribute_expenses.get(r, 0.0)
                 + snapshot.construction_expenses_ships.get(r, 0.0)
@@ -1139,7 +1137,7 @@ class TestTreasuryTotalIncludesUpkeep:
         also lower by the upkeep amount. With the bug present, net is
         overstated by exactly the per-resource upkeep value."""
         from game.strategy.data.species_population import SpeciesPopulation
-        from game.strategy.engine.empire_economy_calculator import _PLANETARY_IDS
+        from game.strategy.engine.empire_economy_calculator import _get_planetary_ids
 
         colony = self._colony_with_populations(populations=[
             SpeciesPopulation(race_id="human", count=1000, happiness=0.5),
@@ -1158,7 +1156,7 @@ class TestTreasuryTotalIncludesUpkeep:
         )
         snapshot = calculator.calculate(empire)
 
-        for r in _PLANETARY_IDS:
+        for r in _get_planetary_ids():
             expected_net = snapshot.total_production.get(r, 0.0) - (
                 snapshot.tribute_expenses.get(r, 0.0)
                 + snapshot.construction_expenses_ships.get(r, 0.0)

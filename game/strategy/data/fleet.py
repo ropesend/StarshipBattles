@@ -356,16 +356,24 @@ class Fleet:
 
         Returns the removed orders.
         """
-        removed = [
-            o for o in self.orders
-            if o.type in order_types and o.target is target
-        ]
+        removed: List[Order] = []
+        remaining: List[Order] = []
+        removed_active_order = False
+        for index, order in enumerate(self.orders):
+            if order.type in order_types and order.target is target:
+                removed.append(order)
+                removed_active_order = removed_active_order or index == 0
+            else:
+                remaining.append(order)
+
+        if not removed:
+            return []
+
+        self.orders = remaining
         for order in removed:
             self._unregister_from_target(order)
-        self.orders = [
-            o for o in self.orders
-            if not (o.type in order_types and o.target is target)
-        ]
+        if removed_active_order:
+            self.path = []
         return removed
 
     def merge_with(self, other_fleet: 'Fleet', event_bus=None) -> None:
@@ -389,26 +397,15 @@ class Fleet:
         # pursuer of itself if it had a JOIN_FLEET order targeting self.
         from game.strategy.data.fleet_pursuer_tracker import PURSUIT_ORDER_TYPES
         from game.strategy.events.event_types import EventType, EventCategory
-        from game.core.event_logging import log_event
-
+        # PROJ-382 Phase 2 (Pattern #10): emit only via injected event_bus.
         redirected, excluded = self._pursuer_tracker.redirect_pursuers(
             other_fleet,
             exclude=frozenset({other_fleet}),
         )
 
         for pursuer, _old_target in redirected:
-            if event_bus:
+            if event_bus is not None:
                 event_bus.log_event(
-                    EventType.FLEET_JOIN_REDIRECTED,
-                    category=EventCategory.FLEET_OPERATIONS,
-                    empire_id=pursuer.owner_id,
-                    message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
-                    fleet_id=pursuer.id,
-                    old_target_id=self.id,
-                    new_target_id=other_fleet.id,
-                )
-            else:
-                log_event(
                     EventType.FLEET_JOIN_REDIRECTED,
                     category=EventCategory.FLEET_OPERATIONS,
                     empire_id=pursuer.owner_id,
@@ -426,18 +423,8 @@ class Fleet:
                 f"[BUG-122] Fleet {pursuer.id} pursuit orders dropped during merge "
                 f"of Fleet {self.id} into Fleet {other_fleet.id}: would have created self-join"
             )
-            if event_bus:
+            if event_bus is not None:
                 event_bus.log_event(
-                    EventType.FLEET_JOIN_CANCELLED,
-                    category=EventCategory.FLEET_OPERATIONS,
-                    empire_id=pursuer.owner_id,
-                    message=f"Fleet {pursuer.id} join order cancelled: would have self-targeted Fleet {other_fleet.id}",
-                    fleet_id=pursuer.id,
-                    target_fleet_id=self.id,
-                    reason="self_target_after_redirect",
-                )
-            else:
-                log_event(
                     EventType.FLEET_JOIN_CANCELLED,
                     category=EventCategory.FLEET_OPERATIONS,
                     empire_id=pursuer.owner_id,

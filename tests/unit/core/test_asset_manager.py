@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch, mock_open
 import os
 import pygame
-from game.assets.asset_manager import AssetManager, get_asset_manager, set_default_asset_manager
+from game.assets.asset_manager import AssetManager, get_default_asset_manager, set_default_asset_manager
 
 
 class TestAssetManagerLogging:
@@ -104,8 +104,8 @@ class TestAssetManager:
         set_default_asset_manager(AssetManager())
 
     def test_singleton(self):
-        am1 = get_asset_manager()
-        am2 = get_asset_manager()
+        am1 = get_default_asset_manager()
+        am2 = get_default_asset_manager()
         assert am1 is am2
         
     def test_load_manifest_file_not_found(self):

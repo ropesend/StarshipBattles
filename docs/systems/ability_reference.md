@@ -1,1697 +1,579 @@
 # Ability Reference
 
-> **Last verified:** 2026-04-28 — Documented the `chance` field on intrinsic ability rolls (FEAT-15). Earlier 2026-04-27 pass: PROJ-300..305 added the §"Strategic-Layer Sector/System Abilities" section (EnvironmentalDamage, FuelDrain, StrategicSpeedModifier, ThrustModifier) and the IAbilitySource sources-by-kind summary.
+> **Last verified:** 2026-05-08 - Verified against `game/simulation/components/abilities/`, strategic ability services, and the compact ability reference. Current live registry has 60 keys.
 
-> Comprehensive catalog of all component abilities available in the game.
-> Source: `game/simulation/components/abilities/`
-> Registry: `ABILITY_REGISTRY` in `abilities/__init__.py`
+Compact agent reference for the component ability system. It preserves live registry keys, data shapes, contracts, invariants, extension recipes, warnings, stale-reference corrections, and validation commands while omitting release-note history.
 
 ---
 
-## How to Read This Document
-
-Each ability entry lists:
-- **Registry Key** — the string used in `components.json` to attach the ability
-- **Class** — the Python class that implements it
-- **Source File** — location under `game/simulation/components/abilities/`
-- **Layer** — COMBAT (default) or STRATEGIC
-- **Data Format** — how to specify values in JSON (scalar, dict, or boolean)
-- **Required/Optional Values** — parameters the ability expects
-- **Stat Bindings** — modifier stats that affect the ability at runtime
-
-Data format conventions:
-- **Scalar**: `100` or `5.0` — a single numeric value
-- **Dict**: `{"damage": 100, "range": 5000}` — named parameters
-- **Boolean**: `true` — marker presence
-- **Formula**: `"=50 + range_to_target * 0.1"` — runtime-evaluated expression (weapons only)
-- **Load-time formula**: `"=ceil(sqrt(ship_class_mass / 1000))"` — evaluated when the
-  component is recalculated with a ship context. Used to scale ability values per
-  ship class. See "Formula-Driven Abilities" below.
-
----
-
-## Formula-Driven Abilities (`_parse_attrs` requirement)
-
-Some ability values are scaled by `ship_class_mass` (the owning ship class's
-`max_mass`). These appear in `components.json` as formula strings starting with
-`=`, e.g. `"max_tonnage": "=ship_class_mass"`.
-
-Such formulas are evaluated by `ComponentStatsCalculator.reset_and_evaluate_formulas`
-when a component is attached to a ship and `recalculate_stats` runs. The evaluated
-numeric value is then placed in `component.abilities[name]`. A subsequent
-`Ability._instantiate` call either constructs the ability fresh or refreshes an
-existing instance via `sync_data`.
-
-**Implementation contract for ability authors**: any ability that parses
-numeric/string attributes from `data` MUST do so in `_parse_attrs(data)`, NOT
-in `__init__`. The base `Ability` class wires `_parse_attrs` into BOTH `__init__`
-and `sync_data`, so attributes refresh automatically when the underlying data
-changes — including when formulas re-evaluate to new values.
-
-If an ability overrides `__init__` to parse data instead, the instance keeps the
-value parsed at construction time even after the abilities dict is updated to
-the correct evaluated value. This was the cause of the original "Frigate has no
-warp capability" bug (WarpJump.max_tonnage frozen at 1000 instead of 2000) and
-the same-pattern bug on CrewRequired.
-
-See `docs/guides/component_system.md` (section "Refreshing data-derived
-attributes") for the design rationale.
-
-### Abilities with formula-driven data in production components
-
-The following ability instances have at least one production component
-(`data/components.json`) whose data is formula-driven on `ship_class_mass`.
-These abilities MUST use `_parse_attrs` (and currently do):
-
-| Ability | Component | Formula |
-|---------|-----------|---------|
-| `WarpJump` | `warp_drive` | `"max_tonnage": "=ship_class_mass"` |
-| `EmissiveArmor` | `emissive_armor` | `"=8 * (ship_class_mass / 1000)**(1/3)"` |
-| `ShieldRegeneratingArmor` | `shield_regenerating_armor` | `"=5 * (ship_class_mass / 1000)**(1/3)"` |
-| `CrewRequired` | `bridge` | `"=ceil(sqrt(ship_class_mass / 1000))"` |
-| `CrewRequired` | `central_complex_command` | `"=ceil(sqrt(ship_class_mass / 1000))"` |
-| `ResourceConsumption` | `warp_drive` | `"amount": "=5 * (ship_class_mass ** (2/3))"` |
-
-Other abilities not on this list may still parse attributes from data — they
-should also use `_parse_attrs` defensively, in case future content adds a
-formula-driven value.
-
----
-
-## Stacking Rules
-
-All numeric abilities follow a two-phase aggregation model when multiple
-components provide the same ability:
-
-### Phase 1: Intra-Group MAX
-Components with the same `stack_group` value are reduced to their **maximum**.
-Redundant components in the same group provide no additional benefit.
-
-Example: Two sensors with `stack_group: "sensors_a"` and values [1.0, 0.5] → result is 1.0.
-
-### Phase 2: Inter-Group SUM  
-After intra-group reduction, values from **different** groups are **summed**.
-Diverse components from different groups stack additively.
-
-Example: Sensor group_a (1.0) + Sensor group_b (0.5) → total 1.5.
-
-### No Stack Group
-Components without an explicit `stack_group` each form their own group
-(keyed by the component object). Multiple such components SUM together.
-
-### Validation
-Stacking behavior is validated by simulation tests:
-- Same-group MAX: EMISSIVE-003, SRA-004, TOHIT-ATK-002, TOHIT-DEF-002
-- Different-group SUM: EMISSIVE-004, SRA-005, TOHIT-ATK-003, TOHIT-DEF-003
-- Three-component same-group: EMISSIVE-006
-- Mixed positive + negative: TOHIT-ATK-005
-
----
-
-## Scope Reference
-
-Scopes control which entities an ability affects. Defined in `AbilityScope` enum
-(`game/simulation/components/abilities/base.py`). Each ability declares `allowed_scopes`
-(valid scopes) and `default_scope` (used when JSON omits `scope`).
-
-| Scope | Value | Description |
-|-------|-------|-------------|
-| SELF | `"self"` | Only the owner entity |
-| FLEET | `"fleet"` | All ships in the same battle group |
-| SECTOR | `"sector"` | All entities in the same hex |
-| ALLIED_SECTOR | `"allied_sector"` | Allied entities in the same hex (owner + allies) |
-| SYSTEM | `"system"` | All entities in the star system |
-| ALLIED_SYSTEM | `"allied_system"` | Allied entities in the star system (owner + allies) |
-| PLANET | `"planet"` | Planet-wide effect |
-| EMPIRE | `"empire"` | All colonies belonging to the owning player |
-| ALLIED_EMPIRE | `"allied_empire"` | All colonies of the owning player and their allies |
-| ENEMY_SECTOR | `"enemy_sector"` | Enemy entities in the same hex (not owned by the player) |
-| ENEMY_SYSTEM | `"enemy_system"` | Enemy entities in the star system (not owned by the player) |
-| PLAYER_SECTOR | `"player_sector"` | Only the player's own entities in the same hex (excludes allies) |
-| PLAYER_SYSTEM | `"player_system"` | Only the player's own entities in the star system (excludes allies) |
-
-**Key distinction:** `PLAYER_*` scopes are strictly owner-only. `ALLIED_*` scopes include the owner and their allies. `ENEMY_*` scopes target only entities not owned by the player.
-
----
-
-## Weapons
-
-### WeaponAbility
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `WeaponAbility` |
-| Class | `WeaponAbility` |
-| Source | `weapons.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Generic weapon base. Supports damage formulas, firing arcs, and reload cycles.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `damage` | float or formula | Yes | — | Base weapon damage per shot |
-| `range` | float or formula | Yes | — | Maximum engagement range (px) |
-| `reload` | float | No | 1.0 | Reload time in seconds |
-| `firing_arc` | float | No | 360 | Firing arc in degrees |
-| `facing_angle` | float | No | 0 | Angle offset from ship facing |
-| `tags` | list | No | [] | Classification tags |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| DAMAGE_MULT | damage | multiply |
-| RANGE_MULT | range | multiply |
-| RELOAD_MULT | reload_time | multiply |
-| ARC_SET | firing_arc | set (override) |
-| ARC_ADD | firing_arc | add |
-
----
-
-### BeamWeaponAbility
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `BeamWeaponAbility` |
-| Class | `BeamWeaponAbility` |
-| Source | `weapons.py` |
-| Layer | COMBAT |
-| Base Class | `WeaponAbility` |
-
-Beam weapon with accuracy falloff over distance. Hit chance uses logistic/sigmoid function.
-
-**Data Format:** Dict (all WeaponAbility parameters plus below)
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `accuracy_falloff` | float | No | 0.001 | Accuracy penalty per unit distance |
-| `base_accuracy` | float | No | 1.0 | Base accuracy (0.0-1.0 or percentage) |
-
-**Additional Stat Bindings (extends WeaponAbility):**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| ACCURACY_ADD | base_accuracy | add |
-
----
-
-### ProjectileWeaponAbility
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ProjectileWeaponAbility` |
-| Class | `ProjectileWeaponAbility` |
-| Source | `weapons.py` |
-| Layer | COMBAT |
-| Base Class | `WeaponAbility` |
-
-Projectile-based weapon (bullets, railgun rounds, unguided missiles).
-
-**Data Format:** Dict (all WeaponAbility parameters plus below)
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `projectile_speed` | float | No | 500 | Speed of projectile (divided by PROJECTILE_SPEED_SCALE=100 at runtime) |
-
----
-
-### SeekerWeaponAbility
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `SeekerWeaponAbility` |
-| Class | `SeekerWeaponAbility` |
-| Source | `weapons.py` |
-| Layer | COMBAT |
-| Base Class | `WeaponAbility` |
-
-Guided seeking missile with tracking, HP, and stealth properties. Fires omni-directionally (ignores firing arc for launch).
-
-**Data Format:** Dict (all WeaponAbility parameters plus below)
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `projectile_speed` | float | No | 500 | Missile flight speed |
-| `endurance` | float | No | 3.0 | Flight duration in seconds |
-| `turn_rate` | float | No | 30.0 | Turning speed (degrees/sec) |
-| `to_hit_defense` | float | No | 0 | Defensive modifier for the missile |
-| `projectile_damage` | float | Yes | — | Warhead explosion damage |
-| `projectile_hp` | float | No | 1.0 | Missile durability (HP) |
-| `projectile_stealth` | float | No | 0.0 | Stealth level |
-
-**Additional Stat Bindings (extends WeaponAbility):**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| ENDURANCE_MULT | endurance | multiply |
-| PROJECTILE_DAMAGE_MULT | projectile_damage | multiply |
-| PROJECTILE_HP_MULT | projectile_hp | multiply |
-| PROJECTILE_STEALTH_LEVEL | projectile_stealth | add |
-
----
-
-## Defense
-
-### ShieldProjection
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ShieldProjection` |
-| Class | `ShieldProjection` |
-| Source | `defense.py` |
-| Layer | BOTH |
-| Base Class | `SimpleMultiplierAbility` |
-
-Provides shield capacity (HP pool). Operates at both combat layer (SELF scope on ships) and strategic layer (sector/system scopes on planetary complexes).
-
-**Data Format:** Scalar or Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `value` | float | Yes | — | Shield capacity in HP |
-| `scope` | string | No | `"self"` | Effect range |
-| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active (planetary complex variant) |
-| `activation_time` | int | No | 0 | Ticks to activate (planetary complex variant) |
-| `deactivation_time` | int | No | 0 | Ticks to deactivate |
-
-**Allowed Scopes:** SELF, FLEET, PLAYER_SECTOR, ALLIED_SECTOR, PLAYER_SYSTEM, ALLIED_SYSTEM
-
-**Combat (SELF scope):** Shield capacity on the ship, modified by CAPACITY_MULT and SHIELD_CAPACITY_MULT stat bindings.
-
-**Strategic (sector/system scopes):** Flat shield bonus added to all friendly ships pre-battle via the combat modifier collector. Requires activation on planetary complexes (checked with `require_active=True`).
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| CAPACITY_MULT | capacity | multiply |
-| SHIELD_CAPACITY_MULT | capacity | multiply (stacked) |
-
----
-
-### ShieldRegeneration
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ShieldRegeneration` |
-| Class | `ShieldRegeneration` |
-| Source | `defense.py` |
-| Layer | COMBAT |
-| Base Class | `SimpleMultiplierAbility` |
-
-Regenerates shields per second.
-
-**Data Format:** Scalar (regen rate)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | float | Yes | Shield regeneration rate per second |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| ENERGY_GEN_MULT | rate | multiply |
-
----
-
-### ToHitAttackModifier
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ToHitAttackModifier` |
-| Class | `ToHitAttackModifier` |
-| Source | `defense.py` |
-| Layer | COMBAT |
-| Base Class | `StaticValueAbility` |
-
-Provides sensor/targeting attack bonus for to-hit calculations.
-Supports fleet/system/allied_system/empire scope — a single component can provide
-a to-hit bonus to all friendly ships in the battle group or star system.
-
-**Data Format:** Dict with value and optional scope
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | float | Yes | Attack bonus (+) or penalty (-) |
-| scope | string | No | `"self"` (default), `"fleet"`, `"system"`, `"allied_system"`, or `"empire"` |
-| stack_group | string | No | Stacking group (same group = MAX, different = SUM) |
-
-**Scope:** `self` (default), `fleet`, `system`, `allied_system`, `empire`
-
-**Example:** `{"ToHitAttackModifier": {"value": 2.0, "scope": "fleet", "stack_group": "FleetSensor"}}`
-
-**Stat Bindings:** None (static value, not modified)
-
-**Validation Tests:** TOHIT-ATK-001 to 005 (self scope), TOHIT-ATK-FLEET-001 to 004 (fleet scope)
-
----
-
-### ToHitDefenseModifier
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ToHitDefenseModifier` |
-| Class | `ToHitDefenseModifier` |
-| Source | `defense.py` |
-| Layer | COMBAT |
-| Base Class | `StaticValueAbility` |
-
-Provides evasion/defense bonus for to-hit calculations.
-Supports fleet/system/allied_system/empire scope — a single component can provide
-an evasion bonus to all friendly ships in the battle group or star system.
-
-**Data Format:** Dict with value and optional scope
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | float | Yes | Defense bonus (+) or penalty (-) |
-| scope | string | No | `"self"` (default), `"fleet"`, `"system"`, `"allied_system"`, or `"empire"` |
-| stack_group | string | No | Stacking group (same group = MAX, different = SUM) |
-
-**Scope:** `self` (default), `fleet`, `system`, `allied_system`, `empire`
-
-**Stat Bindings:** None (static value, not modified)
-
----
-
-### EmissiveArmor
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `EmissiveArmor` |
-| Class | `EmissiveArmor` |
-| Source | `defense.py` |
-| Layer | COMBAT |
-| Base Class | `StaticValueAbility` |
-
-Flat damage reduction per hit (damage ignored). Damage pipeline: Shields → EmissiveArmor → ShieldRegeneratingArmor → Hull.
-
-**Data Format:** Scalar (integer, damage points ignored)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | int | Yes | Damage points ignored per hit |
-
-**Formula-driven in production:** the `emissive_armor` component uses
-`"=8 * (ship_class_mass / 1000)**(1/3)"` so the ignored-damage value scales
-with ship class. Refresh is handled by `StaticValueAbility._parse_attrs`.
-
-**Stat Bindings:** None (static value, not modified)
-
----
-
-### ShieldRegeneratingArmor
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ShieldRegeneratingArmor` |
-| Class | `ShieldRegeneratingArmor` |
-| Source | `defense.py` |
-| Layer | COMBAT |
-| Base Class | `StaticValueAbility` |
-
-Absorbs overflow damage (after shields and emissive armor) and recharges shields by the absorbed amount. Damage pipeline: Shields → EmissiveArmor → ShieldRegeneratingArmor → Hull. Only aggregates from active (non-destroyed) armor components.
-
-**Data Format:** Scalar (integer, absorption capacity per hit)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | int | Yes | Damage absorption capacity per hit |
-
-**Formula-driven in production:** the `shield_regenerating_armor` component uses
-`"=5 * (ship_class_mass / 1000)**(1/3)"` so the absorption value scales with
-ship class. Refresh is handled by `StaticValueAbility._parse_attrs`.
-
-**Stat Bindings:** None (static value, not modified)
-
----
-
-### Armor
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `Armor` |
-| Class | `Ability` (lambda) |
-| Source | `__init__.py` |
-| Layer | COMBAT |
-
-Dummy ability for armor tag/existence checks. No functional behavior.
-
-**Data Format:** Any (ignored)
-
----
-
-## Propulsion
-
-### CombatPropulsion
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `CombatPropulsion` |
-| Class | `CombatPropulsion` |
-| Source | `propulsion.py` |
-| Layer | COMBAT |
-| Base Class | `SimpleMultiplierAbility` |
-
-Provides thrust for combat maneuvering. Ship speed = `(thrust * 25) / mass` px/tick.
-
-**Data Format:** Scalar (thrust in Newtons)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | float | Yes | Thrust force in Newtons |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| THRUST_MULT | thrust_force | multiply |
-
----
-
-### ManeuveringThruster
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ManeuveringThruster` |
-| Class | `ManeuveringThruster` |
-| Source | `propulsion.py` |
-| Layer | COMBAT |
-| Base Class | `SimpleMultiplierAbility` |
-
-Provides rotation/turn speed for combat maneuvering. Turn speed = `(raw * 25000) / mass^1.5` degrees per 100 ticks.
-
-**Data Format:** Scalar (rotation degrees/sec)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | float | Yes | Raw rotation rate |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| TURN_MULT | turn_rate | multiply |
-
----
-
-### StrategicMovement
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `StrategicMovement` |
-| Class | `StrategicMovement` |
-| Source | `propulsion.py` |
-| Layer | STRATEGIC |
-| Base Class | `SimpleMultiplierAbility` |
-| Allowed Scopes | SELF, ALLIED_SECTOR, ALLIED_SYSTEM |
-
-Provides strategic map movement points for interstellar travel.
-
-**Data Format:** Scalar (movement points)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | float | Yes | Movement points per turn |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| STRATEGIC_MULT | movement_points | multiply |
-
----
-
-### WarpJump
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `WarpJump` |
-| Class | `WarpJump` |
-| Source | `propulsion.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Binary capability for warp transit between star systems.
-
-**Data Format:** Scalar or Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `max_tonnage` | float | Yes | — | Maximum ship mass for warp transit |
-| `energy_cost` | float | No | 0 | Energy consumed per jump |
-
-Scalar format: `5000` is interpreted as `max_tonnage = 5000`.
-
-**Formula-driven in production:** the `warp_drive` component uses
-`"max_tonnage": "=ship_class_mass"` so the limit equals the owning ship class's
-`max_mass` (e.g. 2000 for a Frigate, 64000 for a Battle Cruiser). Refresh is
-handled by `WarpJump._parse_attrs`.
-
-**Stat Bindings:** None
-
----
-
-## Resources
-
-### ResourceConsumption
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ResourceConsumption` |
-| Class | `ResourceConsumption` |
-| Source | `resources.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Consumes resources (fuel, ammo, energy) based on a trigger type.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `resource` | string | Yes | Resource type to consume (fuel, ammo, energy) |
-| `amount` | float | Yes | Consumption amount per trigger |
-| `trigger` | string | Yes | `"constant"` (per-tick), `"activation"` (per-use), `"strategic_per_hex"` (per-hex movement), `"warp_jump"` (per warp transit), or `"per_turn"` (per-turn strategic cost) |
-
-**Formula-driven in production:** the `warp_drive` component uses
-`"amount": "=5 * (ship_class_mass ** (2/3))"` so the energy cost of a warp
-jump scales with ship class.
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| CONSUMPTION_MULT | amount | multiply |
-
----
-
-### ResourceStorage
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ResourceStorage` |
-| Class | `ResourceStorage` |
-| Source | `resources.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Stores resources with capacity limits.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `resource` | string | Yes | Resource type to store |
-| `amount` | float | Yes | Storage capacity |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| CAPACITY_MULT | max_amount | multiply |
-
----
-
-### ResourceGeneration
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ResourceGeneration` |
-| Class | `ResourceGeneration` |
-| Source | `resources.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Generates resources (energy, fuel) per second.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `resource` | string | Yes | Resource type generated |
-| `amount` | float | Yes | Generation rate per second |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| ENERGY_GEN_MULT | rate | multiply |
-
----
-
-## Crew
-
-### CrewCapacity
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `CrewCapacity` |
-| Class | `CrewCapacity` |
-| Source | `crew.py` |
-| Layer | COMBAT |
-| Base Class | `SimpleMultiplierAbility` |
-
-Provides crew quarters capacity.
-
-**Data Format:** Scalar (integer, crew count)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | int | Yes | Number of crew housed |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| CREW_CAPACITY_MULT | amount | multiply |
-
----
-
-### LifeSupportCapacity
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `LifeSupportCapacity` |
-| Class | `LifeSupportCapacity` |
-| Source | `crew.py` |
-| Layer | COMBAT |
-| Base Class | `SimpleMultiplierAbility` |
-
-Provides life support capacity for crew.
-
-**Data Format:** Scalar (integer, support units)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | int | Yes | Life support capacity |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| LIFE_SUPPORT_CAPACITY_MULT | amount | multiply |
-
----
-
-### CrewRequired
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `CrewRequired` |
-| Class | `CrewRequired` |
-| Source | `crew.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Specifies crew required to operate the component. Also scales with mass via sqrt scaling (custom, not via STAT_BINDINGS).
-
-**Data Format:** Scalar (integer, crew count)
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| value | int | Yes | Crew members required to operate |
-
-**Formula-driven in production:** the `bridge` and `central_complex_command`
-components use `"=ceil(sqrt(ship_class_mass / 1000))"` so command-tier crew
-scales with ship class. Refresh is handled by `CrewRequired._parse_attrs`.
-
-> **Design note:** the formulas were tuned to gentle scaling (multiplier 1)
-> after the original `5` and `10` multipliers caused production designs to go
-> derelict for lack of crew once the formula started evaluating correctly. If
-> you increase the multipliers, audit `data/designs/*.json` for crew-deficit
-> regressions before merging.
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| CREW_REQ_MULT | amount | multiply |
-
----
-
-## Cargo
-
-### CargoStorage
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `CargoStorage` |
-| Class | `CargoStorage` |
-| Source | `cargo.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Cargo transport capability for passengers or generic goods.
-
-**Data Format:** Scalar or Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `cargo_type` | string | No | `"generic"` | `"passengers"` or `"generic"` |
-| `capacity` | float | No | 0 | Cargo capacity |
-
-Scalar format: `5000` is interpreted as generic cargo with capacity 5000.
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| CAPACITY_MULT | capacity | multiply |
-
----
-
-### PodStorage
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `PodStorage` |
-| Class | `PodStorageAbility` |
-| Source | `cargo.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Ship-side mass-based pod storage. Provides capacity for carrying discrete items (drop pods, fighters) as `carried_items`.
-
-**Data Format:** Scalar or Dict
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `capacity_mass` | float | Yes | Mass capacity for carried items |
-
-Scalar format: `5000` is interpreted as `capacity_mass = 5000`.
-
-**Stat Bindings:** None
-
----
-
-## Markers / Special
-
-### VehicleLaunch
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `VehicleLaunch` |
-| Class | `VehicleLaunchAbility` |
-| Source | `markers.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Fighter hangar bay. Stores and launches fighters on a cycle timer.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `fighter_class` | string | No | `"Fighter (Small)"` | Fighter type name |
-| `capacity` | int | No | 0 | Hangar capacity |
-| `cycle_time` | float | No | 5.0 | Seconds between launches |
-
-**Stat Bindings:**
-
-| StatKey | Attribute | Operation |
-|---------|-----------|-----------|
-| CAPACITY_MULT | capacity | multiply |
-
----
-
-### CommandAndControl
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `CommandAndControl` |
-| Class | `CommandAndControl` |
-| Source | `markers.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Marker — component provides command capability (bridge, CIC).
-
-**Data Format:** Boolean (`true`)
-
-**Stat Bindings:** None
-
----
-
-### RequiresCommandAndControl
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `RequiresCommandAndControl` |
-| Class | `RequiresCommandAndControl` |
-| Source | `markers.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Per-component requirement — component requires an operational `CommandAndControl`
-provider on the ship to function. Checked each tick via `update()`: if no active
-C&C component exists on the ship, this component becomes non-operational (its stats
-don't contribute, weapons won't fire).
-
-**Applied to:** All combat-relevant production components (weapons, shields, engines,
-thrusters, sensors, ECM, generators, hangars, repair bays — 24 components total).
-NOT applied to passive components (armor, storage, crew quarters, life support).
-
-**Data Format:** Boolean (`true`)
-
-**Stat Bindings:** None (operational check via `update()` return value)
-
----
-
-### RequiresCombatMovement
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `RequiresCombatMovement` |
-| Class | `RequiresCombatMovement` |
-| Source | `markers.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Marker — component requires combat propulsion to operate.
-
-**Data Format:** Boolean (`true`)
-
-**Stat Bindings:** None
-
----
-
-### StructuralIntegrity
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `StructuralIntegrity` |
-| Class | `StructuralIntegrity` |
-| Source | `markers.py` |
-| Layer | COMBAT |
-| Base Class | `Ability` |
-
-Marker — hull provides structural integrity for the ship.
-
-**Data Format:** Boolean (`true`)
-
-**Stat Bindings:** None
-
----
-
-## Colonization
-
-### ColonizePlanet
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ColonizePlanet` |
-| Class | `ColonizePlanet` |
-| Source | `colonize.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Marks a ship component as providing colonization capability for a planet type.
-
-**Phase 3 Colonization Flow (Drop Pod system):**
-1. Drop pods are designed in the workshop and built at colonies (see Drop Pod section in `resource_system.md`)
-2. Colony ship loads drop pods from the planet staging yard into `ship.carried_items`
-3. Drop pods are **universal** -- any drop pod works on any planet type
-4. `ColonizeValidator` checks `ship.carried_items` for entries with `vehicle_type='drop_pod'`
-5. `OrderProcessor._deploy_drop_pod()` removes the pod from `carried_items` and creates a `PlanetaryFacility` using the pod's full `design_data`
-6. Colony ship stays in fleet (not consumed)
-
-**Stat Bindings:** None
-
----
-
-## Harvester & Storage
-
-### ResourceHarvester
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ResourceHarvester` |
-| Class | `ResourceHarvesterAbility` |
-| Source | `harvester.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Enables resource harvesting on planets.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `resource_type` | string | Yes | Type of resource harvested |
-| `base_harvest_rate` | float | Yes | Resources per turn |
-
-**Stat Bindings:** None
-
-**Size mount scaling:** `base_harvest_rate` is multiplied by the component's `simple_size_mount` value at runtime by `HarvestingEngine` (via `modifier_resolver.resolve_size_multiplier()`). At size 0.2, a harvester with rate 100 harvests at 20/turn.
-
----
-
-### LocalStorage
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `LocalStorage` |
-| Class | `LocalStorageAbility` |
-| Source | `harvester.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Local colony resource storage capacity.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `resource_type` | string | Yes | Resource type stored |
-| `capacity` | float | Yes | Storage capacity |
-
-**Stat Bindings:** Uses `storage_mult` modifier
-
-**Size mount scaling:** `capacity` is multiplied by the component's `simple_size_mount` value at runtime by `HarvestingEngine._collect_storage_from_facility()`. At size 0.2, a 10000 capacity vault stores 2000.
-
----
-
-### StagingYard
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `StagingYard` |
-| Class | `StagingYardAbility` |
-| Source | `harvester.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Planet-side storage for constructed items (fighters, drop pods). Each instance adds
-mass capacity. Multiple staging yard facilities stack additively.
-
-**Data Format:** Scalar or Dict
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `capacity_mass` | float | Yes | Mass capacity for stored vehicles |
-
-Scalar format: `5000` is interpreted as `capacity_mass = 5000`.
-
-**Stat Bindings:** None
-
----
-
-### PlanetaryYard
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `PlanetaryYard` |
-| Class | `PlanetaryYardAbility` |
-| Source | `harvester.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Marker ability -- required for a colony's base construction queue. A colony must
-have at least one operational facility with this ability to build complexes. The
-starter facility (deployed from a drop pod during colonization) provides this.
-
-**Data Format:** Boolean (`true`)
-
-**Stat Bindings:** None
-
----
-
-### SpaceShipyard
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `SpaceShipyard` |
-| Class | `SpaceShipyardAbility` |
-| Source | `harvester.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Enables ship construction at colonies.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `construction_speed_bonus` | float | No | 1.0 | Construction speed multiplier |
-| `max_ship_mass` | float | No | 100000 | Maximum constructible ship mass |
-| `production_rates` | dict | No | — | Per-type production rates |
-
-**Stat Bindings:** None
-
----
-
-## Planetary
-
-### PlanetaryShield
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `PlanetaryShield` |
-| Class | `PlanetaryShieldAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Planetary shield protection against superweapons. Toggled via generic `ACTIVATE_ABILITY`/`DEACTIVATE_ABILITY` orders. The `shield_active` field was removed; shield state is tracked in `planet.active_abilities['PlanetaryShield']`.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `energy_drain_rate` | float | No | 0 | Energy per turn while active |
-| `activation_time` | int | No | 1 | Ticks to activate |
-| `deactivation_time` | int | No | 1 | Ticks to deactivate |
-| `shield_hp` | float | No | 0 | Combat shield HP (placeholder) |
-| `shield_regen` | float | No | 0 | Combat regen (placeholder) |
-
-**Stat Bindings:** None
-
----
-
-### StrategicResourceGeneration
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `StrategicResourceGeneration` |
-| Class | `StrategicResourceGenerationAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Generates resources per turn on the strategy layer. Each instance generates a specific resource type at a given rate per turn (spread across 100 ticks). Works on any entity with facilities (planets, space stations, ships). Separate from combat `ResourceGeneration` which operates per second.
-
-Replaces the old `PlanetaryEnergyGenerator` (PROJ-238). Old `PlanetaryEnergyStorage` was also removed — reuse combat `ResourceStorage` instead.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `resource` | string | Yes | `""` | Resource type identifier (e.g. from resources.json) |
-| `generation_rate` | float | No | 0.0 | Amount produced per turn |
-
-**Stat Bindings:** None
-
----
-
-### GeologicStabilizer
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `GeologicStabilizer` |
-| Class | `GeologicStabilizerAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Prevents planet-destroying superweapons (IMPLODE_PLANET) within scope. Requires energy and manual activation — only provides protection when in the ACTIVE phase (checked via `require_active=True` in the scanner).
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
-| `activation_time` | int | No | 1 | Ticks to activate |
-| `deactivation_time` | int | No | 1 | Ticks to deactivate |
-| `scope` | string | No | `"sector"` | Protection range: planet, sector, system |
-
-**Allowed Scopes:** PLANET, SECTOR, SYSTEM
-
-**Stat Bindings:** None
-
-**Size mount scaling:** Production rates from `production_rates.json` are multiplied by the PlanetaryYard component's `simple_size_mount` value at runtime.
-
----
-
-### StellarStabilizer
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `StellarStabilizer` |
-| Class | `StellarStabilizerAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Prevents star-destroying superweapons (STELLERATE_STAR) and Dyson Sphere construction (CREATE_DYSON_SPHERE) within scope. Requires energy and manual activation — only provides protection when in the ACTIVE phase.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
-| `activation_time` | int | No | 1 | Ticks to activate |
-| `deactivation_time` | int | No | 1 | Ticks to deactivate |
-| `scope` | string | No | `"system"` | Protection range: sector, system |
-
-**Allowed Scopes:** SECTOR, SYSTEM
-
-**Stat Bindings:** None
-
----
-
-### WarpFieldStabilizer
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `WarpFieldStabilizer` |
-| Class | `WarpFieldStabilizerAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Prevents warp point creation (OPEN_WARP_POINT) and destruction (CLOSE_WARP_POINT) within scope. Requires energy and manual activation — only provides protection when in the ACTIVE phase.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
-| `activation_time` | int | No | 1 | Ticks to activate |
-| `deactivation_time` | int | No | 1 | Ticks to deactivate |
-| `scope` | string | No | `"system"` | Protection range: sector, system |
-
-**Allowed Scopes:** SECTOR, SYSTEM
-
-**Stat Bindings:** None
-
----
-
-### ResourceHarvestBooster
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ResourceHarvestBooster` |
-| Class | `ResourceHarvestBoosterAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Increases resource harvesting rate for a specific resource within scope. Multiplies `base_harvest_rate` of matching ResourceHarvester abilities.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `resource_type` | string | No | `""` | Resource to boost (e.g., "metals") |
-| `multiplier` | float | No | 1.0 | Harvest rate multiplier (e.g., 1.5 for 50% boost) |
-| `scope` | string | No | `"planet"` | Effect range |
-| `stack_group` | string | No | None | Stacking group (intra-group MAX, inter-group MULTIPLY) |
-
-**Allowed Scopes:** SELF, PLANET, SECTOR, SYSTEM, EMPIRE, ALLIED_EMPIRE
-
-**Stat Bindings:** None
-
----
-
-### BuildRateBooster
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `BuildRateBooster` |
-| Class | `BuildRateBoosterAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Increases construction/production rate within scope. Multiplies all build queue production rates.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `multiplier` | float | No | 1.0 | Build rate multiplier (e.g., 1.25 for 25% faster) |
-| `scope` | string | No | `"sector"` | Effect range |
-| `stack_group` | string | No | None | Stacking group |
-
-**Allowed Scopes:** SELF, PLANET, SECTOR, SYSTEM, EMPIRE, ALLIED_EMPIRE
-
-**Stat Bindings:** None
-
----
-
-### AtmosphereModifier
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `AtmosphereModifier` |
-| Class | `AtmosphereModifierAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Modifies a planet's atmosphere toward target gas compositions. Slowly adds or removes atmospheric gases each turn. The rate is in kg of gas that can be processed per turn; conversion to pressure change depends on the planet's surface area and gravity (`Pa_per_kg = gravity / surface_area`). Multiple facilities on the same planet stack their rates additively.
-
-Processed once per turn (not per tick) by `AtmosphereEngine`, after the 100-tick loop. See the [Atmosphere Modification Pipeline](strategy_layer.md#atmosphere-modification-pipeline) section in strategy_layer.md for the full processing algorithm.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `modification_rate` | float | No | 0.0 | kg of atmosphere added/removed per turn |
-
-**Allowed Scopes:** SELF only
-
-**Stat Bindings:** None
-
----
-
-### QualityImprovement
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `QualityImprovement` |
-| Class | `QualityImprovementAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Permanently improves resource deposit quality on a planet. Each turn, adds `improvement_rate` to the quality value of the specified resource. The change is permanent — persists even if the facility is later removed. Quality caps at 100.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `resource_type` | string | No | `""` | Which resource to improve (e.g., "metals") |
-| `improvement_rate` | float | No | 0.0 | Quality increase per turn |
-
-**Allowed Scopes:** SELF only
-
-**Stat Bindings:** None
-
----
-
-## Combat Modifiers
-
-### ShieldModifier
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `ShieldModifier` |
-| Class | `ShieldModifierAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Multiplies shield capacity for entities within scope. Values below 1.0 suppress shields; values above 1.0 boost them. Applied pre-battle by the combat modifier collector in `game/strategy/services/combat_modifier_collector.py` only when ACTIVE. Uses two-phase aggregation (intra-group MAX, inter-group MULTIPLY).
-
-Planetary complex variants are activatable (have `energy_drain_rate`/`activation_time`). Ship-mounted fleet variants can omit these fields to remain passive (always-on).
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `multiplier` | float | No | 1.0 | Shield capacity multiplier |
-| `scope` | string | No | `"allied_system"` | Effect range |
-| `stack_group` | string | No | None | Stacking group |
-| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active (0 = passive) |
-| `activation_time` | int | No | 0 | Ticks to activate (0 = passive/instant) |
-| `deactivation_time` | int | No | 0 | Ticks to deactivate |
-
-**Allowed Scopes:** SELF, FLEET, SECTOR, ALLIED_SECTOR, PLAYER_SECTOR, ENEMY_SECTOR, SYSTEM, ALLIED_SYSTEM, PLAYER_SYSTEM, ENEMY_SYSTEM
-
-**Stat Bindings:** None
-
----
-
-### DamageModifier
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `DamageModifier` |
-| Class | `DamageModifierAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Multiplies damage output for entities within scope. Same structure and aggregation as ShieldModifier. Applied pre-battle via `ship.damage_output_mult` only when ACTIVE. Same activatable/passive behavior as ShieldModifier.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `multiplier` | float | No | 1.0 | Damage output multiplier |
-| `scope` | string | No | `"allied_system"` | Effect range |
-| `stack_group` | string | No | None | Stacking group |
-| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active (0 = passive) |
-| `activation_time` | int | No | 0 | Ticks to activate (0 = passive/instant) |
-| `deactivation_time` | int | No | 0 | Ticks to deactivate |
-
-**Allowed Scopes:** SELF, FLEET, SECTOR, ALLIED_SECTOR, PLAYER_SECTOR, ENEMY_SECTOR, SYSTEM, ALLIED_SYSTEM, PLAYER_SYSTEM, ENEMY_SYSTEM
-
-**Stat Bindings:** None
-
----
-
-## Planet Modifiers
-
-### GravityModifier
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `GravityModifier` |
-| Class | `GravityModifierAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Modifies planet gravity when active. Requires energy and manual activation via ComponentActivationEngine. NOT permanent — gravity reverts to original when facility is deactivated or destroyed. Target set via `SetGravityTargetCommand`. Effect applied by `PlanetModifierEffectEngine`.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
-| `activation_time` | int | No | 1 | Ticks to activate |
-| `deactivation_time` | int | No | 1 | Ticks to deactivate |
-
-**Allowed Scopes:** SELF only
-
-**Stat Bindings:** None
-
----
-
-### WaterModifier
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `WaterModifier` |
-| Class | `WaterModifierAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Gradually changes planet water level toward target. PERMANENT — changes persist even if facility removed. Processed once per turn by `WaterEngine`, similar to AtmosphereEngine.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `modification_rate` | float | No | 0.0 | Fraction of water coverage change per turn |
-
-**Allowed Scopes:** SELF only
-
-**Stat Bindings:** None
-
----
-
-### RadiationShield
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `RadiationShield` |
-| Class | `RadiationShieldAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Provides artificial radiation shielding when active. NOT permanent — reverts to zero on deactivation. The `radiation_shielding` value is additive with the planet's natural `magnetic_field` in habitability calculations. Effect applied by `PlanetModifierEffectEngine`.
-
-**Data Format:** Dict
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
-| `activation_time` | int | No | 1 | Ticks to activate |
-| `deactivation_time` | int | No | 1 | Ticks to deactivate |
-| `max_shielding` | float | No | 1.0 | Maximum shielding strength |
-
-**Allowed Scopes:** SELF only
-
-**Stat Bindings:** None
-
----
-
-## Superweapons
-
-All superweapons share the same structure: boolean or dict with optional `action_time`. All are STRATEGIC layer, SELF scope only.
-
-### DestroyPlanet
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `DestroyPlanet` |
-| Class | `DestroyPlanet` |
-| Source | `superweapons.py` |
-
-Planet Imploder. Destroys a single planet.
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `action_time` | int | No | 1 | Ticks to execute |
-
----
-
-### DestroyStar
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `DestroyStar` |
-| Class | `DestroyStar` |
-| Source | `superweapons.py` |
-
-Stellerator. Destroys a star and everything in the system (ships, planets).
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `action_time` | int | No | 1 | Ticks to execute |
-
----
-
-### OpenWarpPoint
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `OpenWarpPoint` |
-| Class | `OpenWarpPoint` |
-| Source | `superweapons.py` |
-
-Warp Point Creator. Creates a new warp connection between star systems.
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `action_time` | int | No | 1 | Ticks to execute |
-
----
-
-### CloseWarpPoint
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `CloseWarpPoint` |
-| Class | `CloseWarpPoint` |
-| Source | `superweapons.py` |
-
-Warp Point Closer. Permanently closes a warp point.
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `action_time` | int | No | 1 | Ticks to execute |
-
----
-
-### CreateDysonSphere
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `CreateDysonSphere` |
-| Class | `CreateDysonSphere` |
-| Source | `superweapons.py` |
-
-Dyson Sphere Constructor. Builds a megastructure around a star.
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `action_time` | int | No | 1 | Ticks to execute |
-
----
-
-### SelfDestruct
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `SelfDestruct` |
-| Class | `SelfDestruct` |
-| Source | `superweapons.py` |
-
-Self-Destruct Device. Schedules ship for destruction.
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `action_time` | int | No | 1 | Ticks to execute |
-
----
-
-## Quick Reference: Registry Key to Class
-
-| Registry Key | Class | Category |
+## Agent Essentials
+
+- Runtime registry: `game/simulation/components/abilities/__init__.py::ABILITY_REGISTRY`.
+- Factory: `create_ability(name, component, data) -> Ability | None`.
+- Default-scope helper: `get_ability_default_scope(ability_name) -> str`; compilers and collectors must call this instead of assuming `"self"`.
+- Base classes and enums: `game/simulation/components/abilities/base.py`.
+- Modifier stat contract: `game/simulation/components/abilities/stat_keys.py`.
+- Ability-to-external-stat bridge: `game/simulation/combat/ability_stat_registry.py`.
+- Ship-stat extension point: `game/simulation/entities/stat_contributors/registry.py`.
+- Strategic source/effect pipeline: `game/strategy/services/ability_iterator.py`, `system_effects_collector.py`, `effect_ability_metadata.py`.
+- Design/facility ability inspection must use `game/strategy/services/component_inspector.py`; loaded designs usually store component IDs, with abilities resolved through the component registry.
+- Current stale-reference corrections: old counts such as 39, 53, or 56 are obsolete; `PodStorage`, `VehicleStorage`, and `MultiplexTracking` are typed marker abilities, not raw-dict stat reads.
+- `PlanetaryShield` and `StrategicResourceGeneration` still inherit the base combat-layer class metadata in live code, but gameplay consumes them as strategic component abilities.
+
+## JSON Data Shapes
+
+Ability data lives under each component's `abilities` mapping in `data/components.json`.
+
+| Shape | Example | Contract |
 |---|---|---|
-| `WeaponAbility` | WeaponAbility | Weapons |
-| `BeamWeaponAbility` | BeamWeaponAbility | Weapons |
-| `ProjectileWeaponAbility` | ProjectileWeaponAbility | Weapons |
-| `SeekerWeaponAbility` | SeekerWeaponAbility | Weapons |
-| `ShieldProjection` | ShieldProjection | Defense |
-| `ShieldRegeneration` | ShieldRegeneration | Defense |
-| `ToHitAttackModifier` | ToHitAttackModifier | Defense |
-| `ToHitDefenseModifier` | ToHitDefenseModifier | Defense |
-| `EmissiveArmor` | EmissiveArmor | Defense |
-| `ShieldRegeneratingArmor` | ShieldRegeneratingArmor | Defense |
-| `Armor` | Ability (lambda) | Defense |
-| `CombatPropulsion` | CombatPropulsion | Propulsion |
-| `ManeuveringThruster` | ManeuveringThruster | Propulsion |
-| `StrategicMovement` | StrategicMovement | Propulsion |
-| `WarpJump` | WarpJump | Propulsion |
-| `ResourceConsumption` | ResourceConsumption | Resources |
-| `ResourceStorage` | ResourceStorage | Resources |
-| `ResourceGeneration` | ResourceGeneration | Resources |
-| `CrewCapacity` | CrewCapacity | Crew |
-| `LifeSupportCapacity` | LifeSupportCapacity | Crew |
-| `CrewRequired` | CrewRequired | Crew |
-| `CargoStorage` | CargoStorage | Cargo |
-| `PodStorage` | PodStorageAbility | Cargo |
-| `VehicleLaunch` | VehicleLaunchAbility | Markers |
-| `CommandAndControl` | CommandAndControl | Markers |
-| `RequiresCommandAndControl` | RequiresCommandAndControl | Markers |
-| `RequiresCombatMovement` | RequiresCombatMovement | Markers |
-| `StructuralIntegrity` | StructuralIntegrity | Markers |
-| `ColonizePlanet` | ColonizePlanet | Colonization |
-| `ResourceHarvester` | ResourceHarvesterAbility | Harvester |
-| `LocalStorage` | LocalStorageAbility | Harvester |
-| `StagingYard` | StagingYardAbility | Harvester |
-| `PlanetaryYard` | PlanetaryYardAbility | Harvester |
-| `SpaceShipyard` | SpaceShipyardAbility | Harvester |
-| `PlanetaryShield` | PlanetaryShieldAbility | Planetary |
-| `StrategicResourceGeneration` | StrategicResourceGenerationAbility | Planetary |
-| `GeologicStabilizer` | GeologicStabilizerAbility | Planetary |
-| `StellarStabilizer` | StellarStabilizerAbility | Planetary |
-| `WarpFieldStabilizer` | WarpFieldStabilizerAbility | Planetary |
-| `ResourceHarvestBooster` | ResourceHarvestBoosterAbility | Planetary |
-| `BuildRateBooster` | BuildRateBoosterAbility | Planetary |
-| `AtmosphereModifier` | AtmosphereModifierAbility | Planetary |
-| `QualityImprovement` | QualityImprovementAbility | Planetary |
-| `ShieldModifier` | ShieldModifierAbility | Combat Modifiers |
-| `DamageModifier` | DamageModifierAbility | Combat Modifiers |
-| `GravityModifier` | GravityModifierAbility | Planet Modifiers |
-| `WaterModifier` | WaterModifierAbility | Planet Modifiers |
-| `RadiationShield` | RadiationShieldAbility | Planet Modifiers |
-| `DestroyPlanet` | DestroyPlanet | Superweapons |
-| `DestroyStar` | DestroyStar | Superweapons |
-| `OpenWarpPoint` | OpenWarpPoint | Superweapons |
-| `CloseWarpPoint` | CloseWarpPoint | Superweapons |
-| `CreateDysonSphere` | CreateDysonSphere | Superweapons |
-| `SelfDestruct` | SelfDestruct | Superweapons |
+| Boolean marker | `"CommandAndControl": true` | Presence matters; value often ignored. |
+| Scalar | `"CombatPropulsion": 1000` | Parsed as the primary numeric value. |
+| Dict | `"WarpJump": {"max_tonnage": 5000}` | Preferred shape for named fields, `scope`, `tags`, and `stack_group`. |
+| List | `"ResourceConsumption": [{"resource": "fuel", "amount": 1}]` | `AbilityManager` creates/syncs one ability instance per list item. |
+| Runtime formula | `"damage": "=20 * (1 - 0.00005 * range_to_target)"` | Weapons only; evaluated with `range_to_target` during combat. |
+| Load-time formula | `"max_tonnage": "=ship_class_mass"` | Evaluated during component recalculation with ship context. |
 
----
+`create_ability` returns `None` for unknown keys. If construction fails because data still contains formula strings that need ship context, it skips silently so the ability can be instantiated after formulas resolve. Other malformed data logs a warning.
 
-## Stat Key Reference
+## Core APIs And Invariants
 
-All modifier stat keys that affect abilities at runtime.
+### Ability Base Contract
 
-### Multiplicative (default 1.0)
+File: `game/simulation/components/abilities/base.py`
 
-| StatKey | Typical Consumers |
-|---------|-------------------|
-| MASS_MULT | Component mass |
-| HP_MULT | Component HP |
-| DAMAGE_MULT | WeaponAbility |
-| RANGE_MULT | WeaponAbility |
-| COST_MULT | Component cost |
-| THRUST_MULT | CombatPropulsion |
-| TURN_MULT | ManeuveringThruster |
-| STRATEGIC_MULT | StrategicMovement |
-| ENERGY_GEN_MULT | ResourceGeneration, ShieldRegeneration |
-| CAPACITY_MULT | ResourceStorage, ShieldProjection, CargoStorage, VehicleLaunch |
-| SHIELD_CAPACITY_MULT | ShieldProjection (stacked with CAPACITY_MULT) |
-| CREW_CAPACITY_MULT | CrewCapacity |
-| LIFE_SUPPORT_CAPACITY_MULT | LifeSupportCapacity |
-| CONSUMPTION_MULT | ResourceConsumption |
-| RELOAD_MULT | WeaponAbility |
-| ENDURANCE_MULT | SeekerWeaponAbility |
-| PROJECTILE_HP_MULT | SeekerWeaponAbility |
-| PROJECTILE_DAMAGE_MULT | SeekerWeaponAbility |
-| CREW_REQ_MULT | CrewRequired |
+```python
+layer: AbilityLayer = AbilityLayer.COMBAT
+allowed_scopes: list[AbilityScope] = [AbilityScope.SELF]
+default_scope: AbilityScope = AbilityScope.SELF
+STAT_BINDINGS: list[AbilityStatBinding] = []
+```
 
-### Additive (default 0.0)
+Instance behavior:
 
-| StatKey | Typical Consumers |
-|---------|-------------------|
-| MASS_ADD | Component mass |
-| ARC_ADD | WeaponAbility firing arc |
-| ACCURACY_ADD | BeamWeaponAbility base accuracy |
-| PROJECTILE_STEALTH_LEVEL | SeekerWeaponAbility stealth |
-| SHIELD_BONUS_ADD | Ship-level `max_shields`; added once per ship and scaled by external `shield_capacity_mult` in `ship_stats.py::_apply_aggregated_stats`. See [combat_simulation.md § Shield Stat Pipeline Ordering](combat_simulation.md#shield-stat-pipeline-ordering-proj-271--proj-272-phase-6) for the canonical formula. Typical source: strategic ShieldProjection auras (PROJ-271 Phase 1). |
+- `scope` comes from dict data `scope`, otherwise from `default_scope`.
+- Invalid scope names or unsupported scopes raise `ValidationException`.
+- `tags` and `stack_group` are parsed from dict data.
+- `sync_data(data)` updates raw data, tags, stack group, scope, and re-runs `_parse_attrs(data)`.
+- `get_effective_stat(stat_key, default=...)` composes ability-local `component.ability_stats[class_name]`, component-wide `component.stats`, and read-only `ship.external_stats`.
+- `*_mult` values multiply, `*_add` values add, and unknown key shapes prefer the external value when both local and external are present.
+- `get_primary_value()` is the numeric value aggregators consume. Marker abilities generally return `0.0` or `1.0`.
+- `get_ui_rows()` returns capability scanner/detail-panel rows.
 
-### Set/Override (default None)
+### Formula-Driven Data
 
-| StatKey | Typical Consumers |
-|---------|-------------------|
-| ARC_SET | WeaponAbility firing arc (overrides base value) |
+Any ability that parses numeric or string fields from `data` must parse them in `_parse_attrs(data)`, not only in `__init__`. The base class calls `_parse_attrs` from both construction and `sync_data`, so formulas re-evaluate correctly when a component is attached to a ship or receives a new ship-class context.
 
+Current production formulas in `data/components.json`:
 
----
-
-## PROJ-300..305 — Strategic-Layer Sector/System Abilities
-
-### EnvironmentalDamage (rate)
-
-Per-turn hull damage applied by storms, planet intrinsics, star intrinsics, warp points, or system archetypes. Damage flows through `environmental_hazard_engine.process_environmental_tick` per `aggregate_value` from `collect_sector_effects`.
-
-**Data fields:**
-- `rate`: float, hull HP damage per turn (>= 0).
-- `damage_type`: `'plasma' | 'radiation' | 'thermal' | 'environmental' | 'warp' | 'debris'` (free-form string; identifies the row group).
-- `scope`: `'sector'` (most uses) or `'system'` (star intrinsics like neutron-star radiation).
-
-**Stacking:** intra-group (same `damage_type`) MAX, inter-group SUM via `aggregate_rates`. Two radiation belts at the same hex: MAX(0.4, 0.5) = 0.5; plasma + radiation: 0.5 + 0.8 = 1.3 total per turn.
-
-### FuelDrain (rate)
-
-Per-turn fuel drain. Same aggregation rules as EnvironmentalDamage but with no sub-type (single group).
-
-### StrategicSpeedModifier (multiplier)
-
-Multiplies fleet strategic-map movement speed when the fleet is in the affected hex/system. Read by `fleet_movement_engine._get_effective_fleet_speed`.
-
-### ThrustModifier (multiplier)
-
-Multiplies effective combat thrust. Wired through `ABILITY_STAT_REGISTRY` to `external_stats['thrust_mult']` (PROJ-300 D14). Storms multiply per-provider (no shared `stack_group`).
-
-### IAbilitySource sources by kind
-
-| Source kind | Owner | Typical scopes | Generation |
+| Component | Ability | Field | Formula Type |
 |---|---|---|---|
-| facility | Empire (planet.owner_id) | sector / system | built by player |
-| storm | None (ownerless) | sector | rolled at galaxy gen (storm_generator) |
-| planet | None | sector | rolled at galaxy gen from `data/planet_types.json` per PlanetType (PROJ-301) |
-| star | None | system (most), sector at star hex | rolled from `data/star_types.json` per StarType (PROJ-302) |
-| warp_point | None | sector | rolled from `data/warp_point_types.json` per warp_type (PROJ-303) |
-| system | None | system | rolled from `data/system_archetypes.json`; ~15% of systems get an archetype (PROJ-304) |
-| fleet | Empire (fleet.owner_id) | allied_sector / sector / system / etc. | ship-component-driven; surfaces only when `set_fleet_lookups` registered (PROJ-305) |
+| `laser_cannon` | `BeamWeaponAbility` | `damage = "=20 * (1 - 0.00005 * range_to_target)"` | runtime weapon formula |
+| `warp_drive` | `WarpJump` | `max_tonnage = "=ship_class_mass"` | load-time ship-class formula |
+| `warp_drive` | `ResourceConsumption` | `[0].amount = "=5 * (ship_class_mass ** (2/3))"` | load-time ship-class formula |
+| `bridge` | `CrewRequired` | `=ceil(sqrt(ship_class_mass / 1000))` | load-time ship-class formula |
+| `central_complex_command` | `CrewRequired` | `=ceil(sqrt(ship_class_mass / 1000))` | load-time ship-class formula |
+| `emissive_armor` | `EmissiveArmor` | `value = "=8 * (ship_class_mass / 1000)**(1/3)"` | load-time ship-class formula |
+| `shield_regenerating_armor` | `ShieldRegeneratingArmor` | `value = "=5 * (ship_class_mass / 1000)**(1/3)"` | load-time ship-class formula |
 
-### Intrinsic-ability registry — optional `chance` field (FEAT-15)
+Formula warnings:
 
-Every ability declaration in the four registry templates consumed by `roll_intrinsic_abilities`
-(`data/planet_types.json`, `data/star_types.json`, `data/warp_point_types.json`, `data/system_archetypes.json`)
-may carry an optional `chance: float` field in `[0.0, 1.0]`. Default is `1.0` (always fires, no
-RNG draw). When `chance < 1.0`, `roll_intrinsic_abilities` (`game/strategy/services/ability_sources/intrinsic_roll.py`)
-draws `rng.random()` against the threshold and either emits the ability dict (rolled value
-plus the rest of the fields) or skips it entirely; the `chance` key is stripped from the emitted
-ability so it never leaks into runtime ability state.
+- Do not silently substitute a default for `ship_class_mass`; unresolved formulas must fail or wait for ship context.
+- Attach a component to its ship before adding modifiers or forcing recalculation when the component data references `ship_class_mass`.
+- `Component.clone()` preserves `self.ship` when cloning an attached component; palette/template clones remain detached and need a ship assigned before recalculation.
+- Weapon damage formulas use `FormulaEvaluator.safe_evaluate` with `range_to_target`; static weapon stats still use normal stat bindings.
 
-| Field | Type | Default | Effect |
+### AbilityManager
+
+File: `game/simulation/components/ability_manager.py`
+
+- Owns ability instances and an MRO-based lookup index.
+- `instantiate_and_index()` preserves existing instances when possible and calls `sync_data` to keep cooldown/stateful abilities alive while refreshing data-derived fields.
+- `get_ability("WeaponAbility")` and `get_abilities("WeaponAbility")` work polymorphically for `ProjectileWeaponAbility`, `BeamWeaponAbility`, and `SeekerWeaponAbility`.
+- `has_ability_with_tag("pdc")` is the tag-driven PDC check; avoid hardcoded PDC class-name branches.
+
+### Stacking
+
+Numeric strategic effects use two-phase aggregation:
+
+1. Same `stack_group`: reduce providers with MAX.
+2. Different groups: combine groups by effect kind.
+
+Combination rules:
+
+- Rates such as `EnvironmentalDamage` sum across groups.
+- Multipliers such as `ShieldModifier`, `DamageModifier`, and `StrategicSpeedModifier` multiply across groups.
+- Flat shield bonuses from `ShieldProjection` add across groups.
+- Missing `stack_group` makes each provider its own unique group, so those providers combine at phase 2.
+
+Validation areas: `tests/unit/simulation/combat/test_fleet_aura_provider_identity.py`, `tests/unit/strategy/services/test_combat_modifier_collector.py`, and `tests/unit/strategy/services/test_effect_ability_metadata.py`.
+
+### Scopes
+
+Enum: `AbilityScope` in `game/simulation/components/abilities/base.py`.
+
+| Scope | Meaning |
+|---|---|
+| `self` | Owner entity only. |
+| `fleet` | Same battle group/fleet. |
+| `sector` | One galaxy hex. |
+| `allied_sector` | Owner plus allies in one hex. |
+| `player_sector` | Owner only in one hex. |
+| `enemy_sector` | Non-owner entities in one hex. |
+| `system` | Whole star system. |
+| `allied_system` | Owner plus allies in the star system. |
+| `player_system` | Owner only in the star system. |
+| `enemy_system` | Non-owner entities in the star system. |
+| `planet` | Planet-wide. |
+| `empire` | Owning empire colonies. |
+| `allied_empire` | Owning empire plus allies. |
+
+Spatial precision matters: a star system is the radius-50 region around a star; a sector is one `HexCoord`. Orders and validators that target a planet, warp point, fleet, or local effect must validate sector precision when the target is sector-specific.
+
+Owner-aware scopes (`allied_*`, `player_*`, `enemy_*`, `allied_empire`) require a source with `owner_id`. Ownerless sources such as storms, stars, planets, warp points, and system archetypes should use neutral `sector` or `system` scope. The collector skips and logs ownerless sources that declare owner-aware scopes.
+
+## Stat Keys
+
+File: `game/simulation/components/abilities/stat_keys.py`
+
+`AbilityStatBinding(stat_key, attribute_name, operation, base_attribute=None)` supports `multiply`, `add`, and `set`. `base_attribute` defaults to `"_base_{attribute_name}"`.
+
+Multiplicative default `1.0`:
+
+`mass_mult`, `hp_mult`, `damage_mult`, `range_mult`, `cost_mult`, `thrust_mult`, `turn_mult`, `strategic_mult`, `energy_gen_mult`, `capacity_mult`, `shield_capacity_mult`, `crew_capacity_mult`, `life_support_capacity_mult`, `consumption_mult`, `reload_mult`, `endurance_mult`, `projectile_hp_mult`, `projectile_damage_mult`, `crew_req_mult`.
+
+Additive default `0.0`:
+
+`mass_add`, `arc_add`, `accuracy_add`, `projectile_stealth_level`, `shield_bonus_add`.
+
+Set/override default `None`:
+
+`arc_set`.
+
+`shield_bonus_add` is ship-level, not per-ability. It is read by `game/simulation/entities/ship_stats.py` and applied once per ship before external `shield_capacity_mult` scaling.
+
+## Strategic Effect Bridges
+
+### Ability To External Stat Registry
+
+File: `game/simulation/combat/ability_stat_registry.py`
+
+| Ability | External Stat Key | Operation | Value Field |
 |---|---|---|---|
-| `chance` | float in `[0.0, 1.0]` | `1.0` | Probability that the ability fires for this entity at galaxy generation. |
+| `ShieldProjection` | `shield_bonus_add` | add | `value` |
+| `ShieldModifier` | `shield_capacity_mult` | multiply | `multiplier` |
+| `DamageModifier` | `damage_mult` | multiply | `multiplier` |
+| `ThrustModifier` | `thrust_mult` | multiply | `multiplier` |
 
-**Determinism contract:** entries without `chance` consume **zero** extra RNG draws — adding the field
-to one registry (e.g. planets) does not shift the seeded RNG stream for the others (stars, warps,
-archetypes), so byte-identical seed determinism is preserved across registries that opt out.
+`emit_entries_for_ability(...)` returns `(team_id, ModifierEntry)` pairs. `enemy_sector` and `enemy_system` fan out to all non-owner teams; other scopes route to the owner team. Callers should import `OPPONENT_SCOPES` rather than reimplementing enemy-scope routing.
 
-**Per-galaxy effect (planets only, today):** dropping `chance` to ~0.1–0.25 on rare-flavour planet
-abilities reduces the proportion of "effectful" planets in a typical galaxy from ~50% to ~14% while
-keeping defining features (e.g. `DYSON_SPHERE` `EnvironmentalDamage` radiation) at `1.0`.
+Known external stat keys consumed downstream:
 
-**Schema validation:** `tests/integration/data/test_intrinsic_registries_coverage.py` enforces
-`0 <= chance <= 1` for every ability declaration in every registry that opts in to the field.
+`shield_bonus_add`, `shield_capacity_mult`, `damage_mult`, `thrust_mult`, `turn_mult`, `strategic_mult`, `capacity_mult`, `energy_gen_mult`, `crew_capacity_mult`, `life_support_capacity_mult`.
+
+### Strategic Effect Metadata
+
+File: `game/strategy/services/effect_ability_metadata.py`
+
+This is the current metadata registry for strategic effects. Older references to module-level `SYSTEM_EFFECT_ABILITIES`, `_RATE_ABILITIES`, or collector-local hardcoded lists are stale.
+
+| Ability | Kind | Grouping Field | Activation |
+|---|---|---|---|
+| `GeologicStabilizer` | multiplier | none | activatable |
+| `StellarStabilizer` | multiplier | none | activatable |
+| `WarpFieldStabilizer` | multiplier | none | activatable |
+| `ResourceHarvestBooster` | multiplier | `resource_type` | passive |
+| `QualityImprovement` | multiplier | `resource_type` | passive |
+| `BuildRateBooster` | multiplier | none | passive |
+| `ShieldModifier` | multiplier | none | per-entry activation fields allowed |
+| `DamageModifier` | multiplier | none | per-entry activation fields allowed |
+| `ThrustModifier` | multiplier | none | passive |
+| `StrategicSpeedModifier` | multiplier | none | passive |
+| `EnvironmentalDamage` | rate | `damage_type` | passive |
+| `FuelDrain` | rate | none | passive |
+
+Collectors:
+
+- `collect_system_effects(system, empire_id, registries=None)` filters system scopes.
+- `collect_sector_effects(system, hex_coord, empire_id, registries=None)` filters sector scopes.
+- `aggregate_value_or(effects, ability_name, default, **filters)` reads the aggregate or returns the default.
+
+## Ability Registry Quick Table
+
+Live keys from `ABILITY_REGISTRY`.
+
+| Key | Class | Source | Layer | Default Scope |
+|---|---|---|---|---|
+| `ColonizePlanet` | `ColonizePlanet` | `colonize.py` | strategic | `self` |
+| `ResourceConsumption` | `ResourceConsumption` | `resources.py` | combat | `self` |
+| `ResourceStorage` | `ResourceStorage` | `resources.py` | combat | `self` |
+| `ResourceGeneration` | `ResourceGeneration` | `resources.py` | combat | `self` |
+| `CombatPropulsion` | `CombatPropulsion` | `propulsion.py` | combat | `self` |
+| `ManeuveringThruster` | `ManeuveringThruster` | `propulsion.py` | combat | `self` |
+| `StrategicMovement` | `StrategicMovement` | `propulsion.py` | strategic | `self` |
+| `WarpJump` | `WarpJump` | `propulsion.py` | strategic | `self` |
+| `ShieldProjection` | `ShieldProjection` | `defense.py` | both | `self` |
+| `ShieldRegeneration` | `ShieldRegeneration` | `defense.py` | combat | `self` |
+| `VehicleLaunch` | `VehicleLaunchAbility` | `markers.py` | combat | `self` |
+| `MultiplexTracking` | `MultiplexTrackingAbility` | `markers.py` | combat | `self` |
+| `VehicleStorage` | `VehicleStorageAbility` | `markers.py` | combat | `self` |
+| `PodStorage` | `PodStorageAbility` | `markers.py` | combat | `self` |
+| `WeaponAbility` | `WeaponAbility` | `weapons.py` | combat | `self` |
+| `ProjectileWeaponAbility` | `ProjectileWeaponAbility` | `weapons.py` | combat | `self` |
+| `BeamWeaponAbility` | `BeamWeaponAbility` | `weapons.py` | combat | `self` |
+| `SeekerWeaponAbility` | `SeekerWeaponAbility` | `weapons.py` | combat | `self` |
+| `CommandAndControl` | `CommandAndControl` | `markers.py` | combat | `self` |
+| `CrewCapacity` | `CrewCapacity` | `crew.py` | combat | `self` |
+| `LifeSupportCapacity` | `LifeSupportCapacity` | `crew.py` | combat | `self` |
+| `CrewRequired` | `CrewRequired` | `crew.py` | combat | `self` |
+| `ToHitAttackModifier` | `ToHitAttackModifier` | `defense.py` | combat | `self` |
+| `ToHitDefenseModifier` | `ToHitDefenseModifier` | `defense.py` | combat | `self` |
+| `EmissiveArmor` | `EmissiveArmor` | `defense.py` | combat | `self` |
+| `ShieldRegeneratingArmor` | `ShieldRegeneratingArmor` | `defense.py` | combat | `self` |
+| `Armor` | `Ability` lambda | `__init__.py` | combat marker | `self` |
+| `RequiresCommandAndControl` | `RequiresCommandAndControl` | `markers.py` | combat | `self` |
+| `RequiresCombatMovement` | `RequiresCombatMovement` | `markers.py` | combat | `self` |
+| `StructuralIntegrity` | `StructuralIntegrity` | `markers.py` | combat | `self` |
+| `ResourceHarvester` | `ResourceHarvesterAbility` | `harvester.py` | combat metadata; strategic use | `self` |
+| `SpaceShipyard` | `SpaceShipyardAbility` | `harvester.py` | combat metadata; strategic use | `self` |
+| `PlanetaryYard` | `PlanetaryYardAbility` | `harvester.py` | combat metadata; strategic use | `self` |
+| `StagingYard` | `StagingYardAbility` | `harvester.py` | combat metadata; strategic use | `self` |
+| `LocalStorage` | `LocalStorageAbility` | `harvester.py` | combat metadata; strategic use | `self` |
+| `CargoStorage` | `CargoStorage` | `cargo.py` | strategic | `self` |
+| `PlanetaryShield` | `PlanetaryShieldAbility` | `planetary.py` | combat metadata; strategic use | `self` |
+| `StrategicResourceGeneration` | `StrategicResourceGenerationAbility` | `planetary.py` | combat metadata; strategic use | `self` |
+| `GeologicStabilizer` | `GeologicStabilizerAbility` | `planetary.py` | strategic | `sector` |
+| `StellarStabilizer` | `StellarStabilizerAbility` | `planetary.py` | strategic | `system` |
+| `WarpFieldStabilizer` | `WarpFieldStabilizerAbility` | `planetary.py` | strategic | `system` |
+| `ResourceHarvestBooster` | `ResourceHarvestBoosterAbility` | `planetary.py` | strategic | `planet` |
+| `BuildRateBooster` | `BuildRateBoosterAbility` | `planetary.py` | strategic | `sector` |
+| `AtmosphereModifier` | `AtmosphereModifierAbility` | `planetary.py` | strategic | `self` |
+| `QualityImprovement` | `QualityImprovementAbility` | `planetary.py` | strategic | `self` |
+| `ShieldModifier` | `ShieldModifierAbility` | `planetary.py` | strategic | `allied_system` |
+| `DamageModifier` | `DamageModifierAbility` | `planetary.py` | strategic | `allied_system` |
+| `GravityModifier` | `GravityModifierAbility` | `planetary.py` | strategic | `self` |
+| `WaterModifier` | `WaterModifierAbility` | `planetary.py` | strategic | `self` |
+| `RadiationShield` | `RadiationShieldAbility` | `planetary.py` | strategic | `self` |
+| `ThrustModifier` | `ThrustModifierAbility` | `planetary.py` | strategic | `sector` |
+| `StrategicSpeedModifier` | `StrategicSpeedModifierAbility` | `planetary.py` | strategic | `sector` |
+| `EnvironmentalDamage` | `EnvironmentalDamageAbility` | `planetary.py` | strategic | `sector` |
+| `FuelDrain` | `FuelDrainAbility` | `planetary.py` | strategic | `sector` |
+| `DestroyPlanet` | `DestroyPlanet` | `superweapons.py` | strategic | `self` |
+| `DestroyStar` | `DestroyStar` | `superweapons.py` | strategic | `self` |
+| `OpenWarpPoint` | `OpenWarpPoint` | `superweapons.py` | strategic | `self` |
+| `CloseWarpPoint` | `CloseWarpPoint` | `superweapons.py` | strategic | `self` |
+| `CreateDysonSphere` | `CreateDysonSphere` | `superweapons.py` | strategic | `self` |
+| `SelfDestruct` | `SelfDestruct` | `superweapons.py` | strategic | `self` |
+
+## Ability Details By Family
+
+### Weapons
+
+Source: `game/simulation/components/abilities/weapons.py`.
+
+| Key | Parameters | Stat Bindings | Notes |
+|---|---|---|---|
+| `WeaponAbility` | `damage` required, `range` required, `reload=1.0`, `firing_arc=360`, `facing_angle=0`, `tags=[]` | `damage_mult -> damage`, `range_mult -> range`, `reload_mult -> reload_time`, `arc_set -> firing_arc`, `arc_add -> firing_arc` | Base weapon; damage/range/reload can be formulas. |
+| `ProjectileWeaponAbility` | weapon params plus `projectile_speed=500` | inherits weapon bindings | Unguided projectile. Runtime speed is scaled in firing logic. |
+| `BeamWeaponAbility` | weapon params plus `accuracy_falloff=0.001`, `base_accuracy=1.0`, `pdc_valid_targets=["MISSILE", "FIGHTER"]` | inherits weapon bindings plus `accuracy_add -> base_accuracy` | Uses sigmoid hit chance; PDC behavior is tag/target metadata driven. |
+| `SeekerWeaponAbility` | weapon params plus `projectile_speed=500`, `endurance=3.0`, `turn_rate=30.0`, `to_hit_defense=0.0`, `projectile_damage=damage`, `projectile_hp=1.0`, `projectile_stealth=0.0` | inherits weapon bindings plus `endurance_mult`, `projectile_damage_mult`, `projectile_hp_mult`, `projectile_stealth_level` | Guided missile; ignores firing arc. If range is absent, derives range from speed and endurance. |
+
+Weapon family dispatch is registry-backed in `game/simulation/combat/weapon_registry.py` and `game/simulation/combat/families/`. Adding a new weapon family should add a family handler and metadata, not central branches in firing, targeting, collision, or projectile manager code.
+
+### Defense And Hit Modifiers
+
+Source: `game/simulation/components/abilities/defense.py`.
+
+| Key | Parameters | Allowed Scopes | Stat Bindings | Notes |
+|---|---|---|---|---|
+| `ShieldProjection` | scalar or `value`; strategic variants may include `scope`, `energy_drain_rate=0`, `activation_time=0`, `deactivation_time=0` | `self`, `fleet`, `player_sector`, `allied_sector`, `player_system`, `allied_system` | `capacity_mult`, `shield_capacity_mult` both multiply capacity | Combat self shield capacity; strategic scoped flat shield bonus through external stats. |
+| `ShieldRegeneration` | scalar or `value` | `self` | `energy_gen_mult -> rate` | Shield regen per second. |
+| `ToHitAttackModifier` | scalar or `value`, optional `scope`, `stack_group` | `self`, `fleet`, `system`, `allied_system`, `empire` | none | Static attack score modifier. |
+| `ToHitDefenseModifier` | scalar or `value`, optional `scope`, `stack_group` | `self`, `fleet`, `system`, `allied_system`, `empire` | none | Static defense/evasion score modifier. |
+| `EmissiveArmor` | scalar or `value` | `self` | none | Integer flat damage ignored per hit. |
+| `ShieldRegeneratingArmor` | scalar or `value` | `self` | none | Integer overflow absorption that recharges shields by absorbed amount. |
+| `Armor` | any | marker | none | Dummy tag/existence ability. |
+
+Damage pipeline order: shields, emissive armor, shield-regenerating armor, hull.
+
+### Propulsion
+
+Source: `game/simulation/components/abilities/propulsion.py`.
+
+| Key | Parameters | Allowed Scopes | Stat Bindings | Notes |
+|---|---|---|---|---|
+| `CombatPropulsion` | scalar thrust | `self` | `thrust_mult -> thrust_force` | Tactical thrust. |
+| `ManeuveringThruster` | scalar turn rate | `self` | `turn_mult -> turn_rate` | Tactical rotation. |
+| `StrategicMovement` | scalar movement points | `self`, `allied_sector`, `allied_system` | `strategic_mult -> movement_points` | Strategy-map mobility; can be scoped as tug/tractor-style support. |
+| `WarpJump` | scalar max tonnage, or dict `max_tonnage`, `energy_cost=0` | `self` | none | Warp-capable only when ship mass is within `max_tonnage` and storage can cover warp resource costs. |
+
+Warp checks use `component_inspector.has_warp_capability(ship)` and calculated stats: `mass`, `warp_max_tonnage`, `warp_resource_costs`, `resource_storage`.
+
+### Resources
+
+Source: `game/simulation/components/abilities/resources.py`.
+
+| Key | Parameters | Stat Bindings | Notes |
+|---|---|---|---|
+| `ResourceConsumption` | `resource`, `amount`, `trigger="constant"`; triggers include `constant`, `activation`, `strategic_per_hex` | `consumption_mult -> amount` | Constant consumption is per second in combat; strategic trigger exposes per-hex cost. |
+| `ResourceStorage` | `resource`, `amount` | `capacity_mult -> max_amount` | Adds storage capacity for the resource. |
+| `ResourceGeneration` | `resource`, `amount` | `energy_gen_mult -> rate` | Combat per-second generation. |
+
+### Crew, Cargo, Launch, And Markers
+
+Sources: `crew.py`, `cargo.py`, `markers.py`.
+
+| Key | Parameters | Stat Bindings | Notes |
+|---|---|---|---|
+| `CrewCapacity` | scalar amount or `value` | `crew_capacity_mult -> amount` | Integer crew capacity. |
+| `LifeSupportCapacity` | scalar amount or `value` | `life_support_capacity_mult -> amount` | Integer supported crew. |
+| `CrewRequired` | scalar amount or `value`/`amount` | `crew_req_mult -> amount` | Also scales by `sqrt(mass_mult)` internally; `mass_mult` is intentionally not a `STAT_BINDINGS` entry. |
+| `CargoStorage` | scalar capacity, or dict `cargo_type="generic"`, `capacity` | `capacity_mult -> capacity` | Strategic cargo; `passengers` is used for population transport. |
+| `VehicleLaunch` | `fighter_class="Fighter (Small)"`, `capacity=0`, `cycle_time=5.0`, `max_launch_mass=0.0` | `capacity_mult -> capacity` | Launch bay; `max_launch_mass` is typed and additive. |
+| `VehicleStorage` | scalar capacity, or dict `capacity` | none | Adds fighter storage capacity. |
+| `PodStorage` | scalar mass, or dict `capacity_mass` | none | Adds pod mass capacity; single attribute only. |
+| `MultiplexTracking` | scalar slots, or dict `slots` | none | Adds max target slots. |
+| `CommandAndControl` | marker | none | Provides command capability and highest crew priority. |
+| `RequiresCommandAndControl` | marker | none | Component is non-operational unless another active C&C component exists. |
+| `RequiresCombatMovement` | marker | none | Component requires combat propulsion. |
+| `StructuralIntegrity` | marker | none | Hull structural marker. |
+
+Crew priority defaults in `CREW_PRIORITY_REGISTRY`: `CommandAndControl=0`, `CombatPropulsion=1`, `ManeuveringThruster=1`, `WeaponAbility=2`, fallback `3`.
+
+### Colonization
+
+Source: `game/simulation/components/abilities/colonize.py`.
+
+`ColonizePlanet` is a strategic self-scope ability. Data is string shorthand such as `"ICE_DWARF"` or dict fields `planet_type` and `action_time=1`. It enables the colonization order flow for matching planet types.
+
+### Harvester, Storage, And Construction
+
+Source: `game/simulation/components/abilities/harvester.py`.
+
+| Key | Parameters | Notes |
+|---|---|---|
+| `ResourceHarvester` | `resource_type`, `base_harvest_rate=0.0` | Planet resource harvesting source. |
+| `LocalStorage` | `resource_type`, `capacity=0.0` | Local colony stockpile capacity; `storage_mult` can affect recalculation. |
+| `StagingYard` | scalar mass or dict `capacity_mass` | Planet-side storage for assembled vehicles/items. |
+| `PlanetaryYard` | marker | Enables base planetary construction queue. |
+| `SpaceShipyard` | `construction_speed_bonus=1.0`, `max_ship_mass=100000`, `production_rates={}` | Enables ship construction at colonies. |
+
+These classes inherit combat default metadata in code, but current gameplay use is strategic/colony construction.
+
+### Planetary And Strategic Abilities
+
+Source: `game/simulation/components/abilities/planetary.py`.
+
+| Key | Parameters | Allowed Scopes | Notes |
+|---|---|---|---|
+| `PlanetaryShield` | `energy_drain_rate=0`, `activation_time=1`, `deactivation_time=1`, `shield_hp=0`, `shield_regen=0` | code default `self` | Activatable shield marker; blocks planet destroyers when active. |
+| `StrategicResourceGeneration` | `resource`, `generation_rate=0` | code default `self` | Strategic per-turn resource generation. |
+| `GeologicStabilizer` | `energy_drain_rate=0`, `activation_time=1`, `deactivation_time=1`, `scope` | `planet`, `sector`, `system`; default `sector` | Blocks planet-destroying superweapons in scope when active. |
+| `StellarStabilizer` | same activation fields | `sector`, `system`; default `system` | Blocks star destroy and Dyson sphere actions in scope when active. |
+| `WarpFieldStabilizer` | same activation fields | `sector`, `system`; default `system` | Blocks open/close warp point actions in scope when active. |
+| `ResourceHarvestBooster` | `resource_type`, `multiplier=1.0`, `scope`, `stack_group` | `self`, `planet`, `sector`, `system`, `empire`, `allied_empire`; default `planet` | Multiplies matching resource harvest. |
+| `BuildRateBooster` | `multiplier=1.0`, `scope`, `stack_group` | `self`, `planet`, `sector`, `system`, `empire`, `allied_empire`; default `sector` | Multiplies build queue production rates. |
+| `AtmosphereModifier` | `modification_rate=0.0` | `self` | Processes atmosphere kg/turn toward target gas composition. Pressure conversion: `Pa_per_kg = gravity / surface_area`. Multiple facilities stack additively. PERMANENT (persists if facility removed). Run once per turn by `AtmosphereEngine`. |
+| `QualityImprovement` | `resource_type`, `improvement_rate=0.0` | `self` | Permanent deposit quality increase per turn; caps at quality 100. |
+| `GravityModifier` | activation fields | `self` | Target gravity set via `SetGravityTargetCommand`; effect reverts to original on deactivation or facility destruction (NOT permanent). Applied by `PlanetModifierEffectEngine`. |
+| `WaterModifier` | `modification_rate=0.0` | `self` | PERMANENT change to planet water coverage; persists if facility removed. Processed once per turn by `WaterEngine`. |
+| `RadiationShield` | activation fields, `max_shielding=1.0` | `self` | Artificial radiation shielding while active; reverts to zero on deactivation (NOT permanent). `radiation_shielding` is additive with the planet's natural `magnetic_field` in habitability calculations. |
+
+### Combat Modifiers From Strategic Sources
+
+Source: `planetary.py`; bridge: `ability_stat_registry.py`; collector: `combat_modifier_collector.py`.
+
+| Key | Parameters | Allowed Scopes | External Effect |
+|---|---|---|---|
+| `ShieldModifier` | `multiplier=1.0`, `scope`, `stack_group`, `energy_drain_rate=0`, `activation_time=0`, `deactivation_time=0` | `self`, `fleet`, sector/system allied/player/enemy variants | Emits `shield_capacity_mult`; default scope `allied_system`. |
+| `DamageModifier` | same shape | same scopes | Emits `damage_mult`; default scope `allied_system`. |
+| `ThrustModifier` | `multiplier=1.0`, `scope` | storm scopes: `self`, sector/system allied/player/enemy variants | Emits `thrust_mult`. |
+| `StrategicSpeedModifier` | `multiplier=1.0`, `scope` | same storm scopes | Read by fleet movement speed calculation through sector effects. |
+
+Activation rule: if ability data carries activation fields, active state is consulted; otherwise the effect is passive/always-on.
+
+### Strategic Environmental Rates
+
+Source: `planetary.py`; collector: `system_effects_collector.py`; consumers include `environmental_hazard_engine.py` and `fleet_movement_engine.py`.
+
+| Key | Parameters | Aggregation | Notes |
+|---|---|---|---|
+| `EnvironmentalDamage` | `rate=0.0`, `damage_type="environmental"`, `scope` | Same `damage_type` MAX, different types SUM | Per-turn hull damage. `damage_type` is free-form; known values: `plasma`, `radiation`, `thermal`, `environmental`, `warp`, `debris`. Storms typically use `sector` scope; star intrinsics like neutron-star radiation use `system`. Consumed by `environmental_hazard_engine.process_environmental_tick`. |
+| `FuelDrain` | `rate=0.0`, `scope` | Single group; rates aggregate via rate rules | Per-turn fuel drain. |
+
+Intrinsic source templates can include `chance` in `[0.0, 1.0]`. `game/strategy/services/ability_sources/intrinsic_roll.py::roll_intrinsic_abilities` removes `chance` from emitted runtime data. Missing `chance` consumes no RNG draw, preserving seeded determinism for registries that do not opt in.
+
+| File | Source Kind |
+|---|---|
+| `data/planet_types.json` | planet |
+| `data/star_types.json` | star |
+| `data/warp_point_types.json` | warp_point |
+| `data/system_archetypes.json` | system |
+
+Runtime source adapters:
+
+| Source Kind | Adapter |
+|---|---|
+| facility | `game/strategy/services/ability_sources/facility.py` |
+| storm | `game/strategy/services/ability_sources/storm.py` |
+| planet | `game/strategy/services/ability_sources/planet_intrinsic.py` |
+| star | `game/strategy/services/ability_sources/star.py` |
+| warp_point | `game/strategy/services/ability_sources/warp_point.py` |
+| system | `game/strategy/services/ability_sources/system_archetype.py` |
+| fleet | `game/strategy/services/ability_sources/fleet.py` |
+
+### Superweapons
+
+Source: `game/simulation/components/abilities/superweapons.py`.
+
+All are strategic, self-scope marker abilities. Data is boolean marker or dict with `action_time=1`. They return `0.0` primary value and have no stat bindings.
+
+| Key | Action |
+|---|---|
+| `DestroyPlanet` | Destroys a single planet. |
+| `DestroyStar` | Destroys a star and system contents per strategy engine rules. |
+| `OpenWarpPoint` | Creates a warp connection. |
+| `CloseWarpPoint` | Closes a warp connection. |
+| `CreateDysonSphere` | Builds a Dyson sphere around a star. |
+| `SelfDestruct` | Schedules ship destruction. |
+
+## Ship Stat Contributor Registry
+
+File: `game/simulation/entities/stat_contributors/registry.py`.
+
+`STAT_CONTRIBUTOR_REGISTRY.iter_for(comp)` is the unified Phase-3 ship-stat pipeline. Entries bind an ability key to `contributor(ship, comp, accumulator) -> None`.
+
+Default built-ins:
+
+| Domain | Phase Order | Abilities |
+|---|---:|---|
+| movement | 10 | `CombatPropulsion`, `StrategicMovement`, `WarpJump`, `ManeuveringThruster` |
+| defense | 20 | `Armor`, `ShieldProjection`, `ShieldRegeneration` |
+| hangar | 40 | `VehicleLaunch` |
+| command | 50 | `MultiplexTracking` |
+
+Registration API:
+
+```python
+handle = register_stat_contributor(
+    "MyAbility",
+    my_contributor,
+    policy=RegistrationConflictPolicy.REPLACE_WARN,
+    phase_order=99,
+)
+unregister_stat_contributor(handle)
+reset_stat_contributor_registry()
+```
+
+Conflict policies:
+
+| Policy | Behavior |
+|---|---|
+| `REPLACE_WARN` | Default; replaces active entry and logs. |
+| `REPLACE_SILENT` | Replaces without log. |
+| `APPEND` | Coexists with existing/default entry. |
+| `ERROR` | Raises on conflict. |
+
+Default entries cannot be unregistered by handle; reset clears and reseeds defaults. The root test fixture resets this registry around tests.
+
+## Ability Inspection And Registry Lookup
+
+File: `game/strategy/services/component_inspector.py`.
+
+Use these helpers instead of hand-reading `comp.get("abilities", {})`:
+
+- `get_component_abilities(comp_def) -> dict`
+- `extract_abilities_from_component(comp, registries) -> dict`
+- `iterate_design_components(design_data, component_registry)`
+- `ship_has_ability(ship, ability_name, component_registry) -> bool`
+- `find_ship_with_ability(fleet_ships, ability_name, component_registry)`
+- `count_ability(ship, ability_name, component_registry) -> int`
+- `list_ship_abilities(ship, component_registry) -> list[str]`
+- `get_ability_list(abilities, ability_name) -> list[dict]`
+- `iter_facility_ability_entries(facility, ability_name, registries=None)`
+- `has_warp_capability(ship) -> bool`
+
+Reason: facility and ship design data often stores component IDs. The abilities live in the component registry. Inline-only checks silently miss registry-defined abilities.
+
+## Extension Guidance
+
+### Add A New Ability
+
+1. Add or extend a module under `game/simulation/components/abilities/`.
+2. Subclass `Ability`, `SimpleMultiplierAbility`, `StaticValueAbility`, or a domain base.
+3. Set `layer`, `allowed_scopes`, `default_scope`, and `STAT_BINDINGS`.
+4. Parse data-derived attributes in `_parse_attrs(data)` whenever possible.
+5. Implement `recalculate()` if stats affect runtime attributes.
+6. Implement `get_primary_value()` and concise `get_ui_rows()`.
+7. Register the key in `ABILITY_REGISTRY` and export the class from `__all__`.
+8. Add focused tests under `tests/unit/simulation/components/abilities/` and integration tests if strategy/combat pipelines consume it.
+9. If data-driven content uses the ability, update `data/components.json` and relevant design validation/golden tests.
+
+### Add A New Stat-Bound Ability
+
+- Add any new stat key to `StatKey`.
+- Add `AbilityStatBinding` entries on the ability class.
+- Ensure defaults match key shape: `*_mult` defaults to `1.0`, `*_add` defaults to `0.0`, set keys default to `None`.
+- If ship external stats should affect it, add the key to `KNOWN_EXTERNAL_STAT_KEYS`.
+
+### Add A New Strategic Combat-Effect Ability
+
+1. Add the ability class and registry key.
+2. Add an `AbilityStatMapping` to `ABILITY_STAT_REGISTRY`.
+3. Add the emitted stat key to `KNOWN_EXTERNAL_STAT_KEYS`.
+4. Ensure compilers/collectors call `emit_entries_for_ability`, not local mappings.
+5. Add content coverage so registry tests see a real design using the mapping.
+
+### Add A New Strategic System/Sector Effect
+
+1. Add the ability class in `planetary.py` or a new strategic ability module.
+2. Add metadata to `EFFECT_ABILITY_METADATA`.
+3. Choose `kind`: `rate` uses rate aggregation; `multiplier` uses multiplier aggregation.
+4. Set `grouping_key_field` when independent instances need separate display/aggregation groups.
+5. Ensure ownerless generated sources use neutral scopes only (`sector`/`system`).
+6. Add tests for collector output, aggregation, display naming, and consuming engine behavior.
+
+### Add A New Ship-Stat Contributor
+
+1. Write `def contribute_x(ship, comp, acc) -> None`.
+2. Register with `register_stat_contributor("AbilityKey", contribute_x, phase_order=...)`.
+3. Use `APPEND` to coexist with built-ins, `REPLACE_*` to override, or `ERROR` for strict tests.
+4. Capture the returned handle for cleanup, or rely on `reset_stat_contributor_registry()` in tests.
+
+### Add A New Activatable Planet Ability
+
+- If component data carries `activation_time`, `PlanetAbilitiesController.scan_abilities()` auto-discovers it for the abilities window.
+- Add persistent energy handling to `_ACTIVATABLE_ABILITIES` in `game/strategy/engine/planet_energy_engine.py`.
+- Add display text to `_ACTIVATABLE_DISPLAY_NAMES` in `game/ui/screens/strategy_detail_fmt.py`.
+- If CamelCase humanization is not acceptable, add an override in `ABILITY_DISPLAY_NAME_OVERRIDES` in `game/ui/screens/planet_abilities_controller.py`.
+- If it needs a dedicated environment editor, add the editor window, `ENVIRONMENT_EDITORS` entry, event-router method, and window-manager wiring.
+
+## Tests And Validation Pointers
+
+Focused test areas:
+
+- Ability construction/scopes: `tests/unit/simulation/components/abilities/`
+- Legacy ability unit coverage: `tests/unit/abilities/`
+- Modifier and binding behavior: `tests/unit/modifiers/`
+- Formula skip and refresh: `tests/unit/simulation/components/test_create_ability_formula_skip.py`, `tests/integration/test_design_load_warp_capability.py`
+- External stat bridge: `tests/unit/simulation/combat/test_ability_stat_registry.py`
+- Fleet aura stacking: `tests/unit/simulation/combat/test_fleet_aura_provider_identity.py`
+- Ship stat contributors: `tests/unit/simulation/entities/stat_contributors/`, `tests/unit/simulation/entities/test_stat_contributor_extension.py`
+- Strategic source adapters: `tests/unit/strategy/services/ability_sources/`
+- Strategic effects: `tests/unit/strategy/services/test_effect_ability_metadata.py`, `test_effect_ability_display.py`, `test_ability_iterator.py`, `test_combat_modifier_collector.py`
+- Data schemas and intrinsic `chance`: `tests/integration/data/test_intrinsic_registries_coverage.py`
+- Strategic ability integration: `tests/integration/test_strategic_abilities.py`
+- Combat integration for strategic modifiers: `tests/integration/strategy/combat/test_suppressor_effects.py`, `test_storm_shield_interference.py`
+
+Common commands:
+
+```bash
+pytest tests/unit/simulation/components/abilities/
+pytest tests/unit/simulation/components/test_create_ability_formula_skip.py
+pytest tests/integration/test_design_load_warp_capability.py
+pytest tests/unit/simulation/combat/test_ability_stat_registry.py
+pytest tests/unit/simulation/entities/stat_contributors/
+pytest tests/unit/strategy/services/ability_sources/
+pytest tests/unit/strategy/services/test_effect_ability_metadata.py tests/unit/strategy/services/test_ability_iterator.py
+pytest tests/integration/test_strategic_abilities.py
+python Tools/test_sharded/test_sharded.py
+```

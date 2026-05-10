@@ -37,6 +37,7 @@ from game.strategy.config.economy_config import (
 from game.strategy.interfaces.engines import IOrganicsConsumptionEngine
 
 if TYPE_CHECKING:
+    from game.core.protocols import IPlanetMutator
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet
 
@@ -58,8 +59,22 @@ class OrganicsConsumptionEngine(IOrganicsConsumptionEngine):
     organics. See module docstring for the rename-deferral rationale.
     """
 
-    def __init__(self, economy_config: Optional[EconomyConfig] = None) -> None:
+    def __init__(
+        self,
+        economy_config: Optional[EconomyConfig] = None,
+        planet_mutator: Optional['IPlanetMutator'] = None,
+    ) -> None:
         self._economy = economy_config if economy_config is not None else get_default_economy_config()
+        self._planet_mutator = planet_mutator
+
+    def _get_planet_mutator(self) -> 'IPlanetMutator':
+        """Lazy-default the planet mutator (PROJ-370 Phase 3)."""
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
 
     def _validate_tick_inputs(self, empires: List['Empire']) -> None:
         """PROJ-251: Validate preconditions before mutating state."""
@@ -104,5 +119,8 @@ class OrganicsConsumptionEngine(IOrganicsConsumptionEngine):
 
                 available = colony.stockpile.get(resource_id, 0.0)
                 supplied = min(available, needed)
-                colony.stockpile[resource_id] = available - supplied
+                # PROJ-370 Phase 3: route stockpile write through IPlanetMutator.
+                self._get_planet_mutator().set_stockpile_amount(
+                    colony, resource_id, available - supplied,
+                )
                 cfg.last_consumption_ratios[resource_id] = supplied / needed

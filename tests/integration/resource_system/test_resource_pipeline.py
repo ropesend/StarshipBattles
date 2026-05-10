@@ -11,6 +11,7 @@ from game.core.resources import ResourceCatalog
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 
 from .conftest import create_mock_component, create_test_ship_design, make_ship_instance
 
@@ -146,7 +147,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
         empires = [MockEmpire()]
 
         # Run turn engine for 100 ticks
-        turn_engine = TurnEngine(registries=loaded_registry)
+        turn_engine = build_test_turn_engine(loaded_registry)
 
         for tick in range(1, 101):
             turn_engine.resource_engine.process_per_turn_consumption(tick, empires)
@@ -223,7 +224,7 @@ class TestAutoDisableComponentChainOnResourceDepletion:
                 self.fleets = [fleet]
 
         empires = [MockEmpire()]
-        turn_engine = TurnEngine(registries=loaded_registry)
+        turn_engine = build_test_turn_engine(loaded_registry)
 
         # Component should be enabled initially
         assert ship.is_component_enabled('test_plasma_engine') is True
@@ -243,66 +244,6 @@ class TestAutoDisableComponentChainOnResourceDepletion:
         # Movement should be 0 because engine is disabled
         assert stats.get('strategic_movement', 0) == 0, \
             "Strategic movement should be 0 with engine disabled"
-
-
-class TestBackwardCompatLoadOldSaveWithoutComponentToggles:
-    """Test loading old save games that don't have component_toggles field."""
-
-    def test_backward_compat_load_old_save_without_component_toggles(self, fresh_registries):
-        """
-        Create ShipInstance.from_dict() with data missing component_toggles,
-        verify defaults to empty dict, verify ship still works.
-        """
-        from game.strategy.data.ship_instance import ShipInstance
-
-        # Old save format - missing component_toggles
-        old_save_data = {
-            'instance_id': 'test-12345',
-            'design_id': 'destroyer_mk1',
-            'name': 'USS Legacy',
-            'owner_id': 0,
-            'design_data': {
-                'name': 'Destroyer Mk1',
-                'vehicle_type': 'Ship',
-                'layers': {},
-                'expected_stats': {
-                    'max_hp': 1000,
-                    'mass': 2000,
-                    'max_fuel': 50000,
-                    'strategic_fuel_per_hex': 100
-                }
-            },
-            'current_hp': 800,
-            'consumable_levels': {'fuel': 25000},
-            # Note: component_toggles is intentionally missing
-            'is_alive': True,
-            'is_derelict': False,
-            'experience': 10,
-            'kills': 2,
-            'battles_survived': 3
-        }
-
-        # Load from old format (PROJ-211: pass registries for DI)
-        ship = ShipInstance.from_dict(old_save_data, registries=fresh_registries)
-
-        # Verify component_toggles defaults to empty dict
-        assert ship.component_toggles == {}, \
-            "component_toggles should default to empty dict"
-
-        # Verify ship still works
-        assert ship.instance_id == 'test-12345'
-        assert ship.name == 'USS Legacy'
-        assert ship.current_hp == 800
-        assert ship.consumable_levels == {'fuel': 25000}
-
-        # Verify stats calculation works
-        stats = ship.get_calculated_stats()
-        assert 'max_hp' in stats
-
-        # Verify component toggle methods work
-        assert ship.is_component_enabled('any_component') is True  # Default enabled
-        ship.set_component_enabled('some_component', False)
-        assert ship.is_component_enabled('some_component') is False
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ PROJ-264 Phase 2: Coverage for zero-coverage methods in order_processor.py.
 """
 
 import pytest
+from game.strategy.data.order_types import OrderType
 from unittest.mock import MagicMock
 
 from game.strategy.engine.order_processor import OrderProcessor
@@ -68,7 +69,7 @@ class TestExecuteFleetTransfer:
         target = _make_fleet(cargo_current=10, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 50
 
-        result = processor._execute_fleet_transfer(fleet, target, "metals", "unload", 50)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "unload", 50)
 
         assert result == 50
         fleet.resources.unload_cargo_from_fleet.assert_called_once_with("metals", 50)
@@ -80,7 +81,7 @@ class TestExecuteFleetTransfer:
         target = _make_fleet(cargo_current=80, cargo_capacity=100)
         target.resources.unload_cargo_from_fleet.return_value = 50
 
-        result = processor._execute_fleet_transfer(fleet, target, "metals", "load", 50)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "load", 50)
 
         assert result == 50
         target.resources.unload_cargo_from_fleet.assert_called_once_with("metals", 50)
@@ -92,7 +93,7 @@ class TestExecuteFleetTransfer:
         target = _make_fleet(cargo_current=0, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 20
 
-        result = processor._execute_fleet_transfer(fleet, target, "fuel", "unload", 50)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "fuel", "unload", 50)
 
         assert result == 20
 
@@ -102,7 +103,7 @@ class TestExecuteFleetTransfer:
         target = _make_fleet(cargo_current=90, cargo_capacity=100)  # Only 10 space
         fleet.resources.unload_cargo_from_fleet.return_value = 10
 
-        result = processor._execute_fleet_transfer(fleet, target, "fuel", "unload", 50)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "fuel", "unload", 50)
 
         assert result == 10
 
@@ -112,7 +113,7 @@ class TestExecuteFleetTransfer:
         target = _make_fleet(cargo_current=0, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 30
 
-        result = processor._execute_fleet_transfer(fleet, target, "metals", "unload", 0)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "unload", 0)
 
         assert result == 30
 
@@ -121,7 +122,7 @@ class TestExecuteFleetTransfer:
         fleet = _make_fleet(cargo_current=50, cargo_capacity=100)
         target = _make_fleet(cargo_current=100, cargo_capacity=100)  # Full
 
-        result = processor._execute_fleet_transfer(fleet, target, "metals", "unload", 50)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "unload", 50)
 
         assert result == 0
 
@@ -130,7 +131,7 @@ class TestExecuteFleetTransfer:
         fleet = _make_fleet(cargo_current=0, cargo_capacity=100)  # Empty
         target = _make_fleet(cargo_current=0, cargo_capacity=100)
 
-        result = processor._execute_fleet_transfer(fleet, target, "metals", "unload", 50)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "unload", 50)
 
         assert result == 0
 
@@ -149,7 +150,7 @@ class TestExecuteLoadResource:
         planet = _make_planet(stockpile=200)
         empire = _make_empire()
 
-        result = processor._execute_load(fleet, planet, "metals", 50, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_load_planet_resource(fleet, planet, "metals", 50)
 
         assert result == 50
         planet.consume_from_stockpile.assert_called_once_with("metals", 50.0)
@@ -161,7 +162,7 @@ class TestExecuteLoadResource:
         planet = _make_planet(stockpile=200)
         empire = _make_empire()
 
-        result = processor._execute_load(fleet, planet, "metals", 50, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_load_planet_resource(fleet, planet, "metals", 50)
 
         assert result == 10
 
@@ -171,7 +172,7 @@ class TestExecuteLoadResource:
         planet = _make_planet(stockpile=5)  # Only 5 available
         empire = _make_empire()
 
-        result = processor._execute_load(fleet, planet, "metals", 50, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_load_planet_resource(fleet, planet, "metals", 50)
 
         assert result == 5
 
@@ -181,7 +182,7 @@ class TestExecuteLoadResource:
         planet = _make_planet(stockpile=200)
         empire = _make_empire()
 
-        result = processor._execute_load(fleet, planet, "metals", 0, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_load_planet_resource(fleet, planet, "metals", 0)
 
         assert result == 100  # Limited by fleet capacity
 
@@ -191,7 +192,7 @@ class TestExecuteLoadResource:
         planet = _make_planet(stockpile=0)
         empire = _make_empire()
 
-        result = processor._execute_load(fleet, planet, "metals", 50, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_load_planet_resource(fleet, planet, "metals", 50)
 
         assert result == 0
 
@@ -211,7 +212,7 @@ class TestExecuteUnloadResource:
         planet = _make_planet()
         empire = _make_empire()
 
-        result = processor._execute_unload(fleet, planet, "metals", 50, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_unload_planet_resource(fleet, planet, "metals", 50)
 
         assert result == 50
         fleet.resources.unload_cargo_from_fleet.assert_called_once_with("metals", 50)
@@ -224,7 +225,7 @@ class TestExecuteUnloadResource:
         planet = _make_planet()
         empire = _make_empire()
 
-        result = processor._execute_unload(fleet, planet, "metals", 50, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_unload_planet_resource(fleet, planet, "metals", 50)
 
         assert result == 20
 
@@ -235,7 +236,7 @@ class TestExecuteUnloadResource:
         planet = _make_planet()
         empire = _make_empire()
 
-        result = processor._execute_unload(fleet, planet, "metals", 0, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_unload_planet_resource(fleet, planet, "metals", 0)
 
         assert result == 75
 
@@ -245,6 +246,6 @@ class TestExecuteUnloadResource:
         planet = _make_planet()
         empire = _make_empire()
 
-        result = processor._execute_unload(fleet, planet, "metals", 50, empire)
+        result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_unload_planet_resource(fleet, planet, "metals", 50)
 
         assert result == 0

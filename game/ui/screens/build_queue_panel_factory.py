@@ -93,35 +93,46 @@ class BuildQueuePanelFactory:
         self,
         manager: pygame_gui.UIManager,
         build_context,
-        session,
         queue_sources: List['BuildQueueSource'],
         portrait_loader: 'BuildQueuePortraitLoader',
         on_queue_selection_changed,
         portrait_surface: Optional[pygame.Surface] = None,
-        facade=None,
-    ):
+        *,
+        facade,
+        empire,
+    ) -> None:
         """Initialize the panel factory.
 
         Args:
             manager: pygame_gui UIManager.
             build_context: Planet or Fleet whose build queue is being managed.
-            session: Game session with current_empire and turn info.
             queue_sources: List of BuildQueueSource objects at this hex.
             portrait_loader: BuildQueuePortraitLoader for resource icons.
             on_queue_selection_changed: Callback for queue selector changes.
             portrait_surface: Planet portrait image surface.
-            facade: PROJ-292 H1 — optional `StrategySessionFacade` for
-                resolving the per-species `ColonyDemographicView` so
-                `PlanetReportPanel` renders PROJ-289's sub-block. When
-                None (legacy callers), the panel falls back to the
-                pre-PROJ-289 single-line rendering.
+            facade: ``StrategySessionFacade`` — required.  Used for the
+                per-species ``ColonyDemographicView`` (PROJ-292 H1),
+                ``get_registries()`` (PROJ-396 MAJ-003), and
+                ``get_turn_number()`` (PROJ-396 MAJ-003).
+            empire: The current empire whose resource pool is rendered in
+                the bottom bar.  Passed explicitly rather than read off a
+                session so this factory has no facade-bypass path.
+
+        PROJ-396 MAJ-003: removed ``session`` parameter.  The previous
+        three reads (``session.registries``, ``session.current_empire``,
+        ``session.turn``) all now route through ``facade`` or the
+        explicit ``empire`` kwarg.  Note: ``getattr(self.session,
+        'current_empire', None)`` was already returning ``None`` in
+        production (the session attribute is ``active_empire``), so the
+        bottom-bar resource label was effectively dormant; passing
+        ``empire`` explicitly restores the intended behavior.
         """
         self.manager = manager
         self.build_context = build_context
-        self.session = session
         self.queue_sources = queue_sources
         self.portrait_loader = portrait_loader
         self._facade = facade
+        self._empire = empire
         self.on_queue_selection_changed = on_queue_selection_changed
         self.portrait_surface = portrait_surface
 
@@ -190,10 +201,17 @@ class BuildQueuePanelFactory:
         )
 
     def _create_background(self) -> ui.UIPanel:
-        """Create semi-transparent background overlay."""
+        """Create semi-transparent background overlay.
+
+        PROJ-373 Phase 4: opts into the scoped `@fast_panel` theme class so
+        pygame_gui uses the cheap `RectDrawableShape` instead of the global
+        `panel` block's `RoundedRectangleShape` (eliminates ~3s of
+        anti-aliased corner rasterization on first open).
+        """
         return ui.UIPanel(
             relative_rect=pygame.Rect(0, 0, self.screen_width, self.screen_height),
-            manager=self.manager
+            manager=self.manager,
+            object_id="@fast_panel",
         )
 
     def _create_context_report_panel(self, container: ui.UIPanel) -> tuple:
@@ -211,9 +229,11 @@ class BuildQueuePanelFactory:
             # PROJ-292 H1: BuildQueueScreen always opens on colonized
             # planets (you can't queue construction on an uncolonized
             # world), so the facade lookup should essentially always
-            # return a view. `_facade is None` preserves legacy callers.
+            # return a view.  PROJ-396 MAJ-003: ``facade`` is now a
+            # required ctor kwarg, so the legacy ``_facade is None``
+            # branch is gone.
             view = None
-            if self.build_context.owner_id is not None and self._facade is not None:
+            if self.build_context.owner_id is not None:
                 view = self._facade.get_colony_demographic_view(self.build_context.id)
             planet_report = PlanetReportPanel(
                 manager=self.manager,
@@ -223,7 +243,7 @@ class BuildQueuePanelFactory:
                 portrait_surface=self.portrait_surface,
                 show_complexes=False,
                 production_rates=compute_planet_production(
-                    self.build_context, self.session.registries
+                    self.build_context, self._facade.get_registries()
                 ),
                 view=view,  # PROJ-292 H1
             )
@@ -240,7 +260,8 @@ class BuildQueuePanelFactory:
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(10, 10, width, height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         ui.UITextBox(
@@ -317,7 +338,8 @@ class BuildQueuePanelFactory:
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         ui.UITextBox(
@@ -358,7 +380,8 @@ class BuildQueuePanelFactory:
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         header_text = ui.UITextBox(
@@ -378,7 +401,8 @@ class BuildQueuePanelFactory:
                 0, 42, panel_width, panel_height - 52 - footer_height
             ),
             manager=self.manager,
-            container=panel
+            container=panel,
+            object_id="@fast_panel",
         )
 
         # Get initial build rate / paused-state from first queue source
@@ -437,7 +461,8 @@ class BuildQueuePanelFactory:
         panel = ui.UIPanel(
             relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         ui.UITextBox(
@@ -517,7 +542,8 @@ class BuildQueuePanelFactory:
         bar = ui.UIPanel(
             relative_rect=pygame.Rect(10, bar_top, self.screen_width - 20, bar_height),
             manager=self.manager,
-            container=container
+            container=container,
+            object_id="@fast_panel",
         )
 
         btn_close = ui.UIButton(
@@ -527,7 +553,7 @@ class BuildQueuePanelFactory:
             container=bar
         )
 
-        empire = getattr(self.session, 'current_empire', None)
+        empire = self._empire
         if empire and hasattr(empire, 'resource_pool'):
             resource_text = format_empire_resources(empire)
         else:
@@ -540,7 +566,7 @@ class BuildQueuePanelFactory:
             container=bar
         )
 
-        turn_number = getattr(self.session, 'turn', 0)
+        turn_number = self._facade.get_turn_number()
         ui.UILabel(
             relative_rect=pygame.Rect(self.screen_width - 200, 10, 180, 40),
             text=f"Turn: {turn_number}",

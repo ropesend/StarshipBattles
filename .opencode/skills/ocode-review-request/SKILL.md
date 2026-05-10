@@ -40,6 +40,28 @@ Parse these fields:
 - **Context** — why this review, what changed
 - **Expected Deliverable** — what kind of output
 
+### 03c phase-aware request fields (optional)
+
+Requests dispatched by `phase_complete.py` (Projects/protocols/03c) include
+two additional blocks. The daemon has already validated the SHA and
+checked out a detached worktree for you, so your `cwd` is the project at
+the exact `project_tip_sha` named in the Coverage block — repo-relative
+paths in the scope resolve against that worktree, not against `main`.
+
+- **Checkout** block: `mode`, `ref`, `sha`, `worktree_path`. Informational
+  for the review report; do not act on it (the daemon already did).
+- **Coverage** block: `project_id`, `review_sequence`, `project_tip_sha`,
+  `focus_phase`, `review_mode`, `coverage_set`. Mention the focus_phase
+  and coverage_set in your report. If `review_mode` is `lightweight`,
+  scope your scrutiny down per the request's instructions (small phase,
+  correctness + regression risk only; explicitly ban style-only or
+  cosmetic findings — only report items that create a correctness or
+  integration risk).
+
+When these blocks are present, the report's findings MUST be emitted with
+**stable IDs and fingerprints** so 03c's findings ledger can dedupe
+across cumulative reviews — see Step 4 below.
+
 ## Step 1.25: Scope Sanity Check — Return Early For Out-Of-Repo Paths
 
 **This is a hard precondition. Run it before any other work.** If the
@@ -163,6 +185,11 @@ Full code review using the review swarm protocol:
    **Context:** {from request file}
    ```
 
+   The final `report.md` MUST state: review mode, scope, checkout SHA
+   (when present in Coverage block), parent request ID (if present),
+   and any limitations of the review (e.g., files partially read due to
+   context constraints, agents that failed). This is required for every report.
+
 4. **Determine agent configuration** based on scope size:
    - 1-10 files → 3-4 agents (Code Quality, Architecture, Test Coverage)
    - 10-50 files → 5-7 agents (add Security, Error Handling, Dead Code)
@@ -271,6 +298,47 @@ directory. If a specific path was provided by the daemon, use that exact path:
 - `verification` — present only for follow-ups; maps parent finding IDs to
   status: `resolved`, `partially-resolved`, `unresolved`, or `regressed`.
 
+### 03c sidecar extension: `findings_by_id`
+
+When the request has a Coverage block, also emit a `findings_by_id`
+section so the project's findings ledger can dedupe and track each
+finding's lifecycle across cumulative reviews. `findings_by_id` is
+REQUIRED (emit as `{}` even for zero-finding reviews — never omit it):
+
+```json
+{
+  "...": "...standard fields above...",
+  "coverage": {
+    "project_id": "PROJ-XX",
+    "focus_phase": "phase_3",
+    "coverage_set": ["phase_1", "phase_2", "phase_3"],
+    "project_tip_sha": "abc12345..."
+  },
+  "findings_by_id": {
+    "FND-001": {
+      "severity": "MAJ",
+      "title": "Layer violation: simulation imports from ui",
+      "file": "game/simulation/combat.py",
+      "line": 142,
+      "fingerprint": "sha256:<stable hash of severity|title|file|normalized snippet>",
+      "phase_attributed_to": "phase_2"
+    }
+  }
+}
+```
+
+Stable-ID requirements:
+- `fingerprint` MUST be deterministic across re-reviews of the same
+  finding — base it on a hash of (severity, title, file path, a
+  normalized one-line snippet of the offending code). Do not include
+  line numbers or surrounding whitespace in the hash input.
+- `phase_attributed_to` SHOULD be the phase whose changes introduced or
+  most recently touched the offending code. If it is genuinely cross-phase,
+  set `coverage[focus_phase]`.
+- IDs (`FND-001`, ...) are local to this review request. The ledger
+  matches via `fingerprint`, not ID, so the ID is allowed to differ
+  across runs.
+
 Do NOT move or rename the request file — the daemon handles that.
 
 ## Step 5: Log Skill Usage
@@ -295,6 +363,16 @@ If the review fails at any point:
 3. **Never write Status directly** — the daemon owns the lifecycle. The
    skill always communicates failure through the `error` key in
    `result.json`, never through the request file's frontmatter.
+
+## Failure-Mode Checklist
+
+When something goes wrong, check these before reporting:
+- Missing parent request → exit with error JSON
+- Invalid scope path (outside repo) → exit with out-of-repo error JSON (Step 1.25)
+- Missing result path → create directory structure, proceed
+- Partial agent failure → retry once with fewer agents, write partial findings
+- Malformed result JSON → validate against schema, report parse error
+- Parent not in completed/ → exit with "parent request not yet completed" error
 
 If `create_review.py` fails (interactive mode only):
 - Fall back to creating the directory structure manually

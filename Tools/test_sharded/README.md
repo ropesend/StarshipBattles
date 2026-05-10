@@ -16,7 +16,7 @@ No additional dependencies beyond the base project (`pytest`, `pytest-xdist`).
 python Tools/test_sharded/test_sharded.py              # auto-detect shards (= physical CPU cores)
 python Tools/test_sharded/test_sharded.py --shards 8    # custom shard count
 python Tools/test_sharded/test_sharded.py --verbose     # show per-shard test lists
-python Tools/test_sharded/test_sharded.py --refresh-baseline-timestamp
+python Tools/test_sharded/test_sharded.py --refresh-baseline-timestamp  # compatibility flag
 ```
 
 There is also a PowerShell convenience wrapper:
@@ -31,7 +31,7 @@ There is also a PowerShell convenience wrapper:
 |-------------|--------------------------------------------------------------------|
 | `--shards N`| Number of parallel shards (default: auto-detected physical cores). |
 | `--verbose` | Show the first test ID in each shard for debugging distribution.   |
-| `--refresh-baseline-timestamp` | Refresh `verified_at` in the generated test baseline after a successful whole-suite run, even when counts are unchanged. |
+| `--refresh-baseline-timestamp` | Compatibility flag. Green whole-suite runs now always refresh the per-install verification receipt. |
 
 ## How It Works
 
@@ -39,28 +39,39 @@ There is also a PowerShell convenience wrapper:
 2. **Group** -- Groups tests by source file (tests in the same file always stay together).
 3. **Assign** -- Distributes file groups across shards:
    - **First run**: Round-robin by file, largest files assigned first.
-   - **Subsequent runs**: Greedy least-loaded-bin using per-test durations from `.test_durations.json` (requires >= 50% coverage).
+   - **Subsequent runs**: Greedy least-loaded-bin using rolling per-file medians from `.test_file_duration_history.json` when available, with per-test durations from `.test_durations.json` filling gaps (requires >= 50% per-test coverage).
 4. **Execute** -- Runs each shard as an independent `pytest.main()` subprocess with JUnit XML output.
 5. **Aggregate** -- Parses JUnit XML results, merges timing data, and prints a combined report.
-6. **Baseline** -- After a successful whole-suite run, updates `AgentCoordination/generated/test_baseline.json` only when counts change. With `--refresh-baseline-timestamp`, also refreshes `verified_at` on unchanged counts.
+6. **Diagnose** -- Prints shard-level estimate/actual timing columns, per-shard file min/median/max timing, slowest files, and file timing variability when history is available.
+7. **Baseline** -- After a successful whole-suite run, updates `AgentCoordination/generated/test_baseline.json` only when canonical counts change or the schema is migrated. It also records the local green-run receipt in `AgentCoordination/generated/test_baseline/by_install/<install_id>.json`.
 
 ## Output
 
 - Per-shard pass/fail status with test counts and elapsed time.
-- Shard timing balance report (bar chart with balance ratio).
+- Shard timing balance report with wall time, estimated time, actual testcase time, estimate error, test/file counts, known-duration coverage, per-shard file min/median/max time, and historical file variability.
+- File timing diagnostics listing the slowest files in the current run, the largest file-level estimate errors, and the most variable files once at least two runs of history exist.
 - Aggregated failure details and deduplicated warnings.
 - Final summary: total tests, passed, failed, errors, and wall-clock time.
-- Saves per-test timing data to `.test_durations.json` for future runs.
-- Updates `AgentCoordination/generated/test_baseline.json` only after successful whole-suite runs. Failed, partial, or interrupted runs leave the baseline unchanged.
+- Saves exact pytest node-id timing data to `.test_durations.json` for future runs. Each shard writes a local `shard_<N>_durations.json` sidecar from pytest's `report.nodeid`; JUnit XML timing remains a fallback for older or interrupted shard results.
+- Saves rolling per-file timing samples to `.test_file_duration_history.json` for local variability diagnostics. The file is ignored because it is machine- and shard-configuration-specific.
+- Updates `AgentCoordination/generated/test_baseline.json` only after successful whole-suite runs when canonical counts change. Failed, partial, or interrupted runs leave the baseline and verification receipts unchanged.
+- Updates `AgentCoordination/generated/test_baseline/by_install/<install_id>.json` after every successful whole-suite run. The install ID comes from `AgentCoordination/local/install_id.json`, shared with skill-usage tracking.
 
 ## Test baseline schema
 
-The generated `AgentCoordination/generated/test_baseline.json` records the most recent green whole-suite result. Field semantics:
+The generated `AgentCoordination/generated/test_baseline.json` records the canonical repo-wide test count baseline. Field semantics:
 
-- `git_sha` — the SHA of `HEAD` **at the moment the runner executed**, not the SHA of the commit that contains the file. The runner cannot know about commits that have not happened yet, so when you run the suite and then commit the resulting baseline file, `git_sha` will refer to the parent commit. This is the intended contract: it answers "what code did the recorded counts come from?"
 - `baseline_changed_at` — timestamp updated whenever any of `total`, `passed`, `failed`, `errors`, `skipped` change.
-- `verified_at` — timestamp of the most recent green whole-suite run. Updated even when counts are unchanged if `--refresh-baseline-timestamp` is passed.
 - `schema_version` — bumped only on breaking schema changes.
+
+Volatile verification data lives in per-install receipts at
+`AgentCoordination/generated/test_baseline/by_install/<install_id>.json`.
+Each receipt records `verified_at`, `git_sha`, `command`, and the counts from
+that machine's latest green whole-suite run. Use
+`python Tools/agent_coordination/summarize_test_baseline.py` to aggregate the
+canonical counts with every per-install verification receipt into the
+gitignored derived summary at
+`AgentCoordination/generated/test_baseline/summary.json`.
 
 The summary line in stdout includes a `skipped` column:
 

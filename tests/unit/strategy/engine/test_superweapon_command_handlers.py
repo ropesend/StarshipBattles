@@ -63,7 +63,90 @@ def mock_session(mock_fleet, mock_galaxy, mock_planet):
     session.empires = []
     # BUG-125: align active_empire with mock_fleet owner so authorization passes.
     session.active_empire = Mock(id=mock_fleet.owner_id)
+    # PROJ-370 Phase 2: handlers route Fleet writes through this mutator;
+    # configure ``set_path`` to actually mutate the mock fleet so existing
+    # assertions on ``mock_fleet.path`` continue to work.
+    def _set_path(fleet, new_path):
+        fleet.path = new_path
+
+    session.fleet_mutator.set_path.side_effect = _set_path
     return session
+
+
+# =============================================================================
+# PROJ-323 Task 3.30: cross-handler "valid when validation passes" parametrize.
+# =============================================================================
+
+
+def _build_handler_command_pairs():
+    """Build (handler_class, command_instance, validator_method_name) tuples
+    for each direct superweapon handler."""
+    from game.strategy.engine.superweapon_command_handlers import (
+        ImplodePlanetCommandHandler,
+        StellerateStarCommandHandler,
+        OpenWarpPointCommandHandler,
+        CloseWarpPointCommandHandler,
+        CreateDysonSphereCommandHandler,
+        SelfDestructCommandHandler,
+    )
+    from game.strategy.engine.commands import (
+        IssueImplodePlanetCommand,
+        IssueStellerateStarCommand,
+        IssueOpenWarpPointCommand,
+        IssueCloseWarpPointCommand,
+        IssueCreateDysonSphereCommand,
+        IssueSelfDestructCommand,
+    )
+
+    return [
+        (
+            ImplodePlanetCommandHandler,
+            IssueImplodePlanetCommand(fleet_id=1, planet_id=100),
+            'validate_implode_planet',
+        ),
+        (
+            StellerateStarCommandHandler,
+            IssueStellerateStarCommand(fleet_id=1),
+            'validate_stellerate_star',
+        ),
+        (
+            OpenWarpPointCommandHandler,
+            IssueOpenWarpPointCommand(
+                fleet_id=1,
+                target_hex=HexCoord(10, 10),
+                target_system_name="Target System",
+            ),
+            'validate_open_warp_point',
+        ),
+        (
+            CloseWarpPointCommandHandler,
+            IssueCloseWarpPointCommand(fleet_id=1, warp_point_destination_id="Alpha Centauri"),
+            'validate_close_warp_point',
+        ),
+        (
+            CreateDysonSphereCommandHandler,
+            IssueCreateDysonSphereCommand(fleet_id=1),
+            'validate_create_dyson_sphere',
+        ),
+        # SelfDestruct needs ships pre-populated; handled in its own test.
+    ]
+
+
+@pytest.mark.parametrize(
+    "handler_cls,cmd,validator_attr",
+    [pytest.param(*case, id=case[0].__name__) for case in _build_handler_command_pairs()],
+)
+def test_handler_execute_returns_valid_when_validation_passes(
+    mock_session, mock_fleet, mock_planet, handler_cls, cmd, validator_attr,
+):
+    """All direct superweapon handlers return a valid result when validation succeeds."""
+    handler = handler_cls()
+
+    with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
+        getattr(mock_validator, validator_attr).return_value = ValidationResult()
+        result = handler.execute(mock_session, cmd)
+
+    assert result.is_valid
 
 
 # =============================================================================
@@ -71,21 +154,11 @@ def mock_session(mock_fleet, mock_galaxy, mock_planet):
 # =============================================================================
 
 class TestImplodePlanetCommandHandler:
-    """Tests for ImplodePlanetCommandHandler."""
+    """Tests for ImplodePlanetCommandHandler.
 
-    def test_execute_returns_valid_when_validation_passes(self, mock_session, mock_fleet, mock_planet):
-        """Handler returns valid result when validation passes."""
-        from game.strategy.engine.superweapon_command_handlers import ImplodePlanetCommandHandler
-        from game.strategy.engine.commands import IssueImplodePlanetCommand
-
-        cmd = IssueImplodePlanetCommand(fleet_id=1, planet_id=100)
-        handler = ImplodePlanetCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_implode_planet.return_value = ValidationResult()
-            result = handler.execute(mock_session, cmd)
-
-        assert result.is_valid
+    `test_execute_returns_valid_when_validation_passes` covered by parametrized
+    test_handler_execute_returns_valid_when_validation_passes above (PROJ-323 Task 3.30).
+    """
 
     def test_execute_adds_correct_order_type(self, mock_session, mock_fleet, mock_planet):
         """Handler adds IMPLODE_PLANET order to fleet."""
@@ -102,19 +175,9 @@ class TestImplodePlanetCommandHandler:
         assert len(mock_fleet.orders) == 1
         assert mock_fleet.orders[0].type == OrderType.IMPLODE_PLANET
 
-    def test_execute_fails_when_fleet_not_found(self, mock_session):
-        """Handler returns invalid when fleet not found."""
-        from game.strategy.engine.superweapon_command_handlers import ImplodePlanetCommandHandler
-        from game.strategy.engine.commands import IssueImplodePlanetCommand
-
-        mock_session._get_fleet_by_id.return_value = None
-        cmd = IssueImplodePlanetCommand(fleet_id=999, planet_id=100)
-        handler = ImplodePlanetCommandHandler()
-
-        result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
+    # NOTE: ImplodePlanet's `_get_fleet_by_id.return_value = None` case is
+    # covered by the parametrized `test_mission_handler_fleet_not_found`
+    # in test_superweapon_edge_cases.py (PROJ-322 Task 1.13/1.14).
 
     def test_execute_fails_when_validation_fails(self, mock_session, mock_fleet):
         """Handler returns invalid when validation fails."""
@@ -139,21 +202,11 @@ class TestImplodePlanetCommandHandler:
 # =============================================================================
 
 class TestStellerateStarCommandHandler:
-    """Tests for StellerateStarCommandHandler."""
+    """Tests for StellerateStarCommandHandler.
 
-    def test_execute_returns_valid_when_validation_passes(self, mock_session, mock_fleet):
-        """Handler returns valid result when validation passes."""
-        from game.strategy.engine.superweapon_command_handlers import StellerateStarCommandHandler
-        from game.strategy.engine.commands import IssueStellerateStarCommand
-
-        cmd = IssueStellerateStarCommand(fleet_id=1)
-        handler = StellerateStarCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_stellerate_star.return_value = ValidationResult()
-            result = handler.execute(mock_session, cmd)
-
-        assert result.is_valid
+    `test_execute_returns_valid_when_validation_passes` covered by parametrized
+    test_handler_execute_returns_valid_when_validation_passes (PROJ-323 Task 3.30).
+    """
 
     def test_execute_adds_correct_order_type(self, mock_session, mock_fleet):
         """Handler adds STELLERATE_STAR order to fleet."""
@@ -190,25 +243,11 @@ class TestStellerateStarCommandHandler:
 # =============================================================================
 
 class TestOpenWarpPointCommandHandler:
-    """Tests for OpenWarpPointCommandHandler."""
+    """Tests for OpenWarpPointCommandHandler.
 
-    def test_execute_returns_valid_when_validation_passes(self, mock_session, mock_fleet):
-        """Handler returns valid result when validation passes."""
-        from game.strategy.engine.superweapon_command_handlers import OpenWarpPointCommandHandler
-        from game.strategy.engine.commands import IssueOpenWarpPointCommand
-
-        cmd = IssueOpenWarpPointCommand(
-            fleet_id=1,
-            target_hex=HexCoord(10, 10),
-            target_system_name="Target System"
-        )
-        handler = OpenWarpPointCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_open_warp_point.return_value = ValidationResult()
-            result = handler.execute(mock_session, cmd)
-
-        assert result.is_valid
+    `test_execute_returns_valid_when_validation_passes` covered by parametrized
+    test_handler_execute_returns_valid_when_validation_passes (PROJ-323 Task 3.30).
+    """
 
     def test_execute_adds_order_with_target_dict(self, mock_session, mock_fleet):
         """Handler adds OPEN_WARP_POINT order with target dict."""
@@ -237,21 +276,11 @@ class TestOpenWarpPointCommandHandler:
 # =============================================================================
 
 class TestCloseWarpPointCommandHandler:
-    """Tests for CloseWarpPointCommandHandler."""
+    """Tests for CloseWarpPointCommandHandler.
 
-    def test_execute_returns_valid_when_validation_passes(self, mock_session, mock_fleet):
-        """Handler returns valid result when validation passes."""
-        from game.strategy.engine.superweapon_command_handlers import CloseWarpPointCommandHandler
-        from game.strategy.engine.commands import IssueCloseWarpPointCommand
-
-        cmd = IssueCloseWarpPointCommand(fleet_id=1, warp_point_destination_id="Alpha Centauri")
-        handler = CloseWarpPointCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_close_warp_point.return_value = ValidationResult()
-            result = handler.execute(mock_session, cmd)
-
-        assert result.is_valid
+    `test_execute_returns_valid_when_validation_passes` covered by parametrized
+    test_handler_execute_returns_valid_when_validation_passes (PROJ-323 Task 3.30).
+    """
 
     def test_execute_adds_order_with_destination_id(self, mock_session, mock_fleet):
         """Handler adds CLOSE_WARP_POINT order with destination and source system."""
@@ -278,21 +307,11 @@ class TestCloseWarpPointCommandHandler:
 # =============================================================================
 
 class TestCreateDysonSphereCommandHandler:
-    """Tests for CreateDysonSphereCommandHandler."""
+    """Tests for CreateDysonSphereCommandHandler.
 
-    def test_execute_returns_valid_when_validation_passes(self, mock_session, mock_fleet):
-        """Handler returns valid result when validation passes."""
-        from game.strategy.engine.superweapon_command_handlers import CreateDysonSphereCommandHandler
-        from game.strategy.engine.commands import IssueCreateDysonSphereCommand
-
-        cmd = IssueCreateDysonSphereCommand(fleet_id=1)
-        handler = CreateDysonSphereCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_create_dyson_sphere.return_value = ValidationResult()
-            result = handler.execute(mock_session, cmd)
-
-        assert result.is_valid
+    `test_execute_returns_valid_when_validation_passes` covered by parametrized
+    test_handler_execute_returns_valid_when_validation_passes (PROJ-323 Task 3.30).
+    """
 
     def test_execute_adds_order_with_no_target(self, mock_session, mock_fleet):
         """Handler adds CREATE_DYSON_SPHERE order with None target."""
@@ -558,7 +577,7 @@ class TestHandlerRegistration:
 
     def test_all_handlers_registered(self):
         """All 11 superweapon handlers are registered in default registry."""
-        from game.strategy.engine.command_handlers import create_default_registry
+        from game.strategy.engine.handlers import create_default_registry
 
         registry = create_default_registry()
 

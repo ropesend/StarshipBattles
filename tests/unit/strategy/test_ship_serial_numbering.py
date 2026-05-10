@@ -109,15 +109,16 @@ class TestShipInstanceSerial:
 
         assert restored.serial == 123
 
-    def test_serial_none_when_not_in_dict(self, design_data):
-        """Serial should be None when loading old save without serial."""
+    def test_serial_none_when_not_in_dict(self, design_data) -> None:
+        """Serial should be None when the `serial` key is absent from the dict."""
         data = {
             'instance_id': 'test-123',
             'design_id': 'Destroyer',
             'name': 'Destroyer',
             'owner_id': 0,
             'design_data': design_data,
-            # No 'serial' key - simulates old save format
+            'components': {},
+            # No 'serial' key
         }
 
         instance = ShipInstance.from_dict(data)

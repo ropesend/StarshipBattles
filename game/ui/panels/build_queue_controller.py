@@ -10,7 +10,8 @@ Updated in PROJ-69 Phase 4 to support multi-queue operations via BuildQueueSourc
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+import os
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +109,13 @@ class BuildQueueController:
         self.active_queue_source: Optional['BuildQueueSource'] = None
         self.selected_queue_sources: List['BuildQueueSource'] = []
 
+        # PROJ-373 Phase 1: validation cache.
+        # design_id -> (fingerprint, valid_bool). Hit when fingerprint matches
+        # the on-disk file mtime; saves ~2.2s per repeat build-queue open.
+        self._validation_cache: Dict[str, Tuple[Any, bool]] = {}
+        # Lazy validator instance — constructed on first cache miss only.
+        self._validator: Optional[Any] = None
+
     def set_active_queue(self, source: 'BuildQueueSource') -> None:
         """Set the active queue source for single-queue mode.
 
@@ -190,32 +198,79 @@ class BuildQueueController:
 
         return filtered, roles_list
 
+    def _design_fingerprint(self, design_id: str) -> Optional[int]:
+        """Return a fingerprint for a design's on-disk file, or None if missing.
+
+        PROJ-373 Phase 1: Used as the validation-cache key. `os.stat` is
+        microseconds; mtime changes on every save, so editing a design
+        (workshop save) naturally invalidates that one cache entry.
+
+        Routes through DesignLibrary.get_design_path so path logic stays in
+        the library — the controller never builds filesystem paths itself.
+        """
+        try:
+            path = self.design_library.get_design_path(design_id)
+            # PROJ-373 review MIN-002: legacy HFS+ has 1-second mtime resolution.
+            # Two saves within the same second on HFS+ produce identical fingerprints
+            # → cache returns stale validation. Self-corrects on next open per
+            # design.md alternative F (false invalidation is harmless).
+            return os.stat(path).st_mtime_ns
+        except (OSError, AttributeError):
+            # Missing file, missing helper, or any IO failure → cache miss.
+            return None
+
     def _validate_designs(self, designs) -> None:
         """Run full validation on each design and set design_valid flag.
 
         Loads each design's data and runs DesignValidator to check all rules
         (crew, C&C, combat movement, mass budgets, etc.). Sets a `design_valid`
         attribute on each DesignMetadata object.
+
+        PROJ-373 Phase 1: results are cached keyed by (design_id, file mtime);
+        a cache hit avoids both `Ship.from_dict` and `validator.validate`. The
+        validator itself is lazy-initialized on first miss so a pure cache-hit
+        call pays zero validator-construction cost.
         """
         if not self._registries:
             for d in designs:
                 d.design_valid = True
             return
 
-        from game.strategy.services.design_validator import DesignValidator
-        validator = DesignValidator(self._registries)
-
         for d in designs:
+            fingerprint = self._design_fingerprint(d.design_id)
+            cached = self._validation_cache.get(d.design_id)
+            if cached is not None and cached[0] == fingerprint:
+                d.design_valid = cached[1]
+                continue
+
             try:
                 load_result = self.design_library.load_design_data(d.design_id)
                 if not load_result.success:
                     d.design_valid = False
+                    self._validation_cache[d.design_id] = (fingerprint, False)
                     continue
 
-                result = validator.validate(load_result.data)
+                if self._validator is None:
+                    from game.strategy.services.design_validator import DesignValidator
+                    self._validator = DesignValidator(self._registries)
+
+                result = self._validator.validate(load_result.data)
                 d.design_valid = not result.has_issues
+                self._validation_cache[d.design_id] = (fingerprint, d.design_valid)
             except Exception:  # Intentional broad catch: design validation traverses arbitrary registry/save data; queue panel must remain usable on validator failure
                 d.design_valid = True  # Can't validate, assume valid
+                # Do NOT cache — failure may be transient.
+
+    def reset_filters(self) -> None:
+        """Reset category and role filters to their defaults.
+
+        PROJ-376 (continuation of PROJ-373 Phase 1): called from
+        `BuildQueueScreen.open_for_yard` when the screen is reused
+        across yard switches. Live as of PROJ-376 Phase 1.
+        Does NOT call `on_queue_changed` — caller decides when to refresh.
+        """
+        self.selected_category = "complex"
+        self.selected_role = "Any"
 
     def set_category(self, category: str) -> None:
         """

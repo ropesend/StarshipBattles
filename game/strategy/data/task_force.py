@@ -7,8 +7,7 @@ organizational level: Fleet -> TaskForce -> Squadron -> Ships.
 
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
 
-from game.core.math import Vector2
-from game.simulation.combat.formation import FormationShape, FormationSpec
+from game.simulation.combat.formation import FormationSpec
 from game.strategy.data.fleet_hierarchy import (
     FleetHierarchyNode,
     CombatPolicy,
@@ -85,8 +84,10 @@ class TaskForce(FleetHierarchyNode):
             data["squadrons"] = [sq.to_dict() for sq in self._squadrons]
 
         # PROJ-269 Phase 4: formation (omitted when None for back-compat).
+        # PROJ-391 Task 1.3: serialization moved onto `FormationSpec` per
+        # Pattern #17 (Serializable Protocol).
         if self.formation is not None:
-            data["formation"] = _formation_to_dict(self.formation)
+            data["formation"] = self.formation.to_dict()
 
         return data
 
@@ -99,7 +100,10 @@ class TaskForce(FleetHierarchyNode):
         if "battle_role" in data:
             battle_role = BattleRole(data["battle_role"])
 
-        formation = _formation_from_dict(data.get("formation"))
+        formation_data = data.get("formation")
+        formation = (
+            FormationSpec.from_dict(formation_data) if formation_data is not None else None
+        )
 
         tf = cls(
             name=data["name"],
@@ -116,27 +120,7 @@ class TaskForce(FleetHierarchyNode):
         return tf
 
 
-# ---------------------------------------------------------------------------
-# FormationSpec (de)serialization helpers — local to TaskForce since it is
-# the only strategy-layer holder of FormationSpec today.
-# ---------------------------------------------------------------------------
-
-
-def _formation_to_dict(formation: FormationSpec) -> Dict[str, Any]:
-    return {
-        "shape": formation.shape.value,
-        "spacing": float(formation.spacing),
-        "custom_positions": [
-            [float(p.x), float(p.y)] for p in formation.custom_positions
-        ],
-    }
-
-
-def _formation_from_dict(data: Optional[Dict[str, Any]]) -> Optional[FormationSpec]:
-    if data is None:
-        return None
-    shape = FormationShape(data["shape"])
-    spacing = float(data.get("spacing", 100.0))
-    raw_positions = data.get("custom_positions", [])
-    custom = tuple(Vector2(float(p[0]), float(p[1])) for p in raw_positions)
-    return FormationSpec(shape=shape, spacing=spacing, custom_positions=custom)
+# PROJ-391 Task 1.3: the duplicated `_formation_to_dict` /
+# `_formation_from_dict` helpers were moved onto `FormationSpec` itself
+# per Pattern #17 (Serializable Protocol). Use `FormationSpec.to_dict()`
+# / `FormationSpec.from_dict(data)` instead.

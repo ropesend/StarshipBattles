@@ -226,3 +226,56 @@ class TestDesignValidationResultHasIssues:
         result = DesignValidationResult()
         result.add_error("Missing crew")
         assert result.has_issues is True
+
+
+class TestSimValidatorFailureSurfacesAsResultError:
+    """PROJ-381 Phase 2 (ERR-03-004): a ShipDesignValidator crash must
+    NOT be silently swallowed; it must surface in the returned
+    DesignValidationResult so callers see the validation signal.
+
+    Before the fix, sim-validator failures only emitted a logger.warning
+    and discarded the failure, leaving is_valid=True even when a crash
+    meant nothing was actually validated.
+    """
+
+    def test_sim_validator_exception_marks_result_invalid(
+        self, registries, monkeypatch
+    ):
+        """Inject a stub ShipDesignValidator that raises; result must
+        contain an error AND `is_valid` must be False."""
+        # The sim validator is imported lazily inside DesignValidator.validate
+        # via `from game.simulation.validation.ship_validator import
+        # ShipDesignValidator`. Patch the class on its source module so the
+        # lazy import inside `validate` picks up the stub.
+        from game.simulation.validation import ship_validator as sv_module
+
+        class _Boom:
+            def __init__(self, *a, **kw) -> None:
+                pass
+
+            def validate_design(self, ship):  # type: ignore[no-untyped-def]
+                raise RuntimeError("simulated sim-validator failure")
+
+        monkeypatch.setattr(sv_module, "ShipDesignValidator", _Boom)
+
+        # A trivially-loadable design — Ship.from_dict must succeed; the
+        # crash must come from the sim_validator path so we exercise the
+        # specific code path that ERR-03-004 fixed.
+        design = {
+            'ship_class': 'frigate',
+            'layers': {
+                'CORE': [
+                    {'id': 'bridge', 'modifiers': []},
+                    {'id': 'crew_quarters', 'modifiers': []},
+                    {'id': 'life_support', 'modifiers': []},
+                ]
+            }
+        }
+        validator = DesignValidator(registries)
+        result = validator.validate(design)
+
+        assert result.is_valid is False
+        assert any(
+            "Sim validation failed" in err
+            for err in result.errors
+        ), f"Expected 'Sim validation failed' in errors but got: {result.errors}"

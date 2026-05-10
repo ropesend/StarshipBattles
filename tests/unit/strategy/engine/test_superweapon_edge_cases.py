@@ -20,6 +20,16 @@ from game.strategy.data.order_types import Order, OrderType
 # Fixtures
 # =============================================================================
 
+# PROJ-368 Phase 4: SELF_DESTRUCT was lifted from SuperweaponOrderProcessor
+# to SelfDestructHandler. Tests that called process_self_destruct now route
+# through the handler with the same arguments and field shape.
+def _lift_self_destruct(processor, fleet, empire, galaxy):
+    from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
+    handler = SelfDestructHandler(event_bus=getattr(processor, "_event_bus", None))
+    return handler.execute_action_order(fleet, empire, galaxy)
+
+
+
 @pytest.fixture
 def mock_fleet():
     """Create a mock fleet with basic attributes."""
@@ -182,25 +192,112 @@ class TestSetupMissionMove:
 # Mission Handler Fleet/Planet Not Found Tests
 # =============================================================================
 
+def _mission_fleet_not_found_cases():
+    """Parametrized cases for `mission_handler.execute()` when
+    `_get_fleet_by_id` returns None. Each entry is (label, handler_factory,
+    command_factory).
+
+    Consolidated in PROJ-322 Tasks 1.13 + 1.14 (S03-CAT4-001 and
+    S03-CAT4-002 / DUP-001 / DUP-002): replaces the 6 byte-similar
+    handler-by-handler tests previously in this file (and one extra
+    duplicate from `test_superweapon_command_handlers.py`).
+    """
+    from game.strategy.engine.superweapon_command_handlers import (
+        ImplodePlanetCommandHandler,
+        ImplodePlanetMissionCommandHandler,
+        StellerateStarMissionCommandHandler,
+        OpenWarpPointMissionCommandHandler,
+        CloseWarpPointMissionCommandHandler,
+        CreateDysonSphereMissionCommandHandler,
+    )
+    from game.strategy.engine.commands import (
+        IssueImplodePlanetCommand,
+        QueueImplodePlanetMissionCommand,
+        QueueStellerateStarMissionCommand,
+        QueueOpenWarpPointMissionCommand,
+        QueueCloseWarpPointMissionCommand,
+        QueueCreateDysonSphereMissionCommand,
+    )
+
+    return [
+        (
+            'implode_planet_command',
+            ImplodePlanetCommandHandler,
+            lambda: IssueImplodePlanetCommand(fleet_id=999, planet_id=100),
+        ),
+        (
+            'implode_planet_mission',
+            ImplodePlanetMissionCommandHandler,
+            lambda: QueueImplodePlanetMissionCommand(
+                fleet_id=999, target_hex=HexCoord(10, 10), planet_id=100,
+            ),
+        ),
+        (
+            'stellerate_star_mission',
+            StellerateStarMissionCommandHandler,
+            lambda: QueueStellerateStarMissionCommand(
+                fleet_id=999, target_hex=HexCoord(10, 10),
+            ),
+        ),
+        (
+            'open_warp_point_mission',
+            OpenWarpPointMissionCommandHandler,
+            lambda: QueueOpenWarpPointMissionCommand(
+                fleet_id=999, target_hex=HexCoord(10, 10),
+                target_system_name='Beta',
+            ),
+        ),
+        (
+            'close_warp_point_mission',
+            CloseWarpPointMissionCommandHandler,
+            lambda: QueueCloseWarpPointMissionCommand(
+                fleet_id=999, target_hex=HexCoord(10, 10),
+                warp_point_destination_id='Beta',
+            ),
+        ),
+        (
+            'create_dyson_sphere_mission',
+            CreateDysonSphereMissionCommandHandler,
+            lambda: QueueCreateDysonSphereMissionCommand(
+                fleet_id=999, target_hex=HexCoord(10, 10),
+            ),
+        ),
+    ]
+
+
 class TestMissionHandlerNotFound:
     """Tests for mission handlers when fleet or planet not found."""
 
-    def test_implode_planet_mission_fleet_not_found(self, mock_session):
-        """ImplodePlanetMissionCommandHandler returns invalid when fleet not found."""
-        from game.strategy.engine.superweapon_command_handlers import ImplodePlanetMissionCommandHandler
-        from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
+    @pytest.mark.parametrize(
+        'label,handler_cls,make_cmd',
+        _mission_fleet_not_found_cases(),
+        ids=lambda v: v if isinstance(v, str) else None,
+    )
+    def test_mission_handler_fleet_not_found(
+        self, mock_session, label, handler_cls, make_cmd,
+    ):
+        """Each mission handler returns invalid with 'Fleet not found'
+        when `_get_fleet_by_id` returns None.
 
+        PROJ-322 Tasks 1.13 + 1.14: parametrization of structurally
+        identical fleet-not-found tests across 5 mission handlers + the
+        ImplodePlanet command handler.
+        """
         mock_session._get_fleet_by_id.return_value = None
-        cmd = QueueImplodePlanetMissionCommand(fleet_id=999, target_hex=HexCoord(10, 10), planet_id=100)
-        handler = ImplodePlanetMissionCommandHandler()
+        handler = handler_cls()
+        cmd = make_cmd()
 
         result = handler.execute(mock_session, cmd)
 
         assert not result.is_valid
-        assert "Fleet not found" in result.message
+        assert 'Fleet not found' in result.message
 
     def test_implode_planet_mission_planet_not_found(self, mock_session, mock_fleet):
-        """ImplodePlanetMissionCommandHandler returns invalid when planet not found."""
+        """ImplodePlanetMissionCommandHandler returns invalid when planet not found.
+
+        Distinct case (planet missing rather than fleet); kept separate
+        from the parametrized fleet-not-found family.
+        """
         from game.strategy.engine.superweapon_command_handlers import ImplodePlanetMissionCommandHandler
         from game.strategy.engine.commands import QueueImplodePlanetMissionCommand
 
@@ -213,66 +310,6 @@ class TestMissionHandlerNotFound:
         assert not result.is_valid
         assert "Planet not found" in result.message
 
-    def test_stellerate_mission_fleet_not_found(self, mock_session):
-        """StellerateStarMissionCommandHandler returns invalid when fleet not found."""
-        from game.strategy.engine.superweapon_command_handlers import StellerateStarMissionCommandHandler
-        from game.strategy.engine.commands import QueueStellerateStarMissionCommand
-
-        mock_session._get_fleet_by_id.return_value = None
-        cmd = QueueStellerateStarMissionCommand(fleet_id=999, target_hex=HexCoord(10, 10))
-        handler = StellerateStarMissionCommandHandler()
-
-        result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
-
-    def test_open_warp_point_mission_fleet_not_found(self, mock_session):
-        """OpenWarpPointMissionCommandHandler returns invalid when fleet not found."""
-        from game.strategy.engine.superweapon_command_handlers import OpenWarpPointMissionCommandHandler
-        from game.strategy.engine.commands import QueueOpenWarpPointMissionCommand
-
-        mock_session._get_fleet_by_id.return_value = None
-        cmd = QueueOpenWarpPointMissionCommand(
-            fleet_id=999, target_hex=HexCoord(10, 10), target_system_name="Beta"
-        )
-        handler = OpenWarpPointMissionCommandHandler()
-
-        result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
-
-    def test_close_warp_point_mission_fleet_not_found(self, mock_session):
-        """CloseWarpPointMissionCommandHandler returns invalid when fleet not found."""
-        from game.strategy.engine.superweapon_command_handlers import CloseWarpPointMissionCommandHandler
-        from game.strategy.engine.commands import QueueCloseWarpPointMissionCommand
-
-        mock_session._get_fleet_by_id.return_value = None
-        cmd = QueueCloseWarpPointMissionCommand(
-            fleet_id=999, target_hex=HexCoord(10, 10), warp_point_destination_id="Beta"
-        )
-        handler = CloseWarpPointMissionCommandHandler()
-
-        result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
-
-    def test_create_dyson_sphere_mission_fleet_not_found(self, mock_session):
-        """CreateDysonSphereMissionCommandHandler returns invalid when fleet not found."""
-        from game.strategy.engine.superweapon_command_handlers import CreateDysonSphereMissionCommandHandler
-        from game.strategy.engine.commands import QueueCreateDysonSphereMissionCommand
-
-        mock_session._get_fleet_by_id.return_value = None
-        cmd = QueueCreateDysonSphereMissionCommand(fleet_id=999, target_hex=HexCoord(10, 10))
-        handler = CreateDysonSphereMissionCommandHandler()
-
-        result = handler.execute(mock_session, cmd)
-
-        assert not result.is_valid
-        assert "Fleet not found" in result.message
-
 
 # =============================================================================
 # Order Processor Error Cases
@@ -281,26 +318,20 @@ class TestMissionHandlerNotFound:
 class TestOrderProcessorErrorCases:
     """Tests for error cases in SuperweaponOrderProcessor."""
 
-    def test_implode_planet_no_order(self):
-        """process_implode_planet fails when fleet has no order."""
+    @pytest.mark.parametrize(
+        'current_order',
+        [None, Order(OrderType.MOVE, target=HexCoord(10, 10))],
+        ids=['no_order', 'wrong_order_type'],
+    )
+    def test_implode_planet_missing_or_wrong_order(self, current_order):
+        """process_implode_planet fails when the current order is None
+        OR a non-IMPLODE_PLANET order — both produce the same
+        'No IMPLODE_PLANET order' error. Parametrized in PROJ-322
+        Task 1.14 (S03-CAT4-003)."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
-        fleet.get_current_order.return_value = None
-
-        empire = Mock()
-        processor = SuperweaponOrderProcessor()
-        result = processor.process_implode_planet(fleet, empire, Mock(), [empire])
-
-        assert not result.success
-        assert "No IMPLODE_PLANET order" in result.message
-
-    def test_implode_planet_wrong_order_type(self):
-        """process_implode_planet fails when order is wrong type."""
-        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-
-        fleet = Mock()
-        fleet.get_current_order.return_value = Order(OrderType.MOVE, target=HexCoord(10, 10))
+        fleet.get_current_order.return_value = current_order
 
         empire = Mock()
         processor = SuperweaponOrderProcessor()
@@ -338,20 +369,44 @@ class TestOrderProcessorErrorCases:
         assert not result.success
         assert "No STELLERATE_STAR order" in result.message
 
-    def test_stellerate_star_not_at_system(self):
-        """process_stellerate_star fails when fleet not at a star system."""
+    @pytest.mark.parametrize(
+        'process_method,order',
+        [
+            ('process_stellerate_star', Order(OrderType.STELLERATE_STAR)),
+            (
+                'process_open_warp_point',
+                Order(OrderType.OPEN_WARP_POINT,
+                      target={'target_system_name': 'Beta'}),
+            ),
+            (
+                'process_close_warp_point',
+                Order(OrderType.CLOSE_WARP_POINT,
+                      target={'destination_id': 'Beta',
+                              'target_hex': {'q': 100, 'r': 100}}),
+            ),
+        ],
+        ids=['stellerate_star', 'open_warp_point', 'close_warp_point'],
+    )
+    def test_processor_fails_when_fleet_not_at_star_system(self, process_method, order):
+        """The three star-system superweapon processors share an identical
+        'fleet not at a star system' guard. Parametrized in PROJ-322
+        Task 1.14 (S03-CAT4-003)."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
         fleet.location = HexCoord(100, 100)
-        fleet.get_current_order.return_value = Order(OrderType.STELLERATE_STAR)
+        fleet.get_current_order.return_value = order
         fleet.pop_order = Mock()
 
         galaxy = Mock()
-        galaxy.systems = {}  # Empty dict for get_system_at_hex lookup
+        galaxy.systems = {}  # Empty -> get_system_at_hex returns None.
 
         processor = SuperweaponOrderProcessor()
-        result = processor.process_stellerate_star(fleet, Mock(), galaxy, [])
+        method = getattr(processor, process_method)
+        if process_method == 'process_stellerate_star':
+            result = method(fleet, Mock(), galaxy, [])
+        else:
+            result = method(fleet, Mock(), galaxy)
 
         assert not result.success
         assert "not at a star system" in result.message
@@ -370,27 +425,6 @@ class TestOrderProcessorErrorCases:
 
         assert not result.success
         assert "Invalid warp point params" in result.message
-        fleet.pop_order.assert_called_once()
-
-    def test_open_warp_point_not_at_system(self):
-        """process_open_warp_point fails when fleet not at star system."""
-        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-
-        fleet = Mock()
-        fleet.location = HexCoord(100, 100)
-        fleet.get_current_order.return_value = Order(
-            OrderType.OPEN_WARP_POINT, target={'target_system_name': 'Beta'}
-        )
-        fleet.pop_order = Mock()
-
-        galaxy = Mock()
-        galaxy.systems = {}  # Empty dict for get_system_at_hex lookup
-
-        processor = SuperweaponOrderProcessor()
-        result = processor.process_open_warp_point(fleet, Mock(), galaxy)
-
-        assert not result.success
-        assert "not at a star system" in result.message
         fleet.pop_order.assert_called_once()
 
     def test_open_warp_point_target_system_not_found(self):
@@ -434,25 +468,6 @@ class TestOrderProcessorErrorCases:
         assert "No destination" in result.message
         fleet.pop_order.assert_called_once()
 
-    def test_close_warp_point_not_at_system(self):
-        """process_close_warp_point fails when fleet not at star system."""
-        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-
-        fleet = Mock()
-        fleet.location = HexCoord(100, 100)
-        fleet.get_current_order.return_value = Order(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 100, 'r': 100}})
-        fleet.pop_order = Mock()
-
-        galaxy = Mock()
-        galaxy.systems = {}  # Empty dict for get_system_at_hex lookup
-
-        processor = SuperweaponOrderProcessor()
-        result = processor.process_close_warp_point(fleet, Mock(), galaxy)
-
-        assert not result.success
-        assert "not at a star system" in result.message
-        fleet.pop_order.assert_called_once()
-
     def test_create_dyson_sphere_no_stars(self):
         """process_create_dyson_sphere fails when system has no stars."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
@@ -477,31 +492,23 @@ class TestOrderProcessorErrorCases:
         assert "no stars" in result.message
         fleet.pop_order.assert_called_once()
 
-    def test_self_destruct_empty_ship_ids(self):
-        """process_self_destruct fails when ship_ids is empty list."""
+    @pytest.mark.parametrize(
+        'target',
+        [[], 'invalid'],
+        ids=['empty_ship_ids', 'invalid_target_type'],
+    )
+    def test_self_destruct_no_ships(self, target):
+        """process_self_destruct fails with 'No ships specified' for both
+        an empty ship_ids list and a non-list target. Parametrized in
+        PROJ-322 Task 1.14 (S03-CAT4-003)."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
-        fleet.get_current_order.return_value = Order(OrderType.SELF_DESTRUCT, target=[])
+        fleet.get_current_order.return_value = Order(OrderType.SELF_DESTRUCT, target=target)
         fleet.pop_order = Mock()
 
         processor = SuperweaponOrderProcessor()
-        result = processor.process_self_destruct(fleet, Mock(), Mock())
-
-        assert not result.success
-        assert "No ships specified" in result.message
-        fleet.pop_order.assert_called_once()
-
-    def test_self_destruct_invalid_target_type(self):
-        """process_self_destruct fails when target is not a list."""
-        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-
-        fleet = Mock()
-        fleet.get_current_order.return_value = Order(OrderType.SELF_DESTRUCT, target="invalid")
-        fleet.pop_order = Mock()
-
-        processor = SuperweaponOrderProcessor()
-        result = processor.process_self_destruct(fleet, Mock(), Mock())
+        result = _lift_self_destruct(processor, fleet, Mock(), Mock())
 
         assert not result.success
         assert "No ships specified" in result.message
@@ -674,7 +681,7 @@ class TestSelfDestructShipNames:
 
         # Should not raise, should use ship_id as name fallback
         with patch('game.strategy.engine.superweapon_order_processor.logger'):
-            result = processor.process_self_destruct(fleet, empire, Mock())
+            result = _lift_self_destruct(processor, fleet, empire, Mock())
 
         assert result.success
         fleet.remove_ship.assert_called_once_with(ship)
@@ -699,7 +706,7 @@ class TestSelfDestructShipNames:
         empire.id = 0
 
         with patch('game.strategy.engine.superweapon_order_processor.logger'):
-            result = processor.process_self_destruct(fleet, empire, Mock())
+            result = _lift_self_destruct(processor, fleet, empire, Mock())
 
         assert result.success
 
@@ -725,7 +732,7 @@ class TestSelfDestructShipNames:
         empire = Mock()
 
         with patch('game.strategy.engine.superweapon_order_processor.logger'):
-            result = processor.process_self_destruct(fleet, empire, Mock())
+            result = _lift_self_destruct(processor, fleet, empire, Mock())
 
         assert result.success
         # Only existing ship should be removed

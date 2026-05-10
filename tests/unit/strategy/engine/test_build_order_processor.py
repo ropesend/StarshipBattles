@@ -61,7 +61,14 @@ class TestBuildOrderProcessing:
     ):
         """Test BUILD order auto-completes when construction_queue empties.
 
-        Note: BUILD auto-pop is handled by ActionExecutionEngine, not OrderProcessor.
+        Design note (PROJ-322 Task 3.10): BUILD auto-pop lives in
+        ``ActionExecutionEngine.process_action_ticks``, not in
+        ``OrderProcessor.execute_action_order``. ``execute_action_order`` is
+        the per-order dispatcher; queue-empty detection requires the
+        post-tick sweep that ``ActionExecutionEngine`` owns. This test
+        therefore intentionally drives the engine rather than the processor —
+        the alternative would test a code path the production engine never
+        takes.
         """
         from game.strategy.engine.action_execution_engine import ActionExecutionEngine
 

@@ -1,14 +1,21 @@
 """Tests for TriStateFilterWidget."""
 import pytest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pygame
 
 from game.ui.filters.filter_state import FilterState
 
 
+@patch("game.ui.components.filters.tri_state_widget.UIButton")
+@patch("game.ui.components.filters.tri_state_widget.UILabel")
 class TestTriStateFilterWidget:
-    """Tests for the tri-state radio button filter widget."""
+    """Tests for the tri-state radio button filter widget.
+
+    PROJ-323 Task 1.22: UIButton/UILabel patches promoted to class level
+    (every test in this class needs both patches with default behavior).
+    Per-test mocks for side_effect customization remain in-method.
+    """
 
     @pytest.fixture
     def mock_manager(self):
@@ -24,8 +31,6 @@ class TestTriStateFilterWidget:
     def widget_rect(self):
         return pygame.Rect(0, 0, 250, 30)
 
-    @patch("game.ui.components.filters.tri_state_widget.UIButton")
-    @patch("game.ui.components.filters.tri_state_widget.UILabel")
     def test_initial_state_is_ignore(
         self, mock_label_cls, mock_btn_cls, mock_manager, mock_container, widget_rect
     ):
@@ -34,8 +39,6 @@ class TestTriStateFilterWidget:
         widget = TriStateFilterWidget("warp", "Warp Capable", widget_rect, mock_manager, mock_container)
         assert widget.current_state is FilterState.IGNORE
 
-    @patch("game.ui.components.filters.tri_state_widget.UIButton")
-    @patch("game.ui.components.filters.tri_state_widget.UILabel")
     def test_creates_label_and_three_buttons(
         self, mock_label_cls, mock_btn_cls, mock_manager, mock_container, widget_rect
     ):
@@ -45,8 +48,6 @@ class TestTriStateFilterWidget:
         mock_label_cls.assert_called_once()
         assert mock_btn_cls.call_count == 3
 
-    @patch("game.ui.components.filters.tri_state_widget.UIButton")
-    @patch("game.ui.components.filters.tri_state_widget.UILabel")
     def test_set_state_to_yes(
         self, mock_label_cls, mock_btn_cls, mock_manager, mock_container, widget_rect
     ):
@@ -56,8 +57,6 @@ class TestTriStateFilterWidget:
         widget.set_state(FilterState.YES)
         assert widget.current_state is FilterState.YES
 
-    @patch("game.ui.components.filters.tri_state_widget.UIButton")
-    @patch("game.ui.components.filters.tri_state_widget.UILabel")
     def test_set_state_to_no(
         self, mock_label_cls, mock_btn_cls, mock_manager, mock_container, widget_rect
     ):
@@ -67,8 +66,6 @@ class TestTriStateFilterWidget:
         widget.set_state(FilterState.NO)
         assert widget.current_state is FilterState.NO
 
-    @patch("game.ui.components.filters.tri_state_widget.UIButton")
-    @patch("game.ui.components.filters.tri_state_widget.UILabel")
     def test_set_state_to_ignore(
         self, mock_label_cls, mock_btn_cls, mock_manager, mock_container, widget_rect
     ):
@@ -79,8 +76,6 @@ class TestTriStateFilterWidget:
         widget.set_state(FilterState.IGNORE)
         assert widget.current_state is FilterState.IGNORE
 
-    @patch("game.ui.components.filters.tri_state_widget.UIButton")
-    @patch("game.ui.components.filters.tri_state_widget.UILabel")
     def test_set_state_updates_visuals(
         self, mock_label_cls, mock_btn_cls, mock_manager, mock_container, widget_rect
     ):
@@ -108,8 +103,6 @@ class TestTriStateFilterWidget:
         btn_no.unselect.assert_called()
         btn_ignore.unselect.assert_called()
 
-    @patch("game.ui.components.filters.tri_state_widget.UIButton")
-    @patch("game.ui.components.filters.tri_state_widget.UILabel")
     def test_kill_destroys_all_children(
         self, mock_label_cls, mock_btn_cls, mock_manager, mock_container, widget_rect
     ):
@@ -130,8 +123,6 @@ class TestTriStateFilterWidget:
         btn_no.kill.assert_called_once()
         btn_ignore.kill.assert_called_once()
 
-    @patch("game.ui.components.filters.tri_state_widget.UIButton")
-    @patch("game.ui.components.filters.tri_state_widget.UILabel")
     def test_attribute_name_stored(
         self, mock_label_cls, mock_btn_cls, mock_manager, mock_container, widget_rect
     ):

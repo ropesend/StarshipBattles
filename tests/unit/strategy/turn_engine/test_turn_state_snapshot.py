@@ -3,6 +3,8 @@ Tests for TurnStateSnapshot capture and restore.
 
 PROJ-251 Phase 4: Turn State Snapshot & Rollback
 """
+import json
+import logging
 import time
 import pytest
 from unittest.mock import MagicMock, patch
@@ -137,6 +139,91 @@ class TestTurnStateSnapshotRestore:
         snapshot.restore(session)
 
         assert len(session.empires) == len(snapshot.empire_dicts)
+
+
+class TestTurnStateSnapshotCrashDump:
+    """Tests for crash snapshot disk-writing helpers."""
+
+    def test_dump_crash_snapshot_writes_summary_json(self, tmp_path):
+        from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
+
+        snapshot = TurnStateSnapshot(
+            turn_number=7,
+            empire_dicts=[{"id": 1}, {"id": 2}],
+            galaxy_dict={"systems": [{"name": "Alpha"}, {"name": "Beta"}]},
+            timestamp=123.5,
+        )
+
+        snapshot.dump_crash_snapshot(
+            str(tmp_path),
+            {
+                "tick": 42,
+                "phase_name": "PlanetEnergy",
+                "error": "boom",
+            },
+        )
+
+        crash_path = tmp_path / "crash_turn7_tick42_phase_PlanetEnergy.json"
+        assert crash_path.exists()
+        data = json.loads(crash_path.read_text())
+        assert data == {
+            "turn_number": 7,
+            "timestamp": 123.5,
+            "error": {
+                "tick": 42,
+                "phase_name": "PlanetEnergy",
+                "error": "boom",
+            },
+            "empire_count": 2,
+            "system_count": 2,
+        }
+
+    def test_dump_crash_snapshot_logs_oserror_without_raising(
+        self, tmp_path, caplog
+    ):
+        """PROJ-381 Phase 3 (ERR-02-005): dump_crash_snapshot routes
+        through `save_json`, which returns False on write failure. The
+        method must log the error and not raise."""
+        from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
+
+        snapshot = TurnStateSnapshot(turn_number=3)
+
+        with patch(
+            "game.strategy.engine.turn_state_snapshot.save_json",
+            return_value=False,
+        ):
+            with caplog.at_level(logging.ERROR):
+                snapshot.dump_crash_snapshot(
+                    str(tmp_path),
+                    {"tick": 9, "phase_name": "Movement"},
+                )
+
+        # PROJ-395 MAJ-010: assert on the structural contract — at
+        # least one ERROR-level record was emitted — rather than
+        # exact message wording. The previous "Failed to write crash
+        # snapshot" substring would break under cosmetic copy edits
+        # (e.g., "Could not write..." or "Crash snapshot write
+        # failed") despite identical behavior. The behavior under
+        # test is "log at ERROR and do not raise"; the message text
+        # is documentation, not contract.
+        error_records = [
+            rec for rec in caplog.records if rec.levelno == logging.ERROR
+        ]
+        assert error_records, (
+            f"Expected at least one ERROR record; got: "
+            f"{[(r.levelname, r.getMessage()) for r in caplog.records]}"
+        )
+        # The record should mention the snapshot path so log mining
+        # can correlate the error with the failed write — but accept
+        # any rendering that includes the path component.
+        assert any(
+            str(tmp_path) in rec.getMessage() or "crash" in rec.getMessage().lower()
+            for rec in error_records
+        ), (
+            "Expected the ERROR record to reference the crash snapshot "
+            "(by path or by the word 'crash'); got: "
+            f"{[r.getMessage() for r in error_records]}"
+        )
 
 
 # Fixtures

@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import Mock, MagicMock
 
 from game.strategy.engine.commands import IssueBuildOrderCommand, CommandType
-from game.strategy.engine.command_handlers import (
+from game.strategy.engine.handlers import (
     BuildOrderCommandHandler,
 )
 from game.strategy.data.order_types import Order, OrderType
@@ -45,7 +45,11 @@ class TestBuildOrderCommandHandler:
     """Tests for BuildOrderCommandHandler."""
 
     def test_handler_creates_build_order(self):
-        """Handler should create BUILD order and insert at position 0."""
+        """Handler should create BUILD order and insert at position 0.
+
+        PROJ-370 Phase 2: write goes through ``session.fleet_mutator``;
+        verify the mutator was called with the right BUILD order.
+        """
         # Setup
         handler = BuildOrderCommandHandler()
         session = Mock()
@@ -62,12 +66,20 @@ class TestBuildOrderCommandHandler:
 
         # Verify
         assert result.is_valid
-        assert len(mock_fleet.orders) == 1
-        assert mock_fleet.orders[0].type == OrderType.BUILD
-        assert mock_fleet.path == []  # Path should be cleared
+        # PROJ-370: insertion is routed through the mutator.
+        session.fleet_mutator.insert_order.assert_called_once()
+        call_args = session.fleet_mutator.insert_order.call_args
+        assert call_args[0][0] is mock_fleet
+        assert call_args[0][1] == 0
+        assert call_args[0][2].type == OrderType.BUILD
+        # Path clear is also routed through the mutator.
+        session.fleet_mutator.set_path.assert_called_once_with(mock_fleet, [])
 
     def test_handler_inserts_at_position_0(self):
-        """BUILD order should be inserted at position 0 (front of queue)."""
+        """BUILD order should be inserted at position 0 (front of queue).
+
+        PROJ-370 Phase 2: assert via the mutator call shape.
+        """
         handler = BuildOrderCommandHandler()
         session = Mock()
         session.active_empire = Mock(id=0)
@@ -84,12 +96,17 @@ class TestBuildOrderCommandHandler:
         result = handler.execute(session, cmd)
 
         assert result.is_valid
-        assert len(mock_fleet.orders) == 2
-        assert mock_fleet.orders[0].type == OrderType.BUILD
-        assert mock_fleet.orders[1].type == OrderType.MOVE
+        # The mutator received an insertion at index 0 with a BUILD order.
+        session.fleet_mutator.insert_order.assert_called_once()
+        call_args = session.fleet_mutator.insert_order.call_args
+        assert call_args[0][1] == 0
+        assert call_args[0][2].type == OrderType.BUILD
 
     def test_handler_clears_path(self):
-        """Handler should clear fleet.path when adding BUILD order."""
+        """Handler should clear fleet.path when adding BUILD order.
+
+        PROJ-370 Phase 2: ``set_path(fleet, [])`` is called via the mutator.
+        """
         handler = BuildOrderCommandHandler()
         session = Mock()
         session.active_empire = Mock(id=0)
@@ -104,7 +121,7 @@ class TestBuildOrderCommandHandler:
         result = handler.execute(session, cmd)
 
         assert result.is_valid
-        assert mock_fleet.path == []
+        session.fleet_mutator.set_path.assert_called_once_with(mock_fleet, [])
 
     def test_handler_returns_error_if_fleet_not_found(self):
         """Handler should return error if fleet doesn't exist."""
@@ -134,7 +151,7 @@ class TestRemoveBuildOrderCommand:
     def test_handler_removes_build_orders(self):
         """Handler should call fleet.remove_orders_by_type(BUILD) (PROJ-222: uses Fleet API)."""
         from game.strategy.engine.commands import RemoveBuildOrderCommand
-        from game.strategy.engine.command_handlers import RemoveBuildOrderCommandHandler
+        from game.strategy.engine.handlers import RemoveBuildOrderCommandHandler
 
         handler = RemoveBuildOrderCommandHandler()
         session = Mock()
@@ -155,7 +172,7 @@ class TestRemoveBuildOrderCommand:
     def test_handler_does_nothing_if_no_build_order(self):
         """Handler should succeed even if no BUILD order exists."""
         from game.strategy.engine.commands import RemoveBuildOrderCommand
-        from game.strategy.engine.command_handlers import RemoveBuildOrderCommandHandler
+        from game.strategy.engine.handlers import RemoveBuildOrderCommandHandler
 
         handler = RemoveBuildOrderCommandHandler()
         session = Mock()
@@ -178,28 +195,42 @@ class TestRemoveBuildOrderCommand:
 
 
 class TestBuildOrderHandlerRegistration:
-    """Tests for handler registration in create_default_registry()."""
+    """Tests for handler registration in create_default_registry().
+
+    PROJ-322 Task 1.12 (S06-CAT4-003 / APC-003-F06): drives the public
+    `dispatch(command_name, ...)` surface instead of indexing the private
+    `_handlers` dict. A registered handler is one whose dispatch result
+    is NOT the registry's "Unknown command type" failure.
+    """
+
+    def _dispatch_returns_unknown_error(self, registry, command_name: str) -> bool:
+        # An unregistered command yields a ValidationResult error whose
+        # message starts with "Unknown command type:". We pass a no-op
+        # session/command pair: when the handler IS registered the call
+        # may or may not succeed (depends on the session shape) but it
+        # will not return the unknown-command failure.
+        result = registry.dispatch(command_name, session=Mock(), command=Mock())
+        if result.is_valid:
+            return False
+        joined = ' '.join(result.errors or [])
+        return 'Unknown command type' in joined
 
     def test_build_order_handler_registered(self):
-        """BuildOrderCommandHandler should be registered."""
-        from game.strategy.engine.command_handlers import create_default_registry
+        """IssueBuildOrderCommand dispatches without `Unknown command type`."""
+        from game.strategy.engine.handlers import create_default_registry
 
         registry = create_default_registry()
-
-        # Should have handler registered
-        assert 'IssueBuildOrderCommand' in registry._handlers
-        assert isinstance(registry._handlers['IssueBuildOrderCommand'], BuildOrderCommandHandler)
-
-    def test_remove_build_order_handler_registered(self):
-        """RemoveBuildOrderCommandHandler should be registered."""
-        from game.strategy.engine.command_handlers import (
-            create_default_registry,
-            RemoveBuildOrderCommandHandler
+        assert not self._dispatch_returns_unknown_error(
+            registry, 'IssueBuildOrderCommand'
         )
 
-        registry = create_default_registry()
+    def test_remove_build_order_handler_registered(self):
+        """RemoveBuildOrderCommand dispatches without `Unknown command type`."""
+        from game.strategy.engine.handlers import create_default_registry
 
-        assert 'RemoveBuildOrderCommand' in registry._handlers
-        assert isinstance(registry._handlers['RemoveBuildOrderCommand'], RemoveBuildOrderCommandHandler)
+        registry = create_default_registry()
+        assert not self._dispatch_returns_unknown_error(
+            registry, 'RemoveBuildOrderCommand'
+        )
 
 

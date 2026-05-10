@@ -29,7 +29,3 @@ class TestDamageContext:
     def test_slots(self):
         ctx = DamageContext()
         assert hasattr(ctx, "__slots__")
-
-    def test_import_path(self):
-        from game.core.combat_types import DamageContext as DC
-        assert DC is DamageContext

@@ -140,8 +140,10 @@ WORKER.md files now live in the staging directory:
 |---|------|---------|
 | 01 | `01_initialize_project.md` | Create new project with swarm analysis |
 | 02 | `02_plan_protocol.md` | How to read and use project plans |
-| 03a | `03a_continue_working.md` | Autonomous multi-task TDD work loop |
-| 04 | `04_audit_project.md` | Skeptical post-completion audit |
+| 03a | `03a_continue_working.md` | Autonomous multi-task TDD work loop (legacy single-branch) |
+| 03b | `03b_parallel_projects.md` | Inter-project parallelism (multiple projects in worktrees) |
+| 03c | `03c_phase_aware_execution.md` | Phase DAG, SHA-pinned cumulative reviews, intra-project parallelism |
+| 04 | `04_audit_project.md` | Skeptical post-completion audit (final cumulative gate for 03c projects) |
 | 05 | `05_close_project.md` | Archive completed project |
 | 06 | `06_revise_project.md` | Add phases to completed project |
 | 07 | `07_extract_phase.md` | Extract phase into sub-project |

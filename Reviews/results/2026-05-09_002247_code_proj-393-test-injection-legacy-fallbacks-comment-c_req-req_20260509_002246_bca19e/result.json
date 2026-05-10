@@ -1,0 +1,46 @@
+{
+  "request_id": "req_20260509_002246_bca19e",
+  "review_dir": "Reviews/results/2026-05-09_002247_code_proj-393-test-injection-legacy-fallbacks-comment-c_req-req_20260509_002246_bca19e",
+  "report_path": "Reviews/results/2026-05-09_002247_code_proj-393-test-injection-legacy-fallbacks-comment-c_req-req_20260509_002246_bca19e/report.md",
+  "findings": {
+    "critical": 1,
+    "major": 6,
+    "minor": 8,
+    "info": 4
+  },
+  "completed_at": "2026-05-09T00:30:00Z",
+  "focus_area_results": {
+    "phase2_test_fallbacks": {
+      "LEG-03-006": "PASS — all 3 tests pass required callback",
+      "LEG-03-007": "MAJOR gap — no test validates real constructor signature",
+      "LEG-03-004/005": "PASS — handler guards prevent None component_key",
+      "LEG-02-002": "PASS — IScene migration correct, no events dropped"
+    },
+    "phase3_task_3.2": {
+      "fleet_id_kept_justified": true,
+      "tag_removal_assessment": "Regression — misleadingly labels transitional field as canonical",
+      "call_site_count_actual": 3,
+      "call_site_count_claimed": "~20",
+      "entity_type_dead_weight": "3 commands — missed opportunity"
+    },
+    "phase3_task_3.5": {
+      "deferral_verdict": "REJECTED — 4 of 6 vars are dead code",
+      "active_vars": ["headless_mode"],
+      "dead_vars": ["test_mode", "test_scenario", "test_tick_count", "test_completed", "headless_start_time"]
+    },
+    "phase3_task_3.6": {
+      "legacy_pattern_deleted": true,
+      "scan_completeness": "MINOR gap — only Components dirs scanned; conclusion correct"
+    },
+    "rule3_compliance": {
+      "task_3.2_shim": false,
+      "task_3.3_shim": "acknowledged, transparent, legitimate deferral",
+      "task_3.5_shim": "dead code missed — not a Rule 3 violation but a scope failure"
+    },
+    "pytest_errors": {
+      "count": 4,
+      "orthogonal": true,
+      "traceability": "Confirmed — no PROJ-393 commits touched any colliding files"
+    }
+  }
+}

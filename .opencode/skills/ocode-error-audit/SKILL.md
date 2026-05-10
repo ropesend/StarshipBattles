@@ -4,11 +4,37 @@ description: Error handling & robustness audit. Scans all production code for ex
 argument-hint: "[--skip-phase1 to reuse existing raw results]"
 ---
 
+## Invocation
+
+- **Slash command (interactive):** `/ocode-error-audit`
+- **CLI (non-interactive):** `opencode run "Load the ocode-error-audit skill and execute it. Args: [optional --skip-phase1]"`
+
+The skill is identical in both modes. CLI mode skips any user-prompt confirmations.
+
 # Error Handling & Robustness Audit
 
 Run a comprehensive audit of error handling quality across the production codebase. Scans for exception hygiene issues, JSON I/O bypass, resource leaks, and debug-print leakage. Produces a prioritized error hygiene scorecard with remediation estimates.
 
 Does NOT change any code. Targets `game/` only (not tests).
+
+## Pre-Flight Safeguards
+
+Before starting any work:
+1. **Run from repo root.** All paths are relative to the repository root.
+2. **Check `git status --short`** and do NOT revert unrelated changes.
+3. **Never read `docs/_ignore/`.** It is not documentation.
+4. **Write only under `Reviews/results/`** and explicitly named `AgentCoordination/` paths.
+5. **This is a read-only audit.** Do not edit source code, test code, or docs.
+
+## Scope Exclusions (Pre-Filtered by Phase 1)
+
+The deterministic scanner skips these by design — agents should not see them and should not flag them:
+
+- **In-memory `json.loads(string_arg)` / `json.dumps(obj)` calls** — `json_utils` does not offer in-memory equivalents, so routing through it is impossible. Only file I/O paths are in scope.
+- **`except Exception` with a recognized `# Intentional broad catch:` comment on the same line or the line immediately above** — these are explicitly compliant per `docs/05_ERROR_HANDLING.md`.
+- **Top-level CLI scripts under `Tools/`** — broader exception types are tolerated at script level.
+
+If you see findings agents have flagged in these categories, treat them as audit defects (file an entry in the report's "Refinement Notes" section) rather than acting on them.
 
 ## Execution
 
@@ -70,7 +96,7 @@ Read these files into memory for use in agent prompts:
 6. Read `REVIEW_DIR/raw/print_debug_sites.json`
 7. Read `docs/05_ERROR_HANDLING.md`, `docs/03_CONVENTIONS.md`
 
-### Step 3: Launch 5 Agents in Parallel
+### Step 3: Launch 6 Agents in Parallel
 
 Create the findings directory:
 
@@ -78,9 +104,10 @@ Create the findings directory:
 mkdir -p REVIEW_DIR/findings
 ```
 
-Launch **5 agents** in parallel using the Task tool with `subagent_type: general`:
+Launch **6 agents** in parallel using OpenCode subagents in parallel:
 - **4 in-shard deep review agents** (one per shard: 01, 02, 03, 04)
 - **1 cross-layer error propagation validator**
+- **1 LLM context security validator**
 
 **Replace these placeholders in each template before sending:**
 - `{REVIEW_DIR}` → the actual review directory
@@ -129,7 +156,13 @@ For EACH file in your shard:
 3. **Check for additional error handling issues:**
    - Exception swallowing: `except: pass` or bare except with no action
    - Error information loss: catching one exception but raising a new one
-     without chaining (`raise NewError from e`)
+     without chaining (`raise NewError from e` or explicit `from None`)
+   - **Lost exception chaining:** `raise NewError(...)` inside `except` without
+     `from e` (swallows original traceback) or without `from None` rationale
+     (must document why the original is intentionally suppressed)
+   - Generic exception types where project-specific exceptions exist:
+     `raise RuntimeError(...)` or `raise ValueError(...)` where
+     `ValidationException` or `EnginePhaseError` would be more specific
    - Inconsistent logging: some errors logged at error level, others at debug
    - Missing error boundaries: TurnEngine callbacks without catch-all wrapper
    - Duplicate error handling code across files in the shard
@@ -149,9 +182,23 @@ For EACH file in your shard:
 - CRITICAL: Bare except that swallows all errors silently; resource leak
   that could exhaust file handles or memory
 - MAJOR: Broad except without comment where specific types would work;
-  JSON bypass where json_utils is clearly available
+  JSON bypass where json_utils is clearly available; lost exception chaining
+  in production runtime code
 - MINOR: Missing error chaining; inconsistent log levels; duplicate
-  error-handling patterns across files
+  error-handling patterns across files; generic raise in CLI/tool scripts
+  (top-level scripts tolerate broader exception types than runtime code)
+
+## JSON Bypass Exemptions
+Production code under `game/` must route JSON I/O through `game.core.json_utils`.
+Scripts under `Tools/` are exempt when appropriate. For LLM/security checks,
+require direct source evidence before reporting sensitive data leakage — do
+not flag based on variable naming alone. Verify by reading the actual data
+that flows through the exception handler.
+
+## Verification Guidance
+Verify ALL critical findings against the actual source file. For MAJOR
+findings, sample-verify at least 30% (every 3rd finding) to catch false
+positives. Report verification coverage: "N/N critical verified, N/N major sampled."
 
 ## Output
 You MUST use the Write tool to save your report to:
@@ -225,11 +272,6 @@ research/, assets/, services/).
    - Verify snapshot-and-rollback is used where documented
    - Confirm no errors bypass the StrategySessionFacade without conversion
 
-4. **Check LLM exception context security:**
-   - Search for LLM-related exception handlers
-   - Verify context dicts never contain API keys, request bodies, or tokens
-   - Flag any sites where raw provider responses leak into logs
-
 ## Severity Guide
 - CRITICAL: Error that would crash or corrupt game state with no fallback
 - MAJOR: Information loss on error propagation; missing error boundary
@@ -252,21 +294,73 @@ You MUST use the Write tool to save your report to:
 ## Critical Path Analysis
 [Per-path findings]
 
-## LLM Context Security
-[Per-site audit]
-
 ## Prioritized Recommendations
 [Ordered by impact/effort]
 ```
 
+#### Agent 3: LLM Context Security Validator
+
+```
+# LLM Context Security Validator
+
+Audit every site that handles LLM-related exceptions or attaches diagnostic
+context to logs. Verify that no API keys, request bodies, or raw provider
+response text leaks into logs, error messages, or persisted state.
+
+## Documentation Reference
+Read docs/05_ERROR_HANDLING.md.
+
+## Scope
+- All files under game/services/llm/ and any caller of those services.
+- Search the codebase for variable names: `api_key`, `secret`, `token`, `_request`, `_response`, `prompt`, `messages`.
+- Search for any exception handler that builds a `dict()` containing keys
+  named `request`, `response`, `body`, `payload`, `prompt`, `messages`.
+
+## Methodology
+
+1. Identify every catch site that produces an exception context dict or
+   structured log message.
+2. Verify the context never includes:
+   - API keys or credentials
+   - Full request bodies (truncate or redact)
+   - Full provider response bodies (truncate or redact)
+   - User-provided prompts that may contain PII
+3. Check that all LLM service code lives behind the LLM service interface
+   (per docs/05_ERROR_HANDLING.md) and converts provider-specific errors to
+   domain-specific ones before propagating up.
+
+## Severity Guide
+- CRITICAL: API key, token, or full request body in a log statement that
+  could reach disk or telemetry.
+- MAJOR: Full provider response body logged at error/warning level.
+- MINOR: Excess verbose context that could be trimmed; missing exception
+  conversion at the service boundary.
+
+## Output
+Save to: {REVIEW_DIR}/findings/llm_context_security.md
+
+# LLM Context Security Report
+## Summary
+- Sites Audited: [N]
+- Total Findings: [N]
+- Critical: [N] | Major: [N] | Minor: [N]
+
+## Findings
+[Per-site analysis]
+
+## Recommendations
+[Prioritized list]
+```
+
 ### Step 4: Verify Agent Outputs
 
-After all 5 agents complete, check that these files exist and are non-empty:
+After all 6 agents complete, check that these files exist and are non-empty:
 - `REVIEW_DIR/findings/error_review_01.md`
 - `REVIEW_DIR/findings/error_review_02.md`
 - `REVIEW_DIR/findings/error_review_03.md`
 - `REVIEW_DIR/findings/error_review_04.md`
 - `REVIEW_DIR/findings/error_propagation_cross_layer.md`
+- `REVIEW_DIR/findings/llm_context_security.md`
 
 ### Step 5: Launch Verification Agent
 
@@ -326,9 +420,20 @@ Read all agent reports and the verification report. Write `REVIEW_DIR/report.md`
 Summary from the cross-layer validator.
 
 **5. Prioritized Remediation Plan**
-Top 10 items ordered by severity then by LOC affected.
+Top 10 items ordered by severity then by LOC affected. Sorted by `severity_weight × layer_weight × loc_affected` via `Tools/_audit_common/layer_weight.py`. All findings still appear in detail tables and the scorecard; weighting only affects this top-N ordering.
 
-**6. Appendices**
+**6. Trend Comparison**
+Use `Tools/_audit_common/run_tracker.py` with `audit_name="error"` to load the previous run's totals and render a delta table:
+
+| Category | Previous Run | This Run | Delta |
+|---|---|---|---|
+| Critical | [N] | [N] | [+/-N] |
+| Major | [N] | [N] | [+/-N] |
+| Minor | [N] | [N] | [+/-N] |
+
+After writing the report, append this run's totals via `run_tracker.py`.
+
+**7. Appendices**
 Paths to raw tool outputs, agent reports, and verification report.
 
 ### Step 7: Log Skill Usage

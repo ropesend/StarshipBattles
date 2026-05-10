@@ -28,6 +28,7 @@ No additional dependencies.
 ```powershell
 python Tools/agent_coordination/inventory_agent_surfaces.py
 python Tools/agent_coordination/inventory_agent_surfaces.py --stdout
+python Tools/agent_coordination/summarize_test_baseline.py
 ```
 
 ### Arguments
@@ -173,7 +174,7 @@ State lives at `AgentCoordination/opencodereview/`; helpers live here:
 | `review_daemon.py` | Watches `pending_review_requests/`, spawns one OpenCode subprocess per request via a worker pool, writes a `## Results` section to the completed request file. |
 | `create_review_request.py` | Atomic, collision-resistant request creation from a JSON payload file. The single supported interface is `--payload-file`. |
 | `parse_results.py` | Reads the `## Results` section from a completed request file and prints fields as JSON. Used by the OpenCode skill to load parent context for follow-up reviews. |
-| `Start-ReviewDaemon.ps1` | Windows launcher. Activates `.venv` if present, otherwise runs against system Python. |
+| `Start-ReviewDaemon.ps1` | Windows launcher. Runs against system Python (falls back to `.venv` if one is present). |
 
 Operating doc with full lifecycle, schema, lock-file semantics, and the
 trust boundary: [`AgentCoordination/opencodereview/DELEGATION.md`](../../AgentCoordination/opencodereview/DELEGATION.md).
@@ -187,10 +188,16 @@ flow (parent's `## Results` is parsed by `parse_results.py` and consumed
 by the OpenCode skill). Tests at `Tools/agent_coordination/test_*.py` —
 53/53 green.
 
-## Test baseline `git_sha` semantics
+## Test baseline verification
 
-The companion file `AgentCoordination/generated/test_baseline.json` records
-`git_sha` from `HEAD` **at run time**. After a green run, the baseline file is
-updated and committed; the recorded `git_sha` therefore refers to the parent
-commit (the code that was tested), not the commit that contains the file. This
-is the intended contract — see `Tools/test_sharded/README.md` for details.
+`AgentCoordination/generated/test_baseline.json` is the counts-only canonical
+baseline. Green whole-suite runs write volatile verification data to
+`AgentCoordination/generated/test_baseline/by_install/<install_id>.json`, where
+`install_id` is the same per-checkout ID used by skill-usage tracking. Each
+receipt records `verified_at`, `git_sha`, and the observed counts for that
+checkout.
+
+Use `summarize_test_baseline.py` to regenerate the gitignored derived summary
+at `AgentCoordination/generated/test_baseline/summary.json`. The validator
+checks the canonical baseline shape, per-install verification shape, and
+per-install ownership rules.

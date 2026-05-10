@@ -6,34 +6,39 @@ import pytest
 from unittest.mock import MagicMock
 
 
+# PROJ-323 Task 2.20: shared module-level fixtures (was duplicated per-class).
+
+
+@pytest.fixture
+def mock_mod_def():
+    """Create a mock modifier definition."""
+    mod_def = MagicMock()
+    mod_def.min_val = 0.0
+    mod_def.max_val = 100.0
+    return mod_def
+
+
+@pytest.fixture
+def row(mock_mod_def):
+    """Create a ModifierControlRow instance with mocked dependencies."""
+    from game.ui.screens.builder.modifier_row import ModifierControlRow
+
+    manager = MagicMock()
+    container = MagicMock()
+    return ModifierControlRow(
+        manager=manager,
+        container=container,
+        width=400,
+        mod_id='test_mod',
+        mod_def=mock_mod_def,
+        config={},
+        on_change_callback=MagicMock(),
+        modifier_logic=MagicMock(),
+    )
+
+
 class TestModifierControlRowGetLocalBounds:
     """Tests for _get_local_bounds() method that centralizes range lookup and clamping."""
-
-    @pytest.fixture
-    def mock_mod_def(self):
-        """Create a mock modifier definition."""
-        mod_def = MagicMock()
-        mod_def.min_val = 0.0
-        mod_def.max_val = 100.0
-        return mod_def
-
-    @pytest.fixture
-    def row(self, mock_mod_def):
-        """Create a ModifierControlRow instance with mocked dependencies."""
-        from game.ui.screens.builder.modifier_row import ModifierControlRow
-
-        manager = MagicMock()
-        container = MagicMock()
-        row = ModifierControlRow(
-            manager=manager,
-            container=container,
-            width=400,
-            mod_id='test_mod',
-            mod_def=mock_mod_def,
-            config={},
-            on_change_callback=MagicMock()
-        )
-        return row
 
     def test_get_local_bounds_no_component_uses_mod_def(self, row, mock_mod_def):
         """With no component context, uses mod_def min/max."""
@@ -109,30 +114,9 @@ class TestModifierControlRowSetControlsEnabled:
     """Tests for _set_controls_enabled() method that centralizes enable/disable logic."""
 
     @pytest.fixture
-    def mock_mod_def(self):
-        """Create a mock modifier definition."""
-        mod_def = MagicMock()
-        mod_def.min_val = 0.0
-        mod_def.max_val = 100.0
-        return mod_def
-
-    @pytest.fixture
-    def row(self, mock_mod_def):
-        """Create a ModifierControlRow instance with mocked dependencies."""
-        from game.ui.screens.builder.modifier_row import ModifierControlRow
-
-        manager = MagicMock()
-        container = MagicMock()
-        row = ModifierControlRow(
-            manager=manager,
-            container=container,
-            width=400,
-            mod_id='test_mod',
-            mod_def=mock_mod_def,
-            config={},
-            on_change_callback=MagicMock()
-        )
-        # Set up mock UI elements
+    def row(self, row):
+        """Augment shared `row` fixture with mock UI elements (entry/slider/buttons)
+        used by the controls-enabled tests."""
         row.entry = MagicMock()
         row.slider = MagicMock()
         row.buttons = {MagicMock(): {}, MagicMock(): {}}

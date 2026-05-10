@@ -3,9 +3,18 @@ Build Queue Helpers - Pure formatting functions for build queue display.
 
 Extracted from BuildQueueScreen (PROJ-86 Phase 8).
 """
+from functools import lru_cache
+
 from game.core.resources import ResourceCatalog
 
-_PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
+
+@lru_cache(maxsize=1)
+def _get_planetary_ids() -> tuple[str, ...]:
+    """PROJ-393: lazy-load planetary resource IDs (was a module-level
+    ``ResourceCatalog.from_json()`` call that ran at import time, breaking
+    the docs/02_PATTERNS.md Pattern 12 contract). The cached tuple is
+    cheap to iterate; tests can call ``_get_planetary_ids.cache_clear()``."""
+    return tuple(d.id for d in ResourceCatalog.from_json().by_display_group("planetary"))
 
 # Resource abbreviations for compact UI display
 RESOURCE_ABBREVS = {
@@ -36,7 +45,7 @@ def format_empire_resources(empire) -> str:
         Formatted string like "Met: 500/1000  Org: 200/500  Vap: 0"
     """
     parts = []
-    for res in _PLANETARY_IDS:
+    for res in _get_planetary_ids():
         current = empire.resource_pool.get(res, 0.0)
         cap = empire.max_storage.get(res, 0.0)
         abbr = RESOURCE_ABBREVS.get(res, res[:3])
@@ -197,7 +206,7 @@ def format_resource_cost(cost: dict) -> str:
         Compact string like "M:100 O:50 V:20"
     """
     parts = []
-    for res in _PLANETARY_IDS:
+    for res in _get_planetary_ids():
         amount = cost.get(res, 0)
         if amount > 0:
             abbr = RESOURCE_ABBREVS_SHORT.get(res, res[0])

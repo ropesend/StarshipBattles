@@ -1,6 +1,9 @@
 """Tests for Combat Lab visual run functionality.
 
 Tests the flow when "Run Visual" is clicked in the Combat Lab UI.
+
+PROJ-342: TestLabScreen no longer takes a `game` handle. The fixture and
+helpers now operate on a `mock_battle_scene` directly.
 """
 import pygame
 import pytest
@@ -11,24 +14,17 @@ class TestVisualRunFlow:
     """Tests for _on_run() method in test_lab_screen."""
 
     @pytest.fixture
-    def mock_game(self):
-        """Create a mock Game object with battle_scene."""
-        game = Mock()
+    def mock_battle_scene(self):
+        """Create a mock BattleScreen the executor wires through to."""
+        battle_scene = Mock()
+        battle_scene.engine = Mock()
+        battle_scene.engine.ships = []
+        battle_scene.sim_paused = False
+        battle_scene.headless_mode = True
+        battle_scene.camera = Mock()
+        battle_scene._battle_service = Mock()
 
-        # Mock battle scene with engine
-        game.battle_scene = Mock()
-        game.battle_scene.engine = Mock()
-        game.battle_scene.engine.ships = []
-        game.battle_scene.sim_paused = False
-        game.battle_scene.test_mode = False
-        game.battle_scene.headless_mode = True
-        game.battle_scene.test_scenario = None
-        game.battle_scene.test_tick_count = 0
-        game.battle_scene.test_completed = False
-        game.battle_scene.camera = Mock()
-        game.battle_scene._battle_service = Mock()
-
-        return game
+        return battle_scene
 
     @pytest.fixture
     def mock_registry(self):
@@ -89,7 +85,7 @@ class TestVisualRunFlow:
 
         return controller
 
-    def _create_test_lab_screen(self, mock_game, mock_registry, mock_controller):
+    def _create_test_lab_screen(self, mock_battle_scene, mock_registry, mock_controller):
         """Helper to create a TestLabScreen with mocked dependencies.
 
         Uses the real _switch_to_battle method (BUG-110 fix).
@@ -100,7 +96,7 @@ class TestVisualRunFlow:
 
         with patch.object(TestLabScreen, '__init__', lambda self, *a, **kw: None):
             screen = TestLabScreen.__new__(TestLabScreen)
-            screen.game = mock_game
+            screen.battle_scene = mock_battle_scene
             screen.scene_callback = Mock()
             screen.registry = registry
             screen.controller = mock_controller
@@ -112,25 +108,25 @@ class TestVisualRunFlow:
                 controller=mock_controller,
                 render_progress=lambda t, s, d: None,
                 draw_and_flip=lambda: None,
-                get_engine=lambda: mock_game.battle_scene.engine,
+                get_engine=lambda: mock_battle_scene.engine,
                 ensure_engine=lambda: None,
                 switch_to_battle=lambda scenario: screen._switch_to_battle(scenario),
                 output_log=mock_controller.output_log,
             )
             return screen
 
-    def test_visual_run_calls_start_battle(self, mock_game, mock_registry, mock_controller):
+    def test_visual_run_calls_start_battle(self, mock_battle_scene, mock_registry, mock_controller):
         """Visual run should call battle_scene.start_battle() with a BattleController."""
-        screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
+        screen = self._create_test_lab_screen(mock_battle_scene, mock_registry, mock_controller)
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
         # start_battle should have been called exactly once
-        mock_game.battle_scene.start_battle.assert_called_once()
+        mock_battle_scene.start_battle.assert_called_once()
 
-    def test_visual_run_controller_set_for_test_lab(self, mock_game, mock_registry, mock_controller):
+    def test_visual_run_controller_set_for_test_lab(self, mock_battle_scene, mock_registry, mock_controller):
         """Visual run should pass a controller routed to return to TEST_LAB.
 
         PROJ-269 Phase 6: BattleMode is gone — test-vs-manual distinction
@@ -138,29 +134,29 @@ class TestVisualRunFlow:
         """
         from game.core.return_destination import ReturnDestination
 
-        screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
+        screen = self._create_test_lab_screen(mock_battle_scene, mock_registry, mock_controller)
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
-        controller = mock_game.battle_scene.start_battle.call_args[0][0]
+        controller = mock_battle_scene.start_battle.call_args[0][0]
         assert controller.config.return_destination == ReturnDestination.TEST_LAB
 
-    def test_visual_run_controller_starts_paused(self, mock_game, mock_registry, mock_controller):
+    def test_visual_run_controller_starts_paused(self, mock_battle_scene, mock_registry, mock_controller):
         """Visual run should pass a controller configured to start paused."""
-        screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
+        screen = self._create_test_lab_screen(mock_battle_scene, mock_registry, mock_controller)
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
-        controller = mock_game.battle_scene.start_battle.call_args[0][0]
+        controller = mock_battle_scene.start_battle.call_args[0][0]
         assert controller.config.start_paused is True
 
-    def test_visual_run_requests_battle_transition(self, mock_game, mock_registry, mock_controller):
+    def test_visual_run_requests_battle_transition(self, mock_battle_scene, mock_registry, mock_controller):
         """Visual run should request battle transition via scene_callback."""
-        screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
+        screen = self._create_test_lab_screen(mock_battle_scene, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
@@ -170,11 +166,11 @@ class TestVisualRunFlow:
         # Verify scene_callback was called to request battle transition
         screen.scene_callback.assert_called_once_with("start_test_battle", scenario=mock_scenario)
 
-    def test_visual_run_wires_scenario_via_spec_compiler(self, mock_game, mock_registry, mock_controller):
+    def test_visual_run_wires_scenario_via_spec_compiler(self, mock_battle_scene, mock_registry, mock_controller):
         """PROJ-269 Phase 6: visual run goes through `scenario.to_spec()`
         + `wire_ships()` + `custom_setup()`, NOT the legacy
         `scenario.setup(engine)` path."""
-        screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
+        screen = self._create_test_lab_screen(mock_battle_scene, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
@@ -185,9 +181,9 @@ class TestVisualRunFlow:
         assert mock_scenario.wire_ships.call_count == 1
         assert mock_scenario.custom_setup.call_count == 1
 
-    def test_visual_run_controller_has_scenario_reference(self, mock_game, mock_registry, mock_controller):
+    def test_visual_run_controller_has_scenario_reference(self, mock_battle_scene, mock_registry, mock_controller):
         """Visual run should store scenario reference in controller config."""
-        screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
+        screen = self._create_test_lab_screen(mock_battle_scene, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
@@ -195,22 +191,22 @@ class TestVisualRunFlow:
             screen._on_run()
 
         # Verify scenario reference is stored in the controller config
-        controller = mock_game.battle_scene.start_battle.call_args[0][0]
+        controller = mock_battle_scene.start_battle.call_args[0][0]
 
-    def test_visual_run_camera_handled_by_start_battle(self, mock_game, mock_registry, mock_controller):
+    def test_visual_run_camera_handled_by_start_battle(self, mock_battle_scene, mock_registry, mock_controller):
         """Visual run delegates camera fitting to start_battle (no direct camera call)."""
-        screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
+        screen = self._create_test_lab_screen(mock_battle_scene, mock_registry, mock_controller)
 
         # Add ships to the engine (simulating scenario.setup() adding them)
         mock_ship = Mock()
-        mock_game.battle_scene.engine.ships = [mock_ship]
+        mock_battle_scene.engine.ships = [mock_ship]
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
         # Camera fitting is now handled inside start_battle, so just verify start_battle was called
-        mock_game.battle_scene.start_battle.assert_called_once()
+        mock_battle_scene.start_battle.assert_called_once()
 
 
 def _mock_scenario_for_switch_to_battle():
@@ -246,56 +242,48 @@ class TestSceneTransitionCallbacks:
     """
 
     @pytest.fixture
-    def mock_game(self):
-        """Create a mock Game object with battle_scene."""
-        game = Mock()
-        game.battle_scene = Mock()
-        game.battle_scene.engine = Mock()
-        game.battle_scene.engine.ships = []
-        game.battle_scene.sim_paused = False
-        game.battle_scene.test_mode = False
-        game.battle_scene.headless_mode = True
-        game.battle_scene.test_scenario = None
-        game.battle_scene.test_tick_count = 0
-        game.battle_scene.test_completed = False
-        game.battle_scene.camera = Mock()
-        game.battle_scene._battle_service = Mock()
-        game.screen = Mock()
-        game.screen.get_width.return_value = 3840
-        game.screen.get_height.return_value = 2160
-        return game
+    def mock_battle_scene(self):
+        """Create a mock BattleScreen the executor wires through to."""
+        battle_scene = Mock()
+        battle_scene.engine = Mock()
+        battle_scene.engine.ships = []
+        battle_scene.sim_paused = False
+        battle_scene.headless_mode = True
+        battle_scene.camera = Mock()
+        battle_scene._battle_service = Mock()
+        return battle_scene
 
-    def _create_screen_with_real_switch(self, mock_game, scene_callback):
+    def _create_screen_with_real_switch(self, mock_battle_scene, scene_callback):
         """Create a TestLabScreen with the real _switch_to_battle method."""
         from game.ui.screens.test_lab.screen import TestLabScreen
 
         with patch.object(TestLabScreen, '__init__', lambda self, *a, **kw: None):
             screen = TestLabScreen.__new__(TestLabScreen)
-            screen.game = mock_game
+            screen.battle_scene = mock_battle_scene
             screen.scene_callback = scene_callback
             return screen
 
-    def test_switch_to_battle_calls_scene_callback(self, mock_game):
+    def test_switch_to_battle_calls_scene_callback(self, mock_battle_scene):
         """_switch_to_battle must call scene_callback('start_test_battle')."""
         callback = Mock()
-        screen = self._create_screen_with_real_switch(mock_game, callback)
+        screen = self._create_screen_with_real_switch(mock_battle_scene, callback)
 
         scenario = _mock_scenario_for_switch_to_battle()
         screen._switch_to_battle(scenario)
 
         callback.assert_called_once_with("start_test_battle", scenario=scenario)
 
-    def test_switch_to_battle_calls_start_battle(self, mock_game):
+    def test_switch_to_battle_calls_start_battle(self, mock_battle_scene):
         """_switch_to_battle must call battle_scene.start_battle with a controller."""
         callback = Mock()
-        screen = self._create_screen_with_real_switch(mock_game, callback)
+        screen = self._create_screen_with_real_switch(mock_battle_scene, callback)
 
         scenario = _mock_scenario_for_switch_to_battle()
         screen._switch_to_battle(scenario)
 
-        mock_game.battle_scene.start_battle.assert_called_once()
+        mock_battle_scene.start_battle.assert_called_once()
 
-    def test_switch_to_battle_controller_has_test_config(self, mock_game):
+    def test_switch_to_battle_controller_has_test_config(self, mock_battle_scene):
         """_switch_to_battle should pass controller routed for the test lab.
 
         PROJ-269 Phase 6: BattleMode is gone; the equivalent of "TEST mode"
@@ -305,45 +293,23 @@ class TestSceneTransitionCallbacks:
         from game.core.return_destination import ReturnDestination
 
         callback = Mock()
-        screen = self._create_screen_with_real_switch(mock_game, callback)
+        screen = self._create_screen_with_real_switch(mock_battle_scene, callback)
 
         scenario = _mock_scenario_for_switch_to_battle()
         screen._switch_to_battle(scenario)
 
-        controller = mock_game.battle_scene.start_battle.call_args[0][0]
+        controller = mock_battle_scene.start_battle.call_args[0][0]
         assert controller.config.start_paused is True
         assert controller.config.return_destination == ReturnDestination.TEST_LAB
 
-    def test_switch_to_battle_does_not_set_game_state_directly(self, mock_game):
-        """_switch_to_battle must NOT set game.state directly (app.py does that)."""
-        callback = Mock()
-        mock_game.state = "INITIAL"  # sentinel value
-        screen = self._create_screen_with_real_switch(mock_game, callback)
-
-        scenario = _mock_scenario_for_switch_to_battle()
-        screen._switch_to_battle(scenario)
-
-        # game.state should not have been set by _switch_to_battle
-        assert mock_game.state == "INITIAL"
-
-    def test_on_back_calls_scene_callback(self, mock_game):
+    def test_on_back_calls_scene_callback(self, mock_battle_scene):
         """_on_back must call scene_callback('return_to_menu')."""
         callback = Mock()
-        screen = self._create_screen_with_real_switch(mock_game, callback)
+        screen = self._create_screen_with_real_switch(mock_battle_scene, callback)
 
         screen._on_back()
 
         callback.assert_called_once_with("return_to_menu")
-
-    def test_on_back_does_not_set_game_state_directly(self, mock_game):
-        """_on_back must NOT set game.state directly."""
-        callback = Mock()
-        mock_game.state = "INITIAL"
-        screen = self._create_screen_with_real_switch(mock_game, callback)
-
-        screen._on_back()
-
-        assert mock_game.state == "INITIAL"
 
 
 class TestEndBattleInTestMode:
@@ -464,57 +430,11 @@ class TestBattleScreenDrawsInTestMode:
                 assert mock_draw_ship.call_count == 2
 
 
-class TestUpdateBattleVisualWithTestMode:
-    """Tests that update_battle_visual properly handles test mode."""
-
-    @pytest.fixture
-    def mock_battle_scene_test_mode(self):
-        """Create a mock BattleScreen in test mode."""
-        scene = Mock()
-        scene.sim_tick_counter = 0
-        scene.sim_paused = False  # Unpaused to run simulation
-        scene.sim_speed_multiplier = 1.0
-        scene.headless_mode = False
-        scene.test_mode = True
-        scene.test_scenario = Mock()
-        scene.test_tick_count = 0
-        scene.test_completed = False
-        scene.is_battle_over.return_value = False
-        scene.ships = [Mock()]  # Has ships
-        scene.tick_rate_count = 0
-        scene.tick_rate_timer = 0.0
-        scene.current_tick_rate = 0
-
-        # Camera
-        scene.camera = Mock()
-        scene.camera.zoom = 1.0
-
-        # UI
-        scene.ui = Mock()
-        scene.ui.seeker_panel = Mock()
-        scene.ui.seeker_panel.rect = Mock()
-        scene.ui.seeker_panel.rect.width = 200
-
-        # Engine
-        scene.engine = Mock()
-
-        return scene
-
-    def test_update_calls_scenario_update(self, mock_battle_scene_test_mode):
-        """BattleScreen.update() should call test_scenario.update() in test mode."""
-        from game.ui.screens.battle_screen import BattleScreen
-
-        scene = mock_battle_scene_test_mode
-
-        # Create a minimal callable update that triggers scenario update
-        # The real update method checks test_mode and calls scenario.update
-        scene.test_scenario.update = Mock()
-
-        # Simulate what update() does in test mode
-        if scene.test_mode and scene.test_scenario and not scene.test_completed:
-            scene.test_tick_count += 1
-            scene.test_scenario.update(scene.engine)
-
-        # Verify scenario.update was called
-        scene.test_scenario.update.assert_called_once_with(scene.engine)
-        assert scene.test_tick_count == 1
+# PROJ-397 Phase 1: deleted `TestUpdateBattleVisualWithTestMode`. The class
+# verified fictional behaviour — it manually simulated a `if self.test_mode`
+# branch inside its own assertion and never invoked the real
+# `BattleScreen.update()`. Production `update()` has no test_mode branch
+# (it dispatches solely on `headless_mode`), so the test was a tautology
+# on a Mock. The associated `test_mode` / `test_scenario` /
+# `test_tick_count` / `test_completed` BattleScreen instance vars were
+# deleted in the same phase.

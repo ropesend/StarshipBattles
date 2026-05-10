@@ -111,9 +111,9 @@ class BattleController:
         Args:
             config: Battle configuration
             spec: Optional BattleSpec for outcome extraction. Production
-                callers (app.py, test_lab/screen.py, test_execution_service.py)
-                pass the spec they compiled so the controller can emit a
-                `BattleOutcome` at battle end via `get_outcome()`.
+                callers (app.py, test_lab/screen.py) pass the spec they
+                compiled so the controller can emit a `BattleOutcome` at
+                battle end via `get_outcome()`.
 
         Returns:
             BattleResult indicating success/failure
@@ -253,11 +253,10 @@ class BattleController:
 
         PROJ-270 Phase 10 — single entry point for visual-mode battles.
         Routes through `start_engine_from_spec` (the same code path
-        `run_battle` uses), eliminating the 3 duplicated `engine.boundary
+        `run_battle` uses), eliminating the duplicated `engine.boundary
         = spec.boundary; engine.modifier_stack = spec.modifier_stack;
         materialize_spec_ships; controller.add_ships; controller.start`
-        blocks that previously lived in `app.py`, `test_lab/screen.py`,
-        and `test_execution_service.py`.
+        blocks that previously lived in `app.py` and `test_lab/screen.py`.
 
         Args:
             spec: The `BattleSpec` describing the battle.
@@ -678,10 +677,13 @@ class BattleController:
                     if ship_id:
                         ship_lookup[ship_id] = ship
 
-                # Restore each projectile
+                # Restore each projectile.  PROJ-405: forward the engine's
+                # session EventBus so restored seekers emit SEEKER_EXPIRE
+                # on the same bus as freshly-spawned ones.
+                event_bus = getattr(engine, "event_bus", None)
                 for proj_state in state.projectiles:
                     if proj_state.is_alive:
-                        proj = proj_state.to_projectile(ship_lookup)
+                        proj = proj_state.to_projectile(ship_lookup, event_bus=event_bus)
                         engine.projectiles.append(proj)
 
                 logger.info(f"Restored {len(state.projectiles)} projectiles")

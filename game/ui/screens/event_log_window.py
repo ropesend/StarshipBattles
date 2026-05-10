@@ -60,6 +60,18 @@ SIDEBAR_WIDTH = 180
 DOUBLE_CLICK_THRESHOLD_MS = 400
 
 
+class EventLogUiBuilder:
+    """Production widget builder. Constructs sidebar_panel, header_panel
+    + filter buttons, table_panel + VirtualTable, sidebar component, and
+    triggers the initial _rebuild_list. Reads Stage-1 state (all_events,
+    current_filter).
+    """
+
+    def build(self, screen: "EventLogWindow") -> None:
+        screen._init_layout()
+        screen._rebuild_list()
+
+
 class EventLogWindow(StrategyModalWindow):
     """Modal window displaying game events with filter tabs.
 
@@ -97,7 +109,30 @@ class EventLogWindow(StrategyModalWindow):
         empire_name: Optional[str] = None,
         replay_resolver: "Optional[ReplayResolver]" = None,
         launch_replay_callback: "Optional[Callable[[ReplayRecord], None]]" = None,
+        ui_builder: Optional[EventLogUiBuilder] = None,
     ) -> None:
+        # ---- Stage 1: cheap state ----
+        self.all_events = list(events)
+        self.current_filter = "all"
+        self.on_close_callback = on_close_callback
+        self.on_navigate_callback = on_navigate_callback
+        # FEAT-26: replay launch wiring.
+        self._replay_resolver = replay_resolver
+        self._launch_replay_callback = launch_replay_callback
+
+        # Double-click tracking
+        self._last_click_time: int = 0
+        self._last_click_row: int = -1
+
+        # VirtualTable components (populated by builder)
+        self.data_source: Optional[EventLogDataSource] = None
+        self.column_manager: Optional[TableColumnManager] = None
+        self.virtual_table: Optional[VirtualTable] = None
+
+        # Sidebar component (populated by builder)
+        self.sidebar: Optional[EventLogSidebar] = None
+
+        # ---- Stage 2: shell ----
         title = (
             f"Event Log — {empire_name} Empire"
             if empire_name
@@ -110,31 +145,14 @@ class EventLogWindow(StrategyModalWindow):
             resizable=True,
             window_manager=window_manager,
         )
-        self.all_events = list(events)
-        self.current_filter = "all"
-        self.on_close_callback = on_close_callback
-        self.on_navigate_callback = on_navigate_callback
-        # FEAT-26: replay launch wiring. None on both = legacy/test paths
-        # where the Replay button click is a no-op (button itself is
-        # disabled when no resolver is provided, see _handle_replay_click).
-        self._replay_resolver = replay_resolver
-        self._launch_replay_callback = launch_replay_callback
 
-        # Double-click tracking
-        self._last_click_time: int = 0
-        self._last_click_row: int = -1
+        # ---- Stage 3: widgets ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
 
-        # VirtualTable components
-        self.data_source: Optional[EventLogDataSource] = None
-        self.column_manager: Optional[TableColumnManager] = None
-        self.virtual_table: Optional[VirtualTable] = None
-
-        # Sidebar component
-        self.sidebar: Optional[EventLogSidebar] = None
-
-        # --- Build UI ---
-        self._init_layout()
-        self._rebuild_list()
+        (ui_builder or EventLogUiBuilder()).build(self)
 
     # ------------------------------------------------------------------
     # Layout
@@ -448,6 +466,12 @@ class EventLogWindow(StrategyModalWindow):
             )
             self._show_replay_message(_REPLAY_NOT_AVAILABLE_TITLE, message)
             return
+
+        # PROJ-368 (post-r002): verification_status is intentionally NOT a
+        # launch gate. It is a determinism diagnostic; a FAILED/ERROR sidecar
+        # means the headless re-run diverged from the captured outcome, not
+        # that the captured replay is unwatchable. Resolver loadability
+        # (handled above) remains the only launch precondition.
 
         if lookup.registry_drift:
             self._show_replay_message(

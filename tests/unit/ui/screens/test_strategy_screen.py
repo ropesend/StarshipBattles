@@ -1,12 +1,26 @@
 """Tests for StrategyScreen core functionality (PROJ-111 Phase 4).
 
 Tests initialization, turn advancement, fleet/planet selection, build queue
-interaction, lifecycle methods, and event delegation. Uses bypass-init pattern.
+interaction, lifecycle methods, and event delegation.
+
+PROJ-327 Phase 4 (Compositional Construction): the 8 sub-object slots
+(`_renderer`, `_camera_nav`, `_fleet_ops`, `_colonization`, `_superweapons`,
+`_build_queue`, `_game_state`, `_input`) are wired via
+`MockStrategyScreenComposition.populate(screen)` from
+`tests/fixtures/strategy_screen_composition.py`. Adding/renaming a slot is a
+single edit in the fixture instead of one edit per test helper.
+
+The upstream construction (Camera, StrategyUI, asset loading) is still
+bypassed via `__new__` because that path requires pygame_gui + disk I/O.
+A future two-stage refactor (similar to `RaceSetupScreen`) could remove
+that bypass; for now the Composition seam is the only sub-object surface.
 """
 
 import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 import pygame
+
+from tests.fixtures.strategy_screen_composition import MockStrategyScreenComposition
 
 
 # --- Helpers ---
@@ -15,11 +29,12 @@ def _make_strategy_screen():
     """Create a StrategyScreen with mocked dependencies.
 
     Returns (screen, mocks_dict) where mocks_dict contains all mock objects.
+    Sub-object slots are populated via `MockStrategyScreenComposition` so
+    every test sees the same canonical sub-object surface.
     """
     from game.ui.screens.strategy_screen import StrategyScreen
 
-    with patch.object(StrategyScreen, '__init__', lambda self, *a, **kw: None):
-        screen = StrategyScreen.__new__(StrategyScreen)
+    screen = StrategyScreen.__new__(StrategyScreen)
 
     # Core attributes
     screen.screen_width = 1920
@@ -62,15 +77,9 @@ def _make_strategy_screen():
     screen._quit_confirm_dialog = None
     screen.build_queue_screen = None
 
-    # Sub-modules
-    screen._renderer = MagicMock()
-    screen._camera_nav = MagicMock()
-    screen._fleet_ops = MagicMock()
-    screen._colonization = MagicMock()
-    screen._superweapons = MagicMock()
-    screen._build_queue = MagicMock()
-    screen._game_state = MagicMock()
-    screen._input = MagicMock()
+    # Sub-modules: wire all 8 slots via Compositional Construction fixture.
+    composition = MockStrategyScreenComposition()
+    composition.populate(screen)
 
     # Assets
     screen.empire_assets = {}
@@ -81,13 +90,14 @@ def _make_strategy_screen():
         'facade': facade,
         'camera': camera,
         'ui': ui,
-        'renderer': screen._renderer,
-        'camera_nav': screen._camera_nav,
-        'fleet_ops': screen._fleet_ops,
-        'colonization': screen._colonization,
-        'build_queue': screen._build_queue,
-        'game_state': screen._game_state,
-        'input_handler': screen._input,
+        'composition': composition,
+        'renderer': composition.renderer,
+        'camera_nav': composition.camera_nav,
+        'fleet_ops': composition.fleet_ops,
+        'colonization': composition.colonization,
+        'build_queue': composition.build_queue,
+        'game_state': composition.game_state,
+        'input_handler': composition.input_handler,
     }
 
     return screen, mocks
@@ -97,39 +107,128 @@ def _make_strategy_screen():
 # Task 4.1: Initialization Tests
 # ===========================================================================
 
-class TestStrategyScreenInitialization:
-    """Test StrategyScreen.__init__ behavior."""
 
-    def test_init_stores_screen_dimensions(self):
-        """__init__ should store screen width and height."""
-        screen, _ = _make_strategy_screen()
-        assert screen.screen_width == 1920
-        assert screen.screen_height == 1080
+class TestInitialization:
+    """Test cheap StrategyScreen construction edges."""
 
-    def test_init_accepts_session_parameter(self):
-        """__init__ should accept and store session parameter."""
-        screen, mocks = _make_strategy_screen()
-        assert screen.session is mocks['session']
+    def test_init_with_injected_composition_wires_slots(self):
+        """Real __init__ should wire all collaborator slots from composition."""
+        from game.ui.screens.strategy_screen import StrategyScreen
 
-    def test_init_creates_facade(self):
-        """__init__ should create facade from session."""
-        screen, mocks = _make_strategy_screen()
-        assert screen._facade is mocks['facade']
+        session = MagicMock(name="session")
+        session.empires = [MagicMock(id=0)]
+        session.active_empire = session.empires[0]
+        session.human_player_ids = [0]
+        facade = MagicMock(name="facade")
+        camera = MagicMock(name="camera")
+        ui = MagicMock(name="ui")
+        race_loader = MagicMock(name="race_loader")
+        scene_callback = MagicMock(name="scene_callback")
+        input_mapper = MagicMock(name="input_mapper")
 
-    def test_init_creates_sub_objects(self):
-        """__init__ should create renderer, camera_nav, input_handler, etc."""
-        screen, _ = _make_strategy_screen()
-        assert screen._renderer is not None
-        assert screen._camera_nav is not None
-        assert screen._input is not None
-        assert screen._fleet_ops is not None
-        assert screen._colonization is not None
+        class RecordingComposition:
+            def __init__(self):
+                self.calls = []
+                self.renderer = MagicMock(name="renderer")
+                self.camera_nav = MagicMock(name="camera_nav")
+                self.fleet_ops = MagicMock(name="fleet_ops")
+                self.colonization = MagicMock(name="colonization")
+                self.superweapons = MagicMock(name="superweapons")
+                self.build_queue = MagicMock(name="build_queue")
+                self.game_state = MagicMock(name="game_state")
+                self.input_handler = MagicMock(name="input_handler")
 
-    def test_init_stores_input_mapper(self):
-        """__init__ should store input_mapper parameter."""
-        screen, _ = _make_strategy_screen()
-        assert screen.input_mapper is not None
+            def _record(self, name, screen, result):
+                assert screen._facade is facade
+                assert screen.camera is camera
+                assert screen.ui is ui
+                assert screen._race_loader is race_loader
+                assert screen.input_mapper is input_mapper
+                assert screen.current_player_index == 0
+                assert screen.build_queue_screen is None
+                self.calls.append(name)
+                return result
 
+            def make_renderer(self, screen):
+                return self._record("renderer", screen, self.renderer)
+
+            def make_camera_navigator(self, screen):
+                return self._record("camera_nav", screen, self.camera_nav)
+
+            def make_fleet_ops(self, screen):
+                return self._record("fleet_ops", screen, self.fleet_ops)
+
+            def make_colonization(self, screen):
+                return self._record("colonization", screen, self.colonization)
+
+            def make_superweapons(self, screen):
+                return self._record("superweapons", screen, self.superweapons)
+
+            def make_build_queue_manager(self, screen):
+                return self._record("build_queue", screen, self.build_queue)
+
+            def make_game_state_manager(self, screen):
+                return self._record("game_state", screen, self.game_state)
+
+            def make_input_handler(self, screen):
+                return self._record("input", screen, self.input_handler)
+
+        composition = RecordingComposition()
+
+        with patch(
+            "game.ui.screens.strategy_screen.StrategySessionFacade",
+            return_value=facade,
+        ) as facade_cls, patch(
+            "game.ui.screens.strategy_screen.Camera",
+            return_value=camera,
+        ) as camera_cls, patch(
+            "game.ui.screens.strategy_screen.StrategyUI",
+            return_value=ui,
+        ) as ui_cls, patch(
+            "game.ui.screens.strategy_screen.RaceAssetLoader",
+            return_value=race_loader,
+        ) as race_loader_cls, patch(
+            "game.ui.screens.strategy_screen.StrategyScreenCompositionFactory"
+        ) as default_factory_cls, patch.object(
+            StrategyScreen, "_focus_on_player_home"
+        ) as focus_home, patch.object(
+            StrategyScreen, "_load_assets"
+        ) as load_assets:
+            screen = StrategyScreen(
+                1600,
+                900,
+                session=session,
+                scene_callback=scene_callback,
+                input_mapper=input_mapper,
+                composition=composition,
+            )
+
+        facade_cls.assert_called_once_with(session)
+        camera_cls.assert_called_once()
+        ui_cls.assert_called_once_with(screen, 1600, 900, input_mapper=input_mapper)
+        race_loader_cls.assert_called_once_with()
+        default_factory_cls.assert_not_called()
+        focus_home.assert_called_once_with()
+        load_assets.assert_called_once_with()
+
+        assert screen._renderer is composition.renderer
+        assert screen._camera_nav is composition.camera_nav
+        assert screen._fleet_ops is composition.fleet_ops
+        assert screen._colonization is composition.colonization
+        assert screen._superweapons is composition.superweapons
+        assert screen._build_queue is composition.build_queue
+        assert screen._game_state is composition.game_state
+        assert screen._input is composition.input_handler
+        assert composition.calls == [
+            "renderer",
+            "camera_nav",
+            "fleet_ops",
+            "colonization",
+            "superweapons",
+            "build_queue",
+            "game_state",
+            "input",
+        ]
 
 # ===========================================================================
 # Task 4.1: Turn Advancement Tests
@@ -189,8 +288,8 @@ class TestOnUiSelection:
         screen.session.human_player_ids = [0]
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=True), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=True), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(mock_fleet)
 
         assert screen.selected_fleet is mock_fleet
@@ -202,8 +301,8 @@ class TestOnUiSelection:
         mock_planet = MagicMock()
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(mock_planet)
 
         assert screen.selected_fleet is None
@@ -214,8 +313,8 @@ class TestOnUiSelection:
         mock_obj = MagicMock()
         screen._get_object_asset = MagicMock(return_value=MagicMock())
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(mock_obj)
 
         mocks['ui'].show_detailed_report.assert_called_once()
@@ -226,8 +325,8 @@ class TestOnUiSelection:
         screen.selected_object = MagicMock()
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(None)
 
         assert screen.selected_object is None
@@ -627,8 +726,8 @@ class TestErrorHandlingPaths:
         screen.selected_fleet = MagicMock()
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
-             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+        with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen_selection.is_star_system', return_value=False):
             screen.on_ui_selection(None)
 
         assert screen.selected_object is None
@@ -680,6 +779,15 @@ class TestErrorHandlingPaths:
 
         # Delegation should occur regardless of state
         mocks['game_state'].advance_turn.assert_called_once()
+
+    def test_current_empire_with_empty_human_player_ids_returns_active_empire(self):
+        """current_empire should not index into an empty human player list."""
+        screen, _ = _make_strategy_screen()
+        active_empire = screen.session.empires[1]
+        screen.session.active_empire = active_empire
+        screen.session.human_player_ids = []
+
+        assert screen.current_empire is active_empire
 
     def test_on_build_yard_click_no_selected_object(self):
         """on_build_yard_click() should delegate to build_queue manager."""
@@ -888,3 +996,36 @@ class TestScreenResizeHandling:
         assert screen.screen_height == 2160
         # UI should have been called 4 times
         assert mocks['ui'].handle_resize.call_count == 4
+
+
+class TestSessionSetterFacadeRebuild:
+    """PROJ-396 MAJ-001 — ``screen.session = ...`` rebuilds the facade.
+
+    Before MAJ-001, the setter wrote ``self._session`` but left
+    ``self._facade`` pointing at the original session, producing a
+    split-brain state where commands dispatched through the stale facade
+    while reads (galaxy/empires/active_empire) came from the new session.
+    """
+
+    def test_session_setter_rebuilds_facade_around_new_session(self) -> None:
+        from game.ui.screens.strategy_screen import StrategyScreen
+
+        screen = StrategyScreen.__new__(StrategyScreen)
+        original_session = MagicMock(name="original_session")
+        screen._session = original_session
+
+        with patch(
+            "game.ui.screens.strategy_screen.StrategySessionFacade",
+        ) as facade_cls:
+            original_facade = MagicMock(name="original_facade")
+            new_facade = MagicMock(name="new_facade")
+            facade_cls.side_effect = [original_facade, new_facade]
+            screen._facade = facade_cls(original_session)
+            assert screen._facade is original_facade
+
+            new_session = MagicMock(name="new_session")
+            screen.session = new_session
+
+            assert screen._session is new_session
+            assert screen._facade is new_facade
+            facade_cls.assert_called_with(new_session)

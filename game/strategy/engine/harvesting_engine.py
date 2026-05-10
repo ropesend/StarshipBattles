@@ -35,16 +35,21 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet, PlanetaryFacility
 
 
-def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> dict | list | None:
-    """Extract ResourceHarvester info from a component entry.
+def _get_ability_info(
+    comp, ability_name: str, registries: Optional[GameRegistries] = None
+) -> dict | list | None:
+    """Extract a named ability's data from a component entry.
 
-    Supports:
-    - Dict with inline abilities: {"id": "x", "abilities": {"ResourceHarvester": {...}}}
-    - List of dicts: {"id": "x", "abilities": {"ResourceHarvester": [{...}, {...}]}}
+    PROJ-375 Task 2.6: generic replacement for the harvester/storage
+    info-extractor pairs. Supports:
+    - Dict with inline abilities: {"id": "x", "abilities": {<ability>: {...}}}
+    - List of dicts: {"id": "x", "abilities": {<ability>: [{...}, {...}]}}
     - Plain string ID: resolved via registries
 
     Args:
         comp: Component entry from design_data layers (dict or str)
+        ability_name: Ability key to extract (e.g. "ResourceHarvester",
+            "LocalStorage", "StagingYard")
         registries: Optional GameRegistries for component lookup
 
     Returns:
@@ -52,24 +57,26 @@ def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> dic
     """
     if isinstance(comp, dict):
         abilities = comp.get('abilities', {})
-        harvester_data = abilities.get('ResourceHarvester')
-        if isinstance(harvester_data, (dict, list)):
-            return harvester_data
-        # Also check by component ID via registry
+        data = abilities.get(ability_name)
+        if isinstance(data, (dict, list)):
+            return data
         comp_id = comp.get('id')
         if comp_id and registries is not None:
-            return get_harvester_from_registry(comp_id, registries)
+            return _get_ability_data_from_registry(comp_id, registries, ability_name)
     elif isinstance(comp, str) and registries is not None:
-        return get_harvester_from_registry(comp, registries)
+        return _get_ability_data_from_registry(comp, registries, ability_name)
     return None
 
 
-def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> dict | list | None:
-    """Get harvester ability from the component registry.
+def _get_ability_data_from_registry(
+    comp_id: str, registries: GameRegistries, ability_name: str
+) -> dict | list | None:
+    """Look up a named ability's data from the component registry.
 
     Args:
         comp_id: Component identifier to look up
         registries: GameRegistries for component lookup
+        ability_name: Ability key to extract
 
     Returns:
         Dict, list of dicts, or None
@@ -78,10 +85,26 @@ def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> dic
     if comp_def is None:
         return None
     abilities = get_component_abilities(comp_def)
-    harvester_data = abilities.get('ResourceHarvester')
-    if isinstance(harvester_data, (dict, list)):
-        return harvester_data
+    data = abilities.get(ability_name)
+    if isinstance(data, (dict, list)):
+        return data
     return None
+
+
+def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> dict | list | None:
+    """Extract ResourceHarvester info from a component entry.
+
+    Thin wrapper around `_get_ability_info` (PROJ-375 Task 2.6).
+    """
+    return _get_ability_info(comp, 'ResourceHarvester', registries)
+
+
+def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> dict | list | None:
+    """Get harvester ability from the component registry.
+
+    Thin wrapper around `_get_ability_data_from_registry` (PROJ-375 Task 2.6).
+    """
+    return _get_ability_data_from_registry(comp_id, registries, 'ResourceHarvester')
 
 
 class HarvestingEngine(IHarvestingEngine):
@@ -106,6 +129,8 @@ class HarvestingEngine(IHarvestingEngine):
         *,
         registries: GameRegistries,
         race_registry: Optional[Any] = None,
+        planet_mutator: Optional[Any] = None,
+        empire_mutator: Optional[Any] = None,
     ):
         """Initialize the harvesting engine.
 
@@ -131,10 +156,30 @@ class HarvestingEngine(IHarvestingEngine):
             )
         self._registries = registries
         self._race_registry = race_registry
+        self._planet_mutator = planet_mutator
+        self._empire_mutator = empire_mutator
         # PROJ-285: used to key the per-turn habitability cache on Planet.
         # TurnEngine calls `set_current_turn` before each turn's tick loop.
         self._current_turn: int = 0
         self._galaxy = None
+
+    def _get_planet_mutator(self):
+        """Lazy-default the planet mutator (PROJ-370)."""
+        if self._planet_mutator is None:
+            from game.strategy.services.planet_write_service import (
+                PlanetWriteService,
+            )
+            self._planet_mutator = PlanetWriteService()
+        return self._planet_mutator
+
+    def _get_empire_mutator(self):
+        """Lazy-default the empire mutator (PROJ-370)."""
+        if self._empire_mutator is None:
+            from game.strategy.services.empire_write_service import (
+                EmpireWriteService,
+            )
+            self._empire_mutator = EmpireWriteService()
+        return self._empire_mutator
 
     def set_current_turn(self, turn: int) -> None:
         """PROJ-285: TurnEngine calls this at the start of each turn so the
@@ -203,14 +248,17 @@ class HarvestingEngine(IHarvestingEngine):
                     continue
                 self._collect_storage_from_facility(facility, colony_storage)
                 staging_mass += self._collect_staging_capacity(facility)
-            colony.max_stockpile = colony_storage
+            # PROJ-370 Phase 3: route through IPlanetMutator.
+            self._get_planet_mutator().set_max_stockpile(colony, colony_storage)
             colony.max_staging_mass = staging_mass
-        # Keep empire.max_storage as aggregate for read-only UI display
+        # Keep empire.max_storage as aggregate for read-only UI display.
+        # PROJ-370 Phase 4: route through IEmpireMutator.replace_max_storage
+        # (clear-then-update preserves the legacy whole-dict semantics).
         empire_total = {}
         for colony in empire.colonies:
             for res, cap in colony.max_stockpile.items():
                 empire_total[res] = empire_total.get(res, 0.0) + cap
-        empire.max_storage = empire_total
+        self._get_empire_mutator().replace_max_storage(empire, empire_total)
 
     def _collect_staging_capacity(self, facility: 'PlanetaryFacility') -> float:
         """Sum StagingYard capacity from a facility's components."""
@@ -226,28 +274,11 @@ class HarvestingEngine(IHarvestingEngine):
         return total
 
     def _get_staging_info(self, comp) -> dict | list | None:
-        """Extract StagingYard info from a component entry."""
-        if isinstance(comp, dict):
-            abilities = comp.get('abilities', {})
-            data = abilities.get('StagingYard')
-            if isinstance(data, (dict, list)):
-                return data
-            comp_id = comp.get('id')
-            if comp_id and self._registries is not None:
-                comp_def = self._registries.components.get(comp_id)
-                if comp_def:
-                    reg_abilities = get_component_abilities(comp_def)
-                    data = reg_abilities.get('StagingYard')
-                    if isinstance(data, (dict, list)):
-                        return data
-        elif isinstance(comp, str) and self._registries is not None:
-            comp_def = self._registries.components.get(comp)
-            if comp_def:
-                reg_abilities = get_component_abilities(comp_def)
-                data = reg_abilities.get('StagingYard')
-                if isinstance(data, (dict, list)):
-                    return data
-        return None
+        """Extract StagingYard info from a component entry.
+
+        PROJ-375 Task 2.6: thin wrapper around `_get_ability_info`.
+        """
+        return _get_ability_info(comp, 'StagingYard', self._registries)
 
     def _collect_storage_from_facility(
         self,
@@ -274,47 +305,16 @@ class HarvestingEngine(IHarvestingEngine):
     def _get_storage_info(self, comp) -> dict | list | None:
         """Extract LocalStorage info from a component entry.
 
-        Supports:
-        - Dict with inline abilities: {"id": "x", "abilities": {"LocalStorage": {...}}}
-        - List of dicts: {"id": "x", "abilities": {"LocalStorage": [{...}, {...}]}}
-        - Plain string ID: resolved via registries
-
-        Args:
-            comp: Component entry from design_data layers (dict or str)
-
-        Returns:
-            Dict, list of dicts, or None
+        PROJ-375 Task 2.6: thin wrapper around `_get_ability_info`.
         """
-        if isinstance(comp, dict):
-            abilities = comp.get('abilities', {})
-            storage_data = abilities.get('LocalStorage')
-            if isinstance(storage_data, (dict, list)):
-                return storage_data
-            # Also check by component ID via registry
-            comp_id = comp.get('id')
-            if comp_id and self._registries is not None:
-                return self._get_storage_from_registry(comp_id)
-        elif isinstance(comp, str) and self._registries is not None:
-            return self._get_storage_from_registry(comp)
-        return None
+        return _get_ability_info(comp, 'LocalStorage', self._registries)
 
     def _get_storage_from_registry(self, comp_id: str) -> dict | list | None:
         """Get storage ability from the component registry.
 
-        Args:
-            comp_id: Component identifier to look up
-
-        Returns:
-            Dict, list of dicts, or None
+        PROJ-375 Task 2.6: thin wrapper around `_get_ability_data_from_registry`.
         """
-        comp_def = self._registries.components.get(comp_id)
-        if comp_def is None:
-            return None
-        abilities = get_component_abilities(comp_def)
-        storage_data = abilities.get('LocalStorage')
-        if isinstance(storage_data, (dict, list)):
-            return storage_data
-        return None
+        return _get_ability_data_from_registry(comp_id, self._registries, 'LocalStorage')
 
     def _process_empire(self, empire: 'Empire', tick_fraction: float = 1.0) -> None:
         """Process harvesting for a single empire.

@@ -27,7 +27,7 @@ class SpeciesDemographicView:
         race_name:           Display name; falls back to `race_id` if the race's
                              `race_name`/`name` are both empty.
         count:               Current population units (1 unit = 1,000 people).
-        habitability:        `score_planet_for_race(planet, race_config)` -> [0, 1].
+        habitability:        `calculate_habitability(planet, race_config)` -> [0, 1].
         happiness:           Current `pop.happiness` (HappinessEngine output, [0, 3]).
         growth_rate:         Per-capita next-turn rate from `projected_growth_rate`.
                              Multiply by `count` for absolute Δpop.

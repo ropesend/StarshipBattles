@@ -218,3 +218,50 @@ class TestGetStarGenerationConfig:
             assert config.mass_sigma == 0.8
 
         get_star_generation_config.cache_clear()
+
+
+class TestStarGenerationConfigCatchNarrowing:
+    """PROJ-381 Phase 3 (ERR-04-007): ValueError / KeyError must NOT
+    be silently masked behind the defaults fallback — they indicate
+    data-integrity bugs that should surface."""
+
+    def test_value_error_in_loader_propagates(self):
+        """A ValueError from the loader must propagate, not be swallowed."""
+        get_star_generation_config.cache_clear()
+        try:
+            with patch(
+                "game.strategy.generation.loaders.astrophysics_loader.AstrophysicsLoader"
+            ) as MockLoader:
+                MockLoader.return_value.load.side_effect = ValueError("bad config dict")
+                with pytest.raises(ValueError, match="bad config dict"):
+                    get_star_generation_config()
+        finally:
+            get_star_generation_config.cache_clear()
+
+    def test_key_error_in_loader_propagates(self):
+        """A KeyError from the loader must propagate, not be swallowed."""
+        get_star_generation_config.cache_clear()
+        try:
+            with patch(
+                "game.strategy.generation.loaders.astrophysics_loader.AstrophysicsLoader"
+            ) as MockLoader:
+                MockLoader.return_value.load.side_effect = KeyError("missing_key")
+                with pytest.raises(KeyError):
+                    get_star_generation_config()
+        finally:
+            get_star_generation_config.cache_clear()
+
+    def test_file_not_found_still_returns_defaults(self):
+        """FileNotFoundError stays in the catch tuple — defaults returned."""
+        get_star_generation_config.cache_clear()
+        try:
+            with patch(
+                "game.strategy.generation.loaders.astrophysics_loader.AstrophysicsLoader"
+            ) as MockLoader:
+                MockLoader.return_value.load.side_effect = FileNotFoundError("no file")
+                config = get_star_generation_config()
+                # Defaults: MAIN_SEQUENCE weight is 0.525.
+                assert isinstance(config, StarGenerationConfig)
+                assert config.type_weights["MAIN_SEQUENCE"] == 0.525
+        finally:
+            get_star_generation_config.cache_clear()

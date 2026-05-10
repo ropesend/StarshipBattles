@@ -7,23 +7,18 @@ and warp points by hex coordinate.
 import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.galaxy_spatial_index import GalaxySpatialIndex
+from game.strategy.data.galaxy_state import GalaxyState
 
 
 # ---------------------------------------------------------------------------
-# Lightweight test doubles
+# Lightweight test doubles.
+#
+# PROJ-403: tests now construct a real ``GalaxyState`` rather than a
+# ``_MockGalaxy`` stub. PROJ-372 Phase 3 made ``GalaxySpatialIndex``
+# depend on ``GalaxyState``; PROJ-387 deleted the legacy
+# underscore-prefixed forwarders, so the old stub fields no longer
+# match the production reads.
 # ---------------------------------------------------------------------------
-
-class _MockGalaxy:
-    """Minimal Galaxy substitute with only the state dicts that
-    GalaxySpatialIndex reads."""
-
-    def __init__(self):
-        self.systems = {}                  # HexCoord -> StarSystem
-        self._planet_to_system = {}        # Planet -> StarSystem
-        self._global_hex_planets = {}      # HexCoord -> List[Planet]
-        self._global_hex_zones = {}        # HexCoord -> List[object]
-        self._zone_to_system = {}          # id(obj) -> StarSystem
-        self._global_hex_warp_points = {}  # HexCoord -> StarSystem
 
 
 class _MockStarSystem:
@@ -71,13 +66,13 @@ class _MockZone:
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def galaxy():
-    return _MockGalaxy()
+def state() -> GalaxyState:
+    return GalaxyState(radius=10)
 
 
 @pytest.fixture
-def spatial(galaxy):
-    return GalaxySpatialIndex(galaxy)
+def spatial(state):
+    return GalaxySpatialIndex(state)
 
 
 # ===========================================================================
@@ -88,26 +83,26 @@ class TestGetPlanetsAtGlobalHex:
     def test_returns_empty_list_for_empty_index(self, spatial):
         assert spatial.get_planets_at_global_hex(HexCoord(0, 0)) == []
 
-    def test_returns_planets_registered_at_hex(self, spatial, galaxy):
+    def test_returns_planets_registered_at_hex(self, spatial, state):
         planet = _MockPlanet(location=HexCoord(1, 0))
         global_hex = HexCoord(6, 5)
-        galaxy._global_hex_planets[global_hex] = [planet]
+        state.global_hex_planets[global_hex] = [planet]
 
         result = spatial.get_planets_at_global_hex(global_hex)
 
         assert result == [planet]
 
-    def test_returns_multiple_planets_at_same_hex(self, spatial, galaxy):
+    def test_returns_multiple_planets_at_same_hex(self, spatial, state):
         p1 = _MockPlanet(location=HexCoord(1, 0))
         p2 = _MockPlanet(location=HexCoord(1, 0))
         hex_ = HexCoord(10, 10)
-        galaxy._global_hex_planets[hex_] = [p1, p2]
+        state.global_hex_planets[hex_] = [p1, p2]
 
         assert len(spatial.get_planets_at_global_hex(hex_)) == 2
 
-    def test_does_not_return_planets_at_different_hex(self, spatial, galaxy):
+    def test_does_not_return_planets_at_different_hex(self, spatial, state):
         planet = _MockPlanet(location=HexCoord(1, 0))
-        galaxy._global_hex_planets[HexCoord(1, 1)] = [planet]
+        state.global_hex_planets[HexCoord(1, 1)] = [planet]
 
         assert spatial.get_planets_at_global_hex(HexCoord(2, 2)) == []
 
@@ -120,10 +115,10 @@ class TestGetZonesAtGlobalHex:
     def test_returns_empty_for_unregistered_hex(self, spatial):
         assert spatial.get_zones_at_global_hex(HexCoord(0, 0)) == []
 
-    def test_returns_zone_at_registered_hex(self, spatial, galaxy):
+    def test_returns_zone_at_registered_hex(self, spatial, state):
         zone = _MockZone(hexes=[HexCoord(0, 0)])
         global_hex = HexCoord(5, 5)
-        galaxy._global_hex_zones[global_hex] = [zone]
+        state.global_hex_zones[global_hex] = [zone]
 
         assert spatial.get_zones_at_global_hex(global_hex) == [zone]
 
@@ -133,10 +128,10 @@ class TestGetZonesAtGlobalHex:
 # ===========================================================================
 
 class TestGetPlanetGlobalHex:
-    def test_returns_global_hex_for_registered_planet(self, spatial, galaxy):
+    def test_returns_global_hex_for_registered_planet(self, spatial, state):
         system = _MockStarSystem(global_location=HexCoord(10, 20))
         planet = _MockPlanet(location=HexCoord(1, -1))
-        galaxy._planet_to_system[planet] = system
+        state.planet_to_system[planet] = system
 
         result = spatial.get_planet_global_hex(planet)
 
@@ -153,10 +148,10 @@ class TestGetPlanetGlobalHex:
 # ===========================================================================
 
 class TestGetSystemOfPlanet:
-    def test_returns_system_for_registered_planet(self, spatial, galaxy):
+    def test_returns_system_for_registered_planet(self, spatial, state):
         system = _MockStarSystem(global_location=HexCoord(5, 5))
         planet = _MockPlanet(location=HexCoord(1, 0))
-        galaxy._planet_to_system[planet] = system
+        state.planet_to_system[planet] = system
 
         assert spatial.get_system_of_planet(planet) is system
 
@@ -171,16 +166,16 @@ class TestGetSystemOfPlanet:
 # ===========================================================================
 
 class TestGetSystemOfObject:
-    def test_returns_system_when_fleet_at_system_location(self, spatial, galaxy):
+    def test_returns_system_when_fleet_at_system_location(self, spatial, state):
         system = _MockStarSystem(global_location=HexCoord(5, 5))
-        galaxy.systems[HexCoord(5, 5)] = system
+        state.systems[HexCoord(5, 5)] = system
         fleet = _MockFleet(location=HexCoord(5, 5))
 
         assert spatial.get_system_of_object(fleet) is system
 
-    def test_returns_none_for_fleet_in_deep_space(self, spatial, galaxy):
+    def test_returns_none_for_fleet_in_deep_space(self, spatial, state):
         system = _MockStarSystem(global_location=HexCoord(5, 5))
-        galaxy.systems[HexCoord(5, 5)] = system
+        state.systems[HexCoord(5, 5)] = system
         fleet = _MockFleet(location=HexCoord(99, 99))
 
         assert spatial.get_system_of_object(fleet) is None
@@ -190,7 +185,7 @@ class TestGetSystemOfObject:
 
         assert spatial.get_system_of_object(obj) is None
 
-    def test_auto_routes_real_planet_to_planet_lookup(self, spatial, galaxy):
+    def test_auto_routes_real_planet_to_planet_lookup(self, spatial, state):
         """When passed an actual Planet instance, delegates to
         get_system_of_planet (which uses the planet-to-system reverse map
         rather than global location matching)."""
@@ -204,7 +199,7 @@ class TestGetSystemOfObject:
         planet.location = HexCoord(1, 0)
         planet.orbit_distance = 1
         planet.id = 1
-        galaxy._planet_to_system[planet] = system
+        state.planet_to_system[planet] = system
 
         assert spatial.get_system_of_object(planet) is system
 
@@ -214,48 +209,48 @@ class TestGetSystemOfObject:
 # ===========================================================================
 
 class TestGetSystemAtLocation:
-    def test_returns_system_at_direct_location(self, spatial, galaxy):
+    def test_returns_system_at_direct_location(self, spatial, state):
         system = _MockStarSystem(global_location=HexCoord(3, 3))
-        galaxy.systems[HexCoord(3, 3)] = system
+        state.systems[HexCoord(3, 3)] = system
 
         assert spatial.get_system_at_location(HexCoord(3, 3)) is system
 
-    def test_returns_system_via_planet_index(self, spatial, galaxy):
+    def test_returns_system_via_planet_index(self, spatial, state):
         system = _MockStarSystem(global_location=HexCoord(5, 5))
         planet = _MockPlanet(location=HexCoord(1, 0))
         planet_hex = HexCoord(6, 5)
-        galaxy._global_hex_planets[planet_hex] = [planet]
-        galaxy._planet_to_system[planet] = system
+        state.global_hex_planets[planet_hex] = [planet]
+        state.planet_to_system[planet] = system
 
         assert spatial.get_system_at_location(planet_hex) is system
 
-    def test_returns_system_via_zone_index(self, spatial, galaxy):
+    def test_returns_system_via_zone_index(self, spatial, state):
         system = _MockStarSystem(global_location=HexCoord(5, 5))
         zone = _MockZone(hexes=[HexCoord(0, 0)])
         zone_hex = HexCoord(5, 5)
-        galaxy._global_hex_zones[zone_hex] = [zone]
-        galaxy._zone_to_system[id(zone)] = system
+        state.global_hex_zones[zone_hex] = [zone]
+        state.zone_to_system[id(zone)] = system
 
         assert spatial.get_system_at_location(zone_hex) is system
 
-    def test_returns_system_via_warp_point_index(self, spatial, galaxy):
+    def test_returns_system_via_warp_point_index(self, spatial, state):
         system = _MockStarSystem(global_location=HexCoord(5, 5))
         wp_hex = HexCoord(7, 5)
-        galaxy._global_hex_warp_points[wp_hex] = system
+        state.global_hex_warp_points[wp_hex] = system
 
         assert spatial.get_system_at_location(wp_hex) is system
 
     def test_returns_none_for_deep_space(self, spatial):
         assert spatial.get_system_at_location(HexCoord(99, 99)) is None
 
-    def test_priority_direct_system_over_planet(self, spatial, galaxy):
+    def test_priority_direct_system_over_planet(self, spatial, state):
         """If a hex is both a system location AND has a planet, the direct
         system match wins (short-circuit)."""
         system = _MockStarSystem(global_location=HexCoord(5, 5))
-        galaxy.systems[HexCoord(5, 5)] = system
+        state.systems[HexCoord(5, 5)] = system
         # Also has planet data at same hex
         planet = _MockPlanet(location=HexCoord(0, 0))
-        galaxy._global_hex_planets[HexCoord(5, 5)] = [planet]
+        state.global_hex_planets[HexCoord(5, 5)] = [planet]
 
         assert spatial.get_system_at_location(HexCoord(5, 5)) is system
 

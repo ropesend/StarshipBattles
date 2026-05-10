@@ -1,6 +1,8 @@
 """Tests for Fleet DTOs."""
 import pytest
 from dataclasses import FrozenInstanceError
+from types import SimpleNamespace
+
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
@@ -409,3 +411,133 @@ class TestFleetInfoFactory:
         assert len(info.orders) == 1
         assert info.orders[0].order_type == "JOIN_FLEET"
         assert info.orders[0].target_id == 99  # Fleet ID
+
+    def test_from_fleet_with_move_to_fleet_order(self):
+        """from_fleet handles MOVE_TO_FLEET order with fleet target."""
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        target_fleet = Fleet(
+            fleet_id=99,
+            owner_id=0,
+            location=HexCoord(10, 10),
+        )
+
+        fleet = Fleet(
+            fleet_id=1,
+            owner_id=0,
+            location=HexCoord(0, 0),
+            speed=5.0,
+        )
+        fleet.add_order(Order(OrderType.MOVE_TO_FLEET, target_fleet))
+
+        info = FleetInfo.from_fleet(fleet)
+
+        assert len(info.orders) == 1
+        assert info.orders[0].order_type == "MOVE_TO_FLEET"
+        assert info.orders[0].target_id == 99
+        assert info.orders[0].target_description == target_fleet.name
+
+    def test_from_fleet_with_build_order_description(self):
+        """from_fleet describes BUILD orders with queue item count."""
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        fleet = Fleet(
+            fleet_id=1,
+            owner_id=0,
+            location=HexCoord(0, 0),
+            speed=5.0,
+        )
+        fleet.construction_queue = [{"design_id": "scout"}, {"design_id": "miner"}]
+        fleet.add_order(Order(OrderType.BUILD))
+
+        info = FleetInfo.from_fleet(fleet)
+
+        assert len(info.orders) == 1
+        assert info.orders[0].order_type == "BUILD"
+        assert info.orders[0].target_description == "Building (2 items)"
+
+    @pytest.mark.parametrize(
+        ("direction", "expected_description"),
+        [
+            ("load", "Load 25 metals"),
+            ("unload", "Unload 25 metals"),
+        ],
+    )
+    def test_from_fleet_with_transfer_order_description(
+        self, direction, expected_description
+    ):
+        """from_fleet describes TRANSFER orders with direction and cargo."""
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        fleet = Fleet(
+            fleet_id=1,
+            owner_id=0,
+            location=HexCoord(0, 0),
+            speed=5.0,
+        )
+        fleet.add_order(
+            Order(
+                OrderType.TRANSFER,
+                {"direction": direction, "cargo_type": "metals", "amount": 25},
+            )
+        )
+
+        info = FleetInfo.from_fleet(fleet)
+
+        assert len(info.orders) == 1
+        assert info.orders[0].order_type == "TRANSFER"
+        assert info.orders[0].target_description == expected_description
+
+    def test_from_fleet_with_transfer_order_non_dict_target(self):
+        """from_fleet uses the generic TRANSFER label for non-dict targets."""
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        fleet = Fleet(
+            fleet_id=1,
+            owner_id=0,
+            location=HexCoord(0, 0),
+            speed=5.0,
+        )
+        fleet.add_order(Order(OrderType.TRANSFER, object()))
+
+        info = FleetInfo.from_fleet(fleet)
+
+        assert len(info.orders) == 1
+        assert info.orders[0].target_description == "Transfer"
+
+    def test_from_fleet_with_colonize_params_without_planet(self):
+        """from_fleet describes planetless colonize params as Any Planet."""
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        fleet = Fleet(
+            fleet_id=1,
+            owner_id=0,
+            location=HexCoord(0, 0),
+            speed=5.0,
+        )
+        fleet.add_order(Order(OrderType.COLONIZE, {"planet": None}))
+
+        info = FleetInfo.from_fleet(fleet)
+
+        assert len(info.orders) == 1
+        assert info.orders[0].order_type == "COLONIZE"
+        assert info.orders[0].target_description == "Any Planet"
+        assert info.orders[0].target_hex is None
+
+
+class TestFleetInfoCarriedItems:
+    """Tests for carried item aggregation helper."""
+
+    def test_aggregate_carried_items_defaults_missing_fields_and_counts(self):
+        """Missing carried-item fields use DTO defaults and aggregate by key."""
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        fleet = SimpleNamespace(
+            ships=[
+                SimpleNamespace(carried_items=[{}, {}]),
+            ]
+        )
+
+        assert FleetInfo._aggregate_carried_items(fleet) == (
+            ("Unknown", "unknown", 0.0, 2),
+        )

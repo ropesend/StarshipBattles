@@ -12,7 +12,7 @@ Usage:
     result = ColonizeValidator.validate(galaxy, fleet, target_planet)
     result = TransferValidator.validate(galaxy, fleet, planet, cargo_type, direction, amount)
     result = SuperweaponValidator.validate_implode_planet(galaxy, fleet, planet, registry)
-    result = PlanetOrderValidator.validate_activate_ability(planet, facility_id, ability, registry)
+    result = PlanetOrderValidator.validate_activate_ability(planet, facility_id, ability, registry, component_key=key)
 """
 from .colonize_validator import ColonizeValidator
 from .planet_order_validator import PlanetOrderValidator

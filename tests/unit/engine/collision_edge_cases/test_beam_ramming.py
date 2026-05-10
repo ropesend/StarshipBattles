@@ -8,6 +8,27 @@ import pytest
 from unittest.mock import MagicMock, patch
 from pygame.math import Vector2
 
+from game.simulation.combat.attack_contract import BeamResolution
+
+
+def _beam(*, origin, direction, range, target, component, source=None,
+          damage=10.0, hit=True):
+    """PROJ-359 Phase 4: build a BeamResolution for collision-layer tests.
+
+    `process_beam_attack` no longer accepts dict-shaped carriers; the engine
+    consumes the typed `BeamResolution` produced by family handlers.
+    """
+    return BeamResolution(
+        source=source,
+        component=component,
+        target=target,
+        damage=damage,
+        range=range,
+        origin=origin,
+        direction=direction,
+        hit=hit,
+    )
+
 
 # =============================================================================
 # Test: Beam Weapon Raycasting Edge Cases
@@ -32,13 +53,13 @@ class TestBeamRaycastingEdgeCases:
         mock_component.get_ability.return_value = mock_ability
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(0, 0),  # Zero direction
-            'range': 300,
-            'target': target,
-            'component': mock_component
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(0, 0),  # Zero direction
+            range= 300,
+            target= target,
+            component= mock_component
+        )
 
         # Should not crash (a == 0 case handled)
         collision_system.process_beam_attack(attack, recent_beams)
@@ -61,13 +82,13 @@ class TestBeamRaycastingEdgeCases:
         mock_component.get_ability.return_value = mock_ability
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),
-            'range': 300,
-            'target': target,
-            'component': mock_component
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),
+            range= 300,
+            target= target,
+            component= mock_component
+        )
 
         # Should handle this case
         with patch('random.random', return_value=0.0):
@@ -91,13 +112,13 @@ class TestBeamRaycastingEdgeCases:
         mock_component.get_ability.return_value = mock_ability
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),
-            'range': 300,
-            'target': target,
-            'component': mock_component
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),
+            range= 300,
+            target= target,
+            component= mock_component
+        )
 
         collision_system.process_beam_attack(attack, recent_beams)
 
@@ -106,13 +127,13 @@ class TestBeamRaycastingEdgeCases:
     def test_beam_no_target(self, collision_system):
         """Beam without target should record full-length beam."""
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),
-            'range': 500,
-            'target': None,  # No target
-            'component': MagicMock()
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),
+            range= 500,
+            target= None,  # No target
+            component= MagicMock()
+        )
 
         collision_system.process_beam_attack(attack, recent_beams)
 
@@ -135,13 +156,13 @@ class TestBeamRaycastingEdgeCases:
         mock_component.get_ability.return_value = mock_ability
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),
-            'range': 300,
-            'target': target,
-            'component': mock_component
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),
+            range= 300,
+            target= target,
+            component= mock_component
+        )
 
         with patch('random.random', return_value=0.5):  # 0.5 > 0.0
             collision_system.process_beam_attack(attack, recent_beams)
@@ -174,13 +195,13 @@ class TestBeamRaycastingEdgeCases:
         recent_beams = []
 
         # Ray exactly tangent to sphere at distance 100
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),  # Horizontal ray
-            'range': 300,
-            'target': target,
-            'component': mock_component
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),  # Horizontal ray
+            range= 300,
+            target= target,
+            component= mock_component
+        )
 
         with patch('random.random', return_value=0.0):
             collision_system.process_beam_attack(attack, recent_beams)
@@ -203,13 +224,13 @@ class TestBeamRaycastingEdgeCases:
         mock_component = MagicMock()
         recent_beams = []
 
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),  # Firing forward
-            'range': 300,
-            'target': target,
-            'component': mock_component
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),  # Firing forward
+            range= 300,
+            target= target,
+            component= mock_component
+        )
 
         collision_system.process_beam_attack(attack, recent_beams)
 
@@ -256,14 +277,14 @@ class TestBeamRaycastingGeometry:
         source_ship.get_total_sensor_score.return_value = 0.0
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),  # Unit vector pointing right
-            'range': 300,
-            'target': target,
-            'component': mock_component,
-            'source': source_ship
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),  # Unit vector pointing right
+            range= 300,
+            target= target,
+            component= mock_component,
+            source= source_ship
+        )
 
         with patch('random.random', return_value=0.0):  # Guarantee hit
             collision_system.process_beam_attack(attack, recent_beams)
@@ -309,14 +330,14 @@ class TestBeamRaycastingGeometry:
         source_ship.get_total_sensor_score.return_value = 0.0
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),
-            'range': 300,
-            'target': target,
-            'component': mock_component,
-            'source': source_ship
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),
+            range= 300,
+            target= target,
+            component= mock_component,
+            source= source_ship
+        )
 
         with patch('random.random', return_value=0.0):
             collision_system.process_beam_attack(attack, recent_beams)
@@ -343,13 +364,13 @@ class TestBeamRaycastingGeometry:
         mock_component.get_ability.return_value = mock_ability
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),
-            'range': 300,  # Range is only 300
-            'target': target,
-            'component': mock_component
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),
+            range= 300,  # Range is only 300
+            target= target,
+            component= mock_component
+        )
 
         collision_system.process_beam_attack(attack, recent_beams)
 
@@ -374,13 +395,13 @@ class TestBeamRaycastingGeometry:
         mock_component.get_ability.return_value = mock_ability
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),  # Ray goes right at y=0
-            'range': 300,
-            'target': target,
-            'component': mock_component
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),  # Ray goes right at y=0
+            range= 300,
+            target= target,
+            component= mock_component
+        )
 
         collision_system.process_beam_attack(attack, recent_beams)
 
@@ -419,14 +440,14 @@ class TestBeamRaycastingGeometry:
         source_ship.get_total_sensor_score.return_value = 10.0  # Attacker has sensors
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),
-            'range': 300,
-            'target': target,
-            'component': mock_component,
-            'source': source_ship
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),
+            range= 300,
+            target= target,
+            component= mock_component,
+            source= source_ship
+        )
 
         with patch.object(collision_system.rng, 'random', return_value=0.5):  # 0.5 < 0.8 = hit
             collision_system.process_beam_attack(attack, recent_beams)
@@ -710,14 +731,14 @@ class TestCollisionIntegrationWithRealShip:
         mock_component.get_ability.return_value = mock_ability
 
         recent_beams = []
-        attack = {
-            'origin': Vector2(0, 0),
-            'direction': Vector2(1, 0),
-            'range': 300,
-            'target': target_ship,
-            'component': mock_component,
-            'source': None
-        }
+        attack = _beam(
+            origin= Vector2(0, 0),
+            direction= Vector2(1, 0),
+            range= 300,
+            target= target_ship,
+            component= mock_component,
+            source= None
+        )
 
         with patch('random.random', return_value=0.0):  # Guarantee hit
             collision_system.process_beam_attack(attack, recent_beams)

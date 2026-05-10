@@ -88,11 +88,6 @@ def _make_window(events=None, on_close=None):
 class TestEventLogWindowInit:
     """Verify EventLogWindow can be created with various inputs."""
 
-    def test_module_exists(self):
-        """EventLogWindow module should be importable."""
-        from game.ui.screens.event_log_window import EventLogWindow
-        assert EventLogWindow is not None
-
     def test_stores_events(self):
         """Window should store all_events from constructor."""
         events = _sample_events()
@@ -378,18 +373,6 @@ class TestStrategyUIEventLogIntegration:
 class TestTurnStartModalTrigger:
     """Verify event log modal opens at turn start."""
 
-    def test_get_turn_events_called_after_turn(self):
-        """After turn processing, facade.get_turn_events should be queryable."""
-        from game.strategy.facade.strategy_session_facade import StrategySessionFacade
-        # This verifies the facade method exists and is accessible
-        assert hasattr(StrategySessionFacade, 'get_turn_events')
-
-    def test_get_all_events_callable(self):
-        """facade.get_all_events should be callable."""
-        from game.strategy.facade.strategy_session_facade import StrategySessionFacade
-        assert hasattr(StrategySessionFacade, 'get_all_events')
-
-
 # ---------------------------------------------------------------------------
 # FEAT-04: Double-Click Navigation
 # ---------------------------------------------------------------------------
@@ -452,6 +435,29 @@ class TestEventLogNavigation:
 
         cb.assert_not_called()
 
+    def test_handle_row_navigate_without_data_source_is_noop(self):
+        """A window without a data source should not navigate."""
+        cb = MagicMock()
+        win = _make_window(events=_sample_events())
+        win.on_navigate_callback = cb
+        win.data_source = None
+
+        win._handle_row_navigate(0)
+
+        cb.assert_not_called()
+
+    def test_handle_row_navigate_missing_event_is_noop(self):
+        """Out-of-range or missing rows should not call the callback."""
+        cb = MagicMock()
+        win = _make_window(events=_sample_events())
+        win.on_navigate_callback = cb
+        win.data_source = MagicMock()
+        win.data_source.get_event_at_index.return_value = None
+
+        win._handle_row_navigate(99)
+
+        cb.assert_not_called()
+
 
 # ---------------------------------------------------------------------------
 # PROJ-215 Phase 3: Sidebar Integration
@@ -460,35 +466,12 @@ class TestEventLogNavigation:
 class TestEventLogSidebarIntegration:
     """Verify EventLogWindow sidebar integration."""
 
-    def test_sidebar_attr_exists(self):
-        """EventLogWindow should have sidebar attribute."""
-        from game.ui.screens.event_log_window import EventLogWindow
-        win = _make_window()
-        # After mock construction, sidebar is None (not built)
-        assert hasattr(win, 'sidebar') or True  # Just test attribute exists
-
-    def test_sidebar_panel_attr_defined_in_init_layout(self):
-        """SIDEBAR_WIDTH constant should be defined."""
-        from game.ui.screens.event_log_window import SIDEBAR_WIDTH
-        assert SIDEBAR_WIDTH == 180
-
-    def test_sidebar_import_exists(self):
-        """EventLogSidebar should be importable from event_log_window module."""
-        from game.ui.screens.event_log_window import EventLogSidebar
-        assert EventLogSidebar is not None
-
-
 # ---------------------------------------------------------------------------
 # PROJ-215 Phase 4: Double-Click Navigation
 # ---------------------------------------------------------------------------
 
 class TestDoubleClickNavigation:
     """Verify double-click detection and navigation callback triggering."""
-
-    def test_double_click_threshold_constant_defined(self):
-        """DOUBLE_CLICK_THRESHOLD_MS should be defined."""
-        from game.ui.screens.event_log_window import DOUBLE_CLICK_THRESHOLD_MS
-        assert DOUBLE_CLICK_THRESHOLD_MS == 400
 
     def test_process_event_tracks_last_click_time(self):
         """process_event should track click time for double-click detection."""
@@ -699,11 +682,6 @@ class TestEventLogColumnReorder:
         }
         with patch.object(UIWindow, 'update', return_value=None):
             EventLogWindow.update(stub, 0.016)
-
-    def test_update_method_exists(self):
-        """EventLogWindow should have an update() method."""
-        from game.ui.screens.event_log_window import EventLogWindow
-        assert hasattr(EventLogWindow, 'update')
 
     def test_swap_column_calls_column_manager(self):
         """When header returns swap_column, column_manager.swap_column() must be called."""

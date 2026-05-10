@@ -7,15 +7,17 @@ Owns:
     - `add_move_order_if_needed` (chain-aware MOVE auto-queue helper)
 
 Extracted from the monolithic `command_handlers.py` in PROJ-309 sub-phase 3.5
-(2026-04-27). Sibling modules in `game.strategy.engine.handlers/*` import
-`BaseCommandHandler` from here; external callers continue to use the
-`game.strategy.engine.command_handlers` shim.
+(2026-04-27). PROJ-383 (2026-05-08) deleted the transitional
+`command_handlers.py` re-export shim; all callers now import directly from
+`game.strategy.engine.handlers/*`.
 """
 from __future__ import annotations
 
 from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable, Optional
 import logging
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
 from game.core.validation import ValidationResult
 from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 from game.strategy.data.order_types import Order, OrderType
@@ -76,7 +78,10 @@ def add_move_order_if_needed(
 
     # Set path immediately if it's the first order and fleet is at start
     if len(fleet.orders) == 1 and fleet.location == start_hex:
-        fleet.path = strip_start_hex(fleet.location, path)
+        # PROJ-370 Phase 2: route Fleet.path write through IFleetMutator.
+        session.fleet_mutator.set_path(
+            fleet, strip_start_hex(fleet.location, path)
+        )
 
     return ValidationResult.success()
 
@@ -157,9 +162,14 @@ class BaseCommandHandler:
 
     @staticmethod
     def _resolve_fleet_required(session: 'GameSession', fleet_id: int, empire_id: int = None) -> 'Fleet':
-        """Resolve a fleet by ID, raising ValueError if not found.
+        """Resolve a fleet by ID, raising ValidationException if not found.
 
         Use this when fleet must exist - avoids tuple unpacking boilerplate.
+
+        PROJ-381 Phase 3 (ERR-01-003) replaced the previous bare
+        ``ValueError`` with a structured ``ValidationException`` (codes
+        ``MISSING_ENTITY`` / ``OWNERSHIP_MISMATCH``). PROJ-395 MAJ-012
+        corrects this docstring (which still referenced ``ValueError``).
 
         Args:
             session: The game session with empires and galaxy.
@@ -171,16 +181,53 @@ class BaseCommandHandler:
             Fleet object if found.
 
         Raises:
-            ValueError: If fleet not found or ownership validation fails.
+            ValidationException: If fleet not found (MISSING_ENTITY) or
+                ownership validation fails (OWNERSHIP_MISMATCH). PROJ-381
+                Phase 3 (ERR-01-003) replaced the previous bare
+                ValueError so handlers can branch on `code`.
         """
         fleet = session._get_fleet_by_id(fleet_id)
         if fleet is None:
-            raise ValueError("Fleet not found.")
+            raise ValidationException(
+                message="Fleet not found.",
+                code=ErrorCode.MISSING_ENTITY.value,
+                context={"fleet_id": fleet_id},
+            )
 
         if empire_id is not None and fleet.owner_id != empire_id:
-            raise ValueError("Fleet does not belong to this empire.")
+            raise ValidationException(
+                message="Fleet does not belong to this empire.",
+                code=ErrorCode.OWNERSHIP_MISMATCH.value,
+                context={"fleet_id": fleet_id, "empire_id": empire_id},
+            )
 
         return fleet
+
+    @staticmethod
+    def _resolve_player_planet(session: 'GameSession', planet_id: int) -> tuple:
+        """Resolve a planet and authorize against the active empire.
+
+        PROJ-375 (DUP-X-01): the standard authorization path for planet
+        command handlers. Mirrors `_resolve_player_fleet`. Identity is
+        session context (`session.active_empire.id`); handlers must NEVER
+        trust an empire identifier supplied through the request body.
+
+        Args:
+            session: The game session with empires and galaxy.
+            planet_id: The planet ID to resolve.
+
+        Returns:
+            tuple[Planet, None] on success, tuple[None, ValidationResult] on failure.
+        """
+        active = session.active_empire
+        if active is None:
+            return (None, ValidationResult.error("No active empire."))
+        planet = session._get_planet_by_id(planet_id)
+        if planet is None:
+            return (None, ValidationResult.error("Planet not found."))
+        if planet.owner_id != active.id:
+            return (None, ValidationResult.error("Planet does not belong to this empire."))
+        return (planet, None)
 
     @staticmethod
     def _resolve_planet(session: 'GameSession', planet_id: int) -> tuple:
@@ -208,18 +255,27 @@ class BaseCommandHandler:
         Args:
             session: The game session with galaxy.
             planet_id: The planet ID to resolve.
-            required: If True, raise ValueError when not found. If False, return None.
+            required: If True, raise ValidationException(MISSING_ENTITY)
+                when not found. If False, return None. PROJ-381 Phase 3
+                replaced the previous bare ``ValueError`` with a
+                structured ``ValidationException``; PROJ-395 MAJ-012
+                corrects this docstring.
 
         Returns:
             Planet object if found, None if not found and required=False.
 
         Raises:
-            ValueError: If planet not found and required=True.
+            ValidationException: If planet not found and required=True
+                (MISSING_ENTITY). PROJ-381 Phase 3 (ERR-01-003).
         """
         planet = session._get_planet_by_id(planet_id)
         if planet is None:
             if required:
-                raise ValueError("Planet not found.")
+                raise ValidationException(
+                    message="Planet not found.",
+                    code=ErrorCode.MISSING_ENTITY.value,
+                    context={"planet_id": planet_id},
+                )
             return None
 
         return planet
@@ -238,7 +294,15 @@ class BaseCommandHandler:
         handler. Handlers do their own resolve + validate, then call this to
         finish the "create-and-log if valid" pattern.
 
-        Returns the same `result` so callers can `return self._emit_validated_order(...)`.
+        Returns the same ``result`` argument unchanged so callers can write
+        ``return self._emit_validated_order(...)``. **The result is propagated
+        as-is — including any warnings the validator attached** — rather than
+        being flattened to ``ValidationResult.success()``. Today validators
+        return only clean-success or hard-error, so this contract is
+        observationally identical; if a future validator emits valid-with-warnings
+        results, callers will receive those warnings instead of a bare success.
+        Do not change this contract without updating every direct + mission
+        handler that currently relies on it (PROJ-375 review MAJ-001).
         """
         if result.is_valid:
             order = Order(order_type, target=target)

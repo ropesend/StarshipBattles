@@ -8,6 +8,7 @@ import pytest
 from unittest.mock import MagicMock, patch, call
 
 from game.core.event_logging import EventBus
+from game.strategy.data.order_types import OrderType
 from game.strategy.events import EventType, EventCategory
 from game.strategy.systems.design_library import DesignLoadResult
 
@@ -99,22 +100,25 @@ class TestShipBuiltEvent:
         galaxy = _make_mock_galaxy()
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
+        # PROJ-323 Task 2.16: flattened triple-nested with-patch via patch.multiple
+        from unittest.mock import DEFAULT
+        with patch.multiple(
+            'game.strategy.engine.production_spawner',
+            DesignLibrary=DEFAULT, ShipInstance=DEFAULT, Fleet=DEFAULT,
+        ) as mocks:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout Ship"})
-            mock_lib_cls.return_value = mock_lib
+            mocks['DesignLibrary'].return_value = mock_lib
 
-            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
-                mock_ship = MagicMock()
-                mock_ship.name = "Scout Ship"
-                mock_si.create.return_value = mock_ship
+            mock_ship = MagicMock()
+            mock_ship.name = "Scout Ship"
+            mocks['ShipInstance'].create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_cls:
-                    mock_fleet = MagicMock()
-                    mock_fleet.id = 1
-                    mock_fleet_cls.return_value = mock_fleet
+            mock_fleet = MagicMock()
+            mock_fleet.id = 1
+            mocks['Fleet'].return_value = mock_fleet
 
-                    engine._spawner._spawn_ship(planet, "scout_design", empire, galaxy, save_path="/test")
+            engine._spawner._spawn_ship(planet, "scout_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -135,21 +139,24 @@ class TestShipBuiltEvent:
         galaxy = _make_mock_galaxy()
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
+        # PROJ-323 Task 2.16: flattened triple-nested with-patch via patch.multiple
+        from unittest.mock import DEFAULT
+        with patch.multiple(
+            'game.strategy.engine.production_spawner',
+            DesignLibrary=DEFAULT, ShipInstance=DEFAULT, Fleet=DEFAULT,
+        ) as mocks:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Cruiser"})
-            mock_lib_cls.return_value = mock_lib
+            mocks['DesignLibrary'].return_value = mock_lib
 
-            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
-                mock_ship = MagicMock()
-                mock_si.create.return_value = mock_ship
+            mock_ship = MagicMock()
+            mocks['ShipInstance'].create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_cls:
-                    mock_fleet = MagicMock()
-                    mock_fleet.id = 1
-                    mock_fleet_cls.return_value = mock_fleet
+            mock_fleet = MagicMock()
+            mock_fleet.id = 1
+            mocks['Fleet'].return_value = mock_fleet
 
-                    engine._spawner._spawn_ship(planet, "cruiser_design", empire, galaxy, save_path="/test")
+            engine._spawner._spawn_ship(planet, "cruiser_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         _, kw = calls[0]
@@ -473,7 +480,7 @@ class TestColonyFoundedEvent:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (fleet.ships[0], 0)
 
-            with patch.object(processor, '_deploy_drop_pod'):
+            with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -566,7 +573,7 @@ class TestColonyFoundedEvent:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'):
+            with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -724,21 +731,24 @@ class TestProductionEventLocationEnrichment:
         galaxy.get_system_of_planet.return_value = mock_system
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
+        # PROJ-323 Task 2.16: flattened triple-nested with-patch via patch.multiple
+        from unittest.mock import DEFAULT
+        with patch.multiple(
+            'game.strategy.engine.production_spawner',
+            DesignLibrary=DEFAULT, ShipInstance=DEFAULT, Fleet=DEFAULT,
+        ) as mocks:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
-            mock_lib_cls.return_value = mock_lib
+            mocks['DesignLibrary'].return_value = mock_lib
 
-            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
-                mock_ship = MagicMock()
-                mock_si.create.return_value = mock_ship
+            mock_ship = MagicMock()
+            mocks['ShipInstance'].create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_cls:
-                    mock_fleet = MagicMock()
-                    mock_fleet.id = 1
-                    mock_fleet_cls.return_value = mock_fleet
+            mock_fleet = MagicMock()
+            mock_fleet.id = 1
+            mocks['Fleet'].return_value = mock_fleet
 
-                    engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+            engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         _, kw = calls[0]
@@ -759,21 +769,24 @@ class TestProductionEventLocationEnrichment:
         galaxy.get_system_of_planet.return_value = None
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
+        # PROJ-323 Task 2.16: flattened triple-nested with-patch via patch.multiple
+        from unittest.mock import DEFAULT
+        with patch.multiple(
+            'game.strategy.engine.production_spawner',
+            DesignLibrary=DEFAULT, ShipInstance=DEFAULT, Fleet=DEFAULT,
+        ) as mocks:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
-            mock_lib_cls.return_value = mock_lib
+            mocks['DesignLibrary'].return_value = mock_lib
 
-            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
-                mock_ship = MagicMock()
-                mock_si.create.return_value = mock_ship
+            mock_ship = MagicMock()
+            mocks['ShipInstance'].create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_cls:
-                    mock_fleet = MagicMock()
-                    mock_fleet.id = 1
-                    mock_fleet_cls.return_value = mock_fleet
+            mock_fleet = MagicMock()
+            mock_fleet.id = 1
+            mocks['Fleet'].return_value = mock_fleet
 
-                    engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+            engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
 
         _, kw = calls[0]
         assert kw["system_name"] == ""
@@ -961,7 +974,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'):
+            with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]
@@ -1014,7 +1027,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.fleet_has_drop_pod.return_value = True
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_deploy_drop_pod'):
+            with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]

@@ -23,6 +23,8 @@ def mock_scene():
     scene.systems = [Mock()]
     scene.camera = Mock()
     scene.camera.screen_to_world = Mock(return_value=Mock(x=100, y=200))
+    # PROJ-380 DUP-X-08: superweapon handlers now call camera.hex_at_screen
+    scene.camera.hex_at_screen = Mock(return_value=(5, 5))
     scene.hex_size = 50
     scene.galaxy = Mock()
     scene.ui = Mock()
@@ -103,31 +105,63 @@ class TestPropertyAccessors:
 
 
 # =============================================================================
+# Shared no-fleet / fleet-without-ability tests
+# =============================================================================
+
+# PROJ-323 Task 3.5 (S10-CAT10-004 / S10-CAT10-005): collapse 5 identical
+# no_fleet_returns_none and 5 identical fleet_without_ability_returns_error
+# tests across handlers with the same (x, y, fleet) signature.
+# SelfDestruct keeps its own per-class tests because handle_self_destruct
+# takes only `fleet`.
+_HANDLER_DESIGNATIONS = [
+    pytest.param(
+        "handle_implode_planet_designation", "Planet Imploder", id="planet_imploder",
+    ),
+    pytest.param(
+        "handle_stellerate_star_designation", "Stellerator", id="stellerator",
+    ),
+    pytest.param(
+        "handle_open_warp_designation", "Quantum Tunneling Inducer", id="open_warp",
+    ),
+    pytest.param(
+        "handle_close_warp_designation", "Quantum Tunneling Disruptor", id="close_warp",
+    ),
+    pytest.param(
+        "handle_dyson_sphere_designation", "Dyson Sphere Constructor", id="dyson_sphere",
+    ),
+]
+
+
+@pytest.mark.parametrize("handler_name,weapon_label", _HANDLER_DESIGNATIONS)
+class TestSuperweaponDesignationCommonChecks:
+    """Cross-handler common checks (PROJ-323 Task 3.5)."""
+
+    def test_no_fleet_returns_none(self, superweapon_ops, handler_name, weapon_label):
+        """Test with no fleet returns None."""
+        result = getattr(superweapon_ops, handler_name)(100, 200, None)
+        assert result is None
+
+    def test_fleet_without_ability_returns_error(
+        self, superweapon_ops, mock_fleet, handler_name, weapon_label,
+    ):
+        """Fleet without the relevant ability returns an error mentioning the weapon."""
+        mock_fleet.capabilities.has_ability = Mock(return_value=False)
+
+        result = getattr(superweapon_ops, handler_name)(100, 200, mock_fleet)
+
+        assert result['type'] == 'error'
+        assert weapon_label in result['message']
+
+
+# =============================================================================
 # Planet Imploder Tests
 # =============================================================================
 
 class TestPlanetImploderWorkflow:
     """Tests for Planet Imploder superweapon."""
 
-    def test_no_fleet_returns_none(self, superweapon_ops):
-        """Test with no fleet returns None."""
-        result = superweapon_ops.handle_implode_planet_designation(100, 200, None)
-
-        assert result is None
-
-    def test_fleet_without_ability_returns_error(self, superweapon_ops, mock_fleet):
-        """Test fleet without DestroyPlanet ability returns error."""
-        mock_fleet.capabilities.has_ability = Mock(return_value=False)
-
-        result = superweapon_ops.handle_implode_planet_designation(100, 200, mock_fleet)
-
-        assert result['type'] == 'error'
-        assert 'Planet Imploder' in result['message']
-
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_no_planet_at_location_returns_error(self, mock_pixel_to_hex, superweapon_ops, mock_fleet):
+    def test_no_planet_at_location_returns_error(self, superweapon_ops, mock_fleet):
         """Test no planet at target returns error."""
-        mock_pixel_to_hex.return_value = (5, 5)
         superweapon_ops.galaxy.get_planets_at_global_hex = Mock(return_value=[])
 
         result = superweapon_ops.handle_implode_planet_designation(100, 200, mock_fleet)
@@ -135,10 +169,8 @@ class TestPlanetImploderWorkflow:
         assert result['type'] == 'error'
         assert 'No planet' in result['message']
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_single_planet_triggers_confirmation(self, mock_pixel_to_hex, superweapon_ops, mock_fleet, mock_scene):
+    def test_single_planet_triggers_confirmation(self, superweapon_ops, mock_fleet, mock_scene):
         """Test single planet triggers confirmation dialog."""
-        mock_pixel_to_hex.return_value = (5, 5)
         planet = Mock()
         planet.id = "planet-1"
         planet.name = "Target Planet"
@@ -150,10 +182,8 @@ class TestPlanetImploderWorkflow:
         assert result['type'] == 'success'
         mock_scene.ui.show_confirmation_dialog.assert_called_once()
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_multiple_planets_prompts_selection(self, mock_pixel_to_hex, superweapon_ops, mock_fleet, mock_scene):
+    def test_multiple_planets_prompts_selection(self, superweapon_ops, mock_fleet, mock_scene):
         """Test multiple planets prompts selection."""
-        mock_pixel_to_hex.return_value = (5, 5)
         planets = [Mock(id="p1"), Mock(id="p2")]
         superweapon_ops.galaxy.get_planets_at_global_hex = Mock(return_value=planets)
         mock_scene.ui.prompt_planet_selection = Mock()
@@ -172,25 +202,8 @@ class TestPlanetImploderWorkflow:
 class TestStelleratorWorkflow:
     """Tests for Stellerator superweapon."""
 
-    def test_no_fleet_returns_none(self, superweapon_ops):
-        """Test with no fleet returns None."""
-        result = superweapon_ops.handle_stellerate_star_designation(100, 200, None)
-
-        assert result is None
-
-    def test_fleet_without_ability_returns_error(self, superweapon_ops, mock_fleet):
-        """Test fleet without DestroyStar ability returns error."""
-        mock_fleet.capabilities.has_ability = Mock(return_value=False)
-
-        result = superweapon_ops.handle_stellerate_star_designation(100, 200, mock_fleet)
-
-        assert result['type'] == 'error'
-        assert 'Stellerator' in result['message']
-
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_no_system_at_location_returns_error(self, mock_pixel_to_hex, superweapon_ops, mock_fleet):
+    def test_no_system_at_location_returns_error(self, superweapon_ops, mock_fleet):
         """Test no system at target returns error."""
-        mock_pixel_to_hex.return_value = (5, 5)
 
         with patch.object(superweapon_ops, '_get_system_at_hex', return_value=None):
             result = superweapon_ops.handle_stellerate_star_designation(100, 200, mock_fleet)
@@ -198,10 +211,8 @@ class TestStelleratorWorkflow:
         assert result['type'] == 'error'
         assert 'No star system' in result['message']
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_valid_target_triggers_warning_confirmation(self, mock_pixel_to_hex, superweapon_ops, mock_fleet, mock_scene):
+    def test_valid_target_triggers_warning_confirmation(self, superweapon_ops, mock_fleet, mock_scene):
         """Test valid target triggers warning confirmation."""
-        mock_pixel_to_hex.return_value = (5, 5)
         system = Mock(name="Alpha Centauri")
         mock_scene.ui.show_confirmation_dialog = Mock()
 
@@ -222,25 +233,8 @@ class TestStelleratorWorkflow:
 class TestOpenWarpPointWorkflow:
     """Tests for Open Warp Point superweapon."""
 
-    def test_no_fleet_returns_none(self, superweapon_ops):
-        """Test with no fleet returns None."""
-        result = superweapon_ops.handle_open_warp_designation(100, 200, None)
-
-        assert result is None
-
-    def test_fleet_without_ability_returns_error(self, superweapon_ops, mock_fleet):
-        """Test fleet without OpenWarpPoint ability returns error."""
-        mock_fleet.capabilities.has_ability = Mock(return_value=False)
-
-        result = superweapon_ops.handle_open_warp_designation(100, 200, mock_fleet)
-
-        assert result['type'] == 'error'
-        assert 'Quantum Tunneling Inducer' in result['message']
-
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_no_system_at_location_returns_error(self, mock_pixel_to_hex, superweapon_ops, mock_fleet):
+    def test_no_system_at_location_returns_error(self, superweapon_ops, mock_fleet):
         """Test no system at target returns error."""
-        mock_pixel_to_hex.return_value = (5, 5)
 
         with patch.object(superweapon_ops, '_get_system_at_hex', return_value=None):
             result = superweapon_ops.handle_open_warp_designation(100, 200, mock_fleet)
@@ -248,10 +242,8 @@ class TestOpenWarpPointWorkflow:
         assert result['type'] == 'error'
         assert 'No star system' in result['message']
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_no_available_systems_returns_error(self, mock_pixel_to_hex, superweapon_ops, mock_fleet, mock_scene):
+    def test_no_available_systems_returns_error(self, superweapon_ops, mock_fleet, mock_scene):
         """Test no available systems returns error."""
-        mock_pixel_to_hex.return_value = (5, 5)
 
         current_system = Mock(name="Alpha")
         current_system.warp_points = []
@@ -265,10 +257,8 @@ class TestOpenWarpPointWorkflow:
         assert result['type'] == 'error'
         assert 'No available systems' in result['message']
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_valid_target_shows_system_picker(self, mock_pixel_to_hex, superweapon_ops, mock_fleet, mock_scene):
+    def test_valid_target_shows_system_picker(self, superweapon_ops, mock_fleet, mock_scene):
         """Test valid target shows system picker."""
-        mock_pixel_to_hex.return_value = (5, 5)
 
         current_system = Mock()
         current_system.name = "Alpha"
@@ -294,25 +284,8 @@ class TestOpenWarpPointWorkflow:
 class TestCloseWarpPointWorkflow:
     """Tests for Close Warp Point superweapon."""
 
-    def test_no_fleet_returns_none(self, superweapon_ops):
-        """Test with no fleet returns None."""
-        result = superweapon_ops.handle_close_warp_designation(100, 200, None)
-
-        assert result is None
-
-    def test_fleet_without_ability_returns_error(self, superweapon_ops, mock_fleet):
-        """Test fleet without CloseWarpPoint ability returns error."""
-        mock_fleet.capabilities.has_ability = Mock(return_value=False)
-
-        result = superweapon_ops.handle_close_warp_designation(100, 200, mock_fleet)
-
-        assert result['type'] == 'error'
-        assert 'Quantum Tunneling Disruptor' in result['message']
-
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_no_warp_point_at_location_returns_error(self, mock_pixel_to_hex, superweapon_ops, mock_fleet):
+    def test_no_warp_point_at_location_returns_error(self, superweapon_ops, mock_fleet):
         """Test no warp point at target returns error."""
-        mock_pixel_to_hex.return_value = (5, 5)
 
         with patch.object(superweapon_ops, '_get_warp_point_at_hex', return_value=None):
             result = superweapon_ops.handle_close_warp_designation(100, 200, mock_fleet)
@@ -320,10 +293,8 @@ class TestCloseWarpPointWorkflow:
         assert result['type'] == 'error'
         assert 'No warp point' in result['message']
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_valid_warp_point_triggers_confirmation(self, mock_pixel_to_hex, superweapon_ops, mock_fleet, mock_scene):
+    def test_valid_warp_point_triggers_confirmation(self, superweapon_ops, mock_fleet, mock_scene):
         """Test valid warp point triggers confirmation."""
-        mock_pixel_to_hex.return_value = (5, 5)
         warp_point = Mock()
         warp_point.destination_id = "Beta System"
         mock_scene.ui.show_confirmation_dialog = Mock()
@@ -342,25 +313,8 @@ class TestCloseWarpPointWorkflow:
 class TestDysonSphereWorkflow:
     """Tests for Dyson Sphere superweapon."""
 
-    def test_no_fleet_returns_none(self, superweapon_ops):
-        """Test with no fleet returns None."""
-        result = superweapon_ops.handle_dyson_sphere_designation(100, 200, None)
-
-        assert result is None
-
-    def test_fleet_without_ability_returns_error(self, superweapon_ops, mock_fleet):
-        """Test fleet without CreateDysonSphere ability returns error."""
-        mock_fleet.capabilities.has_ability = Mock(return_value=False)
-
-        result = superweapon_ops.handle_dyson_sphere_designation(100, 200, mock_fleet)
-
-        assert result['type'] == 'error'
-        assert 'Dyson Sphere Constructor' in result['message']
-
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_no_system_at_location_returns_error(self, mock_pixel_to_hex, superweapon_ops, mock_fleet):
+    def test_no_system_at_location_returns_error(self, superweapon_ops, mock_fleet):
         """Test no system at target returns error."""
-        mock_pixel_to_hex.return_value = (5, 5)
 
         with patch.object(superweapon_ops, '_get_system_at_hex', return_value=None):
             result = superweapon_ops.handle_dyson_sphere_designation(100, 200, mock_fleet)
@@ -368,10 +322,8 @@ class TestDysonSphereWorkflow:
         assert result['type'] == 'error'
         assert 'No star system' in result['message']
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_valid_target_triggers_confirmation(self, mock_pixel_to_hex, superweapon_ops, mock_fleet, mock_scene):
+    def test_valid_target_triggers_confirmation(self, superweapon_ops, mock_fleet, mock_scene):
         """Test valid target triggers confirmation."""
-        mock_pixel_to_hex.return_value = (5, 5)
         system = Mock()
         system.name = "Alpha Centauri"
         mock_scene.ui.show_confirmation_dialog = Mock()
@@ -427,10 +379,9 @@ class TestSelfDestructWorkflow:
 class TestErrorHandling:
     """Tests for error handling."""
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
-    def test_operation_with_invalid_hex_graceful_failure(self, mock_pixel_to_hex, superweapon_ops, mock_fleet):
+    def test_operation_with_invalid_hex_graceful_failure(self, superweapon_ops, mock_fleet):
         """Test operation with invalid hex coordinates fails gracefully."""
-        mock_pixel_to_hex.return_value = None  # Invalid hex
+        superweapon_ops.scene.camera.hex_at_screen = Mock(return_value=None)
 
         # Should not raise exception
         superweapon_ops.galaxy.get_planets_at_global_hex = Mock(return_value=[])
@@ -492,12 +443,10 @@ class TestHelperMethods:
 class TestCommandDispatch:
     """Tests for command dispatch to facade."""
 
-    @patch('game.ui.screens.strategy_superweapons.pixel_to_hex')
     @patch('game.ui.screens.strategy_superweapons.QueueImplodePlanetMissionCommand')
-    def test_implode_planet_creates_correct_command(self, mock_cmd_class, mock_pixel_to_hex,
+    def test_implode_planet_creates_correct_command(self, mock_cmd_class,
                                                      superweapon_ops, mock_fleet, mock_scene, mock_facade):
         """Test implode planet creates correct command."""
-        mock_pixel_to_hex.return_value = (5, 5)
         planet = Mock()
         planet.id = "planet-1"
         planet.name = "Target Planet"

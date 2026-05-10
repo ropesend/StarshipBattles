@@ -112,10 +112,25 @@ def resolve_relative_import(level, module, current_file_path):
             
     return None
 
+def _mark_package_inits(path, visited, queue):
+    """When a module is reached, mark every __init__.py up the package
+    chain as also reached — Python loads them implicitly during import.
+    """
+    parent = os.path.dirname(path)
+    while parent and parent.startswith(PROJECT_ROOT) and parent != PROJECT_ROOT:
+        init_path = os.path.join(parent, "__init__.py")
+        if os.path.exists(init_path) and init_path not in visited:
+            visited.add(init_path)
+            queue.append(init_path)
+        parent = os.path.dirname(parent)
+
+
 def find_reachable_files(entry_points):
     queue = list(entry_points)
     visited = set(entry_points)
-    
+    for ep in entry_points:
+        _mark_package_inits(ep, visited, queue)
+
     # BFS
     while queue:
         current_file = queue.pop(0)
@@ -137,56 +152,97 @@ def find_reachable_files(entry_points):
                     if resolved_path and resolved_path not in visited:
                         visited.add(resolved_path)
                         queue.append(resolved_path)
-                        
+                        _mark_package_inits(resolved_path, visited, queue)
+
             elif isinstance(node, ast.ImportFrom):
                 if node.level > 0:
                     # Relative import
                     resolved_path = resolve_relative_import(node.level, node.module, current_file)
                 elif node.module:
-                    # Absolute import
                     resolved_path = resolve_import(node.module)
-                    
-                    # Special case: from game.core.constants import GameState
-                    # might be importing a class from a file.
-                    # If resolve_import('game.core.constants') works, great.
-                    # But sometimes we import 'game.core' and assume constants is in init.
-                    pass
-                
+                    # `from game.pkg import sub` may pull in a submodule by name,
+                    # not just the package. Resolve those too.
+                    for alias in node.names:
+                        if alias.name == "*":
+                            continue
+                        sub_path = resolve_import(f"{node.module}.{alias.name}")
+                        if sub_path and sub_path not in visited:
+                            visited.add(sub_path)
+                            queue.append(sub_path)
+                            _mark_package_inits(sub_path, visited, queue)
+
                 if resolved_path and resolved_path not in visited:
                     visited.add(resolved_path)
                     queue.append(resolved_path)
+                    _mark_package_inits(resolved_path, visited, queue)
     
     return visited
 
+# Directories outside the production tree that should not be considered when
+# looking for dead production code. The tool used to scan the entire repo,
+# producing thousands of false positives from agent scratch files, archived
+# project work, and audit results.
+EXCLUDE_PATH_FRAGMENTS = (
+    os.sep + "venv",
+    os.sep + ".venv",
+    os.sep + ".git",
+    os.sep + "tests",
+    os.sep + "combat_lab",
+    os.sep + "__pycache__",
+    os.sep + "Projects",
+    os.sep + ".agents",
+    os.sep + ".claude",
+    os.sep + ".opencode",
+    os.sep + "AgentCoordination",
+    os.sep + "Reviews",
+    os.sep + "Tools",
+    os.sep + "Tracking",
+    os.sep + "_marked_for_deletion_",
+    os.sep + "docs",
+    os.sep + "data",
+)
+
+
+def _is_excluded(path):
+    return any(frag in path for frag in EXCLUDE_PATH_FRAGMENTS)
+
+
 def get_all_python_files(root_dir):
+    """Return every production .py file under ``root_dir``.
+
+    Production = ``game/`` plus top-level entry points (e.g. ``launcher.py``).
+    Everything else is excluded so dead-code candidates only surface real
+    production code.
+    """
     all_files = set()
-    for root, dirs, files in os.walk(root_dir):
-        # Skip hidden/venv/test dirs
-        if "venv" in root or ".git" in root or "tests" in root or "combat_lab" in root or "__pycache__" in root:
-            continue
-            
-        for file in files:
-            if file.endswith(".py"):
-                all_files.add(os.path.join(root, file))
+    game_dir = os.path.join(root_dir, "game")
+    if os.path.isdir(game_dir):
+        for root, dirs, files in os.walk(game_dir):
+            if _is_excluded(root):
+                continue
+            for file in files:
+                if file.endswith(".py"):
+                    all_files.add(os.path.join(root, file))
+    # Top-level launchers / scripts that are sibling to game/.
+    for entry in os.listdir(root_dir):
+        full = os.path.join(root_dir, entry)
+        if entry.endswith(".py") and os.path.isfile(full):
+            all_files.add(full)
     return all_files
+
 
 if __name__ == "__main__":
     print("Building dependency graph...")
     reachable = find_reachable_files(ENTRY_POINTS)
     print(f"Reachable files: {len(reachable)}")
-    
+
     all_files = get_all_python_files(PROJECT_ROOT)
-    print(f"Total source files (excluding tests): {len(all_files)}")
-    
+    print(f"Total production source files: {len(all_files)}")
+
     dead_code = all_files - reachable
     print(f"Potentially Dead Files: {len(dead_code)}")
-    
-    print("\n--- Top 20 Potentially Dead Files ---")
-    sorted_dead = sorted(list(dead_code))
-    for f in sorted_dead[:20]:
+
+    sorted_dead = sorted(dead_code)
+    print("\n--- Potentially Dead Files (relative paths) ---")
+    for f in sorted_dead:
         print(os.path.relpath(f, PROJECT_ROOT))
-        
-    # Save to file
-    with open("dead_code_candidates.txt", "w") as f:
-        for path in sorted_dead:
-            f.write(path + "\n")

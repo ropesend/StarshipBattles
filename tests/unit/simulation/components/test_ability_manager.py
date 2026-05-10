@@ -128,29 +128,37 @@ class TestAbilityManagerUIRows:
 
 
 class TestAbilityManagerStandalone:
-    """Test AbilityManager deprecated static methods (legacy API)."""
+    """Test AbilityManager direct delegate use (post-PROJ-384 instance API).
 
-    def test_manager_get_abilities_static(self, fresh_registries):
-        """AbilityManager.get_abilities_static should work on instance list."""
+    These tests exercise the AbilityManager delegate directly rather than via
+    the Component facade properties. PROJ-384 deleted the equivalent
+    `*_static` wrappers; the assertions remain valid through the instance API.
+    """
+
+    def test_manager_get_abilities(self, fresh_registries) -> None:
+        """AbilityManager.get_abilities should work via the delegate."""
         railgun = create_component('railgun', registries=fresh_registries)
+        mgr = railgun.ability_manager
 
-        weapons = AbilityManager.get_abilities_static('WeaponAbility', railgun.ability_instances)
+        weapons = mgr.get_abilities('WeaponAbility')
 
         assert len(weapons) >= 1
 
-    def test_manager_has_ability_static(self, fresh_registries):
-        """AbilityManager.has_ability_static should work on instance list."""
+    def test_manager_has_ability(self, fresh_registries) -> None:
+        """AbilityManager.has_ability should work via the delegate."""
         railgun = create_component('railgun', registries=fresh_registries)
+        mgr = railgun.ability_manager
 
-        result = AbilityManager.has_ability_static('WeaponAbility', railgun.ability_instances)
+        result = mgr.has_ability('WeaponAbility')
 
         assert result is True
 
-    def test_manager_get_ui_rows_static(self, fresh_registries):
-        """AbilityManager.get_ui_rows_static should aggregate from instances."""
+    def test_manager_get_ui_rows(self, fresh_registries) -> None:
+        """AbilityManager.get_ui_rows should aggregate from instances."""
         railgun = create_component('railgun', registries=fresh_registries)
+        mgr = railgun.ability_manager
 
-        rows = AbilityManager.get_ui_rows_static(railgun.ability_instances)
+        rows = mgr.get_ui_rows()
 
         assert isinstance(rows, list)
 

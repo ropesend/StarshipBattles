@@ -5,7 +5,7 @@ Handles move, join, and intercept commands.
 Extracted from StrategyScreen to reduce file size and improve testability.
 
 Cross-layer imports (acceptable for UI):
-- pixel_to_hex: Runtime - coordinate conversion for command targeting
+- Camera.hex_at_screen: Runtime - coordinate conversion for command targeting
 - IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand: Runtime (local) - UI issues commands
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Optional, Any
-from game.core.hex_math import pixel_to_hex
 from game.strategy.engine.commands import IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand
 from game.strategy.facade.dto.fleet_dto import FleetInfo
 
@@ -21,6 +20,27 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.facade.strategy_session_facade import StrategySessionFacade
+
+
+def _format_result_error(result: Any, operation: str) -> dict:
+    """Build the standard ``{'type': 'error', 'message': msg}`` payload + warning log.
+
+    Shared error path for ``execute_move`` / ``execute_intercept`` /
+    ``execute_join`` (PROJ-380, DUP-X-10, scope-reduced to fleet_ops).
+    Logs ``"<operation> failed: <msg>"`` at WARNING and returns the dict.
+    ``msg`` is ``result.message`` when a result is present, else ``"Unknown"``.
+
+    Args:
+        result: The (optional) command result; ``None`` is permitted.
+        operation: Human-readable verb tag (e.g. ``"Move"``, ``"Intercept"``,
+            ``"Join Fleet"``) used in the warning log.
+
+    Returns:
+        ``{'type': 'error', 'message': msg}``.
+    """
+    msg = result.message if result else 'Unknown'
+    logger.warning(f"{operation} failed: {msg}")
+    return {'type': 'error', 'message': msg}
 
 
 class FleetOperations:
@@ -88,8 +108,7 @@ class FleetOperations:
             logger.warning("Fleet is building - cancel BUILD order first to move.")
             return {'type': 'error', 'message': 'Fleet is building - cancel BUILD order first'}
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         target_fleet_info = self.get_fleet_at_hex(target_hex)
 
@@ -124,9 +143,7 @@ class FleetOperations:
             if result and result.is_valid:
                 return {'type': 'success', 'fleet': fleet}
             else:
-                msg = result.message if result else 'Unknown'
-                logger.warning(f"Move failed: {msg}")
-                return {'type': 'error', 'message': msg}
+                return _format_result_error(result, "Move")
         else:
             logger.warning("Move failed: No path (Unreachable)")
             return {'type': 'error', 'message': 'Unreachable'}
@@ -150,9 +167,7 @@ class FleetOperations:
         if result and result.is_valid:
             return {'type': 'success', 'fleet': fleet}
         else:
-            msg = result.message if result else 'Unknown'
-            logger.warning(f"Intercept Failed: {msg}")
-            return {'type': 'error', 'message': msg}
+            return _format_result_error(result, "Intercept")
 
     def handle_join_designation(self, mx, my, selected_fleet) -> Any:
         """
@@ -172,8 +187,7 @@ class FleetOperations:
         if not selected_fleet:
             return None
 
-        world_pos = self.camera.screen_to_world((mx, my))
-        target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
+        target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
         all_fleets = self.facade.get_fleets_at_hex(target_hex)
 
@@ -213,6 +227,4 @@ class FleetOperations:
         if result and result.is_valid:
             return {'type': 'success', 'fleet': fleet}
         else:
-            msg = result.message if result else 'Unknown'
-            logger.warning(f"Join Fleet Failed: {msg}")
-            return {'type': 'error', 'message': msg}
+            return _format_result_error(result, "Join Fleet")

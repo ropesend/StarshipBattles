@@ -17,6 +17,9 @@ from game.ui.screens.strategy_detail_fmt import (
     format_fleet_info,
     format_uncolonized_habitability_for_empire,
     get_label_for_object,
+    _get_ability_status_text,
+    _get_system_ability_status,
+    _planet_has_ability_facility,
     _format_ship_groups,
     _format_cargo_summary,
     _format_orders,
@@ -825,8 +828,15 @@ class TestFormatPlanetInfo:
 
         assert "5k" in result or "6k" in result  # Rounding
 
-    def test_happiness_indicators(self, mock_planet):
-        """Test happiness indicators display."""
+    def test_per_species_block_omitted_when_view_is_none(self, mock_planet):
+        """PROJ-397 Phase 3 Task 3.2: legacy single-line per-species
+        layout (with `[+]/[~]/[-]` markers) was deleted. With ``view=None``
+        the per-species block is omitted entirely; demographic rendering
+        requires a `ColonyDemographicView` from the facade. The
+        `TestPerSpeciesSubBlock` suite at the bottom of this file
+        exercises the modern view-based layout (which uses
+        `_happiness_category` strings like `[Happy]`/`[Neutral]`).
+        """
         mock_planet.owner_id = 1
 
         pop_happy = Mock()
@@ -834,25 +844,19 @@ class TestFormatPlanetInfo:
         pop_happy.happiness = 0.9
         pop_happy.race_id = "Happy"
 
-        pop_neutral = Mock()
-        pop_neutral.count = 1000
-        pop_neutral.happiness = 0.5
-        pop_neutral.race_id = "Neutral"
-
-        pop_unhappy = Mock()
-        pop_unhappy.count = 1000
-        pop_unhappy.happiness = 0.2
-        pop_unhappy.race_id = "Unhappy"
-
-        mock_planet.populations = [pop_happy, pop_neutral, pop_unhappy]
+        mock_planet.populations = [pop_happy]
         mock_planet.max_population = 10000
         mock_planet.facilities = []
 
         result = format_planet_info(mock_planet)
 
-        assert "[+]" in result  # Happy
-        assert "[~]" in result  # Neutral
-        assert "[-]" in result  # Unhappy
+        # The Population summary line still renders.
+        assert "<b>Population:</b>" in result
+        # Legacy per-species markers MUST NOT reappear.
+        assert "[+]" not in result
+        assert "[~]" not in result
+        assert "[-]" not in result
+        assert " - Happy:" not in result
 
     def test_facilities_display(self, mock_planet):
         """Test facilities list display."""
@@ -1014,6 +1018,103 @@ class TestFormatStarSystemInfo:
         assert "Geologic Stabilizer" not in result
 
 
+class TestAbilityStatusHelpers:
+    def _facility_with_inline_ability(self, ability_name):
+        facility = Mock()
+        facility.design_data = {
+            "layers": {
+                "OUTER": [
+                    {
+                        "id": ability_name.lower(),
+                        "abilities": {ability_name: {"scope": "system"}},
+                    }
+                ]
+            }
+        }
+        facility.component_states = {}
+        return facility
+
+    def test_detail_deactivating_status_includes_progress(self):
+        from game.strategy.data.component_activation_state import (
+            ActivationPhase,
+            ComponentActivationState,
+        )
+
+        planet = Mock()
+        facility = self._facility_with_inline_ability("GeologicStabilizer")
+        facility.component_states = {
+            "OUTER:0:geologic": ComponentActivationState(
+                phase=ActivationPhase.DEACTIVATING,
+                progress_ticks=25,
+                required_ticks=150,
+                ability_name="GeologicStabilizer",
+            ).to_dict()
+        }
+        planet.facilities = [facility]
+        planet.active_abilities = {}
+
+        result = _get_ability_status_text(planet, "GeologicStabilizer")
+
+        assert result == "Deactivating (25/150 ticks)"
+
+    def test_ability_status_ignores_non_dict_component_state_and_falls_back_active(self):
+        planet = Mock()
+        facility = self._facility_with_inline_ability("GravityModifier")
+        facility.component_states = {"bad": object()}
+        planet.facilities = [facility]
+        planet.active_abilities = {"GravityModifier": True}
+
+        assert _get_ability_status_text(planet, "GravityModifier") == "Active"
+
+    def test_system_ability_status_prefers_active_planet_over_inactive_planet(self):
+        from game.strategy.data.component_activation_state import (
+            ActivationPhase,
+            ComponentActivationState,
+        )
+
+        inactive_planet = Mock(name="inactive_planet")
+        inactive_planet.name = "InactiveWorld"
+        inactive_facility = self._facility_with_inline_ability("GeologicStabilizer")
+        inactive_planet.facilities = [inactive_facility]
+        inactive_planet.active_abilities = {"GeologicStabilizer": False}
+
+        active_planet = Mock(name="active_planet")
+        active_planet.name = "ActiveWorld"
+        active_facility = self._facility_with_inline_ability("GeologicStabilizer")
+        active_facility.component_states = {
+            "OUTER:0:geologic": ComponentActivationState(
+                phase=ActivationPhase.ACTIVE,
+                ability_name="GeologicStabilizer",
+            ).to_dict()
+        }
+        active_planet.facilities = [active_facility]
+        active_planet.active_abilities = {"GeologicStabilizer": True}
+        system = Mock()
+        system.planets = [inactive_planet, active_planet]
+
+        result = _get_system_ability_status(system)
+
+        assert result["GeologicStabilizer"] == {
+            "status_text": "Active",
+            "planet_name": "ActiveWorld",
+        }
+
+    def test_planet_has_ability_facility_uses_inline_abilities_when_registry_unavailable(
+        self, monkeypatch
+    ):
+        def _raise_uninitialized():
+            raise RuntimeError("registry unavailable")
+
+        planet = Mock()
+        planet.facilities = [self._facility_with_inline_ability("RadiationShield")]
+        monkeypatch.setattr(
+            "game.core.registry.get_default_registry_manager",
+            _raise_uninitialized,
+        )
+
+        assert _planet_has_ability_facility(planet, "RadiationShield") is True
+
+
 # =============================================================================
 # format_star_info Tests
 # =============================================================================
@@ -1049,7 +1150,7 @@ class TestUncolonizedHabitabilityForEmpire:
       provided.
     - One line per `empire.resident_species()` entry: ` - {name}: {score}/100`.
     - Sorted DESCENDING by score (best-fit first).
-    - Score = `int(round(score_planet_for_race(planet, race_config) * 100))`.
+    - Score = `int(round(calculate_habitability(planet, race_config) * 100))`.
     - race_id with `registry.get_race(id) == None` is silently skipped.
     - Empty resident_species set → returns `""` (section omitted).
     """
@@ -1072,7 +1173,7 @@ class TestUncolonizedHabitabilityForEmpire:
         empire = self._mock_empire(set())
         registry = Mock()
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.5,
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1084,7 +1185,7 @@ class TestUncolonizedHabitabilityForEmpire:
         registry = Mock()
         registry.get_race.return_value = self._mock_race("Humans")
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.94,
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1105,7 +1206,7 @@ class TestUncolonizedHabitabilityForEmpire:
 
         scores = {"human": 0.80, "voidari": 0.30, "ghost": 0.55}
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             side_effect=lambda planet, race: scores[
                 next(rid for rid, r in races.items() if r is race)
             ],
@@ -1130,7 +1231,7 @@ class TestUncolonizedHabitabilityForEmpire:
 
         registry.get_race.side_effect = _resolve
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.5,
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1148,7 +1249,7 @@ class TestUncolonizedHabitabilityForEmpire:
         registry.get_race.return_value = self._mock_race("Humans")
 
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.047,  # rounds to 5
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1160,7 +1261,7 @@ class TestUncolonizedHabitabilityForEmpire:
         registry = Mock()
         registry.get_race.return_value = self._mock_race("Humans")
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.0,
         ):
             result = format_uncolonized_habitability_for_empire(mock_planet, empire, registry)
@@ -1189,7 +1290,7 @@ class TestFormatPlanetInfoUncolonizedHabitabilitySection:
         registry.get_race.return_value = race
 
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.73,
         ):
             result = format_planet_info(mock_planet, empire=empire, race_registry=registry)
@@ -1211,7 +1312,7 @@ class TestFormatPlanetInfoUncolonizedHabitabilitySection:
         registry.get_race.return_value = race
 
         with patch(
-            "game.ui.screens.strategy_detail_fmt.score_planet_for_race",
+            "game.ui.screens.strategy_detail_fmt.calculate_habitability",
             return_value=0.73,
         ):
             result = format_planet_info(mock_planet, empire=empire, race_registry=registry)
@@ -1338,9 +1439,12 @@ def _make_view(species_views, *, planet_id=42, planet_name="Earth"):
 
 class TestPerSpeciesSubBlock:
 
-    def test_view_none_preserves_legacy_single_line(self):
-        """`view=None` (default) keeps the existing single-line per-species
-        rendering — backward compat for legacy call sites and tests."""
+    def test_view_none_omits_per_species_block(self):
+        """PROJ-397 Phase 3 Task 3.2: the legacy single-line per-species
+        layout was deleted. `view=None` on an owned planet now silently
+        omits the per-species block — callers that want demographic
+        rendering must thread a facade and provide a
+        `ColonyDemographicView`."""
         from game.ui.screens.strategy_detail_fmt import format_planet_info
         planet = _make_basic_planet()
         pop = MagicMock()
@@ -1351,9 +1455,12 @@ class TestPerSpeciesSubBlock:
 
         out = format_planet_info(planet)
 
-        # Legacy line uses ` - {race_id}: {count} [...]` pattern.
-        assert " - human:" in out
-        # Sub-block markers from the new layout must NOT appear.
+        # Higher-level Population summary still renders.
+        assert "<b>Population:</b>" in out
+        # Legacy single-line marker MUST NOT reappear.
+        assert " - human:" not in out
+        # Sub-block markers from the modern PROJ-289 layout also MUST NOT
+        # appear — view is None.
         assert "Habitability:" not in out
         assert "Growth:" not in out
 

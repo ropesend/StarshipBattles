@@ -1,4 +1,10 @@
-"""Hex grid snake-line drawing with viewport culling (PROJ-309 sub-phase 3.2)."""
+"""Hex grid snake-line drawing with viewport culling and surface cache.
+
+PROJ-309 sub-phase 3.2: extracted from the renderer.
+PROJ-374: introduced ``GridLayer`` with a quantized property-keyed surface
+cache. ``draw_grid`` is preserved for back-compat; new callers should use
+``GridLayer.draw``.
+"""
 from __future__ import annotations
 
 from typing import Any
@@ -9,8 +15,19 @@ from game.core.hex_math import pixel_to_hex
 from game.ui.colors import COLORS
 
 
-def draw_grid(r: Any, screen: Any) -> None:
-    """Draw the hex grid with optimized snake lines."""
+# 0.1 world-unit position tolerance, 0.01 zoom tolerance. Sub-tolerance
+# motion is sub-pixel and produces a cache hit.
+_POS_QUANT = 1   # round() ndigits arg → 0.1 quantum
+_ZOOM_QUANT = 2  # round() ndigits arg → 0.01 quantum
+
+
+def _render_grid_to_surface(r: Any, target_surface: Any) -> None:
+    """Render the hex grid onto ``target_surface``.
+
+    Pure function of ``(camera, hex_size, viewport)`` — no other state read.
+    Extracted from the original ``draw_grid`` body so cache logic can wrap it
+    and tests can mock the heavy work.
+    """
     # 1. Culling
     tl_world = r.camera.screen_to_world((0, 0))
     tr_world = r.camera.screen_to_world((r.screen_width, 0))
@@ -78,7 +95,89 @@ def draw_grid(r: Any, screen: Any) -> None:
 
             p1 = (cx + v_tl.x, cy + v_tl.y)
             p2 = (cx + v_tr.x, cy + v_tr.y)
-            pygame.draw.line(screen, grid_color, p1, p2, 1)
+            pygame.draw.line(target_surface, grid_color, p1, p2, 1)
 
         if len(snake_points) > 1:
-            pygame.draw.lines(screen, grid_color, False, snake_points, 1)
+            pygame.draw.lines(target_surface, grid_color, False, snake_points, 1)
+
+
+def draw_grid(r: Any, screen: Any) -> None:
+    """Draw the hex grid directly onto ``screen``.
+
+    Uncached fast path retained for back-compat with existing direct callers
+    (e.g. tests). Production rendering goes through ``GridLayer.draw``.
+    """
+    _render_grid_to_surface(r, screen)
+
+
+class GridLayer:
+    """Property-keyed surface cache for the strategy hex grid.
+
+    Mirrors the pattern in ``BackgroundLayer`` and ``HexOutlineLayer``:
+    one cache entry, viewport-sized surface allocated once on first miss
+    and reused via ``fill((0,0,0,0))`` + redraw on subsequent misses. The
+    cache key is a quantized snapshot of camera state so smooth pan/zoom
+    animations don't thrash.
+
+    Below ``zoom < 0.4`` the renderer's existing cutoff means there's
+    nothing to draw; we short-circuit at the top of ``draw`` before any
+    cache work.
+    """
+
+    def __init__(self) -> None:
+        self._cache_surface: pygame.Surface | None = None
+        self._cache_key: tuple | None = None
+
+    def _compute_key(self, r: Any) -> tuple:
+        """Compute the quantized cache key for the current renderer state.
+
+        Every *runtime-varying* input that affects the rendered bitmap appears
+        here. If a new input is introduced (e.g. dynamic grid color from a
+        theme), it must be added or the cache will go stale.
+
+        Constant inputs read by ``_render_grid_to_surface`` and intentionally
+        excluded from the key (their values are fixed for the renderer's
+        lifetime and the cache invalidates correctly when they would change):
+            - ``r.camera.width``  — derived from ``screen_width - SIDEBAR_WIDTH``
+            - ``r.camera.height`` — derived from ``screen_height - TOP_BAR_HEIGHT``
+            - ``r.camera.offset_x`` — fixed at 0
+            - ``r.camera.offset_y`` — fixed at TOP_BAR_HEIGHT
+            - ``COLORS['border_subtle']`` — hardcoded grid color
+        If any of these become runtime-varying, add them to the key.
+        """
+        cam = r.camera
+        return (
+            round(cam.position.x, _POS_QUANT),
+            round(cam.position.y, _POS_QUANT),
+            round(cam.zoom, _ZOOM_QUANT),
+            r.screen_width,
+            r.screen_height,
+            r.hex_size,
+        )
+
+    def _ensure_surface(self, r: Any) -> pygame.Surface:
+        """Return a viewport-sized SRCALPHA cache surface, reallocating only
+        when the viewport size changes."""
+        target_size = (r.screen_width, r.screen_height)
+        if (
+            self._cache_surface is None
+            or self._cache_surface.get_size() != target_size
+        ):
+            self._cache_surface = pygame.Surface(target_size, pygame.SRCALPHA)
+        return self._cache_surface
+
+    def draw(self, r: Any, screen: Any) -> None:
+        """Draw the grid via the cache, blitting to ``screen``."""
+        if r.camera.zoom < 0.4:
+            return
+
+        key = self._compute_key(r)
+        if key == self._cache_key and self._cache_surface is not None:
+            screen.blit(self._cache_surface, (0, 0))
+            return
+
+        surface = self._ensure_surface(r)
+        surface.fill((0, 0, 0, 0))
+        _render_grid_to_surface(r, surface)
+        self._cache_key = key
+        screen.blit(surface, (0, 0))

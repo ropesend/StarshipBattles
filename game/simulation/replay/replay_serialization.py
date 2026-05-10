@@ -54,7 +54,7 @@ from game.simulation.combat.boundary import (
     RectBoundary,
     UnboundedRegion,
 )
-from game.simulation.combat.formation import FormationShape, FormationSpec
+from game.simulation.combat.formation import FormationSpec
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
 from game.simulation.combat.telemetry import TelemetryLevel
 from game.simulation.components.modifier_effects import ModifierEffect
@@ -67,7 +67,7 @@ from game.simulation.systems.battle_end_conditions import (
 # Strict-match version pinned on every saved replay file. See
 # `Projects/active_projects/PROJ-312/decisions.md` and Pattern #18 (PROJ-312
 # Regression Contract) for the policy.
-REPLAY_SCHEMA_VERSION = "1.0.0"
+REPLAY_SCHEMA_VERSION = "2.0.0"
 
 
 # ---------------------------------------------------------------------------
@@ -184,33 +184,14 @@ def modifier_stack_from_dict(data: Optional[Dict[str, Any]]) -> Optional[Modifie
 
 
 # ---------------------------------------------------------------------------
-# Formation  (used by TaskForceSpec)
+# Formation (used by TaskForceSpec) — PROJ-391 Task 1.3
+#
+# (De)serialization moved onto `FormationSpec` itself per Pattern #17
+# (Serializable Protocol). The previous duck-typed fallback that
+# accepted non-FormationSpec inputs is gone — every spec compiler in
+# production produces a real `FormationSpec`, and the field's `object`
+# typing on `TaskForceSpec` is a vestige slated for tightening.
 # ---------------------------------------------------------------------------
-
-
-def _formation_to_dict(formation: Any) -> Dict[str, Any]:
-    """Serialize a FormationSpec. The field is typed ``object`` on
-    TaskForceSpec, so accept duck-typed inputs that lack ``shape``/``spacing``
-    by coercing to a no-op shape — but in practice every spec compiler
-    produces a real ``FormationSpec``."""
-    if isinstance(formation, FormationSpec):
-        return {
-            "shape": formation.shape.value,
-            "spacing": float(formation.spacing),
-            "custom_positions": [_vec_to_list(p) for p in formation.custom_positions],
-        }
-    # Fallback for legacy / mock formations: store nothing identifying.
-    return {"shape": FormationShape.LINE_ASTERN.value, "spacing": 0.0, "custom_positions": []}
-
-
-def _formation_from_dict(data: Dict[str, Any]) -> FormationSpec:
-    return FormationSpec(
-        shape=FormationShape(data["shape"]),
-        spacing=float(data["spacing"]),
-        custom_positions=tuple(
-            _list_to_vec(p) for p in data.get("custom_positions", [])
-        ),
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -243,6 +224,8 @@ def _component_state_to_dict(c: ComponentStateSpec) -> Dict[str, Any]:
         "component_id": c.component_id,
         "instance_index": int(c.instance_index),
         "current_hp": float(c.current_hp),
+        "max_hp": float(c.max_hp),
+        "status": str(c.status),
         "is_active": bool(c.is_active),
     }
 
@@ -252,6 +235,8 @@ def _component_state_from_dict(data: Dict[str, Any]) -> ComponentStateSpec:
         component_id=data["component_id"],
         instance_index=int(data["instance_index"]),
         current_hp=float(data["current_hp"]),
+        max_hp=float(data["max_hp"]),
+        status=str(data["status"]),
         is_active=bool(data["is_active"]),
     )
 
@@ -304,18 +289,27 @@ def _squadron_spec_from_dict(data: Dict[str, Any]) -> SquadronSpec:
 
 
 def _task_force_spec_to_dict(tf: TaskForceSpec) -> Dict[str, Any]:
+    # PROJ-407 D-08: ``TaskForceSpec.formation`` is now strictly typed
+    # ``FormationSpec | None``; the prior ``isinstance`` fallback that
+    # silently dropped invalid formations to ``None`` is gone — the type
+    # contract enforces the precondition at construction.
+    formation_dict = tf.formation.to_dict() if tf.formation is not None else None
     return {
         "task_force_id": tf.task_force_id,
-        "formation": _formation_to_dict(tf.formation),
+        "formation": formation_dict,
         "policies": _combat_policies_to_dict(tf.policies),
         "squadrons": [_squadron_spec_to_dict(sq) for sq in tf.squadrons],
     }
 
 
 def _task_force_spec_from_dict(data: Dict[str, Any]) -> TaskForceSpec:
+    formation_data = data.get("formation")
+    formation: Any = (
+        FormationSpec.from_dict(formation_data) if formation_data is not None else None
+    )
     return TaskForceSpec(
         task_force_id=data["task_force_id"],
-        formation=_formation_from_dict(data["formation"]),
+        formation=formation,
         policies=_combat_policies_from_dict(data["policies"]),
         squadrons=tuple(_squadron_spec_from_dict(sq) for sq in data["squadrons"]),
     )

@@ -33,10 +33,15 @@ def fmt_targeting(val) -> Any:
     return "Single" if val == 1 else f"Multi ({val})"
 
 
-# --- Helpers ---
+# --- Getters / Helpers ---
 
-def _get_total_crew_requirement(ship) -> Any:
-    """Get total crew requirement from CrewRequired ability."""
+def get_total_crew_requirement(ship) -> Any:
+    """Get total crew requirement from CrewRequired ability.
+
+    Public helper used by validators and registered as the
+    ``'get_crew_required'`` dispatch entry (dispatch key kept stable for
+    JSON layouts; PROJ-392 dropped the trivial wrapper).
+    """
     return ship.get_ability_total('CrewRequired')
 
 
@@ -46,13 +51,13 @@ def mass_validator(ship, val) -> tuple:
     return (ship.mass_limits_ok, "✓" if ship.mass_limits_ok else "✗")
 
 def crew_validator(ship, val) -> tuple:
-    req = _get_total_crew_requirement(ship)
+    req = get_total_crew_requirement(ship)
     if val >= req:
         return (True, "✓")
     return (False, f"✗ Miss {req - val}")
 
 def life_support_validator(ship, val) -> tuple:
-    req = _get_total_crew_requirement(ship)
+    req = get_total_crew_requirement(ship)
     if val >= req:
         return (True, "✓")
     return (False, f"✗ -{req - val}")
@@ -62,9 +67,6 @@ def life_support_validator(ship, val) -> tuple:
 
 def get_mass_display(ship) -> Any:
     return ship.mass
-
-def get_crew_required(ship) -> Any:
-    return _get_total_crew_requirement(ship)
 
 def get_crew_capacity(ship) -> Any:
     return max(0, ship.get_ability_total('CrewCapacity'))
@@ -110,29 +112,35 @@ def get_energy_consumption(ship) -> Any:
 
 def get_resource_storage(ship, res_name) -> Any:
     """Get max storage for a specific resource."""
-    r = ship.resources.get_resource(res_name)
+    resources = getattr(ship, 'resources', None)
+    r = resources.get_resource(res_name) if resources else None
     return r.max_value if r else 0
 
 def get_resource_current(ship, res_name) -> Any:
     """Get current value for a specific resource."""
-    r = ship.resources.get_resource(res_name)
+    resources = getattr(ship, 'resources', None)
+    r = resources.get_resource(res_name) if resources else None
     return r.current_value if r else 0
 
 def get_resource_generation(ship, res_name) -> Any:
     """Get generation/regen rate for a specific resource."""
-    r = ship.resources.get_resource(res_name)
+    resources = getattr(ship, 'resources', None)
+    r = resources.get_resource(res_name) if resources else None
     return r.regen_rate if r else 0
 
 def get_resource_consumption(ship, res_name) -> Any:
     """Get total consumption for a resource."""
-    val = ship.get_resource_stat(res_name, 'consumption')
-    if val > 0:
+    try:
+        val = ship.get_resource_stat(res_name, 'consumption')
+    except (TypeError, AttributeError):
+        val = 0
+    if isinstance(val, (int, float)) and val > 0:
         return val
     from game.simulation.components.abilities.resources import ResourceConsumption
     total = 0
-    for layer in ship.layers.values():
-        for comp in layer.components:
-            for ability in comp.ability_instances:
+    for layer in getattr(ship, 'layers', {}).values():
+        for comp in getattr(layer, 'components', []):
+            for ability in getattr(comp, 'ability_instances', []):
                 if isinstance(ability, ResourceConsumption):
                     if ability.resource_type == res_name and ability.trigger == 'constant':
                         total += ability.amount
@@ -163,11 +171,17 @@ def get_resource_max_usage(ship, res_name) -> Any:
     }
     potential_res = potential_map.get(res_name)
     if potential_res:
-        val = ship.get_resource_stat(potential_res, 'consumption')
-        if val > 0:
+        try:
+            val = ship.get_resource_stat(potential_res, 'consumption')
+        except (TypeError, AttributeError):
+            val = 0
+        if isinstance(val, (int, float)) and val > 0:
             return val
-    val = ship.get_resource_stat(res_name, 'consumption')
-    if val > 0:
+    try:
+        val = ship.get_resource_stat(res_name, 'consumption')
+    except (TypeError, AttributeError):
+        val = 0
+    if isinstance(val, (int, float)) and val > 0:
         return val
     return 0
 
@@ -272,11 +286,21 @@ def get_colony_types(ship) -> Any:
 
 
 # --- Superweapon Getters ---
+#
+# PROJ-382 Phase 2 (Convention §6.5): the ability list is derived from the
+# canonical SUPERWEAPONS registry; only ``SelfDestruct`` is appended manually
+# because it is intentionally out of the registry (no ability check, no
+# stabilizer block, no galaxy mutation — see superweapon_registry docstring).
+# Display labels remain a UI-side mapping until SuperweaponSpec gains a
+# ``display_name`` field; ``DestroyStar`` -> "Stellerator" cannot be derived
+# from the bare ability name.
 
-_SUPERWEAPON_ABILITIES = [
-    'DestroyPlanet', 'DestroyStar', 'OpenWarpPoint',
-    'CloseWarpPoint', 'CreateDysonSphere', 'SelfDestruct',
-]
+# Note: ``DestroyStar`` is the historical ability name used in component data
+# files; the registry uses ``STELLERATE_STAR`` for the order_type but the
+# component-side ability name is the ``ability_name`` field (which is None for
+# this entry — Stellerator dispatches via system_destroyer rather than an
+# ability).  We still want to count the legacy ability surface here, so we
+# preserve "DestroyStar" as a manual addendum below.
 
 _SUPERWEAPON_LABELS = {
     'DestroyPlanet': 'Planet Imploder',
@@ -287,10 +311,34 @@ _SUPERWEAPON_LABELS = {
     'SelfDestruct': 'Self-Destruct',
 }
 
+
+def _superweapon_ability_names() -> list[str]:
+    """Derive the ability-name list from the SUPERWEAPONS registry.
+
+    Filters out registry rows whose ability_name is None (currently
+    STELLERATE_STAR, which dispatches via system_destroyer), then appends the
+    two non-registry abilities that the UI still tracks:
+
+    * ``DestroyStar`` — legacy component-ability name for the Stellerator;
+      the registry's STELLERATE_STAR row carries ``ability_name=None`` so the
+      derived list misses it. Components in data files still declare this
+      ability for the UI summary count.
+    * ``SelfDestruct`` — intentionally outside SUPERWEAPONS (structural
+      outlier, no stabilizer block) but still surfaced in the UI summary.
+    """
+    from game.strategy.services.superweapon_registry import SUPERWEAPONS
+    names: list[str] = [s.ability_name for s in SUPERWEAPONS if s.ability_name is not None]
+    if 'DestroyStar' not in names:
+        names.append('DestroyStar')
+    if 'SelfDestruct' not in names:
+        names.append('SelfDestruct')
+    return names
+
+
 def get_superweapon_summary(ship) -> Any:
     """Get formatted summary of superweapon capabilities with activation counts."""
     entries = []
-    for ab_name in _SUPERWEAPON_ABILITIES:
+    for ab_name in _superweapon_ability_names():
         count = 0
         for comp in ship.get_all_components():
             if comp.has_ability(ab_name):
@@ -302,8 +350,9 @@ def get_superweapon_summary(ship) -> Any:
 
 def has_superweapons(ship) -> bool:
     """Check if ship has any superweapon abilities."""
+    ability_names = _superweapon_ability_names()
     for comp in ship.get_all_components():
-        for ab_name in _SUPERWEAPON_ABILITIES:
+        for ab_name in ability_names:
             if comp.has_ability(ab_name):
                 return True
     return False
@@ -344,7 +393,7 @@ def fmt_text(val) -> Any:
 
 GETTERS = {
     'get_mass_display': get_mass_display,
-    'get_crew_required': get_crew_required,
+    'get_crew_required': get_total_crew_requirement,
     'get_crew_capacity': get_crew_capacity,
     'get_life_support': get_life_support,
     'get_max_targets': get_max_targets,

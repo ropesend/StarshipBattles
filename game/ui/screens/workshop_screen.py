@@ -25,7 +25,7 @@ from game.ui.screens.builder import BuilderLeftPanel, BuilderRightPanel, Weapons
 from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
 from game.ui.screens.builder.schematic_view import SchematicView
 from game.ui.screens.builder.interaction_controller import InteractionController
-from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import WorkshopEventBus
 from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
 from game.ui.screens.workshop_event_router import WorkshopEventRouter
 from game.ui.screens.workshop_viewmodel import WorkshopViewModel
@@ -37,7 +37,7 @@ from game.ui.screens.workshop_ship_io import WorkshopShipIO
 from game.ui.screens.workshop_data_reloader import WorkshopDataReloader
 from game.ui.colors import COLORS
 from game.ui.screens.builder.detail_panel import ComponentDetailPanel
-from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.screens.builder.modifier_logic import ModifierLogicService
 from game.ui.services.vehicle_class_service import VehicleClassService
 
 logger = logging.getLogger(__name__)
@@ -66,13 +66,9 @@ class DesignWorkshopScreen:
         self.context = context
         self.on_start_battle = context.on_return  # Use context's callback
 
-        self.event_bus = EventBus()
+        self.event_bus = WorkshopEventBus()
 
-        # PROJ-211: Initialize ModifierLogic with registry provider
-        ModifierLogic.init_service(context.registries)
-
-        # Instance-based service (used by panels that accept it)
-        from game.ui.screens.builder.modifier_logic import ModifierLogicService
+        # Instance-based service injected into panels via constructor (strict DI).
         self._modifier_logic = ModifierLogicService(context.registries)
 
         # PROJ-43: UI service adapters for ship I/O and design loading

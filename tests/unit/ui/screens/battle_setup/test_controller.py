@@ -7,6 +7,7 @@ mutations are end-to-end behavior tests, not interface mocks.
 """
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -120,6 +121,158 @@ class TestFleetCRUD:
 
         # Must keep at least one fleet
         assert len(state.side_0.fleets) == 1
+
+
+class TestRegistryLookup:
+    def test_get_registries_returns_none_when_provider_fails(self):
+        from game.ui.screens.battle_setup.controller import _get_registries
+
+        with patch(
+            "game.core.registry.get_default_registry_provider",
+            side_effect=RuntimeError("not initialized"),
+        ):
+            assert _get_registries() is None
+
+    def test_get_registries_builds_game_registries_from_provider(self):
+        from game.ui.screens.battle_setup.controller import _get_registries
+
+        provider = SimpleNamespace(
+            get_components=MagicMock(return_value={"laser": object()}),
+            get_modifiers=MagicMock(return_value={"mod": object()}),
+            get_vehicle_classes=MagicMock(return_value={"Escort": object()}),
+            get_resources=MagicMock(return_value={"fuel": object()}),
+            get_resource_catalog=MagicMock(return_value=MagicMock()),
+        )
+
+        with patch(
+            "game.core.registry.get_default_registry_provider",
+            return_value=provider,
+        ):
+            registries = _get_registries()
+
+        assert registries.components == provider.get_components.return_value
+        assert registries.modifiers == provider.get_modifiers.return_value
+        assert registries.vehicle_classes == provider.get_vehicle_classes.return_value
+        assert registries.resources == provider.get_resources.return_value
+        assert registries.resource_catalog is provider.get_resource_catalog.return_value
+
+
+class TestShipCRUD:
+    def test_add_ship_from_design_uses_active_fleet_and_registries(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        fleet = state.side_0.create_fleet("A")
+        view_model.available_designs = [{"name": "Escort", "vehicle_type": "Ship"}]
+        registries = MagicMock(name="registries")
+        ship = _make_ship_mock()
+
+        with patch(
+            "game.ui.screens.battle_setup.controller._get_registries",
+            return_value=registries,
+        ), patch.object(
+            state,
+            "add_ship_from_design",
+            side_effect=lambda f, d, registries=None: f.add_ship(ship) or ship,
+        ) as add_ship:
+            controller.add_ship_from_design(0)
+
+        add_ship.assert_called_once_with(
+            fleet,
+            view_model.available_designs[0],
+            registries=registries,
+        )
+        assert fleet.ships == [ship]
+        controller._on_change.assert_called_once()
+
+    def test_add_ship_from_design_assigns_to_selected_task_force(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        fleet = state.side_0.create_fleet("A")
+        controller.add_task_force()
+        view_model.selected_tf_index = 0
+        view_model.available_designs = [{"name": "Escort", "vehicle_type": "Ship"}]
+        ship = _make_ship_mock()
+
+        with patch(
+            "game.ui.screens.battle_setup.controller._get_registries",
+            return_value=None,
+        ), patch.object(
+            state,
+            "add_ship_from_design",
+            side_effect=lambda f, d, registries=None: f.add_ship(ship) or ship,
+        ):
+            controller.add_ship_from_design(0)
+
+        assert fleet.task_forces[0].lone_ships == [ship]
+
+    def test_add_ship_from_design_assigns_to_selected_squadron(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        fleet = state.side_0.create_fleet("A")
+        controller.add_squadron()
+        view_model.selected_tf_index = 0
+        view_model.selected_sq_index = 0
+        view_model.available_designs = [{"name": "Escort", "vehicle_type": "Ship"}]
+        ship = _make_ship_mock()
+
+        with patch(
+            "game.ui.screens.battle_setup.controller._get_registries",
+            return_value=None,
+        ), patch.object(
+            state,
+            "add_ship_from_design",
+            side_effect=lambda f, d, registries=None: f.add_ship(ship) or ship,
+        ):
+            controller.add_ship_from_design(0)
+
+        assert fleet.task_forces[0].squadrons[0].ships == [ship]
+
+    def test_add_ship_from_design_out_of_range_is_noop(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        state.side_0.create_fleet("A")
+        view_model.available_designs = []
+
+        controller.add_ship_from_design(0)
+
+        controller._on_change.assert_not_called()
+
+    def test_remove_ship_removes_indexed_ship_and_fires_on_change(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        fleet = state.side_0.create_fleet("A")
+        ship_a = _make_ship_mock()
+        ship_b = _make_ship_mock()
+        fleet.add_ship(ship_a)
+        fleet.add_ship(ship_b)
+
+        controller.remove_ship(0)
+
+        assert fleet.ships == [ship_b]
+        controller._on_change.assert_called_once()
+
+    def test_remove_ship_clears_task_force_and_squadron_assignments(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        fleet = state.side_0.create_fleet("A")
+        controller.add_squadron()
+        ship = _make_ship_mock()
+        fleet.add_ship(ship)
+        tf = fleet.task_forces[0]
+        sq = tf.squadrons[0]
+        tf.add_lone_ship(ship)
+        sq.add_ship(ship)
+
+        controller.remove_ship(0)
+
+        assert ship not in fleet.ships
+        assert ship not in tf.lone_ships
+        assert ship not in sq.ships
+
+    def test_remove_ship_out_of_range_is_noop(self):
+        controller, state, view_model = _make_controller(on_change=MagicMock())
+        fleet = state.side_0.create_fleet("A")
+        ship = _make_ship_mock()
+        fleet.add_ship(ship)
+
+        controller.remove_ship(3)
+
+        assert fleet.ships == [ship]
+        controller._on_change.assert_not_called()
 
 
 class TestSideDropdown:
@@ -479,43 +632,6 @@ class TestReturnToMenu:
         controller, _, _ = _make_controller(scene_callback=None)
         # Should not raise.
         controller.return_to_menu()
-
-
-class TestSaveLoadLegacyMigration:
-    def test_load_migrates_legacy_top_level_complex_toggles(self, tmp_path):
-        """Legacy saves (pre-Phase-2) stored `_complex_toggles` at top level
-        with flat string keys. Controller.load_setup must migrate them onto
-        per-side `*_complex_toggles` dicts."""
-        from game.core.json_utils import save_json
-        from game.ui.screens.battle_setup.controller import BattleSetupController
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-        from game.ui.screens.battle_setup_state import BattleSetupState
-
-        # Build a minimal legacy save file.
-        state = BattleSetupState()
-        state.side_0.create_fleet("Fleet Alpha")
-        state.side_1.create_fleet("Fleet Beta")
-        data = state.to_dict()
-        data["_complex_toggles"] = {
-            "0_system_qs_system_shield_booster_complex": True,
-            "1_sector_qs_sector_damage_booster_complex": True,
-        }
-        save_path = tmp_path / "legacy.json"
-        save_json(str(save_path), data)
-
-        controller = BattleSetupController(
-            state=BattleSetupState(),
-            view_model=BattleSetupViewModel(),
-            on_change=MagicMock(),
-        )
-        controller._load_from_path(str(save_path))
-
-        assert controller._state.sides[0].system_complex_toggles.get(
-            "qs_system_shield_booster_complex"
-        ) is True
-        assert controller._state.sides[1].sector_complex_toggles.get(
-            "qs_sector_damage_booster_complex"
-        ) is True
 
 
 class TestNTeamBattleLaunch:

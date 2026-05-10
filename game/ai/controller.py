@@ -53,7 +53,6 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.engine.spatial import SpatialGrid
-    from game.simulation.interfaces.ai_controller import IControllableShip
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +72,6 @@ from game.ai.combat_utils import (
     get_capability_cache_key,
     get_entity_id,
     get_hp_percent,
-    is_in_pdc_arc,
 )
 
 # Behaviors that can execute without an enemy target
@@ -84,7 +82,7 @@ _NO_TARGET_BEHAVIORS = frozenset({
 class AIController:
     def __init__(
         self,
-        ship: 'IControllableShip',
+        ship: 'ShipControllableAdapter',
         grid: 'SpatialGrid',
         enemy_team_id: int,
         *,
@@ -225,8 +223,10 @@ class AIController:
             # Get weapon components once
             weapons = entity.get_components_by_ability('WeaponAbility', operational_only=True)
 
-            # Filter for PDC weapons
-            pdc_weapons = [w for w in weapons if w.has_ability('PDCAbility')]
+            # Filter for PDC weapons via tag-based detection (PROJ-241/PROJ-356).
+            # PDC was generalized from a dedicated ability class to a 'pdc' tag
+            # on weapon abilities; `has_pdc_ability()` is the canonical surface.
+            pdc_weapons = [w for w in weapons if w.has_pdc_ability()]
 
             cache[entity_id] = {
                 'has_weapons': len(weapons) > 0,
@@ -266,8 +266,11 @@ class AIController:
             except (AttributeError, TypeError):
                 pass  # Will fall back to _safe_distance in evaluate()
 
-        # PERF: Pre-compute capability checks once for all candidates
-        # Avoids redundant component lookups for has_weapons, pdc_arc rules
+        # PERF: Pre-compute capability checks once for all candidates.
+        # Today only `has_weapons` rules consume the cache. The `has_pdc`
+        # / `pdc_components` keys are populated for a future PDC-arc cache
+        # consumer (see decisions.md PROJ-356 audit remediation, DC-003);
+        # `_eval_pdc_arc_rule` still calls `is_in_pdc_arc` directly.
         capabilities_cache = self._build_capabilities_cache(enemies)
 
         for e in enemies:

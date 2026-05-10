@@ -84,18 +84,28 @@ class CombatPolicies:
 
 @dataclass(frozen=True)
 class ComponentStateSpec:
-    """Persisted per-component HP + active-toggle state.
+    """Persisted per-component HP, max_hp, status, and active-toggle state.
 
     Populated by the strategy compiler from `ShipInstance.components` so
     per-component damage carries across battles. Combat Lab and Battle Setup
     normally emit ships with no persistent component state (empty tuple on
     `ShipSpec.components`), in which case the engine initializes HP from
     the design.
+
+    `max_hp` and `status` (PROJ-354A) capture battle-end fidelity for the
+    PROJ-354B replay end-state verifier — the live capture extractor in
+    `battle_runner._extract_component_states` populates them from the
+    engine `Component`. `status` carries the `ComponentStatus.name` string
+    (e.g., "ACTIVE", "DAMAGED", "NO_CREW", "NO_POWER", "NO_FUEL", "NO_AMMO");
+    the enum uses `auto()` numeric values which are not stable across
+    Python versions, so we serialize the name.
     """
 
     component_id: str
     instance_index: int
     current_hp: float
+    max_hp: float
+    status: str  # ComponentStatus.name (ACTIVE/DAMAGED/NO_CREW/NO_POWER/NO_FUEL/NO_AMMO)
     is_active: bool
 
 
@@ -149,15 +159,30 @@ class SquadronSpec:
 class TaskForceSpec:
     """Task force — top-level tactical grouping under a team.
 
-    `formation` is an opaque slot in Phase 1 (typed as FormationSpec when
-    Task 1.4 lands). Annotated as `object` to avoid forcing Phase 1
-    callers to import the not-yet-built type.
+    `formation` carries a real :class:`FormationSpec` (or ``None`` for the
+    legacy free-maneuver path). PROJ-407 D-08 tightened this from the
+    Phase 1 ``object`` vestige; `__post_init__` rejects any other type so
+    invalid formations fail at the boundary instead of being silently
+    dropped by downstream serialization.
     """
 
     task_force_id: str
-    formation: object  # FormationSpec — real type lands in Task 1.4
+    formation: "FormationSpec | None"
     policies: CombatPolicies
     squadrons: Tuple[SquadronSpec, ...]
+
+    def __post_init__(self) -> None:
+        # Local import to avoid a hard ``battle_spec -> formation`` cycle
+        # at module-import time. ``FormationSpec`` lives in
+        # ``game/simulation/combat/formation.py`` and is the only valid
+        # non-``None`` value.
+        from game.simulation.combat.formation import FormationSpec
+
+        if self.formation is not None and not isinstance(self.formation, FormationSpec):
+            raise TypeError(
+                "TaskForceSpec.formation must be FormationSpec | None; "
+                f"got {type(self.formation).__name__}"
+            )
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,14 @@
+[
+  {
+    "file": "game/simulation/components/component_loader.py",
+    "line": 37,
+    "variable": "_default_cache_manager",
+    "context": "_default_cache_manager: 'Optional[ComponentCacheManager]' = None"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 54,
+    "variable": "_default_ship_theme_manager",
+    "context": "_default_ship_theme_manager: Optional['ShipThemeManager'] = None"
+  }
+]

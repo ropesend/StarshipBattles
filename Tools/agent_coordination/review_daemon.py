@@ -279,6 +279,32 @@ def _parse_request_parent(request_path: Path) -> str | None:
     return None
 
 
+def _parse_block_fields(content: str, heading: str) -> dict[str, str] | None:
+    """Parse a `## <heading>` block of `- **key:** value` lines.
+
+    Returns a dict (possibly empty) if the heading exists, else None.
+    """
+    pattern = rf"##\s+{re.escape(heading)}\s*\n(.*?)(?=\n##\s+|\Z)"
+    m = re.search(pattern, content, re.DOTALL)
+    if not m:
+        return None
+    out: dict[str, str] = {}
+    for line in m.group(1).splitlines():
+        kv = re.match(r"-\s+\*\*([^*]+):\*\*\s*(.+)$", line.strip())
+        if kv:
+            out[kv.group(1).strip()] = kv.group(2).strip()
+    return out
+
+
+def _parse_checkout_block(request_path: Path) -> dict[str, str] | None:
+    """Extract the 03c Checkout block from a request file. None if absent."""
+    try:
+        content = request_path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    return _parse_block_fields(content, "Checkout")
+
+
 def _parse_request_title(request_path: Path) -> str:
     """Extract a slug-friendly title from the request."""
     try:
@@ -399,16 +425,36 @@ def process_request(request_path: Path, opencode_cmd: list[str] | None = None) -
         PickedUp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
 
+    # If a 03c Checkout block is present, materialize a SHA-pinned worktree.
+    # On any setup failure here, complete the request as failed and return.
+    checkout = _parse_checkout_block(in_progress_path)
+    review_cwd: Path = PROJECT_ROOT
+    review_worktree: Path | None = None
+    if checkout:
+        result = _setup_review_worktree(in_progress_path, checkout, request_id)
+        if result is None:
+            return False
+        review_cwd, review_worktree = result
+
     # Create review directory and pass its path to OpenCode
     review_dir = _make_review_dir(in_progress_path)
     sidecar_path = review_dir / "result.json"
-    review_dir_rel = str(review_dir.relative_to(PROJECT_ROOT)).replace("\\", "/")
+    if review_worktree:
+        # When running in a worktree, use the absolute path so OpenCode
+        # writes results to the main checkout regardless of its cwd.
+        review_dir_arg = str(review_dir).replace("\\", "/")
+        request_path_arg = str(in_progress_path).replace("\\", "/")
+    else:
+        review_dir_arg = str(review_dir.relative_to(PROJECT_ROOT)).replace("\\", "/")
+        request_path_arg = (
+            f"AgentCoordination/opencodereview/in_progress_review_requests/{in_progress_path.name}"
+        )
 
     prompt = (
         f"Load the ocode-review-request skill. "
-        f"Process the request at AgentCoordination/opencodereview/in_progress_review_requests/{in_progress_path.name}. "
-        f"Use review directory: {review_dir_rel}/. "
-        f"Write result.json to: {review_dir_rel}/result.json"
+        f"Process the request at {request_path_arg}. "
+        f"Use review directory: {review_dir_arg}/. "
+        f"Write result.json to: {review_dir_arg}/result.json"
     )
 
     if opencode_cmd is not None:
@@ -419,16 +465,17 @@ def process_request(request_path: Path, opencode_cmd: list[str] | None = None) -
         opencode_exe = _find_opencode()
         if opencode_exe is None:
             log(f"Request {request_id}: opencode not found on PATH")
+            _teardown_review_worktree(review_worktree)
             move_to_completed(in_progress_path, success=False, failure_reason="opencode not found on PATH")
             return False
         cmd = [opencode_exe, "run", "--dangerously-skip-permissions", prompt]
-    log(f"Launching: {' '.join(cmd)} (request={request_id})")
+    log(f"Launching: {' '.join(cmd)} (request={request_id}, cwd={review_cwd})")
 
     proc: subprocess.Popen[Any] | None = None
     try:
         proc = subprocess.Popen(
             cmd,
-            cwd=str(PROJECT_ROOT),
+            cwd=str(review_cwd),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -499,6 +546,122 @@ def process_request(request_path: Path, opencode_cmd: list[str] | None = None) -
         if proc is not None:
             with _procs_lock:
                 _active_procs.discard(proc)
+        _teardown_review_worktree(review_worktree)
+
+
+def _setup_review_worktree(
+    in_progress_path: Path,
+    checkout: dict[str, str],
+    request_id: str,
+) -> tuple[Path, Path] | None:
+    """Materialize a SHA-pinned detached worktree per the request's Checkout block.
+
+    Returns (cwd, worktree_path) on success. Returns None and completes the
+    request as failed on validation/setup error.
+    """
+    mode = checkout.get("mode", "detached_worktree")
+    if mode != "detached_worktree":
+        log(f"Request {request_id}: unsupported checkout mode {mode!r}")
+        move_to_completed(in_progress_path, success=False, failure_reason=f"unsupported checkout mode: {mode}")
+        return None
+    ref = checkout.get("ref", "")
+    expected_sha = checkout.get("sha", "")
+    worktree_rel = checkout.get("worktree_path", "")
+    if not (ref and expected_sha and worktree_rel):
+        log(f"Request {request_id}: incomplete checkout block: {checkout!r}")
+        move_to_completed(in_progress_path, success=False, failure_reason="incomplete checkout block")
+        return None
+
+    # Validate SHA matches the ref currently in the main checkout.
+    try:
+        actual = subprocess.run(
+            ["git", "rev-parse", "--verify", ref],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            check=True,
+            shell=False,
+        ).stdout.strip()
+    except subprocess.CalledProcessError as e:
+        log(f"Request {request_id}: cannot resolve ref {ref!r}: {e.stderr.strip()}")
+        move_to_completed(in_progress_path, success=False, failure_reason=f"unresolvable ref: {ref}")
+        return None
+
+    if actual != expected_sha:
+        log(
+            f"Request {request_id}: SHA mismatch. ref={ref} expected={expected_sha} "
+            f"actual={actual}"
+        )
+        move_to_completed(in_progress_path, success=False, failure_reason="sha_mismatch")
+        return None
+
+    # Resolve worktree path; accept relative-to-project-root or absolute.
+    worktree_path = Path(worktree_rel)
+    if not worktree_path.is_absolute():
+        worktree_path = PROJECT_ROOT / worktree_path
+
+    # If a stale worktree exists at this path, prune it.
+    if worktree_path.exists():
+        log(f"Request {request_id}: pruning stale worktree at {worktree_path}")
+        try:
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", str(worktree_path)],
+                cwd=str(PROJECT_ROOT),
+                capture_output=True,
+                text=True,
+                check=False,
+                shell=False,
+            )
+        except OSError:
+            pass
+
+    worktree_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        subprocess.run(
+            ["git", "worktree", "add", "--detach", str(worktree_path), expected_sha],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            check=True,
+            shell=False,
+        )
+    except subprocess.CalledProcessError as e:
+        log(f"Request {request_id}: worktree add failed: {e.stderr.strip()}")
+        move_to_completed(in_progress_path, success=False, failure_reason=f"worktree add failed: {e.stderr.strip()[:200]}")
+        return None
+
+    log(f"Request {request_id}: review worktree at {worktree_path} (SHA {expected_sha[:8]})")
+    return worktree_path, worktree_path
+
+
+def _teardown_review_worktree(worktree_path: Path | None) -> None:
+    """Best-effort removal of a review worktree."""
+    if not worktree_path:
+        return
+    try:
+        subprocess.run(
+            ["git", "worktree", "remove", "--force", str(worktree_path)],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+            shell=False,
+        )
+    except OSError as e:
+        log(f"Worktree teardown error: {e}")
+    # Defensive: prune so git's worktree registry stays clean even if the
+    # remove failed (e.g., concurrent process held the path).
+    try:
+        subprocess.run(
+            ["git", "worktree", "prune"],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+            shell=False,
+        )
+    except OSError:
+        pass
 
 
 def _kill_process_tree(proc: subprocess.Popen[Any]) -> None:

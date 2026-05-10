@@ -1,4 +1,11 @@
-"""Event bus for decoupled communication between UI components."""
+"""Event bus for decoupled communication between UI components.
+
+PROJ-382 Phase 2 (Pattern #10 / Pattern #6 naming hygiene): the workshop /
+build-queue UI bus is named ``WorkshopEventBus`` to avoid colliding with
+the canonical strategy-layer ``EventBus`` (``game/core/events/event_bus.py``).
+The two buses serve different scopes; sharing the name made imports
+ambiguous at code-review time.
+"""
 from __future__ import annotations
 
 import logging
@@ -9,8 +16,12 @@ from game.core.error_codes import ErrorCode
 logger = logging.getLogger(__name__)
 
 
-class EventBus:
-    """Simple publish/subscribe event bus with proper error handling."""
+class WorkshopEventBus:
+    """Simple publish/subscribe event bus with proper error handling.
+
+    Used by workshop / build-queue UI to coordinate between viewmodels,
+    panels, and sidebars without hardcoded references between widgets.
+    """
 
     def __init__(self):
         self._subscribers = {}

@@ -1,0 +1,13 @@
+{
+  "request_id": "req_20260506_071706_deac7e",
+  "review_dir": "Reviews/results/2026-05-06_071707_code_proj-369-turnengine-decomposition-descriptor-extra_req-req_20260506_071706_deac7e",
+  "report_path": "Reviews/results/2026-05-06_071707_code_proj-369-turnengine-decomposition-descriptor-extra_req-req_20260506_071706_deac7e/report.md",
+  "findings": {
+    "critical": 0,
+    "major": 1,
+    "minor": 3,
+    "info": 8
+  },
+  "completed_at": "2026-05-06T07:25:00Z",
+  "parent_request_id": null
+}

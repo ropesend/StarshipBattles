@@ -29,7 +29,7 @@ def test_load_passengers_success(mock_galaxy, colonized_planet, transport_fleet)
     """Load is valid when fleet has capacity and colony has population."""
     result = TransferValidator.validate(
         mock_galaxy, transport_fleet, colonized_planet,
-        "passengers", "load", 50
+        "passengers", "load", 50, species_id="human"
     )
     assert result.is_valid
     assert result.errors == []
@@ -43,7 +43,7 @@ def test_load_fails_when_fleet_full(mock_galaxy, colonized_planet, fresh_registr
 
     result = TransferValidator.validate(
         mock_galaxy, full_fleet, colonized_planet,
-        "passengers", "load", 50
+        "passengers", "load", 50, species_id="human"
     )
     assert not result.is_valid
     assert result.error_code == "NO_CARGO_SPACE"
@@ -62,7 +62,7 @@ def test_load_fails_when_colony_empty(mock_galaxy, transport_fleet):
 
     result = TransferValidator.validate(
         mock_galaxy, transport_fleet, empty_colony,
-        "passengers", "load", 50
+        "passengers", "load", 50, species_id="human"
     )
     assert not result.is_valid
     assert result.error_code == "NO_POPULATION"

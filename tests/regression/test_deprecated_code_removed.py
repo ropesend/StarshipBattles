@@ -4,16 +4,6 @@ Verification tests for deprecated code removal (PROJ-42).
 These tests ensure that deprecated code stays removed and doesn't accidentally
 get reintroduced. They serve as regression guards for the cleanup work.
 """
-import pytest
-
-
-class TestFleetMovementSimulatorRemoved:
-    """Verify FleetMovementSimulator module has been removed."""
-
-    def test_fleet_movement_simulator_import_fails(self):
-        """FleetMovementSimulator should no longer be importable."""
-        with pytest.raises(ImportError):
-            from game.strategy.engine.fleet_movement import FleetMovementSimulator
 
 
 class TestDeprecatedRegistryFunctionsRemoved:

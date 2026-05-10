@@ -33,26 +33,35 @@ def _make_sidebar(viewmodel=None):
         {'id': 'system', 'width': 120, 'title': 'System', 'visible': True},
     ]
 
-    with patch('game.ui.screens.empire_build_queue_sidebar.UILabel'):
-        with patch('game.ui.screens.empire_build_queue_sidebar.UIButton') as MockBtn:
-            # Ensure mock buttons have check_pressed returning False
-            MockBtn.return_value = Mock(check_pressed=Mock(return_value=False))
-            with patch('game.ui.screens.empire_build_queue_sidebar.UITextEntryLine'):
-                with patch('game.ui.screens.empire_build_queue_sidebar.TriStateFilterWidget') as MockWidget:
-                    # Each call creates a distinct mock widget
-                    def _make_widget(**kwargs):
-                        return Mock(
-                            check_pressed=Mock(return_value=None),
-                            set_state=Mock(),
-                        )
-                    MockWidget.side_effect = _make_widget
-                    sidebar = EmpireBuildQueueSidebar(
-                        ui_manager=Mock(),
-                        parent_container=Mock(),
-                        viewmodel=vm,
-                        event_bus=event_bus,
-                        columns=columns,
-                    )
+    # PROJ-323 Task 2.23: flatten 4-level nested `with patch(...)` to a single
+    # `patch.multiple` call. Using `DEFAULT` sentinels makes `patch.multiple`
+    # yield a dict of MagicMocks we can customize.
+    from unittest.mock import DEFAULT
+    with patch.multiple(
+        'game.ui.screens.empire_build_queue_sidebar',
+        UILabel=DEFAULT,
+        UIButton=DEFAULT,
+        UITextEntryLine=DEFAULT,
+        TriStateFilterWidget=DEFAULT,
+    ) as mocks:
+        # Ensure mock buttons have check_pressed returning False
+        mocks['UIButton'].return_value = Mock(check_pressed=Mock(return_value=False))
+
+        # Each TriStateFilterWidget call creates a distinct mock widget
+        def _make_widget(**kwargs):
+            return Mock(
+                check_pressed=Mock(return_value=None),
+                set_state=Mock(),
+            )
+        mocks['TriStateFilterWidget'].side_effect = _make_widget
+
+        sidebar = EmpireBuildQueueSidebar(
+            ui_manager=Mock(),
+            parent_container=Mock(),
+            viewmodel=vm,
+            event_bus=event_bus,
+            columns=columns,
+        )
     return sidebar, vm
 
 

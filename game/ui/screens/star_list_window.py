@@ -5,10 +5,16 @@ Provides comprehensive star browsing with filtering, sorting, and presets.
 Mirrors PlanetListWindow architecture.
 
 PROJ-231: Star List Panel.
+PROJ-329B Phase 1: two-stage construction. Cheap state (galaxy data,
+filter manager, columns, layout constants) lives before
+``super().__init__``; widget construction (sidebar, main panel,
+virtual table, navigate button, initial refresh) is behind
+``StarListWindowUiBuilder`` so tests can swap in a Mock under
+``bypass_init``.
 """
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 import pygame
 from pygame_gui.elements import UIPanel, UIButton
 
@@ -36,6 +42,89 @@ from game.ui.components.table import VirtualTable, TableColumnManager, SingleSel
 from game.ui.screens.star_data_source import StarDataSource
 
 
+class StarListWindowUiBuilder:
+    """Production widget builder. Constructs sidebar_panel, sidebar
+    widgets, main_panel, virtual_table, navigate button, and triggers
+    the initial ``refresh_list()``.
+
+    Reads Stage-1 state (galaxy, _star_ranges, columns, layout
+    constants); writes ``screen.sidebar_panel``, ``screen.main_panel``,
+    ``screen.virtual_table``, ``screen.btn_navigate``, ``screen.column_manager``,
+    ``screen.data_source``, ``screen.selection``, plus the sidebar
+    widget references unpacked from ``build_sidebar``.
+    """
+
+    def build(self, screen: "StarListWindow") -> None:
+        rect = screen.rect
+        manager = screen.ui_manager
+
+        # UI Containers - Sidebar
+        screen.sidebar_panel = UIPanel(
+            relative_rect=pygame.Rect(0, 0, screen.sidebar_width, rect.height - 50),
+            manager=manager,
+            container=screen,
+            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
+        )
+
+        # Build sidebar
+        sidebar_widgets = build_sidebar(
+            manager=manager,
+            sidebar_panel=screen.sidebar_panel,
+            sidebar_width=screen.sidebar_width,
+            rect_height=rect.height,
+            star_ranges=screen._star_ranges,
+            columns=screen.columns,
+            preset_manager=screen.preset_manager,
+        )
+        screen.sidebar_scroller = sidebar_widgets['sidebar_scroller']
+        screen.txt_name_filter = sidebar_widgets['txt_name_filter']
+        screen.btn_all_types = sidebar_widgets['btn_all_types']
+        screen.btn_none_types = sidebar_widgets['btn_none_types']
+        screen.btn_apply = sidebar_widgets['btn_apply']
+        screen.btn_save_preset = sidebar_widgets['btn_save_preset']
+        screen.txt_preset_name = sidebar_widgets['txt_preset_name']
+        screen.dd_presets = sidebar_widgets['dd_presets']
+        screen.ui_filters = sidebar_widgets['ui_filters']
+
+        # Main Content Area - full width after sidebar (no detail panel)
+        main_w = rect.width - screen.sidebar_width - 10
+        screen.main_panel = UIPanel(
+            relative_rect=pygame.Rect(screen.sidebar_width, 0, main_w, rect.height - 90),
+            manager=manager, container=screen,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
+        )
+
+        # Table infrastructure
+        screen.column_manager = TableColumnManager(screen.columns)
+        screen.column_manager.sort_column_id = 'name'
+        screen.column_manager.sort_descending = False
+
+        screen.data_source = StarDataSource(screen.columns)
+        screen.selection = SingleSelect()
+
+        screen.virtual_table = VirtualTable(
+            panel=screen.main_panel,
+            manager=manager,
+            data_source=screen.data_source,
+            column_manager=screen.column_manager,
+            selection_strategy=screen.selection,
+            row_height=screen.row_height,
+            header_height=screen.header_height,
+        )
+
+        # Navigate button (bottom of window)
+        nav_y = rect.height - 80
+        screen.btn_navigate = UIButton(
+            relative_rect=pygame.Rect(screen.sidebar_width + 10, nav_y, 180, 30),
+            text="Navigate to Star",
+            manager=manager,
+            container=screen,
+        )
+
+        # Initial population
+        screen.refresh_list()
+
+
 class StarListWindow(DataListWindowMixin, StrategyModalWindow):
     """Window displaying a filterable, sortable list of all stars in the galaxy.
 
@@ -50,7 +139,8 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
 
     def __init__(self, rect, manager, galaxy, *,
                  window_manager: "StrategyWindowManager",
-                 on_close_callback=None, on_navigate_callback=None):
+                 on_close_callback=None, on_navigate_callback=None,
+                 ui_builder: Optional[StarListWindowUiBuilder] = None):
         """Initialize the Star List Window.
 
         Args:
@@ -60,19 +150,29 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
             window_manager: PROJ-313 StrategyWindowManager (or None outside the strategy screen).
             on_close_callback: Called when window is closed.
             on_navigate_callback: Called with HexCoord to navigate camera to star.
+            ui_builder: Optional UI builder override (test seam).
         """
-        # Initialize state before super().__init__ (which triggers set_dimensions)
+        # ---- Stage 1: cheap state (set BEFORE super().__init__) ----
+        # Note: super().__init__ triggers set_dimensions which may read
+        # selected_star / btn_navigate, hence those are set here.
         self.selected_star = None
         self.btn_navigate = None
         self.last_preset_selection = None
 
-        super().__init__(
-            rect, manager,
-            window_display_title="Galactic Star Registry",
-            resizable=True,
-            window_manager=window_manager,
-        )
+        # PROJ-347 T4.1a (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullStarListWindowUiBuilder test can safely call kill() without
+        # AttributeError on `self.virtual_table.kill()`. The production
+        # builder overwrites these in Stage 3.
+        self.virtual_table = None
+        self.sidebar_panel = None
+        self.main_panel = None
+        self.data_source = None
+        self.column_manager = None
+        self.selection = None
 
+        # Cheap state previously set after super().__init__: hoisted up
+        # so the builder (and bypass branch) sees it.
         self.galaxy = galaxy
         self.on_close_callback = on_close_callback
         self.on_navigate_callback = on_navigate_callback
@@ -127,71 +227,21 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
             {'id': 'spec_radio', 'width': 90, 'title': 'Radio', 'func': lambda s: f"{s.spectrum.radio:.4f}", 'visible': False},
         ]
 
-        # UI Containers - Sidebar
-        self.sidebar_panel = UIPanel(
-            relative_rect=pygame.Rect(0, 0, self.sidebar_width, rect.height - 50),
-            manager=manager,
-            container=self,
-            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'}
+        # ---- Stage 2: shell ----
+        super().__init__(
+            rect, manager,
+            window_display_title="Galactic Star Registry",
+            resizable=True,
+            window_manager=window_manager,
         )
 
-        # Build sidebar
-        sidebar_widgets = build_sidebar(
-            manager=manager,
-            sidebar_panel=self.sidebar_panel,
-            sidebar_width=self.sidebar_width,
-            rect_height=rect.height,
-            star_ranges=self._star_ranges,
-            columns=self.columns,
-            preset_manager=self.preset_manager,
-        )
-        self.sidebar_scroller = sidebar_widgets['sidebar_scroller']
-        self.txt_name_filter = sidebar_widgets['txt_name_filter']
-        self.btn_all_types = sidebar_widgets['btn_all_types']
-        self.btn_none_types = sidebar_widgets['btn_none_types']
-        self.btn_apply = sidebar_widgets['btn_apply']
-        self.btn_save_preset = sidebar_widgets['btn_save_preset']
-        self.txt_preset_name = sidebar_widgets['txt_preset_name']
-        self.dd_presets = sidebar_widgets['dd_presets']
-        self.ui_filters = sidebar_widgets['ui_filters']
+        # ---- Stage 3: widgets ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
 
-        # Main Content Area - full width after sidebar (no detail panel)
-        main_w = rect.width - self.sidebar_width - 10
-        self.main_panel = UIPanel(
-            relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 90),
-            manager=manager, container=self,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
-        )
-
-        # Table infrastructure
-        self.column_manager = TableColumnManager(self.columns)
-        self.column_manager.sort_column_id = 'name'
-        self.column_manager.sort_descending = False
-
-        self.data_source = StarDataSource(self.columns)
-        self.selection = SingleSelect()
-
-        self.virtual_table = VirtualTable(
-            panel=self.main_panel,
-            manager=manager,
-            data_source=self.data_source,
-            column_manager=self.column_manager,
-            selection_strategy=self.selection,
-            row_height=self.row_height,
-            header_height=self.header_height,
-        )
-
-        # Navigate button (bottom of window)
-        nav_y = rect.height - 80
-        self.btn_navigate = UIButton(
-            relative_rect=pygame.Rect(self.sidebar_width + 10, nav_y, 180, 30),
-            text="Navigate to Star",
-            manager=manager,
-            container=self,
-        )
-
-        # Initial population
-        self.refresh_list()
+        (ui_builder or StarListWindowUiBuilder()).build(self)
 
     # -----------------------------------------------------------------------
     # Filter state properties (delegate to StarListFilterManager)
@@ -338,36 +388,10 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
 
     def update(self, time_delta) -> None:
         super().update(time_delta)
-
-        # Scrollbar movement (cheap — only updates rows when position changed)
-        if self.virtual_table.scroll_bar.check_has_moved_recently():
-            self.virtual_table.update_visible_rows()
-
-        # Slider text sync (only when slider actually moved)
-        self._sync_slider_text(('mass', 'temperature', 'luminosity', 'age', 'radius_hexes'))
-
-        # Header sort/swap (check_presses iterates header buttons)
-        header_result = self.virtual_table.check_header_presses()
-        if header_result.get('swap_column'):
-            col_dict, direction = header_result.get('swap_column')
-            self.column_manager.swap_column(col_dict['id'], direction)
-            self.virtual_table.rebuild_headers()
-            self.virtual_table.rebuild_row_pool()
-            self.refresh_list()
-        elif header_result.get('sort_column'):
-            col_id = header_result.get('sort_column')
-            self.column_manager.set_sort(col_id)
-            self.virtual_table.rebuild_headers()
-            self.refresh_list()
-
-        # Preset dropdown (cheap — single string comparison)
-        if self.last_preset_selection is None:
-            self.last_preset_selection = self.dd_presets.selected_option
-        if self.dd_presets.selected_option != self.last_preset_selection:
-            self.last_preset_selection = self.dd_presets.selected_option
-            name = self.last_preset_selection
-            if self.preset_manager.has_preset(name):
-                self._apply_state(self.preset_manager.get_preset(name))
+        # PROJ-375 Task 3.2: shared scroll/slider/header/preset polling.
+        self._run_update_template(
+            ('mass', 'temperature', 'luminosity', 'age', 'radius_hexes')
+        )
 
     # -----------------------------------------------------------------------
     # Event-driven button handlers (called from process_event, not polled)

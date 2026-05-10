@@ -46,7 +46,6 @@ Usage (Combat Lab):
 import os
 import sys
 import importlib
-import importlib.util
 import threading
 from typing import Dict, List, Type, Any, Optional
 from pathlib import Path
@@ -195,17 +194,14 @@ class TestRegistry:
                 continue
 
             try:
-                # Import module dynamically
+                # PROJ-350: use the standard import machinery so `sys.modules`
+                # is honored. The previous `spec_from_file_location` /
+                # `module_from_spec` / `exec_module` pipeline re-executed
+                # already-loaded support modules (notably `templates.py`),
+                # creating duplicate template class objects that broke
+                # isinstance checks in `combat_lab/spec_compiler.py`.
                 module_name = f"combat_lab.scenarios.{file_path.stem}"
-                spec = importlib.util.spec_from_file_location(module_name, file_path)
-
-                if spec is None or spec.loader is None:
-                    logger.warning(f"Could not load spec for {file_path}")
-                    continue
-
-                module = importlib.util.module_from_spec(spec)
-                sys.modules[module_name] = module
-                spec.loader.exec_module(module)
+                module = importlib.import_module(module_name)
 
                 # Find TestScenario subclasses in module
                 for attr_name in dir(module):

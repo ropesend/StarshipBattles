@@ -31,6 +31,22 @@ class MockSession:
         # PROJ-208: Track commands for test verification
         self.commands_handled = []
 
+    def get_registries(self):
+        """PROJ-382 Phase 1: facade-shaped registries accessor."""
+        return self.registries
+
+    def get_colony_demographic_view(self, planet_id):
+        """PROJ-382 Phase 1: facade-shaped demographic view stub for tests."""
+        return None
+
+    def get_turn_number(self) -> int:
+        """PROJ-396 MAJ-003: facade-shaped turn-number accessor."""
+        return 0
+
+    def get_save_path(self):
+        """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
+        return self.savegame_path
+
     def handle_command(self, cmd):
         """Mock command handler that executes AddToConstructionQueueCommand.
 
@@ -93,7 +109,8 @@ def test_build_queue_screen_initializes(build_queue_screen):
     """Test that BuildQueueScreen creates without crashing."""
     assert build_queue_screen is not None
     assert build_queue_screen.build_context is not None
-    assert build_queue_screen.session is not None
+    # PROJ-382 Phase 1: facade is required; legacy `session` attribute removed.
+    assert build_queue_screen.facade is not None
     assert build_queue_screen.on_close is not None
 
 
@@ -183,12 +200,19 @@ def test_queue_display_updates(build_queue_screen):
 
 
 def test_close_callback_fires(build_queue_screen):
-    """Test that on_close callback is invoked."""
-    # Close the screen
-    build_queue_screen._close()
+    """Test that on_close callback is invoked.
+
+    PROJ-376 Phase 2: ``_close()`` was replaced by ``_request_close()``
+    (hide + on_close). The close-button / Esc handler routes through it.
+    """
+    # Close the screen via the public close path.
+    build_queue_screen._request_close()
 
     # Verify callback was called
     build_queue_screen.on_close.assert_called_once()
+    # Panels survive across opens — only visibility toggles.
+    assert build_queue_screen.panels.background.alive()
+    assert not build_queue_screen.panels.background.visible
 
 
 def test_planet_report_panel_exists(build_queue_screen):
@@ -275,13 +299,14 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
     screen_obj = BuildQueueScreen(
         manager,
         planet,
-        session,
         lambda: None,
         design_library=mock_design_library,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
-        empire=empire
+        empire=empire,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # Should create with design_library injected
@@ -389,13 +414,14 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
     bq_screen = BuildQueueScreen(
         manager,
         planet,
-        session,
         lambda: None,
         design_library=mock_design_library,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
-        empire=empire
+        empire=empire,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
     )
 
     # Should have 2 queue sources: planetary yard + shipyard

@@ -249,13 +249,6 @@ class TestShipStatQuerierMaxWeaponRange:
         assert result == 200.0
 
 
-class TestShipStatQuerierCachedSummary:
-    """Tests for cached_summary property."""
-
-    # PROJ-225: Removed test_cached_summary_* tests (DUP-SIM-007).
-    # cached_summary property removed from ShipStatQuerier - use Ship.cached_summary.
-
-
 # ============================================================================
 # Additional Edge Case Tests (PROJ-118 Phase 2)
 # ============================================================================

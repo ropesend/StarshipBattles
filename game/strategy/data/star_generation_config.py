@@ -189,6 +189,12 @@ def get_star_generation_config() -> StarGenerationConfig:
         loader = AstrophysicsLoader()
         data = loader.load()
         return StarGenerationConfig(data)
-    except (ImportError, FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
+    except (ImportError, FileNotFoundError, OSError, TypeError) as e:
+        # PROJ-381 Phase 3 (ERR-04-007): narrow the catch tuple — drop
+        # ValueError and KeyError because they typically indicate a
+        # data-integrity bug (malformed config dict) that should NOT be
+        # silently masked behind a defaults fallback. The cache
+        # decorator will retry on next call; surfacing the failure is
+        # preferable to a silent fallback.
         logger.warning(f"Failed to load star generation config: {e}")
         return StarGenerationConfig(None)

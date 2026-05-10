@@ -14,29 +14,54 @@ from __future__ import annotations
 import pygame
 import pygame_gui
 from pygame_gui.elements import (
-    UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer,
+    UIPanel, UILabel, UIButton, UIScrollingContainer,
     UITextEntryLine, UIDropDownMenu, UIImage
 )
 from typing import Any, Optional, Callable, List, Dict, Set, TYPE_CHECKING
 from game.strategy.systems.design_library import DesignLibrary
 import logging
 from game.ui.screens.design_image_helper import load_portrait_thumbnail, load_topdown_thumbnail
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.design_metadata import DesignMetadata
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
-class DesignSelectorWindow(UIWindow):
-    """Window for selecting ship designs from the design library"""
+class DesignSelectorUiBuilder:
+    """Production widget builder. Constructs the sidebar, main list,
+    bottom buttons, and triggers the initial _refresh_designs call.
+
+    PROJ-329B Phase 4: extracted from DesignSelectorWindow.__init__.
+    """
+
+    def build(self, screen: "DesignSelectorWindow") -> None:
+        screen._create_sidebar()
+        screen._create_main_list()
+        screen._create_bottom_buttons()
+        screen._refresh_designs()
+
+
+class DesignSelectorWindow(StrategyModalWindow):
+    """Window for selecting ship designs from the design library.
+
+    PROJ-382 Phase 2 (Pattern #31): subclasses ``StrategyModalWindow`` so the
+    StrategyEventRouter's modal-tracking sees this window as opaque to
+    background clicks.  Pass ``window_manager=None`` when opened outside the
+    strategy screen (e.g. from the workshop).
+    """
 
     def __init__(self,
                  rect: pygame.Rect,
                  manager: pygame_gui.UIManager,
                  design_library: DesignLibrary,
                  mode: str = "load",
-                 on_select_callback: Optional[Callable[[str], None]] = None):
+                 on_select_callback: Optional[Callable[[str], None]] = None,
+                 *,
+                 window_manager: "StrategyWindowManager | None" = None,
+                 ui_builder: Optional[DesignSelectorUiBuilder] = None):
         """
         Initialize design selector window.
 
@@ -46,10 +71,11 @@ class DesignSelectorWindow(UIWindow):
             design_library: DesignLibrary to browse
             mode: "load" (for loading designs) or "target" (for selecting targets)
             on_select_callback: Callback function when design is selected
+            window_manager: PROJ-382 Phase 2 — StrategyWindowManager for modal
+                tracking, or None when opened outside the strategy screen.
+            ui_builder: Optional UI builder override (test seam — PROJ-329B).
         """
-        title = "Load Design" if mode == "load" else "Select Target"
-        super().__init__(rect, manager, window_display_title=title, resizable=True)
-
+        # ---- Stage 1: cheap state ----
         self.design_library = design_library
         self.mode = mode
         self.on_select_callback = on_select_callback
@@ -77,13 +103,40 @@ class DesignSelectorWindow(UIWindow):
         self._obsolete_buttons: Set[UIButton] = set()
         self._obsolete_state_map: Dict[UIButton, bool] = {}
 
-        # Create UI
-        self._create_sidebar()
-        self._create_main_list()
-        self._create_bottom_buttons()
+        # PROJ-347 T4.3 (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullDesignSelectorWindowUiBuilder test can safely call
+        # ``process_event()`` without AttributeError on
+        # ``self.apply_filters_button``/``self.cancel_button``/etc. The
+        # production builder overwrites these in Stage 3.
+        self.sidebar_panel = None
+        self.name_search_entry = None
+        self.class_dropdown = None
+        self.type_dropdown = None
+        self.obsolete_button = None
+        self.apply_filters_button = None
+        self.main_panel = None
+        self.scroll_container = None
+        self.select_button = None
+        self.cancel_button = None
 
-        # Initial load
-        self._refresh_designs()
+        # ---- Stage 2: UIWindow shell (skipped under bypass_init) ----
+        if getattr(type(self), 'bypass_init', False):
+            self.ui_manager = manager
+            self._window_init_bypassed = True
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
+
+        title = "Load Design" if mode == "load" else "Select Target"
+        super().__init__(
+            rect, manager,
+            window_display_title=title, resizable=True,
+            window_manager=window_manager,
+        )
+
+        # ---- Stage 3: widgets + initial design load ----
+        (ui_builder or DesignSelectorUiBuilder()).build(self)
 
     def _create_sidebar(self) -> None:
         """Create the left sidebar with filters"""

@@ -151,7 +151,10 @@ class AssetManager:
                 img = self.load_external_image(image_path)
                 if img and img != self.get_missing_texture():
                     return img
-            except Exception as e:
+            except (FileNotFoundError, pygame.error, ValueError, OSError) as e:
+                # PROJ-381 Phase 2 (ERR-02-001): narrow to match
+                # load_planet_image so MemoryError / KeyboardInterrupt /
+                # other genuinely-fatal types are not silently swallowed.
                 logger.warning(f"Could not load star image {image_filename} at {size}px: {e}")
                 continue
                 
@@ -342,9 +345,3 @@ def set_default_asset_manager(manager: AssetManager) -> None:
     """Set the module-level AssetManager instance."""
     global _default_asset_manager
     _default_asset_manager = manager
-
-
-# Global Accessor (convenience alias)
-def get_asset_manager() -> AssetManager:
-    """Get the default AssetManager instance."""
-    return get_default_asset_manager()

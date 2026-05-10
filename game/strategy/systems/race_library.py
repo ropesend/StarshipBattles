@@ -11,6 +11,12 @@ the filesystem on every call. Both hits and misses (None results) are
 cached. Invalidation is manual via invalidate(race_id=None) and is the
 race editor's responsibility on save.
 """
+# PROJ-382 Phase 3 (Pattern #12): the bare ``json`` import is preserved
+# solely for the ``json.JSONDecodeError`` exception type used in the load
+# paths below; ``RaceConfig.load`` performs the actual deserialization
+# through ``json_utils``, so race_library itself does not call json.dump /
+# json.loads.  Same pattern documented in
+# system_blueprints_loader.py (audit PAT-01-CFG-003).
 import json
 import logging
 import os

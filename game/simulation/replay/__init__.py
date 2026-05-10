@@ -48,7 +48,6 @@ from game.simulation.replay.replay_spec import ReplaySpec, ReplayShipSpec
 from game.simulation.replay.replay_outcome import ReplayOutcome
 from game.simulation.replay.replay_record import ReplayRecord
 from game.simulation.replay.replay_player import (
-    build_replay_ship_builder,
     replay_record_to_spec,
     run_replay_headless,
 )
@@ -76,7 +75,6 @@ __all__ = [
     "get_default_capture_sink",
     "set_default_capture_sink",
     "reset_default_capture_sink",
-    "build_replay_ship_builder",
     "replay_record_to_spec",
     "run_replay_headless",
 ]

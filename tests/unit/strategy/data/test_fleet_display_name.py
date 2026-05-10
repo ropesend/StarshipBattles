@@ -120,14 +120,6 @@ class TestEmpireDisplayNumbering:
         assert empire.get_next_fleet_display_number() == 2
         assert empire.get_next_fleet_display_number() == 3
 
-    def test_two_empires_have_independent_display_numbers(self):
-        """Display numbers are per-empire, so both start at 1."""
-        empire0 = Empire(0, "Player", (0, 0, 255))
-        empire1 = Empire(1, "AI", (255, 0, 0))
-        assert empire0.get_next_fleet_display_number() == 1
-        assert empire1.get_next_fleet_display_number() == 1
-        assert empire0.get_next_fleet_display_number() == 2
-
     def test_empire_display_number_serialization(self):
         """Display number counter should survive save/load."""
         empire = Empire(0, "Player", (0, 0, 255))

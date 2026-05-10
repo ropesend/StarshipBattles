@@ -1,0 +1,12 @@
+{
+  "request_id": "req_20260504_231828_f8313b",
+  "review_dir": "Reviews/results/2026-05-04_231829_code_full-review-batch-2-6-proj-326-328-audit-sessions-_req-req_20260504_231828_f8313b",
+  "report_path": "Reviews/results/2026-05-04_231829_code_full-review-batch-2-6-proj-326-328-audit-sessions-_req-req_20260504_231828_f8313b/report.md",
+  "findings": {
+    "critical": 2,
+    "major": 12,
+    "minor": 0,
+    "info": 0
+  },
+  "completed_at": "2026-05-04T23:35:00Z"
+}

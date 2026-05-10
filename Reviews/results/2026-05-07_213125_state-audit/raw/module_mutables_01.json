@@ -1,0 +1,247 @@
+[
+  {
+    "file": "game/core/constants.py",
+    "line": 5,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/exceptions.py",
+    "line": 400,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/return_destination.py",
+    "line": 23,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ReturnDestination\"]"
+  },
+  {
+    "file": "game/core/spectrum_math.py",
+    "line": 20,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/__init__.py",
+    "line": 145,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/services/llm/background.py",
+    "line": 371,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/battle_outcome.py",
+    "line": 193,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/battle_spec.py",
+    "line": 232,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/combat/formation.py",
+    "line": 376,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/components/abilities/__init__.py",
+    "line": 236,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/interfaces/__init__.py",
+    "line": 91,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/replay/replay_outcome.py",
+    "line": 49,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ReplayOutcome\"]"
+  },
+  {
+    "file": "game/simulation/services/__init__.py",
+    "line": 8,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/__init__.py",
+    "line": 58,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/combat/post_battle_hook.py",
+    "line": 251,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"apply_outcome_to_fleets\"]"
+  },
+  {
+    "file": "game/strategy/engine/commands/registry.py",
+    "line": 376,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/interfaces/engines.py",
+    "line": 29,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/interfaces/__init__.py",
+    "line": 28,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/component_inspector.py",
+    "line": 13,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/intercept_calculator.py",
+    "line": 25,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"InterceptCalculator\", \"project_fleet_path\"]"
+  },
+  {
+    "file": "game/strategy/services/planet_economy_projector.py",
+    "line": 255,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/planet_habitability_service.py",
+    "line": 25,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PlanetHabitabilityService\"]"
+  },
+  {
+    "file": "game/strategy/services/planet_write_service.py",
+    "line": 29,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PlanetWriteService\"]"
+  },
+  {
+    "file": "game/strategy/services/race_description_llm_controller.py",
+    "line": 312,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"FieldStatus\", \"RaceDescriptionLLMController\"]"
+  },
+  {
+    "file": "game/strategy/services/replay_verification_coordinator.py",
+    "line": 438,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/__init__.py",
+    "line": 5,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['CargoTransferService']"
+  },
+  {
+    "file": "game/ui/fonts.py",
+    "line": 27,
+    "variable": "_font_cache",
+    "type": "Dict",
+    "context": "_font_cache: dict = {}"
+  },
+  {
+    "file": "game/ui/assets/__init__.py",
+    "line": 4,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ShipThemeManager', 'get_default_ship_theme_manager', 'set_default_ship_theme_manager']"
+  },
+  {
+    "file": "game/ui/components/table/__init__.py",
+    "line": 28,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/cargo_quick_dialog.py",
+    "line": 330,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"CargoQuickDialog\", \"CargoQuickDialogUiBuilder\"]"
+  },
+  {
+    "file": "game/ui/screens/planet_abilities_window.py",
+    "line": 275,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/transfer_dialog.py",
+    "line": 478,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/transfer_grid_renderer.py",
+    "line": 359,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/battle_setup/__init__.py",
+    "line": 16,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"FleetBattleSetupScreen\"]"
+  },
+  {
+    "file": "game/ui/services/image/__init__.py",
+    "line": 45,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  }
+]

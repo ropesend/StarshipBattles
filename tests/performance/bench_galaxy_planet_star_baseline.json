@@ -1,0 +1,12 @@
+{
+  "pathfinding_min_seconds": 4.089999129064381e-05,
+  "spatial_min_seconds": 0.0003690999874379486,
+  "habitability_min_seconds": 0.00024009999469853938,
+  "scale": {
+    "num_systems": 50,
+    "num_lookups": 1000,
+    "num_habitability": 1000,
+    "num_paths": 3,
+    "runs_per_bench": 5
+  }
+}

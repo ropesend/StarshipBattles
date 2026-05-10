@@ -95,31 +95,11 @@ class TestDamageLayerLogic:
             assert self.ship.current_shields < initial_shields
             assert armor.current_hp == initial_armor_hp
 
-    def test_derelict_functional_definition(self):
-        """Ship becomes derelict when it has no operational weapons AND no engines.
-
-        Derelict is now a functional definition (can't fight), not tied to
-        a specific component like the bridge. Per-component C&C requirements
-        are tested in combat_lab (CNC category).
-        """
-        # The ship (Frigate) starts with no weapons/engines → derelict
-        self.ship.recalculate_stats()
-        self.ship.update_derelict_status()
-        assert self.ship.is_derelict, "Ship with no weapons/engines should be derelict"
-
-        # Add a weapon to OUTER layer — ship should not be derelict
-        railgun = create_component('railgun', registries=self.registries)
-        self.ship.add_component(railgun, LayerType.OUTER)
-        self.ship.recalculate_stats()
-        self.ship.update_derelict_status()
-        assert not self.ship.is_derelict, "Ship with operational weapon should not be derelict"
-
-        # Destroy the weapon — no weapons, no engines → derelict
-        railgun.current_hp = 0
-        railgun.is_active = False
-        self.ship.recalculate_stats()
-        self.ship.update_derelict_status()
-        assert self.ship.is_derelict, "Ship with no weapons or engines should be derelict"
+    # NOTE: derelict-status coverage lives in
+    # tests/unit/entities/test_ship.py::test_derelict_status_logic
+    # (entity-level home for the functional-definition behaviour).
+    # The duplicated three-step coverage was removed in PROJ-322 Task 1.4
+    # (S09-CAT4-001).
 
 class TestEnergyRegeneration:
     """Test energy and shield regeneration mechanics."""

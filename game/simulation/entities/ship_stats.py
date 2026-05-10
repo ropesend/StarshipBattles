@@ -1,47 +1,22 @@
 """
-Ship Stats Calculator - Derived Statistics Computation
+Ship Stats Calculator — coordinator for derived ship statistics.
 
-This module contains ShipStatsCalculator, which computes all derived ship
-statistics from the ship's components, abilities, and class definition.
+This module owns the *phase order* of ship-stat calculation. Per-domain
+aggregation (movement, defense, weapons, command, launch) lives in
+``stat_contributors/`` modules. The coordinator preserves the legacy
+mutation order verbatim so the golden snapshot from PROJ-360 Phase 1
+keeps passing bit-for-bit.
 
 Stat Calculation Phases:
-    The calculate() method runs through 5 phases in order:
 
-    Phase 1 - DAMAGE CHECK & SUPPLY GATHERING:
-        - Reset component status assumptions
-        - Check damage threshold to mark damaged components
-        - Gather available crew and life support from active components
-        - Build component pool for subsequent phases
+    Phase 1 — DAMAGE CHECK & SUPPLY GATHERING
+    Phase 2 — RESOURCE ALLOCATION (crew + life support)
+    Phase 3 — STATS AGGREGATION (active components only)
+    Phase 4 — PHYSICS & LIMITS
+    Phase 5 — SENSOR / DEFENSE SCORES + RESOURCE INIT
 
-    Phase 2 - RESOURCE ALLOCATION:
-        - Calculate effective crew (min of available crew, life support)
-        - Sort components by priority (critical systems first)
-        - Deactivate components that can't be crewed
-        - Track crew_required and crew_onboard for UI
-
-    Phase 3 - STATS AGGREGATION:
-        - Iterate active components only
-        - Aggregate resource storage (fuel, ammo, energy)
-        - Aggregate resource generation (energy, ammo)
-        - Sum combat stats: thrust, turn speed, shields
-        - Sum hangar stats: capacity, launch cycle
-        - Track max_targets from MultiplexTracking
-
-    Phase 4 - PHYSICS & LIMITS:
-        - Apply physics formulas with inverse mass scaling:
-          * max_speed = (thrust * K_SPEED) / mass
-          * acceleration = (thrust * K_THRUST) / mass²
-          * turn_speed = (raw_turn * K_TURN) / mass^1.5
-        - Check mass budget limits
-        - Calculate ship radius from total mass
-
-    Phase 5 - SENSOR/DEFENSE SCORES:
-        - Aggregate sensor scores for targeting
-        - Aggregate ECM scores for defense
-
-Physics Constants:
-    K_SPEED, K_THRUST, K_TURN defined in physics_constants.py
-    These control how ship stats convert to gameplay behavior.
+Physics constants (`K_SPEED`, `K_THRUST`, `K_TURN`) live in
+``physics_constants.py``.
 
 Example:
     calculator = ShipStatsCalculator(
@@ -51,42 +26,61 @@ Example:
     calculator.calculate(ship)
     # ship.max_speed, ship.turn_speed, etc. are now updated
 """
-from game.simulation.components.component_constants import ComponentStatus
-from game.core.constants import LayerType
-from game.simulation.physics_constants import K_TURN, compute_acceleration, compute_max_speed, DEFAULT_MAX_MASS
-from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
-from game.simulation.entities.combat_endurance import calculate_combat_endurance
-from game.core.config import PhysicsConfig
-from game.core.constants import CombatConstants
-from game.simulation.interfaces import (
-    is_resource_storage,
-    is_resource_generation,
-    is_resource_consumption,
-    is_warp_jump,
-)
+from __future__ import annotations
+
 import math
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
+from game.core.config import PhysicsConfig
+from game.simulation.components.component_constants import ComponentStatus
+from game.core.constants import LayerType
+from game.simulation.entities.ability_aggregator import calculate_ability_totals
+from game.simulation.entities.combat_endurance import calculate_combat_endurance
+from game.simulation.entities.stat_contributors import (
+    command as _cmd,
+    defense as _def,
+    weapons as _wep,
+)
+from game.simulation.entities.stat_contributors.accumulator import StatAccumulator
+from game.simulation.entities.stat_contributors.registry import (
+    STAT_CONTRIBUTOR_REGISTRY,
+)
+from game.simulation.interfaces import (
+    is_resource_consumption,
+    is_resource_generation,
+    is_resource_storage,
+)
+from game.simulation.physics_constants import (
+    DEFAULT_MAX_MASS,
+    K_TURN,
+    compute_acceleration,
+    compute_max_speed,
+)
+
 if TYPE_CHECKING:
     from game.core.resources import ResourceCatalog
-    from game.simulation.entities.ship import Ship
     from game.simulation.components.component import Component
+    from game.simulation.entities.ship import Ship
 
 
-def _get_planetary_resource_ids(resource_catalog: 'ResourceCatalog') -> List[str]:
-    """Get planetary resource IDs from the injected catalog."""
+def _get_planetary_resource_ids(resource_catalog: "ResourceCatalog") -> List[str]:
+    """Return planetary resource IDs from the injected catalog."""
     return [d.id for d in resource_catalog.by_display_group("planetary")]
 
 
 class ShipStatsCalculator:
+    """Coordinator for ship-stat calculation.
+
+    Owns phase ordering and a small amount of cross-cutting state (the
+    planetary resource id cache). All per-domain logic delegates to
+    ``stat_contributors/``.
     """
-    Encapsulates the logic for calculating ship statistics from its components.
-    """
+
     def __init__(
         self,
         vehicle_classes: dict,
         *,
-        resource_catalog: Optional['ResourceCatalog'] = None,
+        resource_catalog: Optional["ResourceCatalog"] = None,
         planetary_resource_ids: Optional[List[str]] = None,
     ):
         self.vehicle_classes = vehicle_classes
@@ -108,46 +102,68 @@ class ShipStatsCalculator:
         self._planetary_resource_ids = _get_planetary_resource_ids(self._resource_catalog)
         return self._planetary_resource_ids
 
-    def calculate(self, ship: 'Ship') -> None:
-        """
-        Recalculates all derived stats for the ship based on its components and class.
-        """
-        # Import local to avoid circular dep if needed, or top level if safe.
-        # resources.py likely imports NOTHING from ship_stats.
-        from game.simulation.components.abilities.resources import ResourceStorage, ResourceGeneration
+    def calculate(self, ship: "Ship") -> None:
+        """Recalculate all derived stats for ``ship`` from its components and class."""
+        self._reset_base_state(ship)
 
-        # 1. Reset Base Calculations
+        # Phase 1: Damage Check & Resource Supply Gathering
+        component_pool, available_crew, available_life_support = (
+            self._phase_damage_check_and_supply(ship)
+        )
+
+        # Phase 2: Resource Allocation (Crew & Life Support)
+        _cmd.allocate_crew_and_life_support(
+            ship,
+            component_pool,
+            available_crew,
+            available_life_support,
+            self.vehicle_classes,
+        )
+
+        # Phase 3: Stats Aggregation (Active Components Only)
+        self._phase_stats_aggregation(ship, component_pool)
+
+        # Phase 4: Physics & Limits
+        self._phase_physics_and_limits(ship)
+
+        # Phase 5: To-Hit & Electronic Warfare Stats
+        self._phase_sensor_defense_scores(ship, component_pool)
+
+    # ------------------------------------------------------------------ #
+    # Phase 1: damage check + supply
+    # ------------------------------------------------------------------ #
+
+    def _reset_base_state(self, ship: "Ship") -> None:
+        """Zero out every field the calculator will rewrite this pass."""
         ship.current_mass = 0
         ship.layer_status = {}
         ship.mass_limits_ok = True
         ship.drag = PhysicsConfig.DEFAULT_LINEAR_DRAG
-        
-        # Calculate Mass (Mass never changes due to damage/status in this model, dead weight remains)
-        for layer_type, layer_data in ship.layers.items():
+
+        # Mass per layer (mass never changes due to damage; dead weight remains)
+        for _, layer_data in ship.layers.items():
             l_mass = sum(c.mass for c in layer_data.components)
             layer_data.mass = l_mass
             ship.current_mass += l_mass
-            
-        # Update cached values via property setters
+
         ship.mass = ship.current_mass + ship.base_mass
         all_components = ship.get_all_components()
         ship.max_hp = sum(c.max_hp for c in all_components)
         ship.hp = sum(c.current_hp for c in all_components)
 
-        # Resource Costs Aggregation
+        # Resource costs aggregation — pre-fill with planetary resource ids
         ship.construction_cost = {}
         for res in self._get_or_resolve_planetary_ids():
             ship.construction_cost[res] = 0
-            
+
         for comp in all_components:
-            comp_costs = comp.get_resource_cost()
-            for res, amount in comp_costs.items():
+            for res, amount in comp.get_resource_cost().items():
                 if res in ship.construction_cost:
                     ship.construction_cost[res] += amount
 
-        # Base Stats Reset
+        # Base stats reset
         ship.total_thrust = 0
-        ship.total_strategic_movement = 0  # Strategic layer movement points
+        ship.total_strategic_movement = 0
         ship.turn_speed = 0
         ship.resources.reset_stats()
 
@@ -157,445 +173,294 @@ class ShipStatsCalculator:
         ship.repair_rate = 0
         if LayerType.ARMOR in ship.layers:
             ship.layers[LayerType.ARMOR].max_hp_pool = 0
-            
+
         ship.emissive_armor = 0
         ship.shield_regenerating_armor = 0
-        
-        # Maneuvering Points (Raw Thrust/Turning Capability unrelated to mass)
         ship.total_maneuver_points = 0
-        
-        # Hangar Stats
+
         ship.fighter_capacity = 0
         ship.fighters_per_wave = 0
         ship.fighter_size_cap = 0
         ship.launch_cycle = 0
-        
-        # 2. Phase 1: Damage Check & Resource Supply Gathering
-        # ----------------------------------------------------
-        component_pool, available_crew, available_life_support = self._phase_damage_check_and_supply(ship)
 
-        # 3. Phase 2: Resource Allocation (Crew & Life Support)
-        # -----------------------------------------------------
-        self._phase_resource_allocation(ship, component_pool, available_crew, available_life_support)
-
-        # 4. Phase 3: Stats Aggregation (Active Components Only)
-        # ------------------------------------------------------
-        self._phase_stats_aggregation(ship, component_pool)
-
-        # 5. Phase 4: Physics & Limits
-        # ----------------------------
-        self._phase_physics_and_limits(ship)
-
-        # 6. Phase 5: To-Hit & Electronic Warfare Stats
-        # ---------------------------------------------
-        self._phase_sensor_defense_scores(ship, component_pool)
-
-    def _phase_sensor_defense_scores(self, ship: 'Ship', component_pool: List['Component']) -> None:
-        """Phase 5: Calculate to-hit, defense scores, and finalize resources.
-
-        Computes defense score (size + maneuver + ECM), offensive modifiers,
-        emissive/shield regenerating armor, repair rate, ammo generation, and initializes resources.
-        """
-        # New Logit-Score System:
-        # Defense Score (Higher = Harder to Hit). Is SUBTRACTED from Accuracy.
-        # Components:
-        # 1. Size: Larger = Easier to Hit (Negative Score).
-        # 2. Maneuver: Agile = Harder to Hit (Positive Score).
-        # 3. ECM: Noise = Harder to Hit (Positive Score).
-
-        diameter = ship.radius * 2
-
-        # Size Score:
-        # Baseline Diameter 80 (Mass ~1k) = 0.0
-        # Formula: -2.5 * log10(diameter / 80)
-        # Prevents log(0)
-        d_ratio = max(0.1, diameter / 80.0)
-        size_score = -2.5 * math.log10(d_ratio)
-
-        # Maneuver Score:
-        # Accel contributes ~0-2.5 pts (Fighters 25 accel) -> /10
-        # Turn contributes ~0-2.0 pts (Fighters 180 turn) -> /90
-        maneuver_score = math.sqrt((ship.acceleration_rate / 20.0) + (ship.turn_speed / 360.0))
-
-        # ECM Score (Additive)
-        ecm_score = self._get_ability_total(component_pool, 'ToHitDefenseModifier')
-        # Default 0 if none
-        if isinstance(ecm_score, bool):
-            ecm_score = 0.0
-
-        # Total Defense Score
-        ship.total_defense_score = size_score + maneuver_score + ecm_score
-
-        # Offensive Baseline (Sensor Strength) - Score
-        attack_mods = self._get_ability_total(component_pool, 'ToHitAttackModifier')
-        # Default 0
-        if isinstance(attack_mods, bool):
-            attack_mods = 0.0
-
-        ship.baseline_to_hit_offense = attack_mods
-
-        # Armor abilities — only from active components (destroyed armor has no effect)
-        active_pool = [c for c in component_pool if c.is_active]
-        ship.emissive_armor = self._get_ability_total(active_pool, 'EmissiveArmor')
-
-        # Shield Regenerating Armor (Max Stacking)
-        ship.shield_regenerating_armor = self._get_ability_total(active_pool, 'ShieldRegeneratingArmor')
-
-        # Ship Repair (SumStacking)
-        ship.repair_rate = self._get_ability_total(component_pool, 'ShipRepair')
-
-        # Ammo Generation (SumStacking) - using value from ResourceGeneration(ammo)
-        ammo_res = ship.resources.get_resource("ammo")
-        ship.ammo_gen_rate = ammo_res.regen_rate if ammo_res else 0.0
-
-        # Armor Pool Init (if starting)
-        if LayerType.ARMOR in ship.layers:
-            if ship.layers[LayerType.ARMOR].hp_pool == 0:
-                ship.layers[LayerType.ARMOR].hp_pool = ship.layers[LayerType.ARMOR].max_hp_pool
-
-        # Initialize Resources
-        self._initialize_resources(ship)
-
-        # Combat Endurance Stats
-        calculate_combat_endurance(ship, component_pool)
-
-    def _phase_physics_and_limits(self, ship: 'Ship') -> None:
-        """Phase 4: Apply physics formulas and check mass limits.
-
-        Calculates acceleration, max speed, turn speed using inverse mass scaling.
-        Also calculates ship radius and validates mass budget.
-        """
-        # Physics Stats - INVERSE MASS SCALING
-        if ship.mass > 0:
-            ship.acceleration_rate = compute_acceleration(ship.total_thrust, ship.mass)
-            raw_turn_speed = ship.turn_speed
-            ship.turn_speed = (raw_turn_speed * K_TURN) / (ship.mass ** 1.5)
-
-            ship.max_speed = compute_max_speed(ship.total_thrust, ship.mass) if ship.total_thrust > 0 else 0
-        else:
-            ship.acceleration_rate = 0
-            ship.max_speed = 0
-
-        # Limit Checks (Budget)
-        self._check_mass_limits(ship)
-
-        # Radius Calculation
-        base_radius = PhysicsConfig.DEFAULT_BASE_RADIUS
-        ref_mass = PhysicsConfig.REFERENCE_MASS
-        actual_mass = max(ship.mass, 100)
-        ratio = actual_mass / ref_mass
-        ship.radius = base_radius * (ratio ** (1/3.0))
-
-    def _phase_stats_aggregation(self, ship: 'Ship', component_pool: List['Component']) -> None:
-        """Phase 3: Aggregate stats from active components.
-
-        Iterates all active components and aggregates resource storage, generation,
-        thrust, shields, hangar capacity, and other combat stats.
-        """
-        # Local accumulators for atomic updates (prevents premature clamping).
-        # Resource keys (max_*, gen_*) are added dynamically by
-        # _aggregate_resource_abilities — any resource type from data files works.
-        acc = {
-            'thrust': 0, 'strategic_movement': 0, 'turn_speed': 0,
-            'maneuver_points': 0,
-            'max_shields': 0, 'shield_regen': 0, 'shield_cost': 0,
-            'warp_max_tonnage': 0, 'warp_energy_cost': 0,
-            'warp_resource_costs': {},
-            'cargo_storage': {},
-            'pod_storage_mass': 0.0,
-        }
-
-        for comp in component_pool:
-            if not comp.is_active:
-                continue
-
-            # Resource storage is always aggregated (batteries provide capacity
-            # even if their own consumption isn't met — they have no consumption).
-            self._aggregate_resource_abilities(comp, acc)
-            self._aggregate_cargo_and_pod_abilities(comp, acc)
-
-            # All other stats require the component to be operational
-            # (has resources to function).  A shield that can't afford its
-            # energy cost should not contribute shield capacity.
-            if not comp.is_operational:
-                continue
-
-            self._aggregate_propulsion_abilities(comp, acc)
-            self._aggregate_defense_abilities(ship, comp, acc)
-            self._aggregate_hangar_abilities(ship, comp)
-
-            # MultiplexTracking (only 3 lines, uses max not sum)
-            mt = comp.abilities.get('MultiplexTracking', 0)
-            if mt > 0:
-                if mt > ship.max_targets:
-                    ship.max_targets = mt
-
-        self._apply_aggregated_stats(ship, acc)
-
-    def _aggregate_resource_abilities(self, comp: 'Component', acc: Dict[str, Any]) -> None:
-        """Aggregate ResourceStorage and ResourceGeneration abilities.
-
-        Discovers resource types dynamically from component abilities so any
-        resource defined in data files (fuel, energy, ammo, metals, etc.) works
-        without code changes.  Also registers resources from consumption
-        abilities (with 0 capacity) so the ResourceRegistry knows about all
-        resource types even when no storage is present.
-        """
-        for ability in comp.ability_instances:
-            if is_resource_storage(ability):
-                key = f'max_{ability.resource_type}'
-                acc[key] = acc.get(key, 0) + ability.max_amount
-            elif is_resource_generation(ability):
-                key = f'gen_{ability.resource_type}'
-                acc[key] = acc.get(key, 0) + ability.rate
-            elif is_resource_consumption(ability):
-                # Ensure the resource type is registered even without storage
-                key = f'max_{ability.resource_type}'
-                if key not in acc:
-                    acc[key] = 0
-                # Accumulate warp jump costs into warp_resource_costs
-                if getattr(ability, 'trigger', '') == 'warp_jump':
-                    rt = ability.resource_type
-                    acc['warp_resource_costs'][rt] = (
-                        acc['warp_resource_costs'].get(rt, 0) + ability.amount
-                    )
-
-    def _aggregate_cargo_and_pod_abilities(self, comp: 'Component', acc: Dict[str, Any]) -> None:
-        """Aggregate CargoStorage and PodStorage abilities."""
-        for ab in comp.get_abilities('CargoStorage'):
-            cargo_type = getattr(ab, 'cargo_type', 'generic')
-            capacity = getattr(ab, 'capacity', 0.0)
-            if capacity > 0:
-                acc['cargo_storage'][cargo_type] = (
-                    acc['cargo_storage'].get(cargo_type, 0) + capacity
-                )
-
-        # PodStorage has no ability class — read from raw abilities dict
-        pod_data = comp.abilities.get('PodStorage')
-        if isinstance(pod_data, dict):
-            capacity = pod_data.get('capacity_mass', 0.0)
-            if capacity > 0:
-                acc['pod_storage_mass'] += capacity
-
-    def _aggregate_propulsion_abilities(self, comp: 'Component', acc: Dict[str, Any]) -> None:
-        """Aggregate CombatPropulsion, StrategicMovement, WarpJump, ManeuveringThruster."""
-        # Thrust from CombatPropulsion abilities
-        for ab in comp.get_abilities('CombatPropulsion'):
-            acc['thrust'] += ab.thrust_force
-
-        # Strategic movement from StrategicMovement abilities
-        for ab in comp.get_abilities('StrategicMovement'):
-            acc['strategic_movement'] += ab.movement_points
-
-        # WarpJump capability - use the largest warp drive
-        for ab in comp.get_abilities('WarpJump'):
-            # WarpJump abilities implement IWarpJumpAbility protocol
-            if is_warp_jump(ab):
-                if ab.max_tonnage > acc['warp_max_tonnage']:
-                    acc['warp_max_tonnage'] = ab.max_tonnage
-                # Accumulate energy costs from all warp drives
-                acc['warp_energy_cost'] += ab.energy_cost
-
-        # Turn speed from ManeuveringThruster abilities
-        for ab in comp.get_abilities('ManeuveringThruster'):
-            acc['turn_speed'] += ab.turn_rate
-            acc['maneuver_points'] += ab.turn_rate
-
-    def _aggregate_defense_abilities(self, ship: 'Ship', comp: 'Component', acc: Dict[str, Any]) -> None:
-        """Aggregate Armor HP pool, ShieldProjection, ShieldRegeneration, shield energy cost."""
-        # Armor HP pool (using ability-based detection)
-        if comp.abilities.get('Armor', False):
-            if LayerType.ARMOR in ship.layers:
-                ship.layers[LayerType.ARMOR].max_hp_pool += comp.max_hp
-
-        # Shields from ShieldProjection abilities
-        for ab in comp.get_abilities('ShieldProjection'):
-            acc['max_shields'] += ab.capacity
-
-        # Shield regen from ShieldRegeneration abilities
-        for ab in comp.get_abilities('ShieldRegeneration'):
-            acc['shield_regen'] += ab.rate
-
-        # Shield energy cost from ResourceConsumption(energy) abilities on shield regen components
-        if comp.has_ability('ShieldRegeneration'):
-            for ab in comp.ability_instances:
-                if is_resource_consumption(ab) and ab.resource_type == "energy":
-                    acc['shield_cost'] += ab.amount
-                    break
-
-    def _aggregate_hangar_abilities(self, ship: 'Ship', comp: 'Component') -> None:
-        """Aggregate VehicleLaunch, VehicleStorage, and launch cycle (directly mutates ship)."""
-        if comp.has_ability('VehicleLaunch') or 'VehicleLaunch' in comp.abilities:
-            vl = comp.abilities.get('VehicleLaunch', {})
-            ship.fighter_capacity += comp.abilities.get('VehicleStorage', 0)
-            ship.fighters_per_wave += 1
-            max_mass = vl.get('max_launch_mass', 0) if isinstance(vl, dict) else 0
-            if max_mass > ship.fighter_size_cap:
-                ship.fighter_size_cap = max_mass
-
-            cycle = vl.get('cycle_time', 5.0) if isinstance(vl, dict) else 5.0
-            if cycle > ship.launch_cycle:
-                ship.launch_cycle = cycle
-
-    def _apply_aggregated_stats(self, ship, acc) -> None:
-        """Atomic application of accumulated totals to ship."""
-        # Register all discovered resource types dynamically
-        for key, value in acc.items():
-            if key.startswith('max_') and key != 'max_shields':
-                ship.resources.register_storage(key[4:], value)
-            elif key.startswith('gen_'):
-                ship.resources.register_generation(key[4:], value)
-        ship.total_thrust = acc['thrust']
-        ship.total_strategic_movement = acc['strategic_movement']
-        ship.turn_speed = acc['turn_speed']
-        ship.total_maneuver_points = acc['maneuver_points']
-        ship.max_shields = acc['max_shields']
-        # PROJ-271 Phase 1: flat shield bonus from external_stats acts as
-        # a virtual extra shield component. Pipeline order (base + flat) × mult:
-        # real shield components already have external shield_capacity_mult
-        # applied via ShieldProjection.recalculate(); we apply the same
-        # multiplier to the flat bonus so both compose identically.
-        # isinstance(dict) guard matches abilities/base.py:281 — test Mocks
-        # often have external_stats as a bare MagicMock, not a real dict.
-        external_stats = getattr(ship, 'external_stats', None)
-        if isinstance(external_stats, dict):
-            flat_shield_bonus = external_stats.get('shield_bonus_add', 0.0)
-            if flat_shield_bonus:
-                # PROJ-272 Phase 6: reverted PROJ-271 Phase 12.1's
-                # `capacity_mult` read. No current aura populates
-                # `capacity_mult` — reading it from external_stats was
-                # a latent double-multiply the moment any future aura
-                # would populate it. Revisit if a real `capacity_mult`
-                # team aura is ever added. See PROJ-272 decisions.md.
-                shield_cap_mult = external_stats.get('shield_capacity_mult', 1.0)
-                ship.max_shields += flat_shield_bonus * shield_cap_mult
-        ship.shield_regen_rate = acc['shield_regen']
-        ship.shield_regen_cost = acc['shield_cost']
-        ship.warp_max_tonnage = acc['warp_max_tonnage']
-        ship.warp_energy_cost = acc['warp_energy_cost']
-        ship.cargo_storage = acc['cargo_storage']
-        ship.pod_storage_mass = acc['pod_storage_mass']
-        ship.warp_resource_costs = acc.get('warp_resource_costs', {})
-
-    def _phase_resource_allocation(self, ship: 'Ship', component_pool: List['Component'], available_crew: int, available_life_support: int) -> None:
-        """Phase 2: Allocate crew and life support to components.
-
-        Deactivates components that cannot be crewed. Updates ship.crew_onboard,
-        ship.crew_required, and ship.max_targets.
-        """
-        # Store for UI
-        ship.crew_onboard = available_crew
-        ship.crew_required = 0
-        ship.max_targets = CombatConstants.DEFAULT_MAX_TARGETS  # Reset to default
-
-        # Centralize mass budget lookup
-        ship.max_mass_budget = self.vehicle_classes.get(ship.ship_class, {}).get('max_mass', DEFAULT_MAX_MASS)
-
-        # Effective Crew is limited by Life Support
-        effective_crew = min(available_crew, available_life_support)
-
-        # Priority sort using helper
-        component_pool.sort(key=self._priority_sort_key)
-
-        for comp in component_pool:
-            if not comp.is_active:
-                continue  # Already damaged
-
-            # Check Crew Requirement
-            req_crew = 0
-            for ab in comp.get_abilities('CrewRequired'):
-                req_crew += ab.amount
-
-            ship.crew_required += req_crew
-
-            if req_crew > 0:
-                if effective_crew >= req_crew:
-                    effective_crew -= req_crew
-                else:
-                    comp.is_active = False
-                    comp.status = ComponentStatus.NO_CREW
-
-    def _phase_damage_check_and_supply(self, ship: 'Ship') -> Tuple[List['Component'], int, int]:
-        """Phase 1: Check damage thresholds and gather crew/life support.
-
-        Returns:
-            Tuple of (component_pool, available_crew, available_life_support)
-        """
+    def _phase_damage_check_and_supply(
+        self, ship: "Ship"
+    ) -> Tuple[List["Component"], int, int]:
+        """Phase 1: Reset component status, mark damaged, gather crew/LS supply."""
         available_crew = 0
         available_life_support = 0
-        component_pool = []
+        component_pool: List["Component"] = []
 
-        for layer_type, comp in ship.iter_components():
-            # Reset Status Assumption
+        for _layer_type, comp in ship.iter_components():
             comp.is_active = True
             comp.status = ComponentStatus.ACTIVE
+            comp.mark_hp_cache_dirty()  # PROJ-49
 
-            # PROJ-49: Ensure HP ratio cache is refreshed (handles external HP modifications)
-            comp.mark_hp_cache_dirty()
-
-            # Check Damage Threshold (ignore Armor - armor uses HP pool, not individual component threshold)
-            # PROJ-49: Use cached hp_ratio property to avoid repeated division
-            if not comp.abilities.get('Armor', False):
+            # Damage threshold (armor uses HP pool, not per-component threshold)
+            # PROJ-367 Phase 1 (closes EXT-07): Armor is consumed via
+            # `has_ability` (marker idiom) — no typed class needed.
+            if not comp.has_ability("Armor"):
                 if comp.hp_ratio <= comp.damage_threshold:
                     comp.is_active = False
                     comp.status = ComponentStatus.DAMAGED
 
-            # If armor is dead (0 hp), it's inactive
-            if comp.abilities.get('Armor', False) and comp.current_hp <= 0:
+            # Dead armor (0 hp) is inactive
+            if comp.has_ability("Armor") and comp.current_hp <= 0:
                 comp.is_active = False
                 comp.status = ComponentStatus.DAMAGED
 
-            # Gather Supply from FUNCTIONAL components
+            # Gather supply from FUNCTIONAL components
             if comp.is_active:
-                # Crew Provided
-                for ab in comp.get_abilities('CrewCapacity'):
+                for ab in comp.get_abilities("CrewCapacity"):
                     available_crew += ab.amount
-
-                # Life Support Provided
-                for ab in comp.get_abilities('LifeSupportCapacity'):
+                for ab in comp.get_abilities("LifeSupportCapacity"):
                     available_life_support += ab.amount
 
             component_pool.append(comp)
 
         return component_pool, available_crew, available_life_support
 
-    def _priority_sort_key(self, c: 'Component') -> int:
-        # Bridge (Command)
-        if c.has_ability('CommandAndControl'): return 0
-        # Engines (Movement)
-        if c.has_ability('CombatPropulsion') or c.has_ability('ManeuveringThruster'): return 1
-        # Weapons (Offense)
-        if c.has_ability('WeaponAbility'): return 2
-        # Others
-        return 3
+    # ------------------------------------------------------------------ #
+    # Phase 3: stats aggregation (delegates per-domain aggregation)
+    # ------------------------------------------------------------------ #
 
-    def _check_mass_limits(self, ship: 'Ship') -> None:
+    def _phase_stats_aggregation(
+        self, ship: "Ship", component_pool: List["Component"]
+    ) -> None:
+        """Phase 3: Aggregate stats from active components.
+
+        PROJ-367 Phase 3: ``acc`` is a typed ``StatAccumulator`` dataclass
+        (10 scalar fields + 4 named map fields = 14 total). Misspelled
+        scalar/map field names raise ``AttributeError`` at runtime
+        (``slots=True`` semantics). Dynamic resource keys live INSIDE
+        ``acc.resource_storage`` / ``acc.resource_generation`` map fields —
+        any resource type from data files works without code changes.
+        """
+        acc = StatAccumulator()
+
+        for comp in component_pool:
+            if not comp.is_active:
+                continue
+
+            # Resource storage is always aggregated (batteries provide capacity
+            # even when consumption isn't met — they have no consumption).
+            self._aggregate_resource_abilities(comp, acc)
+            self._aggregate_cargo_and_pod_abilities(comp, acc)
+
+            # All other stats require the component to be operational.
+            if not comp.is_operational:
+                continue
+
+            # PROJ-367 Phase 2: single unified pipeline — built-in contributors
+            # are seeded as default registry entries with phase_order in
+            # 10..50; modder entries default to phase_order=99 so they fire
+            # after non-replaced built-ins. ``iter_for(comp)`` yields all
+            # entries the component qualifies for (via has_ability) in
+            # phase_order ascending, then registration order.
+            for entry in STAT_CONTRIBUTOR_REGISTRY.iter_for(comp):
+                entry.contributor(ship, comp, acc)
+
+        self._apply_aggregated_stats(ship, acc)
+
+    def _aggregate_resource_abilities(
+        self, comp: "Component", acc: StatAccumulator
+    ) -> None:
+        """Aggregate ResourceStorage, ResourceGeneration, ResourceConsumption.
+
+        PROJ-367 Phase 3: writes into ``acc.resource_storage`` /
+        ``acc.resource_generation`` map fields (was synthetic
+        ``max_<resource>`` / ``gen_<resource>`` keys on the legacy dict).
+        Discovers resource types dynamically from component abilities so any
+        resource defined in data files works without code changes. Also
+        registers resources from consumption abilities (with 0 capacity) so
+        the ResourceRegistry knows about all resource types even when no
+        storage is present.
+        """
+        for ability in comp.ability_instances:
+            if is_resource_storage(ability):
+                rt = ability.resource_type
+                acc.resource_storage[rt] = (
+                    acc.resource_storage.get(rt, 0) + ability.max_amount
+                )
+            elif is_resource_generation(ability):
+                rt = ability.resource_type
+                acc.resource_generation[rt] = (
+                    acc.resource_generation.get(rt, 0) + ability.rate
+                )
+            elif is_resource_consumption(ability):
+                rt = ability.resource_type
+                # Ensure resource_storage has an entry for consumed resources
+                # so the registry sees them even with zero storage.
+                if rt not in acc.resource_storage:
+                    acc.resource_storage[rt] = 0
+                if getattr(ability, "trigger", "") == "warp_jump":
+                    acc.warp_resource_costs[rt] = (
+                        acc.warp_resource_costs.get(rt, 0) + ability.amount
+                    )
+
+    def _aggregate_cargo_and_pod_abilities(
+        self, comp: "Component", acc: StatAccumulator
+    ) -> None:
+        """Aggregate CargoStorage and PodStorage abilities."""
+        for ab in comp.get_abilities("CargoStorage"):
+            cargo_type = getattr(ab, "cargo_type", "generic")
+            capacity = getattr(ab, "capacity", 0.0)
+            if capacity > 0:
+                acc.cargo_storage[cargo_type] = (
+                    acc.cargo_storage.get(cargo_type, 0) + capacity
+                )
+
+        # PROJ-367 Phase 1 (closes EXT-07): PodStorage is now a typed class
+        # (`PodStorageAbility.capacity_mass: float`). Sum across instances
+        # on the same component (legacy semantics ignored 0/empty entries).
+        for ab in comp.get_abilities("PodStorage"):
+            capacity = getattr(ab, "capacity_mass", 0.0)
+            if capacity > 0:
+                acc.pod_storage_mass += capacity
+
+    def _apply_aggregated_stats(self, ship: "Ship", acc: StatAccumulator) -> None:
+        """Atomic application of accumulated totals to ship.
+
+        PROJ-367 Phase 3: reads from typed ``StatAccumulator`` fields. Resource
+        registration uses the dedicated ``resource_storage`` / ``resource_generation``
+        map fields (no more "starts with max_/gen_" string-prefix heuristic).
+        """
+        # Resource storage + generation registration (data-driven keys live
+        # in the dedicated map fields).
+        for resource_type, amount in acc.resource_storage.items():
+            ship.resources.register_storage(resource_type, amount)
+        for resource_type, rate in acc.resource_generation.items():
+            ship.resources.register_generation(resource_type, rate)
+
+        ship.total_thrust = acc.thrust
+        ship.total_strategic_movement = acc.strategic_movement
+        ship.turn_speed = acc.turn_speed
+        ship.total_maneuver_points = acc.maneuver_points
+        ship.max_shields = acc.max_shields
+
+        # PROJ-271 Phase 1: flat shield bonus from external_stats acts as a
+        # virtual extra shield component. Pipeline order (base + flat) × mult:
+        # real shield components already have external shield_capacity_mult
+        # applied via ShieldProjection.recalculate(); we apply the same
+        # multiplier to the flat bonus so both compose identically.
+        # isinstance(dict) guard matches abilities/base.py:281 — test Mocks
+        # often have external_stats as a bare MagicMock, not a real dict.
+        external_stats = getattr(ship, "external_stats", None)
+        if isinstance(external_stats, dict):
+            flat_shield_bonus = external_stats.get("shield_bonus_add", 0.0)
+            if flat_shield_bonus:
+                # PROJ-272 Phase 6: reverted PROJ-271 Phase 12.1's
+                # `capacity_mult` read. No current aura populates
+                # `capacity_mult` — reading it from external_stats was a
+                # latent double-multiply if any future aura would populate it.
+                shield_cap_mult = external_stats.get("shield_capacity_mult", 1.0)
+                ship.max_shields += flat_shield_bonus * shield_cap_mult
+
+        ship.shield_regen_rate = acc.shield_regen
+        ship.shield_regen_cost = acc.shield_cost
+        ship.warp_max_tonnage = acc.warp_max_tonnage
+        ship.warp_energy_cost = acc.warp_energy_cost
+        ship.cargo_storage = acc.cargo_storage
+        ship.pod_storage_mass = acc.pod_storage_mass
+        ship.warp_resource_costs = acc.warp_resource_costs
+
+    # ------------------------------------------------------------------ #
+    # Phase 4: physics & limits
+    # ------------------------------------------------------------------ #
+
+    def _phase_physics_and_limits(self, ship: "Ship") -> None:
+        """Apply inverse-mass scaling for physics and check mass budget."""
+        if ship.mass > 0:
+            ship.acceleration_rate = compute_acceleration(ship.total_thrust, ship.mass)
+            raw_turn_speed = ship.turn_speed
+            ship.turn_speed = (raw_turn_speed * K_TURN) / (ship.mass ** 1.5)
+            ship.max_speed = (
+                compute_max_speed(ship.total_thrust, ship.mass)
+                if ship.total_thrust > 0
+                else 0
+            )
+        else:
+            ship.acceleration_rate = 0
+            ship.max_speed = 0
+
+        self._check_mass_limits(ship)
+
+        # Radius
+        base_radius = PhysicsConfig.DEFAULT_BASE_RADIUS
+        ref_mass = PhysicsConfig.REFERENCE_MASS
+        actual_mass = max(ship.mass, 100)
+        ratio = actual_mass / ref_mass
+        ship.radius = base_radius * (ratio ** (1 / 3.0))
+
+    def _check_mass_limits(self, ship: "Ship") -> None:
         ship.mass_limits_ok = True
-        # Budget check (Max Mass)
         ship.max_mass_budget = DEFAULT_MAX_MASS
 
         if ship.ship_class in self.vehicle_classes:
-             ship.max_mass_budget = self.vehicle_classes[ship.ship_class].get('max_mass', DEFAULT_MAX_MASS)
+            ship.max_mass_budget = self.vehicle_classes[ship.ship_class].get(
+                "max_mass", DEFAULT_MAX_MASS
+            )
 
         for layer_type, layer_data in ship.layers.items():
             limit_ratio = layer_data.max_mass_pct
             ratio = layer_data.mass / ship.max_mass_budget
             is_ok = ratio <= limit_ratio
             ship.layer_status[layer_type] = {
-                'mass': layer_data.mass,
-                'ratio': ratio,
-                'limit': limit_ratio,
-                'ok': is_ok
+                "mass": layer_data.mass,
+                "ratio": ratio,
+                "limit": limit_ratio,
+                "ok": is_ok,
             }
-            if not is_ok: ship.mass_limits_ok = False
-        
+            if not is_ok:
+                ship.mass_limits_ok = False
+
         if ship.mass > ship.max_mass_budget:
             ship.mass_limits_ok = False
 
-    def _initialize_resources(self, ship: 'Ship') -> None:
+    # ------------------------------------------------------------------ #
+    # Phase 5: sensor / defense scores + resource init + endurance
+    # ------------------------------------------------------------------ #
+
+    def _phase_sensor_defense_scores(
+        self, ship: "Ship", component_pool: List["Component"]
+    ) -> None:
+        """Phase 5: defense score, repair, armor totals, ammo gen, resource init."""
+        diameter = ship.radius * 2
+
+        # Size score: baseline diameter 80 (mass ~1k) = 0.0
+        # Formula: -2.5 * log10(diameter / 80); guard against log(0)
+        d_ratio = max(0.1, diameter / 80.0)
+        size_score = -2.5 * math.log10(d_ratio)
+
+        # Maneuver score
+        maneuver_score = math.sqrt(
+            (ship.acceleration_rate / 20.0) + (ship.turn_speed / 360.0)
+        )
+
+        # ECM (defense) + sensor (offense) scores via weapons contributor.
+        # Returns the ECM term so we can compose total_defense_score here.
+        ecm_score = _wep.aggregate_targeting_scores(ship, component_pool)
+
+        ship.total_defense_score = size_score + maneuver_score + ecm_score
+
+        # Armor abilities + repair via defense contributor.
+        _def.apply_armor_and_repair_scores(ship, component_pool)
+
+        # Ammo generation passthrough — the resource registry already has the rate.
+        ammo_res = ship.resources.get_resource("ammo")
+        ship.ammo_gen_rate = ammo_res.regen_rate if ammo_res else 0.0
+
+        # Armor pool init (first-time fill).
+        _def.init_armor_pool(ship)
+
+        # Resources + combat endurance.
+        self._initialize_resources(ship)
+        calculate_combat_endurance(ship, component_pool)
+
+    def _initialize_resources(self, ship: "Ship") -> None:
         """Initialize or update resource values after stats aggregation.
 
-        On first load, fills all resources to max capacity.  On subsequent
+        On first load, fills all resources to max capacity. On subsequent
         recalculations, adds capacity deltas (preserves current usage).
         Handles any resource type dynamically — no hardcoded fuel/energy/ammo.
         """
@@ -603,7 +468,6 @@ class ShipStatsCalculator:
         prev_max_shields = ship._prev_max_shields
 
         if not ship._resources_initialized:
-            # First init — fill all resources to max
             for name in ship.resources.get_resource_names():
                 max_val = ship.resources.get_max_value(name)
                 if max_val > 0:
@@ -612,32 +476,26 @@ class ShipStatsCalculator:
                 ship.current_shields = ship.max_shields
             ship._resources_initialized = True
         else:
-            # Handle capacity increases for all resources
             for name in ship.resources.get_resource_names():
                 curr_max = ship.resources.get_max_value(name)
                 prev = prev_max.get(name, 0)
                 if curr_max > prev:
                     ship.resources.modify_value(name, curr_max - prev)
-            # Shield capacity changes
             if ship.max_shields > prev_max_shields:
-                ship.current_shields += (ship.max_shields - prev_max_shields)
+                ship.current_shields += ship.max_shields - prev_max_shields
             if ship.current_shields > ship.max_shields:
                 ship.current_shields = ship.max_shields
 
-        # Remember current max for all resources
         ship._prev_max_resources = {
             name: ship.resources.get_max_value(name)
             for name in ship.resources.get_resource_names()
         }
         ship._prev_max_shields = ship.max_shields
 
-    def calculate_ability_totals(self, components: List['Component']) -> Dict[str, Any]:
-        """Calculate total values for all abilities from components.
+    # ------------------------------------------------------------------ #
+    # Public passthroughs (legacy API surface)
+    # ------------------------------------------------------------------ #
 
-        Delegates to the extracted ability_aggregator module.
-        """
+    def calculate_ability_totals(self, components: List["Component"]) -> Dict[str, Any]:
+        """Total values for all abilities. Delegates to ``ability_aggregator``."""
         return calculate_ability_totals(components)
-
-    def _get_ability_total(self, component_list: List['Component'], ability_name: str) -> float:
-        """Calculate total value of a specific ability across provided components."""
-        return get_ability_total(component_list, ability_name)

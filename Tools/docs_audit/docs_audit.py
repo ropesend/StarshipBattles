@@ -50,7 +50,61 @@ DOC_DIRS: list[tuple[str, str]] = [
     ("systems", "docs/systems"),
     ("guides", "docs/guides"),
 ]
-EXTRA_DOCS = ["AGENTS.md", "CLAUDE.md"]
+EXTRA_DOCS = ["AGENTS.md", "CLAUDE.md", ".agents/CODEX.md"]
+
+# Group definitions for per-group filtered output (B2 in opencode_review_skills_overhaul plan).
+# Each group's `docs` is a set of doc paths (relative to repo root, forward slashes)
+# OR a directory prefix (ending in "/") that matches any doc under it.
+DOC_GROUPS: dict[str, dict] = {
+    "G1": {
+        "label": "core architecture docs",
+        "docs": {
+            "docs/README.md",
+            "docs/01_ARCHITECTURE.md",
+            "docs/02_PATTERNS.md",
+            "docs/03_CONVENTIONS.md",
+            "docs/04_SERVICES.md",
+            "docs/05_ERROR_HANDLING.md",
+            "docs/06_UI_STYLE_GUIDE.md",
+        },
+        "prefixes": (),
+    },
+    "G2": {
+        "label": "docs/systems",
+        "docs": set(),
+        "prefixes": ("docs/systems/",),
+    },
+    "G3": {
+        "label": "docs/guides",
+        "docs": set(),
+        "prefixes": ("docs/guides/",),
+    },
+    "G4": {
+        "label": "root agent docs",
+        "docs": {"AGENTS.md", "CLAUDE.md", ".agents/CODEX.md"},
+        "prefixes": (),
+    },
+    "G5": {
+        "label": "Projects/protocols",
+        "docs": set(),
+        "prefixes": ("Projects/protocols/",),
+    },
+    "G6": {
+        "label": "Reviews/protocols",
+        "docs": set(),
+        "prefixes": ("Reviews/protocols/",),
+    },
+}
+
+
+def _doc_in_group(doc_rel: str, group_id: str) -> bool:
+    spec = DOC_GROUPS[group_id]
+    if doc_rel in spec["docs"]:
+        return True
+    for prefix in spec["prefixes"]:
+        if doc_rel.startswith(prefix):
+            return True
+    return False
 
 
 def _rel(path: str) -> str:
@@ -65,21 +119,37 @@ def _read_file(path: str) -> str | None:
         return None
 
 
+REF_PREFIXES = ("game", "Tools", "Projects/protocols", "Reviews/protocols", "data", "tests")
+
+
 def extract_file_references(doc_path: str) -> list[dict]:
     content = _read_file(doc_path)
     if content is None:
         return []
 
     refs: list[dict] = []
-    pattern = re.compile(r'(game/[\w/]+(?:\.py|\w+/))')
+    # Match any of the configured top-level prefixes followed by /path components,
+    # ending in either a file extension (.py/.md/.json/etc.) or a trailing slash.
+    prefix_alt = "|".join(re.escape(p) for p in REF_PREFIXES)
+    pattern = re.compile(
+        rf'((?:{prefix_alt})/[\w./-]+(?:\.\w+|/))'
+    )
     for match in pattern.finditer(content):
-        ref_path = match.group(1)
+        ref_path = match.group(1).rstrip(".,;:)")
         line_no = content[:match.start()].count("\n") + 1
         exists = os.path.exists(os.path.join(PROJECT_ROOT, ref_path))
+        # Determine which configured prefix matched (longest match wins so
+        # "Projects/protocols" beats "Projects" if both were configured).
+        prefix = ""
+        for candidate in sorted(REF_PREFIXES, key=len, reverse=True):
+            if ref_path.startswith(candidate + "/") or ref_path == candidate:
+                prefix = candidate
+                break
         refs.append({
             "doc": _rel(doc_path),
             "line": line_no,
             "reference": ref_path,
+            "prefix": prefix,
             "exists": exists,
         })
     return refs
@@ -141,6 +211,8 @@ def extract_staleness(doc_path: str) -> dict | None:
 def find_undocumented_modules() -> list[dict]:
     all_doc_content = ""
     for root, _, filenames in os.walk(DOCS_DIR):
+        if "_ignore" in Path(root).parts:
+            continue
         for fname in filenames:
             if fname.endswith(".md"):
                 content = _read_file(os.path.join(root, fname))
@@ -249,6 +321,14 @@ def run(force_output_dir: str | None = None) -> str:
     for extra in EXTRA_DOCS:
         all_doc_paths.append(os.path.join(PROJECT_ROOT, extra))
 
+    # Pull in Projects/protocols and Reviews/protocols for groups G5/G6.
+    for protocol_dir_rel in ("Projects/protocols", "Reviews/protocols"):
+        protocol_dir = os.path.join(PROJECT_ROOT, protocol_dir_rel)
+        if os.path.isdir(protocol_dir):
+            for fname in sorted(os.listdir(protocol_dir)):
+                if fname.endswith(".md"):
+                    all_doc_paths.append(os.path.join(protocol_dir, fname))
+
     print(f"Scanning {len(all_doc_paths)} doc files...")
     for path in all_doc_paths:
         refs = extract_file_references(path)
@@ -278,6 +358,46 @@ def run(force_output_dir: str | None = None) -> str:
         json.dump({"count": len(undocumented), "modules": undocumented}, f, indent=2)
     with open(os.path.join(raw_dir, "doc_inventory.json"), "w", encoding="utf-8") as f:
         json.dump({"total_docs": len(inventory), "docs": inventory}, f, indent=2)
+
+    # Per-group filtered output files (B2).
+    for group_id in DOC_GROUPS:
+        group_dead = [r for r in dead_refs if _doc_in_group(r["doc"], group_id)]
+        group_stale_proj = [r for r in stale_proj_refs if _doc_in_group(r["doc"], group_id)]
+        group_stale_docs = [s for s in staleness if _doc_in_group(s["doc"], group_id)]
+        # Undocumented modules are not tied to a single doc; we still emit a per-group
+        # file so consumers have a uniform input shape. The contents mirror the global
+        # set; downstream filtering (e.g. by layer) is the consumer's responsibility.
+        group_undocumented = list(undocumented)
+
+        with open(os.path.join(raw_dir, f"dead_refs_{group_id}.json"), "w", encoding="utf-8") as f:
+            json.dump({
+                "group": group_id,
+                "label": DOC_GROUPS[group_id]["label"],
+                "total": len(group_dead),
+                "dead_refs": group_dead,
+            }, f, indent=2)
+        with open(os.path.join(raw_dir, f"stale_proj_refs_{group_id}.json"), "w", encoding="utf-8") as f:
+            json.dump({
+                "group": group_id,
+                "label": DOC_GROUPS[group_id]["label"],
+                "total": len(group_stale_proj),
+                "stale": group_stale_proj,
+            }, f, indent=2)
+        with open(os.path.join(raw_dir, f"stale_docs_{group_id}.json"), "w", encoding="utf-8") as f:
+            json.dump({
+                "group": group_id,
+                "label": DOC_GROUPS[group_id]["label"],
+                "total": len(group_stale_docs),
+                "staleness": group_stale_docs,
+            }, f, indent=2)
+        with open(os.path.join(raw_dir, f"undocumented_modules_{group_id}.json"), "w", encoding="utf-8") as f:
+            json.dump({
+                "group": group_id,
+                "label": DOC_GROUPS[group_id]["label"],
+                "count": len(group_undocumented),
+                "modules": group_undocumented,
+                "note": "Undocumented modules are global; the same set is emitted for each group for uniform consumer input.",
+            }, f, indent=2)
 
     print(f"  File refs: {len(all_refs)} total, {len(dead_refs)} dead")
     print(f"  PROJ refs: {len(all_proj_refs)} total, {len(stale_proj_refs)} stale")

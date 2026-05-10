@@ -791,3 +791,127 @@ class TestRaceRegistryAccessor:
         facade_b = StrategySessionFacade(Mock())
 
         assert facade_a.get_race_registry() is not facade_b.get_race_registry()
+
+
+class TestProcessTurnErrorConversion:
+    """PROJ-408 C-02 / PROJ-381 Phase 3 (B-4):
+    ``StrategySessionFacade.process_turn`` MUST convert a domain-engine
+    ``EnginePhaseError`` into a facade-level ``TurnFailedError`` so the
+    UI never has to import a sub-engine exception type.
+
+    The conversion site lives at
+    ``game/strategy/facade/strategy_session_facade.py:194-201``. Prior
+    to PROJ-408 this conversion had no direct unit test — only an
+    integration test at
+    ``tests/integration/ui/test_strategy_turn_error_boundary.py``
+    exercised the boundary, which conflated the UI catch with the
+    facade conversion. These unit tests pin the conversion in
+    isolation.
+    """
+
+    def _make_facade_raising(self, error):
+        """Build a facade whose underlying session raises ``error`` from
+        ``process_turn``."""
+        session = Mock()
+        session.process_turn = Mock(side_effect=error)
+        facade = StrategySessionFacade(session)
+        # Stub out the per-turn cache invalidation that the facade
+        # would otherwise perform on a successful turn — it should not
+        # be reached on the error path.
+        facade._state.invalidate_all = Mock()
+        return facade, session
+
+    def test_engine_phase_error_is_re_raised_as_turn_failed_error(self):
+        """An ``EnginePhaseError`` from the session is converted to a
+        ``TurnFailedError`` at the facade boundary."""
+        from game.core.exceptions import EnginePhaseError, TurnFailedError
+
+        engine_err = EnginePhaseError(
+            "harvesting failed",
+            code="S102",
+            context={
+                "phase_name": "harvesting",
+                "tick": 17,
+                "turn_number": 5,
+                "save_path": "/tmp/snap.json",
+            },
+        )
+        facade, _ = self._make_facade_raising(engine_err)
+
+        with pytest.raises(TurnFailedError) as exc_info:
+            facade.process_turn()
+
+        # Class identity check: the UI must never see EnginePhaseError.
+        assert type(exc_info.value) is TurnFailedError
+
+    def test_turn_failed_error_preserves_message_code_and_context(self):
+        """The wrapper carries the original message, code, and context
+        so UI dialogs (PROJ-395) can render turn_number, save_path, etc."""
+        from game.core.exceptions import EnginePhaseError, TurnFailedError
+
+        ctx = {
+            "phase_name": "production",
+            "tick": 42,
+            "turn_number": 9,
+            "save_path": "C:/saves/pre_turn_9.json",
+            "original_type": "FormulaException",
+        }
+        engine_err = EnginePhaseError("production failed", code="S103", context=ctx)
+        facade, _ = self._make_facade_raising(engine_err)
+
+        with pytest.raises(TurnFailedError) as exc_info:
+            facade.process_turn()
+
+        wrapped: TurnFailedError = exc_info.value
+        assert str(wrapped) == "production failed"
+        assert wrapped.code == "S103"
+        # Context is copied (defensive dict()) so it should equal but
+        # not necessarily be the same object.
+        assert wrapped.context == ctx
+        # PROJ-395 convenience properties read from context.
+        assert wrapped.phase_name == "production"
+        assert wrapped.tick == 42
+        assert wrapped.turn_number == 9
+        assert wrapped.save_path == "C:/saves/pre_turn_9.json"
+
+    def test_turn_failed_error_chains_from_engine_phase_error(self):
+        """The wrapped error is preserved on ``__cause__`` so debug
+        tooling (and tests) can recover the original engine exception."""
+        from game.core.exceptions import EnginePhaseError, TurnFailedError
+
+        engine_err = EnginePhaseError(
+            "movement failed", code="S101", context={"phase_name": "movement"}
+        )
+        facade, _ = self._make_facade_raising(engine_err)
+
+        with pytest.raises(TurnFailedError) as exc_info:
+            facade.process_turn()
+
+        assert exc_info.value.__cause__ is engine_err
+
+    def test_invalidate_all_is_not_called_on_engine_phase_error(self):
+        """When the session raises, the facade should NOT proceed to
+        invalidate per-turn caches — the session has already rolled
+        back and the caches still reflect the pre-turn state."""
+        from game.core.exceptions import EnginePhaseError, TurnFailedError
+
+        engine_err = EnginePhaseError("bang", context={})
+        facade, _ = self._make_facade_raising(engine_err)
+
+        with pytest.raises(TurnFailedError):
+            facade.process_turn()
+
+        facade._state.invalidate_all.assert_not_called()
+
+    def test_non_engine_phase_error_propagates_unchanged(self):
+        """Only ``EnginePhaseError`` is converted. A different exception
+        type (e.g. a programmer-error ``RuntimeError``) must propagate
+        unchanged so it surfaces as a real bug, not a recoverable turn
+        failure."""
+        original = RuntimeError("unexpected programmer error")
+        facade, _ = self._make_facade_raising(original)
+
+        with pytest.raises(RuntimeError) as exc_info:
+            facade.process_turn()
+
+        assert exc_info.value is original

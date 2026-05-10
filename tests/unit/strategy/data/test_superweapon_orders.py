@@ -22,40 +22,6 @@ from game.strategy.engine.commands import (
 from game.core.hex_math import HexCoord
 
 
-class TestSuperweaponOrderTypes:
-    """Test that all 6 superweapon OrderType enum values exist."""
-
-    def test_implode_planet_order_type_exists(self):
-        """IMPLODE_PLANET OrderType is defined."""
-        assert hasattr(OrderType, 'IMPLODE_PLANET')
-        assert isinstance(OrderType.IMPLODE_PLANET, OrderType)
-
-    def test_stellerate_star_order_type_exists(self):
-        """STELLERATE_STAR OrderType is defined."""
-        assert hasattr(OrderType, 'STELLERATE_STAR')
-        assert isinstance(OrderType.STELLERATE_STAR, OrderType)
-
-    def test_open_warp_point_order_type_exists(self):
-        """OPEN_WARP_POINT OrderType is defined."""
-        assert hasattr(OrderType, 'OPEN_WARP_POINT')
-        assert isinstance(OrderType.OPEN_WARP_POINT, OrderType)
-
-    def test_close_warp_point_order_type_exists(self):
-        """CLOSE_WARP_POINT OrderType is defined."""
-        assert hasattr(OrderType, 'CLOSE_WARP_POINT')
-        assert isinstance(OrderType.CLOSE_WARP_POINT, OrderType)
-
-    def test_create_dyson_sphere_order_type_exists(self):
-        """CREATE_DYSON_SPHERE OrderType is defined."""
-        assert hasattr(OrderType, 'CREATE_DYSON_SPHERE')
-        assert isinstance(OrderType.CREATE_DYSON_SPHERE, OrderType)
-
-    def test_self_destruct_order_type_exists(self):
-        """SELF_DESTRUCT OrderType is defined."""
-        assert hasattr(OrderType, 'SELF_DESTRUCT')
-        assert isinstance(OrderType.SELF_DESTRUCT, OrderType)
-
-
 class TestFleetOrderSerialization:
     """Test Order to_dict/from_dict for superweapon order types."""
 

@@ -1,5 +1,11 @@
 """
 Tests for SaveSelectionWindow with turn list feature.
+
+PROJ-322 Task 2.18 (S09-CAT5-001): the three byte-identical
+`setup_tmpdir` autouse fixtures formerly on
+`TestSaveSelectionTurnList`, `TestSaveSelectionListSaves` and
+`TestSaveSelectionEmpireInfo` are now provided by the module-level
+`patched_saves_tmpdir` autouse fixture below.
 """
 import pytest
 import tempfile
@@ -10,6 +16,21 @@ from unittest.mock import MagicMock, patch
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.engine.game_config import GameConfig
 from game.core import paths as paths_module
+
+
+@pytest.fixture
+def _patched_saves_tmpdir():
+    """Per-test temporary saves directory + Paths.SAVES_DIR patch.
+
+    PROJ-322 Task 2.18 (S09-CAT5-001): hoisted from three duplicate
+    class-local autouse fixtures.
+    """
+    tmpdir = tempfile.mkdtemp()
+    saves_dir = os.path.join(tmpdir, "saves")
+    os.makedirs(saves_dir, exist_ok=True)
+    with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+        yield tmpdir
+    shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 class MockGameSession:
@@ -45,14 +66,9 @@ class TestSaveSelectionTurnList:
     """Tests for turn list functionality in save selection."""
 
     @pytest.fixture(autouse=True)
-    def setup_tmpdir(self):
-        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
-        tmpdir = tempfile.mkdtemp()
-        saves_dir = os.path.join(tmpdir, "saves")
-        os.makedirs(saves_dir, exist_ok=True)
-        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
-            yield tmpdir
-        shutil.rmtree(tmpdir)
+    def setup_tmpdir(self, _patched_saves_tmpdir):
+        """Use the shared module-level _patched_saves_tmpdir fixture."""
+        yield _patched_saves_tmpdir
 
     def test_list_turns_returns_all_turns(self):
         """list_turns() returns metadata for each turn file."""
@@ -146,14 +162,9 @@ class TestSaveSelectionListSaves:
     """Tests for save listing functionality."""
 
     @pytest.fixture(autouse=True)
-    def setup_tmpdir(self):
-        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
-        tmpdir = tempfile.mkdtemp()
-        saves_dir = os.path.join(tmpdir, "saves")
-        os.makedirs(saves_dir, exist_ok=True)
-        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
-            yield tmpdir
-        shutil.rmtree(tmpdir)
+    def setup_tmpdir(self, _patched_saves_tmpdir):
+        """Use the shared module-level _patched_saves_tmpdir fixture."""
+        yield _patched_saves_tmpdir
 
     def test_list_saves_returns_all_saves(self):
         """list_saves() returns all available saves."""
@@ -193,16 +204,29 @@ class TestSaveSelectionListSaves:
         assert 'timestamp' in save
 
     def test_list_saves_sorted_by_timestamp(self):
-        """Saves are sorted by timestamp (newest first)."""
-        import time
+        """Saves are sorted by timestamp (newest first).
 
+        PROJ-322 Task 4.8 (S09-CAT7-001): replaced the sleep(0.1) with
+        an explicit os.utime backdating of the older save's metadata
+        file, so the ordering is deterministic instead of depending on
+        wall-clock progression and filesystem mtime resolution.
+        """
         # Create separate sessions to avoid save_path reuse
         session1 = MockGameSession(turn_number=1)
         session2 = MockGameSession(turn_number=1)
 
-        SaveGameService.save_game(session1, "OldSave")
-        time.sleep(0.1)  # Ensure different timestamp
-        SaveGameService.save_game(session2, "NewSave")
+        success_old, _, old_path = SaveGameService.save_game(session1, "OldSave")
+        success_new, _, new_path = SaveGameService.save_game(session2, "NewSave")
+        assert success_old and success_new
+
+        # Backdate the OldSave's metadata file by ~10 seconds so the
+        # st_mtime-based sort in SaveGameService.list_saves places
+        # NewSave first regardless of how close the two saves landed.
+        old_metadata = os.path.join(old_path, "save_metadata.json")
+        new_metadata = os.path.join(new_path, "save_metadata.json")
+        new_mtime_ns = os.stat(new_metadata).st_mtime_ns
+        backdated_ns = new_mtime_ns - 10 * 1_000_000_000  # 10 s earlier
+        os.utime(old_metadata, ns=(backdated_ns, backdated_ns))
 
         saves = SaveGameService.list_saves()
 
@@ -215,14 +239,9 @@ class TestSaveSelectionEmpireInfo:
     """Tests for empire information in save metadata."""
 
     @pytest.fixture(autouse=True)
-    def setup_tmpdir(self):
-        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
-        tmpdir = tempfile.mkdtemp()
-        saves_dir = os.path.join(tmpdir, "saves")
-        os.makedirs(saves_dir, exist_ok=True)
-        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
-            yield tmpdir
-        shutil.rmtree(tmpdir)
+    def setup_tmpdir(self, _patched_saves_tmpdir):
+        """Use the shared module-level _patched_saves_tmpdir fixture."""
+        yield _patched_saves_tmpdir
 
     def test_save_metadata_includes_empire_count(self):
         """Metadata includes number of empires."""

@@ -13,6 +13,18 @@ from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
 from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands import (
+    IssueColonizeCommand,
+    IssueInterceptCommand,
+    IssueJoinFleetCommand,
+    IssueMoveCommand,
+    IssueWarpCommand,
+)
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.engine.handlers.base import (
     BaseCommandHandler,
     add_move_order_if_needed,
@@ -21,16 +33,18 @@ from game.strategy.engine.handlers.base import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from game.strategy.engine.commands import (
-        IssueColonizeCommand,
-        IssueInterceptCommand,
-        IssueJoinFleetCommand,
-        IssueMoveCommand,
-        IssueWarpCommand,
-    )
     from game.strategy.engine.game_session import GameSession
 
 
+@command_spec(
+    command_class=IssueColonizeCommand,
+    order_type=OrderType.COLONIZE,
+    category='action',
+    action_ability_name='ColonizePlanet',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_colonize',
+    serializer_codec='planet_ref',
+)
 class ColonizeCommandHandler(BaseCommandHandler):
     """Handler for IssueColonizeCommand."""
 
@@ -69,6 +83,14 @@ class ColonizeCommandHandler(BaseCommandHandler):
         return result
 
 
+@command_spec(
+    command_class=IssueMoveCommand,
+    order_type=OrderType.MOVE,
+    category='movement',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_move',
+    serializer_codec='hex_coord',
+)
 class MoveCommandHandler(BaseCommandHandler):
     """Handler for IssueMoveCommand."""
 
@@ -84,7 +106,7 @@ class MoveCommandHandler(BaseCommandHandler):
 
         if not path:
             if fleet.location == cmd.target_hex:
-                pass  # Already there - no-op
+                return ValidationResult.success()  # Already there - no-op
             else:
                 return ValidationResult.error("Target is unreachable or invalid.")
 
@@ -94,7 +116,8 @@ class MoveCommandHandler(BaseCommandHandler):
 
         # Optimization: Set path immediately if it's the active order
         if len(fleet.orders) == 1:
-            fleet.path = path
+            # PROJ-370 Phase 2: route through IFleetMutator.
+            session.fleet_mutator.set_path(fleet, path)
 
         return ValidationResult.success()
 
@@ -103,6 +126,14 @@ class MoveCommandHandler(BaseCommandHandler):
 # Use AddToConstructionQueueCommandHandler instead for all build queue operations.
 
 
+@command_spec(
+    command_class=IssueInterceptCommand,
+    order_type=OrderType.MOVE_TO_FLEET,
+    category='movement',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_intercept',
+    serializer_codec='fleet_ref',
+)
 class InterceptCommandHandler(BaseCommandHandler):
     """Handler for IssueInterceptCommand."""
 
@@ -133,6 +164,14 @@ class InterceptCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=IssueJoinFleetCommand,
+    order_type=OrderType.JOIN_FLEET,
+    category='movement',
+    execution_model='instant',
+    facade_helper_name='dispatch_issue_join_fleet',
+    serializer_codec='fleet_ref',
+)
 class JoinCommandHandler(BaseCommandHandler):
     """Handler for IssueJoinFleetCommand."""
 
@@ -171,6 +210,14 @@ class JoinCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=IssueWarpCommand,
+    order_type=OrderType.WARP,
+    category='movement',
+    execution_model='action',
+    facade_helper_name='dispatch_issue_warp',
+    serializer_codec='hex_coord',
+)
 class WarpCommandHandler(BaseCommandHandler):
     """Handler for IssueWarpCommand (PROJ-187)."""
 
@@ -192,7 +239,7 @@ class WarpCommandHandler(BaseCommandHandler):
 
         # 3. Validate warp point exists at target hex
         warp_point_hex = cmd.warp_point_hex
-        source_system = session.galaxy._global_hex_warp_points.get(warp_point_hex)
+        source_system = session.galaxy.state.global_hex_warp_points.get(warp_point_hex)
         if not source_system:
             return ValidationResult.error(
                 f"No warp point at {warp_point_hex}."
@@ -212,3 +259,17 @@ class WarpCommandHandler(BaseCommandHandler):
 
         logger.info(f"GameSession: Issued WARP order for Fleet {fleet.id} -> {warp_point_hex}")
         return ValidationResult.success()
+
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (
+        MoveCommandHandler,
+        WarpCommandHandler,
+        InterceptCommandHandler,
+        JoinCommandHandler,
+        ColonizeCommandHandler,
+    ):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))

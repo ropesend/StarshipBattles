@@ -83,7 +83,8 @@ class TestFromDictSerialization:
             'name': 'Test Ship',
             'owner_id': 0,
             'design_data': make_design_data_with_stats(),
-            'component_toggles': {}
+            'component_toggles': {},
+            'components': {},
         }
 
         ship = ShipInstance.from_dict(data)
@@ -98,7 +99,8 @@ class TestFromDictSerialization:
             'name': 'Test Ship',
             'owner_id': 0,
             'design_data': make_design_data_with_stats(),
-            'component_toggles': {'engine': False, 'shield': True}
+            'component_toggles': {'engine': False, 'shield': True},
+            'components': {},
         }
 
         ship = ShipInstance.from_dict(data)
@@ -112,7 +114,8 @@ class TestFromDictSerialization:
             'design_id': 'TestDesign',
             'name': 'Test Ship',
             'owner_id': 0,
-            'design_data': make_design_data_with_stats()
+            'design_data': make_design_data_with_stats(),
+            'components': {},
             # No component_toggles key
         }
 
@@ -128,7 +131,8 @@ class TestFromDictSerialization:
             'name': 'Test Ship',
             'owner_id': 0,
             'design_data': make_design_data_with_stats(),
-            'component_toggles': {'engine': False, 'warp_drive': True}
+            'component_toggles': {'engine': False, 'warp_drive': True},
+            'components': {},
         }
 
         ship = ShipInstance.from_dict(original_data)

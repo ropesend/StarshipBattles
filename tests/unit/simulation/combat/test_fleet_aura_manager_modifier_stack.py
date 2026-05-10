@@ -31,25 +31,39 @@ def _ship(team_id: int):
     )
 
 
-def _effect(stat_key: str, value: float) -> ModifierEffect:
-    return ModifierEffect(
-        stat_key=stat_key,
-        value=value,
-        operation="multiply",
-        target_ability=None,
-        source_modifier_id="mod",
-        source_modifier_name="Mod",
-        formula_str="param",
-        param_value=value,
+def _make_entry(
+    source: str,
+    stat_key: str,
+    value: float,
+    *,
+    operation: str = "multiply",
+    stack_group: str | None = None,
+    formula_str: str = "param",
+) -> ModifierEntry:
+    """Factory for ModifierEntry. Default is `multiply` op with no stack group.
+
+    Used to consolidate four near-identical legacy helpers
+    (`_effect`, `_entry`, `_add_entry`, `_grouped_mult_entry`).
+    """
+    return ModifierEntry(
+        source=source,
+        stack_group=stack_group,
+        effect=ModifierEffect(
+            stat_key=stat_key,
+            value=value,
+            operation=operation,
+            target_ability=None,
+            source_modifier_id="mod",
+            source_modifier_name="Mod",
+            formula_str=formula_str,
+            param_value=value,
+        ),
     )
 
 
 def _entry(source: str, stat_key: str, value: float) -> ModifierEntry:
-    return ModifierEntry(
-        source=source,
-        stack_group=None,
-        effect=_effect(stat_key, value),
-    )
+    """Backwards-compatible alias: multiply, no stack group."""
+    return _make_entry(source, stat_key, value)
 
 
 # ---------------------------------------------------------------------------
@@ -171,22 +185,8 @@ def test_none_modifier_stack_is_noop():
 
 
 def _add_entry(source: str, stat_key: str, value: float) -> ModifierEntry:
-    """Build an ADD-operation ModifierEntry (distinct from the default
-    multiply `_entry` above — shield_bonus_add is additive)."""
-    return ModifierEntry(
-        source=source,
-        stack_group=None,
-        effect=ModifierEffect(
-            stat_key=stat_key,
-            value=value,
-            operation="add",
-            target_ability=None,
-            source_modifier_id="mod",
-            source_modifier_name="Mod",
-            formula_str="param",
-            param_value=value,
-        ),
-    )
+    """Build an ADD-operation ModifierEntry (shield_bonus_add is additive)."""
+    return _make_entry(source, stat_key, value, operation="add")
 
 
 def test_shield_bonus_add_reaches_external_stats_per_team():
@@ -286,20 +286,7 @@ def test_mixed_add_and_mult_per_team_isolation():
 
 
 def _grouped_mult_entry(source: str, stat_key: str, value: float, stack_group: str):
-    return ModifierEntry(
-        source=source,
-        stack_group=stack_group,
-        effect=ModifierEffect(
-            stat_key=stat_key,
-            value=value,
-            operation="multiply",
-            target_ability=None,
-            source_modifier_id="mod",
-            source_modifier_name="Mod",
-            formula_str="",
-            param_value=value,
-        ),
-    )
+    return _make_entry(source, stat_key, value, stack_group=stack_group, formula_str="")
 
 
 def test_same_stack_group_entries_compose_max_not_sum():

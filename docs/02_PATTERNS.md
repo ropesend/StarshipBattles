@@ -1,1294 +1,400 @@
-# Design Patterns Reference
+# 02_PATTERNS Compact Agent Reference
 
-> **Last verified:** 2026-04-28 — FEAT-22 added Bootstrap Phase Timing subsection under Profiler entry (14 sub-phases via `_timed_phase` helper, `[startup]` log prefix, eager `save_history()`). Earlier same-day pass: PROJ-318 verified `ApplicationContext` manages 10 services including the PROJ-314 `ImageProvider`; PROJ-316 corrected PROJ-313 Pattern #31 claims against live code. Pattern count is 31.
+Balanced compact derivative of `docs/02_PATTERNS.md` and
+`AgentCoordination/Scratchpad/reports/02_PATTERNS_ALT_compact.md`.
+Source doc last verified 2026-05-08. This version removes release-note
+archaeology, preserves current contracts and extension recipes, and fixes the
+stale pattern count to 35.
 
-Agent-optimized reference for every core pattern in the codebase (31 patterns).
-Each section: **Where**, **How It Works**, **When to Use**.
+## Global Rules
 
----
+- Prefer dependency injection, protocols, registries, and data-driven dispatch over globals, concrete cross-layer imports, mode switches, and hardcoded class-name lists.
+- Simulation code must not call `get_default_registry_provider()`; inject registries or use `Ship._registries` / a passed provider.
+- UI talks to strategy through `StrategySessionFacade` DTOs and commands; UI must not mutate strategy domain objects directly.
+- New strategy modal windows subclass `StrategyModalWindow`; do not add manual modal slot scanning.
+- New UI classes should use Compositional Construction; `bypass_init` is a legacy UIWindow test retrofit only.
+- Battle randomness must use injected `random.Random` instances; do not call module-level `random.*` in simulation, engine, or AI.
+- Save-file compatibility is not a constraint. Delete replaced systems instead of adding fallback or migration paths.
+- Protocol references are under `game/core/protocols/`, not a stale `protocols.py` module path.
 
-## Table of Contents
+## Pattern Map
 
-1. [ApplicationContext (DI Container)](#1-applicationcontext-di-container--proj-258)
-2. [Protocol + TypeGuard](#2-protocol--typeguard)
-3. [Dependency Injection (Registry)](#3-dependency-injection-registry)
-4. [Registry Pattern](#4-registry-pattern)
-5. [Facade / Delegate](#5-facade--delegate)
-6. [CQRS-lite (Strategy Session)](#6-cqrs-lite-strategy-session)
-7. [CommandHandlerRegistry](#7-commandhandlerregistry)
-8. [MVVM (Workshop)](#8-mvvm-workshop)
-9. [Template Method (Validation)](#9-template-method-validation)
-10. [Event Bus](#10-event-bus)
-11. [Surface Caching (SpriteManager)](#11-surface-caching-spritemanager)
-12. [Configuration Classes](#12-configuration-classes)
-13. [Spec Compiler + run_battle](#13-spec-compiler--run_battle-replaces-battle-mode-strategy)
-14. [Two-Phase Ability Aggregation](#14-two-phase-ability-aggregation)
-15. [Factory](#15-factory)
-16. [ScrollState (Scroll Utility)](#16-scrollstate-scroll-utility)
-17. [Serializable Protocol](#17-serializable-protocol)
-18. [Per-Battle RNG](#18-per-battle-rng-proj-252)
-19. [Error Boundary](#19-error-boundary-turn-engine--proj-251)
-20. [Precondition Validation](#20-precondition-validation-sub-engines--proj-251)
-21. [Screen State Machine](#21-screen-state-machine-proj-259)
-22. [TurnEngineConfig](#22-turnengineconfig-proj-259)
-23. [Tick Phase Registry](#23-tick-phase-registry-proj-259)
-24. [External-Stats Bridge](#24-external-stats-bridge-proj-270-phase-9--proj-271)
-25. [Scope-Driven Team Routing](#25-scope-driven-team-routing-proj-271)
-26. [Ability-Stat Registry](#26-ability-stat-registry-proj-273)
-27. [Budget-Aware Randomization](#27-budget-aware-randomization-feat-12)
-28. [Background Service Call](#28-background-service-call-proj-296)
-29. [Universal Ability Source (PROJ-300..305)](#29-universal-ability-source-proj-300305)
-30. [Registrar Close-Callback (BUG-121) — SUPERSEDED](#30-registrar-close-callback-bug-121)
-31. [Strategy Modal Window Base Class (PROJ-313)](#31-strategy-modal-window-base-class-proj-313)
+| # | Pattern | Primary Contract |
+|---|---|---|
+| 1 | ApplicationContext | `game/context.py::ApplicationContext` owns the app service graph; callers own lifetime. |
+| 2 | Protocol + TypeGuard | `game/core/protocols/` defines cross-layer structural contracts plus duck-typed guards. |
+| 3 | Registry DI | Services receive `IRegistryProvider`; tests use `TestRegistryProvider`; simulation gets explicit registries. |
+| 4 | Registry | Stable keys map to data/classes/callables; avoid switch statements and hardcoded type lists. |
+| 5 | Facade / Delegate | Facades expose narrow APIs; delegates own cohesive behavior. |
+| 6 | CQRS-lite | Strategy writes use commands; reads use frozen/read-only DTOs. |
+| 7 | CommandHandlerRegistry | Command/order dispatch is registry-backed and self-registering. |
+| 8 | MVVM | Complex UI screens split state, command boundary, rendering, and events. |
+| 9 | Template Method | Validation rules share an execution skeleton with specialized checks. |
+| 10 | Event Bus | UI-internal event delivery avoids direct coupling between builder panels. |
+| 11 | Surface Caching | `SpriteManager` and asset managers cache loaded/scaled surfaces by stable keys. |
+| 12 | Configuration Classes | Named config containers and JSON-backed config loaders replace scattered constants. |
+| 13 | Spec Compiler + `run_battle` | All battle callers compile `BattleSpec` and use the unified runner path. |
+| 14 | Two-Phase Ability Aggregation | MAX within stack group, then SUM across groups; marker abilities use boolean presence. |
+| 15 | Factory | Isolate construction with policy or dependency choices. |
+| 16 | ScrollState | Shared scroll bounds/offset helper for UI lists. |
+| 17 | Serializable Protocol | Persistence DTOs/classes expose `to_dict` / `from_dict` contracts. |
+| 18 | Per-Battle RNG | Seeded `BattleEngine.rng` propagates to combat, collision, damage, and AI. |
+| 19 | Error Boundary | Turn processing snapshots, wraps phase errors, rolls back, and re-raises. |
+| 20 | Precondition Validation | Sub-engines validate inputs before mutation. |
+| 21 | Screen State Machine | App scene transitions use a declarative transition table. |
+| 22 | TurnEngineConfig | `TurnEngineConfig.create_default(...)` is the injection point for turn engines. |
+| 23 | Tick Phase Registry | Battle tick work is ordered by registered `ITickPhase` priority. |
+| 24 | External-Stats Bridge | `ship.external_stats` composes battle-scoped modifiers without mutating source data. |
+| 25 | Scope-Driven Team Routing | Ability scope decides recipient team(s), including N-team enemy fan-out. |
+| 26 | Ability-Stat Registry | Ability class names map once to external stat entries. |
+| 27 | Budget-Aware Randomization | Roll candidates, score with canonical budget API, rebalance toward free baselines. |
+| 28 | Background Service Call | Non-daemon worker object with status/result/error/cancel/shutdown contract. |
+| 29 | Universal Ability Source | Strategic effects come from `IAbilitySource` adapters and shared collection. |
+| 30 | Registrar Close-Callback | Legacy slot cleanup only; modal tracking is superseded by pattern #31. |
+| 31 | Strategy Modal Window Base Class | Structural modal register/unregister via `StrategyModalWindow`. |
+| 32 | Compositional Construction | New UI classes accept a composition factory/protocol for testable seams. |
+| 33 | UI Widget Test Factory | Retrofit legacy pygame_gui widgets with `make_ui_widget` and scoped `bypass_init`. |
+| 34 | Weapon Family Registry | Weapon family handlers dispatch attacks; no central branch edits for new families. |
+| 35 | Stat Contributor Registry | Per-component stat contributors run through one typed accumulator pipeline. |
 
----
+## 1. ApplicationContext
 
-## 1. ApplicationContext (DI Container) — PROJ-258
+Where: `game/context.py`, `game/app.py`, `game/app_bootstrap.py`.
 
-### Where
+Contract:
+- `ApplicationContext.create_production()` builds the production graph once.
+- `ApplicationContext.create_test(**overrides)` builds isolated test services.
+- Managed services: `RegistryManager`, `Profiler`, `ComponentCacheManager`, `PolicyManager`, `AssetManager`, `SpriteManager`, `ShipThemeManager`, `GameSettings`, `LLMProvider`, `ImageProvider`.
+- Context-owned services install matching `get_default_*` / `set_default_*` module defaults where those defaults exist.
+- `SingletonMeta`, `game/core/singleton.py`, and `.instance()` service access are retired. Use context, constructor injection, or documented default accessors.
+- `game/app_bootstrap.py::bootstrap()` records named `[startup]` phases and saves profiler history early. `pygame.init` and `ctx.create_production` are timed before the profiler exists and backfilled.
 
-- Container: `game/context.py` -- `ApplicationContext`
-- Factory methods: `create_production()`, `create_test(**overrides)`
-- Composition root: `game/app.py` -- `Game.__init__` creates context
-
-### How It Works
-
-`ApplicationContext` is a dependency injection container holding references to all application
-services. Created once at startup (production) or per-test (testing). Passed explicitly to code
-that needs service references. **Not a singleton** — the caller manages lifetime.
-
-```python
-# game/context.py
-class ApplicationContext:
-    def __init__(self, registry_manager, profiler,
-                 component_cache, policy_manager, asset_manager,
-                 sprite_manager, ship_theme_manager,
-                 game_settings, llm_provider, image_provider):
-        self.registry_manager = registry_manager
-        self.profiler = profiler
-        self.llm_provider = llm_provider
-        self.image_provider = image_provider
-        # ... all 10 services
-
-    @classmethod
-    def create_production(cls) -> 'ApplicationContext':
-        """Creates all services directly. Called once from app.py."""
-        ...
-
-    @classmethod
-    def create_test(cls, **overrides) -> 'ApplicationContext':
-        """Creates fresh lightweight instances. Override specific services via kwargs."""
-        ...
-```
-
-### Services Managed (10 total)
-
-| Service | File | Layer |
-|---------|------|-------|
-| RegistryManager | `game/core/registry.py` | Core |
-| Profiler | `game/core/profiling.py` | Core |
-| ComponentCacheManager | `game/simulation/components/component_loader.py` | Simulation |
-| PolicyManager | `game/ai/policy_manager.py` | AI |
-| AssetManager | `game/assets/asset_manager.py` | Assets |
-| SpriteManager | `game/ui/renderer/sprites.py` | UI |
-| ShipThemeManager | `game/ui/assets/ship_theme_manager.py` | UI |
-| GameSettings | `game/ui/services/game_settings.py` | UI |
-| LLMProvider | `game/services/llm/provider.py` | Services |
-| ImageProvider | `game/ui/services/image/provider.py` | UI |
-
-### How Services Are Accessed
-
-Each service has a module-level `get_default_xxx()` / `set_default_xxx()` accessor pair.
-`ApplicationContext.create_production()` creates all instances and sets all module-level
-references, ensuring `get_default_xxx()` returns the same instance as `ctx.xxx`.
-
-```python
-# Production code — via ApplicationContext (preferred)
-ctx = ApplicationContext.create_production()
-ctx.profiler.start()
-
-# Production code — via module-level accessor (for decorators, convenience functions)
-from game.core.profiling import get_default_profiler
-profiler = get_default_profiler()
-
-# Test code — fresh isolated instances
-ctx = ApplicationContext.create_test(profiler=mock_profiler)
-```
-
-### Bootstrap Phase Timing (FEAT-22)
-
-`game/app_bootstrap.py:bootstrap()` instruments 14 named sub-phases via a
-private `_timed_phase(name, profiler)` context manager. Each sub-phase
-emits one `[startup] <subphase>: X.XXs` line via `logger.info` and appends
-an entry named `"startup: <subphase>"` to `ctx.profiler.records`. The
-fixed `[startup]` log prefix is greppable and the `"startup: "` record
-prefix is greppable in the persisted `profiling_history.json` session.
-
-Two phases (`pygame.init` and `ctx.create_production`) run before the
-profiler exists; they are timed with raw `time.perf_counter()` and
-back-filled into the profiler immediately after `create_production()`.
-
-`bootstrap()` calls `ctx.profiler.save_history()` eagerly before returning
-so launch diagnostics survive in-game crashes; the existing post-`run()`
-flush in `app.py` continues to append a second session per launch.
-
-### Removed: SingletonMeta
-
-`SingletonMeta` and `game/core/singleton.py` were removed by PROJ-297. No
-current production service uses `.instance()` / `.reset()` singleton access;
-new service wiring goes through `ApplicationContext`, constructor injection,
-or the documented module-level `get_default_*` / `set_default_*` accessor pair.
-
----
+Use for composition roots and tests. Do not turn service classes into singletons.
 
 ## 2. Protocol + TypeGuard
 
-### Where
+Where: `game/core/protocols/`, including `boundary.py`, `combat.py`, `common.py`, `persistence.py`, `registry.py`, `strategy_domain.py`, `strategy_entities.py`, `strategy_mutators.py`, `ui.py`.
 
-`game/core/protocols.py` -- all protocol definitions and TypeGuard functions.
+Contract:
+- Define cross-layer interfaces as `@runtime_checkable Protocol`.
+- Pair runtime checks with minimal duck-typed `TypeGuard` helpers, not strict `isinstance` checks that require full protocol compliance.
+- Use protocols at layer boundaries and for polymorphic entity handling.
+- Package `__init__.py` re-exports symbols, so `from game.core.protocols import IFleet` remains valid.
 
-### How It Works
+Read/write protocol pair:
+- Read protocols answer state questions: `IFleet`, `IPlanet`, `IStarSystem`, `IEmpire`, `IStorm`, `IAbilitySource`, `IWarpPoint`, `IZoneOccupant`, `IShipInstance`, `IFacility`.
+- Mutator protocols answer who may change state: `IFleetMutator`, `IPlanetMutator`, `IEmpireMutator`, `IShipInstanceMutator` in `strategy_mutators.py`.
+- Engines receive mutators by constructor injection via `GameSession.__init__` and `TurnEngineConfig.create_default()`.
+- AST guard: `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` prevents unauthorized direct mutation of guarded data attributes.
 
-The codebase uses `@runtime_checkable` Protocol classes to define structural interfaces,
-paired with TypeGuard functions that use duck typing (hasattr checks) for safe narrowing.
+Use mutator protocols when a data class is mutated from more than two outside files. Do not add mutator twins for frozen value objects, single-writer state, or construction-only fields.
 
-```python
-# game/core/protocols.py (actual code)
-@runtime_checkable
-class IFleet(Protocol):
-    @property
-    def ships(self) -> List[Any]: ...
-    @property
-    def orders(self) -> List[Any]: ...
-    @property
-    def location(self) -> Any: ...
-    @property
-    def owner_id(self) -> int: ...
-    # ... more properties
+## 3. Registry DI
 
-def _has_attrs(obj: Any, *attrs: str) -> bool:
-    return all(hasattr(obj, attr) for attr in attrs)
+Where: `game/core/registry.py`, `game/core/protocols/registry.py`.
 
-def is_fleet(obj: Any) -> TypeGuard[IFleet]:
-    """Check minimal distinguishing attributes."""
-    return _has_attrs(obj, 'ships', 'orders')
-```
+Contract:
+- Preferred access is constructor injection of `IRegistryProvider`.
+- Leaf factory access may use `get_default_registry_provider()` outside simulation.
+- Direct `ctx.registry_manager` use belongs at composition roots.
+- `DefaultRegistryProvider` delegates to the module default `RegistryManager`; `TestRegistryProvider` holds isolated dicts.
+- `Ship(..., *, registries: GameRegistries)` requires explicit registries and raises on `None`.
+- `GameRegistries.__post_init__()` fills an empty `ResourceCatalog` only as a convenience; production should pass the real catalog.
+- `ShipStatsCalculator.calculate()` needs a `resource_catalog` or explicit planetary IDs; `calculate_ability_totals()` does not.
+- In UI code, use `get_default_registry_provider()` when needed. Do not try to access registries through `scene.facade`; the facade does not expose them.
 
-**Why duck typing?** `isinstance()` with `@runtime_checkable` requires full protocol
-compliance, which breaks with test mocks. Duck typing checks only the minimal
-distinguishing attributes.
+Facility ability checks:
+- Facility designs store component IDs, not inline abilities.
+- Resolve abilities through the component registry plus `game.strategy.services.component_inspector.get_component_abilities`.
+- Reuse `_facility_has_ability(...)` in `game/strategy/validation/planet_order_validator.py` when applicable.
 
-Protocol families (representative subset — see `game/core/protocols.py` for the full list of 23+ protocols):
-
-| Protocol | Distinguishing Attrs | Layer |
-|----------|---------------------|-------|
-| `IFleet` | `ships`, `orders` | Strategy |
-| `IPlanet` | `planet_type` | Strategy |
-| `IStarSystem` | `stars`, `planets`, `warp_points` | Strategy |
-| `ICombatShip` | `team_id`, `hp`, `is_derelict` | Simulation |
-| `IRegistryProvider` | `get_components`, `get_modifiers` | Core |
-| `IPostBattleShip` | `hp`, `max_hp`, `is_alive` | Cross-layer boundary |
-| `IScene` | `handle_event`, `update`, `draw` | UI |
-
-### When to Use
-
-- Cross-layer boundaries where you cannot import the concrete class.
-- Polymorphic code that handles multiple entity types (e.g., rendering fleets vs planets).
-- Always pair a Protocol with a TypeGuard function for runtime checks.
-
----
-
-## 3. Dependency Injection (Registry)
-
-### Where
-
-`game/core/registry.py` -- `IRegistryProvider` (protocol in `protocols.py`),
-`DefaultRegistryProvider`, `TestRegistryProvider`, `get_default_registry_provider()`.
-
-### How It Works
-
-Three access modes, from most to least preferred:
-
-**1. Constructor injection (best):**
-```python
-def __init__(self, registry: IRegistryProvider):
-    self._registry = registry
-    components = registry.get_components()
-```
-
-**2. Factory function (acceptable for leaf code):**
-```python
-from game.core.registry import get_default_registry_provider
-provider = get_default_registry_provider()
-```
-
-**3. Direct access (composition roots only):**
-```python
-mgr = ctx.registry_manager  # Via ApplicationContext
-mgr.hydrate(components_data, modifiers_data, vehicle_classes_data)
-```
-
-**Production path:** `DefaultRegistryProvider` delegates to module-level RegistryManager:
-
-```python
-# game/core/registry.py (actual code)
-class DefaultRegistryProvider:
-    def get_components(self) -> Dict[str, Any]:
-        return get_default_registry_manager().components
-```
-
-**Test path:** `TestRegistryProvider` holds isolated data:
-
-```python
-# game/core/registry.py (actual code)
-class TestRegistryProvider:
-    def __init__(self, components=None, modifiers=None, ...):
-        self._components = components if components is not None else {}
-    def get_components(self) -> Dict[str, Any]:
-        return self._components
-```
-
-**Ship class requires registries (strict DI):**
-```python
-# game/simulation/entities/ship.py (actual code)
-class Ship(PhysicsBody, ShipPhysicsMixin):
-    def __init__(self, name, x, y, color, team_id=0, ship_class="Escort",
-                 theme_id="Federation", *, registries: GameRegistries):
-        if registries is None:
-            raise ValidationException("registries is required ...")
-```
-
-**GameRegistries defaults `resource_catalog`:**
-
-`GameRegistries.__post_init__()` automatically provides an empty `ResourceCatalog` when
-`resource_catalog=None`. This means callers that don't need resource data (tests, validators)
-can omit it without crashing. Production code should always pass the real catalog explicitly:
-
-```python
-registries = GameRegistries(
-    components=provider.get_components(),
-    modifiers=provider.get_modifiers(),
-    vehicle_classes=provider.get_vehicle_classes(),
-    resources=provider.get_resources(),
-    resource_catalog=provider.get_resource_catalog(),  # explicit in production
-)
-```
-
-**ShipStatsCalculator requires `resource_catalog` for `calculate()`:**
-
-`ShipStatsCalculator` uses lazy resolution — it accepts `resource_catalog` at construction
-and resolves planetary resource IDs on first `calculate()` call. Omitting both
-`resource_catalog` and `planetary_resource_ids` raises `TypeError` at `calculate()` time.
-The `calculate_ability_totals()` method does not require a catalog.
-
-```python
-# game/simulation/entities/ship_stats.py
-calculator = ShipStatsCalculator(
-    registries.vehicle_classes,
-    resource_catalog=registries.resource_catalog,
-)
-calculator.calculate(ship)
-```
-
-### Simulation Code Must NOT Use Global Lookup (PROJ-252)
-
-`get_default_registry_provider()` must **never** be called from `game/simulation/` code.
-Ship already holds `_registries` (`GameRegistries`, which implements `IRegistryProvider`).
-Simulation delegates (ShipComponentManager, ShipValidatorHelper) must use
-`self._ship._registries` instead of calling the global factory function.
-
-### When to Use
-
-- All services and domain objects that need component/modifier/vehicle-class data.
-- Tests: use `TestRegistryProvider` for isolation; never depend on global service state.
-
-### Critical: Registry Lookup for Facility Ability Checks (PROJ-237/238)
-
-**When checking if a facility/complex has a specific ability, you MUST use registry lookup.**
-
-Facility `design_data` stores components as ID references (`{"id": "generator", "modifiers": [...]}`), **not** with inline abilities. The abilities are defined in `data/components.json` and accessed via the component registry. Checking `comp.get('abilities', {})` directly will silently return empty and miss the ability.
-
-**Correct pattern:**
-```python
-from game.strategy.services.component_inspector import get_component_abilities
-from game.core.registry import get_default_registry_provider
-
-provider = get_default_registry_provider()
-comp_registry = provider.get_components()
-
-# For each component in facility.design_data:
-comp_id = comp.get('id')
-comp_def = comp_registry.get(comp_id)
-abilities = get_component_abilities(comp_def)
-if 'PlanetaryShield' in abilities:
-    # Found it
-```
-
-**Anti-pattern (WILL FAIL on loaded designs):**
-```python
-# WRONG: Only checks inline abilities — these don't exist in loaded designs
-if 'PlanetaryShield' in comp.get('abilities', {}):
-    pass  # Never reaches here for registry-defined abilities
-```
-
-**Helper:** Use `_facility_has_ability(facility, ability_name, component_registry)` from `game/strategy/validation/planet_order_validator.py` — it handles both inline and registry lookup.
-
-**In UI code:** Use `get_default_registry_provider()` (factory function pattern #2 above) to get the registry. Do NOT try to access registries via `scene.facade` — the facade does not expose registries.
-
-### Critical: Unified Stat Calculation (Single Source of Truth)
-
-**All ship/design stat calculations MUST go through the simulation `Ship` object.**
-
-The canonical path is `calculate_design_stats()` in `game/simulation/entities/ship_design_stats.py`, which calls `Ship.from_dict()` + `recalculate_stats()`. This is the ONLY code path for computing stats from design JSON.
-
-**DO NOT:**
-- Write new stat calculation code that iterates components and sums abilities manually
-- Compute mass, HP, crew, resource storage, or movement by reading component definitions directly
-- Create "lightweight" stat calculators that skip Ship instantiation
-- Duplicate formula evaluation logic from `ShipStatsCalculator`
-
-**DO:**
-- Use `calculate_design_stats(design_data, registries)` for design JSON → stats dict
-- Use `ship_instance.get_calculated_stats()` for ShipInstance → stats dict (delegates to above)
-- Use `component_inspector.has_warp_capability(ship)` for warp capability checks
-- Use `component_inspector.get_ability_list(abilities, name)` for ability data normalization
-
-**Why:** The project previously had two parallel stat calculators (simulation and strategy) that diverged, producing different mass/HP values for the same design. The strategy calculator is now deprecated. One code path prevents future drift.
-
-```python
-# Correct: use the canonical function
-from game.simulation.entities.ship_design_stats import calculate_design_stats
-stats = calculate_design_stats(design_data, registries)
-
-# Correct: use ShipInstance's cached wrapper
-stats = ship_instance.get_calculated_stats()
-
-# WRONG: manual component iteration for stat calculation
-total_mass = 0
-for comp in iter_components(design_data):
-    total_mass += comp_registry[comp['id']].mass  # DO NOT DO THIS
-```
-
----
+Unified stat calculation:
+- Ship/design stat calculations go through the simulation `Ship` object and `calculate_design_stats()` in `game/simulation/entities/ship_design_stats.py`.
+- `ShipInstance.get_calculated_stats()` is the cached strategy wrapper.
+- Do not duplicate formulas in UI or strategy, and do not manually iterate components to compute mass/HP.
 
 ## 4. Registry Pattern
 
-### Where
+Where: `game/core/registry.py`, `game/core/resources.py`, ability registries, command registries, weapon/stat contributor registries.
 
-- `game/core/registry.py` -- `RegistryManager`, `GameRegistries`
-- Data files: `data/components.json`, `data/modifiers.json`, `data/vehicleclasses.json`, `data/resources.json`
-- `game/core/resources.py` -- `ResourceCatalog`, `ResourceDefinition`
-
-### How It Works
-
-`RegistryManager` (managed by ApplicationContext) holds four dictionaries: `components`, `modifiers`,
-`vehicle_classes`, and `resources`. `GameRegistries` is an immutable (`@dataclass(frozen=True)`)
-container that bundles these together for DI. It also holds an optional `ResourceCatalog`
-which provides typed, immutable access to all resource definitions (both planetary materials
-and operational consumables).
-
-```python
-# game/core/registry.py (actual code)
-@dataclass(frozen=True)
-class GameRegistries:
-    components: Dict[str, Any]
-    modifiers: Dict[str, Any]
-    vehicle_classes: Dict[str, Any]
-    resources: Dict[str, Any]
-    resource_catalog: Optional[ResourceCatalog] = None
-
-    # Also implements IRegistryProvider interface
-    def get_components(self) -> Dict[str, Any]:
-        return self.components
-```
-
-Lifecycle:
-1. **Load:** Game startup loads JSON files into `RegistryManager` dictionaries.
-2. **Freeze:** `freeze_registry()` prevents accidental mutations during gameplay.
-3. **Access:** Consumer code receives `IRegistryProvider` or `GameRegistries` via DI.
-4. **Test reset:** `RegistryManager.reset()` destroys the instance; `.clear()` empties data.
-
-### When to Use
-
-- Looking up component definitions, modifier specs, or vehicle class data.
-
----
+Contract:
+- `RegistryManager` holds `components`, `modifiers`, `vehicle_classes`, and `resources` loaded from `data/components.json`, `data/modifiers.json`, `data/vehicleclasses.json`, and `data/resources.json`.
+- `GameRegistries` is a frozen DI container and also implements `IRegistryProvider`.
+- `ResourceCatalog` / `ResourceDefinition` provide typed, immutable access to planetary materials and operational consumables.
+- Lifecycle: load JSON, freeze registry for gameplay, inject provider/container, reset or clear for tests.
+- Registries should expose explicit register/reset/lookup behavior and deterministic test reset where mutable.
+- Use registries when adding a new type should require one registration, not edits to many dispatch sites.
+- Avoid hardcoded lists of ability names, component types, or class names.
 
 ## 5. Facade / Delegate
 
-### Where
+Where: `game/strategy/facade/strategy_session_facade.py`, `game/simulation/entities/ship*.py`, `game/simulation/components/*_manager.py`, strategy data facades for `Galaxy`, `Planet`, and `Star`.
 
-- **Facade:** `game/strategy/facade/strategy_session_facade.py` -- `StrategySessionFacade`
-- **Delegate:** `game/simulation/entities/ship.py` -- Ship delegates combat to `ShipCombatEngine`
+Contract:
+- A facade exposes a stable narrow API and hides orchestration.
+- A delegate owns one cohesive responsibility and is easier to test directly.
+- `StrategySessionFacade` wraps `GameSession`; UI never touches `GameSession` directly.
+- Ship delegates component lifecycle to `ShipComponentManager`, combat orchestration to `ShipCombatManager`, and the combat sub-delegate to `ShipCombatEngine`.
+- Fleet delegates: `FleetCapabilityCalculator`, `FleetConsumableAggregator`, `FleetBattleAdapter`.
+- ShipInstance delegates: `ShipInstanceBridge`, `ShipInstanceSerializer`, `ShipConsumableManager`, `ShipCargoManager`, `ShipDisplayFormatter`.
+- Component delegates: `ComponentHealthManager`, `ComponentResourceManager`, `ModifierManager`, `AbilityManager`. `ComponentStatsCalculator` remains a static namespace.
 
-### How It Works
+Strategy data facade contract:
+- `Galaxy` is a pure facade over `GalaxyState` plus services for entity registry, spatial index, warp generation, system generation, pathfinding, and intercept calculation.
+- Read protocols in `game/strategy/data/galaxy_protocols.py`: `IGalaxySystemGraph`, `IGalaxySpatialQuery`, `IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder`.
+- AST guard: `tests/unit/strategy/data/test_no_method_body_over_5_loc.py` keeps `Galaxy` / `Planet` / `Star` methods thin, with lifecycle/serde allowlists.
 
-**StrategySessionFacade** wraps `GameSession` to provide the UI a clean interface.
-The UI never touches `GameSession` directly.
+Use when a class has multiple independent reasons to change. Keep facade methods delegating; put real logic in services/delegates.
 
-```python
-# game/strategy/facade/strategy_session_facade.py (actual code)
-class StrategySessionFacade:
-    def __init__(self, session: 'GameSession') -> None:
-        self._session = session
+## 6. CQRS-lite Strategy Session
 
-    # COMMANDS (Write Path)
-    def handle_command(self, command: 'Command') -> ValidationResult:
-        return self._session.handle_command(command)
+Where: `game/strategy/facade/`, DTOs under `game/strategy/facade/dto/`, commands under `game/strategy/engine/commands.py`.
 
-    # QUERIES (Read Path) - return DTOs, never domain objects
-    def get_fleet(self, fleet_id: int) -> Optional[FleetInfo]:
-        fleet = self._get_fleet_by_id(fleet_id)
-        if fleet is None:
-            return None
-        return FleetInfo.from_fleet(fleet)
-```
+Contract:
+- Writes go through command DTOs and command handlers, usually via `facade.handle_command(...)` or generated `dispatch_*` helpers.
+- Reads return frozen/read-only DTOs such as `FleetInfo`, `SystemInfo`, `PlanetInfo`, `EmpireInfo`, `TaskForceInfo`, `SquadronInfo`, and `ShipInfoExtended`.
+- DTOs include display-safe summaries such as `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`, and `staging_yard_summary` where needed.
+- UI must not hold mutable strategy domain objects as its write surface.
 
-**Ship -> ShipComponentManager delegation:** Ship lazily creates a
-`ShipComponentManager` and delegates all component lifecycle operations
-(add, remove, bulk add, cache, iteration, layer queries) to it.
-
-**Ship -> ShipCombatManager delegation:** Ship lazily creates a
-`ShipCombatManager` and delegates combat orchestration (update loop, derelict
-status, death, firing state) to it. The combat manager also owns the
-`ShipCombatEngine` as a sub-delegate.
-
-**Ship -> ShipCombatEngine delegation:** Ship's `combat_engine` property
-delegates through `ShipCombatManager` which lazily creates a `ShipCombatEngine`.
-
-```python
-# game/simulation/entities/ship.py (actual code)
-class Ship(PhysicsBody, ShipPhysicsMixin):
-
-    @property
-    def combat_engine(self):
-        return self.combat_manager.combat_engine
-```
-
-**Fleet delegates:** Fleet also uses the delegate pattern to decompose responsibilities:
-- `FleetCapabilityCalculator` -- computes fleet-level capabilities from ship components
-- `FleetConsumableAggregator` -- aggregates resource totals across all ships in a fleet
-- `FleetBattleAdapter` -- adapts fleet data for the combat simulation layer
-
-**ShipInstance delegates:** ShipInstance uses delegation to separate concerns:
-- `ShipInstanceBridge` -- conversion between strategy ShipInstance and simulation Ship (`to_ship`, `update_from_ship`)
-- `ShipInstanceSerializer` -- serialization/deserialization (`to_dict`, `from_dict`, `clone`)
-- `ShipConsumableManager` -- consumable tracking (fuel, energy, ammo)
-- `ShipCargoManager` -- cargo loading/unloading
-- `ShipDisplayFormatter` -- display string formatting
-
-**Component delegates (PROJ-241):** Component uses 4 delegates with a consistent pattern:
-- `ComponentHealthManager` -- HP tracking, damage processing, status updates
-- `ComponentResourceManager` -- resource activation costs (check, consume, try_activate)
-- `ModifierManager` -- modifier state ownership, add/remove/query, effects aggregation
-- `AbilityManager` -- ability instances + MRO index, instantiation, querying, tag-based lookups
-
-All 4 delegates follow the same pattern:
-```python
-# game/simulation/components/modifier_manager.py (actual code)
-class ModifierManager:
-    __slots__ = ('_component', '_modifiers')
-
-    def __init__(self, component: 'Component'):
-        self._component = component
-        self._modifiers: list = []
-        self._load_initial_modifiers()
-```
-
-Component provides facade properties for backward compatibility:
-```python
-# game/simulation/components/component.py (actual code)
-@property
-def modifiers(self):
-    """Facade: access modifier list through delegate."""
-    return self.modifier_manager.modifiers
-
-@property
-def ability_instances(self):
-    """Facade: access ability instances through delegate."""
-    return self._ability_mgr.ability_instances
-```
-
-Note: `ComponentStatsCalculator` remains a static namespace (no state to own).
-
-### When to Use
-
-- **Facade:** Layer boundary needs a simplified, controlled API (UI to engine).
-- **Delegate:** Class would become a god class. Extract behavior; original keeps public API.
-
----
-
-## 6. CQRS-lite (Strategy Session)
-
-### Where
-
-- Facade: `game/strategy/facade/strategy_session_facade.py`
-- DTOs: `game/strategy/facade/dto/` (fleet_dto.py, system_dto.py, planet_dto.py, empire_dto.py)
-- Commands: `game/strategy/engine/commands.py`
-
-### How It Works
-
-The strategy layer separates reads and writes:
-
-- **Commands (writes):** All state mutations go through `handle_command(Command)`.
-  Commands are plain data objects dispatched to handlers.
-- **Queries (reads):** Return frozen `@dataclass` DTOs, never live domain objects.
-
-```python
-# Write path -- UI sends a command
-from game.strategy.engine.commands import IssueMoveCommand
-result = facade.handle_command(IssueMoveCommand(fleet_id=42, target_hex=hex))
-
-# Read path -- UI queries for display data
-fleet_info: FleetInfo = facade.get_fleet(42)  # Returns frozen DTO
-```
-
-DTO example:
-
-```python
-# game/strategy/facade/dto/fleet_dto.py (actual code)
-@dataclass(frozen=True)
-class FleetOrderInfo:
-    order_type: str
-    target_description: str
-    target_hex: Optional[HexCoord] = None
-    target_id: Optional[int] = None
-
-@dataclass(frozen=True)
-class ShipInfo:
-    instance_id: str
-    name: str
-    design_id: str
-    ship_class: str
-```
-
-### When to Use
-
-- All UI-to-strategy-engine communication must go through the facade.
-- Never expose mutable domain objects to the UI layer.
-- Commands should be validated and return `ValidationResult`.
-
----
+Use for UI-to-strategy communication and any new operation that mutates strategy state.
 
 ## 7. CommandHandlerRegistry
 
-### Where
+> **Last verified:** 2026-05-08
 
-`game/strategy/engine/command_handlers.py` -- `CommandHandlerRegistry`, `ICommandHandler`,
-`BaseCommandHandler`, and all concrete handlers.
+Where:
+- Canonical `BaseCommandHandler` + `CommandHandlerRegistry`:
+  `game/strategy/engine/handlers/base.py`. The legacy
+  `game/strategy/engine/command_handlers.py` re-export shim was removed
+  (PROJ-383); all imports must target `handlers/base.py` directly.
+- Self-registering command metadata: `game/strategy/engine/commands/registry.py`.
+- UI command handlers: `game/strategy/engine/handlers/`.
+- Order action handlers: `game/strategy/engine/order_handlers/`.
+- Facade command forwarding: `game/strategy/facade/slices/command_dispatch_slice.py`.
 
-### How It Works
+Contract:
+- Runtime `CommandHandlerRegistry` is `Dict[str, ICommandHandler]` keyed by command class name (e.g. `'IssueColonizeCommand'`); unknown keys return `ValidationResult.error("Unknown command type: ...")`.
+- `ICommandHandler` is a `@runtime_checkable` Protocol with one method: `execute(session, command) -> ValidationResult`.
+- `BaseCommandHandler` holds shared entity-resolution helpers like `_resolve_fleet(session, fleet_id) -> (fleet, error)`.
+- `CommandRegistry` stores one `CommandSpec` per command DTO: handler class, `OrderType`, category, execution model, facade helper name, serializer codec.
+- `@command_spec(...)` is metadata-only: it attaches `__command_spec_kwargs__` to the handler class and returns it unchanged. It does NOT call `command_registry.register(...)` at import. Each command module exposes `register(registry)`, and `seed_default_commands(command_registry)` performs registration. Decorator-side registration would break `reset_command_registry()` because Python caches `sys.modules`, so already-imported decorators do not re-fire on a clear+seed cycle.
+- `StrategySessionFacade._install_dispatch_forwarders` auto-installs one bound `dispatch_<facade_helper_name>` method per spec so `hasattr(class, name)` and `inspect.getmembers` stay honest. The dispatch slice's `__getattr__` resolves from `command_registry.specs_by_facade_helper()`.
+- AST guard: `tests/unit/strategy/engine/test_no_specs_tuple_literal.py` forbids reintroducing a module-level `COMMAND_SPECS = (...)` tuple literal anywhere under `game/`.
 
-Registry-based dispatch replaces a giant switch/if-else in `GameSession`.
+Parallel order registry:
+- `engine/handlers/`: UI `Command` DTO -> `ValidationResult` and queued `Order` (write side, when player issues a command).
+- `engine/order_handlers/`: live `Order` whose action progress hits `action_time` (or instant tick for `JOIN_FLEET`) -> `OrderExecutionResult` and state mutation on Fleet/Planet/Empire.
+- `IOrderHandler.execute_action_order(fleet, empire, galaxy, ...)` is the protocol; key is the `OrderType` enum value (e.g. `OrderType.COLONIZE`).
+- Factory: `create_default_order_handler_registry(*, event_bus, superweapon_processor=None)`.
+- Adding a new order type means add an `IOrderHandler` under `game/strategy/engine/order_handlers/` and register it in `registry_factory.py`.
+- Static guards keep `OrderProcessor` LOC under 200, forbid `if order.type == ...` ladders, and require every `OrderType` to have a registered handler.
 
-```python
-# game/strategy/engine/command_handlers.py (actual code)
-@runtime_checkable
-class ICommandHandler(Protocol):
-    def execute(self, session: 'GameSession', command: 'Command') -> ValidationResult: ...
+## 8. MVVM
 
-class CommandHandlerRegistry:
-    def __init__(self):
-        self._handlers: Dict[str, ICommandHandler] = {}
+Where: `game/ui/screens/workshop_*`, `game/ui/screens/build_queue_*`, `game/ui/screens/test_lab/`, `game/ui/screens/battle_setup/`.
 
-    def register(self, command_name: str, handler: ICommandHandler) -> None:
-        self._handlers[command_name] = handler
+Contract:
+- ViewModel owns state, derived view data, and events without Pygame dependencies.
+- Controller owns facade queries and command emission.
+- Renderer/UI builder owns pygame_gui element construction and updates.
+- Event router dispatches UI events to the right controller/render path.
+- Screen classes compose collaborators and should stay thin.
 
-    def dispatch(self, command_name: str, session, command) -> ValidationResult:
-        handler = self._handlers.get(command_name)
-        if handler is None:
-            return ValidationResult.error(f"Unknown command type: {command_name}")
-        return handler.execute(session, command)
-```
+Build Queue collaborators (canonical multi-collaborator example):
+- `BuildQueueController` (`game/ui/panels/build_queue_controller.py`) — business logic.
+- `BuildQueueRenderer` (`game/ui/screens/build_queue_renderer.py`) — view management.
+- `BuildQueuePanelFactory` (`game/ui/screens/build_queue_panel_factory.py`) — construction.
+- `BuildQueueDragHandler` (`game/ui/panels/build_queue_drag_handler.py`) — drag input.
 
-Handlers extend `BaseCommandHandler` for common resolution helpers:
+Workshop contracts:
+- `WorkshopViewModel` delegates ship operations to `VehicleDesignService`, not `ShipBuilderService`.
+- Ship mutations must go through the ViewModel (`remove_component`, `quick_add_component`, movement methods), never directly on the `Ship` object.
+- `quick_add_component` layer resolution: use selected layer if valid; if invalid, find nearest valid layer and prefer inner on ties; if no selection, use innermost valid layer; HULL is never a quick-add target.
+- Component movement uses remove + re-add of the same instance, preserving modifiers and state.
+- `on_modifier_changed()` syncs multi-selection, recalculates ship stats, and emits events.
+- Stats panel visibility is data-driven via `data/stats_sections.json` and `stats_config.py::resolve_section_visibility()`.
 
-```python
-class ColonizeCommandHandler(BaseCommandHandler):
-    def execute(self, session, cmd) -> ValidationResult:
-        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
-        if error:
-            return error
-        # ... validation and application
-```
+Use for complex screens. Put new mutation logic in controllers, derived state in view-models, and widget construction in renderers/builders.
 
-Factory creates the default registry with all handlers:
+## 9. Template Method Validation
 
-```python
-def create_default_registry() -> CommandHandlerRegistry:
-    registry = CommandHandlerRegistry()
-    registry.register('IssueColonizeCommand', ColonizeCommandHandler())
-    registry.register('IssueMoveCommand', MoveCommandHandler())
-    # ... 20+ handlers registered
-    return registry
-```
+Where: `game/simulation/validation/base.py` and validation modules.
 
-### When to Use
+Contract:
+- Shared validation skeleton handles setup, result aggregation, and error shape.
+- `ValidationRule.validate(...)` checks `_should_validate(...)` before calling `_do_validate(...)`.
+- `DesignValidationRule` always runs; `AdditionValidationRule` runs for component/layer additions.
+- Validation should return structured `ValidationResult` or raise specific exceptions according to the calling contract.
 
-- Adding a new strategy command: create a handler class, register it in `create_default_registry()`.
-- Each handler follows: resolve entities, validate, apply, return `ValidationResult`.
-
----
-
-## 8. MVVM (Workshop & Build Queue)
-
-### Where
-
-- **Design Workshop:**
-    - ViewModel: `game/ui/screens/workshop_viewmodel.py` -- `WorkshopViewModel`
-    - EventBus: `game/ui/screens/builder/event_bus.py` -- `EventBus`
-- **Build Queue Screen:**
-    - Controller (Business Logic): `game/ui/panels/build_queue_controller.py` -- `BuildQueueController`
-    - Renderer (View Management): `game/ui/screens/build_queue_renderer.py` -- `BuildQueueRenderer`
-    - Panel Factory: `game/ui/screens/build_queue_panel_factory.py` -- `BuildQueuePanelFactory`
-    - Drag Handler: `game/ui/panels/build_queue_drag_handler.py` -- `BuildQueueDragHandler`
-
-### How It Works
-
-The Design Workshop uses Model-View-ViewModel. The ViewModel holds all state, emits
-events on changes, and delegates operations to `VehicleDesignService`.
-
-```python
-# game/ui/screens/workshop_viewmodel.py (actual code)
-class WorkshopViewModel:
-    def __init__(self, event_bus, screen_width, screen_height, *, context=None):
-        self.event_bus = event_bus
-        self._ship_service = VehicleDesignService(...)  # NOT ShipBuilderService
-        self._ship: Optional[Ship] = None
-        self._selected_components: List[Tuple[LayerType, int, Component]] = []
-        self._dragged_item: Optional[Component] = None
-```
-
-Data flow:
-```
-View (panels) --[user action]--> ViewModel --[delegates]--> VehicleDesignService
-                                     |
-                                     v
-                              EventBus.emit(SHIP_UPDATED)
-                                     |
-                                     v
-                          View (panels) refresh via subscription
-```
-
-### ViewModel Operations
-
-Beyond basic CRUD (add/remove/change class), the ViewModel provides higher-level
-operations that compose service calls with layer resolution logic:
-
-| Method | Purpose |
-|--------|---------|
-| `quick_add_component(component_id, selected_layer?, count?)` | Add via "+" button — auto-resolves target layer |
-| `resolve_target_layer(component, selected_layer?)` | Pure logic: find best layer for a component |
-| `move_component(source_layer, index, target_layer)` | Move a single component between layers |
-| `move_component_group(group_key, source_layer, target_layer)` | Move all components in a group between layers |
-| `resolve_move_target(component, source_layer, direction)` | Find next valid layer in up/down direction |
-| `on_modifier_changed()` | Called after any modifier change — syncs multi-selection, recalculates ship stats |
-
-**Quick-add layer resolution** (used by component palette "+" button):
-1. If `selected_layer` is valid for the component → use it
-2. If `selected_layer` is invalid → find nearest valid layer (prefer inner on ties)
-3. If no selection → use innermost valid layer
-4. HULL is never a quick-add target
-
-**Component movement** between layers uses remove + re-add of the same instance,
-preserving modifiers and state. The ViewModel resolves the target layer direction
-(up = toward inner, down = toward outer), skipping layers that reject the component.
-
-**Stats panel visibility** is data-driven via `data/stats_sections.json`:
-- Each section declares visibility rules (`"always"`, `ability_present`, or `dynamic`)
-- `always_visible` block per vehicle type overrides ability checks (e.g., Ships always show maneuvering)
-- `resolve_section_visibility()` in `stats_config.py` resolves which sections to display
-- Section headers are collapsible (click to toggle)
-
-### When to Use
-
-- Complex UI screens with multiple panels sharing state.
-- The ViewModel is the single source of truth; views are stateless renderers.
-- Always use `VehicleDesignService` (not `ShipBuilderService`) for ship operations.
-- **Ship mutations must go through the ViewModel** (e.g., `viewmodel.remove_component()`), never directly on the Ship object. The ViewModel delegates to `VehicleDesignService` which provides validation and result handling, then emits the appropriate events.
-
----
-
-## 9. Template Method (Validation)
-
-### Where
-
-`game/simulation/validation/base.py` -- `ValidationRule`, `DesignValidationRule`, `AdditionValidationRule`
-
-### How It Works
-
-`ValidationRule` defines the algorithm skeleton. Subclasses override `_do_validate()`
-for specific logic and optionally `_should_validate()` to control when the rule runs.
-
-```python
-# game/simulation/validation/base.py (actual code)
-class ValidationRule(ABC):
-    def validate(self, ship, component=None, layer_type=None) -> ValidationResult:
-        if not self._should_validate(component, layer_type):
-            return ValidationResult.success()
-        return self._do_validate(ship, component, layer_type)
-
-    def _should_validate(self, component, layer_type) -> bool:
-        return component is not None and layer_type is not None
-
-    @abstractmethod
-    def _do_validate(self, ship, component, layer_type) -> ValidationResult:
-        pass
-
-class DesignValidationRule(ValidationRule):
-    """Always runs -- validates the ship design as a whole."""
-    def _should_validate(self, component, layer_type) -> bool:
-        return True
-
-class AdditionValidationRule(ValidationRule):
-    """Only runs when adding a component (default guard)."""
-    pass
-```
-
-### When to Use
-
-- Adding a new validation rule: extend `DesignValidationRule` or `AdditionValidationRule`.
-- Override `_should_validate()` for custom guard logic (e.g., only for unique components).
-- Implement `_do_validate()` with your rule; return `ValidationResult.success()` or `.error(msg)`.
-
----
+Use when multiple validators share setup, aggregation, and reporting behavior.
 
 ## 10. Event Bus
 
-### Where
+Where: `game/ui/screens/builder/event_bus.py`, `game/ui/screens/builder_utils.py::BuilderEvents`, `game/core/event_logging.py`.
 
-- Implementation: `game/ui/screens/builder/event_bus.py` -- `EventBus`
-- Event constants: `game/ui/screens/builder_utils.py` -- `BuilderEvents`
+Workshop event bus contract:
+- Simple pub/sub with string event constants.
+- `subscribe(event_type, callback)` validates the callback is callable.
+- `emit(event_type, data=None)` passes exactly one `data` argument.
+- `emit()` makes a defensive copy of handlers and isolates callback errors by logging.
+- Use `BuilderEvents` constants such as `SHIP_UPDATED`, `SELECTION_CHANGED`, `REGISTRY_RELOADED`, `TEMPLATE_MODIFIERS_CHANGED`, `DRAG_STATE_CHANGED`, `HULL_LAYER_VISIBILITY_CHANGED`; do not use raw strings.
+- Scoped to Workshop UI; not a general-purpose game event system.
 
-### How It Works
+Strategy/core event logging:
+- `game/core/event_logging.py::EventBus` is separate structured event logging for simulation/strategy events.
+- Each `GameSession` creates its own event bus to avoid process-global mutable state.
+- Constructor injection is the only supported pattern: every event-emitting engine, handler, or data class takes an `event_bus: EventBus` parameter (or, for projectiles, an `event_logger=` callable that closes over a session-scoped bus). PROJ-390 retired the module-level `log_event()` / `set_event_handler()` / `get_event_handler()` compatibility shim — there is no fallback path.
 
-Simple pub/sub with string event types, defensive copy during emit, and error isolation.
+## 11. Surface Caching
 
-```python
-# game/ui/screens/builder/event_bus.py (actual code)
-class EventBus:
-    def __init__(self):
-        self._subscribers = {}
+Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`.
 
-    def subscribe(self, event_type, callback):
-        if not callable(callback):
-            raise ValidationException(...)
-        if event_type not in self._subscribers:
-            self._subscribers[event_type] = []
-        self._subscribers[event_type].append(callback)
+Contract:
+- Cache loaded/scaled pygame surfaces by stable asset key and dimensions.
+- `SpriteManager` loads 64px component sprites from `Paths.COMPONENTS_64_DIR` and parses `{resolution}Portrait_Comp_{number}.png` filenames; `tile_size = 36`.
+- Use fallback/missing textures through asset managers rather than ad hoc loads.
+- Component derivative images are generated/refreshed by asset tooling from the tracked 1024px source set.
+- Individual UI panels may keep local `Dict[str, Surface]` caches with `invalidate_cache()` methods for rotated text and scaled surfaces.
+- Do not cache color fills or line drawing; they are fast and position-dependent.
 
-    def emit(self, event_type, data=None):
-        if event_type in self._subscribers:
-            handlers = list(self._subscribers[event_type])  # Defensive copy
-            for callback in handlers:
-                try:
-                    callback(data)
-                except Exception as e:
-                    logger.error(f"Error in event handler for {event_type}: {e}")
-```
-
-Event constants:
-
-```python
-# game/ui/screens/builder_utils.py (actual code)
-class BuilderEvents:
-    SHIP_UPDATED = 'SHIP_UPDATED'
-    SELECTION_CHANGED = 'SELECTION_CHANGED'
-    REGISTRY_RELOADED = 'REGISTRY_RELOADED'
-    TEMPLATE_MODIFIERS_CHANGED = 'TEMPLATE_MODIFIERS_CHANGED'
-    DRAG_STATE_CHANGED = 'DRAG_STATE_CHANGED'
-    HULL_LAYER_VISIBILITY_CHANGED = 'HULL_LAYER_VISIBILITY_CHANGED'
-```
-
-**Key detail:** `emit()` passes a single `data` argument (not `*args, **kwargs`).
-Subscribers receive one argument: `callback(data)`.
-
-### When to Use
-
-- Decoupling UI panels that need to react to shared state changes.
-- Always use string constants from `BuilderEvents`, never raw strings.
-- Currently scoped to the Workshop UI; not a general-purpose game event system.
-
-### Strategy-Layer Event Logging (PROJ-252)
-
-`game/core/event_logging.py` provides a separate `EventBus` class for structured
-simulation/strategy events. Each `GameSession` creates its own `EventBus` instance,
-avoiding process-global mutable state.
-
-```python
-# game/core/event_logging.py
-class EventBus:
-    def __init__(self, handler=None):
-        self._handler = handler
-    def log_event(self, event_type, **kwargs): ...
-```
-
-The module-level `log_event()` function is a backward-compatibility shim. New code
-should prefer explicit `EventBus` injection where possible.
-
----
-
-## 11. Surface Caching (SpriteManager)
-
-### Where
-
-`game/ui/renderer/sprites.py` -- `SpriteManager` (managed by ApplicationContext)
-
-### How It Works
-
-`SpriteManager` loads component sprite images once and caches them by index.
-Individual UI panels also maintain local caches for expensive operations
-(rotated text, scaled surfaces).
-
-```python
-# game/ui/renderer/sprites.py (actual code)
-class SpriteManager:
-    def __init__(self):
-        self.sprites = []
-        self.tile_size = 36
-
-    def load_sprites(self, base_path: str = None) -> None:
-        # Loads 64px sprites from Paths.COMPONENTS_64_DIR
-        # Uses regex to parse {resolution}Portrait_Comp_{number}.png filenames
-        if base_path is not None:
-            sprite_dir = os.path.join(base_path, "assets", "Images", "Components", "Components 64")
-        else:
-            sprite_dir = Paths.COMPONENTS_64_DIR
-        # ...
-```
-
-### When to Use
-
-- Cache: font rendering, surface rotation, surface scaling (all create new surfaces).
-- Do not cache: color fills, line drawing (fast, position-dependent).
-- Individual panels use `Dict[str, Surface]` caches with `invalidate_cache()` methods.
-
----
+Use for repeated image loads, component sprites, race/planet/star images, and generated derivatives.
 
 ## 12. Configuration Classes
 
-### Where
+> **Last verified:** 2026-05-08
 
-`game/core/config.py` -- `DisplayConfig`, `AIConfig`, `PhysicsConfig`, `BattleConfig`
+Where: `game/core/config.py`, `game/strategy/data/*_config.py`, `game/ui/screens/builder_utils.py`, `game/strategy/config/economy_config.py`.
 
-### How It Works
+Contracts:
+- Core config classes (`DisplayConfig`, `AIConfig`, `PhysicsConfig`, `BattleConfig`) are plain classes with class-level attributes. Do not add `@dataclass` decorators.
+- UI layout config can use frozen dataclasses with singleton instances, e.g. panel width objects.
+- Strategy data-driven configs load `data/astrophysics.json` through cached getters and `DEFAULT_*` dict fallbacks.
+- JSON-backed config modules: `classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`.
+- Config getters use `@lru_cache(maxsize=1)` and late-import `AstrophysicsLoader`; tests must call `get_*_config.cache_clear()` in setup/teardown when overriding data.
+- Fallback catches expected load/shape failures (`ImportError`, file/OS errors, key/type/value errors) and returns defaults.
 
-Configuration classes are **plain classes with class-level attributes** (not `@dataclass`).
-They use `@classmethod` helpers for common operations.
+Three valid singleton-access flavors coexist:
 
-```python
-# game/core/config.py (actual code)
-class DisplayConfig:
-    """Display and resolution configuration."""
-    DEFAULT_WIDTH: int = 3840
-    DEFAULT_HEIGHT: int = 2160
-    WINDOWED_WIDTH: int = 2560
-    WINDOWED_HEIGHT: int = 1600
-    TEST_WIDTH: int = 1440
-    TEST_HEIGHT: int = 900
+1. **`@lru_cache(maxsize=1)` getters** — used by the JSON-backed configs above. Tests call `.cache_clear()` to swap.
+2. **`DEFAULT_*` dict fallback** — module-level dict consulted when JSON load fails (e.g. `DEFAULT_CLASSIFICATION_CONFIG`).
+3. **Module-accessor pair (`get_default_*` / `set_default_*`)** — a `_default = None` module variable plus paired accessors, currently used by `game/strategy/config/economy_config.py:136-149`. Justification (quoted from the file): "Chose this over `@lru_cache` (as used by `ClassificationConfig`) because CLAUDE.md's module-accessor form gives tests a clean swap API without poking `.cache_clear()`." PROJ-382 Phase 4 (audit U6) elevates this to a documented variant despite being below the usual 3-site bar — the in-code justification is explicit and the variant is intentional rather than accidental.
 
-    @classmethod
-    def default_resolution(cls) -> Tuple[int, int]:
-        return (cls.DEFAULT_WIDTH, cls.DEFAULT_HEIGHT)
+Use named config instead of inline magic numbers. Use JSON-backed config for gameplay tuning that designers/data should control.
 
-class AIConfig:
-    MIN_SPACING: int = 150
-    DEFAULT_ORBIT_DISTANCE: int = 500
-    MAX_CORRECTION_FORCE: int = 500
-    # ... many more
+## 13. Spec Compiler + `run_battle`
 
-class PhysicsConfig:
-    TICK_RATE: float = 0.01
-    DEFAULT_LINEAR_DRAG: float = 0.5
+Where:
+- Runner: `game/simulation/battle_runner.py::run_battle`.
+- DTOs: `game/simulation/battle_spec.py`, `game/simulation/battle_outcome.py`.
+- Compilers: `combat_lab/spec_compiler.py::build_test_battle_spec`, `game/ui/screens/battle_setup/spec_compiler.py::build_manual_battle_spec`, `game/strategy/combat/spec_compiler.py::build_strategy_battle_spec`.
 
-class BattleConfig:
-    TARGET_QUERY_RADIUS: int = 200000
-    COLLISION_BUFFER: int = 100
-```
+Contract:
+- Caller-specific compilers emit frozen `BattleSpec` DTOs.
+- `run_battle(spec, ai_factory, ship_builder=None, registry_provider=None, ...) -> BattleOutcome` is the headless unified entry.
+- Visual mode calls `BattleController.start_from_spec(...)`, which uses the same engine-start path as `run_battle`.
+- If `ship_builder is None`, callers must pass `registry_provider`.
+- Simulation layer must not resolve registry provider through globals.
+- Every battle path emits `BattleOutcome`; visual mode obtains it through `controller.get_outcome()`.
+- Variance lives on spec fields (`boundary`, `end_condition`, `modifier_stack`, `telemetry_level`, `post_battle_hook`) rather than a mode switch.
+- Deleted stale system: do not revive `BattleModeHandler`, concrete mode handlers, `get_handler_for_mode(BattleMode)`, or duplicated engine materialization blocks.
 
-**Important:** These are NOT `@dataclass(frozen=True)`. They are plain classes used as
-namespace containers for constants. Do not add `@dataclass` decorators.
-
-Layout config in `game/ui/screens/builder_utils.py` does use frozen dataclasses for
-instantiated layout objects:
-
-```python
-@dataclass(frozen=True)
-class PanelWidths:
-    component_palette: int = 400
-    layer_panel: int = 500
-PANEL_WIDTHS = PanelWidths()  # Singleton instance
-```
-
-### Data-Driven Configs (Strategy Layer)
-
-The strategy layer uses a second config pattern for **JSON-backed tunable parameters** loaded
-from `data/astrophysics.json`. These are classes with `DEFAULT_*` dicts, `_load_from_json()`
-/ `_use_defaults()` methods, and an `@lru_cache` getter function with graceful fallback.
-
-**Files:**
-- `game/strategy/data/classification_config.py` -- `ClassificationConfig` (planet classification thresholds)
-- `game/strategy/data/resource_generation_config.py` -- `ResourceGenerationConfig` (resource quantity/quality/affinities)
-- `game/strategy/data/star_generation_config.py` -- `StarGenerationConfig` (star type weights, mass distribution, SB type properties)
-- `game/strategy/data/orbital_generation_config.py` -- `OrbitalGenerationConfig` (orbital placement, moon system, surface flags)
-
-```python
-# game/strategy/data/classification_config.py (actual code, representative)
-class ClassificationConfig:
-    DEFAULT_MASS = {
-        "dwarf_max": 2.0e23,
-        "giant_min": 6.0e24,
-        "gas_giant_min": 1.0e26,
-    }
-    # ... more DEFAULT_* dicts
-
-    def __init__(self, data: Optional[Dict[str, Any]] = None):
-        if data and "classification" in data:
-            self._load_from_json(data["classification"])
-        else:
-            self._use_defaults()
-
-    def _load_from_json(self, section: Dict[str, Any]) -> None:
-        subsection = section.get("mass_thresholds", {})
-        self.dwarf_max = subsection.get("dwarf_max", self.DEFAULT_MASS["dwarf_max"])
-        # ... each attribute uses .get() with DEFAULT dict fallback
-
-    def _use_defaults(self) -> None:
-        self.dwarf_max = self.DEFAULT_MASS["dwarf_max"]
-        # ... direct assignment from DEFAULT dicts
-
-@lru_cache(maxsize=1)
-def get_classification_config() -> ClassificationConfig:
-    try:
-        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
-        loader = AstrophysicsLoader()
-        data = loader.load()
-        return ClassificationConfig(data)
-    except (ImportError, FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
-        logger.warning(f"Failed to load classification config: {e}")
-        return ClassificationConfig(None)  # Falls back to hardcoded defaults
-```
-
-Key characteristics:
-- `@lru_cache(maxsize=1)` — singleton; loads once per process
-- **Late import** of `AstrophysicsLoader` inside the getter (avoids circular imports)
-- **Broad exception handling** — catches all likely loading failures, falls back to defaults
-- **Tests must call `get_*_config.cache_clear()`** in setup/teardown to prevent pollution
-- Consumers import the getter via late import inside methods (e.g., `planet_gen.py` line 458)
-
-### When to Use
-
-- **Core config (static):** Game-engine constants that never change at runtime (AI, Physics, Battle, Display). Use plain classes in `game/core/config.py`.
-- **Strategy data-driven config (JSON-backed):** Gameplay tuning parameters loaded from `astrophysics.json`. Use the `@lru_cache` getter pattern in `game/strategy/data/*_config.py`.
-- **UI layout config:** Frozen dataclasses with singleton instances.
-- Always import from the config module, never inline magic numbers.
-
----
-
-## 13. Spec Compiler + `run_battle` (replaces "Battle Mode Strategy")
-
-### Where
-
-- `game/simulation/battle_runner.py` — `run_battle(spec) -> BattleOutcome`
-- `game/simulation/battle_spec.py` — frozen `BattleSpec` DTO
-- `game/simulation/battle_outcome.py` — frozen `BattleOutcome` DTO
-- Three context-specific compilers:
-  - `combat_lab/spec_compiler.py::build_test_battle_spec`
-  - `game/ui/screens/battle_setup/spec_compiler.py::build_manual_battle_spec`
-  - `game/strategy/combat/spec_compiler.py::build_strategy_battle_spec`
-
-### How It Works
-
-Every battle goes through ONE entry point: `run_battle(spec)`. The
-engine is context-blind. Variance lives on `BattleSpec` fields
-(`boundary`, `end_condition`, `modifier_stack`, `telemetry_level`,
-`post_battle_hook`) rather than in a mode switch.
-
-```
-caller domain inputs (TestScenario / BattleSetupState / Fleets)
-        │
-        ▼
-context-specific spec compiler (build_*_battle_spec)
-        │
-        ▼
-BattleSpec (frozen DTO)
-        │
-        ▼
-run_battle(spec, ai_factory, ship_builder, ...)  ──► BattleOutcome
-                                                          │
-                                                          ▼
-                                       spec.post_battle_hook(outcome)
-```
-
-This pattern replaces the deleted **Battle Mode Strategy** (PROJ-269
-Phase 6 removed `BattleModeHandler` + 4 concrete handlers + the
-`get_handler_for_mode(BattleMode)` factory).
-
-### When to Use
-
-- Adding a new battle context: create a `build_*_battle_spec()`
-  compiler that translates your domain inputs into a `BattleSpec`. The
-  compiler lives in YOUR layer (Combat Lab / Battle Setup / Strategy /
-  …). Call `run_battle(spec, ...)`.
-- Adding a new variance dimension that crosses contexts: add a field to
-  `BattleSpec` and consume it from the engine. Do NOT introduce a mode
-  switch.
-- Adding a context-specific post-battle side effect: attach a
-  `post_battle_hook` closure on the spec.
-
-### Why it replaced the Strategy pattern
-
-| Old "mode" trait | New `BattleSpec` field / mechanism |
-|------------------|-----------------------------------|
-| `can_retreat` | `BoundaryRegion(exit_policy=RETREAT)` |
-| `can_reinforce` | `BattleConfig.allow_reinforcements` (visual mode only) |
-| `should_clone_ships` | Caller's `ship_builder` returns a clone |
-| `is_headless_default` | Driver choice: blocking `run_battle(spec)` vs per-frame `BattleController.start_from_spec(spec, ...)` |
-| `apply_results(...)` | `BattleSpec.post_battle_hook` |
-
-See `docs/systems/combat_simulation.md` §0–§1 and
-`Projects/deep_archive/PROJ-251-300/PROJ-269/decisions.md` for the full
-rationale.
-
----
+Extension recipe:
+- New battle context: create `build_*_battle_spec()` in the caller layer, then call `run_battle` or `BattleController.start_from_spec`.
+- New cross-context variance: add a `BattleSpec` field and consume it from the engine.
+- Context-specific post-battle side effect: attach `spec.post_battle_hook`.
 
 ## 14. Two-Phase Ability Aggregation
 
-### Where
+Where: `game/simulation/entities/ability_aggregator.py`, `ShipStatsCalculator`, component ability managers.
 
-`game/simulation/entities/ability_aggregator.py` -- `calculate_ability_totals()`,
-`_aggregate_ability_groups()`
+Contract:
+- Phase 1 collects ability contributions across the ship.
+- Numeric abilities aggregate as MAX within the same named `stack_group`, then SUM across different groups.
+- Marker abilities (`CommandAndControl`, `Armor`, `RequiresCommandAndControl`, etc.) use boolean `True` semantics.
+- Stack groups are defined in component JSON via `stack_group`.
+- `FleetAuraManager._recalculate()` delegates to `_aggregate_ability_groups()`; new aggregation code should use the shared function.
+- Phase 2 consumes totals to calculate final ship stats, preventing order-dependent behavior when one component affects another.
 
-### How It Works
-
-Abilities on ship components support stacking groups. Aggregation is two-phase:
-
-1. **Intra-group (MAX):** Within the same named stack group, take the highest value.
-   This models redundancy -- two sensors in the same group do not stack.
-2. **Inter-group (SUM):** Across different groups, sum the contributions.
-
-Marker abilities (`CommandAndControl`, `Armor`, etc.) use boolean True semantics
-instead of numeric aggregation.
-
-```python
-# game/simulation/entities/ability_aggregator.py
-MARKER_ABILITIES = {'CommandAndControl', 'Armor', 'RequiresCommandAndControl', ...}
-
-def _aggregate_ability_groups(ability_groups):
-    totals = {}
-    for ability_name, groups in ability_groups.items():
-        group_contributions = []
-        for key, values in groups.items():
-            nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
-            if nums:
-                group_contributions.append(max(nums))          # Phase 1: MAX within group
-            elif any(v is True for v in values):
-                group_contributions.append(True)
-
-        if not group_contributions:
-            continue
-
-        first = group_contributions[0]
-        if isinstance(first, bool):
-            totals[ability_name] = True
-        else:
-            totals[ability_name] = sum(                        # Phase 2: SUM
-                v for v in group_contributions if isinstance(v, (int, float))
-            )
-    return totals
-```
-
-### When to Use
-
-- Calculating effective ship stats from components.
-- All numeric abilities use SUM across groups by default.
-  Add to `MARKER_ABILITIES` for boolean presence checks.
-- Stack groups are defined in component JSON via the `stack_group` field.
-- **PROJ-253:** `FleetAuraManager._recalculate()` now delegates to `_aggregate_ability_groups()` instead of reimplementing the two-phase logic. Any new aggregation code must use the shared function.
-
----
+Use when an ability needs whole-ship context before final stat application.
 
 ## 15. Factory
 
-### Where
+Where: `game/ai/ai_factory.py`, `game/ui/services/ship_factory.py`, `game/ui/widgets/panel_factory.py`, LLM/image provider factories, registry factory modules.
 
-- `game/ai/ai_factory.py` -- `AIControllerFactory`
-- `game/ui/services/ship_factory.py` -- `ShipFactory`
-- `game/ui/widgets/panel_factory.py` -- `PanelFactory`
+Contract:
+- Factory owns construction choices, default dependencies, and policy-based selection.
+- Callers ask for the object they need instead of knowing all concrete collaborators.
+- Factories pair well with tests when construction depends on registries, environment variables, display state, providers, or mode-specific policy.
 
-### How It Works
+Use where construction is conditional, dependency-heavy, or shared by production/tests.
 
-Factory classes encapsulate object creation logic, hiding constructor complexity and
-configuration details from callers. They are used throughout the codebase where object
-construction requires assembling dependencies, applying defaults, or selecting concrete
-implementations.
+## 16. ScrollState
 
-### When to Use
+Where: `game/ui/widgets/scroll_state.py`, tests in `tests/unit/ui/widgets/test_scroll_state.py`.
 
-- Object creation requires non-trivial setup, dependency resolution, or conditional logic.
-- Callers should not need to know concrete implementation details.
-- Centralizes construction so changes to dependencies propagate from one place.
+Contract:
+- One helper owns scroll offset, bounds, viewport/content size, wheel delta, clamp behavior, and scroll ratio.
+- Works for pixel-based scrolling and line-based scrolling.
+- UI widgets read/write scroll state instead of reimplementing `scroll_offset` / `max_scroll` math.
+- Do not use for camera zoom handling or pygame_gui scrollbar-driven scrolling.
 
----
-
-## 16. ScrollState (Scroll Utility)
-
-### Where
-
-- Implementation: `game/ui/widgets/scroll_state.py` -- `ScrollState`
-- Tests: `tests/unit/ui/widgets/test_scroll_state.py`
-- Consumers: `results_panel.py`, `test_run_details.py`, `dialogs.py`, `json_viewer.py`, `scrollable_json_panel.py`, `modifier_impact_grid.py`, `battle_panels.py`, `battle_state_viewer.py`
-
-### How It Works
-
-`ScrollState` encapsulates the common scroll_offset + MOUSEWHEEL handling pattern into a reusable utility. It manages offset tracking, clamping, mousewheel events, and scroll ratio calculation for scrollbar positioning.
-
-```python
-from game.ui.widgets.scroll_state import ScrollState
-
-# In __init__:
-self.scroll = ScrollState(step=20)
-
-# When content changes:
-self.scroll.content_height = total_content_height
-self.scroll.viewport_height = visible_area_height
-self.scroll.clamp()
-
-# In event handler:
-if event.type == pygame.MOUSEWHEEL:
-    if self.scroll.handle_mousewheel(event):
-        return True  # consumed
-
-# In draw method:
-y = start_y - self.scroll.offset
-
-# For scrollbar thumb positioning:
-thumb_y = track_y + int(self.scroll.scroll_ratio * available_range)
-```
-
-Works with both pixel-based scrolling (default) and line-based scrolling (set content_height to line count, viewport_height to visible line count, step to lines per scroll tick).
-
-### When to Use
-
-- Any UI panel or widget that needs vertical scrolling with MOUSEWHEEL support.
-- Replaces the ad-hoc `self.scroll_offset = 0; self.max_scroll = 0` pattern.
-- Do NOT use for zoom handling (camera) or scrollbar-driven scrolling (pygame_gui widgets).
-
----
+Use for scrollable lists/panels.
 
 ## 17. Serializable Protocol
 
-### Where
+Where: `game/core/protocols/persistence.py`, tests in `tests/unit/core/test_serializable_protocol.py`.
 
-- Protocol: `game/core/protocols.py` -- `ISerializable`
-- Tests: `tests/unit/core/test_serializable_protocol.py`
-- Implementors: `ComponentState`, `ShipState`, `ProjectileState`, `BattleState`, `BattleResults` in `game/simulation/battle_state.py`; `ShipInstance` via `ShipInstanceSerializer` in `game/strategy/data/ship_instance_serializer.py`
+Contract:
+- `ISerializable` is a `@runtime_checkable` protocol for `to_dict()` / `from_dict()` and type checking.
+- There is no mixin/base class; each implementor owns domain-specific serialization logic.
+- Implementors include simulation state DTOs and `ShipInstance` via `game/strategy/data/ship_instance_serializer.py`.
+- Corrupt persistence data should raise `PersistenceException` or a specific exception, not be swallowed.
+- Save migrations are not required; old saves are disposable.
 
-### How It Works
+Use for save/load DTOs, replay DTOs, and domain persistence boundaries.
 
-`ISerializable` is a `@runtime_checkable` Protocol that defines the `to_dict()` / `from_dict()` contract. It exists for **type checking only** -- there is no mixin or base class, because each implementor has domain-specific serialization logic.
+## 18. Per-Battle RNG
 
-```python
-@runtime_checkable
-class ISerializable(Protocol):
-    def to_dict(self) -> Dict[str, Any]: ...
+Where: `game/simulation/systems/battle_engine.py`, `game/engine/collision.py`, `game/simulation/combat/damage_calculator.py`, `game/ai/ai_factory.py`, `game/ai/controller.py`, `game/ai/behaviors.py`, `game/strategy/engine/conflict_resolution_engine.py`.
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ISerializable': ...
-```
+Contract:
+- `BattleEngine.start_teams(..., seed=N, ...)` initializes `self.rng = random.Random(seed)`.
+- The same RNG is injected into `CollisionSystem`, `DamageCalculator`, `AIControllerFactory`, `AIController`, and random AI behaviors such as `ErraticBehavior`.
+- AI behaviors that need randomness take `rng` as a required keyword-only constructor argument and consume it via `self._rng`. `AIController._rng` forwards from `AIControllerFactory._rng`, ultimately `BattleEngine.rng`.
+- Strategy conflict resolution owns its own `self._rng = random.Random()` (unseeded; separate from battle replay determinism) for empire pairing in multi-empire conflicts.
+- Do not call `random.seed()` or module-level `random.*` from simulation, engine, or AI.
+- Guard test: `tests/unit/quality/test_no_unseeded_random.py` forbids `random.<X>(...)` under `game/simulation/`, `game/engine/`, or `game/ai/` except `random.Random(...)`.
+- A `# noqa: replay-determinism` allowlist marker exists for genuinely justified exceptions; none are expected.
+- Determinism integration: `tests/integration/fleet_combat/test_battle_determinism.py::TestBattleStateHashRegression` asserts SHA-256 of canonical per-ship final state is equal across 5 repeated runs of the same seeded battle.
 
-### When to Use
+Use injected RNG for every combat random decision.
 
-- Use as a type annotation when a function accepts any serializable object.
-- Do NOT create a mixin. Each class implements its own `to_dict()`/`from_dict()`.
+## 19. Error Boundary
 
----
+Where: `game/strategy/engine/turn_engine.py`, `game/strategy/engine/turn_state_snapshot.py`.
 
-## 18. Per-Battle RNG (PROJ-252, extended by PROJ-312)
+Contract:
+- `TurnStateSnapshot.capture()` serializes all empires + galaxy via `to_dict()` before processing a turn.
+- `_time_phase()` wraps sub-engine failures as `EnginePhaseError`.
+- `process_turn()` catches `EnginePhaseError`, restores the snapshot, writes a crash diagnostic file, and re-raises.
+- `GameSession.process_turn()` catches `EnginePhaseError` for UI notification.
 
-### Where
+Use snapshot/rollback around multi-step strategy mutations that must be atomic. The snapshot/rollback shape is preferred to full transactional semantics when the state graph is complex.
 
-`game/simulation/systems/battle_engine.py` -- `BattleEngine.rng`,
-`game/engine/collision.py` -- `CollisionSystem.rng`,
-`game/simulation/combat/damage_calculator.py` -- `DamageCalculator.rng`,
-`game/ai/ai_factory.py` -- `AIControllerFactory._rng` (PROJ-312),
-`game/ai/controller.py` -- `AIController._rng` (PROJ-312),
-`game/ai/behaviors.py` -- `ErraticBehavior._rng` (PROJ-312),
-`game/strategy/engine/conflict_resolution_engine.py` -- `ConflictResolutionEngine._rng`
+## 20. Precondition Validation
 
-### How It Works
+Where: sub-engines under `game/strategy/engine/`.
 
-Each `BattleEngine.start(seed=N)` creates a per-instance `random.Random(seed)`.
-This RNG is propagated to subsystems (`CollisionSystem`, `DamageCalculator`,
-`AIControllerFactory` → `AIController` → `ErraticBehavior`). The global
-`random` module is **never** seeded by simulation code.
+Contract:
+- Each mutating tick entry validates inputs up front through `_validate_tick_inputs(empires)` at the entry point of any method that mutates state.
+- Checks for null references, missing attributes, and impossible values before any mutation.
+- Raise `ValidationException` with `context={"empire_id": ..., "fleet_id": ...}` identifying the broken entity, not a cryptic `AttributeError`.
+- Validate before any state mutation so pattern #19 can roll back cleanly with a useful error.
 
-```python
-# BattleEngine.start_teams()
-self._initialize_start_state(seed, ...)        # self.rng = random.Random(seed)
-...
-self._ai_factory.set_rng(self.rng)             # PROJ-312: AI chain
-self._ai_factory.create_for_ships(team_ships, ...)
-```
+Use for engine phases, action execution, production, movement, hazards, and any new mutating sub-engine.
 
-`ConflictResolutionEngine` has its own `self._rng = random.Random()` for
-strategy-layer randomness (empire pairing in multi-empire conflicts).
+Skeleton:
 
-### When to Use
-
-- All combat randomness (hit rolls, damage distribution, fighter spawn offsets)
-  must use the battle's `self.rng`, never `random.random()`.
-- AI behaviors that need randomness (e.g. `ErraticBehavior`) take `rng` as a
-  required keyword-only constructor argument and consume it via `self._rng`.
-  The `AIController` forwards its own `_rng` (sourced from
-  `AIControllerFactory._rng`, ultimately `BattleEngine.rng`).
-- Strategy-layer randomness uses its own `Random` instance.
-- **Never** call `random.seed()` from simulation or strategy code.
-
-### Regression Contract (PROJ-312)
-
-The AST guard at
-[tests/unit/quality/test_no_unseeded_random.py](../tests/unit/quality/test_no_unseeded_random.py)
-fails if any `.py` file under `game/simulation/`, `game/engine/`, or
-`game/ai/` calls `random.<X>(...)` other than `random.Random(...)`. New
-RNG consumers in those layers MUST inject a `random.Random` instance via
-DI; module-level `random.*` is forbidden. An explicit
-`# noqa: replay-determinism` allowlist marker exists for genuinely-justified
-exceptions, but none are expected today.
-
-Bit-stable replay is verified at
-[tests/integration/fleet_combat/test_battle_determinism.py](../tests/integration/fleet_combat/test_battle_determinism.py)
-via `TestBattleStateHashRegression` (SHA-256 of canonical per-ship final
-state, asserted equal across 5 repeated runs of the same seeded battle).
-
----
-
-## 19. Error Boundary (Turn Engine — PROJ-251)
-
-**Where:** `game/strategy/engine/turn_engine.py`, `game/strategy/engine/turn_state_snapshot.py`
-
-**How It Works:**
-1. `TurnStateSnapshot.capture()` serializes all empires + galaxy via `to_dict()` before each turn
-2. `_time_phase()` wraps each sub-engine call — any exception becomes `EnginePhaseError`
-3. `process_turn()` catches `EnginePhaseError`, restores from snapshot, dumps crash file, re-raises
-4. `GameSession.process_turn()` catches `EnginePhaseError` for UI notification
-
-**When to Use:** Whenever a complex operation involves multiple sequential mutations that must succeed atomically. The snapshot-and-rollback pattern is more practical than full transactional semantics when the state graph is complex.
-
-**Key Classes:** `TurnStateSnapshot`, `EnginePhaseError`
-
----
-
-## 20. Precondition Validation (Sub-Engines — PROJ-251)
-
-**Where:** All 14 sub-engines in `game/strategy/engine/`
-
-**How It Works:**
-Each sub-engine has `_validate_tick_inputs(empires)` called at the start of its tick method. Checks for null references, missing attributes, and impossible values. Raises `ValidationException` with context dict identifying the broken entity.
-
-**When to Use:** At the entry point of any method that mutates state based on external inputs. Validates preconditions before any mutations occur, so the error boundary (pattern 19) gets a clear, descriptive exception rather than a cryptic `AttributeError`.
-
-**Key Pattern:**
 ```python
 def _validate_tick_inputs(self, empires):
     from game.core.exceptions import ValidationException
@@ -1297,374 +403,437 @@ def _validate_tick_inputs(self, empires):
             if fleet.location is None:
                 raise ValidationException(
                     f"Empire {empire.id}: fleet '{fleet.id}' has None location",
-                    context={"empire_id": empire.id, "fleet_id": fleet.id}
+                    context={"empire_id": empire.id, "fleet_id": fleet.id},
                 )
 ```
 
----
+## 21. Screen State Machine
 
-## 21. Screen State Machine (PROJ-259)
+Where: `game/core/state_machine.py`, transition table in `game/app.py`.
 
-**Where:** `game/core/state_machine.py` -- `ScreenStateMachine`, `game/app.py` -- transition table
+Contract:
+- `ScreenStateMachine` validates transitions against a declarative table.
+- Supports guards, enter/exit callbacks, and stack-based return via `push_and_transition()` / `pop_and_return()`.
+- `_switch_scene()` in `app.py` delegates transition validity to the state machine before changing the active scene.
 
-**How It Works:**
-- Declarative transition table: `_SCREEN_TRANSITIONS` frozenset of `(from_state, to_state)` tuples
-- `ScreenStateMachine` validates all transitions, supports guards and on_enter/on_exit callbacks
-- State stack via `push_and_transition()` / `pop_and_return()` for return-to-previous (builder, keybindings)
-- `_switch_scene()` in app.py delegates to `state_machine.transition()` then sets active_scene
+Use for formal app/screen states and return-to-previous flows.
 
-**When to Use:** Formalize any state machine where transitions should be validated declaratively.
+## 22. TurnEngineConfig
 
----
+Where: `game/strategy/engine/turn_engine_config.py`, helper `tests/fixtures/turn_engine.py::build_test_turn_engine(...)`.
 
-## 22. TurnEngineConfig (PROJ-259)
+Contract:
+- Frozen dataclass bundles 18 sub-engine dependencies: 15 tick-loop engines plus 3 end-of-turn terraforming engines.
+- `TurnEngineConfig.create_default(registries, *, ai_factory=None, race_registry=None, event_bus=None)` is the canonical construction path and eagerly constructs default engines in one place.
+- `TurnEngine.__init__` requires `config=...`; per-engine override kwargs are gone.
+- Tests override specific engines via `dataclasses.replace(cfg, foo_engine=mock)`.
+- Phase descriptor lists (`tick_phases`, `end_of_turn_phases`) remain separate constructor kwargs because they are descriptor tuples, not engine dependencies.
+- Explicit `tick_phases=` / `end_of_turn_phases=` constructor kwargs win over registry defaults.
+- Do not import engine classes inside `TurnEngine` methods. The lone allow-listed location for function-local engine imports is `TurnEngineConfig.create_default()`.
+- Guard test: `test_no_lazy_fallback_init.py::test_no_function_local_engine_imports_in_TurnEngine_methods`.
 
-**Where:** `game/strategy/engine/turn_engine_config.py` -- `TurnEngineConfig`
+Use for all turn-engine dependency construction and test substitution.
 
-**How It Works:**
-Frozen dataclass bundling 13 optional engine dependencies. `TurnEngine.__init__()` accepts `config=TurnEngineConfig(...)` alongside individual kwargs (individual kwargs take precedence for backward compat).
+## 23. Tick Phase Registry
 
-**When to Use:** Pass to `TurnEngine()` or `create_default_turn_engine()` when overriding specific engines for testing.
+> **Last verified:** 2026-05-08
 
----
+Where: `game/simulation/systems/tick_phase.py`.
 
-## 23. Tick Phase Registry (PROJ-259)
+Contract:
+- `ITickPhase` has `name`, `priority`, and `execute(engine)`.
+- `TickPhaseRegistry` executes phases ordered by ascending priority.
+- Defaults (six phases — every name carries the `Phase` suffix):
+  `RebuildGridPhase(100)`, `AIAndShipUpdatePhase(200)`,
+  `BoundaryEnforcementPhase(250)`, `AttackProcessingPhase(300)`,
+  `RammingPhase(400)`, `ProjectileUpdatePhase(500)`.
+- `BattleEngine.update()` delegates to the registry.
 
-**Where:** `game/simulation/systems/tick_phase.py` -- `ITickPhase`, `TickPhaseRegistry`, 5 default phases
+Add simulation tick behavior by registering a phase at a deliberate priority.
 
-**How It Works:**
-- `ITickPhase` protocol: `name`, `priority`, `execute(engine)`
-- `TickPhaseRegistry`: ordered list of phases, sorted by priority (ascending)
-- `BattleEngine.update()` calls `self._tick_phases.execute_all(self)`
-- 5 default phases: RebuildGrid(100), AIAndShipUpdate(200), AttackProcessing(300), Ramming(400), ProjectileUpdate(500)
-- Custom phases can be registered at any priority without modifying BattleEngine
+## 24. External-Stats Bridge
 
-**When to Use:** Extend the battle simulation with new tick phases (e.g., environmental effects) by registering a custom `ITickPhase` at the desired priority.
+Where: `game/simulation/entities/ship.py`, `game/simulation/combat/fleet_aura_manager.py`, `game/simulation/components/abilities/base.py`, `game/simulation/entities/ship_stats.py`.
 
----
+Contract:
+- Spec compiler `ModifierStack` entries aggregate through `FleetAuraManager._recalculate` into `ship.external_stats: dict[str, float]`.
+- Ability-level consumers call `Ability.get_effective_stat(stat_key)`: `_mult` keys multiply local and external values; `_add` keys sum.
+- Ship-level virtual stats such as `shield_bonus_add` are read in `_apply_aggregated_stats`.
+- `external_stats` is battle-scoped and never serialized.
+- Only `FleetAuraManager._apply_bonuses` populates it.
+- Do not mutate `component.stats` from outside `Component._calculate_modifier_stats`.
 
-## 24. External-Stats Bridge (PROJ-270 Phase 9 + PROJ-271)
+Known limitation:
+- Stack groups aggregate within a source only. Provider auras bucket by ability class name, while external `ModifierStack` entries bucket by stat key, so a provider `ShieldModifier` and an external `shield_capacity_mult` with the same stack group do not cross-compose via MAX.
 
-**Where:** `game/simulation/entities/ship.py` (`Ship.external_stats`), `game/simulation/combat/fleet_aura_manager.py` (`_apply_bonuses`), `game/simulation/components/abilities/base.py` (`Ability.get_effective_stat` composition), `game/simulation/entities/ship_stats.py` (`_apply_aggregated_stats` for ship-level keys).
+Use for battle-scoped modifiers that should not mutate component stats or save data.
 
-**How It Works:**
-- `ModifierStack` entries (from spec compilers) flow through `FleetAuraManager._recalculate` which aggregates per-team bonuses into `ship.external_stats: Dict[str, float]`.
-- At ability-level consumption, `Ability.get_effective_stat(stat_key)` composes ability-local / component-local / ship-external values: `_mult` keys multiply (local × external); `_add` keys sum (local + external).
-- At ship-level consumption (for keys like `shield_bonus_add`), `Ship.recalculate_stats` reads `ship.external_stats[stat_key]` directly and applies it to aggregated stats.
-- External_stats is battle-scoped and never serialized — it's read-only composition layer preserving "ships enter unmutated".
+## 25. Scope-Driven Team Routing
 
-**Why:**
-- Pre-Phase 9, `FleetAuraManager._apply_bonuses` was a hardcoded 2-key sink that silently discarded every stat_key except `fleet_attack_bonus` / `fleet_defense_bonus`. Track A battle math (storm, fleet boosters) compiled real stat_keys that never reached ship stats.
-- Option A (external-stats dict) chosen over Option B (synthesize `AppliedModifier` entries) because B would write back into `component.modifiers`, violating PROJ-269's invariant.
+Where: `game/simulation/combat/ability_stat_registry.py`, `game/ui/screens/battle_setup/spec_compiler.py`, `game/strategy/services/combat_modifier_collector.py`.
 
-**When to Use:**
-- New stat_key that applies across all components on a ship uniformly -> per-ability lookup via `STAT_BINDINGS` + `get_effective_stat`.
-- New stat_key that adds "virtual" capacity/effect at the ship level (no specific ability owns it) -> ship-level read in `_apply_aggregated_stats`. `shield_bonus_add` is the reference example.
+Contract:
+- Ability `AbilityScope` decides recipient side.
+- `fleet` / `allied_*` / `player_*` / `system` / `sector` route to the owner team.
+- `enemy_sector` / `enemy_system` route to all non-owner teams.
+- Suppressor vs booster is just multiplying by less than 1 vs more than 1; the scope is the routing mechanism, not a separate ability kind.
+- `OPPONENT_SCOPES` is the single source of truth; compilers must not keep local duplicate scope sets.
+- `emit_entries_for_ability(..., owner_team, num_teams, ...)` returns `(team_id, ModifierEntry)` pairs and handles N-team fan-out.
+- For `num_teams == 2`, enemy fan-out is one opponent; for larger N, it emits one entry for every non-owner team.
+- Strategy compiler may receive precomputed enemy effects from `CombatModifierCollector`; battle setup compiler delegates routing directly.
 
-**Don't:**
-- Mutate `component.stats` from outside `Component._calculate_modifier_stats`.
-- Populate `ship.external_stats` from anywhere except `FleetAuraManager._apply_bonuses`.
-- Serialize `external_stats` in save data — it's battle-scoped composition, rebuilt each battle.
+Use for any ability whose effects compile into `ModifierStack` entries. Extending `OPPONENT_SCOPES` requires tests proving routing across N-team fan-out.
 
-**Known Limitation — within-source stack_group composition only (PROJ-272):**
-Stack-group aggregation is WITHIN-SOURCE only. Provider auras (ship-mounted
-abilities with fleet-scope) bucket under `type(ab).__name__` (e.g.,
-`"ShieldModifier"`), while external `ModifierStack` entries bucket under
-`effect.stat_key` (e.g., `"shield_capacity_mult"`). These are semantically
-different dict keys — a provider `ShieldModifier` aura with
-`stack_group="shield_boost"` and an external `shield_capacity_mult` entry
-with the same `stack_group="shield_boost"` do NOT compose via MAX; they
-aggregate independently. Cross-source unification would require a class-name
-→ stat_key registry and is out of scope. Within each source (provider-only
-OR external-only), same-stack_group entries correctly MAX and
-different-stack_group entries correctly SUM.
+## 26. Ability-Stat Registry
 
----
+Where: `game/simulation/combat/ability_stat_registry.py`.
 
-## 25. Scope-Driven Team Routing (PROJ-271, PROJ-273, PROJ-275)
+Contract:
+- `ABILITY_STAT_REGISTRY` maps ability class name to `AbilityStatMapping(stat_key, operation, value_field)`.
+- Current mappings include `ShieldProjection -> shield_bonus_add/add/value`, `ShieldModifier -> shield_capacity_mult/multiply/multiplier`, `DamageModifier -> damage_mult/multiply/multiplier`.
+- `emit_entries_for_ability(ability_name, ability_data, *, scope, owner_team, num_teams, source, source_modifier_id, source_modifier_name, stack_group=None)` performs value extraction, team routing, N-team fan-out, and entry creation.
+- Unknown abilities and zero values emit nothing.
+- `KNOWN_EXTERNAL_STAT_KEYS` lists downstream-consumed stat keys; `FleetAuraManager` warns once per `(stat_key, source)` for unconsumed emitted keys.
+- Consumers: `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries`, `game/strategy/combat/spec_compiler.py::_emit_entries_team_scoped`.
+- Guard tests in `tests/unit/simulation/combat/test_ability_stat_registry.py` iterate `data/designs/qs_*_complex.json` for placeholder keys and coverage.
 
-**Where:** `game/simulation/combat/ability_stat_registry.py` (`OPPONENT_SCOPES`, `emit_entries_for_ability`, `_route_team_ids`), `game/ui/screens/battle_setup/spec_compiler.py` (`_complex_to_entries`), `game/strategy/services/combat_modifier_collector.py` (pre-compile routing for strategy path).
+To add a combat-affecting ability: add one registry entry, add the consumed stat key to `KNOWN_EXTERNAL_STAT_KEYS`, and rely on glob tests for quickstart complex coverage.
 
-**How It Works:**
-- An ability's `AbilityScope` value encodes who it targets: `fleet`/`allied_*`/`player_*`/`system`/`sector` -> owner's team; `enemy_sector`/`enemy_system` -> opponent teams (plural — see fan-out below).
-- Both compilers delegate enemy-scope detection to the shared `OPPONENT_SCOPES` frozenset in the ability-stat registry (single source of truth; PROJ-273 consolidated the previously-duplicated `_OPPONENT_SCOPES` locals).
-- The registry's `emit_entries_for_ability(..., num_teams=N, ...)` helper fans `enemy_*` scopes out to ALL non-owner teams and returns `List[Tuple[team_id, ModifierEntry]]`. For `num_teams == 2` the fan-out degenerates to a single opposing entry; for `num_teams == 4` with `owner_team == 0` the helper returns three entries targeting teams 1, 2, 3 (PROJ-275 verified end-to-end).
-- PROJ-275 Phase 3 removed the local 2-team `_route_team_for_scope` wrapper from the Battle Setup compiler. Routing lives in one place (`_route_team_ids` inside the registry), and `num_teams` is now threaded all the way from the compiler entry points.
-- Strategy compiler path is simpler for the same three "classic" mods: `CombatModifierCollector` pre-computes enemy-scope effects INTO the receiving fleet's `FleetCombatModifiers` before the compiler runs, so the compiler emits to `per_team[receiver_id]` trivially.
+## 27. Budget-Aware Randomization
 
-**Why:**
-- User clarified 2026-04-13: "the suppressor and booster effect is just the difference between multiplying by less than 1 or more than 1; the scope determines what vehicles/designs are impacted." No separate suppressor architecture — scope IS the routing mechanism.
-- PROJ-275 extended the same logic to N teams; the single `_route_team_ids` helper returns a list regardless of N, so the compilers iterate without caring about team count.
+Where: `game/strategy/systems/race_randomizer.py`, `game/strategy/data/race_point_budget.py::RacePointBudget`.
 
-**When to Use:**
-- Any new ability type with fleet/system/sector scope options needs scope-driven routing when its effects are compiled into `ModifierStack` entries.
-- Extending `OPPONENT_SCOPES` (now a single shared constant) requires adding tests proving each scope routes correctly across N-team fan-out.
+Contract:
+- Randomizers roll candidate aptitude/environment values.
+- Cost is computed only through `RacePointBudget`, the same authority used by UI save validation.
+- If over budget, move the most expensive value one step toward its free baseline until valid.
+- Aptitude baseline is 50; environment preference baseline is the factor default tolerance. Setpoints are free and are not rebalanced.
+- Tolerance-deviation cost is `_exponential_cost(steps) = 2**steps - 1`; aptitudes use the same exponential shape from the 50 baseline. Reproduction-rate cost is exponential above the 3% default and a linear refund (2 points per 1% step) below default down to a 0.5% floor (returns -5 exactly).
+- `randomize_all` splits a 100-point budget between aptitude and environment slices using a per-run random fraction in `[0.3, 0.7]`.
+- Environment generation may seed from a random `homeworld_presets.json` preset before per-factor jitter so randomized races are biologically coherent.
+- Methods accept optional `random.Random` for deterministic tests; module-level `random` remains the production default for this strategy/UI randomizer.
 
----
+Use when randomized output must satisfy a global budget. Skip for simple per-axis bounds.
 
-## 26. Ability-Stat Registry (PROJ-273)
+## 28. Background Service Call
 
-**Where:** `game/simulation/combat/ability_stat_registry.py` (`ABILITY_STAT_REGISTRY`, `AbilityStatMapping`, `emit_entries_for_ability`, `KNOWN_EXTERNAL_STAT_KEYS`), consumed by `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries` and `game/strategy/combat/spec_compiler.py::_emit_entries_team_scoped`.
+Where: `game/services/llm/background.py`, `game/strategy/services/race_description_llm_controller.py`, image background equivalents under `game/ui/services/image/`.
 
-**How It Works:**
-- One canonical dict maps ability class name -> `AbilityStatMapping(stat_key, operation, value_field)`. Currently three entries: `ShieldProjection -> shield_bonus_add/add/value`, `ShieldModifier -> shield_capacity_mult/multiply/multiplier`, `DamageModifier -> damage_mult/multiply/multiplier`.
-- `emit_entries_for_ability(ability_name, ability_data, *, scope, owner_team, num_teams, source, source_modifier_id, source_modifier_name, stack_group=None)` returns `List[Tuple[int, ModifierEntry]]`. Team routing + N-team fan-out + value extraction all happen in one call. Returns `[]` for unknown abilities (silent skip) or zero values (nothing to apply).
-- Battle Setup compiler delegates via `_complex_to_entries`. Strategy compiler delegates via a thin team-scoped wrapper (`_emit_entries_team_scoped`) since `FleetCombatModifiers` stores raw floats rather than dict-shaped ability data.
-- `KNOWN_EXTERNAL_STAT_KEYS: FrozenSet[str]` enumerates every stat_key the engine actually consumes downstream of `ship.external_stats`. `FleetAuraManager._append_external_from_entry` warns once per (stat_key, source) when an entry's stat_key isn't in this set — catches silent-drop bugs where a compiler emits an entry no reader picks up.
-- Glob-driven guard tests (`tests/unit/simulation/combat/test_ability_stat_registry.py`) iterate every `data/designs/qs_*_complex.json` and validate: (a) no placeholder stat_keys, (b) every combat-class ability in data is covered by the registry. New complex designs are auto-covered.
+Contract:
+- Background call object owns a non-daemon worker thread.
+- Tracks status, result, error, and elapsed time.
+- Cancellation sets an event checked between provider retries; in-flight HTTP completes in the background and is discarded logically.
+- Shared state is guarded by an instance lock.
+- Module-level counter enforces `LLMConfig.MAX_CONCURRENT_CALLS` (default 3); exceeding it raises `LLMConfigError`.
+- `shutdown_all_calls(timeout=5.0)` joins workers before `pygame.quit()`.
+- Worker exceptions are captured and surfaced through object state, not thrown only on the worker thread.
+- Non-LLM exceptions escaping a provider are wrapped in `LLMUnexpectedError`; `CallStatus.ERROR` may carry it.
+- Status reads are lock-protected so concurrent reads never observe torn state.
 
-**Why:**
-- Pre-PROJ-273, `_ABILITY_TO_STAT_KEY` lived in Battle Setup's spec_compiler AND the same three stat_keys were emitted via hand-rolled calls in Strategy's spec_compiler. A new ability class required touching both compilers + the ability class, with nothing alerting you if you missed a compiler. Registry consolidates this into a one-line edit.
+Reference consumer:
+- `RaceDescriptionLLMController` owns two `LLMBackgroundCall` instances, translates `CallStatus` into a domain `FieldStatus`, exposes elapsed seconds for 30s/90s UI messaging, and is polled by the screen each frame.
 
-**When to Use:**
-- Adding a new combat-affecting ability (class ending in `Modifier` / `Projection`): add one entry to `ABILITY_STAT_REGISTRY`; the glob test picks up coverage automatically. Also add the `stat_key` to `KNOWN_EXTERNAL_STAT_KEYS` so the runtime warning doesn't false-positive.
-- Any future caller (beyond Battle Setup + Strategy) that walks design JSONs and emits `ModifierEntry` objects should use `emit_entries_for_ability` rather than constructing `ModifierEffect` + `ModifierEntry` by hand.
+Use for external provider calls that must not block UI but must complete or shut down cleanly. Do not use for fast in-memory/file operations, skip the concurrency limit, or daemon-thread workers.
 
----
+## 29. Universal Ability Source
 
-## 27. Budget-Aware Randomization (FEAT-12)
+Where:
+- Protocol: `game/core/protocols/strategy_entities.py::IAbilitySource`.
+- Adapters: `game/strategy/services/ability_sources/`.
+- Iterator: `game/strategy/services/ability_iterator.py`.
+- Collector: `game/strategy/services/system_effects_collector.py`.
+- Aggregation: `game/strategy/services/strategic_ability_scanner.py`.
 
-**Where:** `game/strategy/systems/race_randomizer.py` — `RaceRandomizer.randomize_aptitudes`, `randomize_environment`, `randomize_all`. Cost authority is `game/strategy/data/race_point_budget.py::RacePointBudget`.
+Contract:
+- Ability sources expose `source_kind`, `source_label`, `source_id`, `owner_id`, `get_abilities()`, `affects_hex()`, `affects_system()`, and activation state.
+- Adapters include facility, storm, planet intrinsic, star, warp point, system, and fleet sources.
+- Providers register via `register_source_provider_at_hex` / `register_source_provider_in_system`.
+- Collector filters by owner and scope, groups compatible effects, then aggregates multipliers or rates.
+- Multipliers aggregate intra-provider MAX and inter-provider MULTIPLY; rates aggregate intra-provider MAX and inter-provider SUM.
+- Fleet providers are wired at session start through `set_fleet_lookups`.
+- Validations reject mixed effect kinds in one group, ownerless ownership-aware scopes, and combat+strategic scopes on one ability instance.
+- Adapter package must not call `get_default_registry_provider()`; static guard enforces layering.
+- Overlapping storms multiply per provider; hostile star systems are deliberately uncapped and surfaced through hazard hints.
 
-**How It Works:**
-- Roll candidate values for each axis being randomized (aptitudes from a 2-3-high / 2-3-low / rest-at-50 shape; environmental preferences seeded from a random `homeworld_presets.json` preset, then jittered per-factor).
-- Compute total cost via the same `RacePointBudget` API the UI's `_validate_for_save` uses — single source of truth for the cost contract.
-- If total cost exceeds the supplied `budget`, deterministically pull the most-expensive value one step toward its free-baseline (50 for aptitudes, `factor.default_tolerance` for preferences). Repeat until under budget. Setpoints are free, so they're never rebalanced.
-- Master orchestrator (`randomize_all`) apportions a 100-point budget between aptitudes and environment using a per-run random fraction in `[0.3, 0.7]`. Each sub-randomizer receives its slice independently and rebalances within it.
-- All methods accept `rng: Optional[random.Random] = None` per the Per-Battle RNG pattern (#18) for deterministic testing. Module-level `random` is the default for production callers.
+Use by adding an `IAbilitySource` adapter and provider for any new strategic entity that projects effects to a hex or system.
 
-**Why:**
-- Prevents the randomizer from emitting configurations the validator would reject on save. The randomizer doesn't reimplement cost math — it delegates to the same `RacePointBudget` the validator uses, so they cannot drift apart.
-- The two-phase "roll then rebalance" structure preserves the desired distribution shape for in-budget cases while degrading gracefully when the rolled values overshoot. Random values still drive the result; the rebalance step only kicks in for the 5–10% of seeds that overshoot at low budgets.
-- Preset-seeded environment generation produces biologically coherent races (an "Arid" world race naturally wants low water + high CO₂, not random gas mixtures).
+## 30. Registrar Close-Callback
 
-**When to Use:**
-- Any randomization where a global resource limit must hold over the result. Examples: race generation here; future ship-randomizer with mass / power budget; campaign-start fleet generation with ship-point budget.
-- Skip if the constraint is purely per-axis (e.g. `value in [min, max]`) — straightforward `random.uniform` clamping is sufficient and doesn't need a rebalance pass.
+Status: legacy slot cleanup pattern only. Modal tracking is superseded by pattern #31.
 
----
+Where: `game/ui/screens/strategy_windows/`, `game/ui/screens/planet_abilities_window.py`, `game/ui/screens/planet_list_window.py`, `game/ui/screens/strategy_event_router.py`.
 
-## 28. Background Service Call (PROJ-296)
+Contract:
+- Legacy window registrars may still own convenience slots on `StrategyWindowManager`.
+- Open path stores the window ref and passes an `on_close_callback`.
+- Window `kill()` invokes callback before `super().kill()`.
+- Callback clears the slot to avoid stale references.
+- The `_handle_window_close` event-driven cleanup branch also clears several legacy slots on `UI_WINDOW_CLOSE`.
+- New modal blocking behavior must not use this as the tracking mechanism.
 
-### Where
+Use only when maintaining existing slot cleanup. New strategy modal windows use `StrategyModalWindow`.
 
-- `game/services/llm/background.py` — `LLMBackgroundCall`, `CallStatus`, `shutdown_all_calls`
-- Called from `game/app.py` shutdown sequence before `pygame.quit()`
+## 31. Strategy Modal Window Base Class
 
-### How It Works
+Where: `game/ui/screens/strategy_modal_window.py`, `game/ui/screens/strategy_window_manager.py`, tests in `tests/unit/ui/screens/test_strategy_modal_window.py` and `tests/integration/ui/test_editor_click_blocking.py`.
 
-Wraps a synchronous service call (LLM `complete()`) in a worker thread. The
-caller polls `.status` / `.result` / `.error` / `.elapsed_seconds` from the
-pygame `update()` loop each frame instead of blocking. Cancellation via
-`.cancel()` sets a `threading.Event` that the underlying provider checks
-between retries; in-flight HTTP work completes in the background and is
-discarded (logical cancel, not physical).
+Contract:
+- `StrategyModalWindow(UIWindow)` registers itself with `StrategyWindowManager.register_modal(self)` during construction when a manager is supplied.
+- Constructor requires keyword-only `window_manager`; callers outside strategy screen may pass `window_manager=None`.
+- `kill()` unregisters before calling `super().kill()`.
+- `unregister_modal` is idempotent, so double `kill()` is safe.
+- `StrategyEventRouter.has_modal_open()` and blocking-element checks iterate `window_manager.iter_live_modals()`.
+- `iter_live_modals()` filters dead refs with `.alive()` and reaps orphan refs.
+- `has_modal_open()` also checks retained pre-modal concerns such as `menu_panel` and `build_queue_screen`.
+- Legacy slot fields remain as caller-convenience pointers; they no longer provide modal tracking.
+
+Use for every new strategy-screen modal that should block input. Do not add manual slots, `has_modal_open()` clauses, custom modal `kill()` cleanup, or slot-based modal tracking.
+
+## 32. Compositional Construction
+
+Where: `game/ui/screens/strategy_screen_composition.py`, `game/ui/screens/strategy_screen.py`, `tests/fixtures/strategy_screen_composition.py`, `tests/unit/ui/screens/test_strategy_screen_composition.py`.
+
+Contract:
+- Define a `FooComposition` protocol/dataclass grouping collaborators.
+- Production constructor accepts an optional composition factory and otherwise uses `DefaultFooCompositionFactory`.
+- Factory exposes one `make_<thing>(self_ref)` method per stable collaborator slot.
+- Tests pass a `Mock<Class>Composition` / null composition without bypassing `__init__`.
+- Adding/renaming a slot is one edit in the protocol, default factory, and mock fixture, not repeated per test.
+- Constructor stays cheap enough to wire collaborators before heavy widget creation.
+- `MockStrategyScreenComposition.populate(screen)` exists for the remaining bypass-init path; direct construction can pass the mock composition as a kwarg.
+
+Use for classes that construct three or more stable, heavy collaborators in `__init__`. Prefer this over `bypass_init` for new UI classes.
+
+Skeleton:
 
 ```python
-call = LLMBackgroundCall(provider, messages, model="deepseek-v4-flash")
-call.start()
-# ... in the screen's update():
-if call.status == CallStatus.DONE:
-    consume(call.result)
-elif call.status == CallStatus.ERROR:
-    show_error(call.error)
-elif call.elapsed_seconds > 30:
-    offer_user_a_cancel_button()
+class StrategyScreenComposition(Protocol):
+    def make_renderer(self, screen) -> StrategyRenderer: ...
+    def make_camera_navigator(self, screen) -> CameraNavigator: ...
+    # ... one per stable sub-object slot
+
+class StrategyScreenCompositionFactory:
+    def make_renderer(self, screen) -> StrategyRenderer:
+        return StrategyRenderer(screen)
+    # ...
+
+class StrategyScreen:
+    def __init__(self, ..., *, composition: StrategyScreenComposition | None = None):
+        comp = composition or StrategyScreenCompositionFactory()
+        self._renderer = comp.make_renderer(self)
+        self._camera_nav = comp.make_camera_navigator(self)
 ```
 
-**Concurrency safeguards:**
+## 33. UI Widget Test Factory
 
-- All shared state guarded by an instance `threading.Lock`.
-- A module-level counter enforces `LLMConfig.MAX_CONCURRENT_CALLS` (default 3);
-  exceeding it raises `LLMConfigError` so a buggy consumer can't spam costly
-  requests.
-- Workers are non-daemon. `shutdown_all_calls(timeout=5.0)` joins them with
-  a bounded timeout before `pygame.quit()` — a hung remote endpoint can
-  never freeze the game on shutdown.
-- Status reads are lock-protected, so 100 concurrent reads from different
-  threads never see torn state.
+Where: `tests/fixtures/ui_widget_factory.py`, `tests/fixtures/test_ui_widget_factory.py`, per-class UI builder fixtures under `tests/fixtures/`.
 
-### When to Use
+Contract:
+- `make_ui_widget(cls, extra_modules=(), **kwargs)` constructs a real instance while patching `pygame_gui.elements.UI*` classes with mocks.
+- The factory patches the canonical `pygame_gui.elements` namespace and module-bound imports along the class MRO.
+- It introspects `__init__` defaults for common kwargs such as panel, manager/ui_manager, container, and rect; caller kwargs override.
+- For UIWindow subclasses, element-class patches are insufficient because `super().__init__()` resolves through the MRO. Use `bypass_init(cls)`.
+- `bypass_init(cls)` is a context manager; never set `Cls.bypass_init = True` bare in tests.
 
-- Any service call with unbounded latency (network I/O) that must not block
-  the pygame main loop.
-- Future LLM consumers (diplomacy "emails", ad-hoc summaries).
-- Future non-LLM services with the same shape (cloud sync, telemetry
-  uploads, asset downloads).
+Two-stage UIWindow shape:
+- Stage 1 above bypass guard: pure-Python state, delegate factory wiring, builder seam setup. No pygame_gui widgets, no `self.get_container()`, no asset I/O.
+- Guard: `if getattr(type(self), "bypass_init", False): return`. Use `type(self)` so inherited guards honor subclass flags.
+- Stage 2 below guard: `super().__init__(...)` and heavy widget tree via UI builder.
+- Use `Null{Foo}UiBuilder` when UI is irrelevant; use `Mock{Foo}UiBuilder` when asserting UI calls.
 
-### Reference consumer (PROJ-299)
+Use for legacy pygame_gui widget/unit tests. Use integration UI tests for real multi-widget event flow. Production never sets `bypass_init`.
 
-`game/strategy/services/race_description_llm_controller.py` —
-`RaceDescriptionLLMController` is the canonical first consumer. It
-owns two `LLMBackgroundCall` instances (one for the bio description,
-one for socio), translates their `CallStatus` into a domain-specific
-`FieldStatus` enum, and drives the Race Setup UI via an `on_change`
-callback. The screen polls `controller.update()` each frame and reads
-`bio_elapsed_seconds` / `socio_elapsed_seconds` to drive a 30s/90s
-"still working" modal dialog. New consumers should follow the same
-shape: a thin pygame-free Controller that owns the call lifecycle,
-exposes per-domain status, and is polled by the UI.
+Skeleton (two-stage `UIWindow` `__init__`):
 
-### Don't
+```python
+def __init__(self, ..., *, ui_builder=None, delegate_factory=None):
+    # Stage 1 — pure-Python state + delegate factory wiring + UI-builder seam.
+    # No pygame_gui widgets, no self.get_container(), no asset I/O.
+    self._race_config = ...
+    delegates = (delegate_factory or DefaultRaceSetupDelegateFactory()).build(self)
+    self._controller = delegates.controller
 
-- Use for fast operations (file I/O, in-memory work) — the threading
-  overhead isn't worth it.
-- Skip the concurrent-call limit — it's the only protection against a
-  buggy consumer racking up provider costs.
-- Daemon-thread the workers — daemon threads can die mid-write, corrupting
-  the result. Non-daemon + shutdown hook is the contract.
+    # Bypass guard — type(self) so subclass flags win.
+    if getattr(type(self), "bypass_init", False):
+        return
 
----
+    # Stage 2 — heavy widget tree.
+    super().__init__(...)
+    builder = ui_builder or DefaultRaceSetupUiBuilder()
+    builder.build(self)
+```
 
-## Quick Reference
+Test invocation:
 
-| Pattern | Primary File | Key Class/Function |
-|---------|-------------|-------------------|
-| ApplicationContext (DI) | `game/context.py` | `ApplicationContext` |
-| Protocol+TypeGuard | `game/core/protocols.py` | `IFleet`, `is_fleet()` |
-| DI (Registry) | `game/core/registry.py` | `DefaultRegistryProvider`, `TestRegistryProvider` |
-| Registry | `game/core/registry.py` | `RegistryManager`, `GameRegistries` |
-| Facade | `game/strategy/facade/strategy_session_facade.py` | `StrategySessionFacade` |
-| Delegate | `game/simulation/entities/ship_combat_engine.py` | `ShipCombatEngine` |
-| Delegate | `game/simulation/components/modifier_manager.py` | `ModifierManager` |
-| Delegate | `game/simulation/components/ability_manager.py` | `AbilityManager` |
-| Delegate | `game/simulation/components/component_health_manager.py` | `ComponentHealthManager` |
-| Delegate | `game/simulation/components/component_resource_manager.py` | `ComponentResourceManager` |
-| CQRS-lite | `game/strategy/facade/` | Commands + DTOs |
-| CommandHandler | `game/strategy/engine/command_handlers.py` | `CommandHandlerRegistry` |
-| MVVM | `game/ui/screens/workshop_viewmodel.py` | `WorkshopViewModel` |
-| Template Method | `game/simulation/validation/base.py` | `ValidationRule` |
-| Event Bus | `game/ui/screens/builder/event_bus.py` | `EventBus`, `BuilderEvents` |
-| Surface Cache | `game/ui/renderer/sprites.py` | `SpriteManager` |
-| Config Classes | `game/core/config.py` | `DisplayConfig`, `AIConfig`, `PhysicsConfig` |
-| Spec Compiler + run_battle | `game/simulation/battle_runner.py` + 3 compilers | `run_battle`, `BattleSpec` |
-| Ability Aggregation | `game/simulation/entities/ability_aggregator.py` | `calculate_ability_totals()` |
-| Factory | `game/ai/ai_factory.py`, `game/ui/services/ship_factory.py` | `AIControllerFactory`, `ShipFactory`, `PanelFactory` |
-| ScrollState | `game/ui/widgets/scroll_state.py` | `ScrollState` |
-| Serializable | `game/core/protocols.py` | `ISerializable` |
-| Error Boundary | `game/strategy/engine/turn_state_snapshot.py` | `TurnStateSnapshot`, `EnginePhaseError` |
-| Precondition Validation | `game/strategy/engine/*.py` | `_validate_tick_inputs()` |
-| Screen State Machine | `game/core/state_machine.py` | `ScreenStateMachine` |
-| TurnEngineConfig | `game/strategy/engine/turn_engine_config.py` | `TurnEngineConfig` |
-| Tick Phase Registry | `game/simulation/systems/tick_phase.py` | `ITickPhase`, `TickPhaseRegistry` |
-| External-Stats Bridge | `game/simulation/entities/ship.py` + `fleet_aura_manager.py` | `ship.external_stats`, `FleetAuraManager._apply_bonuses` |
-| Scope-Driven Team Routing | `game/simulation/combat/ability_stat_registry.py` | `OPPONENT_SCOPES`, `emit_entries_for_ability` |
-| Ability-Stat Registry | `game/simulation/combat/ability_stat_registry.py` | `ABILITY_STAT_REGISTRY`, `emit_entries_for_ability`, `KNOWN_EXTERNAL_STAT_KEYS` |
-| Background Service Call | `game/services/llm/background.py` | `LLMBackgroundCall`, `CallStatus`, `shutdown_all_calls` |
-| Universal Ability Source | `game/strategy/services/system_effects_collector.py` + `ability_sources/` | `IAbilitySource`, `collect_system_effects` |
+```python
+from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
 
-### Critical Naming Reminders
+with bypass_init(FleetReportWindow):
+    window = make_ui_widget(FleetReportWindow, fleet=mock_fleet, ...)
+```
 
-- Ship inherits `(PhysicsBody, ShipPhysicsMixin)` -- **no ShipCombatMixin**.
-- Config classes in `game/core/config.py` are **plain classes, not dataclasses**.
-- Use **BattleScreen / StrategyScreen**, not BattleScene / StrategyScene.
-- Use **VehicleDesignService**, not ShipBuilderService.
-- **PolicyManager** is at `game/ai/policy_manager.py`.
-- **EventBus** is at `game/ui/screens/builder/event_bus.py`.
+Never set `Cls.bypass_init = True` bare in a test body — a crash mid-test leaks the flag to every subsequent test.
 
+## 34. Weapon Family Registry
 
-## 29. Universal Ability Source (PROJ-300..305)
+Where:
+- Contract types: `game/simulation/combat/attack_contract.py`.
+- Registry: `game/simulation/combat/weapon_registry.py`.
+- Handlers: `game/simulation/combat/families/{beam,projectile,seeker,pdc}.py`.
+- Consumers: `weapon_firing_system.py`, `targeting_system.py`, `game/engine/collision.py`.
+- Acceptance test: `tests/unit/simulation/combat/test_weapon_registry.py::TestExtensibilityAcceptance`.
 
-### Where
-- Protocol: [`game/core/protocols/strategy_entities.py`](../game/core/protocols/strategy_entities.py) — `IAbilitySource` + `is_ability_source` TypeGuard
-- Adapter package: [`game/strategy/services/ability_sources/`](../game/strategy/services/ability_sources/) — `FacilityAbilitySource`, `StormAbilitySource`, `PlanetIntrinsicAbilitySource`, `StarAbilitySource`, `WarpPointAbilitySource`, `SystemAbilitySource`, `FleetAbilitySource`, plus shared helpers (`roll_intrinsic_abilities`, `format_intrinsic_source_label`)
-- Iterator: [`game/strategy/services/ability_iterator.py`](../game/strategy/services/ability_iterator.py)
-- Collector: [`game/strategy/services/system_effects_collector.py`](../game/strategy/services/system_effects_collector.py)
-- Aggregation: [`game/strategy/services/strategic_ability_scanner.py`](../game/strategy/services/strategic_ability_scanner.py) — `aggregate_multipliers` (intra-MAX, inter-MULTIPLY) + `aggregate_rates` (intra-MAX, inter-SUM)
+Contract:
+- Each `WeaponFamily` registers one `WeaponHandler`.
+- Importing `game.simulation.combat.families` triggers built-in registration.
+- Firing flow: `detect_family(comp)` -> `AttackRequest` -> `WEAPON_REGISTRY.dispatch(request)` -> typed resolution.
+- `BeamResolution` carries `source`, `component`, `target`, `damage`, `range`, `origin`, `direction`, `hit`, plus `type=AttackType.BEAM`.
+- `ProjectileResolution` wraps a `Projectile`; `NoAttack` represents no fire.
+- `FAMILY_METADATA` owns targeting policy flags such as missile targeting and PDC context.
+- Engine collision consumes typed resolution attributes, not simulation dict keys.
 
-### How It Works
-Every locatable entity that contributes strategic-layer abilities — facility, storm, planet, star, warp point, system archetype, fleet — implements `IAbilitySource`. Each one declares `source_kind` / `source_label` / `source_id` / `owner_id` for UI rendering, `get_abilities()` for the ability dict, and `affects_hex` / `affects_system` for filtering.
+To add a new family: add enum member, handler module implementing `WeaponHandler.fire`, metadata if needed, and import in `families/__init__.py`. Do not edit central firing/targeting/collision/projectile dispatch unless the shared contract itself changes.
 
-Adapters register a provider function with `register_source_provider_at_hex` / `register_source_provider_in_system`. The iterator yields `IAbilitySource` instances; the collector walks them, applies owner-filter (ownerless apply to all empires; owned to matching empire) + scope-filter (`_SECTOR_SCOPES` vs `_SYSTEM_SCOPES`), groups by `(ability_name, resource_type | damage_type)`, and dispatches to either `aggregate_multipliers` or `aggregate_rates` depending on the effect's `kind`.
+## 35. Stat Contributor Registry
 
-**PROJ-305 fleet integration:** `_fleet_provider` gates on `_FLEETS_AT_HEX_LOOKUP` / `_FLEETS_IN_SYSTEM_LOOKUP` callbacks registered via `set_fleet_lookups`. `GameInitializer._wire_fleet_lookups` connects them at session start.
+Where: `game/simulation/entities/stat_contributors/`.
 
-**Validations:**
-- D16 — mixed-kind groups (multiplier-only + rate-only entries in the same group) skip the offender + log warning.
-- D17 — ownerless sources may not declare ownership-aware scopes (`enemy_sector`, `allied_sector`, etc.); offending entries are skipped + logged.
-- D13 — components must not declare both combat scopes (self/fleet/team) and strategic scopes (sector/system/etc) on the same ability instance (test enforces).
-- AST static-analysis guard prevents `get_default_registry_provider()` calls inside the adapter package (PROJ-306 layering rule).
+Contract:
+- `STAT_CONTRIBUTOR_REGISTRY` is the single Phase-3 stat aggregation pipeline.
+- `ShipStatsCalculator._phase_stats_aggregation` iterates `STAT_CONTRIBUTOR_REGISTRY.iter_for(comp)` once per operational component.
+- Built-ins are registered entries seeded after domain modules load with explicit `phase_order`: movement=10, defense=20, hangar=40, command=50.
+- Modder entries default to `phase_order=99`, after non-replaced built-ins.
+- `StatAccumulator` is a typed `slots=True` dataclass with 10 scalar fields and 4 named map fields; misspelled scalar/map fields raise.
+- Dynamic resource keys (`max_<resource>`, `gen_<resource>`) live inside `acc.resource_storage` / `acc.resource_generation`.
+- Conflict policies: `REPLACE_WARN`, `REPLACE_SILENT`, `APPEND`, `ERROR`.
+- `REPLACE_*` entries suppress the underlying default while active; unregistering restores the default.
+- `register_stat_contributor(...)` returns a `RegistrationHandle`; unregister by handle.
+- Defaults cannot be unregistered by handle; `reset_stat_contributor_registry()` clears and re-seeds.
+- `CREW_PRIORITY_REGISTRY` is separate and maps ability names to crew allocation priority.
+- This registry is distinct from `combat.ability_stat_registry.ABILITY_STAT_REGISTRY`; the latter emits battle modifier entries, this one aggregates component stats.
+- Acceptance tests: `tests/unit/simulation/entities/stat_contributors/test_registry_pipeline.py` and `tests/unit/simulation/entities/test_stat_contributor_extension.py`.
 
-### When to Use
-- Any new entity kind that should project strategic-layer effects to a hex or system: write an adapter implementing `IAbilitySource`, register a provider.
-- Storm-style "things at a hex apply effects" become one-line plug-ins instead of bespoke pipelines.
+To add a recalculation-time stat ability: define a contributor taking `(ship, comp, accumulator)`, register it for the ability name with an explicit conflict policy, capture the handle, and reset/unregister in tests.
 
-### Key behavior
-- Overlapping storms multiply per-provider (no shared `stack_group`) — two ion storms apply 0.25× shields, not 0.5× (PROJ-300 D6).
-- ThrustModifier is wired into combat propulsion via `ABILITY_STAT_REGISTRY` (PROJ-300 D14).
-- Hostile star systems are deliberately uncapped (PROJ-302 D7); a hazard hint UI in `system_tree_panel` warns the player (D8).
+Boundary:
+- Phase-5 helpers such as `weapons.aggregate_targeting_scores`, `defense.apply_armor_and_repair_scores`, and `defense.init_armor_pool` remain imperative after the Phase-4 physics boundary. Folding them into the registry requires a future design.
 
----
+## 36. Re-Export Shim
 
-## 30. Registrar Close-Callback (BUG-121)
+> **Last verified:** 2026-05-08 (PROJ-396 MAJ-006: Pattern #5 facade-bypass prohibition added)
 
-> **STATUS: SUPERSEDED by Pattern #31 (PROJ-313) for modal tracking.**
-> This pattern documented the per-window manual contract used for strategy
-> modal-window tracking pre-PROJ-313: add a slot to
-> ``StrategyWindowManager``, scan it in ``has_modal_open()``, override
-> ``kill()`` on the window to fire ``on_close_callback``, and implement
-> a registrar ``_on_closed`` that resets the slot. PROJ-313 replaced
-> modal tracking with structural enforcement via the ``StrategyModalWindow``
-> base class (Pattern #31). The registrar callback remains active for
-> slot cleanup of caller-convenience pointers; what is superseded is using
-> those slots as the modal-tracking contract. New strategy-modal windows
-> MUST subclass ``StrategyModalWindow`` instead of implementing Pattern #30
-> manually.
+Where (4 confirmed sites at PROJ-382 verification, 2026-05-07):
+- `game/ui/screens/race_setup_screen.py` (~31 LOC) — re-exports
+  `RaceSetupScreen`, `RaceRandomizer`, `RaceBrowserDialog` from
+  `game/ui/screens/race_setup/`.
+- `game/ui/screens/test_lab/test_run_details.py` (~12 LOC) — re-exports
+  `TestRunDetailsPanel` from `game/ui/screens/test_lab/details/`.
+- `game/simulation/components/component.py:395-405` — re-exports
+  loader symbols from `game/simulation/components/component_loader.py`.
+- (Removed PROJ-383) `game/strategy/engine/command_handlers.py` —
+  the transitional re-export shim is deleted; all callers import
+  from `game/strategy/engine/handlers/base.py` directly.
 
-### Where
-- Reference adopters: [`game/ui/screens/strategy_windows/planet_abilities_ctrl.py`](../game/ui/screens/strategy_windows/planet_abilities_ctrl.py) (`PlanetAbilitiesRegistrar._on_closed`); [`game/ui/screens/strategy_windows/list_windows.py`](../game/ui/screens/strategy_windows/list_windows.py) (`PlanetListRegistrar`, `StarListRegistrar`); [`game/ui/screens/strategy_windows/fleet_report_ctrl.py`](../game/ui/screens/strategy_windows/fleet_report_ctrl.py) (`FleetReportRegistrar`)
-- Window classes that override `kill()` to invoke the callback: `PlanetAbilitiesWindow` ([`game/ui/screens/planet_abilities_window.py`](../game/ui/screens/planet_abilities_window.py)), `PlanetListWindow` ([`game/ui/screens/planet_list_window.py`](../game/ui/screens/planet_list_window.py))
-- Historical modal-state reader (pre-PROJ-313): [`game/ui/screens/strategy_event_router.py`](../game/ui/screens/strategy_event_router.py) — `has_modal_open()` walked tracked window slots and returned True if any was non-None. Current strategy-modal tracking uses Pattern #31.
+Problem the pattern solves:
+- A module is decomposed into a sub-package (or sibling module) but
+  many existing imports still target the original path. Editing every
+  importer in one PR enlarges the change footprint and complicates
+  review/rollback. A thin re-export shim preserves the legacy import
+  path while the canonical implementation moves.
 
-### How It Works
-Every modal-style strategy window has a registrar (a controller object on the strategy screen) that owns a slot variable like `wm.planet_abilities_window`. When the registrar opens the window it stores a reference in its slot AND passes `on_close_callback=self._on_closed` to the window constructor. The window stores the callback and overrides pygame_gui's `kill()` to invoke the callback before calling `super().kill()`. The callback resets the slot back to `None`.
+Structure:
+- The shim file is small (≤ ~30 LOC) and contains only `from <new
+  path> import <name>` lines plus an `__all__` listing of the
+  re-exported names.
+- A header docstring identifies the canonical module and the project
+  / migration that introduced the shim.
+- Tests that exercise behavior import from the canonical module.
 
-This is the **write side** of `has_modal_open()`'s **read side**: both sides must be wired together. Adding a slot to `has_modal_open` without also wiring a cleanup path causes the slot to leak after the user closes the window via the title-bar `[X]`, permanently triggering `has_modal_open() == True` and silently blocking downstream input gating (e.g., the strategy screen's mouse-wheel zoom guard).
+When to use:
+- Decomposing a god-module into a sub-package mid-refactor.
+- Renaming a module while letting downstream call sites migrate
+  incrementally (e.g. across multiple PROJs).
+- Promoting an internal symbol to a new canonical home without a
+  hard, repository-wide rename pass in a single change.
 
-### When to Use
-- Historical reference only. New modal-style strategy windows use Pattern #31. If legacy caller-convenience slots are touched, keep their cleanup path (`on_close_callback` or `_handle_window_close`) in the same change.
+When NOT to use:
+- For "compatibility" with old save files or external API consumers
+  outside the repo — Rule 3 (Root Cause Fixes) prohibits compat shims
+  for either. Re-export shims are an internal-migration aid only.
+- To paper over genuinely unmigrated state. The shim is a temporary
+  scaffold tied to a tracked decomposition project; it does not
+  legitimize a permanent two-path import surface.
+- When the canonical home is uncertain. Decide before introducing the
+  shim; otherwise the shim becomes a permanent fixture.
+- To create a public import surface that bypasses a Facade
+  (Pattern #5). PROJ-382 Phase 1 specifically eradicated facade-bypass
+  paths from `BuildQueueScreen` and `EmpireBuildQueueWindow`; a
+  re-export shim that exposes internal delegate symbols the Facade
+  is supposed to hide reopens the same hole under a new name.
+  Facade-bypass sites must route through the Facade — never through a
+  re-export shim, a renamed kwarg (e.g. `portrait_session=`), or any
+  other indirection that re-exposes the underlying session/object.
 
-### Why
-- pygame_gui's `kill()` releases the widget but does not reset the Python attribute on the parent that holds a reference to the killed window. `has_modal_open()` checks `is not None` (not `.alive()`), so a dead reference still counts as "open" until the slot is explicitly cleared.
-- The `_handle_window_close` event-driven cleanup branch is the alternative (used for ~12 slots today). The registrar callback pattern is preferred for windows whose lifecycle is owned by a registrar, because it keeps the open-and-close paths co-located.
+Retirement:
+- Each shim should reference the project responsible for migrating
+  its callers (e.g. PROJ-302 for race_setup; PROJ-383 retired the
+  former command_handlers shim).
+- When the legacy import path has zero remaining call sites under
+  `game/`, delete the shim file in the same PR that removes the last
+  caller. Audit guard: a periodic grep for shim contents is the
+  current detection mechanism; a future audit may add a static check.
 
-### Key behavior
-- Registrar's `_on_closed` runs synchronously inside `kill()`; the slot is `None` before `kill()` returns.
-- Test contract: `tests/unit/ui/screens/test_strategy_window_manager_public_api.py::test_modal_slot_clears_after_window_kill` is parametrised over every slot in `has_modal_open`'s scan and pins the lifecycle invariant for the whole window family.
+## Critical Naming Reminders
 
+- Ship inherits `(PhysicsBody, ShipPhysicsMixin)` — there is no `ShipCombatMixin`.
+- Config classes in `game/core/config.py` are plain classes, not dataclasses.
+- Use `BattleScreen` / `StrategyScreen`, not `BattleScene` / `StrategyScene`.
+- Use `VehicleDesignService`, not `ShipBuilderService`.
+- `PolicyManager` lives at `game/ai/policy_manager.py`.
+- Workshop `EventBus` lives at `game/ui/screens/builder/event_bus.py`; it is distinct from `game/core/event_logging.py::EventBus` used by simulation/strategy logging.
+- Galaxy/Planet/Star read protocols (`IGalaxySystemGraph`, `IGalaxySpatialQuery`, `IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder`) live at `game/strategy/data/galaxy_protocols.py`, beside the data classes; the cross-layer protocol package is `game/core/protocols/`.
+- Mutator protocols (`IFleetMutator`, `IPlanetMutator`, `IEmpireMutator`, `IShipInstanceMutator`) live at `game/core/protocols/strategy_mutators.py`.
 
----
+## Quick File/API Reminders
 
-## 31. Strategy Modal Window Base Class (PROJ-313)
+- `ApplicationContext`: `game/context.py`.
+- Registry provider: `game/core/registry.py::DefaultRegistryProvider`, `TestRegistryProvider`, `get_default_registry_provider`.
+- Protocols: `game/core/protocols/`.
+- Strategy facade: `game/strategy/facade/strategy_session_facade.py`.
+- Battle runner: `game/simulation/battle_runner.py::run_battle`.
+- Battle spec/outcome DTOs: `game/simulation/battle_spec.py`, `game/simulation/battle_outcome.py`.
+- Ability stat registry: `game/simulation/combat/ability_stat_registry.py`.
+- Weapon registry: `game/simulation/combat/weapon_registry.py`.
+- Stat contributor registry: `game/simulation/entities/stat_contributors/registry.py`.
+- Universal ability source adapters: `game/strategy/services/ability_sources/`.
+- Strategy modal base: `game/ui/screens/strategy_modal_window.py`.
+- UI widget factory: `tests/fixtures/ui_widget_factory.py`.
+- Turn config: `game/strategy/engine/turn_engine_config.py`.
+- Tick phases: `game/simulation/systems/tick_phase.py`.
 
-### Where
-- Base class: [`game/ui/screens/strategy_modal_window.py`](../game/ui/screens/strategy_modal_window.py) — `StrategyModalWindow(UIWindow)`.
-- Registry: `StrategyModalWindow._registered_subclasses` (populated by `__init_subclass__` at class definition time).
-- Manager API: `StrategyWindowManager.register_modal()`, `unregister_modal()`, `iter_live_modals()` in [`game/ui/screens/strategy_window_manager.py`](../game/ui/screens/strategy_window_manager.py).
-- Adopters (20 windows): `OrdersWindow`, `TransferDialog`, `CargoQuickDialog`, `PlanetSelectionWindow`, `SystemSelectionWindow`, `FleetSelectionWindow`, `EmpireBuildQueueWindow`, `EventLogWindow`, `EmpirePanelWindow`, `PlanetListWindow`, `StarListWindow`, `BuildQueueListWindow`, `FleetReportWindow`, `PlanetAbilitiesWindow`, `MoveChoiceWindow`, `FoodAllocationEditor`, `AtmosphereTargetEditor`, `GravityTargetEditor`, `WaterTargetEditor`, `RadiationShieldEditor`.
+## Extension Checklist
 
-### How It Works
-Subclassing `StrategyModalWindow` auto-registers the instance with a `StrategyWindowManager` on construction (via `register_modal(self)` in `__init__`) and auto-deregisters on `kill()` (via `unregister_modal(self)` before `super().kill()`).
+- New battle launch: compile `BattleSpec`; call `run_battle` or `BattleController.start_from_spec`; pass `registry_provider` when no ship builder is supplied.
+- New strategic effect source: implement `IAbilitySource`, register source provider, add owner/scope validation tests.
+- New combat modifier ability: register in `ABILITY_STAT_REGISTRY`, update `KNOWN_EXTERNAL_STAT_KEYS`, add tests through quickstart complex coverage.
+- New weapon family: add handler and metadata, register via family module import, keep central systems unchanged.
+- New recalculation stat contributor: use `register_stat_contributor`, typed `StatAccumulator`, explicit conflict policy, and handle cleanup.
+- New turn sub-engine: add dependency to `TurnEngineConfig.create_default`, add/adjust phase descriptor, validate preconditions before mutation.
+- New strategy modal: subclass `StrategyModalWindow` and require keyword-only `window_manager`.
+- New complex UI class: use Compositional Construction; for legacy UIWindow tests only, use scoped `bypass_init`.
+- New registry consumer in simulation: inject provider/registries; never call global registry lookup.
+- New random behavior in combat/AI/engine: accept and use injected `random.Random`; add determinism coverage if behavior affects outcomes.
 
-`StrategyEventRouter.has_modal_open()` and `_is_blocking_ui_element_at()` walk `window_manager.iter_live_modals()` for modal tracking; the manager GC-filters dead refs via `.alive()` on every iteration. `has_modal_open()` additionally checks `menu_panel` and `build_queue_screen`, which are pre-modal-tracking concerns retained from before PROJ-313.
+## Guard And Test Anchors
 
-The contract is structural: the constructor accepts a required keyword-only `window_manager` parameter, so forgetting registration is impossible. The `kill()` override is in the base class, so forgetting deregistration is impossible. pygame_gui's `UIWindow.kill()` is the universal funnel for every kill path (programmatic, title-bar `[X]` button, parent-kill cascade), so `StrategyModalWindow.kill()` always runs.
-
-### When to Use
-**Any new modal-style window that should block strategy-screen input.** Subclass `StrategyModalWindow`, accept `window_manager` as a keyword-only param in `__init__`, and forward it to `super().__init__(..., window_manager=window_manager)`. No further wiring required — no manual slot field on `StrategyWindowManager`, no clauses in `has_modal_open()` or `_is_blocking_ui_element_at()`, no `kill()` override.
-
-For windows opened **outside** the strategy screen (e.g., `BuildQueueScreen` opening a `PlanetSelectionWindow`), pass `window_manager=None`. The instance simply doesn't register; the contract is preserved at strategy-screen callers.
-
-### Why
-- Eradicates the BUG-22 / BUG-69 / BUG-121 / BUG-122-foodallocation bug class structurally — clicks-through and stale-flag-leak failures are no longer possible because their causal contract steps are absent.
-- The asymmetric `is not None` (in `has_modal_open`) vs `.alive()` (in `_is_blocking_ui_element_at`) check that produced BUG-121 is collapsed: both paths now walk the same `.alive()`-filtered list.
-- Test contract strengthening: structural tests in `tests/unit/ui/screens/test_strategy_modal_window.py` cover base-class registration, deregistration, subclass registry behavior, and required `window_manager` signatures. These augment the legacy `TestModalSlotCleanupContract`, which remains as a regression for the still-active slot-cleanup pathway.
-
-### Key Behavior
-- `kill()` deregisters BEFORE `super().kill()`, so the modal is off the live list at the moment `alive()` flips to False.
-- `unregister_modal` is idempotent (swallows `ValueError` for already-removed entries) — calling `kill()` twice is safe.
-- `iter_live_modals` performs an in-place GC walk (`self._modals = [w for w in self._modals if w.alive()]`) on every call — orphan refs from parent-kill cascades are reaped within one walk.
-- Test contract: `tests/unit/ui/screens/test_strategy_modal_window.py` covers the base class invariants and required `window_manager` signatures; `tests/integration/ui/test_editor_click_blocking.py` imports the real Phase 7 editor classes, verifies subclassing, verifies registration through the base class, and asserts editor spawn sites pass `window_manager=ui.window_manager`.
-
-### Migration notes (legacy slot fields)
-The legacy slot fields on `StrategyWindowManager` are KEPT post-migration as caller-convenience pointers (used by `strategy_screen.rebuild_list()`, `handle_global_event` forwarding, "kill before re-open" idioms). They no longer provide the modal-tracking contract; strategy-modal tracking is via `iter_live_modals()`. The legacy `_handle_window_close` event listener is also kept; it clears these slots when pygame_gui posts `UI_WINDOW_CLOSE`, so callers see `None` after close. Pattern #30's "registrar callback to clear the slot" mechanism remains active where present, but the contract for **modal tracking** is now Pattern #31.
+- Registry/global lookup guard: simulation must not call `get_default_registry_provider()`.
+- Mutation boundary guard: `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py`.
+- Facade thinness guard: `tests/unit/strategy/data/test_no_method_body_over_5_loc.py`.
+- Command tuple regression: `tests/unit/strategy/engine/test_no_specs_tuple_literal.py`.
+- RNG guard: `tests/unit/quality/test_no_unseeded_random.py`.
+- Battle determinism: `tests/integration/fleet_combat/test_battle_determinism.py`.
+- Scroll utility: `tests/unit/ui/widgets/test_scroll_state.py`.
+- Serializable protocol: `tests/unit/core/test_serializable_protocol.py`.
+- Modal base contracts: `tests/unit/ui/screens/test_strategy_modal_window.py`, `tests/integration/ui/test_editor_click_blocking.py`.
+- Weapon family extensibility: `tests/unit/simulation/combat/test_weapon_registry.py::TestExtensibilityAcceptance`.
+- Stat contributor registry: `tests/unit/simulation/entities/stat_contributors/test_registry_pipeline.py`, `tests/unit/simulation/entities/test_stat_contributor_extension.py`.

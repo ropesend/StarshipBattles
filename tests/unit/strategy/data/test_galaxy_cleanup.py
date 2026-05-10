@@ -3,11 +3,12 @@
 PROJ-102 Phase 3 tests for data model extensions.
 """
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
+from game.strategy.data.galaxy import StarSystem, WarpPoint
+from tests.fixtures.galaxy_fixtures import make_galaxy_stub
 
 
 class TestDysonSpherePlanetType:
@@ -58,50 +59,38 @@ class TestGalaxyUnregisterPlanet:
     @pytest.fixture
     def galaxy_with_planet(self):
         """Create a galaxy with a registered planet."""
-        from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry
-        with patch.object(Galaxy, '__init__', lambda self, radius=100: None):
-            galaxy = Galaxy.__new__(Galaxy)
-            galaxy.radius = 100
-            galaxy.systems = {}
-            galaxy.name_map = {}
-            galaxy._next_planet_id = 1
-            galaxy.planets_by_id = {}
-            galaxy._planet_to_system = {}
-            galaxy._global_hex_planets = {}
-            galaxy._global_hex_zones = {}
-            galaxy.fleets_by_id = {}
-            galaxy._registry = GalaxyEntityRegistry(galaxy)
+        galaxy = make_galaxy_stub()
 
-            # Create system and planet
-            system = StarSystem("TestSys", HexCoord(10, 20))
-            planet = Planet(
-                name="TestPlanet",
-                location=HexCoord(2, 3),
-                orbit_distance=1,
-                mass=1e24,
-                radius=6e6,
-                surface_area=5e14,
-                density=5000,
-                surface_gravity=10,
-                surface_pressure=101325,
-                surface_temperature=288,
-                surface_water=0.7,
-                tectonic_activity=0.5,
-                magnetic_field=1.0,
-            )
+        # Create system and planet
+        system = StarSystem("TestSys", HexCoord(10, 20))
+        planet = Planet(
+            name="TestPlanet",
+            location=HexCoord(2, 3),
+            orbit_distance=1,
+            mass=1e24,
+            radius=6e6,
+            surface_area=5e14,
+            density=5000,
+            surface_gravity=10,
+            surface_pressure=101325,
+            surface_temperature=288,
+            surface_water=0.7,
+            tectonic_activity=0.5,
+            magnetic_field=1.0,
+        )
 
-            # Register manually (simulating galaxy.register_planet)
-            planet.id = 1
-            galaxy._next_planet_id = 2
-            galaxy.planets_by_id[planet.id] = planet
-            galaxy._planet_to_system[planet] = system
-            global_hex = system.global_location + planet.location
-            galaxy._global_hex_planets[global_hex] = [planet]
-            system.planets.append(planet)
-            galaxy.systems[system.global_location] = system
-            galaxy.name_map[system.name] = system
+        # Register manually (simulating galaxy.register_planet)
+        planet.id = 1
+        galaxy.state.next_planet_id = 2
+        galaxy.planets_by_id[planet.id] = planet
+        galaxy.state.planet_to_system[planet] = system
+        global_hex = system.global_location + planet.location
+        galaxy.state.global_hex_planets[global_hex] = [planet]
+        system.planets.append(planet)
+        galaxy.systems[system.global_location] = system
+        galaxy.name_map[system.name] = system
 
-            return galaxy, system, planet
+        return galaxy, system, planet
 
     def test_unregister_planet_removes_from_planets_by_id(self, galaxy_with_planet):
         """Planet should be removed from planets_by_id dict."""
@@ -117,7 +106,7 @@ class TestGalaxyUnregisterPlanet:
 
         galaxy.unregister_planet(planet)
 
-        assert planet not in galaxy._planet_to_system
+        assert planet not in galaxy.state.planet_to_system
 
     def test_unregister_planet_removes_from_global_hex_planets(self, galaxy_with_planet):
         """Planet should be removed from _global_hex_planets dict."""
@@ -127,7 +116,7 @@ class TestGalaxyUnregisterPlanet:
         galaxy.unregister_planet(planet)
 
         # Should either be empty list or key removed
-        planets_at_hex = galaxy._global_hex_planets.get(global_hex, [])
+        planets_at_hex = galaxy.state.global_hex_planets.get(global_hex, [])
         assert planet not in planets_at_hex
 
     def test_unregister_planet_removes_from_system_planets_list(self, galaxy_with_planet):
@@ -163,31 +152,22 @@ class TestGalaxyRemoveWarpLink:
     @pytest.fixture
     def galaxy_with_warp_link(self):
         """Create a galaxy with two systems linked by warp points."""
-        with patch.object(Galaxy, '__init__', lambda self, radius=100: None):
-            galaxy = Galaxy.__new__(Galaxy)
-            galaxy.radius = 100
-            galaxy.systems = {}
-            galaxy.name_map = {}
-            galaxy._next_planet_id = 1
-            galaxy.planets_by_id = {}
-            galaxy._planet_to_system = {}
-            galaxy._global_hex_planets = {}
-            galaxy.fleets_by_id = {}
+        galaxy = make_galaxy_stub()
 
-            # Create two systems
-            system_a = StarSystem("Alpha", HexCoord(0, 0))
-            system_b = StarSystem("Beta", HexCoord(50, 50))
+        # Create two systems
+        system_a = StarSystem("Alpha", HexCoord(0, 0))
+        system_b = StarSystem("Beta", HexCoord(50, 50))
 
-            # Add mutual warp points
-            system_a.warp_points.append(WarpPoint("Beta", HexCoord(5, 0)))
-            system_b.warp_points.append(WarpPoint("Alpha", HexCoord(-5, 0)))
+        # Add mutual warp points
+        system_a.warp_points.append(WarpPoint("Beta", HexCoord(5, 0)))
+        system_b.warp_points.append(WarpPoint("Alpha", HexCoord(-5, 0)))
 
-            galaxy.systems[system_a.global_location] = system_a
-            galaxy.systems[system_b.global_location] = system_b
-            galaxy.name_map["Alpha"] = system_a
-            galaxy.name_map["Beta"] = system_b
+        galaxy.systems[system_a.global_location] = system_a
+        galaxy.systems[system_b.global_location] = system_b
+        galaxy.name_map["Alpha"] = system_a
+        galaxy.name_map["Beta"] = system_b
 
-            return galaxy, system_a, system_b
+        return galaxy, system_a, system_b
 
     def test_remove_warp_link_removes_from_both_systems(self, galaxy_with_warp_link):
         """Warp points should be removed from both systems."""
@@ -245,53 +225,45 @@ class TestGalaxyGetAllFleetsInSystem:
     @pytest.fixture
     def galaxy_with_fleets(self):
         """Create a galaxy with a system and fleets from multiple empires."""
-        with patch.object(Galaxy, '__init__', lambda self, radius=100: None):
-            galaxy = Galaxy.__new__(Galaxy)
-            galaxy.radius = 100
-            galaxy.systems = {}
-            galaxy.name_map = {}
-            galaxy._next_planet_id = 1
-            galaxy.planets_by_id = {}
-            galaxy._planet_to_system = {}
-            galaxy._global_hex_planets = {}
-            galaxy.fleets_by_id = {}
+        galaxy = make_galaxy_stub()
 
-            # Create a system at (10, 10)
-            system = StarSystem("TestSys", HexCoord(10, 10))
+        # Create a system at (10, 10)
+        system = StarSystem("TestSys", HexCoord(10, 10))
 
-            # Add a planet at local (2, 0)
-            planet = MagicMock()
-            planet.location = HexCoord(2, 0)
-            system.planets.append(planet)
+        # Add a planet at local (2, 0)
+        planet = MagicMock()
+        planet.location = HexCoord(2, 0)
+        planet.radius_hexes = 0  # PROJ-378: _spatial reads this; 0 = no extra occupied hexes
+        system.planets.append(planet)
 
-            # Add a warp point at local (-3, 0)
-            wp = WarpPoint("OtherSys", HexCoord(-3, 0))
-            system.warp_points.append(wp)
+        # Add a warp point at local (-3, 0)
+        wp = WarpPoint("OtherSys", HexCoord(-3, 0))
+        system.warp_points.append(wp)
 
-            galaxy.systems[system.global_location] = system
-            galaxy.name_map[system.name] = system
+        galaxy.systems[system.global_location] = system
+        galaxy.name_map[system.name] = system
 
-            # Create mock empires with fleets
-            empire1 = MagicMock()
-            empire1.id = 1
-            fleet1 = MagicMock()
-            fleet1.id = 101
-            fleet1.location = HexCoord(10, 10)  # At system center
-            empire1.fleets = [fleet1]
+        # Create mock empires with fleets
+        empire1 = MagicMock()
+        empire1.id = 1
+        fleet1 = MagicMock()
+        fleet1.id = 101
+        fleet1.location = HexCoord(10, 10)  # At system center
+        empire1.fleets = [fleet1]
 
-            empire2 = MagicMock()
-            empire2.id = 2
-            fleet2 = MagicMock()
-            fleet2.id = 102
-            fleet2.location = HexCoord(12, 10)  # At planet (10,10) + (2,0)
-            fleet3 = MagicMock()
-            fleet3.id = 103
-            fleet3.location = HexCoord(7, 10)   # At warp point (10,10) + (-3,0)
-            empire2.fleets = [fleet2, fleet3]
+        empire2 = MagicMock()
+        empire2.id = 2
+        fleet2 = MagicMock()
+        fleet2.id = 102
+        fleet2.location = HexCoord(12, 10)  # At planet (10,10) + (2,0)
+        fleet3 = MagicMock()
+        fleet3.id = 103
+        fleet3.location = HexCoord(7, 10)   # At warp point (10,10) + (-3,0)
+        empire2.fleets = [fleet2, fleet3]
 
-            empires = [empire1, empire2]
+        empires = [empire1, empire2]
 
-            return galaxy, system, empires
+        return galaxy, system, empires
 
     def test_get_all_fleets_at_system_center(self, galaxy_with_fleets):
         """Should find fleets at the system's global_location."""

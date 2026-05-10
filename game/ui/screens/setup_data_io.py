@@ -12,6 +12,9 @@ from __future__ import annotations
 from typing import Any
 import os
 import glob
+# PROJ-382 Phase 3 (Pattern #12): bare ``json`` import preserved for the
+# ``json.JSONDecodeError`` exception type used in the file-IO except
+# clauses below. Persistence itself routes through json_utils.
 import json
 import pygame
 

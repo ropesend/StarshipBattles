@@ -51,12 +51,10 @@ Example:
     engine.shutdown()
 """
 import logging
-import os
 import random
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
 
 from game.core.math import Vector2
-from game.core.paths import Paths
 
 logger = logging.getLogger(__name__)
 from game.engine.spatial import SpatialGrid
@@ -68,6 +66,12 @@ from game.simulation.systems.battle_end_conditions import (
     IEndCondition,
     TeamEliminatedCondition,
 )
+# PROJ-382 Phase 5: BattleLogger + boundary helpers extracted into sibling
+# modules to bring this file under the 500 LOC ceiling.
+from game.simulation.systems.battle_logger import BattleLogger
+from game.simulation.systems import boundary_enforcement as _boundary
+from game.simulation.systems import attack_processor as _attacks
+from game.simulation.systems import battle_setup as _setup
 
 from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship
@@ -80,94 +84,16 @@ if TYPE_CHECKING:
     from game.simulation.interfaces.ai_controller import IAIController, IAIControllerFactory
     from game.simulation.systems.tick_phase import TickPhaseRegistry
 
-class BattleLogger:
-    """Toggleable logger that writes battle events to file."""
-
-    def __init__(self, filename: str = None, enabled: bool = True):
-        if filename is None:
-            filename = os.path.join(Paths.LOGS_DIR, "battle_log.txt")
-        self.enabled = enabled
-        self.filename = filename
-        self.file = None
-    
-    def __enter__(self):
-        """Context manager entry."""
-        self.start_session()
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit - ensures file is closed."""
-        self.close()
-        return False
-    
-    def __del__(self):
-        """Destructor - ensures file is closed on garbage collection."""
-        self.close()
-        
-    def start_session(self) -> None:
-        """Start a new logging session.
-
-        ERR-010: Uses try/except/finally for proper cleanup on failure.
-        """
-        if self.enabled:
-            self.close()  # Ensure existing file is closed before opening new one
-            new_file = None
-            try:
-                os.makedirs(os.path.dirname(self.filename), exist_ok=True)
-                new_file = open(self.filename, 'w', encoding='utf-8')
-                new_file.write("=== BATTLE LOG STARTED ===\n")
-                self.file = new_file  # Only assign on success
-            except IOError as e:
-                logger.warning(f"Could not open battle log '{self.filename}': {e}")
-                self.enabled = False
-                if new_file:
-                    try:
-                        new_file.close()
-                    except IOError:
-                        pass  # Already in error state, ignore close failure
-    
-    def log(self, message: str) -> None:
-        """Log a message if logging is enabled."""
-        if self.enabled and self.file:
-            try:
-                self.file.write(f"{message}\n")
-
-            except IOError as e:
-                logger.warning(f"BattleLogger: Failed to write to '{self.filename}': {e}")
-    
-    def close(self) -> None:
-        """Close the log file."""
-        if self.file:
-            try:
-                self.log("=== BATTLE LOG ENDED ===")
-                self.file.close()
-            except IOError as e:
-                logger.warning(f"BattleLogger: Failed to close '{self.filename}': {e}")
-            finally:
-                self.file = None
 
 class BattleEngine:
-    """
-    Core combat simulation engine.
+    """Core combat simulation engine — see module docstring for the
+    battle lifecycle and ``BattleEndMode`` semantics.
 
-    Manages real-time space combat between two teams of ships, handling:
-    - Ship and AI controller lifecycle
-    - Spatial indexing for efficient collision queries
-    - Projectile and beam weapon processing
-    - Fighter launches and reinforcements
-    - Battle end conditions
-
-    Attributes:
-        ships: All ships currently in battle
-        ai_controllers: AI controllers for each ship
-        projectile_manager: Tracks and updates projectiles
-        collision_system: Handles hit detection
-        recent_beams: Beam attack data for current tick (for rendering)
-        grid: Spatial hash grid for efficient neighbor queries
-        tick_counter: Number of simulation ticks elapsed
-        winner: Winning team ID after battle ends (0, 1, or None)
-        end_condition: Configurable battle end condition
-        logger: Battle event logger (disabled by default)
+    Manages ship + AI controller lifecycle, spatial indexing, projectile
+    and beam processing, fighter launches/reinforcements, and end
+    conditions.  PROJ-382 Phase 5: heavy lifting (battle_logger, attack
+    processing, boundary enforcement, battle setup) lives in sibling
+    modules; this class is the engine façade.
     """
 
     def __init__(
@@ -177,6 +103,7 @@ class BattleEngine:
         tick_phases: Optional['TickPhaseRegistry'] = None,
         boundary: Optional[Any] = None,
         modifier_stack: Optional[Any] = None,
+        event_bus: Optional[Any] = None,
     ):
         """
         Create a BattleEngine instance.
@@ -255,6 +182,32 @@ class BattleEngine:
         # the FleetAuraManager pipeline. None = no external modifiers.
         self.modifier_stack = modifier_stack
 
+        # PROJ-405: session EventBus (game.core.event_logging.EventBus).
+        # Distinct from `self.combat_events` (the per-battle CombatEventBus
+        # used by DamageCalculator) — this one is the structured, string-keyed
+        # session bus that GameSession owns.  When provided, it is forwarded
+        # into the shared `WeaponFiringSystem` so projectile/seeker handlers
+        # can thread `Projectile.event_logger=bus.log_event`, surfacing
+        # SEEKER_EXPIRE telemetry that PROJ-382 left silently dropped.
+        self.event_bus = event_bus
+        if event_bus is not None:
+            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
+            from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
+            from game.simulation.combat.targeting_system import TargetingSystem
+
+            # Force creation of the shared firing system so we can hand it
+            # the bus before the first ship fires.  ShipCombatEngine lazily
+            # creates these on first instantiation; do it eagerly here.
+            if ShipCombatEngine._targeting_system is None:
+                ShipCombatEngine._targeting_system = TargetingSystem()
+            if ShipCombatEngine._weapon_firing_system is None:
+                ShipCombatEngine._weapon_firing_system = WeaponFiringSystem(
+                    ShipCombatEngine._targeting_system,
+                    event_bus=event_bus,
+                )
+            else:
+                ShipCombatEngine._weapon_firing_system.set_event_bus(event_bus)
+
     @property
     def projectiles(self) -> List[Any]:
         return self.projectile_manager.projectiles
@@ -298,66 +251,15 @@ class BattleEngine:
         absolute_max_ticks: Optional[int] = None,
         ai_controllers: Optional[List['IAIController']] = None,
     ) -> None:
-        """N-team version of `start()`. Accepts any number of teams.
-
-        Each key in `teams` is the `team_id` to assign; values are the
-        ship lists. AI controllers default to the factory with
-        `enemy_team_id=None` (the factory picks a default); Task 3.4
-        refines the AI to read `engine.get_enemies_of` dynamically.
-
-        The existing 2-team `start(team0, team1, ...)` signature is kept
-        as a thin wrapper (see below) for backwards compatibility.
-        """
-        self._initialize_start_state(seed, end_condition, absolute_max_ticks)
-
-        # Assign team_ids + append ships.
-        ships_per_team: Dict[int, List['Ship']] = {}
-        for team_id, team_ships in teams.items():
-            if not isinstance(team_ships, list):
-                team_ships = [team_ships]
-            for s in team_ships:
-                s.team_id = team_id
-                self.ships.append(s)
-            ships_per_team[team_id] = list(team_ships)
-
-        if ai_controllers is not None:
-            self.ai_controllers = list(ai_controllers)
-        elif self._ai_factory is not None:
-            # PROJ-312: forward the per-battle seeded RNG to the factory so
-            # every controller it builds (and every behavior they own —
-            # ErraticBehavior in particular) consumes a deterministic RNG.
-            # Pattern #18 (Per-Battle RNG).
-            self._ai_factory.set_rng(self.rng)
-            # Phase 3 Task 3.3: AI factory's `enemy_team_id` is a 2-team
-            # artifact. For N teams, we pass any non-self team id as a
-            # hint — Task 3.4 refines the AI to scan all enemies.
-            self.ai_controllers = []
-            all_team_ids = list(ships_per_team.keys())
-            for team_id, team_ships in ships_per_team.items():
-                enemy_candidates = [tid for tid in all_team_ids if tid != team_id]
-                enemy_hint = enemy_candidates[0] if enemy_candidates else team_id
-                controllers = self._ai_factory.create_for_ships(
-                    team_ships, enemy_team_id=enemy_hint
-                )
-                self.ai_controllers.extend(controllers)
-        else:
-            raise ValidationException(
-                "BattleEngine requires AI configuration",
-                code=ErrorCode.MISSING_DEPENDENCY.value,
-                context={"missing": "ai_controllers and ai_factory", "operation": "start_teams"}
-            )
-
-        for s in self.ships:
-            self._initialize_ship(s)
-        # PROJ-269 Phase 5.5: thread the engine's modifier_stack (populated
-        # by run_battle from spec) into the aura manager for effect application.
-        self.aura_manager.initialize(self.ships, modifier_stack=self.modifier_stack)
-        self.logger.start_session()
-        self.logger.log(
-            f"Battle started: {sum(len(t) for t in teams.values())} ships "
-            f"across {len(teams)} teams"
+        """N-team version of ``start()``.  Delegates to ``battle_setup``
+        helper (PROJ-382 Phase 5 extraction)."""
+        _setup.start_teams(
+            self, teams,
+            seed=seed,
+            end_condition=end_condition,
+            absolute_max_ticks=absolute_max_ticks,
+            ai_controllers=ai_controllers,
         )
-        self._log_initial_status()
 
     def _initialize_start_state(
         self,
@@ -365,23 +267,8 @@ class BattleEngine:
         end_condition: Optional[IEndCondition],
         absolute_max_ticks: Optional[int],
     ) -> None:
-        """Shared setup for `start()` and `start_teams()`."""
-        self.rng = random.Random(seed)
-        self.collision_system.rng = self.rng
-        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-        ShipCombatEngine._damage_calculator = DamageCalculator(rng=self.rng)
-
-        self.ships = []
-        self.ai_controllers = []
-        self.projectile_manager.clear()
-        self.recent_beams = []
-        self.tick_counter = 0
-        self.winner = None
-        self.retreated_ships = []
-
-        self.end_condition = end_condition if end_condition is not None else TeamEliminatedCondition()
-        if absolute_max_ticks is not None:
-            self._absolute_max_ticks = absolute_max_ticks
+        """Delegate to ``battle_setup.initialize_start_state`` (PROJ-382)."""
+        _setup.initialize_start_state(self, seed, end_condition, absolute_max_ticks)
 
     def start(
         self,
@@ -411,16 +298,8 @@ class BattleEngine:
         )
 
     def _log_initial_status(self) -> None:
-        for s in self.ships:
-            fuel = s.resources.get_value("fuel")
-            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f}"
-            self.logger.log(status_msg)
-            logger.info(status_msg)
-            # Removed Derelict Warning
-            if s.total_thrust <= 0:
-                self.logger.log(f"WARNING: {s.name} has NO THRUST!")
-            if s.turn_speed <= 0.01:
-                self.logger.log(f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})!")
+        """Delegate to ``battle_setup.log_initial_status`` (PROJ-382)."""
+        _setup.log_initial_status(self)
 
     def _initialize_ship(self, ship: 'Ship') -> None:
         """Run per-ship initialization: event bus, components, stats, derelict check.
@@ -568,169 +447,42 @@ class BattleEngine:
         self.aura_manager.update(self.ships)
 
     def _collect_new_attacks(self, alive_ships: List['Ship']) -> List[Any]:
-        """Collect and clear attacks emitted by ships this tick."""
-        new_attacks = []
-        for ship in alive_ships:
-            if ship.just_fired_projectiles:
-                new_attacks.extend(ship.just_fired_projectiles)
-                ship.just_fired_projectiles = []
-        return new_attacks
+        """Delegate to ``attack_processor.collect_new_attacks`` (PROJ-382)."""
+        return _attacks.collect_new_attacks(self, alive_ships)
 
     def _process_attacks(self, attacks: List[Any]) -> None:
-        """Process projectile, beam, and launch attacks."""
-        for attack in attacks:
-            is_dict = isinstance(attack, dict)
-            attack_type = attack.get('type') if is_dict else attack.type
-
-            if attack_type in (AttackType.PROJECTILE, AttackType.MISSILE):
-                self._process_projectile_attack(attack, attack_type, is_dict)
-            elif attack_type == AttackType.BEAM:
-                self.collision_system.process_beam_attack(attack, self.recent_beams)
-            elif attack_type == AttackType.LAUNCH:
-                self._process_launch_attack(attack)
+        """Delegate to ``attack_processor.process_attacks`` (PROJ-382)."""
+        _attacks.process_attacks(self, attacks)
 
     def _process_projectile_attack(self, attack: Any, attack_type: AttackType, is_dict: bool) -> None:
-        """Register a projectile or missile attack with logging."""
-        if is_dict:
-            return
-
-        self.projectile_manager.add_projectile(attack)
-        if attack_type == AttackType.PROJECTILE:
-            self.logger.log(f"Projectile fired at {attack.position}")
-        else:
-            target_name = attack.target.name if attack.target else 'unknown'
-            self.logger.log(f"Missile fired at {target_name}")
+        """Delegate to ``attack_processor.process_projectile_attack`` (PROJ-382)."""
+        _attacks.process_projectile_attack(self, attack, attack_type, is_dict)
 
     def _process_launch_attack(self, attack: Dict[str, Any]) -> None:
-        """Spawn a launched fighter and add it to the battle."""
-        source_ship = attack.get('source')
-        fighter_class = attack.get('fighter_class', 'Fighter (Small)')
-        origin = attack.get('origin', Vector2(0, 0))
-
-        count = len([ship for ship in self.ships if ship.team_id == source_ship.team_id])
-        new_name = f"{source_ship.name} Wing {count+1}"
-
-        offset = Vector2(self.rng.uniform(-10, 10), self.rng.uniform(-10, 10))
-        spawn_pos = origin + offset
-
-        new_ship = Ship(
-            name=new_name,
-            x=spawn_pos.x,
-            y=spawn_pos.y,
-            color=source_ship.color,
-            team_id=source_ship.team_id,
-            ship_class=fighter_class,
-            theme_id=source_ship.theme_id,
-            registries=source_ship.registries,
-        )
-
-        new_ship.velocity = Vector2(source_ship.velocity)
-        launch_dir = Vector2(1, 0).rotate(source_ship.angle)
-        new_ship.velocity += launch_dir * BattleTuning.FIGHTER_LAUNCH_SPEED
-        new_ship.angle = source_ship.angle
-
-        self.add_ship_mid_battle(new_ship, new_ship.team_id)
-        self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")
+        """Delegate to ``attack_processor.process_launch_attack`` (PROJ-382)."""
+        _attacks.process_launch_attack(self, attack)
 
     # ------------------------------------------------------------------
     # PROJ-269 Phase 3: boundary enforcement
     # ------------------------------------------------------------------
 
     def enforce_boundary(self) -> None:
-        """Per-tick boundary check — called from the BoundaryEnforcementPhase.
+        """Per-tick boundary check — delegates to the boundary_enforcement
+        helper module (PROJ-382 Phase 5 extraction).
 
-        For each alive ship, if `self.boundary.contains(ship.position)`
-        returns False, dispatch to `_apply_exit_policy(ship, policy)`.
-        NONE policy is the default safety net for engines constructed
-        without an explicit boundary (UnboundedRegion always returns True).
+        Wrapper preserved so the BoundaryEnforcementPhase can call
+        ``engine.enforce_boundary()`` without knowing about the helper
+        module.
         """
-        boundary = self.boundary
-        if boundary is None:
-            return
-        policy = getattr(boundary, "exit_policy", None)
-        # Snapshot the alive ships — _apply_exit_policy may remove from
-        # self.ships mid-iteration.
-        for ship in list(self.ships):
-            if not getattr(ship, "is_alive", True):
-                continue
-            if not boundary.contains(ship.position):
-                self._apply_exit_policy(ship, policy)
+        _boundary.enforce_boundary(self)
 
     def _apply_exit_policy(self, ship: 'Ship', policy) -> None:
-        """Apply the configured `ExitPolicy` to a ship that crossed the boundary.
-
-        Phase 3 Task 3.1 stub: only handles NONE (no-op). DESTROY /
-        RETREAT / BOUNCE are implemented in Task 3.2.
-        """
-        from game.simulation.combat.boundary import ExitPolicy
-
-        if policy is None or policy == ExitPolicy.NONE:
-            return
-        if policy == ExitPolicy.DESTROY:
-            # Destroy the ship by applying lethal damage. Uses the normal
-            # damage pipeline so SHIP_DESTROYED events fire correctly.
-            remaining_hp = max(ship.hp, 1)
-            ship.combat_engine.take_damage(remaining_hp)
-            self.logger.log(
-                f"Boundary DESTROY: {ship.name} crossed boundary at "
-                f"({ship.x:.0f}, {ship.y:.0f})"
-            )
-            return
-        if policy == ExitPolicy.RETREAT:
-            # Remove ship from active battle, track for outcome reporting.
-            if ship in self.ships:
-                self.retreated_ships.append(ship)
-                self.remove_ship(ship)
-                self.logger.log(
-                    f"Boundary RETREAT: {ship.name} exited battle at "
-                    f"({ship.x:.0f}, {ship.y:.0f})"
-                )
-            return
-        if policy == ExitPolicy.BOUNCE:
-            # Clamp to closest in-bounds point and reflect velocity.
-            new_pos = self.boundary.closest_inside_point(ship.position)
-            self._bounce_ship(ship, new_pos)
-            return
-        logger.warning(f"Unknown ExitPolicy: {policy!r}; treating as NONE.")
+        """Delegate to ``boundary_enforcement.apply_exit_policy`` (PROJ-382)."""
+        _boundary.apply_exit_policy(self, ship, policy)
 
     def _bounce_ship(self, ship: 'Ship', new_pos: Vector2) -> None:
-        """Clamp `ship.position` to `new_pos` and reflect velocity along
-        the outward normal. For Rect boundaries we flip whichever velocity
-        component was carrying the ship out; for Circle boundaries we
-        reflect along the radial vector.
-        """
-        from game.simulation.combat.boundary import CircleBoundary, RectBoundary
-
-        old_x, old_y = ship.x, ship.y
-        ship.x = float(new_pos.x)
-        ship.y = float(new_pos.y)
-        vel = getattr(ship, "velocity", None)
-        if vel is None:
-            return
-
-        boundary = self.boundary
-        if isinstance(boundary, RectBoundary):
-            # Ship crossed either the X or Y extent; flip the component(s)
-            # that exceed the boundary.
-            half_w = boundary.width / 2.0
-            half_h = boundary.height / 2.0
-            if abs(old_x) > half_w:
-                vel.x = -vel.x
-            if abs(old_y) > half_h:
-                vel.y = -vel.y
-        elif isinstance(boundary, CircleBoundary):
-            # Reflect velocity about the radial normal.
-            r = (new_pos.x ** 2 + new_pos.y ** 2) ** 0.5
-            if r > 0:
-                nx = new_pos.x / r
-                ny = new_pos.y / r
-                dot = vel.x * nx + vel.y * ny
-                vel.x -= 2 * dot * nx
-                vel.y -= 2 * dot * ny
-        else:
-            # Fallback: flip both components.
-            vel.x = -vel.x
-            vel.y = -vel.y
+        """Delegate to ``boundary_enforcement.bounce_ship`` (PROJ-382)."""
+        _boundary.bounce_ship(self, ship, new_pos)
 
     def is_battle_over(self) -> bool:
         """

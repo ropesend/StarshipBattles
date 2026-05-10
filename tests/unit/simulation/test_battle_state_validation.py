@@ -36,34 +36,25 @@ class TestComponentStateValidation:
         assert state.is_active is True
         assert state.layer == 'WEAPONS'
 
-    def test_missing_component_id_raises_persistence_exception(self, valid_component_data):
-        """Missing component_id should raise PersistenceException."""
-        del valid_component_data['component_id']
+    @pytest.mark.parametrize('field', [
+        'component_id',
+        'current_hp',
+        'max_hp',
+        'layer',
+    ])
+    def test_missing_required_field_raises_persistence_exception(
+        self, valid_component_data, field,
+    ):
+        """Each required ComponentState field, when absent, raises a
+        PersistenceException naming the field. Parametrized in PROJ-322
+        Task 1.7 (S08-CAT4-002)."""
+        del valid_component_data[field]
         with pytest.raises(PersistenceException) as exc_info:
             ComponentState.from_dict(valid_component_data)
-        assert 'component_id' in str(exc_info.value)
-        assert 'ComponentState' in str(exc_info.value)
-
-    def test_missing_current_hp_raises_persistence_exception(self, valid_component_data):
-        """Missing current_hp should raise PersistenceException."""
-        del valid_component_data['current_hp']
-        with pytest.raises(PersistenceException) as exc_info:
-            ComponentState.from_dict(valid_component_data)
-        assert 'current_hp' in str(exc_info.value)
-
-    def test_missing_max_hp_raises_persistence_exception(self, valid_component_data):
-        """Missing max_hp should raise PersistenceException."""
-        del valid_component_data['max_hp']
-        with pytest.raises(PersistenceException) as exc_info:
-            ComponentState.from_dict(valid_component_data)
-        assert 'max_hp' in str(exc_info.value)
-
-    def test_missing_layer_raises_persistence_exception(self, valid_component_data):
-        """Missing layer should raise PersistenceException."""
-        del valid_component_data['layer']
-        with pytest.raises(PersistenceException) as exc_info:
-            ComponentState.from_dict(valid_component_data)
-        assert 'layer' in str(exc_info.value)
+        assert field in str(exc_info.value)
+        if field == 'component_id':
+            # Original test asserted on the exception's class context label.
+            assert 'ComponentState' in str(exc_info.value)
 
     def test_negative_current_hp_raises_persistence_exception(self, valid_component_data):
         """Negative current_hp should raise PersistenceException."""

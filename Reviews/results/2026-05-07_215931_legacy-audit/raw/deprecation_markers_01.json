@@ -1,0 +1,19 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 197,
+  "total_findings": 2,
+  "findings": [
+    {
+      "file": "game/simulation/entities/ship_stats.py",
+      "line": 503,
+      "marker": "# Legacy",
+      "context": "    # Legacy module-internal helper preserved for code that imported it directly."
+    },
+    {
+      "file": "game/ui/panels/race_summary_panel.py",
+      "line": 149,
+      "marker": "# legacy",
+      "context": "        # legacy three-column split and the y-55 alignment hack."
+    }
+  ]
+}

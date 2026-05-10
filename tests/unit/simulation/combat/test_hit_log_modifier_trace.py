@@ -215,3 +215,32 @@ def test_missing_attacker_context_produces_only_global_trace():
     assert "system:nebula" in sources
     # No per-team entries without attacker context.
     assert "empire:team0_buff" not in sources
+
+
+def test_trace_skips_entries_without_real_stat_keys():
+    bus = CombatEventBus(detail_level=EventDetailLevel.DETAILED)
+    stack = ModifierStack(
+        per_team={
+            0: (
+                ModifierEntry(source="team:none", stack_group=None, effect=None),
+                ModifierEntry(
+                    source="team:blank",
+                    stack_group=None,
+                    effect=_effect("", 1.0),
+                ),
+                _entry("team:real", "damage_mult", 1.25),
+            ),
+        },
+        global_=(
+            _entry("global:placeholder", "placeholder", 0.0),
+            _entry("global:real", "range_mult", 1.5),
+        ),
+    )
+    rec = HitLogRecorder(bus, modifier_stack=stack)
+
+    applications = rec._trace_modifiers_for_team(0)
+
+    assert [(app.source, app.effect_name, app.value) for app in applications] == [
+        ("global:real", "range_mult", pytest.approx(1.5)),
+        ("team:real", "damage_mult", pytest.approx(1.25)),
+    ]

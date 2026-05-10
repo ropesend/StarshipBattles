@@ -1,4 +1,4 @@
 interface:
   display_name: "Codex Discuss Respond"
-  short_description: "Respond to a v2.3 Claude-started discussion."
-  default_prompt: "Use $codex-discuss-respond with a discussion parent or leaf folder to respond to a v2.3 Claude-started inter-agent discussion; polls briefly if the parent has no pending leaf yet."
+  short_description: "Respond to a v2.6 inter-agent discussion."
+  default_prompt: "Use $codex-discuss-respond with a discussion parent or leaf folder to respond to a live v2.6 inter-agent discussion; polls briefly if the parent has no pending leaf yet."

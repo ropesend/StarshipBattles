@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 import re
 
 from game.core.exceptions import ValidationException
+from game.ui.screens.new_game_setup_controller import NewGameSetupController
 
 
 class TestNewGameSetupValidation:
@@ -19,7 +20,7 @@ class TestNewGameSetupValidation:
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
         # Test the static validation method
-        is_valid, error = NewGameSetupScreen.validate_save_name("")
+        is_valid, error = NewGameSetupController.validate_save_name("")
         assert not is_valid
         assert "empty" in error.lower()
 
@@ -27,7 +28,7 @@ class TestNewGameSetupValidation:
         """Whitespace-only save name rejected."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        is_valid, error = NewGameSetupScreen.validate_save_name("   ")
+        is_valid, error = NewGameSetupController.validate_save_name("   ")
         assert not is_valid
         assert "empty" in error.lower()
 
@@ -37,7 +38,7 @@ class TestNewGameSetupValidation:
 
         valid_names = ["MyGame", "Game 1", "Test_Game", "Campaign-2026"]
         for name in valid_names:
-            is_valid, error = NewGameSetupScreen.validate_save_name(name)
+            is_valid, error = NewGameSetupController.validate_save_name(name)
             assert is_valid, f"'{name}' should be valid: {error}"
 
     def test_save_name_invalid_characters_rejected(self):
@@ -46,7 +47,7 @@ class TestNewGameSetupValidation:
 
         invalid_names = ["Game/1", "Test\\Game", "My:Game", "Game?Name", "Test*Game", "Game<>"]
         for name in invalid_names:
-            is_valid, error = NewGameSetupScreen.validate_save_name(name)
+            is_valid, error = NewGameSetupController.validate_save_name(name)
             assert not is_valid, f"'{name}' should be invalid"
 
 
@@ -73,14 +74,14 @@ class TestNewGameSetupValidationUniqueness:
         """Unique save name accepted."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        is_valid, error = NewGameSetupScreen.validate_save_name("NewUniqueName", self.saves_folder)
+        is_valid, error = NewGameSetupController.validate_save_name("NewUniqueName", self.saves_folder)
         assert is_valid
 
     def test_save_name_duplicate_rejected(self):
         """Duplicate save name rejected."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        is_valid, error = NewGameSetupScreen.validate_save_name("ExistingGame", self.saves_folder)
+        is_valid, error = NewGameSetupController.validate_save_name("ExistingGame", self.saves_folder)
         assert not is_valid
         assert "exists" in error.lower()
 
@@ -100,19 +101,26 @@ class TestNewGameSetupSystemCountDefault:
 
         assert config.system_count == 2
 
-    def test_build_game_config_signature_default_matches_dataclass(self):
-        """The system_count parameter's default is sourced from GameConfig.
+    def test_build_game_config_default_matches_dataclass_constant(self):
+        """The default system_count produced by build_game_config matches
+        the DEFAULT_SYSTEM_COUNT constant from game_config.
 
         FEAT-27 single-source-of-truth contract: the UI must NOT hardcode
-        the default; it imports DEFAULT_SYSTEM_COUNT from the GameConfig
-        module so changing one place updates both.
+        the default; it imports DEFAULT_SYSTEM_COUNT so changing one
+        place updates both. PROJ-322 Task 5.25 (S08-CAT5-... / APC-002-F09):
+        rewritten as a behavioural test (call build_game_config with no
+        system_count and observe the resulting GameConfig) instead of
+        signature/getsource source-inspection.
         """
-        import inspect
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
         from game.strategy.engine.game_config import DEFAULT_SYSTEM_COUNT
 
-        sig = inspect.signature(NewGameSetupScreen.build_game_config)
-        assert sig.parameters["system_count"].default == DEFAULT_SYSTEM_COUNT
+        config = NewGameSetupScreen.build_game_config(
+            save_name="DefaultSig",
+            player_count=1,
+            empire_names=["Solo"],
+        )
+        assert config.system_count == DEFAULT_SYSTEM_COUNT
         assert DEFAULT_SYSTEM_COUNT == 2
 
 
@@ -323,14 +331,14 @@ class TestNewGameSetupDefaultSaveName:
         """Default save name starts with 'save game'."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        name = NewGameSetupScreen.generate_default_save_name()
+        name = NewGameSetupController.generate_default_save_name()
         assert name.startswith("save game ")
 
     def test_default_save_name_contains_timestamp(self):
         """Default save name contains a date-time timestamp."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        name = NewGameSetupScreen.generate_default_save_name()
+        name = NewGameSetupController.generate_default_save_name()
         # Should match pattern: "save game YYYY-MM-DD HHMM"
         assert re.match(r"save game \d{4}-\d{2}-\d{2} \d{4}$", name), \
             f"Expected 'save game YYYY-MM-DD HHMM' pattern, got: '{name}'"
@@ -339,8 +347,8 @@ class TestNewGameSetupDefaultSaveName:
         """Default save name passes save name validation."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        name = NewGameSetupScreen.generate_default_save_name()
-        is_valid, error = NewGameSetupScreen.validate_save_name(name)
+        name = NewGameSetupController.generate_default_save_name()
+        is_valid, error = NewGameSetupController.validate_save_name(name)
         assert is_valid, f"Default save name '{name}' failed validation: {error}"
 
 
@@ -377,20 +385,40 @@ class TestNewGameSetupPlayerCount:
 class TestSetupRacePassesLoadedData:
     """BUG-92: Verify Setup Species passes loaded race data to RaceSetupScreen."""
 
+    def _make_screen(self):
+        """PROJ-328 Phase B: build via real two-stage construction."""
+        import pygame
+        from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
+        from tests.fixtures.new_game_setup_ui_builder import (
+            MockNewGameSetupUiBuilder,
+        )
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        ui_manager = MagicMock(name="ui_manager")
+        ui_manager.window_resolution = (1920, 1080)
+
+        with bypass_init(NewGameSetupScreen):
+            screen = make_ui_widget(
+                NewGameSetupScreen,
+                rect=pygame.Rect(0, 0, 650, 600),
+                manager=ui_manager,
+                on_start_callback=MagicMock(),
+                on_cancel_callback=MagicMock(),
+                ui_builder=MockNewGameSetupUiBuilder(),
+            )
+        # ``ui_manager`` defaults to a MagicMock with no
+        # ``window_resolution``; replace with the configured one.
+        screen.ui_manager = ui_manager
+        return screen
+
     def test_setup_race_passes_loaded_race(self):
         """When a race is already loaded, Setup Species should pass it as race_to_edit."""
-        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
         from game.strategy.data.race_config import RaceConfig
 
         loaded_race = RaceConfig(race_id="loaded_species", name="Loaded Species")
 
-        with patch('game.ui.screens.new_game_setup_screen.NewGameSetupScreen.__init__', return_value=None):
-            screen = NewGameSetupScreen.__new__(NewGameSetupScreen)
-            screen.player_races = [loaded_race, None, None, None]
-            screen.ui_manager = MagicMock()
-            screen.ui_manager.window_resolution = (1920, 1080)
-            screen.active_race_modal = None
-            screen.race_modal_player_index = -1
+        screen = self._make_screen()
+        screen.player_races[0] = loaded_race
 
         with patch('game.ui.screens.race_setup_screen.RaceSetupScreen') as MockRaceSetup:
             screen._on_setup_race_clicked(0)
@@ -404,15 +432,8 @@ class TestSetupRacePassesLoadedData:
 
     def test_setup_race_no_loaded_race_passes_none(self):
         """When no race is loaded, Setup Species should pass None as race_to_edit."""
-        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
-
-        with patch('game.ui.screens.new_game_setup_screen.NewGameSetupScreen.__init__', return_value=None):
-            screen = NewGameSetupScreen.__new__(NewGameSetupScreen)
-            screen.player_races = [None, None, None, None]
-            screen.ui_manager = MagicMock()
-            screen.ui_manager.window_resolution = (1920, 1080)
-            screen.active_race_modal = None
-            screen.race_modal_player_index = -1
+        screen = self._make_screen()
+        # All player_races already default to None from the view model.
 
         with patch('game.ui.screens.race_setup_screen.RaceSetupScreen') as MockRaceSetup:
             screen._on_setup_race_clicked(0)

@@ -9,17 +9,38 @@ import json
 import sys
 from pathlib import Path
 
-import tiktoken
+try:
+    import tiktoken as _tiktoken
+except ModuleNotFoundError as exc:
+    missing_name = getattr(exc, "name", None)
+    if missing_name != "tiktoken" and "No module named 'tiktoken'" not in str(exc):
+        raise
+    _tiktoken = None
 
 # o200k_base matches GPT-4o / approximates Claude tokenization.
-_ENCODING = tiktoken.get_encoding("o200k_base")
+_ENCODING = _tiktoken.get_encoding("o200k_base") if _tiktoken is not None else None
+
+
+class MissingLocDependencyError(RuntimeError):
+    """Raised when the LOC tool cannot perform an exact token count."""
+
+
+def _missing_tiktoken_message() -> str:
+    requirements_file = ROOT / "requirements-dev.txt"
+    return (
+        "Missing Python dependency: tiktoken\n"
+        "Install the development requirements for this checkout:\n"
+        f'  python -m pip install -r "{requirements_file}"'
+    )
 
 
 def _count_tokens(text: str) -> int:
+    if _ENCODING is None:
+        raise MissingLocDependencyError(_missing_tiktoken_message())
     return len(_ENCODING.encode(text, disallowed_special=()))
 
 
-def _find_project_root():
+def _find_project_root() -> Path:
     """Find project root by looking for game/ and data/ directories."""
     current = Path(__file__).resolve().parent
     for _ in range(10):
@@ -251,13 +272,13 @@ def build_detailed() -> dict:
     return result
 
 
-def print_detailed():
+def print_detailed() -> None:
     """Print detailed JSON breakdown for the /loc skill."""
     data = build_detailed()
     print(json.dumps(data, indent=2))
 
 
-def print_simple():
+def print_simple() -> None:
     """Print the original simple summary."""
     rows_source = []
     rows_test = []
@@ -342,12 +363,12 @@ def print_simple():
     tok_w = 14
     file_w = 12
 
-    def header():
+    def header() -> None:
         print(
             f"  {'':<{col_w}} {'LOC':>{num_w}}  {'Tokens':>{tok_w}}  {'Files':>{file_w}}"
         )
 
-    def row(label, lines, tokens, files):
+    def row(label: str, lines: int, tokens: int, files: int) -> None:
         f_label = "file" if files == 1 else "files"
         print(
             f"  {label:<{col_w}} {fmt(lines):>{num_w}}  {fmt(tokens):>{tok_w}}  "
@@ -391,12 +412,17 @@ def print_simple():
     print()
 
 
-def main():
-    if "--detailed" in sys.argv:
-        print_detailed()
-    else:
-        print_simple()
+def main() -> int:
+    try:
+        if "--detailed" in sys.argv:
+            print_detailed()
+        else:
+            print_simple()
+    except MissingLocDependencyError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

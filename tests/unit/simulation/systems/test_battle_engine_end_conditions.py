@@ -20,32 +20,29 @@ from game.simulation.systems.battle_end_conditions import (
 from game.simulation.systems.battle_engine import BattleEngine
 
 
-@pytest.fixture
-def mock_ship():
-    """Create a mock ship for testing."""
+def _make_mock_ship(team_id: int = 0) -> Mock:
+    """Build a minimal Mock ship for engine end-condition tests."""
     ship = Mock()
     ship.is_alive = True
     ship.is_derelict = False
-    ship.team_id = 0
+    ship.team_id = team_id
     ship.position = pygame.math.Vector2(0, 0)
     ship.total_thrust = 100
     ship.turn_speed = 10
     ship.get_all_components.return_value = []
     return ship
+
+
+@pytest.fixture
+def mock_ship():
+    """Create a mock ship for testing (team 0)."""
+    return _make_mock_ship(team_id=0)
 
 
 @pytest.fixture
 def mock_ship_team1():
     """Create a mock ship for team 1."""
-    ship = Mock()
-    ship.is_alive = True
-    ship.is_derelict = False
-    ship.team_id = 1
-    ship.position = pygame.math.Vector2(0, 0)
-    ship.total_thrust = 100
-    ship.turn_speed = 10
-    ship.get_all_components.return_value = []
-    return ship
+    return _make_mock_ship(team_id=1)
 
 
 @pytest.fixture
@@ -116,36 +113,25 @@ class TestAbsoluteCeilingEnforcement:
 class TestEscapeBasedMode:
     """Tests for ESCAPE_BASED battle termination."""
 
-    def test_escape_mode_ends_when_ship_exceeds_radius(
-        self, battle_engine, mock_ship
+    # PROJ-323 Task 3.21: 3 single-ship escape mode tests parametrized.
+    @pytest.mark.parametrize("position,is_alive,expected_over", [
+        # ship beyond radius -> battle ends
+        pytest.param((6000, 0), True, True, id="ship_exceeds_radius"),
+        # ship within radius -> battle continues
+        pytest.param((3000, 0), True, False, id="ship_inside_radius"),
+        # dead ship beyond radius is ignored -> battle continues
+        pytest.param((10000, 0), False, False, id="dead_ship_ignored"),
+    ])
+    def test_escape_mode_single_ship(
+        self, battle_engine, mock_ship, position, is_alive, expected_over,
     ):
-        """Battle should end when any ship exceeds escape_radius."""
-        mock_ship.position = pygame.math.Vector2(6000, 0)  # Beyond 5000
+        """Escape condition reacts only to live ships beyond escape_radius."""
+        mock_ship.position = pygame.math.Vector2(*position)
+        mock_ship.is_alive = is_alive
         battle_engine.ships = [mock_ship]
         battle_engine.end_condition = EscapeCondition(escape_radius=5000.0)
 
-        assert battle_engine.is_battle_over() is True
-
-    def test_escape_mode_continues_when_ships_inside_radius(
-        self, battle_engine, mock_ship
-    ):
-        """Battle should continue when all ships within escape_radius."""
-        mock_ship.position = pygame.math.Vector2(3000, 0)  # Within 5000
-        battle_engine.ships = [mock_ship]
-        battle_engine.end_condition = EscapeCondition(escape_radius=5000.0)
-
-        assert battle_engine.is_battle_over() is False
-
-    def test_escape_mode_ignores_dead_ships(
-        self, battle_engine, mock_ship
-    ):
-        """Dead ships should not trigger escape condition."""
-        mock_ship.position = pygame.math.Vector2(10000, 0)  # Far beyond radius
-        mock_ship.is_alive = False
-        battle_engine.ships = [mock_ship]
-        battle_engine.end_condition = EscapeCondition(escape_radius=5000.0)
-
-        assert battle_engine.is_battle_over() is False
+        assert battle_engine.is_battle_over() is expected_over
 
     def test_escape_mode_team_specific(
         self, battle_engine, mock_ship, mock_ship_team1

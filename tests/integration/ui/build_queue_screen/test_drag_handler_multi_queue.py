@@ -15,8 +15,16 @@ from game.strategy.data.build_queue_source import BuildQueueSource
 
 
 @pytest.fixture
-def drag_handler():
-    """Create a BuildQueueDragHandler for testing."""
+def drag_handler(single_queue_source):
+    """Create a BuildQueueDragHandler for testing.
+
+    PROJ-393 (LEG-03-006) made on_remove_from_queue a required arg and
+    deleted the in-place ``construction_queue.pop(idx)`` legacy fallback.
+    Production wires the callback to a command dispatcher that ultimately
+    removes the item; in tests we wire it to a closure that pops directly
+    from the fixture queue, so "item gets removed when callback fires"
+    is preserved as the contract under test.
+    """
     portrait_loader = MagicMock()
     portrait_loader.load_design_portrait.return_value = None
     portrait_loader.load_queue_item_portrait.return_value = None
@@ -24,12 +32,17 @@ def drag_handler():
     design_library = MagicMock()
     design_library.scan_designs.return_value = []
 
+    def _remove_from_queue(idx: int) -> None:
+        if 0 <= idx < len(single_queue_source.construction_queue):
+            single_queue_source.construction_queue.pop(idx)
+
     handler = BuildQueueDragHandler(
         portrait_loader=portrait_loader,
         design_library=design_library,
         on_add_to_queue=MagicMock(),
         on_refresh_queue=MagicMock(),
-        on_refresh_design_report=MagicMock()
+        on_refresh_design_report=MagicMock(),
+        on_remove_from_queue=_remove_from_queue,
     )
     return handler
 

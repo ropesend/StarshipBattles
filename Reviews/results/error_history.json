@@ -1,0 +1,27 @@
+{
+  "audit_name": "error",
+  "runs": [
+    {
+      "date": "2026-05-07",
+      "review_dir": "Reviews/results/2026-05-07_220225_error-audit",
+      "findings": {
+        "critical": 1,
+        "major": 13,
+        "minor": 14,
+        "total": 28
+      },
+      "files_scanned": 749,
+      "by_category": {
+        "broad_except": 10,
+        "json_bypass": 4,
+        "cross_layer": 8,
+        "llm_security": 3,
+        "additional": 6,
+        "generic_raise": 0,
+        "bare_except": 0,
+        "print_debug": 0,
+        "resource_cleanup": 0
+      }
+    }
+  ]
+}

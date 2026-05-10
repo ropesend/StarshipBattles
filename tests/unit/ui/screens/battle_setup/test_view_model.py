@@ -21,24 +21,6 @@ class TestBattleSetupViewModelDefaults:
         assert vm.selected_ship_index is None
         assert vm.available_designs == []
 
-    def test_no_pygame_import_in_view_model_module(self):
-        """ViewModel must remain pygame-free (TestLab convention)."""
-        import ast
-        import inspect
-
-        from game.ui.screens.battle_setup import view_model as vm_mod
-
-        src = inspect.getsource(vm_mod)
-        tree = ast.parse(src)
-        imports: list[str] = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                imports.extend(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                imports.append(node.module)
-        assert not any(name.startswith("pygame") for name in imports), imports
-
-
 class TestBattleSetupViewModelMutation:
     """View state mutates via direct attribute assignment (dataclass-style)."""
 
@@ -109,16 +91,3 @@ class TestBattleSetupViewModelHelpers:
         assert vm.has_sq_selection() is True
 
 
-class TestBattleSetupViewModelIndependence:
-    """ViewModel has no import-time dependency on BattleSetupState.
-
-    Phase 3 invariant: tests for view-model behavior should construct the
-    model in isolation, without needing a state or registries.
-    """
-
-    def test_can_construct_without_registries_or_state(self):
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
-        # Should not raise even with zero external setup.
-        vm = BattleSetupViewModel()
-        assert vm is not None

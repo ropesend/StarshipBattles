@@ -6,21 +6,125 @@ Supports:
 - Expanding a save to show its turn history
 - Loading a specific turn from a save
 - Deleting saves
+
+PROJ-329B Phase 1: two-stage construction. Cheap state (callbacks,
+saves_list, list_item_mapping, selection trackers) lives before the
+``UIWindow`` shell; widget construction is behind
+``SaveSelectionUiBuilder`` so tests can swap in a Mock under
+``bypass_init``.
+
+PROJ-352A T6.6: migrated from raw ``pygame_gui.elements.UIWindow`` to
+``StrategyModalWindow`` so the strategy-screen load dialog auto-registers
+with ``StrategyWindowManager.iter_live_modals()`` and blocks strategy
+input while open. Callers outside the strategy screen (e.g.,
+``screen_router.show_load_menu`` from the main menu) pass
+``window_manager=None`` to skip live-list registration; the base class
+handles the None case.
 """
 from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
 
 import pygame
 import pygame_gui
 from game.ui.config import UIConfig
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 import logging
+
+if TYPE_CHECKING:
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
 
-class SaveSelectionWindow(pygame_gui.elements.UIWindow):
-    """Window for selecting a save game to load."""
+class SaveSelectionUiBuilder:
+    """Production widget builder. Constructs saves_listbox, info_label,
+    btn_load, btn_expand, btn_delete, btn_cancel and disables the action
+    buttons. Reads ``screen.get_container()`` for layout sizing.
+    """
 
-    def __init__(self, rect, manager, on_load_callback, on_cancel_callback):
+    def build(self, screen: "SaveSelectionWindow") -> None:
+        container = screen.get_container()
+        content_width = container.get_size()[0] - 20
+        content_height = container.get_size()[1] - 110  # Room for buttons and info
+
+        # Save list (scrollable)
+        screen.saves_listbox = pygame_gui.elements.UISelectionList(
+            relative_rect=pygame.Rect(10, 10, content_width, content_height),
+            item_list=[],
+            manager=screen.ui_manager,
+            container=container,
+            allow_multi_select=False,
+        )
+
+        # Info label showing selected save details
+        info_y = content_height + 15
+        screen.info_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, info_y, content_width, 25),
+            text="Select a save to load",
+            manager=screen.ui_manager,
+            container=container,
+        )
+
+        # Button panel at bottom
+        button_y = content_height + 45
+        button_width = 100
+
+        screen.btn_load = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(10, button_y, button_width, 40),
+            text="Load",
+            manager=screen.ui_manager,
+            container=container,
+        )
+
+        screen.btn_expand = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(10 + button_width + 10, button_y, button_width, 40),
+            text="Show Turns",
+            manager=screen.ui_manager,
+            container=container,
+        )
+
+        screen.btn_delete = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(10 + (button_width + 10) * 2, button_y, button_width, 40),
+            text="Delete",
+            manager=screen.ui_manager,
+            container=container,
+        )
+
+        screen.btn_cancel = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(content_width - button_width + 10, button_y, button_width, 40),
+            text="Cancel",
+            manager=screen.ui_manager,
+            container=container,
+        )
+
+        # Disable action buttons initially
+        screen.btn_load.disable()
+        screen.btn_expand.disable()
+        screen.btn_delete.disable()
+
+
+class SaveSelectionWindow(StrategyModalWindow):
+    """Window for selecting a save game to load.
+
+    PROJ-352A T6.6: subclass of :class:`StrategyModalWindow` so the
+    strategy-screen load dialog auto-registers with
+    :meth:`StrategyWindowManager.iter_live_modals` and the strategy
+    event router treats it as a blocking modal. Outside the strategy
+    screen (e.g., the main-menu loader) callers pass
+    ``window_manager=None`` and the base class skips registration.
+    """
+
+    def __init__(
+        self,
+        rect,
+        manager,
+        on_load_callback,
+        on_cancel_callback,
+        *,
+        window_manager: "StrategyWindowManager | None" = None,
+        ui_builder: Optional[SaveSelectionUiBuilder] = None,
+    ):
         """
         Create save selection window.
 
@@ -29,15 +133,15 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             manager: pygame_gui UIManager
             on_load_callback: Callback(save_path, turn_number=None) when user selects a save
             on_cancel_callback: Callback() when user cancels
+            window_manager: Optional :class:`StrategyWindowManager` for
+                modal registration (PROJ-352A T6.6). Pass the strategy
+                screen's ``ui.window_manager`` when opening from the
+                strategy screen so the dialog blocks strategy input.
+                Pass ``None`` (default) when opening from the main menu
+                loader, which has no strategy modal-tracker.
+            ui_builder: Optional UI builder override (test seam).
         """
-        super().__init__(
-            rect,
-            manager,
-            window_display_title="Load Game",
-            object_id="#save_selection_window",
-            resizable=True
-        )
-
+        # ---- Stage 1: cheap state ----
         self.on_load_callback = on_load_callback
         self.on_cancel_callback = on_cancel_callback
 
@@ -48,72 +152,42 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         self.expanded_save_idx = None  # Index of expanded save showing turns
 
         # Track list items for mapping back to saves/turns
-        self.list_item_mapping = []  # List of tuples: ('save', save_idx) or ('turn', save_idx, turn_num)
+        self.list_item_mapping = []  # tuples: ('save', save_idx) or ('turn', save_idx, turn_num)
 
-        # Create UI elements
-        self._create_ui()
+        # PROJ-347 T4.3 (Pattern §33 widget-ref placeholders): set widget
+        # slots populated by the production builder to None up front, so a
+        # NullSaveSelectionWindowUiBuilder test can safely call
+        # ``process_event()`` without AttributeError on
+        # ``self.btn_load``/``self.saves_listbox``/etc. The production
+        # builder overwrites these in Stage 3.
+        self.saves_listbox = None
+        self.info_label = None
+        self.btn_load = None
+        self.btn_expand = None
+        self.btn_delete = None
+        self.btn_cancel = None
+
+        # ---- Stage 2: UIWindow shell (skipped under bypass_init by the
+        # StrategyModalWindow base class). PROJ-352A T6.6: registration
+        # with the window manager (when non-None) happens inside
+        # ``super().__init__`` after the real ``UIWindow.__init__`` chain.
+        super().__init__(
+            rect,
+            manager,
+            window_display_title="Load Game",
+            object_id="#save_selection_window",
+            resizable=True,
+            window_manager=window_manager,
+        )
+
+        # ---- Stage 3: widgets + initial save load ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
+
+        (ui_builder or SaveSelectionUiBuilder()).build(self)
         self._load_saves()
-
-    def _create_ui(self) -> None:
-        """Create UI elements."""
-        container = self.get_container()
-        content_width = container.get_size()[0] - 20
-        content_height = container.get_size()[1] - 110  # Room for buttons and info
-
-        # Save list (scrollable)
-        self.saves_listbox = pygame_gui.elements.UISelectionList(
-            relative_rect=pygame.Rect(10, 10, content_width, content_height),
-            item_list=[],
-            manager=self.ui_manager,
-            container=container,
-            allow_multi_select=False
-        )
-
-        # Info label showing selected save details
-        info_y = content_height + 15
-        self.info_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, info_y, content_width, 25),
-            text="Select a save to load",
-            manager=self.ui_manager,
-            container=container
-        )
-
-        # Button panel at bottom
-        button_y = content_height + 45
-        button_width = 100
-
-        self.btn_load = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10, button_y, button_width, 40),
-            text="Load",
-            manager=self.ui_manager,
-            container=container
-        )
-
-        self.btn_expand = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10 + button_width + 10, button_y, button_width, 40),
-            text="Show Turns",
-            manager=self.ui_manager,
-            container=container
-        )
-
-        self.btn_delete = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10 + (button_width + 10) * 2, button_y, button_width, 40),
-            text="Delete",
-            manager=self.ui_manager,
-            container=container
-        )
-
-        self.btn_cancel = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(content_width - button_width + 10, button_y, button_width, 40),
-            text="Cancel",
-            manager=self.ui_manager,
-            container=container
-        )
-
-        # Disable buttons initially
-        self.btn_load.disable()
-        self.btn_expand.disable()
-        self.btn_delete.disable()
 
     def _load_saves(self) -> None:
         """Load list of available saves from SaveGameService."""

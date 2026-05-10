@@ -12,10 +12,22 @@ The key insight: both UI and execution now use the SAME code path through
 FleetNavigationService, so discrepancies should be impossible. These tests
 verify that assumption.
 """
+from collections import defaultdict
+
 import pytest
 from unittest.mock import MagicMock, patch
 
+
+# PROJ-323 Task 5.5: shared helper for grouping projected segments by turn.
+def _positions_by_turn(projected_segments):
+    """Group projected_segments by their turn attribute, mapping turn -> list[end]."""
+    grouped = defaultdict(list)
+    for seg in projected_segments:
+        grouped[seg.turn].append(seg.end)
+    return dict(grouped)
+
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
@@ -55,7 +67,7 @@ class MockGalaxy:
 @pytest.fixture
 def turn_engine(fresh_registries):
     """Create a TurnEngine instance."""
-    return TurnEngine(registries=fresh_registries)
+    return build_test_turn_engine(fresh_registries)
 
 
 @pytest.fixture
@@ -146,12 +158,8 @@ class TestProjectionMatchesExecution:
         # PROJECT: Get positions for each turn
         projected_segments = nav_service.project_path(fleet, mock_galaxy, max_turns=10)
 
-        # Group projections by turn
-        positions_by_turn = {}
-        for seg in projected_segments:
-            if seg.turn not in positions_by_turn:
-                positions_by_turn[seg.turn] = []
-            positions_by_turn[seg.turn].append(seg.end)
+        # Group projections by turn (extracted to helper in PROJ-323 Task 5.5).
+        positions_by_turn = _positions_by_turn(projected_segments)
 
         # EXECUTE: Reset and run turn-by-turn
         fleet.location = start

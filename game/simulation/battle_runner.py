@@ -29,7 +29,7 @@ What `run_battle` enforces:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from game.core.math import Vector2
 from game.simulation.battle_outcome import (
@@ -146,6 +146,7 @@ def start_engine_from_spec(
     ai_factory: "IAIControllerFactory",
     ship_builder: Callable[[ShipSpec, int], "Ship"],
     capture_context: "Optional[ReplayCaptureContext]" = None,
+    event_bus: Optional[Any] = None,
 ) -> "tuple[BattleEngine, Dict[str, Ship]]":
     """Construct and start a `BattleEngine` from a `BattleSpec`.
 
@@ -169,6 +170,7 @@ def start_engine_from_spec(
     engine = BattleEngine(
         logger=BattleLogger(enabled=False),
         ai_factory=ai_factory,
+        event_bus=event_bus,
     )
     if spec.boundary is not None:
         engine.boundary = spec.boundary
@@ -262,6 +264,7 @@ def run_battle(
     per_tick_callback: Optional[Callable[["BattleEngine"], None]] = None,
     pre_tick_loop_callback: Optional[Callable[["BattleEngine"], None]] = None,
     capture_context: "Optional[ReplayCaptureContext]" = None,
+    event_bus: Optional[Any] = None,
 ) -> BattleOutcome:
     """Run a fully-specified battle and return its outcome.
 
@@ -323,6 +326,7 @@ def run_battle(
     engine, _ships_by_role = start_engine_from_spec(
         spec, ai_factory=ai_factory, ship_builder=ship_builder,
         capture_context=capture_context,
+        event_bus=event_bus,
     )
 
     # PROJ-269 Phase 5: attach telemetry subscribers based on spec level.
@@ -585,13 +589,21 @@ def _apply_spec_components_to_ship(
     Walks the Ship's layers in order, tracking per-component-id indices
     to match the keys the compilers emit. Components on the Ship that
     have no matching spec entry are left at their freshly-constructed
-    state (typically full HP). Components in the spec that don't map to
-    any Ship component are silently ignored (design drift).
+    state (typically full HP).
+
+    Raises:
+        ValidationException: if any `ShipSpec.components` entry does not
+            map to a materialized Ship component (`(component_id,
+            instance_index)` not present on `ship`). PROJ-358 removed the
+            silent "design drift" path — unmapped entries indicate a stale
+            spec, a materialization bug, or a compiler emitting components
+            for the wrong design and must surface immediately.
 
     Called by `run_battle` for each ship after `ship_builder` returns.
     """
     if not ship_spec.components:
         return
+
     # Build (component_id, instance_index) -> ComponentStateSpec lookup.
     spec_by_key: Dict[tuple, ComponentStateSpec] = {
         (c.component_id, c.instance_index): c for c in ship_spec.components
@@ -599,6 +611,10 @@ def _apply_spec_components_to_ship(
     if not spec_by_key:
         return
 
+    # First pass: enumerate the materialized keys on the Ship and apply
+    # spec HP to anything that matches. Track which spec keys were
+    # consumed so the validator can flag drift in a single pass.
+    consumed: set = set()
     per_id_index: Dict[str, int] = {}
     for layer_data in ship.layers.values():
         for comp in getattr(layer_data, "components", []):
@@ -607,9 +623,11 @@ def _apply_spec_components_to_ship(
                 continue
             idx = per_id_index.get(comp_id, 0)
             per_id_index[comp_id] = idx + 1
-            spec_entry = spec_by_key.get((comp_id, idx))
+            key = (comp_id, idx)
+            spec_entry = spec_by_key.get(key)
             if spec_entry is None:
                 continue
+            consumed.add(key)
             target_hp = spec_entry.current_hp
             current = getattr(comp, "current_hp", None)
             if current is None:
@@ -618,10 +636,44 @@ def _apply_spec_components_to_ship(
             if damage > 0:
                 comp.take_damage(int(damage))
 
+    # Second pass: any spec entry that did not match a materialized
+    # component is a drift — fail loudly with full context. Reports the
+    # first unmapped entry so the message stays focused.
+    unmapped_keys = [k for k in spec_by_key if k not in consumed]
+    if unmapped_keys:
+        from game.core.error_codes import ErrorCode  # noqa: PLC0415
+        from game.core.exceptions import ValidationException  # noqa: PLC0415
+
+        component_id, instance_index = unmapped_keys[0]
+        ship_id = getattr(ship, "instance_id", None) or ship_spec.instance_id
+        design_id = ship_spec.design_id
+        message = (
+            f"ShipSpec.components entry does not map to a materialized "
+            f"Ship component: ship_id={ship_id!r} "
+            f"component_id={component_id!r} instance_index={instance_index} "
+            f"design_id={design_id!r}"
+        )
+        raise ValidationException(
+            message,
+            code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+            context={
+                "ship_id": ship_id,
+                "component_id": component_id,
+                "instance_index": instance_index,
+                "design_id": design_id,
+            },
+        )
+
 
 def _extract_component_states(engine_ship: "Ship") -> tuple:
     """Emit a tuple of `ComponentStateSpec` reflecting each Ship component's
     final state. Walks layers in order; instance_index resets per component_id.
+
+    PROJ-354A: `max_hp` and `status` are populated from the live `Component`
+    so the replay record carries enough fidelity for end-state verification
+    (PROJ-354B). `status` is serialized as `ComponentStatus.name` (string),
+    not `.value` — the enum uses `auto()`, so numeric values aren't stable
+    across Python versions.
     """
     out: List[ComponentStateSpec] = []
     per_id_index: Dict[str, int] = {}
@@ -632,11 +684,17 @@ def _extract_component_states(engine_ship: "Ship") -> tuple:
                 continue
             idx = per_id_index.get(comp_id, 0)
             per_id_index[comp_id] = idx + 1
+            status_obj = getattr(comp, "status", None)
+            status_name = (
+                status_obj.name if hasattr(status_obj, "name") else str(status_obj)
+            )
             out.append(
                 ComponentStateSpec(
                     component_id=comp_id,
                     instance_index=idx,
                     current_hp=float(getattr(comp, "current_hp", 0)),
+                    max_hp=float(getattr(comp, "max_hp", 0)),
+                    status=status_name,
                     is_active=bool(getattr(comp, "is_active", True)),
                 )
             )

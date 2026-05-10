@@ -129,12 +129,19 @@ def _make_minimal_battle_spec() -> BattleSpec:
         velocity=Vector2(5.0, 0.0),
         components=(
             ComponentStateSpec(
-                component_id="bridge", instance_index=0, current_hp=10.0, is_active=True
+                component_id="bridge",
+                instance_index=0,
+                current_hp=10.0,
+                max_hp=10.0,
+                status="ACTIVE",
+                is_active=True,
             ),
             ComponentStateSpec(
                 component_id="armor_plate",
                 instance_index=0,
                 current_hp=8.5,
+                max_hp=10.0,
+                status="DAMAGED",
                 is_active=True,
             ),
         ),
@@ -188,7 +195,12 @@ def _make_minimal_outcome() -> BattleOutcome:
         final_velocity=Vector2(4.5, 0.1),
         components=(
             ComponentStateSpec(
-                component_id="bridge", instance_index=0, current_hp=8.5, is_active=True
+                component_id="bridge",
+                instance_index=0,
+                current_hp=8.5,
+                max_hp=10.0,
+                status="DAMAGED",
+                is_active=True,
             ),
         ),
         weapons=(
@@ -254,6 +266,13 @@ class TestBoundarySerialization:
         with pytest.raises(ValueError):
             boundary_from_dict({"type": "hexagonal", "exit_policy": "destroy"})
 
+    def test_unknown_boundary_subtype_raises_type_error(self):
+        class HexBoundary:
+            pass
+
+        with pytest.raises(TypeError, match="HexBoundary"):
+            boundary_to_dict(HexBoundary())
+
 
 # ---------------------------------------------------------------------------
 # ModifierStack  (Task 2.2)
@@ -299,6 +318,34 @@ class TestModifierSerialization:
     def test_none_passes_through(self):
         assert modifier_stack_to_dict(None) is None
         assert modifier_stack_from_dict(None) is None
+
+
+class TestSerializationPrivateHelpers:
+    def test_list_to_vec_returns_existing_vector2_unchanged(self):
+        from game.simulation.replay.replay_serialization import _list_to_vec
+
+        vector = Vector2(3.0, 4.0)
+
+        result = _list_to_vec(vector)
+
+        assert result is vector
+
+    def test_task_force_spec_rejects_non_formation_spec(self):
+        """PROJ-407 D-08: ``TaskForceSpec.formation`` is ``FormationSpec | None``.
+
+        Previously the replay layer silently dropped non-``FormationSpec``
+        formations to ``None`` — a Phase 1 vestige of the ``object``-typed
+        slot. The slot is now strict: constructing a ``TaskForceSpec`` with
+        a non-``FormationSpec`` formation raises ``TypeError`` at the
+        boundary, before any serialization happens.
+        """
+        with pytest.raises(TypeError, match="FormationSpec"):
+            TaskForceSpec(
+                task_force_id="tf-test",
+                formation=object(),  # not a FormationSpec — must raise
+                policies=CombatPolicies(),
+                squadrons=(),
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -529,3 +576,123 @@ class TestReplayRecord:
         result = ReplayRecord.from_dict(d)
         assert result.sector_coords is None
         assert result.turn_number is None
+
+
+class TestComponentsRegistryHash:
+    def test_hash_is_stable_for_dict_components(self):
+        from game.simulation.replay.replay_serialization import (
+            compute_components_registry_hash,
+        )
+
+        class RegistryStub:
+            def __init__(self, components):
+                self._components = components
+
+            def get_components(self):
+                return self._components
+
+        first = RegistryStub(
+            {
+                "laser": {"mass": 5, "abilities": {"BeamWeaponAbility": {}}},
+                "armor": {"mass": 10, "hp": 100},
+            }
+        )
+        second = RegistryStub(
+            {
+                "armor": {"hp": 100, "mass": 10},
+                "laser": {"abilities": {"BeamWeaponAbility": {}}, "mass": 5},
+            }
+        )
+
+        first_hash = compute_components_registry_hash(first)
+        second_hash = compute_components_registry_hash(second)
+
+        assert first_hash == second_hash
+        assert first_hash.startswith("sha256:")
+        assert first_hash != "sha256:unknown"
+
+    def test_hash_accepts_objects_and_bad_to_dict_fallback(self):
+        from game.simulation.replay.replay_serialization import (
+            compute_components_registry_hash,
+        )
+
+        class RegistryStub:
+            def get_components(self):
+                return {
+                    "object_component": ComponentObject(),
+                    "bad_component": BadComponentObject(),
+                }
+
+        class ComponentObject:
+            def to_dict(self):
+                return {"mass": 3, "abilities": {"CrewRequired": 1}}
+
+        class BadComponentObject:
+            def to_dict(self):
+                raise RuntimeError("broken component export")
+
+            def __str__(self):
+                return "bad-component-string"
+
+        result = compute_components_registry_hash(RegistryStub())
+
+        assert result.startswith("sha256:")
+        assert result != "sha256:unknown"
+
+    def test_hash_returns_unknown_for_invalid_registry_shapes(self):
+        from game.simulation.replay.replay_serialization import (
+            compute_components_registry_hash,
+        )
+
+        class RaisingRegistry:
+            def get_components(self):
+                raise RuntimeError("registry unavailable")
+
+        class ListRegistry:
+            def get_components(self):
+                return []
+
+        assert compute_components_registry_hash(RaisingRegistry()) == "sha256:unknown"
+        assert compute_components_registry_hash(ListRegistry()) == "sha256:unknown"
+
+
+# ---------------------------------------------------------------------------
+# PROJ-354A — ComponentStateSpec end-state fidelity
+# ---------------------------------------------------------------------------
+
+
+def test_component_state_spec_round_trip_includes_max_hp_and_status():
+    """PROJ-354A Phase 1 Task 1.1 — TDD anchor.
+
+    Constructs a `ComponentStateSpec` carrying the new `max_hp` and `status`
+    fields, asserts the to-dict serializer emits them, and asserts the
+    from-dict reverse re-creates an equal spec.
+    """
+    from game.simulation.replay.replay_serialization import (
+        _component_state_from_dict,
+        _component_state_to_dict,
+    )
+
+    spec = ComponentStateSpec(
+        component_id="reactor",
+        instance_index=0,
+        current_hp=50.0,
+        max_hp=100.0,
+        status="DAMAGED",
+        is_active=True,
+    )
+    d = _component_state_to_dict(spec)
+    assert d["max_hp"] == 100.0
+    assert d["status"] == "DAMAGED"
+
+    rebuilt = _component_state_from_dict(_roundtrip_json(d))
+    assert rebuilt == spec
+
+
+def test_replay_schema_version_is_2_0_0():
+    """PROJ-354A Phase 2 Task 2.4 — pin schema version constant.
+
+    Bumped from "1.0.0" to "2.0.0" because per-component state gained two
+    new fields (`max_hp`, `status`) — backward-incompatible.
+    """
+    assert REPLAY_SCHEMA_VERSION == "2.0.0"

@@ -595,15 +595,11 @@ class TestHandleColonizeDesignationPodFiltering:
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_system)
 
-        # Patch pixel_to_hex to return target hex (10, 10) = system + (0, 0) local
-        import game.ui.screens.strategy_colonization as colonization_module
-        original_pixel_to_hex = colonization_module.pixel_to_hex
-        colonization_module.pixel_to_hex = Mock(return_value=HexCoord(10, 10))
+        # PROJ-380 DUP-X-08: stub camera.hex_at_screen (replaces the prior
+        # monkey-patch of `colonization_module.pixel_to_hex`).
+        mock_camera.hex_at_screen.return_value = HexCoord(10, 10)
 
-        try:
-            result = system.handle_colonize_designation(100, 100, mock_fleet)
-        finally:
-            colonization_module.pixel_to_hex = original_pixel_to_hex
+        result = system.handle_colonize_designation(100, 100, mock_fleet)
 
         # Pod availability is checked at execution time — prompt is shown
         assert result is not None
@@ -652,14 +648,10 @@ class TestHandleColonizeDesignationPodFiltering:
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_system)
 
-        import game.ui.screens.strategy_colonization as colonization_module
-        original_pixel_to_hex = colonization_module.pixel_to_hex
-        colonization_module.pixel_to_hex = Mock(return_value=HexCoord(10, 10))
+        # PROJ-380 DUP-X-08: stub camera.hex_at_screen.
+        mock_camera.hex_at_screen.return_value = HexCoord(10, 10)
 
-        try:
-            result = system.handle_colonize_designation(100, 100, mock_fleet)
-        finally:
-            colonization_module.pixel_to_hex = original_pixel_to_hex
+        result = system.handle_colonize_designation(100, 100, mock_fleet)
 
         # Should succeed or return prompt (not filtered out)
         assert result is not None
@@ -704,14 +696,10 @@ class TestHandleColonizeDesignationPodFiltering:
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_system)
 
-        import game.ui.screens.strategy_colonization as colonization_module
-        original_pixel_to_hex = colonization_module.pixel_to_hex
-        colonization_module.pixel_to_hex = Mock(return_value=HexCoord(10, 10))
+        # PROJ-380 DUP-X-08: stub camera.hex_at_screen.
+        mock_camera.hex_at_screen.return_value = HexCoord(10, 10)
 
-        try:
-            result = system.handle_colonize_designation(100, 100, mock_fleet)
-        finally:
-            colonization_module.pixel_to_hex = original_pixel_to_hex
+        result = system.handle_colonize_designation(100, 100, mock_fleet)
 
         # Pod availability is checked at execution time — prompt is shown
         assert result is not None
@@ -768,14 +756,10 @@ class TestHandleColonizeDesignationPodFiltering:
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_system)
 
-        import game.ui.screens.strategy_colonization as colonization_module
-        original_pixel_to_hex = colonization_module.pixel_to_hex
-        colonization_module.pixel_to_hex = Mock(return_value=HexCoord(10, 10))
+        # PROJ-380 DUP-X-08: stub camera.hex_at_screen.
+        mock_camera.hex_at_screen.return_value = HexCoord(10, 10)
 
-        try:
-            result = system.handle_colonize_designation(100, 100, mock_fleet)
-        finally:
-            colonization_module.pixel_to_hex = original_pixel_to_hex
+        result = system.handle_colonize_designation(100, 100, mock_fleet)
 
         # Universal pods: both planets are valid, should prompt for selection
         assert result is not None

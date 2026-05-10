@@ -50,7 +50,7 @@ class BuildQueueDragHandler:
         on_add_to_queue: Callable[[str, Optional[float], str, Optional[int]], None],
         on_refresh_queue: Callable[[], None],
         on_refresh_design_report: Callable[[str], None],
-        on_remove_from_queue: Optional['RemoveFromQueueCallback'] = None,
+        on_remove_from_queue: 'RemoveFromQueueCallback',
     ):
         """
         Initialize the drag handler.
@@ -61,7 +61,7 @@ class BuildQueueDragHandler:
             on_add_to_queue: Callback(design_id, turns, category, index) to add item to queue
             on_refresh_queue: Callback to refresh queue display after reorder
             on_refresh_design_report: Callback(design_id) to update design report on selection
-            on_remove_from_queue: PROJ-208 callback(item_index) to dispatch RemoveFromConstructionQueueCommand
+            on_remove_from_queue: PROJ-208 callback(item_index) to dispatch RemoveFromConstructionQueueCommand. Required (PROJ-393 removed legacy fallback).
         """
         self.portrait_loader = portrait_loader
         self.design_library = design_library
@@ -84,6 +84,21 @@ class BuildQueueDragHandler:
     def is_dragging(self) -> bool:
         """Return True if currently dragging an item."""
         return self.dragged_item is not None
+
+    def reset_state(self) -> None:
+        """Clear all transient drag/selection state.
+
+        PROJ-376: called from ``BuildQueueScreen.open_for_yard`` when the
+        screen is reused across yard switches. Clears the 5 fields established
+        in ``__init__`` lines 73-81 — leaving any of them populated would
+        leak state across opens (e.g., a half-clicked queue row in yard A
+        priming a phantom drag in yard B).
+        """
+        self.dragged_item = None
+        self.drag_preview = None
+        self.drag_start_pos = None
+        self._pending_queue_index = None
+        self.selected_design = None
 
     def handle_mouse_down(
         self,
@@ -189,12 +204,8 @@ class BuildQueueDragHandler:
                 design_id = item.get('design_id', 'Unknown')
                 item_type = item.get('type', 'ship')
 
-                # Remove item: use command callback if available, else fall back to direct pop
-                if self._on_remove_from_queue is not None:
-                    self._on_remove_from_queue(idx)
-                else:
-                    # Legacy fallback for tests without command injection
-                    construction_queue.pop(idx)
+                # Remove item via the required command callback.
+                self._on_remove_from_queue(idx)
 
                 # Load portrait icon for drag preview
                 portrait = self.portrait_loader.load_queue_item_portrait(design_id, item_type, 48)

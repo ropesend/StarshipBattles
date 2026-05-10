@@ -73,7 +73,7 @@ class DesignValidator:
             from game.simulation.entities.ship import Ship
             ship = Ship.from_dict(design_data, registries=self._registries)
             ship.recalculate_stats()
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: Ship.from_dict may raise various persistence/validation errors; collect as error string in result.
             result.add_error(f"Could not load design: {e}")
             return result
 
@@ -89,8 +89,13 @@ class DesignValidator:
             for warning in sim_result.warnings:
                 result.add_warning(warning)
 
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: ShipDesignValidator may raise unexpected types; collect as result error rather than crash the validator.
+            # PROJ-381 Phase 2 (ERR-03-004): previously logged a warning
+            # and discarded the failure, leaving is_valid=True even when
+            # sim validation crashed. Surface as a result error so
+            # callers see the validation signal.
             logger.warning(f"Simulation validator failed: {e}")
+            result.add_error(f"Sim validation failed: {e}")
 
         # Check per-layer mass budgets (sim validator only checks total mass,
         # not per-layer percentages during design validation)

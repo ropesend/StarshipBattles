@@ -1,0 +1,58 @@
+[
+  {
+    "file": "game/services/llm/background.py",
+    "line": 144,
+    "variable": "_in_flight_calls",
+    "function": "start",
+    "context": "global _in_flight_calls"
+  },
+  {
+    "file": "game/services/llm/background.py",
+    "line": 329,
+    "variable": "_in_flight_calls",
+    "function": "_run",
+    "context": "global _in_flight_calls"
+  },
+  {
+    "file": "game/simulation/components/component_loader.py",
+    "line": 48,
+    "variable": "_default_cache_manager",
+    "function": "get_default_cache_manager",
+    "context": "global _default_cache_manager"
+  },
+  {
+    "file": "game/simulation/components/component_loader.py",
+    "line": 69,
+    "variable": "_default_cache_manager",
+    "function": "reset_component_caches",
+    "context": "global _default_cache_manager"
+  },
+  {
+    "file": "game/strategy/data/galaxy_warp_generator.py",
+    "line": 359,
+    "variable": "_WARP_POINT_TYPES_CACHE",
+    "function": "_load_warp_point_types",
+    "context": "global _WARP_POINT_TYPES_CACHE"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 444,
+    "variable": "_default_ship_theme_manager",
+    "function": "get_default_ship_theme_manager",
+    "context": "global _default_ship_theme_manager"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 452,
+    "variable": "_default_ship_theme_manager",
+    "function": "set_default_ship_theme_manager",
+    "context": "global _default_ship_theme_manager"
+  },
+  {
+    "file": "game/ui/screens/setup_data_io.py",
+    "line": 32,
+    "variable": "_ship_factory",
+    "function": "_get_ship_factory",
+    "context": "global _ship_factory"
+  }
+]

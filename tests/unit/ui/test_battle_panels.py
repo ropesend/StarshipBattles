@@ -107,12 +107,12 @@ class TestBattlePanels:
         handled = panel.handle_click(10, 50)
         assert handled is True
         # PROJ-43: expanded_ships now tracks ship IDs (name used as fallback ID)
-        assert "Hero" in panel.expanded_ships
+        assert "Hero" in panel._expanded_ids
 
         # Test 2: Collapse
         handled = panel.handle_click(10, 50)
         assert handled is True
-        assert "Hero" not in panel.expanded_ships
+        assert "Hero" not in panel._expanded_ids
 
     def test_stats_panel_scroll_offset(self):
         """Test that scroll offset shifts the click targets."""
@@ -128,18 +128,18 @@ class TestBattlePanels:
         # Test clicking Ship 2 WITHOUT scroll (click Y=120, rel_y=120+0=120)
         handled = panel.handle_click(10, 120)
         assert handled is True
-        assert "Villain" in panel.expanded_ships
-        panel.expanded_ships.clear()
+        assert "Villain" in panel._expanded_ids
+        panel._expanded_ids.clear()
 
         # Test clicking Ship 2 WITH scroll offset=50
         # Click at screen Y=70 → rel_y = 70 + 50 = 120 → hits [110, 135)
         panel.scroll.offset = 50
         handled = panel.handle_click(10, 70)
         assert handled is True
-        assert "Villain" in panel.expanded_ships
+        assert "Villain" in panel._expanded_ids
 
         # Click at screen Y=120 → rel_y = 120 + 50 = 170 → miss
-        panel.expanded_ships.clear()
+        panel._expanded_ids.clear()
         handled = panel.handle_click(10, 120)
         assert handled is False
 
@@ -304,10 +304,10 @@ class TestBattlePanelsDTOIntegration:
         handled = panel.handle_click(10, 50)
         assert handled is True
 
-        # Check that expanded_ships contains string ID, not object
-        assert len(panel.expanded_ships) == 1
-        expanded_id = list(panel.expanded_ships)[0]
-        assert isinstance(expanded_id, str), "expanded_ships should contain string IDs"
+        # Check that _expanded_ids contains string ID, not object
+        assert len(panel._expanded_ids) == 1
+        expanded_id = list(panel._expanded_ids)[0]
+        assert isinstance(expanded_id, str), "_expanded_ids should contain string IDs"
         assert expanded_id == "ship_001"
 
     def test_panel_uses_ui_service_for_ships(self):
@@ -334,11 +334,11 @@ class TestBattlePanelsDTOIntegration:
 
         # Expand
         panel.handle_click(10, 50)
-        assert "ship_001" in panel.expanded_ships
+        assert "ship_001" in panel._expanded_ids
 
         # Collapse
         panel.handle_click(10, 50)
-        assert "ship_001" not in panel.expanded_ships
+        assert "ship_001" not in panel._expanded_ids
 
     def test_focus_ship_returns_ship_id(self):
         """Test shift-click returns ship ID for camera focus (PROJ-43)."""

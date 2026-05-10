@@ -1,0 +1,256 @@
+# Phase 3: CAT-6 Mocking Brittleness
+
+> **BEFORE MARKING THIS PHASE COMPLETE:**
+> 1. Run `python Projects/scripts/validate_phase.py PROJ-322 3`
+> 2. Only proceed if output shows PASSED
+> 3. Update plan.md phase table AND Current State
+
+**Status:** Complete (12 done in passes 1-3 — pass 3 added 5; 7 obsolete (target files deleted upstream); 7 formally deferred-out-of-scope — UIWindow-inheritance cluster + multi-day production refactors. PROJ-322 pass 3 verified)
+**Objective:** Reduce the 26 verified CAT-6 brittle-mocking patterns by patching at public boundaries instead of private internals.
+
+---
+
+## Tasks
+
+### Task 3.1: Boundary-patch builder drag-drop UI [Medium]
+**File:** `tests/integration/builder/test_builder_drag_drop_real.py`
+**Tests:** `pytest tests/integration/builder/test_builder_drag_drop_real.py`
+
+- [x] S11-CAT6-004: stop patching `DesignWorkshopScreen._create_ui` (lines 29, 55-65) and the 10 manual mock-attr assignments. Use real headless `_create_ui` or refactor to inject UI via DI. Coordinate with APC-003-F08 in Phase 5. _(skipped — `tests/integration/builder/test_builder_drag_drop_real.py` no longer exists; deleted upstream by PROJ-321 cleanup. Pre-flight `ls` confirms file is gone.)_
+- [x] Verify: `pytest tests/integration/builder/test_builder_drag_drop_real.py` passes; LOC delta approximately -15 _(skipped — file no longer exists.)_
+
+---
+
+### Task 3.2: Decouple AI attack-run test from approach_distance constant [Simple]
+**File:** `tests/unit/ai/test_ai.py`
+**Tests:** `pytest tests/unit/ai/test_ai.py`
+
+- [x] S01-CAT6-001: rewrite `test_attack_run_transitions_to_retreat` (lines 228-237) to mock `weapon_range` to a known value or set ship position relative to the calculated threshold instead of hard-coding `(0,0)`/`(150,0)`.
+- [x] Verify: `pytest tests/unit/ai/test_ai.py` passes; LOC delta approximately -2
+
+---
+
+### Task 3.3: Convert multi-selection autouse to value-returning fixtures [Medium]
+**File:** `tests/unit/builder/test_multi_selection_logic.py`
+**Tests:** `pytest tests/unit/builder/test_multi_selection_logic.py`
+
+- [x] S02-CAT6-004: rewrite the autouse setup (lines 10-50) that sets attributes on `self` to a standard fixture returning test objects (or a helper function); this removes the parallel-run fragility. _(done in PROJ-322 pass 3 — converted autouse `setup` to a value-returning `selection_setup` fixture wrapping `_MultiSelectionFixture` dataclass. 3 tests refactored.)_
+- [x] Verify: `pytest tests/unit/builder/test_multi_selection_logic.py` passes; LOC delta approximately -10 _(done in PROJ-322 pass 3 — 3 tests pass; net code shape replaces self-mutation with explicit fixture parameter.)_
+
+---
+
+### Task 3.4: Replace inline MockComponent with MagicMock(stats=...) [Medium]
+**File:** `tests/unit/modifiers/test_seeker_weapon_bindings.py`
+**Tests:** `pytest tests/unit/modifiers/test_seeker_weapon_bindings.py`
+
+- [x] S09-CAT6-003: replace each inline `class MockComponent` definition (lines 103-193, 4 occurrences with only the `stats` dict differing) with `MagicMock(stats={...})`. Coordinate with CAT-4 cleanup (Task 1.2).
+- [x] Verify: `pytest tests/unit/modifiers/test_seeker_weapon_bindings.py` passes; LOC delta approximately -55
+
+---
+
+### Task 3.5: Replace research-scene reset call-sequence asserts with state asserts [Complex]
+**File:** `tests/unit/research/research_scene/test_reset_state.py`
+**Tests:** `pytest tests/unit/research/research_scene/test_reset_state.py`
+
+- [x] S09-CAT6-002: rewrite the 6 tests (lines 17-31, 76-188) to assert observable post-reset state of a real `ResearchControlPanel`; remove `_create_mock_panel` lambda binding and the call-sequence assertions on `clear_selection`/`update_budget_display`/etc. _(skipped — `tests/unit/research/research_scene/test_reset_state.py` no longer exists; deleted upstream.)_
+- [x] Verify: `pytest tests/unit/research/research_scene/test_reset_state.py` passes; LOC delta approximately -80 _(skipped — file no longer exists.)_
+
+---
+
+### Task 3.6: Remove source-text camera-import test [Simple]
+**File:** `tests/unit/research/test_research_scene_di.py`
+**Tests:** `pytest tests/unit/research/test_research_scene_di.py`
+
+- [x] S06-CAT6-001: delete `test_camera_import_is_direct` (lines 88-97); behavioural DI tests already cover Camera injection. Coordinate with APC-002-F06 in Phase 5.
+- [x] Verify: `pytest tests/unit/research/test_research_scene_di.py` passes; LOC delta approximately -10
+
+---
+
+### Task 3.7: Extract _make_projectile helper for CCD tests [Complex]
+**File:** `tests/unit/simulation/projectile/test_ccd.py`
+**Tests:** `pytest tests/unit/simulation/projectile/test_ccd.py`
+
+- [x] S08-CAT6-001: extract a `_make_projectile(**overrides)` helper (or use real `Projectile` / sparse spec); avoid hand-wiring 15-attr MagicMocks per test (lines 23-376). _(skipped — `tests/unit/simulation/projectile/test_ccd.py` no longer exists; deleted upstream.)_
+- [x] Verify: `pytest tests/unit/simulation/projectile/test_ccd.py` passes; LOC delta approximately -100 _(skipped — file no longer exists.)_
+
+---
+
+### Task 3.8: Replace mock-delegate validator tests with behavioural ones [Medium]
+**File:** `tests/unit/simulation/services/test_validation_service.py`
+**Tests:** `pytest tests/unit/simulation/services/test_validation_service.py`
+
+- [x] S11-CAT6-003: replace the 4 mock-delegation tests (lines 14-100) with behavioural tests exercising the real validator chain; keep `test_service_creates_default_validator_when_none_provided`. _(skipped — `tests/unit/simulation/services/test_validation_service.py` no longer exists; deleted upstream.)_
+- [x] Verify: `pytest tests/unit/simulation/services/test_validation_service.py` passes; LOC delta approximately -50 _(skipped — file no longer exists.)_
+
+---
+
+### Task 3.9: Drive battle-engine init through public API [Medium]
+**File:** `tests/unit/simulation/systems/test_battle_engine_init_ship.py`
+**Tests:** `pytest tests/unit/simulation/systems/test_battle_engine_init_ship.py`
+
+- [x] S02-CAT6-002: rewrite the 4 tests at lines 65, 73, 82, 90 to drive the engine via `start()` / `start_teams()` instead of calling `battle_engine._initialize_ship(ship)`. Coordinate with APC-003-F02 in Phase 5. _(done in PROJ-322 pass 3 — 4 tests rewritten to drive `engine.start([ship_a], [ship_b], ai_controllers=[])`. Renamed class to `TestStartInitializesEachShip`. Each test now also asserts on the second ship to prove parity across both teams.)_
+- [x] Verify: `pytest tests/unit/simulation/systems/test_battle_engine_init_ship.py` passes; LOC delta approximately -15 _(done in PROJ-322 pass 3 — 4 tests pass; net -2 LOC after dropping the explicit fixture.)_
+
+---
+
+### Task 3.10: Refactor or document build-order auto-completion entry point [Medium]
+**File:** `tests/unit/strategy/engine/test_build_order_processor.py`
+**Tests:** `pytest tests/unit/strategy/engine/test_build_order_processor.py`
+
+- [x] S10-CAT6-001 (NEEDS_REWORK): refactor `test_build_order_auto_completes_when_queue_empties` (lines 60-81) to use `OrderProcessor.execute_action_order` public boundary; OR add a clear docstring explaining why `ActionExecutionEngine.process_action_ticks` is the correct entry point and document the design intent. _(verification adjusted from review's "Test through OrderProcessor.execute_action_order public boundary" - see verification_report.md)_ _(done in PROJ-322 pass 3 — chose the documentation path: strengthened docstring to explain that BUILD auto-pop is owned by `ActionExecutionEngine.process_action_ticks` (the post-tick sweep), not `execute_action_order` (the per-order dispatcher). The alternative would test a code path the engine never takes.)_
+- [x] Verify: `pytest tests/unit/strategy/engine/test_build_order_processor.py` passes; LOC delta approximately -10 (if refactored) or 0 (if documented) _(done in PROJ-322 pass 3 — 6 tests pass; LOC delta 0 (docstring only).)_
+
+---
+
+### Task 3.11: Accept positional-or-keyword in superweapon-stabilizers assert [Simple]
+**File:** `tests/unit/strategy/engine/test_superweapon_stabilizers.py`
+**Tests:** `pytest tests/unit/strategy/engine/test_superweapon_stabilizers.py`
+
+- [x] S03-CAT6-001: replace `assert sentinel in mock_find.call_args.args` (lines 89-92) with a `call_args_list` comprehension accepting either positional or kwargs - matches the documented intent.
+- [x] Verify: `pytest tests/unit/strategy/engine/test_superweapon_stabilizers.py` passes; LOC delta approximately 0
+
+---
+
+### Task 3.12: Inject path-finder via DI in fleet-movement basics [Medium]
+**File:** `tests/unit/strategy/fleet_movement_engine/test_basics.py`
+**Tests:** `pytest tests/unit/strategy/fleet_movement_engine/test_basics.py`
+
+- [x] S08-CAT6-002: stop patching `fleet_navigation_service.find_hybrid_path` in `test_recalculates_path_if_destination_changed` (lines 77-108); inject a fake path-finder via DI. Coordinate with APC-003-F07 in Phase 5. _(done in PROJ-322 pass 3 — pass `nav_service=fake_nav_service` to `FleetMovementEngine(...)` constructor and assert that `calculate_fleet_next_hex` was called on the injected service. No more module-level patch.)_
+- [x] Verify: `pytest tests/unit/strategy/fleet_movement_engine/test_basics.py` passes; LOC delta approximately -10 _(done in PROJ-322 pass 3 — 9 tests pass.)_
+
+---
+
+### Task 3.13: Inject fake movement_engine instead of patching dispatch [Simple]
+**File:** `tests/unit/strategy/turn_engine/test_tick_mechanics.py`
+**Tests:** `pytest tests/unit/strategy/turn_engine/test_tick_mechanics.py`
+
+- [x] S05-CAT6-003: stop patching `turn_engine.movement_engine.calculate_next_hex` (lines 149, 177); inject a fake `movement_engine` via DI. Coordinate with APC-003-F04 in Phase 5.
+- [x] Verify: `pytest tests/unit/strategy/turn_engine/test_tick_mechanics.py` passes; LOC delta approximately -2
+
+---
+
+### Task 3.14: Move pygame_gui patches to module-scoped autouse for virtual-table [Medium]
+**File:** `tests/unit/ui/components/table/test_virtual_table.py`
+**Tests:** `pytest tests/unit/ui/components/table/test_virtual_table.py`
+
+- [x] S11-CAT6-001: move the 5 `@patch` decorators (UIImage, UILabel, UIVerticalScrollBar, UIPanel, TableHeader) from each method (lines 78-82) into a class-level or module-scoped autouse fixture; 12+ tests share them. **RESOLVED IN PROJ-327 Phase 1 (2026-05-04, commit 742c67910 baseline + Phase 1 commit) — 80 of 81 `@patch` decorators removed (the 1 surviving UIButton patch applies to a single test and was kept per design.md Task 1.5 "don't migrate for style"). File runtime reduced 1.03 s → 1.00 s (median of 3 single-process runs). Suite-level: slowest shard 127.7 s → 123.8 s (median of 3 sharded runs); modest delta but bracketed cleanly with outcome parity verified byte-identical (24 PASSED before + after, 0 changes). The deferral rationale (high regression risk across 700 LOC) was addressed by capturing pre/post `pytest -v` outcomes and diff-checking. See `Projects/active_projects/PROJ-327/findings/virtual_table_runtime.md`.**
+- [x] Verify: `pytest tests/unit/ui/components/table/test_virtual_table.py` passes; LOC delta approximately -50 _(resolved — see above; net LOC change is approximately -130 from removed @patch decorators and mock-class positional args, partially offset by the +30 LOC autouse fixture body.)_
+
+---
+
+### Task 3.15: Replace empire-treasury private-attr asserts with public refresh asserts [Simple]
+**File:** `tests/unit/ui/panels/test_empire_treasury_panel.py`
+**Tests:** `pytest tests/unit/ui/panels/test_empire_treasury_panel.py`
+
+- [ ] S05-CAT6-001: rewrite `test_refresh_clears_old_elements` (lines 419-437) to verify observable behaviour of `refresh()`; remove `panel._elements` / `panel._scroll_container` private-attr access. **DEFERRED-OUT-OF-SCOPE (PROJ-322 pass 3):** the test specifically verifies that the panel cleans up its internal element-tracking lists when refreshed. With pygame_gui mocked out (no real renderable surfaces), there is no observable side effect to assert other than the internal `_elements`/`_scroll_container` lists. Public `refresh()` returns None; the only contract worth verifying without internals is "old container.kill() was called", which is already in the test. Removing the private-attr read would weaken the test rather than improve it. **RE-CONFIRMED DEFERRED IN PROJ-327 Phase 2 Task 2.11 (commit 7b05f610a)** — re-audit confirmed the original rationale: the test asserts on the cleanup contract of `refresh()`. With pygame_gui mocked, there is no public observable beyond the kill-call (already asserted) and the internal element-tracking lists. The runtime context that triggered re-judgment doesn't apply here (this is a single test; no fixture-rescope opportunity). Honoring D-006: re-confirmation is a valid outcome.
+- [ ] Verify: `pytest tests/unit/ui/panels/test_empire_treasury_panel.py` passes; LOC delta approximately -5 _(re-confirmed deferred in PROJ-327 — see above.)_
+
+---
+
+### Task 3.16: Assert on cloned ship attributes, not ShipInstance.create kwargs [Simple]
+**File:** `tests/unit/ui/screens/battle_setup/test_fleet_hierarchy_editor.py`
+**Tests:** `pytest tests/unit/ui/screens/battle_setup/test_fleet_hierarchy_editor.py`
+
+- [x] S01-CAT6-002: rewrite `test_clone_ship_calls_ship_instance_create` (lines 81-98) to verify the cloned ship's attributes; remove `ShipInstance.create` mock + kwargs assertion.
+- [x] Verify: `pytest tests/unit/ui/screens/battle_setup/test_fleet_hierarchy_editor.py` passes; LOC delta approximately -5
+
+---
+
+### Task 3.17: Promote `_get_base_firing_arc` to public surface or test through public API [Medium]
+**File:** `tests/unit/ui/screens/builder/test_modifier_logic_service.py`
+**Tests:** `pytest tests/unit/ui/screens/builder/test_modifier_logic_service.py`
+
+- [x] S02-CAT6-001: rewrite the 5 tests in `TestGetBaseFiringArc` (lines 47, 57, 67, 73, 84) to use the public API (`get_initial_value`, `get_local_min_max`); OR promote `_get_base_firing_arc` to a public helper. Coordinate with APC-003-F01 in Phase 5. _(done in PROJ-322 pass 3 — chose the public-API path: rewrote 5 tests to call `service.get_initial_value('turret_mount', comp)` (which internally consumes `_get_base_firing_arc`). The "no arc found" test now asserts the public fallback to `mod_def.min_val` instead of None, which is the observable behaviour callers rely on. Class fixture extended with the `turret_mount` mod_def.)_
+- [x] Verify: `pytest tests/unit/ui/screens/builder/test_modifier_logic_service.py` passes; LOC delta approximately -10 _(done in PROJ-322 pass 3 — 23 tests pass.)_
+
+---
+
+### Task 3.18: Replace patch.dict(sys.modules) with targeted patch.object [Medium]
+**File:** `tests/unit/ui/screens/test_battle_panels_extended.py`
+**Tests:** `pytest tests/unit/ui/screens/test_battle_panels_extended.py`
+
+- [x] S11-CAT6-002: replace `patch.dict(sys.modules, {'pygame': mock_pygame})` + `importlib.reload(battle_panels)` (lines 48-49) with targeted `patch.object` on specific pygame paths; eliminates state leakage between classes that share the module reference. _(skipped — `tests/unit/ui/screens/test_battle_panels_extended.py` no longer exists; deleted upstream.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_battle_panels_extended.py` passes; LOC delta approximately -2 _(skipped — file no longer exists.)_
+
+---
+
+### Task 3.19: Patch at boundary instead of `_build_list` private method [Simple]
+**File:** `tests/unit/ui/screens/test_build_queue_list_window.py`
+**Tests:** `pytest tests/unit/ui/screens/test_build_queue_list_window.py`
+
+- [x] S05-CAT6-002: stop patching `BuildQueueListWindow._build_list` in `mock_window_base` (lines 10-13, 28); patch at the pygame_gui boundary, or promote `_build_list` to public if independently testable. 11 tests depend on this fixture. Coordinate with APC-003-F03 in Phase 5. **RESOLVED IN PROJ-328 Phase A Task A.2 (commit 7859d652c)** — `_build_list` was decomposed into a pure-data row collector (`BuildQueueRowCollector`) + a production widget builder (`BuildQueueListUiBuilder`); tests use bypass_init + `MockBuildQueueListUiBuilder` (which routes through the real collector). Zero `patch.object(BuildQueueListWindow, '_build_list')` and zero `mock_window_base` fixture remain. _(original deferral: BuildQueueListWindow inherits from pygame_gui.elements.UIWindow; PROJ-325 PoC + PROJ-328 Phase A unblocked this.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_build_queue_list_window.py` passes; LOC delta approximately -5 — actual: 16 tests pass (was 14), helper LOC delta substantially negative (per-test 30-line bypass blocks → single 12-line _make_window helper).
+
+---
+
+### Task 3.20: Extract patch chain helper for fleet-report-window-multi-select [Complex]
+**File:** `tests/unit/ui/screens/test_fleet_report_window_multi_select.py`
+**Tests:** `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py`
+
+- [x] S03-CAT6-001b: extract the 3-5 nested `with patch()` blocks (lines 76-117, 148-178, 234-268, 389-427) into a single helper; prefer patching at service boundary instead of `_init_layout`/`refresh_list` private methods. Coordinate with APC-001-F07 in Phase 5. **RESOLVED IN PROJ-328 Phase A Task A.4 (commit 495fa0f39)** — the 3-5 nested patch blocks collapsed to a single `_make_window` helper using bypass_init + `MockFleetReportUiBuilder`. Zero `patch.object(FleetReportWindow, '_init_layout')` patches remain (the production `_init_layout` was extracted to `FleetReportLayoutBuilder` so the patch is no longer applicable). _(original deferral: FleetReportWindow inherits StrategyModalWindow → UIWindow; PROJ-325 PoC + PROJ-328 Phase A unblocked this.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_fleet_report_window_multi_select.py` passes; LOC delta approximately -50 — actual: 23 tests pass; helper LOC delta -50.
+
+---
+
+### Task 3.21: Use real `__init__` for new-game-setup-extended screen [Medium]
+**File:** `tests/unit/ui/screens/test_new_game_setup_extended.py`
+**Tests:** `pytest tests/unit/ui/screens/test_new_game_setup_extended.py`
+
+- [x] S08-CAT6-003: rewrite `_make_screen` (lines 16-49) to construct via real `__init__` with mocked pygame_gui dependencies; eliminate the manual 16+ attribute wiring. Coordinate with APC-001-F12 in Phase 5. **RESOLVED IN PROJ-328 Phase B (commit pending):** NewGameSetupScreen refactored to two-stage construction (ViewModel + Controller + UI builder split). `_make_screen` now uses `bypass_init(NewGameSetupScreen)` + `make_ui_widget(...)` + `MockNewGameSetupUiBuilder()` — manual per-attribute wiring eliminated.
+- [x] Verify: `pytest tests/unit/ui/screens/test_new_game_setup_extended.py` passes; LOC delta approximately -20 _(actual: 15 tests pass; helper went from ~34 LOC of `__new__` + per-attribute wiring to ~25 LOC bypass_init + make_ui_widget + MockBuilder.)_
+
+---
+
+### Task 3.22: Note bypass-init convention for planet-list-window [Simple]
+**File:** `tests/unit/ui/screens/test_planet_list_window.py`
+**Tests:** `pytest tests/unit/ui/screens/test_planet_list_window.py`
+
+- [x] S10-CAT6-002: keep current shape (the deep mocking of PlanetReportPanel/`compute_planet_production`/UIButton at lines 71-111 follows the project bypass-init convention). Add a note pointing to Phase 5 APC-001 cleanup, to be revisited when the bypass-init pattern is consolidated globally.
+- [x] Verify: `pytest tests/unit/ui/screens/test_planet_list_window.py` passes; LOC delta approximately 0 (note only)
+
+---
+
+### Task 3.23: Drive selection via real pygame_gui events for save-selection [Medium]
+**File:** `tests/unit/ui/screens/test_save_selection.py`
+**Tests:** `pytest tests/unit/ui/screens/test_save_selection.py`
+
+- [x] S09-CAT6-001: rewrite `test_buttons_enable_after_selection` (lines 274-327) to drive selection through real pygame_gui events; assert observable button state. Remove mutation of `first_item['selected']` and the `_handle_selection_change()` private call. _(skipped — `tests/unit/ui/screens/test_save_selection.py` no longer exists; deleted upstream.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_save_selection.py` passes; LOC delta approximately -10 _(skipped — file no longer exists.)_
+
+---
+
+### Task 3.24: Use real headless pygame_gui session for strategy-modal-window [Medium]
+**File:** `tests/unit/ui/screens/test_strategy_modal_window.py`
+**Tests:** `pytest tests/unit/ui/screens/test_strategy_modal_window.py`
+
+- [x] S08-CAT6-004: rewrite `_make_modal_window` (lines 16-37) to use a real headless pygame_gui session; remove the `pygame_gui.elements.UIWindow.__init__` lambda patch and the manual base-init call. **RESOLVED IN PROJ-328 Phase A Task A.5 (commit dbc252c23)** — `_make_modal_window` now constructs a real `_ProbeModal` (concrete StrategyModalWindow subclass) under bypass_init. The base bypass branch (Task A.1, commit fd388946d) leaves `_window_manager`, `ui_manager`, `_window_init_bypassed` populated, so the helper just calls the constructor and manually registers the window with the manager (bypassed instances intentionally skip auto-register). Added 5 new TestBypassShellInvariants tests pinning the Task A.1 contract. _(original deferral: StrategyModalWindow IS the UIWindow subclass that was the root cause; PROJ-325 PoC + PROJ-328 Phase A unblocked this via the bypass-shell update rather than the integration-harness approach.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_modal_window.py` passes; LOC delta approximately -15 — actual: 28 tests pass (was 23, +5 new bypass-shell-invariant tests).
+
+---
+
+### Task 3.25: Test strategy-screen public surface [Complex]
+**File:** `tests/unit/ui/screens/test_strategy_screen.py`
+**Tests:** `pytest tests/unit/ui/screens/test_strategy_screen.py`
+
+- [x] S02-CAT6-003: rewrite `_make_strategy_screen` (lines 66-74) and the ~50 dependent tests to assert observable outcomes from public methods (`update`, `draw`, `handle_event`, `handle_resize`, `handle_click`); drop the `__new__` bypass-init that injects MagicMock for 8 internal sub-objects. (Big change; consider splitting into sub-PRs.) **RESOLVED IN PROJ-327 Phase 4 (2026-05-04) — Compositional Construction pattern.** Production wiring extracted to `StrategyScreenComposition` Protocol + `StrategyScreenCompositionFactory` (`game/ui/screens/strategy_screen_composition.py`). `StrategyScreen.__init__` now accepts `composition: StrategyScreenComposition | None = None` and calls `comp.make_<thing>(self)` for each sub-object. Tests use `MockStrategyScreenComposition` from `tests/fixtures/strategy_screen_composition.py` to wire all 8 sub-object slots in one call (`composition.populate(screen)`). The bypass-init `__new__` survives (the upstream `Camera` + `StrategyUI` + asset loading still run inline; a future two-stage refactor like `RaceSetupScreen` would close that), but the brittle `patch.object(StrategyScreen, '__init__', lambda...)` is gone from both `test_strategy_screen.py` and `test_strategy_menu_actions.py`. New pattern documented as `docs/02_PATTERNS.md` § 32 "Compositional Construction". 62 + 22 + 17 = 101 tests pass; runtime: ~2.55 s (median of 3) — flat vs pre-refactor.
+- [x] Verify: `pytest tests/unit/ui/screens/test_strategy_screen.py` passes; LOC delta approximately -200 — actual: production +14 LOC (`strategy_screen.py` 694→708 from composition import + kwarg + 8 `comp.make_*` calls); tests +10 LOC (`test_strategy_screen.py` 856→866 from import + comments). **NEW LOC**: `strategy_screen_composition.py` (114), `strategy_screen_composition.py` test fixture (119), composition smoke tests (124). Net **+381 LOC** rather than -200, but the readability/maintainability win justifies it: adding/renaming a sub-object slot is now a single edit in the protocol + factory + mock instead of 50+ inline test edits. Pattern reusable across StrategyScreen-shaped classes. Per user priority order (readability > maintainability > functionality > runtime), this is the right outcome.
+
+---
+
+### Task 3.26: Real construction for sub-window hotkey tests [Complex]
+**File:** `tests/unit/ui/screens/test_sub_window_hotkeys.py`
+**Tests:** `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py`
+
+- [x] S12-CAT6-001: rewrite the constructor-bypass pattern (lines 36-294) for `OrdersWindow`/`BuildQueueScreen`/`TransferDialog`/`BuildQueueListWindow` to use real construction with mocked pygame_gui; or refactor windows so hotkey logic lives in a separately testable module. Coordinate with APC-001-F16 in Phase 5. **FULLY RESOLVED IN PROJ-328 Phase A Task A.6 (commit 2252a6ef3) + Phase C (commit 909bfbecf)** — OrdersWindow + BuildQueueListWindow clusters migrated to bypass_init + explicit-Mock-builder construction in Phase A; TransferDialog cluster migrated to bypass_init + `MockTransferUiBuilder` in Phase C alongside the deep TransferDialog MVVM split. BuildQueueScreen cluster unchanged (not a UIWindow subclass — bypass_init machinery doesn't apply; current MagicMock(spec=...) shape is canonical for non-UIWindow screens). _(original deferral: all four classes inherit from pygame_gui.elements.UIWindow / StrategyModalWindow; PROJ-325 PoC + PROJ-328 Phase A unblocked the UIWindow path for OrdersWindow + BuildQueueListWindow; PROJ-328 Phase C closed the TransferDialog portion.)_
+- [x] Verify: `pytest tests/unit/ui/screens/test_sub_window_hotkeys.py` passes; LOC delta approximately -150 — actual: 23 tests pass; OrdersWindow + BuildQueueListWindow + TransferDialog helpers all use bypass_init + Mock builder (~10-25 LOC each, replacing per-class inline wiring).
+
+---
+
+## Phase Completion Checklist
+When all tasks above are done:
+- [x] All task checkboxes above are checked (or marked deferred-out-of-scope with concrete blockers)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
+
+_Source review: `Reviews/results/2026-05-02_204633_test-review/`. See `findings/source_review.md` for the link._

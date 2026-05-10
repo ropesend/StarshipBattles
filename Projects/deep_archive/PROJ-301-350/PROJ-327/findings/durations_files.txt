@@ -1,0 +1,49 @@
+=== TOP 25 SLOWEST TEST FILES (sum of per-test durations from .test_durations.json) ===
+file                                                                                total_s     n     avg_ms
+tests/integration/ui.py                                                               53.53   119      449.8
+tests/integration/ui/build_queue_screen.py                                            44.88    44     1020.1
+tests/unit/validation/test_component_definitions.py                                   33.16   912       36.4
+tests/unit/quickstart/test_quickstart_designs.py                                      31.47   299      105.2
+tests/projects/phase_workflow.py                                                      23.23    90      258.2
+tests/unit/ui/test_race_theme_gallery.py                                              16.41    13     1262.4
+tests/unit/systems/test_main_integration.py                                           13.67     2     6835.5
+tests/unit/tools/test_regenerate_ship_portraits.py                                    12.11    18      672.8
+tests/unit/tools.py                                                                   11.50   212       54.2
+tests/unit/ui/test_race_portrait_gallery.py                                            8.54    15      569.7
+tests/unit/simulation/combat.py                                                        6.54   140       46.7
+tests/unit/simulation/services/test_vehicle_design_service.py                          5.84    64       91.2
+tests/unit/ui/screens/test_keybindings_scene.py                                        5.73    26      220.3
+tests/unit/ui/screens/test_empire_build_queue_window.py                                5.36   117       45.8
+tests/unit/simulation/services/test_battle_service.py                                  5.30    77       68.9
+tests/unit/research/test_tech_node.py                                                  4.98   124       40.2
+tests/unit/ui/test_battle_screen_simulation.py                                         4.78    40      119.5
+tests/unit/strategy/engine/test_game_initializer.py                                    4.70    32      146.9
+tests/unit/builder/test_builder_improvements.py                                        4.67     2     2332.5
+tests/unit.py                                                                          4.50    51       88.3
+tests/unit/ai/formation_prediction/test_formation_behavior.py                          4.46    22      202.7
+tests/unit/ui/services/test_ship_io.py                                                 4.16    56       74.3
+tests/unit/strategy/test_command_handlers.py                                           4.15    94       44.1
+tests/unit/simulation/entities/test_ship_serialization.py                              4.09    60       68.1
+tests/unit/simulation.py                                                               3.97    61       65.1
+
+=== TOP 20 SLOWEST INDIVIDUAL TESTS ===
+   13.845s  tests/integration/ui.py::test_race_setup_ships_smoke::test_every_skin_loads_as_non_fallback
+   13.190s  tests/unit/systems/test_main_integration.py::TestMainIntegration::test_game_instantiation
+    4.352s  tests/projects/phase_workflow.py::test_lifecycle_e2e::test_full_dag_to_verified
+    2.728s  tests/integration/ui.py::test_race_setup_ships_smoke::test_get_portrait_image_always_returns_surface
+    2.655s  tests/unit/tools/test_regenerate_ship_portraits.py::TestAudit::test_missing_portrait_exits_three
+    2.621s  tests/unit/tools/test_regenerate_ship_portraits.py::TestAudit::test_clean_theme_exits_zero
+    2.443s  tests/unit/simulation/services/test_vehicle_design_service.py::TestAdditionalEdgeCases::test_add_component_to_ship_with_full_layer
+    2.384s  tests/unit/builder/test_builder_improvements.py::TestBuilderImprovements::test_image_scale_factor
+    2.342s  tests/integration/strategy/combat.py::test_damage_persistence::test_damage_persists_across_two_strategy_battles
+    2.281s  tests/unit/builder/test_builder_improvements.py::TestBuilderImprovements::test_loading_sync
+    2.225s  tests/unit/ui/test_race_theme_gallery.py::TestThemeSelection::test_on_asset_selected_updates_race_config
+    2.046s  tests/projects/phase_workflow.py::test_lifecycle_e2e::test_finding_lifecycle_deferred_then_resolved
+    2.025s  tests/unit/quickstart/test_quickstart_designs.py::TestQuickstartDesignsValid::test_design_recalculates_stats[BS Battleship GC-unknown]
+    2.006s  tests/unit/quickstart/test_quickstart_designs.py::TestQuickstartDesignsValid::test_design_stats_match_expected[BS Battleship GC-unknown]
+    1.998s  tests/unit/quickstart/test_quickstart_designs.py::TestQuickstartDesignsValid::test_design_loads_as_valid_ship[BS Battleship GC-unknown]
+    1.899s  tests/integration/ui/build_queue_screen.py::test_queue_selector::test_queue_selector_buttons_exist
+    1.882s  tests/integration/ui/build_queue_screen.py::test_basics::test_no_savegame_path_handled_gracefully
+    1.852s  tests/integration/ui/build_queue_screen.py::test_basics::test_roles_panel_exists
+    1.846s  tests/unit/ui/test_race_theme_gallery.py::TestConfigurationBinding::test_set_from_config_no_theme_id_no_selection
+    1.831s  tests/integration/ui/build_queue_screen.py::test_crash_tooltips::test_apply_tooltips_crash_none_buttons

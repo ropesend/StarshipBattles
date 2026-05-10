@@ -14,6 +14,17 @@ import logging
 from typing import Any, Dict, TYPE_CHECKING
 
 from game.core.validation import ValidationResult
+from game.strategy.engine.commands import (
+    AddToConstructionQueueCommand,
+    RemoveFromConstructionQueueCommand,
+    ReorderConstructionQueueCommand,
+    SetBuildQueuePausedCommand,
+)
+from game.strategy.engine.commands.registry import (
+    CommandRegistry,
+    CommandSpec,
+    command_spec,
+)
 from game.strategy.engine.handlers.base import BaseCommandHandler
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
 from game.strategy.systems.design_library import DesignLibrary
@@ -21,15 +32,16 @@ from game.strategy.systems.design_library import DesignLibrary
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from game.strategy.engine.commands import (
-        AddToConstructionQueueCommand,
-        RemoveFromConstructionQueueCommand,
-        ReorderConstructionQueueCommand,
-        SetBuildQueuePausedCommand,
-    )
     from game.strategy.engine.game_session import GameSession
 
 
+@command_spec(
+    command_class=AddToConstructionQueueCommand,
+    order_type=None,
+    category='construction',
+    execution_model='instant',
+    facade_helper_name='dispatch_add_to_construction_queue',
+)
 class AddToConstructionQueueCommandHandler(BaseCommandHandler):
     """Handler for AddToConstructionQueueCommand (PROJ-208 Phase 2)."""
 
@@ -157,6 +169,13 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             return {}
 
 
+@command_spec(
+    command_class=RemoveFromConstructionQueueCommand,
+    order_type=None,
+    category='construction',
+    execution_model='instant',
+    facade_helper_name='dispatch_remove_from_construction_queue',
+)
 class RemoveFromConstructionQueueCommandHandler(BaseCommandHandler):
     """Handler for RemoveFromConstructionQueueCommand (PROJ-208 Phase 2).
 
@@ -191,6 +210,13 @@ class RemoveFromConstructionQueueCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=ReorderConstructionQueueCommand,
+    order_type=None,
+    category='construction',
+    execution_model='instant',
+    facade_helper_name='dispatch_reorder_construction_queue',
+)
 class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
     """Handler for ReorderConstructionQueueCommand (PROJ-208 Phase 2).
 
@@ -227,6 +253,14 @@ class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+@command_spec(
+    command_class=SetBuildQueuePausedCommand,
+    order_type=None,
+    category='construction',
+    execution_model='instant',
+    # No facade helper today (FEAT-17 wires through other paths).
+    facade_helper_name=None,
+)
 class SetBuildQueuePausedCommandHandler(BaseCommandHandler):
     """Handler for SetBuildQueuePausedCommand (FEAT-17).
 
@@ -254,8 +288,18 @@ class SetBuildQueuePausedCommandHandler(BaseCommandHandler):
                 f"Build queue '{getattr(cmd, 'queue_id', None)}' not found."
             )
 
-        # 3. Set the flag
-        owner.construction_queue_paused = bool(cmd.paused)
+        # 3. Set the flag.
+        # PROJ-370 Phase 2: when the queue owner is a Fleet, route through
+        # IFleetMutator. Other owner types (PlanetaryFacility) are a
+        # different class and not in the Fleet AST-guard scope; assign
+        # directly. Resolve by duck-type — Fleet has `add_order` etc.
+        from game.strategy.data.fleet import Fleet
+        if isinstance(owner, Fleet):
+            session.fleet_mutator.set_construction_queue_paused(
+                owner, bool(cmd.paused),
+            )
+        else:
+            owner.construction_queue_paused = bool(cmd.paused)
 
         action = "Paused" if cmd.paused else "Resumed"
         logger.info(
@@ -263,3 +307,16 @@ class SetBuildQueuePausedCommandHandler(BaseCommandHandler):
             f"{cmd.entity_id} (queue_id={getattr(cmd, 'queue_id', None)})"
         )
         return ValidationResult.success()
+
+def register(registry: CommandRegistry) -> None:
+    """PROJ-371: register this module's handlers into ``registry``."""
+    for handler_cls in (
+        AddToConstructionQueueCommandHandler,
+        RemoveFromConstructionQueueCommandHandler,
+        ReorderConstructionQueueCommandHandler,
+        SetBuildQueuePausedCommandHandler,
+    ):
+        registry.register(CommandSpec(
+            handler_class=handler_cls,
+            **handler_cls.__command_spec_kwargs__,
+        ))

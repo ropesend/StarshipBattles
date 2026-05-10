@@ -1,0 +1,91 @@
+{
+  "group": "G1",
+  "label": "core architecture docs",
+  "total": 12,
+  "dead_refs": [
+    {
+      "doc": "docs/README.md",
+      "line": 167,
+      "reference": "game/core/input_handler.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/README.md",
+      "line": 184,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 155,
+      "reference": "data/galaxy_protocols.py",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 466,
+      "reference": "game/core/protocols.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 27,
+      "reference": "data/classes/",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 69,
+      "reference": "game/core/singleton.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 151,
+      "reference": "game/strategy/engine/commands.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 42,
+      "reference": "game/core/input_handler.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 264,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 880,
+      "reference": "game/strategy/services/area_effect_manager.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 225,
+      "reference": "data/FiraCode-Regular.ttf",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 514,
+      "reference": "game/ui/screens/ship_detail_panel.py",
+      "prefix": "game",
+      "exists": false
+    }
+  ]
+}

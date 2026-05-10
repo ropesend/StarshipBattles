@@ -11,10 +11,9 @@ import os
 from pathlib import Path
 from unittest.mock import MagicMock
 
+from game.core.paths import Paths
 from game.strategy.quickstart_builder import (
     QuickstartBuilder,
-    get_quickstart_races_dir,
-    get_quickstart_designs_dir,
     INITIAL_COMPLEXES,
 )
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
@@ -26,12 +25,12 @@ class TestQuickstartBuilderPaths:
 
     def test_races_dir_exists(self):
         """Starter races directory should exist."""
-        races_dir = get_quickstart_races_dir()
+        races_dir = Paths.get_starter_races_dir()
         assert races_dir.exists(), f"Races dir not found: {races_dir}"
 
     def test_designs_dir_exists(self):
         """Starter designs directory should exist."""
-        designs_dir = get_quickstart_designs_dir()
+        designs_dir = Paths.get_starter_designs_dir()
         assert designs_dir.exists(), f"Designs dir not found: {designs_dir}"
 
 
@@ -223,7 +222,7 @@ class TestQuickstartBuilderDesignCopying:
         result = QuickstartBuilder.copy_quickstart_designs(temp_save_folder, [0])
         assert result is True
 
-        source_dir = get_quickstart_designs_dir()
+        source_dir = Paths.get_starter_designs_dir()
         empire_folder = Path(temp_save_folder) / "designs" / "empire_0"
         for design_file in empire_folder.glob("*.json"):
             with open(design_file) as f:

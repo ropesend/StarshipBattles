@@ -16,7 +16,10 @@ on:
       - ".codex/config.toml"
       - "Tools/agent_coordination/**"
       - "Tools/test_sharded/**"
+      - "Tools/lint_test_files.py"
+      - "Tools/lint_test_files_allowlist.txt"
       - "tests/unit/tools/**"
+      - "tests/**/*.py"
   push:
     branches:
       - main
@@ -54,3 +57,11 @@ jobs:
           fi
       - name: Full validator
         run: python Tools/agent_coordination/validate_agent_surfaces.py
+      - name: Lint test files (zero-game-import detector)
+        # PROJ-326 Phase 3 Task 3.5: catches new test files that import zero
+        # `game.*` modules and aren't in the allowlist. Most often these are
+        # test files that re-implement production logic locally (the
+        # tests/unit/test_modifier_logic.py pattern PROJ-321 deleted) and
+        # test nothing real. See Tools/lint_test_files_allowlist.txt for
+        # legitimate exceptions.
+        run: python Tools/lint_test_files.py

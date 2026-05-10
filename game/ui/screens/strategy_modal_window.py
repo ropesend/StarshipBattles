@@ -74,9 +74,64 @@ class StrategyModalWindow(UIWindow):
                 doesn't participate in strategy-screen modal tracking.
             **kwargs: Forwarded to ``UIWindow.__init__``. Typically
                 ``window_display_title``, ``resizable``, etc.
+
+        Bypass-init shell (PROJ-328 Phase A Task A.1):
+
+        When a subclass sets ``Cls.bypass_init = True`` (typically via
+        ``tests.fixtures.ui_widget_factory.bypass_init``), this method
+        skips the heavy ``UIWindow.__init__`` chain but still leaves a
+        usable minimal shell so subclasses' Stage-1 cheap state survives
+        and Stage-3 widget construction can be branched on
+        ``self._window_init_bypassed``.
+
+        The shell sets:
+
+        * ``self._window_manager`` — populated even under bypass so
+          ``kill()`` cleanup is consistent. We intentionally do NOT call
+          ``window_manager.register_modal(self)`` because bypassed
+          instances are test fixtures, not real live windows.
+        * ``self.ui_manager`` — extracted from ``args``/``kwargs`` (the
+          first positional arg after the rect, or the ``manager`` keyword)
+          so subclasses' renderer/builder code that reads
+          ``self.ui_manager`` survives.
+        * ``self._window_init_bypassed = True`` — the flag subclasses
+          check after ``super().__init__`` to short-circuit their own
+          Stage-3 widget construction.
+
+        Note: ``self.rect`` is NOT assigned here. ``pygame_gui``'s
+        ``GUISprite`` base class makes ``rect`` a descriptor that mutates
+        ``self.blit_data`` on write, and ``blit_data`` is initialized
+        only by the ``pygame.sprite.Sprite.__init__`` chain that
+        ``bypass_init`` skips. (PROJ-325 PoC finding 1.)
         """
+        # PROJ-324 Phase 1 / PROJ-328 Phase A Task A.1: opt-in test
+        # escape hatch. When a test sets ``Cls.bypass_init = True``
+        # (preferably via the
+        # ``tests.fixtures.ui_widget_factory.bypass_init`` context
+        # manager), skip the heavy ``UIWindow.__init__`` chain that
+        # requires a real pygame display. Production code never sets
+        # the flag; ``getattr`` with default ``False`` keeps behavior
+        # unchanged when the flag is absent. ``type(self)`` (not the
+        # defining class) is required so flags set on concrete
+        # subclasses (e.g., ``FleetReportWindow``) are honored when the
+        # subclass calls ``super().__init__()``.
+        if getattr(type(self), 'bypass_init', False):
+            self._window_manager = window_manager
+            # Extract the manager so subclass code that reads
+            # ``self.ui_manager`` (renderers, list builders, etc.) keeps
+            # working under bypass. Subclasses call us as
+            # ``super().__init__(rect, manager, ..., window_manager=...)``
+            # in production — args[1] is the manager. They may also pass
+            # it by keyword as ``manager=...``.
+            resolved_manager = kwargs.get('manager')
+            if resolved_manager is None and len(args) >= 2:
+                resolved_manager = args[1]
+            self.ui_manager = resolved_manager
+            self._window_init_bypassed = True
+            return
         super().__init__(*args, **kwargs)
         self._window_manager = window_manager
+        self._window_init_bypassed = False
         if window_manager is not None:
             window_manager.register_modal(self)
 

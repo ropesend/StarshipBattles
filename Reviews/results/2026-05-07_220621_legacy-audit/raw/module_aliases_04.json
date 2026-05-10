@@ -1,0 +1,28 @@
+{
+  "detector": "module_aliases",
+  "scanned_files": 185,
+  "total_findings": 3,
+  "findings": [
+    {
+      "file": "game/core/formula_evaluator.py",
+      "line": 411,
+      "alias": "evaluate_math_formula",
+      "target": "FormulaEvaluator.evaluate",
+      "context": "evaluate_math_formula = FormulaEvaluator.evaluate"
+    },
+    {
+      "file": "game/core/formula_evaluator.py",
+      "line": 412,
+      "alias": "safe_evaluate_math_formula",
+      "target": "FormulaEvaluator.safe_evaluate",
+      "context": "safe_evaluate_math_formula = FormulaEvaluator.safe_evaluate"
+    },
+    {
+      "file": "game/core/formula_evaluator.py",
+      "line": 413,
+      "alias": "validate_formula",
+      "target": "FormulaEvaluator.validate",
+      "context": "validate_formula = FormulaEvaluator.validate"
+    }
+  ]
+}

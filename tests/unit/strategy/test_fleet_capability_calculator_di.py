@@ -145,6 +145,7 @@ class TestFleetCapabilityCalculatorDI:
                 'max_fuel': 100,
                 'max_energy': 100,
                 'cargo_contents': {},
+                'components': {},
             }],
             'orders': [],
             'path': [],

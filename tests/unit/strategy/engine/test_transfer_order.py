@@ -171,12 +171,15 @@ class TestOrderProcessorTransfer:
         planet = self.make_planet_with_pop(pop_count=500)
         fleet = self.make_fleet_with_cargo_ship(capacity=100, current=0)
 
-        # Set up TRANSFER order
+        # Set up TRANSFER order. PROJ-393 (LEG-04-004) made species_id
+        # required for passenger LOAD; the test colony has a single
+        # "human" species, so we name it explicitly.
         params = {
             'direction': 'load',
             'cargo_type': 'passengers',
             'amount': 50,
-            'planet_id': planet.id
+            'planet_id': planet.id,
+            'species_id': 'human',
         }
         order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
@@ -238,11 +241,13 @@ class TestOrderProcessorTransfer:
         planet = self.make_planet_with_pop(pop_count=20)  # Only 20 pop
         fleet = self.make_fleet_with_cargo_ship(capacity=100, current=0)
 
+        # PROJ-393 (LEG-04-004): species_id is now required for passenger LOAD.
         params = {
             'direction': 'load',
             'cargo_type': 'passengers',
             'amount': 50,  # Want 50 but only 20 available
-            'planet_id': planet.id
+            'planet_id': planet.id,
+            'species_id': 'human',
         }
         order = Order(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
@@ -426,8 +431,10 @@ class TestTransferCommandDispatch:
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.empire import Empire
 
-        # Create minimal session with mocked galaxy generation
-        def mock_initialize(config):
+        # Create minimal session with mocked galaxy generation.
+        # PROJ-370 review MAJ-002: GameSession now passes
+        # planet_mutator/empire_mutator as kwargs; absorb them.
+        def mock_initialize(config, **_):
             galaxy = Galaxy(radius=config.galaxy_radius)
             empires = [Empire(i, f"Empire {i}", (255, 255, 255)) for i in range(2)]
             return galaxy, empires

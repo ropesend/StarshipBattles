@@ -9,6 +9,17 @@ Must PASS pre-split; must continue to PASS post-split.
 Frozen contract — if you must change this list, also update:
 - `Projects/active_projects/PROJ-309/findings/strategy_session_facade_decomposition.md`
 - All callers of the renamed/removed member.
+
+PROJ-344 T2.6: ``TestPublicMethodSurface`` and ``PUBLIC_METHODS`` were deleted
+in PROJ-321 commit ``148170d2f`` ("delete 46 CAT-1 trivial-pass tests") on the
+grounds that ``hasattr`` / ``callable`` / "no unexpected additions" presence
+checks were trivial. PROJ-326 added behavioral coverage in
+``test_strategy_session_facade_contract.py`` for ~10 of the 62 public methods,
+but the PROJ-321 review (review stream MIN-002 follow-up) flagged that the
+class-wide *surface* invariant was not replaced by the behavioral tests:
+those tests catch contract regressions on the methods they cover, but they
+do not catch a silent rename, removal, or unexpected addition on the other
+~50 methods. Restoring the surface invariant here closes the gap.
 """
 
 from __future__ import annotations
@@ -26,7 +37,7 @@ PUBLIC_METHODS: frozenset[str] = frozenset({
     # Lifecycle / write path
     "handle_command",
     "process_turn",
-    # Command dispatch helpers (28)
+    # Command dispatch helpers
     "dispatch_issue_colonize",
     "dispatch_issue_move",
     "dispatch_issue_intercept",
@@ -88,6 +99,7 @@ PUBLIC_METHODS: frozenset[str] = frozenset({
     # Demographics / economy / races
     "get_colony_demographic_view",
     "get_race_registry",
+    "get_registries",  # PROJ-382 Phase 1: registries DTO accessor
     # Events
     "get_turn_events",
     "get_all_events",
@@ -120,6 +132,14 @@ PROTECTED_ATTRS: frozenset[str] = frozenset({
 # ---------------------------------------------------------------------------
 
 class TestPublicMethodSurface:
+    """Restored PROJ-344 T2.6 — pin every entry in ``PUBLIC_METHODS`` is
+    present, callable, and that no public method has been silently added
+    without updating the frozen contract. Behavioral coverage in
+    ``test_strategy_session_facade_contract.py`` covers ~10 of these
+    methods; this class catches surface-level regressions on the other ~50
+    where a silent rename or removal would otherwise slip through.
+    """
+
     def test_every_public_method_present(self) -> None:
         missing = [name for name in PUBLIC_METHODS
                    if not hasattr(StrategySessionFacade, name)]

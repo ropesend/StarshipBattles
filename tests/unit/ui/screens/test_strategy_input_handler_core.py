@@ -690,6 +690,7 @@ class TestZoneSelection:
         mock_scene._get_system_at_hex = MagicMock(return_value=None)
 
         mock_scene.camera.screen_to_world = MagicMock(return_value=MagicMock(x=0, y=0))
+        mock_scene.camera.hex_at_screen = MagicMock(return_value=HexCoord(0, 0))
         mock_scene.camera.zoom = 1.0  # Low zoom, no hit testing
         mock_scene.ui.show_system_info = MagicMock()
         mock_scene.ui.show_sector_info = MagicMock()

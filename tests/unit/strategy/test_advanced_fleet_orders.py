@@ -11,6 +11,7 @@ from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
@@ -41,7 +42,7 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
 @pytest.fixture
 def turn_engine(fresh_registries):
     """Create a fresh TurnEngine for each test."""
-    engine = TurnEngine(registries=fresh_registries)
+    engine = build_test_turn_engine(fresh_registries)
     yield engine
 
 

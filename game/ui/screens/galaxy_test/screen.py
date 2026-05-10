@@ -278,7 +278,7 @@ class GalaxyTestScreen:
         elif self.mode == self.MODE_SYSTEM:
             self._create_system_ui()
 
-    def handle_input(self, dt: float, events: list) -> None:
+    def update_input(self, dt: float, events: list) -> None:
         """Handle continuous input for camera control."""
         if self.mode != self.MODE_MENU:
             mx, my = pygame.mouse.get_pos()

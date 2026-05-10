@@ -126,6 +126,7 @@ def destroy_system(
     *,
     remove_stars: bool = True,
     event_bus: Any = None,
+    empire_mutator: Any = None,
 ) -> SystemDestructionResult:
     """Execute a destruction plan: remove planets, stars, fleets.
 
@@ -151,14 +152,20 @@ def destroy_system(
     """
     result = SystemDestructionResult()
 
+    # PROJ-370 Phase 4: route Empire.colonies removals through IEmpireMutator.
+    if empire_mutator is None:
+        from game.strategy.services.empire_write_service import (
+            EmpireWriteService,
+        )
+        empire_mutator = EmpireWriteService()
+
     # Remove planets: drop from owner empire's colonies (if owned) and
     # unregister from galaxy. Iterate all empires because planets may
     # belong to anyone.
     for planet in plan.planets:
         if getattr(planet, "owner_id", None) is not None:
             for emp in empires:
-                if planet in emp.colonies:
-                    emp.colonies.remove(planet)
+                empire_mutator.remove_colony(emp, planet)
         galaxy.unregister_planet(planet)
         result.planets_removed += 1
 

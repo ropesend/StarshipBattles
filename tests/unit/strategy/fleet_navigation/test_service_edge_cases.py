@@ -26,6 +26,28 @@ from game.strategy.services.fleet_navigation_service import (
 from game.strategy.data.order_types import Order, OrderType
 
 
+def _make_mock_fleet(
+    *,
+    location=None,
+    path=None,
+    orders=None,
+    speed=5.0,
+    can_use_warp=False,
+    current_order=None,
+):
+    """Build a MagicMock fleet pre-populated with the attributes the navigation
+    service consults. Lets test bodies focus on the assertion under test."""
+    fleet = MagicMock()
+    fleet.location = location if location is not None else HexCoord(0, 0)
+    fleet.path = list(path) if path is not None else []
+    fleet.orders = list(orders) if orders is not None else []
+    fleet.speed = speed
+    fleet.capabilities.can_use_warp.return_value = can_use_warp
+    if current_order is not None:
+        fleet.get_current_order.return_value = current_order
+    return fleet
+
+
 class TestNavigationStateImmutability:
     """Tests for NavigationState immutability."""
 
@@ -391,46 +413,33 @@ class TestProjectPath:
 
     def test_project_path_zero_speed(self, service):
         """project_path with zero speed should return empty list."""
-        fleet = MagicMock()
-        fleet.location = HexCoord(0, 0)
-        fleet.path = [HexCoord(1, 0)]
-        fleet.orders = []
-        fleet.speed = 0.0
-        fleet.capabilities.can_use_warp.return_value = False
-
+        fleet = _make_mock_fleet(path=[HexCoord(1, 0)], speed=0.0)
         galaxy = MagicMock()
-        result = service.project_path(fleet, galaxy)
-        assert result == []
+        assert service.project_path(fleet, galaxy) == []
 
     def test_project_path_negative_speed(self, service):
         """project_path with negative speed should return empty list."""
-        fleet = MagicMock()
-        fleet.location = HexCoord(0, 0)
-        fleet.path = [HexCoord(1, 0)]
-        fleet.orders = []
-        fleet.speed = -5.0
-        fleet.capabilities.can_use_warp.return_value = False
-
+        fleet = _make_mock_fleet(path=[HexCoord(1, 0)], speed=-5.0)
         galaxy = MagicMock()
-        result = service.project_path(fleet, galaxy)
-        assert result == []
+        assert service.project_path(fleet, galaxy) == []
 
     def test_project_path_empty_path_and_orders(self, service):
         """project_path with no path or orders should return empty list."""
-        fleet = MagicMock()
-        fleet.location = HexCoord(0, 0)
-        fleet.path = []
-        fleet.orders = []
-        fleet.speed = 5.0
-        fleet.capabilities.can_use_warp.return_value = False
-
+        fleet = _make_mock_fleet(speed=5.0)
         galaxy = MagicMock()
-        result = service.project_path(fleet, galaxy)
-        assert result == []
+        assert service.project_path(fleet, galaxy) == []
 
 
 class TestProjectPathAsDicts:
-    """Tests for project_path_as_dicts method."""
+    """Tests for project_path_as_dicts method.
+
+    NOTE: surface overlap with `tests/unit/strategy/fleet_navigation/
+    test_projection.py:146-169` is intentional. These tests pin the
+    list-of-dict shape returned by the service (zero-speed empty-list
+    edge case is unique to this file) while `test_projection.py`
+    covers the geometric projection itself. PROJ-322 Task 1.16
+    (S10-CAT4-001).
+    """
 
     @pytest.fixture
     def service(self):
@@ -438,31 +447,17 @@ class TestProjectPathAsDicts:
 
     def test_returns_list_of_dicts(self, service):
         """project_path_as_dicts should return list of dicts."""
-        fleet = MagicMock()
-        fleet.location = HexCoord(0, 0)
-        fleet.path = [HexCoord(1, 0)]
-        fleet.orders = []
-        fleet.speed = 5.0
-        fleet.capabilities.can_use_warp.return_value = False
-
+        fleet = _make_mock_fleet(path=[HexCoord(1, 0)], speed=5.0)
         galaxy = MagicMock()
         result = service.project_path_as_dicts(fleet, galaxy)
-
         # May be empty if no movement orders, but should be list
         assert isinstance(result, list)
 
     def test_empty_with_zero_speed(self, service):
         """project_path_as_dicts with zero speed should return empty list."""
-        fleet = MagicMock()
-        fleet.location = HexCoord(0, 0)
-        fleet.path = []
-        fleet.orders = []
-        fleet.speed = 0.0
-        fleet.capabilities.can_use_warp.return_value = False
-
+        fleet = _make_mock_fleet(speed=0.0)
         galaxy = MagicMock()
-        result = service.project_path_as_dicts(fleet, galaxy)
-        assert result == []
+        assert service.project_path_as_dicts(fleet, galaxy) == []
 
 
 class TestCalculateFleetNextHex:
@@ -474,17 +469,9 @@ class TestCalculateFleetNextHex:
 
     def test_no_orders_returns_none(self, service):
         """Fleet with no orders should return None."""
-        fleet = MagicMock()
-        fleet.get_current_order.return_value = None
-        fleet.location = HexCoord(0, 0)
-        fleet.path = []
-        fleet.orders = []
-        fleet.speed = 5.0
-        fleet.capabilities.can_use_warp.return_value = False
-
+        fleet = _make_mock_fleet(speed=5.0, current_order=None)
         galaxy = MagicMock()
-        result = service.calculate_fleet_next_hex(fleet, galaxy)
-        assert result is None
+        assert service.calculate_fleet_next_hex(fleet, galaxy) is None
 
     def test_move_to_fleet_invalid_target_pops_order(self, service):
         """MOVE_TO_FLEET with invalid target should pop order and return None."""
@@ -492,18 +479,9 @@ class TestCalculateFleetNextHex:
         order.type = OrderType.MOVE_TO_FLEET
         order.target = None  # Invalid target
 
-        fleet = MagicMock()
-        fleet.get_current_order.return_value = order
-        fleet.location = HexCoord(0, 0)
-        fleet.path = []
-        fleet.orders = [order]
-        fleet.speed = 5.0
-        fleet.capabilities.can_use_warp.return_value = False
-
+        fleet = _make_mock_fleet(orders=[order], speed=5.0, current_order=order)
         galaxy = MagicMock()
-        result = service.calculate_fleet_next_hex(fleet, galaxy)
-
-        assert result is None
+        assert service.calculate_fleet_next_hex(fleet, galaxy) is None
         fleet.pop_order.assert_called_once()
 
     # NOTE: test_move_to_fleet_target_without_location_pops_order removed

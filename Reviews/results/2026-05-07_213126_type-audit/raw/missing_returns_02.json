@@ -1,0 +1,44 @@
+[
+  {
+    "file": "game/simulation/entities/stat_contributors/registry.py",
+    "line": 297,
+    "function": "iter_for",
+    "class": "_StatContributorRegistry",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/strategy/data/pathfinding.py",
+    "line": 47,
+    "function": "_pathfinder_for",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/data/pathfinding.py",
+    "line": 64,
+    "function": "_intercept_for",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/environmental_hazard_engine.py",
+    "line": 65,
+    "function": "_get_ship_mutator",
+    "class": "EnvironmentalHazardEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/ability_sources/fleet.py",
+    "line": 128,
+    "function": "_walk_strategic_abilities",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/water_target_editor.py",
+    "line": 173,
+    "function": "_button_handlers",
+    "class": "WaterTargetEditor",
+    "layer": "ui"
+  }
+]

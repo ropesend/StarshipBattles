@@ -1,0 +1,547 @@
+{
+  "run_info": {
+    "date": "2026-05-04",
+    "seed": "testcoverage-2026-05-04_205404",
+    "shard_count": 18,
+    "total_prod_files": 699,
+    "total_prod_loc": 154138,
+    "total_symbols": 7011
+  },
+  "phase1_coverage": {
+    "overall_pct": 55.1,
+    "by_layer": {
+      "game_root": 30.2,
+      "ai": 89.1,
+      "assets": 53.6,
+      "core": 49.6,
+      "engine": 80.0,
+      "research": 93.5,
+      "services": 75.8,
+      "simulation": 62.6,
+      "strategy": 64.2,
+      "ui": 45.8
+    }
+  },
+  "phase2_claims": {
+    "critical": 43,
+    "major": 135,
+    "minor": 98,
+    "advisory": 72,
+    "total": 348
+  },
+  "verified_confirmed": {
+    "critical": 20,
+    "major": 62,
+    "minor": 46,
+    "advisory": 33,
+    "total": 161
+  },
+  "disputed": 125,
+  "inconclusive": 2,
+  "findings": [
+    {
+      "file": "game/simulation/entities/ship_validator_helper.py",
+      "severity": "CRITICAL",
+      "function": "check_validity, get_validation_warnings, get_missing_requirements",
+      "description": "Zero dedicated unit tests. 3 tests exercise indirectly through Ship delegation but no test creates ShipValidatorHelper directly with controlled DI.",
+      "suggested_test": "Create tests/unit/simulation/entities/test_ship_validator_helper.py — test direct construction, registry_provider DI path, check_validity with valid/invalid ships."
+    },
+    {
+      "file": "game/strategy/facade/slices/planet_slice.py",
+      "severity": "CRITICAL",
+      "function": "get_planets_at_hex, can_colonize, get_planet",
+      "description": "Zero dedicated unit tests (105 LOC). Dual-path hex lookup (strict + radius fallback), cross-domain colonize validation with multiple failure branches, DTO conversion — all untested.",
+      "suggested_test": "Create tests/unit/strategy/facade/slices/test_planet_slice.py — mock FacadeSessionState with Galaxy containing known planets. Verify get_planets_at_hex strict + radius fallback, can_colonize all failure branches."
+    },
+    {
+      "file": "game/strategy/facade/slices/empire_slice.py",
+      "severity": "CRITICAL",
+      "function": "get_empire_by_id, get_all_empires, get_empire_colonies, get_empire_fleets, get_empire_build_queues",
+      "description": "Zero test coverage (97 LOC). 7 public CQRS-lite Read methods consumed by UI empire panel. DTO conversions, None-return branches, late-import error paths all uncovered.",
+      "suggested_test": "Create tests/unit/strategy/facade/slices/test_empire_slice.py — test all 7 public methods with mock FacadeSessionState."
+    },
+    {
+      "file": "game/strategy/facade/slices/system_slice.py",
+      "severity": "CRITICAL",
+      "function": "get_all_systems, get_all_stars, get_system_at_hex, get_system_near_hex, get_system_containing_fleet, get_storm_names_at_hex",
+      "description": "Zero test coverage (132 LOC). Primary CQRS read-slice for UI system/star resolution. No test imports SystemSlice anywhere in repo.",
+      "suggested_test": "Create tests/unit/strategy/facade/slices/test_system_slice.py — mock FacadeSessionState with Galaxy containing known systems + storms."
+    },
+    {
+      "file": "game/strategy/facade/dto/build_queue_dto.py",
+      "severity": "CRITICAL",
+      "function": "BuildQueueSourceDTO.from_domain",
+      "description": "Zero test coverage (41 LOC). from_domain cloning logic with [dict(item) for item in list(...)] — shallow copy bugs could allow UI to mutate domain queue data.",
+      "suggested_test": "Create tests/unit/strategy/facade/dto/test_build_queue_dto.py — verify from_domain produces detached copies, test missing owner_entity attribute fallbacks."
+    },
+    {
+      "file": "game/core/protocols/boundary.py",
+      "severity": "CRITICAL",
+      "function": "IResourceReader, IPostBattleShip, IResourceHolder, is_post_battle_ship",
+      "description": "Zero test coverage (126 LOC, 23 symbols). Defines 3 protocols + 3 TypeGuard functions. No test imports any symbol from this module.",
+      "suggested_test": "Create tests/unit/core/test_protocols_boundary.py — test all TypeGuards, protocol isinstance checks, and runtime_checkable conformance."
+    },
+    {
+      "file": "game/simulation/replay/replay_record.py",
+      "severity": "CRITICAL",
+      "function": "ReplayRecord (class + 3 methods)",
+      "description": "Zero test coverage. Dataclass handles serialization/deserialization of persisted-on-disk replay format (PROJ-312 deliverable). No test file exists.",
+      "suggested_test": "Create tests/unit/simulation/replay/test_replay_record.py — test from_dict/to_dict roundtrip, field validation, edge cases."
+    },
+    {
+      "file": "game/strategy/engine/handlers/movement.py",
+      "severity": "CRITICAL",
+      "function": "ColonizeCommandHandler, MoveCommandHandler, InterceptCommandHandler, JoinCommandHandler, WarpCommandHandler",
+      "description": "Zero test coverage (214 LOC, 10 symbols). Five handler classes for critical fleet movement commands. No test file exists.",
+      "suggested_test": "Create tests/unit/strategy/engine/handlers/test_movement_handlers.py — test each handler's execute() with mock session and fleet."
+    },
+    {
+      "file": "game/strategy/engine/handlers/order_queue.py",
+      "severity": "CRITICAL",
+      "function": "SplitFleetCommandHandler, DeleteOrderCommandHandler, ReorderOrderCommandHandler, AddOrderCommandHandler, RemoveOrderCommandHandler",
+      "description": "Zero test coverage (212 LOC, 10 symbols). SplitFleetCommandHandler creates new Fleet objects, transfers ships, mutates empire registrations — high risk.",
+      "suggested_test": "Create tests/unit/strategy/engine/handlers/test_order_queue_handlers.py — test split fleet creation, order reorder, delete with index validation."
+    },
+    {
+      "file": "game/run_loop.py",
+      "severity": "CRITICAL",
+      "function": "main game loop (~211 LOC)",
+      "description": "Zero test coverage. Main game loop has no automated test coverage. No test file imports this module.",
+      "suggested_test": "Create tests/unit/test_run_loop.py — test loop startup/shutdown, fps management, event routing at unit level with mocked dependencies."
+    },
+    {
+      "file": "game/screen_router.py",
+      "severity": "CRITICAL",
+      "function": "scene routing hub (~515 LOC)",
+      "description": "Zero test coverage. Central scene-routing hub dispatches between all game screens. No test file exists.",
+      "suggested_test": "Create tests/unit/test_screen_router.py — test scene registration, transition flow, screen lifecycle callbacks."
+    },
+    {
+      "file": "game/strategy/facade/slices/_facade_state.py",
+      "severity": "CRITICAL",
+      "function": "FacadeSessionState (~98 LOC)",
+      "description": "Zero test coverage. Core facade shared state with caches and ID lookups consumed by all facade slices. No test file imports this module.",
+      "suggested_test": "Create tests/unit/strategy/facade/slices/test_facade_state.py — test turn-based cache invalidation, ID lookup consistency."
+    },
+    {
+      "file": "game/exit_dialog.py",
+      "severity": "CRITICAL",
+      "function": "draw_exit_dialog, handle_exit_dialog_click, handle_exit_dialog_cancel",
+      "description": "Zero test coverage. Module-level mutable globals (_exit_yes_rect, _exit_no_rect) — PROJ-258 violation. No test verifies reset between calls.",
+      "suggested_test": "Create tests/unit/test_exit_dialog.py — test dialog drawing, click handling with mocked pygame surface, cancel flow."
+    },
+    {
+      "file": "game/simulation/replay/replay_outcome.py",
+      "severity": "CRITICAL",
+      "function": "ReplayOutcome, from_battle_outcome, to_battle_outcome, to_dict, from_dict",
+      "description": "Zero test coverage. from_dict casts via str() which could silently mask type errors. Serialization round-trip never verified.",
+      "suggested_test": "Create tests/unit/simulation/replay/test_replay_outcome.py — test to_dict/from_dict roundtrip, type coercion safety, schema_version handling."
+    },
+    {
+      "file": "game/strategy/services/ability_sources/star.py",
+      "severity": "CRITICAL",
+      "function": "StarAbilitySource — all 9 properties/methods",
+      "description": "Zero test coverage. Core PROJ-302 infrastructure. affects_hex() coordinate math with try/except TypeError fallback untested. affects_system uses is identity comparison. get_abilities None→{} fallback untested.",
+      "suggested_test": "Create tests/unit/strategy/services/ability_sources/test_star.py — test affects_hex global/local frame, get_abilities fallback, source_label formatting."
+    },
+    {
+      "file": "game/ui/screens/builder/components.py",
+      "severity": "CRITICAL",
+      "function": "ComponentListItem — all 7 methods",
+      "description": "Zero test coverage. _generate_tooltip has 12+ branches on ability types. Dynamic mass calculation via component.clone() + recalculate_stats() has branching on ship_context presence.",
+      "suggested_test": "Create tests/unit/ui/screens/builder/test_components.py — test tooltip generation for each ability type, mass calc with/without ship_context."
+    },
+    {
+      "file": "game/ui/screens/strategy_windows/orders_window_ctrl.py",
+      "severity": "CRITICAL",
+      "function": "OrdersRegistrar.__init__ and .open",
+      "description": "Zero test coverage. Closure-capture pattern for command dispatch with facade rebinding risk. 6 closures created with shared edit_order_callback.",
+      "suggested_test": "Create tests/unit/ui/screens/strategy_windows/test_orders_window_ctrl.py — test open creates window with correct callbacks, verify closure captures updated facade."
+    },
+    {
+      "file": "game/ui/screens/transfer_grid_renderer.py",
+      "severity": "CRITICAL",
+      "function": "TransferGridRenderer (8 methods) + TransferDialogUiBuilder (1 method)",
+      "description": "Zero test coverage (366 LOC). build_chrome constructs dropdowns, filter button, scrolling container, 3 bottom buttons. _add_row constructs 15+ pygame_gui widgets per row with pixel-position math across 13 layout constants.",
+      "suggested_test": "Create tests/unit/ui/screens/test_transfer_grid_renderer.py — test layout calculations, widget construction with mocked pygame_gui."
+    },
+    {
+      "file": "game/ui/screens/test_lab/renderer/metadata_panel.py",
+      "severity": "CRITICAL",
+      "function": "MetadataPanel.draw, _draw_run_buttons",
+      "description": "Zero test coverage. _draw_run_buttons has 3 button hover states + conditional baseline button (only for is_comparison scenarios) — all branches untested.",
+      "suggested_test": "Create tests/unit/ui/screens/test_lab/renderer/test_metadata_panel.py — test button hover states, comparison scenario baseline button."
+    },
+    {
+      "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+      "severity": "CRITICAL",
+      "function": "All 14 pure-data-transformation functions",
+      "description": "Zero test coverage (504 LOC). All 14 functions produce StatDefinition dataclasses — no pygame rendering dependency. Complex conditional branching in _build_resource_rows (7 conditional row outputs), _get_strategic_abilities, get_planetary_engineering_rows, etc.",
+      "suggested_test": "Create tests/unit/ui/screens/builder/test_stat_rows_dynamic.py — ~30+ tests covering each function with edge cases (empty ship, missing resources, zero rates, TypeError handling)."
+    },
+    {
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "severity": "CRITICAL",
+      "function": "All 9 TypeGuard functions (is_ability, is_weapon, is_beam_weapon, is_seeker_weapon, is_projectile_weapon, is_warp_jump, etc.)",
+      "description": "TypeGuard functions are sole mechanism for duck-type narrowing across simulation layer. Zero direct test references for any of the 9 guards. is_projectile_weapon hasattr negative guard (excluding seekers) untested.",
+      "suggested_test": "Create tests/unit/simulation/interfaces/test_ability_protocols.py — test all 9 TypeGuards with valid/invalid objects, edge cases for attribute disambiguation."
+    },
+    {
+      "file": "game/app.py",
+      "severity": "MAJOR",
+      "function": "_return_to, start_replay, _request_shutdown",
+      "description": "Major entry points untested at unit level. _return_to has 3 branches (test_lab, battle_setup, strategy). start_replay (FEAT-26) does late imports and constructs BattleConfig. _request_shutdown sets running=False.",
+      "suggested_test": "Extend tests/unit/test_app.py — test_request_shutdown, test_return_to_test_lab, test_return_to_strategy, test_start_replay."
+    },
+    {
+      "file": "game/context.py",
+      "severity": "MAJOR",
+      "function": "create_production (LLM/Image provider error-fallback paths)",
+      "description": "LLMProviderFactory.create() raising LLMConfigError → llm_provider=None not tested. ImageProviderFactory.create() raising ImageConfigError → NullImageProvider fallback not tested. create_test __new__ bypass file I/O check absent.",
+      "suggested_test": "Extend tests/unit/core/test_application_context.py — test_create_production_survives_llm_config_error, test_create_production_survives_image_config_error."
+    },
+    {
+      "file": "game/core/roles.py",
+      "severity": "MAJOR",
+      "function": "_fire_invalidation_callbacks (re-entrance guard)",
+      "description": "Re-entrance guard (if self._firing_callbacks: return) never exercised. No test registers a callback that itself calls add_user_role.",
+      "suggested_test": "Extend tests/unit/core/test_role_registry.py — test_fire_invalidation_callbacks_reentrant_guard_suppresses_nested_fire."
+    },
+    {
+      "file": "game/simulation/battle_config.py",
+      "severity": "MAJOR",
+      "function": "_default_end_condition, replay_mode/replay_id/captured_telemetry_level fields",
+      "description": "_default_end_condition module-level factory never directly called. Replay fields (replay_mode, replay_id, captured_telemetry_level) completely untested — no test constructs BattleConfig(replay_mode=True).",
+      "suggested_test": "Extend tests for battle_config — test_default_end_condition_callable, test_replay_mode_default, test_replay_id_default."
+    },
+    {
+      "file": "game/simulation/components/abilities/resources.py",
+      "severity": "MAJOR",
+      "function": "ResourceConsumption._get_resource_registry, update() resource-type-not-found branch, ResourceGeneration.get_ui_rows()",
+      "description": "_get_resource_registry never tested in isolation. update() branch where registry.get_resource returns None (unregistered resource type) untested. get_ui_rows() non-energy color, rate=0.0, negative rate untested.",
+      "suggested_test": "Extend test_resource_abilities.py — test_get_resource_registry_passed_resource_arg, test_constant_update_resource_type_not_found, test_generation_ui_rows_edge_cases."
+    },
+    {
+      "file": "game/simulation/components/abilities/weapons.py",
+      "severity": "MAJOR",
+      "function": "_parse_formula_field, _get_raw_field, SeekerWeaponAbility.check_firing_solution",
+      "description": "Module-level helper _parse_formula_field: raw=None returns (default, None) untested. _get_raw_field fallback_key path untested. Seeker omni-directional arc-skip contract not independently verified.",
+      "suggested_test": "Extend test_weapons.py — test_parse_formula_field_none_returns_default, test_get_raw_field_fallback_key_used, test_seeker_firing_solution_no_arc_restriction."
+    },
+    {
+      "file": "game/simulation/combat/telemetry.py",
+      "severity": "MAJOR",
+      "function": "ShipStatsAggregator._on_damage_event, HitLogRecorder._trace_modifiers_for_team",
+      "description": "Specific edge branches untested: target_ship=None early return, instance_id=None early return, damage<=0 early return, _trace_modifiers_for_team with non-None modifier_stack (entire path untested).",
+      "suggested_test": "Extend test_telemetry.py / test_ship_stats_aggregator.py — test None-target/instance/damage guards, test _trace_modifiers_for_team with populated modifier_stack."
+    },
+    {
+      "file": "game/strategy/data/fleet_capability_calculator.py",
+      "severity": "MAJOR",
+      "function": "list_abilities()",
+      "description": "list_abilities() has zero coverage — the only reference in tests is a mocked-out stub. The real implementation has never been exercised.",
+      "suggested_test": "Extend test_fleet_capability_calculator.py — test_list_abilities_returns_all_from_ships, test_list_abilities_empty_fleet."
+    },
+    {
+      "file": "game/strategy/engine/turn_state_snapshot.py",
+      "severity": "MAJOR",
+      "function": "dump_crash_snapshot()",
+      "description": "Crash forensics path for PROJ-251 completely untested. Writes to disk with os.makedirs, json.dump, OSError/TypeError catch — real implementation never exercised, only MagicMock fake snapshots tested.",
+      "suggested_test": "Extend test_turn_state_snapshot.py — test_dump_crash_snapshot_writes_file, test_dump_crash_snapshot_handles_oserror."
+    },
+    {
+      "file": "game/ui/screens/list_data_source_base.py",
+      "severity": "MAJOR",
+      "function": "_extract_value (func, attr with dot-path, fmt formatting branches)",
+      "description": "Abstract base class ListDataSource with complex _extract_value branch logic. No direct test file exists. Only exercised indirectly through PlanetDataSource and StarDataSource subclass tests.",
+      "suggested_test": "Create tests/unit/ui/screens/test_list_data_source_base.py — test _extract_value with func getter, attr getter, dot-path attr chain, fmt formatting."
+    },
+    {
+      "file": "game/strategy/validation/planet_order_validator.py",
+      "severity": "MAJOR",
+      "function": "_facility_has_ability (3 branches)",
+      "description": "Called by both validate_activate_ability and validate_deactivate_ability. Command handler tests mock PlanetOrderValidator entirely via patch.object. All 3 branches (dict+ability_name, dict+comp_id+registry, str+registry) have zero coverage.",
+      "suggested_test": "Create tests/unit/strategy/validation/test_planet_order_validator.py — test dict component with inline abilities, dict with reg lookup, string component with reg lookup, negative case."
+    },
+    {
+      "file": "game/strategy/services/system_effects_collector.py",
+      "severity": "MAJOR",
+      "function": "_aggregate (192 LOC, 7 error-handling paths, 4 filtering stages)",
+      "description": "Tested only indirectly through 35 test cases on collect_system_effects/collect_sector_effects. D16/D17 validation, activation state filtering, scope filtering, provider construction all exercised indirectly but not in isolation. Risk of silent regression in gating/filtering paths.",
+      "suggested_test": "Extend test_system_effects_collector.py — add isolated tests for _aggregate error paths, D16/D17 validation edge cases."
+    },
+    {
+      "file": "game/ui/services/game_settings.py",
+      "severity": "MAJOR",
+      "function": "_load, get, save, background_brightness setter, module-level singleton",
+      "description": "Zero test coverage (94 LOC). ApplicationContext-managed service (#9 of 10). Module-level mutable global state (_default_game_settings), global keyword in set_default_game_settings. User settings corruption risk.",
+      "suggested_test": "Create tests/unit/ui/services/test_game_settings.py — test load/save roundtrip, get defaults, background_brightness clamp, singleton lifecycle."
+    },
+    {
+      "file": "game/ui/screens/workshop_viewmodel_layer_ops.py",
+      "severity": "MAJOR",
+      "function": "resolve_target_layer, quick_add_component, resolve_move_target, move_component, move_component_group",
+      "description": "Zero test coverage (254 LOC). All 5 methods are pure-Python algorithm code with zero Pygame dependencies. Complex branching in layer resolution, restriction validation, reverse-index iteration.",
+      "suggested_test": "Create tests/unit/ui/screens/test_workshop_viewmodel_layer_ops.py — test layer resolution with restrictions, quick-add pipeline, move with reverse-index iteration."
+    },
+    {
+      "file": "game/ui/screens/builder/weapons_panel.py",
+      "severity": "MAJOR",
+      "function": "handle_event, draw, _update_scrollbar, _on_weapons_updated, _on_filter_changed",
+      "description": "14 of 15 symbols have zero direct tests. Only __init__ + _setup_filter_buttons are exercised (indirectly). Event routing logic (23 lines) and scroll management are meaningfully complex.",
+      "suggested_test": "Extend test_weapons_report_layout.py — test handle_event dispatch, _update_scrollbar visibility, draw viewport clipping."
+    },
+    {
+      "file": "game/ui/screens/builder/stat_definitions.py",
+      "severity": "MAJOR",
+      "function": "StatDefinition.get_value, format_value, get_display_unit, get_status",
+      "description": "Zero test coverage (77 LOC). 4 dispatch paths (callable getter vs string getter, callable formatter vs format string, callable unit vs string unit, validator call path) all untested.",
+      "suggested_test": "Create tests/unit/ui/screens/builder/test_stat_definitions.py — test all 4 dispatch paths with callable and string variants."
+    },
+    {
+      "file": "game/ui/screens/test_lab/test_run_card.py",
+      "severity": "MAJOR",
+      "function": "handle_click, handle_hover, _draw_header, _draw_propulsion_metrics, _draw_resource_metrics",
+      "description": "Zero test coverage (370 LOC). handle_click/handle_hover are pure rect-collision logic testable without pygame. _draw_header dispatches to propulsion vs resource metrics based on test_id prefix — significant branch logic.",
+      "suggested_test": "Create tests/unit/ui/screens/test_lab/test_test_run_card.py — test handle_click inside/outside rect, handle_hover, header dispatch, propulsion/resource branch selection."
+    },
+    {
+      "file": "game/ui/screens/battle_setup/controller.py",
+      "severity": "MAJOR",
+      "function": "_get_registries exception path, add_ship_from_design, remove_ship, duplicate_task_force",
+      "description": "_get_registries broad except Exception returning None untested. Core CRUD operations (add_ship_from_design, remove_ship) untested at unit level.",
+      "suggested_test": "Extend test_controller.py — test_get_registries_returns_none_when_provider_uninitialized, test_add_ship_from_design, test_remove_ship."
+    },
+    {
+      "file": "game/ui/screens/event_log_window.py",
+      "severity": "MAJOR",
+      "function": "_handle_replay_click, _handle_row_navigate",
+      "description": "Replay resolution has 4 branches (no data_source, no replay_id, no resolver, lookup.found=False/True with drift) — none tested. Double-click navigation logic untested.",
+      "suggested_test": "Extend test_event_log_window.py — test replay click no data_source, replay not found, registry drift warning, successful replay launch, row navigate extracts hex + calls callback."
+    },
+    {
+      "file": "game/ui/screens/save_selection_window.py",
+      "severity": "MAJOR",
+      "function": "_load_saves, _on_load_clicked, _handle_delete_confirmation, update",
+      "description": "Event handlers with file operations untested. _handle_delete_confirmation involves temp file deletion.",
+      "suggested_test": "Extend test_save_selection_window.py — test_load_saves_populates_list, test_handle_delete_confirmation_removes_file, test_update_checks_confirm_button."
+    },
+    {
+      "file": "game/strategy/engine/planet_energy_engine.py",
+      "severity": "MAJOR",
+      "function": "get_shield_info, get_activatable_ability_info, _extract_abilities, _is_ability_active, _get_facility_fingerprint, _compute_activation_drain, _cancel_all_draining_components",
+      "description": "Multiple helpers have zero direct tests. Integration coverage for process_energy_tick and _process_planet is strong, but all private helper methods are exercised only indirectly.",
+      "suggested_test": "Extend test_planet_energy_engine.py — test_get_shield_info_returns_none_for_non_shield, test_is_ability_active_non_dict_fallback, test_compute_activation_drain_non_operational_skip."
+    },
+    {
+      "file": "game/strategy/engine/water_engine.py",
+      "severity": "MAJOR",
+      "function": "_process_colony list-form branch, _extract_water_modifier, WaterEngine.__init__ with registries",
+      "description": "list-form isinstance(wm_data, list) branch completely untested — all tests use dict-form WaterModifier. registries parameter with non-None value never tested.",
+      "suggested_test": "Extend test_water_engine.py — test_water_modifier_list_form_stacks_rates, test_extract_water_modifier_returns_none_for_no_ability, test_water_engine_with_registries_passed_in."
+    },
+    {
+      "file": "game/strategy/data/planet_physics.py",
+      "severity": "MAJOR",
+      "function": "calculate_radius_density_from_mass (gas giant + small rocky branches), calculate_surface_area, calculate_blackbody_temperature, validate_planet_parameters (density consistency check)",
+      "description": "Only Earth/Super-Earth branch tested. Gas giant (>1e26) and small rocky (<=5e24) branches untested. calculate_surface_area, blackbody zero flux branch, density inconsistency warning all untested.",
+      "suggested_test": "Extend test_planet_physics.py — test_calculate_radius_density_gas_giant, test_surface_area, test_blackbody_temp_zero_flux, test_validate_inconsistent_density."
+    },
+    {
+      "file": "game/ui/screens/species_selector_mixin.py",
+      "severity": "MAJOR",
+      "function": "build_species_selector, get_selected_race_id, load_race_config, _get_active_race_config",
+      "description": "Zero test coverage (163 LOC). Business logic beyond rendering: population formatting (k/M suffixes), tuple vs string selected_option handling, RaceLibrary exception path.",
+      "suggested_test": "Create tests/unit/ui/screens/test_species_selector_mixin.py — test get_selected_race_id with tuple/string options, load_race_config valid/None, resolution order."
+    },
+    {
+      "file": "game/ui/screens/strategy_windows/build_queue_windows.py",
+      "severity": "MAJOR",
+      "function": "BuildQueueListRegistrar.open/_on_closed, EmpireBuildQueueRegistrar.open/close/_on_closed",
+      "description": "Registrar lifecycle logic (open/close/_on_closed) never tested. Window construction with full DI, kill + nullify guard, nullify on close — all untested.",
+      "suggested_test": "Create tests/unit/ui/screens/strategy_windows/test_build_queue_windows.py — test open creates window, open replaces existing, on_closed nullifies, empire close nullifies."
+    },
+    {
+      "file": "game/ui/screens/strategy_fleet_ops.py",
+      "severity": "MAJOR",
+      "function": "handle_move_designation, execute_move, execute_intercept, handle_join_designation, execute_join",
+      "description": "5 methods with significant business logic and branching (4 branches in handle_move_designation, 4 in handle_join_designation). Orchestrate strategy-level fleet operations with complex state transitions. Only handle_designation_request covered indirectly.",
+      "suggested_test": "Create tests/unit/ui/screens/test_strategy_fleet_ops.py — test move designation branches, execute move/intercept/join, join designation with multiple targets."
+    },
+    {
+      "file": "game/ui/screens/builder/stat_getters.py",
+      "severity": "MAJOR",
+      "function": "~19 of 36 untested getters + 5 formatters + 3 validators",
+      "description": "Resource getters with error-handling paths (ResourceRegistry None guards, division-by-zero guards) entirely untouched. Only weapon, strategic movement, cargo, and misc getters tested (17 of 36).",
+      "suggested_test": "Extend test_stat_getters.py — add tests for resource getters (storage, current, generation, consumption, endurance, replenish), fuel/ammo/energy consumption, warp tonnage/cost."
+    },
+    {
+      "file": "game/ui/screens/test_lab/screen_input_handler.py",
+      "severity": "MAJOR",
+      "function": "handle_event, _handle_dialog_events, _handle_panel_events, _handle_scroll_and_mouse, _handle_click",
+      "description": "Zero test coverage (399 LOC). 8 methods untested including event dispatch with USEREVENT+1, dialog gating, 5 panel types, scroll/mouse routing, hover state, click dispatch to 5 sub-checkers.",
+      "suggested_test": "Create tests/unit/ui/screens/test_lab/test_screen_input_handler.py — test event dispatch, dialog modal gating, panel type routing, scroll/mouse event handling."
+    },
+    {
+      "file": "game/ui/services/image/openai_provider.py",
+      "severity": "MAJOR",
+      "function": "_post_edit, _parse_response error paths, _read_actual_size PIL failure, SSL error path",
+      "description": "Entire _post_edit edit_image endpoint path untested. _parse_response JSON decode failure, missing b64_json, invalid base64 untested. _read_actual_size PIL failure fallback returning (0,0) untested.",
+      "suggested_test": "Extend test_openai_provider.py — test_edit_image, test_parse_response_non_json, test_parse_response_missing_b64, test_read_actual_size_fallback, test_ssl_error."
+    },
+    {
+      "file": "game/strategy/data/galaxy_warp_generator.py",
+      "severity": "MAJOR",
+      "function": "_calculate_warp_distance, _is_angle_clear, create_warp_link, _build_edge_candidates, _apply_mst_edges, _add_density_edges, _roll_warp_type",
+      "description": "Only 3 boundary tests (N=0,1,2) exist. All 11 internal methods lack direct test coverage. MST correctness and angle validation critical for galaxy connectivity.",
+      "suggested_test": "Extend test_galaxy_warp_generator.py — test MST with 3-system triangle, _is_angle_clear, _roll_warp_type determinism, create_warp_link bidirectionality."
+    },
+    {
+      "file": "game/strategy/services/ability_iterator.py",
+      "severity": "MAJOR",
+      "function": "_planet_global_hex, _star_provider, _planet_intrinsic_provider, _warp_point_provider, _system_archetype_provider, _fleet_provider + set_fleet_lookups",
+      "description": "7 of 9 provider functions lack any test coverage. These plug in PROJ-301..305 integration seams. High risk for provider registration correctness.",
+      "suggested_test": "Extend test_ability_iterator.py — add mock systems with planets having intrinsic_abilities, stars, warp points, archetypes to exercise each untested provider."
+    },
+    {
+      "file": "game/ui/screens/strategy_windows/empire_panel_ctrl.py",
+      "severity": "MAJOR",
+      "function": "SettingsRegistrar.open (entirely untested), EmpirePanelRegistrar.open (race_registry resolution + registries DI not verified)",
+      "description": "82 LOC, 2 non-trivial classes. EmpirePanelRegistrar has only 3 indirect tests through StrategyWindowManager. SettingsRegistrar has zero coverage.",
+      "suggested_test": "Extend test_strategy_window_manager.py — test SettingsRegistrar open creates SettingsWindow, kill-existing behavior."
+    },
+    {
+      "file": "game/simulation/battle_runner.py",
+      "severity": "MAJOR",
+      "function": "_derive_end_reason (disambiguation branch at L657-664)",
+      "description": "_derive_end_reason is tested indirectly, but specific disambiguation when absolute_max_ticks fires AND spec's end_condition is TickLimitCondition with max_ticks <= absolute_max_ticks is untested.",
+      "suggested_test": "Extend test_battle_runner.py — test_derive_end_reason_tick_limit_vs_absolute_max_disambiguation."
+    },
+    {
+      "file": "game/simulation/components/component.py",
+      "severity": "MAJOR",
+      "function": "health_manager (lazy-init path), reset_hp (facade delegation)",
+      "description": "2 facade methods untested on Component instances: health_manager lazy-init + second-access-returns-same-instance, reset_hp() on Component (only tested via ComponentHealthManager directly).",
+      "suggested_test": "Extend test_component.py — test_health_manager_lazy_init, test_reset_hp_on_component."
+    },
+    {
+      "file": "game/simulation/components/abilities/__init__.py",
+      "severity": "MAJOR",
+      "function": "get_ability_default_scope (3 branches)",
+      "description": "Zero test coverage. Single source of truth for default scope resolution used by compilers and collectors. 3 branches: known-with-default, known-without-default (fallback self), unknown (warning log + fallback self). If it malfunctions, abilities silently route to wrong scopes.",
+      "suggested_test": "Create tests for get_ability_default_scope — test known ability with default_scope, known ability without (fallback), unknown ability (warning + fallback)."
+    },
+    {
+      "file": "game/strategy/combat/spec_compiler.py",
+      "severity": "MAJOR",
+      "function": "_ship_spec_from_instance (design_data fallback), _pick_formation_for_fleet (empty/missing task_forces), post_battle_hook empire key resolution",
+      "description": "~5 branch gaps in internal helpers. Bulk of code IS tested via public API (933 LOC in 3 test files). Genuine gaps: design_data not-a-dict fallback, explicit-None task_forces, post_battle_hook empire_id vs owner_id resolution.",
+      "suggested_test": "Extend test_spec_compiler.py — test _ship_spec_from_instance design_data fallback, test post_battle_hook empire key resolution."
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "severity": "MAJOR",
+      "function": "__init__ registration validation, _equip_default_hull missing class_def, _loading_warnings accumulation, fleet aura interaction",
+      "description": "607 LOC. Several specific branches lack targeted unit tests: registries is None → ValidationException, missing hull class_def edge case, _loading_warnings accumulation never verified.",
+      "suggested_test": "Extend test_ship.py — test_init_with_none_registries_raises, test_equip_default_hull_missing_class_def, test_loading_warnings_accumulated."
+    },
+    {
+      "file": "game/simulation/entities/ship_resource_manager.py",
+      "severity": "MAJOR",
+      "function": "resources_initialized flag, prev_max_resources delta, prev_max_shields delta",
+      "description": "No dedicated test. Stateful tracking logic completely untested: resources_initialized flag tracking, prev_max_resources delta calculation, prev_max_shields delta tracking.",
+      "suggested_test": "Create tests/unit/simulation/entities/test_ship_resource_manager.py — test resources_initialized lifecycle, prev_max deltas after capacity changes."
+    },
+    {
+      "file": "game/ui/screens/race_setup/panel_factory.py",
+      "severity": "MAJOR",
+      "function": "All 7 factory functions",
+      "description": "No dedicated test (177 LOC). Each of 7 factory functions has distinct wiring logic (panel construction, callback wiring, LLM controller attachment in create_descriptions_panel). Only exercised through integration tests.",
+      "suggested_test": "Create tests/unit/ui/screens/race_setup/test_panel_factory.py — test each factory creates correct panel type with expected callbacks."
+    },
+    {
+      "file": "game/ui/screens/strategy_windows/list_windows.py",
+      "severity": "MAJOR",
+      "function": "navigate_camera_to, StarListRegistrar.open + callbacks",
+      "description": "navigate_camera_to completely untested (zero references in tests). StarListRegistrar untested — no test exercises open() or callbacks.",
+      "suggested_test": "Extend test_strategy_window_manager.py — test navigate_camera_to, test StarListRegistrar open/on_closed lifecycle."
+    },
+    {
+      "file": "game/ui/screens/race_setup/controller.py",
+      "severity": "MAJOR",
+      "function": "~17 mutation methods + save/load + validation",
+      "description": "486 LOC with ~17 methods, no dedicated unit tests. Screen-level tests exercise many paths indirectly but lack isolation. on_overwrite_save, on_save_as_new, on_save_dialog_cancel, update_description_char_counts only tested through screen-level integration.",
+      "suggested_test": "Create tests/unit/ui/screens/race_setup/test_controller.py — unit test save flows, load flows, per-tab randomization, validation edge cases."
+    },
+    {
+      "file": "game/simulation/components/abilities/planetary.py",
+      "severity": "MAJOR",
+      "function": "PROJ-300 abilities: ThrustModifierAbility, StrategicSpeedModifierAbility, EnvironmentalDamageAbility, FuelDrainAbility",
+      "description": "4 PROJ-300 abilities (lines 777-913) have zero test coverage. Only PlanetaryShieldAbility and StrategicResourceGenerationAbility tested. __init__ methods handle dict/non-dict data differently — branching untested.",
+      "suggested_test": "Extend test_planetary_abilities.py — test ThrustModifierAbility init with dict/numeric data, StrategicSpeedModifierAbility get_primary_value, EnvironmentalDamageAbility get_ui_rows, FuelDrainAbility."
+    },
+    {
+      "file": "game/simulation/systems/resource_manager.py",
+      "severity": "MAJOR",
+      "function": "ResourceState.has_sufficient, add, set_max; ResourceRegistry.set_max_value, set_regen_rate asymmetry, get_resource_names, get_all_resources",
+      "description": "set_max_value vs set_regen_rate asymmetry (one creates new entry, one silently skips) is a genuine API inconsistency. has_sufficient, add, set_max (clamp-on-reduction), get_resource_names, get_all_resources all untested.",
+      "suggested_test": "Extend test_resource_manager_edge_cases.py — test set_max_value vs set_regen_rate asymmetry, has_sufficient border cases, add overflow, set_max clamp."
+    },
+    {
+      "file": "game/ui/screens/builder/grouping_strategies.py",
+      "severity": "MAJOR",
+      "function": "DefaultGroupingStrategy.group_components, TypeGroupingStrategy.group_components, FlatGroupingStrategy.group_components",
+      "description": "Three strategy classes with zero test coverage. get_component_group_key readonly filter (modifiers with m.definition.readonly True excluded) untested. Only get_component_group_key tested indirectly.",
+      "suggested_test": "Create tests/unit/ui/screens/builder/test_grouping_strategies.py — test all three strategies with empty, single-component, multi-component inputs."
+    },
+    {
+      "file": "game/ui/screens/empire_panel_window.py",
+      "severity": "MAJOR",
+      "function": "_create_ui, _create_tab_buttons, _create_tab_panels, _build_treasury_tab, _build_population_tab, _render_species_card",
+      "description": "15 of 19 symbols untested (572 LOC). Rendering methods inaccessible to current test infrastructure. _render_environment_section with None gravity_pref partially guarded but other rendering paths untested.",
+      "suggested_test": "Extend test_empire_panel_window.py — test tab switching, section rendering with empty data, process_event routing."
+    },
+    {
+      "file": "game/strategy/services/race_resolver.py",
+      "severity": "MAJOR",
+      "function": "resolve_race_config (4 code paths)",
+      "description": "Zero test coverage. 4 paths: registry returns config, registry returns None + empire match, empire match (no registry), no match → None. Feeds population growth and happiness calculations.",
+      "suggested_test": "Create tests/unit/strategy/services/test_race_resolver.py — test all 4 resolution paths with mock registries and empire configs."
+    },
+    {
+      "file": "game/ui/services/modifier_icon_service.py",
+      "severity": "MAJOR",
+      "function": "__init__, get_icon, clear_cache",
+      "description": "Zero test coverage. get_icon has multiple untested paths: cache hit, cache miss + map lookup, filename not in map → fallback, file not found, pygame load error, scale path.",
+      "suggested_test": "Create tests/unit/ui/services/test_modifier_icon_service.py — test cache hit/miss, fallback filename, missing file error handling."
+    },
+    {
+      "file": "game/ui/screens/builder/modifier_row.py",
+      "severity": "MAJOR",
+      "function": "build_ui, update, handle_event, kill/_clear_ui, smart snap-to-floor/ceil",
+      "description": "355 LOC widget. Only 2 internal helpers tested (156 LOC). build_ui 3 control type branches, update component/template state sync, handle_event button dispatch — all untested.",
+      "suggested_test": "Extend test_modifier_control_row.py — test handle_event dispatch, update state transitions, build_ui layout variations for all 3 control types."
+    },
+    {
+      "file": "game/ai/combat_utils.py",
+      "severity": "MAJOR",
+      "function": "get_capability_cache_key (3 code paths)",
+      "description": "Only untested function in otherwise well-tested module. 3 paths: entity.id exists, entity.name fallback, neither → None.",
+      "suggested_test": "Extend test_combat_utils.py — test get_capability_cache_key with id, with name only, with neither."
+    },
+    {
+      "file": "game/strategy/services/race_description_llm_controller.py",
+      "severity": "MAJOR",
+      "function": "re_roll_socio, cancel_socio",
+      "description": "2 public API methods have zero direct test calls. All private methods exercised indirectly through generate_bio/generate_socio. Socio-specific paths (cancel and re-roll) are naked — a regression would not be caught.",
+      "suggested_test": "Extend test_race_description_llm_controller.py — test re_roll_socio, cancel_socio."
+    },
+    {
+      "file": "game/simulation/entities/ship_stats.py",
+      "severity": "MAJOR",
+      "function": "_aggregate_hangar_abilities, PROJ-271 shield_bonus_add path, _initialize_resources delta-update path, WarpJump + StrategicMovement aggregation",
+      "description": "5 phases have at least one test each (contrary to Phase 2 report claim of zero). Genuine gaps: _aggregate_hangar_abilities zero coverage, PROJ-271 shield_bonus_add via external_stats never exercised, _initialize_resources delta-update untested.",
+      "suggested_test": "Extend test_ship_stats_calculator_phases.py — test hangar ability aggregation, shield_bonus_add via external_stats, resources delta-update, WarpJump/StrategicMovement stat aggregation."
+    }
+  ]
+}

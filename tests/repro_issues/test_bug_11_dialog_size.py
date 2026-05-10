@@ -6,17 +6,24 @@ from pygame_gui.windows import UIConfirmationDialog
 import os
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-class TestBug11DialogSize:
-    @pytest.fixture(autouse=True)
-    def setup_pygame(self):
-        self.window_size = (1600, 900)
-        pygame.display.set_mode(self.window_size)
-        # Load theme
-        theme_path = "builder_theme.json"
-        self.ui_manager = pygame_gui.UIManager(self.window_size, theme_path if os.path.exists(theme_path) else None)
-        yield
 
-    def test_confirmation_dialog_scrolling(self):
+# PROJ-322 Task 2.2 (S06-CAT5-001): module-scoped pygame.display +
+# UIManager. Only one test runs in this file; the per-test set-up
+# was unnecessary churn.
+WINDOW_SIZE = (1600, 900)
+
+
+@pytest.fixture(scope='module')
+def ui_manager():
+    pygame.display.set_mode(WINDOW_SIZE)
+    theme_path = "builder_theme.json"
+    return pygame_gui.UIManager(
+        WINDOW_SIZE, theme_path if os.path.exists(theme_path) else None,
+    )
+
+
+class TestBug11DialogSize:
+    def test_confirmation_dialog_scrolling(self, ui_manager):
         """
         Verify that the 'Confirm Refit' dialog requires scrolling with 400x200 size.
         """
@@ -31,13 +38,13 @@ class TestBug11DialogSize:
         
         dialog = UIConfirmationDialog(
             rect=dialog_rect,
-            manager=self.ui_manager,
+            manager=ui_manager,
             action_long_desc=msg,
             window_title="Confirm Refit"
         )
         
         # Force layout update
-        self.ui_manager.update(0.1)
+        ui_manager.update(0.1)
         
         text_box = None
         for element in dialog.get_container().elements:

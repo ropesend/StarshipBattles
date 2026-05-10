@@ -1,0 +1,118 @@
+{
+  "request_id": "req_20260504_132454_ba99d6",
+  "review_dir": "Reviews/results/2026-05-04_132455_consistency_skeptical-audit-of-proj-321-322-323-324-as-shipped_req-req_20260504_132454_ba99d6",
+  "report_path": "Reviews/results/2026-05-04_132455_consistency_skeptical-audit-of-proj-321-322-323-324-as-shipped_req-req_20260504_132454_ba99d6/report.md",
+  "findings": {
+    "critical": 3,
+    "major": 10,
+    "minor": 6,
+    "info": 9
+  },
+  "completed_at": "2026-05-04T14:30:00Z",
+  "findings_by_id": {
+    "FND-001": {
+      "severity": "CRIT",
+      "title": "SystemTreePanel production code has zero test coverage after 664 LOC unit test deletion",
+      "file": "game/ui/panels/system_tree_panel.py",
+      "line": 1,
+      "fingerprint": "sha256:cbf0e8a2e1c1c0e8a2e1c1c0e8a2e1c1c0e8a2e1c1c0e8a2e1c1c0e8a2e1c1",
+      "phase_attributed_to": "PROJ-321 Phase 2"
+    },
+    "FND-002": {
+      "severity": "CRIT",
+      "title": "Task 5.10 workshop_screen is genuinely unresolved; included among RESOLVED 14 deferrals",
+      "file": "Projects/active_projects/PROJ-322/phase_5_checklist.md",
+      "line": 122,
+      "fingerprint": "sha256:d1e2f3a4b5c6d1e2f3a4b5c6d1e2f3a4b5c6d1e2f3a4b5c6d1e2f3a4b5c6",
+      "phase_attributed_to": "PROJ-322 Phase 5"
+    },
+    "FND-003": {
+      "severity": "CRIT",
+      "title": "Task 2.15 marked RESOLVED but was subsumed into a RE-CONFIRMED DEFERRED item",
+      "file": "Projects/active_projects/PROJ-322/plan.md",
+      "line": 52,
+      "fingerprint": "sha256:e2f3a4b5c6d7e2f3a4b5c6d7e2f3a4b5c6d7e2f3a4b5c6d7e2f3a4b5c6d7",
+      "phase_attributed_to": "PROJ-322 Phase 2 / PROJ-327 Phase 3"
+    },
+    "FND-004": {
+      "severity": "MAJ",
+      "title": "Prior review falsified: test_strategy_session_facade_public_api.py claimed whole-file deleted but EXISTS",
+      "file": "tests/unit/strategy/facade/test_strategy_session_facade_public_api.py",
+      "line": 1,
+      "fingerprint": "sha256:f3a4b5c6d7e8f3a4b5c6d7e8f3a4b5c6d7e8f3a4b5c6d7e8f3a4b5c6d7e8",
+      "phase_attributed_to": "PROJ-321 Phase 1"
+    },
+    "FND-005": {
+      "severity": "MAJ",
+      "title": "PROJ-323 Tasks 3.3 and 3.6: [x] checkmarks remain despite annotation (CRIT-001 partial fix)",
+      "file": "Projects/active_projects/PROJ-323/phase_3_checklist.md",
+      "line": 1,
+      "fingerprint": "sha256:a4b5c6d7e8f9a4b5c6d7e8f9a4b5c6d7e8f9a4b5c6d7e8f9a4b5c6d7e8f9",
+      "phase_attributed_to": "PROJ-323 Phase 3"
+    },
+    "FND-006": {
+      "severity": "MAJ",
+      "title": "7 PROJ-323 Phase 5 tasks carry [x] + skipped for GONE files",
+      "file": "Projects/active_projects/PROJ-323/phase_5_checklist.md",
+      "line": 1,
+      "fingerprint": "sha256:b5c6d7e8f9a0b5c6d7e8f9a0b5c6d7e8f9a0b5c6d7e8f9a0b5c6d7e8f9a0",
+      "phase_attributed_to": "PROJ-323 Phase 5"
+    },
+    "FND-007": {
+      "severity": "MAJ",
+      "title": "PROJ-323 Task 2.12: file GONE but annotated no-op instead of skipped",
+      "file": "tests/unit/simulation/services/test_ship_stats_calculator_phases.py",
+      "line": 1,
+      "fingerprint": "sha256:c6d7e8f9a0b1c6d7e8f9a0b1c6d7e8f9a0b1c6d7e8f9a0b1c6d7e8f9a0b1",
+      "phase_attributed_to": "PROJ-323 Phase 2"
+    },
+    "FND-008": {
+      "severity": "MAJ",
+      "title": "Task 3.15 RE-CONFIRMED DEFERRED without measurement evidence",
+      "file": "Projects/active_projects/PROJ-327/findings/phase_2_runtime_delta.md",
+      "line": 15,
+      "fingerprint": "sha256:d7e8f9a0b1c2d7e8f9a0b1c2d7e8f9a0b1c2d7e8f9a0b1c2d7e8f9a0b1c2",
+      "phase_attributed_to": "PROJ-327 Phase 2"
+    },
+    "FND-009": {
+      "severity": "MAJ",
+      "title": "Tasks 2.8 and 2.9 have no explicit Final disposition row",
+      "file": "Projects/active_projects/PROJ-322/plan.md",
+      "line": 47,
+      "fingerprint": "sha256:e8f9a0b1c2d3e8f9a0b1c2d3e8f9a0b1c2d3e8f9a0b1c2d3e8f9a0b1c2d3",
+      "phase_attributed_to": "PROJ-322 Phase 2"
+    },
+    "FND-010": {
+      "severity": "MAJ",
+      "title": "LLMBackgroundCall: unexpected exception in _provider.complete() sets _done_event but leaves _status=RUNNING",
+      "file": "game/services/llm/background.py",
+      "line": 240,
+      "fingerprint": "sha256:f9a0b1c2d3e4f9a0b1c2d3e4f9a0b1c2d3e4f9a0b1c2d3e4f9a0b1c2d3e4",
+      "phase_attributed_to": "PROJ-324 Phase 2"
+    },
+    "FND-011": {
+      "severity": "MAJ",
+      "title": "Pattern doc 33 MUST be first statement rule contradicted by its own two-stage example",
+      "file": "docs/02_PATTERNS.md",
+      "line": 1831,
+      "fingerprint": "sha256:a0b1c2d3e4f5a0b1c2d3e4f5a0b1c2d3e4f5a0b1c2d3e4f5a0b1c2d3e4f5",
+      "phase_attributed_to": "PROJ-324 Phase 4"
+    },
+    "FND-012": {
+      "severity": "MAJ",
+      "title": "PROJ-321 manifest vs. prior review whole-file deletion count mismatch",
+      "file": "Projects/active_projects/PROJ-321/manifest.md",
+      "line": 1,
+      "fingerprint": "sha256:b1c2d3e4f5a6b1c2d3e4f5a6b1c2d3e4f5a6b1c2d3e4f5a6b1c2d3e4f5a6",
+      "phase_attributed_to": "PROJ-321"
+    },
+    "FND-013": {
+      "severity": "MAJ",
+      "title": "Task 3.25 LOC outcome contradicts original estimate by 581 LOC",
+      "file": "Projects/active_projects/PROJ-327/plan.md",
+      "line": 27,
+      "fingerprint": "sha256:c2d3e4f5a6b7c2d3e4f5a6b7c2d3e4f5a6b7c2d3e4f5a6b7c2d3e4f5a6b7",
+      "phase_attributed_to": "PROJ-327 Phase 4"
+    }
+  }
+}

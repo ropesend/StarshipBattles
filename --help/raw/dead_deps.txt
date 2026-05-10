@@ -1,0 +1,26 @@
+Building dependency graph...
+Reachable files: 643
+Total source files (excluding tests): 892
+Potentially Dead Files: 269
+
+--- Top 20 Potentially Dead Files ---
+.agents\skills\codex-ship-theme-creator\scripts\create_manifest.py
+.agents\skills\codex-ship-theme-creator\scripts\process_theme_images.py
+.agents\skills\codex-ship-theme-creator\scripts\theme_common.py
+.agents\skills\codex-ship-theme-creator\scripts\validate_theme.py
+AgentCoordination\Scratchpad\tmp\check_coverage.py
+AgentCoordination\Scratchpad\tmp\check_tests.py
+AgentCoordination\Scratchpad\tmp\extract_shard02_coverage.py
+AgentCoordination\Scratchpad\tmp\extract_shard04.py
+AgentCoordination\Scratchpad\tmp\extract_shard05.py
+AgentCoordination\Scratchpad\tmp\extract_shard09_coverage.py
+AgentCoordination\Scratchpad\tmp\extract_shard09_matrix.py
+AgentCoordination\Scratchpad\tmp\extract_shard12.py
+AgentCoordination\Scratchpad\tmp\extract_shard13.py
+AgentCoordination\Scratchpad\tmp\extract_shard17.py
+AgentCoordination\Scratchpad\tmp\extract_shard18.py
+AgentCoordination\Scratchpad\tmp\filter_shard11.py
+AgentCoordination\Scratchpad\tmp\shard08_coverage.py
+AgentCoordination\Scratchpad\tmp\shard16_extract.py
+Projects\deep_archive\PROJ-301-350\PROJ-310\findings\build_rankings.py
+Projects\deep_archive\PROJ-301-350\PROJ-310\findings\extract_radon_top.py

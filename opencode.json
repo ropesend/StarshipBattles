@@ -24,13 +24,45 @@
       "template": "Load the ocode-audit-shrink skill and run a comprehensive code shrinkage audit on the production codebase (game/).",
       "description": "Run a comprehensive code shrinkage audit"
     },
+    "ocode-discuss-continue": {
+      "template": "Load the ocode-discuss-continue skill and continue a previously concluded v2.4 inter-agent discussion. $ARGUMENTS",
+      "description": "Continue a concluded v2.4 inter-agent discussion"
+    },
+    "ocode-discuss-respond": {
+      "template": "Load the ocode-discuss-respond skill and join a pending v2.4 inter-agent discussion at $ARGUMENTS.",
+      "description": "Join a pending v2.4 inter-agent discussion"
+    },
+    "ocode-discuss-start": {
+      "template": "Load the ocode-discuss-start skill and open a v2.4 inter-agent discussion with Claude and/or Codex at $ARGUMENTS.",
+      "description": "Open a v2.4 inter-agent discussion"
+    },
+    "ocode-docs-audit": {
+      "template": "Load the ocode-docs-audit skill and run a documentation freshness & accuracy audit. $ARGUMENTS",
+      "description": "Run a documentation freshness & accuracy audit"
+    },
+    "ocode-error-audit": {
+      "template": "Load the ocode-error-audit skill and run an error handling & robustness audit. $ARGUMENTS",
+      "description": "Run an error handling & robustness audit"
+    },
+    "ocode-pattern-audit": {
+      "template": "Load the ocode-pattern-audit skill and run a pattern conformance & architecture drift audit. $ARGUMENTS",
+      "description": "Run a pattern conformance & architecture drift audit"
+    },
     "ocode-review-request": {
       "template": "Load the ocode-review-request skill and process the review request at $ARGUMENTS.",
       "description": "Process a delegated code review request"
     },
+    "ocode-state-audit": {
+      "template": "Load the ocode-state-audit skill and run a state management & mutability audit. $ARGUMENTS",
+      "description": "Run a state management & mutability audit"
+    },
     "ocode-test-review": {
       "template": "Load the ocode-test-review skill and run an exhaustive test suite audit across 12 quality categories. $ARGUMENTS",
       "description": "Run an exhaustive test suite audit"
+    },
+    "ocode-type-audit": {
+      "template": "Load the ocode-type-audit skill and run a type safety & annotation quality audit. $ARGUMENTS",
+      "description": "Run a type safety & annotation quality audit"
     }
   },
   "agent": {

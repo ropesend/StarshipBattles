@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
 from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.order_handlers.transfer import TransferHandler
 from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.validation.transfer_validator import TransferValidator
 from game.core.hex_math import HexCoord
@@ -82,10 +83,8 @@ class TestResourceLoadFromPlanet:
         empire = Empire(empire_id=0, name="Test", color=(255, 0, 0))
         empire.add_colony(planet)
 
-        processor = OrderProcessor.__new__(OrderProcessor)
-        transferred = processor._execute_load(
-            fleet, planet, "metals", 200, empire
-        )
+        processor = TransferHandler()
+        transferred = processor._dispatch_load_planet_resource(fleet, planet, "metals", 200)
 
         assert transferred == 200
         assert planet.get_stockpile("metals") == pytest.approx(300.0)
@@ -104,10 +103,8 @@ class TestResourceLoadFromPlanet:
 
         empire = Empire(empire_id=0, name="Test", color=(255, 0, 0))
 
-        processor = OrderProcessor.__new__(OrderProcessor)
-        transferred = processor._execute_load(
-            fleet, planet, "metals", 200, empire
-        )
+        processor = TransferHandler()
+        transferred = processor._dispatch_load_planet_resource(fleet, planet, "metals", 200)
 
         assert transferred == 50
         assert planet.get_stockpile("metals") == pytest.approx(0.0)
@@ -125,10 +122,8 @@ class TestResourceLoadFromPlanet:
 
         empire = Empire(empire_id=0, name="Test", color=(255, 0, 0))
 
-        processor = OrderProcessor.__new__(OrderProcessor)
-        transferred = processor._execute_load(
-            fleet, planet, "metals", 500, empire
-        )
+        processor = TransferHandler()
+        transferred = processor._dispatch_load_planet_resource(fleet, planet, "metals", 500)
 
         assert transferred == 100
 
@@ -153,10 +148,8 @@ class TestResourceUnloadToPlanet:
 
         empire = Empire(empire_id=0, name="Test", color=(255, 0, 0))
 
-        processor = OrderProcessor.__new__(OrderProcessor)
-        transferred = processor._execute_unload(
-            fleet, planet, "metals", 200, empire
-        )
+        processor = TransferHandler()
+        transferred = processor._dispatch_unload_planet_resource(fleet, planet, "metals", 200)
 
         assert transferred == 200
         assert planet.get_stockpile("metals") == pytest.approx(300.0)
@@ -178,10 +171,8 @@ class TestResourceUnloadToPlanet:
 
         empire = Empire(empire_id=0, name="Test", color=(255, 0, 0))
 
-        processor = OrderProcessor.__new__(OrderProcessor)
-        transferred = processor._execute_unload(
-            fleet, planet, "fuel", 0, empire
-        )
+        processor = TransferHandler()
+        transferred = processor._dispatch_unload_planet_resource(fleet, planet, "fuel", 0)
 
         assert transferred == 750
         assert planet.get_stockpile("fuel") == pytest.approx(750.0)

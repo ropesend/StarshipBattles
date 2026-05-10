@@ -3,9 +3,9 @@
 PROJ-309 sub-phase 3.5 (2026-04-27): the original 1076-line monolith was
 split into cohesive sub-modules grouped by domain (movement, order_queue,
 transfer, build, construction_queue) plus infrastructure (`base.py`) and
-the dispatcher factory (`registry_factory.py`). The legacy
-`game.strategy.engine.command_handlers` module is now a re-export shim
-preserving every public symbol so callers don't need to update imports.
+the dispatcher factory (`registry_factory.py`). PROJ-383 (2026-05-08)
+deleted the transitional `command_handlers.py` re-export shim; this
+package is now the sole canonical home for the command-handler API.
 """
 from game.strategy.engine.handlers.base import (
     BaseCommandHandler,

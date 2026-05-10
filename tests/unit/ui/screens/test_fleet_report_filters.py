@@ -115,17 +115,22 @@ class TestCalculateFleetStats:
         assert stats['total_tonnage'] == 3500
 
     def test_average_hp_calculation(self):
-        """Average HP should be calculated correctly."""
+        """Average HP should be calculated correctly.
+
+        PROJ-323 Task 5.23: hardcoded reference 0.7667 (validated against
+        calculate_fleet_stats 2026-05-03). For inputs (1.0, 0.5, 0.8) the
+        production avg is (1.0 + 0.5 + 0.8) / 3 ≈ 0.7666666...
+        """
         from game.ui.screens.fleet_report_filters import calculate_fleet_stats
 
         ships = [
-            make_mock_ship(hp_pct=1.0),   # 100%
-            make_mock_ship(hp_pct=0.5),   # 50%
-            make_mock_ship(hp_pct=0.8),   # 80%
+            make_mock_ship(hp_pct=1.0),
+            make_mock_ship(hp_pct=0.5),
+            make_mock_ship(hp_pct=0.8),
         ]
         stats = calculate_fleet_stats(ships)
 
-        # Average: (1.0 + 0.5 + 0.8) / 3 = 0.7667
+        # Hardcoded reference; see docstring derivation.
         assert abs(stats['avg_hp_percent'] - 0.7667) < 0.01
 
     def test_combat_capable_excludes_destroyed(self):
@@ -585,18 +590,30 @@ class TestSortShipsNewColumns:
 
 
 class TestFilterShipsSpaceyard:
-    """Test cases for spaceyard capability filtering in filter_ships."""
+    """Test cases for spaceyard capability filtering in filter_ships.
 
-    def test_filter_hide_has_spaceyard(self):
-        """NO filter shows only ships without spaceyards."""
-        from game.ui.screens.fleet_report_filters import filter_ships
-        from unittest.mock import patch
+    PROJ-323 Task 3.1: 3 spaceyard NO/YES/IGNORE tests parametrized.
+    """
 
+    @staticmethod
+    def _make_carrier_destroyer_pair():
         ship_with_yard = make_mock_ship(design_name="Carrier")
         ship_with_yard.cargo_contents = {}
         ship_no_yard = make_mock_ship(design_name="Destroyer")
         ship_no_yard.cargo_contents = {}
-        ships = [ship_with_yard, ship_no_yard]
+        return [ship_with_yard, ship_no_yard]
+
+    @pytest.mark.parametrize("filter_value,expected_names", [
+        pytest.param(FilterState.NO, ["Destroyer"], id="hide_has_spaceyard"),
+        pytest.param(FilterState.YES, ["Carrier"], id="hide_no_spaceyard"),
+        pytest.param(FilterState.IGNORE, ["Carrier", "Destroyer"], id="ignore_passes_all"),
+    ])
+    def test_spaceyard_filter(self, filter_value, expected_names):
+        """Spaceyard filter respects NO/YES/IGNORE states."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+        from unittest.mock import patch
+
+        ships = self._make_carrier_destroyer_pair()
 
         def mock_has_yard(ship):
             return ship.name == "Carrier"
@@ -606,115 +623,50 @@ class TestFilterShipsSpaceyard:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'has_spaceyard': FilterState.NO,
+            'has_spaceyard': filter_value,
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
+        with patch(
+            'game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard',
+            side_effect=mock_has_yard,
+        ):
             result = filter_ships(ships, filter_state)
 
-        assert len(result) == 1
-        assert result[0].name == "Destroyer"
-
-    def test_filter_hide_no_spaceyard(self):
-        """YES filter shows only ships with spaceyards."""
-        from game.ui.screens.fleet_report_filters import filter_ships
-        from unittest.mock import patch
-
-        ship_with_yard = make_mock_ship(design_name="Carrier")
-        ship_with_yard.cargo_contents = {}
-        ship_no_yard = make_mock_ship(design_name="Destroyer")
-        ship_no_yard.cargo_contents = {}
-        ships = [ship_with_yard, ship_no_yard]
-
-        def mock_has_yard(ship):
-            return ship.name == "Carrier"
-
-        filter_state = {
-            'show_damaged': True,
-            'show_undamaged': True,
-            'show_derelict': True,
-            'show_destroyed': True,
-            'has_spaceyard': FilterState.YES,
-        }
-
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
-            result = filter_ships(ships, filter_state)
-
-        assert len(result) == 1
-        assert result[0].name == "Carrier"
-
-    def test_filter_show_all_spaceyard_states(self):
-        """IGNORE filter passes all ships through spaceyard filter."""
-        from game.ui.screens.fleet_report_filters import filter_ships
-
-        ship_with_yard = make_mock_ship(design_name="Carrier")
-        ship_with_yard.cargo_contents = {}
-        ship_no_yard = make_mock_ship(design_name="Destroyer")
-        ship_no_yard.cargo_contents = {}
-        ships = [ship_with_yard, ship_no_yard]
-
-        filter_state = {
-            'show_damaged': True,
-            'show_undamaged': True,
-            'show_derelict': True,
-            'show_destroyed': True,
-            'has_spaceyard': FilterState.IGNORE,
-        }
-
-        result = filter_ships(ships, filter_state)
-        assert len(result) == 2
+        assert sorted(s.name for s in result) == sorted(expected_names)
 
 
 class TestFilterShipsCargo:
-    """Test cases for cargo filtering in filter_ships."""
+    """Test cases for cargo filtering in filter_ships.
 
-    def test_filter_hide_has_cargo(self):
-        """NO filter shows only ships without cargo."""
-        from game.ui.screens.fleet_report_filters import filter_ships
+    PROJ-323 Task 3.1: 3 cargo NO/YES/IGNORE tests parametrized.
+    """
 
+    @staticmethod
+    def _make_freighter_warship_pair():
         ship_with_cargo = make_mock_ship(design_name="Freighter")
         ship_with_cargo.cargo_contents = {'minerals': 100}
-
         ship_no_cargo = make_mock_ship(design_name="Warship")
         ship_no_cargo.cargo_contents = {}
+        return [ship_with_cargo, ship_no_cargo]
 
-        ships = [ship_with_cargo, ship_no_cargo]
+    @pytest.mark.parametrize("filter_value,expected_names", [
+        pytest.param(FilterState.NO, ["Warship"], id="hide_has_cargo"),
+        pytest.param(FilterState.YES, ["Freighter"], id="hide_no_cargo"),
+    ])
+    def test_cargo_filter_no_or_yes(self, filter_value, expected_names):
+        """Cargo NO/YES filter selects ships by cargo presence."""
+        from game.ui.screens.fleet_report_filters import filter_ships
 
+        ships = self._make_freighter_warship_pair()
         filter_state = {
             'show_damaged': True,
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'has_cargo': FilterState.NO,
+            'has_cargo': filter_value,
         }
-
         result = filter_ships(ships, filter_state)
-        assert len(result) == 1
-        assert result[0].name == "Warship"
-
-    def test_filter_hide_no_cargo(self):
-        """YES filter shows only ships with cargo."""
-        from game.ui.screens.fleet_report_filters import filter_ships
-
-        ship_with_cargo = make_mock_ship(design_name="Freighter")
-        ship_with_cargo.cargo_contents = {'minerals': 100}
-
-        ship_no_cargo = make_mock_ship(design_name="Warship")
-        ship_no_cargo.cargo_contents = {}
-
-        ships = [ship_with_cargo, ship_no_cargo]
-
-        filter_state = {
-            'show_damaged': True,
-            'show_undamaged': True,
-            'show_derelict': True,
-            'show_destroyed': True,
-            'has_cargo': FilterState.YES,
-        }
-
-        result = filter_ships(ships, filter_state)
-        assert len(result) == 1
-        assert result[0].name == "Freighter"
+        assert sorted(s.name for s in result) == sorted(expected_names)
 
     def test_filter_cargo_with_population(self):
         """Cargo filter includes population as cargo."""
@@ -782,6 +734,103 @@ class TestFilterShipsCargo:
 
         result = filter_ships(ships, filter_state)
         assert len(result) == 2
+
+
+class TestFilterPredicateIsolation:
+    def test_worker_i_fleet_filter_predicate_isolation_warp(self):
+        from game.ui.screens import fleet_report_filters as filters
+        from unittest.mock import patch
+
+        ship = make_mock_ship()
+
+        with patch.object(filters, "has_warp_capability", return_value=False) as has_warp:
+            assert filters._should_exclude_by_warp(
+                ship,
+                {"warp_capable": FilterState.YES},
+            ) is True
+
+        has_warp.assert_called_once_with(ship)
+
+        with patch.object(filters, "has_warp_capability", return_value=False) as has_warp:
+            assert filters._should_exclude_by_warp(
+                ship,
+                {"warp_capable": FilterState.IGNORE},
+            ) is False
+
+        has_warp.assert_not_called()
+
+    def test_worker_i_fleet_filter_predicate_isolation_spaceyard(self):
+        from game.ui.screens import fleet_report_filters as filters
+        from unittest.mock import patch
+
+        ship = make_mock_ship(design_name="Tender")
+
+        with patch(
+            "game.strategy.data.fleet_capability_calculator."
+            "FleetCapabilityCalculator.ship_has_spaceyard",
+            return_value=True,
+        ) as has_spaceyard:
+            assert filters._should_exclude_by_spaceyard(
+                ship,
+                {"has_spaceyard": FilterState.NO},
+            ) is True
+
+        has_spaceyard.assert_called_once_with(ship)
+
+    def test_worker_i_fleet_filter_predicate_isolation_cargo(self):
+        from game.ui.screens import fleet_report_filters as filters
+
+        loaded = make_mock_ship(design_name="Loaded")
+        loaded.cargo_contents = {"metals": 3, "fuel": 0}
+        empty = make_mock_ship(design_name="Empty")
+        empty.cargo_contents = {"metals": 0}
+
+        assert filters._should_exclude_by_cargo(
+            loaded,
+            {"has_cargo": FilterState.NO},
+        ) is True
+        assert filters._should_exclude_by_cargo(
+            empty,
+            {"has_cargo": FilterState.YES},
+        ) is True
+        assert filters._should_exclude_by_cargo(
+            loaded,
+            {"has_cargo": FilterState.IGNORE},
+        ) is False
+
+    def test_worker_i_fleet_filter_predicate_isolation_status(self):
+        from game.ui.screens import fleet_report_filters as filters
+
+        destroyed = make_mock_ship(is_alive=False)
+        derelict = make_mock_ship(is_derelict=True, is_damaged=True)
+        damaged = make_mock_ship(is_damaged=True)
+        healthy = make_mock_ship(is_damaged=False)
+
+        assert filters._should_exclude_by_status(destroyed, {"show_destroyed": False}) is True
+        assert filters._should_exclude_by_status(derelict, {"show_derelict": False}) is True
+        assert filters._should_exclude_by_status(damaged, {"show_damaged": False}) is True
+        assert filters._should_exclude_by_status(healthy, {"show_undamaged": False}) is True
+
+    def test_worker_i_fleet_filter_predicate_isolation_special_capability(self):
+        from game.ui.screens import fleet_report_filters as filters
+        from unittest.mock import patch
+
+        ship = make_mock_ship(serial=7)
+        ship._registries = None
+
+        def has_ability(candidate, ability_name, registry):
+            return candidate is ship and ability_name == "OpenWarpPoint" and registry == {}
+
+        with patch(
+            "game.strategy.services.component_inspector.ship_has_ability",
+            side_effect=has_ability,
+        ) as ship_has_ability:
+            assert filters._should_exclude_by_special_capabilities(
+                ship,
+                {"open_warp": FilterState.NO},
+            ) is True
+
+        ship_has_ability.assert_called_once()
 
 
 class TestFilterStatusPrecedence:
@@ -1039,101 +1088,30 @@ class TestSpecialCapabilityFilter:
         result = filter_ships(ships, filter_state)
         assert len(result) == 5
 
-    def test_filter_hides_ships_with_open_warp_ability(self):
-        """Filter hides ships with OpenWarpPoint ability."""
+    # PROJ-323 Task 3.1: 4 special-ability filter tests parametrized.
+    @pytest.mark.parametrize("filter_key,ability_name,design_name", [
+        pytest.param('open_warp', 'OpenWarpPoint', 'Warp Opener', id='OpenWarpPoint'),
+        pytest.param('close_warp', 'CloseWarpPoint', 'Warp Closer', id='CloseWarpPoint'),
+        pytest.param('destroy_star', 'DestroyStar', 'Star Destroyer', id='DestroyStar'),
+        pytest.param('create_sphere', 'CreateSphereWorld', 'Sphere Builder', id='CreateSphereWorld'),
+    ])
+    def test_filter_hides_ships_with_ability_by_capability(self, filter_key, ability_name, design_name):
+        """Filter hides ships that possess the given special ability when filter_key=NO."""
         from game.ui.screens.fleet_report_filters import filter_ships
         from unittest.mock import patch
 
-        ship_with = make_mock_ship(serial=1, design_name="Warp Opener")
+        ship_with = make_mock_ship(serial=1, design_name=design_name)
         ship_without = make_mock_ship(serial=2, design_name="Scout")
 
-        def mock_has_ability(ship, ability_name, registry):
-            return ship.serial == 1 and ability_name == 'OpenWarpPoint'
+        def mock_has_ability(ship, requested_ability, registry):
+            return ship.serial == 1 and requested_ability == ability_name
 
         filter_state = {
             'show_damaged': True,
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'open_warp': FilterState.NO,
-        }
-
-        with patch('game.strategy.services.component_inspector.ship_has_ability',
-                   side_effect=mock_has_ability):
-            result = filter_ships([ship_with, ship_without], filter_state)
-
-        assert len(result) == 1
-        assert result[0].serial == 2
-
-    def test_filter_hides_ships_with_close_warp_ability(self):
-        """Filter hides ships with CloseWarpPoint ability."""
-        from game.ui.screens.fleet_report_filters import filter_ships
-        from unittest.mock import patch
-
-        ship_with = make_mock_ship(serial=1, design_name="Warp Closer")
-        ship_without = make_mock_ship(serial=2, design_name="Scout")
-
-        def mock_has_ability(ship, ability_name, registry):
-            return ship.serial == 1 and ability_name == 'CloseWarpPoint'
-
-        filter_state = {
-            'show_damaged': True,
-            'show_undamaged': True,
-            'show_derelict': True,
-            'show_destroyed': True,
-            'close_warp': FilterState.NO,
-        }
-
-        with patch('game.strategy.services.component_inspector.ship_has_ability',
-                   side_effect=mock_has_ability):
-            result = filter_ships([ship_with, ship_without], filter_state)
-
-        assert len(result) == 1
-        assert result[0].serial == 2
-
-    def test_filter_hides_ships_with_destroy_star_ability(self):
-        """Filter hides ships with DestroyStar ability."""
-        from game.ui.screens.fleet_report_filters import filter_ships
-        from unittest.mock import patch
-
-        ship_with = make_mock_ship(serial=1, design_name="Star Destroyer")
-        ship_without = make_mock_ship(serial=2, design_name="Scout")
-
-        def mock_has_ability(ship, ability_name, registry):
-            return ship.serial == 1 and ability_name == 'DestroyStar'
-
-        filter_state = {
-            'show_damaged': True,
-            'show_undamaged': True,
-            'show_derelict': True,
-            'show_destroyed': True,
-            'destroy_star': FilterState.NO,
-        }
-
-        with patch('game.strategy.services.component_inspector.ship_has_ability',
-                   side_effect=mock_has_ability):
-            result = filter_ships([ship_with, ship_without], filter_state)
-
-        assert len(result) == 1
-        assert result[0].serial == 2
-
-    def test_filter_hides_ships_with_create_sphere_ability(self):
-        """Filter hides ships with CreateSphereWorld ability."""
-        from game.ui.screens.fleet_report_filters import filter_ships
-        from unittest.mock import patch
-
-        ship_with = make_mock_ship(serial=1, design_name="Sphere Builder")
-        ship_without = make_mock_ship(serial=2, design_name="Scout")
-
-        def mock_has_ability(ship, ability_name, registry):
-            return ship.serial == 1 and ability_name == 'CreateSphereWorld'
-
-        filter_state = {
-            'show_damaged': True,
-            'show_undamaged': True,
-            'show_derelict': True,
-            'show_destroyed': True,
-            'create_sphere': FilterState.NO,
+            filter_key: FilterState.NO,
         }
 
         with patch('game.strategy.services.component_inspector.ship_has_ability',

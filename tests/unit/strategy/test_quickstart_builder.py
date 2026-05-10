@@ -2,7 +2,6 @@
 Tests for QuickstartBuilder - Factory for creating pre-configured game sessions.
 
 Tests cover:
-- Fixture path functions (get_quickstart_fixtures_dir, get_quickstart_races_dir, get_quickstart_designs_dir)
 - QuickstartBuilder.load_test_race (valid, missing, invalid JSON)
 - QuickstartBuilder.build_1p_config (returns GameConfig, player count, is_human, prefix, defaults)
 - QuickstartBuilder.build_2p_config (player count, both human)
@@ -11,36 +10,17 @@ Tests cover:
 """
 import pytest
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from game.strategy.quickstart_builder import (
-    get_quickstart_races_dir,
-    get_quickstart_designs_dir,
     QuickstartBuilder,
     INITIAL_COMPLEXES,
 )
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.design_library import DesignLoadResult
-
-
-class TestStarterDataPathFunctions:
-    """Tests for starter data directory path functions."""
-
-    def test_get_quickstart_races_dir_returns_path(self):
-        """get_quickstart_races_dir returns a Path under data/."""
-        result = get_quickstart_races_dir()
-
-        assert isinstance(result, Path)
-        assert result.name == "races"
-
-    def test_get_quickstart_designs_dir_returns_path(self):
-        """get_quickstart_designs_dir returns a Path under data/."""
-        result = get_quickstart_designs_dir()
-
-        assert isinstance(result, Path)
-        assert result.name == "designs"
 
 
 class TestQuickstartBuilderLoadTestRace:
@@ -144,7 +124,7 @@ class TestQuickstartBuilderCopyDesigns:
         source_dir.mkdir()
 
         with patch(
-            "game.strategy.quickstart_builder.get_quickstart_designs_dir",
+            "game.strategy.quickstart_builder.Paths.get_starter_designs_dir",
             return_value=source_dir
         ):
             result = QuickstartBuilder.copy_quickstart_designs(str(tmp_path / "save"), [1])
@@ -161,7 +141,7 @@ class TestQuickstartBuilderCopyDesigns:
         save_path.mkdir()
 
         with patch(
-            "game.strategy.quickstart_builder.get_quickstart_designs_dir",
+            "game.strategy.quickstart_builder.Paths.get_starter_designs_dir",
             return_value=source_dir
         ):
             result = QuickstartBuilder.copy_quickstart_designs(str(save_path), [1, 2])
@@ -181,7 +161,7 @@ class TestQuickstartBuilderCopyDesigns:
         save_path.mkdir()
 
         with patch(
-            "game.strategy.quickstart_builder.get_quickstart_designs_dir",
+            "game.strategy.quickstart_builder.Paths.get_starter_designs_dir",
             return_value=source_dir
         ):
             result = QuickstartBuilder.copy_quickstart_designs(str(save_path), [1])
@@ -201,7 +181,7 @@ class TestQuickstartBuilderCopyDesigns:
         save_path.mkdir()
 
         with patch(
-            "game.strategy.quickstart_builder.get_quickstart_designs_dir",
+            "game.strategy.quickstart_builder.Paths.get_starter_designs_dir",
             return_value=source_dir
         ):
             with patch("shutil.copy2", side_effect=OSError("Permission denied")):
@@ -210,80 +190,73 @@ class TestQuickstartBuilderCopyDesigns:
         assert result is False
 
 
+def _make_planet(name="Home World"):
+    planet = MagicMock()
+    planet.name = name
+    planet.facilities = []
+    return planet
+
+
+def _make_empire(empire_id, colonies):
+    empire = MagicMock()
+    empire.id = empire_id
+    empire.colonies = colonies
+    return empire
+
+
+def _make_session(empires):
+    session = MagicMock()
+    session.empires = empires
+    return session
+
+
+@contextmanager
+def _patched_design_library(load_result=None):
+    """Patch DesignLibrary so `load_design_data` returns a controllable result.
+
+    Default: success with a minimal valid design dict.
+    Pass `load_result=DesignLoadResult.not_found("x")` to simulate missing designs.
+    """
+    if load_result is None:
+        load_result = DesignLoadResult.ok({"name": "Test Complex", "components": []})
+    with patch("game.strategy.quickstart_builder.DesignLibrary") as MockLibrary:
+        mock_lib = MagicMock()
+        mock_lib.load_design_data.return_value = load_result
+        MockLibrary.return_value = mock_lib
+        yield MockLibrary
+
+
 class TestQuickstartBuilderSpawnComplexes:
     """Tests for QuickstartBuilder.spawn_initial_complexes method."""
 
     def test_spawn_initial_complexes_no_empires(self, tmp_path):
         """spawn_initial_complexes returns True with no empires."""
-        session = MagicMock()
-        session.empires = []
-
-        result = QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
-
-        assert result is True
+        session = _make_session([])
+        assert QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session) is True
 
     def test_spawn_initial_complexes_empire_no_colonies(self, tmp_path):
         """spawn_initial_complexes skips empires with no colonies."""
-        empire = MagicMock()
-        empire.id = 1
-        empire.colonies = []
-
-        session = MagicMock()
-        session.empires = [empire]
-
-        result = QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
-
+        session = _make_session([_make_empire(1, colonies=[])])
         # Returns True, just skips that empire
-        assert result is True
+        assert QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session) is True
 
     def test_spawn_initial_complexes_uses_first_colony_as_home(self, tmp_path):
         """spawn_initial_complexes adds facilities to first colony."""
-        home_planet = MagicMock()
-        home_planet.name = "Home World"
-        home_planet.facilities = []
+        home_planet = _make_planet()
+        session = _make_session([_make_empire(1, colonies=[home_planet])])
 
-        empire = MagicMock()
-        empire.id = 1
-        empire.colonies = [home_planet]
-
-        session = MagicMock()
-        session.empires = [empire]
-
-        # Mock DesignLibrary to return valid design data
-        mock_design_data = {"name": "Test Complex", "components": []}
-        with patch(
-            "game.strategy.quickstart_builder.DesignLibrary"
-        ) as MockLibrary:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
-            MockLibrary.return_value = mock_lib
-
-            result = QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
+        with _patched_design_library():
+            QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
 
         # Should have added facilities to home_planet
         assert len(home_planet.facilities) == len(INITIAL_COMPLEXES)
 
     def test_spawn_initial_complexes_missing_design_returns_partial_success(self, tmp_path):
         """spawn_initial_complexes returns False when design missing."""
-        home_planet = MagicMock()
-        home_planet.name = "Home World"
-        home_planet.facilities = []
+        home_planet = _make_planet()
+        session = _make_session([_make_empire(1, colonies=[home_planet])])
 
-        empire = MagicMock()
-        empire.id = 1
-        empire.colonies = [home_planet]
-
-        session = MagicMock()
-        session.empires = [empire]
-
-        # Mock DesignLibrary to return not_found (design not found)
-        with patch(
-            "game.strategy.quickstart_builder.DesignLibrary"
-        ) as MockLibrary:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.not_found("test")
-            MockLibrary.return_value = mock_lib
-
+        with _patched_design_library(load_result=DesignLoadResult.not_found("test")):
             result = QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
 
         # Returns False because designs couldn't be loaded
@@ -293,25 +266,10 @@ class TestQuickstartBuilderSpawnComplexes:
         """spawn_initial_complexes creates PlanetaryFacility instances."""
         from game.strategy.data.planet import PlanetaryFacility
 
-        home_planet = MagicMock()
-        home_planet.name = "Home World"
-        home_planet.facilities = []
+        home_planet = _make_planet()
+        session = _make_session([_make_empire(1, colonies=[home_planet])])
 
-        empire = MagicMock()
-        empire.id = 1
-        empire.colonies = [home_planet]
-
-        session = MagicMock()
-        session.empires = [empire]
-
-        mock_design_data = {"name": "Test Complex", "components": []}
-        with patch(
-            "game.strategy.quickstart_builder.DesignLibrary"
-        ) as MockLibrary:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
-            MockLibrary.return_value = mock_lib
-
+        with _patched_design_library():
             QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
 
         # All facilities should be PlanetaryFacility instances
@@ -322,25 +280,10 @@ class TestQuickstartBuilderSpawnComplexes:
 
     def test_spawn_initial_complexes_facilities_are_operational(self, tmp_path):
         """spawn_initial_complexes creates operational facilities."""
-        home_planet = MagicMock()
-        home_planet.name = "Home World"
-        home_planet.facilities = []
+        home_planet = _make_planet()
+        session = _make_session([_make_empire(1, colonies=[home_planet])])
 
-        empire = MagicMock()
-        empire.id = 1
-        empire.colonies = [home_planet]
-
-        session = MagicMock()
-        session.empires = [empire]
-
-        mock_design_data = {"name": "Test Complex", "components": []}
-        with patch(
-            "game.strategy.quickstart_builder.DesignLibrary"
-        ) as MockLibrary:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
-            MockLibrary.return_value = mock_lib
-
+        with _patched_design_library():
             QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
 
         # All facilities should be operational
@@ -348,33 +291,14 @@ class TestQuickstartBuilderSpawnComplexes:
 
     def test_spawn_initial_complexes_multiple_empires(self, tmp_path):
         """spawn_initial_complexes handles multiple empires."""
-        home1 = MagicMock()
-        home1.name = "Home 1"
-        home1.facilities = []
+        home1 = _make_planet("Home 1")
+        home2 = _make_planet("Home 2")
+        session = _make_session([
+            _make_empire(1, colonies=[home1]),
+            _make_empire(2, colonies=[home2]),
+        ])
 
-        home2 = MagicMock()
-        home2.name = "Home 2"
-        home2.facilities = []
-
-        empire1 = MagicMock()
-        empire1.id = 1
-        empire1.colonies = [home1]
-
-        empire2 = MagicMock()
-        empire2.id = 2
-        empire2.colonies = [home2]
-
-        session = MagicMock()
-        session.empires = [empire1, empire2]
-
-        mock_design_data = {"name": "Test Complex", "components": []}
-        with patch(
-            "game.strategy.quickstart_builder.DesignLibrary"
-        ) as MockLibrary:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
-            MockLibrary.return_value = mock_lib
-
+        with _patched_design_library():
             result = QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
 
         assert result is True
@@ -383,25 +307,10 @@ class TestQuickstartBuilderSpawnComplexes:
 
     def test_spawn_initial_complexes_unique_instance_ids(self, tmp_path):
         """spawn_initial_complexes creates unique instance IDs."""
-        home_planet = MagicMock()
-        home_planet.name = "Home World"
-        home_planet.facilities = []
+        home_planet = _make_planet()
+        session = _make_session([_make_empire(1, colonies=[home_planet])])
 
-        empire = MagicMock()
-        empire.id = 1
-        empire.colonies = [home_planet]
-
-        session = MagicMock()
-        session.empires = [empire]
-
-        mock_design_data = {"name": "Test Complex", "components": []}
-        with patch(
-            "game.strategy.quickstart_builder.DesignLibrary"
-        ) as MockLibrary:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok(mock_design_data)
-            MockLibrary.return_value = mock_lib
-
+        with _patched_design_library():
             QuickstartBuilder.spawn_initial_complexes(str(tmp_path), session)
 
         # All instance_ids should be unique

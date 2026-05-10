@@ -125,10 +125,11 @@ class TestBuilderValidation:
         # If accepted, check if comp1 is still there.
         # If comp1 is there and comp2 is there -> Fail.
 
-        has_comp1 = any(c.id == "group_a_1" for c in self.ship.layers[LayerType.INNER].components)
-        has_comp2 = any(c.id == "group_a_2" for c in self.ship.layers[LayerType.INNER].components)
-
-        assert not (has_comp1 and has_comp2), "Should not allow multiple components from same exclusive group"
+        # PROJ-323 Task 5.12: pre-compute id-set once instead of two `any(...)` scans.
+        inner_component_ids = {c.id for c in self.ship.layers[LayerType.INNER].components}
+        assert not {"group_a_1", "group_a_2"}.issubset(inner_component_ids), (
+            "Should not allow multiple components from same exclusive group"
+        )
 
     def test_component_dependencies(self):
         """Step 4: Test logic that requires specific mounts."""

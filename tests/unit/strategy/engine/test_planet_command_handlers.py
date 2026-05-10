@@ -63,7 +63,7 @@ class TestIssuePlanetOrderCommandHandler:
         cmd.order_type = overrides.get('order_type', 'ACTIVATE_ABILITY')
         cmd.facility_instance_id = overrides.get('facility_instance_id', 'fac-1')
         cmd.ability_name = overrides.get('ability_name', 'PlanetaryShield')
-        cmd.component_key = overrides.get('component_key', None)
+        cmd.component_key = overrides.get('component_key', 'CORE:0:shield_gen')
         cmd.component_id = overrides.get('component_id', None)
         return cmd
 
@@ -127,6 +127,32 @@ class TestIssuePlanetOrderCommandHandler:
 
         assert not result.is_valid
         assert "ability_name" in result.message.lower()
+
+    def test_activate_without_component_key(self, mock_session, mock_planet):
+        """PROJ-393: Returns error when ACTIVATE_ABILITY lacks component_key."""
+        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
+
+        _session_with_planet(mock_session, mock_planet)
+
+        handler = IssuePlanetOrderCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd(component_key=None))
+
+        assert not result.is_valid
+        assert "component_key" in result.message.lower()
+
+    def test_deactivate_without_component_key(self, mock_session, mock_planet):
+        """PROJ-393: Returns error when DEACTIVATE_ABILITY lacks component_key."""
+        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
+
+        _session_with_planet(mock_session, mock_planet)
+
+        handler = IssuePlanetOrderCommandHandler()
+        result = handler.execute(mock_session, self._make_cmd(
+            order_type='DEACTIVATE_ABILITY', component_key=None
+        ))
+
+        assert not result.is_valid
+        assert "component_key" in result.message.lower()
 
     def test_activate_validation_failure(self, mock_session, mock_planet):
         """Returns error when validator rejects activation."""

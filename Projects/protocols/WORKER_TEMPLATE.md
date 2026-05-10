@@ -186,7 +186,7 @@ If verdict is STOP:
 
 ## Protocols Reference
 
-**Primary:** `Projects/protocols/08_automated_loop_protocol.md`
+**Primary:** `Projects/protocols/08_automated_loop_protocol.md` _(RETIRED — kept for historical reference; the automated-loop runner workflow is no longer active. Use `03a_continue_working.md` for the current autonomous-work loop.)_
 
 **Supporting:**
 - `02_plan_protocol.md` - Project plan usage

@@ -17,7 +17,7 @@ from game.core.constants import EARTH_MASS
 from game.core.string_utils import display_name
 from game.ui.utils.formatters import format_compact_number, format_signed_float
 from game.strategy.data.order_types import OrderType
-from game.strategy.formulas.habitability import score_planet_for_race
+from game.strategy.formulas.habitability import calculate_habitability
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
     is_warp_point, is_sector_environment, is_storm
@@ -91,7 +91,7 @@ def format_uncolonized_habitability_for_empire(
     species resident in the viewing empire on this uncolonized planet
     (PROJ-290 Phase 2).
 
-    Score = `int(round(score_planet_for_race(planet, race_config) * 100))`.
+    Score = `int(round(calculate_habitability(planet, race_config) * 100))`.
     List is sorted DESCENDING (best-fit first). Each entry reads as
     ` - {display_name}: {score}/100`. Empty resident-species set returns
     `""` so the caller can unconditionally concatenate.
@@ -126,7 +126,7 @@ def format_uncolonized_habitability_for_empire(
         race_config = race_registry.get_race(race_id)
         if race_config is None:
             continue
-        score = int(round(score_planet_for_race(planet, race_config) * 100))
+        score = int(round(calculate_habitability(planet, race_config) * 100))
         name = (
             getattr(race_config, "race_name", None)
             or getattr(race_config, "name", None)
@@ -154,10 +154,15 @@ def format_planet_info(
     """
     Format comprehensive planet information as HTML.
 
-    PROJ-289: when `view` is supplied, the per-species line is replaced
-    with an indented sub-block (habitability / happiness / growth rate /
-    food ratio / food allocation) per species. Legacy single-line layout
-    preserved when `view is None`.
+    PROJ-289: when `view` is supplied, the per-species sub-block
+    (habitability / happiness / growth rate / food ratio / food
+    allocation) is rendered for each species in the demographic view.
+
+    PROJ-397 Phase 3 Task 3.2: the pre-PROJ-289 single-line legacy
+    per-species layout was deleted. Owned planets without a view now
+    omit the per-species block entirely (a callable contract — tests
+    and snapshots that don't construct a facade simply get the
+    higher-level fields, not stale legacy markup).
 
     PROJ-290: when `planet.owner_id is None` AND both `empire` and
     `race_registry` are provided, appends an "uncolonized habitability
@@ -168,12 +173,9 @@ def format_planet_info(
     Args:
         planet: Planet object (IPlanet protocol).
         view: Optional ``ColonyDemographicView`` (PROJ-288/289). When
-            supplied, the per-species line is replaced with an indented
-            sub-block showing habitability / happiness / growth rate /
-            food ratio / food allocation per species. When ``None``, the
-            legacy single-line per-species rendering is preserved for
-            backward compatibility (uncolonized planets, snapshot tests,
-            callers without a facade).
+            supplied, the per-species sub-block is rendered for each
+            species. When ``None`` for an owned planet, the per-species
+            section is silently omitted (PROJ-397 Phase 3).
         empire: PROJ-290 — optional viewing empire. When provided
             together with `race_registry` AND the planet is unowned,
             triggers the uncolonized habitability section.
@@ -250,22 +252,16 @@ def format_planet_info(
                             f"&nbsp;&nbsp;&nbsp;\u2192 "
                             f"+{s.food_surplus_bonus:.2f} happiness<br>"
                         )
-            elif len(populations) > 0:
-                # Legacy single-line layout — preserved for callers that
-                # do not pass a `ColonyDemographicView` (uncolonized snapshots,
-                # legacy tests, pre-PROJ-289 panels).
-                for pop in populations:
-                    # Happiness indicator
-                    if pop.happiness >= 0.8:
-                        h_icon = "+"
-                    elif pop.happiness >= 0.4:
-                        h_icon = "~"
-                    else:
-                        h_icon = "-"
-
-                    cnt_str = format_compact_number(pop.count)
-
-                    text += f" - {pop.race_id}: {cnt_str} [{h_icon}]<br>"
+            # PROJ-397 Phase 3 Task 3.2: the legacy `view is None` /
+            # `elif len(populations) > 0` branch (single-line per-species
+            # layout) was deleted here. All production callers now thread
+            # a facade through PlanetReportPanel and fetch a
+            # ColonyDemographicView for owned planets, so the
+            # `view is not None` branch above is the only path. Owned-
+            # but-view-None now silently skips the per-species lines —
+            # legitimate for tests / snapshots that don't construct a
+            # facade. Uncolonized planets short-circuit on the outer
+            # `planet.owner_id is not None` check.
 
         # Show facilities/complexes list - IPlanet.facilities is always present (List)
         facilities = planet.facilities

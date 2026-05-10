@@ -3,11 +3,17 @@ Fleet Selection Window - Simple fleet selection dialog.
 
 Used when the player clicks a hex containing multiple fleets during a join order,
 allowing them to choose which fleet to join.
+
+PROJ-329A Phase 2 Task 2.2: Migrated to two-stage construction. Cheap
+state (display labels, label_to_fleet mapping, callback) lives before
+``super().__init__``; widget construction is behind
+``FleetSelectionUiBuilder`` so tests can swap in a Mock under
+``bypass_init``.
 """
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Callable, List
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 import pygame
 from pygame_gui.elements import UISelectionList, UIButton, UILabel
@@ -35,12 +41,54 @@ def _fleet_display_label(fleet: 'FleetInfo') -> str:
     return f"{fleet.name} — {fleet.composition_summary}"
 
 
+class FleetSelectionUiBuilder:
+    """Production widget builder. Constructs the label, selection list,
+    and Confirm/Cancel buttons.
+
+    Reads ``screen._display_labels`` (built in Stage 1) and writes
+    ``screen.label``, ``screen.selection_list``, ``screen.btn_confirm``,
+    ``screen.btn_cancel``.
+    """
+
+    def build(self, screen: "FleetSelectionWindow") -> None:
+        rect = screen.rect
+
+        screen.label = UILabel(
+            pygame.Rect(10, 10, rect.width - 20, 30),
+            "Available fleets:",
+            screen.ui_manager,
+            container=screen,
+        )
+
+        screen.selection_list = UISelectionList(
+            pygame.Rect(10, 45, rect.width - 20, rect.height - 120),
+            item_list=screen._display_labels,
+            manager=screen.ui_manager,
+            container=screen,
+        )
+
+        screen.btn_confirm = UIButton(
+            pygame.Rect(10, rect.height - 60, 120, 30),
+            "Confirm",
+            screen.ui_manager,
+            container=screen,
+        )
+
+        screen.btn_cancel = UIButton(
+            pygame.Rect(rect.width - 130, rect.height - 60, 120, 30),
+            "Cancel",
+            screen.ui_manager,
+            container=screen,
+        )
+
+
 class FleetSelectionWindow(StrategyModalWindow):
     """Modal dialog for selecting a fleet from a list.
 
     Follows the PlanetSelectionWindow pattern: UISelectionList + Confirm/Cancel.
 
     PROJ-313: migrated to StrategyModalWindow base class.
+    PROJ-329A Phase 2 Task 2.2: Two-stage construction.
     """
 
     def __init__(
@@ -52,6 +100,7 @@ class FleetSelectionWindow(StrategyModalWindow):
         *,
         window_manager: "StrategyWindowManager",
         window_title: str = "Select Fleet to Join",
+        ui_builder: Optional[FleetSelectionUiBuilder] = None,
     ):
         """Initialize fleet selection window.
 
@@ -62,48 +111,28 @@ class FleetSelectionWindow(StrategyModalWindow):
             on_selection_callback: Called with the selected FleetInfo.
             window_manager: PROJ-313 StrategyWindowManager for modal registration.
             window_title: Window title text.
+            ui_builder: Optional UI builder override (test seam). Production
+                callers leave this as None to use ``FleetSelectionUiBuilder``.
         """
+        # ---- Stage 1: cheap state ----
+        self.fleets = fleets
+        self.callback = on_selection_callback
+        self._display_labels = [_fleet_display_label(f) for f in fleets]
+        self._label_to_fleet = dict(zip(self._display_labels, fleets))
+
+        # ---- Stage 2: shell ----
         super().__init__(
             rect, manager, window_display_title=window_title,
             window_manager=window_manager,
         )
-        self.fleets = fleets
-        self.callback = on_selection_callback
 
-        # Build display labels and lookup mapping
-        self._display_labels = [_fleet_display_label(f) for f in fleets]
-        self._label_to_fleet = dict(zip(self._display_labels, fleets))
+        # ---- Stage 3: widgets ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
 
-        # Label
-        self.label = UILabel(
-            pygame.Rect(10, 10, rect.width - 20, 30),
-            "Available fleets:",
-            self.ui_manager,
-            container=self,
-        )
-
-        # Selection list
-        self.selection_list = UISelectionList(
-            pygame.Rect(10, 45, rect.width - 20, rect.height - 120),
-            item_list=self._display_labels,
-            manager=self.ui_manager,
-            container=self,
-        )
-
-        # Buttons
-        self.btn_confirm = UIButton(
-            pygame.Rect(10, rect.height - 60, 120, 30),
-            "Confirm",
-            self.ui_manager,
-            container=self,
-        )
-
-        self.btn_cancel = UIButton(
-            pygame.Rect(rect.width - 130, rect.height - 60, 120, 30),
-            "Cancel",
-            self.ui_manager,
-            container=self,
-        )
+        (ui_builder or FleetSelectionUiBuilder()).build(self)
 
     def update(self, time_delta) -> None:
         super().update(time_delta)

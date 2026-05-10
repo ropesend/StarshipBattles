@@ -16,6 +16,9 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from game.core.exceptions import TurnFailedError
+from game.ui.screens.turn_failed_dialog import TurnFailedDialog
+
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
 
@@ -119,13 +122,47 @@ class StrategyGameStateManager:
                 self._screen.draw(surface)
                 pygame.display.flip()
 
+        turn_failed = False
         try:
             # Process turn for all empires
             self._screen._facade.process_turn(progress_callback=_on_tick)
+        except TurnFailedError as e:
+            # PROJ-381 Phase 1 (B-5 CRITICAL): close the UI error boundary.
+            # Before this catch, an `EnginePhaseError` from any sub-engine
+            # phase propagated through `advance_turn` into the pygame
+            # event loop and exited the game via the top-level crash
+            # handler. State rollback already happened inside
+            # `TurnEngine.process_turn`; we only need to surface a modal
+            # to the player so the session continues.
+            #
+            # PROJ-381 Phase 3 (B-4): the facade converts
+            # `EnginePhaseError` → `TurnFailedError` so this UI catch
+            # never sees a domain-engine exception type. PROJ-409 MAJ-014
+            # removed the secondary defensive `except EnginePhaseError`
+            # block per CLAUDE.md Rule 4 — the facade is the only
+            # converter and a raw `EnginePhaseError` reaching the UI is a
+            # genuine bug we want to surface, not paper over. Direct
+            # facade-conversion coverage lives in PROJ-408 C-02
+            # (`tests/unit/strategy/facade/test_strategy_session_facade.py`
+            # ::TestProcessTurnErrorConversion).
+            turn_failed = True
+            logger.error(
+                "Turn processing failed in phase '%s': %s",
+                e.context.get("phase_name"), e,
+            )
+            self._show_turn_failed_dialog(e)
         finally:
             # Hide the per-tick line once the turn finishes (or aborts).
             self._screen.current_tick = None
             self._screen.total_ticks = None
+
+        if turn_failed:
+            # Rollback already restored pre-turn state in TurnEngine; skip
+            # auto-save and the event-log popup so neither operates on a
+            # half-applied turn. The player retries via the normal "End
+            # Turn" flow once they understand the failure.
+            self._screen.turn_processing = False
+            return []
 
         # Auto-save after turn processing
         # PROJ-208: Use facade.get_save_path() instead of session.save_path
@@ -226,6 +263,55 @@ class StrategyGameStateManager:
         # Update the player indicator after the bulk run completes.
         self._update_player_label()
         return completed
+
+    def _show_turn_failed_dialog(self, error: TurnFailedError) -> None:
+        """PROJ-381 / PROJ-395 (B-5 / CRIT-001): surface a modal for a TurnFailedError.
+
+        Builds an in-game modal so the player learns the turn was rolled
+        back without crashing the application. Uses
+        :class:`TurnFailedDialog` (a :class:`StrategyModalWindow`
+        subclass) so the dialog blocks strategy-screen input — Pattern
+        #31 modal tracking — preventing fleet commands or another
+        end-turn click while the error is visible. The dialog reads
+        ``phase_name``, ``tick``, ``turn_number``, and ``original_type``
+        from ``error.context`` and falls back to placeholders when keys
+        are absent so construction never raises.
+        """
+        ctx = error.context or {}
+        phase_name = ctx.get("phase_name", "unknown")
+        tick = ctx.get("tick", "?")
+        original_type = ctx.get("original_type", "Exception")
+
+        manager = getattr(self._screen.ui, "manager", None)
+        if manager is None:
+            # Headless / mocked environment with no UIManager — fall back to
+            # logging so the failure is still observable. This is rare but
+            # allows tests to assert the catch without instantiating
+            # pygame_gui's window.
+            logger.error(
+                "Turn failed but no UIManager available to show dialog "
+                "(phase=%s, tick=%s, original_type=%s)",
+                phase_name, tick, original_type,
+            )
+            return
+
+        width = getattr(self._screen.ui, "width", 1920)
+        height = getattr(self._screen.ui, "height", 1080)
+        rect = pygame.Rect(0, 0, 480, 280)
+        rect.center = (width // 2, height // 2)
+        # CRIT-001: thread the StrategyWindowManager through so the
+        # dialog auto-registers with iter_live_modals(). Falls back to
+        # None when the screen's UI mock omits ``window_manager`` (the
+        # dialog still constructs but does not participate in modal
+        # tracking — acceptable in headless tests; production always
+        # has a real manager).
+        window_manager = getattr(self._screen.ui, "window_manager", None)
+        TurnFailedDialog(
+            rect=rect,
+            manager=manager,
+            error=error,
+            window_manager=window_manager,
+        )
 
     def _pump_cancel_events(self) -> None:
         """Pump pygame events looking for Esc / QUIT to set the cancel flag.

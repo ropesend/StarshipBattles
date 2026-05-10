@@ -189,6 +189,37 @@ class TestSimulationBattleResolverBehavior:
         assert result.winner == 1
         assert result.tick_count == 250
 
+    def test_resolve_seed_returns_explicit_seed_without_rng(self):
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+
+        assert resolver._resolve_seed(12345) == 12345
+        assert not hasattr(resolver, "_seed_rng")
+
+    def test_resolve_seed_lazily_creates_and_reuses_rng(self, monkeypatch):
+        import random
+
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        created = []
+
+        class _FakeRandom:
+            def __init__(self):
+                self.values = [101, 202]
+                created.append(self)
+
+            def randint(self, low, high):
+                assert (low, high) == (0, 1000000)
+                return self.values.pop(0)
+
+        monkeypatch.setattr(random, "Random", _FakeRandom)
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+
+        assert resolver._resolve_seed(None) == 101
+        assert resolver._resolve_seed(None) == 202
+        assert len(created) == 1
+
 
 class TestSimulationBattleResolverDependencyInjection:
     """AI factory must be injectable; no direct AI-layer import at module level."""
@@ -336,3 +367,76 @@ class TestSimulationAdapterReplayId:
         mock_run.assert_called_once()
         assert result.replay_id == "brief-replay-uuid"
         assert result.replay_unavailable_reason is None
+
+
+class TestSimulationAdapterBattleContextPreservation:
+    """PROJ-381 Phase 3 (B-6): a SimulationException raised by run_battle
+    must be re-raised as BattleResolutionError carrying fleet_ids and
+    hex_coord context so crash dumps capture the situation."""
+
+    def test_validation_exception_wrapped_with_battle_context(self):
+        """PROJ-402: `run_battle` raises `ValidationException` for invalid
+        `ShipSpec.components` (battle_runner.py:640-652). The wrapper must
+        catch it (not just `SimulationException`) so the battle context
+        survives into crash dumps. This is the originally-required B-6
+        regression that PROJ-381 substituted."""
+        import pytest
+
+        from game.core.exceptions import BattleResolutionError, ValidationException
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet1.owner_id = 7
+        fleet1.hex_coord = (3, 4)
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet2.owner_id = 9
+        fleet2.hex_coord = (3, 4)
+
+        boom = ValidationException("invalid component")
+
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            side_effect=boom,
+        ):
+            with pytest.raises(BattleResolutionError) as exc_info:
+                resolver.resolve_battle([fleet1, fleet2])
+
+        ctx = exc_info.value.context or {}
+        assert ctx.get("fleet_ids") == [1, 2]
+        assert ctx.get("empire_ids") == [7, 9]
+        assert ctx.get("hex_coord") == (3, 4)
+        assert ctx.get("original_type") == "ValidationException"
+        assert exc_info.value.__cause__ is boom
+
+    def test_simulation_exception_wrapped_with_battle_context(self):
+        """Coverage for the existing `SimulationException` path — must not
+        regress when the catch tuple is widened."""
+        import pytest
+
+        from game.core.exceptions import BattleResolutionError, SimulationException
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet1.owner_id = 7
+        fleet1.hex_coord = (3, 4)
+        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet2.owner_id = 9
+        fleet2.hex_coord = (3, 4)
+
+        class _BoomSim(SimulationException):
+            pass
+
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            side_effect=_BoomSim("boom"),
+        ):
+            with pytest.raises(BattleResolutionError) as exc_info:
+                resolver.resolve_battle([fleet1, fleet2])
+
+        ctx = exc_info.value.context or {}
+        assert ctx.get("fleet_ids") == [1, 2]
+        assert ctx.get("empire_ids") == [7, 9]
+        assert ctx.get("hex_coord") == (3, 4)
+        assert isinstance(exc_info.value.__cause__, _BoomSim)

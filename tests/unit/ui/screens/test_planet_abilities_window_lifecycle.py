@@ -7,28 +7,54 @@ strategy mouse-wheel zoom dies for the rest of the session.
 
 Mirrors the lifecycle contract of ``PlanetListWindow`` /
 ``PlanetListRegistrar`` (the registered ``on_close_callback`` pattern).
+
+PROJ-329C Phase 1: migrated from ``__new__`` + ``__init__``-patch to
+``bypass_init`` + ``MockPlanetAbilitiesWindowUiBuilder``.
 """
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import pygame
 import pytest
+
+from tests.fixtures.planet_abilities_window_ui_builder import (
+    MockPlanetAbilitiesWindowUiBuilder,
+)
+from tests.fixtures.ui_widget_factory import bypass_init
 
 
 def _make_window(on_close_callback=None):
-    """Construct a PlanetAbilitiesWindow without booting pygame_gui.
+    """Construct a PlanetAbilitiesWindow under bypass_init.
 
-    Mirrors the ``__new__`` + ``__init__``-patch technique used in
-    ``test_empire_build_queue_window.py`` so we can exercise the kill()
-    contract without a live display.
+    Uses the two-stage construction seam (PROJ-329C Phase 1): Stage 1
+    runs (cheap state + delegates), Stage 2's ``StrategyModalWindow``
+    super-init short-circuits when ``bypass_init`` is set, Stage 3
+    invokes the supplied Mock builder which populates the widget slots
+    with MagicMocks.
     """
     from game.ui.screens.planet_abilities_window import PlanetAbilitiesWindow
 
-    with patch.object(PlanetAbilitiesWindow, "__init__",
-                      lambda self, *a, **kw: None):
-        win = PlanetAbilitiesWindow.__new__(PlanetAbilitiesWindow)
+    planet = MagicMock()
+    planet.name = "Test Planet"
+    planet.id = "test-planet-id"
+    planet.facilities = []
+    planet.populations = []
 
-    win._on_close_callback = on_close_callback
+    facade = MagicMock()
+    rect = pygame.Rect(0, 0, 600, 400)
+
+    with bypass_init(PlanetAbilitiesWindow):
+        win = PlanetAbilitiesWindow(
+            relative_rect=rect,
+            manager=MagicMock(),
+            planet=planet,
+            facade=facade,
+            window_manager=None,
+            on_close_callback=on_close_callback,
+            ui_builder=MockPlanetAbilitiesWindowUiBuilder(),
+        )
+
     return win
 
 

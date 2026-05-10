@@ -9,99 +9,58 @@ from game.simulation.components.abilities.base import AbilityScope
 from game.core.exceptions import ValidationException
 
 
-class TestStellarStabilizerAbility:
-    """Tests for StellarStabilizerAbility."""
+# PROJ-323 Task 3.16: Stellar/Warp Stabilizer near-identical test classes
+# collapsed into one parametrized class.
+@pytest.mark.parametrize(
+    "ability_cls,drain,activation,deactivation",
+    [
+        pytest.param(StellarStabilizerAbility, 250.0, 100, 20, id="StellarStabilizer"),
+        pytest.param(WarpFieldStabilizerAbility, 150.0, 75, 15, id="WarpFieldStabilizer"),
+    ],
+)
+class TestStabilizerAbility:
+    """Tests for StellarStabilizer and WarpFieldStabilizer abilities."""
 
-    def test_construction_from_dict(self):
+    def test_construction_from_dict(self, ability_cls, drain, activation, deactivation):
         comp = MagicMock()
         data = {
-            "energy_drain_rate": 250.0,
-            "activation_time": 100,
-            "deactivation_time": 20,
+            "energy_drain_rate": drain,
+            "activation_time": activation,
+            "deactivation_time": deactivation,
             "scope": "system",
         }
-        ability = StellarStabilizerAbility(comp, data)
+        ability = ability_cls(comp, data)
 
-        assert ability.energy_drain_rate == 250.0
-        assert ability.activation_time == 100
-        assert ability.deactivation_time == 20
+        assert ability.energy_drain_rate == drain
+        assert ability.activation_time == activation
+        assert ability.deactivation_time == deactivation
         assert ability.scope == AbilityScope.SYSTEM
 
-    def test_defaults(self):
+    def test_defaults(self, ability_cls, drain, activation, deactivation):
         comp = MagicMock()
-        ability = StellarStabilizerAbility(comp, {})
+        ability = ability_cls(comp, {})
         assert ability.energy_drain_rate == 0.0
         assert ability.scope == AbilityScope.SYSTEM  # default_scope
 
-    def test_sector_scope_allowed(self):
+    def test_sector_scope_allowed(self, ability_cls, drain, activation, deactivation):
         comp = MagicMock()
-        ability = StellarStabilizerAbility(comp, {"scope": "sector"})
+        ability = ability_cls(comp, {"scope": "sector"})
         assert ability.scope == AbilityScope.SECTOR
 
-    def test_planet_scope_rejected(self):
+    def test_planet_scope_rejected(self, ability_cls, drain, activation, deactivation):
         comp = MagicMock()
         with pytest.raises(ValidationException):
-            StellarStabilizerAbility(comp, {"scope": "planet"})
+            ability_cls(comp, {"scope": "planet"})
 
-    def test_get_primary_value(self):
+    def test_get_primary_value(self, ability_cls, drain, activation, deactivation):
         comp = MagicMock()
-        ability = StellarStabilizerAbility(comp, {"energy_drain_rate": 250.0})
-        assert ability.get_primary_value() == 250.0
+        ability = ability_cls(comp, {"energy_drain_rate": drain})
+        assert ability.get_primary_value() == drain
 
-    def test_get_ui_rows(self):
+    def test_get_ui_rows(self, ability_cls, drain, activation, deactivation):
         comp = MagicMock()
-        ability = StellarStabilizerAbility(comp, {
-            "energy_drain_rate": 250.0, "scope": "system"
-        })
-        rows = ability.get_ui_rows()
-        labels = [r['label'] for r in rows]
-        assert 'Energy Drain' in labels
-        assert 'Scope' in labels
-
-
-class TestWarpFieldStabilizerAbility:
-    """Tests for WarpFieldStabilizerAbility."""
-
-    def test_construction_from_dict(self):
-        comp = MagicMock()
-        data = {
-            "energy_drain_rate": 150.0,
-            "activation_time": 75,
-            "deactivation_time": 15,
-            "scope": "system",
-        }
-        ability = WarpFieldStabilizerAbility(comp, data)
-
-        assert ability.energy_drain_rate == 150.0
-        assert ability.activation_time == 75
-        assert ability.deactivation_time == 15
-        assert ability.scope == AbilityScope.SYSTEM
-
-    def test_defaults(self):
-        comp = MagicMock()
-        ability = WarpFieldStabilizerAbility(comp, {})
-        assert ability.energy_drain_rate == 0.0
-        assert ability.scope == AbilityScope.SYSTEM
-
-    def test_sector_scope_allowed(self):
-        comp = MagicMock()
-        ability = WarpFieldStabilizerAbility(comp, {"scope": "sector"})
-        assert ability.scope == AbilityScope.SECTOR
-
-    def test_planet_scope_rejected(self):
-        comp = MagicMock()
-        with pytest.raises(ValidationException):
-            WarpFieldStabilizerAbility(comp, {"scope": "planet"})
-
-    def test_get_primary_value(self):
-        comp = MagicMock()
-        ability = WarpFieldStabilizerAbility(comp, {"energy_drain_rate": 150.0})
-        assert ability.get_primary_value() == 150.0
-
-    def test_get_ui_rows(self):
-        comp = MagicMock()
-        ability = WarpFieldStabilizerAbility(comp, {
-            "energy_drain_rate": 150.0, "scope": "system"
+        ability = ability_cls(comp, {
+            "energy_drain_rate": drain, "scope": "system"
         })
         rows = ability.get_ui_rows()
         labels = [r['label'] for r in rows]

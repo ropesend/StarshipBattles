@@ -9,16 +9,6 @@ import pytest
 class TestSimulationConstants:
     """Tests for SimulationConstants class."""
 
-    def test_constants_exist(self):
-        """SimulationConstants should be importable with expected attributes."""
-        from game.core.constants import SimulationConstants
-
-        assert hasattr(SimulationConstants, 'TICKS_PER_SECOND')
-        assert hasattr(SimulationConstants, 'WARP_CHARGE_TICKS')
-        assert hasattr(SimulationConstants, 'DEFAULT_MAP_EDGE_THRESHOLD')
-        assert hasattr(SimulationConstants, 'DEFAULT_MAP_SIZE')
-        assert hasattr(SimulationConstants, 'DEFAULT_MAX_TICKS')
-
     def test_warp_charge_timing(self):
         """Warp charge should be 5 seconds at standard tick rate."""
         from game.core.constants import SimulationConstants

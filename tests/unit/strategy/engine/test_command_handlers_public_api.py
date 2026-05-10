@@ -1,13 +1,14 @@
-"""Contract test for the public API of game.strategy.engine.command_handlers (PROJ-309 sub-phase 3.5).
+"""Contract test for the public API of game.strategy.engine.handlers.
 
-The 1076-line monolith was decomposed into a package of cohesive sub-modules
-under `game.strategy.engine.handlers/`. The original `command_handlers.py`
-becomes a re-export shim (Option A) so that ~30 import sites — production
-(`game_session.py`) plus tests — keep working unchanged.
+PROJ-309 sub-phase 3.5 decomposed the original 1076-line `command_handlers.py`
+monolith into a package of cohesive sub-modules under
+`game.strategy.engine.handlers/`. PROJ-383 (2026-05-08) deleted the
+transitional `command_handlers.py` re-export shim and migrated all callers
+to the canonical package.
 
-This contract test asserts every symbol on the documented public-API list
-remains importable from `game.strategy.engine.command_handlers`. The same
-symbols must also be importable from their new canonical home in `handlers/`.
+This contract test asserts every public symbol remains importable from the
+canonical `game.strategy.engine.handlers` package, and that the dispatch
+factory registers a handler for every declared Command class.
 """
 
 import pytest
@@ -46,13 +47,13 @@ PUBLIC_COMMAND_HANDLER_SYMBOLS = (
 
 
 @pytest.mark.parametrize("symbol", PUBLIC_COMMAND_HANDLER_SYMBOLS)
-def test_symbol_importable_from_shim(symbol: str) -> None:
-    """Every public symbol remains importable from the original module path."""
-    import game.strategy.engine.command_handlers as shim
+def test_symbol_importable_from_handlers_package(symbol: str) -> None:
+    """Every public symbol remains importable from the canonical package."""
+    import game.strategy.engine.handlers as handlers
 
-    assert hasattr(shim, symbol), (
-        f"{symbol!r} is no longer exported from game.strategy.engine.command_handlers. "
-        "Production callers (game_session.py) and ~30 test sites depend on this path."
+    assert hasattr(handlers, symbol), (
+        f"{symbol!r} is no longer exported from game.strategy.engine.handlers. "
+        "Production callers (game_session.py) and test sites depend on this path."
     )
 
 
@@ -66,7 +67,7 @@ def test_create_default_registry_dispatches_all_command_classes() -> None:
     `game.strategy.engine.commands`. Catches the case where a handler moves
     to a new module but its `registry.register(...)` call gets dropped.
     """
-    from game.strategy.engine.command_handlers import create_default_registry
+    from game.strategy.engine.handlers import create_default_registry
     import game.strategy.engine.commands as commands_module
 
     registry = create_default_registry()

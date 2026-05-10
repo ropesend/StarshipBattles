@@ -1,0 +1,112 @@
+{
+  "group": "G5",
+  "label": "Projects/protocols",
+  "total": 15,
+  "dead_refs": [
+    {
+      "doc": "Projects/protocols/01_initialize_project.md",
+      "line": 282,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/02_plan_protocol.md",
+      "line": 94,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/02_plan_protocol.md",
+      "line": 96,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/02_plan_protocol.md",
+      "line": 112,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/02_plan_protocol.md",
+      "line": 136,
+      "reference": "tests/unit/test_feature.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/02_plan_protocol.md",
+      "line": 179,
+      "reference": "tests/unit/test_user_preferences.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/03a_continue_working.md",
+      "line": 122,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/03a_continue_working.md",
+      "line": 125,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/03a_continue_working.md",
+      "line": 137,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/03a_continue_working.md",
+      "line": 218,
+      "reference": "tests/unit/test_cache.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/03b_parallel_projects.md",
+      "line": 42,
+      "reference": "game/ui/panels/fleet_report.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/09_review_project.md",
+      "line": 423,
+      "reference": "game/strategy/old_module.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/12_create_from_test_review.md",
+      "line": 401,
+      "reference": "tests/_helpers/ship_factory.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/12_create_from_test_review.md",
+      "line": 425,
+      "reference": "game/_helpers/",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "Projects/protocols/14_create_from_error_audit.md",
+      "line": 124,
+      "reference": "game/services/json_utils.py",
+      "prefix": "game",
+      "exists": false
+    }
+  ]
+}

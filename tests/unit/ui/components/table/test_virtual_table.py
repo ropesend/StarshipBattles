@@ -40,6 +40,38 @@ class MockDataSource:
 class TestVirtualTable:
     """Tests for the VirtualTable class."""
 
+    @pytest.fixture(autouse=True)
+    def patched_pygame_gui(self):
+        """Patch the 5 pygame_gui imports VirtualTable consults — universal across this class.
+
+        PROJ-327 Phase 1 (PROJ-322 Task 3.14 resolution): all 16 tests in this class
+        previously declared the same 5 ``@patch`` decorators
+        (UIImage / UILabel / UIVerticalScrollBar / UIPanel / TableHeader).
+        Centralizing into a single autouse fixture removes 80 of the 81
+        ``@patch`` decorations from this file, collapsing 5 patch-context
+        enter/exits per test to 1 nested context enter/exit.
+
+        The fixture stays function-scoped (the autouse default): each test gets
+        fresh Mock instances, so per-test ``assert mock_X.called`` checks remain
+        sound (no cross-test state leak).
+
+        Tests that need to observe or configure a specific mock add
+        ``patched_pygame_gui`` to their signature and read
+        ``patched_pygame_gui["UIPanel"]`` (etc.).
+        """
+        with patch("game.ui.components.table.virtual_table.UIImage") as image, \
+             patch("game.ui.components.table.virtual_table.UILabel") as label, \
+             patch("game.ui.components.table.virtual_table.UIVerticalScrollBar") as scrollbar, \
+             patch("game.ui.components.table.virtual_table.UIPanel") as panel, \
+             patch("game.ui.components.table.virtual_table.TableHeader") as header:
+            yield {
+                "UIImage": image,
+                "UILabel": label,
+                "UIVerticalScrollBar": scrollbar,
+                "UIPanel": panel,
+                "TableHeader": header,
+            }
+
     @pytest.fixture
     def mock_manager(self):
         """Create a mock pygame_gui manager."""
@@ -75,18 +107,9 @@ class TestVirtualTable:
         """Create mock data source."""
         return MockDataSource(rows=20)
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_constructor_creates_components(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -95,6 +118,10 @@ class TestVirtualTable:
     ):
         """Constructor should create header panel, list viewport, scroll bar."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
+        mock_header_class = patched_pygame_gui["TableHeader"]
 
         # Setup mock panel to return proper rect
         mock_list_panel = MagicMock()
@@ -116,18 +143,9 @@ class TestVirtualTable:
         # TableHeader created
         assert mock_header_class.called
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_rebuild_row_pool_creates_correct_count(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -136,6 +154,8 @@ class TestVirtualTable:
     ):
         """rebuild_row_pool should create (visible_height / row_height) + 2 rows."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
 
         # Setup mock panel with controlled rect
         mock_list_panel = MagicMock()
@@ -165,18 +185,9 @@ class TestVirtualTable:
         # Row pool should have 9 rows, but let's check it was built
         assert len(table._row_pool) >= 1
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_update_scroll_bar_sets_visible_percentage(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -185,6 +196,9 @@ class TestVirtualTable:
     ):
         """update_scroll_bar should set visible percentage correctly."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
 
         mock_scrollbar = MagicMock()
         mock_scrollbar_class.return_value = mock_scrollbar
@@ -209,18 +223,9 @@ class TestVirtualTable:
         # Check set_visible_percentage was called
         assert mock_scrollbar.set_visible_percentage.called
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_force_update_resets_dirty_tracking(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -229,6 +234,9 @@ class TestVirtualTable:
     ):
         """force_update should reset dirty tracking state."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
 
         mock_scrollbar = MagicMock()
         mock_scrollbar.start_percentage = 0.0
@@ -256,18 +264,9 @@ class TestVirtualTable:
         assert table._last_scroll_pct == -1.0
         assert table._last_row_count == -1
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_kill_cleans_up_all_widgets(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -276,6 +275,10 @@ class TestVirtualTable:
     ):
         """kill() should clean up all widgets."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
+        mock_header_class = patched_pygame_gui["TableHeader"]
 
         mock_header = MagicMock()
         mock_header_class.return_value = mock_header
@@ -302,18 +305,9 @@ class TestVirtualTable:
         # Scroll bar should be killed
         mock_scrollbar.kill.assert_called()
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_handle_click_delegates_to_selection_strategy(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -322,6 +316,9 @@ class TestVirtualTable:
         """handle_click should delegate to selection strategy."""
         from game.ui.components.table.virtual_table import VirtualTable
         from game.ui.components.table.selection import SingleSelect
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
 
         mock_scrollbar = MagicMock()
         mock_scrollbar.start_percentage = 0.0
@@ -349,18 +346,9 @@ class TestVirtualTable:
         assert result == 2
         assert selection.get_selected_indices() == {2}
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_check_header_presses_delegates_to_header(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -369,6 +357,10 @@ class TestVirtualTable:
     ):
         """check_header_presses should delegate to TableHeader."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
+        mock_header_class = patched_pygame_gui["TableHeader"]
 
         mock_header = MagicMock()
         mock_header.check_presses.return_value = {"swap_column": None, "sort_column": "name"}
@@ -394,18 +386,9 @@ class TestVirtualTable:
         mock_header.check_presses.assert_called()
         assert result == {"swap_column": None, "sort_column": "name"}
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_selected_row_highlight_color(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -419,18 +402,9 @@ class TestVirtualTable:
         assert VirtualTable.SELECTED_COLOR == pygame.Color(60, 80, 120)
         assert VirtualTable.UNSELECTED_COLOR == pygame.Color(35, 35, 35)
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_initial_dirty_tracking_state(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -439,6 +413,9 @@ class TestVirtualTable:
     ):
         """Initial dirty tracking state should trigger first update."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
 
         mock_scrollbar = MagicMock()
         mock_scrollbar.start_percentage = 0.0
@@ -462,18 +439,9 @@ class TestVirtualTable:
         assert table._last_scroll_pct == -1.0
         assert table._last_row_count == -1
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_handle_click_returns_minus_one_on_miss(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -482,6 +450,9 @@ class TestVirtualTable:
     ):
         """handle_click should return -1 when click misses all rows."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
 
         mock_scrollbar = MagicMock()
         mock_scrollbar.start_percentage = 0.0
@@ -506,18 +477,9 @@ class TestVirtualTable:
 
         assert result == -1
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_rebuild_headers_delegates_to_header(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -526,6 +488,10 @@ class TestVirtualTable:
     ):
         """rebuild_headers should delegate to TableHeader.rebuild()."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
+        mock_header_class = patched_pygame_gui["TableHeader"]
 
         mock_header = MagicMock()
         mock_header_class.return_value = mock_header
@@ -553,27 +519,26 @@ class TestVirtualTable:
         mock_header.rebuild.assert_called_once()
 
     @patch("game.ui.components.table.virtual_table.UIButton", create=True)
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_rebuild_row_pool_handles_actions_column(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
         mock_button_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
         selection_strategy,
     ):
-        """rebuild_row_pool should create action buttons if type is 'actions'."""
+        """rebuild_row_pool should create action buttons if type is 'actions'.
+
+        Phase 1 note: UIButton is the only "few-test" patch (single test)
+        so it stays as ``@patch`` per design.md Phase 1 Task 1.5.
+        The other 5 patches come from the autouse ``patched_pygame_gui``
+        fixture.
+        """
         from game.ui.components.table.virtual_table import VirtualTable
         from game.ui.components.table.column_manager import TableColumnManager
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
 
         cols = [
             {"id": "actions", "label": "Actions", "width": 100, "visible": True, "type": "actions"},
@@ -582,12 +547,12 @@ class TestVirtualTable:
 
         mock_list_panel = MagicMock()
         mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
-        
+
         def panel_side_effect(*args, **kwargs):
             mock = MagicMock()
             mock.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
             return mock
-            
+
         mock_panel_class.side_effect = panel_side_effect
 
         table = VirtualTable(
@@ -611,18 +576,9 @@ class TestVirtualTable:
             assert "actions_dict" in actions_widget, "actions_dict dictionary missing from actions widget"
             assert set(actions_widget["actions_dict"].keys()) == {"up", "down", "remove", "add"}
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_update_visible_rows_handles_actions_column(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -631,6 +587,9 @@ class TestVirtualTable:
     ):
         """update_visible_rows should skip set_text for 'actions' to avoid KeyError 'el'."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
 
         mock_scrollbar = MagicMock()
         mock_scrollbar.start_percentage = 0.0
@@ -675,18 +634,9 @@ class TestVirtualTable:
         ],
         ids=["first", "middle", "last", "single"],
     )
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_update_visible_rows_disables_edge_action_buttons(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         column_manager,
@@ -702,6 +652,9 @@ class TestVirtualTable:
         edges coincide so both up and down are disabled.
         """
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
 
         mock_scrollbar = MagicMock()
         mock_scrollbar.start_percentage = 0.0
@@ -769,18 +722,9 @@ class TestVirtualTable:
         if not exp_down_disabled:
             assert down_btn.enable.called, "down should be enabled when not on last row"
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_check_action_button_press(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -789,7 +733,9 @@ class TestVirtualTable:
     ):
         """check_action_button_press should map UI element to action and row_index."""
         from game.ui.components.table.virtual_table import VirtualTable
-        
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+
         mock_list_panel = MagicMock()
         mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
         mock_panel_class.return_value = mock_list_panel
@@ -818,18 +764,9 @@ class TestVirtualTable:
         result = table.check_action_button_press(MagicMock())
         assert result is None
 
-    @patch("game.ui.components.table.virtual_table.UIImage")
-    @patch("game.ui.components.table.virtual_table.UILabel")
-    @patch("game.ui.components.table.virtual_table.UIVerticalScrollBar")
-    @patch("game.ui.components.table.virtual_table.UIPanel")
-    @patch("game.ui.components.table.virtual_table.TableHeader")
     def test_kill_cleans_up_actions(
         self,
-        mock_header_class,
-        mock_panel_class,
-        mock_scrollbar_class,
-        mock_label_class,
-        mock_image_class,
+        patched_pygame_gui,
         mock_panel,
         mock_manager,
         data_source,
@@ -838,6 +775,8 @@ class TestVirtualTable:
     ):
         """kill() should destroy any UIButtons held in actions_dict."""
         from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
 
         mock_list_panel = MagicMock()
         mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
@@ -859,6 +798,230 @@ class TestVirtualTable:
 
         # Method handles multi buttons, so it might be called multiple times via values()
         assert fake_btn.kill.call_count >= 2
+
+    @patch("game.ui.components.table.virtual_table.UIButton", create=True)
+    def test_rebuild_row_pool_handles_replay_action_column(
+        self,
+        mock_button_class,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """rebuild_row_pool creates the single-button replay action widgets."""
+        from game.ui.components.table.column_manager import TableColumnManager
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+        columns = [{
+            "id": "replay",
+            "label": "Replay",
+            "width": 90,
+            "visible": True,
+            "type": "replay_action",
+            "action": "view_replay",
+        }]
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            TableColumnManager(columns),
+            selection_strategy,
+            row_height=40,
+        )
+
+        assert mock_button_class.call_count == len(table._row_pool)
+        widget = table._row_pool[0]["widgets"][0]
+        assert widget["type"] == "replay_action"
+        assert widget["action"] == "view_replay"
+        assert widget["button"] is mock_button_class.return_value
+
+    def test_replay_action_button_updates_when_replay_id_present(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """Rows with replay ids enable the replay button and set its tooltip."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
+        mock_scrollbar = MagicMock()
+        mock_scrollbar.start_percentage = 0.0
+        mock_scrollbar_class.return_value = mock_scrollbar
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+
+        source = MagicMock()
+        source.get_row_count.return_value = 1
+        source.get_row_highlight.return_value = None
+        source.get_cell_replay_id.return_value = "replay-1"
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+        button = MagicMock()
+        table.data_source = source
+        table._row_pool = [{
+            "bg": MagicMock(),
+            "row_index": -1,
+            "_last_color": None,
+            "widgets": [{
+                "type": "replay_action",
+                "col": {"id": "replay", "type": "replay_action"},
+                "button": button,
+                "action": "replay",
+            }],
+        }]
+
+        table.update_visible_rows()
+
+        button.enable.assert_called_once()
+        button.disable.assert_not_called()
+        assert button.tool_tip_text == "Replay this battle"
+
+    def test_replay_action_button_disabled_uses_reason_tooltip(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """Rows without replay ids disable the button with structural reason text."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_scrollbar_class = patched_pygame_gui["UIVerticalScrollBar"]
+        mock_scrollbar = MagicMock()
+        mock_scrollbar.start_percentage = 0.0
+        mock_scrollbar_class.return_value = mock_scrollbar
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+
+        source = MagicMock()
+        source.get_row_count.return_value = 1
+        source.get_row_highlight.return_value = None
+        source.get_cell_replay_id.return_value = None
+        source.get_cell_replay_unavailable_reason.return_value = "no_ships"
+
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+        button = MagicMock()
+        table.data_source = source
+        table._row_pool = [{
+            "bg": MagicMock(),
+            "row_index": -1,
+            "_last_color": None,
+            "widgets": [{
+                "type": "replay_action",
+                "col": {"id": "replay", "type": "replay_action"},
+                "button": button,
+                "action": "replay",
+            }],
+        }]
+
+        table.update_visible_rows()
+
+        button.disable.assert_called_once()
+        button.enable.assert_not_called()
+        assert button.tool_tip_text.startswith("No combat")
+        assert "neither side had any ships" in button.tool_tip_text
+
+    def test_check_action_button_press_maps_replay_action(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """check_action_button_press maps replay-action buttons to row actions."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+        replay_button = MagicMock()
+        bg = MagicMock()
+        bg.visible = True
+        table._row_pool = [{
+            "bg": bg,
+            "row_index": 7,
+            "widgets": [{
+                "type": "replay_action",
+                "button": replay_button,
+                "action": "view_replay",
+            }],
+        }]
+
+        assert table.check_action_button_press(replay_button) == ("view_replay", 7)
+
+    def test_kill_cleans_up_replay_action_button(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """kill destroys the single-button replay action widget."""
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 200
+        )
+        table = VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+        replay_button = MagicMock()
+        table._row_pool.append({
+            "bg": MagicMock(),
+            "widgets": [{
+                "type": "replay_action",
+                "button": replay_button,
+            }],
+        })
+
+        table.kill()
+
+        replay_button.kill.assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -928,3 +1091,329 @@ class TestDisabledReplayTooltip:
         assert _disabled_replay_tooltip(_Old(), 0) == (
             "No replay available — older save."
         )
+
+
+# ===========================================================================
+# PROJ-373 Phase 3 — Row-pool reuse guard
+#
+# `rebuild_row_pool()` should be a no-op when the table dimensions
+# `(list_panel_height, row_height)` are unchanged since the last build —
+# the existing pool is still correctly sized. Saves ~1.5s/click in the
+# subset of cases where the row pool would otherwise be rebuilt.
+# ===========================================================================
+
+
+class TestRowPoolReuseGuard:
+    """PROJ-373 Phase 3: rebuild_row_pool guards against redundant rebuilds."""
+
+    @pytest.fixture(autouse=True)
+    def patched_pygame_gui(self):
+        """Reuse the same patches as TestVirtualTable."""
+        with patch("game.ui.components.table.virtual_table.UIImage") as image, \
+             patch("game.ui.components.table.virtual_table.UILabel") as label, \
+             patch("game.ui.components.table.virtual_table.UIVerticalScrollBar") as scrollbar, \
+             patch("game.ui.components.table.virtual_table.UIPanel") as panel, \
+             patch("game.ui.components.table.virtual_table.TableHeader") as header:
+            yield {
+                "UIImage": image,
+                "UILabel": label,
+                "UIVerticalScrollBar": scrollbar,
+                "UIPanel": panel,
+                "TableHeader": header,
+            }
+
+    @pytest.fixture
+    def mock_manager(self):
+        return MagicMock()
+
+    @pytest.fixture
+    def mock_panel(self):
+        panel = MagicMock()
+        panel.get_relative_rect.return_value = pygame.Rect(0, 0, 300, 400)
+        return panel
+
+    @pytest.fixture
+    def column_manager(self):
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        return TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+        ])
+
+    @pytest.fixture
+    def selection_strategy(self):
+        from game.ui.components.table.selection import SingleSelect
+
+        return SingleSelect()
+
+    @pytest.fixture
+    def data_source(self):
+        return MockDataSource(rows=5)
+
+    def _build_table(self, patched_pygame_gui, mock_panel, mock_manager,
+                     data_source, column_manager, selection_strategy,
+                     list_panel_height: int = 200):
+        from game.ui.components.table.virtual_table import VirtualTable
+
+        mock_panel_class = patched_pygame_gui["UIPanel"]
+        mock_panel_class.return_value.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, list_panel_height
+        )
+        return VirtualTable(
+            mock_panel,
+            mock_manager,
+            data_source,
+            column_manager,
+            selection_strategy,
+        )
+
+    def test_rebuild_skipped_when_dimensions_unchanged(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """Calling rebuild_row_pool a second time with identical dimensions
+        must not trigger a fresh widget tear-down/rebuild."""
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        # Snapshot the pool's bg widgets (not the list itself)
+        first_bgs = [row["bg"] for row in table._row_pool]
+        first_kill_count = sum(bg.kill.call_count for bg in first_bgs)
+
+        # Call rebuild again — dimensions unchanged
+        table.rebuild_row_pool()
+
+        # Same widgets — none of the previous bgs were killed
+        new_kill_count = sum(bg.kill.call_count for bg in first_bgs)
+        assert new_kill_count == first_kill_count
+        # And the pool's bgs are unchanged (same objects, same length)
+        current_bgs = [row["bg"] for row in table._row_pool]
+        assert current_bgs == first_bgs
+
+    def test_rebuild_runs_when_panel_height_changes(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """When the list panel's height changes, the pool must be rebuilt
+        so visible-row count is recalculated."""
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+            list_panel_height=200,
+        )
+        first_pool = list(table._row_pool)
+
+        # Simulate a panel-height change. _list_view_panel is a MagicMock
+        # whose get_relative_rect returns a configurable rect.
+        table._list_view_panel.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 280, 600
+        )
+        table.rebuild_row_pool()
+
+        # The first-pool bgs were killed during teardown
+        for row in first_pool:
+            assert row["bg"].kill.called
+
+    def test_rebuild_runs_when_row_height_changes(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """Mutating row_height invalidates the pool dimensions."""
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_pool = list(table._row_pool)
+        # Mutate row_height
+        table._row_height = table._row_height * 2
+        table.rebuild_row_pool()
+        for row in first_pool:
+            assert row["bg"].kill.called
+
+    def test_force_update_does_not_force_pool_rebuild(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """force_update only resets dirty-tracking for visible-row updates,
+        not the pool dims cache."""
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_bgs = [row["bg"] for row in table._row_pool]
+        table.force_update()
+        table.rebuild_row_pool()
+        # Dims unchanged — pool widgets reused
+        assert [row["bg"] for row in table._row_pool] == first_bgs
+        # And no kills were issued on the existing widgets
+        assert all(bg.kill.call_count == 0 for bg in first_bgs)
+
+    def test_rebuild_runs_when_panel_width_changes(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        column_manager,
+        selection_strategy,
+    ):
+        """PROJ-373 review MAJ-001: width-only resize must invalidate the pool.
+
+        Row backgrounds are sized to ``panel_rect.width`` (virtual_table.py:198);
+        a width change without a height change leaves stale-width row
+        backgrounds and broken cell layouts.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+            list_panel_height=200,
+        )
+        first_pool = list(table._row_pool)
+
+        # Width changes (280 → 200), height unchanged.
+        table._list_view_panel.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 200, 200
+        )
+        table.rebuild_row_pool()
+
+        for row in first_pool:
+            assert row["bg"].kill.called, (
+                "width change must invalidate the pool"
+            )
+
+    def test_rebuild_runs_when_visible_columns_toggled(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """PROJ-373 review MAJ-002: a visibility toggle on the column manager
+        must invalidate the pool.
+
+        Production sites in ``data_list_window_mixin``, ``event_log_window``,
+        ``fleet_report_window``, ``empire_build_queue_window`` all call
+        ``column_manager.toggle_column()`` followed by
+        ``virtual_table.rebuild_row_pool()`` and expect the pool to reflect
+        the new visible-column set. Without this guard input, the rebuild
+        is silently skipped because (height, row_height) did not change.
+        """
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        column_manager = TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+            {"id": "value", "label": "Value", "width": 80, "visible": True},
+        ])
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_pool = list(table._row_pool)
+
+        # Hide one column. Panel dimensions and row_height do NOT change.
+        column_manager.toggle_column("value")
+        table.rebuild_row_pool()
+
+        for row in first_pool:
+            assert row["bg"].kill.called, (
+                "visibility toggle must invalidate the pool"
+            )
+
+    def test_rebuild_runs_when_columns_reordered(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """PROJ-373 review MAJ-002: a column-order swap must invalidate the
+        pool. Header-drag swap path in
+        ``data_list_window_mixin._run_update_template`` and equivalents
+        depends on a rebuild after ``swap_column``.
+        """
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        column_manager = TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+            {"id": "value", "label": "Value", "width": 80, "visible": True},
+        ])
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_pool = list(table._row_pool)
+
+        column_manager.swap_column("name", 1)
+        table.rebuild_row_pool()
+
+        for row in first_pool:
+            assert row["bg"].kill.called, (
+                "column reorder must invalidate the pool"
+            )
+
+    def test_column_config_change_triggers_rebuild(
+        self,
+        patched_pygame_gui,
+        mock_panel,
+        mock_manager,
+        data_source,
+        selection_strategy,
+    ):
+        """PROJ-376 Phase 3 (PROJ-373 review MIN-005): adding a column to the
+        column manager — without changing panel dimensions or row_height —
+        must invalidate the pool. Confirms the visible-column fingerprint
+        (``virtual_table.py:163-174``) covers config changes that go beyond
+        toggle / reorder, e.g. a new column appearing at runtime.
+        """
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        column_manager = TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+            {"id": "value", "label": "Value", "width": 80, "visible": True},
+        ])
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            data_source, column_manager, selection_strategy,
+        )
+        first_pool = list(table._row_pool)
+        assert len(column_manager.get_visible_columns()) == 2
+
+        # Add a third column. Panel dimensions and row_height do NOT change.
+        # No public ``add_column`` API exists; mutate the internal list as the
+        # column-manager allows direct dict-mutation on visibility/order paths.
+        column_manager._columns.append(
+            {"id": "extra", "label": "Extra", "width": 60, "visible": True}
+        )
+        assert len(column_manager.get_visible_columns()) == 3
+
+        table.rebuild_row_pool()
+
+        for row in first_pool:
+            assert row["bg"].kill.called, (
+                "column-config change (added column) must invalidate the pool"
+            )
+        # New pool reflects the 3-column config.
+        assert len(column_manager.get_visible_columns()) == 3

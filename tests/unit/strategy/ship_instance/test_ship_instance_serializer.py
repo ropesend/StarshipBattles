@@ -68,19 +68,6 @@ class TestToDict:
         data = ShipInstanceSerializer.to_dict(full_ship)
         assert 'component_damage' not in data
 
-    def test_from_dict_ignores_legacy_component_damage_key(self):
-        """Old saves containing `component_damage` load without error;
-        the key is simply ignored. Per CLAUDE.md saves-are-disposable
-        policy we don't migrate — but we must not crash."""
-        data = {
-            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
-            # Legacy key from a pre-PROJ-276 save; should be ignored.
-            'component_damage': {'laser_1': 5, 'shield_2': 10},
-        }
-        # Should not raise.
-        instance = ShipInstanceSerializer.from_dict(data)
-        assert instance.components == {}
-
     def test_cargo_contents_omitted_when_empty(self):
         """to_dict does not include cargo_contents key when empty."""
         ship = ShipInstance(
@@ -119,9 +106,45 @@ class TestFromDict:
         mock_registries = MagicMock()
         data = {
             'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            'components': {},
         }
         instance = ShipInstanceSerializer.from_dict(data, registries=mock_registries)
         assert instance._registries is mock_registries
+
+    def test_missing_components_raises_persistence_exception(self):
+        """PROJ-404: missing `components` key routes through require_keys() and
+        raises PersistenceException, not raw KeyError."""
+        data = {
+            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            # No 'components' key
+        }
+        with pytest.raises(PersistenceException):
+            ShipInstanceSerializer.from_dict(data)
+
+    def test_legacy_resource_levels_field_is_not_accepted(self):
+        """PROJ-404 / Rule 3: the `resource_levels` rename fallback is
+        deleted. A legacy payload that supplies only `resource_levels`
+        deserializes with empty consumables (it is treated as if the field
+        were absent), not silently mapped to `consumable_levels`."""
+        data = {
+            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            'components': {},
+            'resource_levels': {'fuel': 99.0, 'energy': 99.0},
+        }
+        instance = ShipInstanceSerializer.from_dict(data)
+        # Legacy field is ignored — does NOT populate consumable_levels.
+        assert instance.consumable_levels == {}
+
+    def test_canonical_consumable_levels_round_trip(self):
+        """PROJ-404: positive regression — current canonical shape using
+        `consumable_levels` deserializes correctly."""
+        data = {
+            'instance_id': 'x', 'design_id': 'd', 'name': 'n', 'owner_id': 0,
+            'components': {},
+            'consumable_levels': {'fuel': 75.0, 'energy': 50.0},
+        }
+        instance = ShipInstanceSerializer.from_dict(data)
+        assert instance.consumable_levels == {'fuel': 75.0, 'energy': 50.0}
 
 
 class TestClone:

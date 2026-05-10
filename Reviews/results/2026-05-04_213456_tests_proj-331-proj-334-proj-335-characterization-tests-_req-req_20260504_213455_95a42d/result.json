@@ -1,0 +1,12 @@
+{
+  "request_id": "req_20260504_213455_95a42d",
+  "review_dir": "Reviews/results/2026-05-04_213456_tests_proj-331-proj-334-proj-335-characterization-tests-_req-req_20260504_213455_95a42d",
+  "report_path": "Reviews/results/2026-05-04_213456_tests_proj-331-proj-334-proj-335-characterization-tests-_req-req_20260504_213455_95a42d/report.md",
+  "findings": {
+    "critical": 0,
+    "major": 4,
+    "minor": 5,
+    "observation": 4
+  },
+  "completed_at": "2026-05-04T22:30:00Z"
+}

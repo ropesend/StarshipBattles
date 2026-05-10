@@ -1,0 +1,79 @@
+[
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 335,
+    "variable": "_default_asset_manager",
+    "function": "get_default_asset_manager",
+    "context": "global _default_asset_manager"
+  },
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 343,
+    "variable": "_default_asset_manager",
+    "function": "set_default_asset_manager",
+    "context": "global _default_asset_manager"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 293,
+    "variable": "_default_manager",
+    "function": "set_default_registry_manager",
+    "context": "global _default_manager"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 305,
+    "variable": "_default_manager",
+    "function": "get_default_registry_manager",
+    "context": "global _default_manager"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 467,
+    "variable": "_default_provider",
+    "function": "get_default_registry_provider",
+    "context": "global _default_provider"
+  },
+  {
+    "file": "game/simulation/entities/stat_contributors/registry.py",
+    "line": 107,
+    "variable": "CREW_PRIORITY_REGISTRY",
+    "function": "unregister_crew_priority",
+    "context": "global CREW_PRIORITY_REGISTRY"
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 187,
+    "variable": "_default_ship_materializer",
+    "function": "get_default_ship_materializer",
+    "context": "global _default_ship_materializer"
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 203,
+    "variable": "_default_ship_materializer",
+    "function": "set_default_ship_materializer",
+    "context": "global _default_ship_materializer"
+  },
+  {
+    "file": "game/strategy/data/homeworld_presets.py",
+    "line": 32,
+    "variable": "_presets_cache",
+    "function": "load_homeworld_presets",
+    "context": "global _presets_cache"
+  },
+  {
+    "file": "game/strategy/data/homeworld_presets.py",
+    "line": 136,
+    "variable": "_presets_cache",
+    "function": "clear_cache",
+    "context": "global _presets_cache"
+  },
+  {
+    "file": "game/ui/screens/setup_screen.py",
+    "line": 53,
+    "variable": "_ship_factory",
+    "function": "_get_ship_factory",
+    "context": "global _ship_factory"
+  }
+]

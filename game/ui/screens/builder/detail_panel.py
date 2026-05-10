@@ -8,6 +8,10 @@ Cross-layer imports (acceptable for builder UI):
 """
 from __future__ import annotations
 
+# PROJ-382 Phase 3 (Pattern #12): bare ``json`` import preserved because
+# ``json_utils`` has no string-formatter (dumps) helper — only file-IO
+# wrappers.  This call is in-memory pretty-printing for a debug popup,
+# not persistence; routing through json_utils would add no benefit.
 import json
 import logging
 import pygame
@@ -16,7 +20,7 @@ import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from game.core.constants import LayerType  # Canonical location for LayerType
 from game.core.paths import Paths
-from .modifier_logic import ModifierLogic, ModifierLogicService
+from .modifier_logic import ModifierLogicService
 from game.ui.fonts import get_font
 
 logger = logging.getLogger(__name__)
@@ -24,20 +28,20 @@ from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CR
 from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT, GRID_BG, TEXT_ITEM
 
 class ComponentDetailPanel:
-    def __init__(self, manager, rect, event_bus=None, modifier_logic=None):
+    def __init__(self, manager, rect, *, modifier_logic: ModifierLogicService, event_bus=None):
         self.manager = manager
         self.rect = rect
-        
+
         self.panel = UIPanel(
             relative_rect=rect,
             manager=manager,
             object_id='#detail_panel'
         )
-        
+
         if event_bus:
             event_bus.subscribe("SELECTION_CHANGED", self.on_selection_changed)
-        
-        self._logic = modifier_logic if modifier_logic is not None else ModifierLogic
+
+        self._logic = modifier_logic
 
         self.current_component = None
         self.last_html = ""

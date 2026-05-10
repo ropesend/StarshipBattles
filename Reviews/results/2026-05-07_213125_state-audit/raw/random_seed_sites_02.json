@@ -1,0 +1,7 @@
+[
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 250,
+    "call": "random.seed"
+  }
+]

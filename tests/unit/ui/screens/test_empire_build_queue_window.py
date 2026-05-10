@@ -45,7 +45,7 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     Sets up minimal state for testing business logic.
     """
     from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
-    from game.ui.screens.builder.event_bus import EventBus
+    from game.ui.screens.builder.event_bus import WorkshopEventBus
     from game.ui.screens.empire_build_queue_viewmodel import EmpireBuildQueueViewModel
 
     if sources is None:
@@ -75,7 +75,7 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.ui_manager = MagicMock()
 
     # MVVM components - ViewModel owns the state
-    win._event_bus = EventBus()
+    win._event_bus = WorkshopEventBus()
     win._viewmodel = EmpireBuildQueueViewModel(win._event_bus, sources)
 
     # Filter manager (for column definitions)
@@ -103,8 +103,33 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.sidebar_panel = MagicMock()
     win.row_elements = []
 
-    # PROJ-208: Session for command dispatch (None = fallback to direct append)
-    win._session = None
+    # PROJ-208 / PROJ-393: facade is the only command-dispatch surface.
+    # The old None-session fallback that mutated source.construction_queue
+    # in-place was deleted; the test facade mock simulates that behavior so
+    # existing assertions on `source.construction_queue` keep working.
+    def _fake_handle_command(cmd):
+        # Locate the source whose queue_id (or owner_entity.id for fleet/planet)
+        # matches the command, and append.
+        from game.strategy.engine.commands import AddToConstructionQueueCommand
+        if isinstance(cmd, AddToConstructionQueueCommand):
+            for src in sources:
+                if cmd.queue_id is not None and src.queue_id == cmd.queue_id:
+                    src.construction_queue.append({
+                        "design_id": cmd.design_id,
+                        "type": cmd.category,
+                        "target_planet_id": cmd.target_planet_id,
+                    })
+                    return MagicMock(is_valid=True)
+                if cmd.queue_id is None and getattr(src.owner_entity, "id", None) == cmd.entity_id:
+                    src.construction_queue.append({
+                        "design_id": cmd.design_id,
+                        "type": cmd.category,
+                        "target_planet_id": cmd.target_planet_id,
+                    })
+                    return MagicMock(is_valid=True)
+        return MagicMock(is_valid=True)
+    win._facade = MagicMock()
+    win._facade.handle_command = MagicMock(side_effect=_fake_handle_command)
 
     # Column manager (Phase 3 sorting/reordering) - now TableColumnManager
     win._column_manager = MagicMock()
@@ -177,6 +202,64 @@ class TestWindowInitialization:
         cb = MagicMock()
         win = _make_window(on_navigate=cb)
         assert win.on_navigate_to_hex is cb
+
+    def test_add_item_to_source_routes_command_through_facade(self):
+        """PROJ-408 C-01: `_add_item_to_source` MUST dispatch
+        ``AddToConstructionQueueCommand`` through ``self._facade.handle_command``.
+
+        Replaces a prior PROJ-397 F-05 introspection-only test that asserted
+        the constructor accepted a required ``facade`` kwarg without ever
+        constructing or exercising the class. This test:
+
+        1. Constructs an ``EmpireBuildQueueWindow`` (via the suite's
+           ``_make_window`` helper, which wires a ``MagicMock`` facade with
+           a real ``handle_command`` mock).
+        2. Calls ``_add_item_to_source`` — the real production code path
+           that PROJ-393 Task 2.5 narrowed to facade-only dispatch.
+        3. Asserts the facade received exactly one command, that the
+           command type is ``AddToConstructionQueueCommand``, and that
+           the command carries the design_id, category, and queue_id
+           threaded from the source/item.
+
+        A regression that re-introduces the deleted "no facade injected"
+        in-place mutation fallback (PROJ-393 Task 2.5), or that bypasses
+        the facade by mutating ``source.construction_queue`` directly,
+        would fail here because ``handle_command`` would not be called.
+        """
+        from game.strategy.engine.commands import (
+            AddToConstructionQueueCommand,
+            BuildEntityType,
+        )
+
+        source = _make_source(
+            queue_id="planet_1_base",
+            display_name="Alpha - Base",
+            can_build_ships=True,
+            queue_items=[],
+        )
+        # Give owner_entity a stable id and the planet_type marker the
+        # production code reads to choose BuildEntityType.PLANET.
+        source.owner_entity.id = 42
+        source.owner_entity.planet_type = "rocky"
+
+        win = _make_window(sources=[source])
+        item = {"design_id": "frigate-mk1", "target_planet_id": None}
+
+        win._add_item_to_source(source, item, item_type="ship")
+
+        # Facade must have been invoked exactly once.
+        assert win._facade.handle_command.call_count == 1, (
+            "Production code must dispatch via the facade, not mutate "
+            "construction_queue in place. PROJ-393 Task 2.5 deleted the "
+            "no-facade fallback path."
+        )
+        (cmd,), _ = win._facade.handle_command.call_args
+        assert isinstance(cmd, AddToConstructionQueueCommand)
+        assert cmd.design_id == "frigate-mk1"
+        assert cmd.category == "ship"
+        assert cmd.queue_id == "planet_1_base"
+        assert cmd.entity_id == 42
+        assert cmd.entity_type == BuildEntityType.PLANET
 
 
 # =======================================================================

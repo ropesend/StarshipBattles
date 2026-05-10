@@ -16,19 +16,16 @@ def mock_design_library():
 
 
 @pytest.fixture
-def mock_session():
-    """Create mock session with player_empire."""
-    session = Mock()
-    session.active_empire = Mock()
-    session.active_empire.empire_theme_id = "Federation"
-    return session
+def mock_theme_id_supplier():
+    """PROJ-396 MAJ-002: narrow zero-arg theme-id supplier."""
+    return lambda: "Federation"
 
 
 @pytest.fixture
-def portrait_loader(mock_design_library, mock_session):
+def portrait_loader(mock_design_library, mock_theme_id_supplier):
     """Create BuildQueuePortraitLoader with mocks."""
     from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
-    return BuildQueuePortraitLoader(mock_design_library, mock_session)
+    return BuildQueuePortraitLoader(mock_design_library, mock_theme_id_supplier)
 
 
 class TestResourceIconLoading:
@@ -73,13 +70,15 @@ class TestResourceIconLoading:
             assert surface.get_height() == 20, f"{resource} default height should be 20"
 
     def test_load_resource_icons_fallback_on_missing_file(
-        self, mock_design_library, mock_session):
+        self, mock_design_library, mock_theme_id_supplier):
         """load_resource_icons creates fallback surfaces when files missing."""
         from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 
         # Patch pygame.image.load to raise FileNotFoundError
         with patch('pygame.image.load', side_effect=FileNotFoundError("not found")):
-            loader = BuildQueuePortraitLoader(mock_design_library, mock_session)
+            loader = BuildQueuePortraitLoader(
+                mock_design_library, mock_theme_id_supplier
+            )
             icons = loader.load_resource_icons(icon_size=20)
 
             # Should still return all 5 resources with fallback surfaces

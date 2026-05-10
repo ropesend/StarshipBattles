@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
     from game.strategy.engine.commands import Command
     from game.strategy.engine.game_session import GameSession
+    from game.core.registry import GameRegistries
 
 
 class StrategySessionFacade:
@@ -172,140 +173,44 @@ class StrategySessionFacade:
         resolving movement, and processing AI actions. PROJ-254: invalidates
         every per-turn cache after the session advances.
 
+        PROJ-381 Phase 3 (B-4): catches the domain-engine
+        :class:`EnginePhaseError` and re-raises as a facade-level
+        :class:`TurnFailedError` so the UI never has to import a
+        sub-engine exception type. The original error is preserved on
+        ``__cause__`` and the same context dict travels through.
+
         Args:
             progress_callback: Issue #7 — optional per-tick callback
                 ``(current_tick, total_ticks)`` forwarded to the underlying
                 ``GameSession.process_turn`` so the strategy screen can
                 repaint the "PROCESSING TURN..." overlay between ticks.
+
+        Raises:
+            TurnFailedError: If a sub-engine phase failure escaped the
+                rollback boundary in ``GameSession.process_turn``.
         """
-        self._session.process_turn(progress_callback=progress_callback)
+        from game.core.exceptions import EnginePhaseError, TurnFailedError
+
+        try:
+            self._session.process_turn(progress_callback=progress_callback)
+        except EnginePhaseError as e:
+            raise TurnFailedError(
+                message=str(e),
+                code=e.code,
+                context=dict(e.context or {}),
+            ) from e
         self._state.invalidate_all()
 
-    # --- Command dispatch helpers (forwarders) ---
-
-    def dispatch_issue_colonize(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueColonizeCommand."""
-        return self._command_slice.dispatch_issue_colonize(**kwargs)
-
-    def dispatch_issue_move(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueMoveCommand."""
-        return self._command_slice.dispatch_issue_move(**kwargs)
-
-    def dispatch_issue_intercept(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueInterceptCommand."""
-        return self._command_slice.dispatch_issue_intercept(**kwargs)
-
-    def dispatch_issue_join_fleet(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueJoinFleetCommand."""
-        return self._command_slice.dispatch_issue_join_fleet(**kwargs)
-
-    def dispatch_queue_colonize_mission(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch QueueColonizeMissionCommand."""
-        return self._command_slice.dispatch_queue_colonize_mission(**kwargs)
-
-    def dispatch_clear_orders(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch ClearOrdersCommand."""
-        return self._command_slice.dispatch_clear_orders(**kwargs)
-
-    def dispatch_issue_transfer(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueTransferCommand."""
-        return self._command_slice.dispatch_issue_transfer(**kwargs)
-
-    def dispatch_issue_implode_planet(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueImplodePlanetCommand."""
-        return self._command_slice.dispatch_issue_implode_planet(**kwargs)
-
-    def dispatch_issue_stellerate_star(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueStellerateStarCommand."""
-        return self._command_slice.dispatch_issue_stellerate_star(**kwargs)
-
-    def dispatch_issue_open_warp_point(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueOpenWarpPointCommand."""
-        return self._command_slice.dispatch_issue_open_warp_point(**kwargs)
-
-    def dispatch_issue_close_warp_point(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueCloseWarpPointCommand."""
-        return self._command_slice.dispatch_issue_close_warp_point(**kwargs)
-
-    def dispatch_issue_create_dyson_sphere(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueCreateDysonSphereCommand."""
-        return self._command_slice.dispatch_issue_create_dyson_sphere(**kwargs)
-
-    def dispatch_issue_self_destruct(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueSelfDestructCommand."""
-        return self._command_slice.dispatch_issue_self_destruct(**kwargs)
-
-    def dispatch_queue_implode_planet_mission(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch QueueImplodePlanetMissionCommand."""
-        return self._command_slice.dispatch_queue_implode_planet_mission(**kwargs)
-
-    def dispatch_queue_stellerate_star_mission(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch QueueStellerateStarMissionCommand."""
-        return self._command_slice.dispatch_queue_stellerate_star_mission(**kwargs)
-
-    def dispatch_queue_open_warp_point_mission(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch QueueOpenWarpPointMissionCommand."""
-        return self._command_slice.dispatch_queue_open_warp_point_mission(**kwargs)
-
-    def dispatch_queue_close_warp_point_mission(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch QueueCloseWarpPointMissionCommand."""
-        return self._command_slice.dispatch_queue_close_warp_point_mission(**kwargs)
-
-    def dispatch_queue_create_dyson_sphere_mission(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch QueueCreateDysonSphereMissionCommand."""
-        return self._command_slice.dispatch_queue_create_dyson_sphere_mission(**kwargs)
-
-    def dispatch_issue_warp(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueWarpCommand."""
-        return self._command_slice.dispatch_issue_warp(**kwargs)
-
-    def dispatch_issue_build_order(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssueBuildOrderCommand."""
-        return self._command_slice.dispatch_issue_build_order(**kwargs)
-
-    def dispatch_remove_build_order(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch RemoveBuildOrderCommand."""
-        return self._command_slice.dispatch_remove_build_order(**kwargs)
-
-    def dispatch_split_fleet(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch SplitFleetCommand."""
-        return self._command_slice.dispatch_split_fleet(**kwargs)
-
-    def dispatch_delete_order(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch DeleteOrderCommand."""
-        return self._command_slice.dispatch_delete_order(**kwargs)
-
-    def dispatch_reorder_order(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch ReorderOrderCommand."""
-        return self._command_slice.dispatch_reorder_order(**kwargs)
-
-    def dispatch_add_to_construction_queue(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch AddToConstructionQueueCommand."""
-        return self._command_slice.dispatch_add_to_construction_queue(**kwargs)
-
-    def dispatch_remove_from_construction_queue(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch RemoveFromConstructionQueueCommand."""
-        return self._command_slice.dispatch_remove_from_construction_queue(**kwargs)
-
-    def dispatch_reorder_construction_queue(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch ReorderConstructionQueueCommand."""
-        return self._command_slice.dispatch_reorder_construction_queue(**kwargs)
-
-    def dispatch_issue_planet_order(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch IssuePlanetOrderCommand."""
-        return self._command_slice.dispatch_issue_planet_order(**kwargs)
-
-    def dispatch_clear_planet_orders(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch ClearPlanetOrdersCommand."""
-        return self._command_slice.dispatch_clear_planet_orders(**kwargs)
-
-    def dispatch_delete_planet_order(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch DeletePlanetOrderCommand."""
-        return self._command_slice.dispatch_delete_planet_order(**kwargs)
-
-    def dispatch_set_atmosphere_target(self, **kwargs) -> ValidationResult:
-        """Helper to dispatch SetAtmosphereTargetCommand."""
-        return self._command_slice.dispatch_set_atmosphere_target(**kwargs)
+    # --- Command dispatch helpers ---
+    #
+    # PROJ-371 Phase 2: 31 hand-written ``dispatch_*`` forwarders
+    # (~150 LOC) collapsed to a class-level loop that derives one bound
+    # method per ``CommandSpec.facade_helper_name`` from
+    # ``command_registry``. The loop runs once at module import (see
+    # ``_install_dispatch_forwarders`` below) so the methods exist on
+    # ``StrategySessionFacade`` itself — ``hasattr(class, name)`` and
+    # ``inspect.getmembers`` both see them, and tests can monkey-patch
+    # ``facade.dispatch_X = MagicMock(...)`` at instance scope.
 
     # =========================================================================
     # QUERIES (Read Path) — Return DTOs only, never domain objects
@@ -459,6 +364,16 @@ class StrategySessionFacade:
         """Get the session-scoped race registry (PROJ-287)."""
         return self._economy_slice.get_race_registry()
 
+    def get_registries(self) -> "GameRegistries":
+        """Get the session-scoped game registries (PROJ-382 Phase 1).
+
+        UI screens that need to call helpers expecting ``registries=`` (e.g.
+        ``collect_build_queues_at_hex``) pull the bundle through the facade
+        rather than reaching into ``session.registries`` directly.  Read-only
+        access — callers must not mutate the returned object.
+        """
+        return self._session.registries
+
     # --- Event log queries (PROJ-77; BUG-123 per-empire scoping) ---
 
     def get_turn_events(
@@ -500,3 +415,50 @@ class StrategySessionFacade:
     def can_move_to(self, fleet_id: int, target_hex: HexCoord) -> ValidationResult:
         """Check if a fleet can move to a target hex by previewing a path."""
         return self._fleet_slice.can_move_to(fleet_id, target_hex)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-371 Phase 2 — auto-install ``dispatch_*`` forwarders on the class.
+# ---------------------------------------------------------------------------
+#
+# Each spec's ``facade_helper_name`` becomes a bound method that proxies to
+# the same name on ``self._command_slice``. The slice's ``__getattr__``
+# resolver looks the spec up in ``command_registry.specs_by_facade_helper()``
+# and returns a closure that instantiates the Command DTO from kwargs and
+# forwards to ``handle_command``.
+#
+# Defining the methods on the class (not via ``__getattr__``) keeps them
+# visible to ``hasattr(StrategySessionFacade, name)``, ``inspect.getmembers``,
+# and the public-API contract test in
+# ``tests/unit/strategy/facade/test_strategy_session_facade_public_api.py``.
+
+def _install_dispatch_forwarders() -> None:
+    from game.strategy.engine.commands.registry import (
+        command_registry,
+        seed_default_commands,
+    )
+
+    if len(command_registry) == 0:
+        seed_default_commands(command_registry)
+
+    def _make_forwarder(helper_name: str):
+        def _dispatch(self, **kwargs) -> ValidationResult:
+            return getattr(self._command_slice, helper_name)(**kwargs)
+
+        _dispatch.__name__ = helper_name
+        _dispatch.__qualname__ = f"StrategySessionFacade.{helper_name}"
+        _dispatch.__doc__ = (
+            f"Helper to dispatch the Command associated with "
+            f"facade_helper_name={helper_name!r} (PROJ-371)."
+        )
+        return _dispatch
+
+    for spec in command_registry.all():
+        helper = spec.facade_helper_name
+        if helper is None:
+            continue
+        if not hasattr(StrategySessionFacade, helper):
+            setattr(StrategySessionFacade, helper, _make_forwarder(helper))
+
+
+_install_dispatch_forwarders()

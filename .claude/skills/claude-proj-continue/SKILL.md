@@ -9,10 +9,14 @@ argument-hint: <project-number>
 
 **Protocols:**
 - `Projects/protocols/02_plan_protocol.md` (how to use the plan)
-- `Projects/protocols/03a_continue_working.md` (autonomous work loop)
+- `Projects/protocols/03a_continue_working.md` (autonomous work loop — the TDD inner loop)
+- `Projects/protocols/03c_phase_aware_execution.md` (phase DAG + cumulative reviews — used when the project's `plan.md` carries the `**Execution Protocol:** 03c-phase-aware-execution` marker)
 - `Projects/protocols/context_config.md` (threshold + handoff template)
 
-Read and follow all three protocol files.
+Read and follow all four protocol files. **Routing:** if `plan.md` has the
+03c marker, work proceeds under 03c (project branch + phase worktrees +
+cumulative reviews). Otherwise legacy 03a flow on `main` applies. Do NOT
+infer routing from anything else.
 
 ## Principle
 
@@ -71,6 +75,43 @@ Read in this order:
 python Projects/scripts/project_status.py PROJ-$0
 python Projects/scripts/current_task.py PROJ-$0
 ```
+
+**For 03c projects** (plan.md has `**Execution Protocol:** 03c-phase-aware-execution`):
+
+```bash
+python Projects/scripts/phase_dag.py PROJ-$0 status
+python Projects/scripts/phase_dag.py PROJ-$0 eligible
+python Projects/scripts/pending_reviews.py PROJ-$0
+```
+
+If the project branch (`proj/PROJ-$0/main`) does not exist yet (this is the
+first 03c execution session), create it from the current `main` tip and
+commit any new planning artifacts to it before spawning phase work:
+
+```bash
+git branch proj/PROJ-$0/main main
+git checkout proj/PROJ-$0/main
+# (planning artifacts already on main are reachable; new edits commit here)
+```
+
+To start work on a phase, prefer worktree spawn:
+
+```bash
+python Projects/scripts/spawn_phase_worker.py PROJ-$0 phase_<id>
+```
+
+If the DAG has only one eligible phase and no live siblings, you may
+continue work directly in the project worktree without spawning. When the
+phase is complete:
+
+```bash
+python Projects/scripts/phase_complete.py PROJ-$0 phase_<id> \
+    [--repo .worktrees/phases/PROJ-$0/phase_<id>]
+```
+
+This handles validate + tests + commit + temp-integration merge + SHA-pinned
+review dispatch automatically. See
+`Projects/protocols/03c_phase_aware_execution.md` for the full lifecycle.
 
 **FIRST TIME on a new project:** also run `pytest tests/` (full, no
 --testmon) to establish baseline and initialize testmon.

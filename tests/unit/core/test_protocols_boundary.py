@@ -8,8 +8,10 @@ import pytest
 
 from game.core.protocols import (
     IPostBattleShip,
+    IResourceHolder,
     IResourceReader,
     is_post_battle_ship,
+    is_resource_holder,
     is_resource_reader,
 )
 from game.core.constants import LayerType
@@ -140,6 +142,48 @@ class TestIResourceReaderConformance:
         """get_max_value for unknown resource should return 0."""
         assert resource_registry.get_max_value('unknown') == 0.0
 
+    def test_registry_get_resource_names(self, resource_registry):
+        """get_resource_names should expose registered resource keys."""
+        assert set(resource_registry.get_resource_names()) == {"fuel", "energy"}
+
+
+class TestIResourceHolderConformance:
+    """Test structural conformance for resource-holding post-battle objects."""
+
+    def test_complete_resource_holder_satisfies_protocol(self):
+        """Objects with resource and battle-state attributes satisfy IResourceHolder."""
+        holder = type(
+            "ResourceHolderDouble",
+            (),
+            {
+                "resources": object(),
+                "hp": 10,
+                "max_hp": 20,
+                "is_alive": True,
+                "is_derelict": False,
+                "layers": {},
+            },
+        )()
+
+        assert isinstance(holder, IResourceHolder)
+        assert is_resource_holder(holder)
+
+    def test_missing_resources_fails_typeguard(self):
+        """Resource holder duck typing requires an explicit resources attribute."""
+        holder = type(
+            "IncompleteResourceHolderDouble",
+            (),
+            {
+                "hp": 10,
+                "max_hp": 20,
+                "is_alive": True,
+                "is_derelict": False,
+                "layers": {},
+            },
+        )()
+
+        assert not is_resource_holder(holder)
+
 
 class TestProtocolNegativeCases:
     """Test that non-conforming objects fail protocol checks."""
@@ -154,3 +198,4 @@ class TestProtocolNegativeCases:
         """None should not satisfy protocols."""
         assert not is_post_battle_ship(None)
         assert not is_resource_reader(None)
+        assert not is_resource_holder(None)

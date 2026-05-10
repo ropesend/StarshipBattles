@@ -51,13 +51,6 @@ class TestSprites:
         count = sum(1 for s in mgr.sprites if s is not None)
         assert count > 10, "Should have loaded multiple sprites"
 
-    def test_atlas_fallback_logic(self):
-        """Test that we can still conceptually load an atlas if we wanted to (via private method maybe? or just skip)."""
-        # Since load_atlas is deprecated/empty, this test is less relevant unless we test the fallback path explicitly.
-        # But we tested fallback logic with mocks in test_sprite_loading.py.
-        pass
-
-
 class TestSpriteManagerSingletonLifecycle:
     """Test singleton pattern for SpriteManager."""
 
@@ -183,18 +176,20 @@ class TestSpriteManagerNamingConventions:
         pygame.image.save(surf, path)
 
     def test_comp_pattern_parsing(self):
-        """Test loading files matching Comp_* pattern."""
+        """Test loading files matching the canonical {resolution}Portrait_Comp_* pattern.
+
+        PROJ-393 deleted the legacy `Comp_NNN.ext` fallback regex; this test
+        previously exercised that fallback and now uses the canonical filenames.
+        """
         mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create Comp_001.png -> index 1
-            self._create_test_image(os.path.join(tmpdir, "Comp_001.png"))
-            # Create Comp_005.png -> index 5
-            self._create_test_image(os.path.join(tmpdir, "Comp_005.png"))
+            self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_001.png"))
+            self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_005.png"))
 
             mgr._load_from_directory(tmpdir)
 
-            assert mgr.get_sprite(1) is not None, "Comp_001 should be at index 1"
-            assert mgr.get_sprite(5) is not None, "Comp_005 should be at index 5"
+            assert mgr.get_sprite(1) is not None, "64Portrait_Comp_001 should be at index 1"
+            assert mgr.get_sprite(5) is not None, "64Portrait_Comp_005 should be at index 5"
             assert mgr.get_sprite(2) is None, "Index 2 should be None (gap)"
 
     def test_portrait_pattern_parsing(self):
@@ -221,29 +216,34 @@ class TestSpriteManagerNamingConventions:
             assert mgr.get_sprite(3) is not None, "Comp_003 should be at index 3"
 
     def test_unexpected_prefix_skipped(self):
-        """Test loading files with unexpected prefixes are skipped."""
+        """Test loading files with unexpected prefixes are skipped.
+
+        PROJ-393: legacy Comp_NNN files no longer match; only the canonical
+        {resolution}Portrait_Comp_NNN convention loads.
+        """
         mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create file with unknown prefix
             self._create_test_image(os.path.join(tmpdir, "Unknown_001.png"))
-            # Create valid file
-            self._create_test_image(os.path.join(tmpdir, "Comp_001.png"))
+            self._create_test_image(os.path.join(tmpdir, "Comp_001.png"))  # legacy bare name no longer matches
+            self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_001.png"))
 
             mgr._load_from_directory(tmpdir)
 
-            # Should only have one sprite (the valid one)
             assert mgr.get_sprite(1) is not None
             count = sum(1 for s in mgr.sprites if s is not None)
             assert count == 1
 
     def test_sparse_sprite_list(self):
-        """Test sparse sprite list (indices with gaps)."""
+        """Test sparse sprite list (indices with gaps).
+
+        PROJ-393: switched from legacy `Comp_NNN.bmp` filenames to the canonical
+        `{resolution}Portrait_Comp_NNN.png` convention.
+        """
         mgr = get_default_sprite_manager()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create sprites at indices 1, 3, 6 (with gaps)
-            self._create_test_image(os.path.join(tmpdir, "Comp_001.bmp"))  # index 1
-            self._create_test_image(os.path.join(tmpdir, "Comp_003.bmp"))  # index 3
-            self._create_test_image(os.path.join(tmpdir, "Comp_006.bmp"))  # index 6
+            self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_001.png"))
+            self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_003.png"))
+            self._create_test_image(os.path.join(tmpdir, "64Portrait_Comp_006.png"))
 
             mgr._load_from_directory(tmpdir)
 

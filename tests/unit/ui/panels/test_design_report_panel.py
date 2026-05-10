@@ -2,11 +2,47 @@
 
 Tests the design report panel widget for displaying ship design information
 with portrait and stats display.
+
+PROJ-322 Task 5.9 (APC-001-F09): the legacy `DesignReportPanel.__new__` +
+`patch.object(__init__, ...)` blocks have been replaced with the shared
+`make_ui_widget` factory routed through a module-scope `_bypass_init_panel`
+helper. The factory's `extra_modules` kwarg pulls in `design_stats_panel`
+so its own pygame_gui imports get mocked too.
 """
 
 import pytest
 from unittest.mock import MagicMock, patch
 import pygame
+
+from tests.fixtures.ui_widget_factory import make_ui_widget
+
+
+def _bypass_init_panel():
+    """Build a `DesignReportPanel` via the shared `make_ui_widget` factory.
+
+    Replaces the inline `__new__` + `patch.object(__init__, ...)` blocks
+    that wired ~10 attrs per test. Returns a fully-initialized panel; the
+    caller then overrides specific attrs (e.g.
+    ``panel.placeholder_text = MagicMock()``) for deterministic assertions.
+
+    PROJ-322 Task 5.9 / APC-001-F09.
+    """
+    from game.ui.panels.design_report_panel import DesignReportPanel
+    from game.ui.panels import design_stats_panel as _dsp_mod
+
+    panel = make_ui_widget(
+        DesignReportPanel,
+        extra_modules=(_dsp_mod,),
+    )
+    # Force portrait_image.relative_rect to be a real Rect so update_design's
+    # geometry calls (`port_rect.width`, etc.) succeed. The factory left it
+    # as a MagicMock since UIImage was patched.
+    panel.portrait_image = MagicMock()
+    panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
+    # Ensure rect is a real Rect (factory's _default_rect supplies pygame.Rect
+    # but the production stores `self.rect = rect`).
+    panel.rect = pygame.Rect(0, 0, 400, 800)
+    return panel
 
 
 # --- Helpers ---
@@ -38,23 +74,14 @@ class TestUpdateDesign:
 
     def test_update_design_sets_current(self):
         """update_design sets current_ship reference."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
         panel.current_ship = None
         panel.placeholder_text = MagicMock()
         panel._update_portrait = MagicMock()
         panel.name_label = MagicMock()
         panel.type_class_label = MagicMock()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
         panel._stats_panel = None
-        panel.rect = pygame.Rect(0, 0, 400, 800)
-        panel.manager = MagicMock()
-        panel.panel = MagicMock()
 
         with patch('game.ui.panels.design_report_panel.DesignStatsPanel') as MockStats:
             mock_stats = MagicMock()
@@ -66,11 +93,7 @@ class TestUpdateDesign:
 
     def test_update_design_kills_placeholder(self):
         """update_design kills placeholder text."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
         placeholder = MagicMock()
         panel.current_ship = None
@@ -78,12 +101,7 @@ class TestUpdateDesign:
         panel._update_portrait = MagicMock()
         panel.name_label = MagicMock()
         panel.type_class_label = MagicMock()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
         panel._stats_panel = None
-        panel.rect = pygame.Rect(0, 0, 400, 800)
-        panel.manager = MagicMock()
-        panel.panel = MagicMock()
 
         with patch('game.ui.panels.design_report_panel.DesignStatsPanel') as MockStats:
             mock_stats = MagicMock()
@@ -96,11 +114,7 @@ class TestUpdateDesign:
 
     def test_update_design_updates_name_label(self):
         """update_design sets name_label text."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
         ship.name = "Battlecruiser Alpha"
         panel.current_ship = None
@@ -108,12 +122,7 @@ class TestUpdateDesign:
         panel._update_portrait = MagicMock()
         panel.name_label = MagicMock()
         panel.type_class_label = MagicMock()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
         panel._stats_panel = None
-        panel.rect = pygame.Rect(0, 0, 400, 800)
-        panel.manager = MagicMock()
-        panel.panel = MagicMock()
 
         with patch('game.ui.panels.design_report_panel.DesignStatsPanel') as MockStats:
             mock_stats = MagicMock()
@@ -125,11 +134,7 @@ class TestUpdateDesign:
 
     def test_update_design_updates_type_class(self):
         """update_design sets type_class_label text."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
         ship.vehicle_type = "Starship"
         ship.ship_class = "Cruiser"
@@ -138,12 +143,7 @@ class TestUpdateDesign:
         panel._update_portrait = MagicMock()
         panel.name_label = MagicMock()
         panel.type_class_label = MagicMock()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
         panel._stats_panel = None
-        panel.rect = pygame.Rect(0, 0, 400, 800)
-        panel.manager = MagicMock()
-        panel.panel = MagicMock()
 
         with patch('game.ui.panels.design_report_panel.DesignStatsPanel') as MockStats:
             mock_stats = MagicMock()
@@ -155,11 +155,7 @@ class TestUpdateDesign:
 
     def test_update_design_kills_old_stats(self):
         """update_design kills old stats_panel."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
         old_stats = MagicMock()
         panel.current_ship = None
@@ -167,12 +163,7 @@ class TestUpdateDesign:
         panel._update_portrait = MagicMock()
         panel.name_label = MagicMock()
         panel.type_class_label = MagicMock()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
         panel._stats_panel = old_stats
-        panel.rect = pygame.Rect(0, 0, 400, 800)
-        panel.manager = MagicMock()
-        panel.panel = MagicMock()
 
         with patch('game.ui.panels.design_report_panel.DesignStatsPanel') as MockStats:
             mock_stats = MagicMock()
@@ -184,23 +175,14 @@ class TestUpdateDesign:
 
     def test_update_design_creates_stats_panel(self):
         """update_design creates new DesignStatsPanel."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
         panel.current_ship = None
         panel.placeholder_text = None
         panel._update_portrait = MagicMock()
         panel.name_label = MagicMock()
         panel.type_class_label = MagicMock()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
         panel._stats_panel = None
-        panel.rect = pygame.Rect(0, 0, 400, 800)
-        panel.manager = MagicMock()
-        panel.panel = MagicMock()
 
         with patch('game.ui.panels.design_report_panel.DesignStatsPanel') as MockStats:
             mock_stats = MagicMock()
@@ -213,23 +195,14 @@ class TestUpdateDesign:
 
     def test_update_design_exposes_rows_map(self):
         """update_design exposes stats_panel.rows_map."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
         panel.current_ship = None
         panel.placeholder_text = None
         panel._update_portrait = MagicMock()
         panel.name_label = MagicMock()
         panel.type_class_label = MagicMock()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
         panel._stats_panel = None
-        panel.rect = pygame.Rect(0, 0, 400, 800)
-        panel.manager = MagicMock()
-        panel.panel = MagicMock()
         panel.rows_map = {}
 
         with patch('game.ui.panels.design_report_panel.DesignStatsPanel') as MockStats:
@@ -248,14 +221,8 @@ class TestUpdatePortrait:
 
     def test_portrait_uses_ship_theme_manager(self) -> None:
         """_update_portrait uses ShipThemeManager's unified Surface contract."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
         source = pygame.Surface((64, 64))
         manager = MagicMock()
         manager.get_portrait_image.return_value = source
@@ -272,14 +239,8 @@ class TestUpdatePortrait:
 
     def test_portrait_loads_from_file(self):
         """_update_portrait attempts to load from file paths."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
 
         with patch('os.path.exists', return_value=False):
             panel._update_portrait(ship)
@@ -289,14 +250,8 @@ class TestUpdatePortrait:
 
     def test_portrait_uses_fallback(self):
         """_update_portrait creates fallback when no image found."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         ship = _make_mock_ship()
-        panel.portrait_image = MagicMock()
-        panel.portrait_image.relative_rect = pygame.Rect(0, 0, 200, 200)
 
         with patch('os.path.exists', return_value=False):
             panel._update_portrait(ship)
@@ -311,10 +266,7 @@ class TestWidthRequired:
 
     def test_width_returns_750(self):
         """get_width_required returns 750."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
+        panel = _bypass_init_panel()
 
         width = panel.get_width_required()
 
@@ -328,11 +280,7 @@ class TestPanelKill:
 
     def test_kill_destroys_stats_panel(self):
         """kill destroys stats_panel."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         mock_stats = MagicMock()
         panel._stats_panel = mock_stats
         panel.panel = MagicMock()
@@ -344,11 +292,7 @@ class TestPanelKill:
 
     def test_kill_destroys_main_panel(self):
         """kill destroys main panel."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         panel._stats_panel = None
         panel.panel = MagicMock()
 
@@ -358,11 +302,7 @@ class TestPanelKill:
 
     def test_kill_handles_no_stats_panel(self):
         """kill handles case where stats_panel is None."""
-        from game.ui.panels.design_report_panel import DesignReportPanel
-
-        with patch.object(DesignReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = DesignReportPanel.__new__(DesignReportPanel)
-
+        panel = _bypass_init_panel()
         panel._stats_panel = None
         panel.panel = MagicMock()
 

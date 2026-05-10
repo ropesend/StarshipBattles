@@ -8,7 +8,7 @@ Provides a single entry point for creating new game galaxies with empires.
 """
 import logging
 import random
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -47,7 +47,12 @@ class GameInitializer:
     """
 
     @staticmethod
-    def initialize(config: GameConfig) -> Tuple[Galaxy, List[Empire]]:
+    def initialize(
+        config: GameConfig,
+        *,
+        planet_mutator: Any = None,
+        empire_mutator: Any = None,
+    ) -> Tuple[Galaxy, List[Empire]]:
         """
         Initialize a new game galaxy and empires from configuration.
 
@@ -59,6 +64,14 @@ class GameInitializer:
 
         Args:
             config: Game configuration with player, galaxy, and seed settings.
+            planet_mutator: PROJ-370 ``IPlanetMutator``. When supplied (the
+                production path via ``GameSession``), homeworld population
+                seeding routes through ``add_species_population``. When
+                ``None`` (test fixtures), falls back to direct list append.
+                Per PROJ-370 review MAJ-002.
+            empire_mutator: PROJ-370 ``IEmpireMutator``. When supplied,
+                attempt-restart colony reset routes through
+                ``clear_colonies``. When ``None``, direct list clear.
 
         Returns:
             Tuple of (Galaxy, list[Empire]) ready for gameplay.
@@ -82,9 +95,23 @@ class GameInitializer:
             try:
                 # Reset any colony state from a prior failed attempt before
                 # re-running placement (empires are reused across attempts).
+                # PROJ-370 review MAJ-002: route through IEmpireMutator
+                # unconditionally. If no mutator was supplied (test paths
+                # that call initialize() directly), lazy-construct an
+                # EmpireWriteService — same shape as the lazy-defaults in
+                # superweapon_order_processor / post_battle_hook.
+                emp_mut = empire_mutator
+                if emp_mut is None:
+                    from game.strategy.services.empire_write_service import (
+                        EmpireWriteService,
+                    )
+                    emp_mut = EmpireWriteService()
                 for empire in empires:
-                    empire.colonies.clear()
-                GameInitializer._setup_initial_scenario(systems, empires, attempt_config)
+                    emp_mut.clear_colonies(empire)
+                GameInitializer._setup_initial_scenario(
+                    systems, empires, attempt_config,
+                    planet_mutator=planet_mutator,
+                )
                 break
             except _PlanetShortageError as exc:
                 last_error = exc
@@ -273,13 +300,23 @@ class GameInitializer:
         ]
 
     @staticmethod
-    def _setup_initial_scenario(systems: list, empires: List[Empire], config: GameConfig) -> None:
+    def _setup_initial_scenario(
+        systems: list,
+        empires: List[Empire],
+        config: GameConfig,
+        *,
+        planet_mutator: Any = None,
+    ) -> None:
         """Set up starting colonies and homeworlds for all empires.
 
         FEAT-27 — At N=1 every empire shares ``systems[0]`` and is given
         a distinct planet. If the lone system has fewer planets than
         empires this raises ``_PlanetShortageError`` so that
         ``initialize()`` can drive a regeneration retry.
+
+        PROJ-370 review MAJ-002: ``planet_mutator`` (when supplied) routes
+        homeworld population seeding through ``IPlanetMutator``. ``None``
+        falls back to direct list append for test paths.
         """
         if not systems:
             return
@@ -341,7 +378,17 @@ class GameInitializer:
                     count=home_planet.max_population,
                     happiness=0.7
                 )
-                home_planet.populations.append(initial_pop)
+                # PROJ-370 review MAJ-002: route through IPlanetMutator
+                # unconditionally. Lazy-construct PlanetWriteService when
+                # `planet_mutator` is None (test paths that call
+                # ``_setup_initial_scenario`` directly).
+                pl_mut = planet_mutator
+                if pl_mut is None:
+                    from game.strategy.services.planet_write_service import (
+                        PlanetWriteService,
+                    )
+                    pl_mut = PlanetWriteService()
+                pl_mut.add_species_population(home_planet, initial_pop)
                 logger.info(f"GameInitializer: Seeded {initial_pop.count} population on {home_planet.name}")
 
             logger.info(

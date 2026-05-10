@@ -58,6 +58,20 @@ class Empire:
             self.colonies.append(planet)
             planet.owner_id = self.id
 
+    def remove_colony(self, planet) -> bool:
+        """Remove a planet from this empire's colonies.
+
+        PROJ-370 Phase 4: data-class-internal helper symmetric with
+        ``add_colony``. Does NOT clear ``planet.owner_id`` — that's the
+        caller's responsibility (PlanetWriteService.set_owner_id).
+
+        Returns True if the planet was in the colony list and removed.
+        """
+        if planet in self.colonies:
+            self.colonies.remove(planet)
+            return True
+        return False
+
     def add_fleet(self, fleet) -> None:
         """Add fleet to empire and auto-register with galaxy for O(1) lookup.
 
@@ -86,31 +100,20 @@ class Empire:
         """
         if fleet in self.fleets:
             # PROJ-222: Cancel all pursuer orders before removing fleet
+            # PROJ-382 Phase 2 (Pattern #10): emit only via injected event_bus.
             if hasattr(fleet, 'pursuer_tracker'):
                 cancelled = fleet.pursuer_tracker.notify_target_destroyed()
-                if cancelled:
+                if cancelled and event_bus is not None:
                     from game.strategy.events.event_types import EventType, EventCategory
-                    if event_bus:
-                        for pursuer in cancelled:
-                            event_bus.log_event(
-                                EventType.FLEET_JOIN_CANCELLED,
-                                category=EventCategory.FLEET_OPERATIONS,
-                                empire_id=pursuer.owner_id,
-                                message=f"Fleet {pursuer.id} join order cancelled: target Fleet {fleet.id} destroyed",
-                                fleet_id=pursuer.id,
-                                target_fleet_id=fleet.id,
-                            )
-                    else:
-                        from game.core.event_logging import log_event
-                        for pursuer in cancelled:
-                            log_event(
-                                EventType.FLEET_JOIN_CANCELLED,
-                                category=EventCategory.FLEET_OPERATIONS,
-                                empire_id=pursuer.owner_id,
-                                message=f"Fleet {pursuer.id} join order cancelled: target Fleet {fleet.id} destroyed",
-                                fleet_id=pursuer.id,
-                                target_fleet_id=fleet.id,
-                            )
+                    for pursuer in cancelled:
+                        event_bus.log_event(
+                            EventType.FLEET_JOIN_CANCELLED,
+                            category=EventCategory.FLEET_OPERATIONS,
+                            empire_id=pursuer.owner_id,
+                            message=f"Fleet {pursuer.id} join order cancelled: target Fleet {fleet.id} destroyed",
+                            fleet_id=pursuer.id,
+                            target_fleet_id=fleet.id,
+                        )
 
             self.fleets.remove(fleet)
             if self._galaxy:

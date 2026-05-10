@@ -460,8 +460,13 @@ class TestEdgeCases:
         ship = ShipSerializer.from_dict(data, registries=registries)
         assert ship is not None
 
-    def test_from_dict_unknown_component_id(self, registries):
-        """from_dict should skip unknown component IDs."""
+    def test_from_dict_unknown_component_id_raises(self, registries):
+        """from_dict should raise ValidationException for unknown component IDs.
+
+        PROJ-358 audit remediation (CQ-01): unknown component IDs were previously
+        silently skipped, masking save/registry drift. The contract now is to
+        raise loudly with full context (layer, component_id, ship_name).
+        """
         data = {
             "name": "UnknownComponentShip",
             "layers": {
@@ -469,12 +474,14 @@ class TestEdgeCases:
             }
         }
 
-        # Should not raise - just skips unknown component
-        ship = ShipSerializer.from_dict(data, registries=registries)
+        with pytest.raises(ValidationException) as exc_info:
+            ShipSerializer.from_dict(data, registries=registries)
 
-        # Check that no component was added
-        core_ids = [c.id for c in ship.layers[LayerType.CORE].components]
-        assert "nonexistent_component" not in core_ids
+        # Verify context fields surface the drift
+        ctx = exc_info.value.context
+        assert ctx["component_id"] == "nonexistent_component"
+        assert ctx["layer"] == "CORE"
+        assert ctx["ship_name"] == "UnknownComponentShip"
 
     def test_from_dict_invalid_component_entry_raises(self, registries):
         """from_dict should raise ValueError for non-dict component entry."""
@@ -708,6 +715,21 @@ class TestVerifyStats:
 
         assert len(equipped_ship._loading_warnings) > 0
         assert any("max_hp" in w for w in equipped_ship._loading_warnings)
+
+    def test_verify_stats_accumulates_multiple_mismatches_including_zero_expected(
+        self, equipped_ship
+    ):
+        """_verify_stats should compare expected zero values when the key exists."""
+        expected = {
+            "max_hp": 0,
+            "mass": equipped_ship.mass + 1000,
+        }
+
+        ShipSerializer._verify_stats(equipped_ship, expected)
+
+        assert len(equipped_ship._loading_warnings) == 2
+        assert any(w.startswith("max_hp:") for w in equipped_ship._loading_warnings)
+        assert any(w.startswith("mass:") for w in equipped_ship._loading_warnings)
 
     def test_verify_stats_handles_empty_expected(self, basic_ship):
         """_verify_stats should handle empty expected stats dict."""

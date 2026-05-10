@@ -31,8 +31,16 @@ VALID_PHASE_STATUSES = [
     "Complete",
     "Deferred",
     "Skipped",
-    "Extracted",           # Phase extracted to sub-project
-    "Extracted (Complete)", # Sub-project archived, phase auto-completed
+    "Extracted",            # Phase extracted to sub-project
+    "Extracted (Complete)",  # Sub-project archived, phase auto-completed
+    # 03c phase-aware execution statuses (Projects/protocols/03c_phase_aware_execution.md).
+    # Existing validators that check for the literal substring "complete"
+    # continue to recognize these as complete; the 03c lifecycle distinguishes
+    # them via phase_state.json.
+    "Complete (Committed)",
+    "Complete (Under Review)",
+    "Complete (Verified)",
+    "Scrapped",
 ]
 
 # Freshness threshold for Current State (hours)

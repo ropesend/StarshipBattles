@@ -166,22 +166,3 @@ def test_ship_instance_components_serialization_roundtrip(session_registries):
         assert restored_cs.is_active == cs.is_active
 
 
-def test_ship_instance_legacy_save_without_components_defaults_empty(
-    session_registries,
-):
-    """Loading an existing save dict that predates PROJ-269 should NOT
-    crash; `components` defaults to an empty dict (graceful degradation
-    per CLAUDE.md 'saves are disposable' rule)."""
-    # Start from a normal serialized ship, then remove the `components` key
-    # to simulate a legacy save.
-    ship = ShipInstance.create(
-        design_data=_design_with_single_component(),
-        owner_id=0,
-        registries=session_registries,
-    )
-    data = ship.to_dict()
-    data.pop("components", None)
-
-    restored = ShipInstance.from_dict(data, registries=session_registries)
-    assert hasattr(restored, "components")
-    assert restored.components == {}

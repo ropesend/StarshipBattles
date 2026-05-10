@@ -134,15 +134,6 @@ class TestSuperweaponRegistryPresence:
         """Each ability should exist in ABILITY_REGISTRY."""
         assert ability_name in ABILITY_REGISTRY
 
-    def test_all_six_abilities_registered(self):
-        """All 6 superweapon abilities should be in the registry."""
-        for ability_name in SUPERWEAPON_ABILITIES:
-            assert ability_name in ABILITY_REGISTRY, f"{ability_name} missing from registry"
-
-        # Verify count
-        assert len(SUPERWEAPON_ABILITIES) == 6
-
-
 class TestSuperweaponActionTime:
     """PROJ-187: Test action_time field on superweapon abilities."""
 

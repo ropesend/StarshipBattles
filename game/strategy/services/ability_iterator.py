@@ -118,6 +118,56 @@ def iter_ability_sources_in_system(
 # ---------------------------------------------------------------------------
 
 
+def _iter_hex_filtered_sources(
+    system: Any,
+    hex_coord: Any,
+    container_attr: str,
+    adapter_factory: Callable[[Any, Any], Any],
+    *,
+    item_filter: Callable[[Any], bool] = bool,
+) -> Iterable[Any]:
+    """Shared skeleton for hex/system providers backed by a `system.<attr>` list.
+
+    Captures the common 5-step pattern (PROJ-380, DUP-X-12, scope-reduced):
+
+      1. ``system is None`` short-circuit.
+      2. Walk ``getattr(system, container_attr, None) or []``.
+      3. Drop items that don't pass ``item_filter`` (default ``bool``).
+      4. Build adapter via ``adapter_factory(item, system)``.
+      5. Yield when ``hex_coord is None`` OR ``adapter.affects_hex(hex_coord)``.
+
+    Used by ``_storm_provider``, ``_planet_intrinsic_provider``,
+    ``_warp_point_provider``, and (post-PROJ-398) ``_star_provider``.
+    The other 3 providers (facilities, fleets, system archetype) diverge
+    enough that they keep their own bodies — see PROJ-398 / FND-041 for
+    the star-provider widening and the verification report for the rest.
+
+    Args:
+        system: The galaxy system being queried (may be ``None``).
+        hex_coord: Specific hex to filter to, or ``None`` for system-wide.
+        container_attr: Attribute name on ``system`` whose value is the
+            iterable of items (e.g. ``"storms"``, ``"planets"``,
+            ``"warp_points"``).
+        adapter_factory: Callable ``(item, system) -> AbilitySource``.
+        item_filter: Predicate run before building the adapter
+            (default ``bool``: skip falsy items, e.g. items with empty
+            ``intrinsic_abilities``).
+
+    Yields:
+        Adapter instances whose ``affects_hex(hex_coord)`` is true (or
+        every adapter, when ``hex_coord is None``).
+    """
+    if system is None:
+        return
+    items = getattr(system, container_attr, None) or []
+    for item in items:
+        if not item_filter(item):
+            continue
+        adapter = adapter_factory(item, system)
+        if hex_coord is None or adapter.affects_hex(hex_coord):
+            yield adapter
+
+
 def _facility_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
     """Yield FacilityAbilitySource for every operational facility in the system.
 
@@ -154,13 +204,11 @@ def _storm_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[An
     panel) matches correctly. (BUG-119 regression — pre-fix the storm
     adapter compared frames naively and never matched.)
     """
-    if system is None:
-        return
-    storms = getattr(system, 'storms', None) or []
-    for storm in storms:
-        adapter = StormAbilitySource(storm=storm, system=system)
-        if hex_coord is None or adapter.affects_hex(hex_coord):
-            yield adapter
+    return _iter_hex_filtered_sources(
+        system, hex_coord, 'storms',
+        lambda storm, sys: StormAbilitySource(storm=storm, system=sys),
+        item_filter=lambda _: True,
+    )
 
 
 def _planet_global_hex(planet: Any, system: Any) -> Optional[Any]:
@@ -182,36 +230,19 @@ def _planet_global_hex(planet: Any, system: Any) -> Optional[Any]:
 def _star_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
     """PROJ-302: yield StarAbilitySource for stars with intrinsic abilities.
 
-    For hex queries (hex_coord != None), yields a star source if EITHER the
-    star is at the queried hex (sector-scope abilities can fire) OR the star
-    declares system-scope abilities that apply at every hex of the system.
-    The collector's scope filter narrows from there.
+    Post-PROJ-398 (FND-041): the scope-aware fallback that previously lived
+    here is folded into ``StarAbilitySource.affects_hex``, which now returns
+    True both for sector-scope hits at the star's own hex AND when the star
+    declares any system-scope ability. That widening lets the provider
+    reuse the shared ``_iter_hex_filtered_sources`` skeleton; the collector's
+    ``_SECTOR_SCOPES`` filter still hides system-scope abilities from sector
+    queries.
     """
-    if system is None:
-        return
-    stars = getattr(system, 'stars', None) or []
-    for star in stars:
-        abilities = getattr(star, 'intrinsic_abilities', None)
-        if not abilities:
-            continue
-        adapter = StarAbilitySource(star=star, system=system)
-        if hex_coord is None:
-            yield adapter
-            continue
-        # Sector-scope: star must be at the queried hex.
-        if adapter.affects_hex(hex_coord):
-            yield adapter
-            continue
-        # System-scope abilities: yield even when star isn't at this hex —
-        # `_SECTOR_SCOPES` filtering at the collector still hides them from
-        # sector queries, but `_SYSTEM_SCOPES` queries (or hex queries with
-        # `include_system_sources=True`) need access to the source.
-        for entry in abilities.values():
-            entries = entry if isinstance(entry, list) else [entry]
-            if any(e.get('scope') in {'system', 'allied_system', 'player_system', 'enemy_system'}
-                   for e in entries if isinstance(e, dict)):
-                yield adapter
-                break
+    return _iter_hex_filtered_sources(
+        system, hex_coord, 'stars',
+        lambda star, sys: StarAbilitySource(star=star, system=sys),
+        item_filter=lambda star: bool(getattr(star, 'intrinsic_abilities', None)),
+    )
 
 
 def _planet_intrinsic_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
@@ -220,15 +251,11 @@ def _planet_intrinsic_provider(system: Any, hex_coord: Any, registries: Any) -> 
     `hex_coord=None` (system-wide query): every planet with intrinsic abilities.
     `hex_coord=<HexCoord>` (hex query): only planets whose global hex matches.
     """
-    if system is None:
-        return
-    planets = getattr(system, 'planets', None) or []
-    for planet in planets:
-        if not getattr(planet, 'intrinsic_abilities', None):
-            continue
-        adapter = PlanetIntrinsicAbilitySource(planet=planet, system=system)
-        if hex_coord is None or adapter.affects_hex(hex_coord):
-            yield adapter
+    return _iter_hex_filtered_sources(
+        system, hex_coord, 'planets',
+        lambda planet, sys: PlanetIntrinsicAbilitySource(planet=planet, system=sys),
+        item_filter=lambda planet: bool(getattr(planet, 'intrinsic_abilities', None)),
+    )
 
 
 # PROJ-305 fleet lookup hook — set by the strategy session to provide
@@ -287,15 +314,11 @@ def _system_archetype_provider(system: Any, hex_coord: Any, registries: Any) -> 
 
 def _warp_point_provider(system: Any, hex_coord: Any, registries: Any) -> Iterable[Any]:
     """PROJ-303: yield WarpPointAbilitySource for warp points with abilities."""
-    if system is None:
-        return
-    warp_points = getattr(system, 'warp_points', None) or []
-    for wp in warp_points:
-        if not getattr(wp, 'intrinsic_abilities', None):
-            continue
-        adapter = WarpPointAbilitySource(warp_point=wp, system=system)
-        if hex_coord is None or adapter.affects_hex(hex_coord):
-            yield adapter
+    return _iter_hex_filtered_sources(
+        system, hex_coord, 'warp_points',
+        lambda wp, sys: WarpPointAbilitySource(warp_point=wp, system=sys),
+        item_filter=lambda wp: bool(getattr(wp, 'intrinsic_abilities', None)),
+    )
 
 
 # Register the built-in providers at module load. PROJ-304..305 register their

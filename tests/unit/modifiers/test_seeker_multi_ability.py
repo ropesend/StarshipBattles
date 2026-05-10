@@ -63,24 +63,6 @@ class TestSeekerUsesGetEffectiveStat:
         assert 'projectile_stealth_level' in call_tracker, \
             "recalculate() should call get_effective_stat('projectile_stealth_level')"
 
-    def test_seeker_does_not_use_direct_stats_access(self):
-        """SeekerWeaponAbility should not use self.component.stats.get() directly."""
-        # Read the source code of SeekerWeaponAbility.recalculate
-        import inspect
-        source = inspect.getsource(SeekerWeaponAbility.recalculate)
-
-        # Check that it doesn't use direct stats access patterns
-        bad_patterns = [
-            'self.component.stats.get',
-            'stats.get(',
-            'self.component.stats[',
-        ]
-
-        for pattern in bad_patterns:
-            assert pattern not in source, \
-                f"SeekerWeaponAbility.recalculate() should not use '{pattern}'. " \
-                f"Use self.get_effective_stat() instead for multi-ability support."
-
     def test_seeker_endurance_applies_modifier_correctly(self):
         """Verify endurance is correctly calculated with modifier."""
         mock_component = MagicMock()

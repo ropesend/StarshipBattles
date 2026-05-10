@@ -39,9 +39,9 @@ class TestWeaponsViewModelInit:
     def test_init_with_event_bus(self):
         """ViewModel should initialize with event bus."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        bus = EventBus()
+        bus = WorkshopEventBus()
         vm = WeaponsViewModel(bus)
 
         assert vm.event_bus is bus
@@ -51,9 +51,9 @@ class TestWeaponsViewModelInit:
     def test_init_default_filter_states(self):
         """ViewModel should have all filters enabled by default."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         assert vm.filter_states['projectile'] is True
         assert vm.filter_states['beam'] is True
@@ -66,9 +66,9 @@ class TestWeaponsViewModelFiltering:
     def test_toggle_filter_emits_event(self):
         """Toggling a filter should emit FILTER_CHANGED event."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel, WeaponsEvents
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        bus = EventBus()
+        bus = WorkshopEventBus()
         vm = WeaponsViewModel(bus)
 
         received = []
@@ -82,9 +82,9 @@ class TestWeaponsViewModelFiltering:
     def test_toggle_filter_changes_state(self):
         """Toggling a filter should change its state."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         assert vm.filter_states['beam'] is True
         vm.toggle_filter('beam')
@@ -95,9 +95,9 @@ class TestWeaponsViewModelFiltering:
     def test_enable_all_filters(self):
         """enable_all_filters should set all filters to True."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         vm.filter_states['projectile'] = False
         vm.filter_states['beam'] = False
 
@@ -114,9 +114,9 @@ class TestWeaponsViewModelTarget:
     def test_set_target_stores_values(self):
         """Setting target should store name and defense mod."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         target_ship = Mock()
         target_ship.name = "Enemy Ship"
@@ -130,9 +130,9 @@ class TestWeaponsViewModelTarget:
     def test_set_target_emits_event(self):
         """Setting target should emit TARGET_CHANGED event."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel, WeaponsEvents
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        bus = EventBus()
+        bus = WorkshopEventBus()
         vm = WeaponsViewModel(bus)
 
         received = []
@@ -148,9 +148,9 @@ class TestWeaponsViewModelTarget:
     def test_clear_target(self):
         """clear_target should reset target values."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         target = Mock()
         target.name = "Target"
@@ -185,9 +185,9 @@ class TestWeaponsViewModelGrouping:
     def test_group_identical_weapons(self):
         """Identical weapons should be grouped with count."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         w1 = self._make_mock_weapon("laser_1", "Laser Cannon")
         w2 = self._make_mock_weapon("laser_1", "Laser Cannon")
@@ -202,9 +202,9 @@ class TestWeaponsViewModelGrouping:
     def test_different_weapons_not_grouped(self):
         """Different weapons should not be grouped."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         w1 = self._make_mock_weapon("laser_1", "Laser Cannon")
         w2 = self._make_mock_weapon("missile_1", "Missile Launcher")
@@ -216,9 +216,9 @@ class TestWeaponsViewModelGrouping:
     def test_same_id_different_facing_not_grouped(self):
         """Same weapon ID with different facing should not be grouped."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         w1 = self._make_mock_weapon("laser_1", "Laser", facing=0)
         w2 = self._make_mock_weapon("laser_1", "Laser", facing=90)
@@ -272,9 +272,9 @@ class TestWeaponsViewModelPointsOfInterest:
     def test_projectile_poi_has_range_breakpoints(self):
         """Projectile weapons should have range percentage breakpoints."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         weapon = self._make_projectile_weapon(weapon_range=1000)
         ship = self._make_mock_ship()
 
@@ -289,9 +289,9 @@ class TestWeaponsViewModelPointsOfInterest:
     def test_projectile_poi_no_accuracy(self):
         """Projectile weapons should have None accuracy."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         weapon = self._make_projectile_weapon()
         ship = self._make_mock_ship()
 
@@ -303,9 +303,9 @@ class TestWeaponsViewModelPointsOfInterest:
     def test_beam_poi_has_accuracy_values(self):
         """Beam weapons should have accuracy calculated at each point."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         weapon = self._make_beam_weapon()
         ship = self._make_mock_ship()
 
@@ -318,9 +318,9 @@ class TestWeaponsViewModelPointsOfInterest:
     def test_poi_sorted_by_range(self):
         """Points of interest should be sorted by range."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         weapon = self._make_beam_weapon()
         ship = self._make_mock_ship()
 
@@ -354,9 +354,9 @@ class TestWeaponsViewModelThresholdCalculation:
     def test_threshold_ranges_returns_list(self):
         """calculate_threshold_ranges should return a list of tuples."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         weapon = self._make_beam_weapon()
         ship = self._make_mock_ship()
 
@@ -369,9 +369,9 @@ class TestWeaponsViewModelThresholdCalculation:
     def test_threshold_ranges_format(self):
         """Each threshold result should be (threshold, range, damage)."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         weapon = self._make_beam_weapon()
         ship = self._make_mock_ship()
 
@@ -426,9 +426,9 @@ class TestWeaponsViewModelLoadWeapons:
     def test_load_weapons_updates_cache(self):
         """load_weapons should update weapon_groups."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         w1 = self._make_weapon_component("Laser 1")
         w2 = self._make_weapon_component("Laser 2")
@@ -441,9 +441,9 @@ class TestWeaponsViewModelLoadWeapons:
     def test_load_weapons_calculates_max_range(self):
         """load_weapons should calculate max_range from all weapons."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         w1 = self._make_weapon_component("Short Range")
         w1.get_ability.return_value.range = 400
@@ -460,9 +460,9 @@ class TestWeaponsViewModelLoadWeapons:
     def test_load_weapons_emits_event(self):
         """load_weapons should emit WEAPONS_UPDATED event."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel, WeaponsEvents
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        bus = EventBus()
+        bus = WorkshopEventBus()
         vm = WeaponsViewModel(bus)
 
         received = []
@@ -476,9 +476,9 @@ class TestWeaponsViewModelLoadWeapons:
     def test_load_weapons_respects_filters(self):
         """load_weapons should filter based on current filter state."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
 
         w1 = self._make_weapon_component("Projectile", 'projectile')
         w2 = self._make_weapon_component("Beam", 'beam')
@@ -503,9 +503,9 @@ class TestWeaponsViewModelHover:
     def test_set_hovered_weapon(self):
         """Setting hovered weapon should store it."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         weapon = Mock()
 
         vm.set_hovered_weapon(weapon)
@@ -515,9 +515,9 @@ class TestWeaponsViewModelHover:
     def test_set_hovered_weapon_emits_event(self):
         """Setting hovered weapon should emit HOVER_CHANGED event."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel, WeaponsEvents
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        bus = EventBus()
+        bus = WorkshopEventBus()
         vm = WeaponsViewModel(bus)
 
         received = []
@@ -531,9 +531,9 @@ class TestWeaponsViewModelHover:
     def test_clear_hovered_weapon(self):
         """Clearing hovered weapon should set it to None."""
         from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
-        from game.ui.screens.builder.event_bus import EventBus
+        from game.ui.screens.builder.event_bus import WorkshopEventBus
 
-        vm = WeaponsViewModel(EventBus())
+        vm = WeaponsViewModel(WorkshopEventBus())
         vm.set_hovered_weapon(Mock())
 
         vm.set_hovered_weapon(None)

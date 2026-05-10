@@ -16,7 +16,7 @@ Formula (FEAT-19):
 - `last_food_ratio` + `last_food_surplus` live on `ColonySpeciesConfig`
   (PROJ-284 Phase 1 / FEAT-19), both derived from the dict that
   `OrganicsConsumptionEngine` writes in Phase 2.
-- `habitability` is a [0, 1] geometric mean from `score_planet_for_race`
+- `habitability` is a [0, 1] geometric mean from `calculate_habitability`
   (PROJ-283 Phase 4, registry-driven via `FACTOR_REGISTRY`).
 - Surplus bonus is additive (not multiplicative) so allocation > 1.0×
   with met demand is rewarded without compounding the starvation
@@ -31,7 +31,7 @@ from __future__ import annotations
 import logging
 from typing import Any, List, Optional, TYPE_CHECKING
 
-from game.strategy.formulas.habitability import score_planet_for_race
+from game.strategy.formulas.habitability import calculate_habitability
 from game.strategy.interfaces.engines import IHappinessEngine
 from game.strategy.services.race_resolver import resolve_race_config
 
@@ -114,7 +114,7 @@ class HappinessEngine(IHappinessEngine):
                 # untouched. Test coverage: tests expect pre-call value.
                 continue
 
-            habitability = score_planet_for_race(colony, race_config)
+            habitability = calculate_habitability(colony, race_config)
             cfg = colony.get_species_config(pop.race_id)
             raw = race_config.base_happiness * cfg.last_food_ratio * habitability
             # FEAT-19: additive surplus-food bonus when allocation > 1.0×

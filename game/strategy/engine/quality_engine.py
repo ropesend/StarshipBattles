@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from typing import List, TYPE_CHECKING
 
-from game.core.patterns.layer_iterator import iter_components
+from game.strategy.services.component_inspector import iter_facility_ability_entries
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -59,20 +59,13 @@ class QualityEngine:
         for facility in colony.facilities:
             if not getattr(facility, 'is_operational', True):
                 continue
-            for comp in iter_components(facility.design_data):
-                qi_data = self._extract_quality_improvement(comp)
-                if qi_data is None:
-                    continue
-                # Handle list of abilities
-                if isinstance(qi_data, list):
-                    entries = qi_data
-                else:
-                    entries = [qi_data]
-                for entry in entries:
-                    res = entry.get('resource_type', '')
-                    rate = entry.get('improvement_rate', 0.0)
-                    if res and rate > 0:
-                        improvements[res] = improvements.get(res, 0.0) + rate
+            for _comp, entry in iter_facility_ability_entries(
+                facility, 'QualityImprovement', self._registries
+            ):
+                res = entry.get('resource_type', '')
+                rate = entry.get('improvement_rate', 0.0)
+                if res and rate > 0:
+                    improvements[res] = improvements.get(res, 0.0) + rate
 
         # Apply improvements
         deposits = getattr(colony, 'deposits', {})
@@ -88,12 +81,3 @@ class QualityEngine:
                 logger.debug(
                     f"{colony.name}: {resource_type} quality {current_quality:.1f} -> {new_quality:.1f}"
                 )
-
-    def _extract_quality_improvement(self, comp) -> dict | list | None:
-        """Extract QualityImprovement ability data from a component entry."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-        abilities = extract_abilities_from_component(comp, self._registries)
-        data = abilities.get('QualityImprovement')
-        if isinstance(data, (dict, list)):
-            return data
-        return None

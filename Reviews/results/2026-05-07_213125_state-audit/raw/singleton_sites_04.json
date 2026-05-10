@@ -1,0 +1,26 @@
+[
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 15,
+    "variable": "_default_asset_manager",
+    "context": "_default_asset_manager: Optional['AssetManager'] = None"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 284,
+    "variable": "_default_manager",
+    "context": "_default_manager: Optional[RegistryManager] = None"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 453,
+    "variable": "_default_provider",
+    "context": "_default_provider: Optional[DefaultRegistryProvider] = None"
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 177,
+    "variable": "_default_ship_materializer",
+    "context": "_default_ship_materializer: Optional[IShipMaterializer] = None"
+  }
+]

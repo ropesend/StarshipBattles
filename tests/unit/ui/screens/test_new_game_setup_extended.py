@@ -1,50 +1,59 @@
-"""
-Tests for NewGameSetupScreen UI state management.
+"""Tests for NewGameSetupScreen UI state management.
 
-PROJ-266 Phase 2: Coverage for empire visibility, race display updates,
-race callbacks, start validation, and cancel behavior. Uses bypass-init
-pattern since the real __init__ requires a live pygame_gui display.
+PROJ-266 Phase 2: Coverage for empire visibility, race display
+updates, race callbacks, start validation, and cancel behaviour.
+
+PROJ-328 Phase B: Migrated to the two-stage UIWindow construction
+pattern. ``_make_screen`` now constructs via the real ``__init__``
+under ``with bypass_init(NewGameSetupScreen):`` plus
+``MockNewGameSetupUiBuilder`` from
+``tests/fixtures/new_game_setup_ui_builder.py`` — was ~34 LOC of
+manual ``__new__`` + per-attribute wiring; now goes through the real
+constructor (closes PROJ-322 Tasks 5.12 + 3.21).
 """
 
 from unittest.mock import MagicMock, patch
+
+import pygame
+
+from tests.fixtures.new_game_setup_ui_builder import MockNewGameSetupUiBuilder
+from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
 
 
 # =============================================================================
 # Helpers
 # =============================================================================
 
+
 def _make_screen():
-    """Create a NewGameSetupScreen with bypassed init and mock UI elements."""
+    """Create a NewGameSetupScreen with bypassed init and mock UI elements.
+
+    PROJ-328 Phase B: real two-stage construction. The screen builds
+    its own real ``NewGameSetupViewModel`` + ``NewGameSetupController``
+    in Stage 1; the ``MockNewGameSetupUiBuilder`` populates the widget
+    slots in Stage 3 (bypass branch). The on_start/on_cancel callbacks
+    are real ``MagicMock`` instances passed via ``__init__``.
+    """
     from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-    with patch.object(NewGameSetupScreen, '__init__', lambda self, *a, **kw: None):
-        screen = NewGameSetupScreen.__new__(NewGameSetupScreen)
+    on_start_callback = MagicMock(name="on_start_callback")
+    on_cancel_callback = MagicMock(name="on_cancel_callback")
 
-    # Set up the attributes that real __init__ would create
-    screen.player_count = 2
-    screen.galaxy_type = "spiral"
-    screen.system_count = 20
-    screen.on_start_callback = MagicMock()
-    screen.on_cancel_callback = MagicMock()
-    screen.active_race_modal = None
-    screen.race_modal_player_index = -1
-    screen.error_label = MagicMock()
+    with bypass_init(NewGameSetupScreen):
+        screen = make_ui_widget(
+            NewGameSetupScreen,
+            rect=pygame.Rect(0, 0, 650, 600),
+            manager=MagicMock(name="ui_manager"),
+            on_start_callback=on_start_callback,
+            on_cancel_callback=on_cancel_callback,
+            ui_builder=MockNewGameSetupUiBuilder(),
+        )
 
-    # Mock UI element arrays (4 players max)
-    screen.empire_name_inputs = [MagicMock() for _ in range(4)]
-    screen.theme_labels = [MagicMock() for _ in range(4)]
-    screen.num_labels = [MagicMock() for _ in range(4)]
-    screen.race_preview_labels = [MagicMock() for _ in range(4)]
-    screen.load_race_buttons = [MagicMock() for _ in range(4)]
-    screen.setup_race_buttons = [MagicMock() for _ in range(4)]
-    screen.player_races = [None, None, None, None]
-
-    # save_name_input for _on_start_clicked
-    screen.save_name_input = MagicMock()
-    screen.save_name_input.get_text.return_value = "TestSave"
-
-    # kill method (from UIWindow)
-    screen.kill = MagicMock()
+    # ``UIWindow.kill`` is an instance method on the live class; in
+    # bypass mode the underlying sprite chain is uninitialized, so
+    # calling the real ``kill()`` would crash. Replace with a Mock so
+    # the controller's ``self._screen.kill()`` call is observable.
+    screen.kill = MagicMock(name="kill")
 
     return screen
 
@@ -75,10 +84,10 @@ class TestUpdateEmpireVisibility:
 
         screen._update_empire_visibility()
 
-        # Players 0,1 should be shown
+        # Players 0,1 should be shown.
         screen.empire_name_inputs[0].show.assert_called()
         screen.empire_name_inputs[1].show.assert_called()
-        # Players 2,3 should be hidden
+        # Players 2,3 should be hidden.
         screen.empire_name_inputs[2].hide.assert_called()
         screen.empire_name_inputs[3].hide.assert_called()
 
@@ -99,7 +108,7 @@ class TestUpdateEmpireVisibility:
         screen.player_races[2] = _make_race_config()
         screen.player_races[3] = _make_race_config()
 
-        # Reduce to 2 players
+        # Reduce to 2 players.
         screen.player_count = 2
         screen._update_empire_visibility()
 
@@ -146,7 +155,11 @@ class TestUpdateRaceDisplay:
         screen._update_race_display(0)
 
         call_text = screen.race_preview_labels[0].set_text.call_args[0][0]
-        assert "not selected" in call_text.lower() or "no race" in call_text.lower() or "species" in call_text.lower()
+        assert (
+            "not selected" in call_text.lower()
+            or "no race" in call_text.lower()
+            or "species" in call_text.lower()
+        )
 
 
 # =============================================================================
@@ -189,7 +202,7 @@ class TestRaceCallbacks:
 
         assert screen.active_race_modal is None
         assert screen.race_modal_player_index == -1
-        assert screen.player_races[2] is original_race  # Unchanged
+        assert screen.player_races[2] is original_race  # Unchanged.
 
 
 # =============================================================================
@@ -203,7 +216,7 @@ class TestOnStartClicked:
     def test_invalid_save_name_shows_error(self):
         """Invalid save name sets error label text."""
         screen = _make_screen()
-        screen.save_name_input.get_text.return_value = ""  # Empty name
+        screen.save_name_input.get_text.return_value = ""  # Empty name.
 
         screen._on_start_clicked()
 
@@ -217,7 +230,7 @@ class TestOnStartClicked:
         screen.player_count = 1
         screen.empire_name_inputs[0].get_text.return_value = "Empire One"
 
-        with patch.object(type(screen), 'validate_save_name', return_value=(True, "")):
+        with patch('game.ui.screens.new_game_setup_controller.NewGameSetupController.validate_save_name', return_value=(True, "")):
             screen._on_start_clicked()
 
         screen.on_start_callback.assert_called_once()
@@ -230,10 +243,10 @@ class TestOnStartClicked:
         race = _make_race_config(name="Klingon Empire")
         screen.player_races[0] = race
 
-        with patch.object(type(screen), 'validate_save_name', return_value=(True, "")):
+        with patch('game.ui.screens.new_game_setup_controller.NewGameSetupController.validate_save_name', return_value=(True, "")):
             screen._on_start_clicked()
 
-        # The config passed to callback should use the race name
+        # The config passed to callback should use the race name.
         config = screen.on_start_callback.call_args[0][0]
         assert config.players[0].name == "Klingon Empire"
 
@@ -264,13 +277,12 @@ class TestOnCancelClicked:
 class TestBug115CancelAfterModalLeak:
     """BUG-115: After the Race Setup modal is killed without invoking its
     cancel callback (e.g., user clicks the title-bar [X]), the parent's
-    `active_race_modal` reference is stale. The fix is to drop the
-    early-return guard in `process_event` so the parent's button branch
-    still runs. The modal child consumes its own events first via
-    pygame_gui z-ordering."""
+    ``active_race_modal`` reference is stale. The fix is to drop the
+    early-return guard in ``process_event`` so the parent's button
+    branch still runs. The modal child consumes its own events first
+    via pygame_gui z-ordering."""
 
     def _build_button_event(self, ui_element):
-        import pygame
         import pygame_gui
         return pygame.event.Event(
             pygame_gui.UI_BUTTON_PRESSED,
@@ -281,10 +293,6 @@ class TestBug115CancelAfterModalLeak:
         """Parent btn_cancel fires even when active_race_modal still
         references a killed wizard window."""
         screen = _make_screen()
-        screen.btn_cancel = MagicMock()
-        screen.btn_start = MagicMock()
-        screen.load_race_buttons = [MagicMock() for _ in range(4)]
-        screen.setup_race_buttons = [MagicMock() for _ in range(4)]
 
         # Stale reference simulating post-[X]-close on the wizard.
         stale_modal = MagicMock()
@@ -302,13 +310,9 @@ class TestBug115CancelAfterModalLeak:
         assert handled is True
 
     def test_parent_start_works_when_modal_reference_is_stale(self):
-        """Parent btn_start dispatch is also unblocked once the guard is
-        gone (sanity check that we didn't only special-case Cancel)."""
+        """Parent btn_start dispatch is also unblocked once the guard
+        is gone (sanity check that we didn't only special-case Cancel)."""
         screen = _make_screen()
-        screen.btn_cancel = MagicMock()
-        screen.btn_start = MagicMock()
-        screen.load_race_buttons = [MagicMock() for _ in range(4)]
-        screen.setup_race_buttons = [MagicMock() for _ in range(4)]
         screen.active_race_modal = MagicMock()
 
         with patch.object(
@@ -319,3 +323,118 @@ class TestBug115CancelAfterModalLeak:
             NewGameSetupScreen.process_event(screen, event)
 
         on_start.assert_called_once()
+
+
+# =============================================================================
+# PROJ-400 — Regression: production _create_ui() construction path
+# =============================================================================
+
+
+class TestCreateUiConstructionPath:
+    """PROJ-400 (Tier 1 B-01): cover the production widget-construction
+    path so any future ``self.<deleted-static>()`` call inside
+    ``_create_ui()`` is caught by tests instead of crashing the live
+    "New Game" UI.
+
+    PROJ-392 deleted ``NewGameSetupScreen.generate_default_save_name``
+    (a static wrapper) but missed an unmigrated production caller at
+    ``new_game_setup_screen.py:348``. The bypass-init test fixture
+    (``MockNewGameSetupUiBuilder``) skips ``_create_ui`` entirely, so
+    none of the existing ~30 ``test_new_game_setup_extended`` tests
+    exercised the bug. This class drives ``_create_ui`` directly with
+    ``pygame_gui.elements`` patched out, so the real method body runs
+    end-to-end and any missing-static blind spot is surfaced.
+    """
+
+    def _build_screen_for_create_ui(self):
+        """Construct a bypass-init screen with the cheap delegates wired
+        but no widget tree; ``_create_ui`` will populate the widget
+        slots itself when invoked."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+        from tests.fixtures.new_game_setup_ui_builder import (
+            NullNewGameSetupUiBuilder,
+        )
+
+        with bypass_init(NewGameSetupScreen):
+            screen = make_ui_widget(
+                NewGameSetupScreen,
+                rect=pygame.Rect(0, 0, 650, 600),
+                manager=MagicMock(name="ui_manager"),
+                on_start_callback=MagicMock(name="on_start_callback"),
+                on_cancel_callback=MagicMock(name="on_cancel_callback"),
+                ui_builder=NullNewGameSetupUiBuilder(),
+            )
+
+        # Mock the UIWindow container surface that _create_ui reads.
+        container = MagicMock(name="container")
+        container.get_size.return_value = (640, 600)
+        screen.get_container = MagicMock(return_value=container)
+        return screen
+
+    def test_create_ui_completes_without_attribute_error(self):
+        """``_create_ui()`` must run end-to-end without
+        ``AttributeError``. Pre-fix this fails at line 348 with
+        ``'NewGameSetupScreen' object has no attribute
+        'generate_default_save_name'``.
+        """
+        screen = self._build_screen_for_create_ui()
+
+        # Patch every pygame_gui.elements constructor to a MagicMock so
+        # the real _create_ui body executes without instantiating live
+        # widgets.
+        with patch("game.ui.screens.new_game_setup_screen.pygame_gui.elements") as elements:
+            elements.UILabel.side_effect = lambda **kw: MagicMock(name="UILabel")
+            elements.UITextEntryLine.side_effect = lambda **kw: MagicMock(
+                name="UITextEntryLine"
+            )
+            elements.UIDropDownMenu.side_effect = lambda **kw: MagicMock(
+                name="UIDropDownMenu"
+            )
+            elements.UIHorizontalSlider.side_effect = lambda **kw: MagicMock(
+                name="UIHorizontalSlider"
+            )
+            elements.UIButton.side_effect = lambda **kw: MagicMock(name="UIButton")
+
+            # The real assertion: this call must not raise.
+            screen._create_ui()
+
+        # And the save-name input must have been seeded with the
+        # canonical default-save-name value.
+        screen.save_name_input.set_text.assert_called_once()
+        seeded = screen.save_name_input.set_text.call_args[0][0]
+        assert isinstance(seeded, str) and seeded.startswith("save game ")
+
+    def test_create_ui_uses_controller_default_save_name(self):
+        """The default save-name source is
+        ``NewGameSetupController.generate_default_save_name`` — the
+        canonical static method PROJ-392 migrated all other callers to.
+        """
+        from game.ui.screens.new_game_setup_controller import (
+            NewGameSetupController,
+        )
+
+        screen = self._build_screen_for_create_ui()
+
+        sentinel = "sentinel-default-save-name"
+        with patch("game.ui.screens.new_game_setup_screen.pygame_gui.elements") as elements, \
+             patch.object(
+                 NewGameSetupController,
+                 "generate_default_save_name",
+                 return_value=sentinel,
+             ) as gen:
+            elements.UILabel.side_effect = lambda **kw: MagicMock(name="UILabel")
+            elements.UITextEntryLine.side_effect = lambda **kw: MagicMock(
+                name="UITextEntryLine"
+            )
+            elements.UIDropDownMenu.side_effect = lambda **kw: MagicMock(
+                name="UIDropDownMenu"
+            )
+            elements.UIHorizontalSlider.side_effect = lambda **kw: MagicMock(
+                name="UIHorizontalSlider"
+            )
+            elements.UIButton.side_effect = lambda **kw: MagicMock(name="UIButton")
+
+            screen._create_ui()
+
+        gen.assert_called_once()
+        screen.save_name_input.set_text.assert_called_once_with(sentinel)

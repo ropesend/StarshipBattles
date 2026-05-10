@@ -1,0 +1,49 @@
+{
+  "detector": "name_pair_drift",
+  "scanned_files": 185,
+  "total_findings": 3,
+  "findings": [
+    {
+      "kind": "underscore_pair",
+      "legacy_name": "_get_harvester_info",
+      "current_name": "get_harvester_info",
+      "legacy": {
+        "file": "game/strategy/services/planet_economy_projector.py",
+        "line": 234
+      },
+      "current": {
+        "file": "game/strategy/engine/harvesting_engine.py",
+        "line": 94
+      }
+    },
+    {
+      "kind": "underscore_pair",
+      "legacy_name": "_iter_components",
+      "current_name": "iter_components",
+      "legacy": {
+        "file": "game/ui/screens/battle_setup/spec_compiler.py",
+        "line": 419
+      },
+      "current": {
+        "file": "game/core/patterns/layer_iterator.py",
+        "line": 42
+      }
+    },
+    {
+      "kind": "manager_service_overlap",
+      "manager_name": "ModifierManager",
+      "service_name": "ModifierService",
+      "shared_methods": [
+        "__init__"
+      ],
+      "manager": {
+        "file": "game/simulation/components/modifier_manager.py",
+        "line": 31
+      },
+      "service": {
+        "file": "game/simulation/services/modifier_service.py",
+        "line": 16
+      }
+    }
+  ]
+}

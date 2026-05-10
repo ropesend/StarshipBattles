@@ -3,6 +3,13 @@
 Shows environment editor buttons (Atmosphere, Gravity, Water, Radiation) at the top,
 followed by each toggleable ability with its current status and a toggle button.
 Status displays: Active, Inactive, Activating (ticks), Deactivating (ticks).
+
+PROJ-329C Phase 1: Migrated to two-stage construction. Cheap state
+(planet, callbacks, slot dicts, controller delegate) lives before
+``super().__init__``; widget construction is behind
+``PlanetAbilitiesUiBuilder`` so tests can swap in a Mock under
+``bypass_init``. The facade-side queries + command dispatch live in
+``PlanetAbilitiesController`` (see ``planet_abilities_controller.py``).
 """
 from __future__ import annotations
 
@@ -13,8 +20,11 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
 
-from game.core.patterns.layer_iterator import iter_keyed_components
-from game.strategy.data.component_activation_state import ActivationPhase
+from game.ui.screens.planet_abilities_controller import (
+    FOOD_EDITOR_LABEL as _FOOD_EDITOR_LABEL,
+    FOOD_EDITOR_TYPE as _FOOD_EDITOR_TYPE,
+    PlanetAbilitiesController,
+)
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
@@ -22,32 +32,124 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Abilities that can be toggled (have activation_time and deactivation_time)
-TOGGLEABLE_ABILITIES = {
-    'PlanetaryShield': 'Planetary Shield',
-    'GeologicStabilizer': 'Geologic Stabilizer',
-    'StellarStabilizer': 'Stellar Stabilizer',
-    'WarpFieldStabilizer': 'Warp Field Stabilizer',
-    'GravityModifier': 'Gravity Modifier',
-    'RadiationShield': 'Radiation Shield',
-    'ShieldModifier': 'Shield Modifier',
-    'DamageModifier': 'Damage Modifier',
-    'ShieldProjection': 'Shield Projector',
-}
 
-# Environment editor buttons — shown when planet has the corresponding ability
-_ENVIRONMENT_EDITORS = [
-    ('AtmosphereModifier', 'Atmosphere'),
-    ('GravityModifier', 'Gravity'),
-    ('WaterModifier', 'Water'),
-    ('RadiationShield', 'Radiation'),
-]
+class PlanetAbilitiesUiBuilder:
+    """Production widget builder. Reads from ``screen.controller`` and
+    populates editor buttons + ability rows on the screen.
 
-# Food allocation (PROJ-284 Phase 4) — shown on any colony with populations.
-# Unlike environment editors, it does NOT require a specific facility ability;
-# every colony has populations that consume food.
-_FOOD_EDITOR_LABEL = 'Food'
-_FOOD_EDITOR_TYPE = 'food'
+    Writes to ``screen._toggle_buttons``, ``screen._editor_buttons``,
+    ``screen._status_labels``, and ``screen._widgets``.
+    """
+
+    ROW_HEIGHT = 36
+
+    def build(self, screen: "PlanetAbilitiesWindow") -> None:
+        container = screen.get_container()
+        y = 10
+
+        # --- Environment editor buttons (conditional on facility presence) ---
+        available_editors = screen.controller.get_available_editors()
+        show_food_editor = screen.controller.should_show_food_editor()
+        if available_editors or show_food_editor:
+            btn_w = 100
+            btn_h = 30
+            gap = 8
+            x = 10
+            for ability_key, label in available_editors:
+                btn = UIButton(
+                    relative_rect=pygame.Rect(x, y, btn_w, btn_h),
+                    text=label,
+                    manager=screen.ui_manager,
+                    container=container,
+                )
+                btn._editor_type = label.lower()
+                screen._editor_buttons.append(btn)
+                screen._widgets.append(btn)
+                x += btn_w + gap
+            if show_food_editor:
+                food_btn = UIButton(
+                    relative_rect=pygame.Rect(x, y, btn_w, btn_h),
+                    text=_FOOD_EDITOR_LABEL,
+                    manager=screen.ui_manager,
+                    container=container,
+                )
+                food_btn._editor_type = _FOOD_EDITOR_TYPE
+                screen._editor_buttons.append(food_btn)
+                screen._widgets.append(food_btn)
+            y += btn_h + 10
+
+        # --- Toggleable ability rows ---
+        abilities_found = screen.controller.scan_abilities()
+
+        if not abilities_found and not available_editors:
+            lbl = UILabel(
+                relative_rect=pygame.Rect(10, y, 350, 30),
+                text="No abilities on this planet.",
+                manager=screen.ui_manager,
+                container=container,
+            )
+            screen._widgets.append(lbl)
+            return
+
+        if not abilities_found:
+            lbl = UILabel(
+                relative_rect=pygame.Rect(10, y, 350, 30),
+                text="No toggleable abilities.",
+                manager=screen.ui_manager,
+                container=container,
+            )
+            screen._widgets.append(lbl)
+            return
+
+        for entry in abilities_found:
+            ability_name = entry['ability_name']
+            display_name = entry['display_name']
+            facility_id = entry['facility_id']
+            facility_name = entry['facility_name']
+            component_key = entry['component_key']
+            instance_label = entry['instance_label']
+            row_key = f"{facility_id}:{component_key}"
+
+            name_text = f"{display_name} ({facility_name}{instance_label})"
+            name_lbl = UILabel(
+                relative_rect=pygame.Rect(10, y, 290, self.ROW_HEIGHT),
+                text=name_text,
+                manager=screen.ui_manager,
+                container=container,
+            )
+            screen._widgets.append(name_lbl)
+
+            status = screen.controller.get_component_status(
+                facility_id, component_key
+            )
+            status_lbl = UILabel(
+                relative_rect=pygame.Rect(305, y, 110, self.ROW_HEIGHT),
+                text=status,
+                manager=screen.ui_manager,
+                container=container,
+            )
+            screen._widgets.append(status_lbl)
+            screen._status_labels[row_key] = status_lbl
+
+            is_active = screen.controller.is_component_active(
+                facility_id, component_key
+            )
+
+            btn_text = "Deactivate" if is_active else "Activate"
+            btn = UIButton(
+                relative_rect=pygame.Rect(420, y + 2, 90, self.ROW_HEIGHT - 4),
+                text=btn_text,
+                manager=screen.ui_manager,
+                container=container,
+            )
+            btn._ability_name = ability_name
+            btn._facility_id = facility_id
+            btn._component_key = component_key
+            btn._is_active = is_active
+            screen._widgets.append(btn)
+            screen._toggle_buttons[row_key] = btn
+
+            y += self.ROW_HEIGHT
 
 
 class PlanetAbilitiesWindow(StrategyModalWindow):
@@ -57,6 +159,8 @@ class PlanetAbilitiesWindow(StrategyModalWindow):
     gravity, water, and radiation targets.
 
     PROJ-313: Migrated to StrategyModalWindow base class.
+    PROJ-329C Phase 1: two-stage construction with ``ui_builder`` test
+    seam + ``PlanetAbilitiesController`` for facade I/O.
     """
 
     ROW_HEIGHT = 36
@@ -72,6 +176,8 @@ class PlanetAbilitiesWindow(StrategyModalWindow):
         window_manager: "StrategyWindowManager",
         on_open_editor: Optional[Callable[[str, Any], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
+        ui_builder: Optional[PlanetAbilitiesUiBuilder] = None,
+        controller: Optional[PlanetAbilitiesController] = None,
     ):
         """Initialize the abilities window.
 
@@ -82,19 +188,14 @@ class PlanetAbilitiesWindow(StrategyModalWindow):
             facade: StrategySessionFacade for command dispatch.
             component_registry: Component registry for ability lookup.
             on_open_editor: Callback(editor_type, planet) to open environment editors.
-                editor_type is one of: 'atmosphere', 'gravity', 'water', 'radiation'.
             on_close_callback: Callback fired from kill() so the registrar can
-                reset its slot to None. Without this, the slot leaks and
-                ``StrategyEventRouter.has_modal_open()`` returns True forever
-                after the window is closed (BUG-121).
+                reset its slot to None (BUG-121).
+            ui_builder: Optional UI builder override (test seam).
+            controller: Optional controller override (test seam). Defaults
+                to a real ``PlanetAbilitiesController(planet, facade,
+                component_registry)``.
         """
-        super().__init__(
-            relative_rect,
-            manager,
-            window_display_title=f"Abilities: {planet.name}",
-            resizable=False,
-            window_manager=window_manager,
-        )
+        # ---- Stage 1: cheap state + delegates (no facade I/O) ----
         self.planet = planet
         self.facade = facade
         self.component_registry = component_registry
@@ -103,217 +204,32 @@ class PlanetAbilitiesWindow(StrategyModalWindow):
         self._toggle_buttons: Dict[str, UIButton] = {}
         self._editor_buttons: List[UIButton] = []
         self._status_labels: Dict[str, UILabel] = {}
-        self._widgets = []
-        self._build_ui()
+        self._widgets: List = []
+        self.controller = controller or PlanetAbilitiesController(
+            planet, facade, component_registry
+        )
+
+        # ---- Stage 2: shell ----
+        super().__init__(
+            relative_rect,
+            manager,
+            window_display_title=f"Abilities: {planet.name}",
+            resizable=False,
+            window_manager=window_manager,
+        )
+
+        # ---- Stage 3: widgets ----
+        if getattr(self, '_window_init_bypassed', False):
+            if ui_builder is not None:
+                ui_builder.build(self)
+            return
+
+        (ui_builder or PlanetAbilitiesUiBuilder()).build(self)
 
     def kill(self) -> None:
         if self._on_close_callback is not None:
             self._on_close_callback()
         super().kill()
-
-    def _build_ui(self) -> None:
-        """Build environment editor buttons and ability rows."""
-        container = self.get_container()
-        y = 10
-
-        # --- Environment editor buttons (conditional on facility presence) ---
-        available_editors = self._get_available_editors()
-        show_food_editor = self._should_show_food_editor()
-        if available_editors or show_food_editor:
-            btn_w = 100
-            btn_h = 30
-            gap = 8
-            x = 10
-            for ability_key, label in available_editors:
-                btn = UIButton(
-                    relative_rect=pygame.Rect(x, y, btn_w, btn_h),
-                    text=label,
-                    manager=self.ui_manager,
-                    container=container,
-                )
-                btn._editor_type = label.lower()
-                self._editor_buttons.append(btn)
-                self._widgets.append(btn)
-                x += btn_w + gap
-            if show_food_editor:
-                food_btn = UIButton(
-                    relative_rect=pygame.Rect(x, y, btn_w, btn_h),
-                    text=_FOOD_EDITOR_LABEL,
-                    manager=self.ui_manager,
-                    container=container,
-                )
-                food_btn._editor_type = _FOOD_EDITOR_TYPE
-                self._editor_buttons.append(food_btn)
-                self._widgets.append(food_btn)
-            y += btn_h + 10
-
-        # --- Toggleable ability rows ---
-        abilities_found = self._scan_abilities()
-
-        if not abilities_found and not available_editors:
-            lbl = UILabel(
-                relative_rect=pygame.Rect(10, y, 350, 30),
-                text="No abilities on this planet.",
-                manager=self.ui_manager,
-                container=container,
-            )
-            self._widgets.append(lbl)
-            return
-
-        if not abilities_found:
-            lbl = UILabel(
-                relative_rect=pygame.Rect(10, y, 350, 30),
-                text="No toggleable abilities.",
-                manager=self.ui_manager,
-                container=container,
-            )
-            self._widgets.append(lbl)
-            return
-
-        for entry in abilities_found:
-            ability_name = entry['ability_name']
-            display_name = entry['display_name']
-            facility_id = entry['facility_id']
-            facility_name = entry['facility_name']
-            component_key = entry['component_key']
-            instance_label = entry['instance_label']
-            row_key = f"{facility_id}:{component_key}"
-
-            # Ability name + facility + instance number
-            name_text = f"{display_name} ({facility_name}{instance_label})"
-            name_lbl = UILabel(
-                relative_rect=pygame.Rect(10, y, 290, self.ROW_HEIGHT),
-                text=name_text,
-                manager=self.ui_manager,
-                container=container,
-            )
-            self._widgets.append(name_lbl)
-
-            # Status from component_state (source of truth)
-            status = self._get_component_status(facility_id, component_key)
-            status_lbl = UILabel(
-                relative_rect=pygame.Rect(305, y, 110, self.ROW_HEIGHT),
-                text=status,
-                manager=self.ui_manager,
-                container=container,
-            )
-            self._widgets.append(status_lbl)
-            self._status_labels[row_key] = status_lbl
-
-            # Determine active state from component_state
-            facility = next((f for f in self.planet.facilities if f.instance_id == facility_id), None)
-            is_active = False
-            if facility:
-                state = facility.get_activation_state(component_key)
-                is_active = state.phase in (ActivationPhase.ACTIVE, ActivationPhase.ACTIVATING)
-
-            btn_text = "Deactivate" if is_active else "Activate"
-            btn = UIButton(
-                relative_rect=pygame.Rect(420, y + 2, 90, self.ROW_HEIGHT - 4),
-                text=btn_text,
-                manager=self.ui_manager,
-                container=container,
-            )
-            btn._ability_name = ability_name
-            btn._facility_id = facility_id
-            btn._component_key = component_key
-            btn._is_active = is_active
-            self._widgets.append(btn)
-            self._toggle_buttons[row_key] = btn
-
-            y += self.ROW_HEIGHT
-
-    def _should_show_food_editor(self) -> bool:
-        """PROJ-284 Phase 4: show the Food button on any colony that
-        has at least one population. Unlike environment editors, food
-        allocation is population-driven, not facility-driven."""
-        populations = getattr(self.planet, 'populations', None) or []
-        return len(populations) > 0
-
-    def _get_available_editors(self) -> List[tuple]:
-        """Return list of (ability_key, label) for editors where the planet has the facility."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-        from game.core.patterns.layer_iterator import iter_components
-
-        # Collect all ability keys present on operational facilities
-        present_abilities = set()
-        for facility in getattr(self.planet, 'facilities', []):
-            if not getattr(facility, 'is_operational', True):
-                continue
-            for comp in iter_components(facility.design_data):
-                abilities = extract_abilities_from_component(comp, self.component_registry)
-                present_abilities.update(abilities.keys())
-
-        return [
-            (key, label) for key, label in _ENVIRONMENT_EDITORS
-            if key in present_abilities
-        ]
-
-    def _scan_abilities(self) -> List[Dict]:
-        """Scan planet facilities for toggleable abilities at per-component granularity.
-
-        Returns list of dicts with keys: ability_name, display_name, facility_id,
-        facility_name, component_key, instance_label.
-
-        Each activatable component gets its own entry — no deduplication by ability name.
-        When multiple instances of the same ability exist, they get numbered labels
-        (e.g., " #1", " #2").
-        """
-        from game.strategy.services.component_inspector import extract_abilities_from_component
-
-        raw_entries = []
-        for facility in self.planet.facilities:
-            if not getattr(facility, 'is_operational', True):
-                continue
-            for comp_key, layer_name, comp in iter_keyed_components(facility.design_data):
-                abilities = extract_abilities_from_component(comp, self.component_registry)
-                for ability_name, display_name in TOGGLEABLE_ABILITIES.items():
-                    if ability_name in abilities:
-                        ability_data = abilities[ability_name]
-                        if isinstance(ability_data, dict) and 'activation_time' in ability_data:
-                            raw_entries.append({
-                                'ability_name': ability_name,
-                                'display_name': display_name,
-                                'facility_id': facility.instance_id,
-                                'facility_name': facility.name,
-                                'component_key': comp_key,
-                            })
-
-        # Add instance labels when multiple entries share the same ability_name
-        ability_counts: Dict[str, int] = {}
-        for entry in raw_entries:
-            name = entry['ability_name']
-            ability_counts[name] = ability_counts.get(name, 0) + 1
-
-        ability_indices: Dict[str, int] = {}
-        for entry in raw_entries:
-            name = entry['ability_name']
-            if ability_counts[name] > 1:
-                idx = ability_indices.get(name, 0) + 1
-                ability_indices[name] = idx
-                entry['instance_label'] = f" #{idx}"
-            else:
-                entry['instance_label'] = ""
-
-        return raw_entries
-
-    def _get_component_status(self, facility_id: str, component_key: str) -> str:
-        """Get display status for a specific component's activation state."""
-        facility = next((f for f in self.planet.facilities if f.instance_id == facility_id), None)
-        if not facility:
-            return "Unknown"
-
-        state = facility.get_activation_state(component_key)
-
-        if state.phase == ActivationPhase.ACTIVATING:
-            remaining = state.required_ticks - state.progress_ticks
-            return f"Activating ({remaining})"
-        elif state.phase == ActivationPhase.DEACTIVATING:
-            remaining = state.required_ticks - state.progress_ticks
-            return f"Deactivating ({remaining})"
-        elif state.phase == ActivationPhase.ACTIVE:
-            return "Active"
-        return "Inactive"
 
     def process_event(self, event: pygame.event.Event) -> bool:
         """Handle toggle button clicks and editor button clicks."""
@@ -330,30 +246,33 @@ class PlanetAbilitiesWindow(StrategyModalWindow):
             is_active = getattr(event.ui_element, '_is_active', None)
 
             if ability_name and facility_id is not None and component_key:
-                order_type = "DEACTIVATE_ABILITY" if is_active else "ACTIVATE_ABILITY"
-
-                from game.strategy.engine.commands import IssuePlanetOrderCommand
-                cmd = IssuePlanetOrderCommand(
-                    planet_id=self.planet.id,
-                    order_type=order_type,
-                    facility_instance_id=facility_id,
-                    ability_name=ability_name,
+                result = self.controller.toggle_ability(
+                    facility_id=facility_id,
                     component_key=component_key,
+                    ability_name=ability_name,
+                    is_active=is_active,
                 )
-                result = self.facade.handle_command(cmd)
                 if result and not result.is_valid:
                     logger.warning(f"Ability toggle failed: {result.message}")
                 else:
-                    # Update button state
                     new_active = not is_active
                     event.ui_element._is_active = new_active
-                    event.ui_element.set_text("Deactivate" if new_active else "Activate")
-                    # Update status label
+                    event.ui_element.set_text(
+                        "Deactivate" if new_active else "Activate"
+                    )
                     row_key = f"{facility_id}:{component_key}"
                     if row_key in self._status_labels:
                         self._status_labels[row_key].set_text(
-                            self._get_component_status(facility_id, component_key)
+                            self.controller.get_component_status(
+                                facility_id, component_key
+                            )
                         )
                 return True
 
         return super().process_event(event)
+
+
+__all__ = [
+    "PlanetAbilitiesWindow",
+    "PlanetAbilitiesUiBuilder",
+]

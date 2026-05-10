@@ -133,5 +133,36 @@ def run(force_output_dir=None):
 
 
 if __name__ == "__main__":
-    force_dir = sys.argv[1] if len(sys.argv) > 1 else None
-    run(force_dir)
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Run Phase 1 deterministic analysis for ocode-audit-shrink."
+    )
+    parser.add_argument(
+        "force_dir",
+        nargs="?",
+        default=None,
+        help="Reuse an existing review directory instead of creating a new one.",
+    )
+    parser.add_argument(
+        "--all-shards",
+        action="store_true",
+        help=(
+            "Set the manifest's deep_review_mode flag so the skill launches one "
+            "in-shard agent per shard instead of just the rotating one. Use "
+            "before major refactors when you need 100%% LLM coverage in a single run."
+        ),
+    )
+    args = parser.parse_args()
+
+    output_dir = run(args.force_dir)
+
+    # Annotate the manifest with the runtime flag so the skill (and any
+    # downstream consumers) can branch on it without re-parsing CLI args.
+    manifest_path = os.path.join(output_dir, "raw", "manifest.json")
+    if os.path.exists(manifest_path):
+        with open(manifest_path, encoding="utf-8") as f:
+            manifest = json.load(f)
+        manifest["deep_review_mode"] = "all_shards" if args.all_shards else "rotating"
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2)

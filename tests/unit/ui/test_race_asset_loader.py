@@ -82,17 +82,6 @@ class TestPortraitLoading:
 
         assert result is None
 
-    def test_load_portrait_full_has_correct_signature(self):
-        """load_portrait_full accepts portrait_id parameter."""
-        from game.ui.screens.race_asset_loader import RaceAssetLoader
-
-        loader = RaceAssetLoader()
-
-        # Method should exist and accept string parameter
-        assert hasattr(loader, 'load_portrait_full')
-        assert callable(loader.load_portrait_full)
-
-
 # =============================================================================
 # Test: Placeholder Creation
 # =============================================================================

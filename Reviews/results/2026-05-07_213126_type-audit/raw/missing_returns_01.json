@@ -1,0 +1,79 @@
+[
+  {
+    "file": "game/app_bootstrap.py",
+    "line": 308,
+    "function": "_replay_combat_lab_fallback",
+    "class": null,
+    "layer": "unknown"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 203,
+    "function": "fleet_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 213,
+    "function": "planet_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 218,
+    "function": "empire_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 223,
+    "function": "ship_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/harvesting_engine.py",
+    "line": 166,
+    "function": "_get_planet_mutator",
+    "class": "HarvestingEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/harvesting_engine.py",
+    "line": 175,
+    "function": "_get_empire_mutator",
+    "class": "HarvestingEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/planet_modifier_effect_engine.py",
+    "line": 34,
+    "function": "_get_planet_mutator",
+    "class": "PlanetModifierEffectEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/production_spawner.py",
+    "line": 51,
+    "function": "_get_planet_mutator",
+    "class": "ProductionSpawner",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 434,
+    "function": "_iter_replay_files",
+    "class": "ReplayStore",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/test_lab/details/validation.py",
+    "line": 39,
+    "function": "_phase_color",
+    "class": null,
+    "layer": "ui"
+  }
+]

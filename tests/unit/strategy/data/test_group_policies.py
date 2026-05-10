@@ -28,47 +28,31 @@ class TestGroupPolicyRegistryLoading:
         assert len(registry.movement_policies) > 0
         assert len(registry.retreat_policies) > 0
 
-    def test_targeting_policies_loaded(self):
-        """All 7 targeting policies load correctly."""
+    @pytest.mark.parametrize('axis', ['targeting', 'movement', 'retreat'])
+    def test_policy_registry_structural_invariants(self, axis):
+        """Each policy axis loads at least one policy and every entry is
+        addressable via its public ``get_<axis>(policy_id)`` accessor.
+
+        PROJ-322 Task 1.11 (S06-CAT4-002): the previous three tests
+        hardcoded the seven-element list per axis, forcing test edits
+        every time a policy was added. This drives the registry's
+        public surface and asserts structural invariants instead.
+        """
         from game.strategy.data.group_policy_registry import GroupPolicyRegistry
 
         registry = GroupPolicyRegistry()
         registry.load()
 
-        expected = [
-            "focus_strongest", "focus_nearest", "focus_weakest",
-            "distributed", "anti_fighter", "anti_capital", "opportunistic",
-        ]
-        for policy_id in expected:
-            assert policy_id in registry.targeting_policies, f"Missing: {policy_id}"
+        policies = getattr(registry, f'{axis}_policies')
+        getter = getattr(registry, f'get_{axis}')
+        validator = getattr(registry, f'is_valid_{axis}')
 
-    def test_movement_policies_loaded(self):
-        """All 7 movement policies load correctly."""
-        from game.strategy.data.group_policy_registry import GroupPolicyRegistry
-
-        registry = GroupPolicyRegistry()
-        registry.load()
-
-        expected = [
-            "advance", "hold_range", "hold_position", "pursue",
-            "hit_and_run", "ram", "evasive",
-        ]
-        for policy_id in expected:
-            assert policy_id in registry.movement_policies, f"Missing: {policy_id}"
-
-    def test_retreat_policies_loaded(self):
-        """All 7 retreat policies load correctly."""
-        from game.strategy.data.group_policy_registry import GroupPolicyRegistry
-
-        registry = GroupPolicyRegistry()
-        registry.load()
-
-        expected = [
-            "group_25", "group_50", "individual_15", "individual_30",
-            "flagship_lost", "ammo_depleted", "never",
-        ]
-        for policy_id in expected:
-            assert policy_id in registry.retreat_policies, f"Missing: {policy_id}"
+        assert len(policies) > 0, f"No {axis} policies loaded"
+        for policy_id in policies:
+            data = getter(policy_id)
+            assert data is not None, f"{axis} policy {policy_id} not retrievable"
+            assert isinstance(data, dict)
+            assert validator(policy_id)
 
 
 # =============================================================================

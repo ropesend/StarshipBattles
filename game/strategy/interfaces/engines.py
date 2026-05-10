@@ -42,6 +42,11 @@ __all__ = [
     'IComponentActivationEngine',
     'IOrganicsConsumptionEngine',
     'IHappinessEngine',
+    # PROJ-369 Phase 2: per-turn terraforming engines (formerly
+    # locally-constructed inside `process_turn`).
+    'IQualityEngine',
+    'IAtmosphereEngine',
+    'IWaterEngine',
 ]
 
 
@@ -172,6 +177,11 @@ class IOrderProcessor(ABC):
     PROJ-187/PROJ-207: Order processing is split between:
     - process_instant_orders(): Called every tick for JOIN_FLEET co-location
     - execute_action_order(): Called by ActionExecutionEngine when action completes
+
+    PROJ-368: implementation now uses a per-OrderType handler registry.
+    See `game.strategy.engine.order_handlers`. The public method signatures
+    on this ABC are preserved verbatim; the facade `OrderProcessor` delegates
+    each method to the registered handler.
 
     Implementations handle:
     - Instant order processing (JOIN_FLEET when co-located)
@@ -683,6 +693,60 @@ class IHappinessEngine(ABC):
             galaxy: Galaxy reference — currently unused but accepted for
                 forward compatibility with future factors (e.g. neighbor
                 empires, storm overlays).
+        """
+        pass
+
+
+class IQualityEngine(ABC):
+    """Abstract interface for per-turn planet-quality improvement.
+
+    PROJ-369 Phase 2: Promoted from locally-constructed to injectable
+    via TurnEngineConfig. Runs ONCE per turn during the end-of-turn
+    block, after population growth.
+    """
+
+    @abstractmethod
+    def process_quality_improvement(self, empires: List) -> None:
+        """Process planet-quality changes for all empires (once per turn).
+
+        Args:
+            empires: List of Empire objects to process.
+        """
+        pass
+
+
+class IAtmosphereEngine(ABC):
+    """Abstract interface for per-turn atmosphere modification.
+
+    PROJ-369 Phase 2: Promoted from locally-constructed to injectable
+    via TurnEngineConfig. Runs ONCE per turn during the end-of-turn
+    block, after the quality phase.
+    """
+
+    @abstractmethod
+    def process_atmosphere(self, empires: List) -> None:
+        """Process atmosphere changes for all empires (once per turn).
+
+        Args:
+            empires: List of Empire objects to process.
+        """
+        pass
+
+
+class IWaterEngine(ABC):
+    """Abstract interface for per-turn water-level modification.
+
+    PROJ-369 Phase 2: Promoted from locally-constructed to injectable
+    via TurnEngineConfig. Runs ONCE per turn during the end-of-turn
+    block, after the atmosphere phase.
+    """
+
+    @abstractmethod
+    def process_water_modification(self, empires: List) -> None:
+        """Process water-level changes for all empires (once per turn).
+
+        Args:
+            empires: List of Empire objects to process.
         """
         pass
 

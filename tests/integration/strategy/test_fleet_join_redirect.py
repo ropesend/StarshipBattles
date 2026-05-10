@@ -186,7 +186,7 @@ class TestOrderLifecycleEdgeCases:
     def test_self_join_rejected(self):
         """Validation: fleet cannot join itself."""
         from unittest.mock import Mock
-        from game.strategy.engine.command_handlers import JoinCommandHandler
+        from game.strategy.engine.handlers import JoinCommandHandler
 
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         session = Mock()
@@ -199,7 +199,7 @@ class TestOrderLifecycleEdgeCases:
     def test_cross_empire_join_rejected(self):
         """Validation: fleet cannot join fleet of another empire."""
         from unittest.mock import Mock
-        from game.strategy.engine.command_handlers import JoinCommandHandler
+        from game.strategy.engine.handlers import JoinCommandHandler
 
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         target = Fleet("f2", 1, HexCoord(5, 5))

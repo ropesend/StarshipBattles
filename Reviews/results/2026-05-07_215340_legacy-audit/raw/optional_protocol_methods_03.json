@@ -1,0 +1,3356 @@
+{
+  "detector": "optional_protocol_methods",
+  "scanned_files": 179,
+  "total_findings": 31,
+  "findings": [
+    {
+      "protocol": "IGridEntity",
+      "file": "game/ai/protocols.py",
+      "line": 34,
+      "protocol_methods": [
+        "is_alive",
+        "position",
+        "radius",
+        "team_id"
+      ],
+      "partial_implementers": [
+        {
+          "class": "IControllable",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 22,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "position",
+            "radius",
+            "team_id"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "ShipControllableAdapter",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 221,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "position",
+            "radius",
+            "team_id"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "Galaxy",
+          "file": "game/strategy/data/galaxy.py",
+          "line": 33,
+          "implemented_methods": [
+            "radius"
+          ],
+          "missing_methods": [
+            "is_alive",
+            "position",
+            "team_id"
+          ],
+          "implements_ratio": 0.25
+        }
+      ]
+    },
+    {
+      "protocol": "IProjectile",
+      "file": "game/simulation/interfaces/entity_protocols.py",
+      "line": 238,
+      "protocol_methods": [
+        "damage",
+        "distance_traveled",
+        "endurance",
+        "hp",
+        "is_alive",
+        "max_endurance",
+        "max_hp",
+        "max_range",
+        "max_speed",
+        "owner",
+        "position",
+        "radius",
+        "source_weapon",
+        "status",
+        "target",
+        "team_id",
+        "turn_rate",
+        "type",
+        "velocity"
+      ],
+      "partial_implementers": [
+        {
+          "class": "IControllable",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 22,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "damage",
+            "distance_traveled",
+            "endurance",
+            "hp",
+            "max_endurance",
+            "max_hp",
+            "max_range",
+            "max_speed",
+            "owner",
+            "position",
+            "radius",
+            "source_weapon",
+            "status",
+            "target",
+            "team_id",
+            "turn_rate",
+            "type",
+            "velocity"
+          ],
+          "implements_ratio": 0.05
+        },
+        {
+          "class": "ShipControllableAdapter",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 221,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "damage",
+            "distance_traveled",
+            "endurance",
+            "hp",
+            "max_endurance",
+            "max_hp",
+            "max_range",
+            "max_speed",
+            "owner",
+            "position",
+            "radius",
+            "source_weapon",
+            "status",
+            "target",
+            "team_id",
+            "turn_rate",
+            "type",
+            "velocity"
+          ],
+          "implements_ratio": 0.05
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "hp",
+            "max_hp"
+          ],
+          "missing_methods": [
+            "damage",
+            "distance_traveled",
+            "endurance",
+            "is_alive",
+            "max_endurance",
+            "max_range",
+            "max_speed",
+            "owner",
+            "position",
+            "radius",
+            "source_weapon",
+            "status",
+            "target",
+            "team_id",
+            "turn_rate",
+            "type",
+            "velocity"
+          ],
+          "implements_ratio": 0.11
+        },
+        {
+          "class": "Galaxy",
+          "file": "game/strategy/data/galaxy.py",
+          "line": 33,
+          "implemented_methods": [
+            "radius"
+          ],
+          "missing_methods": [
+            "damage",
+            "distance_traveled",
+            "endurance",
+            "hp",
+            "is_alive",
+            "max_endurance",
+            "max_hp",
+            "max_range",
+            "max_speed",
+            "owner",
+            "position",
+            "source_weapon",
+            "status",
+            "target",
+            "team_id",
+            "turn_rate",
+            "type",
+            "velocity"
+          ],
+          "implements_ratio": 0.05
+        }
+      ]
+    },
+    {
+      "protocol": "IComponentHealth",
+      "file": "game/ai/protocols.py",
+      "line": 85,
+      "protocol_methods": [
+        "current_hp",
+        "max_hp"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "max_hp"
+          ],
+          "missing_methods": [
+            "current_hp"
+          ],
+          "implements_ratio": 0.5
+        }
+      ]
+    },
+    {
+      "protocol": "IPostBattleShip",
+      "file": "game/core/protocols/boundary.py",
+      "line": 34,
+      "protocol_methods": [
+        "hp",
+        "instance_id",
+        "is_alive",
+        "is_derelict",
+        "layers",
+        "max_hp",
+        "name",
+        "resources"
+      ],
+      "partial_implementers": [
+        {
+          "class": "IControllable",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 22,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "hp",
+            "instance_id",
+            "is_derelict",
+            "layers",
+            "max_hp",
+            "name",
+            "resources"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "ShipControllableAdapter",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 221,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "hp",
+            "instance_id",
+            "is_derelict",
+            "layers",
+            "max_hp",
+            "name",
+            "resources"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "hp",
+            "max_hp"
+          ],
+          "missing_methods": [
+            "instance_id",
+            "is_alive",
+            "is_derelict",
+            "layers",
+            "name",
+            "resources"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name",
+            "resources"
+          ],
+          "missing_methods": [
+            "hp",
+            "instance_id",
+            "is_alive",
+            "is_derelict",
+            "layers",
+            "max_hp"
+          ],
+          "implements_ratio": 0.25
+        }
+      ]
+    },
+    {
+      "protocol": "IResourceHolder",
+      "file": "game/core/protocols/boundary.py",
+      "line": 84,
+      "protocol_methods": [
+        "hp",
+        "is_alive",
+        "is_derelict",
+        "layers",
+        "max_hp",
+        "resources"
+      ],
+      "partial_implementers": [
+        {
+          "class": "IControllable",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 22,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "hp",
+            "is_derelict",
+            "layers",
+            "max_hp",
+            "resources"
+          ],
+          "implements_ratio": 0.17
+        },
+        {
+          "class": "ShipControllableAdapter",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 221,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "hp",
+            "is_derelict",
+            "layers",
+            "max_hp",
+            "resources"
+          ],
+          "implements_ratio": 0.17
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "hp",
+            "max_hp"
+          ],
+          "missing_methods": [
+            "is_alive",
+            "is_derelict",
+            "layers",
+            "resources"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "resources"
+          ],
+          "missing_methods": [
+            "hp",
+            "is_alive",
+            "is_derelict",
+            "layers",
+            "max_hp"
+          ],
+          "implements_ratio": 0.17
+        }
+      ]
+    },
+    {
+      "protocol": "ICombatant",
+      "file": "game/core/protocols/combat.py",
+      "line": 9,
+      "protocol_methods": [
+        "is_alive",
+        "position",
+        "team_id"
+      ],
+      "partial_implementers": [
+        {
+          "class": "IControllable",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 22,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "position",
+            "team_id"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "ShipControllableAdapter",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 221,
+          "implemented_methods": [
+            "is_alive"
+          ],
+          "missing_methods": [
+            "position",
+            "team_id"
+          ],
+          "implements_ratio": 0.33
+        }
+      ]
+    },
+    {
+      "protocol": "IDamageable",
+      "file": "game/core/protocols/combat.py",
+      "line": 27,
+      "protocol_methods": [
+        "current_hp",
+        "is_derelict",
+        "max_hp"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "max_hp"
+          ],
+          "missing_methods": [
+            "current_hp",
+            "is_derelict"
+          ],
+          "implements_ratio": 0.33
+        }
+      ]
+    },
+    {
+      "protocol": "ICombatShip",
+      "file": "game/simulation/interfaces/entity_protocols.py",
+      "line": 45,
+      "protocol_methods": [
+        "angle",
+        "combat_engine",
+        "current_shields",
+        "current_target",
+        "emissive_armor",
+        "get_all_components",
+        "get_components_by_ability",
+        "hp",
+        "is_alive",
+        "is_derelict",
+        "iter_components",
+        "layers",
+        "mass",
+        "max_hp",
+        "max_shields",
+        "max_targets",
+        "name",
+        "position",
+        "radius",
+        "recalculate_stats",
+        "repair_rate",
+        "resources",
+        "secondary_targets",
+        "shield_regen_rate",
+        "shield_regenerating_armor",
+        "team_id",
+        "total_defense_score",
+        "vehicle_type",
+        "velocity"
+      ],
+      "partial_implementers": [
+        {
+          "class": "IControllable",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 22,
+          "implemented_methods": [
+            "get_all_components",
+            "get_components_by_ability",
+            "is_alive"
+          ],
+          "missing_methods": [
+            "angle",
+            "combat_engine",
+            "current_shields",
+            "current_target",
+            "emissive_armor",
+            "hp",
+            "is_derelict",
+            "iter_components",
+            "layers",
+            "mass",
+            "max_hp",
+            "max_shields",
+            "max_targets",
+            "name",
+            "position",
+            "radius",
+            "recalculate_stats",
+            "repair_rate",
+            "resources",
+            "secondary_targets",
+            "shield_regen_rate",
+            "shield_regenerating_armor",
+            "team_id",
+            "total_defense_score",
+            "vehicle_type",
+            "velocity"
+          ],
+          "implements_ratio": 0.1
+        },
+        {
+          "class": "ShipControllableAdapter",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 221,
+          "implemented_methods": [
+            "get_all_components",
+            "get_components_by_ability",
+            "is_alive"
+          ],
+          "missing_methods": [
+            "angle",
+            "combat_engine",
+            "current_shields",
+            "current_target",
+            "emissive_armor",
+            "hp",
+            "is_derelict",
+            "iter_components",
+            "layers",
+            "mass",
+            "max_hp",
+            "max_shields",
+            "max_targets",
+            "name",
+            "position",
+            "radius",
+            "recalculate_stats",
+            "repair_rate",
+            "resources",
+            "secondary_targets",
+            "shield_regen_rate",
+            "shield_regenerating_armor",
+            "team_id",
+            "total_defense_score",
+            "vehicle_type",
+            "velocity"
+          ],
+          "implements_ratio": 0.1
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "combat_engine",
+            "get_all_components",
+            "get_components_by_ability",
+            "hp",
+            "iter_components",
+            "mass",
+            "max_hp",
+            "recalculate_stats"
+          ],
+          "missing_methods": [
+            "angle",
+            "current_shields",
+            "current_target",
+            "emissive_armor",
+            "is_alive",
+            "is_derelict",
+            "layers",
+            "max_shields",
+            "max_targets",
+            "name",
+            "position",
+            "radius",
+            "repair_rate",
+            "resources",
+            "secondary_targets",
+            "shield_regen_rate",
+            "shield_regenerating_armor",
+            "team_id",
+            "total_defense_score",
+            "vehicle_type",
+            "velocity"
+          ],
+          "implements_ratio": 0.28
+        },
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name",
+            "resources"
+          ],
+          "missing_methods": [
+            "angle",
+            "combat_engine",
+            "current_shields",
+            "current_target",
+            "emissive_armor",
+            "get_all_components",
+            "get_components_by_ability",
+            "hp",
+            "is_alive",
+            "is_derelict",
+            "iter_components",
+            "layers",
+            "mass",
+            "max_hp",
+            "max_shields",
+            "max_targets",
+            "position",
+            "radius",
+            "recalculate_stats",
+            "repair_rate",
+            "secondary_targets",
+            "shield_regen_rate",
+            "shield_regenerating_armor",
+            "team_id",
+            "total_defense_score",
+            "vehicle_type",
+            "velocity"
+          ],
+          "implements_ratio": 0.07
+        },
+        {
+          "class": "Galaxy",
+          "file": "game/strategy/data/galaxy.py",
+          "line": 33,
+          "implemented_methods": [
+            "radius"
+          ],
+          "missing_methods": [
+            "angle",
+            "combat_engine",
+            "current_shields",
+            "current_target",
+            "emissive_armor",
+            "get_all_components",
+            "get_components_by_ability",
+            "hp",
+            "is_alive",
+            "is_derelict",
+            "iter_components",
+            "layers",
+            "mass",
+            "max_hp",
+            "max_shields",
+            "max_targets",
+            "name",
+            "position",
+            "recalculate_stats",
+            "repair_rate",
+            "resources",
+            "secondary_targets",
+            "shield_regen_rate",
+            "shield_regenerating_armor",
+            "team_id",
+            "total_defense_score",
+            "vehicle_type",
+            "velocity"
+          ],
+          "implements_ratio": 0.03
+        }
+      ]
+    },
+    {
+      "protocol": "IEmpire",
+      "file": "game/core/protocols/strategy_domain.py",
+      "line": 17,
+      "protocol_methods": [
+        "built_ship_designs",
+        "colonies",
+        "color",
+        "empire_theme_id",
+        "flag_id",
+        "fleets",
+        "id",
+        "max_storage",
+        "name",
+        "portrait_id",
+        "race_config",
+        "resource_pool"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Empire",
+          "file": "game/strategy/data/empire.py",
+          "line": 17,
+          "implemented_methods": [
+            "resource_pool"
+          ],
+          "missing_methods": [
+            "built_ship_designs",
+            "colonies",
+            "color",
+            "empire_theme_id",
+            "flag_id",
+            "fleets",
+            "id",
+            "max_storage",
+            "name",
+            "portrait_id",
+            "race_config"
+          ],
+          "implements_ratio": 0.08
+        },
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name"
+          ],
+          "missing_methods": [
+            "built_ship_designs",
+            "colonies",
+            "color",
+            "empire_theme_id",
+            "flag_id",
+            "fleets",
+            "id",
+            "max_storage",
+            "portrait_id",
+            "race_config",
+            "resource_pool"
+          ],
+          "implements_ratio": 0.08
+        }
+      ]
+    },
+    {
+      "protocol": "IFacility",
+      "file": "game/core/protocols/strategy_domain.py",
+      "line": 81,
+      "protocol_methods": [
+        "construction_queue",
+        "consumable_levels",
+        "design_data",
+        "design_id",
+        "instance_id",
+        "is_operational",
+        "name"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name"
+          ],
+          "missing_methods": [
+            "construction_queue",
+            "consumable_levels",
+            "design_data",
+            "design_id",
+            "instance_id",
+            "is_operational"
+          ],
+          "implements_ratio": 0.14
+        }
+      ]
+    },
+    {
+      "protocol": "IStarSystem",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 14,
+      "protocol_methods": [
+        "global_location",
+        "name",
+        "planets",
+        "stars",
+        "storms",
+        "warp_points"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name"
+          ],
+          "missing_methods": [
+            "global_location",
+            "planets",
+            "stars",
+            "storms",
+            "warp_points"
+          ],
+          "implements_ratio": 0.17
+        }
+      ]
+    },
+    {
+      "protocol": "IStar",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 44,
+      "protocol_methods": [
+        "color",
+        "luminosity",
+        "mass",
+        "name",
+        "star_type",
+        "temperature"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "mass"
+          ],
+          "missing_methods": [
+            "color",
+            "luminosity",
+            "name",
+            "star_type",
+            "temperature"
+          ],
+          "implements_ratio": 0.17
+        },
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name"
+          ],
+          "missing_methods": [
+            "color",
+            "luminosity",
+            "mass",
+            "star_type",
+            "temperature"
+          ],
+          "implements_ratio": 0.17
+        }
+      ]
+    },
+    {
+      "protocol": "IPlanet",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 73,
+      "protocol_methods": [
+        "atmosphere",
+        "deposits",
+        "energy",
+        "energy_capacity",
+        "facilities",
+        "id",
+        "image_id",
+        "image_rotation",
+        "location",
+        "max_population",
+        "max_stockpile",
+        "name",
+        "orbit_distance",
+        "owner_id",
+        "planet_type",
+        "populations",
+        "radius_hexes",
+        "stockpile",
+        "surface_gravity",
+        "surface_temperature"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name"
+          ],
+          "missing_methods": [
+            "atmosphere",
+            "deposits",
+            "energy",
+            "energy_capacity",
+            "facilities",
+            "id",
+            "image_id",
+            "image_rotation",
+            "location",
+            "max_population",
+            "max_stockpile",
+            "orbit_distance",
+            "owner_id",
+            "planet_type",
+            "populations",
+            "radius_hexes",
+            "stockpile",
+            "surface_gravity",
+            "surface_temperature"
+          ],
+          "implements_ratio": 0.05
+        },
+        {
+          "class": "SystemAbilitySource",
+          "file": "game/strategy/services/ability_sources/system_archetype.py",
+          "line": 14,
+          "implemented_methods": [
+            "owner_id"
+          ],
+          "missing_methods": [
+            "atmosphere",
+            "deposits",
+            "energy",
+            "energy_capacity",
+            "facilities",
+            "id",
+            "image_id",
+            "image_rotation",
+            "location",
+            "max_population",
+            "max_stockpile",
+            "name",
+            "orbit_distance",
+            "planet_type",
+            "populations",
+            "radius_hexes",
+            "stockpile",
+            "surface_gravity",
+            "surface_temperature"
+          ],
+          "implements_ratio": 0.05
+        }
+      ]
+    },
+    {
+      "protocol": "IOrderable",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 176,
+      "protocol_methods": [
+        "add_order",
+        "clear_orders",
+        "get_current_order",
+        "orders",
+        "pop_order"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "add_order",
+            "clear_orders",
+            "get_current_order",
+            "pop_order"
+          ],
+          "missing_methods": [
+            "orders"
+          ],
+          "implements_ratio": 0.8
+        }
+      ]
+    },
+    {
+      "protocol": "IFleet",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 231,
+      "protocol_methods": [
+        "battle",
+        "capabilities",
+        "construction_queue",
+        "id",
+        "is_building",
+        "location",
+        "name",
+        "orders",
+        "owner_id",
+        "path",
+        "resources",
+        "ships",
+        "speed"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "battle",
+            "capabilities",
+            "is_building",
+            "name",
+            "resources"
+          ],
+          "missing_methods": [
+            "construction_queue",
+            "id",
+            "location",
+            "orders",
+            "owner_id",
+            "path",
+            "ships",
+            "speed"
+          ],
+          "implements_ratio": 0.38
+        },
+        {
+          "class": "SystemAbilitySource",
+          "file": "game/strategy/services/ability_sources/system_archetype.py",
+          "line": 14,
+          "implemented_methods": [
+            "owner_id"
+          ],
+          "missing_methods": [
+            "battle",
+            "capabilities",
+            "construction_queue",
+            "id",
+            "is_building",
+            "location",
+            "name",
+            "orders",
+            "path",
+            "resources",
+            "ships",
+            "speed"
+          ],
+          "implements_ratio": 0.08
+        },
+        {
+          "class": "BattleScreen",
+          "file": "game/ui/screens/battle_screen.py",
+          "line": 56,
+          "implemented_methods": [
+            "ships"
+          ],
+          "missing_methods": [
+            "battle",
+            "capabilities",
+            "construction_queue",
+            "id",
+            "is_building",
+            "location",
+            "name",
+            "orders",
+            "owner_id",
+            "path",
+            "resources",
+            "speed"
+          ],
+          "implements_ratio": 0.08
+        }
+      ]
+    },
+    {
+      "protocol": "ISectorEnvironment",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 318,
+      "protocol_methods": [
+        "calculate_radiation",
+        "local_hex",
+        "system"
+      ],
+      "partial_implementers": [
+        {
+          "class": "SectorEnvironment",
+          "file": "game/strategy/data/physics.py",
+          "line": 22,
+          "implemented_methods": [
+            "calculate_radiation"
+          ],
+          "missing_methods": [
+            "local_hex",
+            "system"
+          ],
+          "implements_ratio": 0.33
+        }
+      ]
+    },
+    {
+      "protocol": "IStorm",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 336,
+      "protocol_methods": [
+        "abilities",
+        "name",
+        "occupied_hexes",
+        "storm_type"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name"
+          ],
+          "missing_methods": [
+            "abilities",
+            "occupied_hexes",
+            "storm_type"
+          ],
+          "implements_ratio": 0.25
+        }
+      ]
+    },
+    {
+      "protocol": "IAbilitySource",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 360,
+      "protocol_methods": [
+        "affects_hex",
+        "affects_system",
+        "get_abilities",
+        "get_activation_state",
+        "owner_id",
+        "source_id",
+        "source_kind",
+        "source_label"
+      ],
+      "partial_implementers": [
+        {
+          "class": "AbilityManager",
+          "file": "game/simulation/components/ability_manager.py",
+          "line": 31,
+          "implemented_methods": [
+            "get_abilities"
+          ],
+          "missing_methods": [
+            "affects_hex",
+            "affects_system",
+            "get_activation_state",
+            "owner_id",
+            "source_id",
+            "source_kind",
+            "source_label"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "Component",
+          "file": "game/simulation/components/component.py",
+          "line": 81,
+          "implemented_methods": [
+            "get_abilities"
+          ],
+          "missing_methods": [
+            "affects_hex",
+            "affects_system",
+            "get_activation_state",
+            "owner_id",
+            "source_id",
+            "source_kind",
+            "source_label"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "PlanetaryFacility",
+          "file": "game/strategy/data/planetary_facility.py",
+          "line": 20,
+          "implemented_methods": [
+            "get_activation_state"
+          ],
+          "missing_methods": [
+            "affects_hex",
+            "affects_system",
+            "get_abilities",
+            "owner_id",
+            "source_id",
+            "source_kind",
+            "source_label"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "ShipInstance",
+          "file": "game/strategy/data/ship_instance.py",
+          "line": 98,
+          "implemented_methods": [
+            "get_activation_state"
+          ],
+          "missing_methods": [
+            "affects_hex",
+            "affects_system",
+            "get_abilities",
+            "owner_id",
+            "source_id",
+            "source_kind",
+            "source_label"
+          ],
+          "implements_ratio": 0.12
+        }
+      ]
+    },
+    {
+      "protocol": "IFleetMutator",
+      "file": "game/core/protocols/strategy_mutators.py",
+      "line": 39,
+      "protocol_methods": [
+        "add_ship",
+        "add_task_force",
+        "append_construction_item",
+        "append_order",
+        "clear_orders",
+        "insert_order",
+        "pop_construction_item",
+        "pop_order",
+        "remove_ship",
+        "remove_task_force",
+        "set_construction_queue_paused",
+        "set_display_name",
+        "set_fleet_policy",
+        "set_location",
+        "set_path",
+        "swap_orders"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "add_ship",
+            "add_task_force",
+            "clear_orders",
+            "pop_order",
+            "remove_ship",
+            "remove_task_force"
+          ],
+          "missing_methods": [
+            "append_construction_item",
+            "append_order",
+            "insert_order",
+            "pop_construction_item",
+            "set_construction_queue_paused",
+            "set_display_name",
+            "set_fleet_policy",
+            "set_location",
+            "set_path",
+            "swap_orders"
+          ],
+          "implements_ratio": 0.38
+        },
+        {
+          "class": "BattleSetupController",
+          "file": "game/ui/screens/battle_setup/controller.py",
+          "line": 60,
+          "implemented_methods": [
+            "add_task_force",
+            "remove_ship"
+          ],
+          "missing_methods": [
+            "add_ship",
+            "append_construction_item",
+            "append_order",
+            "clear_orders",
+            "insert_order",
+            "pop_construction_item",
+            "pop_order",
+            "remove_task_force",
+            "set_construction_queue_paused",
+            "set_display_name",
+            "set_fleet_policy",
+            "set_location",
+            "set_path",
+            "swap_orders"
+          ],
+          "implements_ratio": 0.12
+        }
+      ]
+    },
+    {
+      "protocol": "IPlanetMutator",
+      "file": "game/core/protocols/strategy_mutators.py",
+      "line": 77,
+      "protocol_methods": [
+        "add_facility",
+        "add_species_population",
+        "add_staging_item",
+        "append_construction_item",
+        "append_order",
+        "clear_orders",
+        "insert_order",
+        "pop_construction_item",
+        "pop_order",
+        "pop_staging_item",
+        "remove_facility",
+        "remove_species_population",
+        "set_atmosphere",
+        "set_atmosphere_target",
+        "set_energy",
+        "set_energy_capacity",
+        "set_energy_generation",
+        "set_gravity_target",
+        "set_max_stockpile",
+        "set_owner_id",
+        "set_radiation_shielding",
+        "set_radiation_shielding_target",
+        "set_stockpile_amount",
+        "set_water_target",
+        "update_population_count"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "clear_orders",
+            "pop_order"
+          ],
+          "missing_methods": [
+            "add_facility",
+            "add_species_population",
+            "add_staging_item",
+            "append_construction_item",
+            "append_order",
+            "insert_order",
+            "pop_construction_item",
+            "pop_staging_item",
+            "remove_facility",
+            "remove_species_population",
+            "set_atmosphere",
+            "set_atmosphere_target",
+            "set_energy",
+            "set_energy_capacity",
+            "set_energy_generation",
+            "set_gravity_target",
+            "set_max_stockpile",
+            "set_owner_id",
+            "set_radiation_shielding",
+            "set_radiation_shielding_target",
+            "set_stockpile_amount",
+            "set_water_target",
+            "update_population_count"
+          ],
+          "implements_ratio": 0.08
+        }
+      ]
+    },
+    {
+      "protocol": "IEmpireMutator",
+      "file": "game/core/protocols/strategy_mutators.py",
+      "line": 134,
+      "protocol_methods": [
+        "add_built_design",
+        "add_colony",
+        "add_fleet",
+        "clear_colonies",
+        "prune_empty_fleets",
+        "remove_colony",
+        "remove_fleet",
+        "replace_max_storage",
+        "set_max_storage_amount"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Empire",
+          "file": "game/strategy/data/empire.py",
+          "line": 17,
+          "implemented_methods": [
+            "add_colony",
+            "add_fleet",
+            "remove_colony",
+            "remove_fleet"
+          ],
+          "missing_methods": [
+            "add_built_design",
+            "clear_colonies",
+            "prune_empty_fleets",
+            "replace_max_storage",
+            "set_max_storage_amount"
+          ],
+          "implements_ratio": 0.44
+        },
+        {
+          "class": "BattleSetupController",
+          "file": "game/ui/screens/battle_setup/controller.py",
+          "line": 60,
+          "implemented_methods": [
+            "add_fleet",
+            "remove_fleet"
+          ],
+          "missing_methods": [
+            "add_built_design",
+            "add_colony",
+            "clear_colonies",
+            "prune_empty_fleets",
+            "remove_colony",
+            "replace_max_storage",
+            "set_max_storage_amount"
+          ],
+          "implements_ratio": 0.22
+        }
+      ]
+    },
+    {
+      "protocol": "IScene",
+      "file": "game/core/protocols/ui.py",
+      "line": 9,
+      "protocol_methods": [
+        "draw",
+        "handle_event",
+        "handle_resize",
+        "update"
+      ],
+      "partial_implementers": [
+        {
+          "class": "AIBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 82,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "RamBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 94,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "FleeBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 99,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "KiteBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 113,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "AttackRunBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 204,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "DoNothingBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 276,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "StationaryFireBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 285,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "StraightLineBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 294,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "RotateOnlyBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 303,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "ErraticBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 313,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "OrbitBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 386,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "Ability",
+          "file": "game/simulation/components/abilities/base.py",
+          "line": 59,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "RetreatManager",
+          "file": "game/simulation/managers/retreat_manager.py",
+          "line": 47,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "BattlePanel",
+          "file": "game/ui/panels/battle_panels.py",
+          "line": 27,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "ShipStatsPanel",
+          "file": "game/ui/panels/battle_panels.py",
+          "line": 83,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "SeekerMonitorPanel",
+          "file": "game/ui/panels/battle_panels.py",
+          "line": 263,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "BattleControlPanel",
+          "file": "game/ui/panels/battle_panels.py",
+          "line": 476,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "ModifierEditorPanel",
+          "file": "game/ui/panels/builder_widgets.py",
+          "line": 25,
+          "implemented_methods": [
+            "handle_event",
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "StatRow",
+          "file": "game/ui/panels/design_stats_panel.py",
+          "line": 32,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "DesignStatsPanel",
+          "file": "game/ui/panels/design_stats_panel.py",
+          "line": 102,
+          "implemented_methods": [
+            "handle_event"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "BuildQueueScreen",
+          "file": "game/ui/screens/build_queue_screen.py",
+          "line": 38,
+          "implemented_methods": [
+            "draw",
+            "handle_event",
+            "update"
+          ],
+          "missing_methods": [
+            "handle_resize"
+          ],
+          "implements_ratio": 0.75
+        },
+        {
+          "class": "EmpireBuildQueueWindow",
+          "file": "game/ui/screens/empire_build_queue_window.py",
+          "line": 133,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "PlanetListWindow",
+          "file": "game/ui/screens/planet_list_window.py",
+          "line": 217,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "SaveSelectionWindow",
+          "file": "game/ui/screens/save_selection_window.py",
+          "line": 107,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "SystemSelectionWindow",
+          "file": "game/ui/screens/system_selection_window.py",
+          "line": 69,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "WaterTargetEditor",
+          "file": "game/ui/screens/water_target_editor.py",
+          "line": 28,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_event",
+            "handle_resize"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "WorkshopEventRouter",
+          "file": "game/ui/screens/workshop_event_router.py",
+          "line": 29,
+          "implemented_methods": [
+            "handle_event"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "BattleSetupInputHandler",
+          "file": "game/ui/screens/battle_setup/input_handler.py",
+          "line": 25,
+          "implemented_methods": [
+            "handle_event"
+          ],
+          "missing_methods": [
+            "draw",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "BackgroundLayer",
+          "file": "game/ui/screens/strategy_render/background.py",
+          "line": 16,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "HexOutlineLayer",
+          "file": "game/ui/screens/strategy_render/hex_outlines.py",
+          "line": 17,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "TestRunCard",
+          "file": "game/ui/screens/test_lab/test_run_card.py",
+          "line": 17,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "TestRunDetailsPanel",
+          "file": "game/ui/screens/test_lab/details/panel.py",
+          "line": 31,
+          "implemented_methods": [
+            "draw",
+            "handle_event"
+          ],
+          "missing_methods": [
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "CategoryPanel",
+          "file": "game/ui/screens/test_lab/renderer/category_panel.py",
+          "line": 25,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "TestListPanel",
+          "file": "game/ui/screens/test_lab/renderer/test_list_panel.py",
+          "line": 24,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        },
+        {
+          "class": "ValidationPanel",
+          "file": "game/ui/screens/test_lab/renderer/validation_panel.py",
+          "line": 24,
+          "implemented_methods": [
+            "draw"
+          ],
+          "missing_methods": [
+            "handle_event",
+            "handle_resize",
+            "update"
+          ],
+          "implements_ratio": 0.25
+        }
+      ]
+    },
+    {
+      "protocol": "ICamera",
+      "file": "game/core/protocols/ui.py",
+      "line": 34,
+      "protocol_methods": [
+        "height",
+        "position",
+        "screen_to_world",
+        "update",
+        "update_input",
+        "width",
+        "world_to_screen",
+        "zoom"
+      ],
+      "partial_implementers": [
+        {
+          "class": "AIBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 82,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "RamBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 94,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "FleeBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 99,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "KiteBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 113,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "AttackRunBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 204,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "DoNothingBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 276,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "StationaryFireBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 285,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "StraightLineBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 294,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "RotateOnlyBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 303,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "ErraticBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 313,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "OrbitBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 386,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "Ability",
+          "file": "game/simulation/components/abilities/base.py",
+          "line": 59,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "RetreatManager",
+          "file": "game/simulation/managers/retreat_manager.py",
+          "line": 47,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "ModifierEditorPanel",
+          "file": "game/ui/panels/builder_widgets.py",
+          "line": 25,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "StatRow",
+          "file": "game/ui/panels/design_stats_panel.py",
+          "line": 32,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "BattleScreen",
+          "file": "game/ui/screens/battle_screen.py",
+          "line": 56,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "BuildQueueScreen",
+          "file": "game/ui/screens/build_queue_screen.py",
+          "line": 38,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "EmpireBuildQueueWindow",
+          "file": "game/ui/screens/empire_build_queue_window.py",
+          "line": 133,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "PlanetListWindow",
+          "file": "game/ui/screens/planet_list_window.py",
+          "line": 217,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "SaveSelectionWindow",
+          "file": "game/ui/screens/save_selection_window.py",
+          "line": 107,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "SystemSelectionWindow",
+          "file": "game/ui/screens/system_selection_window.py",
+          "line": 69,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        },
+        {
+          "class": "WaterTargetEditor",
+          "file": "game/ui/screens/water_target_editor.py",
+          "line": 28,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "height",
+            "position",
+            "screen_to_world",
+            "update_input",
+            "width",
+            "world_to_screen",
+            "zoom"
+          ],
+          "implements_ratio": 0.12
+        }
+      ]
+    },
+    {
+      "protocol": "IAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 44,
+      "protocol_methods": [
+        "get_effect_summary",
+        "get_ui_rows",
+        "stack_group",
+        "sync_data",
+        "tags"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Ability",
+          "file": "game/simulation/components/abilities/base.py",
+          "line": 59,
+          "implemented_methods": [
+            "get_effect_summary",
+            "get_ui_rows",
+            "sync_data",
+            "tags"
+          ],
+          "missing_methods": [
+            "stack_group"
+          ],
+          "implements_ratio": 0.8
+        },
+        {
+          "class": "StaticValueAbility",
+          "file": "game/simulation/components/abilities/base.py",
+          "line": 428,
+          "implemented_methods": [
+            "get_ui_rows"
+          ],
+          "missing_methods": [
+            "get_effect_summary",
+            "stack_group",
+            "sync_data",
+            "tags"
+          ],
+          "implements_ratio": 0.2
+        },
+        {
+          "class": "SimpleMultiplierAbility",
+          "file": "game/simulation/components/abilities/base.py",
+          "line": 480,
+          "implemented_methods": [
+            "get_ui_rows"
+          ],
+          "missing_methods": [
+            "get_effect_summary",
+            "stack_group",
+            "sync_data",
+            "tags"
+          ],
+          "implements_ratio": 0.2
+        },
+        {
+          "class": "CrewRequired",
+          "file": "game/simulation/components/abilities/crew.py",
+          "line": 43,
+          "implemented_methods": [
+            "get_ui_rows"
+          ],
+          "missing_methods": [
+            "get_effect_summary",
+            "stack_group",
+            "sync_data",
+            "tags"
+          ],
+          "implements_ratio": 0.2
+        },
+        {
+          "class": "SuperweaponMarker",
+          "file": "game/simulation/components/abilities/superweapons.py",
+          "line": 25,
+          "implemented_methods": [
+            "get_ui_rows"
+          ],
+          "missing_methods": [
+            "get_effect_summary",
+            "stack_group",
+            "sync_data",
+            "tags"
+          ],
+          "implements_ratio": 0.2
+        }
+      ]
+    },
+    {
+      "protocol": "IAIController",
+      "file": "game/simulation/interfaces/ai_controller.py",
+      "line": 23,
+      "protocol_methods": [
+        "ship",
+        "update"
+      ],
+      "partial_implementers": [
+        {
+          "class": "AIBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 82,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "RamBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 94,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "FleeBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 99,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "KiteBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 113,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "AttackRunBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 204,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "DoNothingBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 276,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "StationaryFireBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 285,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "StraightLineBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 294,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "RotateOnlyBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 303,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "ErraticBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 313,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "OrbitBehavior",
+          "file": "game/ai/behaviors.py",
+          "line": 386,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "ShipControllableAdapter",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 221,
+          "implemented_methods": [
+            "ship"
+          ],
+          "missing_methods": [
+            "update"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "Ability",
+          "file": "game/simulation/components/abilities/base.py",
+          "line": 59,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "RetreatManager",
+          "file": "game/simulation/managers/retreat_manager.py",
+          "line": 47,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "ModifierEditorPanel",
+          "file": "game/ui/panels/builder_widgets.py",
+          "line": 25,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "StatRow",
+          "file": "game/ui/panels/design_stats_panel.py",
+          "line": 32,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "BattleScreen",
+          "file": "game/ui/screens/battle_screen.py",
+          "line": 56,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "BuildQueueScreen",
+          "file": "game/ui/screens/build_queue_screen.py",
+          "line": 38,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "EmpireBuildQueueWindow",
+          "file": "game/ui/screens/empire_build_queue_window.py",
+          "line": 133,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "PlanetListWindow",
+          "file": "game/ui/screens/planet_list_window.py",
+          "line": 217,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "SaveSelectionWindow",
+          "file": "game/ui/screens/save_selection_window.py",
+          "line": 107,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "SystemSelectionWindow",
+          "file": "game/ui/screens/system_selection_window.py",
+          "line": 69,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        },
+        {
+          "class": "WaterTargetEditor",
+          "file": "game/ui/screens/water_target_editor.py",
+          "line": 28,
+          "implemented_methods": [
+            "update"
+          ],
+          "missing_methods": [
+            "ship"
+          ],
+          "implements_ratio": 0.5
+        }
+      ]
+    },
+    {
+      "protocol": "IComponent",
+      "file": "game/simulation/interfaces/component_protocols.py",
+      "line": 42,
+      "protocol_methods": [
+        "abilities",
+        "ability_instances",
+        "ability_stats",
+        "can_afford_activation",
+        "cost",
+        "current_hp",
+        "get_abilities",
+        "get_ability",
+        "has_ability",
+        "has_pdc_ability",
+        "id",
+        "is_active",
+        "layer_assigned",
+        "max_hp",
+        "modifiers",
+        "name",
+        "ship",
+        "shots_fired",
+        "shots_hit",
+        "stats",
+        "status"
+      ],
+      "partial_implementers": [
+        {
+          "class": "ShipControllableAdapter",
+          "file": "game/ai/interfaces/controllable.py",
+          "line": 221,
+          "implemented_methods": [
+            "ship"
+          ],
+          "missing_methods": [
+            "abilities",
+            "ability_instances",
+            "ability_stats",
+            "can_afford_activation",
+            "cost",
+            "current_hp",
+            "get_abilities",
+            "get_ability",
+            "has_ability",
+            "has_pdc_ability",
+            "id",
+            "is_active",
+            "layer_assigned",
+            "max_hp",
+            "modifiers",
+            "name",
+            "shots_fired",
+            "shots_hit",
+            "stats",
+            "status"
+          ],
+          "implements_ratio": 0.05
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "max_hp"
+          ],
+          "missing_methods": [
+            "abilities",
+            "ability_instances",
+            "ability_stats",
+            "can_afford_activation",
+            "cost",
+            "current_hp",
+            "get_abilities",
+            "get_ability",
+            "has_ability",
+            "has_pdc_ability",
+            "id",
+            "is_active",
+            "layer_assigned",
+            "modifiers",
+            "name",
+            "ship",
+            "shots_fired",
+            "shots_hit",
+            "stats",
+            "status"
+          ],
+          "implements_ratio": 0.05
+        },
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name"
+          ],
+          "missing_methods": [
+            "abilities",
+            "ability_instances",
+            "ability_stats",
+            "can_afford_activation",
+            "cost",
+            "current_hp",
+            "get_abilities",
+            "get_ability",
+            "has_ability",
+            "has_pdc_ability",
+            "id",
+            "is_active",
+            "layer_assigned",
+            "max_hp",
+            "modifiers",
+            "ship",
+            "shots_fired",
+            "shots_hit",
+            "stats",
+            "status"
+          ],
+          "implements_ratio": 0.05
+        },
+        {
+          "class": "SystemAbilitySource",
+          "file": "game/strategy/services/ability_sources/system_archetype.py",
+          "line": 14,
+          "implemented_methods": [
+            "get_abilities"
+          ],
+          "missing_methods": [
+            "abilities",
+            "ability_instances",
+            "ability_stats",
+            "can_afford_activation",
+            "cost",
+            "current_hp",
+            "get_ability",
+            "has_ability",
+            "has_pdc_ability",
+            "id",
+            "is_active",
+            "layer_assigned",
+            "max_hp",
+            "modifiers",
+            "name",
+            "ship",
+            "shots_fired",
+            "shots_hit",
+            "stats",
+            "status"
+          ],
+          "implements_ratio": 0.05
+        }
+      ]
+    },
+    {
+      "protocol": "IPhysicsShip",
+      "file": "game/simulation/interfaces/entity_protocols.py",
+      "line": 379,
+      "protocol_methods": [
+        "acceleration_rate",
+        "engine_throttle",
+        "is_thrusting",
+        "mass",
+        "turn_speed",
+        "turn_throttle"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "mass"
+          ],
+          "missing_methods": [
+            "acceleration_rate",
+            "engine_throttle",
+            "is_thrusting",
+            "turn_speed",
+            "turn_throttle"
+          ],
+          "implements_ratio": 0.17
+        }
+      ]
+    },
+    {
+      "protocol": "IEndCondition",
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 64,
+      "protocol_methods": [
+        "description",
+        "is_met",
+        "to_dict"
+      ],
+      "partial_implementers": [
+        {
+          "class": "NodeState",
+          "file": "game/research/data/research_tracker.py",
+          "line": 17,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "ResearchTracker",
+          "file": "game/research/data/research_tracker.py",
+          "line": 41,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "Ship",
+          "file": "game/simulation/entities/ship.py",
+          "line": 34,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "ReplaySpec",
+          "file": "game/simulation/replay/replay_spec.py",
+          "line": 92,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "ColonySpeciesConfig",
+          "file": "game/strategy/data/colony_species_config.py",
+          "line": 54,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "ComponentActivationState",
+          "file": "game/strategy/data/component_activation_state.py",
+          "line": 29,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "Empire",
+          "file": "game/strategy/data/empire.py",
+          "line": 17,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "Galaxy",
+          "file": "game/strategy/data/galaxy.py",
+          "line": 33,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "ShipInstanceSerializer",
+          "file": "game/strategy/data/ship_instance_serializer.py",
+          "line": 21,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "PlayerConfig",
+          "file": "game/strategy/engine/game_config.py",
+          "line": 63,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "GameConfig",
+          "file": "game/strategy/engine/game_config.py",
+          "line": 142,
+          "implemented_methods": [
+            "to_dict"
+          ],
+          "missing_methods": [
+            "description",
+            "is_met"
+          ],
+          "implements_ratio": 0.33
+        }
+      ]
+    },
+    {
+      "protocol": "ITickPhase",
+      "file": "game/simulation/systems/tick_phase.py",
+      "line": 37,
+      "protocol_methods": [
+        "execute",
+        "name",
+        "priority"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "name"
+          ],
+          "missing_methods": [
+            "execute",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "ImplodePlanetCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 56,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "StellerateStarCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 91,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "OpenWarpPointCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 122,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "CloseWarpPointCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 157,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "CreateDysonSphereCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 191,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "SelfDestructCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 222,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "ImplodePlanetMissionCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 252,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "StellerateStarMissionCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 293,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "OpenWarpPointMissionCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 329,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "CloseWarpPointMissionCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 370,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "CreateDysonSphereMissionCommandHandler",
+          "file": "game/strategy/engine/superweapon_command_handlers.py",
+          "line": 412,
+          "implemented_methods": [
+            "execute"
+          ],
+          "missing_methods": [
+            "name",
+            "priority"
+          ],
+          "implements_ratio": 0.33
+        }
+      ]
+    },
+    {
+      "protocol": "BuildContext",
+      "file": "game/strategy/data/build_context.py",
+      "line": 11,
+      "protocol_methods": [
+        "can_build_type",
+        "construction_queue",
+        "context_type",
+        "has_space_shipyard",
+        "name",
+        "owner_id"
+      ],
+      "partial_implementers": [
+        {
+          "class": "Fleet",
+          "file": "game/strategy/data/fleet.py",
+          "line": 39,
+          "implemented_methods": [
+            "context_type",
+            "name"
+          ],
+          "missing_methods": [
+            "can_build_type",
+            "construction_queue",
+            "has_space_shipyard",
+            "owner_id"
+          ],
+          "implements_ratio": 0.33
+        },
+        {
+          "class": "SystemAbilitySource",
+          "file": "game/strategy/services/ability_sources/system_archetype.py",
+          "line": 14,
+          "implemented_methods": [
+            "owner_id"
+          ],
+          "missing_methods": [
+            "can_build_type",
+            "construction_queue",
+            "context_type",
+            "has_space_shipyard",
+            "name"
+          ],
+          "implements_ratio": 0.17
+        }
+      ]
+    },
+    {
+      "protocol": "IBattleUI",
+      "file": "game/ui/interfaces/battle_ui.py",
+      "line": 176,
+      "protocol_methods": [
+        "get_projectiles",
+        "get_recent_beams",
+        "get_ships",
+        "get_tick_count",
+        "get_winner",
+        "is_battle_over"
+      ],
+      "partial_implementers": [
+        {
+          "class": "BattleScreen",
+          "file": "game/ui/screens/battle_screen.py",
+          "line": 56,
+          "implemented_methods": [
+            "get_winner",
+            "is_battle_over"
+          ],
+          "missing_methods": [
+            "get_projectiles",
+            "get_recent_beams",
+            "get_ships",
+            "get_tick_count"
+          ],
+          "implements_ratio": 0.33
+        }
+      ]
+    }
+  ]
+}

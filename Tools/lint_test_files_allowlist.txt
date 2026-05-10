@@ -1,0 +1,110 @@
+# lint_test_files allowlist
+#
+# Format:
+#   - One path or glob per line, relative to the repo root.
+#   - Glob patterns are matched by `lint_test_files.py`'s internal
+#     `_glob_to_regex` POSIX-glob translator (NOT `pathlib.PurePosixPath.match`,
+#     which does not recurse on `**`).
+#       e.g. `tests/unit/tools/**/*.py` matches every Python file under
+#       tests/unit/tools/ at any depth.
+#   - Blank lines and `#` comments are ignored.
+#
+# Rule of thumb: only allowlist a file if it legitimately should NOT import
+# `game.*` — typically because it tests repo tooling, the test infrastructure
+# itself, or test data fixtures. If a test file is here because it
+# reimplements production logic locally, it should be deleted instead.
+#
+# See `Tools/lint_test_files.py` and `Projects/active_projects/PROJ-326/` for
+# the full audit history.
+
+# --- Tools tests (test repo tooling, not game internals) -----------------
+tests/unit/tools/**/*.py
+
+# --- Combat lab service tests --------------------------------------------
+tests/unit/combat_lab/**/*.py
+
+# --- Test data fixtures --------------------------------------------------
+tests/data/**/*.py
+
+# --- Test infrastructure (PROJ-326 Phase 1 Task 1.4) ---------------------
+# This file's logic was migrated into Tools/lint_test_files.py.
+tests/unit/data/test_test_infrastructure.py
+
+# --- Phase 3 audit additions (PROJ-326) ----------------------------------
+
+# Project-management tooling tests (Projects/scripts/phase_workflow/, etc.)
+tests/projects/**/*.py
+
+# Agent-coordination skill / discussion-protocol tests (test repo tooling
+# under .agents/skills/ and AgentCoordination/, not game internals).
+tests/unit/agent_coordination/**/*.py
+
+# Shared test fixtures + factories — not tests themselves.
+tests/fixtures/**/*.py
+tests/unit/fixtures/**/*.py
+
+# Save/load deep-compare + state-snapshot helpers (test infrastructure).
+tests/infrastructure/**/*.py
+tests/unit/infrastructure/**/*.py
+
+# Test doubles (MockAIController and friends).
+tests/unit/simulation/mocks/**/*.py
+
+# Architecture / layer-rule AST guards — they scan game/ source via the
+# filesystem rather than importing it.
+tests/regression/test_services_layer_rule.py
+tests/static_guards/test_facade_bypass_guard.py
+tests/unit/quality/test_no_unseeded_random.py
+tests/unit/simulation/entities/stat_contributors/test_typed_contributor_migration.py
+tests/unit/simulation/replay/test_replay_verifier_imports.py
+tests/unit/simulation/entities/test_ship_component_manager_di.py
+tests/unit/strategy/adapters/test_no_ai_import.py
+tests/unit/strategy/data/_mutator_ast_walker.py
+tests/unit/strategy/data/test_data_layer_boundaries.py
+tests/unit/strategy/data/test_galaxy_planet_star_loc_ceilings.py
+tests/unit/strategy/data/test_galaxy_state_encapsulation.py
+tests/unit/strategy/data/test_mutator_boundary_ast_guard.py
+tests/unit/strategy/data/test_mutator_boundary_ast_guard_self_test.py
+tests/unit/strategy/data/test_no_method_body_over_5_loc.py
+tests/unit/strategy/data/test_pathfinding_shim_scope.py
+tests/unit/strategy/engine/order_handlers/test_order_processor_facade.py
+tests/unit/strategy/engine/test_no_specs_tuple_literal.py
+tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py
+tests/unit/strategy/interfaces/test_engine_inheritance.py
+tests/unit/strategy/services/test_ability_sources_no_global_registry_access.py
+
+# JSON-schema / data-fixture regression tests (stdlib only).
+tests/regression/test_caption_schemas_validate.py
+tests/unit/data/test_data_validation.py
+
+# pygame_gui-only repro (no game.* dependency).
+tests/repro_issues/test_bug_11_dialog_size.py
+
+# Tests that depend on game.* through a sibling conftest.py (the linter
+# does not trace through fixtures). Each entry is allowlisted because the
+# real game.* coverage arrives via a fixture in the directory's conftest.py
+# rather than via a top-level `import game.*` in the test file. Audit S3
+# (2026-05-04) verified each entry's nearest conftest.py imports game.*; if
+# you remove a conftest.py here, the corresponding test must also leave the
+# allowlist or the lint regression will not catch a real coverage loss.
+# (Inline `#` after a path is NOT supported by the parser — keep rationale
+# comments on their own lines, prefixed with `#`.)
+
+# save/load fixtures arrive via tests/integration/save_load/conftest.py
+tests/integration/save_load/test_live_verification.py
+# profiling recorder fixtures arrive via tests/unit/core/profiling/conftest.py
+tests/unit/core/profiling/test_recording.py
+# collision-engine fixtures arrive via tests/unit/engine/collision_edge_cases/conftest.py (shared by both files)
+tests/unit/engine/collision_edge_cases/test_ccd.py
+tests/unit/engine/collision_edge_cases/test_damage_tracking.py
+# research-controls fixtures arrive via tests/unit/research/research_controls/conftest.py
+tests/unit/research/research_controls/test_reset_state.py
+tests/unit/research/research_controls/test_event_routing_and_updates.py
+# research-renderer fixtures arrive via tests/unit/research/conftest.py
+tests/unit/research/test_research_renderer.py
+# research-renderer drawing tests load module via importlib (PROJ-337)
+tests/unit/research/test_research_renderer_drawing.py
+# LLM service fixtures arrive via tests/unit/services/llm/conftest.py
+tests/unit/services/llm/test_http_block.py
+# battle-controller fixtures arrive via tests/unit/simulation/battle_controller/conftest.py
+tests/unit/simulation/battle_controller/test_utilities.py

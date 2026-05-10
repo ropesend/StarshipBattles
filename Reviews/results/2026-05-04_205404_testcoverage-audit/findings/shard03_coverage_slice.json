@@ -1,0 +1,5791 @@
+{
+  "game/core/__init__.py": {
+    "layer": "core",
+    "loc": 179,
+    "candidate_test_files": [
+      "tests/unit/core/profiling/test_persistence.py",
+      "tests/unit/core/test_simulation_constants.py",
+      "tests/unit/strategy/save_game_service/conftest.py",
+      "tests/unit/strategy/save_game_service/test_error_handling.py",
+      "tests/unit/strategy/save_game_service/test_load_helpers.py",
+      "tests/unit/strategy/save_game_service/test_save_load_ops.py",
+      "tests/unit/test_app_bootstrap_invariants.py",
+      "tests/unit/ui/test_save_selection.py"
+    ],
+    "total_symbols": 0,
+    "tested_symbols": 0,
+    "untested_symbols": [],
+    "coverage_tier": 1,
+    "tier_label": "TIER_1_NO_SYMBOLS_TESTED",
+    "symbol_coverage": {}
+  },
+  "game/core/input_actions.py": {
+    "layer": "core",
+    "loc": 344,
+    "candidate_test_files": [
+      "tests/unit/core/test_input_actions.py",
+      "tests/unit/ui/screens/test_build_queue_list_window.py",
+      "tests/unit/ui/screens/test_keybindings_scene.py",
+      "tests/unit/ui/screens/test_strategy_input_handler_core.py",
+      "tests/unit/ui/screens/test_strategy_input_handler_hotkeys.py",
+      "tests/unit/ui/screens/test_strategy_ui_tooltips.py",
+      "tests/unit/ui/screens/test_superweapon_input_modes.py",
+      "tests/unit/ui/services/test_input_mapper.py"
+    ],
+    "total_symbols": 6,
+    "tested_symbols": 5,
+    "untested_symbols": [
+      "KeyBinding._key_display_name"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "InputAction": {
+        "type": "class",
+        "line": 21,
+        "aliases": [],
+        "matched_names": [
+          "InputAction"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_input_actions.py",
+          "tests/unit/ui/screens/test_build_queue_list_window.py",
+          "tests/unit/ui/screens/test_keybindings_scene.py",
+          "tests/unit/ui/screens/test_strategy_input_handler_core.py",
+          "tests/unit/ui/screens/test_strategy_input_handler_hotkeys.py",
+          "tests/unit/ui/screens/test_strategy_ui_tooltips.py",
+          "tests/unit/ui/screens/test_superweapon_input_modes.py",
+          "tests/unit/ui/services/test_input_mapper.py"
+        ],
+        "heuristic_match": true
+      },
+      "KeyBinding": {
+        "type": "class",
+        "line": 276,
+        "aliases": [],
+        "matched_names": [
+          "KeyBinding"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_input_actions.py",
+          "tests/unit/ui/screens/test_keybindings_scene.py",
+          "tests/unit/ui/screens/test_strategy_input_handler_hotkeys.py",
+          "tests/unit/ui/services/test_input_mapper.py"
+        ],
+        "heuristic_match": true
+      },
+      "KeyBinding.display_text": {
+        "type": "method",
+        "line": 287,
+        "aliases": [
+          "display_text"
+        ],
+        "matched_names": [
+          "display_text"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_input_actions.py"
+        ],
+        "heuristic_match": true
+      },
+      "KeyBinding._key_display_name": {
+        "type": "method",
+        "line": 301,
+        "aliases": [
+          "_key_display_name"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "KeyBinding.from_dict": {
+        "type": "method",
+        "line": 318,
+        "aliases": [
+          "from_dict"
+        ],
+        "matched_names": [
+          "KeyBinding.from_dict",
+          "from_dict"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_input_actions.py"
+        ],
+        "heuristic_match": true
+      },
+      "KeyBinding.to_dict": {
+        "type": "method",
+        "line": 335,
+        "aliases": [
+          "to_dict"
+        ],
+        "matched_names": [
+          "to_dict"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_input_actions.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/core/paths.py": {
+    "layer": "core",
+    "loc": 197,
+    "candidate_test_files": [
+      "tests/unit/assets/test_asset_manager_resolutions.py",
+      "tests/unit/core/test_paths_config.py",
+      "tests/unit/quickstart/conftest.py",
+      "tests/unit/simulation/entities/test_ship_loader.py",
+      "tests/unit/simulation/systems/test_battle_logger.py",
+      "tests/unit/simulation/systems/test_ship_design_stats.py",
+      "tests/unit/simulation/systems/test_ship_stats_strategy_attributes.py",
+      "tests/unit/strategy/data/test_race_caption_loader.py",
+      "tests/unit/strategy/services/ability_sources/test_dual_scope_validation.py",
+      "tests/unit/ui/screens/test_keybindings_scene.py",
+      "tests/unit/ui/screens/test_setup_data_io.py",
+      "tests/unit/ui/screens/test_strategy_input_handler_core.py",
+      "tests/unit/ui/screens/test_strategy_input_handler_hotkeys.py",
+      "tests/unit/ui/screens/test_strategy_input_handler_transfer.py",
+      "tests/unit/ui/screens/test_strategy_ui_tooltips.py",
+      "tests/unit/ui/screens/test_sub_window_hotkeys.py",
+      "tests/unit/ui/screens/test_warp_hotkey.py",
+      "tests/unit/ui/services/test_input_mapper.py",
+      "tests/unit/ui/test_theme_discovery.py"
+    ],
+    "total_symbols": 13,
+    "tested_symbols": 10,
+    "untested_symbols": [
+      "_find_project_root",
+      "Paths.get_planets_v3_dir",
+      "Paths.get_stars_dir"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "_find_project_root": {
+        "type": "function",
+        "line": 21,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "Paths": {
+        "type": "class",
+        "line": 46,
+        "aliases": [],
+        "matched_names": [
+          "Paths"
+        ],
+        "candidate_test_files": [
+          "tests/unit/assets/test_asset_manager_resolutions.py",
+          "tests/unit/core/test_paths_config.py",
+          "tests/unit/quickstart/conftest.py",
+          "tests/unit/simulation/entities/test_ship_loader.py",
+          "tests/unit/simulation/systems/test_battle_logger.py",
+          "tests/unit/simulation/systems/test_ship_design_stats.py",
+          "tests/unit/simulation/systems/test_ship_stats_strategy_attributes.py",
+          "tests/unit/strategy/data/test_race_caption_loader.py",
+          "tests/unit/strategy/services/ability_sources/test_dual_scope_validation.py",
+          "tests/unit/ui/screens/test_keybindings_scene.py",
+          "tests/unit/ui/screens/test_setup_data_io.py",
+          "tests/unit/ui/screens/test_strategy_input_handler_core.py",
+          "tests/unit/ui/screens/test_strategy_input_handler_hotkeys.py",
+          "tests/unit/ui/screens/test_strategy_input_handler_transfer.py",
+          "tests/unit/ui/screens/test_strategy_ui_tooltips.py",
+          "tests/unit/ui/screens/test_sub_window_hotkeys.py",
+          "tests/unit/ui/screens/test_warp_hotkey.py",
+          "tests/unit/ui/services/test_input_mapper.py",
+          "tests/unit/ui/test_theme_discovery.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_root": {
+        "type": "method",
+        "line": 155,
+        "aliases": [
+          "get_root"
+        ],
+        "matched_names": [
+          "Paths.get_root",
+          "get_root"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_data_dir": {
+        "type": "method",
+        "line": 159,
+        "aliases": [
+          "get_data_dir"
+        ],
+        "matched_names": [
+          "Paths.get_data_dir",
+          "get_data_dir"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_assets_dir": {
+        "type": "method",
+        "line": 163,
+        "aliases": [
+          "get_assets_dir"
+        ],
+        "matched_names": [
+          "Paths.get_assets_dir",
+          "get_assets_dir"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_output_dir": {
+        "type": "method",
+        "line": 167,
+        "aliases": [
+          "get_output_dir"
+        ],
+        "matched_names": [
+          "Paths.get_output_dir",
+          "get_output_dir"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_ships_dir": {
+        "type": "method",
+        "line": 171,
+        "aliases": [
+          "get_ships_dir"
+        ],
+        "matched_names": [
+          "Paths.get_ships_dir",
+          "get_ships_dir"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_saves_dir": {
+        "type": "method",
+        "line": 175,
+        "aliases": [
+          "get_saves_dir"
+        ],
+        "matched_names": [
+          "Paths.get_saves_dir",
+          "get_saves_dir"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_logs_dir": {
+        "type": "method",
+        "line": 179,
+        "aliases": [
+          "get_logs_dir"
+        ],
+        "matched_names": [
+          "Paths.get_logs_dir",
+          "get_logs_dir"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_planets_v3_dir": {
+        "type": "method",
+        "line": 183,
+        "aliases": [
+          "get_planets_v3_dir"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "Paths.get_stars_dir": {
+        "type": "method",
+        "line": 187,
+        "aliases": [
+          "get_stars_dir"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "Paths.get_starter_designs_dir": {
+        "type": "method",
+        "line": 191,
+        "aliases": [
+          "get_starter_designs_dir"
+        ],
+        "matched_names": [
+          "Paths.get_starter_designs_dir",
+          "get_starter_designs_dir"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py",
+          "tests/unit/quickstart/conftest.py",
+          "tests/unit/simulation/systems/test_ship_design_stats.py",
+          "tests/unit/simulation/systems/test_ship_stats_strategy_attributes.py"
+        ],
+        "heuristic_match": true
+      },
+      "Paths.get_starter_races_dir": {
+        "type": "method",
+        "line": 195,
+        "aliases": [
+          "get_starter_races_dir"
+        ],
+        "matched_names": [
+          "Paths.get_starter_races_dir",
+          "get_starter_races_dir"
+        ],
+        "candidate_test_files": [
+          "tests/unit/core/test_paths_config.py",
+          "tests/unit/quickstart/conftest.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/research/data/research_tracker.py": {
+    "layer": "research",
+    "loc": 293,
+    "candidate_test_files": [
+      "tests/unit/fixtures/test_strategy_entities.py",
+      "tests/unit/research/conftest.py",
+      "tests/unit/research/test_research_service.py",
+      "tests/unit/research/test_research_service_edge_cases.py",
+      "tests/unit/research/test_research_tracker.py",
+      "tests/unit/research/test_tech_requirement_negation.py"
+    ],
+    "total_symbols": 21,
+    "tested_symbols": 19,
+    "untested_symbols": [
+      "ResearchTracker.__init__",
+      "ResearchTracker._clamp_allocations_to_budget"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "NodeState": {
+        "type": "class",
+        "line": 17,
+        "aliases": [],
+        "matched_names": [
+          "NodeState"
+        ],
+        "candidate_test_files": [
+          "tests/unit/fixtures/test_strategy_entities.py",
+          "tests/unit/research/conftest.py",
+          "tests/unit/research/test_research_service.py",
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "NodeState.to_dict": {
+        "type": "method",
+        "line": 23,
+        "aliases": [
+          "to_dict"
+        ],
+        "matched_names": [
+          "to_dict"
+        ],
+        "candidate_test_files": [
+          "tests/unit/fixtures/test_strategy_entities.py",
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "NodeState.from_dict": {
+        "type": "method",
+        "line": 32,
+        "aliases": [
+          "from_dict"
+        ],
+        "matched_names": [
+          "NodeState.from_dict",
+          "from_dict"
+        ],
+        "candidate_test_files": [
+          "tests/unit/fixtures/test_strategy_entities.py",
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker": {
+        "type": "class",
+        "line": 41,
+        "aliases": [],
+        "matched_names": [
+          "ResearchTracker"
+        ],
+        "candidate_test_files": [
+          "tests/unit/fixtures/test_strategy_entities.py",
+          "tests/unit/research/conftest.py",
+          "tests/unit/research/test_research_service.py",
+          "tests/unit/research/test_research_service_edge_cases.py",
+          "tests/unit/research/test_research_tracker.py",
+          "tests/unit/research/test_tech_requirement_negation.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.__init__": {
+        "type": "method",
+        "line": 56,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ResearchTracker.get_state": {
+        "type": "method",
+        "line": 71,
+        "aliases": [
+          "get_state"
+        ],
+        "matched_names": [
+          "get_state"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_service.py",
+          "tests/unit/research/test_research_service_edge_cases.py",
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.get_all_tech_levels": {
+        "type": "method",
+        "line": 85,
+        "aliases": [
+          "get_all_tech_levels"
+        ],
+        "matched_names": [
+          "get_all_tech_levels"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.get_total_allocated": {
+        "type": "method",
+        "line": 94,
+        "aliases": [
+          "get_total_allocated"
+        ],
+        "matched_names": [
+          "get_total_allocated"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.get_remaining_rp": {
+        "type": "method",
+        "line": 103,
+        "aliases": [
+          "get_remaining_rp"
+        ],
+        "matched_names": [
+          "get_remaining_rp"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.set_allocation": {
+        "type": "method",
+        "line": 112,
+        "aliases": [
+          "set_allocation"
+        ],
+        "matched_names": [
+          "set_allocation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_service.py",
+          "tests/unit/research/test_research_service_edge_cases.py",
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.clear_allocation": {
+        "type": "method",
+        "line": 153,
+        "aliases": [
+          "clear_allocation"
+        ],
+        "matched_names": [
+          "clear_allocation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.clear_all_allocations": {
+        "type": "method",
+        "line": 163,
+        "aliases": [
+          "clear_all_allocations"
+        ],
+        "matched_names": [
+          "clear_all_allocations"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.spread_rp_evenly": {
+        "type": "method",
+        "line": 168,
+        "aliases": [
+          "spread_rp_evenly"
+        ],
+        "matched_names": [
+          "spread_rp_evenly"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.set_rp_budget": {
+        "type": "method",
+        "line": 206,
+        "aliases": [
+          "set_rp_budget"
+        ],
+        "matched_names": [
+          "set_rp_budget"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker._clamp_allocations_to_budget": {
+        "type": "method",
+        "line": 219,
+        "aliases": [
+          "_clamp_allocations_to_budget"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ResearchTracker.increment_turn": {
+        "type": "method",
+        "line": 246,
+        "aliases": [
+          "increment_turn"
+        ],
+        "matched_names": [
+          "increment_turn"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.set_turn_log": {
+        "type": "method",
+        "line": 250,
+        "aliases": [
+          "set_turn_log"
+        ],
+        "matched_names": [
+          "set_turn_log"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.get_nodes_with_allocation": {
+        "type": "method",
+        "line": 259,
+        "aliases": [
+          "get_nodes_with_allocation"
+        ],
+        "matched_names": [
+          "get_nodes_with_allocation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.to_dict": {
+        "type": "method",
+        "line": 268,
+        "aliases": [
+          "to_dict"
+        ],
+        "matched_names": [
+          "to_dict"
+        ],
+        "candidate_test_files": [
+          "tests/unit/fixtures/test_strategy_entities.py",
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.from_dict": {
+        "type": "method",
+        "line": 279,
+        "aliases": [
+          "from_dict"
+        ],
+        "matched_names": [
+          "ResearchTracker.from_dict",
+          "from_dict"
+        ],
+        "candidate_test_files": [
+          "tests/unit/fixtures/test_strategy_entities.py",
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResearchTracker.reset": {
+        "type": "method",
+        "line": 289,
+        "aliases": [
+          "reset"
+        ],
+        "matched_names": [
+          "reset"
+        ],
+        "candidate_test_files": [
+          "tests/unit/research/test_research_service.py",
+          "tests/unit/research/test_research_tracker.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/simulation/battle_outcome.py": {
+    "layer": "simulation",
+    "loc": 203,
+    "candidate_test_files": [
+      "tests/unit/simulation/combat/test_hit_log_modifier_trace.py",
+      "tests/unit/simulation/combat/test_hit_log_recorder.py",
+      "tests/unit/simulation/combat/test_ship_stats_aggregator.py",
+      "tests/unit/simulation/combat/test_weapon_summary_aggregator.py",
+      "tests/unit/simulation/replay/test_serialization.py",
+      "tests/unit/simulation/test_battle_outcome.py",
+      "tests/unit/simulation/test_battle_outcome_replay_id.py",
+      "tests/unit/simulation/test_battle_runner.py",
+      "tests/unit/simulation/test_battle_runner_component_hp.py",
+      "tests/unit/simulation/test_battle_runner_di.py",
+      "tests/unit/simulation/test_battle_runner_telemetry.py",
+      "tests/unit/strategy/adapters/test_simulation_adapter.py",
+      "tests/unit/strategy/combat/test_post_battle_hook.py",
+      "tests/unit/strategy/combat/test_spec_compiler.py",
+      "tests/unit/test_lab/test_visual_run.py",
+      "tests/unit/ui/test_battle_results_data.py"
+    ],
+    "total_symbols": 9,
+    "tested_symbols": 9,
+    "untested_symbols": [],
+    "coverage_tier": 3,
+    "tier_label": "TIER_3_APPARENTLY_COVERED",
+    "symbol_coverage": {
+      "ShipStatus": {
+        "type": "class",
+        "line": 35,
+        "aliases": [],
+        "matched_names": [
+          "ShipStatus"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py",
+          "tests/unit/simulation/test_battle_runner.py",
+          "tests/unit/strategy/adapters/test_simulation_adapter.py",
+          "tests/unit/strategy/combat/test_post_battle_hook.py",
+          "tests/unit/strategy/combat/test_spec_compiler.py",
+          "tests/unit/ui/test_battle_results_data.py"
+        ],
+        "heuristic_match": true
+      },
+      "EndReason": {
+        "type": "class",
+        "line": 44,
+        "aliases": [],
+        "matched_names": [
+          "EndReason"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py",
+          "tests/unit/simulation/test_battle_outcome_replay_id.py",
+          "tests/unit/simulation/test_battle_runner.py",
+          "tests/unit/strategy/combat/test_post_battle_hook.py",
+          "tests/unit/strategy/combat/test_spec_compiler.py",
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/test_battle_results_data.py"
+        ],
+        "heuristic_match": true
+      },
+      "ModifierApplication": {
+        "type": "class",
+        "line": 70,
+        "aliases": [],
+        "matched_names": [
+          "ModifierApplication"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/combat/test_hit_log_modifier_trace.py",
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py"
+        ],
+        "heuristic_match": true
+      },
+      "HitRecord": {
+        "type": "class",
+        "line": 83,
+        "aliases": [],
+        "matched_names": [
+          "HitRecord"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/combat/test_hit_log_modifier_trace.py",
+          "tests/unit/simulation/combat/test_hit_log_recorder.py",
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py"
+        ],
+        "heuristic_match": true
+      },
+      "WeaponSummary": {
+        "type": "class",
+        "line": 98,
+        "aliases": [],
+        "matched_names": [
+          "WeaponSummary"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/combat/test_weapon_summary_aggregator.py",
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py",
+          "tests/unit/simulation/test_battle_runner_telemetry.py",
+          "tests/unit/strategy/combat/test_post_battle_hook.py",
+          "tests/unit/ui/test_battle_results_data.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipStats": {
+        "type": "class",
+        "line": 108,
+        "aliases": [],
+        "matched_names": [
+          "ShipStats"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/combat/test_ship_stats_aggregator.py",
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py",
+          "tests/unit/strategy/combat/test_post_battle_hook.py",
+          "tests/unit/strategy/combat/test_spec_compiler.py",
+          "tests/unit/ui/test_battle_results_data.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipOutcome": {
+        "type": "class",
+        "line": 123,
+        "aliases": [],
+        "matched_names": [
+          "ShipOutcome"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py",
+          "tests/unit/simulation/test_battle_runner.py",
+          "tests/unit/simulation/test_battle_runner_component_hp.py",
+          "tests/unit/simulation/test_battle_runner_telemetry.py",
+          "tests/unit/strategy/combat/test_post_battle_hook.py",
+          "tests/unit/strategy/combat/test_spec_compiler.py",
+          "tests/unit/ui/test_battle_results_data.py"
+        ],
+        "heuristic_match": true
+      },
+      "TeamOutcome": {
+        "type": "class",
+        "line": 156,
+        "aliases": [],
+        "matched_names": [
+          "TeamOutcome"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py",
+          "tests/unit/simulation/test_battle_outcome_replay_id.py",
+          "tests/unit/strategy/combat/test_post_battle_hook.py",
+          "tests/unit/strategy/combat/test_spec_compiler.py",
+          "tests/unit/ui/test_battle_results_data.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleOutcome": {
+        "type": "class",
+        "line": 170,
+        "aliases": [],
+        "matched_names": [
+          "BattleOutcome"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/replay/test_serialization.py",
+          "tests/unit/simulation/test_battle_outcome.py",
+          "tests/unit/simulation/test_battle_outcome_replay_id.py",
+          "tests/unit/simulation/test_battle_runner.py",
+          "tests/unit/simulation/test_battle_runner_component_hp.py",
+          "tests/unit/simulation/test_battle_runner_di.py",
+          "tests/unit/simulation/test_battle_runner_telemetry.py",
+          "tests/unit/strategy/adapters/test_simulation_adapter.py",
+          "tests/unit/strategy/combat/test_post_battle_hook.py",
+          "tests/unit/strategy/combat/test_spec_compiler.py",
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/test_battle_results_data.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/simulation/components/abilities/harvester.py": {
+    "layer": "simulation",
+    "loc": 181,
+    "candidate_test_files": [
+      "tests/unit/simulation/abilities/test_empire_storage.py",
+      "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+    ],
+    "total_symbols": 21,
+    "tested_symbols": 15,
+    "untested_symbols": [
+      "ResourceHarvesterAbility._parse_attrs",
+      "LocalStorageAbility._parse_attrs",
+      "StagingYardAbility",
+      "StagingYardAbility._parse_attrs",
+      "PlanetaryYardAbility",
+      "SpaceShipyardAbility._parse_attrs"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "ResourceHarvesterAbility": {
+        "type": "class",
+        "line": 11,
+        "aliases": [],
+        "matched_names": [
+          "ResourceHarvesterAbility"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResourceHarvesterAbility._parse_attrs": {
+        "type": "method",
+        "line": 16,
+        "aliases": [
+          "_parse_attrs"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ResourceHarvesterAbility.get_primary_value": {
+        "type": "method",
+        "line": 24,
+        "aliases": [
+          "get_primary_value"
+        ],
+        "matched_names": [
+          "get_primary_value"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResourceHarvesterAbility.get_ui_rows": {
+        "type": "method",
+        "line": 28,
+        "aliases": [
+          "get_ui_rows"
+        ],
+        "matched_names": [
+          "get_ui_rows"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "LocalStorageAbility": {
+        "type": "class",
+        "line": 44,
+        "aliases": [],
+        "matched_names": [
+          "LocalStorageAbility"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "LocalStorageAbility._parse_attrs": {
+        "type": "method",
+        "line": 57,
+        "aliases": [
+          "_parse_attrs"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "LocalStorageAbility.recalculate": {
+        "type": "method",
+        "line": 66,
+        "aliases": [
+          "recalculate"
+        ],
+        "matched_names": [
+          "recalculate"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "LocalStorageAbility.get_primary_value": {
+        "type": "method",
+        "line": 71,
+        "aliases": [
+          "get_primary_value"
+        ],
+        "matched_names": [
+          "get_primary_value"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "LocalStorageAbility.get_ui_rows": {
+        "type": "method",
+        "line": 75,
+        "aliases": [
+          "get_ui_rows"
+        ],
+        "matched_names": [
+          "get_ui_rows"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "StagingYardAbility": {
+        "type": "class",
+        "line": 91,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "StagingYardAbility._parse_attrs": {
+        "type": "method",
+        "line": 100,
+        "aliases": [
+          "_parse_attrs"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "StagingYardAbility.get_primary_value": {
+        "type": "method",
+        "line": 106,
+        "aliases": [
+          "get_primary_value"
+        ],
+        "matched_names": [
+          "get_primary_value"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "StagingYardAbility.get_ui_rows": {
+        "type": "method",
+        "line": 109,
+        "aliases": [
+          "get_ui_rows"
+        ],
+        "matched_names": [
+          "get_ui_rows"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetaryYardAbility": {
+        "type": "class",
+        "line": 113,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetaryYardAbility.__init__": {
+        "type": "method",
+        "line": 123,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetaryYardAbility.get_primary_value": {
+        "type": "method",
+        "line": 126,
+        "aliases": [
+          "get_primary_value"
+        ],
+        "matched_names": [
+          "get_primary_value"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetaryYardAbility.get_ui_rows": {
+        "type": "method",
+        "line": 129,
+        "aliases": [
+          "get_ui_rows"
+        ],
+        "matched_names": [
+          "get_ui_rows"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "SpaceShipyardAbility": {
+        "type": "class",
+        "line": 133,
+        "aliases": [],
+        "matched_names": [
+          "SpaceShipyardAbility"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "SpaceShipyardAbility._parse_attrs": {
+        "type": "method",
+        "line": 138,
+        "aliases": [
+          "_parse_attrs"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "SpaceShipyardAbility.get_primary_value": {
+        "type": "method",
+        "line": 148,
+        "aliases": [
+          "get_primary_value"
+        ],
+        "matched_names": [
+          "get_primary_value"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      },
+      "SpaceShipyardAbility.get_ui_rows": {
+        "type": "method",
+        "line": 152,
+        "aliases": [
+          "get_ui_rows"
+        ],
+        "matched_names": [
+          "get_ui_rows"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/abilities/test_empire_storage.py",
+          "tests/unit/simulation/components/abilities/test_colonize_harvester.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/simulation/components/component_resource_manager.py": {
+    "layer": "simulation",
+    "loc": 112,
+    "candidate_test_files": [
+      "tests/unit/simulation/components/test_component_resource_manager.py"
+    ],
+    "total_symbols": 6,
+    "tested_symbols": 5,
+    "untested_symbols": [
+      "ComponentResourceManager.__init__"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "ComponentResourceManager": {
+        "type": "class",
+        "line": 20,
+        "aliases": [],
+        "matched_names": [
+          "ComponentResourceManager"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/components/test_component_resource_manager.py"
+        ],
+        "heuristic_match": true
+      },
+      "ComponentResourceManager.__init__": {
+        "type": "method",
+        "line": 32,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ComponentResourceManager.can_afford_activation": {
+        "type": "method",
+        "line": 40,
+        "aliases": [
+          "can_afford_activation"
+        ],
+        "matched_names": [
+          "can_afford_activation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/components/test_component_resource_manager.py"
+        ],
+        "heuristic_match": true
+      },
+      "ComponentResourceManager.consume_activation": {
+        "type": "method",
+        "line": 55,
+        "aliases": [
+          "consume_activation"
+        ],
+        "matched_names": [
+          "consume_activation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/components/test_component_resource_manager.py"
+        ],
+        "heuristic_match": true
+      },
+      "ComponentResourceManager.try_activate": {
+        "type": "method",
+        "line": 65,
+        "aliases": [
+          "try_activate"
+        ],
+        "matched_names": [
+          "try_activate"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/components/test_component_resource_manager.py"
+        ],
+        "heuristic_match": true
+      },
+      "ComponentResourceManager.get_resource_cost": {
+        "type": "method",
+        "line": 80,
+        "aliases": [
+          "get_resource_cost"
+        ],
+        "matched_names": [
+          "get_resource_cost"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/components/test_component_resource_manager.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/simulation/interfaces/ability_protocols.py": {
+    "layer": "simulation",
+    "loc": 359,
+    "candidate_test_files": [],
+    "total_symbols": 46,
+    "tested_symbols": 0,
+    "untested_symbols": [
+      "IAbility",
+      "IAbility.stack_group",
+      "IAbility.tags",
+      "IAbility.get_ui_rows",
+      "IAbility.get_effect_summary",
+      "IAbility.sync_data",
+      "IResourceConsumptionAbility",
+      "IResourceConsumptionAbility.trigger",
+      "IResourceConsumptionAbility.resource_type",
+      "IResourceConsumptionAbility.amount",
+      "IResourceConsumptionAbility.check_available",
+      "IResourceStorageAbility",
+      "IResourceStorageAbility.resource_type",
+      "IResourceStorageAbility.max_amount",
+      "IResourceGenerationAbility",
+      "IResourceGenerationAbility.resource_type",
+      "IResourceGenerationAbility.rate",
+      "IWeaponAbility",
+      "IWeaponAbility.damage",
+      "IWeaponAbility.range",
+      "IWeaponAbility.reload_time",
+      "IWeaponAbility.firing_arc",
+      "IWeaponAbility.get_damage",
+      "IBeamWeaponAbility",
+      "IBeamWeaponAbility.base_accuracy",
+      "IBeamWeaponAbility.accuracy_falloff",
+      "ISeekerWeaponAbility",
+      "ISeekerWeaponAbility.projectile_speed",
+      "ISeekerWeaponAbility.endurance",
+      "ISeekerWeaponAbility.turn_rate",
+      "ISeekerWeaponAbility.projectile_damage",
+      "ISeekerWeaponAbility.projectile_hp",
+      "IProjectileWeaponAbility",
+      "IProjectileWeaponAbility.projectile_speed",
+      "IWarpJumpAbility",
+      "IWarpJumpAbility.max_tonnage",
+      "IWarpJumpAbility.energy_cost",
+      "is_ability",
+      "is_resource_consumption",
+      "is_resource_storage",
+      "is_resource_generation",
+      "is_weapon",
+      "is_beam_weapon",
+      "is_seeker_weapon",
+      "is_projectile_weapon",
+      "is_warp_jump"
+    ],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {
+      "IAbility": {
+        "type": "class",
+        "line": 44,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IAbility.stack_group": {
+        "type": "method",
+        "line": 59,
+        "aliases": [
+          "stack_group"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IAbility.tags": {
+        "type": "method",
+        "line": 64,
+        "aliases": [
+          "tags"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IAbility.get_ui_rows": {
+        "type": "method",
+        "line": 68,
+        "aliases": [
+          "get_ui_rows"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IAbility.get_effect_summary": {
+        "type": "method",
+        "line": 77,
+        "aliases": [
+          "get_effect_summary"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IAbility.sync_data": {
+        "type": "method",
+        "line": 88,
+        "aliases": [
+          "sync_data"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceConsumptionAbility": {
+        "type": "class",
+        "line": 98,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceConsumptionAbility.trigger": {
+        "type": "method",
+        "line": 106,
+        "aliases": [
+          "trigger"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceConsumptionAbility.resource_type": {
+        "type": "method",
+        "line": 111,
+        "aliases": [
+          "resource_type"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceConsumptionAbility.amount": {
+        "type": "method",
+        "line": 116,
+        "aliases": [
+          "amount"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceConsumptionAbility.check_available": {
+        "type": "method",
+        "line": 120,
+        "aliases": [
+          "check_available"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceStorageAbility": {
+        "type": "class",
+        "line": 126,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceStorageAbility.resource_type": {
+        "type": "method",
+        "line": 134,
+        "aliases": [
+          "resource_type"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceStorageAbility.max_amount": {
+        "type": "method",
+        "line": 139,
+        "aliases": [
+          "max_amount"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceGenerationAbility": {
+        "type": "class",
+        "line": 145,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceGenerationAbility.resource_type": {
+        "type": "method",
+        "line": 153,
+        "aliases": [
+          "resource_type"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IResourceGenerationAbility.rate": {
+        "type": "method",
+        "line": 158,
+        "aliases": [
+          "rate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWeaponAbility": {
+        "type": "class",
+        "line": 168,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWeaponAbility.damage": {
+        "type": "method",
+        "line": 176,
+        "aliases": [
+          "damage"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWeaponAbility.range": {
+        "type": "method",
+        "line": 181,
+        "aliases": [
+          "range"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWeaponAbility.reload_time": {
+        "type": "method",
+        "line": 186,
+        "aliases": [
+          "reload_time"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWeaponAbility.firing_arc": {
+        "type": "method",
+        "line": 191,
+        "aliases": [
+          "firing_arc"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWeaponAbility.get_damage": {
+        "type": "method",
+        "line": 195,
+        "aliases": [
+          "get_damage"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IBeamWeaponAbility": {
+        "type": "class",
+        "line": 212,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IBeamWeaponAbility.base_accuracy": {
+        "type": "method",
+        "line": 220,
+        "aliases": [
+          "base_accuracy"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IBeamWeaponAbility.accuracy_falloff": {
+        "type": "method",
+        "line": 225,
+        "aliases": [
+          "accuracy_falloff"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ISeekerWeaponAbility": {
+        "type": "class",
+        "line": 231,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ISeekerWeaponAbility.projectile_speed": {
+        "type": "method",
+        "line": 239,
+        "aliases": [
+          "projectile_speed"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ISeekerWeaponAbility.endurance": {
+        "type": "method",
+        "line": 244,
+        "aliases": [
+          "endurance"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ISeekerWeaponAbility.turn_rate": {
+        "type": "method",
+        "line": 249,
+        "aliases": [
+          "turn_rate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ISeekerWeaponAbility.projectile_damage": {
+        "type": "method",
+        "line": 254,
+        "aliases": [
+          "projectile_damage"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ISeekerWeaponAbility.projectile_hp": {
+        "type": "method",
+        "line": 259,
+        "aliases": [
+          "projectile_hp"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IProjectileWeaponAbility": {
+        "type": "class",
+        "line": 265,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IProjectileWeaponAbility.projectile_speed": {
+        "type": "method",
+        "line": 273,
+        "aliases": [
+          "projectile_speed"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWarpJumpAbility": {
+        "type": "class",
+        "line": 283,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWarpJumpAbility.max_tonnage": {
+        "type": "method",
+        "line": 291,
+        "aliases": [
+          "max_tonnage"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "IWarpJumpAbility.energy_cost": {
+        "type": "method",
+        "line": 296,
+        "aliases": [
+          "energy_cost"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_ability": {
+        "type": "function",
+        "line": 317,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_resource_consumption": {
+        "type": "function",
+        "line": 322,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_resource_storage": {
+        "type": "function",
+        "line": 327,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_resource_generation": {
+        "type": "function",
+        "line": 332,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_weapon": {
+        "type": "function",
+        "line": 337,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_beam_weapon": {
+        "type": "function",
+        "line": 342,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_seeker_weapon": {
+        "type": "function",
+        "line": 347,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_projectile_weapon": {
+        "type": "function",
+        "line": 352,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "is_warp_jump": {
+        "type": "function",
+        "line": 357,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/simulation/replay/replay_serialization.py": {
+    "layer": "simulation",
+    "loc": 640,
+    "candidate_test_files": [],
+    "total_symbols": 41,
+    "tested_symbols": 0,
+    "untested_symbols": [
+      "_vec_to_list",
+      "_list_to_vec",
+      "boundary_to_dict",
+      "boundary_from_dict",
+      "modifier_entry_to_dict",
+      "modifier_entry_from_dict",
+      "modifier_stack_to_dict",
+      "modifier_stack_from_dict",
+      "_formation_to_dict",
+      "_formation_from_dict",
+      "_entry_vector_to_dict",
+      "_entry_vector_from_dict",
+      "_combat_policies_to_dict",
+      "_combat_policies_from_dict",
+      "_component_state_to_dict",
+      "_component_state_from_dict",
+      "_ship_spec_to_dict",
+      "_ship_spec_from_dict",
+      "_squadron_spec_to_dict",
+      "_squadron_spec_from_dict",
+      "_task_force_spec_to_dict",
+      "_task_force_spec_from_dict",
+      "_team_spec_to_dict",
+      "_team_spec_from_dict",
+      "battle_spec_to_dict",
+      "battle_spec_from_dict",
+      "_modifier_application_to_dict",
+      "_modifier_application_from_dict",
+      "_hit_record_to_dict",
+      "_hit_record_from_dict",
+      "_weapon_summary_to_dict",
+      "_weapon_summary_from_dict",
+      "_ship_stats_to_dict",
+      "_ship_stats_from_dict",
+      "_ship_outcome_to_dict",
+      "_ship_outcome_from_dict",
+      "_team_outcome_to_dict",
+      "_team_outcome_from_dict",
+      "battle_outcome_to_dict",
+      "battle_outcome_from_dict",
+      "compute_components_registry_hash"
+    ],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {
+      "_vec_to_list": {
+        "type": "function",
+        "line": 78,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_list_to_vec": {
+        "type": "function",
+        "line": 82,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "boundary_to_dict": {
+        "type": "function",
+        "line": 93,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "boundary_from_dict": {
+        "type": "function",
+        "line": 120,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "modifier_entry_to_dict": {
+        "type": "function",
+        "line": 147,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "modifier_entry_from_dict": {
+        "type": "function",
+        "line": 155,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "modifier_stack_to_dict": {
+        "type": "function",
+        "line": 163,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "modifier_stack_from_dict": {
+        "type": "function",
+        "line": 175,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_formation_to_dict": {
+        "type": "function",
+        "line": 191,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_formation_from_dict": {
+        "type": "function",
+        "line": 206,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_entry_vector_to_dict": {
+        "type": "function",
+        "line": 221,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_entry_vector_from_dict": {
+        "type": "function",
+        "line": 225,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_combat_policies_to_dict": {
+        "type": "function",
+        "line": 229,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_combat_policies_from_dict": {
+        "type": "function",
+        "line": 233,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_component_state_to_dict": {
+        "type": "function",
+        "line": 241,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_component_state_from_dict": {
+        "type": "function",
+        "line": 250,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_ship_spec_to_dict": {
+        "type": "function",
+        "line": 259,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_ship_spec_from_dict": {
+        "type": "function",
+        "line": 275,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_squadron_spec_to_dict": {
+        "type": "function",
+        "line": 290,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_squadron_spec_from_dict": {
+        "type": "function",
+        "line": 298,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_task_force_spec_to_dict": {
+        "type": "function",
+        "line": 306,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_task_force_spec_from_dict": {
+        "type": "function",
+        "line": 315,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_team_spec_to_dict": {
+        "type": "function",
+        "line": 324,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_team_spec_from_dict": {
+        "type": "function",
+        "line": 333,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "battle_spec_to_dict": {
+        "type": "function",
+        "line": 349,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "battle_spec_from_dict": {
+        "type": "function",
+        "line": 378,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_modifier_application_to_dict": {
+        "type": "function",
+        "line": 413,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_modifier_application_from_dict": {
+        "type": "function",
+        "line": 417,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_hit_record_to_dict": {
+        "type": "function",
+        "line": 425,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_hit_record_from_dict": {
+        "type": "function",
+        "line": 438,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_weapon_summary_to_dict": {
+        "type": "function",
+        "line": 451,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_weapon_summary_from_dict": {
+        "type": "function",
+        "line": 460,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_ship_stats_to_dict": {
+        "type": "function",
+        "line": 469,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_ship_stats_from_dict": {
+        "type": "function",
+        "line": 478,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_ship_outcome_to_dict": {
+        "type": "function",
+        "line": 487,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_ship_outcome_from_dict": {
+        "type": "function",
+        "line": 507,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_team_outcome_to_dict": {
+        "type": "function",
+        "line": 527,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_team_outcome_from_dict": {
+        "type": "function",
+        "line": 535,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "battle_outcome_to_dict": {
+        "type": "function",
+        "line": 548,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "battle_outcome_from_dict": {
+        "type": "function",
+        "line": 562,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "compute_components_registry_hash": {
+        "type": "function",
+        "line": 582,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/simulation/validation/ship_validator.py": {
+    "layer": "simulation",
+    "loc": 438,
+    "candidate_test_files": [
+      "tests/unit/builder/test_builder_validation.py",
+      "tests/unit/builder/test_requirement_abilities.py",
+      "tests/unit/builder/test_ship_validator_di.py",
+      "tests/unit/entities/test_bridge_requirement_removal.py",
+      "tests/unit/regressions/test_bug_regressions_2026_01.py",
+      "tests/unit/simulation/validation/test_ship_validator_rules.py",
+      "tests/unit/systems/test_layer_refinements.py",
+      "tests/unit/systems/test_layer_restrictions_refactor.py",
+      "tests/unit/systems/test_mount_validation.py",
+      "tests/unit/workshop/test_quick_add.py"
+    ],
+    "total_symbols": 27,
+    "tested_symbols": 15,
+    "untested_symbols": [
+      "LayerConstraintRule._do_validate",
+      "UniqueComponentRule._should_validate",
+      "UniqueComponentRule._do_validate",
+      "ExclusiveGroupRule._should_validate",
+      "ExclusiveGroupRule._do_validate",
+      "MountDependencyRule._do_validate",
+      "LayerRestrictionDefinitionRule._do_validate",
+      "LayerRestrictionDefinitionRule._check_block_rules",
+      "LayerRestrictionDefinitionRule._check_allow_rules",
+      "MassBudgetRule._do_validate",
+      "ClassRequirementsRule._do_validate",
+      "ResourceDependencyRule._do_validate"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "RestrictionPrefixes": {
+        "type": "class",
+        "line": 27,
+        "aliases": [],
+        "matched_names": [
+          "RestrictionPrefixes"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/validation/test_ship_validator_rules.py"
+        ],
+        "heuristic_match": true
+      },
+      "_parse_restriction": {
+        "type": "function",
+        "line": 39,
+        "aliases": [],
+        "matched_names": [
+          "_parse_restriction"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/validation/test_ship_validator_rules.py"
+        ],
+        "heuristic_match": true
+      },
+      "LayerConstraintRule": {
+        "type": "class",
+        "line": 55,
+        "aliases": [],
+        "matched_names": [
+          "LayerConstraintRule"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/validation/test_ship_validator_rules.py"
+        ],
+        "heuristic_match": true
+      },
+      "LayerConstraintRule._do_validate": {
+        "type": "method",
+        "line": 58,
+        "aliases": [
+          "_do_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "UniqueComponentRule": {
+        "type": "class",
+        "line": 71,
+        "aliases": [],
+        "matched_names": [
+          "UniqueComponentRule"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/validation/test_ship_validator_rules.py"
+        ],
+        "heuristic_match": true
+      },
+      "UniqueComponentRule._should_validate": {
+        "type": "method",
+        "line": 74,
+        "aliases": [
+          "_should_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "UniqueComponentRule._do_validate": {
+        "type": "method",
+        "line": 78,
+        "aliases": [
+          "_do_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ExclusiveGroupRule": {
+        "type": "class",
+        "line": 89,
+        "aliases": [],
+        "matched_names": [
+          "ExclusiveGroupRule"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/validation/test_ship_validator_rules.py"
+        ],
+        "heuristic_match": true
+      },
+      "ExclusiveGroupRule._should_validate": {
+        "type": "method",
+        "line": 92,
+        "aliases": [
+          "_should_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ExclusiveGroupRule._do_validate": {
+        "type": "method",
+        "line": 96,
+        "aliases": [
+          "_do_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "MountDependencyRule": {
+        "type": "class",
+        "line": 108,
+        "aliases": [],
+        "matched_names": [
+          "MountDependencyRule"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/validation/test_ship_validator_rules.py",
+          "tests/unit/systems/test_mount_validation.py"
+        ],
+        "heuristic_match": true
+      },
+      "MountDependencyRule._do_validate": {
+        "type": "method",
+        "line": 111,
+        "aliases": [
+          "_do_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "LayerRestrictionDefinitionRule": {
+        "type": "class",
+        "line": 137,
+        "aliases": [],
+        "matched_names": [
+          "LayerRestrictionDefinitionRule"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/validation/test_ship_validator_rules.py",
+          "tests/unit/systems/test_layer_restrictions_refactor.py",
+          "tests/unit/workshop/test_quick_add.py"
+        ],
+        "heuristic_match": true
+      },
+      "LayerRestrictionDefinitionRule._do_validate": {
+        "type": "method",
+        "line": 145,
+        "aliases": [
+          "_do_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "LayerRestrictionDefinitionRule._check_block_rules": {
+        "type": "method",
+        "line": 169,
+        "aliases": [
+          "_check_block_rules"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "LayerRestrictionDefinitionRule._check_allow_rules": {
+        "type": "method",
+        "line": 196,
+        "aliases": [
+          "_check_allow_rules"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "MassBudgetRule": {
+        "type": "class",
+        "line": 236,
+        "aliases": [],
+        "matched_names": [
+          "MassBudgetRule"
+        ],
+        "candidate_test_files": [
+          "tests/unit/entities/test_bridge_requirement_removal.py",
+          "tests/unit/simulation/validation/test_ship_validator_rules.py",
+          "tests/unit/systems/test_layer_refinements.py"
+        ],
+        "heuristic_match": true
+      },
+      "MassBudgetRule._do_validate": {
+        "type": "method",
+        "line": 243,
+        "aliases": [
+          "_do_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ClassRequirementsRule": {
+        "type": "class",
+        "line": 267,
+        "aliases": [],
+        "matched_names": [
+          "ClassRequirementsRule"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_builder_validation.py",
+          "tests/unit/builder/test_ship_validator_di.py",
+          "tests/unit/simulation/validation/test_ship_validator_rules.py"
+        ],
+        "heuristic_match": true
+      },
+      "ClassRequirementsRule.__init__": {
+        "type": "method",
+        "line": 273,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "ClassRequirementsRule.__init__",
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_ship_validator_di.py",
+          "tests/unit/workshop/test_quick_add.py"
+        ],
+        "heuristic_match": true
+      },
+      "ClassRequirementsRule._do_validate": {
+        "type": "method",
+        "line": 293,
+        "aliases": [
+          "_do_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ResourceDependencyRule": {
+        "type": "class",
+        "line": 339,
+        "aliases": [],
+        "matched_names": [
+          "ResourceDependencyRule"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_builder_validation.py",
+          "tests/unit/regressions/test_bug_regressions_2026_01.py",
+          "tests/unit/simulation/validation/test_ship_validator_rules.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResourceDependencyRule._do_validate": {
+        "type": "method",
+        "line": 342,
+        "aliases": [
+          "_do_validate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ShipDesignValidator": {
+        "type": "class",
+        "line": 381,
+        "aliases": [],
+        "matched_names": [
+          "ShipDesignValidator"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_builder_validation.py",
+          "tests/unit/builder/test_requirement_abilities.py",
+          "tests/unit/builder/test_ship_validator_di.py",
+          "tests/unit/entities/test_bridge_requirement_removal.py",
+          "tests/unit/simulation/validation/test_ship_validator_rules.py",
+          "tests/unit/systems/test_mount_validation.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipDesignValidator.__init__": {
+        "type": "method",
+        "line": 387,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_ship_validator_di.py",
+          "tests/unit/workshop/test_quick_add.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipDesignValidator.validate_addition": {
+        "type": "method",
+        "line": 418,
+        "aliases": [
+          "validate_addition"
+        ],
+        "matched_names": [
+          "validate_addition"
+        ],
+        "candidate_test_files": [
+          "tests/unit/simulation/validation/test_ship_validator_rules.py",
+          "tests/unit/systems/test_layer_refinements.py",
+          "tests/unit/systems/test_mount_validation.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipDesignValidator.validate_design": {
+        "type": "method",
+        "line": 428,
+        "aliases": [
+          "validate_design"
+        ],
+        "matched_names": [
+          "validate_design"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_builder_validation.py",
+          "tests/unit/builder/test_requirement_abilities.py",
+          "tests/unit/entities/test_bridge_requirement_removal.py",
+          "tests/unit/simulation/validation/test_ship_validator_rules.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/strategy/combat/__init__.py": {
+    "layer": "strategy",
+    "loc": 6,
+    "candidate_test_files": [],
+    "total_symbols": 0,
+    "tested_symbols": 0,
+    "untested_symbols": [],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {}
+  },
+  "game/strategy/data/design_role_registry.py": {
+    "layer": "strategy",
+    "loc": 98,
+    "candidate_test_files": [
+      "tests/unit/strategy/data/test_design_role_registry.py",
+      "tests/unit/strategy/data/test_design_role_registry_invalidation.py",
+      "tests/unit/strategy/data/test_design_role_registry_loader.py"
+    ],
+    "total_symbols": 4,
+    "tested_symbols": 3,
+    "untested_symbols": [
+      "_build_default"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "get_default_design_role_registry": {
+        "type": "function",
+        "line": 37,
+        "aliases": [],
+        "matched_names": [
+          "get_default_design_role_registry"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_design_role_registry.py",
+          "tests/unit/strategy/data/test_design_role_registry_invalidation.py",
+          "tests/unit/strategy/data/test_design_role_registry_loader.py"
+        ],
+        "heuristic_match": true
+      },
+      "set_default_design_role_registry": {
+        "type": "function",
+        "line": 47,
+        "aliases": [],
+        "matched_names": [
+          "set_default_design_role_registry"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_design_role_registry_loader.py"
+        ],
+        "heuristic_match": true
+      },
+      "reset_default_design_role_registry": {
+        "type": "function",
+        "line": 57,
+        "aliases": [],
+        "matched_names": [
+          "reset_default_design_role_registry"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_design_role_registry.py",
+          "tests/unit/strategy/data/test_design_role_registry_invalidation.py",
+          "tests/unit/strategy/data/test_design_role_registry_loader.py"
+        ],
+        "heuristic_match": true
+      },
+      "_build_default": {
+        "type": "function",
+        "line": 65,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/strategy/data/galaxy_system_generator.py": {
+    "layer": "strategy",
+    "loc": 354,
+    "candidate_test_files": [
+      "tests/unit/strategy/data/test_galaxy_system_generator.py",
+      "tests/unit/strategy/data/test_intrinsic_rng_determinism.py"
+    ],
+    "total_symbols": 13,
+    "tested_symbols": 10,
+    "untested_symbols": [
+      "_load_planet_types",
+      "_load_star_types",
+      "_load_system_archetypes"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "GalaxySystemGenerator": {
+        "type": "class",
+        "line": 19,
+        "aliases": [],
+        "matched_names": [
+          "GalaxySystemGenerator"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_galaxy_system_generator.py"
+        ],
+        "heuristic_match": true
+      },
+      "GalaxySystemGenerator.__init__": {
+        "type": "method",
+        "line": 29,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_galaxy_system_generator.py",
+          "tests/unit/strategy/data/test_intrinsic_rng_determinism.py"
+        ],
+        "heuristic_match": true
+      },
+      "GalaxySystemGenerator.generate_planets": {
+        "type": "method",
+        "line": 52,
+        "aliases": [
+          "generate_planets"
+        ],
+        "matched_names": [
+          "GalaxySystemGenerator.generate_planets",
+          "generate_planets"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_galaxy_system_generator.py"
+        ],
+        "heuristic_match": true
+      },
+      "GalaxySystemGenerator.generate_storms": {
+        "type": "method",
+        "line": 84,
+        "aliases": [
+          "generate_storms"
+        ],
+        "matched_names": [
+          "GalaxySystemGenerator.generate_storms",
+          "generate_storms"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_galaxy_system_generator.py"
+        ],
+        "heuristic_match": true
+      },
+      "GalaxySystemGenerator.generate_systems": {
+        "type": "method",
+        "line": 103,
+        "aliases": [
+          "generate_systems"
+        ],
+        "matched_names": [
+          "GalaxySystemGenerator.generate_systems",
+          "generate_systems"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_galaxy_system_generator.py"
+        ],
+        "heuristic_match": true
+      },
+      "_load_json_or_empty": {
+        "type": "function",
+        "line": 221,
+        "aliases": [],
+        "matched_names": [
+          "_load_json_or_empty"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_galaxy_system_generator.py"
+        ],
+        "heuristic_match": true
+      },
+      "_load_planet_types": {
+        "type": "function",
+        "line": 240,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_apply_intrinsic_abilities": {
+        "type": "function",
+        "line": 248,
+        "aliases": [],
+        "matched_names": [
+          "_apply_intrinsic_abilities"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_galaxy_system_generator.py"
+        ],
+        "heuristic_match": true
+      },
+      "_apply_planet_intrinsic_abilities": {
+        "type": "function",
+        "line": 277,
+        "aliases": [],
+        "matched_names": [
+          "_apply_planet_intrinsic_abilities"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_intrinsic_rng_determinism.py"
+        ],
+        "heuristic_match": true
+      },
+      "_load_star_types": {
+        "type": "function",
+        "line": 294,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_apply_star_intrinsic_abilities": {
+        "type": "function",
+        "line": 302,
+        "aliases": [],
+        "matched_names": [
+          "_apply_star_intrinsic_abilities"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_intrinsic_rng_determinism.py"
+        ],
+        "heuristic_match": true
+      },
+      "_load_system_archetypes": {
+        "type": "function",
+        "line": 319,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "_apply_system_archetype": {
+        "type": "function",
+        "line": 327,
+        "aliases": [],
+        "matched_names": [
+          "_apply_system_archetype"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_galaxy_system_generator.py",
+          "tests/unit/strategy/data/test_intrinsic_rng_determinism.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/strategy/data/resource_generation_config.py": {
+    "layer": "strategy",
+    "loc": 149,
+    "candidate_test_files": [
+      "tests/unit/strategy/data/test_resource_generation_config.py",
+      "tests/unit/strategy/engine/test_game_initializer.py"
+    ],
+    "total_symbols": 6,
+    "tested_symbols": 3,
+    "untested_symbols": [
+      "ResourceGenerationConfig.__init__",
+      "ResourceGenerationConfig._load_from_json",
+      "ResourceGenerationConfig._use_defaults"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "ResourceGenerationConfig": {
+        "type": "class",
+        "line": 15,
+        "aliases": [],
+        "matched_names": [
+          "ResourceGenerationConfig"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_resource_generation_config.py",
+          "tests/unit/strategy/engine/test_game_initializer.py"
+        ],
+        "heuristic_match": true
+      },
+      "ResourceGenerationConfig.__init__": {
+        "type": "method",
+        "line": 45,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ResourceGenerationConfig._load_from_json": {
+        "type": "method",
+        "line": 57,
+        "aliases": [
+          "_load_from_json"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ResourceGenerationConfig._use_defaults": {
+        "type": "method",
+        "line": 100,
+        "aliases": [
+          "_use_defaults"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ResourceGenerationConfig.get_affinity": {
+        "type": "method",
+        "line": 119,
+        "aliases": [
+          "get_affinity"
+        ],
+        "matched_names": [
+          "get_affinity"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_resource_generation_config.py"
+        ],
+        "heuristic_match": true
+      },
+      "get_resource_generation_config": {
+        "type": "function",
+        "line": 135,
+        "aliases": [],
+        "matched_names": [
+          "get_resource_generation_config"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_game_initializer.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/strategy/data/ship_instance_serializer.py": {
+    "layer": "strategy",
+    "loc": 176,
+    "candidate_test_files": [
+      "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py"
+    ],
+    "total_symbols": 6,
+    "tested_symbols": 6,
+    "untested_symbols": [],
+    "coverage_tier": 3,
+    "tier_label": "TIER_3_APPARENTLY_COVERED",
+    "symbol_coverage": {
+      "ShipInstanceSerializer": {
+        "type": "class",
+        "line": 21,
+        "aliases": [],
+        "matched_names": [
+          "ShipInstanceSerializer"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipInstanceSerializer.to_dict": {
+        "type": "method",
+        "line": 25,
+        "aliases": [
+          "to_dict"
+        ],
+        "matched_names": [
+          "ShipInstanceSerializer.to_dict",
+          "to_dict"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipInstanceSerializer.from_dict": {
+        "type": "method",
+        "line": 67,
+        "aliases": [
+          "from_dict"
+        ],
+        "matched_names": [
+          "ShipInstanceSerializer.from_dict",
+          "from_dict"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipInstanceSerializer.to_json": {
+        "type": "method",
+        "line": 143,
+        "aliases": [
+          "to_json"
+        ],
+        "matched_names": [
+          "ShipInstanceSerializer.to_json",
+          "to_json"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipInstanceSerializer.from_json": {
+        "type": "method",
+        "line": 148,
+        "aliases": [
+          "from_json"
+        ],
+        "matched_names": [
+          "ShipInstanceSerializer.from_json",
+          "from_json"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py"
+        ],
+        "heuristic_match": true
+      },
+      "ShipInstanceSerializer.clone": {
+        "type": "method",
+        "line": 154,
+        "aliases": [
+          "clone"
+        ],
+        "matched_names": [
+          "ShipInstanceSerializer.clone",
+          "clone"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/strategy/engine/handlers/base.py": {
+    "layer": "strategy",
+    "loc": 391,
+    "candidate_test_files": [],
+    "total_symbols": 18,
+    "tested_symbols": 0,
+    "untested_symbols": [
+      "add_move_order_if_needed",
+      "ICommandHandler",
+      "ICommandHandler.execute",
+      "BaseCommandHandler",
+      "BaseCommandHandler._resolve_fleet",
+      "BaseCommandHandler._resolve_player_fleet",
+      "BaseCommandHandler._resolve_fleet_required",
+      "BaseCommandHandler._resolve_planet",
+      "BaseCommandHandler._resolve_planet_optional",
+      "BaseCommandHandler._emit_validated_order",
+      "BaseCommandHandler._resolve_build_entity",
+      "BaseCommandHandler._resolve_queue",
+      "BaseCommandHandler._resolve_queue_owner",
+      "BaseCommandHandler._build_colonize_target",
+      "CommandHandlerRegistry",
+      "CommandHandlerRegistry.__init__",
+      "CommandHandlerRegistry.register",
+      "CommandHandlerRegistry.dispatch"
+    ],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {
+      "add_move_order_if_needed": {
+        "type": "function",
+        "line": 32,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ICommandHandler": {
+        "type": "class",
+        "line": 85,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "ICommandHandler.execute": {
+        "type": "method",
+        "line": 88,
+        "aliases": [
+          "execute"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler": {
+        "type": "class",
+        "line": 101,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._resolve_fleet": {
+        "type": "method",
+        "line": 112,
+        "aliases": [
+          "_resolve_fleet"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._resolve_player_fleet": {
+        "type": "method",
+        "line": 135,
+        "aliases": [
+          "_resolve_player_fleet"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._resolve_fleet_required": {
+        "type": "method",
+        "line": 159,
+        "aliases": [
+          "_resolve_fleet_required"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._resolve_planet": {
+        "type": "method",
+        "line": 186,
+        "aliases": [
+          "_resolve_planet"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._resolve_planet_optional": {
+        "type": "method",
+        "line": 203,
+        "aliases": [
+          "_resolve_planet_optional"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._emit_validated_order": {
+        "type": "method",
+        "line": 228,
+        "aliases": [
+          "_emit_validated_order"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._resolve_build_entity": {
+        "type": "method",
+        "line": 250,
+        "aliases": [
+          "_resolve_build_entity"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._resolve_queue": {
+        "type": "method",
+        "line": 271,
+        "aliases": [
+          "_resolve_queue"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._resolve_queue_owner": {
+        "type": "method",
+        "line": 304,
+        "aliases": [
+          "_resolve_queue_owner"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BaseCommandHandler._build_colonize_target": {
+        "type": "method",
+        "line": 346,
+        "aliases": [
+          "_build_colonize_target"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "CommandHandlerRegistry": {
+        "type": "class",
+        "line": 362,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "CommandHandlerRegistry.__init__": {
+        "type": "method",
+        "line": 365,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "CommandHandlerRegistry.register": {
+        "type": "method",
+        "line": 368,
+        "aliases": [
+          "register"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "CommandHandlerRegistry.dispatch": {
+        "type": "method",
+        "line": 377,
+        "aliases": [
+          "dispatch"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/strategy/engine/production_engine.py": {
+    "layer": "strategy",
+    "loc": 666,
+    "candidate_test_files": [
+      "tests/unit/strategy/engine/test_engine_validation.py",
+      "tests/unit/strategy/engine/test_planetary_yard_requirement.py",
+      "tests/unit/strategy/engine/test_production_engine_consumption.py",
+      "tests/unit/strategy/engine/test_production_engine_queue.py",
+      "tests/unit/strategy/engine/test_production_refactor.py",
+      "tests/unit/strategy/engine/test_production_repro.py",
+      "tests/unit/strategy/production_engine/conftest.py",
+      "tests/unit/strategy/production_engine/test_habitability.py",
+      "tests/unit/strategy/production_engine/test_paused_queue.py",
+      "tests/unit/strategy/production_engine/test_resource_costs.py",
+      "tests/unit/strategy/production_engine/test_spawning.py",
+      "tests/unit/strategy/production_engine/test_tick_consumption.py",
+      "tests/unit/strategy/test_engine_event_emission.py",
+      "tests/unit/strategy/turn_engine/test_dependency_injection.py",
+      "tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py"
+    ],
+    "total_symbols": 19,
+    "tested_symbols": 19,
+    "untested_symbols": [],
+    "coverage_tier": 3,
+    "tier_label": "TIER_3_APPARENTLY_COVERED",
+    "symbol_coverage": {
+      "QueueItemAction": {
+        "type": "class",
+        "line": 49,
+        "aliases": [],
+        "matched_names": [
+          "QueueItemAction"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_queue.py"
+        ],
+        "heuristic_match": true
+      },
+      "TickExpenditure": {
+        "type": "class",
+        "line": 56,
+        "aliases": [],
+        "matched_names": [
+          "TickExpenditure"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine": {
+        "type": "class",
+        "line": 71,
+        "aliases": [],
+        "matched_names": [
+          "ProductionEngine"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_engine_validation.py",
+          "tests/unit/strategy/engine/test_planetary_yard_requirement.py",
+          "tests/unit/strategy/engine/test_production_engine_consumption.py",
+          "tests/unit/strategy/engine/test_production_engine_queue.py",
+          "tests/unit/strategy/engine/test_production_refactor.py",
+          "tests/unit/strategy/engine/test_production_repro.py",
+          "tests/unit/strategy/production_engine/conftest.py",
+          "tests/unit/strategy/production_engine/test_habitability.py",
+          "tests/unit/strategy/production_engine/test_paused_queue.py",
+          "tests/unit/strategy/production_engine/test_resource_costs.py",
+          "tests/unit/strategy/production_engine/test_spawning.py",
+          "tests/unit/strategy/production_engine/test_tick_consumption.py",
+          "tests/unit/strategy/test_engine_event_emission.py",
+          "tests/unit/strategy/turn_engine/test_dependency_injection.py",
+          "tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine.__init__": {
+        "type": "method",
+        "line": 92,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/production_engine/test_habitability.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine.set_current_turn": {
+        "type": "method",
+        "line": 130,
+        "aliases": [
+          "set_current_turn"
+        ],
+        "matched_names": [
+          "set_current_turn"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_queue.py",
+          "tests/unit/strategy/production_engine/test_habitability.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._get_habitability_mult": {
+        "type": "method",
+        "line": 134,
+        "aliases": [
+          "_get_habitability_mult"
+        ],
+        "matched_names": [
+          "_get_habitability_mult"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_queue.py",
+          "tests/unit/strategy/production_engine/test_habitability.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._calculate_design_cost": {
+        "type": "method",
+        "line": 151,
+        "aliases": [
+          "_calculate_design_cost"
+        ],
+        "matched_names": [
+          "_calculate_design_cost"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py",
+          "tests/unit/strategy/production_engine/test_resource_costs.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._validate_tick_inputs": {
+        "type": "method",
+        "line": 172,
+        "aliases": [
+          "_validate_tick_inputs"
+        ],
+        "matched_names": [
+          "_validate_tick_inputs"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_engine_validation.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine.process_construction_tick": {
+        "type": "method",
+        "line": 182,
+        "aliases": [
+          "process_construction_tick"
+        ],
+        "matched_names": [
+          "process_construction_tick"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_planetary_yard_requirement.py",
+          "tests/unit/strategy/engine/test_production_engine_queue.py",
+          "tests/unit/strategy/production_engine/test_paused_queue.py",
+          "tests/unit/strategy/production_engine/test_tick_consumption.py",
+          "tests/unit/strategy/turn_engine/test_dependency_injection.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._resolve_fleet_production_rate": {
+        "type": "method",
+        "line": 251,
+        "aliases": [
+          "_resolve_fleet_production_rate"
+        ],
+        "matched_names": [
+          "_resolve_fleet_production_rate"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_queue.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._process_queue_tick_dynamic": {
+        "type": "method",
+        "line": 257,
+        "aliases": [
+          "_process_queue_tick_dynamic"
+        ],
+        "matched_names": [
+          "_process_queue_tick_dynamic"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py",
+          "tests/unit/strategy/engine/test_production_engine_queue.py",
+          "tests/unit/strategy/engine/test_production_refactor.py",
+          "tests/unit/strategy/production_engine/test_habitability.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._validate_queue_item": {
+        "type": "method",
+        "line": 371,
+        "aliases": [
+          "_validate_queue_item"
+        ],
+        "matched_names": [
+          "_validate_queue_item"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_queue.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._calculate_tick_expenditure": {
+        "type": "method",
+        "line": 423,
+        "aliases": [
+          "_calculate_tick_expenditure"
+        ],
+        "matched_names": [
+          "_calculate_tick_expenditure"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._check_affordability": {
+        "type": "method",
+        "line": 492,
+        "aliases": [
+          "_check_affordability"
+        ],
+        "matched_names": [
+          "_check_affordability"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._log_resource_shortage": {
+        "type": "method",
+        "line": 516,
+        "aliases": [
+          "_log_resource_shortage"
+        ],
+        "matched_names": [
+          "_log_resource_shortage"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._apply_resource_consumption": {
+        "type": "method",
+        "line": 581,
+        "aliases": [
+          "_apply_resource_consumption"
+        ],
+        "matched_names": [
+          "_apply_resource_consumption"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._check_item_completion": {
+        "type": "method",
+        "line": 612,
+        "aliases": [
+          "_check_item_completion"
+        ],
+        "matched_names": [
+          "_check_item_completion"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._update_turns_remaining": {
+        "type": "method",
+        "line": 631,
+        "aliases": [
+          "_update_turns_remaining"
+        ],
+        "matched_names": [
+          "_update_turns_remaining"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py"
+        ],
+        "heuristic_match": true
+      },
+      "ProductionEngine._complete_item": {
+        "type": "method",
+        "line": 646,
+        "aliases": [
+          "_complete_item"
+        ],
+        "matched_names": [
+          "_complete_item"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/engine/test_production_engine_consumption.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/strategy/facade/dto/__init__.py": {
+    "layer": "strategy",
+    "loc": 30,
+    "candidate_test_files": [
+      "tests/unit/ui/screens/test_cargo_quick_dialog.py",
+      "tests/unit/ui/screens/test_cargo_quick_dialog_resolution.py",
+      "tests/unit/ui/screens/test_transfer_dialog.py",
+      "tests/unit/ui/screens/test_transfer_dialog_characterization.py",
+      "tests/unit/ui/screens/test_transfer_dialog_enhanced.py"
+    ],
+    "total_symbols": 0,
+    "tested_symbols": 0,
+    "untested_symbols": [],
+    "coverage_tier": 1,
+    "tier_label": "TIER_1_NO_SYMBOLS_TESTED",
+    "symbol_coverage": {}
+  },
+  "game/strategy/generation/planet_image_registry.py": {
+    "layer": "strategy",
+    "loc": 129,
+    "candidate_test_files": [
+      "tests/unit/strategy/data/test_planet_classification_logic.py",
+      "tests/unit/strategy/generation/test_planet_image_registry.py"
+    ],
+    "total_symbols": 7,
+    "tested_symbols": 5,
+    "untested_symbols": [
+      "PlanetImageRegistry.__init__",
+      "PlanetImageRegistry._load_classifications"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "PlanetImageRegistry": {
+        "type": "class",
+        "line": 27,
+        "aliases": [],
+        "matched_names": [
+          "PlanetImageRegistry"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/data/test_planet_classification_logic.py",
+          "tests/unit/strategy/generation/test_planet_image_registry.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetImageRegistry.__init__": {
+        "type": "method",
+        "line": 34,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetImageRegistry._load_classifications": {
+        "type": "method",
+        "line": 41,
+        "aliases": [
+          "_load_classifications"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetImageRegistry.get_random_image": {
+        "type": "method",
+        "line": 65,
+        "aliases": [
+          "get_random_image"
+        ],
+        "matched_names": [
+          "get_random_image"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/generation/test_planet_image_registry.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetImageRegistry.get_random_rotation": {
+        "type": "method",
+        "line": 98,
+        "aliases": [
+          "get_random_rotation"
+        ],
+        "matched_names": [
+          "get_random_rotation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/generation/test_planet_image_registry.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetImageRegistry.get_image_count": {
+        "type": "method",
+        "line": 111,
+        "aliases": [
+          "get_image_count"
+        ],
+        "matched_names": [
+          "get_image_count"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/generation/test_planet_image_registry.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetImageRegistry.get_total_image_count": {
+        "type": "method",
+        "line": 122,
+        "aliases": [
+          "get_total_image_count"
+        ],
+        "matched_names": [
+          "get_total_image_count"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/generation/test_planet_image_registry.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/strategy/generation/storm_generator.py": {
+    "layer": "strategy",
+    "loc": 223,
+    "candidate_test_files": [
+      "tests/unit/strategy/generation/test_storm_generator.py"
+    ],
+    "total_symbols": 5,
+    "tested_symbols": 2,
+    "untested_symbols": [
+      "StormGenerator.__init__",
+      "StormGenerator._collect_occupied_hexes",
+      "StormGenerator._find_valid_center"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "StormGenerator": {
+        "type": "class",
+        "line": 26,
+        "aliases": [],
+        "matched_names": [
+          "StormGenerator"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/generation/test_storm_generator.py"
+        ],
+        "heuristic_match": true
+      },
+      "StormGenerator.__init__": {
+        "type": "method",
+        "line": 33,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "StormGenerator.generate_storms": {
+        "type": "method",
+        "line": 41,
+        "aliases": [
+          "generate_storms"
+        ],
+        "matched_names": [
+          "generate_storms"
+        ],
+        "candidate_test_files": [
+          "tests/unit/strategy/generation/test_storm_generator.py"
+        ],
+        "heuristic_match": true
+      },
+      "StormGenerator._collect_occupied_hexes": {
+        "type": "method",
+        "line": 140,
+        "aliases": [
+          "_collect_occupied_hexes"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "StormGenerator._find_valid_center": {
+        "type": "method",
+        "line": 170,
+        "aliases": [
+          "_find_valid_center"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/strategy/services/__init__.py": {
+    "layer": "strategy",
+    "loc": 5,
+    "candidate_test_files": [
+      "tests/unit/strategy/fleet_navigation/test_navigation_pure.py",
+      "tests/unit/strategy/services/test_empire_economy_service.py",
+      "tests/unit/strategy/services/test_stabilizer_registry.py"
+    ],
+    "total_symbols": 0,
+    "tested_symbols": 0,
+    "untested_symbols": [],
+    "coverage_tier": 1,
+    "tier_label": "TIER_1_NO_SYMBOLS_TESTED",
+    "symbol_coverage": {}
+  },
+  "game/strategy/services/ability_sources/warp_point.py": {
+    "layer": "strategy",
+    "loc": 64,
+    "candidate_test_files": [],
+    "total_symbols": 9,
+    "tested_symbols": 0,
+    "untested_symbols": [
+      "WarpPointAbilitySource",
+      "WarpPointAbilitySource.source_kind",
+      "WarpPointAbilitySource.source_label",
+      "WarpPointAbilitySource.source_id",
+      "WarpPointAbilitySource.owner_id",
+      "WarpPointAbilitySource.get_abilities",
+      "WarpPointAbilitySource.affects_hex",
+      "WarpPointAbilitySource.affects_system",
+      "WarpPointAbilitySource.get_activation_state"
+    ],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {
+      "WarpPointAbilitySource": {
+        "type": "class",
+        "line": 14,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "WarpPointAbilitySource.source_kind": {
+        "type": "method",
+        "line": 20,
+        "aliases": [
+          "source_kind"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "WarpPointAbilitySource.source_label": {
+        "type": "method",
+        "line": 24,
+        "aliases": [
+          "source_label"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "WarpPointAbilitySource.source_id": {
+        "type": "method",
+        "line": 34,
+        "aliases": [
+          "source_id"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "WarpPointAbilitySource.owner_id": {
+        "type": "method",
+        "line": 39,
+        "aliases": [
+          "owner_id"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "WarpPointAbilitySource.get_abilities": {
+        "type": "method",
+        "line": 42,
+        "aliases": [
+          "get_abilities"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "WarpPointAbilitySource.affects_hex": {
+        "type": "method",
+        "line": 45,
+        "aliases": [
+          "affects_hex"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "WarpPointAbilitySource.affects_system": {
+        "type": "method",
+        "line": 60,
+        "aliases": [
+          "affects_system"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "WarpPointAbilitySource.get_activation_state": {
+        "type": "method",
+        "line": 63,
+        "aliases": [
+          "get_activation_state"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/ui/components/table/column_manager.py": {
+    "layer": "ui",
+    "loc": 176,
+    "candidate_test_files": [
+      "tests/unit/ui/components/table/test_column_manager.py",
+      "tests/unit/ui/components/table/test_header.py",
+      "tests/unit/ui/components/table/test_virtual_table.py"
+    ],
+    "total_symbols": 12,
+    "tested_symbols": 10,
+    "untested_symbols": [
+      "TableColumnManager.is_column_visible",
+      "TableColumnManager.get_toggleable_columns"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "TableColumnManager": {
+        "type": "class",
+        "line": 9,
+        "aliases": [],
+        "matched_names": [
+          "TableColumnManager"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py",
+          "tests/unit/ui/components/table/test_header.py",
+          "tests/unit/ui/components/table/test_virtual_table.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.__init__": {
+        "type": "method",
+        "line": 20,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_virtual_table.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.get_columns": {
+        "type": "method",
+        "line": 36,
+        "aliases": [
+          "get_columns"
+        ],
+        "matched_names": [
+          "get_columns"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py",
+          "tests/unit/ui/components/table/test_virtual_table.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.get_visible_columns": {
+        "type": "method",
+        "line": 44,
+        "aliases": [
+          "get_visible_columns"
+        ],
+        "matched_names": [
+          "get_visible_columns"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py",
+          "tests/unit/ui/components/table/test_virtual_table.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.get_column": {
+        "type": "method",
+        "line": 52,
+        "aliases": [
+          "get_column"
+        ],
+        "matched_names": [
+          "get_column"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.toggle_column": {
+        "type": "method",
+        "line": 66,
+        "aliases": [
+          "toggle_column"
+        ],
+        "matched_names": [
+          "toggle_column"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.swap_column": {
+        "type": "method",
+        "line": 81,
+        "aliases": [
+          "swap_column"
+        ],
+        "matched_names": [
+          "swap_column"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py",
+          "tests/unit/ui/components/table/test_header.py",
+          "tests/unit/ui/components/table/test_virtual_table.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.get_total_visible_width": {
+        "type": "method",
+        "line": 117,
+        "aliases": [
+          "get_total_visible_width"
+        ],
+        "matched_names": [
+          "get_total_visible_width"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.is_column_visible": {
+        "type": "method",
+        "line": 125,
+        "aliases": [
+          "is_column_visible"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TableColumnManager.is_image_column": {
+        "type": "method",
+        "line": 139,
+        "aliases": [
+          "is_image_column"
+        ],
+        "matched_names": [
+          "is_image_column"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py"
+        ],
+        "heuristic_match": true
+      },
+      "TableColumnManager.get_toggleable_columns": {
+        "type": "method",
+        "line": 153,
+        "aliases": [
+          "get_toggleable_columns"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TableColumnManager.set_sort": {
+        "type": "method",
+        "line": 163,
+        "aliases": [
+          "set_sort"
+        ],
+        "matched_names": [
+          "set_sort"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/components/table/test_column_manager.py",
+          "tests/unit/ui/components/table/test_header.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/ui/screens/battle_screen.py": {
+    "layer": "ui",
+    "loc": 687,
+    "candidate_test_files": [
+      "tests/unit/ai/test_movement_and_ai.py",
+      "tests/unit/test_lab/test_visual_run.py",
+      "tests/unit/ui/conftest.py",
+      "tests/unit/ui/screens/test_battle_screen_edge_cases.py",
+      "tests/unit/ui/screens/test_battle_screen_modifier_labels.py",
+      "tests/unit/ui/screens/test_battle_setup_logic.py",
+      "tests/unit/ui/test_battle_screen.py",
+      "tests/unit/ui/test_battle_screen_extended.py",
+      "tests/unit/ui/test_battle_screen_simulation.py",
+      "tests/unit/ui/test_scene_protocol.py"
+    ],
+    "total_symbols": 36,
+    "tested_symbols": 22,
+    "untested_symbols": [
+      "BattleScreen.stats_panel_width",
+      "BattleScreen._resolve_focus_target",
+      "BattleScreen._update_headless",
+      "BattleScreen._update_visual_effects",
+      "BattleScreen._update_tick_rate",
+      "BattleScreen._subscribe_combat_events",
+      "BattleScreen._add_hit_effect",
+      "BattleScreen._on_shield_hit",
+      "BattleScreen._on_component_hit",
+      "BattleScreen._on_component_destroyed",
+      "BattleScreen._on_ship_destroyed",
+      "BattleScreen.draw_hud",
+      "BattleScreen.print_headless_summary"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "BattleScreen": {
+        "type": "class",
+        "line": 56,
+        "aliases": [],
+        "matched_names": [
+          "BattleScreen"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ai/test_movement_and_ai.py",
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/screens/test_battle_screen_edge_cases.py",
+          "tests/unit/ui/screens/test_battle_screen_modifier_labels.py",
+          "tests/unit/ui/screens/test_battle_setup_logic.py",
+          "tests/unit/ui/test_battle_screen.py",
+          "tests/unit/ui/test_battle_screen_extended.py",
+          "tests/unit/ui/test_battle_screen_simulation.py",
+          "tests/unit/ui/test_scene_protocol.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.__init__": {
+        "type": "method",
+        "line": 68,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/screens/test_battle_screen_edge_cases.py",
+          "tests/unit/ui/screens/test_battle_screen_modifier_labels.py",
+          "tests/unit/ui/screens/test_battle_setup_logic.py",
+          "tests/unit/ui/test_scene_protocol.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.start_battle": {
+        "type": "method",
+        "line": 135,
+        "aliases": [
+          "start_battle"
+        ],
+        "matched_names": [
+          "start_battle"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.get_controller": {
+        "type": "method",
+        "line": 173,
+        "aliases": [
+          "get_controller"
+        ],
+        "matched_names": [
+          "get_controller"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.engine": {
+        "type": "method",
+        "line": 178,
+        "aliases": [
+          "engine"
+        ],
+        "matched_names": [
+          "engine"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ai/test_movement_and_ai.py",
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/screens/test_battle_screen_modifier_labels.py",
+          "tests/unit/ui/screens/test_battle_setup_logic.py",
+          "tests/unit/ui/test_battle_screen.py",
+          "tests/unit/ui/test_battle_screen_extended.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.ui_service": {
+        "type": "method",
+        "line": 183,
+        "aliases": [
+          "ui_service"
+        ],
+        "matched_names": [
+          "ui_service"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/test_battle_screen.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.handle_resize": {
+        "type": "method",
+        "line": 194,
+        "aliases": [
+          "handle_resize"
+        ],
+        "matched_names": [
+          "handle_resize"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/test_scene_protocol.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.show_overlay": {
+        "type": "method",
+        "line": 209,
+        "aliases": [
+          "show_overlay"
+        ],
+        "matched_names": [
+          "show_overlay"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/screens/test_battle_screen_edge_cases.py",
+          "tests/unit/ui/test_battle_screen.py",
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.stats_panel_width": {
+        "type": "method",
+        "line": 213,
+        "aliases": [
+          "stats_panel_width"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen.ships": {
+        "type": "method",
+        "line": 217,
+        "aliases": [
+          "ships"
+        ],
+        "matched_names": [
+          "ships"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/screens/test_battle_screen_edge_cases.py",
+          "tests/unit/ui/screens/test_battle_screen_modifier_labels.py",
+          "tests/unit/ui/screens/test_battle_setup_logic.py",
+          "tests/unit/ui/test_battle_screen.py",
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.projectiles": {
+        "type": "method",
+        "line": 221,
+        "aliases": [
+          "projectiles"
+        ],
+        "matched_names": [
+          "projectiles"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/screens/test_battle_setup_logic.py",
+          "tests/unit/ui/test_battle_screen.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.ai_controllers": {
+        "type": "method",
+        "line": 225,
+        "aliases": [
+          "ai_controllers"
+        ],
+        "matched_names": [
+          "ai_controllers"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_battle_setup_logic.py",
+          "tests/unit/ui/test_battle_screen.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.handle_event": {
+        "type": "method",
+        "line": 228,
+        "aliases": [
+          "handle_event"
+        ],
+        "matched_names": [
+          "handle_event"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/screens/test_battle_screen_edge_cases.py",
+          "tests/unit/ui/test_battle_screen_simulation.py",
+          "tests/unit/ui/test_scene_protocol.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen._resolve_focus_target": {
+        "type": "method",
+        "line": 246,
+        "aliases": [
+          "_resolve_focus_target"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._handle_keydown": {
+        "type": "method",
+        "line": 271,
+        "aliases": [
+          "_handle_keydown"
+        ],
+        "matched_names": [
+          "_handle_keydown"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_battle_screen_edge_cases.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.update": {
+        "type": "method",
+        "line": 296,
+        "aliases": [
+          "update"
+        ],
+        "matched_names": [
+          "update",
+          "BattleScreen.update"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ai/test_movement_and_ai.py",
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/test_battle_screen.py",
+          "tests/unit/ui/test_battle_screen_simulation.py",
+          "tests/unit/ui/test_scene_protocol.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen._update_headless": {
+        "type": "method",
+        "line": 307,
+        "aliases": [
+          "_update_headless"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._update_visual": {
+        "type": "method",
+        "line": 324,
+        "aliases": [
+          "_update_visual"
+        ],
+        "matched_names": [
+          "_update_visual"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen._run_single_tick": {
+        "type": "method",
+        "line": 367,
+        "aliases": [
+          "_run_single_tick"
+        ],
+        "matched_names": [
+          "_run_single_tick"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen._update_visual_effects": {
+        "type": "method",
+        "line": 393,
+        "aliases": [
+          "_update_visual_effects"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._update_tick_rate": {
+        "type": "method",
+        "line": 410,
+        "aliases": [
+          "_update_tick_rate"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._on_battle_ended": {
+        "type": "method",
+        "line": 418,
+        "aliases": [
+          "_on_battle_ended"
+        ],
+        "matched_names": [
+          "_on_battle_ended"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/test_scene_protocol.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen._cycle_focus_ship": {
+        "type": "method",
+        "line": 445,
+        "aliases": [
+          "_cycle_focus_ship"
+        ],
+        "matched_names": [
+          "_cycle_focus_ship"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen._subscribe_combat_events": {
+        "type": "method",
+        "line": 461,
+        "aliases": [
+          "_subscribe_combat_events"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._add_hit_effect": {
+        "type": "method",
+        "line": 469,
+        "aliases": [
+          "_add_hit_effect"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._on_shield_hit": {
+        "type": "method",
+        "line": 475,
+        "aliases": [
+          "_on_shield_hit"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._on_component_hit": {
+        "type": "method",
+        "line": 478,
+        "aliases": [
+          "_on_component_hit"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._on_component_destroyed": {
+        "type": "method",
+        "line": 481,
+        "aliases": [
+          "_on_component_destroyed"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen._on_ship_destroyed": {
+        "type": "method",
+        "line": 484,
+        "aliases": [
+          "_on_ship_destroyed"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen.is_battle_over": {
+        "type": "method",
+        "line": 487,
+        "aliases": [
+          "is_battle_over"
+        ],
+        "matched_names": [
+          "is_battle_over"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/test_battle_screen.py",
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.get_winner": {
+        "type": "method",
+        "line": 494,
+        "aliases": [
+          "get_winner"
+        ],
+        "matched_names": [
+          "get_winner"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/test_battle_screen.py",
+          "tests/unit/ui/test_battle_screen_simulation.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.draw": {
+        "type": "method",
+        "line": 498,
+        "aliases": [
+          "draw"
+        ],
+        "matched_names": [
+          "BattleScreen.draw",
+          "draw"
+        ],
+        "candidate_test_files": [
+          "tests/unit/test_lab/test_visual_run.py",
+          "tests/unit/ui/test_battle_screen_simulation.py",
+          "tests/unit/ui/test_scene_protocol.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.draw_hud": {
+        "type": "method",
+        "line": 547,
+        "aliases": [
+          "draw_hud"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BattleScreen.get_active_modifier_labels": {
+        "type": "method",
+        "line": 620,
+        "aliases": [
+          "get_active_modifier_labels"
+        ],
+        "matched_names": [
+          "BattleScreen.get_active_modifier_labels",
+          "get_active_modifier_labels"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_battle_screen_modifier_labels.py"
+        ],
+        "heuristic_match": true
+      },
+      "BattleScreen.print_headless_summary": {
+        "type": "method",
+        "line": 676,
+        "aliases": [
+          "print_headless_summary"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/ui/screens/build_queue_renderer.py": {
+    "layer": "ui",
+    "loc": 241,
+    "candidate_test_files": [],
+    "total_symbols": 7,
+    "tested_symbols": 0,
+    "untested_symbols": [
+      "BuildQueueRenderer",
+      "BuildQueueRenderer.__init__",
+      "BuildQueueRenderer.refresh_items_list",
+      "BuildQueueRenderer.refresh_queue_display",
+      "BuildQueueRenderer.refresh_roles_list",
+      "BuildQueueRenderer.update_queue_header",
+      "BuildQueueRenderer.refresh_pause_button"
+    ],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {
+      "BuildQueueRenderer": {
+        "type": "class",
+        "line": 24,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuildQueueRenderer.__init__": {
+        "type": "method",
+        "line": 36,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuildQueueRenderer.refresh_items_list": {
+        "type": "method",
+        "line": 53,
+        "aliases": [
+          "refresh_items_list"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuildQueueRenderer.refresh_queue_display": {
+        "type": "method",
+        "line": 140,
+        "aliases": [
+          "refresh_queue_display"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuildQueueRenderer.refresh_roles_list": {
+        "type": "method",
+        "line": 169,
+        "aliases": [
+          "refresh_roles_list"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuildQueueRenderer.update_queue_header": {
+        "type": "method",
+        "line": 209,
+        "aliases": [
+          "update_queue_header"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuildQueueRenderer.refresh_pause_button": {
+        "type": "method",
+        "line": 221,
+        "aliases": [
+          "refresh_pause_button"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/ui/screens/builder/interaction_controller.py": {
+    "layer": "ui",
+    "loc": 132,
+    "candidate_test_files": [
+      "tests/unit/builder/test_builder_interaction.py"
+    ],
+    "total_symbols": 6,
+    "tested_symbols": 4,
+    "untested_symbols": [
+      "InteractionController.handle_event",
+      "InteractionController.update"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "InteractionController": {
+        "type": "class",
+        "line": 12,
+        "aliases": [],
+        "matched_names": [
+          "InteractionController"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_builder_interaction.py"
+        ],
+        "heuristic_match": true
+      },
+      "InteractionController.__init__": {
+        "type": "method",
+        "line": 34,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_builder_interaction.py"
+        ],
+        "heuristic_match": true
+      },
+      "InteractionController.register_drop_target": {
+        "type": "method",
+        "line": 50,
+        "aliases": [
+          "register_drop_target"
+        ],
+        "matched_names": [
+          "register_drop_target"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_builder_interaction.py"
+        ],
+        "heuristic_match": true
+      },
+      "InteractionController.handle_event": {
+        "type": "method",
+        "line": 61,
+        "aliases": [
+          "handle_event"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "InteractionController.update": {
+        "type": "method",
+        "line": 106,
+        "aliases": [
+          "update"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "InteractionController._handle_drop": {
+        "type": "method",
+        "line": 115,
+        "aliases": [
+          "_handle_drop"
+        ],
+        "matched_names": [
+          "_handle_drop"
+        ],
+        "candidate_test_files": [
+          "tests/unit/builder/test_builder_interaction.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/ui/screens/builder/left_panel.py": {
+    "layer": "ui",
+    "loc": 485,
+    "candidate_test_files": [],
+    "total_symbols": 13,
+    "tested_symbols": 0,
+    "untested_symbols": [
+      "BuilderLeftPanel",
+      "BuilderLeftPanel.__init__",
+      "BuilderLeftPanel.on_registry_reloaded",
+      "BuilderLeftPanel.update",
+      "BuilderLeftPanel.is_dropdown_expanded",
+      "BuilderLeftPanel.get_hovered_list_item",
+      "BuilderLeftPanel.deselect_all",
+      "BuilderLeftPanel.update_component_list",
+      "BuilderLeftPanel.draw",
+      "BuilderLeftPanel.handle_event",
+      "BuilderLeftPanel.get_add_count",
+      "BuilderLeftPanel._get_selected_layer",
+      "BuilderLeftPanel.get_hovered_component"
+    ],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {
+      "BuilderLeftPanel": {
+        "type": "class",
+        "line": 10,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.__init__": {
+        "type": "method",
+        "line": 11,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.on_registry_reloaded": {
+        "type": "method",
+        "line": 151,
+        "aliases": [
+          "on_registry_reloaded"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.update": {
+        "type": "method",
+        "line": 174,
+        "aliases": [
+          "update"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.is_dropdown_expanded": {
+        "type": "method",
+        "line": 212,
+        "aliases": [
+          "is_dropdown_expanded"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.get_hovered_list_item": {
+        "type": "method",
+        "line": 216,
+        "aliases": [
+          "get_hovered_list_item"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.deselect_all": {
+        "type": "method",
+        "line": 240,
+        "aliases": [
+          "deselect_all"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.update_component_list": {
+        "type": "method",
+        "line": 246,
+        "aliases": [
+          "update_component_list"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.draw": {
+        "type": "method",
+        "line": 344,
+        "aliases": [
+          "draw"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.handle_event": {
+        "type": "method",
+        "line": 362,
+        "aliases": [
+          "handle_event"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.get_add_count": {
+        "type": "method",
+        "line": 453,
+        "aliases": [
+          "get_add_count"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel._get_selected_layer": {
+        "type": "method",
+        "line": 461,
+        "aliases": [
+          "_get_selected_layer"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "BuilderLeftPanel.get_hovered_component": {
+        "type": "method",
+        "line": 470,
+        "aliases": [
+          "get_hovered_component"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/ui/screens/builder/stat_definitions.py": {
+    "layer": "ui",
+    "loc": 77,
+    "candidate_test_files": [
+      "tests/unit/workshop/test_stats_visibility.py"
+    ],
+    "total_symbols": 7,
+    "tested_symbols": 2,
+    "untested_symbols": [
+      "StatDefinition.__init__",
+      "StatDefinition.get_value",
+      "StatDefinition.format_value",
+      "StatDefinition.get_display_unit",
+      "StatDefinition.get_status"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "StatDefinition": {
+        "type": "class",
+        "line": 12,
+        "aliases": [],
+        "matched_names": [
+          "StatDefinition"
+        ],
+        "candidate_test_files": [
+          "tests/unit/workshop/test_stats_visibility.py"
+        ],
+        "heuristic_match": true
+      },
+      "StatDefinition.__init__": {
+        "type": "method",
+        "line": 25,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "StatDefinition.get_value": {
+        "type": "method",
+        "line": 34,
+        "aliases": [
+          "get_value"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "StatDefinition.format_value": {
+        "type": "method",
+        "line": 43,
+        "aliases": [
+          "format_value"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "StatDefinition.get_display_unit": {
+        "type": "method",
+        "line": 48,
+        "aliases": [
+          "get_display_unit"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "StatDefinition.get_status": {
+        "type": "method",
+        "line": 53,
+        "aliases": [
+          "get_status"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "SectionDefinition": {
+        "type": "class",
+        "line": 60,
+        "aliases": [],
+        "matched_names": [
+          "SectionDefinition"
+        ],
+        "candidate_test_files": [
+          "tests/unit/workshop/test_stats_visibility.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/ui/screens/data_list_window_mixin.py": {
+    "layer": "ui",
+    "loc": 88,
+    "candidate_test_files": [],
+    "total_symbols": 4,
+    "tested_symbols": 0,
+    "untested_symbols": [
+      "DataListWindowMixin",
+      "DataListWindowMixin._toggle_column",
+      "DataListWindowMixin._save_preset",
+      "DataListWindowMixin._sync_slider_text"
+    ],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {
+      "DataListWindowMixin": {
+        "type": "class",
+        "line": 33,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "DataListWindowMixin._toggle_column": {
+        "type": "method",
+        "line": 36,
+        "aliases": [
+          "_toggle_column"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "DataListWindowMixin._save_preset": {
+        "type": "method",
+        "line": 53,
+        "aliases": [
+          "_save_preset"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "DataListWindowMixin._sync_slider_text": {
+        "type": "method",
+        "line": 72,
+        "aliases": [
+          "_sync_slider_text"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/ui/screens/empire_build_queue_formatter.py": {
+    "layer": "ui",
+    "loc": 189,
+    "candidate_test_files": [
+      "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+    ],
+    "total_symbols": 9,
+    "tested_symbols": 8,
+    "untested_symbols": [
+      "format_turns_remaining"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "get_queue_summary": {
+        "type": "function",
+        "line": 19,
+        "aliases": [],
+        "matched_names": [
+          "get_queue_summary"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+        ],
+        "heuristic_match": true
+      },
+      "get_first_item_text": {
+        "type": "function",
+        "line": 34,
+        "aliases": [],
+        "matched_names": [
+          "get_first_item_text"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+        ],
+        "heuristic_match": true
+      },
+      "get_capabilities_text": {
+        "type": "function",
+        "line": 51,
+        "aliases": [],
+        "matched_names": [
+          "get_capabilities_text"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+        ],
+        "heuristic_match": true
+      },
+      "get_system_name": {
+        "type": "function",
+        "line": 69,
+        "aliases": [],
+        "matched_names": [
+          "get_system_name"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+        ],
+        "heuristic_match": true
+      },
+      "get_sector_text": {
+        "type": "function",
+        "line": 95,
+        "aliases": [],
+        "matched_names": [
+          "get_sector_text"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+        ],
+        "heuristic_match": true
+      },
+      "format_turns_remaining": {
+        "type": "function",
+        "line": 117,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "get_turns_left_text": {
+        "type": "function",
+        "line": 131,
+        "aliases": [],
+        "matched_names": [
+          "get_turns_left_text"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+        ],
+        "heuristic_match": true
+      },
+      "get_resource_rate_text": {
+        "type": "function",
+        "line": 147,
+        "aliases": [],
+        "matched_names": [
+          "get_resource_rate_text"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+        ],
+        "heuristic_match": true
+      },
+      "get_resource_total_text": {
+        "type": "function",
+        "line": 170,
+        "aliases": [],
+        "matched_names": [
+          "get_resource_total_text"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_empire_build_queue_formatter.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/ui/screens/planet_data_source.py": {
+    "layer": "ui",
+    "loc": 100,
+    "candidate_test_files": [
+      "tests/unit/ui/screens/test_planet_data_source.py"
+    ],
+    "total_symbols": 7,
+    "tested_symbols": 2,
+    "untested_symbols": [
+      "PlanetDataSource.__init__",
+      "PlanetDataSource._planets",
+      "PlanetDataSource._render_icon",
+      "PlanetDataSource._get_planet_icon",
+      "PlanetDataSource._get_blank_icon"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "PlanetDataSource": {
+        "type": "class",
+        "line": 18,
+        "aliases": [],
+        "matched_names": [
+          "PlanetDataSource"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_planet_data_source.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetDataSource.__init__": {
+        "type": "method",
+        "line": 25,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetDataSource.get_planet_at_index": {
+        "type": "method",
+        "line": 52,
+        "aliases": [
+          "get_planet_at_index"
+        ],
+        "matched_names": [
+          "get_planet_at_index"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_planet_data_source.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetDataSource._planets": {
+        "type": "method",
+        "line": 57,
+        "aliases": [
+          "_planets"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetDataSource._render_icon": {
+        "type": "method",
+        "line": 61,
+        "aliases": [
+          "_render_icon"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetDataSource._get_planet_icon": {
+        "type": "method",
+        "line": 64,
+        "aliases": [
+          "_get_planet_icon"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetDataSource._get_blank_icon": {
+        "type": "method",
+        "line": 96,
+        "aliases": [
+          "_get_blank_icon"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/ui/screens/planet_selection_window.py": {
+    "layer": "ui",
+    "loc": 232,
+    "candidate_test_files": [
+      "tests/unit/ui/screens/test_planet_selection_window.py"
+    ],
+    "total_symbols": 6,
+    "tested_symbols": 4,
+    "untested_symbols": [
+      "PlanetSelectionUiBuilder",
+      "PlanetSelectionUiBuilder.build"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "PlanetSelectionUiBuilder": {
+        "type": "class",
+        "line": 38,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetSelectionUiBuilder.build": {
+        "type": "method",
+        "line": 49,
+        "aliases": [
+          "build"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "PlanetSelectionWindow": {
+        "type": "class",
+        "line": 97,
+        "aliases": [],
+        "matched_names": [
+          "PlanetSelectionWindow"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_planet_selection_window.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetSelectionWindow.__init__": {
+        "type": "method",
+        "line": 98,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_planet_selection_window.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetSelectionWindow.update": {
+        "type": "method",
+        "line": 158,
+        "aliases": [
+          "update"
+        ],
+        "matched_names": [
+          "update"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_planet_selection_window.py"
+        ],
+        "heuristic_match": true
+      },
+      "PlanetSelectionWindow.kill": {
+        "type": "method",
+        "line": 224,
+        "aliases": [
+          "kill"
+        ],
+        "matched_names": [
+          "kill"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_planet_selection_window.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  },
+  "game/ui/screens/strategy_superweapons.py": {
+    "layer": "ui",
+    "loc": 400,
+    "candidate_test_files": [
+      "tests/unit/ui/screens/test_strategy_screen_composition.py",
+      "tests/unit/ui/screens/test_strategy_superweapons.py"
+    ],
+    "total_symbols": 18,
+    "tested_symbols": 14,
+    "untested_symbols": [
+      "SuperweaponOperations._queue_implode_planet",
+      "SuperweaponOperations._show_confirmation",
+      "SuperweaponOperations._show_system_picker",
+      "SuperweaponOperations._show_ship_picker"
+    ],
+    "coverage_tier": 2,
+    "tier_label": "TIER_2_PARTIAL",
+    "symbol_coverage": {
+      "SuperweaponOperations": {
+        "type": "class",
+        "line": 33,
+        "aliases": [],
+        "matched_names": [
+          "SuperweaponOperations"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_screen_composition.py",
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.__init__": {
+        "type": "method",
+        "line": 36,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [
+          "__init__"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.systems": {
+        "type": "method",
+        "line": 48,
+        "aliases": [
+          "systems"
+        ],
+        "matched_names": [
+          "systems"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.camera": {
+        "type": "method",
+        "line": 52,
+        "aliases": [
+          "camera"
+        ],
+        "matched_names": [
+          "camera"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.hex_size": {
+        "type": "method",
+        "line": 56,
+        "aliases": [
+          "hex_size"
+        ],
+        "matched_names": [
+          "hex_size"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.galaxy": {
+        "type": "method",
+        "line": 60,
+        "aliases": [
+          "galaxy"
+        ],
+        "matched_names": [
+          "galaxy"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.handle_implode_planet_designation": {
+        "type": "method",
+        "line": 63,
+        "aliases": [
+          "handle_implode_planet_designation"
+        ],
+        "matched_names": [
+          "handle_implode_planet_designation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations._queue_implode_planet": {
+        "type": "method",
+        "line": 101,
+        "aliases": [
+          "_queue_implode_planet"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "SuperweaponOperations.handle_stellerate_star_designation": {
+        "type": "method",
+        "line": 119,
+        "aliases": [
+          "handle_stellerate_star_designation"
+        ],
+        "matched_names": [
+          "handle_stellerate_star_designation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.handle_open_warp_designation": {
+        "type": "method",
+        "line": 165,
+        "aliases": [
+          "handle_open_warp_designation"
+        ],
+        "matched_names": [
+          "handle_open_warp_designation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.handle_close_warp_designation": {
+        "type": "method",
+        "line": 221,
+        "aliases": [
+          "handle_close_warp_designation"
+        ],
+        "matched_names": [
+          "handle_close_warp_designation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.handle_dyson_sphere_designation": {
+        "type": "method",
+        "line": 265,
+        "aliases": [
+          "handle_dyson_sphere_designation"
+        ],
+        "matched_names": [
+          "handle_dyson_sphere_designation"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations.handle_self_destruct": {
+        "type": "method",
+        "line": 311,
+        "aliases": [
+          "handle_self_destruct"
+        ],
+        "matched_names": [
+          "handle_self_destruct"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations._get_system_at_hex": {
+        "type": "method",
+        "line": 348,
+        "aliases": [
+          "_get_system_at_hex"
+        ],
+        "matched_names": [
+          "_get_system_at_hex"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations._get_warp_point_at_hex": {
+        "type": "method",
+        "line": 353,
+        "aliases": [
+          "_get_warp_point_at_hex"
+        ],
+        "matched_names": [
+          "_get_warp_point_at_hex"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/screens/test_strategy_superweapons.py"
+        ],
+        "heuristic_match": true
+      },
+      "SuperweaponOperations._show_confirmation": {
+        "type": "method",
+        "line": 365,
+        "aliases": [
+          "_show_confirmation"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "SuperweaponOperations._show_system_picker": {
+        "type": "method",
+        "line": 378,
+        "aliases": [
+          "_show_system_picker"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "SuperweaponOperations._show_ship_picker": {
+        "type": "method",
+        "line": 390,
+        "aliases": [
+          "_show_ship_picker"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/ui/screens/transfer_view_model.py": {
+    "layer": "ui",
+    "loc": 322,
+    "candidate_test_files": [],
+    "total_symbols": 19,
+    "tested_symbols": 0,
+    "untested_symbols": [
+      "TransferViewModel",
+      "TransferViewModel.__init__",
+      "TransferViewModel.apply_arrow",
+      "TransferViewModel.apply_max",
+      "TransferViewModel.set_pending_zero",
+      "TransferViewModel.clear_all_pending",
+      "TransferViewModel.reset_pending",
+      "TransferViewModel.get_pending",
+      "TransferViewModel.format_pending",
+      "TransferViewModel.toggle_filter_empty",
+      "TransferViewModel.set_sources",
+      "TransferViewModel.select_source",
+      "TransferViewModel.select_target",
+      "TransferViewModel.target_labels",
+      "TransferViewModel.source_labels",
+      "TransferViewModel.get_amounts",
+      "TransferViewModel.build_row_data",
+      "TransferViewModel._build_pod_rows",
+      "TransferViewModel.visible_rows"
+    ],
+    "coverage_tier": 0,
+    "tier_label": "TIER_0_NO_TESTS",
+    "symbol_coverage": {
+      "TransferViewModel": {
+        "type": "class",
+        "line": 38,
+        "aliases": [],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.__init__": {
+        "type": "method",
+        "line": 68,
+        "aliases": [
+          "__init__"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.apply_arrow": {
+        "type": "method",
+        "line": 83,
+        "aliases": [
+          "apply_arrow"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.apply_max": {
+        "type": "method",
+        "line": 100,
+        "aliases": [
+          "apply_max"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.set_pending_zero": {
+        "type": "method",
+        "line": 112,
+        "aliases": [
+          "set_pending_zero"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.clear_all_pending": {
+        "type": "method",
+        "line": 116,
+        "aliases": [
+          "clear_all_pending"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.reset_pending": {
+        "type": "method",
+        "line": 121,
+        "aliases": [
+          "reset_pending"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.get_pending": {
+        "type": "method",
+        "line": 126,
+        "aliases": [
+          "get_pending"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.format_pending": {
+        "type": "method",
+        "line": 131,
+        "aliases": [
+          "format_pending"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.toggle_filter_empty": {
+        "type": "method",
+        "line": 143,
+        "aliases": [
+          "toggle_filter_empty"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.set_sources": {
+        "type": "method",
+        "line": 152,
+        "aliases": [
+          "set_sources"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.select_source": {
+        "type": "method",
+        "line": 156,
+        "aliases": [
+          "select_source"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.select_target": {
+        "type": "method",
+        "line": 180,
+        "aliases": [
+          "select_target"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.target_labels": {
+        "type": "method",
+        "line": 188,
+        "aliases": [
+          "target_labels"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.source_labels": {
+        "type": "method",
+        "line": 191,
+        "aliases": [
+          "source_labels"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.get_amounts": {
+        "type": "method",
+        "line": 199,
+        "aliases": [
+          "get_amounts"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.build_row_data": {
+        "type": "method",
+        "line": 226,
+        "aliases": [
+          "build_row_data"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel._build_pod_rows": {
+        "type": "method",
+        "line": 269,
+        "aliases": [
+          "_build_pod_rows"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      },
+      "TransferViewModel.visible_rows": {
+        "type": "method",
+        "line": 309,
+        "aliases": [
+          "visible_rows"
+        ],
+        "matched_names": [],
+        "candidate_test_files": [],
+        "heuristic_match": false
+      }
+    }
+  },
+  "game/ui/utils/formatters.py": {
+    "layer": "ui",
+    "loc": 90,
+    "candidate_test_files": [
+      "tests/unit/ui/panels/test_planet_report_panel.py",
+      "tests/unit/ui/utils/test_formatters.py"
+    ],
+    "total_symbols": 3,
+    "tested_symbols": 3,
+    "untested_symbols": [],
+    "coverage_tier": 3,
+    "tier_label": "TIER_3_APPARENTLY_COVERED",
+    "symbol_coverage": {
+      "format_compact_number": {
+        "type": "function",
+        "line": 18,
+        "aliases": [],
+        "matched_names": [
+          "format_compact_number"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/panels/test_planet_report_panel.py",
+          "tests/unit/ui/utils/test_formatters.py"
+        ],
+        "heuristic_match": true
+      },
+      "format_signed_float": {
+        "type": "function",
+        "line": 42,
+        "aliases": [],
+        "matched_names": [
+          "format_signed_float"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/utils/test_formatters.py"
+        ],
+        "heuristic_match": true
+      },
+      "get_damage_color": {
+        "type": "function",
+        "line": 64,
+        "aliases": [],
+        "matched_names": [
+          "get_damage_color"
+        ],
+        "candidate_test_files": [
+          "tests/unit/ui/utils/test_formatters.py"
+        ],
+        "heuristic_match": true
+      }
+    }
+  }
+}

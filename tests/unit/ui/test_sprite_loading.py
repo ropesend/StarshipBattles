@@ -20,11 +20,12 @@ class TestSpriteLoading:
         # Setup mocks
         mock_exists.return_value = True
 
-        # Mock directory contents
+        # Mock directory contents (PROJ-393: legacy Comp_NNN.bmp pattern was
+        # deleted; only canonical {resolution}Portrait_Comp_NNN.ext loads now).
         mock_listdir.return_value = [
-            "Comp_001.bmp",
-            "Comp_005.bmp",
-            "Comp_010.bmp",
+            "64Portrait_Comp_001.png",
+            "64Portrait_Comp_005.png",
+            "64Portrait_Comp_010.png",
             "OtherFile.txt"
         ]
 
@@ -38,18 +39,15 @@ class TestSpriteLoading:
         self.mgr.load_sprites(base_path)
 
         # Verify
-        # Index 1 should be filled (Comp_001)
         assert self.mgr.get_sprite(1) is not None
-        # Index 5 should be filled (Comp_005)
         assert self.mgr.get_sprite(5) is not None
-        # Index 10 should be filled (Comp_010)
         assert self.mgr.get_sprite(10) is not None
 
         # Index 2 should be None (not in files)
         assert self.mgr.get_sprite(2) is None
 
         # Verify image load calls
-        expected_path_1 = os.path.join(base_path, "assets", "Images", "Components", "Components 64", "Comp_001.bmp")
+        expected_path_1 = os.path.join(base_path, "assets", "Images", "Components", "Components 64", "64Portrait_Comp_001.png")
         mock_load.assert_any_call(expected_path_1)
 
     @patch('os.path.exists')

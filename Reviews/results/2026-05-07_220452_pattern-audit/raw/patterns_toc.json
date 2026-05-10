@@ -1,0 +1,217 @@
+{
+  "source": "docs/02_PATTERNS.md",
+  "extracted_at": "2026-05-07T22:04:58.474542",
+  "patterns": [
+    {
+      "number": 1,
+      "name": "ApplicationContext",
+      "anchor": "1-applicationcontext",
+      "superseded_by": null
+    },
+    {
+      "number": 2,
+      "name": "Protocol + TypeGuard",
+      "anchor": "2-protocol-typeguard",
+      "superseded_by": null
+    },
+    {
+      "number": 3,
+      "name": "Registry DI",
+      "anchor": "3-registry-di",
+      "superseded_by": null
+    },
+    {
+      "number": 4,
+      "name": "Registry Pattern",
+      "anchor": "4-registry-pattern",
+      "superseded_by": null
+    },
+    {
+      "number": 5,
+      "name": "Facade / Delegate",
+      "anchor": "5-facade-delegate",
+      "superseded_by": null
+    },
+    {
+      "number": 6,
+      "name": "CQRS-lite Strategy Session",
+      "anchor": "6-cqrs-lite-strategy-session",
+      "superseded_by": null
+    },
+    {
+      "number": 7,
+      "name": "CommandHandlerRegistry",
+      "anchor": "7-commandhandlerregistry",
+      "superseded_by": null
+    },
+    {
+      "number": 8,
+      "name": "MVVM",
+      "anchor": "8-mvvm",
+      "superseded_by": null
+    },
+    {
+      "number": 9,
+      "name": "Template Method Validation",
+      "anchor": "9-template-method-validation",
+      "superseded_by": null
+    },
+    {
+      "number": 10,
+      "name": "Event Bus",
+      "anchor": "10-event-bus",
+      "superseded_by": null
+    },
+    {
+      "number": 11,
+      "name": "Surface Caching",
+      "anchor": "11-surface-caching",
+      "superseded_by": null
+    },
+    {
+      "number": 12,
+      "name": "Configuration Classes",
+      "anchor": "12-configuration-classes",
+      "superseded_by": null
+    },
+    {
+      "number": 13,
+      "name": "Spec Compiler + `run_battle`",
+      "anchor": "13-spec-compiler-runbattle",
+      "superseded_by": null
+    },
+    {
+      "number": 14,
+      "name": "Two-Phase Ability Aggregation",
+      "anchor": "14-two-phase-ability-aggregation",
+      "superseded_by": null
+    },
+    {
+      "number": 15,
+      "name": "Factory",
+      "anchor": "15-factory",
+      "superseded_by": null
+    },
+    {
+      "number": 16,
+      "name": "ScrollState",
+      "anchor": "16-scrollstate",
+      "superseded_by": null
+    },
+    {
+      "number": 17,
+      "name": "Serializable Protocol",
+      "anchor": "17-serializable-protocol",
+      "superseded_by": null
+    },
+    {
+      "number": 18,
+      "name": "Per-Battle RNG",
+      "anchor": "18-per-battle-rng",
+      "superseded_by": null
+    },
+    {
+      "number": 19,
+      "name": "Error Boundary",
+      "anchor": "19-error-boundary",
+      "superseded_by": null
+    },
+    {
+      "number": 20,
+      "name": "Precondition Validation",
+      "anchor": "20-precondition-validation",
+      "superseded_by": null
+    },
+    {
+      "number": 21,
+      "name": "Screen State Machine",
+      "anchor": "21-screen-state-machine",
+      "superseded_by": null
+    },
+    {
+      "number": 22,
+      "name": "TurnEngineConfig",
+      "anchor": "22-turnengineconfig",
+      "superseded_by": null
+    },
+    {
+      "number": 23,
+      "name": "Tick Phase Registry",
+      "anchor": "23-tick-phase-registry",
+      "superseded_by": null
+    },
+    {
+      "number": 24,
+      "name": "External-Stats Bridge",
+      "anchor": "24-external-stats-bridge",
+      "superseded_by": null
+    },
+    {
+      "number": 25,
+      "name": "Scope-Driven Team Routing",
+      "anchor": "25-scope-driven-team-routing",
+      "superseded_by": null
+    },
+    {
+      "number": 26,
+      "name": "Ability-Stat Registry",
+      "anchor": "26-ability-stat-registry",
+      "superseded_by": null
+    },
+    {
+      "number": 27,
+      "name": "Budget-Aware Randomization",
+      "anchor": "27-budget-aware-randomization",
+      "superseded_by": null
+    },
+    {
+      "number": 28,
+      "name": "Background Service Call",
+      "anchor": "28-background-service-call",
+      "superseded_by": null
+    },
+    {
+      "number": 29,
+      "name": "Universal Ability Source",
+      "anchor": "29-universal-ability-source",
+      "superseded_by": null
+    },
+    {
+      "number": 30,
+      "name": "Registrar Close-Callback",
+      "anchor": "30-registrar-close-callback",
+      "superseded_by": 31
+    },
+    {
+      "number": 31,
+      "name": "Strategy Modal Window Base Class",
+      "anchor": "31-strategy-modal-window-base-class",
+      "superseded_by": null
+    },
+    {
+      "number": 32,
+      "name": "Compositional Construction",
+      "anchor": "32-compositional-construction",
+      "superseded_by": null
+    },
+    {
+      "number": 33,
+      "name": "UI Widget Test Factory",
+      "anchor": "33-ui-widget-test-factory",
+      "superseded_by": null
+    },
+    {
+      "number": 34,
+      "name": "Weapon Family Registry",
+      "anchor": "34-weapon-family-registry",
+      "superseded_by": null
+    },
+    {
+      "number": 35,
+      "name": "Stat Contributor Registry",
+      "anchor": "35-stat-contributor-registry",
+      "superseded_by": null
+    }
+  ],
+  "count": 35
+}

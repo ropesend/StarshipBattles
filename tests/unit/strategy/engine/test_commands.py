@@ -35,14 +35,6 @@ from game.strategy.engine.commands import (
 )
 
 
-class TestCommandBase:
-    """Tests for Command base class."""
-
-    def test_command_name_property(self):
-        """Command.name should return the class name."""
-        cmd = IssueColonizeCommand(fleet_id=1, planet_id=2)
-        assert cmd.name == "IssueColonizeCommand"
-
 class TestIssueColonizeCommand:
     """Tests for IssueColonizeCommand."""
 

@@ -55,6 +55,55 @@ Adopt the **Project Architect** persona.
 - Create detailed plan with phases, tasks, subtasks in the phase checklist files
 - Get user approval on the plan
 
+### Phase D: 03c Phase-Aware Execution Setup
+
+Each new project SHOULD opt into 03c phase-aware execution unless the user
+explicitly requests legacy 03a flow. To opt in:
+
+1. **Add the marker to `plan.md`:**
+   ```markdown
+   **Execution Protocol:** 03c-phase-aware-execution
+   ```
+   Without this marker, `claude-proj-continue` falls through to legacy 03a.
+
+2. **Capture phase dependencies** in each `phase_<n>_checklist.md`:
+   ```markdown
+   # Phase 3: ...
+   **Status:** Not Started
+   **Depends on:** phase_1, phase_2
+   **Review Mode:** standard       # or `lightweight` for trivial phases
+   **Files (planned):** game/foo.py, tests/unit/test_foo.py
+   **Objective:** ...
+   ```
+   Roots use `**Depends on:** none`. Multi-parent phases pause until ALL
+   parents are `verified`. Single-parent phases follow `buffer_depth`
+   (default 0; child waits for parent verified).
+
+3. **Initialize `phase_state.json`** by running:
+   ```bash
+   python -c "
+   import sys; sys.path.insert(0, 'Projects/scripts')
+   from phase_workflow import state
+   from pathlib import Path
+   p = Path('Projects/active_projects/PROJ-XX/phase_state.json')
+   s = state.initial_state('PROJ-XX')
+   # Populate phases from the checklists you just authored:
+   state.add_phase(s, 'phase_1', depends_on=[], planned_files=[...], review_mode='standard')
+   # ...
+   state.save_state(p, s)
+   "
+   ```
+   See `Projects/protocols/03c_phase_aware_execution.md` for the full
+   protocol. Coordinator owns this file; phase workers must NOT edit it.
+
+4. **Initialize an empty `findings_ledger.md`** in the project directory:
+   ```bash
+   echo "# PROJ-XX — Findings Ledger\n\n_(Generated from phase_state.json. Do not edit by hand.)_" > Projects/active_projects/PROJ-XX/findings_ledger.md
+   ```
+
+5. **Don't create the project branch yet** — `claude-proj-continue` does
+   that on first execution. Initial planning artifacts commit to `main`.
+
 **Note:** If this project originates from a Code Review, use `review_to_project.py` instead:
 ```bash
 python Reviews/scripts/review_to_project.py <review_folder>

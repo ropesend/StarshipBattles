@@ -20,7 +20,11 @@ from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import (
     iterate_design_components,
 )
-from game.strategy.data.order_types import OrderType, PLANET_ACTION_ORDER_TYPES
+from game.strategy.data.order_types import (
+    MOVEMENT_ORDER_TYPES,
+    OrderType,
+    PLANET_ACTION_ORDER_TYPES,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -28,25 +32,27 @@ if TYPE_CHECKING:
     from game.strategy.data.order_types import Order
 
 
-# PROJ-212: Module-level constants replacing wrapper functions
-# Mapping from OrderType to the ability name that provides action_time
-ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = {
-    OrderType.COLONIZE: 'ColonizePlanet',
-    OrderType.IMPLODE_PLANET: 'DestroyPlanet',
-    OrderType.STELLERATE_STAR: 'DestroyStar',
-    OrderType.OPEN_WARP_POINT: 'OpenWarpPoint',
-    OrderType.CLOSE_WARP_POINT: 'CloseWarpPoint',
-    OrderType.CREATE_DYSON_SPHERE: 'CreateDysonSphere',
-    OrderType.SELF_DESTRUCT: 'SelfDestruct',
-}
+# PROJ-371 Phase 2: ``ORDER_TO_ABILITY_MAP`` is derived from the
+# self-registering ``command_registry``. The deferred import keeps
+# this module loadable even before the registry is on the import path
+# (e.g. by tools that import the resolver in isolation).
+def _build_order_to_ability_map() -> Dict[OrderType, str]:
+    from game.strategy.engine.commands.registry import (
+        command_registry,
+        seed_default_commands,
+    )
+
+    if len(command_registry) == 0:
+        seed_default_commands(command_registry)
+    return command_registry.order_to_ability_map()
+
+
+ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = _build_order_to_ability_map()
 
 # PROJ-238: Order types that use a non-standard time field name.
 # If not listed here, 'action_time' is used (the default).
 ORDER_TO_TIME_FIELD: Dict[OrderType, str] = {
 }
-
-# Order types that are handled by movement engine, not action engine
-MOVEMENT_ORDER_TYPES: frozenset = frozenset({OrderType.MOVE, OrderType.MOVE_TO_FLEET})
 
 
 class ActionTimeResolver:

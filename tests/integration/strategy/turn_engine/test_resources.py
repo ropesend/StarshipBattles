@@ -1,6 +1,7 @@
 """Turn engine resource tests - per-turn consumption, depletion, movement gating."""
 import pytest
 from game.strategy.engine.turn_engine import TurnEngine
+from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
@@ -15,7 +16,7 @@ class TestPerTurnResourceConsumption:
 
     def test_per_turn_resource_consumption_single_ship(self, fresh_registries):
         """Verify per-turn consumption is spread over 100 ticks (amount/100 per tick)."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         # Create ship with mocked per-turn cost
         ship = create_mock_ship_instance(
@@ -47,7 +48,7 @@ class TestPerTurnResourceConsumption:
 
     def test_per_turn_resource_consumption_multiple_resources(self, fresh_registries):
         """Verify multiple resource types are consumed per tick."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         ship = create_mock_ship_instance(
             consumable_levels={'energy': 100.0, 'fuel': 200.0}
@@ -77,7 +78,7 @@ class TestPerTurnResourceConsumption:
 
     def test_per_turn_resource_consumption_multiple_ships_in_fleet(self, fresh_registries):
         """Verify all ships in a fleet consume resources per tick."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         ships = []
         for i in range(3):
@@ -100,7 +101,7 @@ class TestPerTurnResourceConsumption:
 
     def test_per_turn_consumption_non_combat_ships_skipped(self, fresh_registries):
         """Verify destroyed/derelict ships don't consume per-turn resources."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         combat_ship = create_mock_ship_instance(name="CombatShip")
         combat_ship.is_combat_capable = MagicMock(return_value=True)
@@ -131,7 +132,7 @@ class TestPerTurnResourceConsumption:
 
     def test_per_turn_consumption_zero_cost_components_ignored(self, fresh_registries):
         """Verify components with zero per-turn cost don't attempt consumption."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         ship = create_mock_ship_instance()
         # Return zero costs
@@ -155,7 +156,7 @@ class TestResourceDepletion:
 
     def test_resource_depletion_during_tick_returns_false(self, fresh_registries):
         """Verify consume_resource returns False when resources depleted."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         ship = create_mock_ship_instance()
         ship.get_all_resource_costs_per_turn = MagicMock(return_value={'energy': 100.0})
@@ -175,7 +176,7 @@ class TestResourceDepletion:
 
     def test_resource_depletion_triggers_auto_disable(self, fresh_registries):
         """Verify auto-disable is triggered when resource depleted mid-tick."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         ship = create_mock_ship_instance()
         ship.get_all_resource_costs_per_turn = MagicMock(return_value={'fuel': 50.0})
@@ -193,7 +194,7 @@ class TestResourceDepletion:
 
     def test_no_auto_disable_for_non_per_turn_resources(self, fresh_registries):
         """Verify auto-disable only triggered for per_turn consumption failures."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         ship = create_mock_ship_instance()
         # No per-turn costs
@@ -214,25 +215,35 @@ class TestResourceDepletion:
 class TestFullTurnIntegration:
     """Group 5.4: Full Turn Integration Tests"""
 
-    def test_full_turn_depletes_per_turn_resources_completely(self, fresh_registries):
-        """Verify a full turn (100 ticks) consumes the entire per-turn cost."""
-        engine = TurnEngine(registries=fresh_registries)
+    @staticmethod
+    def _build_per_turn_scenario(fresh_registries, costs, consume_fn):
+        """Set up engine + single-ship empire with given per-turn costs and consume callback.
 
+        PROJ-323 Task 3.7: shared setup helper for full-turn integration tests.
+        """
+        engine = build_test_turn_engine(fresh_registries)
         ship = create_mock_ship_instance()
-        ship.get_all_resource_costs_per_turn = MagicMock(return_value={'energy': 50.0})
+        ship.get_all_resource_costs_per_turn = MagicMock(return_value=costs)
         ship.is_combat_capable = MagicMock(return_value=True)
-
-        # Track total consumption
-        total_consumed = {'energy': 0.0}
-        def mock_consume(resource_type, amount):
-            total_consumed[resource_type] = total_consumed.get(resource_type, 0) + amount
-            return True
-        ship.consume_resource = mock_consume
+        ship.consume_resource = consume_fn
 
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=0)  # No movement
         fleet.ships = [ship]
         empire = Empire(0, "P1", (255, 0, 0))
         empire.add_fleet(fleet)
+        return engine, empire
+
+    def test_full_turn_depletes_per_turn_resources_completely(self, fresh_registries):
+        """Verify a full turn (100 ticks) consumes the entire per-turn cost."""
+        # Track total consumption
+        total_consumed = {'energy': 0.0}
+        def mock_consume(resource_type, amount):
+            total_consumed[resource_type] = total_consumed.get(resource_type, 0) + amount
+            return True
+
+        engine, empire = self._build_per_turn_scenario(
+            fresh_registries, {'energy': 50.0}, mock_consume,
+        )
 
         # Process all 100 ticks
         for tick in range(1, 101):
@@ -243,22 +254,14 @@ class TestFullTurnIntegration:
 
     def test_full_turn_does_not_overconsume_resources(self, fresh_registries):
         """Verify full turn consumes exactly the per-turn amount, not more."""
-        engine = TurnEngine(registries=fresh_registries)
-
-        ship = create_mock_ship_instance()
-        ship.get_all_resource_costs_per_turn = MagicMock(return_value={'fuel': 25.0})
-        ship.is_combat_capable = MagicMock(return_value=True)
-
         consume_calls = []
         def mock_consume(resource_type, amount):
             consume_calls.append(amount)
             return True
-        ship.consume_resource = mock_consume
 
-        fleet = Fleet(1, 0, HexCoord(0, 0), speed=0)
-        fleet.ships = [ship]
-        empire = Empire(0, "P1", (255, 0, 0))
-        empire.add_fleet(fleet)
+        engine, empire = self._build_per_turn_scenario(
+            fresh_registries, {'fuel': 25.0}, mock_consume,
+        )
 
         for tick in range(1, 101):
             engine.resource_engine.process_per_turn_consumption(tick, [empire])
@@ -269,10 +272,10 @@ class TestFullTurnIntegration:
             assert call == pytest.approx(0.25, rel=1e-6)
         assert sum(consume_calls) == pytest.approx(25.0, rel=1e-6)
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_per_turn_and_movement_resources_both_consumed(self, mock_path, fresh_registries):
         """Verify both per-turn and movement resources are consumed during a turn."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         # PROJ-211: Pass registries for DI compliance (fleet adds ship triggering speed calc)
         ship = create_mock_ship_instance(registries=fresh_registries)
@@ -313,10 +316,10 @@ class TestFullTurnIntegration:
 class TestMovementGating:
     """Group 5.5: Movement Gating Tests"""
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_movement_requires_generic_resources(self, mock_path, fresh_registries):
         """Verify movement is blocked when has_resources_for_movement returns False."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
         fleet.path = [HexCoord(1, 0)]
@@ -340,10 +343,10 @@ class TestMovementGating:
         # Orders should be cleared (stranded)
         assert len(fleet.orders) == 0
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_generic_movement_resource_consumption(self, mock_path, fresh_registries):
         """Verify consume_movement_resources is called for each hex moved."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         fleet.path = [HexCoord(i, 0) for i in range(1, 11)]
@@ -365,10 +368,10 @@ class TestMovementGating:
         for call in fleet.resources.consume_movement_resources.call_args_list:
             assert call[0] == (1,)
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_warp_uses_generic_methods(self, mock_path, fresh_registries):
         """Verify warp uses has_resources_for_warp and consume_warp_resources."""
-        engine = TurnEngine(registries=fresh_registries)
+        engine = build_test_turn_engine(fresh_registries)
 
         fleet = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
         # Warp jump = distance > 1 hex

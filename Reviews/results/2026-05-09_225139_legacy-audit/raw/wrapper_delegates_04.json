@@ -1,0 +1,25 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 189,
+  "total_findings": 2,
+  "findings": [
+    {
+      "file": "game/simulation/components/component_constants.py",
+      "line": 45,
+      "function": "create_modifier",
+      "delegates_to": "ApplicationModifier",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def create_modifier(self, value=None) -> \"ApplicationModifier\":"
+    },
+    {
+      "file": "game/strategy/engine/superweapon_order_processor.py",
+      "line": 331,
+      "function": "_get_system_at_hex",
+      "delegates_to": "get_system_at_hex",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _get_system_at_hex(galaxy, location):  # type: ignore[no-untyped-def]"
+    }
+  ]
+}

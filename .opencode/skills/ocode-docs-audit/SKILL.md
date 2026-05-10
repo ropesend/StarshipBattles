@@ -4,11 +4,27 @@ description: Documentation freshness & accuracy audit. Cross-references all docs
 argument-hint: "[--skip-phase1 to reuse existing raw results]"
 ---
 
+## Invocation
+
+- **Slash command (interactive):** `/ocode-docs-audit`
+- **CLI (non-interactive):** `opencode run "Load the ocode-docs-audit skill and execute it. Args: [optional --skip-phase1]"`
+
+The skill is identical in both modes. CLI mode skips any user-prompt confirmations.
+
 # Documentation Freshness & Accuracy Audit
 
-Run a comprehensive audit of documentation quality across the entire `docs/` tree plus `AGENTS.md` and `CLAUDE.md`. Cross-references file paths, PROJ identifiers, and API mentions against live code to find stale references, dead documentation, and undocumented code. Produces a doc health scorecard with prioritized update plan.
+Run a comprehensive audit of documentation quality across the entire `docs/` tree plus `AGENTS.md`, `CLAUDE.md`, and `.agents/CODEX.md`. Cross-references file paths, PROJ identifiers, and API mentions against live code to find stale references, dead documentation, and undocumented code. Produces a doc health scorecard with prioritized update plan.
 
 Does NOT change any code or docs. Read-only audit.
+
+## Pre-Flight Safeguards
+
+Before starting any work:
+1. **Run from repo root.** All paths are relative to the repository root.
+2. **Check `git status --short`** and do NOT revert unrelated changes.
+3. **Never read `docs/_ignore/`.** It is not documentation.
+4. **Write only under `Reviews/results/`** and explicitly named `AgentCoordination/` paths.
+5. **This is a read-only audit.** Do not edit source code, test code, or docs.
 
 ## Execution
 
@@ -42,7 +58,7 @@ If the user passed `--skip-phase1`, find the most recent `Reviews/results/*_docs
 
 The script creates `REVIEW_DIR/raw/` with these outputs:
 
-1. `doc_file_refs.json` — every `game/*` path in docs validated against filesystem
+1. `doc_file_refs.json` — every code/file path reference in docs (`game/*`, `Tools/*`, `Projects/protocols/*`, `Reviews/protocols/*`, `data/*`, `tests/*`) validated against filesystem
 2. `stale_proj_refs.json` — PROJ references cross-referenced against projects_index.md
 3. `doc_staleness.json` — "Last verified" timestamps with staleness scores
 4. `undocumented_modules.json` — production modules > 50 LOC with no doc mention
@@ -61,10 +77,9 @@ Read these files into memory:
 ### Step 3: Launch 8 Agents in Parallel
 
 Launch **8 agents**:
-- **5 doc-group reviewers** (architecture docs, system docs, guides, root docs, reviews/protocols)
+- **6 doc-group reviewers** (architecture docs, system docs, guides, root agent docs, project protocols, review protocols)
 - **1 cross-doc consistency validator**
 - **1 code-base accuracy validator**
-- **1 verification agent**
 
 **Doc-group assignments:**
 
@@ -73,20 +88,21 @@ Launch **8 agents**:
 | G1 | Reviewer | `docs/README.md`, `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`, `docs/04_SERVICES.md`, `docs/05_ERROR_HANDLING.md`, `docs/06_UI_STYLE_GUIDE.md` |
 | G2 | Reviewer | `docs/systems/` (all 8 files: ability, ai, combat, orders, production, research, resource, strategy) |
 | G3 | Reviewer | `docs/guides/` (all 8 files: adding abilities, modifiers, component system, testing, performance, etc.) |
-| G4 | Reviewer | `AGENTS.md`, `CLAUDE.md`, `Projects/protocols/` |
-| G5 | Reviewer | `Reviews/protocols/` (all 11 protocol files) |
+| G4 | Reviewer | Root agent docs: `AGENTS.md`, `CLAUDE.md`, `.agents/CODEX.md` |
+| G5 | Reviewer | Project protocols: `Projects/protocols/` (all files) |
+| G6 | Reviewer | Review protocols: `Reviews/protocols/` (all 11 protocol files) |
 
 **Replace placeholders for each agent:**
 - `{REVIEW_DIR}` → actual review directory
-- `{group_id}` → `"G1"`, `"G2"`, ... `"G5"`
+- `{group_id}` → `"G1"`, `"G2"`, ... `"G6"`
 - `{group_label}` → group description
 - `{doc_list}` → markdown list of doc files in this group
-- `{dead_refs}` → doc_file_refs.json dead_refs content (filtered for this group's docs)
-- `{stale_proj_refs}` → stale_proj_refs.json content (filtered for this group's docs)
-- `{stale_docs}` → doc_staleness.json content (filtered for this group)
-- `{undocumented_modules}` → undocumented_modules.json content
+- `{dead_refs_path}` → `REVIEW_DIR/raw/dead_refs_{group_id}.json` (per-group filtered)
+- `{stale_proj_refs_path}` → `REVIEW_DIR/raw/stale_proj_refs_{group_id}.json` (per-group filtered)
+- `{stale_docs_path}` → `REVIEW_DIR/raw/stale_docs_{group_id}.json` (per-group filtered)
+- `{undocumented_modules_path}` → `REVIEW_DIR/raw/undocumented_modules.json`
 
-#### Agents 1-5: Doc-Group Reviewers
+#### Agents 1-6: Doc-Group Reviewers
 
 ```
 # Documentation Audit — Group {group_id}: {group_label}
@@ -97,19 +113,14 @@ You MUST read EVERY doc file assigned to this group.
 ## Your Doc Files
 {doc_list}
 
-## Deterministic Scan Results (filtered for your group)
+## Deterministic Scan Results (per-group filtered files — read these yourself)
 
-Dead file references (paths that don't exist):
-{dead_refs}
+Read each of the following JSON files; they contain only entries scoped to your group:
 
-Stale PROJ references (projects already completed/archived):
-{stale_proj_refs}
-
-Stale docs (last verified > 60 days ago):
-{stale_docs}
-
-Undocumented modules (>50 LOC, no doc mention):
-{undocumented_modules}
+- Dead file references (paths that don't exist): `{dead_refs_path}`
+- Stale PROJ references (projects already completed/archived): `{stale_proj_refs_path}`
+- Stale docs (last verified > 60 days ago): `{stale_docs_path}`
+- Undocumented modules (>50 LOC, no doc mention; shared across groups): `{undocumented_modules_path}`
 
 ## Methodology
 For EACH doc file in your group:
@@ -135,11 +146,27 @@ For EACH doc file in your group:
      classes, and imports exist.
 6. **Check for missing documentation:**
    - From the undocumented_modules list, identify which modules genuinely
-     need documentation (public API surface > 50 LOC).
+     need documentation (public API surface > 50 LOC, or architectural
+     surface modules that cross layer boundaries).
+   - Focus on public API modules and architectural surface — do NOT flag
+     every >50 LOC implementation detail.
 7. **Assess scope gaps:**
    - Are there major game subsystems with no corresponding doc file?
    - Are there features added after the last doc update that never got
      documented?
+8. **Validate `Last verified` line:**
+   - Every doc file with an H1 should have a `> **Last verified:**` line
+     under it per `docs/03_CONVENTIONS.md`. Flag missing or unparseable
+     dates.
+9. **Validate the deterministic reference extraction:**
+   - Phase 1 has now extracted references from all known prefixes (`game/`,
+     `Tools/`, `Projects/protocols/`, `Reviews/protocols/`, `data/`, `tests/`).
+     Agents validate the deterministic findings rather than re-extracting.
+   - For PROJ references: completed or archived PROJ refs are NOT stale if
+     the surrounding text clearly states the feature is already implemented
+     or the reference is historical context. Only flag PROJ refs that
+     describe the feature as "planned" or "in progress" when the PROJ is
+     already completed or archived.
 
 ## What NOT to Report
 - Minor typos or grammar issues (unless they cause factual confusion)
@@ -195,7 +222,7 @@ You MUST use the Write tool to save your report to:
 | [full doc file list with "Read ✓"] |
 ```
 
-#### Agent 6: Cross-Doc Consistency Validator
+#### Agent 7: Cross-Doc Consistency Validator
 
 ```
 # Cross-Doc Consistency Validator
@@ -267,7 +294,7 @@ You MUST use the Write tool to save your report to:
 [Canonical term table]
 ```
 
-#### Agent 7: Code-Base Accuracy Validator
+#### Agent 8: Code-Base Accuracy Validator
 
 ```
 # Code-Base Accuracy Validator
@@ -276,12 +303,12 @@ Spot-check documentation claims against the actual source code. Read the
 code to verify (or falsify) what the docs say.
 
 ## Scope
-Sample-based. Read doc claims from the 5 reviewer reports, then verify
+Sample-based. Read doc claims from the 6 reviewer reports, then verify
 a representative sample against game/ source code.
 
 ## Methodology
 
-1. **Collect all "content accuracy" claims** from the 5 doc-group reports.
+1. **Collect all "content accuracy" claims** from the 6 doc-group reports.
 2. **For each claim marked CRITICAL or MAJOR:**
    - Read the doc section referenced
    - Read the source code the doc describes
@@ -323,12 +350,13 @@ You MUST use the Write tool to save your report to:
 
 ### Step 4: Verify Agent Outputs
 
-Check that these 7 files exist:
+Check that these 8 files exist:
 - `REVIEW_DIR/findings/docs_review_G1.md`
 - `REVIEW_DIR/findings/docs_review_G2.md`
 - `REVIEW_DIR/findings/docs_review_G3.md`
 - `REVIEW_DIR/findings/docs_review_G4.md`
 - `REVIEW_DIR/findings/docs_review_G5.md`
+- `REVIEW_DIR/findings/docs_review_G6.md`
 - `REVIEW_DIR/findings/docs_consistency_cross.md`
 - `REVIEW_DIR/findings/docs_accuracy_code.md`
 
@@ -347,8 +375,9 @@ Write `REVIEW_DIR/report.md`:
 | Architecture | 7 | | | | |
 | Systems | 8 | | | | |
 | Guides | 8 | | | | |
-| Root | 2 | | | | |
-| Protocols | 11 | | | | |
+| Root Agent Docs | 3 | | | | |
+| Project Protocols | * | | | | |
+| Review Protocols | 11 | | | | |
 
 **3. Dead Reference Register**
 All confirmed dead file references with remediation.
@@ -365,8 +394,23 @@ Modules > 50 LOC with zero doc coverage.
 
 **8. Prioritized Documentation Update Plan**
 Ordered by impact: dead references → content errors → stale PROJs → missing docs → terminology.
+Sort dead refs and content errors first; within each, rank by doc importance
+(root agent docs > architecture/conventions > systems > guides > protocols).
+All findings still appear in the per-group registers above; this is ordering only.
 
-**9. Appendices**
+**9. Trend Comparison**
+
+Use the shared run tracker to compare this run against history and append a
+trend table to the report:
+
+```python
+from Tools._audit_common import run_tracker
+trend = run_tracker.compute_trend("Reviews/results", "docs", current_summary)
+# Append run_tracker.render_trend_markdown(trend) here.
+run_tracker.add_run("Reviews/results", "docs", current_summary)
+```
+
+**10. Appendices**
 Paths to all raw and findings files.
 
 ### Step 6: Log Skill Usage

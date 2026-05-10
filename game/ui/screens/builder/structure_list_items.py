@@ -21,6 +21,65 @@ ACTION_MOVE_DOWN_INDIVIDUAL = 'move_down_individual'
 ACTION_MOVE_UP_GROUP = 'move_up_group'
 ACTION_MOVE_DOWN_GROUP = 'move_down_group'
 
+
+def _rebuild_modifier_icons_for_item(item) -> None:
+    """Shared `_rebuild_modifier_icons` body (PROJ-375 Cluster 6).
+
+    Extracted from the identical 40-line bodies in `IndividualComponentItem`
+    and `LayerComponentItem`. The `item` argument is the calling row instance —
+    this helper requires the caller to expose:
+
+        - `item.modifier_icons` (list, replaced in place)
+        - `item.ctx` (`ComponentItemContext` with `modifier_icon_service`,
+          `config`, and `manager`)
+        - `item.component` (with `.modifiers`)
+        - `item.height`, `item.panel`
+
+    Args:
+        item: The component-row instance whose icons should be rebuilt.
+    """
+    # Clear existing
+    for icon in item.modifier_icons:
+        icon.kill()
+    item.modifier_icons = []
+
+    if not item.ctx.modifier_icon_service:
+        return
+
+    component = item.component
+    modified_ids = []
+    for mod in component.modifiers:
+        if mod.value != mod.definition.default_val:
+            modified_ids.append((mod.definition.id, mod.definition.name, mod.value))
+
+    if not modified_ids:
+        return
+
+    icon_size = item.ctx.config.MODIFIER_ICON_SIZE
+    icon_y = (item.height - icon_size) // 2
+
+    # Anchor from the right side, starting left of the mass label (-220)
+    total_width = len(modified_ids) * (icon_size + item.ctx.config.MODIFIER_ICON_SPACING)
+    start_x_from_right = -220 - total_width
+    current_x = start_x_from_right
+
+    for mod_id, mod_name, mod_value in modified_ids:
+        surf = item.ctx.modifier_icon_service.get_icon(mod_id)
+        if surf:
+            # Format value for tooltip
+            val_str = f"{mod_value:.2f}" if isinstance(mod_value, float) else str(mod_value)
+            icon_image = UIImage(
+                relative_rect=pygame.Rect(current_x, icon_y, icon_size, icon_size),
+                image_surface=surf,
+                manager=item.ctx.manager,
+                container=item.panel,
+                tool_tip_text=f"{mod_name}: {val_str}",
+                anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'},
+            )
+            item.modifier_icons.append(icon_image)
+            current_x += icon_size + item.ctx.config.MODIFIER_ICON_SPACING
+
+
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
     def __init__(self, ctx: ComponentItemContext, component, max_mass, y_pos, is_selected, is_last=False, layer_type=None):
@@ -193,47 +252,12 @@ class IndividualComponentItem:
         self._rebuild_modifier_icons()
 
     def _rebuild_modifier_icons(self) -> None:
-        """Build modifier icons for non-default values."""
-        # Clear existing
-        for icon in self.modifier_icons:
-            icon.kill()
-        self.modifier_icons = []
+        """Build modifier icons for non-default values.
 
-        if not self.ctx.modifier_icon_service:
-            return
-
-        component = self.component
-        modified_ids = []
-        for mod in component.modifiers:
-            if mod.value != mod.definition.default_val:
-                modified_ids.append((mod.definition.id, mod.definition.name, mod.value))
-
-        if not modified_ids:
-            return
-
-        icon_size = self.ctx.config.MODIFIER_ICON_SIZE
-        icon_y = (self.height - icon_size) // 2
-
-        # Anchor from the right side, starting left of the mass label (-220)
-        total_width = len(modified_ids) * (icon_size + self.ctx.config.MODIFIER_ICON_SPACING)
-        start_x_from_right = -220 - total_width
-        current_x = start_x_from_right
-
-        for mod_id, mod_name, mod_value in modified_ids:
-            surf = self.ctx.modifier_icon_service.get_icon(mod_id)
-            if surf:
-                # Format value for tooltip
-                val_str = f"{mod_value:.2f}" if isinstance(mod_value, float) else str(mod_value)
-                icon_image = UIImage(
-                    relative_rect=pygame.Rect(current_x, icon_y, icon_size, icon_size),
-                    image_surface=surf,
-                    manager=self.ctx.manager,
-                    container=self.panel,
-                    tool_tip_text=f"{mod_name}: {val_str}",
-                    anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-                )
-                self.modifier_icons.append(icon_image)
-                current_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
+        PROJ-375 Cluster 6: thin wrapper around the shared
+        `_rebuild_modifier_icons_for_item` helper.
+        """
+        _rebuild_modifier_icons_for_item(self)
 
     def _create_tree_line(self, is_last, config) -> Any:
         surf = pygame.Surface((20, self.height), pygame.SRCALPHA)
@@ -470,48 +494,14 @@ class LayerComponentItem:
         self._rebuild_modifier_icons()
 
     def _rebuild_modifier_icons(self) -> None:
-        """Build modifier icons for non-default values."""
-        # Clear existing
-        for icon in self.modifier_icons:
-            icon.kill()
-        self.modifier_icons = []
+        """Build modifier icons for non-default values.
 
-        if not self.ctx.modifier_icon_service:
-            return
-
-        component = self.component
-        modified_ids = []
-        # Group items always have identical modifiers for all members
-        for mod in component.modifiers:
-            if mod.value != mod.definition.default_val:
-                modified_ids.append((mod.definition.id, mod.definition.name, mod.value))
-
-        if not modified_ids:
-            return
-
-        icon_size = self.ctx.config.MODIFIER_ICON_SIZE
-        icon_y = (self.height - icon_size) // 2
-
-        # Anchor from the right side, starting left of the mass label (-220)
-        total_width = len(modified_ids) * (icon_size + self.ctx.config.MODIFIER_ICON_SPACING)
-        start_x_from_right = -220 - total_width
-        current_x = start_x_from_right
-
-        for mod_id, mod_name, mod_value in modified_ids:
-            surf = self.ctx.modifier_icon_service.get_icon(mod_id)
-            if surf:
-                # Format value for tooltip
-                val_str = f"{mod_value:.2f}" if isinstance(mod_value, float) else str(mod_value)
-                icon_image = UIImage(
-                    relative_rect=pygame.Rect(current_x, icon_y, icon_size, icon_size),
-                    image_surface=surf,
-                    manager=self.ctx.manager,
-                    container=self.panel,
-                    tool_tip_text=f"{mod_name}: {val_str}",
-                    anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-                )
-                self.modifier_icons.append(icon_image)
-                current_x += icon_size + self.ctx.config.MODIFIER_ICON_SPACING
+        PROJ-375 Cluster 6: thin wrapper around the shared
+        `_rebuild_modifier_icons_for_item` helper. Group items have
+        identical modifiers across all members so the helper's per-row
+        scan is correct.
+        """
+        _rebuild_modifier_icons_for_item(self)
 
     def handle_event(self, event) -> Any:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
