@@ -210,7 +210,7 @@ class WorkshopShipIO:
                         load_result.data, self.width // 2, self.height // 2
                     )
                     if ship:
-                        self._weapons_report_panel_ref.set_target(ship)
+                        self._get_weapons_report_panel().set_target(ship)
                         logger.info(f"Selected target: {ship.name}")
                     else:
                         self._show_error("Failed to create ship from design data")
