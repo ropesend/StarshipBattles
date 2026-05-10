@@ -76,7 +76,7 @@ class TestStarListWindowStageOneState:
     def test_layout_constants_assigned_from_uiconfig(self):
         from game.ui.config import UIConfig
         window = _make_window()
-        assert window.sidebar_width == UIConfig.SIDEBAR_WIDTH
+        assert window.sidebar_width == UIConfig.REGISTRY_SIDEBAR_WIDTH
         assert window.header_height == UIConfig.HEADER_HEIGHT
         assert window.row_height == UIConfig.ROW_HEIGHT_LARGE
 

@@ -27,3 +27,9 @@ class TestUIConfig:
     def test_uiconfig_location(self):
         """UIConfig is in game.ui.config, not game.core.config (PROJ-113)."""
         assert UIConfig.PANEL_PADDING == 5
+
+    def test_sidebar_widths(self):
+        """SIDEBAR_WIDTH stays at 300 (Empire Build Queue); REGISTRY_SIDEBAR_WIDTH
+        is widened by ~50% for the Galactic Planet/Star Registry sidebars (#13)."""
+        assert UIConfig.SIDEBAR_WIDTH == 300
+        assert UIConfig.REGISTRY_SIDEBAR_WIDTH == 450

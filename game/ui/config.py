@@ -63,4 +63,6 @@ class UIConfig:
     ROW_HEIGHT_STANDARD: int = 40
     ROW_HEIGHT_LARGE: int = 50
     SIDEBAR_WIDTH: int = 300
+    # Wider sidebar for Galactic Planet/Star Registry windows (#13).
+    REGISTRY_SIDEBAR_WIDTH: int = 450
     HEADER_HEIGHT: int = 40
