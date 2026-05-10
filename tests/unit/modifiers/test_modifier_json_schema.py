@@ -296,7 +296,7 @@ class TestModifierV2Examples:
                 'name': 'Level',
                 'type': 'linear',
                 'min': 0,
-                'max': 3,
+                'max': 10,
                 'default': 0
             },
             'effects': [
