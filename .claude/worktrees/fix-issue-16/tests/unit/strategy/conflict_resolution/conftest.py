@@ -1,0 +1,35 @@
+"""
+Shared fixtures for conflict resolution engine tests.
+"""
+
+import pytest
+from unittest.mock import MagicMock
+
+from game.strategy.data.fleet import Fleet
+from game.core.hex_math import HexCoord
+
+
+@pytest.fixture
+def mock_fleet():
+    """Create a mock fleet."""
+    fleet = MagicMock(spec=Fleet)
+    fleet.id = 1
+    fleet.owner_id = 0
+    fleet.location = HexCoord(0, 0)
+    mock_ship = MagicMock()
+    mock_ship.name = "Test Ship"
+    fleet.ships = [mock_ship]
+    # PROJ-269 Phase 6: `update_from_battle_results` deleted; the adapter
+    # mock is just a placeholder now (no methods exposed).
+    fleet.battle = MagicMock(spec=[])
+    return fleet
+
+
+@pytest.fixture
+def mock_empire():
+    """Create a mock empire."""
+    empire = MagicMock()
+    empire.id = 0
+    empire.name = "Test Empire"
+    empire.fleets = []
+    return empire

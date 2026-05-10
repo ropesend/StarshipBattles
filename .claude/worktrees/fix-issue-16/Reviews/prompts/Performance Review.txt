@@ -1,0 +1,50 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\06_performance_review.md
+
+I want to conduct a Performance Review - identify bottlenecks and optimization opportunities.
+
+1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
+2. LOAD the specific protocol `Reviews/protocols/06_performance_review.md`
+3. READ relevant `docs/` files for the areas being reviewed (see `docs/README.md`). The `docs/` directory describes expected patterns — performance issues caused by deviating from documented patterns should be flagged.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
+   - Phase A: Scope Definition (understand performance concerns and constraints)
+   - Phase B: Agent Planning (select performance analysis agents)
+   - Phase C: Review Swarm Launch (deploy performance audit agents)
+   - Phase D: Findings Compilation (create performance assessment report)
+   - Phase E: User Summary (present bottlenecks and optimization recommendations)
+
+<review_scope>
+
+[DESCRIBE YOUR PERFORMANCE REVIEW SCOPE]
+
+- What areas to review? (entire codebase, specific slow area, game loop, startup)
+- Performance concerns:
+  - [ ] CPU-bound (computation heavy)
+  - [ ] Memory-bound (memory usage, allocations)
+  - [ ] I/O-bound (file, network, database)
+  - [ ] Latency-sensitive (response time)
+  - [ ] Throughput-sensitive (operations per second)
+  - [ ] All of the above
+
+</review_scope>
+
+<known_slow_areas>
+
+[OPTIONAL - Known problem areas]
+
+- Specific operations known to be slow?
+- When does slowness occur? (startup, peak load, specific operations)
+- Any profiling data available?
+
+</known_slow_areas>
+
+<performance_goals>
+
+[OPTIONAL - Performance targets]
+
+- Target frame rate? (for games)
+- Target response time?
+- Target throughput?
+- Memory budget?
+
+</performance_goals>

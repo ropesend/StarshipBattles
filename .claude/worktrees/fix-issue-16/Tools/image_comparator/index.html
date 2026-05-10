@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Recraft Audit | StarshipBattles</title>
+    <style>
+        :root {
+            --bg-color: #0c0e12;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-color: #4f46e5;
+            --text-color: #e5e7eb;
+            --secondary-text: #9ca3af;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(12, 14, 18, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats {
+            font-size: 0.875rem;
+            color: var(--secondary-text);
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 2100px;
+            margin: 0 auto;
+        }
+
+        .comparison-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 4rem;
+        }
+
+        .comparison-row {
+            display: flex;
+            gap: 2rem;
+            position: relative;
+            padding-bottom: 4rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .row-header {
+            position: sticky;
+            top: 5rem;
+            height: fit-content;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            color: var(--accent-color);
+            font-weight: 700;
+            font-size: 1.25rem;
+            opacity: 0.5;
+            padding: 1rem 0;
+        }
+
+        .image-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-width: 0;
+        }
+
+        .image-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--secondary-text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .image-wrapper {
+            background-color: #000;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            min-height: 400px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .placeholder {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%) 50% / 40px 40px;
+            color: var(--secondary-text);
+            font-style: italic;
+        }
+
+        .filename {
+            font-size: 0.75rem;
+            color: var(--secondary-text);
+            font-family: monospace;
+            opacity: 0.7;
+        }
+
+        .loading-shimmer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite linear;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loader" class="loading-shimmer"></div>
+    <header>
+        <div>
+            <h1>Asset Recraft Audit</h1>
+            <div id="sub-header" class="stats">Comparison View</div>
+        </div>
+        <div id="stats-summary" class="stats">
+            Loading assets...
+        </div>
+    </header>
+
+    <main>
+        <div id="root" class="comparison-grid">
+            <!-- Rows injected here -->
+        </div>
+    </main>
+
+    <script>
+        async function init() {
+            try {
+                const response = await fetch('/api/images');
+                const pairs = await response.json();
+                
+                const root = document.getElementById('root');
+                const loader = document.getElementById('loader');
+                const statsSummary = document.getElementById('stats-summary');
+
+                let recreatedCount = 0;
+                let totalCount = pairs.length;
+
+                pairs.forEach(pair => {
+                    const row = document.createElement('div');
+                    row.className = 'comparison-row';
+                    
+                    if (pair.recreated) recreatedCount++;
+
+                    row.innerHTML = `
+                        <div class="row-header">ID ${pair.id}</div>
+                        
+                        <div class="image-container">
+                            <div class="image-label">
+                                <span>Original (Components 1024)</span>
+                                <span class="filename">${pair.original || 'N/A'}</span>
+                            </div>
+                            <div class="image-wrapper">
+                                ${pair.original 
+                                    ? `<img src="/original/${pair.original}" loading="lazy" alt="Original ID ${pair.id}">`
+                                    : `<div class="placeholder">Original asset missing</div>`
+                                }
+                            </div>
+                        </div>
+
+                        <div class="image-container">
+                            <div class="image-label">
+                                <span>Recreated (altcomponents)</span>
+                                <span class="filename">${pair.recreated || 'N/A'}</span>
+                            </div>
+                            <div class="image-wrapper">
+                                ${pair.recreated 
+                                    ? `<img src="/recreated/${pair.recreated}" loading="lazy" alt="Recreated ID ${pair.id}">`
+                                    : `<div class="placeholder">Recreation pending...</div>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                    root.appendChild(row);
+                });
+
+                statsSummary.innerText = `${recreatedCount} / ${totalCount} Recreated (${Math.round(recreatedCount/totalCount*100)}%)`;
+                loader.style.display = 'none';
+
+            } catch (error) {
+                console.error('Failed to load images:', error);
+                document.getElementById('root').innerHTML = `<div class="placeholder">Error loading assets. Ensure server is running.</div>`;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

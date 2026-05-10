@@ -1,0 +1,211 @@
+[
+  {
+    "id": "TCG-UI2-001",
+    "severity": "Critical",
+    "title": "No Tests for game_renderer.py (Ship Rend",
+    "location": "game/ui/renderer/game_renderer",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "TCG-UI1-002",
+    "severity": "Critical",
+    "title": "No Tests for Ship Detail Panel",
+    "location": "game/ui/panels/ship_detail_pan",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI2-002",
+    "severity": "Major",
+    "title": "No Tests for battle_factories.py (Battle",
+    "location": "game/ui/services/battle_factor",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "TCG-UI2-003",
+    "severity": "Major",
+    "title": "config.py Has No Test Coverage",
+    "location": "game/ui/config.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "TCG-UI2-005",
+    "severity": "Major",
+    "title": "ship_io_adapter.py Needs Error Path Test",
+    "location": "game/ui/services/ship_io_adapt",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "TCG-UI1-003",
+    "severity": "Major",
+    "title": "No Tests for Planet Report Panel",
+    "location": "game/ui/panels/planet_report_p",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI1-004",
+    "severity": "Major",
+    "title": "No Tests for Design Report Panel",
+    "location": "game/ui/panels/design_report_p",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI1-005",
+    "severity": "Major",
+    "title": "No Tests for Strategy Widgets (Atmospher",
+    "location": "game/ui/panels/strategy_widget",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI1-006",
+    "severity": "Major",
+    "title": "No Tests for System Tree Panel",
+    "location": "game/ui/panels/system_tree_pan",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI1-007",
+    "severity": "Major",
+    "title": "No Tests for Component Modifier Grid Pan",
+    "location": "game/ui/panels/component_modif",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI1-011",
+    "severity": "Major",
+    "title": "Galaxy Test Screen No Tests",
+    "location": "game/ui/screens/galaxy_test/*.",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI2-006",
+    "severity": "Minor",
+    "title": "BattleOrchestrator Missing Edge Case Tes",
+    "location": "game/ui/orchestration/battle_o",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "TCG-UI2-007",
+    "severity": "Minor",
+    "title": "screenshot_manager.py Tests Could Mock L",
+    "location": "game/ui/services/screenshot_ma",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "TCG-UI2-008",
+    "severity": "Minor",
+    "title": "colors.py Has Test Coverage but Missing",
+    "location": "game/ui/colors.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "TCG-UI1-012",
+    "severity": "Minor",
+    "title": "Incomplete Edge Case Testing for BattleS",
+    "location": "tests/unit/ui/test_battle_scre",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI1-013",
+    "severity": "Minor",
+    "title": "Workshop Screen Tests Are Mock-Heavy",
+    "location": "tests/unit/ui/screens/test_wor",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI1-016",
+    "severity": "Minor",
+    "title": "Test Lab Scene Tests Cover Only Logic, N",
+    "location": "tests/unit/ui/test_lab_scene/",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "TCG-UI2-009",
+    "severity": "Info",
+    "title": "Excellent Test Coverage on BattleUIServi",
+    "location": "game/ui/services/battle_ui_ser",
+    "effort": "N",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "TCG-UI1-018",
+    "severity": "Info",
+    "title": "Test Patterns Vary Between Screen Tests",
+    "location": "Unknown",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  }
+]

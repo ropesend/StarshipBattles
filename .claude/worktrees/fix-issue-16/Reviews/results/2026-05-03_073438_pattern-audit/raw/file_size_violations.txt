@@ -1,0 +1,4 @@
+
+
+--- STDERR ---
+error: production directory C:\Dev\StarshipBattles\Tools\game does not exist; run this script from the repo root.

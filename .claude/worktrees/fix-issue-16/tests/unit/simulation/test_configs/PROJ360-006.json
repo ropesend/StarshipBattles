@@ -1,0 +1,36 @@
+{
+    "test_id": "PROJECTILE-006",
+    "description": "Projectile 360 - Orbiting Target",
+    "duration_ticks": 1000,
+    "ships": [
+        {
+            "name": "Attacker",
+            "file": "tests/data/ships/Test_Attacker_Proj360.json",
+            "position": [
+                0,
+                0
+            ],
+            "movement_policy": "test_do_nothing",
+            "targeting_policy": "standard"
+        },
+        {
+            "name": "Target",
+            "file": "tests/data/ships/Test_Target_Orbiting.json",
+            "position": [
+                500,
+                0
+            ],
+            "movement_policy": "test_erratic",
+            "targeting_policy": "standard"
+        }
+    ],
+    "assertions": [
+        {
+            "type": "hit_rate",
+            "attacker": "Test Attacker Proj360",
+            "target": "Test Target Orbiting",
+            "min": 0.8,
+            "max": 1.0
+        }
+    ]
+}

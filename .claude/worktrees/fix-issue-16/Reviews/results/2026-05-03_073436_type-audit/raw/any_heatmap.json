@@ -1,0 +1,72 @@
+{
+  "unknown": {
+    "any_returns": 9,
+    "any_annotations": 37,
+    "missing_returns": 0,
+    "cast_usages": 0,
+    "type_ignores": 0
+  },
+  "ai": {
+    "any_returns": 7,
+    "any_annotations": 40,
+    "missing_returns": 0,
+    "cast_usages": 0,
+    "type_ignores": 0
+  },
+  "assets": {
+    "any_returns": 0,
+    "any_annotations": 0,
+    "missing_returns": 0,
+    "cast_usages": 0,
+    "type_ignores": 0
+  },
+  "core": {
+    "any_returns": 29,
+    "any_annotations": 39,
+    "missing_returns": 0,
+    "cast_usages": 0,
+    "type_ignores": 0
+  },
+  "engine": {
+    "any_returns": 0,
+    "any_annotations": 5,
+    "missing_returns": 0,
+    "cast_usages": 0,
+    "type_ignores": 0
+  },
+  "research": {
+    "any_returns": 0,
+    "any_annotations": 0,
+    "missing_returns": 0,
+    "cast_usages": 0,
+    "type_ignores": 0
+  },
+  "services": {
+    "any_returns": 0,
+    "any_annotations": 0,
+    "missing_returns": 0,
+    "cast_usages": 0,
+    "type_ignores": 0
+  },
+  "simulation": {
+    "any_returns": 12,
+    "any_annotations": 73,
+    "missing_returns": 0,
+    "cast_usages": 0,
+    "type_ignores": 2
+  },
+  "strategy": {
+    "any_returns": 8,
+    "any_annotations": 93,
+    "missing_returns": 6,
+    "cast_usages": 0,
+    "type_ignores": 3
+  },
+  "ui": {
+    "any_returns": 278,
+    "any_annotations": 106,
+    "missing_returns": 7,
+    "cast_usages": 0,
+    "type_ignores": 4
+  }
+}

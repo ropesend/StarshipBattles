@@ -1,0 +1,135 @@
+[
+  {
+    "id": "ADR-STR-001",
+    "severity": "Critical",
+    "title": "Strategy Layer Imports from AI Layer",
+    "location": "game/strategy/adapters/simulation_adapter.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-FND-001",
+    "severity": "Major",
+    "title": "Research UI imports game.ui.renderer.camera",
+    "location": "game/research/ui/research_scene.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-SIM-001",
+    "severity": "Major",
+    "title": "Ship Class is Approaching God Class Territory",
+    "location": "game/simulation/entities/ship.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-SIM-002",
+    "severity": "Major",
+    "title": "Intentional Late Imports for Circular Dependency",
+    "location": "game/simulation/",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-STR-002",
+    "severity": "Major",
+    "title": "ShipDisplayFormatter in Strategy Layer",
+    "location": "game/strategy/data/ship_display_formatter.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-STR-003",
+    "severity": "Major",
+    "title": "Circular Import Workaround in Galaxy",
+    "location": "game/strategy/data/galaxy.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI2-001",
+    "severity": "Major",
+    "title": "ShipIO Direct Import of Simulation Entities",
+    "location": "game/ui/services/ship_io.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI2-002",
+    "severity": "Major",
+    "title": "Camera Uses pygame.math.Vector2",
+    "location": "game/ui/renderer/camera.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-001",
+    "severity": "Major",
+    "title": "God Class - TestLabScreen (1906 lines)",
+    "location": "game/ui/screens/test_lab/screen.py",
+    "effort": "Complex"
+  },
+  {
+    "id": "ADR-UI1-002",
+    "severity": "Major",
+    "title": "God Class - fleet_report_window.py (1093 lines)",
+    "location": "game/ui/screens/fleet_report_window.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-003",
+    "severity": "Major",
+    "title": "God Class - build_queue_screen.py (1084 lines)",
+    "location": "game/ui/screens/build_queue_screen.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-004",
+    "severity": "Major",
+    "title": "God Class - weapons_panel.py (1037 lines)",
+    "location": "game/ui/screens/builder/weapons_panel.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-FND-002",
+    "severity": "Minor",
+    "title": "Research UI subpackage uses pygame directly",
+    "location": "game/research/ui/",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-SIM-003",
+    "severity": "Minor",
+    "title": "Component Module Contains Multiple Concerns",
+    "location": "game/simulation/components/",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-STR-004",
+    "severity": "Minor",
+    "title": "Intentional Late Imports - Documented but Numerous",
+    "location": "game/strategy/",
+    "effort": "Complex"
+  },
+  {
+    "id": "ADR-STR-005",
+    "severity": "Minor",
+    "title": "RGB Color Tuples in Game Config",
+    "location": "game/strategy/engine/game_config.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI2-003",
+    "severity": "Minor",
+    "title": "Game Renderer Inline Import of ShipThemeManager",
+    "location": "game/ui/renderer/game_renderer.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-005",
+    "severity": "Minor",
+    "title": "Near-God Classes (500-1000 lines)",
+    "location": "game/ui/screens/",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-006",
+    "severity": "Minor",
+    "title": "Inconsistent Cross-Layer Import Documentation",
+    "location": "game/ui/screens/",
+    "effort": "Simple"
+  }
+]

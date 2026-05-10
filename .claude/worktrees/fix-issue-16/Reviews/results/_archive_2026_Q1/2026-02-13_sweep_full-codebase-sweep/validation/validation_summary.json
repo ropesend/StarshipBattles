@@ -1,0 +1,87 @@
+{
+  "original_count": 288,
+  "confirmed": 132,
+  "downgraded": 0,
+  "rejected": 43,
+  "no_verdict": 113,
+  "filtered_count": 245,
+  "rejection_rate_pct": 14.9,
+  "by_shard": {
+    "FND": {
+      "reviewed": 27,
+      "confirmed": 4,
+      "downgraded": 6,
+      "rejected": 17
+    },
+    "SIM": {
+      "reviewed": 54,
+      "confirmed": 42,
+      "downgraded": 7,
+      "rejected": 5
+    },
+    "STR": {
+      "reviewed": 0,
+      "confirmed": 0,
+      "downgraded": 0,
+      "rejected": 0
+    },
+    "UI1": {
+      "reviewed": 75,
+      "confirmed": 64,
+      "downgraded": 3,
+      "rejected": 8
+    },
+    "UI2": {
+      "reviewed": 22,
+      "confirmed": 8,
+      "downgraded": 0,
+      "rejected": 14
+    }
+  },
+  "rejected_ids": [
+    "ADR-FND-001",
+    "CON-FND-001",
+    "UNK-01",
+    "UNK-02",
+    "TCG-SIM-001",
+    "TCG-SIM-002",
+    "TCG-SIM-003",
+    "ADR-FND-002",
+    "ADR-UI2-001",
+    "CON-FND-002",
+    "CON-FND-003",
+    "CON-FND-004",
+    "CON-FND-005",
+    "CON-UI2-002",
+    "CON-UI2-003",
+    "CON-UI2-005",
+    "DUP-FND-002",
+    "DUP-UI2-001",
+    "DUP-UI2-002",
+    "UNK-03",
+    "UNK-04",
+    "UNK-05",
+    "UNK-06",
+    "LEG-FND-001",
+    "LEG-UI2-001",
+    "TCG-FND-008",
+    "TCG-UI2-002",
+    "TCG-UI2-003",
+    "TCG-UI2-005",
+    "ADR-UI2-004",
+    "CON-FND-006",
+    "DUP-FND-003",
+    "DUP-UI2-003",
+    "UNK-07",
+    "LEG-FND-002",
+    "LEG-SIM-NEW-001",
+    "LEG-UI2-002",
+    "TCG-SIM-014",
+    "TCG-UI2-006",
+    "CON-FND-015",
+    "DUP-FND-007",
+    "UNK-12",
+    "LEG-FND-006"
+  ],
+  "downgraded_ids": {}
+}

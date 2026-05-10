@@ -1,0 +1,7 @@
+game\simulation\systems\battle_engine.py:98: unused variable 'exc_tb' (100% confidence)
+game\simulation\systems\battle_engine.py:98: unused variable 'exc_type' (100% confidence)
+game\simulation\systems\battle_engine.py:98: unused variable 'exc_val' (100% confidence)
+game\strategy\data\galaxy.py:624: unused variable 'naming_data_path' (100% confidence)
+game\strategy\data\stars.py:303: unused variable 'age_ratio' (100% confidence)
+game\strategy\services\action_time_resolver.py:115: unreachable code after 'if' (100% confidence)
+game\ui\panels\modifier_impact_grid.py:273: unused variable 'sig_digits' (100% confidence)

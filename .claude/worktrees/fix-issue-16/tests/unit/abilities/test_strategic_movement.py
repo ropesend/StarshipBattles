@@ -1,0 +1,234 @@
+"""
+Tests for StrategicMovement ability.
+
+TDD Phase 2, Step 2.1: Tests for the StrategicMovement ability class.
+"""
+
+import pytest
+from unittest.mock import MagicMock
+
+from game.core.exceptions import ValidationException
+
+
+class TestStrategicMovementAbility:
+    """Tests for the StrategicMovement ability class."""
+
+    @pytest.fixture
+    def mock_component(self):
+        mock = MagicMock()
+        mock.ship = MagicMock()
+        mock.stats = {}
+        return mock
+
+    def test_strategic_movement_layer_is_strategic(self):
+        """StrategicMovement should have STRATEGIC layer."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+        from game.simulation.components.abilities.base import AbilityLayer
+
+        assert StrategicMovement.layer == AbilityLayer.STRATEGIC
+
+    def test_strategic_movement_allowed_scopes(self):
+        """StrategicMovement should allow SELF, ALLIED_SECTOR, and ALLIED_SYSTEM scopes."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+        from game.simulation.components.abilities.base import AbilityScope
+
+        expected_scopes = [AbilityScope.SELF, AbilityScope.ALLIED_SECTOR, AbilityScope.ALLIED_SYSTEM]
+
+        for scope in expected_scopes:
+            assert scope in StrategicMovement.allowed_scopes
+
+    def test_strategic_movement_default_scope_is_self(self):
+        """StrategicMovement should default to SELF scope."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+        from game.simulation.components.abilities.base import AbilityScope
+
+        assert StrategicMovement.default_scope == AbilityScope.SELF
+
+    def test_strategic_movement_value_from_simple_data(self, mock_component):
+        """StrategicMovement should read movement points from primitive data."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 150)
+
+        assert ab.base_movement_points == 150
+        assert ab.movement_points == 150
+
+    def test_strategic_movement_value_from_dict_data(self, mock_component):
+        """StrategicMovement should read movement points from dict data."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        data = {'value': 200}
+        ab = StrategicMovement(mock_component, data)
+
+        assert ab.base_movement_points == 200
+        assert ab.movement_points == 200
+
+    def test_strategic_movement_scope_from_json(self, mock_component):
+        """StrategicMovement should read scope from JSON data."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+        from game.simulation.components.abilities.base import AbilityScope
+
+        data = {'value': 100, 'scope': 'allied_system'}
+        ab = StrategicMovement(mock_component, data)
+
+        assert ab.scope == AbilityScope.ALLIED_SYSTEM
+
+    def test_strategic_movement_recalculate_with_modifier(self, mock_component):
+        """StrategicMovement should apply strategic_mult modifier on recalculate."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+
+        # Apply modifier
+        mock_component.stats = {'strategic_mult': 1.5}
+        ab.recalculate()
+
+        assert ab.base_movement_points == 100
+        assert ab.movement_points == 150
+
+    def test_strategic_movement_ui_rows(self, mock_component):
+        """StrategicMovement should provide UI rows for display."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        rows = ab.get_ui_rows()
+
+        assert len(rows) == 1
+        assert rows[0]['label'] == 'Strategic Mobility'
+        assert '100' in rows[0]['value']
+        assert 'MP' in rows[0]['value']
+
+    def test_strategic_movement_get_primary_value(self, mock_component):
+        """StrategicMovement.get_primary_value() should return movement_points."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 125)
+
+        assert ab.get_primary_value() == 125
+
+    def test_strategic_movement_does_not_apply_to_combat(self, mock_component):
+        """StrategicMovement should NOT apply to COMBAT layer."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+        from game.simulation.components.abilities.base import AbilityLayer
+
+        ab = StrategicMovement(mock_component, 100)
+
+        assert ab.applies_to_layer(AbilityLayer.COMBAT) is False
+        assert ab.applies_to_layer(AbilityLayer.STRATEGIC) is True
+
+    def test_strategic_movement_rejects_invalid_scope(self, mock_component):
+        """StrategicMovement should reject invalid scopes like PLANET."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        data = {'value': 100, 'scope': 'planet'}
+
+        with pytest.raises(ValidationException):
+            StrategicMovement(mock_component, data)
+
+
+class TestStrategicMovementSyncData:
+    """Tests for StrategicMovement.sync_data() functionality."""
+
+    @pytest.fixture
+    def mock_component(self):
+        mock = MagicMock()
+        mock.ship = MagicMock()
+        mock.stats = {}
+        return mock
+
+    def test_sync_data_updates_from_primitive(self, mock_component):
+        """sync_data() should update movement points from primitive value."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        assert ab.movement_points == 100
+
+        ab.sync_data(200)
+
+        assert ab.base_movement_points == 200
+        assert ab.movement_points == 200
+
+    def test_sync_data_updates_from_dict(self, mock_component):
+        """sync_data() should update movement points from dict value."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        ab.sync_data({'value': 300})
+
+        assert ab.base_movement_points == 300
+        assert ab.movement_points == 300
+
+    def test_sync_data_non_dict_non_number_defaults_to_zero(self, mock_component):
+        """sync_data() with non-dict, non-number should default to 0."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        ab.sync_data("invalid")  # String, not number or dict
+
+        assert ab.base_movement_points == 0
+        assert ab.movement_points == 0
+
+    def test_sync_data_preserves_modifier_application(self, mock_component):
+        """sync_data() should properly reset movement_points before recalculate."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        mock_component.stats = {'strategic_mult': 2.0}
+        ab.recalculate()
+        assert ab.movement_points == 200
+
+        # sync_data resets to base value
+        ab.sync_data(50)
+        assert ab.base_movement_points == 50
+        assert ab.movement_points == 50  # Not yet recalculated
+
+        # After recalculate, modifier applies to new base
+        ab.recalculate()
+        assert ab.movement_points == 100
+
+    def test_zero_movement_points_valid(self, mock_component):
+        """Zero movement points should be a valid value."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 0)
+        assert ab.base_movement_points == 0
+        assert ab.movement_points == 0
+        assert ab.get_primary_value() == 0
+
+    def test_negative_movement_points_handled(self, mock_component):
+        """Negative movement points should be stored (edge case)."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        # Negative value might occur from bad data - should store as-is
+        ab = StrategicMovement(mock_component, -50)
+        assert ab.base_movement_points == -50
+        assert ab.movement_points == -50
+
+    def test_float_movement_points_precision(self, mock_component):
+        """Float movement points should maintain precision."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 123.456)
+        assert ab.base_movement_points == 123.456
+        assert ab.movement_points == 123.456
+
+
+class TestStrategicMovementRegistration:
+    """Tests for StrategicMovement registration in ability system."""
+
+    def test_strategic_movement_in_registry(self):
+        """StrategicMovement should be registered in ABILITY_REGISTRY."""
+        from game.simulation.components.abilities import ABILITY_REGISTRY
+
+        assert 'StrategicMovement' in ABILITY_REGISTRY
+
+    def test_create_strategic_movement_via_factory(self):
+        """Should be able to create StrategicMovement via create_ability()."""
+        from game.simulation.components.abilities import create_ability
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        mock_component = MagicMock()
+        ab = create_ability('StrategicMovement', mock_component, 100)
+
+        assert isinstance(ab, StrategicMovement)
+        assert ab.movement_points == 100

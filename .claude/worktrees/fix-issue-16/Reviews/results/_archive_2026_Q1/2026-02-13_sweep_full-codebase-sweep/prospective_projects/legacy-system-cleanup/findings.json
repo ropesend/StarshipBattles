@@ -1,0 +1,22 @@
+[
+  {"id": "LEG-STR-001", "severity": "Major", "title": "Legacy Behavior Branch in FleetOrderProcessor", "location": "game/strategy/engine/fleet_order_processor.py", "effort": "Medium"},
+  {"id": "LEG-STR-002", "severity": "Major", "title": "Backward Compatibility Comment in GameSession", "location": "game/strategy/engine/game_session.py", "effort": "Medium"},
+  {"id": "LEG-STR-003", "severity": "Major", "title": "Legacy Items in ProductionEngine", "location": "game/strategy/engine/production_engine.py", "effort": "Medium"},
+  {"id": "LEG-FND-003", "severity": "Minor", "title": "Raw Ship vs Adapter Access Pattern", "location": "game/ai/behaviors.py", "effort": "Medium"},
+  {"id": "LEG-FND-004", "severity": "Minor", "title": "Singleton Pattern Still in Use Despite DI", "location": "Multiple files", "effort": "Complex"},
+  {"id": "LEG-FND-005", "severity": "Minor", "title": "Unused AI_STATE_ERROR ErrorCode", "location": "game/core/error_codes.py", "effort": "Simple"},
+  {"id": "LEG-SIM-006", "severity": "Minor", "title": "Module Identity Drift Fallback in Abilities", "location": "game/simulation/components/abilities/", "effort": "Medium"},
+  {"id": "LEG-SIM-007", "severity": "Minor", "title": "Component Ability Index Fallback Pattern", "location": "game/simulation/components/component.py", "effort": "Simple"},
+  {"id": "LEG-STR-004", "severity": "Minor", "title": "Backward Compatibility Comment in FleetNavigation", "location": "game/strategy/services/fleet_navigation_service.py", "effort": "Simple"},
+  {"id": "LEG-STR-005", "severity": "Minor", "title": "Backward Compat Default in Planet.from_dict", "location": "game/strategy/data/planet.py", "effort": "Simple"},
+  {"id": "LEG-STR-006", "severity": "Minor", "title": "Backward Compat Defaults in RaceConfig.from_dict", "location": "game/strategy/data/race_config.py", "effort": "N/A"},
+  {"id": "LEG-STR-007", "severity": "Minor", "title": "Old Layer Format Detection in DesignMetadata", "location": "game/strategy/data/design_metadata.py", "effort": "Simple"},
+  {"id": "LEG-STR-008", "severity": "Minor", "title": "Save Compatibility Field in DesignMetadata", "location": "game/strategy/data/design_metadata.py", "effort": "Simple"},
+  {"id": "LEG-UI2-003", "severity": "Minor", "title": "Excessive getattr() with Defaults", "location": "game/ui/services/battle_ui_service.py", "effort": "Medium"},
+  {"id": "LEG-UI2-004", "severity": "Minor", "title": "ModifierEditorPanel Marked as Legacy", "location": "game/ui/screens/builder/modifier_editor.py", "effort": "Medium"},
+  {"id": "LEG-SIM-009", "severity": "Info", "title": "TechPresetLoader Only Used in Tests", "location": "game/simulation/systems/tech_preset_loader.py", "effort": "Unknown"},
+  {"id": "LEG-STR-009", "severity": "Info", "title": "Test Mock Compatibility in FleetOrderProcessor", "location": "game/strategy/engine/fleet_order_processor.py", "effort": "Simple"},
+  {"id": "LEG-STR-010", "severity": "Info", "title": "Intercept Function Accepts Both Fleet and NavigationState", "location": "game/strategy/data/pathfinding.py", "effort": "N/A"},
+  {"id": "LEG-UI2-005", "severity": "Info", "title": "Singleton Pattern Still in Use for AssetManagers", "location": "game/ui/assets/ship_theme_manager.py", "effort": "N/A"},
+  {"id": "LEG-UI2-006", "severity": "Info", "title": "hasattr() Check in Camera for Defensive Coding", "location": "game/ui/renderer/camera.py", "effort": "Simple"}
+]

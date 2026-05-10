@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "asset_type": "portrait",
+  "description": "Caption schema for race portraits. Output by Gemini using Tools/captioning/prompts/portrait_prompt.md.",
+  "required_fields": [
+    "anatomy",
+    "coloration",
+    "attire_and_adornment",
+    "posture_and_expression",
+    "technology_level_hint",
+    "distinctive_traits"
+  ],
+  "field_types": {
+    "anatomy": "string",
+    "coloration": "string",
+    "attire_and_adornment": "string",
+    "posture_and_expression": "string",
+    "technology_level_hint": "enum",
+    "distinctive_traits": "string"
+  },
+  "enums": {
+    "technology_level_hint": [
+      "primitive",
+      "medieval",
+      "industrial",
+      "advanced",
+      "post-human",
+      "unknown"
+    ]
+  },
+  "field_descriptions": {
+    "anatomy": "Body plan, distinctive features (limbs, eyes, skin/scale/fur, head shape).",
+    "coloration": "Hue, pattern, contrast across the body.",
+    "attire_and_adornment": "Clothing, jewelry, tools, scars, paint, ceremonial markings.",
+    "posture_and_expression": "Bearing, gaze, mood, body language conveyed by the pose.",
+    "technology_level_hint": "Implied tech level from visible artifacts (clothing weave, accessories, weapons).",
+    "distinctive_traits": "Anything unusual or memorable that doesn't fit the other fields."
+  }
+}

@@ -1,0 +1,2162 @@
+[
+  {
+    "session_id": "dba17343-bf92-44e6-ac2c-10fb53ccf396",
+    "timestamp": "2026-05-10T09:02:21.776742",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.06620000931434333,
+        "timestamp": 1778428941.7644734,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 4.879899992374703,
+        "timestamp": 1778428941.7644734,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.0023999891709536314,
+        "timestamp": 1778428941.7644825,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.8215999987442046,
+        "timestamp": 1778428941.7653122,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.033199990866705775,
+        "timestamp": 1778428941.7653537,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.011399999493733048,
+        "timestamp": 1778428941.7653692,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.735999988857657,
+        "timestamp": 1778428941.7741148,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.7691999964881688,
+        "timestamp": 1778428941.7759054,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.25179999647662044,
+        "timestamp": 1778428941.7761707,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.010399991879239678,
+        "timestamp": 1778428941.7761889,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.005600013537332416,
+        "timestamp": 1778428941.776198,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001100008375942707,
+        "timestamp": 1778428941.7762017,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 0.09889999637380242,
+        "timestamp": 1778428941.776303,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.38809998659417033,
+        "timestamp": 1778428941.7766967,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "925fa7f3-2907-430b-81a7-bdaeb89ee092",
+    "timestamp": "2026-05-10T09:02:21.814895",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.0714000198058784,
+        "timestamp": 1778428941.8027248,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.49440001021139324,
+        "timestamp": 1778428941.8027248,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.0014999823179095984,
+        "timestamp": 1778428941.8027334,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.007599999662488699,
+        "timestamp": 1778428941.8027449,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.026500027161091566,
+        "timestamp": 1778428941.8027742,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.004799978341907263,
+        "timestamp": 1778428941.8027825,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 9.687200014013797,
+        "timestamp": 1778428941.8124754,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.6032000130508095,
+        "timestamp": 1778428941.814096,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.17189999925903976,
+        "timestamp": 1778428941.8142743,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.00890000956133008,
+        "timestamp": 1778428941.8142896,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.004799978341907263,
+        "timestamp": 1778428941.8142982,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.0015999830793589354,
+        "timestamp": 1778428941.8143022,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 0.07700000423938036,
+        "timestamp": 1778428941.8143818,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.3519000019878149,
+        "timestamp": 1778428941.8147388,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "833e7782-ef95-4152-8ef9-86ecf6d6f29f",
+    "timestamp": "2026-05-10T09:02:21.851848",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.07009998080320656,
+        "timestamp": 1778428941.8410487,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.5655999993905425,
+        "timestamp": 1778428941.8410487,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001600012183189392,
+        "timestamp": 1778428941.8410566,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.007499998901039362,
+        "timestamp": 1778428941.8410676,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.027700007194653153,
+        "timestamp": 1778428941.841098,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0050000089686363935,
+        "timestamp": 1778428941.8411062,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.29399999929592,
+        "timestamp": 1778428941.849406,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.5712000022176653,
+        "timestamp": 1778428941.850987,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.1635999942664057,
+        "timestamp": 1778428941.8511565,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.006499991286545992,
+        "timestamp": 1778428941.851169,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0050000089686363935,
+        "timestamp": 1778428941.8511775,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001300009898841381,
+        "timestamp": 1778428941.8511813,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 0.07470001582987607,
+        "timestamp": 1778428941.8512583,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.34160001087002456,
+        "timestamp": 1778428941.851605,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "be130be7-7ae2-4e98-a37c-c50acf560d97",
+    "timestamp": "2026-05-10T09:02:21.886737",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.055500015150755644,
+        "timestamp": 1778428941.876627,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.44490001164376736,
+        "timestamp": 1778428941.876627,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.00100000761449337,
+        "timestamp": 1778428941.8766327,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.005799985956400633,
+        "timestamp": 1778428941.876642,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.022099993657320738,
+        "timestamp": 1778428941.8766665,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0043000036384910345,
+        "timestamp": 1778428941.8766744,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.004600007552654,
+        "timestamp": 1778428941.884683,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.27859998610802,
+        "timestamp": 1778428941.885969,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.16609998419880867,
+        "timestamp": 1778428941.8861408,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.005999987479299307,
+        "timestamp": 1778428941.8861527,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0031999952625483274,
+        "timestamp": 1778428941.8861592,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.0009999785106629133,
+        "timestamp": 1778428941.8861628,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 0.07059998461045325,
+        "timestamp": 1778428941.886236,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.3234999894630164,
+        "timestamp": 1778428941.886564,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "b33cbde8-c4d9-4e67-8725-955016950a2c",
+    "timestamp": "2026-05-10T09:02:21.921995",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.07520001963712275,
+        "timestamp": 1778428941.9101665,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.5044999998062849,
+        "timestamp": 1778428941.9101665,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001300009898841381,
+        "timestamp": 1778428941.9101734,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.007499998901039362,
+        "timestamp": 1778428941.9101846,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.026599998818710446,
+        "timestamp": 1778428941.910214,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0051000097300857306,
+        "timestamp": 1778428941.9102223,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 9.059700008947402,
+        "timestamp": 1778428941.9192872,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.742799999192357,
+        "timestamp": 1778428941.9210484,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.2010999887716025,
+        "timestamp": 1778428941.921259,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.007700000423938036,
+        "timestamp": 1778428941.921273,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.005199981387704611,
+        "timestamp": 1778428941.9212816,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001300009898841381,
+        "timestamp": 1778428941.9212854,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 0.1033000007737428,
+        "timestamp": 1778428941.921391,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.36490001366473734,
+        "timestamp": 1778428941.921761,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "339baef5-39be-4fae-918a-9a391b5f9e54",
+    "timestamp": "2026-05-10T09:02:21.957922",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.06489999941550195,
+        "timestamp": 1778428941.9475827,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.4031999851576984,
+        "timestamp": 1778428941.9475827,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.0010999792721122503,
+        "timestamp": 1778428941.947589,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.005600013537332416,
+        "timestamp": 1778428941.9475977,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.023300002794712782,
+        "timestamp": 1778428941.9476237,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0041000021155923605,
+        "timestamp": 1778428941.9476311,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 7.90590001270175,
+        "timestamp": 1778428941.9555418,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.3846000074408948,
+        "timestamp": 1778428941.9569356,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.229199999012053,
+        "timestamp": 1778428941.957173,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.007700000423938036,
+        "timestamp": 1778428941.9571874,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0049000082071870565,
+        "timestamp": 1778428941.9571955,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.000900006853044033,
+        "timestamp": 1778428941.957199,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 0.08310002158395946,
+        "timestamp": 1778428941.9572847,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.3582000208552927,
+        "timestamp": 1778428941.9576476,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "741d63c5-76a3-41e9-adc7-a4ebb4b21c9a",
+    "timestamp": "2026-05-10T09:02:21.994262",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.0543000060133636,
+        "timestamp": 1778428941.9814556,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.4302999877836555,
+        "timestamp": 1778428941.9814556,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.0008999777492135763,
+        "timestamp": 1778428941.981461,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.006000016583129764,
+        "timestamp": 1778428941.9814708,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.022499996703118086,
+        "timestamp": 1778428941.9814959,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0043000036384910345,
+        "timestamp": 1778428941.9815035,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 9.945199999492615,
+        "timestamp": 1778428941.9914534,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.6360999725293368,
+        "timestamp": 1778428941.9931078,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.20489998860284686,
+        "timestamp": 1778428941.9933228,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.008500006515532732,
+        "timestamp": 1778428941.9933388,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.005399982910603285,
+        "timestamp": 1778428941.9933474,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001600012183189392,
+        "timestamp": 1778428941.9933531,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 0.12879999121651053,
+        "timestamp": 1778428941.993487,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.45190000673756003,
+        "timestamp": 1778428941.9939475,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "dc1a6822-4e83-44fd-9f77-acfd396992cd",
+    "timestamp": "2026-05-10T09:05:36.701776",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.062099978094920516,
+        "timestamp": 1778428948.6395745,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.5588000058196485,
+        "timestamp": 1778428948.6395745,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001100008375942707,
+        "timestamp": 1778428948.6395814,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.006199989002197981,
+        "timestamp": 1778428948.6395915,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.02789997961372137,
+        "timestamp": 1778428948.639622,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.005500012775883079,
+        "timestamp": 1778428948.6396308,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 70.473600004334,
+        "timestamp": 1778428948.7101104,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.7529000178910792,
+        "timestamp": 1778428948.7118833,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.3533999843057245,
+        "timestamp": 1778428948.7122555,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.007100024959072471,
+        "timestamp": 1778428948.712273,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.005599984433501959,
+        "timestamp": 1778428948.7122822,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 187867.40750001627,
+        "timestamp": 1778429136.579704,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 121.25809999997728,
+        "timestamp": 1778429136.701018,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.455000001238659,
+        "timestamp": 1778429136.7014909,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "5f032a2c-931b-4bf0-b799-c1e5896b123b",
+    "timestamp": "2026-05-10T09:07:04.608205",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.055100012104958296,
+        "timestamp": 1778429224.4656773,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 4.863600013777614,
+        "timestamp": 1778429224.4656773,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.0022999884095042944,
+        "timestamp": 1778429224.4656873,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.6157000025268644,
+        "timestamp": 1778429224.466309,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.030199997127056122,
+        "timestamp": 1778429224.4663482,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.015300000086426735,
+        "timestamp": 1778429224.4663675,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 9.046299994224682,
+        "timestamp": 1778429224.4754207,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.4099000254645944,
+        "timestamp": 1778429224.4768436,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.1880000054370612,
+        "timestamp": 1778429224.4770403,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.008600007276982069,
+        "timestamp": 1778429224.4770558,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0053000112529844046,
+        "timestamp": 1778429224.4770646,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.00100000761449337,
+        "timestamp": 1778429224.4770682,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 130.2338000095915,
+        "timestamp": 1778429224.6073067,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.47569998423568904,
+        "timestamp": 1778429224.6078038,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "e4c9f20b-e473-419c-8571-24f48cf38c7a",
+    "timestamp": "2026-05-10T09:07:04.776851",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.057900004321709275,
+        "timestamp": 1778429224.6350617,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.46320000546984375,
+        "timestamp": 1778429224.6350617,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001500011421740055,
+        "timestamp": 1778429224.6350684,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.006199989002197981,
+        "timestamp": 1778429224.6350784,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.025300018023699522,
+        "timestamp": 1778429224.6351066,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0042000028770416975,
+        "timestamp": 1778429224.6351144,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.351399999810383,
+        "timestamp": 1778429224.643471,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.4679000014439225,
+        "timestamp": 1778429224.6449518,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.20550002227537334,
+        "timestamp": 1778429224.6451638,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.031899980967864394,
+        "timestamp": 1778429224.6452038,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.02060001133941114,
+        "timestamp": 1778429224.645234,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.0039000005926936865,
+        "timestamp": 1778429224.6452415,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 130.84709999384359,
+        "timestamp": 1778429224.7760935,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.43089999235235155,
+        "timestamp": 1778429224.7765398,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "64007373-6aab-4667-81eb-4a88ccb5f7f0",
+    "timestamp": "2026-05-10T09:07:04.947429",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.05740000051446259,
+        "timestamp": 1778429224.8031697,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.48110002535395324,
+        "timestamp": 1778429224.8031697,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001200009137392044,
+        "timestamp": 1778429224.8031754,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.00589998671784997,
+        "timestamp": 1778429224.803185,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.02640002639964223,
+        "timestamp": 1778429224.8032138,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.005199981387704611,
+        "timestamp": 1778429224.8032224,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.055100013734773,
+        "timestamp": 1778429224.8112822,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.3085000100545585,
+        "timestamp": 1778429224.8126,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.2476000227034092,
+        "timestamp": 1778429224.8128536,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.010899995686486363,
+        "timestamp": 1778429224.812875,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.006399990525096655,
+        "timestamp": 1778429224.8128855,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.000800006091594696,
+        "timestamp": 1778429224.812889,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 133.80170002346858,
+        "timestamp": 1778429224.946695,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.41190002229996026,
+        "timestamp": 1778429224.9471219,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "2fc8724d-881c-42ae-aed3-05f642ed3c32",
+    "timestamp": "2026-05-10T09:07:05.148640",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.06120000034570694,
+        "timestamp": 1778429224.9786165,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.5167000053916126,
+        "timestamp": 1778429224.9786165,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001500011421740055,
+        "timestamp": 1778429224.978624,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.005299982149153948,
+        "timestamp": 1778429224.9786332,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.028099981136620045,
+        "timestamp": 1778429224.9786637,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0053000112529844046,
+        "timestamp": 1778429224.9786723,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 9.87029998213984,
+        "timestamp": 1778429224.9885495,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.8592999840620905,
+        "timestamp": 1778429224.9904244,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.19689998589456081,
+        "timestamp": 1778429224.9906301,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.009800016414374113,
+        "timestamp": 1778429224.9906476,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0045000051613897085,
+        "timestamp": 1778429224.990655,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001400010660290718,
+        "timestamp": 1778429224.990659,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 157.12930000154302,
+        "timestamp": 1778429225.1477923,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.47629998880438507,
+        "timestamp": 1778429225.1482856,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "bcbd4a55-18a6-4dad-b4c7-bbe0163c5e88",
+    "timestamp": "2026-05-10T09:07:05.351312",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.08690002141520381,
+        "timestamp": 1778429225.1837513,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.664100021822378,
+        "timestamp": 1778429225.1837513,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.0023999891709536314,
+        "timestamp": 1778429225.183761,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.007099995855242014,
+        "timestamp": 1778429225.1837742,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.02950002090074122,
+        "timestamp": 1778429225.1838088,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.005099980626255274,
+        "timestamp": 1778429225.1838176,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 15.514500002609566,
+        "timestamp": 1778429225.19934,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 2.2366000048350543,
+        "timestamp": 1778429225.2015965,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.2552999940235168,
+        "timestamp": 1778429225.201864,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.010199990356341004,
+        "timestamp": 1778429225.2018816,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.00589998671784997,
+        "timestamp": 1778429225.2018924,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001900014467537403,
+        "timestamp": 1778429225.201898,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 148.52839999366552,
+        "timestamp": 1778429225.350432,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.5117999971844256,
+        "timestamp": 1778429225.3509612,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "97bd5137-36d9-455b-ab8a-fb1da589bd21",
+    "timestamp": "2026-05-10T09:07:05.519570",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.05190001684240997,
+        "timestamp": 1778429225.3818285,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.4535999905783683,
+        "timestamp": 1778429225.3818285,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001200009137392044,
+        "timestamp": 1778429225.3818347,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.005499983672052622,
+        "timestamp": 1778429225.3818438,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.024399982066825032,
+        "timestamp": 1778429225.3818707,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0045000051613897085,
+        "timestamp": 1778429225.3818784,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 9.2644999967888,
+        "timestamp": 1778429225.3911483,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.6170000017154962,
+        "timestamp": 1778429225.392783,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.1931999868247658,
+        "timestamp": 1778429225.3929856,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.007099995855242014,
+        "timestamp": 1778429225.392999,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0048000074457377195,
+        "timestamp": 1778429225.3930066,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001400010660290718,
+        "timestamp": 1778429225.3930106,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 125.69960000109859,
+        "timestamp": 1778429225.5187144,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.43059999006800354,
+        "timestamp": 1778429225.519161,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "fae849fc-0ac8-4dbf-891e-5726b9ecdcc3",
+    "timestamp": "2026-05-10T09:07:05.701228",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.05640002200379968,
+        "timestamp": 1778429225.5470295,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.4774999979417771,
+        "timestamp": 1778429225.5470295,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.0037999998312443495,
+        "timestamp": 1778429225.547041,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.008500006515532732,
+        "timestamp": 1778429225.547054,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.03700001980178058,
+        "timestamp": 1778429225.5470948,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.007399998139590025,
+        "timestamp": 1778429225.5471053,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 7.983899995451793,
+        "timestamp": 1778429225.5550961,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 2.0589999912772328,
+        "timestamp": 1778429225.5571828,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.19759999122470617,
+        "timestamp": 1778429225.5573888,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.008000002708286047,
+        "timestamp": 1778429225.5574036,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0042000028770416975,
+        "timestamp": 1778429225.557411,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.0009999785106629133,
+        "timestamp": 1778429225.5574148,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 142.95489998767152,
+        "timestamp": 1778429225.7003753,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.41799998143687844,
+        "timestamp": 1778429225.7008152,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "c1621f68-371b-45a5-b47b-00f8e926eff1",
+    "timestamp": "2026-05-10T09:07:22.258830",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.05679999594576657,
+        "timestamp": 1778429232.3922734,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.4698999982792884,
+        "timestamp": 1778429232.3922734,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.002200016751885414,
+        "timestamp": 1778429232.3922813,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.006199989002197981,
+        "timestamp": 1778429232.3922915,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.02920001861639321,
+        "timestamp": 1778429232.3923233,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.005599984433501959,
+        "timestamp": 1778429232.392332,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 11.190299992449582,
+        "timestamp": 1778429232.4035287,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.9367000204510987,
+        "timestamp": 1778429232.4054844,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.23629999486729503,
+        "timestamp": 1778429232.4057343,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.00790000194683671,
+        "timestamp": 1778429232.4057522,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.005500012775883079,
+        "timestamp": 1778429232.4057617,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 9726.552599982824,
+        "timestamp": 1778429242.1323192,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 125.36150001687929,
+        "timestamp": 1778429242.2577014,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.4887999966740608,
+        "timestamp": 1778429242.2582078,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "d3c5f610-55ab-46fd-bcaf-9ddad98480ad",
+    "timestamp": "2026-05-10T09:09:10.848157",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.12310000602155924,
+        "timestamp": 1778429350.7049847,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 5.918099981499836,
+        "timestamp": 1778429350.7049847,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.005499983672052622,
+        "timestamp": 1778429350.7050054,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.9673000022303313,
+        "timestamp": 1778429350.7059844,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.037200021324679255,
+        "timestamp": 1778429350.7060316,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.012400007108226418,
+        "timestamp": 1778429350.7060497,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 9.455900028115138,
+        "timestamp": 1778429350.7155163,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.6031000122893602,
+        "timestamp": 1778429350.717134,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.18030000501312315,
+        "timestamp": 1778429350.7173207,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.008899980457499623,
+        "timestamp": 1778429350.717338,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0046000059228390455,
+        "timestamp": 1778429350.7173462,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001200009137392044,
+        "timestamp": 1778429350.7173502,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 129.7323999751825,
+        "timestamp": 1778429350.8470862,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.5554000090342015,
+        "timestamp": 1778429350.8476598,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "799ef769-34ed-41cc-9b01-7491fb18b6a6",
+    "timestamp": "2026-05-10T09:09:11.009193",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.05520001286640763,
+        "timestamp": 1778429350.8750708,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.47900000936351717,
+        "timestamp": 1778429350.8750708,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001600012183189392,
+        "timestamp": 1778429350.8750775,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.005999987479299307,
+        "timestamp": 1778429350.8750873,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.024300010409206152,
+        "timestamp": 1778429350.875114,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0044000043999403715,
+        "timestamp": 1778429350.8751218,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.045900001889095,
+        "timestamp": 1778429350.8831732,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.382700022077188,
+        "timestamp": 1778429350.8845644,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.17270000535063446,
+        "timestamp": 1778429350.8847435,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.007399998139590025,
+        "timestamp": 1778429350.884757,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0036999990697950125,
+        "timestamp": 1778429350.884764,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.0009999785106629133,
+        "timestamp": 1778429350.8847678,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 123.52029999601655,
+        "timestamp": 1778429351.0082927,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.4265999887138605,
+        "timestamp": 1778429351.0087368,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "c7e8748c-cbea-44d0-beb4-6b74dd51141d",
+    "timestamp": "2026-05-10T09:09:11.172627",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.05840000812895596,
+        "timestamp": 1778429351.037615,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.47569998423568904,
+        "timestamp": 1778429351.037615,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001700012944638729,
+        "timestamp": 1778429351.0376225,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.005699985194951296,
+        "timestamp": 1778429351.037632,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.025599991204217076,
+        "timestamp": 1778429351.03766,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0046000059228390455,
+        "timestamp": 1778429351.0376678,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.192599983885884,
+        "timestamp": 1778429351.0458658,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.348399993730709,
+        "timestamp": 1778429351.0472233,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.18370000179857016,
+        "timestamp": 1778429351.0474143,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.007099995855242014,
+        "timestamp": 1778429351.0474274,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0039000005926936865,
+        "timestamp": 1778429351.0474348,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.000900006853044033,
+        "timestamp": 1778429351.0474381,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 124.31260000448674,
+        "timestamp": 1778429351.1717541,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.3920000162906945,
+        "timestamp": 1778429351.172162,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "ba0ae074-7b34-4f2b-abba-00d2a815aa5e",
+    "timestamp": "2026-05-10T09:09:11.350192",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.054500007536262274,
+        "timestamp": 1778429351.197677,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.4116999916732311,
+        "timestamp": 1778429351.197677,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.00100000761449337,
+        "timestamp": 1778429351.1976821,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.005699985194951296,
+        "timestamp": 1778429351.1976914,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.02269999822601676,
+        "timestamp": 1778429351.1977165,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0042000028770416975,
+        "timestamp": 1778429351.1977236,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.366299996851012,
+        "timestamp": 1778429351.2060947,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.3702000142075121,
+        "timestamp": 1778429351.207482,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.285100017208606,
+        "timestamp": 1778429351.2077777,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.007299997378140688,
+        "timestamp": 1778429351.207791,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0042000028770416975,
+        "timestamp": 1778429351.2077982,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.0009999785106629133,
+        "timestamp": 1778429351.2078018,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 140.91319998260587,
+        "timestamp": 1778429351.3487191,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.585400004638359,
+        "timestamp": 1778429351.349325,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "8360a3f7-07b8-450c-a518-11cfc88a1df8",
+    "timestamp": "2026-05-10T09:09:11.532272",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.11899997480213642,
+        "timestamp": 1778429351.39318,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.8138999983202666,
+        "timestamp": 1778429351.39318,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.003200024366378784,
+        "timestamp": 1778429351.3931916,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.009200011845678091,
+        "timestamp": 1778429351.3932056,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.04700000863522291,
+        "timestamp": 1778429351.3932564,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.010799994925037026,
+        "timestamp": 1778429351.3932714,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 11.435299995355308,
+        "timestamp": 1778429351.4047163,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.4789999986533076,
+        "timestamp": 1778429351.4062114,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.2057999954558909,
+        "timestamp": 1778429351.4064248,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.008499977411702275,
+        "timestamp": 1778429351.40644,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0047000066842883825,
+        "timestamp": 1778429351.406448,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001300009898841381,
+        "timestamp": 1778429351.4064517,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 124.68559999251738,
+        "timestamp": 1778429351.531141,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.4833000130020082,
+        "timestamp": 1778429351.5316415,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "178728a7-aa4c-4914-be72-1b318f905e3f",
+    "timestamp": "2026-05-10T09:09:11.701031",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.06590000702999532,
+        "timestamp": 1778429351.5644562,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.6482000171672553,
+        "timestamp": 1778429351.5644562,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.002400018274784088,
+        "timestamp": 1778429351.5644648,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.005999987479299307,
+        "timestamp": 1778429351.5644748,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.027399975806474686,
+        "timestamp": 1778429351.5645049,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.005599984433501959,
+        "timestamp": 1778429351.5645134,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.559899986721575,
+        "timestamp": 1778429351.5730793,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.4093999925535172,
+        "timestamp": 1778429351.574502,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.18950001685880125,
+        "timestamp": 1778429351.5747008,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.007099995855242014,
+        "timestamp": 1778429351.5747144,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0046000059228390455,
+        "timestamp": 1778429351.574722,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.0012999807950109243,
+        "timestamp": 1778429351.574726,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 125.26059997617267,
+        "timestamp": 1778429351.69999,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.43960000039078295,
+        "timestamp": 1778429351.700447,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "c68ea0f0-a6aa-45df-be99-206731d68428",
+    "timestamp": "2026-05-10T09:09:11.872015",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.055599986808374524,
+        "timestamp": 1778429351.729524,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.4059000057168305,
+        "timestamp": 1778429351.729524,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.001200009137392044,
+        "timestamp": 1778429351.7295296,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.006099988240748644,
+        "timestamp": 1778429351.7295394,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.022400025045499206,
+        "timestamp": 1778429351.7295647,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.0039000005926936865,
+        "timestamp": 1778429351.7295716,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.905999973649159,
+        "timestamp": 1778429351.7384827,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 2.1711000008508563,
+        "timestamp": 1778429351.7406669,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.24949997896328568,
+        "timestamp": 1778429351.7409291,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.009499985026195645,
+        "timestamp": 1778429351.7409487,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.005399982910603285,
+        "timestamp": 1778429351.7409592,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 0.001400010660290718,
+        "timestamp": 1778429351.7409647,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 130.04150000051595,
+        "timestamp": 1778429351.8710113,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.4157999937888235,
+        "timestamp": 1778429351.8714468,
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "session_id": "c162f368-2e90-4c2e-bffe-9a71856b4a63",
+    "timestamp": "2026-05-10T09:09:27.725063",
+    "records": [
+      {
+        "name": "startup: pygame.init",
+        "duration_ms": 0.05800000508315861,
+        "timestamp": 1778429358.2730203,
+        "metadata": {}
+      },
+      {
+        "name": "startup: ctx.create_production",
+        "duration_ms": 0.45960000716149807,
+        "timestamp": 1778429358.2730203,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.init",
+        "duration_ms": 0.0012999807950109243,
+        "timestamp": 1778429358.2730274,
+        "metadata": {}
+      },
+      {
+        "name": "startup: font.preload",
+        "duration_ms": 0.006300018867477775,
+        "timestamp": 1778429358.2730377,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.detect_resolution",
+        "duration_ms": 0.027700007194653153,
+        "timestamp": 1778429358.2730677,
+        "metadata": {}
+      },
+      {
+        "name": "startup: display.set_mode",
+        "duration_ms": 0.006099988240748644,
+        "timestamp": 1778429358.273077,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_components",
+        "duration_ms": 8.25539999641478,
+        "timestamp": 1778429358.2813377,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_modifiers",
+        "duration_ms": 1.3891000126022846,
+        "timestamp": 1778429358.282738,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.load_resources",
+        "duration_ms": 0.18439997802488506,
+        "timestamp": 1778429358.282931,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.initialize_ship_data",
+        "duration_ms": 0.005900015821680427,
+        "timestamp": 1778429358.2829437,
+        "metadata": {}
+      },
+      {
+        "name": "startup: registry.build_game_registries",
+        "duration_ms": 0.0046000059228390455,
+        "timestamp": 1778429358.2829514,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.ensure_component_derivatives",
+        "duration_ms": 9321.572799992282,
+        "timestamp": 1778429367.604529,
+        "metadata": {}
+      },
+      {
+        "name": "startup: assets.load_sprites",
+        "duration_ms": 119.38029999146238,
+        "timestamp": 1778429367.7239327,
+        "metadata": {}
+      },
+      {
+        "name": "startup: input.load_keybindings",
+        "duration_ms": 0.4689999914262444,
+        "timestamp": 1778429367.724419,
+        "metadata": {}
+      }
+    ]
+  }
+]

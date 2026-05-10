@@ -1,0 +1,195 @@
+"""Turn engine basic tests - movement timing, combat, colonization."""
+import pytest
+from game.strategy.engine.turn_engine import TurnEngine
+from game.strategy.data.empire import Empire
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import Order, OrderType
+from game.core.hex_math import HexCoord
+from unittest.mock import MagicMock, patch
+
+from .conftest import MockGalaxy, create_colony_ship, MockPlanetType
+
+
+@patch('game.strategy.data.pathfinding.find_hybrid_path')
+def test_movement_timing(mock_path, fresh_registries):
+    """Verify ships move at correct tick intervals based on speed."""
+    engine = TurnEngine(registries=fresh_registries)
+
+    # Speed 5: 100 // 5 = 20. Moves at 20, 40, 60, 80, 100.
+    f5 = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
+    # Mock path: 5 steps linear
+    f5.path = [HexCoord(1,0), HexCoord(2,0), HexCoord(3,0), HexCoord(4,0), HexCoord(5,0)]
+    f5.add_order(Order(OrderType.MOVE, HexCoord(5,0)))
+
+    # Speed 10: 100 // 10 = 10. Moves at 10, 20... 100.
+    f10 = Fleet(2, 0, HexCoord(0, 0), speed=10.0)
+    f10.path = [HexCoord(i,0) for i in range(1, 11)] # 10 step path
+    f10.add_order(Order(OrderType.MOVE, HexCoord(10,0)))
+
+    # Mock pathfinding to return paths that match our expectations
+    # This prevents path recalculation from changing our test conditions
+    mock_path.return_value = None  # No recalc needed since paths are pre-set
+
+    empires = [Empire(0, "P1", (255,0,0))]
+    empires[0].add_fleet(f5)
+    empires[0].add_fleet(f10)
+
+    # Run ticks 1-19
+    for i in range(1, 20):
+        engine._process_tick(i, empires, MockGalaxy())
+
+    assert f5.location == HexCoord(0,0)   # Shouldn't move yet
+    assert f10.location == HexCoord(1,0)  # Moved at tick 10
+
+    # Run tick 20
+    engine._process_tick(20, empires, MockGalaxy())
+    assert f5.location == HexCoord(1,0)   # Moved at tick 20
+    assert f10.location == HexCoord(2,0)  # Moved again at tick 20
+
+
+@patch('game.strategy.data.pathfinding.find_hybrid_path')
+def test_full_turn_distance(mock_path, fresh_registries):
+    """Verify total distance traveled in a turn."""
+    engine = TurnEngine(registries=fresh_registries)
+
+    f2 = Fleet(1, 0, HexCoord(0,0), speed=2.0) # Should move 2 steps
+    # Path must end at destination (10,0) to avoid path recalculation
+    f2.path = [HexCoord(i, 0) for i in range(1, 11)]  # 1..10
+    f2.add_order(Order(OrderType.MOVE, HexCoord(10,0)))
+
+    f5 = Fleet(2, 0, HexCoord(0,0), speed=5.0) # Should move 5 steps
+    f5.path = [HexCoord(i, 0) for i in range(1, 11)]  # 1..10
+    f5.add_order(Order(OrderType.MOVE, HexCoord(10,0)))
+
+    # Mock pathfinding - return None to use pre-set paths
+    mock_path.return_value = None
+
+    empires = [Empire(0, "P1", (0,0,0))]
+    empires[0].add_fleet(f2)
+    empires[0].add_fleet(f5)
+
+    engine.process_turn(empires, MockGalaxy())
+
+    assert f2.location == HexCoord(2,0)
+    assert f5.location == HexCoord(5,0)
+
+
+def test_combat_interception(fresh_registries):
+    """Verify fleets colliding mid-turn co-locate (i.e. the
+    movement engine actually puts them in the same hex).
+
+    BUG-126: the strategy layer no longer deletes either fleet on
+    collision. Both fleets remain in their empires after combat —
+    even on subsequent ticks — until one side is wiped (which in
+    this test cannot happen because both fleets have zero ships).
+    Pre-BUG-126 the legacy `_rng_resolve_empty_fleets` would
+    RNG-pick a "winner" and delete the loser; that path is gone.
+    """
+    engine = TurnEngine(registries=fresh_registries)
+
+    # P1 at (0,0) moving Right -> Speed 5
+    f1 = Fleet(1, 0, HexCoord(0,0), speed=5.0)
+    f1.path = [HexCoord(1,0), HexCoord(2,0), HexCoord(3,0)]
+    f1.add_order(Order(OrderType.MOVE, HexCoord(3,0)))
+
+    # P2 at (2,0) moving Left <- Speed 5
+    f2 = Fleet(2, 1, HexCoord(2,0), speed=5.0)
+    f2.path = [HexCoord(1,0), HexCoord(0,0)]
+    f2.add_order(Order(OrderType.MOVE, HexCoord(0,0)))
+
+    e1 = Empire(0, "P1", (0,0,0))
+    e1.add_fleet(f1)
+    e2 = Empire(1, "P2", (1,1,1))
+    e2.add_fleet(f2)
+
+    engine.process_turn([e1, e2], MockGalaxy())
+
+    # Both fleets remain — strategy layer does not remove fleets on
+    # zero-ship collisions (no real combat possible).
+    assert len(e1.fleets) == 1
+    assert len(e2.fleets) == 1
+
+
+def test_order_chaining(fresh_registries):
+    """Verify Colonize executes after Move finishes."""
+    engine = TurnEngine(registries=fresh_registries)
+
+    # Create a mock planet with proper location and planet type
+    planet = MagicMock()
+    planet.name = "Test Planet"
+    planet.owner_id = None
+    planet.construction_queue = []
+    planet.location = HexCoord(0, 0)  # At system center (relative)
+    planet.planet_type = MockPlanetType("ICE_DWARF")  # PROJ-140: Proper planet type
+    planet.populations = []
+
+    # Create mock system containing the planet
+    mock_system = MagicMock()
+    mock_system.global_location = HexCoord(1, 0)
+    mock_system.planets = [planet]
+
+    # Create galaxy with the system
+    galaxy = MockGalaxy()
+    galaxy.systems[HexCoord(1, 0)] = mock_system
+
+    f1 = Fleet(1, 0, HexCoord(0,0), speed=100.0) # Fast, arrives instantly
+    # PROJ-211: Pass registries for DI compliance
+    f1.ships.append(create_colony_ship("Colony Ship", 0, registries=fresh_registries))
+    f1.path = [HexCoord(1,0)]
+    f1.add_order(Order(OrderType.MOVE, HexCoord(1,0)))
+    f1.add_order(Order(OrderType.COLONIZE, planet))
+
+    e1 = Empire(0, "P1", (0,0,0))
+    e1.add_fleet(f1)
+
+    # Set fleet to ALREADY be at target to test colonize logic specifically
+    f1.location = HexCoord(1,0)
+    f1.path = []
+    # Clear move order, just leave Colonize
+    f1.orders = [Order(OrderType.COLONIZE, planet)]
+
+    engine.process_turn([e1], galaxy)
+
+    assert planet.owner_id == 0
+    assert planet in e1.colonies
+    assert len(f1.orders) == 0 # Order consumed
+
+
+def test_colonize_deletes_fleet(fresh_registries):
+    """Verify colonizing fleet is removed from empire after colonization."""
+    engine = TurnEngine(registries=fresh_registries)
+
+    # Create a mock planet with proper location and planet type
+    planet = MagicMock()
+    planet.name = "Test Planet"
+    planet.owner_id = None
+    planet.construction_queue = []
+    planet.location = HexCoord(0, 0)  # At system center (relative)
+    planet.planet_type = MockPlanetType("ICE_DWARF")  # PROJ-140: Proper planet type
+    planet.populations = []
+
+    # Create mock system containing the planet
+    mock_system = MagicMock()
+    mock_system.global_location = HexCoord(1, 0)
+    mock_system.planets = [planet]
+
+    # Create galaxy with the system
+    galaxy = MockGalaxy()
+    galaxy.systems[HexCoord(1, 0)] = mock_system
+
+    f1 = Fleet(1, 0, HexCoord(1, 0), speed=5.0)
+    # PROJ-211: Pass registries for DI compliance
+    f1.ships.append(create_colony_ship("Colony Ship", 0, registries=fresh_registries))
+    f1.orders = [Order(OrderType.COLONIZE, planet)]
+
+    e1 = Empire(0, "P1", (0, 0, 0))
+    e1.add_fleet(f1)
+
+    assert len(e1.fleets) == 1  # Fleet exists before turn
+
+    engine.process_turn([e1], galaxy)
+
+    # Phase 2: Fleet stays (ship is reusable)
+    assert len(e1.fleets) == 1
+    assert planet.owner_id == 0
+    assert planet in e1.colonies

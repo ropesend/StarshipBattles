@@ -1,0 +1,191 @@
+[
+  {
+    "id": "LEG-UI2-001",
+    "severity": "Critical",
+    "title": "BattleOrchestrator is Defined but Never Used",
+    "location": "game/ui/orchestration/battle_orchestrator.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "LEG-FND-002",
+    "severity": "Major",
+    "title": "Singleton Pattern Pervasive Despite DI Push",
+    "location": "game/core/singleton.py",
+    "effort": "Complex"
+  },
+  {
+    "id": "LEG-FND-003",
+    "severity": "Major",
+    "title": "Defensive getattr Fallbacks in AI Module",
+    "location": "game/ai/controller.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "LEG-SIM-002",
+    "severity": "Major",
+    "title": "Unused BattleConfig.isolated Field",
+    "location": "game/simulation/battle_config.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-SIM-003",
+    "severity": "Major",
+    "title": "Unused validate_state Method in BattleState",
+    "location": "game/simulation/managers/battle_state.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI2-002",
+    "severity": "Major",
+    "title": "Defensive getattr Checks for Attributes",
+    "location": "game/ui/services/battle_ui_service.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "LEG-UI2-003",
+    "severity": "Major",
+    "title": "VehicleClassService Methods Appear Unused",
+    "location": "game/ui/services/vehicle_class_service.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI1-001",
+    "severity": "Major",
+    "title": "Legacy Single-Selection Fields Maintained",
+    "location": "game/ui/screens/empire_build_queue.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI1-003",
+    "severity": "Major",
+    "title": "Fallback Pattern to Direct scene.ships Access",
+    "location": "game/ui/panels/battle_panels.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "LEG-FND-001",
+    "severity": "Minor",
+    "title": "Unused Error Codes in error_codes.py",
+    "location": "game/core/error_codes.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-FND-004",
+    "severity": "Minor",
+    "title": "Strategy Fallback Patterns in AI Documentation",
+    "location": "game/ai/__init__.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "LEG-UI1-002",
+    "severity": "Minor",
+    "title": "Unused Imports Across Multiple Files",
+    "location": "game/ui/screens/",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-FND-006",
+    "severity": "Minor",
+    "title": "is_camera TypeGuard Never Used",
+    "location": "game/core/protocols.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-FND-007",
+    "severity": "Minor",
+    "title": "Profiling Module Has Inconsistent API",
+    "location": "game/core/profiling.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-FND-008",
+    "severity": "Minor",
+    "title": "Mock Detection Pattern in combat_utils",
+    "location": "game/ai/combat_utils.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-SIM-004",
+    "severity": "Minor",
+    "title": "Unused Documentation Constants in physics_constants",
+    "location": "game/simulation/physics_constants.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-SIM-005",
+    "severity": "Minor",
+    "title": "Singleton Pattern in ComponentCacheManager",
+    "location": "game/simulation/components/",
+    "effort": "Complex"
+  },
+  {
+    "id": "LEG-SIM-006",
+    "severity": "Minor",
+    "title": "KNOWN_ISSUE Comment for Module Identity",
+    "location": "game/simulation/components/abilities/",
+    "effort": "Medium"
+  },
+  {
+    "id": "LEG-SIM-008",
+    "severity": "Minor",
+    "title": "Fallback Comments Suggesting Incomplete Migration",
+    "location": "game/simulation/",
+    "effort": "Medium"
+  },
+  {
+    "id": "LEG-UI2-004",
+    "severity": "Minor",
+    "title": "ComponentService.is_modifier_allowed Duplicates",
+    "location": "game/ui/services/component_service.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI2-007",
+    "severity": "Minor",
+    "title": "Inconsistent DI Patterns Across Services",
+    "location": "game/ui/services/",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI1-004",
+    "severity": "Minor",
+    "title": "Empty __init__ Method",
+    "location": "game/ui/screens/race_asset_loader.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI1-005",
+    "severity": "Minor",
+    "title": "Disabled Feature Left as pass Statement",
+    "location": "game/ui/screens/builder/schematic_view.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI1-006",
+    "severity": "Minor",
+    "title": "get_component_at Returns None Unconditionally",
+    "location": "game/ui/screens/builder/schematic_view.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI1-007",
+    "severity": "Minor",
+    "title": "Legacy Pattern Comment Without Active Code",
+    "location": "game/ui/screens/builder/stats_config.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI1-009",
+    "severity": "Minor",
+    "title": "Formation File Format Comment Suggests Rework",
+    "location": "game/ui/screens/formation_editor.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "LEG-UI1-010",
+    "severity": "Minor",
+    "title": "Fallback Mode in Build Queue Controller",
+    "location": "game/ui/panels/build_queue_controller.py",
+    "effort": "Medium"
+  }
+]

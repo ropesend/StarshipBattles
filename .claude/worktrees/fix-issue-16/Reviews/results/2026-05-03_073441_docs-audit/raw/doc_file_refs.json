@@ -1,0 +1,4255 @@
+{
+  "total": 695,
+  "dead_refs": [
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 276,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 346,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 137,
+      "reference": "game/core/singleton.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 148,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 156,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 181,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1183,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1524,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1544,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 77,
+      "reference": "game/ui/screens/test_lab/test_lab_input_handler.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 80,
+      "reference": "game/core/input_handler.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1114,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 680,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    }
+  ],
+  "all_refs": [
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 3,
+      "reference": "game/ui/services/image/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 15,
+      "reference": "game/ui/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 15,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 18,
+      "reference": "game/assets/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 21,
+      "reference": "game/ai/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 24,
+      "reference": "game/strategy/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 27,
+      "reference": "game/research/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 30,
+      "reference": "game/simulation/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 33,
+      "reference": "game/engine/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 36,
+      "reference": "game/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 40,
+      "reference": "game/core/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 68,
+      "reference": "game/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 73,
+      "reference": "game/core/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 77,
+      "reference": "game/ui/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 77,
+      "reference": "game/strategy/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 82,
+      "reference": "game/services/llm/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 90,
+      "reference": "game/context.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 96,
+      "reference": "game/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 108,
+      "reference": "game/assets/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 115,
+      "reference": "game/core/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 141,
+      "reference": "game/engine/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 149,
+      "reference": "game/simulation/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 164,
+      "reference": "game/strategy/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 181,
+      "reference": "game/ai/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 196,
+      "reference": "game/research/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 203,
+      "reference": "game/ui/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 276,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 303,
+      "reference": "game/strategy/systems/race_library.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 336,
+      "reference": "game/simulation/interfaces/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 346,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 350,
+      "reference": "game/context.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 356,
+      "reference": "game/strategy/interfaces/battle_resolver.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 356,
+      "reference": "game/strategy/adapters/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 360,
+      "reference": "game/strategy/facade/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 380,
+      "reference": "game/simulation/services/registry_loader.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 384,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 390,
+      "reference": "game/simulation/components/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 391,
+      "reference": "game/simulation/entities/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 392,
+      "reference": "game/simulation/entities/ship_design_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 393,
+      "reference": "game/simulation/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 405,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 412,
+      "reference": "game/simulation/systems/battle_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 454,
+      "reference": "game/strategy/facade/",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 457,
+      "reference": "game/strategy/engine/game_session.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 460,
+      "reference": "game/strategy/engine/turn_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 487,
+      "reference": "game/core/config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 498,
+      "reference": "game/core/config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 506,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 50,
+      "reference": "game/context.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 52,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 61,
+      "reference": "game/context.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 88,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 89,
+      "reference": "game/core/profiling.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 90,
+      "reference": "game/simulation/components/component_loader.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 91,
+      "reference": "game/ai/policy_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 92,
+      "reference": "game/assets/asset_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 93,
+      "reference": "game/ui/renderer/sprites.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 94,
+      "reference": "game/ui/assets/ship_theme_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 95,
+      "reference": "game/ui/services/game_settings.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 96,
+      "reference": "game/services/llm/provider.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 97,
+      "reference": "game/ui/services/image/provider.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 120,
+      "reference": "game/app_bootstrap.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 137,
+      "reference": "game/core/singleton.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 148,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 156,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 181,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 205,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 234,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 243,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 253,
+      "reference": "game/simulation/entities/ship.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 285,
+      "reference": "game/simulation/entities/ship_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 295,
+      "reference": "game/simulation/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 334,
+      "reference": "game/strategy/validation/planet_order_validator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 342,
+      "reference": "game/simulation/entities/ship_design_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 378,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 380,
+      "reference": "game/core/resources.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 391,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 421,
+      "reference": "game/strategy/facade/strategy_session_facade.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 422,
+      "reference": "game/simulation/entities/ship.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 430,
+      "reference": "game/strategy/facade/strategy_session_facade.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 460,
+      "reference": "game/simulation/entities/ship.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 488,
+      "reference": "game/simulation/components/modifier_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 500,
+      "reference": "game/simulation/components/component.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 525,
+      "reference": "game/strategy/facade/strategy_session_facade.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 526,
+      "reference": "game/strategy/facade/dto/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 527,
+      "reference": "game/strategy/engine/commands.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 549,
+      "reference": "game/strategy/facade/dto/fleet_dto.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 577,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 585,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 638,
+      "reference": "game/ui/screens/workshop_viewmodel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 639,
+      "reference": "game/ui/screens/builder/event_bus.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 641,
+      "reference": "game/ui/panels/build_queue_controller.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 642,
+      "reference": "game/ui/screens/build_queue_renderer.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 643,
+      "reference": "game/ui/screens/build_queue_panel_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 644,
+      "reference": "game/ui/panels/build_queue_drag_handler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 652,
+      "reference": "game/ui/screens/workshop_viewmodel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 716,
+      "reference": "game/simulation/validation/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 724,
+      "reference": "game/simulation/validation/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 760,
+      "reference": "game/ui/screens/builder/event_bus.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 761,
+      "reference": "game/ui/screens/builder_utils.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 768,
+      "reference": "game/ui/screens/builder/event_bus.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 793,
+      "reference": "game/ui/screens/builder_utils.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 814,
+      "reference": "game/core/event_logging.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 819,
+      "reference": "game/core/event_logging.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 835,
+      "reference": "game/ui/renderer/sprites.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 844,
+      "reference": "game/ui/renderer/sprites.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 872,
+      "reference": "game/core/config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 880,
+      "reference": "game/core/config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 912,
+      "reference": "game/ui/screens/builder_utils.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 930,
+      "reference": "game/strategy/data/classification_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 931,
+      "reference": "game/strategy/data/resource_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 932,
+      "reference": "game/strategy/data/star_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 933,
+      "reference": "game/strategy/data/orbital_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 936,
+      "reference": "game/strategy/data/classification_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 981,
+      "reference": "game/core/config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 982,
+      "reference": "game/strategy/data/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 992,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 993,
+      "reference": "game/simulation/battle_spec.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 994,
+      "reference": "game/simulation/battle_outcome.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 997,
+      "reference": "game/ui/screens/battle_setup/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 998,
+      "reference": "game/strategy/combat/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1059,
+      "reference": "game/simulation/entities/ability_aggregator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1074,
+      "reference": "game/simulation/entities/ability_aggregator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1115,
+      "reference": "game/ai/ai_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1116,
+      "reference": "game/ui/services/ship_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1117,
+      "reference": "game/ui/widgets/panel_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1138,
+      "reference": "game/ui/widgets/scroll_state.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1183,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1185,
+      "reference": "game/simulation/battle_state.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1185,
+      "reference": "game/strategy/data/ship_instance_serializer.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1211,
+      "reference": "game/simulation/systems/battle_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1212,
+      "reference": "game/engine/collision.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1213,
+      "reference": "game/simulation/combat/damage_calculator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1214,
+      "reference": "game/ai/ai_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1215,
+      "reference": "game/ai/controller.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1216,
+      "reference": "game/ai/behaviors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1217,
+      "reference": "game/strategy/engine/conflict_resolution_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1252,
+      "reference": "game/simulation/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1252,
+      "reference": "game/engine/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1253,
+      "reference": "game/ai/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1268,
+      "reference": "game/strategy/engine/turn_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1268,
+      "reference": "game/strategy/engine/turn_state_snapshot.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1284,
+      "reference": "game/strategy/engine/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1308,
+      "reference": "game/core/state_machine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1308,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1322,
+      "reference": "game/strategy/engine/turn_engine_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1333,
+      "reference": "game/simulation/systems/tick_phase.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1348,
+      "reference": "game/simulation/entities/ship.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1348,
+      "reference": "game/simulation/combat/fleet_aura_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1348,
+      "reference": "game/simulation/components/abilities/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1348,
+      "reference": "game/simulation/entities/ship_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1386,
+      "reference": "game/simulation/combat/ability_stat_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1386,
+      "reference": "game/ui/screens/battle_setup/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1386,
+      "reference": "game/strategy/services/combat_modifier_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1407,
+      "reference": "game/simulation/combat/ability_stat_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1407,
+      "reference": "game/ui/screens/battle_setup/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1407,
+      "reference": "game/strategy/combat/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1427,
+      "reference": "game/strategy/systems/race_randomizer.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1427,
+      "reference": "game/strategy/data/race_point_budget.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1451,
+      "reference": "game/services/llm/background.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1452,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1497,
+      "reference": "game/strategy/services/race_description_llm_controller.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1523,
+      "reference": "game/context.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1524,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1525,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1526,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1527,
+      "reference": "game/strategy/facade/strategy_session_facade.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1528,
+      "reference": "game/simulation/entities/ship_combat_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1529,
+      "reference": "game/simulation/components/modifier_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1530,
+      "reference": "game/simulation/components/ability_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1531,
+      "reference": "game/simulation/components/component_health_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1532,
+      "reference": "game/simulation/components/component_resource_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1533,
+      "reference": "game/strategy/facade/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1534,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1535,
+      "reference": "game/ui/screens/workshop_viewmodel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1536,
+      "reference": "game/simulation/validation/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1537,
+      "reference": "game/ui/screens/builder/event_bus.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1538,
+      "reference": "game/ui/renderer/sprites.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1539,
+      "reference": "game/core/config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1540,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1541,
+      "reference": "game/simulation/entities/ability_aggregator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1542,
+      "reference": "game/ai/ai_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1542,
+      "reference": "game/ui/services/ship_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1543,
+      "reference": "game/ui/widgets/scroll_state.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1544,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1545,
+      "reference": "game/strategy/engine/turn_state_snapshot.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1546,
+      "reference": "game/strategy/engine/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1547,
+      "reference": "game/core/state_machine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1548,
+      "reference": "game/strategy/engine/turn_engine_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1549,
+      "reference": "game/simulation/systems/tick_phase.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1550,
+      "reference": "game/simulation/entities/ship.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1551,
+      "reference": "game/simulation/combat/ability_stat_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1552,
+      "reference": "game/simulation/combat/ability_stat_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1553,
+      "reference": "game/services/llm/background.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1554,
+      "reference": "game/strategy/services/system_effects_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1559,
+      "reference": "game/core/config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1562,
+      "reference": "game/ai/policy_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1563,
+      "reference": "game/ui/screens/builder/event_bus.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1569,
+      "reference": "game/core/protocols/strategy_entities.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1569,
+      "reference": "game/core/protocols/strategy_entities.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1570,
+      "reference": "game/strategy/services/ability_sources/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1570,
+      "reference": "game/strategy/services/ability_sources/",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1571,
+      "reference": "game/strategy/services/ability_iterator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1571,
+      "reference": "game/strategy/services/ability_iterator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1572,
+      "reference": "game/strategy/services/system_effects_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1572,
+      "reference": "game/strategy/services/system_effects_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1573,
+      "reference": "game/strategy/services/strategic_ability_scanner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1573,
+      "reference": "game/strategy/services/strategic_ability_scanner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1615,
+      "reference": "game/ui/screens/strategy_windows/planet_abilities_ctrl.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1615,
+      "reference": "game/ui/screens/strategy_windows/planet_abilities_ctrl.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1615,
+      "reference": "game/ui/screens/strategy_windows/list_windows.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1615,
+      "reference": "game/ui/screens/strategy_windows/list_windows.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1615,
+      "reference": "game/ui/screens/strategy_windows/fleet_report_ctrl.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1615,
+      "reference": "game/ui/screens/strategy_windows/fleet_report_ctrl.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1616,
+      "reference": "game/ui/screens/planet_abilities_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1616,
+      "reference": "game/ui/screens/planet_abilities_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1616,
+      "reference": "game/ui/screens/planet_list_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1616,
+      "reference": "game/ui/screens/planet_list_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1617,
+      "reference": "game/ui/screens/strategy_event_router.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1617,
+      "reference": "game/ui/screens/strategy_event_router.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1641,
+      "reference": "game/ui/screens/strategy_modal_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1641,
+      "reference": "game/ui/screens/strategy_modal_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1643,
+      "reference": "game/ui/screens/strategy_window_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1643,
+      "reference": "game/ui/screens/strategy_window_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 39,
+      "reference": "game/ui/screens/builder/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 40,
+      "reference": "game/ui/screens/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 42,
+      "reference": "game/ui/screens/builder/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 44,
+      "reference": "game/ui/screens/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 57,
+      "reference": "game/strategy/data/pathfinding.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 76,
+      "reference": "game/ui/screens/strategy_input_handler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 77,
+      "reference": "game/ui/screens/test_lab/test_lab_input_handler.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 78,
+      "reference": "game/ui/screens/builder/weapons_input_handler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 80,
+      "reference": "game/core/input_handler.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 81,
+      "reference": "game/core/input_actions.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 96,
+      "reference": "game/simulation/components/abilities/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 108,
+      "reference": "game/core/resources.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 145,
+      "reference": "game/core/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 146,
+      "reference": "game/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 147,
+      "reference": "game/assets/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 148,
+      "reference": "game/engine/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 149,
+      "reference": "game/simulation/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 150,
+      "reference": "game/research/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 151,
+      "reference": "game/strategy/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 152,
+      "reference": "game/ai/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 153,
+      "reference": "game/ui/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 162,
+      "reference": "game/simulation/components/abilities/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 163,
+      "reference": "game/simulation/components/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 164,
+      "reference": "game/simulation/systems/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 165,
+      "reference": "game/strategy/systems/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 166,
+      "reference": "game/ui/screens/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 167,
+      "reference": "game/ui/screens/builder/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 205,
+      "reference": "game/ui/screens/test_lab/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 205,
+      "reference": "game/ui/screens/test_lab/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 206,
+      "reference": "game/ui/screens/battle_setup/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 206,
+      "reference": "game/ui/screens/battle_setup/",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 316,
+      "reference": "game/simulation/systems/battle_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 317,
+      "reference": "game/ui/screens/strategy_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 318,
+      "reference": "game/simulation/components/abilities/defense.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 402,
+      "reference": "game/strategy/data/design_role_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 412,
+      "reference": "game/strategy/quickstart_builder.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 10,
+      "reference": "game/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 11,
+      "reference": "game/simulation/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 12,
+      "reference": "game/strategy/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 19,
+      "reference": "game/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 30,
+      "reference": "game/simulation/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 38,
+      "reference": "game/ui/screens/builder/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 46,
+      "reference": "game/strategy/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 60,
+      "reference": "game/strategy/data/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 67,
+      "reference": "game/strategy/formulas/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 73,
+      "reference": "game/services/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 77,
+      "reference": "game/services/llm/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 96,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 115,
+      "reference": "game/core/exceptions.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 121,
+      "reference": "game/strategy/services/race_description_llm_controller.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 142,
+      "reference": "game/simulation/services/ship_materializer.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 144,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 162,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 186,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 196,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 197,
+      "reference": "game/strategy/adapters/simulation_adapter.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 200,
+      "reference": "game/ui/screens/test_lab/screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 208,
+      "reference": "game/simulation/services/battle_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 285,
+      "reference": "game/simulation/services/vehicle_design_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 348,
+      "reference": "game/ui/screens/workshop_viewmodel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 369,
+      "reference": "game/ui/screens/builder/stat_getters.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 370,
+      "reference": "game/ui/screens/builder/stat_rows_dynamic.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 371,
+      "reference": "game/ui/screens/builder/stats_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 372,
+      "reference": "game/ui/panels/design_stats_panel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 381,
+      "reference": "game/simulation/services/modifier_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 391,
+      "reference": "game/ui/screens/builder/modifier_logic.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 433,
+      "reference": "game/simulation/services/design_loader.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 467,
+      "reference": "game/simulation/services/registry_loader.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 494,
+      "reference": "game/simulation/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 508,
+      "reference": "game/strategy/services/fleet_navigation_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 591,
+      "reference": "game/strategy/services/fleet_speed_calculator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 648,
+      "reference": "game/simulation/entities/ship_design_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 650,
+      "reference": "game/simulation/entities/ship_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 725,
+      "reference": "game/strategy/services/action_time_resolver.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 762,
+      "reference": "game/strategy/services/cargo_transfer_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 803,
+      "reference": "game/strategy/services/strategic_ability_scanner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 837,
+      "reference": "game/strategy/services/stabilizer_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 849,
+      "reference": "game/strategy/services/system_destroyer.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 866,
+      "reference": "game/strategy/services/system_effects_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 884,
+      "reference": "game/strategy/services/design_cost_calculator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 908,
+      "reference": "game/strategy/services/fleet_cargo_projector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 932,
+      "reference": "game/strategy/services/system_effects_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 932,
+      "reference": "game/strategy/services/ability_iterator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 932,
+      "reference": "game/strategy/services/ability_sources/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 937,
+      "reference": "game/core/protocols/strategy_entities.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 938,
+      "reference": "game/strategy/services/ability_sources/",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 992,
+      "reference": "game/strategy/services/component_inspector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1049,
+      "reference": "game/strategy/data/environmental_preference.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1050,
+      "reference": "game/strategy/data/habitability_factors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1051,
+      "reference": "game/strategy/data/race_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1052,
+      "reference": "game/strategy/data/race_point_budget.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1053,
+      "reference": "game/strategy/data/homeworld_presets.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1054,
+      "reference": "game/strategy/formulas/habitability.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1074,
+      "reference": "game/strategy/data/colony_species_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1075,
+      "reference": "game/strategy/config/economy_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1077,
+      "reference": "game/strategy/engine/organics_consumption_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1078,
+      "reference": "game/strategy/engine/happiness_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1079,
+      "reference": "game/strategy/engine/population_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1080,
+      "reference": "game/strategy/interfaces/engines.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1081,
+      "reference": "game/ui/screens/food_allocation_editor.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1094,
+      "reference": "game/strategy/formulas/colony_output.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1095,
+      "reference": "game/strategy/data/planet.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1096,
+      "reference": "game/strategy/engine/harvesting_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1097,
+      "reference": "game/strategy/engine/production_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1098,
+      "reference": "game/strategy/engine/turn_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1103,
+      "reference": "game/strategy/services/strategic_ability_scanner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1114,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1117,
+      "reference": "game/strategy/systems/race_library.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1130,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1133,
+      "reference": "game/strategy/data/empire.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1154,
+      "reference": "game/strategy/services/planet_economy_projector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1160,
+      "reference": "game/strategy/data/build_queue_source.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1160,
+      "reference": "game/strategy/engine/construction_forecast.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1166,
+      "reference": "game/strategy/formulas/colony_output.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1174,
+      "reference": "game/strategy/facade/dto/colony_demographic_view.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1182,
+      "reference": "game/ui/panels/planet_report_panel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1182,
+      "reference": "game/strategy/services/planet_economy_projector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1190,
+      "reference": "game/strategy/services/empire_economy_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1190,
+      "reference": "game/strategy/services/empire_economy_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1197,
+      "reference": "game/ui/panels/empire_treasury_panel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1197,
+      "reference": "game/ui/panels/empire_treasury_panel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1198,
+      "reference": "game/ui/screens/empire_panel_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1198,
+      "reference": "game/ui/screens/empire_panel_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 1262,
+      "reference": "game/simulation/entities/ship_design_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 7,
+      "reference": "game/core/json_utils.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 25,
+      "reference": "game/core/exceptions.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 93,
+      "reference": "game/core/error_codes.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 264,
+      "reference": "game/core/event_logging.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 286,
+      "reference": "game/core/json_utils.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 652,
+      "reference": "game/core/exceptions.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 653,
+      "reference": "game/core/error_codes.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 654,
+      "reference": "game/core/json_utils.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 655,
+      "reference": "game/core/event_logging.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 65,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 120,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 423,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 495,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 503,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 512,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 520,
+      "reference": "game/simulation/components/abilities/ui_colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 599,
+      "reference": "game/ui/screens/test_lab/theme.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 735,
+      "reference": "game/ui/screens/test_lab/dialogs.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 784,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 785,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 786,
+      "reference": "game/ui/colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 787,
+      "reference": "game/simulation/components/abilities/ui_colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 788,
+      "reference": "game/ui/screens/test_lab/theme.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 6,
+      "reference": "game/simulation/components/abilities/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 16,
+      "reference": "game/simulation/components/abilities/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 114,
+      "reference": "game/simulation/components/abilities/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1300,
+      "reference": "game/strategy/services/combat_modifier_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 1679,
+      "reference": "game/strategy/services/ability_sources/intrinsic_roll.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 12,
+      "reference": "game/ai/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 113,
+      "reference": "game/ai/spatial_behaviors/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 149,
+      "reference": "game/ai/group_target_coordinator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 282,
+      "reference": "game/ai/protocols.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 300,
+      "reference": "game/ai/controller.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 301,
+      "reference": "game/ai/behaviors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 302,
+      "reference": "game/ai/spatial_behaviors/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 303,
+      "reference": "game/ai/group_target_coordinator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 304,
+      "reference": "game/ai/policy_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 305,
+      "reference": "game/ai/target_evaluator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 306,
+      "reference": "game/ai/combat_utils.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 307,
+      "reference": "game/ai/ai_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 308,
+      "reference": "game/ai/interfaces/controllable.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "line": 309,
+      "reference": "game/ai/protocols.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 32,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 32,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 41,
+      "reference": "game/simulation/battle_spec.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 42,
+      "reference": "game/simulation/battle_outcome.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 43,
+      "reference": "game/simulation/combat/boundary.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 44,
+      "reference": "game/simulation/combat/modifier_stack.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 45,
+      "reference": "game/simulation/combat/formation.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 46,
+      "reference": "game/simulation/combat/telemetry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 53,
+      "reference": "game/ui/screens/battle_setup/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 54,
+      "reference": "game/strategy/combat/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 94,
+      "reference": "game/simulation/combat/telemetry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 94,
+      "reference": "game/simulation/combat/telemetry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 160,
+      "reference": "game/simulation/combat/formation.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 160,
+      "reference": "game/simulation/combat/formation.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 231,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 231,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 255,
+      "reference": "game/core/component_state.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 255,
+      "reference": "game/core/component_state.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 332,
+      "reference": "game/ui/screens/battle_setup/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 332,
+      "reference": "game/ui/screens/battle_setup/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 333,
+      "reference": "game/strategy/combat/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 333,
+      "reference": "game/strategy/combat/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 358,
+      "reference": "game/app.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 359,
+      "reference": "game/ui/screens/test_lab/screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 394,
+      "reference": "game/core/return_destination.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 406,
+      "reference": "game/simulation/services/battle_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 421,
+      "reference": "game/simulation/systems/battle_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 453,
+      "reference": "game/simulation/combat/fleet_aura_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 474,
+      "reference": "game/simulation/combat/ability_stat_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 517,
+      "reference": "game/simulation/combat/combat_events.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 530,
+      "reference": "game/ui/effects/hit_effects.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 538,
+      "reference": "game/ui/screens/battle_results_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 573,
+      "reference": "game/simulation/entities/ship.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 574,
+      "reference": "game/simulation/entities/ship_combat_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 575,
+      "reference": "game/simulation/entities/ship_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 576,
+      "reference": "game/simulation/entities/ship_stat_querier.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 577,
+      "reference": "game/simulation/entities/ship_physics.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 578,
+      "reference": "game/simulation/entities/ship_validator_helper.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 653,
+      "reference": "game/simulation/combat/damage_calculator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 756,
+      "reference": "game/simulation/entities/ship_design_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 775,
+      "reference": "game/simulation/combat/targeting_system.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 787,
+      "reference": "game/simulation/combat/weapon_firing_system.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 812,
+      "reference": "game/simulation/components/abilities/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 813,
+      "reference": "game/simulation/entities/ability_aggregator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 834,
+      "reference": "game/simulation/entities/ability_aggregator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 853,
+      "reference": "game/simulation/components/abilities/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 875,
+      "reference": "game/simulation/interfaces/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 923,
+      "reference": "game/ui/screens/battle_results_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 923,
+      "reference": "game/ui/screens/battle_results_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 931,
+      "reference": "game/ui/screens/battle_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 931,
+      "reference": "game/ui/screens/battle_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 980,
+      "reference": "game/strategy/combat/post_battle_hook.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1118,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1118,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 1180,
+      "reference": "game/strategy/combat/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 77,
+      "reference": "game/strategy/data/order_types.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 308,
+      "reference": "game/ui/screens/orders_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 338,
+      "reference": "game/ui/screens/orders_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 339,
+      "reference": "game/ui/screens/strategy_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 340,
+      "reference": "game/ui/screens/strategy_click_dispatcher.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 341,
+      "reference": "game/ui/screens/strategy_renderer.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 342,
+      "reference": "game/ui/screens/strategy_fleet_command_router.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 353,
+      "reference": "game/strategy/data/order_types.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 363,
+      "reference": "game/strategy/data/order_types.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 387,
+      "reference": "game/strategy/services/action_time_resolver.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 433,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 464,
+      "reference": "game/strategy/data/order_types.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 465,
+      "reference": "game/strategy/data/order_types.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 466,
+      "reference": "game/strategy/data/order_types.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 467,
+      "reference": "game/strategy/engine/action_execution_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 468,
+      "reference": "game/strategy/services/action_time_resolver.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 469,
+      "reference": "game/strategy/engine/order_processor.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 470,
+      "reference": "game/strategy/engine/fleet_movement_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 471,
+      "reference": "game/strategy/engine/superweapon_order_processor.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 472,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 473,
+      "reference": "game/strategy/engine/superweapon_command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 475,
+      "reference": "game/ui/screens/orders_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 476,
+      "reference": "game/strategy/services/cargo_transfer_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 61,
+      "reference": "game/strategy/data/planetary_facility.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 107,
+      "reference": "game/strategy/engine/production_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 108,
+      "reference": "game/strategy/engine/production_spawner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 109,
+      "reference": "game/strategy/engine/production_math.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 168,
+      "reference": "game/strategy/services/modifier_resolver.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 183,
+      "reference": "game/strategy/engine/production_spawner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 215,
+      "reference": "game/simulation/entities/ship_design_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 221,
+      "reference": "game/strategy/services/design_validator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 238,
+      "reference": "game/simulation/components/abilities/harvester.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 246,
+      "reference": "game/ui/screens/build_queue_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 270,
+      "reference": "game/strategy/data/build_queue_source.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 283,
+      "reference": "game/strategy/engine/construction_forecast.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 303,
+      "reference": "game/strategy/formulas/colony_output.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 336,
+      "reference": "game/strategy/services/strategic_ability_scanner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 350,
+      "reference": "game/strategy/formulas/colony_output.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 351,
+      "reference": "game/strategy/data/planet.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 352,
+      "reference": "game/strategy/engine/harvesting_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 353,
+      "reference": "game/strategy/engine/production_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 354,
+      "reference": "game/strategy/engine/turn_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 355,
+      "reference": "game/strategy/formulas/habitability.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 363,
+      "reference": "game/strategy/engine/production_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 364,
+      "reference": "game/strategy/engine/production_spawner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 365,
+      "reference": "game/strategy/engine/production_math.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 366,
+      "reference": "game/strategy/data/build_queue_source.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 367,
+      "reference": "game/strategy/data/planetary_facility.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 368,
+      "reference": "game/strategy/data/planet.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 369,
+      "reference": "game/strategy/data/fleet.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 370,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 371,
+      "reference": "game/ui/screens/build_queue_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 372,
+      "reference": "game/ui/screens/empire_build_queue_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 373,
+      "reference": "game/simulation/components/abilities/harvester.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 376,
+      "reference": "game/strategy/systems/design_library.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 377,
+      "reference": "game/strategy/services/design_cost_calculator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "line": 14,
+      "reference": "game/research/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "line": 210,
+      "reference": "game/research/data/tech_node.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "line": 211,
+      "reference": "game/research/data/tech_tree.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "line": 212,
+      "reference": "game/research/data/research_tracker.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "line": 213,
+      "reference": "game/research/systems/research_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "line": 77,
+      "reference": "game/core/resources.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "line": 106,
+      "reference": "game/core/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 11,
+      "reference": "game/strategy/facade/strategy_session_facade.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 31,
+      "reference": "game/strategy/facade/dto/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 64,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 172,
+      "reference": "game/strategy/engine/turn_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 208,
+      "reference": "game/strategy/interfaces/engines.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 306,
+      "reference": "game/ui/screens/strategy_render/overlay.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 315,
+      "reference": "game/strategy/data/fleet.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 347,
+      "reference": "game/strategy/data/fleet_hierarchy.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 348,
+      "reference": "game/strategy/data/task_force.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 349,
+      "reference": "game/strategy/data/squadron.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 354,
+      "reference": "game/strategy/data/design_role_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 355,
+      "reference": "game/core/roles.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 356,
+      "reference": "game/strategy/data/design_role.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 382,
+      "reference": "game/ai/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 428,
+      "reference": "game/strategy/combat/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 428,
+      "reference": "game/strategy/combat/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 432,
+      "reference": "game/strategy/combat/post_battle_hook.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 432,
+      "reference": "game/strategy/combat/post_battle_hook.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 459,
+      "reference": "game/strategy/data/group_policy_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 482,
+      "reference": "game/ai/spatial_behaviors/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 502,
+      "reference": "game/strategy/services/deployment_zone_calculator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 521,
+      "reference": "game/ai/group_target_coordinator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 533,
+      "reference": "game/strategy/services/task_group_suggester.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 548,
+      "reference": "game/strategy/facade/dto/fleet_hierarchy_dto.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 565,
+      "reference": "game/strategy/data/fleet_consumable_aggregator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 583,
+      "reference": "game/strategy/data/fleet_capability_calculator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 600,
+      "reference": "game/strategy/data/fleet_battle_adapter.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 622,
+      "reference": "game/strategy/data/fleet_pursuer_tracker.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 637,
+      "reference": "game/strategy/services/fleet_navigation_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 638,
+      "reference": "game/strategy/engine/fleet_movement_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 650,
+      "reference": "game/strategy/data/ship_instance.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 653,
+      "reference": "game/simulation/entities/ship_design_stats.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 674,
+      "reference": "game/strategy/data/order_types.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 680,
+      "reference": "game/core/protocols.py",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 692,
+      "reference": "game/strategy/services/cargo_transfer_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 708,
+      "reference": "game/strategy/engine/planet_energy_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 757,
+      "reference": "game/ui/screens/planet_abilities_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 774,
+      "reference": "game/ui/screens/species_selector_mixin.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 781,
+      "reference": "game/strategy/services/system_effects_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 819,
+      "reference": "game/strategy/engine/atmosphere_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 820,
+      "reference": "game/strategy/engine/commands.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 821,
+      "reference": "game/strategy/engine/planet_command_handlers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 822,
+      "reference": "game/ui/screens/atmosphere_target_editor.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 823,
+      "reference": "game/strategy/data/planet.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 859,
+      "reference": "game/strategy/engine/water_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 870,
+      "reference": "game/strategy/engine/planet_modifier_effect_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 880,
+      "reference": "game/strategy/services/combat_modifier_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 930,
+      "reference": "game/ui/screens/battle_setup/spec_compiler.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 938,
+      "reference": "game/simulation/combat/ability_stat_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 945,
+      "reference": "game/strategy/engine/component_activation_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 946,
+      "reference": "game/strategy/engine/planet_energy_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 947,
+      "reference": "game/strategy/services/strategic_ability_scanner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 948,
+      "reference": "game/strategy/engine/superweapon_order_processor.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 949,
+      "reference": "game/ui/screens/planet_abilities_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 990,
+      "reference": "game/strategy/services/stabilizer_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1033,
+      "reference": "game/strategy/services/system_destroyer.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1057,
+      "reference": "game/strategy/services/stabilizer_registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1068,
+      "reference": "game/strategy/data/build_queue_source.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1090,
+      "reference": "game/ui/screens/strategy_ui.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1114,
+      "reference": "game/strategy/events/event_types.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1115,
+      "reference": "game/strategy/events/event_log.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1267,
+      "reference": "game/strategy/services/replay_resolver.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1287,
+      "reference": "game/strategy/data/galaxy.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1288,
+      "reference": "game/strategy/data/galaxy_system_generator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1289,
+      "reference": "game/strategy/data/galaxy_warp_generator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1290,
+      "reference": "game/strategy/generation/placement_strategies.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1291,
+      "reference": "game/strategy/generation/region_classifier.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1292,
+      "reference": "game/strategy/data/stars.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1293,
+      "reference": "game/strategy/data/planet_gen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1294,
+      "reference": "game/strategy/generation/storm_generator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1295,
+      "reference": "game/strategy/data/classification_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1296,
+      "reference": "game/strategy/data/resource_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1297,
+      "reference": "game/strategy/data/star_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1298,
+      "reference": "game/strategy/data/orbital_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1299,
+      "reference": "game/strategy/generation/loaders/astrophysics_loader.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1331,
+      "reference": "game/strategy/generation/density/density_map.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1337,
+      "reference": "game/strategy/generation/region_classifier.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1366,
+      "reference": "game/strategy/data/planet_gen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1367,
+      "reference": "game/strategy/data/resource_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1394,
+      "reference": "game/strategy/data/stars.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1395,
+      "reference": "game/strategy/data/star_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1411,
+      "reference": "game/strategy/data/planet_gen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1412,
+      "reference": "game/strategy/data/orbital_generation_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1426,
+      "reference": "game/strategy/engine/game_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1427,
+      "reference": "game/strategy/engine/game_initializer.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1428,
+      "reference": "game/ui/screens/new_game_setup_screen.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1454,
+      "reference": "game/strategy/data/environmental_preference.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1455,
+      "reference": "game/strategy/data/habitability_factors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1456,
+      "reference": "game/strategy/data/race_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1457,
+      "reference": "game/strategy/formulas/habitability.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1507,
+      "reference": "game/strategy/formulas/habitability.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1557,
+      "reference": "game/strategy/data/race_point_budget.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1612,
+      "reference": "game/ui/panels/race_environment_panel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1612,
+      "reference": "game/ui/widgets/preference_row.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1618,
+      "reference": "game/strategy/data/race_caption_loader.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1618,
+      "reference": "game/strategy/services/race_description_prompt_builder.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1618,
+      "reference": "game/strategy/services/race_description_llm_controller.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1643,
+      "reference": "game/strategy/data/colony_species_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1668,
+      "reference": "game/strategy/config/economy_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1688,
+      "reference": "game/ui/screens/food_allocation_editor.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1720,
+      "reference": "game/strategy/formulas/colony_output.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1733,
+      "reference": "game/strategy/formulas/colony_output.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1734,
+      "reference": "game/strategy/services/planet_economy_projector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1745,
+      "reference": "game/ui/panels/planet_report_panel.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1747,
+      "reference": "game/ui/screens/strategy_detail_fmt.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1748,
+      "reference": "game/ui/utils/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1750,
+      "reference": "game/ui/screens/planet_list_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1750,
+      "reference": "game/ui/screens/planet_list_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1750,
+      "reference": "game/ui/screens/build_queue_panel_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1750,
+      "reference": "game/ui/screens/build_queue_panel_factory.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1758,
+      "reference": "game/ui/screens/strategy_detail_fmt.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1782,
+      "reference": "game/core/protocols/strategy_entities.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1783,
+      "reference": "game/strategy/services/ability_sources/",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1784,
+      "reference": "game/strategy/services/ability_iterator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1785,
+      "reference": "game/strategy/services/system_effects_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1786,
+      "reference": "game/strategy/services/strategic_ability_scanner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 17,
+      "reference": "game/simulation/components/abilities/",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 131,
+      "reference": "game/simulation/components/abilities/__init__.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 172,
+      "reference": "game/simulation/components/abilities/stat_keys.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 304,
+      "reference": "game/simulation/components/abilities/ui_colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 346,
+      "reference": "game/ui/screens/planet_abilities_window.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 347,
+      "reference": "game/strategy/engine/planet_energy_engine.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 348,
+      "reference": "game/ui/screens/strategy_detail_fmt.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 351,
+      "reference": "game/strategy/services/system_effects_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 354,
+      "reference": "game/strategy/services/combat_modifier_collector.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 368,
+      "reference": "game/core/constants.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 466,
+      "reference": "game/simulation/components/abilities/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 467,
+      "reference": "game/simulation/components/abilities/__init__.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 468,
+      "reference": "game/simulation/components/abilities/stat_keys.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 469,
+      "reference": "game/simulation/components/abilities/ui_colors.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 470,
+      "reference": "game/simulation/components/abilities/weapons.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 471,
+      "reference": "game/simulation/components/abilities/defense.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 472,
+      "reference": "game/simulation/components/abilities/propulsion.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 473,
+      "reference": "game/simulation/components/abilities/crew.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 474,
+      "reference": "game/simulation/components/abilities/resources.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 475,
+      "reference": "game/simulation/components/abilities/markers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 476,
+      "reference": "game/simulation/components/abilities/superweapons.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 477,
+      "reference": "game/simulation/components/abilities/colonize.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 478,
+      "reference": "game/simulation/components/abilities/harvester.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 479,
+      "reference": "game/simulation/components/abilities/cargo.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 480,
+      "reference": "game/core/constants.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 481,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 508,
+      "reference": "game/simulation/components/abilities/__init__.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_modifiers.md",
+      "line": 44,
+      "reference": "game/simulation/components/abilities/stat_keys.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_modifiers.md",
+      "line": 193,
+      "reference": "game/ui/screens/builder/modifier_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/adding_modifiers.md",
+      "line": 228,
+      "reference": "game/ui/screens/builder/modifier_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 197,
+      "reference": "game/simulation/components/component.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 198,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 199,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 200,
+      "reference": "game/core/registry.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 201,
+      "reference": "game/simulation/components/abilities/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 202,
+      "reference": "game/simulation/components/abilities/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 203,
+      "reference": "game/simulation/components/ability_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 204,
+      "reference": "game/simulation/components/modifier_manager.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 205,
+      "reference": "game/simulation/services/modifier_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 206,
+      "reference": "game/simulation/components/component_stats_calculator.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 247,
+      "reference": "game/core/constants.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 140,
+      "reference": "game/simulation/components/modifier_effects.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 141,
+      "reference": "game/simulation/components/modifiers.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 142,
+      "reference": "game/simulation/components/abilities/stat_keys.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 143,
+      "reference": "game/simulation/components/modifier_schema.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 144,
+      "reference": "game/simulation/components/modifier_introspection.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 145,
+      "reference": "game/simulation/components/component_constants.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 146,
+      "reference": "game/simulation/components/abilities/base.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 147,
+      "reference": "game/simulation/services/modifier_service.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "line": 193,
+      "reference": "game/ui/screens/builder/modifier_config.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "line": 94,
+      "reference": "game/core/profiling.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "line": 179,
+      "reference": "game/strategy/quickstart_builder.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "line": 256,
+      "reference": "game/strategy/quickstart_builder.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "line": 290,
+      "reference": "game/strategy/quickstart_builder.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "line": 291,
+      "reference": "game/strategy/data/planetary_facility.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "line": 292,
+      "reference": "game/strategy/systems/design_library.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "line": 293,
+      "reference": "game/strategy/engine/production_spawner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 228,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 228,
+      "reference": "game/simulation/battle_runner.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 260,
+      "reference": "game/core/roles.py",
+      "exists": true
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 361,
+      "reference": "game/simulation/battle_outcome.py",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 41,
+      "reference": "game/core/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 42,
+      "reference": "game/services/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 43,
+      "reference": "game/assets/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 44,
+      "reference": "game/engine/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 45,
+      "reference": "game/simulation/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 46,
+      "reference": "game/research/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 47,
+      "reference": "game/strategy/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 48,
+      "reference": "game/ai/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 49,
+      "reference": "game/ui/",
+      "exists": true
+    },
+    {
+      "doc": "AGENTS.md",
+      "line": 51,
+      "reference": "game/context.py",
+      "exists": true
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+    "_comment": "Test data for targeting policies.",
+    "policies": {
+        "test_policy_1": {
+            "name": "Test Policy 1",
+            "rules": [
+                {
+                    "type": "nearest",
+                    "weight": 100
+                }
+            ]
+        },
+        "test_policy_complex": {
+            "name": "Test Policy Complex",
+            "rules": [
+                {
+                    "type": "has_weapons",
+                    "weight": 1000
+                },
+                {
+                    "type": "distance",
+                    "factor": -1
+                },
+                {
+                    "type": "mass",
+                    "factor": 1
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,200 @@
+[
+  {
+    "id": "DUP-UI2-001",
+    "severity": "Critical",
+    "title": "Tkinter Root Initialization Duplicated A",
+    "location": "Unknown",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "DUP-UI1-001",
+    "severity": "Critical",
+    "title": "Screenshot Toast Notification Pattern Du",
+    "location": "game/ui/screens/planet_list_wi",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "CON-UI2-001",
+    "severity": "Critical",
+    "title": "Inconsistent Dependency Injection Patter",
+    "location": "game/ui/services/",
+    "effort": "Medium",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "DUP-UI2-002",
+    "severity": "Major",
+    "title": "Battle Factory Functions Follow Identica",
+    "location": "game/ui/services/battle_factor",
+    "effort": "Medium",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "DUP-UI2-004",
+    "severity": "Major",
+    "title": "BattleUIService Repeated Null-Check Patt",
+    "location": "game/ui/services/battle_ui_ser",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "DUP-UI1-003",
+    "severity": "Major",
+    "title": "Filter State Management Pattern Repeated",
+    "location": "game/ui/screens/fleet_report_f",
+    "effort": "Medium",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "DUP-UI1-004",
+    "severity": "Major",
+    "title": "Compact Number Formatting Logic Isolated",
+    "location": "game/ui/panels/planet_report_p",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "DUP-UI2-006",
+    "severity": "Minor",
+    "title": "Ship Cloning Logic in create_hypothetica",
+    "location": "game/ui/services/battle_factor",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "DUP-UI1-005",
+    "severity": "Minor",
+    "title": "RaceThemeGallery Not Using BaseGallery",
+    "location": "game/ui/panels/race_theme_gall",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "CON-UI2-007",
+    "severity": "Minor",
+    "title": "Inconsistent Type Hint Coverage",
+    "location": "game/ui/services/ship_io.py:42",
+    "effort": "Simple",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "CON-UI2-008",
+    "severity": "Minor",
+    "title": "Inconsistent Error Logging Patterns",
+    "location": "game/ui/services/ship_io.py:72",
+    "effort": "Simple",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "CON-UI2-010",
+    "severity": "Minor",
+    "title": "Boolean Parameter Naming Inconsistency",
+    "location": "game/ui/services/battle_factor",
+    "effort": "Simple",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "CON-UI2-011",
+    "severity": "Minor",
+    "title": "Inconsistent Import Organization",
+    "location": "game/ui/services/ship_io.py:1-",
+    "effort": "Simple",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "CON-UI2-012",
+    "severity": "Minor",
+    "title": "Magic Numbers in Rendering Code",
+    "location": "game/ui/renderer/game_renderer",
+    "effort": "Simple",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "CON-UI2-013",
+    "severity": "Info",
+    "title": "Inconsistent __all__ Export Patterns",
+    "location": "game/ui/__init__.py",
+    "effort": "Simple",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "DUP-UI1-009",
+    "severity": "Info",
+    "title": "Well-Refactored Gallery System",
+    "location": "game/ui/panels/base_gallery.py",
+    "effort": "N",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  },
+  {
+    "id": "DUP-UI2-008",
+    "severity": "Info",
+    "title": "Adapter Classes Follow Consistent Patter",
+    "location": "Unknown",
+    "effort": "N",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI2",
+    "shard_name": "UI-Framework"
+  },
+  {
+    "id": "DUP-UI1-010",
+    "severity": "Info",
+    "title": "DesignStatsPanel Successful Extraction",
+    "location": "game/ui/panels/design_stats_pa",
+    "effort": "N",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "UI1",
+    "shard_name": "UI-Screens"
+  }
+]

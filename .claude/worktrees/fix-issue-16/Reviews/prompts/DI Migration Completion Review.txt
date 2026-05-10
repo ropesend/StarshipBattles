@@ -1,0 +1,124 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\03_focused_question_review.md
+
+I want to conduct a Focused Question Review targeting the **Dual/Triple Registry Access Pattern** — rated Critical in the Deliberate Design Debt Audit (2026-02-23).
+
+1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
+2. LOAD the specific protocol `Reviews/protocols/03_focused_question_review.md`
+3. ADOPT the 'Code Review Coordinator' persona
+4. EXECUTE all phases:
+   - Phase A: Scope Definition (understand the question and context below)
+   - Phase B: Agent Planning (select investigators — see suggested agent configuration below)
+   - Phase C: Review Swarm Launch (deploy investigation agents)
+   - Phase D: Findings Compilation (synthesize into actionable project-ready report)
+   - Phase E: User Summary (present direct answer with migration plan)
+
+<my_question>
+
+**Primary Question:** What is the complete migration plan to consolidate all registry access onto a single canonical pattern (IRegistryProvider DI), and what would break?
+
+**Sub-Questions (each agent should answer one or more):**
+
+1. **Inventory:** Exactly which files use each of the 3 registry access patterns, and how many call sites per pattern?
+   - TIER 3 (Direct Singleton): `RegistryManager.instance().components` / `.modifiers` / `.vehicle_classes` / `.resources`
+   - TIER 2 (Service Locator): `get_default_registries()` / `get_default_registries().components`
+   - TIER 1 (DI Provider): `get_default_registry_provider()` / `provider.get_components()`
+   - Also look for: `set_default_registries()`, `clear_registry()`, `freeze_registry()` — these are lifecycle operations, not access patterns, but need to be catalogued for migration planning
+
+2. **Dependency Graph:** Which callers pass registries DOWN to other functions vs. fetch them themselves? Map the propagation chains. Where are the composition roots (places that SHOULD fetch registries)?
+
+3. **Test Impact:** How do tests currently set up registry state? Which fixtures call `set_default_registries()`, `RegistryManager.instance()`, `TestRegistryProvider`? What's the test isolation strategy?
+
+4. **Target Architecture:** What should the final state look like? Should `RegistryManager` become internal-only (used only by the composition root)? Should `get_default_registries()` be kept as a convenience or eliminated? Should `GameRegistries` stay or be replaced entirely by `IRegistryProvider`?
+
+5. **Related Cleanup:** What other registry-adjacent issues should be fixed in the same project?
+   - MOD-CORE-002: GameRegistries frozen=True with mutable dicts
+   - MOD-CORE-004: Inconsistent frozen state management in RegistryManager
+   - MOD-CORE-005: Module-level globals alongside singleton
+   - MOD-CORE-006: TestRegistryProvider lacks resources support
+   - MOD-CORE-007: IRegistryProvider missing `get_resources()` method
+   - AR-005: Singleton overuse (specifically RegistryManager)
+
+</my_question>
+
+<known_context>
+
+## Source Review
+This is a follow-up to: `Reviews/results/2026-02-23_160923_general_deliberate-design-debt-audit/`
+See the unified report at: `Reviews/results/2026-02-23_160923_general_deliberate-design-debt-audit/report.md`
+
+## Key Finding IDs From Parent Review
+| ID | Source | Summary |
+|----|--------|---------|
+| MOD-CORE-001 | Module Core Specialist | **Critical** — Three different registry access patterns create confusion. TIER 2 "RECOMMENDED" but TIER 3 direct singleton still in 30+ files |
+| AR-002 | Architecture Reviewer | **Critical** — RegistryManager is singleton god object holding all game data + validator + freeze state |
+| DD-035 | Deliberate Design Reviewer | Dual registry access (Singleton + DI) — migration in progress, should complete |
+| DD-038 | Deliberate Design Reviewer | Incomplete DI migration — PROJ-38/50 phased, should continue |
+| AR-005 | Architecture Reviewer | **Major** — Singleton overuse for cross-cutting concerns (8 singletons listed) |
+| AR-023 | Architecture Reviewer | **Info (Positive)** — Strong DI with GameRegistries, TestRegistryProvider |
+| MOD-CORE-002 | Module Core Specialist | **Major** — GameRegistries frozen=True but contains mutable Dict[str, Any] |
+| MOD-CORE-004 | Module Core Specialist | **Major** — Inconsistent frozen state (_frozen flag not checked everywhere, direct dict access bypasses) |
+| MOD-CORE-005 | Module Core Specialist | **Minor** — Module-level globals (_default_registries, _default_provider) alongside SingletonMeta |
+| MOD-CORE-006 | Module Core Specialist | **Minor** — TestRegistryProvider lacks resources parameter |
+| MOD-CORE-007 | Module Core Specialist | **Minor** — IRegistryProvider protocol missing get_resources() method |
+
+## Current State of registry.py (game/core/registry.py)
+The file documents three tiers of access in its module docstring:
+
+```
+TIER 1 - Domain Services (Computed Access):      # Best: service wraps registry
+    ShipStatsCalculator.calculate_ship_stats(design)
+
+TIER 2 - Dependency Injection [RECOMMENDED]:      # Good: explicit provider parameter
+    provider = get_default_registry_provider()
+    components = provider.get_components()
+
+TIER 3 - Direct Singleton Access:                 # Avoid: hidden global dependency
+    RegistryManager.instance().components
+```
+
+Key classes/functions:
+- `GameRegistries` (frozen dataclass) — holds components, modifiers, vehicle_classes, resources dicts
+- `RegistryManager(metaclass=SingletonMeta)` — singleton, has hydrate(), freeze(), clear(), owns all data
+- `DefaultRegistryProvider(IRegistryProvider)` — wraps RegistryManager, delegates get_X() calls
+- `TestRegistryProvider(IRegistryProvider)` — isolated test data, takes components/modifiers/vehicle_classes (NOT resources)
+- `get_default_registries()` → returns module-level `_default_registries` global
+- `set_default_registries()` → sets module-level global
+- `get_default_registry_provider()` → returns module-level `_default_provider` global
+- `freeze_registry()` / `clear_registry()` → lifecycle helpers
+
+## Prior Refactoring History
+- **PROJ-27:** Introduced IRegistryProvider and DI pattern
+- **PROJ-38:** Created GameRegistries container, strict DI enforcement
+- **PROJ-50:** Expanded DI pattern, created DefaultRegistryProvider
+- **PROJ-58:** Eradicated backward compat shims, set_default_registries() in conftest
+
+## Design Constraints
+- **CLAUDE.md policy:** "When a new system replaces an old one, ERADICATE the old system completely." — once DI is chosen, remove all non-DI access
+- **Test infrastructure:** 7,353 tests depend on registry access patterns. Migration must not break tests.
+- **Composition roots:** `game/app.py` (production) and `tests/conftest.py` (test) are the legitimate places to initialize registries
+- **Performance:** Registry lookups are on hot paths (ability aggregation, stat calculation). DI should not add overhead.
+
+## Suggested Agent Configuration
+Consider 5-6 agents:
+
+| # | Agent Role | Focus | Prefix |
+|---|-----------|-------|--------|
+| 1 | **Call Site Mapper** | Find every registry access call site, categorize by TIER 1/2/3, count, list files | CSM |
+| 2 | **Dependency Chain Analyzer** | Trace how registries flow through function calls. Map composition roots → leaf consumers. Identify which functions fetch vs. receive registries | DCA |
+| 3 | **Test Infrastructure Analyst** | Map how tests set up registry state. Fixtures, conftest patterns, TestRegistryProvider usage, reset/clear patterns | TIA |
+| 4 | **Target Architecture Designer** | Design the end-state. What does registry.py look like after migration? What's the migration order? Phase plan. | TAD |
+| 5 | **Breaking Change Analyzer** | For each pattern change, what could break? Risk assessment per file/module. Identify ordering dependencies | BCA |
+| 6 | **Related Cleanup Cataloguer** | Audit MOD-CORE-002/004/005/006/007 — which can be fixed in the same project, which are independent | RCC |
+
+## Output Requirements
+This review's output should be **project-ready**:
+- Complete file-by-file inventory of what needs to change
+- Phased migration plan (which files/patterns to migrate first)
+- Test strategy (how to verify each phase)
+- Risk assessment per phase
+- Estimated effort per phase
+- Clear definition of "done" (what registry.py looks like after)
+
+The goal is to take this review's output and immediately convert it to a PROJ-XX via `Reviews/prompts/Review to Project.txt`.
+
+</known_context>

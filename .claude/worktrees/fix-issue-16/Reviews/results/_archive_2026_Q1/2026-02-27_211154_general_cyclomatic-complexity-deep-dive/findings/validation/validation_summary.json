@@ -1,0 +1,65 @@
+{
+  "original_count": 103,
+  "confirmed": 95,
+  "downgraded": 18,
+  "rejected": 8,
+  "no_verdict": 0,
+  "filtered_count": 95,
+  "rejection_rate_pct": 7.8,
+  "by_shard": {
+    "validator_1": {
+      "reviewed": 26,
+      "confirmed": 17,
+      "downgraded": 5,
+      "rejected": 4
+    },
+    "validator_2": {
+      "reviewed": 26,
+      "confirmed": 21,
+      "downgraded": 2,
+      "rejected": 3
+    },
+    "validator_3": {
+      "reviewed": 26,
+      "confirmed": 18,
+      "downgraded": 7,
+      "rejected": 1
+    },
+    "validator_4": {
+      "reviewed": 25,
+      "confirmed": 21,
+      "downgraded": 4,
+      "rejected": 0
+    }
+  },
+  "rejected_ids": [
+    "CQ-003",
+    "AR-09",
+    "CQ-007",
+    "CQ-008",
+    "CQ-017",
+    "DS-011",
+    "CQ-024",
+    "CQ-030"
+  ],
+  "downgraded_ids": {
+    "AR-02": "Minor",
+    "CQ-001": "Major",
+    "CQ-011": "Major",
+    "DS-005": "Major",
+    "DS-017": "Major",
+    "TC-001": "Minor",
+    "TC-003": "Major",
+    "AR-06": "Minor",
+    "CQ-005": "Minor",
+    "CQ-021": "Minor",
+    "CX-008": "Minor",
+    "CX-010": "Minor",
+    "DS-001": "Minor",
+    "DS-007": "Minor",
+    "TC-009": "Minor",
+    "AR-14": "Info",
+    "DS-008": "Info",
+    "DS-004": "Info"
+  }
+}

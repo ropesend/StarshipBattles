@@ -1,0 +1,200 @@
+[
+  {
+    "id": "TCG-SIM-001",
+    "severity": "Critical",
+    "title": "Projectile Entity Has No Unit Tests",
+    "location": "game/simulation/entities/projectile.py",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-002",
+    "severity": "Critical",
+    "title": "ShipStatQuerier Has No Unit Tests",
+    "location": "game/simulation/entities/ship_stat_querier.py",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-003",
+    "severity": "Critical",
+    "title": "ShipValidator Rules Have No Unit Tests",
+    "location": "game/simulation/validation/ship_validator.py",
+    "effort": "Complex",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-004",
+    "severity": "Major",
+    "title": "BattleController Missing Edge Case Tests",
+    "location": "game/simulation/battle_controller.py",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-005",
+    "severity": "Major",
+    "title": "DamageCalculator Armor Penetration Edge Cases",
+    "location": "game/simulation/combat/damage_calculator.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-006",
+    "severity": "Major",
+    "title": "WeaponFiringSystem Missing Multishot Tests",
+    "location": "game/simulation/combat/weapon_firing_system.py",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-007",
+    "severity": "Major",
+    "title": "TargetingSystem Missing AI Priority Tests",
+    "location": "game/simulation/combat/targeting_system.py",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-008",
+    "severity": "Major",
+    "title": "BattleEngine Tick Processing Incomplete",
+    "location": "game/simulation/systems/battle_engine.py",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-009",
+    "severity": "Major",
+    "title": "FormulaSystem Overflow/Underflow Not Tested",
+    "location": "game/simulation/formula_system.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-010",
+    "severity": "Major",
+    "title": "Design System Serialization Roundtrip Gaps",
+    "location": "game/simulation/designs.py",
+    "effort": "Medium",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-011",
+    "severity": "Minor",
+    "title": "AbilityAggregator Missing Concurrent Modification Tests",
+    "location": "game/simulation/entities/ability_aggregator.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-012",
+    "severity": "Minor",
+    "title": "ShipCombatEngine Heat Management Not Tested",
+    "location": "game/simulation/entities/ship_combat_engine.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-013",
+    "severity": "Minor",
+    "title": "ShipFormation Missing Complex Formation Tests",
+    "location": "tests/unit/simulation/entities/test_ship_formation.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-014",
+    "severity": "Minor",
+    "title": "BattleStateSerializer Version Migration Not Tested",
+    "location": "tests/unit/simulation/test_battle_state_serialization.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-015",
+    "severity": "Minor",
+    "title": "PropulsionAbility Strategic Movement Not Tested",
+    "location": "game/simulation/components/abilities/propulsion.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-016",
+    "severity": "Minor",
+    "title": "ProjectileManager Missing Batch Update Tests",
+    "location": "game/simulation/projectile_manager.py",
+    "effort": "Simple",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-017",
+    "severity": "Info",
+    "title": "Test Organization Inconsistency",
+    "location": "tests/unit/simulation/",
+    "effort": "N/A",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "TCG-SIM-018",
+    "severity": "Info",
+    "title": "Simulation Integration Tests Sparse",
+    "location": "tests/integration/",
+    "effort": "N/A",
+    "sweep_type": "TCG",
+    "sweep_type_name": "Test Coverage Gaps",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  }
+]

@@ -1,0 +1,99 @@
+{
+    "_comment": "Stable component values for regression/snapshot tests. Decoupled from data/components.json so that rebalancing production components does not break logic/modifier regression tests. Only components whose values have historically drifted are included here — other components are inherited from production registries. See tests/regression/modifier_ability_snapshots/ and tests/unit/entities/test_components.py.",
+    "components": [
+        {
+            "id": "railgun",
+            "name": "Railgun",
+            "type": "ProjectileWeaponAbility",
+            "mass": 100,
+            "hp": 150,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 86,
+            "abilities": {
+                "CrewRequired": 5,
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 1,
+                        "trigger": "activation"
+                    }
+                ],
+                "ProjectileWeaponAbility": {
+                    "damage": 40,
+                    "range": 2400,
+                    "reload": 2.0,
+                    "projectile_speed": 20000,
+                    "firing_arc": 1
+                },
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "metals": 150,
+                "radioactives": 30
+            }
+        },
+        {
+            "id": "laser_cannon",
+            "name": "Laser Cannon",
+            "type": "BeamWeaponAbility",
+            "mass": 20,
+            "hp": 40,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 88,
+            "abilities": {
+                "CrewRequired": 1,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 5,
+                        "trigger": "activation"
+                    }
+                ],
+                "BeamWeaponAbility": {
+                    "damage": 15,
+                    "range": 2000,
+                    "reload": 0.2,
+                    "firing_arc": 1,
+                    "base_accuracy": 2.0,
+                    "accuracy_falloff": 0.001
+                },
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "metals": 40,
+                "radioactives": 10,
+                "exotics": 30
+            }
+        },
+        {
+            "id": "thruster",
+            "name": "Thruster",
+            "type": "Thruster",
+            "mass": 20,
+            "hp": 40,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 67,
+            "abilities": {
+                "ManeuveringThruster": 30,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Engines",
+            "resource_cost": {
+                "metals": 40,
+                "radioactives": 10
+            }
+        }
+    ]
+}

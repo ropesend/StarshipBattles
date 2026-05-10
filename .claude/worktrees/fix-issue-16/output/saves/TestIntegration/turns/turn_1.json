@@ -1,0 +1,1534 @@
+{
+    "turn_number": 1,
+    "save_path": "C:\\Developer\\StarshipBattles\\.claude\\worktrees\\fix-issue-16\\output\\saves\\TestIntegration",
+    "config": {
+        "asset_base_path": "C:\\Developer\\StarshipBattles\\.claude\\worktrees\\fix-issue-16\\assets\\ShipThemes",
+        "galaxy_radius": 4000,
+        "system_count": 2,
+        "galaxy_type": "random",
+        "galaxy_seed": null,
+        "save_name": "TestIntegration",
+        "players": [
+            {
+                "name": "Player One",
+                "theme": "Federation",
+                "color": [
+                    0,
+                    100,
+                    255
+                ],
+                "is_human": true
+            },
+            {
+                "name": "Player Two",
+                "theme": "Atlantians",
+                "color": [
+                    0,
+                    200,
+                    150
+                ],
+                "is_human": true
+            }
+        ]
+    },
+    "galaxy": {
+        "radius": 4000,
+        "systems": [
+            {
+                "coord": {
+                    "q": -2269,
+                    "r": 802
+                },
+                "system": {
+                    "name": "Wasatisthusa",
+                    "global_location": {
+                        "q": -2269,
+                        "r": 802
+                    },
+                    "stars": [
+                        {
+                            "name": "Wasatisthusa A",
+                            "mass": 0.271903336249247,
+                            "radius_hexes": 1,
+                            "temperature": 3112.60809290926,
+                            "luminosity": 0.010482162242723749,
+                            "spectrum": {
+                                "gamma_ray": 3.853804660624739e-34,
+                                "xray": 8.484081122434874e-11,
+                                "ultraviolet": 0.0005437927941103698,
+                                "blue": 0.002692151093841787,
+                                "green": 0.0029003149412068214,
+                                "red": 0.0036257056679589376,
+                                "infrared": 0.00045603908475863646,
+                                "microwave": 2.6503885553703114e-17,
+                                "radio": 4.270571141741567e-46
+                            },
+                            "star_type": "MAIN_SEQUENCE",
+                            "color": [
+                                255,
+                                180,
+                                117
+                            ],
+                            "age": 6625352317.674693,
+                            "location": {
+                                "q": 0,
+                                "r": 0
+                            },
+                            "image_id": "StarYellowVariant_5.png",
+                            "intrinsic_abilities": {}
+                        }
+                    ],
+                    "warp_points": [
+                        {
+                            "destination_id": "Baltar",
+                            "location": {
+                                "q": 6,
+                                "r": 10
+                            },
+                            "warp_type": "stable",
+                            "intrinsic_abilities": {}
+                        }
+                    ],
+                    "planets": [
+                        {
+                            "id": 1,
+                            "name": "Wasatisthusa I",
+                            "location": {
+                                "q": -7,
+                                "r": 3
+                            },
+                            "orbit_distance": 7,
+                            "mass": 2.5248688236137026e+24,
+                            "radius": 5992376.434810478,
+                            "surface_area": 451240465911743.5,
+                            "density": 2801.2569568007775,
+                            "surface_gravity": 9.81,
+                            "surface_pressure": 100000.0,
+                            "surface_temperature": 293.0,
+                            "surface_water": 0.5,
+                            "tectonic_activity": 0.6573061072403579,
+                            "magnetic_field": 0.85451930055232,
+                            "atmosphere": {
+                                "O2": 21000.0,
+                                "N2": 79000.0
+                            },
+                            "planet_type": "CRYOPLANET",
+                            "orbit_parent_name": null,
+                            "owner_id": 0,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 138165588,
+                                    "quality": 50.0
+                                },
+                                "organics": {
+                                    "quantity": 84741929,
+                                    "quality": 50.0
+                                },
+                                "vapors": {
+                                    "quantity": 324710137,
+                                    "quality": 50.0
+                                },
+                                "radioactives": {
+                                    "quantity": 93142252,
+                                    "quality": 50.0
+                                },
+                                "exotics": {
+                                    "quantity": 340073239,
+                                    "quality": 50.0
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [
+                                {
+                                    "race_id": "empire_0",
+                                    "count": 45124046,
+                                    "happiness": 0.7
+                                }
+                            ],
+                            "image_id": "planet_5_1519_1769640815911.png",
+                            "image_rotation": 58.15308538597137,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {
+                                "ThrustModifier": {
+                                    "multiplier": 0.9101193562774188,
+                                    "scope": "sector"
+                                }
+                            }
+                        },
+                        {
+                            "id": 2,
+                            "name": "Wasatisthusa IV",
+                            "location": {
+                                "q": -2,
+                                "r": -9
+                            },
+                            "orbit_distance": 11,
+                            "mass": 3.81786261850641e+25,
+                            "radius": 13073061.54956878,
+                            "surface_area": 2147654794235752.0,
+                            "density": 4079.4326713664946,
+                            "surface_gravity": 14.909785949617682,
+                            "surface_pressure": 565187284.1290276,
+                            "surface_temperature": 135.4469604826096,
+                            "surface_water": 0.6956808601345796,
+                            "tectonic_activity": 0.22355052039166015,
+                            "magnetic_field": 0.8995863732608453,
+                            "atmosphere": {
+                                "H2": 410380852.1656484,
+                                "He": 131321872.6930075,
+                                "CH4": 3415895.4765796107,
+                                "NH3": 4931308.753316945,
+                                "H2O": 2209125.425215506,
+                                "N2": 3053028.659072081,
+                                "O2": 1783682.6801094313,
+                                "Ar": 140444.55888681603,
+                                "CO2": 4708801.926897996,
+                                "SO2": 3242271.790293285
+                            },
+                            "planet_type": "ICE_GIANT",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 206985536,
+                                    "quality": 5.0
+                                },
+                                "organics": {
+                                    "quantity": 329912713,
+                                    "quality": 5.0
+                                },
+                                "vapors": {
+                                    "quantity": 1135586621,
+                                    "quality": 5.0
+                                },
+                                "radioactives": {
+                                    "quantity": 251225437,
+                                    "quality": 5.0
+                                },
+                                "exotics": {
+                                    "quantity": 966358724,
+                                    "quality": 5.0
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_5_346_1769659080219.png",
+                            "image_rotation": 233.69499698677242,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        },
+                        {
+                            "id": 3,
+                            "name": "Wasatisthusa V",
+                            "location": {
+                                "q": 1,
+                                "r": -11
+                            },
+                            "orbit_distance": 11,
+                            "mass": 7.958596304333679e+24,
+                            "radius": 7710833.510710798,
+                            "surface_area": 747158112400824.9,
+                            "density": 4144.230362756335,
+                            "surface_gravity": 8.933868328225081,
+                            "surface_pressure": 172258101.38672316,
+                            "surface_temperature": 325.8864493401558,
+                            "surface_water": 0.2878534290077088,
+                            "tectonic_activity": 0.7901253181851667,
+                            "magnetic_field": 1.6497978241028723,
+                            "atmosphere": {
+                                "H2": 1492392.187453734,
+                                "He": 2271028.087907428,
+                                "CH4": 3321693.7423148775,
+                                "NH3": 2985512.1767872702,
+                                "H2O": 8184108.22832838,
+                                "N2": 18517148.428960823,
+                                "O2": 112912.72197209347,
+                                "Ar": 36917.1547412675,
+                                "CO2": 134603312.5436948,
+                                "SO2": 733076.1145624886
+                            },
+                            "planet_type": "ICE_GIANT",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 120871277,
+                                    "quality": 5.0
+                                },
+                                "organics": {
+                                    "quantity": 183299926,
+                                    "quality": 5.0
+                                },
+                                "vapors": {
+                                    "quantity": 634004809,
+                                    "quality": 5.0
+                                },
+                                "radioactives": {
+                                    "quantity": 136273313,
+                                    "quality": 5.0
+                                },
+                                "exotics": {
+                                    "quantity": 504073154,
+                                    "quality": 5.0
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_5_457_1769743401642.png",
+                            "image_rotation": 145.91931914524014,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        },
+                        {
+                            "id": 4,
+                            "name": "Wasatisthusa II",
+                            "location": {
+                                "q": -11,
+                                "r": 3
+                            },
+                            "orbit_distance": 11,
+                            "mass": 3.429025276426605e+24,
+                            "radius": 6492442.267815359,
+                            "surface_area": 529695223811894.75,
+                            "density": 2991.2849622999934,
+                            "surface_gravity": 5.429504746768565,
+                            "surface_pressure": 154166064.4797072,
+                            "surface_temperature": 304.62755982650117,
+                            "surface_water": 0.507854920730745,
+                            "tectonic_activity": 0.7056202817836973,
+                            "magnetic_field": 1.3859496431209999,
+                            "atmosphere": {
+                                "H2": 1302562.6479433621,
+                                "He": 3371842.202798581,
+                                "CH4": 28330.181178690942,
+                                "NH3": 5160474.887290515,
+                                "H2O": 20540875.585381612,
+                                "N2": 19009779.35985978,
+                                "O2": 176749.9578952494,
+                                "Ar": 2668112.9454646693,
+                                "CO2": 97674202.55039804,
+                                "SO2": 4233134.161496723
+                            },
+                            "planet_type": "CONTINENTAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 229481970,
+                                    "quality": 11.52517399648212
+                                },
+                                "organics": {
+                                    "quantity": 336505846,
+                                    "quality": 5.0
+                                },
+                                "vapors": {
+                                    "quantity": 178266034,
+                                    "quality": 5.410679385204335
+                                },
+                                "radioactives": {
+                                    "quantity": 179196902,
+                                    "quality": 5.0
+                                },
+                                "exotics": {
+                                    "quantity": 181599291,
+                                    "quality": 13.63978427656286
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_3_315_1769763542363.png",
+                            "image_rotation": 11.155415942979396,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        },
+                        {
+                            "id": 5,
+                            "name": "Wasatisthusa III",
+                            "location": {
+                                "q": 9,
+                                "r": -11
+                            },
+                            "orbit_distance": 11,
+                            "mass": 1.063475566633484e+23,
+                            "radius": 1842284.0861112655,
+                            "surface_area": 42650395746478.76,
+                            "density": 4060.402675314592,
+                            "surface_gravity": 2.0913178236917247,
+                            "surface_pressure": 26.094753331741884,
+                            "surface_temperature": 66.28787751676491,
+                            "surface_water": 0.9879870393521204,
+                            "tectonic_activity": 0.17667366532307965,
+                            "magnetic_field": 0.2853867320687183,
+                            "atmosphere": {
+                                "CH4": 1.2110376387436308,
+                                "NH3": 0.046463131865587357,
+                                "H2O": 2.5273899911526705,
+                                "N2": 7.155865489287939,
+                                "O2": 0.08086917200353326,
+                                "Ar": 0.6013893409820565,
+                                "CO2": 13.275392195922738,
+                                "SO2": 1.1963463717837293
+                            },
+                            "planet_type": "ICE_DWARF",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 46019263,
+                                    "quality": 66.18851533316688
+                                },
+                                "organics": {
+                                    "quantity": 16793635,
+                                    "quality": 67.51538592930015
+                                },
+                                "vapors": {
+                                    "quantity": 94296430,
+                                    "quality": 56.12530084927645
+                                },
+                                "radioactives": {
+                                    "quantity": 27818976,
+                                    "quality": 68.74186121782739
+                                },
+                                "exotics": {
+                                    "quantity": 69303798,
+                                    "quality": 77.36597938642184
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_5_444_1769743373938.png",
+                            "image_rotation": 251.15459175868057,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        },
+                        {
+                            "id": 6,
+                            "name": "Wasatisthusa IVa",
+                            "location": {
+                                "q": -2,
+                                "r": -9
+                            },
+                            "orbit_distance": 11,
+                            "mass": 6.435490319311712e+21,
+                            "radius": 743418.4845929685,
+                            "surface_area": 6945069157109.32,
+                            "density": 3739.3228729426264,
+                            "surface_gravity": 0.7771782792672363,
+                            "surface_pressure": 0.0,
+                            "surface_temperature": 66.28787751676491,
+                            "surface_water": 0.7258100072463093,
+                            "tectonic_activity": 0.04117112863419428,
+                            "magnetic_field": 0.13418204238579284,
+                            "atmosphere": {},
+                            "planet_type": "ICE_DWARF",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 13246540,
+                                    "quality": 77.34617916224863
+                                },
+                                "organics": {
+                                    "quantity": 11463248,
+                                    "quality": 67.43017033478557
+                                },
+                                "vapors": {
+                                    "quantity": 28342390,
+                                    "quality": 90.48372196752152
+                                },
+                                "radioactives": {
+                                    "quantity": 9722166,
+                                    "quality": 68.66484008405574
+                                },
+                                "exotics": {
+                                    "quantity": 33255248,
+                                    "quality": 88.55740125230336
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_5_444_1769743373938.png",
+                            "image_rotation": 126.4776655146736,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        }
+                    ],
+                    "storms": [
+                        {
+                            "name": "Radiation Belt Alpha",
+                            "storm_type": "radiation_belt",
+                            "description": "Intense radiation zone causing gradual hull damage. Often found near gas giants.",
+                            "location": {
+                                "q": -12,
+                                "r": -11
+                            },
+                            "hex_offsets": [
+                                {
+                                    "q": 0,
+                                    "r": 1
+                                },
+                                {
+                                    "q": 0,
+                                    "r": 0
+                                },
+                                {
+                                    "q": -1,
+                                    "r": 1
+                                },
+                                {
+                                    "q": -1,
+                                    "r": 0
+                                },
+                                {
+                                    "q": 0,
+                                    "r": 2
+                                },
+                                {
+                                    "q": -1,
+                                    "r": 3
+                                },
+                                {
+                                    "q": -1,
+                                    "r": 2
+                                },
+                                {
+                                    "q": -2,
+                                    "r": 2
+                                }
+                            ],
+                            "abilities": {
+                                "EnvironmentalDamage": {
+                                    "rate": 0.8,
+                                    "damage_type": "radiation",
+                                    "scope": "sector"
+                                },
+                                "FuelDrain": {
+                                    "rate": 0.1,
+                                    "scope": "sector"
+                                }
+                            },
+                            "image_variant": 1,
+                            "intensity": 0.41071787991307024
+                        },
+                        {
+                            "name": "Gravitational Anomaly Beta",
+                            "storm_type": "gravitational_anomaly",
+                            "description": "Spacetime distortion causing thrust inefficiency. Common in binary systems.",
+                            "location": {
+                                "q": 15,
+                                "r": -5
+                            },
+                            "hex_offsets": [
+                                {
+                                    "q": -1,
+                                    "r": 0
+                                },
+                                {
+                                    "q": 0,
+                                    "r": -1
+                                },
+                                {
+                                    "q": 1,
+                                    "r": -1
+                                },
+                                {
+                                    "q": 0,
+                                    "r": 0
+                                }
+                            ],
+                            "abilities": {
+                                "ThrustModifier": {
+                                    "multiplier": 0.6,
+                                    "scope": "sector"
+                                },
+                                "StrategicSpeedModifier": {
+                                    "multiplier": 0.5,
+                                    "scope": "sector"
+                                }
+                            },
+                            "image_variant": 3,
+                            "intensity": 0.9953683124915726
+                        }
+                    ]
+                }
+            },
+            {
+                "coord": {
+                    "q": -1839,
+                    "r": 1520
+                },
+                "system": {
+                    "name": "Baltar",
+                    "global_location": {
+                        "q": -1839,
+                        "r": 1520
+                    },
+                    "stars": [
+                        {
+                            "name": "Baltar A",
+                            "mass": 2.781288747828581,
+                            "radius_hexes": 4,
+                            "temperature": 3822.6118852042723,
+                            "luminosity": 308.4046550171286,
+                            "spectrum": {
+                                "gamma_ray": 9.668088285315566e-29,
+                                "xray": 6.515504269235204e-06,
+                                "ultraviolet": 19.034142372579918,
+                                "blue": 88.57237269280567,
+                                "green": 88.39517995977607,
+                                "red": 92.5210907842251,
+                                "infrared": 8.5712809117409,
+                                "microwave": 1.6409151063203077e-13,
+                                "radio": 8.444555083325982e-43
+                            },
+                            "star_type": "RED_GIANT",
+                            "color": [
+                                255,
+                                60,
+                                60
+                            ],
+                            "age": 6692798978.1356325,
+                            "location": {
+                                "q": 0,
+                                "r": 0
+                            },
+                            "image_id": "StarRedVariant_4.png",
+                            "intrinsic_abilities": {
+                                "EnvironmentalDamage": {
+                                    "rate": 0.06640761090137531,
+                                    "damage_type": "thermal",
+                                    "scope": "system"
+                                }
+                            }
+                        }
+                    ],
+                    "warp_points": [
+                        {
+                            "destination_id": "Wasatisthusa",
+                            "location": {
+                                "q": -10,
+                                "r": -16
+                            },
+                            "warp_type": "unstable",
+                            "intrinsic_abilities": {
+                                "EnvironmentalDamage": {
+                                    "rate": 0.533248572368762,
+                                    "damage_type": "warp",
+                                    "scope": "sector"
+                                }
+                            }
+                        }
+                    ],
+                    "planets": [
+                        {
+                            "id": 7,
+                            "name": "Baltar I",
+                            "location": {
+                                "q": -7,
+                                "r": 9
+                            },
+                            "orbit_distance": 9,
+                            "mass": 3.2931868627537876e+24,
+                            "radius": 5707762.5293826405,
+                            "surface_area": 409394172231443.8,
+                            "density": 4227.952278918749,
+                            "surface_gravity": 9.81,
+                            "surface_pressure": 100000.0,
+                            "surface_temperature": 293.0,
+                            "surface_water": 0.5,
+                            "tectonic_activity": 0.7685761598294444,
+                            "magnetic_field": 0.8269303489310635,
+                            "atmosphere": {
+                                "O2": 21000.0,
+                                "N2": 79000.0
+                            },
+                            "planet_type": "MAGMA",
+                            "orbit_parent_name": null,
+                            "owner_id": 1,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 364559871,
+                                    "quality": 50.0
+                                },
+                                "organics": {
+                                    "quantity": 43662379,
+                                    "quality": 50.0
+                                },
+                                "vapors": {
+                                    "quantity": 92581011,
+                                    "quality": 50.0
+                                },
+                                "radioactives": {
+                                    "quantity": 482623240,
+                                    "quality": 50.0
+                                },
+                                "exotics": {
+                                    "quantity": 269594778,
+                                    "quality": 50.0
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [
+                                {
+                                    "race_id": "empire_1",
+                                    "count": 40939417,
+                                    "happiness": 0.7
+                                }
+                            ],
+                            "image_id": "planet_5_1689_1769641529687.png",
+                            "image_rotation": 91.12492303011075,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        },
+                        {
+                            "id": 8,
+                            "name": "Baltar Ia",
+                            "location": {
+                                "q": -7,
+                                "r": 9
+                            },
+                            "orbit_distance": 9,
+                            "mass": 9.975065810777843e+22,
+                            "radius": 1792246.8052454202,
+                            "surface_area": 40365049913124.41,
+                            "density": 4136.506542865623,
+                            "surface_gravity": 2.0726494880933726,
+                            "surface_pressure": 0.0,
+                            "surface_temperature": 954.5568699988446,
+                            "surface_water": 0,
+                            "tectonic_activity": 0.12936610532298884,
+                            "magnetic_field": 0.14908930413273053,
+                            "atmosphere": {},
+                            "planet_type": "PLANETOID",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 79875574,
+                                    "quality": 73.83725849591485
+                                },
+                                "organics": {
+                                    "quantity": 16997404,
+                                    "quality": 64.73861749952644
+                                },
+                                "vapors": {
+                                    "quantity": 20631412,
+                                    "quality": 70.25810555588747
+                                },
+                                "radioactives": {
+                                    "quantity": 78253678,
+                                    "quality": 76.71847984514947
+                                },
+                                "exotics": {
+                                    "quantity": 89804669,
+                                    "quality": 68.16734294953454
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_3_400_1769762559606.png",
+                            "image_rotation": 227.90864282847085,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        },
+                        {
+                            "id": 9,
+                            "name": "Baltar II",
+                            "location": {
+                                "q": -9,
+                                "r": 11
+                            },
+                            "orbit_distance": 11,
+                            "mass": 4.347761643920227e+23,
+                            "radius": 2936174.1169483396,
+                            "surface_area": 108336169490627.36,
+                            "density": 4100.451691673368,
+                            "surface_gravity": 3.3659513814847037,
+                            "surface_pressure": 13.3924328198111,
+                            "surface_temperature": 865.5977063293451,
+                            "surface_water": 0,
+                            "tectonic_activity": 0.17923753657497754,
+                            "magnetic_field": 0.37015979141458777,
+                            "atmosphere": {
+                                "SO2": 13.3924328198111
+                            },
+                            "planet_type": "MAGMA",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 184286175,
+                                    "quality": 68.23452584231688
+                                },
+                                "organics": {
+                                    "quantity": 19483145,
+                                    "quality": 68.47920666540952
+                                },
+                                "vapors": {
+                                    "quantity": 57593733,
+                                    "quality": 56.512578751632425
+                                },
+                                "radioactives": {
+                                    "quantity": 175232739,
+                                    "quality": 69.03997053029262
+                                },
+                                "exotics": {
+                                    "quantity": 143046452,
+                                    "quality": 49.72780318671963
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_5_2439_1769657854920.png",
+                            "image_rotation": 261.11157414060693,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        },
+                        {
+                            "id": 10,
+                            "name": "Baltar III",
+                            "location": {
+                                "q": 10,
+                                "r": 2
+                            },
+                            "orbit_distance": 12,
+                            "mass": 5.889502153289567e+23,
+                            "radius": 3294947.669851096,
+                            "surface_area": 136429066369475.8,
+                            "density": 3930.4693227005414,
+                            "surface_gravity": 3.620656009872,
+                            "surface_pressure": 12.676077944515873,
+                            "surface_temperature": 829.6485787220812,
+                            "surface_water": 0,
+                            "tectonic_activity": 0.17100237322769674,
+                            "magnetic_field": 0.19778591921608596,
+                            "atmosphere": {
+                                "SO2": 12.676077944515873
+                            },
+                            "planet_type": "MAGMA",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 224961382,
+                                    "quality": 54.295149353496605
+                                },
+                                "organics": {
+                                    "quantity": 26494170,
+                                    "quality": 56.36601525241277
+                                },
+                                "vapors": {
+                                    "quantity": 39635835,
+                                    "quality": 54.74118184650624
+                                },
+                                "radioactives": {
+                                    "quantity": 209070634,
+                                    "quality": 43.09372013127159
+                                },
+                                "exotics": {
+                                    "quantity": 161715581,
+                                    "quality": 52.12961886368299
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_5_1142_1769639369831.png",
+                            "image_rotation": 199.1500484219799,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        },
+                        {
+                            "id": 11,
+                            "name": "Baltar IV",
+                            "location": {
+                                "q": 10,
+                                "r": -12
+                            },
+                            "orbit_distance": 12,
+                            "mass": 5.521094658361102e+23,
+                            "radius": 3443319.687724082,
+                            "surface_area": 148992550800290.34,
+                            "density": 3228.5279210251247,
+                            "surface_gravity": 3.1079657580261446,
+                            "surface_pressure": 95.5694549164933,
+                            "surface_temperature": 829.6485787220812,
+                            "surface_water": 0,
+                            "tectonic_activity": 0.10623350512292383,
+                            "magnetic_field": 0.16088321523656907,
+                            "atmosphere": {
+                                "SO2": 95.5694549164933
+                            },
+                            "planet_type": "MAGMA",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "construction_queue_paused": false,
+                            "deposits": {
+                                "metals": {
+                                    "quantity": 171898560,
+                                    "quality": 59.09978891417818
+                                },
+                                "organics": {
+                                    "quantity": 16991445,
+                                    "quality": 41.709492679737345
+                                },
+                                "vapors": {
+                                    "quantity": 65010872,
+                                    "quality": 56.24703081057798
+                                },
+                                "radioactives": {
+                                    "quantity": 184834167,
+                                    "quality": 41.412642795544635
+                                },
+                                "exotics": {
+                                    "quantity": 131672815,
+                                    "quality": 60.23640685829326
+                                }
+                            },
+                            "stockpile": {},
+                            "max_stockpile": {},
+                            "staging_yard": [],
+                            "max_staging_mass": 0.0,
+                            "facilities": [],
+                            "populations": [],
+                            "image_id": "planet_5_1707_1769655844440.png",
+                            "image_rotation": 283.1118692992027,
+                            "radius_hexes": 0,
+                            "energy": 0.0,
+                            "energy_capacity": 0.0,
+                            "energy_generation": 0.0,
+                            "atmosphere_target": {},
+                            "gravity_target": null,
+                            "gravity_original": null,
+                            "water_target": null,
+                            "radiation_shielding": 0.0,
+                            "radiation_shielding_target": null,
+                            "orders": [],
+                            "species_configs": {},
+                            "intrinsic_abilities": {}
+                        }
+                    ],
+                    "storms": [
+                        {
+                            "name": "Ion Storm Alpha",
+                            "storm_type": "ion_storm",
+                            "description": "Electromagnetic disturbance that disrupts shields and sensors. Common near active stars.",
+                            "location": {
+                                "q": 26,
+                                "r": 29
+                            },
+                            "hex_offsets": [
+                                {
+                                    "q": 0,
+                                    "r": 1
+                                },
+                                {
+                                    "q": -1,
+                                    "r": 2
+                                },
+                                {
+                                    "q": 0,
+                                    "r": 2
+                                },
+                                {
+                                    "q": 0,
+                                    "r": 0
+                                },
+                                {
+                                    "q": -2,
+                                    "r": 2
+                                }
+                            ],
+                            "abilities": {
+                                "ShieldModifier": {
+                                    "multiplier": 0.5,
+                                    "scope": "sector"
+                                },
+                                "StrategicSpeedModifier": {
+                                    "multiplier": 0.8,
+                                    "scope": "sector"
+                                }
+                            },
+                            "image_variant": 2,
+                            "intensity": 0.957434371025969
+                        },
+                        {
+                            "name": "Dark Nebula Beta",
+                            "storm_type": "dark_nebula",
+                            "description": "Dense gas cloud that slows travel but provides cover. Minimal direct harm.",
+                            "location": {
+                                "q": 11,
+                                "r": 2
+                            },
+                            "hex_offsets": [
+                                {
+                                    "q": 1,
+                                    "r": 2
+                                },
+                                {
+                                    "q": 2,
+                                    "r": 1
+                                },
+                                {
+                                    "q": 0,
+                                    "r": 0
+                                },
+                                {
+                                    "q": 1,
+                                    "r": 0
+                                },
+                                {
+                                    "q": -1,
+                                    "r": 1
+                                },
+                                {
+                                    "q": 1,
+                                    "r": 1
+                                },
+                                {
+                                    "q": 0,
+                                    "r": -1
+                                }
+                            ],
+                            "abilities": {
+                                "StrategicSpeedModifier": {
+                                    "multiplier": 0.4,
+                                    "scope": "sector"
+                                },
+                                "ThrustModifier": {
+                                    "multiplier": 0.8,
+                                    "scope": "sector"
+                                }
+                            },
+                            "image_variant": 2,
+                            "intensity": 0.40526109643175146
+                        }
+                    ]
+                }
+            }
+        ],
+        "_next_planet_id": 12,
+        "_next_fleet_id": 1
+    },
+    "empires": [
+        {
+            "id": 0,
+            "name": "Player One",
+            "color": [
+                0,
+                100,
+                255
+            ],
+            "theme_path": "C:\\Developer\\StarshipBattles\\.claude\\worktrees\\fix-issue-16\\assets\\ShipThemes\\Federation",
+            "empire_theme_id": "Federation",
+            "colony_ids": [
+                1
+            ],
+            "fleets": [],
+            "built_ship_designs": [],
+            "_next_fleet_display_number": 1,
+            "_design_serial_counters": {},
+            "resource_pool": {},
+            "max_storage": {},
+            "race_config": {
+                "race_id": "empire_0",
+                "name": "Player One",
+                "faction_name": "Player One",
+                "race_name": "Player One",
+                "race_name_plural": "",
+                "government_type": "",
+                "government_organization": "",
+                "leader_title": "",
+                "leader_name": "",
+                "physical_type": "",
+                "society_type": "",
+                "flag_id": "",
+                "portrait_id": "",
+                "theme_id": "Federation",
+                "homeworld_type": "",
+                "aptitude_strength": 50,
+                "aptitude_intelligence": 50,
+                "aptitude_constitution": 50,
+                "aptitude_dexterity": 50,
+                "aptitude_tolerance_other_species": 50,
+                "aptitude_cooperation": 50,
+                "aptitude_conflict_tolerance": 50,
+                "preferences": {
+                    "gravity": {
+                        "setpoint": 9.81,
+                        "tolerance": 2.0,
+                        "min_value": 0.1,
+                        "max_value": 30.0,
+                        "step": 0.98
+                    },
+                    "temperature": {
+                        "setpoint": 293.0,
+                        "tolerance": 50.0,
+                        "min_value": 50.0,
+                        "max_value": 2000.0,
+                        "step": 10.0
+                    },
+                    "water": {
+                        "setpoint": 0.5,
+                        "tolerance": 0.2,
+                        "min_value": 0.0,
+                        "max_value": 1.0,
+                        "step": 0.1
+                    },
+                    "pressure": {
+                        "setpoint": 101325.0,
+                        "tolerance": 20000.0,
+                        "min_value": 0.0,
+                        "max_value": 500000.0,
+                        "step": 5000.0
+                    },
+                    "tectonic": {
+                        "setpoint": 0.3,
+                        "tolerance": 0.2,
+                        "min_value": 0.0,
+                        "max_value": 1.0,
+                        "step": 0.1
+                    },
+                    "magnetic": {
+                        "setpoint": 1.0,
+                        "tolerance": 0.3,
+                        "min_value": 0.0,
+                        "max_value": 10.0,
+                        "step": 0.1
+                    },
+                    "radiation": {
+                        "setpoint": 0.0,
+                        "tolerance": 50.0,
+                        "min_value": -100.0,
+                        "max_value": 100.0,
+                        "step": 10.0
+                    },
+                    "gas.O2": {
+                        "setpoint": 21000.0,
+                        "tolerance": 5000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.N2": {
+                        "setpoint": 79000.0,
+                        "tolerance": 20000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.CO2": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.H2O": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.CH4": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.H2": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.He": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.Ar": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.NH3": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.SO2": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    }
+                },
+                "base_reproduction_rate": 0.03,
+                "base_happiness": 0.5,
+                "bio_description": "",
+                "socio_description": "",
+                "created_date": "",
+                "modified_date": ""
+            }
+        },
+        {
+            "id": 1,
+            "name": "Player Two",
+            "color": [
+                0,
+                200,
+                150
+            ],
+            "theme_path": "C:\\Developer\\StarshipBattles\\.claude\\worktrees\\fix-issue-16\\assets\\ShipThemes\\Atlantians",
+            "empire_theme_id": "Atlantians",
+            "colony_ids": [
+                7
+            ],
+            "fleets": [],
+            "built_ship_designs": [],
+            "_next_fleet_display_number": 1,
+            "_design_serial_counters": {},
+            "resource_pool": {},
+            "max_storage": {},
+            "race_config": {
+                "race_id": "empire_1",
+                "name": "Player Two",
+                "faction_name": "Player Two",
+                "race_name": "Player Two",
+                "race_name_plural": "",
+                "government_type": "",
+                "government_organization": "",
+                "leader_title": "",
+                "leader_name": "",
+                "physical_type": "",
+                "society_type": "",
+                "flag_id": "",
+                "portrait_id": "",
+                "theme_id": "Atlantians",
+                "homeworld_type": "",
+                "aptitude_strength": 50,
+                "aptitude_intelligence": 50,
+                "aptitude_constitution": 50,
+                "aptitude_dexterity": 50,
+                "aptitude_tolerance_other_species": 50,
+                "aptitude_cooperation": 50,
+                "aptitude_conflict_tolerance": 50,
+                "preferences": {
+                    "gravity": {
+                        "setpoint": 9.81,
+                        "tolerance": 2.0,
+                        "min_value": 0.1,
+                        "max_value": 30.0,
+                        "step": 0.98
+                    },
+                    "temperature": {
+                        "setpoint": 293.0,
+                        "tolerance": 50.0,
+                        "min_value": 50.0,
+                        "max_value": 2000.0,
+                        "step": 10.0
+                    },
+                    "water": {
+                        "setpoint": 0.5,
+                        "tolerance": 0.2,
+                        "min_value": 0.0,
+                        "max_value": 1.0,
+                        "step": 0.1
+                    },
+                    "pressure": {
+                        "setpoint": 101325.0,
+                        "tolerance": 20000.0,
+                        "min_value": 0.0,
+                        "max_value": 500000.0,
+                        "step": 5000.0
+                    },
+                    "tectonic": {
+                        "setpoint": 0.3,
+                        "tolerance": 0.2,
+                        "min_value": 0.0,
+                        "max_value": 1.0,
+                        "step": 0.1
+                    },
+                    "magnetic": {
+                        "setpoint": 1.0,
+                        "tolerance": 0.3,
+                        "min_value": 0.0,
+                        "max_value": 10.0,
+                        "step": 0.1
+                    },
+                    "radiation": {
+                        "setpoint": 0.0,
+                        "tolerance": 50.0,
+                        "min_value": -100.0,
+                        "max_value": 100.0,
+                        "step": 10.0
+                    },
+                    "gas.O2": {
+                        "setpoint": 21000.0,
+                        "tolerance": 5000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.N2": {
+                        "setpoint": 79000.0,
+                        "tolerance": 20000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.CO2": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.H2O": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.CH4": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.H2": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.He": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.Ar": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.NH3": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    },
+                    "gas.SO2": {
+                        "setpoint": 0.0,
+                        "tolerance": 10000.0,
+                        "min_value": 0.0,
+                        "max_value": 300000.0,
+                        "step": 1000.0
+                    }
+                },
+                "base_reproduction_rate": 0.03,
+                "base_happiness": 0.5,
+                "bio_description": "",
+                "socio_description": "",
+                "created_date": "",
+                "modified_date": ""
+            }
+        }
+    ],
+    "human_player_ids": [
+        0,
+        1
+    ],
+    "event_log": {
+        "events": []
+    }
+}

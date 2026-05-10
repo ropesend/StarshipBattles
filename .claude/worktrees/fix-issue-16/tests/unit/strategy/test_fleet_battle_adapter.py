@@ -1,0 +1,193 @@
+"""Tests for FleetBattleAdapter.
+
+PROJ-87 Phase 4: Extracted battle conversion logic from Fleet class.
+"""
+
+import pytest
+from unittest.mock import MagicMock, patch
+
+
+def make_ship_instance(name: str, design_data: dict = None, registries=None):
+    """Helper to create ShipInstance with required fields.
+
+    PROJ-211: Added registries parameter for DI compliance.
+    Required when ship is added to fleet (triggers speed calc).
+    """
+    from game.strategy.data.ship_instance import ShipInstance
+    ship = ShipInstance(
+        instance_id=f"test-{name}",
+        design_id=f"design-{name}",
+        name=name,
+        owner_id=0,
+        design_data=design_data or {}
+    )
+    if registries is not None:
+        ship._registries = registries
+    return ship
+
+
+class TestFleetBattleAdapter:
+    """Tests for FleetBattleAdapter."""
+
+    def test_default_formation_positions_team_0(self):
+        """Team 0 formations start on left side."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        adapter = FleetBattleAdapter(fleet)
+
+        positions = adapter._default_formation_positions(3, team_id=0)
+
+        assert len(positions) == 3
+        # Team 0 base_x = 20000
+        for pos in positions:
+            assert pos[0] == 20000
+
+    def test_default_formation_positions_team_1(self):
+        """Team 1 formations start on right side."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        adapter = FleetBattleAdapter(fleet)
+
+        positions = adapter._default_formation_positions(3, team_id=1)
+
+        assert len(positions) == 3
+        # Team 1 base_x = 80000
+        for pos in positions:
+            assert pos[0] == 80000
+
+    def test_default_formation_positions_spacing(self):
+        """Ships are spaced vertically."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        adapter = FleetBattleAdapter(fleet)
+
+        positions = adapter._default_formation_positions(3, team_id=0)
+
+        # Verify spacing between ships
+        y_values = [p[1] for p in positions]
+        assert len(set(y_values)) == 3  # All different y values
+
+    def test_to_battle_ships_empty_fleet(self):
+        """Empty fleet returns empty list."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        adapter = FleetBattleAdapter(fleet)
+
+        ships = adapter.to_battle_ships(team_id=0)
+        assert ships == []
+
+    def test_to_battle_ships_converts_instances(self, fresh_registries):
+        """Combat-capable ships are converted."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
+        ship = make_ship_instance(name="Cruiser", design_data={}, registries=fresh_registries)
+        fleet.add_ship(ship)
+        adapter = FleetBattleAdapter(fleet)
+
+        with patch.object(ship, 'to_ship') as mock_to_ship:
+            mock_battle_ship = MagicMock()
+            mock_to_ship.return_value = mock_battle_ship
+
+            result = adapter.to_battle_ships(team_id=0)
+
+            assert len(result) == 1
+            assert result[0] == mock_battle_ship
+            mock_to_ship.assert_called_once()
+
+    def test_to_battle_ships_skips_non_combat(self, fresh_registries):
+        """Non-combat ships are skipped."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
+        ship = make_ship_instance(name="Cruiser", design_data={}, registries=fresh_registries)
+        fleet.add_ship(ship)
+        adapter = FleetBattleAdapter(fleet)
+
+        with patch.object(ship, 'is_combat_capable', return_value=False):
+            result = adapter.to_battle_ships(team_id=0)
+            assert result == []
+
+    def test_to_battle_ships_custom_positions(self, fresh_registries):
+        """Custom formation positions are used when provided."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
+        ship = make_ship_instance(name="Cruiser", design_data={}, registries=fresh_registries)
+        fleet.add_ship(ship)
+        adapter = FleetBattleAdapter(fleet)
+
+        custom_positions = [(100, 200)]
+
+        with patch.object(ship, 'to_ship') as mock_to_ship:
+            mock_battle_ship = MagicMock()
+            mock_to_ship.return_value = mock_battle_ship
+
+            adapter.to_battle_ships(team_id=0, formation_positions=custom_positions)
+
+            # Check position was passed
+            call_args = mock_to_ship.call_args
+            assert call_args[0][0] == (100, 200)
+
+    def test_to_battle_ships_passes_registries(self, fresh_registries):
+        """Registries are passed to ship conversion."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
+        ship = make_ship_instance(name="Cruiser", design_data={}, registries=fresh_registries)
+        fleet.add_ship(ship)
+        adapter = FleetBattleAdapter(fleet)
+
+        mock_registries = MagicMock()
+
+        with patch.object(ship, 'to_ship') as mock_to_ship:
+            mock_battle_ship = MagicMock()
+            mock_to_ship.return_value = mock_battle_ship
+
+            adapter.to_battle_ships(team_id=0, registries=mock_registries)
+
+            # Check registries was passed as keyword arg
+            call_kwargs = mock_to_ship.call_args[1]
+            assert call_kwargs.get('registries') is mock_registries
+
+    # PROJ-269 Phase 6 Task 6.6: tests for `update_from_battle_results`
+    # were deleted alongside the method. Equivalent coverage lives in
+    # `tests/unit/strategy/combat/test_post_battle_hook.py`.
+
+
+class TestFleetBattleAdapterDelegation:
+    """Test that Fleet properly delegates to FleetBattleAdapter."""
+
+    def test_fleet_to_battle_ships_delegates(self):
+        """Fleet.battle.to_battle_ships delegates to adapter."""
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        # Empty fleet should work - use fleet.battle.to_battle_ships (PROJ-210)
+        result = fleet.battle.to_battle_ships(team_id=0)
+        assert result == []

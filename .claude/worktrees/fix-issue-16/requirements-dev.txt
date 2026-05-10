@@ -1,0 +1,33 @@
+-r requirements.txt
+
+# Testing
+pytest>=8.0.0
+pytest-testmon
+pytest-xdist
+
+# Code quality scanning (PROJ-297)
+radon>=6.0.0   # Complexity / maintainability metrics
+vulture>=2.10  # Dead code detection
+scalene>=2.2.1 # CPU/memory/copy profiling for performance investigations
+
+# Image processing (Tools/)
+Pillow>=10.0.0
+numpy>=1.24.0
+opencv-python>=4.8.0
+
+# Charting (Tools/inspect_galaxy)
+matplotlib>=3.7.0
+
+# Web UIs (Tools/background_eraser, component_visuals_manager, image_comparator, star_mask_tool)
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# Tech tree editor (Tools/techtree_editor)
+dearpygui>=1.9.0
+
+# QA Observer (Tools/qa_observer)
+sounddevice>=0.5.5  # PROJ-295: replaces pyaudio for Python 3.13 wheel availability
+audioop-lts>=0.2.2 ; python_version >= "3.13"  # PROJ-295: stdlib audioop removed in 3.13; drop-in replacement
+watchdog>=4.0.0
+google-cloud-speech>=2.26.0
+python-dotenv>=1.0.1

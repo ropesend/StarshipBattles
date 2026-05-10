@@ -1,0 +1,31 @@
+2026-05-10 09:10:47 - CombatLab - DEBUG - Combat Lab logging initialized
+2026-05-10 09:10:47 - CombatLab - DEBUG - Log file: C:\Developer\StarshipBattles\.claude\worktrees\fix-issue-16\output\logs\combat_lab.log
+2026-05-10 09:10:47 - CombatLab - DEBUG - Console level: WARNING
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Instantiating scenario class
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Scenario instantiated: Test Scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Loading test data for scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Test data loaded successfully
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Instantiating scenario class
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Scenario instantiated: Test Scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Loading test data for scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Test data loaded successfully
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Instantiating scenario class
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Scenario instantiated: Test Scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Loading test data for scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Test data loaded successfully
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Instantiating scenario class
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Scenario instantiated: Test Scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Loading test data for scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Test data loaded successfully
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Instantiating scenario class
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Scenario instantiated: Test Scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Loading test data for scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Test data loaded successfully
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Instantiating scenario class
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Scenario instantiated: Test Scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Loading test data for scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Test data loaded successfully
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Instantiating scenario class
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Scenario instantiated: Test Scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Loading test data for scenario
+2026-05-10 09:17:36 - CombatLab.game.ui.screens.test_lab.test_executor - DEBUG -  Test data loaded successfully

@@ -1,0 +1,146 @@
+
+import pytest
+import pygame
+import pygame_gui
+from unittest.mock import MagicMock
+from game.ui.screens.strategy_ui import StrategyUI
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.empire import Empire
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
+    """Create a mock ShipInstance for testing.
+
+    PROJ-211: Accepts optional registries for DI compliance. Required for tests
+    that call get_calculated_stats() (triggered by show_detailed_report).
+    """
+    ship = ShipInstance(
+        instance_id=f"test-{name.lower().replace(' ', '-')}",
+        design_id=name,
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100}
+        },
+    )
+    # PROJ-211: Set registries for DI compliance
+    if registries is not None:
+        ship.set_registries(registries)
+    return ship
+
+class MockScene:
+    def __init__(self):
+        self.camera = MagicMock()
+        self.camera.zoom = 1.0
+        self.current_empire = Empire(1, "Test Empire", (255, 0, 0))
+        self.galaxy = MagicMock()
+        # PROJ-198: turn_engine is accessed via session
+        self.session = MagicMock()
+        self.session.turn_engine = MagicMock()
+        # Ensure validate_colonize_order returns valid for owned fleet test
+        self.session.turn_engine.validate_colonize_order.return_value = MagicMock(is_valid=True)
+
+@pytest.fixture
+def strategy_ui():
+    pygame.init()
+    pygame.display.set_mode((800, 600))
+    scene = MockScene()
+    ui = StrategyUI(scene, 800, 600)
+    return ui
+
+from game.core.hex_math import HexCoord
+
+def create_dummy_planet(name, owner_id=None):
+    p = Planet(
+        name=name,
+        location=HexCoord(0, 0),
+        orbit_distance=1,
+        mass=5.97e24,
+        radius=6371000,
+        surface_area=5.1e14,
+        density=5515,
+        surface_gravity=9.81,
+        surface_pressure=101325,
+        surface_temperature=288,
+        surface_water=0.7,
+        tectonic_activity=0.1,
+        magnetic_field=1.0,
+        planet_type=PlanetType.CONTINENTAL
+    )
+    p.owner_id = owner_id
+    return p
+
+def test_build_button_visibility_owned_planet(strategy_ui):
+    """Test that build button is visible for owned planets with a yard."""
+    # Setup
+    planet = create_dummy_planet("Test Planet", strategy_ui.scene.current_empire.id)
+    # Add a PlanetaryYard facility so the build button shows
+    from game.strategy.data.planet import PlanetaryFacility
+    yard = PlanetaryFacility(
+        instance_id="yard_test", design_id="colony_hub", name="Colony Hub",
+        design_data={"layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}},
+    )
+    planet.facilities = [yard]
+
+    # Debug: Verify empire IDs match
+    assert planet.owner_id == strategy_ui.scene.current_empire.id, (
+        f"Planet owner ({planet.owner_id}) should match current empire ({strategy_ui.scene.current_empire.id})"
+    )
+
+    # Act
+    strategy_ui.show_detailed_report(planet)
+
+    # Assert
+    assert strategy_ui.btn_build_yard.visible == 1, "Build button should be visible for owned planet"
+
+    # NEW TEST (PROJ-54): Planet report panel should not cover the Build Yard button
+    assert strategy_ui.planet_report_panel is not None, "Planet report panel should exist for planets"
+
+    panel_bottom = strategy_ui.planet_report_panel.rect.bottom
+    button_top = strategy_ui.btn_build_yard.rect.top
+
+    # Panel should not cover the button (panel bottom should be above button top)
+    assert panel_bottom <= button_top, (
+        f"Panel bottom (y={panel_bottom}) should not cover button (top at y={button_top})"
+    )
+
+def test_build_button_visibility_unowned_planet(strategy_ui):
+    """Test that build button is hidden for unowned planets."""
+    # Setup
+    planet = create_dummy_planet("Alien Planet", 999)
+    
+    # Act
+    strategy_ui.show_detailed_report(planet)
+    
+    # Assert
+    assert strategy_ui.btn_build_yard.visible == 0, "Build button should be hidden for unowned planet"
+
+def test_fleet_buttons_visibility_owned_fleet(strategy_ui, fresh_registries):
+    """Test that fleet buttons are visible for owned fleets."""
+    # Setup
+    fleet = Fleet(1, strategy_ui.scene.current_empire.id, (0,0))
+    fleet.ships = [make_mock_ship_instance("Ship", strategy_ui.scene.current_empire.id, registries=fresh_registries)]
+
+    # Act
+    strategy_ui.show_detailed_report(fleet)
+
+    # Assert
+    assert strategy_ui.btn_colonize.visible == 1, "Colonize button should be visible for owned fleet"
+    assert strategy_ui.btn_orders.visible == 1, "Orders button should be visible for owned fleet"
+
+def test_fleet_buttons_visibility_enemy_fleet(strategy_ui, fresh_registries):
+    """Test that fleet buttons are hidden for enemy fleets."""
+    # Setup
+    fleet = Fleet(2, 999, (0,0)) # Enemy
+    fleet.ships = [make_mock_ship_instance("Ship", 999, registries=fresh_registries)]
+
+    # Act
+    strategy_ui.show_detailed_report(fleet)
+
+    # Assert
+    assert strategy_ui.btn_colonize.visible == 0, "Colonize button should be hidden for enemy fleet"
+    assert strategy_ui.btn_orders.visible == 0, "Orders button should be hidden for enemy fleet"

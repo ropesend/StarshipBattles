@@ -1,0 +1,60 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\07_technical_debt_review.md
+
+I want to conduct a Technical Debt Review - quantify and prioritize accumulated technical debt.
+
+1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
+2. LOAD the specific protocol `Reviews/protocols/07_technical_debt_review.md`
+3. READ `docs/README.md` and relevant `docs/` files. The `docs/` directory is the authoritative reference for architecture, patterns, and conventions. Documentation debt (stale docs, undocumented patterns, code-docs discrepancies) should be included as a debt category.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
+   - Phase A: Scope Definition (understand debt concerns and business context)
+   - Phase B: Agent Planning (select debt analysis agents)
+   - Phase C: Review Swarm Launch (deploy debt cataloguing agents)
+   - Phase D: Findings Compilation (create debt assessment report)
+   - Phase E: User Summary (present debt inventory with prioritized payoff plan)
+
+<review_scope>
+
+[DESCRIBE YOUR TECHNICAL DEBT REVIEW SCOPE]
+
+- What areas to review? (entire codebase, specific module, areas with most changes)
+- Debt categories of interest:
+  - [ ] Code complexity (hard to understand/modify)
+  - [ ] Outdated patterns (legacy approaches)
+  - [ ] Missing abstractions (copy-paste code)
+  - [ ] Test debt (missing/weak tests)
+  - [ ] Documentation debt (missing/outdated docs)
+  - [ ] Architectural debt (design issues)
+  - [ ] All categories
+
+</review_scope>
+
+<business_context>
+
+[OPTIONAL - Business priorities]
+
+- Which areas are most important to keep working?
+- Which areas see most frequent changes?
+- Any planned major features in these areas?
+
+</business_context>
+
+<effort_constraints>
+
+[OPTIONAL - Refactoring constraints]
+
+- How much refactoring effort is feasible?
+- Any areas that can't be touched?
+- Appetite for large vs. incremental changes?
+
+</effort_constraints>
+
+<known_pain_points>
+
+[OPTIONAL - Known problems]
+
+- Areas developers avoid touching?
+- Features that always have bugs?
+- Code that's hard to onboard to?
+
+</known_pain_points>

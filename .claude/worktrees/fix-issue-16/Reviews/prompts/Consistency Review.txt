@@ -1,0 +1,62 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\08_consistency_review.md
+
+I want to conduct a Consistency Review - check for inconsistent patterns across the codebase.
+
+1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
+2. LOAD the specific protocol `Reviews/protocols/08_consistency_review.md`
+3. READ `docs/02_PATTERNS.md` and `docs/03_CONVENTIONS.md` as the authoritative reference for patterns and conventions. These docs define what "correct" looks like — use them as the baseline, not just code frequency. Every agent must check for code-documentation consistency.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
+   - Phase A: Scope Definition (understand patterns to check and reference points)
+   - Phase B: Agent Planning (select pattern analysis agents)
+   - Phase C: Review Swarm Launch (deploy consistency analysis agents)
+   - Phase D: Findings Compilation (create consistency assessment report)
+   - Phase E: User Summary (present pattern inventory and standardization recommendations)
+
+<review_scope>
+
+[DESCRIBE YOUR CONSISTENCY REVIEW SCOPE]
+
+- What areas to review? (entire codebase, specific module, specific pattern type)
+- Pattern categories to check:
+  - [ ] Error handling patterns
+  - [ ] Logging patterns
+  - [ ] Data access patterns
+  - [ ] API/interface patterns
+  - [ ] Naming conventions
+  - [ ] File/module organization
+  - [ ] Testing patterns
+  - [ ] Configuration patterns
+  - [ ] All categories
+
+</review_scope>
+
+<reference_points>
+
+[OPTIONAL - Known good examples]
+
+- Any files/modules that represent the "correct" way?
+- Established patterns to use as reference?
+- Style guides or conventions already documented?
+
+</reference_points>
+
+<areas_of_concern>
+
+[OPTIONAL - Known inconsistencies]
+
+- Any known inconsistencies?
+- Areas that feel "different" from the rest?
+- Recent additions vs. legacy code concerns?
+
+</areas_of_concern>
+
+<standardization_intent>
+
+[OPTIONAL - Your goal]
+
+- Looking to establish new standards?
+- Enforcing existing standards?
+- Just documenting current state?
+
+</standardization_intent>

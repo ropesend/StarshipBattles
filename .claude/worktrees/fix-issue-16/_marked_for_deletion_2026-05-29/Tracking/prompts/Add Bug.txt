@@ -1,0 +1,12 @@
+!EXECUTE_PROTOCOL: Tracking/protocols/01_ingest_ticket.md
+
+I am providing a list of new bugs/requirements below.
+1. LOAD the attached protocol file Tracking/protocols/01_ingest_ticket.md.
+2. ADOPT the 'Project Manager' persona.
+3. TASK: Parse the text into separate tickets, create the bugs/active/ files, and update the Tracking/debug_plan.md index.
+4. CONSTRAINT: DO NOT start "Phase 1: Analysis." DO NOT write any test code. Just perform the data entry.
+
+<new_bug_payload>
+
+
+</new_bug_payload>

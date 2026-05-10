@@ -1,0 +1,190 @@
+"""
+Unit tests for WorkshopDataLoader class (renamed from WorkshopDataLoader).
+
+Tests the data loading logic extracted from DesignWorkshopScreen._reload_data().
+"""
+import pytest
+import os
+import tempfile
+import shutil
+from unittest.mock import patch, MagicMock
+
+from game.core.json_utils import save_json
+
+
+@pytest.fixture(scope="class")
+def temp_data_dirs():
+    """Create temporary test directories with mock data files."""
+    temp_dir = tempfile.mkdtemp()
+    custom_dir = os.path.join(temp_dir, "custom_data")
+    default_dir = os.path.join(temp_dir, "default_data")
+    os.makedirs(custom_dir)
+    os.makedirs(default_dir)
+
+    # Create mock data files
+    save_json(os.path.join(custom_dir, "components.json"), {"components": {}})
+    save_json(os.path.join(custom_dir, "test_modifiers.json"), {"modifiers": {}})
+    save_json(os.path.join(default_dir, "modifiers.json"), {"modifiers": {}})
+    save_json(os.path.join(default_dir, "vehicleclasses.json"), {"classes": {"Escort": {"max_mass": 1000}}})
+
+    yield temp_dir, custom_dir, default_dir
+
+    shutil.rmtree(temp_dir)
+
+
+@pytest.fixture
+def data_loader_setup(temp_data_dirs, fresh_registries):
+    """Set up registry for each test."""
+    temp_dir, custom_dir, default_dir = temp_data_dirs
+
+    # PROJ-195: Yield registries for DI instead of using singleton
+    yield custom_dir, default_dir, fresh_registries
+
+
+class TestWorkshopDataLoader:
+    """Test WorkshopDataLoader file discovery and data loading."""
+
+    def test_find_file_direct_match(self, data_loader_setup):
+        """find_file returns direct path when file exists in custom directory."""
+        custom_dir, default_dir, registries = data_loader_setup
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=registries)
+        path, is_fallback = loader.find_file("components.json")
+
+        assert path is not None
+        assert not is_fallback
+        assert path.endswith("components.json")
+        assert "custom_data" in path
+
+    def test_find_file_test_prefix_fallback(self, data_loader_setup):
+        """find_file tries test_ prefixed filenames when direct match fails."""
+        custom_dir, default_dir, registries = data_loader_setup
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=registries)
+        # modifiers.json doesn't exist directly, but test_modifiers.json does
+        path, is_fallback = loader.find_file("modifiers.json")
+
+        assert path is not None
+        assert not is_fallback
+        assert path.endswith("test_modifiers.json")
+
+    def test_find_file_default_fallback(self, data_loader_setup):
+        """find_file falls back to default data directory when custom fails."""
+        custom_dir, default_dir, registries = data_loader_setup
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=registries)
+        # vehicleclasses.json only exists in default_dir
+        path, is_fallback = loader.find_file("vehicleclasses.json")
+
+        assert path is not None
+        assert is_fallback
+        assert "default_data" in path
+
+    def test_find_file_not_found(self, data_loader_setup):
+        """find_file returns None when no file found anywhere."""
+        custom_dir, default_dir, registries = data_loader_setup
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=registries)
+        path, is_fallback = loader.find_file("nonexistent_file.json", allow_default=True)
+
+        assert path is None
+        assert not is_fallback
+
+    def test_find_file_multiple_names(self, data_loader_setup):
+        """find_file accepts list of alternative filenames."""
+        custom_dir, default_dir, registries = data_loader_setup
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=registries)
+        # Try multiple names, first should match
+        path, _ = loader.find_file(["components.json", "test_components.json"])
+
+        assert path is not None
+        assert path.endswith("components.json")
+
+    def test_clear_registries_clears_registry_manager(self, data_loader_setup):
+        """clear_registries calls the clear_registry() function.
+
+        Note: PROJ-195 - This tests singleton behavior since clear_registries()
+        delegates to clear_registry() which operates on the singleton.
+        We patch where the function is used (workshop_data_loader module).
+        """
+        custom_dir, default_dir, registries = data_loader_setup
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+        # PROJ-195: Use DI-injected registries for loader construction
+        loader = WorkshopDataLoader(custom_dir, registries=registries)
+
+        # PROJ-195: Patch clear_registry where it's imported (in workshop_data_loader)
+        with patch('game.ui.screens.workshop_data_loader.clear_registry') as mock_clear:
+            loader.clear_registries()
+            mock_clear.assert_called_once()
+
+
+@pytest.fixture
+def integration_setup(fresh_registries):
+    """Set up for integration tests using real data files."""
+    # Get the data directory using path fixture
+    from tests.fixtures.paths import get_data_dir
+    data_dir = str(get_data_dir())
+
+    # PROJ-195: Yield registries for DI instead of using singleton
+    yield data_dir, fresh_registries
+
+    patch.stopall()
+
+
+class TestWorkshopDataLoaderIntegration:
+    """Integration tests using real data files."""
+
+    def test_load_all_with_real_data(self, integration_setup):
+        """load_all successfully loads from real data directory."""
+        data_dir, registries = integration_setup
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(data_dir, registries=registries)
+        result = loader.load_all()
+
+        assert result.success, f"Load failed with errors: {result.errors}"
+        assert result.default_class is not None
+        assert len(result.errors) == 0, f"Unexpected errors: {result.errors}"
+
+    def test_load_all_populates_registries(self, integration_setup):
+        """load_all populates component and modifier registries.
+
+        Note: This test verifies that load_all returns a valid result.
+        Registry state verification is done via LoadResult.default_class
+        which requires vehicle classes to have loaded successfully.
+        """
+        data_dir, registries = integration_setup
+        from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(data_dir, registries=registries)
+        result = loader.load_all()
+
+        # Primary assertion: load succeeded
+        assert result.success, f"Load failed: {result.errors}"
+
+        # Verify default class was found (proves vehicle classes loaded)
+        assert result.default_class is not None
+        assert isinstance(result.default_class, str)
+        assert len(result.default_class) > 0, "Default class should be non-empty"
+
+        # Verify no errors occurred
+        assert len(result.errors) == 0, f"Unexpected errors: {result.errors}"

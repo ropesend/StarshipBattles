@@ -1,0 +1,29 @@
+# PROJ-312: Decisions Log
+
+> **LOG ALL DECISIONS HERE**
+> When you make a design choice or the user specifies a preference, add it to this table.
+> Future agents will reference this to understand why things were done a certain way.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-04-27 | Project initialized | Triage `Projects/Triage/fleet_battle_replay.md` promoted to PROJ-312. |
+| 2026-04-27 | Capture mode: **automatic for every battle** | User answer (Phase 0 clarifying question). Simplest UX; storage cost is bounded by Phase 4's ring buffer. |
+| 2026-04-27 | Storage location: **sidecar files alongside save** (`output/saves/<save>/replays/`) | User answer (Phase 0). Save file stays small; replays portable with save; `shutil.rmtree` handles delete-cascade automatically per existing `delete_save()`. |
+| 2026-04-27 | Retention policy: **capped ring buffer**, cap stored in `output/settings/replay_settings.json` | User answer (Phase 0). Predictable storage cost. Default cap = 50 (~15 MB sidecar overhead per save). |
+| 2026-04-27 | Playback: **read-only** (no fork-from-tick, no live edit) | User answer (Phase 0). Simplest determinism story; matches "view what happened" mental model. |
+| 2026-04-27 | `ErraticBehavior` RNG fix is Phase 1 of PROJ-312 (not a separate ticket) | User answer (Phase A clarifying question). Replay determinism is non-negotiable; folding the fix in keeps the dependency local and testable. |
+| 2026-04-27 | `instance_ref` capture: **full ShipInstance snapshot at battle entry** | User answer (Phase A). Replay is fully decoupled from current strategy state. Reuses the existing `ShipInstanceSerializer.to_dict / from_dict` (already covers components / modifiers / cargo / HP / role / experience). |
+| 2026-04-27 | Telemetry level: **configurable per replay**, default NORMAL, debug toggle to DETAILED | User answer (Phase A). Captured level is pinned in the replay metadata; UI exposes a view-level toggle that warns on divergence. |
+| 2026-04-27 | Replay UI entry point: **Event Log entries** | User answer (Phase A). Battles already produce event log rows; adding a Replay button to each battle row keeps the surface single-sourced. Other entry points (sector context menu, dedicated browser window, post-battle outcome panel) deferred. |
+| 2026-04-27 | Capture hook lives at **`start_engine_from_spec()`** (the shared lower-level helper for both `run_battle` and `BattleController.start_from_spec`) | Investigation found this is the single converging codepath. One hook covers both visual and headless callers. No risk of bypass via alternate entry. |
+| 2026-04-27 | `BattleSpec.post_battle_hook` is **NOT serialized**; replay attaches a no-op hook on load | The hook is the side-effect of capture context (apply outcome to fleets, score telemetry, etc.), not data describing the battle. Persisting callables is also fundamentally not JSON-safe. |
+| 2026-04-27 | Mid-battle crash recovery: **out of scope for v1** — replays exist only for completed battles | Risk audit recommendation accepted. Eager partial-record capture adds complexity without addressing the core ask. Documented limitation. |
+| 2026-04-27 | Schema versioning: **strict match** (mirroring `SaveGameService`) | Risk audit recommendation. Replay JSON carries `schema_version`; on load, mismatched replays are silently skipped + debug logged. Mirrors `race_caption_loader.py`'s graceful-degradation precedent. |
+| 2026-04-27 | Replay metadata header includes `sector_name`, `turn_number`, `participating_empires`, `captured_at`, `components_registry_hash` | Risk audit recommendation. Strategy state staleness — galaxy moves on but the replay browser still needs to display "what battle was this". `components_registry_hash` enables drift detection. |
+| 2026-04-27 | AI policy drift: **documented but not pinned in v1** | `CombatPolicy` IDs (`"aggressive"` etc.) are looked up at runtime. Pinning policy snapshots adds significant scope; replays explicitly assume policy files are stable. Future work. |
+| 2026-04-27 | Ring-buffer eviction: **write-then-evict**, never the reverse | Risk audit recommendation. Eviction-then-write opens a window where a write failure leaves the user with fewer replays than the cap. Test enforces ordering. |
+| 2026-04-27 | AST/lint guard against unseeded `random.*` in `game/simulation/`, `game/engine/`, `game/ai/` | Test impact analyst recommendation. Prevents regressions of Phase 1 ErraticBehavior fix and any future unseeded RNG sneaking in. |
+| 2026-04-27 | `ReplaySpec` lives in **new `game/simulation/replay/` package**, not in `game/simulation/` root | Keeps the replay surface isolated from the spec/outcome surface. Phase 2 imports cleanly without polluting `simulation.__all__` with replay-specific exports. |
+| 2026-04-27 | `ReplayStore` lives in **`game/strategy/services/`** (not `game/simulation/`) | The store reaches into the save filesystem (a strategy-layer concern). Simulation must not import strategy. Capture itself is in `game/simulation/replay/` and stores via a callback / interface. |
+| 2026-04-27 | Replay player reuses `BattleScreen` with a **`replay_mode: bool` flag**, not a separate `BattleReplayScreen` class | UX feasibility audit found `BattleScreen` is already a pure visual consumer with zero engine-mutation paths from input. Sub-classing would duplicate ~600 lines for a small behavioural delta. The flag gates: hide order/retreat/setup buttons (none today, but defensive), show "REPLAY MODE" badge, disable end-of-battle transition (return to event log instead). |
+| 2026-04-27 | Tick scrubber implementation: **re-run from tick 0** (not save per-tick state) | UX feasibility audit found headless mode runs ~1000 ticks/frame; a 50k-tick battle replays from zero in ~0.8 s. Per-tick state snapshots would balloon storage. Re-run-to-target is acceptable latency for a UI seek. |

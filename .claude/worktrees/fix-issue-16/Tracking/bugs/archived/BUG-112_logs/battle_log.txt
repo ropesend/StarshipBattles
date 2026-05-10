@@ -1,0 +1,15 @@
+=== BATTLE LOG STARTED ===
+Battle started: 2 vs 1 ships
+Ship 'Ship1' (Team 0): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30
+WARNING: Ship1 has LOW/NO TURN SPEED (0.0000)!
+Ship 'Ship3' (Team 0): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30
+WARNING: Ship3 has LOW/NO TURN SPEED (0.0000)!
+Ship 'Ship2' (Team 1): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30
+WARNING: Ship2 has LOW/NO TURN SPEED (0.0000)!
+Ship 'Ship1' (Team 0): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Ship1 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Ship3' (Team 0): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Ship3 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+Ship 'Ship2' (Team 1): HP=600/600 Mass=230.0 Thrust=150.0 Fuel=0.0 TurnSpeed=0.00 MaxSpeed=16.30 Derelict=False
+WARNING: Ship2 has LOW/NO TURN SPEED (0.0000)! Mass too high for thrusters?
+=== BATTLE LOG ENDED ===

@@ -1,0 +1,80 @@
+{
+  "component": {
+    "id": "capital_missile",
+    "name": "Capital Missile",
+    "mass": 465.0,
+    "base_mass": 60,
+    "max_hp": 10,
+    "base_max_hp": 10,
+    "cost": 0,
+    "type_str": "SeekerWeaponAbility",
+    "stats": {
+      "mass_mult": 7.75,
+      "hp_mult": 1.0,
+      "damage_mult": 1.0,
+      "range_mult": 1.0,
+      "cost_mult": 3.1622776601683795,
+      "thrust_mult": 1.0,
+      "turn_mult": 1.0,
+      "strategic_mult": 1.0,
+      "energy_gen_mult": 1.0,
+      "capacity_mult": 1.0,
+      "shield_capacity_mult": 1.0,
+      "crew_capacity_mult": 1.0,
+      "life_support_capacity_mult": 1.0,
+      "consumption_mult": 1.0,
+      "reload_mult": 1.0,
+      "endurance_mult": 1.0,
+      "projectile_hp_mult": 10.0,
+      "projectile_damage_mult": 1.0,
+      "crew_req_mult": 1.0,
+      "mass_add": 0.0,
+      "arc_add": 0.0,
+      "accuracy_add": 0.0,
+      "projectile_stealth_level": 0.0,
+      "arc_set": null,
+      "properties": {}
+    },
+    "modifiers": [
+      {
+        "id": "seeker_armored",
+        "value": 10.0
+      }
+    ]
+  },
+  "abilities": [
+    {
+      "class_name": "CrewRequired",
+      "tags": [],
+      "amount": 9,
+      "base_amount": 3
+    },
+    {
+      "class_name": "ResourceConsumption",
+      "tags": [],
+      "amount": 5.0,
+      "base_amount": 5
+    },
+    {
+      "class_name": "SeekerWeaponAbility",
+      "tags": [],
+      "damage": 100.0,
+      "base_damage": 100.0,
+      "range": 14400.0,
+      "base_range": 14400,
+      "reload_time": 4.0,
+      "base_reload": 4.0,
+      "firing_arc": 1.0,
+      "base_firing_arc": 1.0,
+      "projectile_damage": 100.0,
+      "projectile_hp": 10.0,
+      "endurance": 3.0,
+      "base_endurance": 3.0,
+      "turn_rate": 200.0
+    },
+    {
+      "class_name": "RequiresCommandAndControl",
+      "tags": []
+    }
+  ]
+}
