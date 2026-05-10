@@ -23,6 +23,23 @@ if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
 
 
+# Issue #11: module-level theme thumbnail cache shared across gallery
+# instances. Mirrors the ShipThemeManager singleton pattern.
+_THEME_THUMBNAIL_CACHE: Optional[List[Tuple[str, Dict[str, pygame.Surface]]]] = None
+
+
+def _clear_thumbnail_caches() -> None:
+    """Reset the module-level theme thumbnail cache.
+
+    Test fixtures call this between runs. Production code never calls
+    this. Note: ``ShipThemeManager`` has its own ``clear()`` reset hook
+    for the full-size theme surfaces; this helper only resets the 40px
+    gallery thumbnails.
+    """
+    global _THEME_THUMBNAIL_CACHE
+    _THEME_THUMBNAIL_CACHE = None
+
+
 class RaceThemeGallery(BaseGallery):
     """
     Gallery panel for selecting ship themes.
@@ -106,17 +123,19 @@ class RaceThemeGallery(BaseGallery):
             List of (theme_id, ship_surfaces_dict) tuples.
             Note: Returns Dict instead of Surface - _populate_gallery is also overridden.
         """
-        if self._theme_cache is not None:
-            return self._theme_cache
+        global _THEME_THUMBNAIL_CACHE
+        if _THEME_THUMBNAIL_CACHE is not None:
+            self._theme_cache = _THEME_THUMBNAIL_CACHE
+            return _THEME_THUMBNAIL_CACHE
 
-        themes = []
+        themes: List[Tuple[str, Dict[str, pygame.Surface]]] = []
         theme_manager = get_default_ship_theme_manager()
         theme_manager.initialize()
         theme_ids = theme_manager.get_available_themes()
 
         for theme_id in theme_ids:
             # Load small preview images of a couple ships
-            ship_surfs = {}
+            ship_surfs: Dict[str, pygame.Surface] = {}
             for ship_class in ["Escort", "Battleship"]:
                 surf = theme_manager.load_image(theme_id, ship_class)
                 if surf:
@@ -125,6 +144,7 @@ class RaceThemeGallery(BaseGallery):
                     ship_surfs[ship_class] = scaled
             themes.append((theme_id, ship_surfs))
 
+        _THEME_THUMBNAIL_CACHE = themes
         self._theme_cache = themes
         return themes
 

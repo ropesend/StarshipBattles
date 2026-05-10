@@ -26,6 +26,23 @@ if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
 
 
+# Issue #11: module-level thumbnail cache shared across gallery instances.
+# Mirrors the ShipThemeManager singleton pattern (PROJ-314). Cleared via
+# _clear_thumbnail_caches() in test fixtures.
+_FLAG_THUMBNAIL_CACHE: Optional[List[Tuple[str, pygame.Surface]]] = None
+
+
+def _clear_thumbnail_caches() -> None:
+    """Reset the module-level flag thumbnail cache.
+
+    Test fixtures call this between runs so a prior test's decoded
+    surfaces don't leak into the next test. Production code never calls
+    this — assets are static at runtime.
+    """
+    global _FLAG_THUMBNAIL_CACHE
+    _FLAG_THUMBNAIL_CACHE = None
+
+
 class RaceFlagGallery(BaseGallery):
     """
     Gallery panel for selecting race flags.
@@ -104,10 +121,12 @@ class RaceFlagGallery(BaseGallery):
         Returns:
             List of (flag_id, thumbnail_surface) tuples
         """
-        if self._asset_cache is not None:
-            return self._asset_cache
+        global _FLAG_THUMBNAIL_CACHE
+        if _FLAG_THUMBNAIL_CACHE is not None:
+            self._asset_cache = _FLAG_THUMBNAIL_CACHE
+            return _FLAG_THUMBNAIL_CACHE
 
-        flags = []
+        flags: List[Tuple[str, pygame.Surface]] = []
         flags_dir = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed")
 
         if not os.path.exists(flags_dir):
@@ -116,24 +135,36 @@ class RaceFlagGallery(BaseGallery):
 
         for entry in os.scandir(flags_dir):
             if entry.is_dir() and entry.name.startswith("flag_"):
-                # Load the 128px rectangle thumbnail
-                thumb_path = os.path.join(entry.path, "128", "rectangle.png")
-                if not os.path.exists(thumb_path):
-                    # Fallback to root rectangle
-                    thumb_path = os.path.join(entry.path, "rectangle.png")
+                # Issue #11: prefer 256/rectangle.png directly (already at
+                # FLAG_THUMB_SIZE). Falls back to 128/ with smoothscale,
+                # then root rectangle.png if the resolution dirs are absent.
+                thumb_256 = os.path.join(entry.path, "256", "rectangle.png")
+                thumb_128 = os.path.join(entry.path, "128", "rectangle.png")
+                thumb_root = os.path.join(entry.path, "rectangle.png")
+                if os.path.exists(thumb_256):
+                    thumb_path = thumb_256
+                    needs_scale = False
+                elif os.path.exists(thumb_128):
+                    thumb_path = thumb_128
+                    needs_scale = True
+                elif os.path.exists(thumb_root):
+                    thumb_path = thumb_root
+                    needs_scale = True
+                else:
+                    continue
 
-                if os.path.exists(thumb_path):
-                    try:
-                        surf = pygame.image.load(thumb_path).convert_alpha()
-                        # Scale to thumbnail size
-                        scaled = pygame.transform.smoothscale(
+                try:
+                    surf = pygame.image.load(thumb_path).convert_alpha()
+                    if needs_scale:
+                        surf = pygame.transform.smoothscale(
                             surf, (self.FLAG_THUMB_SIZE, self.FLAG_THUMB_SIZE)
                         )
-                        flags.append((entry.name, scaled))
-                    except (FileNotFoundError, OSError, pygame.error) as e:
-                        logger.error(f"Failed to load flag thumbnail {thumb_path}: {e}")
+                    flags.append((entry.name, surf))
+                except (FileNotFoundError, OSError, pygame.error) as e:
+                    logger.error(f"Failed to load flag thumbnail {thumb_path}: {e}")
 
         flags.sort(key=lambda x: x[0])
+        _FLAG_THUMBNAIL_CACHE = flags
         self._asset_cache = flags
         logger.debug(f"Discovered {len(flags)} flags")
         return flags

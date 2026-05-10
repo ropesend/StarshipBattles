@@ -252,6 +252,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # UI element references built in ``_create_ui()`` / by the builder.
         self.step_panels: List = []
         self.tab_buttons: List = []
+        # Issue #11: {tab_index: factory} for deferred panel construction.
+        self._deferred_panel_factories: dict = {}
         self.btn_cancel: Optional[pygame_gui.elements.UIButton] = None
         self.btn_save: Optional[pygame_gui.elements.UIButton] = None
         self.btn_load: Optional[pygame_gui.elements.UIButton] = None
@@ -328,9 +330,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self.tab_buttons.append(btn)
 
     def _create_step_panels(self, container, width: int, top: int, height: int) -> None:
-        """Create one UIPanel per tab and dispatch to per-tab factories."""
+        """Create one UIPanel per tab. Issue #11: only Summary runs eagerly;
+        other factories are deferred to first ``_show_step`` (or to
+        ``ensure_panel_built`` when the controller needs gallery contents
+        before the user has visited the tab)."""
         panel_rect = pygame.Rect(10, top, width, height)
-
         factories = (
             ("#panel_summary", panel_factory.create_summary_panel),
             ("#panel_identity", panel_factory.create_identity_panel),
@@ -340,15 +344,26 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             ("#panel_aptitudes", panel_factory.create_aptitudes_panel),
             ("#panel_descriptions", panel_factory.create_descriptions_panel),
         )
-        for object_id, factory in factories:
+        self._deferred_panel_factories = {}
+        for tab_index, (object_id, factory) in enumerate(factories):
             panel = pygame_gui.elements.UIPanel(
                 relative_rect=panel_rect,
                 manager=self.ui_manager,
                 container=container,
                 object_id=object_id,
             )
-            factory(self, panel)
+            if tab_index == TAB_SUMMARY:
+                factory(self, panel)
+            else:
+                self._deferred_panel_factories[tab_index] = factory
             self.step_panels.append(panel)
+
+    def ensure_panel_built(self, tab_index: int) -> None:
+        """Materialise a deferred tab panel if not yet built (Issue #11)."""
+        factory = self._deferred_panel_factories.pop(tab_index, None)
+        if factory is None:
+            return
+        factory(self, self.step_panels[tab_index])
 
     def _create_navigation_buttons(self, container, content_width: int, content_height: int) -> None:
         """Bottom action buttons."""
@@ -389,6 +404,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._view_model.current_step = step_num
 
         logger.debug(f"Showing race setup tab {step_num}: {self.TAB_NAMES[step_num]}")
+
+        self.ensure_panel_built(step_num)  # Issue #11: lazy tab build
 
         for i, panel in enumerate(self.step_panels):
             if i == step_num:

@@ -243,3 +243,110 @@ class TestConstants:
         assert hasattr(RaceFlagGallery, 'PREVIEW_SIZE')
         assert RaceFlagGallery.PREVIEW_SIZE > 0
 
+
+# =============================================================================
+# Issue #11: cross-instance thumbnail cache + 256/ flag source
+# =============================================================================
+
+
+class TestIssue11FlagModuleCache:
+    """Issue #11: ``_discover_assets`` must reuse decoded thumbnails
+    across gallery instances via a module-level cache, eliminating the
+    per-open filesystem scan + smoothscale on Setup Species reopen."""
+
+    def test_discover_assets_uses_module_level_cache_across_instances(
+        self, mock_race_config
+    ):
+        """Two gallery instances share thumbnails — second open does no
+        filesystem scan."""
+        from game.ui.panels import race_flag_gallery as rfg
+
+        # Reset module cache so this test isn't polluted by other tests.
+        rfg._clear_thumbnail_caches()
+
+        gallery_a = _bypass_init_gallery(mock_race_config)
+        first_pass = gallery_a._discover_assets()
+        assert first_pass, "fixture expects flags directory to exist with content"
+
+        # Patch scandir on the second build: if the cache is per-instance
+        # (bug), the second gallery will call scandir again. With the
+        # module cache fix, it must not.
+        from unittest.mock import patch
+
+        with patch("os.scandir") as mock_scandir:
+            gallery_b = _bypass_init_gallery(mock_race_config)
+            second_pass = gallery_b._discover_assets()
+            mock_scandir.assert_not_called()
+
+        assert second_pass is first_pass, (
+            "Second gallery instance must return the SAME cached list, "
+            "not a fresh decode."
+        )
+
+    def test_clear_thumbnail_caches_resets_module_state(self, mock_race_config):
+        """The reset helper exists and lets tests/fixtures wipe state."""
+        from game.ui.panels import race_flag_gallery as rfg
+
+        gallery = _bypass_init_gallery(mock_race_config)
+        gallery._discover_assets()  # populate cache
+
+        rfg._clear_thumbnail_caches()
+
+        # After reset, the next discover must actually hit disk again.
+        from unittest.mock import patch
+
+        with patch("os.scandir", wraps=__import__("os").scandir) as wrapped:
+            gallery2 = _bypass_init_gallery(mock_race_config)
+            gallery2._discover_assets()
+            wrapped.assert_called()
+
+
+class TestIssue11FlagReads256:
+    """Issue #11: flag gallery must read ``256/rectangle.png`` directly
+    (no 128→256 smoothscale upscale)."""
+
+    def test_discover_assets_prefers_256_path(self, mock_race_config, tmp_path, monkeypatch):
+        """If both 256/ and 128/ exist, the 256/ file is loaded directly
+        (the 128/ file is NOT touched)."""
+        from unittest.mock import patch, MagicMock
+
+        from game.ui.panels import race_flag_gallery as rfg
+
+        # Build a fake flags directory: one flag with both 128/ and 256/.
+        processed = tmp_path / "Images" / "Flags" / "Processed"
+        flag_dir = processed / "flag_x"
+        (flag_dir / "128").mkdir(parents=True)
+        (flag_dir / "256").mkdir(parents=True)
+        (flag_dir / "128" / "rectangle.png").write_bytes(b"x")
+        (flag_dir / "256" / "rectangle.png").write_bytes(b"x")
+
+        monkeypatch.setattr(rfg.Paths, "ASSET_DIR", str(tmp_path))
+        rfg._clear_thumbnail_caches()
+
+        loaded_paths = []
+
+        def fake_load(path):
+            loaded_paths.append(path)
+            surf = MagicMock()
+            surf.convert_alpha.return_value = surf
+            return surf
+
+        with patch("pygame.image.load", side_effect=fake_load), patch(
+            "pygame.transform.smoothscale", side_effect=lambda surf, _size: surf
+        ):
+            gallery = _bypass_init_gallery(mock_race_config)
+            rfg._clear_thumbnail_caches()  # discard the production-scan cache
+            gallery._asset_cache = None  # discard any instance cache from _bypass
+            gallery._discover_assets()
+
+        assert any("256" in p and "rectangle.png" in p for p in loaded_paths), (
+            f"flag gallery must read 256/rectangle.png directly; "
+            f"loaded paths were: {loaded_paths}"
+        )
+        assert not any(
+            "128" in p and "rectangle.png" in p for p in loaded_paths
+        ), (
+            f"flag gallery must NOT read 128/rectangle.png when 256/ "
+            f"is available; loaded paths were: {loaded_paths}"
+        )
+

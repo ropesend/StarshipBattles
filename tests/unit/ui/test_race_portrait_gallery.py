@@ -287,3 +287,51 @@ class TestConstants:
         assert hasattr(RacePortraitGallery, 'PREVIEW_SIZE')
         assert RacePortraitGallery.PREVIEW_SIZE > 0
 
+
+# =============================================================================
+# Issue #11: cross-instance thumbnail cache
+# =============================================================================
+
+
+class TestIssue11PortraitModuleCache:
+    """Issue #11: ``_discover_assets`` must reuse decoded thumbnails
+    across gallery instances via a module-level cache, eliminating the
+    per-open filesystem scan + 2048→256 smoothscale on dialog reopen."""
+
+    def test_discover_assets_uses_module_level_cache_across_instances(self):
+        """Two gallery instances share thumbnails — second open does no
+        filesystem scan."""
+        from unittest.mock import patch
+
+        from game.ui.panels import race_portrait_gallery as rpg
+
+        rpg._clear_thumbnail_caches()
+
+        gallery_a = _bypass_init_gallery()
+        first_pass = gallery_a._discover_assets()
+        assert first_pass, "fixture expects portraits directory to have content"
+
+        with patch("os.scandir") as mock_scandir:
+            gallery_b = _bypass_init_gallery()
+            second_pass = gallery_b._discover_assets()
+            mock_scandir.assert_not_called()
+
+        assert second_pass is first_pass
+
+    def test_clear_thumbnail_caches_resets_module_state(self):
+        """The reset helper exists and lets tests/fixtures wipe state."""
+        from unittest.mock import patch
+
+        from game.ui.panels import race_portrait_gallery as rpg
+        import os as os_mod
+
+        gallery = _bypass_init_gallery()
+        gallery._discover_assets()
+
+        rpg._clear_thumbnail_caches()
+
+        with patch("os.scandir", wraps=os_mod.scandir) as wrapped:
+            gallery2 = _bypass_init_gallery()
+            gallery2._discover_assets()
+            wrapped.assert_called()
+

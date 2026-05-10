@@ -363,6 +363,19 @@ class RaceSetupController:
     def randomize_all(self) -> None:
         """Master "Randomize All" — every category except Description."""
         screen = self._screen
+        # Issue #11: galleries are lazy-built on first tab activation.
+        # Force-materialise Visuals + Ships so the master Randomize All
+        # button works on first click without requiring the user to
+        # visit those tabs first.
+        ensure = getattr(screen, "ensure_panel_built", None)
+        if ensure is not None:
+            from game.ui.screens.race_setup.view_model import (
+                TAB_SHIPS,
+                TAB_VISUALS,
+            )
+            ensure(TAB_VISUALS)
+            ensure(TAB_SHIPS)
+
         flag_ids = (
             [a[0] for a in screen._flag_gallery._discover_assets()]
             if screen._flag_gallery
