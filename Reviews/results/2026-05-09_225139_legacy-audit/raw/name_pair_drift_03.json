@@ -1,0 +1,23 @@
+{
+  "detector": "name_pair_drift",
+  "scanned_files": 218,
+  "total_findings": 1,
+  "findings": [
+    {
+      "kind": "manager_service_overlap",
+      "manager_name": "ModifierManager",
+      "service_name": "ModifierService",
+      "shared_methods": [
+        "__init__"
+      ],
+      "manager": {
+        "file": "game/simulation/components/modifier_manager.py",
+        "line": 30
+      },
+      "service": {
+        "file": "game/simulation/services/modifier_service.py",
+        "line": 16
+      }
+    }
+  ]
+}

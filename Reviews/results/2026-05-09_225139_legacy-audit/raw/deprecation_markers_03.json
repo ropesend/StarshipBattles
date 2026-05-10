@@ -1,0 +1,13 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 218,
+  "total_findings": 1,
+  "findings": [
+    {
+      "file": "game/ui/screens/test_lab/dialogs.py",
+      "line": 256,
+      "marker": "# Old",
+      "context": "            # Old value (strikethrough)"
+    }
+  ]
+}

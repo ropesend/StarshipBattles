@@ -1,0 +1,79 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 770,
+  "total_findings": 8,
+  "findings": [
+    {
+      "file": "game/simulation/components/component_constants.py",
+      "line": 45,
+      "function": "create_modifier",
+      "delegates_to": "ApplicationModifier",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def create_modifier(self, value=None) -> \"ApplicationModifier\":"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 568,
+      "function": "to_dict",
+      "delegates_to": "ShipSerializer.to_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def to_dict(self) -> Dict[str, Any]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 581,
+      "function": "from_dict",
+      "delegates_to": "ShipSerializer.from_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def from_dict("
+    },
+    {
+      "file": "game/simulation/systems/battle_engine.py",
+      "line": 449,
+      "function": "_collect_new_attacks",
+      "delegates_to": "_attacks.collect_new_attacks",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _collect_new_attacks(self, alive_ships: List['Ship']) -> List[Any]:"
+    },
+    {
+      "file": "game/strategy/data/planet_naming.py",
+      "line": 16,
+      "function": "to_roman",
+      "delegates_to": "NameRegistry.to_roman",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def to_roman(n: int) -> str:"
+    },
+    {
+      "file": "game/strategy/engine/superweapon_order_processor.py",
+      "line": 331,
+      "function": "_get_system_at_hex",
+      "delegates_to": "get_system_at_hex",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _get_system_at_hex(galaxy, location):  # type: ignore[no-untyped-def]"
+    },
+    {
+      "file": "game/strategy/services/effect_ability_metadata.py",
+      "line": 150,
+      "function": "find_metadata",
+      "delegates_to": "_BY_NAME.get",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def find_metadata(ability_name: str) -> Optional[EffectAbilityMetadata]:"
+    },
+    {
+      "file": "game/ui/screens/builder/weapons_viewmodel.py",
+      "line": 392,
+      "function": "calc_damage_at_range",
+      "delegates_to": "ab.get_damage",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "        def calc_damage_at_range(r) -> Any:"
+    }
+  ]
+}

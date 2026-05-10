@@ -1,0 +1,31 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 770,
+  "total_findings": 4,
+  "findings": [
+    {
+      "file": "game/app.py",
+      "line": 124,
+      "marker": "# Legacy",
+      "context": "        # Legacy `running` flag \u2014 read by `_handle_strategy_action(\"quit_game\")`"
+    },
+    {
+      "file": "game/strategy/engine/conflict_resolution_engine.py",
+      "line": 379,
+      "marker": "# legacy",
+      "context": "        # legacy `_rng_resolve_empty_fleets` only existed to keep"
+    },
+    {
+      "file": "game/ui/panels/race_summary_panel.py",
+      "line": 149,
+      "marker": "# legacy",
+      "context": "        # legacy three-column split and the y-55 alignment hack."
+    },
+    {
+      "file": "game/ui/screens/test_lab/dialogs.py",
+      "line": 256,
+      "marker": "# Old",
+      "context": "            # Old value (strikethrough)"
+    }
+  ]
+}

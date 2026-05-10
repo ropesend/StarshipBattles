@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Starship Consult"
+  short_description: "Consult Claude, OpenCode, or Gemini during Starship work."
+  default_prompt: "Use $codex-starship-consult --with gemini --mode planning to review this Starship Battles plan."

@@ -4,62 +4,6 @@
   "stale_references": [
     {
       "kind": "absolute_path",
-      "line": 13,
-      "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\\\\\Developer\\\\\\\\StarshipBattles\\\\\\\\tests\\\\\\\\unit\\\\\\\\ui\\\\\\\\test_detail_panel_rendering.py::TestDetailPanelRendering::test_html_stats_generation_basic\\",
-      "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
-      "line": 31,
-      "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\\\\\Developer\\\\\\\\StarshipBattles\\\\\\\\tests\\\\\\\\unit\\\\\\\\services\\",
-      "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
-      "line": 31,
-      "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\\\\\Developer\\\\\\\\StarshipBattles\\\\\\\\tests\\\\\\\\unit\\\\\\\\services\\",
-      "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
-      "line": 39,
-      "path": ".claude/settings.local.json",
-      "pattern": "//c/Developer/StarshipBattles/**",
-      "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
-      "line": 44,
-      "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\\\\\Developer\\\\\\\\StarshipBattles\\",
-      "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
-      "line": 47,
-      "path": ".claude/settings.local.json",
-      "pattern": "//c/Users/rossr/AppData/Roaming/Python/Python311/site-packages/pygame_gui/elements/**",
-      "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
-      "line": 53,
-      "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\Developer\\\\StarshipBattles\\\\Projects\\\\active_projects\\\\PROJ-216\\\\findings",
-      "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
-      "line": 54,
-      "path": ".claude/settings.local.json",
-      "pattern": "c:\\\\Developer\\\\StarshipBattles\\\\Projects\\\\active_projects\\\\PROJ-218\\\\findings",
-      "severity": "warn"
-    },
-    {
-      "kind": "absolute_path",
       "line": 56,
       "path": "AGENTS.md",
       "pattern": "c:\\Dev\\Starship",
@@ -97,7 +41,7 @@
   "surfaces": [
     {
       "agent": "codex",
-      "directory_count": 11,
+      "directory_count": 13,
       "exists": true,
       "expected_prefix": "codex-",
       "kind": "skill_surface",
@@ -109,6 +53,8 @@
         "codex-ship-theme-creator",
         "codex-starship-analysis-review",
         "codex-starship-combat-lab",
+        "codex-starship-consult",
+        "codex-starship-consult-respond",
         "codex-starship-design-assets",
         "codex-starship-performance-profiling",
         "codex-starship-project-system",
@@ -258,6 +204,52 @@
           "agent_skills_spec_compliant": true,
           "claude_frontmatter_present": false,
           "claude_specific_frontmatter": [],
+          "directory": "codex-starship-consult",
+          "expected_prefix": "codex-",
+          "frontmatter": {
+            "description": "Consult Claude Code or OpenCode during Starship Battles work through the lightweight consult/v1 protocol. Use when Codex needs a pairwise second opinion, planning critique, mid-project review, pre-final check, or deep-dive feedback without delegating implementation or starting the heavier v2.6 discussion protocol.",
+            "name": "codex-starship-consult"
+          },
+          "frontmatter_description": "Consult Claude Code or OpenCode during Starship Battles work through the lightweight consult/v1 protocol. Use when Codex needs a pairwise second opinion, planning critique, mid-project review, pre-final check, or deep-dive feedback without delegating implementation or starting the heavier v2.6 discussion protocol.",
+          "frontmatter_fields": [
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "codex-starship-consult",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".agents/skills/codex-starship-consult/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": false,
+          "claude_specific_frontmatter": [],
+          "directory": "codex-starship-consult-respond",
+          "expected_prefix": "codex-",
+          "frontmatter": {
+            "description": "Respond as Codex to Starship Battles consult/v1 request files created by Claude Code or OpenCode. Use when a partner agent invokes Codex non-interactively with a request path for advisory planning, review, pre-final checks, or deep-dive feedback without allowing Codex to edit project files.",
+            "name": "codex-starship-consult-respond"
+          },
+          "frontmatter_description": "Respond as Codex to Starship Battles consult/v1 request files created by Claude Code or OpenCode. Use when a partner agent invokes Codex non-interactively with a request path for advisory planning, review, pre-final checks, or deep-dive feedback without allowing Codex to edit project files.",
+          "frontmatter_fields": [
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "codex-starship-consult-respond",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".agents/skills/codex-starship-consult-respond/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": false,
+          "claude_specific_frontmatter": [],
           "directory": "codex-starship-design-assets",
           "expected_prefix": "codex-",
           "frontmatter": {
@@ -374,7 +366,7 @@
     },
     {
       "agent": "claude",
-      "directory_count": 50,
+      "directory_count": 60,
       "exists": true,
       "expected_prefix": "claude-",
       "kind": "skill_surface",
@@ -383,12 +375,15 @@
         "claude-analysis-complexity",
         "claude-analysis-dead-code",
         "claude-analysis-sweep",
+        "claude-consult",
+        "claude-consult-respond",
         "claude-debug-parallel",
         "claude-deep-dive-parallel",
         "claude-delegate-review",
         "claude-discuss-continue",
         "claude-discuss-respond",
         "claude-discuss-start",
+        "claude-doc-audit-apply",
         "claude-fix-crash",
         "claude-gi-add",
         "claude-gi-answer",
@@ -408,7 +403,14 @@
         "claude-proj-continue",
         "claude-proj-extract-phase",
         "claude-proj-from-audit-shrink",
+        "claude-proj-from-docs-audit",
+        "claude-proj-from-error-audit",
+        "claude-proj-from-legacy-audit",
+        "claude-proj-from-pattern-audit",
+        "claude-proj-from-state-audit",
         "claude-proj-from-test-review",
+        "claude-proj-from-testcoverage-audit",
+        "claude-proj-from-type-audit",
         "claude-proj-manage-plan",
         "claude-proj-parallel",
         "claude-proj-reset-baseline",
@@ -514,6 +516,58 @@
           "opencode_visible": true,
           "prefix_compliant": true,
           "skill_md": ".claude/skills/claude-analysis-sweep/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint"
+          ],
+          "directory": "claude-consult",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Pairwise advisory consult with another agent (codex or opencode). Single round-trip, autonomous \u2014 Claude shells out to the partner CLI directly, no daemon, no manual user invocation on the partner side. Use when you want a second set of eyes/brains on a question, plan, or piece of code; or as the opening move in solving a problem where another perspective helps. NOT a delegation channel \u2014 you (the initiator) own synthesis and action; the partner advises only.",
+            "name": "claude-consult"
+          },
+          "frontmatter_description": "Pairwise advisory consult with another agent (codex or opencode). Single round-trip, autonomous \u2014 Claude shells out to the partner CLI directly, no daemon, no manual user invocation on the partner side. Use when you want a second set of eyes/brains on a question, plan, or piece of code; or as the opening move in solving a problem where another perspective helps. NOT a delegation channel \u2014 you (the initiator) own synthesis and action; the partner advises only.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "claude-consult",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-consult/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint"
+          ],
+          "directory": "claude-consult-respond",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Respond to a `consult/v1` request from another agent. Invoked when codex or opencode shells out to `claude -p` with a request to load this skill. Reads the request artifact at the supplied path, advises within the permission contract (read repo + run tests when allowed; write only inside the consult leaf), and writes a complete `response.md` per the harmonized schema. NOT a delegation channel \u2014 the initiator owns synthesis and action; you advise only.",
+            "name": "claude-consult-respond"
+          },
+          "frontmatter_description": "Respond to a `consult/v1` request from another agent. Invoked when codex or opencode shells out to `claude -p` with a request to load this skill. Reads the request artifact at the supplied path, advises within the permission contract (read repo + run tests when allowed; write only inside the consult leaf), and writes a complete `response.md` per the harmonized schema. NOT a delegation channel \u2014 the initiator owns synthesis and action; you advise only.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "claude-consult-respond",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-consult-respond/SKILL.md",
           "spec_violations": []
         },
         {
@@ -674,6 +728,34 @@
           "opencode_visible": true,
           "prefix_compliant": true,
           "skill_md": ".claude/skills/claude-discuss-start/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-doc-audit-apply",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Verify and apply fixes from an ocode-docs-audit result. Re-checks every claim against current code, applies CONFIRMED fixes autonomously, logs everything else (DISPUTED / STALE / ALREADY-FIXED / INCONCLUSIVE / DEFERRED). Never invents prose. Tier 3 new-doc findings are always deferred.",
+            "name": "claude-doc-audit-apply"
+          },
+          "frontmatter_description": "Verify and apply fixes from an ocode-docs-audit result. Re-checks every claim against current code, applies CONFIRMED fixes autonomously, logs everything else (DISPUTED / STALE / ALREADY-FIXED / INCONCLUSIVE / DEFERRED). Never invents prose. Tier 3 new-doc findings are always deferred.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-doc-audit-apply",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-doc-audit-apply/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1213,6 +1295,146 @@
             "argument-hint",
             "disable-model-invocation"
           ],
+          "directory": "claude-proj-from-docs-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Skeptically verify the findings in an ocode-docs-audit review and create one or more Projects from the verified set. Bundles by doc-file-cluster (not severity); includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces dead references and content-accuracy errors with mislead-risk callouts.",
+            "name": "claude-proj-from-docs-audit"
+          },
+          "frontmatter_description": "Skeptically verify the findings in an ocode-docs-audit review and create one or more Projects from the verified set. Bundles by doc-file-cluster (not severity); includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces dead references and content-accuracy errors with mislead-risk callouts.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-proj-from-docs-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-from-docs-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-proj-from-error-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Skeptically verify the findings in an ocode-error-audit review and create one or more Projects from the verified set. Bundles by code relatedness (not severity); includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces CRITICAL boundary failures with crash-risk callouts.",
+            "name": "claude-proj-from-error-audit"
+          },
+          "frontmatter_description": "Skeptically verify the findings in an ocode-error-audit review and create one or more Projects from the verified set. Bundles by code relatedness (not severity); includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces CRITICAL boundary failures with crash-risk callouts.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-proj-from-error-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-from-error-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-proj-from-legacy-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Skeptically verify the findings in an ocode-legacy-audit review and create one or more Projects from the verified set. Bundles by removal cluster (one project per system being eradicated). Includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces save-migration-code findings as banned-by-CLAUDE.md callouts and zero-call-site aliases as single-PR deletions.",
+            "name": "claude-proj-from-legacy-audit"
+          },
+          "frontmatter_description": "Skeptically verify the findings in an ocode-legacy-audit review and create one or more Projects from the verified set. Bundles by removal cluster (one project per system being eradicated). Includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces save-migration-code findings as banned-by-CLAUDE.md callouts and zero-call-site aliases as single-PR deletions.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-proj-from-legacy-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-from-legacy-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-proj-from-pattern-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Skeptically verify the findings in an ocode-pattern-audit review and create one or more Projects from the verified set. Bundles by code relatedness (layer + pattern-area, not severity); includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces CRITICAL pattern-bypass findings (Registry DI, Facade, layer violations) with architectural-risk callouts.",
+            "name": "claude-proj-from-pattern-audit"
+          },
+          "frontmatter_description": "Skeptically verify the findings in an ocode-pattern-audit review and create one or more Projects from the verified set. Bundles by code relatedness (layer + pattern-area, not severity); includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces CRITICAL pattern-bypass findings (Registry DI, Facade, layer violations) with architectural-risk callouts.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-proj-from-pattern-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-from-pattern-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-proj-from-state-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Skeptically verify the findings in an ocode-state-audit review and create one or more Projects from the verified set. Bundles by singleton-or-mechanism (not severity); includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces CRITICAL singleton-divergence and shared-state-bug callouts.",
+            "name": "claude-proj-from-state-audit"
+          },
+          "frontmatter_description": "Skeptically verify the findings in an ocode-state-audit review and create one or more Projects from the verified set. Bundles by singleton-or-mechanism (not severity); includes all severities. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything. Surfaces CRITICAL singleton-divergence and shared-state-bug callouts.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-proj-from-state-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-from-state-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
           "directory": "claude-proj-from-test-review",
           "expected_prefix": "claude-",
           "frontmatter": {
@@ -1232,6 +1454,62 @@
           "opencode_visible": true,
           "prefix_compliant": true,
           "skill_md": ".claude/skills/claude-proj-from-test-review/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-proj-from-testcoverage-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Skeptically verify the CONFIRMED gaps in an ocode-testcoverage-audit review and create one or more Projects from the verified set. Bundles by layer + module cluster (not severity); ADVISORY UI items are tracked separately rather than driving new test work. Surfaces Tier 0 zero-coverage modules in non-UI layers as the highest-impact category.",
+            "name": "claude-proj-from-testcoverage-audit"
+          },
+          "frontmatter_description": "Skeptically verify the CONFIRMED gaps in an ocode-testcoverage-audit review and create one or more Projects from the verified set. Bundles by layer + module cluster (not severity); ADVISORY UI items are tracked separately rather than driving new test work. Surfaces Tier 0 zero-coverage modules in non-UI layers as the highest-impact category.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-proj-from-testcoverage-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-from-testcoverage-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-proj-from-type-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Skeptically verify the findings in an ocode-type-audit review and create one or more Projects from the verified set. Bundles by code relatedness (not severity); includes all severities plus the mypy strict-mode migration plan. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything.",
+            "name": "claude-proj-from-type-audit"
+          },
+          "frontmatter_description": "Skeptically verify the findings in an ocode-type-audit review and create one or more Projects from the verified set. Bundles by code relatedness (not severity); includes all severities plus the mypy strict-mode migration plan. Interactive bundling \u2014 proposes a project breakdown then lets the user adjust before creating anything.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-proj-from-type-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-proj-from-type-audit/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1822,7 +2100,7 @@
     },
     {
       "agent": "opencode",
-      "directory_count": 11,
+      "directory_count": 13,
       "exists": true,
       "expected_prefix": "ocode-",
       "kind": "skill_surface",
@@ -1834,10 +2112,12 @@
         "ocode-discuss-start",
         "ocode-docs-audit",
         "ocode-error-audit",
+        "ocode-legacy-audit",
         "ocode-pattern-audit",
         "ocode-review-request",
         "ocode-state-audit",
         "ocode-test-review",
+        "ocode-testcoverage-audit",
         "ocode-type-audit"
       ],
       "skills": [
@@ -2003,6 +2283,32 @@
           "claude_specific_frontmatter": [
             "argument-hint"
           ],
+          "directory": "ocode-legacy-audit",
+          "expected_prefix": "ocode-",
+          "frontmatter": {
+            "description": "Legacy code, alias, shim, and migration-code audit. Detects module aliases, __init__.py re-export shims, deprecation markers, wrapper delegates, name-pair drift, save-migration code, superseded-pattern uses, TYPE_CHECKING-only re-exports, and partial Protocol implementers. Produces a legacy-removal scorecard with prioritized cleanup plan. Production code only.",
+            "name": "ocode-legacy-audit"
+          },
+          "frontmatter_description": "Legacy code, alias, shim, and migration-code audit. Detects module aliases, __init__.py re-export shims, deprecation markers, wrapper delegates, name-pair drift, save-migration code, superseded-pattern uses, TYPE_CHECKING-only re-exports, and partial Protocol implementers. Produces a legacy-removal scorecard with prioritized cleanup plan. Production code only.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "ocode-legacy-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "allow",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".opencode/skills/ocode-legacy-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint"
+          ],
           "directory": "ocode-pattern-audit",
           "expected_prefix": "ocode-",
           "frontmatter": {
@@ -2058,10 +2364,10 @@
           "directory": "ocode-state-audit",
           "expected_prefix": "ocode-",
           "frontmatter": {
-            "description": "State management & mutability audit. Scans all production code for module-level mutable state, singleton divergence risk (ctx.xxx vs get_default_xxx()), global keyword abuse, class-level mutable defaults, and random.seed() bypass. Produces a PROJ-258 transition progress report and singleton divergence risk map. Production code only.",
+            "description": "State management & mutability audit. Scans all production code for module-level mutable state, singleton divergence risk (ctx.xxx vs get_default_xxx()), global keyword abuse, class-level mutable defaults, and random.seed() bypass. Produces a singleton access-pattern divergence risk map. Production code only.",
             "name": "ocode-state-audit"
           },
-          "frontmatter_description": "State management & mutability audit. Scans all production code for module-level mutable state, singleton divergence risk (ctx.xxx vs get_default_xxx()), global keyword abuse, class-level mutable defaults, and random.seed() bypass. Produces a PROJ-258 transition progress report and singleton divergence risk map. Production code only.",
+          "frontmatter_description": "State management & mutability audit. Scans all production code for module-level mutable state, singleton divergence risk (ctx.xxx vs get_default_xxx()), global keyword abuse, class-level mutable defaults, and random.seed() bypass. Produces a singleton access-pattern divergence risk map. Production code only.",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -2084,10 +2390,10 @@
           "directory": "ocode-test-review",
           "expected_prefix": "ocode-",
           "frontmatter": {
-            "description": "Exhaustive test suite audit across 12 quality categories. Seeded file-shuffle sharding for cross-run randomization. Includes skeptical verification stage \u2014 only verified claims appear in final report. Read-only \u2014 produces findings documents, no code changes.",
+            "description": "Exhaustive test suite audit across 13 quality categories. Seeded file-shuffle sharding for cross-run randomization. Includes skeptical verification stage \u2014 only verified claims appear in final report. Read-only \u2014 produces findings documents, no code changes.",
             "name": "ocode-test-review"
           },
-          "frontmatter_description": "Exhaustive test suite audit across 12 quality categories. Seeded file-shuffle sharding for cross-run randomization. Includes skeptical verification stage \u2014 only verified claims appear in final report. Read-only \u2014 produces findings documents, no code changes.",
+          "frontmatter_description": "Exhaustive test suite audit across 13 quality categories. Seeded file-shuffle sharding for cross-run randomization. Includes skeptical verification stage \u2014 only verified claims appear in final report. Read-only \u2014 produces findings documents, no code changes.",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -2099,6 +2405,32 @@
           "opencode_visible": true,
           "prefix_compliant": true,
           "skill_md": ".opencode/skills/ocode-test-review/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint"
+          ],
+          "directory": "ocode-testcoverage-audit",
+          "expected_prefix": "ocode-",
+          "frontmatter": {
+            "description": "Comprehensive test coverage audit across the entire production codebase. Phase 1 deterministic AST scanner precomputes coverage tiers and shards. Phase 2 launches one-per-shard discovery agents that read every production file + corresponding unit tests, verifying coverage and identifying untested branches, error paths, and corner cases. Phase 3 launches one-per-shard skeptical verification agents that exhaustively verify CRITICAL/MAJOR claims and sample MINOR/ADVISORY claims. Phase 4 compiles a final report with prioritized test case suggestions. Production code only.",
+            "name": "ocode-testcoverage-audit"
+          },
+          "frontmatter_description": "Comprehensive test coverage audit across the entire production codebase. Phase 1 deterministic AST scanner precomputes coverage tiers and shards. Phase 2 launches one-per-shard discovery agents that read every production file + corresponding unit tests, verifying coverage and identifying untested branches, error paths, and corner cases. Phase 3 launches one-per-shard skeptical verification agents that exhaustively verify CRITICAL/MAJOR claims and sample MINOR/ADVISORY claims. Phase 4 compiles a final report with prioritized test case suggestions. Production code only.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "ocode-testcoverage-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "allow",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".opencode/skills/ocode-testcoverage-audit/SKILL.md",
           "spec_violations": []
         },
         {

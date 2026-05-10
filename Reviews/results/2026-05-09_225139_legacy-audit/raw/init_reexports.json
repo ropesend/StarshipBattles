@@ -1,0 +1,16 @@
+{
+  "detector": "init_reexports",
+  "scanned_files": 770,
+  "total_findings": 1,
+  "findings": [
+    {
+      "file": "game/ui/services/image/__init__.py",
+      "line": 37,
+      "kind": "as_alias",
+      "module": "game.ui.services.image",
+      "imported": "null_provider",
+      "as": "_null_provider",
+      "context": "from game.ui.services.image import null_provider as _null_provider  # noqa: F401"
+    }
+  ]
+}

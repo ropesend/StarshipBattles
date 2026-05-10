@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Starship Consult Respond"
+  short_description: "Respond to consult/v1 requests from partner agents."
+  default_prompt: "Use $codex-starship-consult-respond with --request <path> to answer a consult/v1 request."
