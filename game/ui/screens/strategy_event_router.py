@@ -142,6 +142,13 @@ class StrategyEventRouter:
         Args:
             event: The pygame_gui button pressed event.
         """
+        # Full modality (issue #12): top-bar buttons are inert while any
+        # StrategyModalWindow is live. The user must close the modal first.
+        # Mirrors the existing wheel-zoom guard in
+        # StrategyInputHandler._handle_scroll.
+        if self.has_modal_open():
+            return
+
         ui = self.ui
 
         if event.ui_element == ui.btn_planets:
@@ -492,11 +499,14 @@ class StrategyEventRouter:
                 if is_alive and window.rect.collidepoint((mx, my)):
                     return True
 
-        # PROJ-313: OR-bridge with the live-list of StrategyModalWindow
-        # subclasses. iter_live_modals already filters dead refs.
-        for window in wm.iter_live_modals():
-            if window.rect.collidepoint((mx, my)):
-                return True
+        # Full modality (issue #12): any live StrategyModalWindow blocks
+        # all background clicks regardless of click position. This
+        # replaces the prior rect-coincident check so that clicks in the
+        # gutter outside a 90%-screen registry/empire window cannot leak
+        # through to the hex grid behind it. iter_live_modals already
+        # filters dead refs.
+        for _ in wm.iter_live_modals():
+            return True
 
         # Check menu panel
         if self.ui.menu_panel is not None:

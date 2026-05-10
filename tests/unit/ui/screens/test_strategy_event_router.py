@@ -133,18 +133,28 @@ class TestClickGateWindows:
 
         assert result is True, "Click on fleet_orders_window should be blocked"
 
-    def test_click_outside_fleet_orders_window_not_blocked(self, event_router, mock_ui):
-        """Click outside fleet_orders_window should pass through."""
+    def test_click_outside_fleet_orders_window_blocked_under_full_modality(self, event_router, mock_ui):
+        """Click outside a live StrategyModalWindow should be blocked (issue #12).
+
+        Renamed/inverted from `test_click_outside_fleet_orders_window_not_blocked`
+        as part of issue #12. The old contract (rect-coincident block, gutter
+        pass-through) is intentionally replaced with full modality: any live
+        StrategyModalWindow blocks ALL background clicks regardless of position.
+        """
         window = MagicMock()
         window.alive.return_value = True
         window.rect = MockRect(500, 300, 400, 500)
-        mock_ui.window_manager.fleet_orders_window = window
+        # PROJ-313 / issue #12: live modals are tracked through iter_live_modals.
+        mock_ui.window_manager._modals_for_test.append(window)
 
-        # Click outside the window
-        mx, my = 200, 800  # Not in window rect
+        # Click outside the window's rect — under full modality this is blocked.
+        mx, my = 200, 800
         result = event_router._is_blocking_ui_element_at(mx, my)
 
-        assert result is False, "Click outside window should pass through"
+        assert result is True, (
+            "Issue #12: any live StrategyModalWindow must block clicks "
+            "outside its rect (full modality)."
+        )
 
     def test_click_blocked_by_planet_list_window(self, event_router, mock_ui):
         """Click on planet_list_window should be blocked."""
@@ -265,14 +275,20 @@ class TestClickGateOrBridge:
 
         assert result is True
 
-    def test_click_outside_modal_list_window_passes(self, event_router, mock_ui):
-        """Click outside a modal-list window's rect should pass through."""
+    def test_click_outside_modal_list_window_blocked_under_full_modality(self, event_router, mock_ui):
+        """Click outside a modal-list window's rect should be blocked (issue #12).
+
+        Renamed/inverted from `test_click_outside_modal_list_window_passes`.
+        Under issue #12's full-modality contract, any live StrategyModalWindow
+        blocks ALL background clicks regardless of click position. The
+        rect-pass-through behavior the old test pinned is intentionally gone.
+        """
         win = self._make_live_window(MockRect(500, 300, 400, 500))
         mock_ui.window_manager.iter_live_modals = MagicMock(return_value=iter([win]))
 
         result = event_router._is_blocking_ui_element_at(100, 800)
 
-        assert result is False
+        assert result is True
 
     def test_has_modal_open_returns_true_with_only_modal_list(self, event_router, mock_ui):
         """has_modal_open returns True when modal list populated, no slots."""
@@ -413,3 +429,149 @@ class TestHandleClickIntegration:
         result = event_router.handle_click(mx, my, 1)
 
         assert result is True, "Click on window should be blocked"
+
+
+class TestFullModalityBlocksAllBackgroundClicks:
+    """Issue #12: any live StrategyModalWindow blocks ALL background clicks.
+
+    The three named windows from the bug report (PlanetListWindow,
+    StarListWindow, EmpirePanelWindow) are 90% of screen, so clicks in
+    the gutter outside their rect previously leaked through. The new
+    contract is full modality: any live modal blocks the entire
+    background regardless of click position.
+    """
+
+    @pytest.mark.parametrize(
+        "window_label, rect",
+        [
+            ("planet_list_window", MockRect(128, 80, 2304, 1440)),
+            ("star_list_window", MockRect(128, 80, 2304, 1440)),
+            ("empire_panel_window", MockRect(128, 80, 2304, 1440)),
+        ],
+    )
+    def test_click_outside_modal_rect_blocked(
+        self, event_router, mock_ui, window_label, rect
+    ) -> None:
+        """A live modal blocks clicks outside its rect (full modality)."""
+        window = MagicMock(name=window_label)
+        window.alive.return_value = True
+        window.rect = rect
+        mock_ui.window_manager._modals_for_test.append(window)
+
+        # Click clearly outside the window's rect — in the gutter.
+        mx, my = 50, 1550
+        assert rect.collidepoint((mx, my)) is False, "Test setup: must be outside rect"
+
+        result = event_router._is_blocking_ui_element_at(mx, my)
+
+        assert result is True, (
+            f"Issue #12: {window_label} must block clicks outside its rect"
+        )
+
+    def test_click_inside_modal_rect_still_blocked(self, event_router, mock_ui) -> None:
+        """Sanity: full modality also blocks clicks inside the rect."""
+        window = MagicMock()
+        window.alive.return_value = True
+        window.rect = MockRect(500, 300, 400, 500)
+        mock_ui.window_manager._modals_for_test.append(window)
+
+        # Click inside the window.
+        result = event_router._is_blocking_ui_element_at(700, 500)
+
+        assert result is True
+
+    def test_no_live_modal_allows_background_click(self, event_router) -> None:
+        """When no modal is live, background clicks pass through."""
+        # _modals_for_test is empty by fixture default; nothing else open.
+        result = event_router._is_blocking_ui_element_at(1000, 800)
+
+        assert result is False
+
+
+class TestHandleButtonPressedModalGuard:
+    """Issue #12: _handle_button_pressed must early-return when a modal is live.
+
+    Top-bar UI_BUTTON_PRESSED events previously dispatched directly to
+    open_planet_list / open_star_list / open_empire_panel etc. with no
+    consultation of has_modal_open(). The new guard makes top-bar
+    buttons inert while any StrategyModalWindow is live.
+    """
+
+    @pytest.fixture
+    def router_with_buttons(self, event_router, mock_ui):
+        """Wire button attributes on the mock UI to distinct sentinels.
+
+        The handler dispatches on `event.ui_element is ui.btn_X`, so each
+        button slot must have a stable identity. MagicMock attribute access
+        already returns the same child mock each call, so we just touch
+        each one to materialize the sentinels.
+        """
+        for btn in (
+            "btn_planets", "btn_stars", "btn_design", "btn_build_queues",
+            "btn_all_queues", "btn_menu", "btn_events", "btn_empire",
+            "btn_raw_data", "btn_colonize", "btn_orders", "btn_planet_orders",
+            "btn_fleet_report",
+        ):
+            getattr(mock_ui, btn)
+        return event_router
+
+    @pytest.mark.parametrize("button_name", [
+        "btn_planets",
+        "btn_stars",
+        "btn_empire",
+        "btn_design",
+        "btn_build_queues",
+        "btn_all_queues",
+        "btn_events",
+        "btn_raw_data",
+    ])
+    def test_button_press_inert_while_modal_open(
+        self, router_with_buttons, mock_ui, button_name
+    ) -> None:
+        """Top-bar button press is a no-op while any modal is live."""
+        # A live modal exists.
+        modal = MagicMock()
+        modal.alive.return_value = True
+        modal.rect = MockRect(0, 0, 100, 100)
+        mock_ui.window_manager._modals_for_test.append(modal)
+
+        # Reset all open_* call counts so we can detect dispatch.
+        for opener in (
+            "open_planet_list", "open_star_list", "open_build_queue_list",
+            "open_empire_build_queue_window", "toggle_menu_panel",
+            "open_event_log", "open_empire_panel", "show_raw_data_popup",
+        ):
+            getattr(mock_ui, opener).reset_mock()
+        mock_ui.scene.on_design_click.reset_mock()
+
+        event = MagicMock()
+        event.ui_element = getattr(mock_ui, button_name)
+
+        router_with_buttons._handle_button_pressed(event)
+
+        # NO opener should have been invoked.
+        assert mock_ui.open_planet_list.call_count == 0
+        assert mock_ui.open_star_list.call_count == 0
+        assert mock_ui.open_build_queue_list.call_count == 0
+        assert mock_ui.open_empire_build_queue_window.call_count == 0
+        assert mock_ui.toggle_menu_panel.call_count == 0
+        assert mock_ui.open_event_log.call_count == 0
+        assert mock_ui.open_empire_panel.call_count == 0
+        assert mock_ui.show_raw_data_popup.call_count == 0
+        assert mock_ui.scene.on_design_click.call_count == 0
+
+    def test_button_press_still_dispatches_when_no_modal(
+        self, router_with_buttons, mock_ui
+    ) -> None:
+        """Sanity: with no modal open, top-bar button press still dispatches."""
+        # No modals open: the fixture leaves scene.build_queue_screen as a
+        # MagicMock which has_modal_open would otherwise treat as live, so
+        # set it to None here.
+        mock_ui.scene.build_queue_screen = None
+        mock_ui.open_planet_list.reset_mock()
+        event = MagicMock()
+        event.ui_element = mock_ui.btn_planets
+
+        router_with_buttons._handle_button_pressed(event)
+
+        assert mock_ui.open_planet_list.call_count == 1

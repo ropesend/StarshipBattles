@@ -575,6 +575,8 @@ Use only when maintaining existing slot cleanup. New strategy modal windows use 
 
 ## 31. Strategy Modal Window Base Class
 
+> **Last verified:** 2026-05-10 — issue #12: full-modality clause added; any live `StrategyModalWindow` now blocks all background clicks and top-bar button presses regardless of click position.
+
 Where: `game/ui/screens/strategy_modal_window.py`, `game/ui/screens/strategy_window_manager.py`, tests in `tests/unit/ui/screens/test_strategy_modal_window.py` and `tests/integration/ui/test_editor_click_blocking.py`.
 
 Contract:
@@ -586,6 +588,7 @@ Contract:
 - `iter_live_modals()` filters dead refs with `.alive()` and reaps orphan refs.
 - `has_modal_open()` also checks retained pre-modal concerns such as `menu_panel` and `build_queue_screen`.
 - Legacy slot fields remain as caller-convenience pointers; they no longer provide modal tracking.
+- **Full modality (issue #12):** while any subclass instance is live, the strategy event router blocks ALL background clicks (hex grid AND top-bar buttons) regardless of click position relative to the window's rect. Specifically, `_is_blocking_ui_element_at` returns True whenever `iter_live_modals()` yields any window, and `_handle_button_pressed` early-returns whenever `has_modal_open()` is True. Do not re-introduce a rect-only path or a per-window opt-out flag; the rect-pass-through behavior was the source of bug class #12.
 
 Use for every new strategy-screen modal that should block input. Do not add manual slots, `has_modal_open()` clauses, custom modal `kill()` cleanup, or slot-based modal tracking.
 
