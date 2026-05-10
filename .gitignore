@@ -107,4 +107,5 @@ AgentCoordination/generated/skill_usage/summary.json
 
 # 03c phase-aware execution worktrees and review checkouts
 .worktrees/
+.claude/worktrees/
 AgentCoordination/opencodereview/local/worktrees/
