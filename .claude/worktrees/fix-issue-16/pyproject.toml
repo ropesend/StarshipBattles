@@ -1,8 +1,0 @@
-[project]
-name = "starship-battles"
-description = "Turn-based space combat strategy game"
-requires-python = ">=3.13"
-# PROJ-295: Pinned to 3.13+ on 2026-04-26 because Python 3.10 EOL is 2026-10-04
-# and google-cloud-speech / google-api-core emit FutureWarnings about dropping
-# 3.10 support. Dependency tree verified clean on 3.13. See
-# Projects/archived_projects/PROJ-295/ (or active_projects/ pre-archive).

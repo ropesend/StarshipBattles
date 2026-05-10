@@ -1,1 +1,0 @@
-# Research controls tests package

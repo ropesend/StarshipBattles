@@ -1,1 +1,0 @@
-"""Quickstart button unit tests."""

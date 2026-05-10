@@ -1,1 +1,0 @@
-# Battle controller tests package
