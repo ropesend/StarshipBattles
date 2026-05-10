@@ -178,7 +178,7 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         self.on_navigate_callback = on_navigate_callback
 
         # --- Layout Constants ---
-        self.sidebar_width = UIConfig.SIDEBAR_WIDTH
+        self.sidebar_width = UIConfig.REGISTRY_SIDEBAR_WIDTH
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 

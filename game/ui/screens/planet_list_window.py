@@ -264,7 +264,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.asset_resolver = asset_resolver
 
         # Layout constants
-        self.sidebar_width = UIConfig.SIDEBAR_WIDTH
+        self.sidebar_width = UIConfig.REGISTRY_SIDEBAR_WIDTH
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
         self.detail_panel_width = 580
