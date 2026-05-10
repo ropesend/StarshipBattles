@@ -21,13 +21,13 @@ MODIFIER_UI_CONFIG = {
     'simple_size_mount': { # Handle alias if needed
         'control_type': 'linear_stepped',
         'step_buttons': [
-            {'label': '<<<', 'value': 5.0, 'mode': 'delta_sub'},
-            {'label': '<<', 'value': 1.0, 'mode': 'delta_sub'},
-            {'label': '<', 'value': 0.1, 'mode': 'delta_sub'},
+            {'label': '<<<', 'value': 100, 'mode': 'snap_floor'},
+            {'label': '<<', 'value': 10, 'mode': 'snap_floor'},
+            {'label': '<', 'value': 1, 'mode': 'delta_sub'},
             # Slider
-            {'label': '>', 'value': 0.1, 'mode': 'delta_add'},
-            {'label': '>>', 'value': 1.0, 'mode': 'delta_add'},
-            {'label': '>>>', 'value': 5.0, 'mode': 'delta_add'}
+            {'label': '>', 'value': 1, 'mode': 'delta_add'},
+            {'label': '>>', 'value': 10, 'mode': 'snap_ceil'},
+            {'label': '>>>', 'value': 100, 'mode': 'snap_ceil'}
         ],
         'slider_step': 0.1,
         'smart_floor': True # Special rule for size <= 100
