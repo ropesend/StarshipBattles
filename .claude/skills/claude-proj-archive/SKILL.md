@@ -2,7 +2,7 @@
 name: claude-proj-archive
 description: Archive completed projects (from refactor plan and/or active_projects)
 disable-model-invocation: true
-argument-hint: <project-numbers...> (e.g. 42 43 44)
+argument-hint: <project-numbers...> (e.g. 42 43 44, or 210-217, or mixed: 42 210-217 250)
 ---
 
 # Archive Projects
@@ -11,7 +11,11 @@ Archive completed, user-accepted projects. This is a simple operation with NO fu
 
 **Projects to archive:** $ARGUMENTS
 
-Parse the arguments as a space-separated list of project numbers. For each number N, the project ID is **PROJ-N**. Process each project in order, one at a time.
+Parse the arguments as a space-separated list of tokens. Each token is either:
+- A single project number (e.g. `42`) → expands to `[42]`
+- An inclusive range `START-END` (e.g. `210-217`) → expands to `[210, 211, 212, 213, 214, 215, 216, 217]` (both endpoints included)
+
+Expand all tokens into a flat list of project numbers, preserving order and de-duplicating. If a range has `START > END`, report the error and stop. For each number N, the project ID is **PROJ-N**. Process each project in order, one at a time.
 
 ## For each project, execute these steps:
 
