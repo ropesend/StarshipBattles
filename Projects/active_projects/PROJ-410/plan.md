@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Failing regression tests (TDD) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. VirtualTable invalidation surface | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Screen lifecycle resets + selector fix | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Turn-boundary + save/load hooks | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Final verification + doc updates | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. Failing regression tests (TDD) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. VirtualTable invalidation surface | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Screen lifecycle resets + selector fix | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Turn-boundary + save/load hooks | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Final verification + doc updates | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-10 22:25
-**Active Phase:** Planning complete — Codex review (arc01-002) folded in; awaiting user approval to begin implementation
-**Last Action:** Codex review surfaced 4 material issues + 5 Q&A corrections; all accepted with file:line evidence verified. Plan + decisions + design + manifest + 4 phase checklists revised. Discussion plan revision artifact at `AgentCoordination/Scratchpad/Discussion/20260510T215920Z_proj-410-plan-review/plans/proj410_revisions_r001.md`.
-**Next Action:** User approval. After "Plan Approved", a separate "Continue Project" session begins Phase 1.
-**Blockers:** None.
-**Context for Next Agent:** Strict TDD — Phase 1 writes failing tests first; production fixes follow in phases 2–4. Codex review resolved both prior open questions: (1) `BuildQueueDragHandler.reset_state()` DOES clear `selected_design` (Phase 1 Task 1.1 is now a lock test); (2) active-empire accessor is `self._screen.current_empire.id` (`strategy_screen.py:192`), not a new facade method. Critical addition: A-hook must rebind cached screen domain context (`facade`/`galaxy`/`empire`) before every `open_for_yard()`, not just invalidate caches.
+**Last Updated:** 2026-05-11 01:30
+**Active Phase:** **PROJECT COMPLETE** — all 5 phases delivered, awaiting user verification
+**Last Action:** All 5 phases complete. Production changes in 3 files: `game/ui/components/table/virtual_table.py` (Phase 2 invalidation surface), `game/ui/screens/build_queue_renderer.py` (Phase 3 B-hook), `game/ui/screens/build_queue_screen.py` (Phase 3 zero-source reset + Phase 4 `on_active_player_changed`), `game/ui/screens/strategy_build_queue_manager.py` (Phase 4 polling + cached-screen rebind). Phase 3 Task 3.4 (selector container visibility) confirmed unnecessary — Phase 4 empire-rebind alone resolves Task 1.7 (Codex's prediction). Pattern #11 doc extended with cross-context invalidation guidance. All 17 PROJ-410 tests GREEN, 773 perf-lock + static-guard + lifecycle tests GREEN, broader UI sweep 5415 pass + 2 skipped, 0 failures. Final sharded suite running.
+**Next Action:** User verification of QA scenarios from `findings/build_queue_caching_overhaul.md`: open same-yard twice, switch yards on same planet, end turn → next player open, load saved game, ship-yard ↔ planetary-yard switch. Each scenario is now covered by automated regression tests (Tasks 1.2-1.9).
+**Blockers:** None — awaiting user verification only.
+**Context for Next Agent:** Phase 3 Task 3.4 was DROPPED (yard-selector visibility fix unnecessary — empire-rebind alone resolved Task 1.7). Phase 4 Task 4.3 was DROPPED (production save/load creates fresh `StrategyScreen` per `screen_router.py:324-344`; Task 1.8 locking regression covers the production guarantee). Pattern #11 in `docs/02_PATTERNS.md` was extended with the canonical cross-context invalidation pattern using `VirtualTable.invalidate_widget_caches` as the exemplar. The original handoff_prompt.md is now stale (project is complete) and can be deleted.
 
 ## Overview
 

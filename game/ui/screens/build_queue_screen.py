@@ -321,6 +321,14 @@ class BuildQueueScreen:
         self.controller.empire = self.empire
         if self.active_queue_source is not None:
             self.controller.set_active_queue(self.active_queue_source)
+        else:
+            # PROJ-410 Task 3.6: zero-source yard. set_active_queue() is the
+            # only path that clears controller.active_queue_source /
+            # selected_queue_sources, and we just skipped it. set_selected_queues([])
+            # explicitly clears both via the existing controller API
+            # (build_queue_controller.py:132-143) so the controller does not
+            # leak the prior yard's source refs into a planet with no yards.
+            self.controller.set_selected_queues([])
         self.controller.reset_filters()
 
         # Reset drag handler transient state.
@@ -836,6 +844,28 @@ class BuildQueueScreen:
         self.hide()
         if self.on_close:
             self.on_close()
+
+    def on_active_player_changed(self) -> None:
+        """PROJ-410 Phase 4 Task 4.1: flush cached UI state on player change.
+
+        Called by ``StrategyBuildQueueManager._open_build_queue`` (Task 4.2)
+        when the active empire id has changed since the last open. Hides
+        the screen, invalidates the VirtualTable widget caches, and clears
+        the cached queue-source refs that were collected for the prior
+        empire. The screen-side rebind of ``self.empire`` / ``self.galaxy``
+        / ``self.facade`` happens in the **manager** (Task 4.2), not here —
+        this hook only does the *flush* half.
+
+        Idempotent: safe to call on a hidden screen or one without panels
+        (e.g. shell-only construction).
+        """
+        if self.is_visible():
+            self.hide()
+        if self.panels is not None:
+            self.panels.virtual_table.invalidate_widget_caches()
+        self.queue_sources = []
+        self.active_queue_source = None
+        self.selected_queue_indices = set()
 
     def update(self, time_delta: float) -> None:
         """Update the UI manager."""

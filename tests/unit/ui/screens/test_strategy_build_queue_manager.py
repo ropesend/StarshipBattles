@@ -412,3 +412,178 @@ class TestOnNavigateToHexBuild:
         MockBQS.assert_called_once()
         screen.ui.close_empire_build_queue_window.assert_called_once()
         screen.ui.hide_ui.assert_called_once()
+
+
+# =========================================================================
+# PROJ-410 Task 1.4: turn-boundary detection + cached-screen rebind
+# =========================================================================
+#
+# Per Codex review (arc01-002 + arc01-006), the manager must:
+#   1. Poll self._screen.current_empire.id on each _open_build_queue() to
+#      detect player change (no facade callback API exists today).
+#   2. On change, call cached_screen.on_active_player_changed() to flush
+#      widget/queue state.
+#   3. ALWAYS before open_for_yard(): rebind cached_screen.empire,
+#      .galaxy, and .facade to current values, so the cached screen
+#      queries as the current empire (collect_build_queues_at_hex filters
+#      by empire.id).
+#
+# Without these, the cached screen retains the prior player's empire
+# reference (BuildQueueScreen.__init__ stores empire/galaxy/facade once
+# at construction; only design_library/loader/portrait are rebound in
+# the existing reuse path at strategy_build_queue_manager.py:126-142).
+# =========================================================================
+
+
+class TestProj410TurnBoundaryRebind:
+    """PROJ-410 Task 1.4 + Phase 4 Task 4.2 contract."""
+
+    def _two_empire_screen(self):
+        """Build a manager + screen where current_empire can be flipped
+        between empire_1 and empire_2 by mutating an outer reference."""
+        from game.ui.screens.strategy_build_queue_manager import StrategyBuildQueueManager
+
+        empire_1 = MagicMock()
+        empire_1.id = 1
+        empire_1.empire_theme_id = "Federation"
+        empire_2 = MagicMock()
+        empire_2.id = 2
+        empire_2.empire_theme_id = "Klingon"
+
+        active = {"empire": empire_1}
+
+        mock_screen = MagicMock()
+        mock_screen.galaxy = MagicMock()
+        mock_screen.facade = MagicMock()
+        mock_screen.facade.get_save_path = MagicMock(return_value="test_savegame")
+        mock_screen.ui = MagicMock()
+        mock_screen.ui.manager = MagicMock()
+        mock_screen.selected_object = None
+        mock_screen.build_queue_screen = None
+        mock_screen.input_mapper = MagicMock()
+        type(mock_screen).current_empire = property(lambda s: active["empire"])
+
+        manager = StrategyBuildQueueManager(mock_screen)
+        return manager, mock_screen, empire_1, empire_2, active
+
+    def test_open_after_active_player_change_calls_on_active_player_changed(self):
+        """When the active empire changed since the last open, the manager
+        must call cached_screen.on_active_player_changed() before reopening.
+
+        FAILS today: the manager has no last-active-empire tracking and
+        never calls on_active_player_changed(). Phase 4 Task 4.2.
+        """
+        manager, screen, empire_1, empire_2, active = self._two_empire_screen()
+
+        # Pre-populate cached BQ screen as if first open already happened
+        # under empire_1.
+        cached_screen = MagicMock()
+        cached_screen.on_active_player_changed = MagicMock()
+        screen.build_queue_screen = cached_screen
+
+        # Simulate a planet selection owned by empire_1, first reopen.
+        from game.strategy.data.planet import Planet
+        planet_e1 = MagicMock(spec=Planet)
+        planet_e1.owner_id = 1
+        planet_e1.name = "Empire 1 Planet"
+        screen.selected_object = planet_e1
+        screen._get_object_asset = MagicMock(return_value=None)
+        screen.galaxy.get_system_of_planet.return_value = None
+
+        with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
+             patch("game.ui.screens.strategy_build_queue_manager.DesignLibrary"), \
+             patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
+             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
+             patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
+            # First open under empire_1.
+            manager.on_build_yard_click()
+
+            # Active empire flips to empire_2 (turn advance).
+            active["empire"] = empire_2
+            planet_e2 = MagicMock(spec=Planet)
+            planet_e2.owner_id = 2
+            planet_e2.name = "Empire 2 Planet"
+            screen.selected_object = planet_e2
+
+            # Second open under empire_2.
+            manager.on_build_yard_click()
+
+        cached_screen.on_active_player_changed.assert_called_once()
+
+    def test_open_rebinds_cached_screen_empire_galaxy_facade_each_open(self):
+        """Every _open_build_queue() must rebind cached_screen.empire,
+        .galaxy, and .facade to the current screen's values BEFORE
+        open_for_yard() runs.
+
+        FAILS today: the existing rebind path at
+        strategy_build_queue_manager.py:126-142 only sets design_library,
+        design_loader, and portrait_loader. Phase 4 Task 4.2.
+        """
+        manager, screen, empire_1, empire_2, active = self._two_empire_screen()
+
+        cached_screen = MagicMock()
+        screen.build_queue_screen = cached_screen
+
+        # Active empire is empire_1 initially. Switch to empire_2.
+        active["empire"] = empire_2
+
+        from game.strategy.data.planet import Planet
+        planet_e2 = MagicMock(spec=Planet)
+        planet_e2.owner_id = 2
+        planet_e2.name = "Empire 2 Planet"
+        screen.selected_object = planet_e2
+        screen._get_object_asset = MagicMock(return_value=None)
+        screen.galaxy.get_system_of_planet.return_value = None
+
+        with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
+             patch("game.ui.screens.strategy_build_queue_manager.DesignLibrary"), \
+             patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
+             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
+             patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
+            manager.on_build_yard_click()
+
+        # Rebind contract: empire, galaxy, facade reflect current values.
+        assert cached_screen.empire is empire_2, (
+            f"PROJ-410 Phase 4 Task 4.2: cached_screen.empire must be rebound "
+            f"to current empire (empire_2). Got {cached_screen.empire!r}."
+        )
+        assert cached_screen.galaxy is screen.galaxy, (
+            "PROJ-410 Phase 4 Task 4.2: cached_screen.galaxy must be rebound "
+            "to current screen.galaxy."
+        )
+        assert cached_screen.facade is screen.facade, (
+            "PROJ-410 Phase 4 Task 4.2: cached_screen.facade must be rebound "
+            "to current screen.facade."
+        )
+
+    def test_open_with_unchanged_empire_does_not_call_on_active_player_changed(self):
+        """When the active empire is unchanged across two opens, the manager
+        must NOT call on_active_player_changed() on the cached screen.
+
+        Locks the polled-comparison semantics: the hook only fires on
+        actual player change, not on every open. Phase 4 Task 4.2.
+        """
+        manager, screen, empire_1, empire_2, active = self._two_empire_screen()
+
+        cached_screen = MagicMock()
+        cached_screen.on_active_player_changed = MagicMock()
+        screen.build_queue_screen = cached_screen
+
+        from game.strategy.data.planet import Planet
+        planet_e1 = MagicMock(spec=Planet)
+        planet_e1.owner_id = 1
+        planet_e1.name = "Empire 1 Planet"
+        screen.selected_object = planet_e1
+        screen._get_object_asset = MagicMock(return_value=None)
+        screen.galaxy.get_system_of_planet.return_value = None
+
+        with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
+             patch("game.ui.screens.strategy_build_queue_manager.DesignLibrary"), \
+             patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
+             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
+             patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
+            # Two opens with the same active empire.
+            manager.on_build_yard_click()
+            manager.on_build_yard_click()
+
+        cached_screen.on_active_player_changed.assert_not_called()

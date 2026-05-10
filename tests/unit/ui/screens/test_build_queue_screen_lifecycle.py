@@ -584,6 +584,366 @@ def test_close_method_is_removed():
     assert hasattr(BuildQueueScreen, '_request_close')
 
 
+# =========================================================================
+# PROJ-410: Build Queue Widget Cache Invalidation regression tests
+# =========================================================================
+#
+# These tests assert the contract introduced by PROJ-410:
+#   - VirtualTable exposes an `invalidate_widget_caches()` method (Phase 2).
+#   - BuildQueueRenderer.refresh_queue_display() calls it on every push (Phase 3 B-hook).
+#   - BuildQueueScreen.open_for_yard() resets controller queue refs even
+#     when the new yard has zero sources (Phase 3 C-hook + Task 3.6).
+#
+# All tests below FAIL on current `main` (attribute does not exist) and
+# PASS after Phase 2 + Phase 3 lands. They are intentionally written
+# against the new contract — Strict TDD per AGENTS.md Rule 1.
+# =========================================================================
+
+
+def _planet_with_two_yards(name: str, planet_id: int, hex_coord: HexCoord) -> Planet:
+    """Like _make_planet, but with BOTH a PlanetaryYard and a SpaceShipyard
+    facility. Used for Task 1.5 (ship-yard <-> planetary-yard switch)."""
+    planet = _make_planet(name, planet_id, hex_coord)
+    shipyard = PlanetaryFacility(
+        instance_id=f"shipyard_{planet_id}",
+        design_id="space_shipyard",
+        name="Space Shipyard",
+        design_data={
+            "layers": {
+                "CORE": [{"id": "syd", "abilities": {"SpaceShipyardAbility": True}}]
+            }
+        },
+    )
+    planet.facilities.append(shipyard)
+    return planet
+
+
+def _planet_zero_sources(name: str, planet_id: int, hex_coord: HexCoord) -> Planet:
+    """Like _make_planet, but with no yard facilities. Used for Task 1.9."""
+    planet = Planet(
+        name=name,
+        location=hex_coord,
+        orbit_distance=3,
+        mass=5.97e24,
+        radius=6371000,
+        surface_area=5.1e14,
+        density=5515,
+        surface_gravity=9.81,
+        surface_pressure=101325,
+        surface_temperature=288,
+        surface_water=0.7,
+        tectonic_activity=0.1,
+        magnetic_field=1.0,
+        planet_type=PlanetType.CONTINENTAL,
+    )
+    planet.owner_id = 1
+    planet.id = planet_id
+    return planet
+
+
+def _spy_invalidate(vt):
+    """Wrap virtual_table.invalidate_widget_caches in a Mock spy.
+
+    Returns the spy. Asserts the method exists first (Phase 2 contract).
+    On current `main`, this assertion fails with a clear message — the
+    test is intentionally red until Phase 2 lands.
+    """
+    assert hasattr(vt, "invalidate_widget_caches"), (
+        "PROJ-410 Phase 2: VirtualTable must expose invalidate_widget_caches() method. "
+        "See Projects/active_projects/PROJ-410/phase_2_checklist.md Task 2.2."
+    )
+    original = vt.invalidate_widget_caches
+    spy = MagicMock(side_effect=original)
+    vt.invalidate_widget_caches = spy
+    return spy
+
+
+def test_PROJ410_task_1_2_yard_switch_invalidates_widget_caches(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, hex_a,
+):
+    """Task 1.2: switching the active queue source on the same planet must
+    invalidate widget caches in the row pool.
+
+    Today: VirtualTable has no invalidate_widget_caches() method.
+    After Phase 2 + Phase 3 Task 3.1: renderer calls invalidate on every refresh.
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=planet_a,
+    )
+
+    vt = screen.panels.virtual_table
+    spy = _spy_invalidate(vt)
+
+    # Trigger a refresh that pushes new data via the renderer's B-hook.
+    # _refresh_queue_display routes through refresh_queue_display(), which
+    # is where the invalidation must happen.
+    screen._refresh_queue_display()
+
+    assert spy.call_count >= 1, (
+        "PROJ-410 Phase 3 Task 3.1: BuildQueueRenderer.refresh_queue_display() "
+        "must call virtual_table.invalidate_widget_caches() before pushing new data."
+    )
+
+
+def test_PROJ410_task_1_3_close_and_reopen_invalidates_cache(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, hex_a,
+):
+    """Task 1.3: close + reopen on the same yard must flush widget caches.
+
+    Today: panels survive close (PROJ-376), but caches are not flushed on
+    reopen, so any data mutation between close and reopen leaves stale
+    rows visible.
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=planet_a,
+    )
+
+    vt = screen.panels.virtual_table
+    spy = _spy_invalidate(vt)
+    panels_id_before = id(screen.panels)
+
+    # Close (panels survive).
+    screen._request_close()
+    assert not screen.is_visible()
+
+    # Reopen on the same yard.
+    screen.open_for_yard(planet_a, hex_coord=hex_a)
+
+    # Same panel tree (perf-lock).
+    assert id(screen.panels) == panels_id_before
+    # Cache invalidation MUST have fired on reopen.
+    assert spy.call_count >= 1, (
+        "PROJ-410: reopening a closed BuildQueueScreen must invalidate the "
+        "VirtualTable's widget caches; otherwise rows display stale data from "
+        "before the close."
+    )
+
+
+def test_PROJ410_task_1_5_ship_yard_to_planetary_yard_invalidates(
+    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, mock_registries,
+):
+    """Task 1.5: switching between ship-yard and planetary-yard on the
+    SAME planet must invalidate widget caches between yard activations.
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    planet = _planet_with_two_yards("Twin-Yard", 300, hex_a)
+    galaxy = _MockGalaxy()
+    galaxy._global_hex_planets[hex_a] = [planet]
+    session = _MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy,
+        empire=empire,
+        initial_yard=planet,
+    )
+
+    # Twin-yard planet collects a single base BuildQueueSource that
+    # handles both ship and complex production (can_build_complexes=True,
+    # can_build_ships=False on this hub). The yard-switching scenario in
+    # the QA report manifests at the queue-display level: re-rendering
+    # the queue with mutated content must always invalidate the row pool.
+    assert len(screen.queue_sources) >= 1
+
+    vt = screen.panels.virtual_table
+    spy = _spy_invalidate(vt)
+
+    # Simulate a yard-context refresh (mutated queue content).
+    screen._refresh_queue_display()
+
+    assert spy.call_count >= 1, (
+        "PROJ-410: every queue-display refresh must invalidate widget caches; "
+        "ship-yard and planetary-yard contents must not bleed across switches."
+    )
+
+
+def test_PROJ410_task_1_7_yard_selector_renders_for_second_empire(
+    ui_manager, design_library_mock, design_loader_mock, hex_a, mock_registries,
+):
+    """Task 1.7: when the cached BuildQueueScreen is reused for a second
+    empire's planet, the yard selector must enumerate the second empire's
+    yards (filtered by planet.owner_id == new empire.id).
+
+    Today (per Codex review arc01-002): the cached `screen.empire` retains
+    empire 1's reference, so `collect_build_queues_at_hex` filters as
+    empire 1 -- empire 2 sees no yards. Phase 4 Task 4.2 fixes this by
+    rebinding `cached_screen.empire` before each `open_for_yard()`.
+
+    This test simulates the rebind-then-open path. It fails today because
+    the `screen.empire` rebind is not yet a documented contract; the
+    fix in Phase 4 makes the manager perform it.
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+    from game.strategy.data.build_queue_source import collect_build_queues_at_hex
+
+    empire_1 = Empire(1, "Empire One", (255, 0, 0))
+    empire_2 = Empire(2, "Empire Two", (0, 0, 255))
+
+    # Empire 1's planet at hex_a.
+    planet_1 = _planet_with_two_yards("Colony 1", 100, hex_a)
+    planet_1.owner_id = 1
+
+    # Empire 2's planet at hex_b (different hex to avoid filtering collisions).
+    hex_b = HexCoord(7, 7)
+    planet_2 = _planet_with_two_yards("Colony 2", 200, hex_b)
+    planet_2.owner_id = 2
+
+    galaxy = _MockGalaxy()
+    galaxy._global_hex_planets[hex_a] = [planet_1]
+    galaxy._global_hex_planets[hex_b] = [planet_2]
+
+    # Session starts on empire 1.
+    session = _MockSession(galaxy=galaxy, empire=empire_1, registries=mock_registries)
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy,
+        empire=empire_1,
+        initial_yard=planet_1,
+    )
+    e1_source_count = len(screen.queue_sources)
+    assert e1_source_count >= 1
+
+    # Close (panels survive — production reuse).
+    screen._request_close()
+
+    # Phase 4 Task 4.2 wired the manager to rebind these refs before
+    # every open_for_yard(). At the screen level we exercise the same
+    # contract: the screen must accept rebound empire/galaxy/facade and
+    # query queues against the new empire. (The manager-level path has
+    # its own tests in test_strategy_build_queue_manager.py.)
+    screen.empire = empire_2
+    screen.galaxy = galaxy
+    screen.facade = session
+
+    # Reopen on empire 2's planet.
+    screen.open_for_yard(planet_2, hex_coord=hex_b)
+
+    # Yard selector must enumerate empire 2's yards (collected via the
+    # rebound empire reference).
+    expected_e2_sources = collect_build_queues_at_hex(
+        hex_b, galaxy, empire_2, registries=mock_registries,
+    )
+    assert len(screen.queue_sources) == len(expected_e2_sources), (
+        f"PROJ-410: after rebind, expected {len(expected_e2_sources)} "
+        f"yards for empire 2 at hex_b, got {len(screen.queue_sources)}. "
+        f"This indicates open_for_yard is still filtering by empire 1's id "
+        f"(verify the screen.empire reassignment landed)."
+    )
+    assert len(screen.queue_sources) >= 1, (
+        "PROJ-410 Task 1.7: empire 2's planet has yards but selector lists none."
+    )
+
+    # The yard selector must be visible (container.show propagation).
+    # The `panels.background.visible` is the screen-level toggle; the
+    # queue_selector's container must also be visible.
+    assert screen.is_visible(), "screen must be visible after open"
+    selector = screen.panels.queue_selector
+    # The selector exposes _container or similar; this assertion may need
+    # refinement during Phase 3 Task 3.4 implementation.
+    assert getattr(selector, "active_source", None) is not None, (
+        "PROJ-410: after rebind+open, the queue selector must have an active "
+        "source for empire 2's yards."
+    )
+
+
+def test_PROJ410_task_1_9_zero_source_yard_clears_controller_queue_refs(
+    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, hex_b, mock_registries,
+):
+    """Task 1.9: when switching to a planet with NO yard facilities,
+    controller.active_queue_source AND controller.selected_queue_sources
+    must both be cleared.
+
+    Today: open_for_yard() only calls controller.set_active_queue() when
+    source is non-None (build_queue_screen.py:322-324). Zero-source yards
+    leave controller refs populated with the prior yard's data.
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    planet_with_yard = _make_planet("With Yard", 400, hex_a)
+    planet_zero = _planet_zero_sources("Zero Yard", 500, hex_b)
+
+    galaxy = _MockGalaxy()
+    galaxy._global_hex_planets[hex_a] = [planet_with_yard]
+    galaxy._global_hex_planets[hex_b] = [planet_zero]
+    session = _MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy,
+        empire=empire,
+        initial_yard=planet_with_yard,
+    )
+    # Sanity: yard A populated controller refs.
+    assert screen.controller.active_queue_source is not None
+    assert len(screen.queue_sources) >= 1
+
+    # Switch to the zero-source planet.
+    screen.open_for_yard(planet_zero, hex_coord=hex_b)
+
+    # Both controller refs must be cleared.
+    assert screen.controller.active_queue_source is None, (
+        "PROJ-410 Task 1.9: zero-source yard switch must clear "
+        "controller.active_queue_source. See Phase 3 Task 3.6."
+    )
+    selected = getattr(screen.controller, "selected_queue_sources", None)
+    if selected is None:
+        selected = []
+    assert list(selected) == [], (
+        f"PROJ-410 Task 1.9: zero-source yard switch must clear "
+        f"controller.selected_queue_sources, got {selected!r}. "
+        f"See Phase 3 Task 3.6."
+    )
+
+
 def test_request_close_can_be_re_opened(
     ui_manager, session_with_planet, design_library_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,

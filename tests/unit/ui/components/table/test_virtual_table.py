@@ -1417,3 +1417,211 @@ class TestRowPoolReuseGuard:
             )
         # New pool reflects the 3-column config.
         assert len(column_manager.get_visible_columns()) == 3
+
+
+# ===========================================================================
+# PROJ-410 Phase 2 Task 2.2 + Task 1.6 contract tests
+# ===========================================================================
+
+
+class TestProj410InvalidateWidgetCaches:
+    """PROJ-410: VirtualTable.invalidate_widget_caches() public surface.
+
+    Phase 2 Task 2.1: ``_data_identity_dirty: bool`` flag, default True.
+    Phase 2 Task 2.2: ``invalidate_widget_caches() -> None`` method that
+        nulls per-row/per-widget caches and sets the dirty flag.
+    Phase 2 Task 2.3: ``update_visible_rows()`` early-return guard also
+        checks the dirty flag; clears the flag after the per-row loop.
+    Task 1.6 (overlap): button press after a yard switch resolves to
+        the new yard's row index, not the prior yard's.
+
+    All tests in this class FAIL today (the method/flag don't exist).
+    """
+
+    @pytest.fixture(autouse=True)
+    def patched_pygame_gui(self):
+        with patch("game.ui.components.table.virtual_table.UIImage") as image, \
+             patch("game.ui.components.table.virtual_table.UILabel") as label, \
+             patch("game.ui.components.table.virtual_table.UIVerticalScrollBar") as scrollbar, \
+             patch("game.ui.components.table.virtual_table.UIPanel") as panel, \
+             patch("game.ui.components.table.virtual_table.TableHeader") as header:
+            yield {
+                "UIImage": image, "UILabel": label,
+                "UIVerticalScrollBar": scrollbar, "UIPanel": panel,
+                "TableHeader": header,
+            }
+
+    @pytest.fixture
+    def mock_manager(self):
+        return MagicMock()
+
+    @pytest.fixture
+    def mock_panel(self):
+        panel = MagicMock()
+        panel.get_relative_rect.return_value = pygame.Rect(0, 0, 300, 400)
+        return panel
+
+    @pytest.fixture
+    def column_manager(self):
+        from game.ui.components.table.column_manager import TableColumnManager
+        return TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+            {"id": "value", "label": "Value", "width": 80, "visible": True},
+        ])
+
+    @pytest.fixture
+    def selection_strategy(self):
+        from game.ui.components.table.selection import SingleSelect
+        return SingleSelect()
+
+    def _build_table(self, patched_pygame_gui, mock_panel, mock_manager,
+                     column_manager, selection_strategy, data_source):
+        from game.ui.components.table.virtual_table import VirtualTable
+        mock_list_panel = MagicMock()
+        mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
+        patched_pygame_gui["UIPanel"].return_value = mock_list_panel
+        return VirtualTable(
+            mock_panel, mock_manager, data_source, column_manager,
+            selection_strategy,
+        )
+
+    def test_invalidate_widget_caches_method_exists_and_is_callable(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Phase 2 Task 2.2: VirtualTable must expose
+        ``invalidate_widget_caches() -> None`` as a public method.
+        FAILS today: method does not exist.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=3),
+        )
+        assert hasattr(table, "invalidate_widget_caches"), (
+            "PROJ-410 Phase 2 Task 2.2: VirtualTable must expose "
+            "invalidate_widget_caches() public method."
+        )
+        assert callable(getattr(table, "invalidate_widget_caches", None))
+        # Idempotent: must not raise on a second call.
+        table.invalidate_widget_caches()
+        table.invalidate_widget_caches()
+
+    def test_data_identity_dirty_default_is_true(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Phase 2 Task 2.1: ``_data_identity_dirty`` defaults True so the
+        first ``update_visible_rows`` after construction always re-renders.
+        FAILS today: attribute does not exist.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=3),
+        )
+        assert hasattr(table, "_data_identity_dirty"), (
+            "PROJ-410 Phase 2 Task 2.1: _data_identity_dirty flag must "
+            "exist on VirtualTable."
+        )
+        assert table._data_identity_dirty is True
+
+    def test_invalidate_widget_caches_sets_data_identity_dirty(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Phase 2 Task 2.2: calling invalidate_widget_caches sets the
+        flag to True even if it was previously False.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=3),
+        )
+        table._data_identity_dirty = False
+        table.invalidate_widget_caches()
+        assert table._data_identity_dirty is True
+
+    def test_invalidate_widget_caches_does_not_kill_pool_widgets(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Phase 2 Task 2.5 hard constraint: invalidation MUST NOT call
+        ``.kill()`` on any pool widget. The TestRowPoolReuseGuard locks
+        this behavior; this test reaffirms it specifically for the new
+        invalidate path.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=3),
+        )
+        # Capture kill spies before invalidation.
+        kill_spies = []
+        for row in table._row_pool:
+            if row.get("bg") is not None:
+                kill_spies.append(row["bg"].kill)
+            for widget in row.get("widgets", []):
+                if widget.get("el") is not None:
+                    kill_spies.append(widget["el"].kill)
+
+        table.invalidate_widget_caches()
+
+        for kill_mock in kill_spies:
+            assert not kill_mock.called, (
+                "PROJ-410 Phase 2: invalidate_widget_caches() must NOT call "
+                ".kill() on any pool widget (TestRowPoolReuseGuard contract)."
+            )
+
+    def test_button_press_after_invalidate_resolves_via_current_row_index(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """PROJ-410 Task 1.6 + Phase 2: after invalidate + new data, a
+        button press on a pool row must resolve to the row's CURRENT
+        ``row_index``, not a stale value.
+
+        Per Codex review (arc01-002), the existing code already reads
+        ``row.get("row_index", -1)`` at click time
+        (virtual_table.py:516-524). The bug is purely about the dirty
+        flag preventing re-render. This test pins the click-time lookup
+        as the authoritative resolution path.
+        """
+        # Construct with 3 rows.
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=3),
+        )
+
+        # Inject a synthetic action button on row 0 with row_index=0.
+        fake_btn = MagicMock()
+        table._row_pool.clear()
+        bg_mock = MagicMock()
+        bg_mock.visible = True
+        table._row_pool.append({
+            "bg": bg_mock,
+            "row_index": 0,
+            "widgets": [{
+                "type": "actions",
+                "actions_dict": {"add": fake_btn},
+            }],
+        })
+
+        # Click maps to row 0.
+        result_a = table.check_action_button_press(fake_btn)
+        assert result_a == ("add", 0)
+
+        # Simulate yard switch: invalidate (Phase 2) + the per-row mapping
+        # in update_visible_rows would re-write row_index. Here we
+        # simulate the post-update state directly by changing row_index.
+        # The point is: click MUST resolve via current row_index, never
+        # via a closure-captured value.
+        assert hasattr(table, "invalidate_widget_caches"), (
+            "PROJ-410 Phase 2 Task 2.2 prerequisite for this test."
+        )
+        table.invalidate_widget_caches()
+        table._row_pool[0]["row_index"] = 7  # simulate post-refresh remap
+
+        result_b = table.check_action_button_press(fake_btn)
+        assert result_b == ("add", 7), (
+            "PROJ-410 Task 1.6: button press must resolve via the row's "
+            "CURRENT row_index, not a closure-captured stale value. "
+            "If this fails, check check_action_button_press() at "
+            "virtual_table.py:516-524."
+        )

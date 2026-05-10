@@ -125,6 +125,51 @@ class TestConstructorDefaults:
         assert h.drag_threshold == 10
         assert h.drag_start_pos is None
 
+    def test_reset_state_clears_selected_design(self):
+        """PROJ-410 Task 1.1: locking regression.
+
+        ``reset_state()`` is called from ``BuildQueueScreen.open_for_yard``
+        when the screen is reused across yard switches (PROJ-376). The
+        production reset at ``build_queue_drag_handler.py:101`` clears
+        ``selected_design`` so the next yard does not inherit the prior
+        yard's selection (e.g., the "Add to Queue" hotkey would otherwise
+        add the previous yard's design).
+
+        This test locks that behavior — if a future refactor drops the
+        ``self.selected_design = None`` line, this test fails.
+        """
+        h = _make_handler()
+        h.selected_design = "DSN-prior-yard"
+
+        h.reset_state()
+
+        assert h.selected_design is None, (
+            "reset_state() must clear selected_design (PROJ-410 lock). "
+            "If this fails, check build_queue_drag_handler.py:101."
+        )
+
+    def test_reset_state_clears_all_five_drag_fields(self):
+        """PROJ-410 Task 1.1: locking regression for the full reset_state contract.
+
+        The docstring at ``build_queue_drag_handler.py:91-95`` lists 5
+        fields that must be cleared. Lock all of them so a partial
+        future regression on any one is caught.
+        """
+        h = _make_handler()
+        h.dragged_item = {"design_id": "X"}
+        h.drag_preview = pygame.Surface((10, 10))
+        h.drag_start_pos = (5, 5)
+        h._pending_queue_index = 2
+        h.selected_design = "DSN-x"
+
+        h.reset_state()
+
+        assert h.dragged_item is None
+        assert h.drag_preview is None
+        assert h.drag_start_pos is None
+        assert h._pending_queue_index is None
+        assert h.selected_design is None
+
     def test_drag_from_queue_invokes_remove_callback_when_provided(self):
         """When constructed WITH on_remove_from_queue, a queue-pickup drag
         dispatches the callback with the picked-up index instead of

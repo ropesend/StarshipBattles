@@ -447,3 +447,99 @@ def test_start_battle_delegates_to_controller_and_battle_scene(
         GameState.BATTLE,
     )
     assert router.active_scene is router.battle_scene
+
+
+# =========================================================================
+# PROJ-410 Task 1.8: save/load does not leak cached BuildQueueScreen
+# =========================================================================
+#
+# Codex review (arc01-002 + arc01-004) corrected the original Task 1.8
+# framing. The production save/load path goes through ScreenRouter._on_load_game()
+# which constructs a brand-new StrategyScreen and replaces the scene
+# (game/screen_router.py:324-344). The StrategyScreen.session setter is
+# test-only and never fires in production.
+#
+# The production guarantee Phase 1 Task 1.8 asserts is therefore:
+#   - After _on_load_game(), the new StrategyScreen is a *different
+#     instance* from any prior one, so no cached _build_queue widget tree
+#     can leak across the scene replacement.
+# =========================================================================
+
+
+def test_PROJ410_task_1_8_load_game_replaces_strategy_screen_with_fresh_instance(
+    monkeypatch: pytest.MonkeyPatch,
+    router_harness: SimpleNamespace,
+) -> None:
+    """PROJ-410 Task 1.8 (reframed per Codex review):
+    `_on_load_game()` constructs a brand-new StrategyScreen, ensuring no
+    cached `build_queue_screen` (or any other widget tree) from the prior
+    strategy_scene leaks across the scene replacement.
+
+    This locks the production guarantee Phase 4 Task 4.3 relied on (and
+    was therefore dropped — no session-setter hook needed).
+
+    Today: passes (the production code already constructs a new scene).
+    Locks the invariant against future regressions where someone might
+    add scene-reuse for perf.
+    """
+    router = router_harness.router
+    router.showing_load_menu = True
+    loaded_session = object()
+
+    # Capture the initial strategy_scene instance (from harness boot).
+    initial_strategy = router_harness.factories["StrategyScreen"].instances[-1]
+    assert initial_strategy is not None
+
+    class FakeAIControllerFactory:
+        instances: list["FakeAIControllerFactory"] = []
+
+        def __init__(self) -> None:
+            self.instances.append(self)
+
+    class FakeSaveGameService:
+        @classmethod
+        def load_game(cls, save_path, *, turn_number=None, ai_factory=None):
+            return loaded_session, "loaded"
+
+    monkeypatch.setitem(
+        sys.modules, "game.ai.ai_factory",
+        SimpleNamespace(AIControllerFactory=FakeAIControllerFactory),
+    )
+    monkeypatch.setitem(
+        sys.modules, "game.strategy.systems.save_game_service",
+        SimpleNamespace(SaveGameService=FakeSaveGameService),
+    )
+
+    # Simulate that the prior strategy_scene had accumulated state we
+    # specifically do NOT want leaking across load. (FakeScene allows
+    # arbitrary attribute attachment.)
+    leaked_build_queue_marker = object()
+    initial_strategy._build_queue = SimpleNamespace(
+        build_queue_screen=leaked_build_queue_marker,
+    )
+
+    # Perform load.
+    router._on_load_game("save/path", turn_number=7)
+
+    # PROJ-410 contract: the active strategy_scene must be a fresh
+    # construction, not the cached/reused initial one.
+    new_strategy = router_harness.factories["StrategyScreen"].instances[-1]
+    assert new_strategy is not initial_strategy, (
+        "PROJ-410 Task 1.8: _on_load_game() must construct a brand-new "
+        "StrategyScreen so no cached widget state leaks across scene "
+        "replacement. If this fails, someone added scene-reuse to the "
+        "load path — that breaks the Phase 4 Task 4.3 drop rationale."
+    )
+    assert router.strategy_scene is new_strategy
+
+    # On the new instance, the cached BQ marker we planted on the OLD
+    # instance is absent — confirms no transfer across scene replacement.
+    assert not hasattr(new_strategy, "_build_queue") or (
+        getattr(new_strategy, "_build_queue", None) is None
+        or getattr(new_strategy._build_queue, "build_queue_screen", None)
+        is not leaked_build_queue_marker
+    ), (
+        "PROJ-410 Task 1.8: the prior strategy_scene's _build_queue marker "
+        "leaked onto the new instance. Scene replacement should produce a "
+        "completely fresh state surface."
+    )

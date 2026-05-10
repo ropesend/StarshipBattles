@@ -158,6 +158,12 @@ class BuildQueueRenderer:
         # Update data source with current queue and rates
         data_source.set_queue(queue, build_rate)
 
+        # PROJ-410 B-hook: flush per-row caches whenever a new queue is
+        # pushed; pool widgets are reused across yards/players so stale
+        # _last_text/_last_img/_last_color must be nulled before the next
+        # update_visible_rows() reads them.
+        virtual_table.invalidate_widget_caches()
+
         # Refresh VirtualTable display
         virtual_table.update_scroll_bar()
         virtual_table.force_update()

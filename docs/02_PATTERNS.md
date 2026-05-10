@@ -247,9 +247,9 @@ Strategy/core event logging:
 
 ## 11. Surface Caching
 
-> **Last verified:** 2026-05-10 — Issue #11: race-setup galleries now share thumbnails via module-level caches.
+> **Last verified:** 2026-05-11 — PROJ-410: cross-context invalidation pattern added (`VirtualTable.invalidate_widget_caches`).
 
-Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`, `game/ui/panels/race_flag_gallery.py`, `game/ui/panels/race_portrait_gallery.py`, `game/ui/panels/race_theme_gallery.py`.
+Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`, `game/ui/panels/race_flag_gallery.py`, `game/ui/panels/race_portrait_gallery.py`, `game/ui/panels/race_theme_gallery.py`, `game/ui/components/table/virtual_table.py`.
 
 Contract:
 - Cache loaded/scaled pygame surfaces by stable asset key and dimensions.
@@ -259,6 +259,20 @@ Contract:
 - Individual UI panels may keep local `Dict[str, Surface]` caches with `invalidate_cache()` methods for rotated text and scaled surfaces.
 - Cross-instance thumbnail caches use a module-level singleton + `_clear_thumbnail_caches()` reset hook (mirrors `ShipThemeManager.clear()`). Used by `RaceFlagGallery`, `RacePortraitGallery`, `RaceThemeGallery` so re-opening Setup Species reuses decoded thumbnails instead of re-scanning + re-decoding 28 × 2048-px portraits and 18 ship-theme thumbs every time.
 - Do not cache color fills or line drawing; they are fast and position-dependent.
+
+### Cross-context invalidation (PROJ-410)
+
+When a cached widget pool is reused for *different content* (e.g. yard switch in `BuildQueueScreen`, where the pool widgets stay alive across yards/players to preserve PROJ-373 phase 3's `~1.5s` row-pool reuse perf win), expose a public `invalidate_widget_caches() -> None` method that:
+
+- Nulls per-row/per-widget caches (`_last_text`, `_last_img`, `_last_color`).
+- Sets a private `_data_identity_dirty: bool` flag.
+- Does NOT call `.kill()` on any pool widget — `kill()` defeats the perf-lock that `TestRowPoolReuseGuard` enforces.
+
+The flag is **ephemeral**: cleared at the end of the next `update_visible_rows()` re-render so subsequent frames keep the early-return optimization. Without this, every frame after invalidation re-renders all visible rows (~10–20% FPS drop).
+
+Pair the invalidation method with a content-mutation hook in the renderer (`BuildQueueRenderer.refresh_queue_display()` calls it before `update_visible_rows()`) and a screen-lifecycle hook (`BuildQueueScreen.on_active_player_changed()` calls it on player change). The renderer hook handles per-mutation refreshes; the lifecycle hook handles cross-context boundaries (yard/player swap, save/load).
+
+Canonical example: `VirtualTable.invalidate_widget_caches()` in `game/ui/components/table/virtual_table.py`.
 
 Use for repeated image loads, component sprites, race/planet/star images, and generated derivatives.
 

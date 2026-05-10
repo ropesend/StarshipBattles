@@ -73,6 +73,11 @@ class StrategyBuildQueueManager:
             screen: Parent StrategyScreen for accessing session, UI, and state.
         """
         self._screen = screen
+        # PROJ-410 Phase 4 Task 4.2: track last-seen active empire id so
+        # _open_build_queue can detect player change between opens and
+        # invoke cached_screen.on_active_player_changed() to flush stale
+        # widget/queue state.
+        self._last_active_empire_id: int | None = None
 
     def _active_theme_id(self) -> str:
         """Resolve the active empire's ``empire_theme_id`` (PROJ-396 MAJ-002).
@@ -103,6 +108,12 @@ class StrategyBuildQueueManager:
         references that hang off them) onto the cached instance so each
         open reflects the manager's current empire context.
         """
+        # PROJ-410 Phase 4 Task 4.2: detect active-player change and rebind
+        # cached domain context. Use self._screen.current_empire (existing
+        # property at strategy_screen.py:192) — no new facade accessor.
+        current_empire = self._screen.current_empire
+        current_empire_id = current_empire.id if current_empire is not None else None
+
         if self._screen.build_queue_screen is None:
             # PROJ-382 Phase 1: facade-only construction.
             # PROJ-396 MAJ-002: BuildQueuePortraitLoader no longer takes a
@@ -117,7 +128,7 @@ class StrategyBuildQueueManager:
                 design_loader=design_loader,
                 hex_coord=None,
                 galaxy=self._screen.galaxy,
-                empire=self._screen.current_empire,
+                empire=current_empire,
                 input_mapper=self._screen.input_mapper,
                 facade=self._screen.facade,
                 theme_id_supplier=self._active_theme_id,
@@ -135,15 +146,36 @@ class StrategyBuildQueueManager:
             # only if the drag handler exists yet — covered by the fact
             # that we only reach this branch after first construction.
             screen = self._screen.build_queue_screen
+            # PROJ-410 Phase 4 Task 4.2: if the active empire changed since
+            # the last open, flush widget/queue state on the cached screen
+            # BEFORE rebinding new context. Without the flush the next
+            # open_for_yard would render the prior empire's queues against
+            # newly-rebound domain refs.
+            if (self._last_active_empire_id is not None
+                    and current_empire_id != self._last_active_empire_id):
+                screen.on_active_player_changed()
             screen.design_library = design_library
             screen.design_loader = design_loader
             screen.portrait_loader = BuildQueuePortraitLoader(
                 design_library, self._active_theme_id
             )
 
+        # PROJ-410 Phase 4 Task 4.2: rebind cached domain context (empire,
+        # galaxy, facade) before every open_for_yard(). Without this the
+        # cached BuildQueueScreen still queries as the prior empire — the
+        # root cause of the missing-yard-selector + cross-player-merged-
+        # display symptoms (collect_build_queues_at_hex filters by empire.id
+        # at build_queue_source.py:412-416).
+        self._screen.build_queue_screen.empire = current_empire
+        self._screen.build_queue_screen.galaxy = self._screen.galaxy
+        self._screen.build_queue_screen.facade = self._screen.facade
+
         self._screen.build_queue_screen.open_for_yard(
             yard, hex_coord=hex_coord, portrait_surface=portrait_surface
         )
+
+        # Update last-seen empire id AFTER successful open.
+        self._last_active_empire_id = current_empire_id
 
     def on_build_yard_click(self) -> None:
         """Open build queue screen for selected planet."""

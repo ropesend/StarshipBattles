@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-410 | Build Queue Widget Cache Invalidation | Planning | 2026-05-10 | 2026-05-10 |
+| PROJ-410 | Build Queue Widget Cache Invalidation | Complete | 2026-05-10 | 2026-05-11 |
 | PROJ-409 | Tier 5: closeout MAJ-013 EventBus shim + MAJ-014 raw EnginePhaseError catch | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-408 | Tier 4: coverage gaps from PROJ-380..399 review (C-01..C-06) | Complete | 2026-05-09 | 2026-05-09 |
 | PROJ-407 | Tier 3: stale docs + architecture wording sweep (D-01..D-09) | Complete | 2026-05-09 | 2026-05-09 |

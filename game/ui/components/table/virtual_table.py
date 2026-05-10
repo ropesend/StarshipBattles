@@ -102,6 +102,12 @@ class VirtualTable:
         # when the pool is already correctly sized.
         self._last_pool_dims: Optional[Tuple[int, int]] = None
 
+        # PROJ-410 Phase 2: data-identity dirty flag. Set by
+        # ``invalidate_widget_caches()`` and cleared at the end of the
+        # next ``update_visible_rows()`` re-render (ephemeral). Defaults
+        # True so the first refresh after construction always re-renders.
+        self._data_identity_dirty: bool = True
+
         # Build UI
         self._build_containers()
         self._header = TableHeader(
@@ -306,11 +312,44 @@ class VirtualTable:
                 "_last_color": None,
             })
 
+    def invalidate_widget_caches(self) -> None:
+        """PROJ-410 Phase 2: flush per-row/per-widget caches without killing pool widgets.
+
+        Used by ``BuildQueueRenderer.refresh_queue_display()`` (Phase 3
+        Task 3.1) and the screen lifecycle hook (Phase 3 Task 3.2 / Phase
+        4 Task 4.1) to drop stale ``_last_text``, ``_last_img``, and
+        ``_last_color`` cached on each row. Sets ``_data_identity_dirty``
+        so the next ``update_visible_rows()`` ignores its
+        ``(scroll_pct, row_count)`` early-return and re-renders all
+        visible rows. The flag is ephemeral — cleared after the per-row
+        loop completes, so subsequent frames keep the early-return
+        optimization.
+
+        Hard constraint (PROJ-373 phase 3 perf lock): this method MUST
+        NOT call ``.kill()`` on any pool widget. ``TestRowPoolReuseGuard``
+        asserts widget ``.kill()`` call counts are zero on cache reuse.
+        Idempotent.
+        """
+        for row in self._row_pool:
+            row["_last_color"] = None
+            for widget in row.get("widgets", []):
+                if widget.get("type") == "label":
+                    widget["_last_text"] = None
+                else:
+                    widget["_last_img"] = None
+        self._data_identity_dirty = True
+
     def update_visible_rows(self) -> None:
         """Update content of row pool based on scroll position.
 
         Uses dirty tracking to skip updates when nothing changed.
         Caches text/color values to avoid redundant pygame_gui calls.
+
+        PROJ-410 Phase 2 Task 2.3: the ``(scroll_pct, row_count)``
+        early-return is also gated on ``_data_identity_dirty``; set the
+        flag true via ``invalidate_widget_caches()`` to force a full
+        re-render even when scroll/count are unchanged. The flag is
+        cleared at the end of the per-row loop (ephemeral semantics).
         """
         current_pct = self._scroll_bar.start_percentage
         current_count = self._data_source.get_row_count()
@@ -319,6 +358,7 @@ class VirtualTable:
         if (
             current_pct == self._last_scroll_pct
             and current_count == self._last_row_count
+            and not self._data_identity_dirty
         ):
             return
 
@@ -429,6 +469,10 @@ class VirtualTable:
                         widget["_last_text"] = None
                     else:
                         widget["_last_img"] = None
+
+        # PROJ-410: clear the data-identity dirty flag once per re-render
+        # (ephemeral semantics — subsequent frames keep the early-return).
+        self._data_identity_dirty = False
 
     def update_scroll_bar(self) -> None:
         """Update scroll bar visible percentage."""
