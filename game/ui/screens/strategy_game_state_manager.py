@@ -8,6 +8,13 @@ FEAT-20: adds dev-mode `run_n_turns(n)` that calls the (now-public)
 `process_full_turn()` n times in a row with Esc cancellation between iterations.
 Per-turn event-log auto-open is suppressed during the loop and a single combined
 log is surfaced at the end so the dev tool doesn't pop a modal on every turn.
+
+Issue #9: ``_apply_turn_start_state(empire)`` is the single source of truth
+for per-player turn-start UI state (selection clear, camera focus on home
+colony, lower-right detail panel auto-populate via the manual-click code
+path, per-player event-log auto-open). It is invoked from both branches
+of ``advance_turn`` so every empire — including player 1 after the
+full-turn rollover — sees identical turn-start behaviour.
 """
 from __future__ import annotations
 
@@ -58,6 +65,11 @@ class StrategyGameStateManager:
             # BUG-125: rotation reset to player 1 — push into session
             # so command handlers see the active turn-taker.
             self._sync_active_empire()
+            # Issue #9: single source of truth for per-player turn-start UI
+            # state (selection clear, camera focus, home-colony auto-select,
+            # per-player event log). Must run AFTER _sync_active_empire so
+            # facade.get_turn_events scopes to the correct empire.
+            self._apply_turn_start_state(self._screen.current_empire)
         else:
             # Switch to next human player's view
             next_player_id = self._screen.human_player_ids[self._screen.current_player_index]
@@ -66,10 +78,14 @@ class StrategyGameStateManager:
             # BUG-125: push rotation into the session so command handlers
             # gate on the active empire, not the original session creator.
             self._sync_active_empire()
-            # Center on their home colony
-            next_empire = next((e for e in self._screen.empires if e.id == next_player_id), None)
-            if next_empire and next_empire.colonies:
-                self._screen.center_camera_on(next_empire.colonies[0])
+            # Issue #9: same per-player turn-start state for players 2..N
+            # within one full-turn cycle.
+            next_empire = next(
+                (e for e in self._screen.empires if e.id == next_player_id),
+                None,
+            )
+            if next_empire is not None:
+                self._apply_turn_start_state(next_empire)
 
     def _sync_active_empire(self) -> None:
         """Push the UI rotation index into `session.active_empire`.
@@ -85,6 +101,44 @@ class StrategyGameStateManager:
         )
         if current_empire is not None:
             self._screen.session.active_empire = current_empire
+
+    def _apply_turn_start_state(self, empire) -> None:
+        """Reset per-player UI state at turn-start (Issue #9).
+
+        Single source of truth for what happens when a new player takes
+        control: clear stale selection, focus the camera on their home
+        colony, populate the lower-right detail panel via the
+        manual-click code path (``on_ui_selection``), and open the
+        per-player event log for any turn events scoped to ``empire``.
+
+        Invoked from both ``advance_turn`` branches (per-player switch
+        and full-turn rollover) so every empire sees identical
+        turn-start behaviour. ``_suppress_event_log`` (FEAT-20)
+        defensively gates the popup so callers that re-enter via the
+        dev bulk-run path stay quiet.
+        """
+        screen = self._screen
+        screen.selected_fleet = None
+        screen.selected_object = None
+        screen.last_selected_system = None
+
+        if not empire.colonies:
+            return
+
+        home_colony = empire.colonies[0]
+        screen.center_camera_on(home_colony)
+        # Same code path as a manual planet click — populates
+        # PlanetReportPanel via ui.show_detailed_report.
+        screen.on_ui_selection(home_colony)
+
+        # Per-player event-log auto-open (BUG-123 scoping).
+        turn = screen._facade.get_turn_number()
+        events = screen._facade.get_turn_events(turn=turn, empire_id=empire.id)
+        if events and not self._suppress_event_log:
+            screen.ui.open_event_log_with_events(
+                events,
+                empire_name=getattr(empire, "name", None),
+            )
 
     def process_full_turn(self) -> list:
         """Process the turn for all empires simultaneously.
@@ -173,33 +227,22 @@ class StrategyGameStateManager:
             else:
                 logger.warning(f"Auto-save failed: {message}")
 
-        # Re-center Camera on current player's home
-        current_player_id = self._screen.human_player_ids[self._screen.current_player_index]
-        current_empire = next((e for e in self._screen.empires if e.id == current_player_id), self._screen.session.active_empire)
-        if current_empire.colonies:
-            self._screen.center_camera_on(current_empire.colonies[0])
-
         self._screen.turn_processing = False
 
-        # PROJ-77: Show event log if there are events for this turn.
-        # BUG-123: scope to the active empire; the auto-popup is now
-        # suppressed when the active empire produced no events even if
-        # other empires did (each player only sees their own log).
+        # Issue #9: per-player turn-start UI state (selection clear,
+        # camera focus, home-colony auto-select, event-log popup) is
+        # owned by ``_apply_turn_start_state`` and invoked from
+        # ``advance_turn`` after this method returns. Do not duplicate
+        # those concerns here — see Anti-Reversion Notes in the
+        # issue #9 investigation report.
+        #
+        # The event lookup remains so the FEAT-20 dev-loop caller
+        # (``run_n_turns``) can aggregate events across iterations for
+        # a single combined end-of-loop log. Scoped per BUG-123.
         active_empire = self._screen.current_empire
         turn_events = self._screen._facade.get_turn_events(
             turn=processed_turn, empire_id=active_empire.id
         )
-        # FEAT-20: suppress per-turn popup during run_n_turns; events are still
-        # returned to the caller so the bulk runner can surface a combined log.
-        if turn_events and not self._suppress_event_log:
-            self._screen.ui.open_event_log_with_events(
-                turn_events,
-                empire_name=getattr(active_empire, "name", None),
-            )
-
-        # Refresh UI for currently selected object
-        if self._screen.selected_object:
-            self._screen.on_ui_selection(self._screen.selected_object)
 
         return turn_events or []
 
