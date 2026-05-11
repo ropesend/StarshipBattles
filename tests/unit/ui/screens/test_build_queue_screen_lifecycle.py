@@ -976,3 +976,172 @@ def test_request_close_can_be_re_opened(
     assert screen.is_visible()
     assert id(screen.panels) == panels_id
     assert screen.build_context is planet_b
+
+
+# =========================================================================
+# Issue #17 regression tests
+# =========================================================================
+#
+# Issue #17: after switching to a non-default yard, adding items, closing,
+# and re-opening, the panel shows stale rows from the previously-active
+# yard until first interaction. Two co-located bugs:
+#
+# 1) ``open_for_yard()`` never invokes ``renderer.update_queue_header(...)``,
+#    so the header text remains bound to the previously-active source.
+# 2) When the active queue source resets to ``queue_sources[0]`` on re-open,
+#    ``update_visible_rows()`` correctly hides surplus pool rows via
+#    ``row["bg"].hide()`` — but the subsequent ``self.show()`` calls
+#    ``panels.background.show()`` which is pygame_gui's
+#    ``UIPanel.show(show_contents=True)`` and recursively un-hides every
+#    child via ``UIContainer.show``, re-exposing stale label text on those
+#    rows. (Verified against pygame-ce 2.5.7's pygame_gui source.)
+#
+# The fix calls ``renderer.update_queue_header(self.active_queue_source)``
+# in ``open_for_yard`` and extends ``invalidate_widget_caches`` to also
+# clear pygame_gui widget content (set_text("")/set_image(blank)), not
+# just the cache attrs.
+# =========================================================================
+
+
+def test_issue17_open_for_yard_invokes_update_queue_header(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, hex_a,
+):
+    """Issue #17 (header path): ``open_for_yard`` must invoke
+    ``renderer.update_queue_header(self.active_queue_source)`` so the title
+    bar reflects the active source after re-open / yard switch.
+
+    Today ``update_queue_header`` is only invoked from
+    ``_on_queue_selection_changed`` (build_queue_screen.py:407). On re-open
+    the active source resets to ``queue_sources[0]`` but the header still
+    points at whatever yard the user last clicked into.
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=planet_a,
+    )
+
+    # Spy on update_queue_header to count invocations on re-open.
+    original = screen.renderer.update_queue_header
+    spy = MagicMock(side_effect=original)
+    screen.renderer.update_queue_header = spy
+
+    screen._request_close()
+    screen.open_for_yard(planet_a, hex_coord=hex_a)
+
+    assert spy.call_count >= 1, (
+        "Issue #17: BuildQueueScreen.open_for_yard() must invoke "
+        "renderer.update_queue_header(self.active_queue_source) so the "
+        "title bar matches the active source after re-open."
+    )
+    # The arg must be the active queue source (not None when sources exist).
+    last_call_args = spy.call_args
+    assert last_call_args.args[0] is screen.active_queue_source, (
+        "Issue #17: update_queue_header must be passed the current "
+        "active_queue_source, so the title agrees with the rendered rows."
+    )
+
+
+def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
+    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, mock_registries,
+):
+    """Issue #17 (row content path): close+reopen after a yard switch
+    with items must leave NO stale label text on pool rows beyond
+    ``data_source.get_row_count()``.
+
+    pygame_gui's ``UIPanel.show(show_contents=True)`` -> ``UIContainer.show(True)``
+    contract recursively un-hides every child element regardless of
+    individual visible state (verified against pygame-ce 2.5.7). Therefore
+    ``update_visible_rows()`` calling ``row["bg"].hide()`` on surplus rows
+    is insufficient — the next ``panels.background.show()`` re-exposes
+    them. ``invalidate_widget_caches`` must blank widget content too.
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    planet = _planet_with_two_yards("Twin-Yard", 301, hex_a)
+    galaxy = _MockGalaxy()
+    galaxy._global_hex_planets[hex_a] = [planet]
+    session = _MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy,
+        empire=empire,
+        initial_yard=planet,
+    )
+
+    # Populate the planet's queue with synthetic items, simulate selector
+    # picking the second source if available, and refresh so the row
+    # pool's label widgets carry real text.
+    if len(screen.queue_sources) >= 2:
+        screen._on_queue_selection_changed(screen.queue_sources[1], {1})
+    target_queue = screen._get_active_queue()
+    target_queue.extend([
+        {"design_id": f"qs_organics_complex", "name": "QS Organics Complex",
+         "type": "complex", "turns_remaining": 4.0, "remaining_cost": {}}
+        for _ in range(3)
+    ])
+    screen._refresh_queue_display()
+
+    # Sanity: pool's first row(s) should carry the queue item's design id
+    # in some label cell (the item-name column renders "<id> (<category>)").
+    pool = screen.panels.virtual_table._row_pool
+    pre_close_label_texts = []
+    for row in pool[:3]:
+        for w in row.get("widgets", []):
+            if w.get("type") == "label":
+                pre_close_label_texts.append(w["el"].text)
+    assert any("organics" in t for t in pre_close_label_texts), (
+        "test setup: expected at least one row to carry the queue item's "
+        "design id before close; pool labels were: "
+        + repr(pre_close_label_texts)
+    )
+
+    # Close — panels survive (PROJ-376). Widget text content remains.
+    screen._request_close()
+
+    # Empty the underlying queue (simulating the user opening a different
+    # source whose queue is empty) then re-open on the same planet.
+    del target_queue[:]
+    screen.open_for_yard(planet, hex_coord=hex_a)
+
+    # After re-open, the data source has no rows for surplus pool entries.
+    # Every label widget on a pool row whose ``data_idx >= row_count`` must
+    # not carry stale design-name text. The pygame_gui UIPanel.show
+    # recursive un-hide will re-expose any stale text otherwise.
+    row_count = screen.panels.virtual_table._data_source.get_row_count()
+    stale_rows = []
+    for pool_idx, row in enumerate(pool):
+        data_idx = row.get("row_index", -1)
+        if data_idx >= row_count or data_idx < 0:
+            for w in row.get("widgets", []):
+                if w.get("type") == "label":
+                    text = w["el"].text or ""
+                    if "organics" in text or "complex" in text:
+                        stale_rows.append((pool_idx, data_idx, text))
+
+    assert stale_rows == [], (
+        f"Issue #17: out-of-range pool rows must not retain stale label "
+        f"text after re-open. Found stale labels: {stale_rows!r}. The fix "
+        f"must call set_text(\"\") on every label widget in "
+        f"VirtualTable.invalidate_widget_caches() to defeat pygame_gui's "
+        f"UIPanel.show(show_contents=True) recursive un-hide."
+    )

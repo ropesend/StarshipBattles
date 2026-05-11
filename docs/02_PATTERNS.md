@@ -247,7 +247,7 @@ Strategy/core event logging:
 
 ## 11. Surface Caching
 
-> **Last verified:** 2026-05-11 — PROJ-410: cross-context invalidation pattern added (`VirtualTable.invalidate_widget_caches`).
+> **Last verified:** 2026-05-11 — issue #17: `invalidate_widget_caches()` clause expanded to require widget-content clearing, not just cache-attr nulling, because pygame_gui's `UIPanel.show(show_contents=True)` recursively un-hides every child via `UIContainer.show`, re-exposing stale text/images otherwise.
 
 Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`, `game/ui/panels/race_flag_gallery.py`, `game/ui/panels/race_portrait_gallery.py`, `game/ui/panels/race_theme_gallery.py`, `game/ui/components/table/virtual_table.py`.
 
@@ -265,6 +265,7 @@ Contract:
 When a cached widget pool is reused for *different content* (e.g. yard switch in `BuildQueueScreen`, where the pool widgets stay alive across yards/players to preserve PROJ-373 phase 3's `~1.5s` row-pool reuse perf win), expose a public `invalidate_widget_caches() -> None` method that:
 
 - Nulls per-row/per-widget caches (`_last_text`, `_last_img`, `_last_color`).
+- **Clears the widget content too** — `UILabel.set_text("")` on labels, `UIImage.set_image(blank_surface)` on images (issue #17). Cache-attr nulling alone is insufficient: pygame_gui's `UIPanel.show(show_contents=True)` calls `panel_container.show(True)`, and `UIContainer.show(True)` iterates every child and calls `.show()` on it unconditionally — regardless of each child's prior individual `visible` state. So any stale text/image left on a pool row that `update_visible_rows()` individually hid will re-appear on the next `panel.show()`.
 - Sets a private `_data_identity_dirty: bool` flag.
 - Does NOT call `.kill()` on any pool widget — `kill()` defeats the perf-lock that `TestRowPoolReuseGuard` enforces.
 

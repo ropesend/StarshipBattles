@@ -344,6 +344,14 @@ class BuildQueueScreen:
         self._queue_selector.active_source = self.active_queue_source
         self._queue_selector.refresh()
 
+        # Issue #17: header text is bound to the active queue source, but
+        # ``update_queue_header`` is otherwise only invoked from
+        # ``_on_queue_selection_changed``. Without this call the title
+        # remains pointed at the previously-active yard on re-open /
+        # player-turn change, even though the selector cursor and
+        # rendered rows correctly reflect the reset active source.
+        self.renderer.update_queue_header(self.active_queue_source)
+
         # Initial render — also resyncs the FEAT-17 pause-button label via
         # ``renderer.refresh_pause_button(...)``.
         self._refresh_items_list()
