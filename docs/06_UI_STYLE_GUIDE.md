@@ -1,6 +1,6 @@
 # UI Style Guide Compact Reference
 
-> **Last verified:** 2026-05-10 — issue #12: Strategy Modal Windows section gained one sentence on full modality (any live subclass blocks ALL background clicks and top-bar buttons regardless of click position).
+> **Last verified:** 2026-05-11 — issue #18: Strategy Modal Windows section gained one bullet on Esc-closes-topmost (the strategy event router walks `iter_live_modals()` and kills the last-appended modal when no menu panel is open). Previous (2026-05-10): issue #12 full modality.
 
 Audience: LLM agents working on Starship Battles UI. This is the compact current-system reference for color constants, pygame_gui theme usage, strategy modal windows, read-only component-status rendering, and UI style extension points.
 
@@ -77,6 +77,7 @@ Contracts:
 - Cross-screen reusable windows may type `window_manager: "StrategyWindowManager | None"`, but callers still pass it explicitly. Use `None` only from non-strategy callers.
 - The manager still exposes legacy slot attributes for registrar convenience and public API stability. New modal tracking goes through the live modal list.
 - Full modality (issue #12): while any subclass instance is live, the strategy event router blocks ALL background clicks (hex grid AND top-bar buttons) regardless of click position relative to the window's rect. There is no per-window opt-out.
+- Esc-closes-topmost (issue #18): when no menu panel is open, the strategy event router walks `list(window_manager.iter_live_modals())[-1].kill()` on K_ESCAPE. New `StrategyModalWindow` subclasses pick this up automatically; do not add per-window Esc handlers. The kill() chain fires the window's existing `on_close_callback` before `super().kill()`, matching the X-button close path. Per-window Esc bindings on `BuildQueueListWindow` and `TransferDialog` are retained for tooltip contract and remain safe (double-kill is idempotent).
 
 Test-only bypass invariant:
 
