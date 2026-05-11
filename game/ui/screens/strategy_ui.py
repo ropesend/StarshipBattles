@@ -407,6 +407,15 @@ class StrategyUI:
         """
         self.window_manager.show_confirmation_dialog(title, message, on_confirm, is_warning)
 
+    def show_error_message(self, message: str) -> None:
+        """Surface an error message to the user (issue #19).
+
+        Used by the superweapon click chokepoint to route
+        ``{'type': 'error', 'message': ...}`` results into a visible dialog
+        instead of dropping them at the log layer.
+        """
+        self.window_manager.show_message_dialog("Error", message)
+
     def show_ship_picker(self, ships, ability_name: str, on_selected) -> None:
         """Show ship picker dialog for multi-select.
 

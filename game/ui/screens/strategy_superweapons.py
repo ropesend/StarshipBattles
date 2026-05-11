@@ -212,13 +212,12 @@ class SuperweaponOperations:
         # Get all systems for selection
         all_systems = list(self.galaxy.systems.values())
 
-        # Filter: exclude current system and systems already linked
-        linked_system_names = {wp.destination_id for wp in current_system.warp_points}
-        linked_system_names.add(current_system.name)
-
+        # Issue #19: exclude only the current system. Duplicate warp points
+        # between the same pair of systems are allowed by design — the previous
+        # `linked_system_names` exclusion made the second link impossible.
         available_systems = [
             s for s in all_systems
-            if s.name not in linked_system_names
+            if s.name != current_system.name
         ]
 
         if not available_systems:

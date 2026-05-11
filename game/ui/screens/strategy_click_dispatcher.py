@@ -331,11 +331,18 @@ class ClickModeDispatcher:
 
         Left-click invokes `self.scene._superweapons.<designation_method>(mx, my, fleet)`
         and resets `input_mode` to 'SELECT' on success. Right-click cancels.
+
+        Issue #19: ``{'type': 'error', 'message': ...}`` results are routed
+        to ``scene.ui.show_error_message`` so the user actually sees them
+        instead of dropping them at the log layer. Central chokepoint for
+        all five superweapon-target modes.
         """
         if button == 1:  # Left click — designate target
             method = getattr(self.scene._superweapons, designation_method)
             result = method(mx, my, self.scene.selected_fleet)
             if result:
+                if isinstance(result, dict) and result.get('type') == 'error':
+                    self.scene.ui.show_error_message(result['message'])
                 self.input_mode = 'SELECT'
             return True
         elif button == 3:  # Right click cancels
