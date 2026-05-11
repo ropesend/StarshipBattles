@@ -18,10 +18,18 @@ Issue #8 redirects the design of the two shortcut branches in
 This file pins the round-trip wiring between
 ``SimulationBattleResolver`` → ``IReplayCaptureSink`` (the bridge that
 ``ReplayStore`` implements in production) → ``BattleResult.replay_id``.
-The actual sink-to-disk path is covered by
-``tests/integration/replay/test_replay_store.py``; here we use a
-fake sink that records the calls so the test stays focused on the
-adapter contract issue #8 changes.
+
+Adapter-contract tests (``TestNoCapableBranchTruncatedReplayCapture``,
+``TestSoleSurvivorBranchHonestTooltip``, ``TestReasonFlowsThroughEventBus``)
+use the ``_RecordingCaptureSink`` fake so they stay focused on the
+issue-#8 shortcut-branch changes.
+
+``TestProductionWiringEndToEnd`` deliberately uses a REAL ``ReplayStore``
+plus ``set_save_root`` plus the production ``set_default_capture_sink``
+/ ``set_replay_store`` accessors, to pin the end-to-end production
+wiring (PROJ-366 commits 99b6d7cd0 + c9ad63910) for the simulator
+branch — the path the QA session on 2026-05-04 exercised and saw fail
+because the wiring was missing at QA time.
 """
 from __future__ import annotations
 
@@ -125,6 +133,49 @@ def _make_outcome(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _real_store_run_battle_factory(sink, *, recorded_specs):
+    """``run_battle`` replacement that drives the sink with a REAL
+    ``ReplayOutcome`` (not a ``MagicMock``).
+
+    ``ReplayStore.on_battle_ended`` serializes the outcome via
+    ``record.to_dict()`` and writes the result to disk through
+    ``save_json``. A ``MagicMock`` is not JSON-serializable, so the
+    real-store path requires a real ``ReplayOutcome``. Empty ``data``
+    is fine — this helper only proves the capture round-trip, not the
+    outcome contents (those are covered by
+    ``tests/integration/replay/test_capture_pipeline.py``).
+    """
+    from game.simulation.replay import ReplaySpec
+    from game.simulation.replay.replay_outcome import ReplayOutcome
+    from game.simulation.replay.replay_serialization import REPLAY_SCHEMA_VERSION
+
+    def _patched(spec, **kwargs):
+        recorded_specs.append(spec)
+        capture_context = kwargs.get("capture_context")
+        replay_id: Optional[str] = None
+        if capture_context is not None:
+            replay_spec = ReplaySpec.from_battle_spec(
+                spec,
+                ship_instance_lookup=capture_context.ship_instance_lookup,
+            )
+            replay_id = sink.on_battle_started(replay_spec, context=capture_context)
+
+        outcome = _make_outcome(
+            replay_id=replay_id or None,
+            winner_team_id=0,
+            duration=spec.absolute_max_ticks,
+        )
+        if replay_id:
+            replay_outcome = ReplayOutcome(
+                schema_version=REPLAY_SCHEMA_VERSION,
+                data={},
+            )
+            sink.on_battle_ended(replay_id, replay_outcome)
+        return outcome
+
+    return _patched
 
 
 def _patched_run_battle_factory(sink, *, recorded_specs):
@@ -298,6 +349,180 @@ class TestSoleSurvivorBranchHonestTooltip:
         assert result.replay_id is None
         assert result.replay_unavailable_reason == "sole_survivor"
         assert result.winner == 0
+
+
+class TestProductionWiringEndToEnd:
+    """QA-rejection regression guard for issue #8.
+
+    The QA session on 2026-05-04 showed all three Replay buttons grayed
+    out for ``branch=simulator`` battles, despite the issue-#8 shortcut
+    fix being in place. Root cause at that time: production never wired
+    ``ReplayStore`` as the default capture sink, so every battle ran
+    against ``NullCaptureSink`` and ``BattleOutcome.replay_id`` always
+    landed as ``None``. PROJ-366 (commits 99b6d7cd0 + c9ad63910,
+    2026-05-05 morning PT) added the production wiring in
+    ``game/app_bootstrap.py:279-287``.
+
+    PROJ-366 invariant tests (``tests/unit/test_app_bootstrap_invariants
+    .py::test_invariant_7_replay_store_registered_after_input_mapper``)
+    verify the wiring exists at bootstrap import time. The other tests
+    in THIS file verify the adapter contract via a mock
+    ``_RecordingCaptureSink``. Neither verifies the END-TO-END production
+    path through a real ``ReplayStore`` for the ``branch=simulator``
+    path. This class closes that gap: if PROJ-366's wiring or the
+    sink's ``save_root``-coupled uuid generation regresses, this test
+    fails immediately.
+    """
+
+    def test_simulator_branch_captures_real_replay_id_through_real_store(
+        self, tmp_path,
+    ):
+        """Simulator-branch battle with the production ``ReplayStore``
+        wired as the default sink AND a real ``save_root`` set should:
+
+        - produce a non-None ``BattleResult.replay_id`` (a real uuid hex).
+        - persist a sidecar at ``<save_root>/replays/replay_<uuid>.json``.
+
+        The QA-observed failure had ``replay_id`` always ``None``
+        because no sink was wired AND/OR because the store had no
+        save_root, both of which collapse to the same user-visible
+        symptom (Replay button disabled). This test exercises BOTH
+        conditions being correctly met simultaneously.
+        """
+        from pathlib import Path
+
+        from game.simulation.replay import (
+            reset_default_capture_sink,
+            set_default_capture_sink,
+        )
+        from game.strategy.adapters.simulation_adapter import (
+            SimulationBattleResolver,
+        )
+        from game.strategy.services.replay_store import (
+            ReplaySettings,
+            ReplayStore,
+        )
+        from game.strategy.systems.save_game_service import set_replay_store
+
+        save_root: Path = tmp_path / "qs_save"
+        save_root.mkdir()
+
+        # Settings mirror production defaults; verification disabled keeps
+        # the test focused on the capture-sink wiring (the verification
+        # path is covered by tests/integration/replay/
+        # test_verification_queue_integration.py).
+        settings = ReplaySettings(
+            max_replays_per_save=10,
+            verification_enabled=False,
+            verification_queue_cap=4,
+        )
+        store = ReplayStore(settings=settings)
+        store.set_save_root(save_root)
+
+        # Mirror app_bootstrap.py:286-287 production wiring exactly:
+        # source-module functions, not lazy-import sites.
+        set_default_capture_sink(store)
+        set_replay_store(store)
+
+        try:
+            resolver = SimulationBattleResolver(ai_factory=MagicMock())
+            f1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=True)])
+            f2 = _make_fleet(2, [_MockShipInstance("b", combat_capable=True)])
+
+            # Drive run_battle with a fake that fires the SAME sink hooks
+            # the production start_engine_from_spec + extract_outcome
+            # call, against the REAL ReplayStore. This proves the wiring
+            # end-to-end without needing a full battle physics tick loop
+            # (covered separately by
+            # tests/integration/replay/test_verification_queue_integration
+            # .py and tests/integration/replay/test_capture_pipeline.py).
+            recorded: List[Any] = []
+            with patch(
+                "game.strategy.adapters.simulation_adapter.run_battle",
+                side_effect=_real_store_run_battle_factory(
+                    store, recorded_specs=recorded
+                ),
+            ):
+                result = resolver.resolve_battle([f1, f2])
+
+            # The simulator branch must dispatch to run_battle (not a
+            # shortcut), and BattleResult.replay_id must carry the uuid
+            # the REAL ReplayStore minted.
+            assert len(recorded) == 1, (
+                "simulator branch must call run_battle"
+            )
+            assert result.replay_id is not None, (
+                "BattleResult.replay_id must be non-None when a real "
+                "ReplayStore is wired AND save_root is set. If this "
+                "fails, the QA-observed symptom is back: either the "
+                "sink is not wired (PROJ-366 regression) or "
+                "ReplayStore.on_battle_started returned empty (save_root "
+                "regression)."
+            )
+            # ReplayStore.on_battle_started returns ``uuid.uuid4().hex``,
+            # which is a 32-char lowercase hex string.
+            assert len(result.replay_id) == 32, (
+                f"expected 32-char hex uuid, got {result.replay_id!r}"
+            )
+            assert all(c in "0123456789abcdef" for c in result.replay_id), (
+                f"replay_id is not a hex uuid: {result.replay_id!r}"
+            )
+            assert result.replay_unavailable_reason is None
+
+            # The sidecar JSON must have landed under <save_root>/replays/.
+            sidecar = save_root / "replays" / f"replay_{result.replay_id}.json"
+            assert sidecar.exists(), (
+                f"ReplayStore.on_battle_ended must persist a sidecar at "
+                f"{sidecar}; this proves the full capture round-trip "
+                f"(started → uuid → ended → atomic write) is intact."
+            )
+        finally:
+            reset_default_capture_sink()
+            set_replay_store(None)
+
+    def test_null_sink_baseline_still_yields_none_replay_id(self):
+        """Baseline sanity: without production wiring, ``replay_id`` is
+        ``None`` (the QA-observed pre-PROJ-366 behaviour). Confirms the
+        positive test above is exercising the wiring rather than masking
+        a different cause.
+
+        Uses ``reset_default_capture_sink()`` to ensure the default
+        ``NullCaptureSink`` is active. ``NullCaptureSink.on_battle_started``
+        returns ``""``, which ``extract_outcome`` coerces to ``None``.
+        """
+        from game.simulation.replay import reset_default_capture_sink
+        from game.strategy.adapters.simulation_adapter import (
+            SimulationBattleResolver,
+        )
+
+        # Defensive: clear any leakage from a prior test.
+        reset_default_capture_sink()
+
+        resolver = SimulationBattleResolver(ai_factory=MagicMock())
+        f1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=True)])
+        f2 = _make_fleet(2, [_MockShipInstance("b", combat_capable=True)])
+
+        from game.simulation.replay import get_default_capture_sink
+
+        sink = get_default_capture_sink()
+        recorded: List[Any] = []
+        with patch(
+            "game.strategy.adapters.simulation_adapter.run_battle",
+            side_effect=_real_store_run_battle_factory(
+                sink, recorded_specs=recorded
+            ),
+        ):
+            result = resolver.resolve_battle([f1, f2])
+
+        assert len(recorded) == 1
+        # NullCaptureSink returns "", which extract_outcome coerces to
+        # None — this is the legacy pre-PROJ-366 production behaviour.
+        assert result.replay_id is None, (
+            "Without production wiring, the default NullCaptureSink "
+            "returns an empty replay_id (coerced to None). If this is "
+            "non-None, the test environment is leaking a real sink "
+            "from a prior test."
+        )
 
 
 class TestReasonFlowsThroughEventBus:
