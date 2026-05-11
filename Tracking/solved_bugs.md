@@ -1273,3 +1273,43 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Key Test Case:** `TestModalSlotCleanupContract` (parametrised across 14 modal slots) in `test_strategy_window_manager_public_api.py`
 
 ---
+
+## [BUG-122] - Multiple fleets disappear when joining each other in the same hex — mutual-join + redirect-without-self-exclusion
+* **Date Solved:** 2026-04-28
+* **Confirmed in:** QA Session 20260428_052952
+* **Brief Summary of Solution:** Three coordinated fixes. (1) `redirect_pursuers` gains keyword-only `exclude` set and returns `(redirected, excluded)`; excluded pursuers are not rewritten. (2) `Fleet.merge_with` passes `exclude=frozenset({other_fleet})` and drops stale `MOVE_TO_FLEET`/`JOIN_FLEET` orders targeting `self`, emitting `FLEET_JOIN_CANCELLED` with `reason="self_target_after_redirect"`. (3) `OrderProcessor.process_instant_orders` rewritten as Phase A (collect) → Phase B (`_elect_canonical_merges` collapses mutual pairs, most-ships wins, smaller-id tiebreaker) → Phase C (per-iteration aliveness re-validation; skips emit `FLEET_JOIN_CANCELLED` with `reason="absorbed_by_other_merge"` / `"target_absorbed_mid_iteration"`). Docs: `docs/systems/orders_system.md` JOIN_FLEET edge cases + reason taxonomy; `docs/systems/strategy_layer.md` `redirect_pursuers` signature note.
+* **Key Test Case:** `tests/integration/strategy/test_fleet_join_redirect.py` — mutual-equal-ships, mutual-unequal-ships, redirect-no-self-join, 3-fleet-cycle-no-loss, convergent-target-absorbed-mid-iteration (5 new) + 3 unit tests in `tests/unit/strategy/fleet/test_fleet_pursuer_tracker.py` for the `exclude=` contract.
+
+---
+
+## [BUG-123] - Event Log shows events from all empires combined; should filter to the active empire
+* **Date Solved:** 2026-04-29
+* **Confirmed in:** QA Session 20260428_190154
+* **Brief Summary of Solution:** Data-layer filter (clean-sheet design per CLAUDE.md Rule 3). Added `EventLog.get_events_for_empire(empire_id, *, include_global=True)` plus optional `empire_id` kwarg on `get_events_for_turn` / `get_events_by_category`; threaded through `EventSlice` and `StrategySessionFacade`. UI entry points (`EventLogRegistrar.open_all`, `StrategyGameStateManager.process_full_turn`) read `scene.current_empire.id` (same convention as `StrategyBuildQueueManager` / `StrategyDetailFormatter`). Window title surfaces the active empire name. `empire_id == -1` sentinel is broadcast-to-all so environmental hazards remain visible. Per-turn auto-popup suppressed when the active empire produced zero events. Docs: `docs/systems/strategy_layer.md` §5 Event System updated.
+* **Key Test Case:** `tests/integration/strategy/test_event_log_empire_filter.py` (new) + 22 BUG-123 tests across `test_event_log.py`, `test_event_queries.py`, `test_strategy_window_manager.py`, `test_strategy_game_state_manager.py`.
+
+---
+
+## [BUG-124] - Ship skin icons broken on strategy map for every theme — hardcoded filename mismatch
+* **Date Solved:** 2026-04-29
+* **Confirmed in:** QA Session 20260428_190154
+* **Brief Summary of Solution:** `RaceAssetLoader.load_empire_theme_assets` was hardcoded to load `Skins/Battlecruiser.png` (PascalCase), but every theme on disk uses snake_case `battle_cruiser.png`. Rewritten to delegate to `ShipThemeManager` (PROJ-314, canonical reader of `theme.json`'s `assets:` schema); dropped the `asset_base` parameter (manager owns the directory). The dead `'colony'` branch (`Flags/Colony_Flag.jpg`) is gone. New module-level constant `FLEET_ICON_SHIP_CLASS = "Battle Cruiser"` in `game/core/ship_classes.py` is the single source of truth. Asset presence detected via `manager.get_skin_path(...)` returning non-None.
+* **Key Test Case:** 9-way parametrized real-disk regression in `tests/unit/ui/test_race_asset_loader.py` (one case per stock theme: Aetherwake, Atlantians, Federation, Klingons, Ossivine, Prismsteel, Romulans, Thoraliens, Voidforged) — each asserts `'fleet'` is present and the surface is non-trivial.
+
+---
+
+## [BUG-125] - Hot-seat — drop Command.empire_id + fix session.active_empire rotation; planet + fleet command handlers gate correctly
+* **Date Solved:** 2026-04-29
+* **Confirmed in:** QA Session 20260428_190154
+* **Brief Summary of Solution:** Two compounding bugs (Q5=DROP, Option A per CLAUDE.md System Migration Policy). (1) Dropped `Command.empire_id` field from all DTOs — identity is session context, not request body; migrated ~30 test sites. (2) Renamed `session.player_empire` → `session.active_empire`; `StrategyGameStateManager.advance_turn._sync_active_empire` pushes rotation into the session each turn change (planet handlers' "correct" gate was previously stale in hot-seat — silent bonus fix). Added `BaseCommandHandler._resolve_player_fleet(session, fleet_id)` helper; all 6 fleet handler files now use it for source-fleet authorization. Lower-level `_resolve_fleet(empire_id=None)` retained for legitimate cross-empire intercept-target lookup. `strategy_screen.py` selected_fleet assignments now check `fleet.owner_id == session.active_empire.id` first. 42 files modified (22 production + 19 tests + 1 doc).
+* **Key Test Case:** `tests/integration/strategy/test_fleet_command_authorization.py` (14 cases) — cross-empire rejection for Move / Intercept / Join, DTO no-empire-id, hot-seat planet-handler scenarios. Existing `test_command_ownership.py` rewritten for the new contract.
+
+---
+
+## [BUG-126] - Strategy-layer combat draw silently destroys the smaller fleet — `_resolve_winner_team` survivor-count tiebreaker treats `BattleOutcome.winner=None` as a winnable contest
+* **Date Solved:** 2026-04-29
+* **Confirmed in:** QA Session 20260428_190154
+* **Brief Summary of Solution:** Investigation determined the simulator DID run (20000 ticks, timed out as legitimate draw — both fleets weaponless); no shortcut fired. Real culprit: `ConflictResolutionEngine._resolve_winner_team` (PROJ-275) broke `BattleOutcome.winner=None` draws by survivor-count tiebreaker, then `_resolve_combat_at_hex` deleted the "loser" fleet. User expanded scope to drop the entire winner concept at the strategy layer. Deleted `_resolve_winner_team` and `_rng_resolve_empty_fleets`; `_resolve_combat_at_hex` refactored to no longer call `empire.remove_fleet` (`PostBattleHook` is now the sole pruning path). `empires` kwarg threaded through `IBattleResolver.resolve_battle` → `SimulationBattleResolver._build_spec` → `build_strategy_battle_spec`. `COMBAT_RESOLVED` event schema migrated: dropped `winner_fleet_id`/`loser_fleet_id`, added `participating_fleet_ids` / `surviving_fleet_ids` / `destroyed_fleet_ids`. Diagnostic INFO logging added at every branch decision. Docs: `docs/systems/combat_simulation.md`. **Performance follow-up needed (separate ticket):** stationary weaponless co-located fleets re-engage every sub-tick (up to 100 battles/turn × ~4.4s wall time). Recommend early-termination ("no damage in last N ticks → draw") or tighter `absolute_max_ticks` ceiling.
+* **Key Test Case:** `tests/integration/strategy/test_combat_shortcut_paths.py` (12 new) — 3 shortcut branches, draw keeps both fleets, clear-victory keeps non-empty fleets, re-engagement on next tick, total wipe reports destroyed fleet, new event schema.
+
+---

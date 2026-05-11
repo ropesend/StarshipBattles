@@ -79,6 +79,13 @@
       "count": 1,
       "last_used": "2026-05-05T02:59:26Z"
     },
+    "claude-ticket-batch-close": {
+      "agents": {
+        "claude": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-11T20:56:32Z"
+    },
     "codex-discuss-respond": {
       "agents": {
         "codex": 14
