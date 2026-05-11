@@ -58,6 +58,13 @@
       "count": 1,
       "last_used": "2026-05-11T03:33:04Z"
     },
+    "claude-triage-to-proj": {
+      "agents": {
+        "claude": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-11T04:14:25Z"
+    },
     "codex-discuss-continue": {
       "agents": {
         "codex": 1
