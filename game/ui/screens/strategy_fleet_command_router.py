@@ -160,6 +160,19 @@ class FleetCommandRouter:
 
         elif action == InputAction.FLEET_OPEN_WARP_POINT:
             if self.scene.selected_fleet:
+                # Issue #19: upfront capability check mirrors the FLEET_WARP
+                # pattern above. A fleet without the Quantum Tunneling Inducer
+                # should never enter targeting mode — surface the error now
+                # instead of after the user clicks a destination hex.
+                fleet = self.scene.selected_fleet
+                if (
+                    hasattr(fleet, 'capabilities')
+                    and not fleet.capabilities.has_ability("OpenWarpPoint")
+                ):
+                    self.scene.ui.show_error_message(
+                        "Selected fleet has no Quantum Tunneling Inducer component."
+                    )
+                    return True
                 self.input_mode = 'OPEN_WARP_TARGET'
                 logger.debug("Input Mode: OPEN_WARP_POINT - Select hex for warp point.")
             return True

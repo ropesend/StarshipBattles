@@ -341,6 +341,24 @@ class StrategyWindowManager:
         """Show a confirmation dialog for dangerous actions (PROJ-198)."""
         self._confirmation.show(title, message, on_confirm, is_warning=is_warning)
 
+    def show_message_dialog(self, title: str, message: str) -> None:
+        """Show a single-button info/error dialog (issue #19).
+
+        Uses pygame_gui's ``UIMessageWindow`` — the project's standard
+        single-button modal — so callers can surface error and information
+        messages without coupling to confirmation-callback infrastructure.
+        """
+        import pygame
+        import pygame_gui.windows
+        dialog_rect = pygame.Rect(0, 0, 480, 200)
+        dialog_rect.center = (self.width // 2, self.height // 2)
+        pygame_gui.windows.UIMessageWindow(
+            rect=dialog_rect,
+            html_message=message,
+            manager=self.manager,
+            window_title=title,
+        )
+
     def process_confirmation_event(self, event) -> bool:
         """Process UI_CONFIRMATION_DIALOG_CONFIRMED events.
 

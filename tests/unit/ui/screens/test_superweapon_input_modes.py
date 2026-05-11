@@ -67,6 +67,45 @@ class TestSuperweaponInputModeTransitions:
 
         assert handler_with_mapper.input_mode == expected_mode
 
+    # Issue #19 AC2.5: fleet without OpenWarpPoint capability should NOT
+    # enter target mode, and should surface a visible error message.
+    def test_open_warp_without_inducer_blocks_target_mode_and_shows_error(
+        self, handler_with_mapper,
+    ):
+        """Fleet without OpenWarpPoint ability: stays in SELECT, sees error."""
+        mapper = MockInputMapper(InputAction.FLEET_OPEN_WARP_POINT)
+        handler_with_mapper._mapper = mapper
+        fleet = MagicMock()
+        fleet.capabilities.has_ability.return_value = False
+        handler_with_mapper.scene.selected_fleet = fleet
+        handler_with_mapper.scene.ui.show_error_message = MagicMock()
+        starting_mode = handler_with_mapper.input_mode
+
+        event = MagicMock()
+        handler_with_mapper._handle_keydown_mapped(event)
+
+        assert handler_with_mapper.input_mode == starting_mode
+        assert handler_with_mapper.input_mode != 'OPEN_WARP_TARGET'
+        handler_with_mapper.scene.ui.show_error_message.assert_called_once()
+        msg = handler_with_mapper.scene.ui.show_error_message.call_args[0][0]
+        assert 'Quantum Tunneling' in msg
+        fleet.capabilities.has_ability.assert_called_with("OpenWarpPoint")
+
+    def test_open_warp_with_inducer_enters_target_mode(self, handler_with_mapper):
+        """Fleet with OpenWarpPoint ability still enters OPEN_WARP_TARGET."""
+        mapper = MockInputMapper(InputAction.FLEET_OPEN_WARP_POINT)
+        handler_with_mapper._mapper = mapper
+        fleet = MagicMock()
+        fleet.capabilities.has_ability.return_value = True
+        handler_with_mapper.scene.selected_fleet = fleet
+        handler_with_mapper.scene.ui.show_error_message = MagicMock()
+
+        event = MagicMock()
+        handler_with_mapper._handle_keydown_mapped(event)
+
+        assert handler_with_mapper.input_mode == 'OPEN_WARP_TARGET'
+        handler_with_mapper.scene.ui.show_error_message.assert_not_called()
+
     def test_self_destruct_calls_handler(self, handler_with_mapper):
         """FLEET_SELF_DESTRUCT calls superweapons handler directly."""
         mapper = MockInputMapper(InputAction.FLEET_SELF_DESTRUCT)
