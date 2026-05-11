@@ -325,6 +325,15 @@ class VirtualTable:
         loop completes, so subsequent frames keep the early-return
         optimization.
 
+        Issue #17: cache attrs alone are not sufficient. pygame_gui's
+        ``UIPanel.show(show_contents=True)`` → ``UIContainer.show(True)``
+        recursively un-hides every child element regardless of its prior
+        individual ``visible`` state. So any stale text/image left on a
+        pool row that ``update_visible_rows()`` individually hid would
+        re-appear on the next ``panel.show()``. To defeat that, also clear
+        the pygame_gui widget content here (``set_text("")`` on labels,
+        ``set_image(blank)`` on images).
+
         Hard constraint (PROJ-373 phase 3 perf lock): this method MUST
         NOT call ``.kill()`` on any pool widget. ``TestRowPoolReuseGuard``
         asserts widget ``.kill()`` call counts are zero on cache reuse.
@@ -333,9 +342,20 @@ class VirtualTable:
         for row in self._row_pool:
             row["_last_color"] = None
             for widget in row.get("widgets", []):
-                if widget.get("type") == "label":
+                wtype = widget.get("type")
+                if wtype == "label":
                     widget["_last_text"] = None
+                    widget["el"].set_text("")
+                elif wtype == "image":
+                    widget["_last_img"] = None
+                    rect = widget["el"].get_relative_rect()
+                    widget["el"].set_image(
+                        pygame.Surface((rect.width, rect.height))
+                    )
                 else:
+                    # actions / replay_action rows have no per-row stale
+                    # text to clear — their disabled/enabled state is
+                    # unconditionally rewritten in update_visible_rows.
                     widget["_last_img"] = None
         self._data_identity_dirty = True
 
