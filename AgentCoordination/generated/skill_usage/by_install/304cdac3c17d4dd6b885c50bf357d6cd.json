@@ -51,6 +51,13 @@
       "count": 1,
       "last_used": "2026-04-29T13:47:16Z"
     },
+    "claude-qa-triage-gh": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-11T03:33:04Z"
+    },
     "codex-discuss-continue": {
       "agents": {
         "codex": 1
