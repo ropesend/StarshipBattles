@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> Last verified: 2026-05-07
+> **Last verified:** 2026-05-11 — issue #9: per-player turn-start state helper
 
 System documentation for the turn-based strategy layer.
 
@@ -115,6 +115,15 @@ Ownership and hot-seat rules:
 - Fleet command handlers resolve the source fleet through `BaseCommandHandler._resolve_player_fleet(session, fleet_id)`.
 - Use `_resolve_fleet(empire_id=None)` only for legitimate cross-empire targets, such as an intercept target. Source-fleet authorization must already have happened.
 - Planet handlers gate on `planet.owner_id == session.active_empire.id`.
+
+Per-player turn-start UI state (issue #9):
+
+- `StrategyGameStateManager._apply_turn_start_state(empire)` is the single source of truth for what happens when a new player takes control. It is invoked from both branches of `advance_turn`:
+  - The else branch (mid-rotation, players 2..N within one full-turn cycle).
+  - The true branch (full-turn rollover to player 1, after `_sync_active_empire`).
+- The helper performs four ordered actions: clear `screen.selected_fleet` / `selected_object` / `last_selected_system`; centre the camera on `empire.colonies[0]`; auto-select that home colony via `screen.on_ui_selection(home_colony)` — the same code path a manual planet click takes, so `PlanetReportPanel` is populated through `ui.show_detailed_report` and selection-side concerns (e.g. `transfer_dialog.handle_external_selection`, `last_selected_system` derivation) stay consistent; and open the per-player event log scoped to `empire.id` (BUG-123).
+- `process_full_turn` does NOT duplicate any of these concerns. It still returns the active empire's `turn_events` so the FEAT-20 dev-loop caller (`run_n_turns`) can aggregate them for a single combined end-of-loop log.
+- The helper respects `_suppress_event_log` (FEAT-20) as a defensive guard. `run_n_turns` itself calls `process_full_turn` directly (not `advance_turn`), so the helper does not fire during dev bulk runs.
 
 Base helper surface:
 

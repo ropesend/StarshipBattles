@@ -243,9 +243,9 @@ class TestOpenWarpPointWorkflow:
         assert 'No star system' in result['message']
 
     def test_no_available_systems_returns_error(self, superweapon_ops, mock_fleet, mock_scene):
-        """Test no available systems returns error."""
-
-        current_system = Mock(name="Alpha")
+        """Single-system galaxy: only the current system exists, picker is empty."""
+        current_system = Mock()
+        current_system.name = "Alpha"
         current_system.warp_points = []
 
         # Only one system - the current one
@@ -275,6 +275,99 @@ class TestOpenWarpPointWorkflow:
 
         assert result['type'] == 'prompt'
         mock_scene.ui.show_system_picker.assert_called_once()
+
+    # Issue #19 AC1: duplicate warp links must be allowed. Filter should
+    # exclude only the current system, never the partner system, regardless
+    # of whether a warp point to it already exists.
+    def test_duplicate_link_allowed_when_partner_already_linked(
+        self, superweapon_ops, mock_fleet, mock_scene,
+    ):
+        """A->B already linked: picker MUST still offer Beta (duplicates allowed)."""
+        current_system = Mock()
+        current_system.name = "Alpha"
+        existing_wp = Mock()
+        existing_wp.destination_id = "Beta"
+        current_system.warp_points = [existing_wp]
+
+        other_system = Mock()
+        other_system.name = "Beta"
+
+        mock_scene.galaxy.systems = {"Alpha": current_system, "Beta": other_system}
+        captured_systems = []
+
+        def capture(systems, current, on_selected):
+            captured_systems.extend(systems)
+
+        mock_scene.ui.show_system_picker = Mock(side_effect=capture)
+
+        with patch.object(superweapon_ops, '_get_system_at_hex', return_value=current_system):
+            result = superweapon_ops.handle_open_warp_designation(100, 200, mock_fleet)
+
+        assert result['type'] == 'prompt'
+        mock_scene.ui.show_system_picker.assert_called_once()
+        assert other_system in captured_systems
+        assert current_system not in captured_systems
+
+    def test_only_current_system_excluded(self, superweapon_ops, mock_fleet, mock_scene):
+        """3-system galaxy: picker offers exactly the 2 non-current systems."""
+        current_system = Mock()
+        current_system.name = "Alpha"
+        current_system.warp_points = []
+
+        sys_b = Mock()
+        sys_b.name = "Beta"
+        sys_c = Mock()
+        sys_c.name = "Gamma"
+
+        mock_scene.galaxy.systems = {"Alpha": current_system, "Beta": sys_b, "Gamma": sys_c}
+        captured_systems = []
+
+        def capture(systems, current, on_selected):
+            captured_systems.extend(systems)
+
+        mock_scene.ui.show_system_picker = Mock(side_effect=capture)
+
+        with patch.object(superweapon_ops, '_get_system_at_hex', return_value=current_system):
+            result = superweapon_ops.handle_open_warp_designation(100, 200, mock_fleet)
+
+        assert result['type'] == 'prompt'
+        names = {s.name for s in captured_systems}
+        assert names == {"Beta", "Gamma"}
+
+    # Issue #19 AC3 regression: CLOSE_WARP_POINT is a queued mission order
+    # (processed at TurnEngine phase 1.5), so within the same turn the
+    # warp point is still on `current_system.warp_points`. The picker MUST
+    # still offer the partner system — the new filter does not depend on
+    # warp_points state at all.
+    def test_picker_offers_partner_with_pending_close_order_same_turn(
+        self, superweapon_ops, mock_fleet, mock_scene,
+    ):
+        """Mid-turn: close-warp order queued on fleet, warp_point still present."""
+        current_system = Mock()
+        current_system.name = "Alpha"
+        existing_wp = Mock()
+        existing_wp.destination_id = "Beta"
+        current_system.warp_points = [existing_wp]  # still present mid-turn
+
+        other_system = Mock()
+        other_system.name = "Beta"
+
+        # Fleet has a queued CLOSE_WARP_POINT order but turn hasn't advanced
+        mock_fleet.orders = [Mock(order_type='CLOSE_WARP_POINT', target={'destination_id': 'Beta'})]
+
+        mock_scene.galaxy.systems = {"Alpha": current_system, "Beta": other_system}
+        captured_systems = []
+
+        def capture(systems, current, on_selected):
+            captured_systems.extend(systems)
+
+        mock_scene.ui.show_system_picker = Mock(side_effect=capture)
+
+        with patch.object(superweapon_ops, '_get_system_at_hex', return_value=current_system):
+            result = superweapon_ops.handle_open_warp_designation(100, 200, mock_fleet)
+
+        assert result['type'] == 'prompt'
+        assert other_system in captured_systems
 
 
 # =============================================================================

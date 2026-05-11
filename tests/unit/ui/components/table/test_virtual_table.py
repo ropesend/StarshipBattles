@@ -1625,3 +1625,210 @@ class TestProj410InvalidateWidgetCaches:
             "If this fails, check check_action_button_press() at "
             "virtual_table.py:516-524."
         )
+
+
+# ===========================================================================
+# Issue #17 regression tests
+# ===========================================================================
+
+
+class TestIssue17InvalidateClearsWidgetContent:
+    """Issue #17: ``invalidate_widget_caches()`` must clear pygame_gui widget
+    *content* (``UILabel.set_text("")``, ``UIImage.set_image(blank)``), not
+    just the cache attrs (``_last_text`` / ``_last_img`` / ``_last_color``).
+
+    Background — pygame_gui's ``UIPanel.show(show_contents=True)`` calls
+    ``self.panel_container.show(show_contents)``; ``UIContainer.show(True)``
+    iterates ``self.elements`` and calls ``element.show()`` on every child
+    UNCONDITIONALLY (regardless of each child's prior individual
+    ``visible`` state). So when ``BuildQueueScreen.open_for_yard()`` calls
+    ``self.show()`` after ``_refresh_queue_display()``, every pool row
+    background that ``update_visible_rows()`` individually hid (because
+    ``data_idx >= current_count``) is recursively un-hidden — and any
+    stale text/image left on those rows becomes visible again. The fix:
+    invalidation must blank the widget content too, so even when those
+    rows reappear they show nothing instead of the previous yard's data.
+
+    Verified against pygame-ce 2.5.7's pygame_gui (``UIPanel.show`` →
+    ``panel_container.show(show_contents)``; ``UIContainer.show`` iterates
+    children when ``show_contents`` is True).
+
+    Anti-regression: this must coexist with PROJ-373 phase 3's perf-lock
+    (``TestRowPoolReuseGuard`` forbids ``.kill()`` on any pool widget) —
+    the fix uses ``set_text("")`` / ``set_image(blank)`` only.
+    """
+
+    @pytest.fixture(autouse=True)
+    def patched_pygame_gui(self):
+        with patch("game.ui.components.table.virtual_table.UIImage") as image, \
+             patch("game.ui.components.table.virtual_table.UILabel") as label, \
+             patch("game.ui.components.table.virtual_table.UIVerticalScrollBar") as scrollbar, \
+             patch("game.ui.components.table.virtual_table.UIPanel") as panel, \
+             patch("game.ui.components.table.virtual_table.TableHeader") as header:
+            yield {
+                "UIImage": image, "UILabel": label,
+                "UIVerticalScrollBar": scrollbar, "UIPanel": panel,
+                "TableHeader": header,
+            }
+
+    @pytest.fixture
+    def mock_manager(self):
+        return MagicMock()
+
+    @pytest.fixture
+    def mock_panel(self):
+        panel = MagicMock()
+        panel.get_relative_rect.return_value = pygame.Rect(0, 0, 300, 400)
+        return panel
+
+    @pytest.fixture
+    def column_manager(self):
+        from game.ui.components.table.column_manager import TableColumnManager
+        return TableColumnManager([
+            {"id": "name", "label": "Name", "width": 100, "visible": True},
+            {"id": "icon", "label": "Icon", "width": 60, "visible": True, "type": "image"},
+        ])
+
+    @pytest.fixture
+    def selection_strategy(self):
+        from game.ui.components.table.selection import SingleSelect
+        return SingleSelect()
+
+    def _build_table(self, patched_pygame_gui, mock_panel, mock_manager,
+                     column_manager, selection_strategy, data_source):
+        from game.ui.components.table.virtual_table import VirtualTable
+        mock_list_panel = MagicMock()
+        mock_list_panel.get_relative_rect.return_value = pygame.Rect(0, 0, 280, 200)
+        patched_pygame_gui["UIPanel"].return_value = mock_list_panel
+        return VirtualTable(
+            mock_panel, mock_manager, data_source, column_manager,
+            selection_strategy,
+        )
+
+    def test_invalidate_clears_label_widget_text_not_just_cache_attr(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Issue #17: ``invalidate_widget_caches()`` must call
+        ``set_text("")`` on every label widget in the pool.
+
+        Why this matters: pygame_gui's ``UIPanel.show(show_contents=True)``
+        recursively un-hides every child via ``UIContainer.show`` regardless
+        of individual visible state. So any stale label text left on a
+        pool row that ``update_visible_rows()`` individually hid will
+        re-appear on the next show. Nulling the ``_last_text`` cache attr
+        alone is NOT sufficient — that only affects future change-detection
+        comparisons, not the widget's actual visible content.
+
+        FAILS today (pre-fix): only the cache attr is nulled.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=5),
+        )
+
+        # Collect every label widget and reset its set_text mock so we
+        # can detect new calls from invalidate_widget_caches.
+        label_widgets = []
+        for row in table._row_pool:
+            for widget in row.get("widgets", []):
+                if widget.get("type") == "label":
+                    widget["el"].set_text.reset_mock()
+                    label_widgets.append(widget["el"])
+        assert label_widgets, "test setup: expected at least one label widget"
+
+        table.invalidate_widget_caches()
+
+        for el in label_widgets:
+            el.set_text.assert_called_with(""), (
+                "Issue #17: invalidate_widget_caches() must call "
+                "set_text(\"\") on every label widget to defeat the "
+                "pygame_gui UIPanel.show(show_contents=True) recursive "
+                "un-hide that exposes stale text on previously-hidden "
+                "pool rows."
+            )
+
+    def test_invalidate_clears_image_widget_via_set_image(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Issue #17: ``invalidate_widget_caches()`` must call
+        ``set_image(...)`` on every image widget so stale portraits don't
+        re-appear on the next ``panel.show()``.
+
+        Same root cause as the label test above — pygame_gui recursive
+        show un-hides children regardless of their last individual hide.
+
+        FAILS today (pre-fix): only the ``_last_img`` cache attr is nulled.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=5),
+        )
+
+        image_widgets = []
+        for row in table._row_pool:
+            for widget in row.get("widgets", []):
+                if widget.get("type") == "image":
+                    widget["el"].set_image.reset_mock()
+                    image_widgets.append(widget["el"])
+        assert image_widgets, "test setup: expected at least one image widget"
+
+        table.invalidate_widget_caches()
+
+        for el in image_widgets:
+            assert el.set_image.called, (
+                "Issue #17: invalidate_widget_caches() must call "
+                "set_image(...) on every image widget so the pygame_gui "
+                "UIPanel.show(show_contents=True) un-hide does not "
+                "expose a stale portrait."
+            )
+
+    def test_invalidate_still_preserves_proj410_dirty_flag(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Anti-regression: the issue #17 fix must NOT regress PROJ-410's
+        ephemeral ``_data_identity_dirty`` flag semantics. Invalidation
+        sets it True; ``update_visible_rows()`` clears it after one
+        re-render.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=3),
+        )
+        table._data_identity_dirty = False
+        table.invalidate_widget_caches()
+        assert table._data_identity_dirty is True, (
+            "Anti-regression: issue #17 fix must preserve PROJ-410's "
+            "dirty-flag set in invalidate_widget_caches()."
+        )
+
+    def test_invalidate_still_does_not_kill_pool_widgets(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Anti-regression: issue #17 fix must NOT regress PROJ-373's
+        row-pool perf-lock (``TestRowPoolReuseGuard`` forbids ``.kill()``
+        on pool widgets).
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=3),
+        )
+        kill_spies = []
+        for row in table._row_pool:
+            if row.get("bg") is not None:
+                kill_spies.append(row["bg"].kill)
+            for widget in row.get("widgets", []):
+                if widget.get("el") is not None:
+                    kill_spies.append(widget["el"].kill)
+
+        table.invalidate_widget_caches()
+
+        for kill_mock in kill_spies:
+            assert not kill_mock.called, (
+                "Anti-regression: issue #17 fix (set_text/set_image to "
+                "clear content) must NOT call .kill() on any pool widget. "
+                "PROJ-373 perf-lock contract."
+            )

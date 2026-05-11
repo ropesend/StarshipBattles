@@ -587,3 +587,60 @@ class TestProj410TurnBoundaryRebind:
             manager.on_build_yard_click()
 
         cached_screen.on_active_player_changed.assert_not_called()
+
+    def test_issue17_player_turn_change_flush_invokes_invalidate_widget_caches(self):
+        """Issue #17: the A-hook player flush path goes through
+        ``BuildQueueScreen.on_active_player_changed()`` which calls
+        ``panels.virtual_table.invalidate_widget_caches()``. Issue #17's
+        fix extends ``invalidate_widget_caches`` to clear pygame_gui
+        widget content (set_text(""), set_image(blank)) in addition to
+        cache attrs — so this manager-level test pins that on
+        empire-change, the cached screen's flush path is invoked, which
+        in turn triggers the (now content-clearing) invalidation.
+
+        Combined with the VirtualTable-level test
+        (``TestIssue17InvalidateClearsWidgetContent``) this guarantees
+        end-to-end coverage of the turn-change scenario without needing
+        a full integration test.
+        """
+        manager, screen, empire_1, empire_2, active = self._two_empire_screen()
+
+        cached_screen = MagicMock()
+        cached_screen.on_active_player_changed = MagicMock()
+        screen.build_queue_screen = cached_screen
+
+        from game.strategy.data.planet import Planet
+        planet_e1 = MagicMock(spec=Planet)
+        planet_e1.owner_id = 1
+        planet_e1.name = "Empire 1 Planet"
+        screen.selected_object = planet_e1
+        screen._get_object_asset = MagicMock(return_value=None)
+        screen.galaxy.get_system_of_planet.return_value = None
+
+        with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
+             patch("game.ui.screens.strategy_build_queue_manager.DesignLibrary"), \
+             patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
+             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
+             patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
+            # First open under empire_1 — seeds _last_active_empire_id.
+            manager.on_build_yard_click()
+            cached_screen.on_active_player_changed.reset_mock()
+
+            # Active empire flips to empire_2.
+            active["empire"] = empire_2
+            planet_e2 = MagicMock(spec=Planet)
+            planet_e2.owner_id = 2
+            planet_e2.name = "Empire 2 Planet"
+            screen.selected_object = planet_e2
+
+            # Second open under empire_2 — A-hook must fire.
+            manager.on_build_yard_click()
+
+        cached_screen.on_active_player_changed.assert_called_once(), (
+            "Issue #17: on player turn-change the A-hook "
+            "(on_active_player_changed) must fire. The screen-level "
+            "implementation calls panels.virtual_table.invalidate_widget_caches() "
+            "which (post issue #17 fix) clears widget content too — "
+            "preventing previous-player rows from re-appearing under "
+            "pygame_gui's UIPanel.show(show_contents=True) recursive un-hide."
+        )

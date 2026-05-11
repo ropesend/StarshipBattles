@@ -94,6 +94,10 @@ def _click_scene(*, selected_fleet: object | None = None) -> SimpleNamespace:
         _edit_move_ghost_hex="ghost",
         _edit_move_order_index=3,
         _edit_move_fleet=selected_fleet,
+        # Issue #20: friendly-fleet check needs these to be empty/inert.
+        empires=[],
+        human_player_ids=[1],
+        current_player_index=0,
     )
 
 

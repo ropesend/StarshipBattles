@@ -22,22 +22,31 @@ def _make_game_state_manager():
     mock_screen.turn_processing = False
     mock_screen.current_player_index = 0
     mock_screen.selected_object = None
+    mock_screen.selected_fleet = None
+    mock_screen.last_selected_system = None
 
     # Setup empire mocking
     empire0 = MagicMock()
     empire0.id = 0
-    empire0.colonies = [MagicMock()]
+    empire0.name = "Empire Zero"
+    empire0.colonies = [MagicMock(name="empire0_home")]
     empire1 = MagicMock()
     empire1.id = 1
-    empire1.colonies = [MagicMock()]
+    empire1.name = "Empire One"
+    empire1.colonies = [MagicMock(name="empire1_home")]
     mock_screen.empires = [empire0, empire1]
     mock_screen.session.empires = [empire0, empire1]
     mock_screen.session.human_player_ids = [0, 1]
     mock_screen.human_player_ids = [0, 1]
     mock_screen.active_empire = empire0
 
-    # Property mock for current_empire
-    type(mock_screen).current_empire = property(lambda s: empire0)
+    # Property mock for current_empire — tracks current_player_index so
+    # rollover-branch tests can observe the post-rotation empire.
+    def _current_empire(self):
+        idx = self.human_player_ids[self.current_player_index]
+        return next(e for e in self.empires if e.id == idx)
+
+    type(mock_screen).current_empire = property(_current_empire)
 
     # Setup draw method for rendering
     mock_screen.draw = MagicMock()
@@ -139,33 +148,39 @@ class TestProcessFullTurnLegacy:
 
         screen._facade.process_turn.assert_called_once()
 
-    def test_checks_turn_events(self):
-        """process_full_turn() should check for turn events."""
-        manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+    def test_returns_active_empire_turn_events(self):
+        """process_full_turn() returns the active empire's turn events.
 
-        with patch('pygame.display.get_surface', return_value=None):
-            manager.process_full_turn()
-
-        screen._facade.get_turn_events.assert_called()
-
-    def test_opens_event_log_when_events_exist(self):
-        """process_full_turn() should open event log if there are events.
-
-        BUG-123: empire_name is forwarded as a keyword arg sourced from
-        ``current_empire.name`` so the window title shows the active
-        empire.
+        Issue #9: the per-player turn-start helper is the single source of
+        truth for opening the event log; process_full_turn no longer opens
+        it directly. The events are still returned so the FEAT-20 dev-loop
+        caller (run_n_turns) can aggregate them for a combined end-of-loop
+        log.
         """
         manager, screen = _make_game_state_manager()
         mock_events = [MagicMock()]
         screen._facade.get_turn_events.return_value = mock_events
 
         with patch('pygame.display.get_surface', return_value=None):
+            result = manager.process_full_turn()
+
+        screen._facade.get_turn_events.assert_called()
+        assert result == mock_events
+
+    def test_does_not_open_event_log_directly(self):
+        """process_full_turn() must NOT open the event log itself.
+
+        Issue #9: the per-player turn-start helper called from
+        advance_turn is the single source of truth. process_full_turn
+        opening it again would double-fire on the rollover branch.
+        """
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = [MagicMock()]
+
+        with patch('pygame.display.get_surface', return_value=None):
             manager.process_full_turn()
 
-        screen.ui.open_event_log_with_events.assert_called_once_with(
-            mock_events, empire_name=screen.current_empire.name
-        )
+        screen.ui.open_event_log_with_events.assert_not_called()
 
     def test_auto_saves_when_save_path_exists(self):
         """process_full_turn() should auto-save when session has save_path."""
@@ -180,8 +195,15 @@ class TestProcessFullTurnLegacy:
 
         MockSGS.save_game.assert_called_once_with(screen.session)
 
-    def test_refreshes_selected_object(self):
-        """process_full_turn() should refresh UI for selected object."""
+    def test_does_not_refresh_selected_object_directly(self):
+        """process_full_turn() must NOT touch ``selected_object`` itself.
+
+        Issue #9: the helper reseats the lower-right panel to the new
+        player's home colony via ``on_ui_selection(home_colony)``.
+        process_full_turn refreshing the stale selected_object would
+        either show last turn's selection (the bug) or double-render
+        on top of the home colony reseat.
+        """
         manager, screen = _make_game_state_manager()
         screen._facade.get_turn_events.return_value = []
         screen.selected_object = MagicMock()
@@ -189,7 +211,7 @@ class TestProcessFullTurnLegacy:
         with patch('pygame.display.get_surface', return_value=None):
             manager.process_full_turn()
 
-        screen.on_ui_selection.assert_called_once_with(screen.selected_object)
+        screen.on_ui_selection.assert_not_called()
 
 
 class TestProcessFullTurnErrorBoundary:
@@ -262,37 +284,6 @@ class TestProcessFullTurnErrorBoundary:
                 manager.process_full_turn()
 
 
-class TestProcessFullTurnEmpireFilter:
-    """BUG-123: per-empire scoping of the per-turn auto-popup."""
-
-    def test_passes_active_empire_id_to_get_turn_events(self):
-        """process_full_turn must scope facade.get_turn_events to current_empire."""
-        manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
-        screen._facade.get_turn_number.return_value = 7
-
-        with patch('pygame.display.get_surface', return_value=None):
-            manager.process_full_turn()
-
-        screen._facade.get_turn_events.assert_called_once_with(
-            turn=7, empire_id=screen.current_empire.id
-        )
-
-    def test_does_not_open_popup_when_active_empire_has_no_events(self):
-        """Empty turn_events suppresses the popup even if other empires had events.
-
-        Per-empire filtering happens at the facade call, so the manager
-        only sees the active empire's slice. Empty list -> no popup.
-        """
-        manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
-
-        with patch('pygame.display.get_surface', return_value=None):
-            manager.process_full_turn()
-
-        screen.ui.open_event_log_with_events.assert_not_called()
-
-
 class TestUpdatePlayerLabel:
     """Test _update_player_label() method."""
 
@@ -313,6 +304,295 @@ class TestUpdatePlayerLabel:
         manager._update_player_label()
 
         screen.ui.lbl_current_player.set_text.assert_called_with("Player 1's Turn")
+
+
+# ===========================================================================
+# Issue #9: per-player turn-start state helper
+# ===========================================================================
+
+class TestApplyTurnStartState:
+    """Issue #9: ``_apply_turn_start_state`` is the single source of truth
+    for per-player turn-start UI state — clears stale selection, centres
+    camera, populates the lower-right detail panel via the manual-click
+    code path, and opens the per-player event log (BUG-123 scoping,
+    FEAT-20 suppression honoured).
+    """
+
+    def test_clears_stale_selection_state(self):
+        """Helper clears ``selected_fleet`` / ``selected_object`` /
+        ``last_selected_system`` so the next player never inherits the
+        previous player's pick."""
+        manager, screen = _make_game_state_manager()
+        screen.selected_fleet = MagicMock()
+        screen.selected_object = MagicMock()
+        screen.last_selected_system = MagicMock()
+        screen._facade.get_turn_events.return_value = []
+        empire = screen.empires[1]
+
+        manager._apply_turn_start_state(empire)
+
+        assert screen.selected_fleet is None
+        assert screen.selected_object is None
+        assert screen.last_selected_system is None
+
+    def test_centres_camera_on_home_colony(self):
+        """Helper centres the camera on ``empire.colonies[0]``."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        empire = screen.empires[1]
+
+        manager._apply_turn_start_state(empire)
+
+        screen.center_camera_on.assert_called_once_with(empire.colonies[0])
+
+    def test_auto_selects_home_colony_via_manual_click_path(self):
+        """Helper calls ``on_ui_selection(home_colony)`` — the same path a
+        manual planet click takes — so ``PlanetReportPanel`` is populated
+        via ``show_detailed_report`` and selection-side concerns (e.g.
+        ``transfer_dialog.handle_external_selection``,
+        ``last_selected_system`` derivation) stay consistent with manual
+        clicks."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        empire = screen.empires[1]
+
+        manager._apply_turn_start_state(empire)
+
+        screen.on_ui_selection.assert_called_once_with(empire.colonies[0])
+
+    def test_opens_event_log_scoped_to_new_empire(self):
+        """Helper opens the event log for the new empire's per-turn events
+        (BUG-123 scoping: ``empire_id=empire.id`` + ``empire_name``)."""
+        manager, screen = _make_game_state_manager()
+        mock_events = [MagicMock()]
+        screen._facade.get_turn_events.return_value = mock_events
+        screen._facade.get_turn_number.return_value = 7
+        empire = screen.empires[1]
+
+        manager._apply_turn_start_state(empire)
+
+        screen._facade.get_turn_events.assert_called_once_with(
+            turn=7, empire_id=empire.id
+        )
+        screen.ui.open_event_log_with_events.assert_called_once_with(
+            mock_events, empire_name=empire.name
+        )
+
+    def test_no_event_log_when_no_events(self):
+        """Empty turn_events suppresses the popup."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        empire = screen.empires[1]
+
+        manager._apply_turn_start_state(empire)
+
+        screen.ui.open_event_log_with_events.assert_not_called()
+
+    def test_respects_suppress_event_log_flag(self):
+        """``_suppress_event_log`` (FEAT-20) gates the popup so dev-loop
+        ``run_n_turns`` can surface a single combined log at the end
+        instead of one modal per turn."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = [MagicMock()]
+        manager._suppress_event_log = True
+        empire = screen.empires[1]
+
+        manager._apply_turn_start_state(empire)
+
+        screen.ui.open_event_log_with_events.assert_not_called()
+
+    def test_short_circuits_when_empire_has_no_colonies(self):
+        """Pathological edge case: empire has lost all colonies — leave
+        state untouched rather than crash. Camera/selection are not
+        touched; event-log popup also short-circuits (no home to
+        anchor)."""
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = [MagicMock()]
+        empire = screen.empires[1]
+        empire.colonies = []
+
+        manager._apply_turn_start_state(empire)
+
+        screen.center_camera_on.assert_not_called()
+        screen.on_ui_selection.assert_not_called()
+        screen.ui.open_event_log_with_events.assert_not_called()
+
+
+class TestAdvanceTurnPerPlayerSwitch:
+    """Issue #9: per-player switch (else branch of ``advance_turn``)
+    invokes the turn-start helper for the next empire."""
+
+    def test_else_branch_applies_turn_start_state_to_next_empire(self):
+        """When player N hands off to player N+1, the helper runs with
+        the next empire."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+
+        with patch.object(manager, "_apply_turn_start_state") as mock_helper:
+            manager.advance_turn()
+
+        # Next empire is empire1 (id=1).
+        mock_helper.assert_called_once()
+        called_empire = mock_helper.call_args[0][0]
+        assert called_empire.id == 1
+
+    def test_else_branch_runs_helper_after_sync_active_empire(self):
+        """BUG-125: ``session.active_empire`` must be rotated BEFORE the
+        helper queries turn events / opens the log, otherwise event-log
+        scoping reads the wrong empire."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+        call_order = []
+
+        def record_sync():
+            call_order.append("sync")
+
+        def record_helper(empire):
+            call_order.append("helper")
+
+        with patch.object(manager, "_sync_active_empire", side_effect=record_sync), \
+             patch.object(manager, "_apply_turn_start_state",
+                          side_effect=record_helper):
+            manager.advance_turn()
+
+        assert call_order == ["sync", "helper"]
+
+    def test_else_branch_clears_selection_end_to_end(self):
+        """Acceptance criterion: ``selected_fleet`` / ``selected_object`` /
+        ``last_selected_system`` cleared at the per-player switch."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+        screen.selected_fleet = MagicMock()
+        screen.selected_object = MagicMock()
+        screen.last_selected_system = MagicMock()
+        screen._facade.get_turn_events.return_value = []
+
+        manager.advance_turn()
+
+        assert screen.selected_fleet is None
+        assert screen.selected_object is None
+        assert screen.last_selected_system is None
+
+    def test_else_branch_auto_selects_next_player_home(self):
+        """Acceptance criterion: lower-right detail panel populated via
+        ``on_ui_selection(home_colony)``."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+        screen._facade.get_turn_events.return_value = []
+
+        manager.advance_turn()
+
+        next_empire = screen.empires[1]
+        screen.on_ui_selection.assert_called_once_with(next_empire.colonies[0])
+
+    def test_else_branch_opens_event_log_for_next_empire(self):
+        """Acceptance criterion: event log auto-opens on each per-player
+        turn-start (not only after a full turn)."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+        mock_events = [MagicMock()]
+        screen._facade.get_turn_events.return_value = mock_events
+        screen._facade.get_turn_number.return_value = 5
+
+        manager.advance_turn()
+
+        next_empire = screen.empires[1]
+        screen._facade.get_turn_events.assert_called_once_with(
+            turn=5, empire_id=next_empire.id
+        )
+        screen.ui.open_event_log_with_events.assert_called_once_with(
+            mock_events, empire_name=next_empire.name
+        )
+
+
+class TestAdvanceTurnRolloverBranch:
+    """Issue #9: full-turn rollover branch (after ``process_full_turn``)
+    also invokes the turn-start helper for player 1."""
+
+    def test_rollover_applies_helper_for_player_1(self):
+        """After the full turn processes, player 1 receives the same
+        turn-start treatment via the helper (single source of truth)."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0]
+        screen._facade.get_turn_events.return_value = []
+
+        with patch.object(manager, "_apply_turn_start_state") as mock_helper, \
+             patch("pygame.display.get_surface", return_value=None):
+            manager.advance_turn()
+
+        mock_helper.assert_called_once()
+        called_empire = mock_helper.call_args[0][0]
+        assert called_empire.id == 0
+
+    def test_rollover_runs_helper_after_sync_active_empire(self):
+        """``session.active_empire`` must be rotated before the helper
+        queries events for the rollover empire."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0]
+        screen._facade.get_turn_events.return_value = []
+        call_order = []
+
+        def record_sync():
+            call_order.append("sync")
+
+        def record_helper(empire):
+            call_order.append("helper")
+
+        with patch.object(manager, "_sync_active_empire", side_effect=record_sync), \
+             patch.object(manager, "_apply_turn_start_state",
+                          side_effect=record_helper), \
+             patch("pygame.display.get_surface", return_value=None):
+            manager.advance_turn()
+
+        assert call_order == ["sync", "helper"]
+
+    def test_rollover_no_double_fire_of_event_log(self):
+        """``process_full_turn`` no longer opens the log directly; the
+        helper is the single opener. Rollover must therefore see exactly
+        one ``open_event_log_with_events`` call, not two."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0]
+        mock_events = [MagicMock()]
+        screen._facade.get_turn_events.return_value = mock_events
+
+        with patch("pygame.display.get_surface", return_value=None):
+            manager.advance_turn()
+
+        assert screen.ui.open_event_log_with_events.call_count == 1
+
+    def test_rollover_does_not_call_helper_when_turn_failed(self):
+        """On a ``TurnFailedError``, ``process_full_turn`` returns early
+        with rollback. The rollover helper should still be invoked so
+        the player sees a clean state, but with no events (the facade
+        will still answer ``get_turn_events`` — returning whatever it
+        considers valid after the rollback). The acceptance test here
+        is narrower: a TurnFailed must NOT raise out of advance_turn.
+        """
+        from game.core.exceptions import TurnFailedError
+
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0]
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.process_turn.side_effect = TurnFailedError(
+            message="phase boom",
+            code="S101",
+            context={"phase_name": "p", "tick": 1, "turn_number": 1,
+                     "original_type": "RuntimeError"},
+        )
+
+        with patch("pygame.display.get_surface", return_value=None), \
+             patch.object(manager, "_show_turn_failed_dialog"):
+            # Must not raise.
+            manager.advance_turn()
 
 
 # ===========================================================================
