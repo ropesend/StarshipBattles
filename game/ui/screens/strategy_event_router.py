@@ -103,10 +103,19 @@ class StrategyEventRouter:
         if self.ui.window_manager.fleet_orders_window:
             self.ui.window_manager.fleet_orders_window.handle_global_event(event)
 
-        # Close menu panel on Escape
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and self.ui.menu_panel:
-            self.ui.close_menu_panel()
-            return
+        # Esc handling (issue #18): menu panel takes precedence; otherwise
+        # close the topmost live StrategyModalWindow. Mirrors the X-button
+        # close path via window.kill(), which fires on_close_callback before
+        # super().kill(). New StrategyModalWindow subclasses pick this up
+        # automatically via StrategyWindowManager.iter_live_modals().
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            if self.ui.menu_panel:
+                self.ui.close_menu_panel()
+                return
+            modals = list(self.ui.window_manager.iter_live_modals())
+            if modals:
+                modals[-1].kill()
+                return
 
         # Close menu panel on click outside
         if event.type == pygame.MOUSEBUTTONDOWN and self.ui.menu_panel:
