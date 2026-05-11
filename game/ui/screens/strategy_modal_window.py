@@ -130,6 +130,16 @@ class StrategyModalWindow(UIWindow):
             self._window_init_bypassed = True
             return
         super().__init__(*args, **kwargs)
+        # Issue #12 (hover scope-expansion): enable pygame-gui's native
+        # modal hover-block. UIWindow.check_hover returns True
+        # unconditionally when is_blocking, propagating
+        # hover_handled=True to UIManager._handle_hovering. That
+        # suppresses hover dispatch on every lower-layer element
+        # (top-bar buttons, detail-panel context buttons, tree items,
+        # etc.) without per-button retrofit. Click-block continues to
+        # come from StrategyEventRouter (commit 28c681595); both
+        # defenses coexist.
+        self.is_blocking = True
         self._window_manager = window_manager
         self._window_init_bypassed = False
         if window_manager is not None:

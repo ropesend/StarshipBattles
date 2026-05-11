@@ -1,6 +1,6 @@
 # UI Style Guide Compact Reference
 
-> **Last verified:** 2026-05-10 — issue #12: Strategy Modal Windows section gained one sentence on full modality (any live subclass blocks ALL background clicks and top-bar buttons regardless of click position).
+> **Last verified:** 2026-05-11 — issue #12: is_blocking flag for native hover suppression added; Strategy Modal Windows section now documents that the base class sets pygame-gui's `is_blocking=True` so background hover state is suppressed alongside clicks.
 
 Audience: LLM agents working on Starship Battles UI. This is the compact current-system reference for color constants, pygame_gui theme usage, strategy modal windows, read-only component-status rendering, and UI style extension points.
 
@@ -77,6 +77,7 @@ Contracts:
 - Cross-screen reusable windows may type `window_manager: "StrategyWindowManager | None"`, but callers still pass it explicitly. Use `None` only from non-strategy callers.
 - The manager still exposes legacy slot attributes for registrar convenience and public API stability. New modal tracking goes through the live modal list.
 - Full modality (issue #12): while any subclass instance is live, the strategy event router blocks ALL background clicks (hex grid AND top-bar buttons) regardless of click position relative to the window's rect. There is no per-window opt-out.
+- Native hover suppression (issue #12 scope-expansion): the base class also sets pygame-gui's `is_blocking = True` after `super().__init__()`, so `UIWindow.check_hover()` claims the hover layer unconditionally and `UIManager._handle_hovering` skips every lower-layer button (top bar, detail panel, tree items) — no per-button retrofit needed.
 
 Test-only bypass invariant:
 

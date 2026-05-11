@@ -417,3 +417,75 @@ class TestMultipleManagersIsolated:
         assert win_a not in live_b
         assert win_b in live_b
         assert win_b not in live_a
+
+
+class TestIsBlockingOnConstruction:
+    """Issue #12 (hover scope-expansion): a constructed StrategyModalWindow
+    must have ``is_blocking = True`` so that pygame-gui's
+    ``UIWindow.check_hover()`` returns True unconditionally, propagating
+    ``hover_handled=True`` to ``UIManager._handle_hovering`` and blocking
+    hover dispatch on every lower-layer element (top-bar buttons, detail-
+    panel context buttons, tree items, etc.). Without this, the previous
+    click-blocking fix (28c681595) leaks hover state because hover is
+    poll-based inside ``UIManager.update`` and is independent of the
+    MOUSEBUTTONDOWN routing the prior fix gated."""
+
+    def _build_through_production_path(self, mgr) -> "_ProbeModal":
+        """Construct a real ``_ProbeModal`` via the non-bypass code path
+        with ``pygame_gui.elements.UIWindow.__init__`` stubbed to a no-op."""
+
+        def _stub_init(self, *args, **kwargs):  # noqa: ANN001 — pygame_gui shim
+            return None
+
+        with patch(
+            "pygame_gui.elements.UIWindow.__init__", _stub_init,
+        ):
+            win = _ProbeModal(
+                pygame.Rect(0, 0, 100, 100),
+                MagicMock(name="ui_manager"),
+                window_manager=mgr,
+            )
+        return win
+
+    def test_construction_sets_is_blocking_true(self) -> None:
+        """The hover-block flag is set as a construction side-effect
+        after ``super().__init__()`` — pin the production code path."""
+        mgr = _make_manager()
+        win = self._build_through_production_path(mgr)
+        assert win.is_blocking is True
+
+    def test_bypass_init_does_not_set_is_blocking(self) -> None:
+        """Bypass mode short-circuits before ``super().__init__()`` and
+        before the new ``is_blocking`` assignment. Bypassed instances are
+        test fixtures that never enter the manager's live modal list,
+        so they have no business setting pygame-gui's modal flag.
+
+        Pinning this prevents a future refactor from accidentally moving
+        the flag assignment above the bypass guard, which would break
+        every bypass-init test fixture that doesn't carry a
+        ``window_stack`` attribute."""
+        mgr = _make_manager()
+        win = _make_modal_window(mgr)
+        # _make_modal_window goes through bypass_init. The flag must not
+        # exist (or must be False) — never True under bypass.
+        assert getattr(win, "is_blocking", False) is False
+
+    def test_construction_with_none_window_manager_still_sets_is_blocking(self) -> None:
+        """The flag is independent of strategy-screen modal-list
+        registration. Cross-screen reusable subclasses (passed
+        ``window_manager=None``) still need hover blocking when they
+        appear on the strategy screen via another path."""
+
+        def _stub_init(self, *args, **kwargs):  # noqa: ANN001
+            return None
+
+        with patch(
+            "pygame_gui.elements.UIWindow.__init__", _stub_init,
+        ):
+            win = _ProbeModal(
+                pygame.Rect(0, 0, 100, 100),
+                MagicMock(name="ui_manager"),
+                window_manager=None,
+            )
+
+        assert win.is_blocking is True

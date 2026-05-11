@@ -592,7 +592,7 @@ Use only when maintaining existing slot cleanup. New strategy modal windows use 
 
 ## 31. Strategy Modal Window Base Class
 
-> **Last verified:** 2026-05-10 — issue #12: full-modality clause added; any live `StrategyModalWindow` now blocks all background clicks and top-bar button presses regardless of click position.
+> **Last verified:** 2026-05-11 — issue #12: is_blocking flag for native hover suppression added; pygame-gui's `UIWindow.is_blocking=True` now suppresses background hover state in addition to clicks.
 
 Where: `game/ui/screens/strategy_modal_window.py`, `game/ui/screens/strategy_window_manager.py`, tests in `tests/unit/ui/screens/test_strategy_modal_window.py` and `tests/integration/ui/test_editor_click_blocking.py`.
 
@@ -606,6 +606,7 @@ Contract:
 - `has_modal_open()` also checks retained pre-modal concerns such as `menu_panel` and `build_queue_screen`.
 - Legacy slot fields remain as caller-convenience pointers; they no longer provide modal tracking.
 - **Full modality (issue #12):** while any subclass instance is live, the strategy event router blocks ALL background clicks (hex grid AND top-bar buttons) regardless of click position relative to the window's rect. Specifically, `_is_blocking_ui_element_at` returns True whenever `iter_live_modals()` yields any window, and `_handle_button_pressed` early-returns whenever `has_modal_open()` is True. Do not re-introduce a rect-only path or a per-window opt-out flag; the rect-pass-through behavior was the source of bug class #12.
+- **Native hover suppression (issue #12 scope-expansion):** the base class also sets `self.is_blocking = True` after `super().__init__()`. pygame-gui's `UIWindow.check_hover()` returns True unconditionally when `is_blocking`, propagating `hover_handled=True` to `UIManager._handle_hovering`. That suppresses hover dispatch on every lower-layer element — top-bar buttons, detail-panel context buttons, tree items — without any per-button retrofit. Hover is poll-based inside `UIManager.update`, not event-driven, so this is the only mechanism that addresses the hover leak; gating MOUSEMOTION at the strategy router has no effect. The MOUSEBUTTONDOWN consumption that `is_blocking` also enables runs in parallel with the manual click-block above; both defenses coexist.
 
 Use for every new strategy-screen modal that should block input. Do not add manual slots, `has_modal_open()` clauses, custom modal `kill()` cleanup, or slot-based modal tracking.
 
