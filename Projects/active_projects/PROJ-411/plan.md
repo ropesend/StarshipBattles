@@ -18,12 +18,12 @@
 | 3. Regression Gates + Docs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-10 21:45
-**Active Phase:** Planning — awaiting user approval
-**Last Action:** Phase B swarm review complete; Phase C scoping decisions captured
-**Next Action:** User approves plan → begin Phase 1 in a new "Continue Project" session
-**Blockers:** Issue #17 (Build Queue stale rows, `status:in-progress`) should land before Phase 1 of PROJ-411 to avoid double-masking failures (decision logged in [decisions.md](decisions.md))
-**Context for Next Agent:** Plan has been validated against `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`, `docs/06_UI_STYLE_GUIDE.md`, `docs/guides/performance_profiling.md`, and `docs/systems/strategy_layer.md`. Full test suite baseline established 2026-05-10: 19,910 passed / 0 failed / 4 skipped in 146.3s (12 shards). All architectural patterns to reuse documented in [design.md](design.md).
+**Last Updated:** 2026-05-10 22:00
+**Active Phase:** Phase 1 (Not Started) — **plan approved, ready for implementation**
+**Last Action:** User approved plan after Phase C completed
+**Next Action:** In a new "Continue Project" session: confirm Issue #17 has merged to `main`, then begin Task 1.1 (smoke-scenario fixture)
+**Blockers:** Issue #17 (Build Queue stale rows, `status:in-progress`) must merge to `main` before Phase 1 Task 1.1 starts (per [decisions.md](decisions.md))
+**Context for Next Agent:** Plan has been validated against `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`, `docs/06_UI_STYLE_GUIDE.md`, `docs/guides/performance_profiling.md`, and `docs/systems/strategy_layer.md`. Full test suite baseline established 2026-05-10: 19,910 passed / 0 failed / 4 skipped in 146.3s (12 shards). All architectural patterns to reuse documented in [design.md](design.md). Start by reading plan.md → design.md → phase_1_checklist.md.
 
 ## Overview
 
