@@ -30,6 +30,13 @@ def _get_planetary_ids() -> tuple[str, ...]:
     """PROJ-393: lazy-load planetary resource IDs (was module-level)."""
     return tuple(d.id for d in ResourceCatalog.from_json().by_display_group("planetary"))
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
+from game.ui.screens.strategy_fleet_context_menu import (
+    FleetContextMenu,
+    PANEL_WIDTH as FLEET_MENU_PANEL_WIDTH,
+    clamp_menu_position,
+    dispatch_action,
+)
+from game.ui.screens.fleet_menu_items import build_menu_items
 from game.ui.screens.strategy_window_manager import StrategyWindowManager
 from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
 from game.ui.screens.strategy_panel_manager import (
@@ -61,6 +68,7 @@ class StrategyUI:
         # Only keep references needed by local logic
         self.planet_report_panel = None  # planet report panel instance (PROJ-54)
         self.menu_panel = None           # strategy menu dropdown (PROJ-72)
+        self.fleet_context_menu = None   # fleet right-click context menu (issue #20)
 
         # UI State
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
@@ -165,6 +173,58 @@ class StrategyUI:
         """
         self.close_menu_panel()
         self.scene.on_menu_option(option)
+
+    # ------------------------------------------------------------------
+    # Fleet right-click context menu (issue #20)
+    # ------------------------------------------------------------------
+
+    def open_fleet_context_menu(self, fleet, mx: int, my: int) -> None:
+        """Open the fleet context menu near (mx, my) for ``fleet``.
+
+        Items are built by capability gating (see
+        ``fleet_menu_items.build_menu_items``); clicking a row
+        dispatches the carried ``InputAction`` back through the fleet
+        command router, reusing the exact targeting flow the hotkeys
+        enter today.
+        """
+        self.close_fleet_context_menu()  # one-at-a-time
+
+        items = build_menu_items(fleet, self.scene.galaxy, self._mapper)
+        if not items:
+            # AC bullet 9 guarantees Move/Join are unconditional, so this
+            # is unreachable in production. Defensive guard for tests
+            # that supply degenerate fakes.
+            return
+
+        height = FleetContextMenu.required_height(len(items))
+        rect = clamp_menu_position(
+            x=mx, y=my,
+            width=FLEET_MENU_PANEL_WIDTH, height=height,
+            screen_width=self.width, screen_height=self.height,
+        )
+        self.fleet_context_menu = FleetContextMenu(
+            rect, self.manager, items, self._on_fleet_context_menu_action,
+        )
+
+    def close_fleet_context_menu(self) -> None:
+        """Close and destroy the fleet context menu, if open."""
+        if self.fleet_context_menu:
+            self.fleet_context_menu.kill()
+            self.fleet_context_menu = None
+
+    def _on_fleet_context_menu_action(self, action) -> None:
+        """Handle a menu row click: close, then dispatch the action.
+
+        ``action`` is an ``InputAction``; the dispatcher routes it
+        through the existing fleet command router so the targeting flow
+        is identical to the matching hotkey.
+        """
+        self.close_fleet_context_menu()
+        handler = getattr(self.scene, "_input", None)
+        fleet_router = getattr(handler, "_fleet_router", None)
+        if fleet_router is None:
+            return
+        dispatch_action(fleet_router, action)
 
     # =========================================================================
     # Visibility

@@ -35,6 +35,7 @@ def mock_ui():
     ui.width = 2560
     ui.height = 1600
     ui.menu_panel = None
+    ui.fleet_context_menu = None  # issue #20
 
     ui.window_manager = MagicMock()
     ui.window_manager.fleet_orders_window = None

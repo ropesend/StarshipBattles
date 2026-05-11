@@ -66,6 +66,7 @@ def mock_ui():
 
     # Menu panel not open
     ui.menu_panel = None
+    ui.fleet_context_menu = None  # issue #20
 
     # Top bar and resource bar
     ui.top_bar = MagicMock()

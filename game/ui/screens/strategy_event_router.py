@@ -103,14 +103,16 @@ class StrategyEventRouter:
         if self.ui.window_manager.fleet_orders_window:
             self.ui.window_manager.fleet_orders_window.handle_global_event(event)
 
-        # Esc handling (issue #18): menu panel takes precedence; otherwise
-        # close the topmost live StrategyModalWindow. Mirrors the X-button
-        # close path via window.kill(), which fires on_close_callback before
-        # super().kill(). New StrategyModalWindow subclasses pick this up
-        # automatically via StrategyWindowManager.iter_live_modals().
+        # Esc handling (issue #18 + #20): precedence chain is top-bar menu
+        # panel -> fleet context menu -> topmost live StrategyModalWindow.
+        # Modal close mirrors the X-button path via window.kill(), which
+        # fires on_close_callback before super().kill().
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             if self.ui.menu_panel:
                 self.ui.close_menu_panel()
+                return
+            if getattr(self.ui, "fleet_context_menu", None):
+                self.ui.close_fleet_context_menu()
                 return
             modals = list(self.ui.window_manager.iter_live_modals())
             if modals:
@@ -123,6 +125,16 @@ class StrategyEventRouter:
             menu_btn_rect = self.ui.btn_menu.get_abs_rect()
             if not panel_rect.collidepoint(event.pos) and not menu_btn_rect.collidepoint(event.pos):
                 self.ui.close_menu_panel()
+
+        # Close fleet context menu on click outside (issue #20). The menu
+        # itself consumes button presses on its own buttons via the
+        # pygame_gui UI_BUTTON_PRESSED path; this branch handles clicks
+        # that landed elsewhere.
+        fleet_menu = getattr(self.ui, "fleet_context_menu", None)
+        if event.type == pygame.MOUSEBUTTONDOWN and fleet_menu:
+            menu_rect = fleet_menu.get_abs_rect()
+            if not menu_rect.collidepoint(event.pos):
+                self.ui.close_fleet_context_menu()
 
         if self.ui.system_tree.process_event(event):
             pass

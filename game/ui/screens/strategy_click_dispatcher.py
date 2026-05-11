@@ -375,7 +375,18 @@ class ClickModeDispatcher:
             self._handle_picking(mx, my)
             return True
 
-        elif button == 3:  # Right Click: Quick Move
+        elif button == 3:  # Right Click: friendly fleet -> menu, else Quick-Move
+            # Issue #20: 3-way branch.
+            #   1. Selected fleet's hex          -> open menu.
+            #   2. Different friendly fleet hex  -> select + open menu.
+            #   3. No friendly fleet under hex   -> existing Quick-Move.
+            friendly = self._friendly_fleet_at_screen(mx, my)
+            if friendly is not None:
+                if self.scene.selected_fleet is not friendly:
+                    self.scene.on_ui_selection(friendly)
+                self.scene.ui.open_fleet_context_menu(friendly, mx, my)
+                return True
+
             if self.scene.selected_fleet:
                 result = self.scene._fleet_ops.handle_move_designation(
                     mx, my, self.scene.selected_fleet
@@ -406,6 +417,25 @@ class ClickModeDispatcher:
                 return True
 
         return False
+
+    def _friendly_fleet_at_screen(self, mx: int, my: int) -> Optional[object]:
+        """Return a fleet owned by the current player at the clicked hex.
+
+        Issue #20: identifies the right-click target for the fleet
+        context menu. Hex precision (not pixel-sprite) matches how
+        left-click selection works in ``_handle_picking``.
+        """
+        hex_clicked = self.scene.camera.hex_at_screen(
+            mx, my, self.scene.hex_size,
+        )
+        current_player_id = self.scene.human_player_ids[
+            self.scene.current_player_index
+        ]
+        for emp in self.scene.empires:
+            for f in emp.fleets:
+                if f.location == hex_clicked and getattr(f, "owner_id", None) == current_player_id:
+                    return f
+        return None
 
     # =========================================================================
     # Picking / Hit Testing Methods
