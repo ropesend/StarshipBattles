@@ -1,7 +1,7 @@
-# Phase 4: Orchestration Overhead (snapshot, progress callback, `_run_phases`)
+# Phase 5: Orchestration Overhead (snapshot, progress callback, `_run_phases`)
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-412 4`
+> 1. Run `python Projects/scripts/validate_phase.py PROJ-412 5`
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
@@ -12,7 +12,7 @@
 
 ## Tasks
 
-### Task 4.1: Reduce `TurnStateSnapshot.capture` cost [Medium]
+### Task 5.1: Reduce `TurnStateSnapshot.capture` cost [Medium]
 
 **Files:** `game/strategy/engine/turn_state_snapshot.py`, `game/strategy/engine/turn_engine.py`
 **Tests:** rollback-on-failure tests in `tests/unit/strategy/turn_engine/`; bench
@@ -25,7 +25,7 @@
 
 **Notes:**
 
-### Task 4.2: Trim per-tick orchestration cost in `_run_phases` [Medium]
+### Task 5.2: Trim per-tick orchestration cost in `_run_phases` [Medium]
 
 **Files:** `game/strategy/engine/turn_engine.py`, `game/strategy/engine/turn_phase_registry.py`
 **Tests:** `tests/unit/strategy/turn_engine/`; bench
@@ -39,7 +39,7 @@
 
 **Notes:**
 
-### Task 4.3: Investigate the `progress_callback` overhead [Medium]
+### Task 5.3: Investigate the `progress_callback` overhead [Medium]
 
 **Files:** wherever the UI registers its progress callback (likely `game/ui/screens/strategy_screen.py` or `game/strategy/facade/strategy_session_facade.py`); `game/strategy/engine/turn_engine.py`
 **Tests:** characterization test for the callback contract; bench
@@ -71,4 +71,4 @@ When all tasks above are done:
 - [ ] User signed off on any UX-visible cadence change to the progress overlay
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 5
+- [ ] Update plan.md Current State to point to Phase 6

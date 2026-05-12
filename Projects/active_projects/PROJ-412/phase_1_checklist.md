@@ -29,13 +29,15 @@
 **File:** `tests/performance/bench_turn_processing.py` (new)
 **Tests:** `pytest tests/performance/bench_turn_processing.py -v`
 
-- [ ] Mirror the structure of [`tests/performance/bench_galaxy_planet_star.py`](../../../tests/performance/bench_galaxy_planet_star.py): fixed seed, min-of-N-runs, JSON baseline sibling
+- [ ] Mirror the structure of [`tests/performance/bench_galaxy_planet_star.py`](../../../tests/performance/bench_galaxy_planet_star.py): fixed seed, min-of-N-runs, JSON baseline sibling, `_RUNS_PER_BENCH` pattern
 - [ ] Scenario: 2 empires, 2 planets, a handful of ships, no active combat — driven from the existing quickstart-style fixture if one exists, otherwise build a minimal `GameSession` directly
-- [ ] Drive 10 turns via `session.process_turn()` (or the canonical entry path)
+- [ ] Make turns/runs configurable via module-level constants (e.g. `_CI_TURNS`, `_CI_RUNS`, `_MANUAL_TURNS`, `_MANUAL_RUNS`); CI run honors `--bench-mode=ci` (default) and falls back to manual if env var set
+- [ ] **CI defaults: 2 turns × min-of-3 runs (~45 s budget; tighten to 1 turn × 3 runs if needed)**. At current ~7.5 s/turn the previously-proposed 10-turn run would overshoot the < 30 s CI budget — codex consult flagged this.
+- [ ] Manual profiling default: 10 turns × min-of-5 (script invocation, not CI)
 - [ ] After each turn, capture `turn_engine._phase_times` dict and the total time
 - [ ] Emit per-phase mean/min/max and total mean/min/max
 - [ ] Write `tests/performance/bench_turn_processing.baseline.json` with first-run numbers
-- [ ] Verify: total CI runtime < 30 s
+- [ ] Verify: total CI runtime ≤ 30 s on the user's machine
 - [ ] Verify: re-running on the same machine reproduces numbers within ~10%
 
 **Notes:**
@@ -59,8 +61,8 @@
 **File:** scratch file under `AgentCoordination/Scratchpad/reports/proj-412-overhead-probe.md`
 **Tests:** rerun `bench_turn_processing.py` after each probe variation
 
+- [ ] **Probe B FIRST (highest-priority)**: Replace the UI progress callback with `lambda *a: None` and re-measure. The codex consult verified that [`strategy_game_state_manager.py:170-177`](../../../game/ui/screens/strategy_game_state_manager.py#L170) calls `pygame.event.pump()` + `_screen.draw(surface)` + `pygame.display.flip()` per tick — this is the strongest single suspect for the unaccounted 2.5–3.7 s gap. If Probe B alone accounts for ≥ 30% of the gap, the Phase 2/4 ordering must be revisited (callback fix may promote above the harvesting cache).
 - [ ] Probe A: Patch `TurnStateSnapshot.capture` to return a dummy (or pass `session=None`) and re-measure. Record `total` delta.
-- [ ] Probe B: Replace the UI progress callback with `lambda *a: None` and re-measure. Record `total` delta.
 - [ ] Probe C: Replace each per-tick phase callable with `lambda *a, **k: None` one at a time (production, harvesting, environmental, planet_energy, movement_calc) and record `total` delta — confirms the per-phase wall-clock cost beyond what `_phase_times` shows.
 - [ ] Write the attribution table to `findings/profile_baseline_cpu.md` mapping ~each ~100 ms of the 2.5–3.7 s gap to a specific call site
 - [ ] If anything remains unattributed after all probes, run `cProfile` on the benchmark and append the top stack frames
@@ -74,21 +76,21 @@
 
 - [ ] **Test A — mid-turn facility completion**: at tick 50 a storage facility completes; tick 51's harvest respects the new capacity. Drive via a deterministic queue that completes mid-loop. Assert: `max_stockpile[res]` reflects the new facility's contribution from tick 51 onward; pre-tick-50 harvest still capped at old capacity.
 - [ ] **Test B — mid-turn harvester destruction**: at tick 50 a harvester facility's `is_operational` flips to False (simulate destruction). Tick 51+ contributes zero from that harvester. Assert: per-tick harvest sum drops by exactly the destroyed harvester's contribution.
-- [ ] **Test C — mid-turn booster arrival**: a fleet carrying `ResourceHarvestBooster` enters the relevant scope at tick 25 via `move_apply`. Harvest from tick 26 onward is scaled by the booster. Assert: tick-25 harvest unchanged; tick-26+ harvest scaled.
-- [ ] All three tests must pass against the *current* unchanged code (they characterize present behavior, not target behavior)
+- [ ] **Test C — mid-turn booster arrival (fleet-based; positive control: facility-based)**: User chose Option B (decisions.md 2026-05-12) — Phase 3 migrates the harvest booster scan to the universal `IAbilitySource` pipeline so fleet boosters become functional. Test C is written in two parts: (C1) a planet/facility booster arrival at tick 25 (positive control that should pass against current code); (C2) a fleet-carried `ResourceHarvestBooster` moving into the scope at tick 25 — this MUST FAIL against current code and pass after Phase 3.3. Mark C2 `xfail` referencing Phase 3, then flip in Phase 3.2.
+- [ ] **Test D — rollback-and-retry cache safety** (new, codex consult risk): trigger a turn that fails after harvesting has populated caches; rollback runs; retry the same turn number with mutated state; assert harvest reflects the post-rollback state, not the cached pre-rollback state. This catches stale `(turn, empire_id)` cache entries surviving `TurnStateSnapshot.restore`.
+- [ ] All four tests must pass against the *current* unchanged code (they characterize present behavior, not target behavior)
 - [ ] Verify: tests fail loudly and informatively if invalidation is broken (e.g. by mocking a cache that ignores mid-turn changes)
 
 **Notes:**
 
-### Task 1.6: Rewrite `test_recalculate_storage_called_each_tick` as a behavior assertion [Simple]
+### Task 1.6: Audit `test_process_harvesting_tick_calls_recalculate_storage` [Simple] ⚠ scope reduced (codex consult)
 
 **File:** `tests/unit/strategy/engine/test_harvesting_engine.py`
-**Tests:** `pytest tests/unit/strategy/engine/test_harvesting_engine.py -k storage`
+**Tests:** `pytest tests/unit/strategy/engine/test_harvesting_engine.py -k recalculate or storage`
 
-- [ ] Locate the existing test (~line 926 per swarm-05)
-- [ ] Convert from "asserts call count == 100" to "asserts the *invariant*: storage capacity reflects mid-turn facility completion". Reuse the Test-A characterization pattern from 1.5.
-- [ ] Leave a comment referencing PROJ-412 explaining why the implementation-detail assertion was retired
-- [ ] Run the test, confirm it still passes against unchanged code
+- [ ] The test originally suspected (`test_recalculate_storage_called_each_tick`) **does not exist**. The closest match is `test_process_harvesting_tick_calls_recalculate_storage` at [test_harvesting_engine.py:624-648](../../../tests/unit/strategy/engine/test_harvesting_engine.py#L624), which asserts post-100-tick storage / stockpile values — **a behavior assertion, not a call-count pin**. It will survive a once-per-turn cache.
+- [ ] Confirm via re-read that no test asserts `recalculate_storage` is called N times. If found, convert to an invariant assertion.
+- [ ] If nothing needs changing, mark this task complete with a note.
 
 **Notes:**
 

@@ -43,23 +43,23 @@ The six parallel Explore agents are individually documented in `findings/swarm_0
 
 ### Harvesting hot path (swarm_02)
 
-Pre-profile hypothesis with rough cost ranking:
+Pre-profile hypothesis, **co-equal top items, ranking not locked**. Swarm_02's own internal cost estimates (e.g. "6.5–9.5 s" for harvesting) overshoot the observed 3.9 s, so treat the numbers below as candidate ranges and let Phase 1 measurement decide priority.
 
-1. **`_get_harvest_booster_mult` performs 4-scope ability scans per harvester per tick** — ~30–40% of harvesting time. Cache candidate.
-2. **`recalculate_storage` walks all colonies × facilities × components every tick** — ~25–35%. Cache candidate.
-3. **Late `import` inside the hot loop** at [harvesting_engine.py:405-407](../../../game/strategy/engine/harvesting_engine.py#L405) — ~5–10%. Free fix.
-4. **Registry lookups via `_get_ability_info`** — ~10–15%. Cache candidate.
-5. **Dict copies in `set_max_stockpile` / `replace_max_storage`** — minor.
+- **`_get_harvest_booster_mult` performs 4-scope ability scans per harvester per tick** ([harvesting_engine.py:388-419](../../../game/strategy/engine/harvesting_engine.py#L388)). Co-top candidate.
+- **`recalculate_storage` walks all colonies × facilities × components every tick** ([harvesting_engine.py:204-223](../../../game/strategy/engine/harvesting_engine.py#L204)). Co-top candidate.
+- **Late `import` inside the hot loop** at [harvesting_engine.py:405-407](../../../game/strategy/engine/harvesting_engine.py#L405). Free fix.
+- **Registry lookups via `_get_ability_info`**. Cache candidate, contribution to be measured.
+- **Dict copies in `set_max_stockpile` / `replace_max_storage`** — minor.
 
 ### Overhead hunt (swarm_03)
 
 The 2.5–3.7 s unaccounted overhead is most plausibly:
 
-1. **Progress callback pumping UI events** — possibly 0.1 – 1 s+ depending on whether the UI's registered callback walks pygame events per tick. Easy to verify by swapping in a noop.
-2. **`TurnStateSnapshot.capture`** at turn start — 200–400 ms for full `to_dict()` of empires + galaxy.
+1. **Progress callback that fires per-tick UI redraw + display flip** — **verified by code read**: [`strategy_game_state_manager.py:170-177`](../../../game/ui/screens/strategy_game_state_manager.py#L170) calls `pygame.event.pump()`, `self._screen.draw(surface)`, and `pygame.display.flip()` on every one of the 100 ticks. At a typical full-strategy-screen redraw cost (5–20 ms each), this alone could explain 0.5–2.0 s per turn. Phase 1 should run the noop-callback probe **early** and may promote the callback fix above Phase 3 if the delta is large.
+2. **`TurnStateSnapshot.capture`** at turn start ([turn_state_snapshot.py:53-68](../../../game/strategy/engine/turn_state_snapshot.py#L53)) — full `to_dict()` of every empire and galaxy; estimated 200–400 ms.
 3. **`_run_phases` per-call overhead** — 1500 invocations × tuple alloc + perf_counter ≈ 100–200 ms.
 
-Roughly 1.5–2.6 s would still be unattributed after those three; Phase-1 Scalene profiling is needed to find it.
+Phase-1 Scalene profiling is needed to confirm attribution.
 
 ### Cache patterns (swarm_04)
 
@@ -99,8 +99,12 @@ Proposed reuse for this project:
 | Mid-turn facility mutation | Caching storage / harvester / booster results without invalidation would silently lose mid-turn changes. | Single `dirty` flag bumped by every `add_facility` / `remove_facility` / `set_facility_operational` / `_complete_item` path. Add characterization tests for all three mid-turn surfaces *before* any cache lands. |
 | `_phase_times` key set | Renaming or removing a phase key breaks `test_turn_engine_phase_timing.py`. | Keep all 21 keys; only add new buckets if they appear in both descriptor lists and the timing test. |
 | Phase ordering | Reordering would break `test_default_tick_phase_list.py`. | Do not reorder. All optimizations live inside sub-engines or in `_run_phases` orchestration, not in the descriptor lists. |
-| Floating-point accumulation | Cache reuse may change accumulation order vs. per-tick recompute. | Tolerance-based equivalence assertions in characterization tests. Any change beyond ≈ 1e-9 relative drift must be surfaced to the user before merging. |
-| Progress callback assumptions | If the callback genuinely needs to fire per tick for UI smoothness, batching it would degrade UX. | Measure first. If the per-tick fire is the cost, consider invoking only every Nth tick or only after a meaningful state change, gated on a user-approved UX trade-off. |
+| Floating-point accumulation | Caching capacity and multiplier results that preserve iteration order should produce the same aggregate values. Risk is narrower than initially stated; the real danger is changing provider order, switching from `find_abilities_in_scope` to the universal effect pipeline, or reusing a multiplier after an invalidating mutation. | Tolerance-based end-state assertions in characterization tests **plus** provider/order equivalence assertions around `aggregate_multipliers` calls. Any drift beyond ≈ 1e-9 surfaced to user before merging. |
+| Progress callback assumptions | If the callback genuinely needs to fire per tick for UI smoothness, batching it would degrade UX. | Measure first; UI callback is verified to redraw + flip per tick (see swarm_03). User has confirmed callback coarsening is in scope. |
+| Rollback-and-retry cache staleness | `GameSession.process_turn` increments `turn_number` only on success ([game_session.py:321-329](../../../game/strategy/engine/game_session.py#L321)). On `EnginePhaseError`, `TurnStateSnapshot.restore` replaces galaxy + empires from the snapshot, but caches owned by `TurnEngine` / `HarvestingEngine` survive. A retry with the same turn number could hit stale `(turn, empire_id)` cache. | Phase 1 adds a rollback-and-retry characterization test. Phase 3 caches must clear / invalidate per-turn caches in the `EnginePhaseError` path (via a hook on `_NullBattleResolver` etc., or a direct `engine._invalidate_turn_caches()` call in the rollback site). |
+| Caching the wrong thing | `_harvest_resource` mutates `planet.deposits[resource]["quantity"]` and stockpile every harvester tick. Caching *those* values would change depletion behavior. | Plan caches only ability metadata, storage capacity, and booster multipliers — never accumulated harvest values. Explicit in Phase 3 task descriptions. |
+| Cache observability | `_phase_times` shows phase wall-clock but not whether a cache is hot, cold, or accidentally bypassed. | Phase 3 tasks add debug counters for storage rebuilds, booster cache hits/misses, and invalidation reason. Surface them in tests; do not rely on production benchmarks to detect bypassed caches. |
+| Superweapon mutation surface | If fleet-carried ability sources ever feed harvesting, superweapon paths (`SuperweaponOrderProcessor`, `system_destroyer`) become invalidators. | The tiny benchmark excludes superweapons by construction; this is a future scope concern, not an active risk. Document it in benchmark scope notes rather than building the invalidation hook prematurely. |
 
 ## Opportunities Discovered
 

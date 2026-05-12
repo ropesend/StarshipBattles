@@ -247,7 +247,7 @@ Strategy/core event logging:
 
 ## 11. Surface Caching
 
-> **Last verified:** 2026-05-11 — issue #17: `invalidate_widget_caches()` clause expanded to require widget-content clearing, not just cache-attr nulling, because pygame_gui's `UIPanel.show(show_contents=True)` recursively un-hides every child via `UIContainer.show`, re-exposing stale text/images otherwise.
+> **Last verified:** 2026-05-12 — PROJ-411 Phase 1 extension added: per-turn UI caches on `FacadeSessionState` for data-gathering panels (planet/star/design/economy snapshots), cleared by `FacadeSessionState.invalidate_all()` from `StrategySessionFacade.process_turn`. PROJ-411 Phase 2 added: window-reuse for strategy modals (`hide()` instead of `kill()`; instance preserved across opens). PROJ-411 Phase 3 added: `StarshipUIAppearanceTheme` subclass with tuple-keyed `_combined_ids_cache` working around pygame_gui 0.6.14's pathological `build_all_combined_ids` cache key.
 
 Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`, `game/ui/panels/race_flag_gallery.py`, `game/ui/panels/race_portrait_gallery.py`, `game/ui/panels/race_theme_gallery.py`, `game/ui/components/table/virtual_table.py`.
 
@@ -276,6 +276,25 @@ Pair the invalidation method with a content-mutation hook in the renderer (`Buil
 Canonical example: `VirtualTable.invalidate_widget_caches()` in `game/ui/components/table/virtual_table.py`.
 
 Use for repeated image loads, component sprites, race/planet/star images, and generated derivatives.
+
+### Per-turn UI caches on `FacadeSessionState` (PROJ-411 Phase 1)
+
+For panels whose data is stable within a single turn (Galactic Planet Registry, Galactic Star Registry, Empire Overview, Build Queue), thread a `facade_state: FacadeSessionState | None` kwarg through the data-gathering function. Cache shape lives on the slice at `game/strategy/facade/slices/_facade_state.py`:
+
+- `designs_by_empire: Dict[int, List[DesignMetadata]]`
+- `planets_for_empire_cache: Dict[int, list]`
+- `stars_cache_new: Optional[list]`
+- `empire_economy_snapshot: Dict[int, Any]`
+
+`FacadeSessionState.invalidate_all()` clears every PROJ-411 slot and is called from `StrategySessionFacade.process_turn` post-turn-advance. Functions check the cache first and fall back to a fresh gather when the slot is empty or `facade_state` is `None` (the latter is the test stub / non-strategy path — uncached behavior preserved).
+
+### Window reuse for strategy modals (PROJ-411 Phase 2)
+
+Galactic Planet Registry, Galactic Star Registry, Empire Overview, Event Log subclass `StrategyModalWindow` and override `on_close_window_button_pressed` + `request_close` to call `self.hide()` instead of `self.kill()`. `StrategyModalWindow.hide()` consolidates: `is_blocking=False`, unregister from window manager, remove from pygame_gui's `UIWindowStack`. `show()` mirrors. Registrars branch on `existing.alive()`: hit calls `existing.open_for_X(...)` rebinding context (+ filter snapshot save/restore on empire switch — see hot-seat note); miss constructs fresh. Re-open cost drops from 3–5 s to <500 ms. Per-empire filter snapshots prevent hot-seat state leak via `_filter_snapshots_by_empire: dict[int, dict]` on the window using the existing preset capture/apply infrastructure.
+
+### pygame_gui theme-id cache key (PROJ-411 Phase 3)
+
+`game/ui/pygame_gui_patch.py::StarshipUIAppearanceTheme` overrides `build_all_combined_ids` to use a private tuple-keyed `_combined_ids_cache`, working around pygame_gui 0.6.14's pathological chained-`str.join` cache key (~10 KB per call). Source-fingerprint guard `UPSTREAM_HAS_KNOWN_BUG` flips False when upstream fixes the bug — cue to delete the patch. `StarshipUIManager.create_new_theme` returns the subclass; 8 production `UIManager` construction sites use the subclass. `pygame_gui==0.6.14` pinned in `requirements.txt` while patch is live.
 
 ## 12. Configuration Classes
 

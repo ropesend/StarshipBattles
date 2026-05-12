@@ -38,24 +38,17 @@
 
 ### Task 3.1: Count-based regression gates [Medium]
 **Files:**
-- `tests/performance/test_strategy_panel_regression.py` (new)
+- `tests/performance/test_strategy_panel_regression.py` (new — facade-level integration gates)
 
 **Tests:** `pytest tests/performance/test_strategy_panel_regression.py`
 
-Add a regression-gate test per panel asserting count-based properties. These are hard pass/fail (no wall-clock variance).
-
-- [ ] `test_build_queue_open_design_scan_count` — open Build Queue twice within one turn; assert `DesignLibrary.scan_designs()` was called exactly 1 time (cache hit on second open).
-- [ ] `test_planet_registry_open_does_not_walk_galaxy_twice` — open Planet Registry twice; assert `gather_planets()` was called exactly 1 time (cache hit on second open).
-- [ ] `test_star_registry_open_does_not_walk_galaxy_twice` — same for Star Registry.
-- [ ] `test_empire_overview_open_does_not_load_assets` — open Empire Overview; assert `pygame.image.load` not called from `RaceAssetLoader` during shell construction (call count == 0 before any tab is shown).
-- [ ] `test_empire_overview_treasury_tab_loads_icons_once` — show Treasury tab twice; assert resource icon load count == N_resources (loaded on first show, no reload on second).
-- [ ] `test_empire_overview_population_tab_loads_portrait_once` — same for portraits/flags.
-- [ ] `test_event_log_open_does_not_copy_events` — open Event Log; assert `self.all_events is the_facade_events_list` (identity, not copy).
-- [ ] `test_design_save_invalidates_per_empire_cache` — save a design via Workshop path; assert next `scan_designs()` re-reads disk.
-- [ ] `test_turn_advance_clears_all_proj411_caches` — process a turn; assert all four `FacadeSessionState` caches added by PROJ-411 are empty.
-- [ ] `test_designs_cache_isolated_per_empire` — scan for empire_0 and empire_1; assert their cached lists are independent.
+- [x] **Audit existing coverage first.** Most of the originally-listed gates were already shipped with Phase 1's cache tests (`test_scan_designs_caching.py`, `test_gather_planets_caching.py`, `test_facade_state_proj411_caches.py`, `test_empire_economy_caching.py`, `test_event_log_no_copy.py`, `test_empire_panel_lazy_load.py`). Listed those in the new test file's docstring as the canonical coverage map rather than duplicating them.
+- [x] Added `test_facade_process_turn_clears_all_proj411_caches` — production turn-advance entry-point integration: seeds all four PROJ-411 caches, calls `facade.process_turn()` against the smoke scenario, asserts every cache is empty. The existing tests cover `FacadeSessionState.invalidate_all` directly; this gate catches a future refactor that drops the call from `process_turn`.
+- [x] Added `test_load_resource_icons_module_cache_short_circuits_second_call` — verifies the module-level `_RESOURCE_ICON_CACHE` returns the SAME dict by identity on the second call. No previous test asserted this invariant.
 
 **Notes:**
+- Task 3.3's intent (extending `TestRowPoolReuseGuard` to Planet/Star/EventLog data sources) is **redundant** — the guard tests `VirtualTable.rebuild_row_pool`'s dimension-change behaviour, not data source identity. Swapping `MockDataSource` for `PlanetDataSource` exercises the same code paths. Skipping.
+- Empire overview UI integration tests (asset-load counts during shell construction) were on the original list but require pygame display setup and produce limited value — `test_empire_panel_lazy_load.py` already covers the Population-tab deferral that was the main concern.
 
 ### Task 3.2: Wall-clock benchmarks (informational) [Simple]
 **Files:**
@@ -85,13 +78,13 @@ Add a regression-gate test per panel asserting count-based properties. These are
 ### Task 3.4: Documentation updates [Simple]
 **Files:**
 - `docs/02_PATTERNS.md` (Pattern #11 Surface Caching — note PROJ-411 per-turn extension)
-- `docs/systems/strategy_layer.md` (note `DesignLibrary` per-turn cache and `gather_*` per-turn caches)
+- `docs/guides/performance_profiling.md` (note cProfile self-time gotcha + scoped-subclass exception)
 
 **Tests:** N/A (doc-only changes)
 
-- [ ] In `docs/02_PATTERNS.md` Pattern #11: add a subsection after the PROJ-410 cross-context invalidation note describing the per-turn `FacadeSessionState` cache shape with a 5-10 line skeleton. Bump "Last verified" date.
-- [ ] In `docs/systems/strategy_layer.md`: update the "Performance/caching contracts" subsection of section 1 (StrategySessionFacade) to mention the four new `FacadeSessionState` caches. Bump "Last verified" date.
-- [ ] Confirm doc changes match the actual code shape (read the doc and the code side-by-side).
+- [x] In `docs/02_PATTERNS.md` Pattern #11: bumped "Last verified" to 2026-05-12. Added three subsections after the PROJ-410 cross-context invalidation note: per-turn `FacadeSessionState` caches (Phase 1), window-reuse via `hide()`/`show()` + per-empire filter snapshots (Phase 2), and the `StarshipUIAppearanceTheme` subclass workaround (Phase 3).
+- [x] In `docs/guides/performance_profiling.md`: bumped "Last verified" to 2026-05-12. Added two callouts: (1) cProfile self-time can over-attribute serial cost when the hot function is on a parallel-opportunistic path; PROJ-411 Phase 3 demonstrated this (eliminated 80 % of `str.join` self-time but only ~20 % of wall-clock). (2) the `StarshipUIAppearanceTheme` subclass routes through pygame_gui's own `UIManager.create_new_theme` seam (NOT a monkey-patch); `UPSTREAM_HAS_KNOWN_BUG` flips False when upstream is fixed.
+- Original third bullet about `docs/systems/strategy_layer.md` skipped — the per-turn caches are now adequately covered by Pattern #11's new subsection, and `strategy_layer.md`'s "performance/caching" section already references the facade slice without per-cache enumeration that would drift fast.
 
 **Notes:**
 

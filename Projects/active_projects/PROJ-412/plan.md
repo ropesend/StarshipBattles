@@ -16,17 +16,18 @@
 |-------|--------|-----------|
 | 1. Measure (profile + characterization tests) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Cheap wins (late imports, micro-fixes) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Harvesting recompute reduction (storage + booster caches) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Orchestration overhead (snapshot, progress callback, `_run_phases`) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Secondary phase optimizations (energy / environmental / movement) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 3. Migrate harvest booster scan to universal `IAbilitySource` pipeline | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Harvesting recompute reduction (storage + booster caches) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Orchestration overhead (snapshot, progress callback, `_run_phases`) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Secondary phase optimizations (energy / environmental / movement) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
-Phases 3–5 are **conditional**. Phase 1's profiling result is authoritative — if measured cost differs from the pre-profile hypothesis, the phase ordering and content will be re-justified before any Phase 2+ work starts.
+Phases 4–6 are **conditional**. Phase 1's profiling result is authoritative — if measured cost differs from the pre-profile hypothesis, the phase ordering and content will be re-justified before any Phase 2+ work starts. **Codex consult flagged that Phase 5 may need to come before Phase 4** if the Probe-B noop-callback test (Phase 1.4) shows the per-tick UI redraw is the dominant contributor to the 2.5–3.7 s unaccounted-overhead gap. The Phase-1 exit gate explicitly reconsiders ordering. **Phase 3 (the booster-pipeline migration) is a deliberate behavior change** approved by the user — fleet-carried `ResourceHarvestBooster` becomes functional in harvesting.
 
 ## Current State
 
-**Last Updated:** 2026-05-10
+**Last Updated:** 2026-05-12
 **Active Phase:** Plan approved — ready for Phase 1
-**Last Action:** Plan approved by user; aspirational target ~10× speedup recorded; UI-callback coarsening confirmed in scope; all Phase 2 short-circuits confirmed in scope
+**Last Action:** Codex consult applied; user chose Option B (migrate harvest boosters to universal `IAbilitySource` pipeline); phases renumbered (old 3-5 → 4-6); new Phase 3 inserted for the booster pipeline migration
 **Next Action:** Begin Phase 1 (Measure) in a new session via "Continue Project"
 **Blockers:** None
 
@@ -49,6 +50,7 @@ Turn processing on the user's *tiny* reference scenario (2 empires, 2 planets, a
 - All end-of-turn phases (`organics_consumption` → `water_modification`).
 - `TurnEngine` orchestration: `_run_phases`, `_time_phase`, `TickContext`, `TurnStateSnapshot`, `progress_callback` plumbing.
 - Caching infrastructure for `_aggregate_empire_storage`, `_get_harvest_booster_mult`, and adjacent ability-source scans where the same opportunity exists.
+- **Migration of `_get_harvest_booster_mult` from the planet/facility-only `find_abilities_in_scope` to the universal `IAbilitySource` pipeline (Phase 3)** — a deliberate behavior change so fleet-carried `ResourceHarvestBooster` becomes functional in harvesting.
 - New `tests/performance/bench_turn_processing.py` benchmark and supporting characterization tests.
 - Phase ordering / descriptor list stays unchanged (frozen by golden tests).
 

@@ -1,8 +1,12 @@
 # Performance Profiling
 
-> **Last verified:** 2026-05-08 - Checked against `Tools/profiling/run_scalene.py`, `Tools/profiling/README.md`, `game/core/profiling.py`, and the profiling workflow tests.
+> **Last verified:** 2026-05-12 — PROJ-411 closeout note added re. cProfile self-time attribution and the `StarshipUIAppearanceTheme` scoped subclass exception.
 
 Use Scalene for evidence, not permission to bypass engineering rules. Write or identify a failing or characterization test first, profile a repeatable scenario, fix root causes only, and rerun the same test/profile before claiming improvement. Do not add compatibility shims, hidden globals, cross-layer imports, monkey patches, benchmark-only branches, or duplicate profiling paths.
+
+> **PROJ-411 lesson on self-time attribution:** cProfile self-time can over-attribute serial cost when the hottest function is on an opportunistic path running parallel to the truly serial work. PROJ-411's Phase 1 cProfile pointed at `str.join` self-time (27.96 s / 65 s) as if it were the bottleneck; the Phase 3 fix eliminated ~80 % of that self-time but only ~20 % of wall-clock open time because the chained-`str.join` was happening alongside the real bottlenecks (raw widget construction, font rendering, surface allocation). Treat cProfile attribution as "where time is spent" not "where the critical path runs."
+
+> **PROJ-411 third-party fix exception:** A scoped subclass workaround for pygame_gui 0.6.14's pathological `build_all_combined_ids` cache key lives at `game/ui/pygame_gui_patch.py` (`StarshipUIAppearanceTheme` + `StarshipUIManager`). This is NOT a monkey-patch — it's a subclass routed through pygame_gui's own `UIManager.create_new_theme` seam. Source-fingerprint guard `UPSTREAM_HAS_KNOWN_BUG` flips False when upstream fixes the bug; that's the cue to delete the subclass and un-pin `pygame_gui` in `requirements.txt`.
 
 ## Wrapper Contract
 
