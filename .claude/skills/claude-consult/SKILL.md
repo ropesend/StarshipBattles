@@ -275,8 +275,16 @@ exit_status: ok | partial | error
 "@
 }
 
-# Pick sandbox from mode (codex only — gemini and opencode ignore this)
-$sandbox = if ($Mode -in @('pre-final-check','deep-dive') -and $AllowTests) { 'workspace-write' } else { 'read-only' }
+# Pick sandbox from mode (codex only — gemini and opencode ignore this).
+# Codex always uses workspace-write because codex's `--sandbox read-only` blocks
+# ALL writes including its own `apply_patch` against the consult leaf, even when
+# `--add-dir <leaf>` is passed (verified 2026-05-12 against codex-cli 0.130.x:
+# `--add-dir` extends the writable set "alongside the primary workspace" but
+# does nothing when the primary workspace is read-only). The advisory-only
+# contract is enforced by the codex responder skill's Permissions section,
+# not by sandbox policy. `--allow-tests` is now a "yes, also run tests"
+# signal; sandbox is workspace-write regardless.
+$sandbox = 'workspace-write'
 
 # Pick gemini model (other partners ignore)
 $modelArg = if ($Partner -eq 'gemini' -and $Model) { $Model } else { '' }

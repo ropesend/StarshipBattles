@@ -16,6 +16,7 @@ restrictions, NOT a CLI guarantee, until live probing confirms otherwise.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -51,8 +52,37 @@ def resolve_repo_root() -> Path:
     raise RuntimeError("Unable to discover repository root from partner_invoke.py")
 
 
+def _known_install_locations(name: PartnerName) -> list[Path]:
+    """Best-effort fallback paths to probe when PATH lookup fails.
+
+    Returns paths to check via `Path.is_file()`. Empty list means no
+    platform-specific fallback is available. The caller MUST verify the
+    file still exists before returning it from `resolve_binary`.
+    """
+    if sys.platform != "win32":
+        return []
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if not local_app_data:
+        return []
+    locations: dict[str, list[Path]] = {
+        "codex": [Path(local_app_data) / "OpenAI" / "Codex" / "bin" / "codex.exe"],
+    }
+    return locations.get(name, [])
+
+
 def resolve_binary(name: PartnerName) -> str | None:
-    """Find a partner CLI on PATH. Windows-aware (probes .exe, .cmd, .ps1)."""
+    """Find a partner CLI.
+
+    Resolution order:
+    1. Env-var override (e.g., `CODEX_BIN`, `CLAUDE_BIN`, `OPENCODE_BIN`,
+       `GEMINI_BIN`) pointing at an existing file.
+    2. PATH lookup via `shutil.which` (Windows-aware: probes .exe/.cmd/.ps1).
+    3. Known per-platform install locations (e.g.,
+       `%LOCALAPPDATA%\\OpenAI\\Codex\\bin\\codex.exe` on Windows).
+    """
+    env_override = os.environ.get(f"{name.upper()}_BIN")
+    if env_override and Path(env_override).is_file():
+        return env_override
     candidates: list[str] = [name]
     if sys.platform == "win32":
         candidates += [f"{name}.exe", f"{name}.cmd", f"{name}.ps1"]
@@ -60,6 +90,9 @@ def resolve_binary(name: PartnerName) -> str | None:
         exe = shutil.which(candidate)
         if exe:
             return exe
+    for path in _known_install_locations(name):
+        if path.is_file():
+            return str(path)
     return None
 
 
@@ -214,9 +247,15 @@ def build_command(
         # flag exists in 0.130.x. `--sandbox <mode>` is the policy boundary.
         # `--skip-git-repo-check` keeps the smoke working when invoked from a
         # subdirectory or non-default workspace state.
-        # `--add-dir <consult-leaf>` grants codex write access to the leaf
-        # even under `--sandbox read-only` (live smoke 2026-05-09 proved
-        # that read-only otherwise blocks ALL writes, including response.md).
+        # `--add-dir <consult-leaf>` is passed for documentation-of-intent
+        # purposes, but in 0.130.x it does NOT grant write access under
+        # `--sandbox read-only` (verified 2026-05-12: per `codex exec --help`,
+        # --add-dir adds dirs "writable alongside the primary workspace", and
+        # the primary workspace is non-writable under read-only sandbox). The
+        # caller (`claude-consult`) therefore always passes
+        # `sandbox='workspace-write'` for consults so codex can write
+        # `response.md`. Advisory-only is enforced by the responder skill's
+        # Permissions section, not by sandbox policy.
         cmd = [
             binary,
             "exec",
@@ -225,9 +264,19 @@ def build_command(
             "--skip-git-repo-check",
         ]
         if response_file is not None:
+            # `--output-last-message` writes codex's final assistant text to the
+            # given path AT END OF RUN. Pointing it at `response_file` directly
+            # OVERWRITES whatever codex produced via `apply_patch`, replacing
+            # the valid consult/v1 artifact with chat text like "Done. Wrote
+            # response.md." (verified 2026-05-12 — caused spurious
+            # missing-response failures after a successful apply_patch). Point
+            # it at a sidecar `last_message.txt` so the artifact codex writes
+            # via `apply_patch` survives untouched, and the sidecar is
+            # available as fallback evidence if needed.
+            last_message_file = response_file.with_name("last_message.txt")
             cmd += [
                 "--add-dir", str(response_file.parent),
-                "--output-last-message", str(response_file),
+                "--output-last-message", str(last_message_file),
             ]
         cmd.append(prompt)
         return cmd
