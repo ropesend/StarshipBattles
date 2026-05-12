@@ -1247,8 +1247,7 @@ LEGACY_SCAN_EXCLUDE_DIRS = (
     "docs/_ignore",
     "Projects/archived_projects",
     "Projects/deep_archive",
-    "Tracking/bugs/archived",
-    "Tracking/features/archived",
+    "AgentCoordination/legacy_tickets",
     "_marked_for_deletion_2026-05-29",
 )
 

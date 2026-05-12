@@ -53,7 +53,7 @@ REFERENCE_SEARCH_DIRS = (
     ".agents/skills",
     ".opencode/skills",
     "Projects/protocols",
-    "Tracking/protocols",
+    "AgentCoordination/protocols",
 )
 
 
