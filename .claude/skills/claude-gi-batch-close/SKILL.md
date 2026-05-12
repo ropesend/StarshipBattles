@@ -7,8 +7,7 @@ argument-hint: <issue-number> [<issue-number> ...]
 
 # Batch Close GitHub Issues
 
-Close multiple `status:awaiting-confirmation` issues in one go. Counterpart to
-`/claude-ticket-batch-close`.
+Close multiple `status:awaiting-confirmation` issues in one go.
 
 ## Your Role
 

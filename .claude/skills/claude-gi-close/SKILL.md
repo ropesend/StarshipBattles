@@ -8,7 +8,6 @@ argument-hint: <issue-number>
 # Close GitHub Issue
 
 Final closure of an issue after the user has verified the fix or feature.
-Counterpart to `/claude-ticket-close`.
 
 ## Your Role
 

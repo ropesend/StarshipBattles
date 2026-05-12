@@ -129,14 +129,14 @@ def test_log_records_separate_skills(tmp_path: Path) -> None:
     log_skill_usage.main([
         "--repo-root", str(tmp_path),
         "--agent", "claude",
-        "--skill", "claude-ticket-work",
+        "--skill", "claude-gi-work",
     ])
     install_id = json.loads(
         (tmp_path / "AgentCoordination" / "local" / "install_id.json").read_text(encoding="utf-8")
     )["install_id"]
     by_install = tmp_path / "AgentCoordination" / "generated" / "skill_usage" / "by_install" / f"{install_id}.json"
     payload = json.loads(by_install.read_text(encoding="utf-8"))
-    assert set(payload["skills"].keys()) == {"claude-proj-start", "claude-ticket-work"}
+    assert set(payload["skills"].keys()) == {"claude-proj-start", "claude-gi-work"}
 
 
 def test_log_rejects_invalid_agent(tmp_path: Path) -> None:
@@ -181,7 +181,7 @@ def _write_install_payload(repo_root: Path, install_id: str, skills: dict[str, i
 
 
 def test_summarize_aggregates_across_installs(tmp_path: Path) -> None:
-    _write_install_payload(tmp_path, "install-a", {"claude-proj-start": 3, "claude-ticket-work": 1})
+    _write_install_payload(tmp_path, "install-a", {"claude-proj-start": 3, "claude-gi-work": 1})
     _write_install_payload(tmp_path, "install-b", {"claude-proj-start": 2})
 
     rc = summarize_skill_usage.main(["--repo-root", str(tmp_path)])
@@ -193,7 +193,7 @@ def test_summarize_aggregates_across_installs(tmp_path: Path) -> None:
     assert summary["skills"]["claude-proj-start"]["total_count"] == 5
     assert summary["skills"]["claude-proj-start"]["by_install"]["install-a"] == 3
     assert summary["skills"]["claude-proj-start"]["by_install"]["install-b"] == 2
-    assert summary["skills"]["claude-ticket-work"]["total_count"] == 1
+    assert summary["skills"]["claude-gi-work"]["total_count"] == 1
 
 
 def test_summarize_handles_no_install_files(tmp_path: Path) -> None:

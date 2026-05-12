@@ -8,8 +8,7 @@ argument-hint: <issue-number> <answers>
 # Answer Clarification Questions
 
 Log the user's answers to questions an agent posted, and flip the issue back
-to `status:pending` so it can be picked up again. Counterpart to
-`/claude-ticket-answer`.
+to `status:pending` so it can be picked up again.
 
 ## Your Role
 

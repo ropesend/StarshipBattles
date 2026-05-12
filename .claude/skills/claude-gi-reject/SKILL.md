@@ -9,7 +9,7 @@ argument-hint: <issue-number> <reason>
 
 The user smoke-tested an `awaiting-confirmation` fix and found it inadequate.
 Log the rejection reason and flip the issue back to `status:in-progress` so
-the next work session re-attempts. Counterpart to `/claude-ticket-reject`.
+the next work session re-attempts.
 
 ## Your Role
 
