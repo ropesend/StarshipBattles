@@ -105,8 +105,10 @@ class StrategyEventRouter:
 
         # Esc handling (issue #18 + #20): precedence chain is top-bar menu
         # panel -> fleet context menu -> topmost live StrategyModalWindow.
-        # Modal close mirrors the X-button path via window.kill(), which
-        # fires on_close_callback before super().kill().
+        # PROJ-411 Task 2.5: modal close uses ``request_close()`` so
+        # reusable subclasses (PlanetList/StarList/EmpireOverview/EventLog)
+        # can hide() instead of kill(). Legacy modals' default
+        # implementation routes through kill() unchanged.
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             if self.ui.menu_panel:
                 self.ui.close_menu_panel()
@@ -116,7 +118,7 @@ class StrategyEventRouter:
                 return
             modals = list(self.ui.window_manager.iter_live_modals())
             if modals:
-                modals[-1].kill()
+                modals[-1].request_close()
                 return
 
         # Close menu panel on click outside

@@ -224,14 +224,18 @@ class TestEventLogWindow:
         assert window_manager.event_log_window is not None
 
     @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
-    def test_open_event_log_kills_existing(self, mock_window_class, window_manager):
-        """Test open_event_log kills existing window first."""
+    def test_open_event_log_reuses_alive_existing(self, mock_window_class, window_manager):
+        """PROJ-411 Task 2.4: open_event_log reuses an alive window via
+        ``open_for_events`` instead of killing + reconstructing."""
         existing = Mock()
+        existing.alive.return_value = True
         window_manager.event_log_window = existing
 
         window_manager.open_event_log()
 
-        existing.kill.assert_called_once()
+        existing.kill.assert_not_called()
+        mock_window_class.assert_not_called()
+        existing.open_for_events.assert_called_once()
 
     @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
     def test_open_event_log_with_events(self, mock_window_class, window_manager):

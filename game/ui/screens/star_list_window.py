@@ -146,7 +146,7 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
                  window_manager: "StrategyWindowManager",
                  on_close_callback=None, on_navigate_callback=None,
                  ui_builder: Optional[StarListWindowUiBuilder] = None,
-                 facade_state=None):
+                 facade_state=None, empire=None):
         """Initialize the Star List Window.
 
         Args:
@@ -203,6 +203,15 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         # Filter state manager
         self._filter_mgr = StarListFilterManager()
 
+        # PROJ-411 Task 2.10: per-empire filter snapshots so hot-seat
+        # players don't see each other's filter state. The Star Registry
+        # is galaxy-scoped, but the *view* (filters, search, columns) is
+        # still per-player; track current empire so the registrar's
+        # ``open_for_galaxy`` can drive snapshot save/restore.
+        self.empire = empire
+        self._filter_snapshots_by_empire: dict[int, dict] = {}
+        self._default_filter_snapshot: dict | None = None
+
         # Compute dynamic filter ranges from actual star data
         self._star_ranges = compute_star_ranges(self.all_stars)
         self._filter_mgr.filter_ranges = {
@@ -253,6 +262,11 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
             return
 
         (ui_builder or StarListWindowUiBuilder()).build(self)
+        # PROJ-411 Task 2.10: snapshot pristine post-build state so
+        # first-sight-for-this-empire opens get a clean view.
+        self._default_filter_snapshot = capture_star_list_state(
+            self.columns, self.txt_name_filter, self.filter_types, self.ui_filters
+        )
 
     # -----------------------------------------------------------------------
     # Filter state properties (delegate to StarListFilterManager)
@@ -460,6 +474,71 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
     def set_dimensions(self, dimensions, clamp_to_container=False) -> None:
         """Handle window resize."""
         super().set_dimensions(dimensions, clamp_to_container)
+
+    # ---- PROJ-411 Task 2.2: Window reuse (Track A) ----
+    # See PROJ-411 phase_2_checklist.md for the contract. Mirrors the
+    # PlanetListWindow Task 2.1 implementation; Star Registry doesn't
+    # bind to a per-empire view so ``open_for_galaxy(galaxy)`` takes
+    # only the galaxy argument.
+
+    def on_close_window_button_pressed(self) -> None:
+        """Hide for reuse instead of pygame_gui's default kill()."""
+        self.hide()
+
+    def request_close(self) -> None:
+        """PROJ-411 Task 2.5: Esc close path uses hide() for reuse."""
+        self.hide()
+
+    # ``hide()`` / ``show()`` inherited from StrategyModalWindow base
+    # (PROJ-411 Task 2.8 consolidated the reuse-hide/show logic there).
+
+    def open_for_galaxy(self, galaxy, empire=None) -> None:
+        """Rebind galaxy + empire, reset selection, show, refresh.
+
+        Used by ``StarListRegistrar.open()`` on slot-reuse path: ~5 s
+        widget construction → <500 ms re-open.
+
+        PROJ-411 Task 2.10: filter state is per-empire. Same-empire
+        re-opens preserve in-place state; empire switches save the
+        outgoing player's view and restore the incoming player's (or
+        defaults on first sight). ``empire`` is optional for legacy
+        callers (no per-empire memory if absent).
+        """
+        outgoing_empire = self.empire
+        snapshots_active = self._default_filter_snapshot is not None
+        empire_switched = (
+            snapshots_active
+            and empire is not None
+            and outgoing_empire is not None
+            and outgoing_empire is not empire
+        )
+
+        if empire_switched:
+            self._filter_snapshots_by_empire[outgoing_empire.id] = (
+                capture_star_list_state(
+                    self.columns, self.txt_name_filter,
+                    self.filter_types, self.ui_filters,
+                )
+            )
+
+        self.galaxy = galaxy
+        if empire is not None:
+            self.empire = empire
+        self.selected_star = None
+
+        if empire_switched:
+            target = self._filter_snapshots_by_empire.get(
+                empire.id, self._default_filter_snapshot
+            )
+            self.columns = apply_star_list_state(
+                target, self.columns, self.txt_name_filter,
+                self.filter_types, self.ui_filters,
+            )
+
+        self.show()
+        self.refresh_list()
+
+    # ---- end PROJ-411 Task 2.2 ----
 
     def kill(self) -> None:
         if self.virtual_table:

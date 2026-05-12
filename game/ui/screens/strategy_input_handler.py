@@ -63,7 +63,12 @@ class StrategyInputHandler:
 
         # If planet list window is open, let pygame_gui handle it (skip our F11/F12)
         # BUG FIX PROJ-198 Phase 4: planet_list_window is on window_manager, not ui
-        if self.scene.ui.window_manager.planet_list_window is not None:
+        # PROJ-411 Task 2.9: gate on `.visible` — under Phase 2 reuse the slot
+        # stays populated across user-close cycles, so an `is not None` check
+        # short-circuits the local handler chain forever once the window has
+        # been constructed. A hidden window must be transparent here.
+        planet_list = self.scene.ui.window_manager.planet_list_window
+        if planet_list is not None and planet_list.visible:
             self.scene.ui.handle_event(event)
             return
 

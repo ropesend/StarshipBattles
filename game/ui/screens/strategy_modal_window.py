@@ -168,3 +168,99 @@ class StrategyModalWindow(UIWindow):
                 wm.unregister_modal(self)
         finally:
             super().kill()
+
+    def request_close(self) -> None:
+        """User-requested close (Esc / Cancel / etc.).
+
+        PROJ-411 Task 2.5: extension point for window-reuse subclasses.
+        Default behaviour is ``self.kill()`` — equivalent to the legacy
+        contract. Reusable subclasses (PlanetListWindow, StarListWindow,
+        EmpirePanelWindow, EventLogWindow) override this to call
+        ``self.hide()`` so the instance survives for fast re-open.
+
+        Called by the strategy event router's Esc handler. Distinct from
+        ``kill()`` so true teardown (scene exit, parent kill, game
+        shutdown) still routes through ``kill()`` and clears the slot.
+        """
+        self.kill()
+
+    def hide(self, hide_contents: bool = True) -> None:
+        """Hide the modal so background UI receives input again.
+
+        PROJ-411 Task 2.8: consolidated reuse-hide logic on the base
+        class. Subclasses no longer override hide(); they implement
+        their own ``open_for_X`` to rebind context and call ``show()``.
+
+        Three things must happen for hidden-modal-reuse to work:
+        1. ``is_blocking = False`` so pygame_gui's
+           ``check_clicked_inside_or_blocking`` doesn't claim clicks.
+        2. Unregister from ``StrategyWindowManager._modals`` so
+           ``has_modal_open()`` returns False.
+        3. Remove from pygame_gui's ``window_stack`` so the hidden
+           window isn't z-top — otherwise hit-testing / focus state
+           routes events to the dead-but-alive window.
+
+        PROJ-411 Task 2.6's visibility-aware
+        ``check_clicked_inside_or_blocking`` covered step 1's side of
+        the click-block, but the window_stack was still inflated by the
+        hidden window, causing the symptom the user reported (End Turn
+        and zoom unresponsive after Esc-close).
+        """
+        self.is_blocking = False
+        wm = getattr(self, "_window_manager", None)
+        if wm is not None:
+            try:
+                wm.unregister_modal(self)
+            except ValueError:
+                pass  # Intentional broad ignore: idempotent unregister.
+        # Remove from pygame_gui window_stack — mirrors what kill() does.
+        stack = getattr(self, "window_stack", None)
+        if stack is not None:
+            try:
+                stack.remove_window(self)
+            except (ValueError, KeyError):
+                pass  # Intentional broad ignore: idempotent stack removal.
+        super().hide(hide_contents=hide_contents)
+
+    def show(self) -> None:
+        """Show the modal after a previous hide(), restoring full input
+        ownership and z-top placement.
+
+        PROJ-411 Task 2.8: consolidated reuse-show logic on the base
+        class. Mirrors ``hide()`` step-for-step in reverse.
+        """
+        super().show()
+        self.is_blocking = True
+        wm = getattr(self, "_window_manager", None)
+        if wm is not None:
+            wm.register_modal(self)
+        stack = getattr(self, "window_stack", None)
+        if stack is not None:
+            # add_new_window appends without dedup; remove first if
+            # already present to keep the stack invariant.
+            try:
+                stack.remove_window(self)
+            except (ValueError, KeyError):
+                pass  # Intentional broad ignore.
+            stack.add_new_window(self)
+
+    def check_clicked_inside_or_blocking(self, event):
+        """Skip the pygame_gui focus/block check when hidden.
+
+        PROJ-411 Task 2.6: when a reusable PROJ-411 window is hidden,
+        pygame_gui's default ``check_clicked_inside_or_blocking`` still
+        runs because the window remains in the sprite group. The default
+        implementation calls ``hover_point()`` which collides on rect
+        only (no visibility check), so a 90%-screen hidden window
+        consumes every left-click in its rect — blocking the strategy
+        view's End Turn button, hex clicks, etc.
+
+        By short-circuiting to ``False`` when hidden, hidden modal
+        windows become transparent to input. Killed modals are removed
+        from the sprite group entirely so this method is never reached
+        for them; the override is therefore safe for non-reusable
+        subclasses too.
+        """
+        if not self.visible:
+            return False
+        return super().check_clicked_inside_or_blocking(event)

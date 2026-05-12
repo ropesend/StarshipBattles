@@ -64,8 +64,15 @@ class EventLogRegistrar:
         self, events: list, *, empire_name: Optional[str] = None
     ) -> None:
         c = self._composer
-        if c.event_log_window:
-            c.event_log_window.kill()
+
+        # PROJ-411 Task 2.4: reuse the constructed window instance when
+        # available. Hot-seat-safe — ``open_for_events`` swaps the
+        # events list via ``EventLogDataSource.update_events``. ~2.5 s
+        # widget construction → <200 ms re-open.
+        existing = c.event_log_window
+        if existing is not None and existing.alive():
+            existing.open_for_events(events, empire_name=empire_name)
+            return
 
         w, h = int(c.width * 0.7), int(c.height * 0.7)
         rect = pygame.Rect((c.width - w) / 2, (c.height - h) / 2, w, h)

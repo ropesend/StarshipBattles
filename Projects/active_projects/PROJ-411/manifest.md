@@ -69,18 +69,22 @@
 | `game/ui/screens/strategy_windows/list_windows.py` | Production | 2 | Modify Planet + Star registrars to reuse slot instead of `kill()` + reconstruct. |
 | `game/ui/screens/strategy_windows/empire_panel_ctrl.py` | Production | 2 | Modify Empire registrar to reuse slot. |
 | `game/ui/screens/strategy_windows/event_log_window_ctrl.py` | Production | 2 | Modify Event Log registrar to reuse slot. |
+| `game/ui/screens/strategy_modal_window.py` | Production | 2 (Task 2.5) | Add `request_close()` extension point (default = `kill()`). |
+| `game/ui/screens/strategy_event_router.py` | Production | 2 (Task 2.5) | Esc handler routes to `request_close()` instead of direct `kill()`. |
 
-## Phase 2 test files (planned new + edits)
+## Phase 2 test files (delivered)
 
 | File | Type | Phase | Notes |
 |------|------|-------|-------|
-| `tests/unit/ui/screens/strategy_windows/test_planet_list_window_registrar.py` | Test | 2 | **NEW.** Reuse-path coverage. |
-| `tests/unit/ui/screens/strategy_windows/test_star_list_window_registrar.py` | Test | 2 | **NEW.** Reuse-path coverage. |
-| `tests/unit/ui/screens/strategy_windows/test_empire_panel_ctrl.py` | Test | 2 | **EDIT.** Add reuse-path assertions. |
-| `tests/unit/ui/screens/test_planet_list_window.py` | Test | 2 | **EDIT.** Regression: re-open does not re-walk galaxy. |
-| `tests/unit/ui/screens/test_star_list_window.py` | Test | 2 | **EDIT.** Same shape. |
-| `tests/unit/ui/screens/test_empire_panel_window.py` | Test | 2 | **EDIT.** `open_for_empire` resets state correctly. |
-| `tests/unit/ui/screens/test_event_log_window.py` | Test | 2 | **EDIT.** `open_for_events` rebuilds list for hot-seat empire. |
+| `tests/unit/ui/screens/test_planet_list_window_reuse.py` | Test | 2 | **NEW.** 6 tests: close→hide, hide flips is_blocking + unregisters modal, show flips back + re-registers, `open_for_galaxy` rebinds context, resets selection, calls show+refresh. |
+| `tests/unit/ui/screens/test_star_list_window_reuse.py` | Test | 2 | **NEW.** 6 tests, same shape as Planet minus the empire/facade rebinding. |
+| `tests/unit/ui/screens/test_empire_panel_window_reuse.py` | Test | 2 | **NEW.** 5 tests: same-empire reuse scope; reset to Treasury tab. |
+| `tests/unit/ui/screens/test_event_log_window_reuse.py` | Test | 2 | **NEW.** 7 tests: rebinds events, resets filter, calls `update_events` on data source, updates title. |
+| `tests/unit/ui/screens/strategy_windows/test_planet_list_registrar_reuse.py` | Test | 2 | **NEW.** 4 tests: empty slot constructs, alive slot reuses, dead slot constructs fresh, `_on_closed` clears slot. |
+| `tests/unit/ui/screens/strategy_windows/test_list_windows.py` | Test | 2 | **EDIT.** Replaced legacy `test_star_list_open_kills_existing_window` with reuse-path equivalents. |
+| `tests/unit/ui/screens/strategy_windows/test_empire_panel_ctrl.py` | Test | 2 | **No edits needed.** Existing `test_empire_panel_open_kills_existing_window` still passes — hot-seat path still kills (the existing test uses an unfamiliar empire so it exercises that branch). |
+| `tests/unit/ui/screens/test_strategy_modal_esc_close.py` | Test | 2 (Task 2.5) | **NEW.** 5 tests — base class defaults `request_close → kill`; 4 parametrized covering each reusable window overriding `request_close → hide`. |
+| `tests/unit/ui/screens/test_strategy_event_router_esc_modal.py` | Test | 2 (Task 2.5) | **EDIT.** 5 assertions changed from `.kill.assert_called_once()` to `.request_close.assert_called_once()` to match the new routing contract. |
 
 ## Project-internal files (created during execution)
 

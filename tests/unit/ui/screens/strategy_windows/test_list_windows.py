@@ -61,16 +61,34 @@ def test_star_list_open_creates_centered_window() -> None:
     assert composer.star_list_window is window_cls.return_value
 
 
-def test_star_list_open_kills_existing_window() -> None:
+def test_star_list_open_reuses_alive_existing_window() -> None:
+    """PROJ-411 Task 2.2: reuse path — call ``open_for_galaxy`` instead of kill+construct."""
     composer = _composer()
     existing = MagicMock(name="existing_window")
+    existing.alive.return_value = True
     composer.star_list_window = existing
     registrar = list_windows.StarListRegistrar(composer)
 
-    with patch.object(list_windows, "StarListWindow"):
+    with patch.object(list_windows, "StarListWindow") as window_cls:
         registrar.open()
 
-    existing.kill.assert_called_once()
+    existing.kill.assert_not_called()
+    window_cls.assert_not_called()
+    existing.open_for_galaxy.assert_called_once_with(
+        composer.scene.galaxy, composer.scene.current_empire
+    )
+
+
+def test_star_list_open_constructs_fresh_when_slot_empty() -> None:
+    """PROJ-411 Task 2.2: empty slot still goes down the construction path."""
+    composer = _composer()
+    composer.star_list_window = None
+    registrar = list_windows.StarListRegistrar(composer)
+
+    with patch.object(list_windows, "StarListWindow") as window_cls:
+        registrar.open()
+
+    window_cls.assert_called_once()
 
 
 def test_star_list_on_closed_clears_slot() -> None:

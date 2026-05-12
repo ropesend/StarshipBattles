@@ -599,6 +599,55 @@ class EmpirePanelWindow(StrategyModalWindow):
 
         return handled
 
+    # ---- PROJ-411 Task 2.3: Window reuse (Track A) ----
+    #
+    # Scope: SAME-empire reuse only. If the user opens Empire Overview
+    # for a different empire (hot-seat), the registrar falls back to
+    # kill + reconstruct. ``open_for_empire(empire)`` is only safe to
+    # call when ``empire is self.empire`` — the registrar enforces that
+    # invariant.
+
+    def on_close_window_button_pressed(self) -> None:
+        """Hide for reuse instead of pygame_gui's default kill()."""
+        self.hide()
+
+    def request_close(self) -> None:
+        """PROJ-411 Task 2.5: Esc close path uses hide() for reuse."""
+        self.hide()
+
+    # ``hide()`` / ``show()`` inherited from StrategyModalWindow base
+    # (PROJ-411 Task 2.8 consolidated the reuse-hide/show logic there).
+
+    def open_for_empire(self, empire: 'IEmpire') -> None:
+        """Reset to Treasury tab and show. SAME-empire reuse only.
+
+        The registrar validates `empire is self.empire` before calling.
+        Cross-empire (hot-seat) re-open is handled by the registrar
+        via kill + reconstruct since per-empire data (snapshot, portrait,
+        flag) cached in widgets needs invalidation we don't yet model.
+        """
+        assert empire is self.empire, (
+            "EmpirePanelWindow.open_for_empire only supports same-empire "
+            "reuse. The registrar must kill + reconstruct on hot-seat "
+            "empire switch."
+        )
+        self.current_tab = TAB_TREASURY
+        # Update tab button highlighting to match.
+        for i, btn in enumerate(self.tab_buttons):
+            if i == TAB_TREASURY:
+                btn.select()
+            else:
+                btn.unselect()
+        # Show the Treasury panel; hide the others.
+        for i, panel in enumerate(self.step_panels):
+            if i == TAB_TREASURY:
+                panel.show()
+            else:
+                panel.hide()
+        self.show()
+
+    # ---- end PROJ-411 Task 2.3 ----
+
     def kill(self) -> None:
         """Clean up and fire close callback."""
         if self.on_close_callback:

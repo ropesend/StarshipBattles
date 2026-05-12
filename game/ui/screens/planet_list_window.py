@@ -282,6 +282,12 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.filtered_planets: list = []
         self.preset_manager = PresetManager()
         self._filter_mgr = PlanetListFilterManager()
+        # PROJ-411 Task 2.10: per-empire filter snapshots so hot-seat
+        # players don't see each other's filter state. Captured on
+        # empire switch; default snapshot is taken at the end of Stage 3
+        # below so first-time-for-this-empire opens get a fresh view.
+        self._filter_snapshots_by_empire: dict[int, dict] = {}
+        self._default_filter_snapshot: dict | None = None
 
         # Compute dynamic filter ranges from actual planet data
         self._planet_ranges = compute_planet_ranges(self.all_planets)
@@ -350,6 +356,15 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
             return
 
         (ui_builder or PlanetListUiBuilder()).build(self)
+        # PROJ-411 Task 2.10: snapshot the pristine post-build filter
+        # state so empire switches that see a new empire for the first
+        # time apply defaults instead of inheriting the prior empire's
+        # filters.
+        self._default_filter_snapshot = capture_planet_list_state(
+            self.columns, self.txt_name_filter, self.filter_types,
+            self.filter_owner, self.ui_filters,
+            filter_effects=self.filter_effects,
+        )
 
     # -----------------------------------------------------------------------
     # Filter state properties (delegate to PlanetListFilterManager)
@@ -714,6 +729,84 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         # Recreate the detail panel at new position if one is showing
         if self.selected_planet is not None:
             self._on_planet_selected(self.selected_planet)
+
+    # ---- PROJ-411 Task 2.1: Window reuse (Track A) ----
+    #
+    # PROJ-376 BuildQueueScreen template. The X-button close path now
+    # hides the window instead of killing it; the registrar keeps the
+    # slot populated across user-close/re-open cycles. ``open_for_galaxy``
+    # rebinds context and resets per-open state. Esc-close still calls
+    # ``kill()`` for parity with the existing event-router contract.
+
+    def on_close_window_button_pressed(self) -> None:
+        """Override pygame_gui default kill() — hide for reuse instead."""
+        self.hide()
+
+    def request_close(self) -> None:
+        """PROJ-411 Task 2.5: Esc close path uses hide() for reuse."""
+        self.hide()
+
+    # ``hide()`` / ``show()`` inherited from StrategyModalWindow base
+    # (PROJ-411 Task 2.8 consolidated the reuse-hide/show logic there).
+
+    def open_for_galaxy(
+        self,
+        galaxy,
+        empire,
+        *,
+        facade=None,
+    ) -> None:
+        """Rebind context + reset per-open state + show the window.
+
+        Called by ``PlanetListRegistrar.open()`` when reusing an already-
+        constructed instance instead of constructing a fresh one. Net
+        cost should be <500 ms vs ~4.4 s for fresh construction.
+
+        PROJ-411 Task 2.10: filter state is per-empire. Same-empire
+        re-opens preserve in-place state for repeat lookups; empire
+        switches save the outgoing player's view and restore the
+        incoming player's (or defaults on first sight).
+        """
+        outgoing_empire = self.empire
+        # The per-empire snapshot path requires Stage-3 widgets to exist;
+        # ``_default_filter_snapshot`` is the sentinel for that (None when
+        # bypass_init skipped widget construction in tests).
+        snapshots_active = self._default_filter_snapshot is not None
+        empire_switched = (
+            snapshots_active
+            and outgoing_empire is not None
+            and outgoing_empire is not empire
+        )
+
+        if empire_switched:
+            self._filter_snapshots_by_empire[outgoing_empire.id] = (
+                capture_planet_list_state(
+                    self.columns, self.txt_name_filter, self.filter_types,
+                    self.filter_owner, self.ui_filters,
+                    filter_effects=self.filter_effects,
+                )
+            )
+
+        self.galaxy = galaxy
+        self.empire = empire
+        self._facade = facade
+        self.selected_planet = None
+
+        if empire_switched:
+            target = self._filter_snapshots_by_empire.get(
+                empire.id, self._default_filter_snapshot
+            )
+            self.columns = apply_planet_list_state(
+                target, self.columns, self.txt_name_filter,
+                self.filter_types, self.ui_filters,
+                filter_owner=self.filter_owner,
+                filter_effects=self.filter_effects,
+            )
+
+        self.show()
+        self.refresh_list()
+
+    # ---- end PROJ-411 Task 2.1 ----
 
     def kill(self) -> None:
         # Clean up VirtualTable

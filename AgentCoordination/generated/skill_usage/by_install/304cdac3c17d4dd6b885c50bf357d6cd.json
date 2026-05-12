@@ -114,6 +114,13 @@
       "count": 1,
       "last_used": "2026-05-10T22:01:24Z"
     },
+    "loop": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-12T01:42:38Z"
+    },
     "ocode-review-request": {
       "agents": {
         "ocode": 39

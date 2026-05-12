@@ -72,7 +72,15 @@ def _make_modal(name: str) -> MagicMock:
 
 
 class TestEscClosesSingleModal:
-    """Esc closes the single live modal via .kill()."""
+    """Esc closes the single live modal via .request_close().
+
+    PROJ-411 Task 2.5: the Esc handler routes through
+    ``StrategyModalWindow.request_close()`` (extension point that
+    defaults to ``kill()`` for legacy modals, overridden to ``hide()``
+    on the 4 reusable PROJ-411 windows). The test asserts the routing
+    contract; whether the resulting effect is kill or hide is a
+    per-subclass concern covered by other tests.
+    """
 
     def test_esc_kills_planet_list_window(self, router, mock_ui):
         planet_list = _make_modal("PlanetListWindow")
@@ -80,7 +88,7 @@ class TestEscClosesSingleModal:
 
         router.route_event(_keydown(pygame.K_ESCAPE))
 
-        planet_list.kill.assert_called_once()
+        planet_list.request_close.assert_called_once()
 
     def test_esc_kills_star_list_window(self, router, mock_ui):
         star_list = _make_modal("StarListWindow")
@@ -88,7 +96,7 @@ class TestEscClosesSingleModal:
 
         router.route_event(_keydown(pygame.K_ESCAPE))
 
-        star_list.kill.assert_called_once()
+        star_list.request_close.assert_called_once()
 
     def test_esc_kills_empire_panel_window(self, router, mock_ui):
         empire_panel = _make_modal("EmpirePanelWindow")
@@ -96,7 +104,7 @@ class TestEscClosesSingleModal:
 
         router.route_event(_keydown(pygame.K_ESCAPE))
 
-        empire_panel.kill.assert_called_once()
+        empire_panel.request_close.assert_called_once()
 
     def test_esc_kills_build_queue_list_window(self, router, mock_ui):
         """Regression: BuildQueueListWindow already handles Esc via its
@@ -109,7 +117,7 @@ class TestEscClosesSingleModal:
 
         router.route_event(_keydown(pygame.K_ESCAPE))
 
-        build_queue.kill.assert_called_once()
+        build_queue.request_close.assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -128,9 +136,9 @@ class TestEscStackedModals:
 
         router.route_event(_keydown(pygame.K_ESCAPE))
 
-        topmost.kill.assert_called_once()
-        older.kill.assert_not_called()
-        middle.kill.assert_not_called()
+        topmost.request_close.assert_called_once()
+        older.request_close.assert_not_called()
+        middle.request_close.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
@@ -149,7 +157,7 @@ class TestEscMenuPanelPrecedence:
         router.route_event(_keydown(pygame.K_ESCAPE))
 
         mock_ui.close_menu_panel.assert_called_once()
-        modal.kill.assert_not_called()
+        modal.request_close.assert_not_called()
 
     def test_esc_with_only_menu_panel_closes_menu(self, router, mock_ui):
         mock_ui.menu_panel = MagicMock(name="menu_panel")
@@ -180,4 +188,4 @@ class TestEscNoop:
 
         router.route_event(_keydown(pygame.K_a))
 
-        modal.kill.assert_not_called()
+        modal.request_close.assert_not_called()

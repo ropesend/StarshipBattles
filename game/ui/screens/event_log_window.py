@@ -540,6 +540,55 @@ class EventLogWindow(StrategyModalWindow):
     # Lifecycle
     # ------------------------------------------------------------------
 
+    # ---- PROJ-411 Task 2.4: Window reuse (Track A) ----
+    #
+    # ``open_for_events(events, empire_name=None)`` rebinds the events
+    # list, resets filter, updates the data source in place via the
+    # existing ``EventLogDataSource.update_events`` API, and re-shows.
+    # Hot-seat empire switch is handled transparently — the events list
+    # is the only per-empire state and ``update_events`` swaps it
+    # cleanly. Re-open cost target: <200 ms vs ~2.5 s for fresh.
+
+    def on_close_window_button_pressed(self) -> None:
+        """Hide for reuse instead of pygame_gui's default kill()."""
+        self.hide()
+
+    def request_close(self) -> None:
+        """PROJ-411 Task 2.5: Esc close path uses hide() for reuse."""
+        self.hide()
+
+    # ``hide()`` / ``show()`` inherited from StrategyModalWindow base
+    # (PROJ-411 Task 2.8 consolidated the reuse-hide/show logic there).
+
+    def open_for_events(
+        self,
+        events: list[dict],
+        *,
+        empire_name: Optional[str] = None,
+    ) -> None:
+        """Rebind events, reset filter, refresh data source, show.
+
+        Hot-seat-safe — ``EventLogDataSource.update_events`` swaps the
+        events list cleanly. ``empire_name`` is propagated to the window
+        title so the user sees the active empire's name reflected.
+        """
+        self.all_events = events
+        self.current_filter = "all"
+        if self.data_source is not None:
+            self.data_source.update_events(events)
+        # Guard against bypass_init test paths where ``title_bar`` is
+        # absent — pygame_gui's ``set_display_title`` reads it directly.
+        if getattr(self, "title_bar", None) is not None:
+            title = (
+                f"Event Log — {empire_name} Empire" if empire_name
+                else "Event Log"
+            )
+            self.set_display_title(title)
+        self.show()
+        self._rebuild_list()
+
+    # ---- end PROJ-411 Task 2.4 ----
+
     def kill(self) -> None:
         """Clean up and invoke close callback."""
         if self.virtual_table:

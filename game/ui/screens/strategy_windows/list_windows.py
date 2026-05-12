@@ -49,6 +49,15 @@ class PlanetListRegistrar:
         if facade is not None and hasattr(facade, "get_race_registry"):
             race_registry = facade.get_race_registry()
 
+        # PROJ-411 Task 2.1: reuse the constructed window instance when
+        # available. X-button close hides the window instead of killing
+        # it; ``open_for_galaxy`` rebinds context + resets selection +
+        # re-shows. ~4.4 s widget construction → <500 ms re-open.
+        existing = c.planet_list_window
+        if existing is not None and existing.alive():
+            existing.open_for_galaxy(galaxy, empire, facade=facade)
+            return
+
         c.planet_list_window = PlanetListWindow(
             rect,
             c.manager,
@@ -82,8 +91,17 @@ class StarListRegistrar:
 
     def open(self) -> None:
         c = self._composer
-        if c.star_list_window:
-            c.star_list_window.kill()
+
+        # PROJ-411 Task 2.2: reuse the constructed window instance when
+        # available. X-button close hides; ``open_for_galaxy`` re-shows
+        # with possibly-rebuilt galaxy reference. ~5 s → <500 ms.
+        # PROJ-411 Task 2.10: thread current_empire so the window can
+        # drive per-empire filter snapshots (hot-seat isolation).
+        current_empire = c.scene.current_empire
+        existing = c.star_list_window
+        if existing is not None and existing.alive():
+            existing.open_for_galaxy(c.scene.galaxy, current_empire)
+            return
 
         w, h = c.width * 0.9, c.height * 0.9
         rect = pygame.Rect((c.width - w) / 2, (c.height - h) / 2, w, h)
@@ -101,6 +119,7 @@ class StarListRegistrar:
             on_close_callback=self._on_closed,
             on_navigate_callback=self._on_navigate,
             facade_state=_facade_state,
+            empire=current_empire,
         )
 
     def _on_closed(self) -> None:
