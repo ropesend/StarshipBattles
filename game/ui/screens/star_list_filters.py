@@ -7,20 +7,39 @@ PROJ-231: Star List Panel.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional, TYPE_CHECKING
 
+from game.core.profiling import profile_action
 from game.ui.screens.list_filter_utils import make_attr_sort_key
 
+if TYPE_CHECKING:
+    from game.strategy.facade.slices._facade_state import FacadeSessionState
 
-def gather_stars(galaxy) -> Any:
+
+@profile_action("Panel: StarRegistry.gather_stars")
+def gather_stars(
+    galaxy,
+    *,
+    facade_state: "Optional[FacadeSessionState]" = None,
+) -> Any:
     """Collect all stars from the galaxy with pre-computed filter values.
 
     Args:
         galaxy: The galaxy object containing systems and stars
+        facade_state: PROJ-411 Phase 1. Optional reference to the session's
+            ``FacadeSessionState``. When supplied, the resulting list is
+            cached at ``facade_state.stars_cache_new`` for the rest of
+            the turn and returned by identity on subsequent calls.
+            Cleared by ``FacadeSessionState.invalidate_all()`` at each
+            turn boundary. Engine-side or test callers may omit this
+            kwarg and get the legacy uncached behaviour.
 
     Returns:
         List of stars with cached filter values attached
     """
+    if facade_state is not None and facade_state.stars_cache_new is not None:
+        return facade_state.stars_cache_new
+
     stars = []
 
     if not galaxy or not galaxy.systems:
@@ -40,6 +59,8 @@ def gather_stars(galaxy) -> Any:
 
             stars.append(star)
 
+    if facade_state is not None:
+        facade_state.stars_cache_new = stars
     return stars
 
 
@@ -138,6 +159,7 @@ def sort_stars(stars, sort_column_id, sort_descending, columns) -> Any:
     return stars
 
 
+@profile_action("Panel: StarRegistry.compute_ranges")
 def compute_star_ranges(all_stars) -> Any:
     """Compute min/max ranges for filter sliders from actual star data.
 

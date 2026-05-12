@@ -98,6 +98,19 @@ class StrategySessionFacade:
         self._economy_slice = EconomySlice(self._state)
         self._event_slice = EventSlice(self._state)
 
+    @property
+    def facade_state(self) -> FacadeSessionState:
+        """PROJ-411 Phase 1: public accessor for the per-turn cache holder.
+
+        UI-side callers (Build Queue, Workshop, etc.) can pass this into
+        ``DesignLibrary(facade_state=...)`` and similar collaborators so
+        their per-turn caches are shared across opens within one turn.
+        Engine-side code (turn engines, order processors) should NOT use
+        this — it runs inside the turn loop where the cache is irrelevant
+        and may even mask state-mutation bugs.
+        """
+        return self._state
+
     # =========================================================================
     # Cache attribute forwarders (read+write) — preserved for legacy tests
     # =========================================================================

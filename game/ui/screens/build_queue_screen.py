@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, List, Optional, Callable, Set, Union
 from game.core.input_actions import InputAction
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
+from game.core.profiling import profile_action
 
 logger = logging.getLogger(__name__)
 from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
@@ -261,6 +262,11 @@ class BuildQueueScreen:
             self.manager.update(0)
         self._construct_collaborators(yard, hex_coord, portrait_surface)
 
+    # PROJ-411 Task 1.10: full-open span. ``open_for_yard`` is the
+    # production entry point for the Build Queue panel — covers panel
+    # rebuild (cross-type opens), controller reset, queue refresh, and
+    # virtual-table widget invalidation.
+    @profile_action("Panel: BuildQueue.open_for_yard")
     def open_for_yard(
         self,
         yard,

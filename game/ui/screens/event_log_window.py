@@ -15,6 +15,7 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton
 from pygame_gui.windows import UIMessageWindow
 
+from game.core.profiling import profile_action
 from game.ui.components.table import VirtualTable, TableColumnManager, NoSelect
 from game.ui.screens.event_log_data_source import (
     EventLogDataSource,
@@ -97,6 +98,7 @@ class EventLogWindow(StrategyModalWindow):
             that don't supply it, including tests).
     """
 
+    @profile_action("Panel: EventLog.init")
     def __init__(
         self,
         rect: pygame.Rect,
@@ -112,7 +114,14 @@ class EventLogWindow(StrategyModalWindow):
         ui_builder: Optional[EventLogUiBuilder] = None,
     ) -> None:
         # ---- Stage 1: cheap state ----
-        self.all_events = list(events)
+        # PROJ-411 Task 1.9: hold a reference rather than a defensive
+        # copy. ``facade.get_all_events()`` already returns a fresh
+        # per-call list (``[e.to_dict() for e in events]``), and the
+        # ``EventLogDataSource`` constructor still defensively copies
+        # at the data-source boundary — so a window-level copy is pure
+        # waste. The window never mutates ``self.all_events`` after
+        # construction.
+        self.all_events = events
         self.current_filter = "all"
         self.on_close_callback = on_close_callback
         self.on_navigate_callback = on_navigate_callback
@@ -314,6 +323,7 @@ class EventLogWindow(StrategyModalWindow):
     # List Rendering
     # ------------------------------------------------------------------
 
+    @profile_action("Panel: EventLog.rebuild_data_source")
     def _rebuild_list(self) -> None:
         """Update VirtualTable with current filter."""
         if self.data_source:

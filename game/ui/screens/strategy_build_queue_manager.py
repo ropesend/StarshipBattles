@@ -193,7 +193,12 @@ class StrategyBuildQueueManager:
                 # / screen properties instead of reaching into the session.
                 savegame_path = self._screen.facade.get_save_path()
                 empire_id = planet.owner_id
-                design_library = DesignLibrary(savegame_path, empire_id)
+                # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
+                # the per-turn cache instead of re-globbing 47 JSON files per open.
+                design_library = DesignLibrary(
+                    savegame_path, empire_id,
+                    facade_state=getattr(self._screen.facade, "facade_state", None),
+                )
                 # PROJ-211: Pass registries explicitly
                 design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
@@ -301,7 +306,12 @@ class StrategyBuildQueueManager:
         # PROJ-396 MAJ-004: save_path via facade.
         savegame_path = self._screen.facade.get_save_path()
         empire_id = self._screen.current_empire.id
-        design_library = DesignLibrary(savegame_path, empire_id)
+        # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
+        # the per-turn cache instead of re-globbing 47 JSON files per open.
+        design_library = DesignLibrary(
+            savegame_path, empire_id,
+            facade_state=getattr(self._screen.facade, "facade_state", None),
+        )
         # PROJ-211: Pass registries explicitly
         design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
@@ -326,7 +336,12 @@ class StrategyBuildQueueManager:
                 # PROJ-396 MAJ-004: save_path via facade.
                 savegame_path = self._screen.facade.get_save_path()
                 empire_id = fleet.owner_id
-                design_library = DesignLibrary(savegame_path, empire_id)
+                # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
+                # the per-turn cache instead of re-globbing 47 JSON files per open.
+                design_library = DesignLibrary(
+                    savegame_path, empire_id,
+                    facade_state=getattr(self._screen.facade, "facade_state", None),
+                )
                 # PROJ-211: Pass registries explicitly
                 design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 

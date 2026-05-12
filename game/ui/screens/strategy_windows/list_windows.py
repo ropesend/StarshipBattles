@@ -88,6 +88,11 @@ class StarListRegistrar:
         w, h = c.width * 0.9, c.height * 0.9
         rect = pygame.Rect((c.width - w) / 2, (c.height - h) / 2, w, h)
 
+        # PROJ-411 Phase 1: pass facade_state so gather_stars uses the
+        # per-turn cache instead of re-walking the galaxy on every open.
+        # Use getattr to tolerate test stubs that lack `facade_state`.
+        _facade = getattr(c.scene, "facade", None)
+        _facade_state = getattr(_facade, "facade_state", None) if _facade is not None else None
         c.star_list_window = StarListWindow(
             rect,
             c.manager,
@@ -95,6 +100,7 @@ class StarListRegistrar:
             window_manager=c,
             on_close_callback=self._on_closed,
             on_navigate_callback=self._on_navigate,
+            facade_state=_facade_state,
         )
 
     def _on_closed(self) -> None:

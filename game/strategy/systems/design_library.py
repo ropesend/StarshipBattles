@@ -10,12 +10,16 @@ from dataclasses import dataclass
 from json import JSONDecodeError
 import os
 import glob
-from typing import List, Optional, Tuple, Set
+from typing import List, Optional, Tuple, Set, TYPE_CHECKING
 from datetime import datetime
 from game.strategy.data.design_metadata import DesignMetadata
 from game.core.json_utils import load_json_required, save_json
+from game.core.profiling import profile_action
 from game.core.string_utils import slugify
 from game.core.exceptions import ValidationException
+
+if TYPE_CHECKING:
+    from game.strategy.facade.slices._facade_state import FacadeSessionState
 
 logger = logging.getLogger(__name__)
 
@@ -95,16 +99,33 @@ class DesignLoadResult:
 class DesignLibrary:
     """Manages ship designs for a specific empire/savegame"""
 
-    def __init__(self, savegame_path: Optional[str], empire_id: int):
+    def __init__(
+        self,
+        savegame_path: Optional[str],
+        empire_id: int,
+        *,
+        facade_state: "Optional[FacadeSessionState]" = None,
+    ):
         """
         Initialize design library.
 
         Args:
             savegame_path: Path to the savegame directory (None if no savegame)
             empire_id: ID of the empire this library belongs to
+            facade_state: PROJ-411 Phase 1. Optional reference to the
+                session's ``FacadeSessionState``. When supplied, results
+                from ``scan_designs()`` are cached in
+                ``facade_state.designs_by_empire[empire_id]`` and reused
+                for the rest of the turn. ``save_design()`` pops the
+                entry so the next scan rebuilds. Engine-side callers
+                (construction queue, production spawner, quickstart
+                builder) omit this kwarg and get the legacy uncached
+                shape, since they already run inside the turn loop and
+                don't benefit from cross-call caching.
         """
         self.savegame_path = savegame_path
         self.empire_id = empire_id
+        self._facade_state = facade_state
 
         logger.debug(f"DesignLibrary.__init__ called:")
         logger.debug(f"  savegame_path: {savegame_path}")
@@ -137,6 +158,7 @@ class DesignLibrary:
             os.makedirs(self.designs_folder, exist_ok=True)
             logger.error(f"DesignLibrary: Using fallback temp folder: {self.designs_folder}")
 
+    @profile_action("Panel: BuildQueue.scan_designs")
     def scan_designs(self) -> List[DesignMetadata]:
         """
         Scan designs folder and build metadata list.
@@ -145,6 +167,17 @@ class DesignLibrary:
             List of DesignMetadata objects for all designs in the library
             (empty list if no savegame path)
         """
+        # PROJ-411 Phase 1: per-turn cache hit path. When `facade_state`
+        # was supplied, return the same list object built earlier this
+        # turn. Caller paths that mutate the returned list will leak
+        # across calls — by contract this method's result is read-only
+        # within a turn (next scan rebuilds anyway, or `save_design()`
+        # pops the entry).
+        if self._facade_state is not None:
+            cached = self._facade_state.designs_by_empire.get(self.empire_id)
+            if cached is not None:
+                return cached
+
         # Return empty list if no designs folder
         if self.designs_folder is None:
             logger.warning("scan_designs: designs_folder is None, returning empty list")
@@ -179,6 +212,9 @@ class DesignLibrary:
                 continue
 
         logger.debug(f"scan_designs: Successfully loaded {len(designs)} designs")
+        # PROJ-411 Phase 1: cache result for the rest of the turn.
+        if self._facade_state is not None:
+            self._facade_state.designs_by_empire[self.empire_id] = designs
         return designs
 
     def save_design(self, ship, design_name: str, built_designs: Set[str]) -> Tuple[bool, str]:
@@ -245,6 +281,11 @@ class DesignLibrary:
             # Save to file
             save_json(filepath, ship_data, indent=4)
             logger.info(f"Design saved successfully: {design_name}")
+
+            # PROJ-411 Phase 1: write-through cache invalidation. The
+            # per-empire cached scan_designs result is now stale.
+            if self._facade_state is not None:
+                self._facade_state.designs_by_empire.pop(self.empire_id, None)
 
             return True, f"Saved design: {design_name}"
 

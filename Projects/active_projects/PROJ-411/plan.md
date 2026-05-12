@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Instrument + Shared Wins | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Per-Panel Hotspot Fixes (profile-driven) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Instrument + Shared Wins | Complete (1.10 profile captured) | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Window Reuse (Track A) — 4 windows | Plan Drafted | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Regression Gates + Docs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-10 22:00
-**Active Phase:** Phase 1 (Not Started) — **plan approved, ready for implementation**
-**Last Action:** User approved plan after Phase C completed
-**Next Action:** In a new "Continue Project" session: confirm Issue #17 has merged to `main`, then begin Task 1.1 (smoke-scenario fixture)
-**Blockers:** Issue #17 (Build Queue stale rows, `status:in-progress`) must merge to `main` before Phase 1 Task 1.1 starts (per [decisions.md](decisions.md))
-**Context for Next Agent:** Plan has been validated against `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`, `docs/06_UI_STYLE_GUIDE.md`, `docs/guides/performance_profiling.md`, and `docs/systems/strategy_layer.md`. Full test suite baseline established 2026-05-10: 19,910 passed / 0 failed / 4 skipped in 146.3s (12 shards). All architectural patterns to reuse documented in [design.md](design.md). Start by reading plan.md → design.md → phase_1_checklist.md.
+**Last Updated:** 2026-05-11 18:30 (session 1 — Phase 1 complete + profiled, Phase 2 plan drafted)
+**Active Phase:** Phase 1 (Complete) + Phase 2 (Plan drafted, ready to start)
+**Last Agent Action:** Completed Phase 1 Task 1.10 profiling pass. cProfile + F9 real-game capture identified pygame_gui widget construction (`build_all_combined_ids` + `str.join`, 72% of 65 s) as the dominant lag source. Real-game per-window costs: StarRegistry 5,034 ms, PlanetRegistry 4,410 ms, EmpireOverview 4,192 ms, EventLog 2,534 ms. Build Queue (PROJ-376 reuse pattern) measured 7,088 ms first open → 408 ms re-open (94% reduction). Phase 1 per-turn caches now save microseconds against multi-second costs — not the bottleneck. Phase 2 plan drafted: apply PROJ-376 window-reuse pattern to the four non-reusing windows.
+**Next Action:** Begin Phase 2 Task 2.1 (Planet Registry window reuse). Read `phase_2_checklist.md` Task 2.1 for the 7-sub-step template. Pattern reference: `game/ui/screens/build_queue_screen.py` lines 270 (`open_for_yard`), 368 (`hide`), 391 (`show`); registrar reference: `game/ui/screens/strategy_build_queue_manager.py` line 117 (`if self._screen.build_queue_screen is None: construct; else: reuse`).
+**Blockers:** None. Each Phase 2 task is independent (one PR per window) per Phase 2 decision logged 2026-05-11.
+**Context for Next Agent:** Track A (window reuse) is the chosen Phase 2 strategy — validated by the 94% Build Queue re-open speedup measured in real-game F9 capture. The pattern is mechanical: add `show()`/`hide()`, extract `open_for_X(...)` from `__init__`, modify registrar to detect "slot occupied → reuse" vs "slot empty → construct". State-reset contract is per-window (decide what carries between opens: scroll, filters, selection). Task 2.3 (Empire Overview) is the tricky one — hot-seat means a different empire on re-open, so Treasury content must rebuild (`build_treasury_tab` re-call); Population-tab lazy flag must reset to False. Task 2.4 (Event Log) similar — events are empire-scoped, must rebuild for new empire. Track B (reduce first-open cost via pygame_gui internals) is deferred to potential Phase 3 — first open is paid once per session and would need more invasive work (VirtualTable row-pool sizing, possibly pygame_gui theme memoization monkey-patch).
 
 ## Overview
 

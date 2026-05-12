@@ -23,6 +23,13 @@
       "count": 7,
       "last_used": "2026-05-10T21:59:05Z"
     },
+    "claude-fix-crash": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-12T00:29:39Z"
+    },
     "claude-gi-deep-dive-parallel": {
       "agents": {
         "claude": 1
@@ -39,10 +46,10 @@
     },
     "claude-proj-continue": {
       "agents": {
-        "claude": 3
+        "claude": 4
       },
-      "count": 3,
-      "last_used": "2026-05-11T13:54:22Z"
+      "count": 4,
+      "last_used": "2026-05-11T21:43:16Z"
     },
     "claude-proj-from-audit-shrink": {
       "agents": {

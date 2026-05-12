@@ -17,13 +17,14 @@ keep working.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from game.core.protocols import IRaceRegistry
     from game.strategy.data.empire import Empire
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.planet import Planet
+    from game.strategy.data.design_metadata import DesignMetadata
     from game.strategy.engine.game_session import GameSession
     from game.strategy.facade.dto import StarInfo
 
@@ -53,6 +54,18 @@ class FacadeSessionState:
         self.fleets_by_hex_turn: int = -1
         # PROJ-287: lazy-init session-scoped race registry.
         self.race_registry: Optional["IRaceRegistry"] = None
+        # PROJ-411 Phase 1: per-turn UI caches. Cleared by invalidate_all()
+        # at every turn boundary. Caches by empire_id where applicable.
+        # DesignLibrary.scan_designs results, keyed by empire_id.
+        self.designs_by_empire: Dict[int, List["DesignMetadata"]] = {}
+        # gather_planets() result, keyed by empire_id (different empires may
+        # see different filter views — keep per-empire to be safe).
+        self.planets_for_empire_cache: Dict[int, list] = {}
+        # gather_stars() raw star list. Galaxy-wide; not per-empire.
+        # Distinct from `all_stars_cache` which holds DTO objects.
+        self.stars_cache_new: Optional[list] = None
+        # EmpireEconomyService.get_snapshot() result, keyed by empire_id.
+        self.empire_economy_snapshot: Dict[int, Any] = {}
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -63,6 +76,11 @@ class FacadeSessionState:
         self.fleets_by_hex_cache = None
         self.planet_index = None
         self.all_stars_cache = None
+        # PROJ-411 Phase 1 per-turn UI caches.
+        self.designs_by_empire.clear()
+        self.planets_for_empire_cache.clear()
+        self.stars_cache_new = None
+        self.empire_economy_snapshot.clear()
 
     # ------------------------------------------------------------------
     # ID lookups (cache-owning)

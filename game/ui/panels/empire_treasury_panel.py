@@ -16,6 +16,7 @@ from pygame_gui.elements import UIPanel, UILabel, UIImage, UIScrollingContainer
 
 from functools import lru_cache
 
+from game.core.profiling import profile_action
 from game.core.resources import ResourceCatalog
 from game.core.paths import Paths
 
@@ -319,13 +320,37 @@ class EmpireTreasuryPanel:
         self._build_ui()
 
 
+# PROJ-411 Task 1.10: module-level cache for resource icons.
+# Icons are static disk assets — same files for every Empire Overview
+# open in any session. Cache miss does the full 10× pygame.image.load +
+# convert_alpha + smoothscale loop (~40 ms total per benchmark); cache
+# hit returns the same dict. Pattern mirrors RaceFlagGallery's
+# ``_FLAG_THUMBNAIL_CACHE`` module-level singleton with explicit
+# ``_clear_resource_icon_cache()`` reset hook for tests.
+_RESOURCE_ICON_CACHE: Optional[Dict[str, pygame.Surface]] = None
+
+
+def _clear_resource_icon_cache() -> None:
+    """Reset the module-level icon cache. For test isolation."""
+    global _RESOURCE_ICON_CACHE
+    _RESOURCE_ICON_CACHE = None
+
+
+@profile_action("Panel: EmpireOverview.load_resource_icons")
 def load_resource_icons() -> Dict[str, pygame.Surface]:
     """
     Load and scale resource icons for the treasury panel.
 
+    PROJ-411 Task 1.10: subsequent calls within the same session return
+    the cached dict — ~40 ms saving per re-open of Empire Overview.
+
     Returns:
         Dict mapping resource type to 20x20 pygame Surface.
     """
+    global _RESOURCE_ICON_CACHE
+    if _RESOURCE_ICON_CACHE is not None:
+        return _RESOURCE_ICON_CACHE
+
     icons = {}
     resource_icons_dir = os.path.join(Paths.ASSET_DIR, "Images", "Resource Icons")
 
@@ -341,4 +366,5 @@ def load_resource_icons() -> Dict[str, pygame.Surface]:
             except pygame.error:
                 pass  # Skip icons that fail to load
 
+    _RESOURCE_ICON_CACHE = icons
     return icons

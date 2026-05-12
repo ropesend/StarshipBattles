@@ -39,6 +39,11 @@ class EmpirePanelRegistrar:
         if facade is not None and hasattr(facade, "get_race_registry"):
             race_registry = facade.get_race_registry()
 
+        # PROJ-411 Phase 1: pass facade_state so EmpireEconomyService.get_snapshot
+        # reuses its per-turn cache across Treasury-tab toggles. Use getattr
+        # because the facade attribute may be a test stub that lacks the
+        # `facade_state` property (e.g. SimpleNamespace test doubles).
+        facade_state = getattr(facade, "facade_state", None) if facade is not None else None
         c.empire_panel_window = EmpirePanelWindow(
             rect,
             c.manager,
@@ -47,6 +52,7 @@ class EmpirePanelRegistrar:
             on_close_callback=self._on_closed,
             registries=c.scene.session.registries,  # PROJ-211: Pass registries for DI
             race_registry=race_registry,
+            facade_state=facade_state,
         )
 
     def _on_closed(self) -> None:
