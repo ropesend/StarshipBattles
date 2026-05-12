@@ -22,12 +22,17 @@ from game.strategy.data.planet import Planet, PlanetaryFacility
 # Fixtures / Helpers
 # ===========================================================================
 
-def _make_empire(colonies=None, resource_pool=None, max_storage=None):
+def _make_empire(colonies=None, resource_pool=None, max_storage=None, empire_id=0):
     """Create a mock empire with colonies and resource pool."""
     empire = MagicMock(spec=Empire)
+    empire.id = empire_id
     empire.colonies = colonies or []
     empire.resource_pool = resource_pool or {}
     empire.max_storage = max_storage or {}
+    # PROJ-412 Phase 5: transient dirty flags consumed by HarvestingEngine's
+    # per-turn caches. Start True so the first harvest call always rebuilds.
+    empire._storage_dirty = True
+    empire._booster_dirty = True
 
     # Wire add_resources to behave like the real Empire
     def add_resources(resource_type, amount):
@@ -622,7 +627,15 @@ class TestStorageAggregation:
         assert empire.max_storage == {}
 
     def test_process_harvesting_tick_calls_recalculate_storage(self):
-        """process_harvesting_tick recalculates storage before harvesting."""
+        """process_harvesting_tick recalculates storage before harvesting.
+
+        PROJ-412 audit (2026-05-12): name suggests a call-count pin, but the
+        body asserts post-100-tick storage / stockpile values — a behavior
+        assertion. Survives a once-per-turn cache because the cache rebuilds
+        on turn entry, producing the same end-state. Mid-turn cap changes
+        are pinned in tests/integration/strategy/turn_engine/
+        test_mid_turn_invariants.py::test_A.
+        """
         storage = _make_storage_facility("metals", capacity=500.0, instance_id="s1")
         harvester = _make_harvester_facility("metals", base_harvest_rate=100.0, instance_id="h1")
         planet = _make_planet(
@@ -757,38 +770,48 @@ class TestHarvestBoosters:
         engine._galaxy = None
         assert engine._get_harvest_booster_mult(colony, "metals", empire=object()) == 1.0
 
-    def test_harvest_booster_filters_resource_and_aggregates_all_scopes(
+    def test_harvest_booster_filters_resource_type_and_aggregates(
         self,
         monkeypatch: pytest.MonkeyPatch,
     ):
+        """``_get_harvest_booster_mult`` filters entries by ``resource_type``
+        and delegates the multiplier roll-up to ``aggregate_multipliers``.
+
+        PROJ-412 Phase 3: the pre-migration version of this test pinned the
+        4-scope call pattern of ``find_abilities_in_scope``. After the
+        booster pipeline migrated to ``find_harvest_boosters_for_colony``
+        (which queries the universal ``IAbilitySource`` pipeline), the
+        per-scope iteration is gone — the new helper returns a flat
+        list. This test now monkeypatches the new helper and pins the
+        ``resource_type`` filter + aggregator-delegation contract.
+        """
         engine = self._make_engine()
         colony = object()
         galaxy = object()
         empire = object()
         engine._galaxy = galaxy
-        entries_by_scope = {
-            "planet": [
-                {"resource_type": "metals", "value": 2.0, "stack_group": "planet"},
-                {"resource_type": "organics", "value": 99.0},
-            ],
-            "sector": [{"resource_type": "metals", "value": 1.5}],
-            "system": [],
-            "empire": [{"resource_type": "metals", "value": 1.25}],
-        }
+
+        # Mixed resource_types: only "metals" entries should reach the aggregator.
+        flat_entries = [
+            {"resource_type": "metals", "multiplier": 2.0, "stack_group": "planet"},
+            {"resource_type": "organics", "multiplier": 99.0},
+            {"resource_type": "metals", "multiplier": 1.5},
+            {"resource_type": "metals", "multiplier": 1.25},
+        ]
         calls = []
         captured = {}
 
-        def _find(ability_name, query_colony, query_galaxy, query_empire, scope, *, registries):
-            calls.append((ability_name, query_colony, query_galaxy, query_empire, scope, registries))
-            return entries_by_scope[scope]
+        def _find_boosters(query_colony, query_galaxy, query_empire, *, registries):
+            calls.append((query_colony, query_galaxy, query_empire, registries))
+            return flat_entries
 
         def _aggregate(entries):
             captured["entries"] = list(entries)
             return 3.75
 
         monkeypatch.setattr(
-            "game.strategy.services.strategic_ability_scanner.find_abilities_in_scope",
-            _find,
+            "game.strategy.services.strategic_ability_scanner.find_harvest_boosters_for_colony",
+            _find_boosters,
         )
         monkeypatch.setattr(
             "game.strategy.services.strategic_ability_scanner.aggregate_multipliers",
@@ -798,14 +821,17 @@ class TestHarvestBoosters:
         result = engine._get_harvest_booster_mult(colony, "metals", empire)
 
         assert result == pytest.approx(3.75)
-        assert [call[4] for call in calls] == ["planet", "sector", "system", "empire"]
-        assert all(call[0] == "ResourceHarvestBooster" for call in calls)
-        assert all(call[1] is colony and call[2] is galaxy and call[3] is empire for call in calls)
-        assert all(call[5] is engine._registries for call in calls)
+        assert len(calls) == 1, "booster helper must be called once per harvest call"
+        assert calls[0][0] is colony
+        assert calls[0][1] is galaxy
+        assert calls[0][2] is empire
+        assert calls[0][3] is engine._registries
+        # Only the 3 metals entries pass the resource_type filter; the
+        # organics entry is filtered out before reaching aggregate_multipliers.
         assert captured["entries"] == [
-            entries_by_scope["planet"][0],
-            entries_by_scope["sector"][0],
-            entries_by_scope["empire"][0],
+            flat_entries[0],
+            flat_entries[2],
+            flat_entries[3],
         ]
 
 

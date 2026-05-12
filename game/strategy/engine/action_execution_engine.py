@@ -102,6 +102,11 @@ class ActionExecutionEngine(IActionExecutionEngine):
         self._validate_tick_inputs(empires)
         results: List[ActionTickResult] = []
 
+        # PROJ-412 Phase 2.2 note: an "any action order anywhere" precheck
+        # was tried and dropped — `_process_fleet_action_tick` already
+        # short-circuits on no-order / wrong-type / wrong-tick within ~1 μs,
+        # and the outer precheck broke MagicMock-driven tests. Not worth it.
+
         for empire in empires:
             # Copy list since fleets may be consumed during iteration
             for fleet in list(empire.fleets):

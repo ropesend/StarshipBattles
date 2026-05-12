@@ -208,9 +208,11 @@ Post-loop engines:
 
 Progress callback:
 
-- Signature: `Callable[[int, int], None]`, invoked at the top of each tick with `(current_tick, TICKS_PER_TURN)`.
+- Signature: `Callable[[int, int], None]`, invoked at the top of selected ticks with `(current_tick, TICKS_PER_TURN)`.
 - Plumbing: `StrategyGameStateManager -> StrategySessionFacade -> GameSession -> TurnEngine -> _process_tick`.
 - Used by Strategy UI to repaint the "PROCESSING TURN..." overlay and "Tick N / 100".
+- **Cadence (PROJ-412 Phase 4):** fires at tick 1, every `PROGRESS_CALLBACK_INTERVAL` ticks (default 5), and tick 100. For N=5 this is 21 invocations per turn instead of the pre-Phase-4 contract of 100 invocations per turn. The Strategy UI callback runs `pygame.event.pump() + screen.draw() + display.flip()` per invocation; Phase 1.4 Probe B measured the per-tick redraw at ≈5–20 ms on 4K, so the 5x cadence reduction saves an order of magnitude of wall-clock per turn.
+- **Configuration:** the interval lives in `output/settings/turn_engine_settings.json` (`progress_callback_interval`, default 5, clamped to `[1, 100]`). Loaded once at module import via `game.strategy.engine.turn_engine_settings.load_turn_engine_settings`; missing or malformed file silently falls back to defaults. Set to 1 to restore pre-Phase-4 every-tick behavior; set to 10/20 for chunkier updates and lower CPU.
 - Callback exceptions are intentionally caught/logged and suppressed; engine execution must not depend on UI callback health.
 - Callback state is cleared with `try/finally`.
 - Mid-turn Esc cancellation is not supported; only inter-turn cancel during multi-turn runs.
@@ -808,6 +810,13 @@ Integration:
 - `HarvestingEngine._harvest_resource`: multiply after quality and boosters, before `tick_fraction`.
 - `ProductionEngine._process_queue_tick_dynamic`: scale production-rate dict up front.
 - `TurnEngine.process_turn`: calls `set_current_turn(session.turn_number)` on harvesting/production engines before the tick loop so planet habitability multiplier cache invalidates per turn.
+
+Harvest booster discovery (PROJ-412 Phase 3):
+
+- `HarvestingEngine._get_harvest_booster_mult` queries the universal `IAbilitySource` pipeline via `strategic_ability_scanner.find_harvest_boosters_for_colony(colony, galaxy, empire, registries=)`.
+- The helper walks both `iter_ability_sources_at_hex` (colony's hex) and `iter_ability_sources_in_system` (whole system), then enforces booster scope semantics on each entry: `"planet" | "sector" | "self"` requires the source to be at the colony's hex; `"system"` accepts anywhere in-system; `"empire"` requires same `owner_id`.
+- **Fleet-carried `ResourceHarvestBooster` is in scope.** A flagship with a booster component now scales harvest for colonies at the flagship's hex (`"planet"` scope) or anywhere in-system (`"system"` scope), in addition to facility-mounted boosters. This was inert before PROJ-412 Phase 3.
+- The legacy `find_abilities_in_scope` planet/facility-only path is still used by other consumers (build-rate booster, geologic stabilizer, etc.). Only the harvest-booster call site migrated.
 
 Net habitability effects: carrying capacity, happiness, harvest rate, and production rate.
 

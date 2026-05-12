@@ -78,9 +78,109 @@ After selecting a session:
 
 ---
 
+## Phase 1.5: Parallel Investigation Fan-Out
+
+After Phase 1's grouping is confirmed, every **actionable** observation (anything you'd carry into Phase 2 — i.e. not a pre-classified Skip such as a retracted observation or a greeting) is investigated **in parallel** by a pool of general-purpose subagents before Phase 2 begins. Phase 2 then reads pre-generated findings instead of pausing to run code review and GitHub-duplicate searches inline.
+
+### Step 1: Set up the team and output directory
+
+1. Create the team: `TeamCreate({ name: "qa-triage-<session_id>", ... })`. Keep its members alive for the duration of the triage so each one can be reused via `SendMessage` when it finishes its first observation.
+2. Create the report directory: `mkdir -p .agent_reports/triage-<session_id>/`.
+
+### Step 2: Build the work queue
+
+1. From the grouped observations, drop the pre-classified Skips.
+2. The remaining observations form the **work queue**, numbered to match the Phase 1 grouping table. Track `pending` (not yet dispatched) and `in_flight` (assigned to a subagent, no report file yet).
+
+### Step 3: Worker-pool dispatch (sliding window of 5)
+
+Maintain at most **5 concurrent subagents**. The initial spawn launches `min(5, len(work_queue))` general-purpose subagents in a single Agent message block (parallel tool calls). Each is named `triage-obs-<idx>` and assigned the observation at that index.
+
+After initial spawn, **enter Phase 2 immediately** — do not wait for any subagent to finish. Phase 2 processes observations in order 1..N. Before working on observation `idx`, check whether `.agent_reports/triage-<sid>/obs-<idx>.md` exists. If not, wait (no `Monitor` needed — each report finishes in ~1-3 minutes, and the user-facing back-and-forth in Phase 2 naturally absorbs this latency).
+
+**As soon as any `obs-<idx>.md` appears AND `pending` is non-empty,** immediately `SendMessage` to the freed subagent to take the next pending observation. Subagent warm context (CLAUDE.md, gh CLI, repo familiarity) makes the second-and-later observations faster than cold spawns. Continue until `pending` is empty.
+
+### Step 4: Subagent report schema
+
+Each `obs-<idx>.md` MUST follow this template exactly so Phase 2 can read it deterministically. The subagent writes to `obs-<idx>.md.partial` first, then atomically renames to `obs-<idx>.md` so the main thread never sees a half-written file:
+
+```markdown
+---
+observation_index: <N>
+session_id: <YYYYMMDD_HHMMSS>
+timestamps: ["HH:MM:SS", ...]
+screenshots: ["bug_capture_xxx.png", ...]
+suggested_category: <bug | feature | project | reject_fix | approve_fix | skip>
+suggested_priority: <critical | high | medium | low | N/A>
+duplicate_candidate: <github_issue_number_or_null>
+duplicate_state: <open | closed | null>
+duplicate_status_label: <pending | in-progress | awaiting-confirmation | null>
+duplicate_confidence: <high | medium | low | none>
+---
+
+## Cleaned Commentary
+
+[Speech-to-text cleaned up: punctuation, fillers removed, false-starts dropped — original meaning preserved.]
+
+## Code Investigation Findings
+
+[File:line references, what the code does today vs. what the user said, key call sites.]
+
+## Log Excerpts
+
+[Relevant lines from battle.log around the time window, OR "none relevant".]
+
+## Duplicate Analysis
+
+[The gh issue list / gh issue view findings. Why each candidate matches or doesn't. If `duplicate_candidate` is set, explain the match and why the recommended category (Reject Fix / Approve Fix / Add Context / New Issue) follows.]
+
+## Recommendation
+
+[One paragraph: why this category, why this priority, anything the main thread should flag to the user.]
+
+## Draft Title
+
+[≤72 chars, plain English, no [BUG]/[FEAT] prefix.]
+
+## Draft Body
+
+[Full markdown body matching .github/ISSUE_TEMPLATE/bug.yml or feature.yml structure. Use `[SCREENSHOT_PLACEHOLDER]` (or `[SCREENSHOTS_PLACEHOLDER]` for multiple) where images will go. The main thread substitutes the image link after creating the issue and copying assets.]
+```
+
+### Step 5: Subagent prompt template
+
+Each subagent (initial spawn AND re-tasking via SendMessage) is given a prompt of this shape:
+
+```
+You are investigating observation #<N> from QA session <sid>. Write a structured report to `.agent_reports/triage-<sid>/obs-<N>.md` following the schema in `.claude/skills/claude-qa-triage/SKILL.md` Phase 1.5 Step 4.
+
+**Observation block:**
+<timestamps + raw commentary + screenshot filenames pasted in>
+
+**Tasks:**
+1. Read the session log (`Tools/qa_observer/session_data/<sid>/QA_Session_Log.md`) to confirm context.
+2. Read each referenced screenshot to understand what the user is pointing to.
+3. Investigate the relevant code starting from the user's words → file/function references. Use Grep/Read.
+4. If `Tools/qa_observer/session_data/<sid>/word_timestamps.jsonl` exists, use it to narrow the log time window. Grep `Tools/qa_observer/session_data/<sid>/logs/battle.log` (and `battle_log.txt`, `crash_log.txt` if relevant) in that window for errors or state changes.
+5. Run `gh issue list --state all --limit 50 --json number,title,state,labels --search "<2-4 high-signal keywords>"` to find duplicates. For plausible matches, run `gh issue view <#> --json number,title,state,labels,body,comments`.
+6. Decide on `suggested_category` and `suggested_priority`. If you find an open issue with `status:awaiting-confirmation` that matches the observation, the category is almost always `reject_fix` (user observed the symptom again) or `approve_fix` (observation confirms the fix is working) — let the analysis decide.
+7. Write the full report to `.agent_reports/triage-<sid>/obs-<N>.md.partial`, then rename to `.agent_reports/triage-<sid>/obs-<N>.md`.
+8. Return one line: `obs-<N> ready (category: <X>, dup: #<Y or none>)`.
+
+**Constraints:**
+- READ-ONLY investigation. DO NOT create, modify, comment on, or label any GitHub issue.
+- DO NOT copy screenshots or commit assets. The main thread handles the asset workflow.
+- DO NOT edit any files outside `.agent_reports/triage-<sid>/`.
+- If a critical error makes the investigation incomplete, write a partial report with an `## Errors` section explaining what went wrong and what the main thread needs to do manually.
+```
+
+When re-tasking an existing subagent via `SendMessage`, the prompt can be much shorter — the agent already knows the schema and the session — typically just: `Next observation: #<M>. Block: <…>. Write to obs-<M>.md.`
+
+---
+
 ## Phase 2: Interactive Observation Review
 
-Process each observation **ONE AT A TIME**, sequentially. For each observation:
+Process each observation **ONE AT A TIME**, sequentially. Each observation's investigation is already done (or in flight) — your job is to walk the user through the findings, get their decisions, and execute the GitHub write actions. For each observation:
 
 ### Step A: Present the Observation
 
@@ -90,45 +190,26 @@ Display to the user:
 - Any associated screenshots — **read the image files** so the user can see them in the conversation
 - A brief restatement: "It sounds like you're describing [X]. Is that right?"
 
-### Step B: Code & Log Investigation
+### Step B: Read the Pre-Generated Findings
 
-Launch Explore agent(s) to understand the relevant code:
-- Search for code related to the described behavior
-- Identify the specific files, classes, and functions involved
-- Determine whether the described behavior matches what the code actually does
-- Present findings to the user: "I looked at [file:function] and here is what I found..."
+Before working on observation `idx`:
+1. Check that `.agent_reports/triage-<session_id>/obs-<idx>.md` exists. If not, wait — the subagent is still working. (Phase 2 always processes observations in order; out-of-order reports are fine, just wait for the one you need.)
+2. Read the report file. Extract from the frontmatter: `suggested_category`, `suggested_priority`, `duplicate_candidate`, `duplicate_status_label`, `duplicate_confidence`.
+3. Summarise the findings to the user — Code Investigation Findings, Log Excerpts, Duplicate Analysis sections in a few sentences each. **Do not** redo the Read/Grep/gh queries yourself; the subagent has already done them and the results are in the report.
+4. If the report's findings look incomplete or you need a follow-up (e.g. a deeper look at a specific function), **`SendMessage`** to `triage-obs-<idx>` with the follow-up question rather than spawning a fresh agent — the subagent has warm context.
+5. If the report's `## Errors` section is populated, surface that to the user and decide together whether to push through manually or skip.
 
-**Log cross-referencing:** If `Tools/qa_observer/session_data/<session_id>/logs/` exists:
-1. Read `word_timestamps.jsonl` from the session root to identify the precise time window for this observation. Each line is `{"time": <unix>, "ts": "HH:MM:SS", "word": "..."}`. Find the words corresponding to this observation's timestamps to narrow the window.
-2. Search `logs/battle.log` (format: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`) around that time window for errors, warnings, or relevant state changes.
-3. Also check `logs/battle_log.txt` (combat events) and `logs/crash_log.txt` (crash tracebacks) if they exist.
-4. Include pertinent log excerpts in your investigation findings.
+### Step C: Confirm Duplicate Treatment (against GitHub Issues)
 
-### Step C: Duplicate Check (against GitHub Issues)
+The subagent's report has already searched `gh issue list` / `gh issue view` and populated `duplicate_candidate` in the frontmatter plus a `## Duplicate Analysis` section. Your job is to present that analysis to the user and confirm the treatment:
 
-Query existing GitHub issues for overlap:
-
-```bash
-gh issue list --state all --limit 50 \
-  --json number,title,state,labels \
-  --search "<keywords from observation>"
-```
-
-Pick 2–4 high-signal keywords from the observation (subject + verb of the symptom). If `--search` returns candidates, fetch the body of each plausible match:
-
-```bash
-gh issue view <#> --json number,title,state,labels,body,comments
-```
-
-If a potential match is found:
-
-1. Present the match: "This may overlap with #N: [title]"
-2. **If the matching issue is open AND has `status:awaiting-confirmation`**, use **AskUserQuestion** with these options:
+1. **If `duplicate_candidate` is null:** no duplicate found, proceed straight to Step D.
+2. **If `duplicate_candidate` is set AND `duplicate_status_label == awaiting-confirmation`,** present the match and the subagent's reasoning, then use **AskUserQuestion** with these options:
    - **Approve Fix** — the bug is confirmed fixed during this QA session (proceed to Step E: Approve Bug Fix)
    - **Reject Fix** — the bug is NOT fixed, user observed it again (proceed to Step E: Reject Bug Fix)
    - **Add Context** — related observation but not directly about the fix status (post a comment with new info)
    - **New Issue** — distinct issue, proceed to Step D
-3. **For all other matches** (open, closed, or different status), use **AskUserQuestion** with:
+3. **For all other matches** (open with another status, closed, etc.), present and use **AskUserQuestion** with:
    - **Duplicate** — skip this observation entirely (note in session summary)
    - **Add Context** — post a comment to the existing issue with the new information and screenshots, then move on
    - **New Issue** — this is a distinct issue, proceed to Step D
@@ -137,7 +218,7 @@ When posting a comment for "Add Context", use the same screenshot-commit pipelin
 
 ### Step D: Categorize
 
-Propose a category based on code investigation findings, and confirm with the user via **AskUserQuestion**:
+The subagent's report proposes `suggested_category` and `suggested_priority` in its frontmatter. Present those (plus the rationale from `## Recommendation`) and confirm with the user via **AskUserQuestion**:
 
 1. **Bug** — something is broken or behaving incorrectly
 2. **Feature** — a new capability or enhancement request
@@ -156,15 +237,13 @@ Based on the confirmed category:
 
 The two flows are nearly identical; only the label set and template fields differ.
 
-1. **Draft** the title and body:
-   - Clean up speech-to-text artifacts (missing punctuation, filler words, repetition, false starts)
-   - Title: ≤72 chars, plain English, no `[BUG]`/`[FEAT]` prefix (labels carry that)
-   - Body sections per [`.github/ISSUE_TEMPLATE/bug.yml`](../../../.github/ISSUE_TEMPLATE/bug.yml) / [`feature.yml`](../../../.github/ISSUE_TEMPLATE/feature.yml):
-     - **Bug:** Description, Steps to Reproduce, Expected vs Actual, Acceptance Criteria, Screenshot/Logs (placeholder — added in step 5), Priority
-     - **Feature:** Description, Motivation, Acceptance Criteria, Priority
-   - Include relevant findings from code investigation in the Description.
-2. **Present** the draft to the user for approval or edits.
-3. **Determine priority** (`critical` / `high` / `medium` / `low`) — propose one based on severity, confirm with user.
+1. **Pull the draft from the report.** The subagent has already written `## Draft Title` and `## Draft Body` sections in `.agent_reports/triage-<sid>/obs-<idx>.md`, matching the bug.yml / feature.yml template structure with a `[SCREENSHOT_PLACEHOLDER]` token where images will go. You typically just present that draft as-is. Only re-draft from scratch if the report's `## Errors` section indicates the subagent failed.
+   - **Bug body sections** per [`.github/ISSUE_TEMPLATE/bug.yml`](../../../.github/ISSUE_TEMPLATE/bug.yml): Description, Steps to Reproduce, Expected vs Actual, Acceptance Criteria, Screenshot/Logs (placeholder), Priority.
+   - **Feature body sections** per [`.github/ISSUE_TEMPLATE/feature.yml`](../../../.github/ISSUE_TEMPLATE/feature.yml): Description, Motivation, Acceptance Criteria, Priority.
+   - Title: ≤72 chars, plain English, no `[BUG]`/`[FEAT]` prefix (labels carry that).
+   - Speech-to-text artifacts (missing punctuation, fillers, repetition, false starts) should already be cleaned in the report.
+2. **Present** the draft to the user for approval or edits. If they want changes, edit the draft in place before creating the issue.
+3. **Determine priority.** The report proposes `suggested_priority` in its frontmatter. Confirm with user via AskUserQuestion.
 4. **Create the issue** with type/priority/status labels:
    ```bash
    # Write the body (without image link yet) to a temp file
@@ -209,11 +288,10 @@ The two flows are nearly identical; only the label set and template fields diffe
 
 Projects stay 100% on disk. **Do NOT create a GitHub issue.**
 
-1. **Draft** a triage document:
-   - Clean up speech-to-text artifacts
-   - Include screenshot references using `./assets/` paths (see Image Handling below)
-   - Include code investigation findings
-   - Explain why this is project-sized (scope, architectural implications)
+1. **Pull the draft from the report.** The subagent's `## Draft Body` for a `project`-category observation should already contain the Context / Code Investigation Findings / Scope Notes sections. If it instead drafted in the bug/feature shape (because the categorization wasn't obvious until you saw the screenshots), reshape it for the project template below.
+   - Speech-to-text artifacts should already be cleaned in the report.
+   - Replace any `[SCREENSHOT_PLACEHOLDER]` tokens with `./assets/<filename>.png` references (see Image Handling below).
+   - The "why this is project-sized" reasoning belongs in **Scope Notes** — pull from the report's `## Recommendation` or write fresh if needed.
 2. **Present** the draft to the user for approval or edits.
 3. **Choose a descriptive filename** (e.g., `star_rendering_overhaul.md`) — confirm with user.
 4. **Copy** associated screenshots to `Projects/Triage/assets/` (do NOT copy to `tracking-assets/`).
@@ -318,6 +396,13 @@ Write the summary table above (the full markdown block including the stats lines
 
 This file marks the session as triaged and is checked in Phase 1 to prevent redundant processing.
 
+### Tear Down the Investigation Team
+
+After the summary is written:
+
+1. Call `TeamDelete` on the `qa-triage-<session_id>` team to free the subagent slots.
+2. Optionally clean up `.agent_reports/triage-<session_id>/` if you want to keep the workspace tidy — but the reports are read-only artifacts and harmless to leave around. The `.agent_reports/` directory is already gitignored.
+
 ---
 
 ## Image Handling
@@ -348,12 +433,14 @@ Conventions per [`tracking-assets/README.md`](../../../tracking-assets/README.md
 
 ## Constraints
 
-- **INTERACTIVE:** Do NOT batch-process all observations silently. Walk through each one with the user, one at a time.
-- **CODE REVIEW:** Always investigate relevant code before categorizing. Use Explore agents. Don't guess — look at the actual code.
-- **USER APPROVAL:** Always present drafts and get confirmation before creating any issue or file.
-- **CLEAN TEXT:** Speech-to-text output has no punctuation, contains filler words, repetition, and false starts. Clean it up into proper sentences when writing descriptions. Preserve the original meaning faithfully.
+- **INTERACTIVE PHASE 2:** Investigation runs in parallel (Phase 1.5), but Phase 2 walks through observations with the user **one at a time** — never batch-create issues silently.
+- **CODE REVIEW:** Always investigate relevant code before categorizing. Subagents do this in parallel via the Phase 1.5 fan-out; don't skip the investigation step, and don't guess from the user's words alone.
+- **USER APPROVAL:** Always present drafts and get confirmation before creating any issue or file. Subagents draft; the user approves; the main thread executes.
+- **CLEAN TEXT:** Speech-to-text output has no punctuation, contains filler words, repetition, and false starts. Subagents should clean it into proper sentences for the report's `## Cleaned Commentary` and `## Draft Body`. Preserve the original meaning faithfully.
 - **NO IMPLEMENTATION:** Do not start fixing bugs or implementing features. This is triage and data entry only.
 - **AUTHORITY:** Never call `gh issue close`. Never add the `verified` label. Final closure belongs to the user.
 - **ATOMIC LABEL FLIPS:** Use a single `gh issue edit --remove-label X --add-label Y` invocation for status transitions; never two separate commands.
 - **IMAGE CONTEXT:** Every screenshot referenced in an issue must have a text description explaining what it shows and why it's relevant.
-- **NO BULK COMMITS:** One asset commit per issue (steps 6–7), so `git log` shows clean per-issue history.
+- **NO BULK COMMITS:** One asset commit per issue, so `git log` shows clean per-issue history.
+- **CHECK STAGED FILES BEFORE COMMITTING ASSETS:** Before `git commit -m "chore(qa): add assets for #<N>"`, run `git diff --cached --name-only` and confirm only your intended asset files (`tracking-assets/screenshots/<YYYY-MM>/issue-<N>-*` and `tracking-assets/logs/issue-<N>/*`) are staged. If unrelated files are staged from the user's pre-existing index state, `git restore --staged <file>` them first — do NOT bundle unrelated changes into an asset commit. (This protects the user's in-progress work and keeps `git log` interpretable.)
+- **PARALLEL/MAIN-THREAD SPLIT:** Subagents are **read-only** investigators (file reads, Grep, `gh issue list/view`). They never create, comment on, or label GitHub issues; never copy screenshots into `tracking-assets/`; never commit or push. All write actions (gh create/comment/edit, asset copy, git commit, git push) stay on the main thread to keep shared state (GitHub, git history, tracking-assets/) sequential and reviewable.

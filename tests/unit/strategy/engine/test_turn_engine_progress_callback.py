@@ -1,16 +1,30 @@
-"""Issue #7: TurnEngine.process_turn invokes progress_callback every tick.
+"""Issue #7 + PROJ-412 Phase 4: TurnEngine.process_turn invokes progress_callback
+at a fixed cadence (tick 1, every Nth tick, tick 100).
 
-Verifies the per-tick progress callback contract used by the strategy UI to
-update the "PROCESSING TURN..." overlay with the current tick number while the
-otherwise-synchronous 100-tick loop runs.
+The strategy UI uses the callback to repaint the "PROCESSING TURN..." overlay
+between ticks. Probe B (Phase 1.4) showed the per-tick callback redraw cost
+was the dominant contributor to the 2.5–3.7 s unaccounted-overhead gap; the
+cadence change in Phase 4 cuts callback invocations from 100/turn to 21/turn
+(default ``PROGRESS_CALLBACK_INTERVAL = 5``).
 """
 from unittest.mock import MagicMock
 
 import pytest
 
 from game.strategy.data.empire import Empire
-from game.strategy.engine.turn_engine import TICKS_PER_TURN, TurnEngine
+from game.strategy.engine.turn_engine import (
+    PROGRESS_CALLBACK_INTERVAL,
+    TICKS_PER_TURN,
+    TurnEngine,
+)
 from tests.fixtures.turn_engine import build_test_turn_engine
+
+
+_EXPECTED_CALLBACK_TICKS = (
+    [1]
+    + [t for t in range(PROGRESS_CALLBACK_INTERVAL, TICKS_PER_TURN + 1, PROGRESS_CALLBACK_INTERVAL)]
+)
+# For PROGRESS_CALLBACK_INTERVAL=5 this yields [1, 5, 10, 15, ..., 95, 100] = 21 ticks.
 
 
 @pytest.fixture
@@ -32,15 +46,35 @@ def engine_inputs(fresh_registries):
     return engine, [empire], galaxy
 
 
-def test_progress_callback_invoked_for_every_tick(engine_inputs):
+def test_progress_callback_fires_on_cadence(engine_inputs):
+    """PROJ-412 Phase 4: callback fires at tick 1, every Nth tick, and tick 100.
+
+    Replaces the pre-Phase-4 contract that invoked the callback on every
+    tick (100/turn). The new cadence (default N=5) cuts callbacks to
+    21/turn while keeping both endpoints visible to the UI.
+    """
     engine, empires, galaxy = engine_inputs
     cb = MagicMock()
 
     engine.process_turn(empires, galaxy, save_path=None, progress_callback=cb)
 
-    assert cb.call_count == TICKS_PER_TURN
-    expected = [((tick, TICKS_PER_TURN), {}) for tick in range(1, TICKS_PER_TURN + 1)]
+    assert cb.call_count == len(_EXPECTED_CALLBACK_TICKS)
+    expected = [((tick, TICKS_PER_TURN), {}) for tick in _EXPECTED_CALLBACK_TICKS]
     assert cb.call_args_list == expected
+
+
+def test_progress_callback_always_fires_at_tick_1_and_last(engine_inputs):
+    """UI must always see the first and last tick so the overlay shows 1/100 and 100/100."""
+    engine, empires, galaxy = engine_inputs
+    cb = MagicMock()
+
+    engine.process_turn(empires, galaxy, save_path=None, progress_callback=cb)
+
+    tick_args = [call.args[0] for call in cb.call_args_list]
+    assert tick_args[0] == 1, "first callback invocation must be at tick 1"
+    assert tick_args[-1] == TICKS_PER_TURN, (
+        f"last callback invocation must be at tick {TICKS_PER_TURN}"
+    )
 
 
 def test_progress_callback_exception_does_not_break_turn(engine_inputs, caplog):
@@ -70,7 +104,7 @@ def test_progress_callback_cleared_between_calls(engine_inputs):
     cb1 = MagicMock()
 
     engine.process_turn(empires, galaxy, save_path=None, progress_callback=cb1)
-    assert cb1.call_count == TICKS_PER_TURN
+    assert cb1.call_count == len(_EXPECTED_CALLBACK_TICKS)
 
     cb1.reset_mock()
     engine.process_turn(empires, galaxy, save_path=None)

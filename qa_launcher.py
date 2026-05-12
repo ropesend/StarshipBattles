@@ -15,6 +15,7 @@ QA_REQUIRED_IMPORTS = (
     ("watchdog.observers", "watchdog"),
     ("google.cloud.speech", "google-cloud-speech"),
     ("audioop", "audioop-lts"),
+    ("pyttsx3", "pyttsx3"),
 )
 QA_TARGET_PYTHON_VERSION = (3, 14)
 
@@ -88,7 +89,9 @@ def print_dependency_error(python_exe: str, missing_packages: Sequence[str]) -> 
 
 def main() -> None:
     root_dir = Path(__file__).resolve().parent
-    observer_script = root_dir / "Tools" / "qa_observer" / "observer.py"
+    observer_dir = root_dir / "Tools" / "qa_observer"
+    observer_script = observer_dir / "observer.py"
+    sound_check_script = observer_dir / "sound_check.py"
     game_script = root_dir / "launcher.py"
 
     python_exe = resolve_python_executable(root_dir)
@@ -108,15 +111,25 @@ def main() -> None:
 
     print("=== StarshipBattles QA Debug Launcher ===")
     print(f"Using Python: {python_exe}")
+
+    # Verify the microphone before spawning the observer. Sound check has its
+    # own stdin (inherited from this terminal) so the user can pick a device
+    # and answer the y/n confirmation prompt. A non-zero exit aborts the run.
+    if os.path.exists(sound_check_script):
+        sound_check_result = subprocess.run(
+            [python_exe, str(sound_check_script)],
+            cwd=observer_dir,
+        )
+        if sound_check_result.returncode != 0:
+            print("Sound check did not pass. Aborting QA session.")
+            sys.exit(sound_check_result.returncode)
+
     print("Launching QA Observer in the background...")
 
     # Needs CREATE_NEW_PROCESS_GROUP on Windows to separate Ctrl+C handling
     creation_flags = 0
     if os.name == 'nt':
         creation_flags = getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0x00000200)
-
-    # We run it from its own sub-directory so its .env loads correctly relative to itself
-    observer_dir = observer_script.parent
 
     # Open a pipe to stdin so we can explicitly tell it to quit across platforms
     observer_process = subprocess.Popen(

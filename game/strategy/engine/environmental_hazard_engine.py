@@ -108,6 +108,19 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
         self._validate_tick_inputs(empires)
         events: List[EnvironmentalEvent] = []
 
+        # PROJ-412 Phase 2.2: short-circuit when we can affirmatively confirm
+        # the galaxy has zero storms. Saves the per-fleet system-lookup +
+        # effects-collection loop on storm-free turns (common in early-game
+        # / tiny scenarios). Conservative: only short-circuits when
+        # `galaxy.systems` exposes a `.values()` we can iterate; any unusual
+        # shape (test mock, alternative galaxy impl, etc.) falls through
+        # to the original loop so behavior is preserved.
+        systems = getattr(galaxy, 'systems', None)
+        if isinstance(systems, dict) and not any(
+            getattr(s, 'storms', None) for s in systems.values()
+        ):
+            return events
+
         from game.strategy.services.system_effects_collector import collect_sector_effects
         get_system = getattr(galaxy, 'get_system_at_location', None)
 

@@ -53,6 +53,14 @@ class Empire:
         self._fleet_resource_pool = {}  # Dict[str, float] - fleet construction resources
         self.max_storage = {}     # Dict[str, float] - aggregate storage capacity (set by HarvestingEngine)
 
+        # PROJ-412 Phase 5: transient dirty flags consumed by HarvestingEngine's
+        # per-turn caches. NOT serialized — flipped to True at construction and
+        # on every mid-turn mutation that could change storage or booster
+        # contributions; cleared by the engine after it rebuilds its cache.
+        # Start True so the first turn always rebuilds.
+        self._storage_dirty: bool = True
+        self._booster_dirty: bool = True
+
     def add_colony(self, planet) -> None:
         if planet not in self.colonies:
             self.colonies.append(planet)

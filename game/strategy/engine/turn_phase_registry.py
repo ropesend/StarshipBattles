@@ -30,6 +30,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+# PROJ-412 Phase 2.3: import the engine at module top so the per-tick
+# resolver doesn't pay the import lookup on each of the 100 invocations.
+# Aliased to a leading underscore to signal it's a private detail of
+# the descriptor resolver below.
+from game.strategy.engine.planet_modifier_effect_engine import (
+    PlanetModifierEffectEngine as _PlanetModifierEffectEngine,
+)
+
 # Sentinel: applied to descriptors whose pre/post hooks should only fire
 # on tick==1. The dispatch loop does not gate the phase call itself —
 # the harvesting / production calls run on every tick. Hooks are
@@ -144,29 +152,44 @@ def _capture_move_queue(_engine, ctx: TickContext, result) -> None:
 
 
 def _derive_moved_fleet_ids(_engine, ctx: TickContext, _result) -> None:
-    """Post-hook on movement_apply: PROJ-320 location-diff derivation."""
+    """Post-hook on movement_apply: PROJ-320 location-diff derivation.
+
+    PROJ-412 Phase 5: also flips ``_booster_dirty`` on every empire whose
+    fleet actually moved this tick. Fleets can carry ``ResourceHarvestBooster``
+    components, so a move invalidates the harvesting engine's per-turn
+    booster cache for any empire that has a moved fleet.
+    """
     pre = ctx.pre_movement_locations or {}
-    ctx.moved_fleet_ids = {
-        f.id
-        for emp in ctx.empires
-        for f in emp.fleets
-        if pre.get(f.id) != f.location
-    }
+    moved_owner_ids: set = set()
+    moved_ids: set = set()
+    for emp in ctx.empires:
+        emp_id = getattr(emp, 'id', None)
+        for f in emp.fleets:
+            if pre.get(f.id) != f.location:
+                moved_ids.add(f.id)
+                if emp_id is not None:
+                    moved_owner_ids.add(emp_id)
+    ctx.moved_fleet_ids = moved_ids
+    if moved_owner_ids:
+        for emp in ctx.empires:
+            if getattr(emp, 'id', None) in moved_owner_ids:
+                emp._booster_dirty = True
 
 
 def _resolve_planet_modifier_effects(engine):
     """Resolver for the locally-constructed PlanetModifierEffectEngine.
 
-    The engine is stateless per tick; current production constructs a
-    fresh instance every tick (``turn_engine.py:751``). The descriptor
-    matches that semantics — a new instance per call.
+    PROJ-412 Phase 2.3: the engine is stateless per tick. The
+    pre-Phase-2 implementation constructed a fresh instance + did a late
+    import on every tick (100 allocations + 100 import lookups per turn).
+    Lazy-cache on the TurnEngine instance instead; first call constructs,
+    subsequent calls reuse the same bound method.
     """
-    from game.strategy.engine.planet_modifier_effect_engine import (
-        PlanetModifierEffectEngine,
-    )
-    return PlanetModifierEffectEngine(
-        registries=engine._registries
-    ).process_modifier_effects_tick
+    cached = getattr(engine, '_planet_modifier_effect_engine_cached', None)
+    if cached is None:
+        cached = _PlanetModifierEffectEngine(registries=engine._registries)
+        engine._planet_modifier_effect_engine_cached = cached
+    return cached.process_modifier_effects_tick
 
 
 # ---------------------------------------------------------------------------

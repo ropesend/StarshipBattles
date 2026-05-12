@@ -60,8 +60,11 @@ from __future__ import annotations
 import time
 import logging
 
+from game.core.exceptions import EnginePhaseError
+from game.core.error_codes import ErrorCode
 from game.core.validation import ValidationResult
 from game.core.registry import GameRegistries
+from game.strategy.engine.turn_engine_settings import load_turn_engine_settings
 from game.strategy.engine.turn_phase_registry import (
     DEFAULT_END_OF_TURN_PHASE_LIST,
     DEFAULT_TICK_PHASE_LIST,
@@ -75,6 +78,22 @@ logger = logging.getLogger(__name__)
 
 # Number of sub-ticks per strategy turn
 TICKS_PER_TURN = 100
+
+# PROJ-412 Phase 4: per-tick progress callback was measured by Probe B
+# (findings/profile_baseline_cpu.md) to add ~5 ms / invocation × 100 ticks ≈
+# 0.5–2 s / turn of wall-clock on the user's real game — the UI callback
+# does `pygame.event.pump() + screen.draw() + display.flip()` per tick.
+# Coarsening to "tick 1 + every Nth tick + tick 100" keeps both endpoints
+# visible to the UI while cutting the redraw count.
+#
+# The interval is user-tunable via
+# `output/settings/turn_engine_settings.json`; default ``5`` yields 21
+# callback invocations per turn (ticks 1, 5, 10, …, 95, 100). The module-
+# level constant is set at import time. Tests may monkeypatch it for
+# isolated cadence assertions; the `test_turn_engine_progress_callback.py`
+# suite reads through this constant rather than re-loading settings so
+# overrides remain coherent.
+PROGRESS_CALLBACK_INTERVAL = load_turn_engine_settings().progress_callback_interval
 
 if TYPE_CHECKING:
     from game.core.protocols import IRaceRegistry
@@ -273,9 +292,6 @@ class TurnEngine:
         Raises:
             EnginePhaseError: If the phase function raises any exception.
         """
-        from game.core.exceptions import EnginePhaseError
-        from game.core.error_codes import ErrorCode
-
         t0 = time.perf_counter()
         try:
             result = fn(*args, **kwargs)
@@ -602,6 +618,23 @@ class TurnEngine:
             if snapshot and session:
                 snapshot.restore(session)
 
+            # PROJ-412 Phase 5: drop per-turn caches so a retry on the same
+            # turn number (after the snapshot restore) does not reuse
+            # multipliers / aggregates computed against the pre-rollback
+            # state. Defensive: every engine that grows a per-turn cache
+            # under PROJ-412 must expose ``invalidate_turn_caches`` for
+            # this hook to find.
+            for engine in (self._harvesting_engine, self._production_engine):
+                invalidate = getattr(engine, 'invalidate_turn_caches', None)
+                if invalidate is not None:
+                    try:
+                        invalidate()
+                    except Exception:  # Intentional broad catch: cache invalidation must not mask the original EnginePhaseError
+                        logger.warning(
+                            "invalidate_turn_caches raised during rollback; continuing",
+                            exc_info=True,
+                        )
+
             raise
         finally:
             # Issue #7: clear the per-tick callback so it doesn't leak
@@ -692,11 +725,19 @@ class TurnEngine:
         # PROJ-251: Track current tick for error context
         self._current_tick = tick
 
-        # Issue #7: notify the UI that a tick has started so the
-        # "PROCESSING TURN..." overlay can repaint with the current tick
-        # number. The callback is optional and may be None.
+        # Issue #7 + PROJ-412 Phase 4: notify the UI on a coarsened cadence
+        # so the "PROCESSING TURN..." overlay can repaint without paying
+        # the full per-tick redraw cost. The callback is optional and may
+        # be None. Fire at tick 1 (overlay shows 1/100 immediately), every
+        # PROGRESS_CALLBACK_INTERVAL ticks, and the final tick (overlay
+        # closes on 100/100). For the default N=5 this is 21 invocations
+        # per turn instead of 100.
         cb = getattr(self, "_progress_callback", None)
-        if cb is not None:
+        if cb is not None and (
+            tick == 1
+            or tick == TICKS_PER_TURN
+            or tick % PROGRESS_CALLBACK_INTERVAL == 0
+        ):
             try:
                 cb(tick, TICKS_PER_TURN)
             except Exception:  # Intentional broad catch: UI callback must never break turn processing (PROJ-308)

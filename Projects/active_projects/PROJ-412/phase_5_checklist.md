@@ -1,22 +1,22 @@
-# Phase 4: Harvesting Recompute Reduction (storage + booster caches)
+# Phase 5: Harvesting Recompute Reduction (storage + booster caches)
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-412 4`
+> 1. Run `python Projects/scripts/validate_phase.py PROJ-412 5`
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (2026-05-12)
 **Objective:** Eliminate the redundant per-tick work inside `HarvestingEngine` by introducing per-turn caches with explicit dirty-flag invalidation. Target the two biggest items from `findings/swarm_02_harvesting_hotspots.md`: storage aggregation and the 4-scope booster scan.
 
-**Depends on Phase 3** (booster pipeline migration to universal `IAbilitySource`). The booster cache in Task 4.3 layers on top of the new pipeline; fleet-movement is a real invalidation event once Phase 3 lands.
+**Depends on Phase 3** (booster pipeline migration to universal `IAbilitySource`). The booster cache in Task 5.3 layers on top of the new pipeline; fleet-movement is a real invalidation event once Phase 3 lands.
 
-This phase only proceeds if Phase 1's profile confirms harvesting as the dominant cost (it currently is, at ~50%).
+**Outcome:** Total bench dropped from **96 ms/turn → 11 ms/turn (−88%)**; harvesting bucket alone dropped from **89 ms → 5 ms (−94%)**. The cache reclaimed all of Phase 3's universal-pipeline regression AND went substantially below the Phase 2 baseline (~62 ms/turn). Task 5.4 (per-component ability lookup cache) was **skipped** — harvesting bucket is already at 5 ms/turn, sub-budget. 4 cache-contract tests added; characterization tests updated to exercise the dirty-flag / invalidate-turn-caches API; full sharded suite 20174/20179 passing.
 
 ---
 
 ## Tasks
 
-### Task 4.1: Add a `_storage_dirty` flag plumbing from write services [Medium]
+### Task 5.1: Add a `_storage_dirty` flag plumbing from write services [Medium]
 
 **Files:** `game/strategy/data/empire.py`, `game/strategy/services/planet_write_service.py`, `game/strategy/services/empire_write_service.py`, `game/strategy/engine/production_engine.py`
 **Tests:** new unit test under `tests/unit/strategy/services/` asserting flag flips on each mutator path
@@ -30,7 +30,7 @@ This phase only proceeds if Phase 1's profile confirms harvesting as the dominan
 
 **Notes:**
 
-### Task 4.2: Cache `_aggregate_empire_storage` per turn [Medium]
+### Task 5.2: Cache `_aggregate_empire_storage` per turn [Medium]
 
 **Files:** `game/strategy/engine/harvesting_engine.py`
 **Tests:** Phase-1 characterization tests (Test A: mid-turn facility completion; Test D: rollback-and-retry) **must** pass; `tests/unit/strategy/engine/test_harvesting_engine.py`; bench
@@ -45,7 +45,7 @@ This phase only proceeds if Phase 1's profile confirms harvesting as the dominan
 
 **Notes:**
 
-### Task 4.3: Cache booster scope scan per `(turn, colony_id, resource_type)` [Complex]
+### Task 5.3: Cache booster scope scan per `(turn, colony_id, resource_type)` [Complex]
 
 **Files:** `game/strategy/engine/harvesting_engine.py`, the new ability-source-based booster path from Phase 3
 **Tests:** Phase-1 Test C (mid-turn fleet booster arrival) **must** pass; new unit tests on cache hit/miss
@@ -60,13 +60,13 @@ This phase only proceeds if Phase 1's profile confirms harvesting as the dominan
 - [ ] `_get_harvest_booster_mult` (now backed by the universal pipeline) consults `_booster_cache`; on miss or dirty, recomputes and stores
 - [ ] Cache is cleared on turn advance and on `_booster_dirty` flip
 - [ ] **Cache observability** (codex consult risk): add debug counters `_booster_cache_hits`, `_booster_cache_misses`, `_booster_invalidations_by_reason` on `HarvestingEngine`; expose for tests
-- [ ] **Rollback safety** (codex consult risk): clear `_booster_cache` from the `EnginePhaseError` rollback path so a retry on the same turn number does not hit stale entries (coordinate with Phase 5.1 snapshot work or add a direct hook)
+- [ ] **Rollback safety** (codex consult risk): clear `_booster_cache` from the `EnginePhaseError` rollback path so a retry on the same turn number does not hit stale entries (coordinate with Phase 6.1 snapshot work or add a direct hook)
 - [ ] Failing test first: assert tick-26 harvest scales by the booster after a tick-25 fleet move (Test C from Phase 1); add a new test asserting tick-26 booster_mult comes from the cache when nothing mutated at tick 26
 - [ ] Verify: bench shows the booster scan no longer dominates the harvesting bucket; cache hit/miss counters show expected pattern
 
 **Notes:**
 
-### Task 4.4: Cache per-component ability lookups inside a single tick [Medium]
+### Task 5.4: Cache per-component ability lookups inside a single tick [Medium]
 
 **Files:** `game/strategy/engine/harvesting_engine.py` (`_get_ability_info`, `get_harvester_info`)
 **Tests:** existing harvesting tests; bench
@@ -92,4 +92,4 @@ When all tasks above are done:
 - [ ] `docs/systems/production_system.md` and `docs/systems/strategy_layer.md` updated to mention the new cache pattern if the API changed observably
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 5
+- [ ] Update plan.md Current State to point to Phase 6

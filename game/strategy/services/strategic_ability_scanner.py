@@ -61,6 +61,134 @@ def find_abilities_at_planet(
     return results
 
 
+def find_harvest_boosters_for_colony(
+    colony: 'Planet',
+    galaxy: 'Galaxy',
+    empire: 'Empire',
+    registries=None,
+) -> List[Dict[str, Any]]:
+    """Return ResourceHarvestBooster entries that affect ``colony``.
+
+    PROJ-412 Phase 3: walks the universal ``IAbilitySource`` pipeline so
+    fleet-carried boosters are picked up alongside facility boosters.
+    Replaces the planet/facility-only ``find_abilities_in_scope`` lookup
+    that ``HarvestingEngine`` previously used.
+
+    Scope semantics enforced on each ability entry:
+
+    - ``"planet"`` / ``"sector"`` / ``"self"`` — source must be at the
+      colony's hex (use ``source.affects_hex(colony_hex)``).
+    - ``"system"`` — source must be in the colony's star system (any hex
+      within it). The ``in_system`` iterator query guarantees this.
+    - ``"empire"`` — source must be owned by the same empire. (Not used
+      in current data, but supported for future authoring.)
+    - Other scopes — skipped.
+
+    Owner filter: ownerless sources (storms, planet intrinsic, stars,
+    warp points, system archetypes) apply to all empires; owned sources
+    (facilities, fleets) only contribute when ``owner_id == empire.id``.
+
+    Args:
+        colony: The planet whose harvest is being computed.
+        galaxy: Strategy galaxy facade (must expose ``get_system_of_planet``
+            and ``get_planet_global_hex``).
+        empire: Empire that owns the colony.
+        registries: Optional ``GameRegistries`` for component lookup
+            (forwarded to the iterator providers).
+
+    Returns:
+        Flat list of raw ability entry dicts. Caller filters by
+        ``resource_type`` and passes to ``aggregate_multipliers``.
+    """
+    if galaxy is None or empire is None:
+        return []
+
+    get_system = getattr(galaxy, 'get_system_of_planet', None)
+    get_global_hex = getattr(galaxy, 'get_planet_global_hex', None)
+    if get_system is None or get_global_hex is None:
+        return []
+    system = get_system(colony)
+    if system is None:
+        return []
+    colony_hex = get_global_hex(colony)
+
+    # Late imports: ability_iterator is a sibling service in the same
+    # services/ package; importing at module top would create a cycle
+    # for users of strategic_ability_scanner that don't need the iterator.
+    from game.strategy.services.ability_iterator import (
+        iter_ability_sources_at_hex,
+        iter_ability_sources_in_system,
+    )
+
+    empire_id = getattr(empire, 'id', None)
+
+    # Walk both queries; dedup by source_id so a source visible to both
+    # the at-hex and in-system queries (e.g. a facility on the colony's
+    # own planet) isn't double-counted.
+    seen_ids: set = set()
+    sources: List[Any] = []
+    if colony_hex is not None:
+        sources.extend(iter_ability_sources_at_hex(
+            system, colony_hex, registries=registries,
+            include_system_sources=False,
+        ))
+    sources.extend(iter_ability_sources_in_system(
+        system, registries=registries,
+    ))
+
+    results: List[Dict[str, Any]] = []
+    for source in sources:
+        sid = getattr(source, 'source_id', id(source))
+        if sid in seen_ids:
+            continue
+        seen_ids.add(sid)
+
+        owner_id = getattr(source, 'owner_id', None)
+        if owner_id is not None and empire_id is not None and owner_id != empire_id:
+            continue
+
+        try:
+            abilities = source.get_abilities()
+        except Exception:  # Intentional broad catch: adapter errors must not poison harvest aggregation
+            logger.warning(
+                "PROJ-412 booster scan: source.get_abilities raised; skipping",
+                exc_info=True,
+            )
+            continue
+
+        booster_data = abilities.get('ResourceHarvestBooster')
+        if booster_data is None:
+            continue
+        entries = booster_data if isinstance(booster_data, list) else [booster_data]
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            entry_scope = entry.get('scope', 'planet')
+
+            if entry_scope in ('planet', 'sector', 'self'):
+                # Hex-bound scope: source must be at the colony's hex.
+                if colony_hex is None:
+                    continue
+                try:
+                    if not source.affects_hex(colony_hex):
+                        continue
+                except Exception:  # Intentional broad catch: adapter errors must not poison harvest aggregation
+                    continue
+            elif entry_scope == 'system':
+                # System scope: guaranteed by in_system query, no extra check.
+                pass
+            elif entry_scope == 'empire':
+                # Owner already filtered above. Allow.
+                pass
+            else:
+                # Unknown / cross-empire scope: not in current data; skip.
+                continue
+
+            results.append(entry)
+
+    return results
+
+
 def find_abilities_in_scope(
     ability_key: str,
     target_planet: 'Planet',

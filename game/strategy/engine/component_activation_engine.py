@@ -61,6 +61,25 @@ class ComponentActivationEngine:
         """
         self._validate_tick_inputs(empires)
         results = []
+
+        # PROJ-412 Phase 2.2: short-circuit when no component is currently
+        # in a transition phase. The activation timer only ever decrements
+        # in ACTIVATING / DEACTIVATING; INACTIVE and ACTIVE phases are
+        # no-ops here. Cheap pre-check on the raw dict avoids the per-
+        # facility iteration + per-state `from_dict` allocation on every
+        # tick where no abilities are transitioning (the common case).
+        _TRANSITION_VALUES = ("activating", "deactivating")
+        if not any(
+            isinstance(state_data, dict)
+            and state_data.get('phase') in _TRANSITION_VALUES
+            for empire in empires
+            for planet in empire.colonies
+            for facility in planet.facilities
+            if facility.is_operational
+            for state_data in facility.component_states.values()
+        ):
+            return results
+
         for empire in empires:
             # Planet facilities
             for planet in empire.colonies:

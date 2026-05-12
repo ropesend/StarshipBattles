@@ -162,11 +162,17 @@ class StrategyGameStateManager:
             self._screen.draw(screen)
             pygame.display.flip()
 
-        # Issue #7: per-tick callback that lets pygame paint a frame so the
-        # "PROCESSING TURN..." overlay can show "Tick N / 100" updating in
-        # real time. The turn engine otherwise blocks the main thread for
-        # the full 100-tick loop. event.pump() keeps the OS event queue
-        # drained so the window does not show "Not Responding".
+        # Issue #7 + PROJ-412 Phase 4: progress callback that lets pygame paint
+        # a frame so the "PROCESSING TURN..." overlay can show "Tick N / 100"
+        # updating in real time. The turn engine otherwise blocks the main
+        # thread for the full 100-tick loop. event.pump() keeps the OS event
+        # queue drained so the window does not show "Not Responding".
+        #
+        # PROJ-412 Phase 4 cadence: TurnEngine invokes this callback at tick 1,
+        # every `PROGRESS_CALLBACK_INTERVAL` ticks (default 5), and the final
+        # tick — NOT every tick. Overlay updates jump in increments of N but
+        # the redraw cost drops from ~100 frames/turn to ~21 frames/turn.
+        # Interval is user-tunable via `output/settings/turn_engine_settings.json`.
         def _on_tick(current: int, total: int) -> None:
             self._screen.current_tick = current
             self._screen.total_ticks = total

@@ -32,3 +32,4 @@ audioop-lts>=0.2.2 ; python_version >= "3.13"  # PROJ-295: stdlib audioop remove
 watchdog>=4.0.0
 google-cloud-speech>=2.26.0
 python-dotenv>=1.0.1
+pyttsx3>=2.90  # TTS for QA pre-session sound check (SAPI5 backend on Windows)

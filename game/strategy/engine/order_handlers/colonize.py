@@ -98,7 +98,7 @@ class ColonizeHandler(BaseOrderHandler):
         fleet.pop_order()
 
         # Deploy drop pod as facility on the new colony
-        self._deploy_drop_pod(fleet, final_planet)
+        self._deploy_drop_pod(fleet, final_planet, empire=empire)
 
         logger.info(f"ColonizeHandler: Colonization successful. {empire.name} claimed {final_planet.name}")
 
@@ -136,12 +136,17 @@ class ColonizeHandler(BaseOrderHandler):
             planet_name=final_planet.name,
         )
 
-    def _deploy_drop_pod(self, fleet: Fleet, planet: Any) -> None:
+    def _deploy_drop_pod(
+        self, fleet: Fleet, planet: Any, *, empire: Optional["Empire"] = None,
+    ) -> None:
         """Deploy a drop pod from fleet cargo as a facility on the planet.
 
         Finds the first drop pod in any ship's carried_items, removes it,
         and creates a PlanetaryFacility from its design_data. The full
         design (all components the player chose) becomes the facility.
+
+        PROJ-412 Phase 5: ``empire`` is forwarded to ``add_facility`` so
+        the empire's storage/booster dirty flags flip mid-turn.
         """
         from uuid import uuid4
         from game.strategy.data.planet import PlanetaryFacility
@@ -165,7 +170,9 @@ class ColonizeHandler(BaseOrderHandler):
             is_operational=True,
         )
         # PROJ-370 Phase 3: route through IPlanetMutator.
-        self._get_planet_mutator().add_facility(planet, facility)
+        # PROJ-412 Phase 5: forward empire so HarvestingEngine's per-turn
+        # storage/booster caches see the new facility mid-turn.
+        self._get_planet_mutator().add_facility(planet, facility, empire=empire)
 
         # Seed planet stockpile from design's initial_stockpile if present
         initial_stock = design_data.get("initial_stockpile", {})

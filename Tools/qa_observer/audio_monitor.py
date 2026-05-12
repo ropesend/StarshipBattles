@@ -26,6 +26,23 @@ CHANNELS = 1
 RATE = 16000
 VOICE_THRESHOLD = int(os.getenv('VOICE_THRESHOLD', '450'))
 
+
+def _parse_input_device_index(raw):
+    if raw is None:
+        return None
+    text = raw.strip()
+    if not text:
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        return None
+
+
+# Pinned input device — set by sound_check.py when the system default is the
+# wrong mic. Both observer and audio_monitor read this so they always agree.
+INPUT_DEVICE_INDEX = _parse_input_device_index(os.getenv('INPUT_DEVICE_INDEX'))
+
 # Monitor display config
 WINDOW_SIZE = 512
 BAR_HEIGHT = 60
@@ -53,6 +70,7 @@ class AudioMonitor:
                 channels=CHANNELS,
                 dtype=DTYPE,
                 blocksize=CHUNK,
+                device=INPUT_DEVICE_INDEX,
             )
             self.stream.start()
         except Exception as e:

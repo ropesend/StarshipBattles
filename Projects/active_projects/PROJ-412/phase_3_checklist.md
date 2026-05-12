@@ -5,8 +5,10 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (2026-05-12)
 **Objective:** Make fleet-carried `ResourceHarvestBooster` actually affect harvesting by routing the booster scan through the universal `IAbilitySource` pipeline (`ability_iterator.py` → `FleetAbilitySource` + `FacilityAbilitySource` + …) instead of the planet/facility-only `find_abilities_in_scope`. This is a behavior change (fleet boosters become functional) that the user approved (decisions.md 2026-05-12 entry, Option B).
+
+**Outcome:** New helper `find_harvest_boosters_for_colony` added to `strategic_ability_scanner.py`; `HarvestingEngine._get_harvest_booster_mult` swapped to call it. Test C2 (fleet booster) now passes; all 5 mid-turn characterization tests green; existing unit test rewritten to monkeypatch the new helper. Bench impact: **harvesting +60.5% (~55 ms → ~88 ms / turn)** as the universal pipeline walks more providers than the old planet-facility-only path. **Phase 5 (harvesting cache) will reclaim and exceed this** — caching makes the per-tick scan cost go to ~zero. The regression is intentional and surfaced here.
 
 **Why this lives before Phase 4 (caching):** Phase 4 caches the booster scan results. The cache must be built around the new pipeline so its invalidation hooks correctly include fleet movement / ship destruction. Caching the old planet-only path and then migrating would mean reworking Phase 4 invariants.
 

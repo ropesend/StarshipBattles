@@ -91,6 +91,13 @@ class PlanetActionEngine(IPlanetActionEngine):
         """
         self._validate_tick_inputs(empires)
         results = []
+
+        # PROJ-412 Phase 2.2 note: an "any planet action order anywhere"
+        # precheck was tried and dropped — the per-planet `while True`
+        # loop already short-circuits on the first non-action order
+        # (or empty queue) within ~1 μs, and the outer precheck broke
+        # tests that rely on MagicMock empire shapes.
+
         for empire in empires:
             for planet in empire.colonies:
                 planet_results = self._process_planet_tick(planet, empire, component_registry)

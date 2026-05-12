@@ -237,7 +237,9 @@ class ProductionSpawner:
         )
 
         # PROJ-370 Phase 3: route through IPlanetMutator.
-        self._get_planet_mutator().add_facility(planet, facility)
+        # PROJ-412 Phase 5: pass empire so HarvestingEngine's per-turn
+        # storage/booster caches see the new facility mid-turn.
+        self._get_planet_mutator().add_facility(planet, facility, empire=empire)
         logger.info(f"{log_prefix}Built {facility.name} on {planet.name}")
 
         # Compute location info for event logging (PROJ-233: shared helper)

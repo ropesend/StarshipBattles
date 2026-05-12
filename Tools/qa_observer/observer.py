@@ -40,6 +40,23 @@ SESSION_OUTPUT_DIR = os.getenv('SESSION_OUTPUT_DIR', './session_data')
 VOICE_THRESHOLD = int(os.getenv('VOICE_THRESHOLD', '450'))
 SILENCE_TIMEOUT = float(os.getenv('SILENCE_TIMEOUT', '2.0'))
 
+
+def _parse_input_device_index(raw: str | None) -> int | None:
+    if raw is None:
+        return None
+    text = raw.strip()
+    if not text:
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        return None
+
+
+# Pinned input device — set by sound_check.py when the system default is the
+# wrong mic. Both observer and audio_monitor read this so they always agree.
+INPUT_DEVICE_INDEX = _parse_input_device_index(os.getenv('INPUT_DEVICE_INDEX'))
+
 # Audio configuration
 CHUNK = 1024
 SAMPLE_WIDTH = 2  # bytes per sample for int16 (PROJ-295: was pyaudio.paInt16 = 2)
@@ -85,13 +102,15 @@ def record_audio_loop(audio_output_dir):
             channels=CHANNELS,
             dtype=DTYPE,
             blocksize=CHUNK,
+            device=INPUT_DEVICE_INDEX,
         )
         stream.start()
     except Exception as e:
         print(f"Failed to open audio stream. Do you have a microphone connected? Error: {e}")
         return
 
-    print(f"[Audio] Started continuous recording (chunking every {RECORD_SECONDS} seconds)")
+    device_label = "system default" if INPUT_DEVICE_INDEX is None else f"index {INPUT_DEVICE_INDEX}"
+    print(f"[Audio] Started continuous recording on device: {device_label} (chunking every {RECORD_SECONDS} seconds)")
 
     exit_event = threading.Event()
 

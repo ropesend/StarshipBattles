@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (2026-05-12)
 **Objective:** Produce a defensible, reproducible measurement of where turn-processing time goes on the tiny reference scenario, *and* the characterization tests that will protect mid-turn invariants during later phases. No production-code optimizations land in this phase except for the explicitly-trivial late-import moves authorized for Phase 2.
 
 ---

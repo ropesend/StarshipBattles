@@ -5,8 +5,10 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (2026-05-12)
 **Objective:** Apply the small, low-risk fixes identified by the swarm review *only after* Phase 1's profile confirms they matter. These are the changes that would otherwise be "drive-by clean-ups" if not for the strict TDD/profile-first rule.
+
+**Outcome:** Total bench delta: ~flat (−1.3%, within noise). Per-phase wins: `activation_timers` −16.6%, `planet_modifier_effects` −4.6%. Late-import wins are sub-microsecond per call but tens-to-hundreds of saved import lookups per turn; the meaningful infrastructure change is the lazy-cached `PlanetModifierEffectEngine` instance. Three short-circuits attempted in Task 2.2 (order_processor JOIN_FLEET, action_execution ACTION_ORDERS, planet_action PLANET_ACTION) were reverted — bench-attributed cost was < 1 ms / turn each and structural prechecks broke MagicMock-driven tests. Two short-circuits kept: environmental (no-storms) and component_activation (no-transitions). 20159/20164 tests pass.
 
 ---
 

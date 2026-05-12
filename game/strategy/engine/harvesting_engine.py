@@ -26,6 +26,13 @@ from game.core.registry import GameRegistries
 from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import get_component_abilities
 from game.strategy.services.modifier_resolver import resolve_size_multiplier
+# PROJ-412 Phase 2.1: imported at module top to avoid the per-call import
+# lookup inside `_get_harvest_booster_mult` (called once per harvester per
+# tick * 100 ticks). Imported as the module rather than via `from ...
+# import ...` so tests that monkeypatch
+# `strategic_ability_scanner.find_abilities_in_scope` (the standard pattern)
+# continue to work without changes.
+from game.strategy.services import strategic_ability_scanner
 
 logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IHarvestingEngine
@@ -163,6 +170,28 @@ class HarvestingEngine(IHarvestingEngine):
         self._current_turn: int = 0
         self._galaxy = None
 
+        # PROJ-412 Phase 5: per-turn caches for the two harvesting hot paths.
+        # `_storage_cache_turn[empire_id]` records the turn whose storage
+        # aggregate is currently materialised on the empire's colonies.
+        # `_booster_cache[(turn, colony_id, resource_type)]` records the
+        # aggregated booster multiplier for a (colony, resource) pair.
+        # Both are invalidated by:
+        #   - turn boundary (set_current_turn moves us to a new turn key)
+        #   - the relevant dirty flag on Empire (`_storage_dirty` /
+        #     `_booster_dirty`), which mutator paths flip on facility
+        #     add/remove and on fleet movement.
+        # Counters expose hit/miss/invalidate-by-reason for tests + debug.
+        self._storage_cache_turn: dict[int, int] = {}
+        self._booster_cache: dict[tuple[int, int, str], float] = {}
+        self._cache_counters: dict[str, int] = {
+            'storage_hits': 0,
+            'storage_misses_turn': 0,
+            'storage_misses_dirty': 0,
+            'booster_hits': 0,
+            'booster_misses_turn': 0,
+            'booster_misses_dirty': 0,
+        }
+
     def _get_planet_mutator(self):
         """Lazy-default the planet mutator (PROJ-370)."""
         if self._planet_mutator is None:
@@ -185,6 +214,18 @@ class HarvestingEngine(IHarvestingEngine):
         """PROJ-285: TurnEngine calls this at the start of each turn so the
         per-turn habitability cache invalidates cleanly."""
         self._current_turn = turn
+
+    def invalidate_turn_caches(self) -> None:
+        """PROJ-412 Phase 5: drop every per-turn cache entry.
+
+        Called by ``TurnEngine`` on the ``EnginePhaseError`` rollback path
+        so that a retried turn (same turn_number, restored state) does not
+        serve cached values that reflect the pre-rollback state. Also safe
+        to call externally — e.g. after a save load — without consequence
+        beyond an extra rebuild on the next harvest tick.
+        """
+        self._storage_cache_turn.clear()
+        self._booster_cache.clear()
 
     def _validate_tick_inputs(self, empires: List) -> None:
         """PROJ-251: Validate preconditions before mutating state.
@@ -218,9 +259,43 @@ class HarvestingEngine(IHarvestingEngine):
         """
         self._validate_tick_inputs(empires)
         self._galaxy = galaxy
-        self.recalculate_storage(empires)
+        # PROJ-412 Phase 5: only recompute storage when the turn changed
+        # OR a mutator flipped the empire's `_storage_dirty` flag. Saves
+        # ~99 of 100 storage aggregations per turn in the steady state.
+        self._refresh_storage_if_needed(empires)
         for empire in empires:
             self._process_empire(empire, tick_fraction=0.01)
+
+    def _refresh_storage_if_needed(self, empires: List) -> None:
+        """PROJ-412 Phase 5: per-empire decide whether to rebuild storage.
+
+        Rebuilds when:
+        - turn changed since the last storage compute for this empire, OR
+        - any mutator flipped ``empire._storage_dirty`` (facility add/remove)
+
+        After a successful rebuild, the dirty flag is cleared and the
+        empire's cached turn is set to ``self._current_turn``. The hit/miss
+        counters expose cache behavior to tests + observability tooling.
+        """
+        for empire in empires:
+            # Defensive: tests build MagicMock empires without `.id`. Fall
+            # back to Python's `id()` for cache keying so the cache still
+            # behaves coherently across calls with the same object.
+            empire_key = getattr(empire, 'id', None)
+            if empire_key is None:
+                empire_key = id(empire)
+            cached_turn = self._storage_cache_turn.get(empire_key)
+            dirty = getattr(empire, '_storage_dirty', True)
+            if cached_turn == self._current_turn and not dirty:
+                self._cache_counters['storage_hits'] += 1
+                continue
+            if cached_turn != self._current_turn:
+                self._cache_counters['storage_misses_turn'] += 1
+            else:
+                self._cache_counters['storage_misses_dirty'] += 1
+            self._aggregate_empire_storage(empire)
+            self._storage_cache_turn[empire_key] = self._current_turn
+            empire._storage_dirty = False
 
     def recalculate_storage(self, empires: List) -> None:
         """
@@ -402,21 +477,51 @@ class HarvestingEngine(IHarvestingEngine):
         if empire is None or self._galaxy is None:
             return 1.0
 
-        from game.strategy.services.strategic_ability_scanner import (
-            find_abilities_in_scope, aggregate_multipliers,
+        # PROJ-412 Phase 5: per-turn cache keyed by (turn, colony_id, resource).
+        # Invalidated when empire._booster_dirty is True (mutator paths set
+        # this on facility add/remove and on fleet movement via the
+        # movement_apply post-hook in turn_phase_registry).
+        if getattr(empire, '_booster_dirty', False):
+            # Drop every cached entry for this empire's colonies and reset
+            # the flag. Mid-turn invalidation is rare so we just nuke and
+            # rebuild rather than tracking per-colony provenance.
+            self._invalidate_booster_cache_for_empire(empire)
+            empire._booster_dirty = False
+            self._cache_counters['booster_misses_dirty'] += 1
+
+        cache_key = (self._current_turn, getattr(colony, 'id', id(colony)), resource_type)
+        cached = self._booster_cache.get(cache_key)
+        if cached is not None:
+            self._cache_counters['booster_hits'] += 1
+            return cached
+
+        self._cache_counters['booster_misses_turn'] += 1
+        # PROJ-412 Phase 3: query the universal IAbilitySource pipeline so
+        # fleet-carried ResourceHarvestBooster sources are picked up alongside
+        # facility ones. Replaces the per-scope `find_abilities_in_scope`
+        # loop which only walked planet facilities.
+        entries = strategic_ability_scanner.find_harvest_boosters_for_colony(
+            colony, self._galaxy, empire, registries=self._registries,
         )
+        matching = [e for e in entries if e.get("resource_type") == resource_type]
+        result = strategic_ability_scanner.aggregate_multipliers(matching)
+        self._booster_cache[cache_key] = result
+        return result
 
-        all_boosters = []
-        for scope in ["planet", "sector", "system", "empire"]:
-            entries = find_abilities_in_scope(
-                "ResourceHarvestBooster", colony, self._galaxy, empire, scope,
-                registries=self._registries,
-            )
-            for entry in entries:
-                if entry.get("resource_type") == resource_type:
-                    all_boosters.append(entry)
+    def _invalidate_booster_cache_for_empire(self, empire) -> None:
+        """Drop every booster-cache entry whose colony belongs to ``empire``.
 
-        return aggregate_multipliers(all_boosters)
+        PROJ-412 Phase 5: called when ``empire._booster_dirty`` is True at
+        the start of a harvest call, AND from the engine's rollback hook
+        so a retried turn doesn't reuse pre-rollback multipliers.
+        """
+        colony_ids = {getattr(c, 'id', id(c)) for c in empire.colonies}
+        to_drop = [
+            key for key in self._booster_cache
+            if key[1] in colony_ids
+        ]
+        for key in to_drop:
+            del self._booster_cache[key]
 
     def _harvest_resource(
         self,

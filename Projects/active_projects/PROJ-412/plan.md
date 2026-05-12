@@ -14,22 +14,23 @@
 
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Measure (profile + characterization tests) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Cheap wins (late imports, micro-fixes) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate harvest booster scan to universal `IAbilitySource` pipeline | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Harvesting recompute reduction (storage + booster caches) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Orchestration overhead (snapshot, progress callback, `_run_phases`) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Secondary phase optimizations (energy / environmental / movement) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. Measure (profile + characterization tests) | **Complete** | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Cheap wins (late imports, micro-fixes) | **Complete** | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate harvest booster scan to universal `IAbilitySource` pipeline | **Complete** | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. **UI progress-callback coarsening** (highest measured single win) | **Complete** | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Harvesting recompute reduction (storage + booster caches) | **Complete** | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Remaining orchestration (snapshot, `_run_phases`) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Secondary phase optimizations + final docs | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
-Phases 4–6 are **conditional**. Phase 1's profiling result is authoritative — if measured cost differs from the pre-profile hypothesis, the phase ordering and content will be re-justified before any Phase 2+ work starts. **Codex consult flagged that Phase 5 may need to come before Phase 4** if the Probe-B noop-callback test (Phase 1.4) shows the per-tick UI redraw is the dominant contributor to the 2.5–3.7 s unaccounted-overhead gap. The Phase-1 exit gate explicitly reconsiders ordering. **Phase 3 (the booster-pipeline migration) is a deliberate behavior change** approved by the user — fleet-carried `ResourceHarvestBooster` becomes functional in harvesting.
+**Re-ordering applied 2026-05-12** after Phase 1 Probe B measured the UI callback at +543 ms / turn with a 5 ms synthetic callback (see [findings/profile_baseline_cpu.md](findings/profile_baseline_cpu.md)). Original plan had harvesting cache (now Phase 5) before callback coarsening; the probe data argued for promoting callback coarsening to Phase 4. Phases 6 and 7 are **conditional** on remeasurement after Phase 4/5 land — drop if < 50 ms / turn savings remain. **Phase 3 (the booster-pipeline migration) is a deliberate behavior change** approved by the user — fleet-carried `ResourceHarvestBooster` becomes functional in harvesting.
 
 ## Current State
 
 **Last Updated:** 2026-05-12
-**Active Phase:** Plan approved — ready for Phase 1
-**Last Action:** Codex consult applied; user chose Option B (migrate harvest boosters to universal `IAbilitySource` pipeline); phases renumbered (old 3-5 → 4-6); new Phase 3 inserted for the booster pipeline migration
-**Next Action:** Begin Phase 1 (Measure) in a new session via "Continue Project"
-**Blockers:** None
+**Active Phase:** Phase 5 complete — Phases 6 + 7 conditional on remeasurement
+**Last Action:** Harvesting cache landed. Per-turn `_storage_cache_turn` + per-(turn, colony, resource) `_booster_cache` on `HarvestingEngine`, invalidated by `Empire._storage_dirty` / `_booster_dirty` flags that mutator paths (PlanetWriteService.add/remove_facility, FleetMovementEngine.apply_movements via post-hook) flip. Rollback safety: `engine.invalidate_turn_caches()` called from the `EnginePhaseError` recovery path. **Bench: total 96 ms → 11 ms / turn (−88%); harvesting 89 ms → 5 ms (−94%).** 4 cache-contract tests + observability counters (`_cache_counters` dict). Task 5.4 skipped — harvesting already sub-budget.
+**Next Action:** Phase 6 (remaining orchestration — snapshot capture + `_run_phases` micro-tuning) is **gated on remeasurement** per the conditional plan. Recommend the user run the bench on their real save game first; if turn time is acceptable, skip Phase 6 and Phase 7 entirely.
+**Blockers:** None — but Phase 6+ may be cut after user remeasurement.
 
 ## Overview
 

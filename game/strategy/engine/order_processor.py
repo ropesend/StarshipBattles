@@ -136,6 +136,11 @@ class OrderProcessor(IOrderProcessor):
 
         BUG-122 three-phase pipeline lives in JoinFleetHandler; this
         method is the public entry point.
+
+        PROJ-412 Phase 2.2 note: a "no JOIN_FLEET order anywhere" short-
+        circuit was tried and dropped — bench-attributed cost of this
+        phase is < 5 μs / tick, and structural prechecks broke
+        MagicMock-driven tests. Not worth the fragility.
         """
         handler = self._handler_registry.get(OrderType.JOIN_FLEET)
         return handler.process_instant_orders(empires)

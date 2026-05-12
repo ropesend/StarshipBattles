@@ -55,12 +55,35 @@ class PlanetWriteService:
                 return
 
     # --- Facilities ---
-    def add_facility(self, planet: "Planet", facility: Any) -> None:
-        planet.facilities.append(facility)
+    def add_facility(
+        self, planet: "Planet", facility: Any, *, empire: Any = None,
+    ) -> None:
+        """Append a facility to ``planet.facilities``.
 
-    def remove_facility(self, planet: "Planet", facility: Any) -> bool:
+        PROJ-412 Phase 5: when ``empire`` is supplied, the empire's
+        ``_storage_dirty`` and ``_booster_dirty`` flags are flipped to
+        invalidate ``HarvestingEngine``'s per-turn caches. Callers that
+        omit ``empire`` still mutate state correctly — the engine's
+        turn-key check will rebuild caches on the next turn boundary.
+        """
+        planet.facilities.append(facility)
+        if empire is not None:
+            empire._storage_dirty = True
+            empire._booster_dirty = True
+
+    def remove_facility(
+        self, planet: "Planet", facility: Any, *, empire: Any = None,
+    ) -> bool:
+        """Remove a facility from ``planet.facilities``; return True on success.
+
+        PROJ-412 Phase 5: see ``add_facility`` for the ``empire`` flag
+        semantics.
+        """
         if facility in planet.facilities:
             planet.facilities.remove(facility)
+            if empire is not None:
+                empire._storage_dirty = True
+                empire._booster_dirty = True
             return True
         return False
 
