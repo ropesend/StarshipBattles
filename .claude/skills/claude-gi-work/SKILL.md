@@ -7,10 +7,9 @@ argument-hint: <issue-number>
 
 # Work GitHub Issue
 
-Resolve a single GitHub issue end-to-end via TDD. This is the GitHub-Issues
-counterpart to `/claude-ticket-work`. The procedural rigour from
-`Tracking/protocols/02_work_ticket.md` carries forward verbatim — only the
-storage location changes (issue body + comments instead of a markdown file).
+Resolve a single GitHub issue end-to-end via TDD. The canonical work-loop
+protocol is at [`AgentCoordination/protocols/ticket_workflow.md`](../../../AgentCoordination/protocols/ticket_workflow.md) —
+shared across agents; only the storage layer (GitHub Issues) is skill-specific.
 
 ## Your Role
 
@@ -68,7 +67,7 @@ gh issue comment <#> --body "### Phase 0: Context loaded — starting work."
 
 ### Phase 2..N: TDD Execution
 
-Follow the workflow from `Tracking/protocols/02_work_ticket.md` verbatim:
+Follow the workflow from [`AgentCoordination/protocols/ticket_workflow.md`](../../../AgentCoordination/protocols/ticket_workflow.md) verbatim:
 
 - **Bugs:** reproduce → write failing test → root-cause analysis → fix forward
   (no reverts of recent refactors) → verify → docs sync.

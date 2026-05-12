@@ -8,8 +8,7 @@ argument-hint: bug|feature <descriptions>
 # Add GitHub Issue
 
 Create one or more GitHub issues from the user's raw description(s). This is
-the GitHub-Issues counterpart to `/claude-ticket-add`. Both systems run in
-parallel; use this one for any new ticket.
+the entry point for new tickets — bugs and features.
 
 ## Your Role
 

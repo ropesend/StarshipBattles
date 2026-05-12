@@ -1,14 +1,13 @@
 ---
 name: claude-gp-add
-description: Create a new GitHub-backed project (GP-<n>) from a free-form description or QA-triage item. Mandatory blocking codex consult.
+description: Create a new GitHub-backed project (GP-<n>) from a free-form description. Mandatory blocking codex consult.
 disable-model-invocation: true
-argument-hint: <project description> | --from-triage <triage_filename>
+argument-hint: <project description>
 ---
 
 # Create GP Project
 
-Initialize a new GitHub-backed refactoring/addition/performance project. This
-is the entry point for both manual creation and triage-driven creation. The
+Initialize a new GitHub-backed refactoring/addition/performance project. The
 project lives on GitHub (parent issue + phase sub-issues), with static
 reference docs under `tracking-assets/projects/GP-<n>/`.
 
@@ -20,12 +19,10 @@ and creation mechanics.
 
 ## Arguments
 
-Parse `$ARGUMENTS`:
-- If starts with `--from-triage <filename>`: triage-driven creation. Read the
-  triage item at `Tracking/qa_triage/<filename>` (or the path supplied) and
-  derive the project description from its content. `source = triage`.
-- Otherwise: the entire argument is the free-form project description.
-  `source = manual`.
+`$ARGUMENTS` is the free-form project description. The `source` label is
+always `manual` when invoked directly. Audit-driven and triage-driven
+project creation route through `/claude-gp-from-audit` and (for QA-triage
+seeds) through pasting the triage content into the description.
 
 **Input:** $ARGUMENTS
 
@@ -116,15 +113,6 @@ next command (`/claude-gp-continue <gp_number>` for phase 1).
   `exec:sequential`. The `exec:phase-aware` and `exec:parallel-eligible`
   labels exist but are not exercised until the follow-up design pass lands.
 - **New IDs use `GP-<issue-number>`.** Never reuse `PROJ-NNN`.
-
-## Triage variant notes
-
-When invoked with `--from-triage <filename>`:
-- The triage item is the project description source
-- `source = triage`
-- The triage file path is recorded in the `design_md` for traceability
-- After successful creation, the original triage file can be moved or
-  annotated by the user — this skill does not touch the triage file
 
 ## Related skills
 

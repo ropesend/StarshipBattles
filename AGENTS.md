@@ -72,9 +72,9 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 
 ## Project Management
 
-- Active projects: `Projects/active_projects/PROJ-XX/`. Protocols: `Projects/protocols/`.
-- Tickets (legacy, parallel): `Tracking/bugs/active/` and `Tracking/features/active/`. Protocols: `Tracking/protocols/`. Skills: `/claude-ticket-*`.
-- Tickets (GitHub Issues, parallel): https://github.com/ropesend/StarshipBattles/issues. Skills: `/claude-gi-*`. New tickets should go here unless the legacy system is more convenient. Both systems run side-by-side; legacy will be sunset on user signal.
+- Active projects: `Projects/active_projects/PROJ-XX/` (legacy local) or GitHub Issues with `type:project` (`tracking-assets/projects/GP-<n>/` + `claude-gp-*` skills). Both valid for project-scale work. Protocols: `Projects/protocols/`, `Projects/gp_protocols/`.
+- Tickets: https://github.com/ropesend/StarshipBattles/issues. Skills: `/claude-gi-*`. Canonical workflow protocols: `AgentCoordination/protocols/ticket_workflow.md` (TDD work loop) and `AgentCoordination/protocols/ticket_deep_dive.md` (investigation).
+- Historical (read-only) archived tickets from the retired `Tracking/` system: `AgentCoordination/legacy_tickets/`. Do not cite as current behavior.
 - Reviews: `Reviews/protocols/` and `Reviews/results/`. Historical audit reports stored here.
 - Archive: `Projects/archived_projects/` and `Projects/deep_archive/` — do not reference as current.
 - Scratchpad: `AgentCoordination/Scratchpad/` (gitignored) — transient agent files. Subdirs: `plans/`, `reviews/`, `reports/`, `handoffs/`, `tmp/`. **Do not write transient files outside the repo.** Persist-worthy artifacts go in tracked dirs (`Projects/`, `docs/`, `Reviews/results/`). Full rules: `AgentCoordination/SCRATCHPAD.md`.

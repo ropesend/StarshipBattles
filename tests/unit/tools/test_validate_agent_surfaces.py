@@ -326,7 +326,7 @@ def test_cross_agent_reference_allows_same_surface_command(tmp_path: Path) -> No
     skills = {".claude/skills": {"claude-foo": {"name": "claude-foo", "description": "x"}}}
     _make_repo(tmp_path, skills=skills)
     skill_md = tmp_path / ".claude" / "skills" / "claude-foo" / "SKILL.md"
-    skill_md.write_text(skill_md.read_text(encoding="utf-8") + "\nRun `/claude-ticket-work`.\n", encoding="utf-8")
+    skill_md.write_text(skill_md.read_text(encoding="utf-8") + "\nRun `/claude-gi-work`.\n", encoding="utf-8")
     findings = validator.check_cross_agent_references(tmp_path)
     assert findings == []
 

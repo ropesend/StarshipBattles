@@ -8,8 +8,7 @@ argument-hint: <issue-number> <text>
 # Update GitHub Issue
 
 Append a new comment to an issue with user-supplied context. Pure data entry —
-no analysis, no status changes, no implementation. Counterpart to
-`/claude-ticket-update`.
+no analysis, no status changes, no implementation.
 
 ## Your Role
 

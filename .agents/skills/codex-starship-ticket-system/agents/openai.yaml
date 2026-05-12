@@ -1,4 +1,0 @@
-interface:
-  display_name: "Codex Starship Tickets"
-  short_description: "Work Starship tickets with TDD."
-  default_prompt: "Use $codex-starship-ticket-system to work a Starship Battles bug or feature ticket."

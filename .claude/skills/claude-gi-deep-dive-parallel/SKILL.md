@@ -5,11 +5,11 @@ disable-model-invocation: true
 argument-hint: "[bug|feature [issue numbers...]] (no args = all open bugs then features)"
 ---
 
-# Parallel Deep Dive — GitHub Issues edition
+# Parallel Deep Dive
 
-The GitHub Issues counterpart of `/claude-deep-dive-parallel`. Coordinates an agent team to investigate (and optionally implement fixes for) multiple open GitHub issues in parallel, with real-time Q&A relayed through the coordinator.
+Coordinates an agent team to investigate (and optionally implement fixes for) multiple open GitHub issues in parallel, with real-time Q&A relayed through the coordinator.
 
-This skill mirrors the legacy [`Tracking/protocols/02d_parallel_deep_dive.md`](../../../Tracking/protocols/02d_parallel_deep_dive.md). The architecture, state machine, conflict-detection layers, worktree-isolation rules, and TDD discipline are identical. Only the persistence target changes: ticket files become GitHub issues, status markers become labels, dashboards become `gh issue list` queries.
+This skill is self-contained — the architecture, state machine, conflict-detection layers, worktree-isolation rules, and TDD discipline are all spelled out below.
 
 ## Your Role
 

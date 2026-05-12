@@ -11,7 +11,7 @@ Use this skill for QA Observer session analysis and conversion work.
 
 1. Read `AGENTS.md` and `.agents/CODEX.md`.
 2. Read `Tools/qa_observer/README.md`.
-3. Read `Tracking/README.md` and `Projects/README.md` when creating or cross-referencing tickets/projects.
+3. Read `AgentCoordination/protocols/ticket_workflow.md` and `Projects/README.md` when creating or cross-referencing GitHub Issues/projects.
 4. Read relevant `docs/` files before investigating code paths.
 
 ## Session Selection
@@ -29,7 +29,7 @@ Use this skill for QA Observer session analysis and conversion work.
 ## Rules
 
 - Investigate code and logs before categorizing an observation.
-- Deduplicate against `Tracking/debug_plan.md`, `Tracking/feature_plan.md`, active tickets, and active projects.
+- Deduplicate against open GitHub Issues using `gh issue list --state open --label "type:bug" --limit 200 --json number,title` and `gh issue list --state open --label "type:feature" --limit 200 --json number,title`, plus active projects.
 - Ask for user confirmation before creating new tickets or projects unless the user explicitly requested creation.
 - Copy referenced images into the target project findings assets folder when converting triage to a project.
 - Never read `docs/_ignore/`.

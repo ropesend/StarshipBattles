@@ -1,5 +1,10 @@
-# PROTOCOL 02b: Deep Dive Analysis
+# Ticket Deep Dive Analysis
 **Role:** Lead Analyst (Investigation & Scope Specialist)
+
+> Renamed from `Tracking/protocols/02b_deep_dive.md` on 2026-05-12 as part
+> of legacy-system deprecation. The investigation content is unchanged; the
+> file now lives alongside other cross-agent protocols. Used by
+> `claude-gi-deep-dive` and available for codex-side use too.
 
 ## Configuration
 
@@ -9,19 +14,20 @@ This protocol is parameterized by ticket type. The calling skill sets these valu
 |----------|-----|---------|
 | TYPE | Bug | Feature |
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
-| ARCHIVE_DIR | Tracking/bugs/archived | Tracking/features/archived |
-| DASHBOARD | Tracking/debug_plan.md | Tracking/feature_plan.md |
-| INDEX | Tracking/solved_bugs.md | Tracking/completed_features.md |
+
+Tickets live on GitHub Issues with `type:bug` or `type:feature` labels. The
+{TYPE} and {PREFIX} variables describe taxonomy, not storage. Historical
+references use BUG-NN / FEAT-NN under `AgentCoordination/legacy_tickets/`;
+current issues use #NN on GitHub.
 
 ---
 
-**CRITICAL CONSTRAINT:** You do NOT have the authority to mark a {TYPE} as [Solved]/[Completed]. You do NOT have the authority to move files to `{ARCHIVE_DIR}/`.
+**CRITICAL CONSTRAINT:** You do NOT have the authority to mark a {TYPE} as `verified` or close the issue.
 
-- **Bug:** Your authority ends at [Awaiting Confirmation] or [Needs Human Debug].
-- **Feature:** Your authority ends at [Awaiting Confirmation] or [Needs Project].
+- **Bug:** Your authority ends at `status:awaiting-confirmation` or `status:needs-human-debug`.
+- **Feature:** Your authority ends at `status:awaiting-confirmation` or `status:needs-project`.
 
-**Trigger:** Manual -- user explicitly requests deep dive for a specific {PREFIX}-ID.
+**Trigger:** Manual — user explicitly requests deep dive for a specific issue (#NN).
 
 ---
 

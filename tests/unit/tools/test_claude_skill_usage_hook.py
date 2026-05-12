@@ -26,9 +26,9 @@ def test_extract_skill_name_from_pretooluse_skill() -> None:
     name = hook._extract_skill_name(_payload(
         hook_event_name="PreToolUse",
         tool_name="Skill",
-        tool_input={"skill": "claude-ticket-work"},
+        tool_input={"skill": "claude-gi-work"},
     ))
-    assert name == "claude-ticket-work"
+    assert name == "claude-gi-work"
 
 
 def test_extract_skill_name_from_pretooluse_alt_keys() -> None:

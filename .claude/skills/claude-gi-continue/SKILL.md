@@ -8,8 +8,7 @@ argument-hint: bug|feature
 # Continue (Batch Work)
 
 Loop through pending issues of the given type, working each one to
-`status:awaiting-confirmation`, until you hit ~80% context usage. Counterpart
-to `/claude-ticket-continue`.
+`status:awaiting-confirmation`, until you hit ~80% context usage.
 
 ## Your Role
 

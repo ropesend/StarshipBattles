@@ -70,6 +70,23 @@ Run tests only when allowed. If tests are not allowed, suggest the relevant test
 
 You must write `response.md` explicitly inside `consult_leaf`. Publish through a same-directory `.tmp_*` file and final rename. Final-message capture is not an acceptable fallback for the responder; it is only a caller-side safety net and may contain ordinary chat output.
 
+### How to write the file
+
+**Use your native file-write tool (e.g., `apply_patch`)** against the consult leaf. The caller invokes you with `--sandbox workspace-write` so writes inside the workspace (which includes `consult_leaf` under `AgentCoordination/Scratchpad/Consult/`) succeed.
+
+**Do NOT shell out to `powershell.exe`, `cmd.exe`, `bash`, `python`, or any other process** to write the file. Shell exec calls add no value over `apply_patch` and risk being declined by approval rules or constrained-language-mode policies, falling through to "final-message capture" which the harvester treats as `missing-response`.
+
+The atomic write is two operations against the leaf:
+
+1. Write the response body to `<consult_leaf>/.tmp_<random>.md` via `apply_patch`.
+2. Move/rename `<consult_leaf>/.tmp_<random>.md` to `<consult_leaf>/response.md` via `apply_patch` (or a single direct write to `response.md` if your patch surface doesn't expose a rename — that's still preferable to a shell exec).
+
+### Sandbox note — important
+
+`--sandbox workspace-write` grants you write access to the entire workspace, not only the consult leaf. **You are still bound by the Permissions section above:** write ONLY inside `consult_leaf`. Do not modify production code, tracked docs, tickets, projects, configs, or protocols. The sandbox is a permission ceiling, not your permission floor. If you violate this contract, the caller (Claude) will see the diff in `git status` after the consult and route the disobedience to the user.
+
+If `apply_patch` is rejected, set `exit_status: partial`, name the rejection cause in `## Open questions`, and emit the response artifact as your final assistant message. The caller's harvester will surface this as a missing-response failure so the user can route the fix to the wrapper or sandbox policy.
+
 ```yaml
 ---
 protocol: consult/v1

@@ -1,8 +1,9 @@
 # Reviews
 
 Code review system for the Starship Battles codebase. Reviews complement
-the project (`Projects/`) and ticket (`Tracking/`) workflows: they
-identify issues across the code that may or may not become projects.
+the project (`Projects/`) and ticket (GitHub Issues via `claude-gi-*`)
+workflows: they identify issues across the code that may or may not
+become projects.
 
 ## Layout
 
@@ -31,7 +32,7 @@ flags violations.
 ## Naming conventions
 
 - Directory case: **lowercase** — `prompts/`, `protocols/`, `results/`,
-  `scripts/`. (Aligns with `Projects/` and `Tracking/`.)
+  `scripts/`. (Aligns with `Projects/`.)
 - Result folder name: `{YYYY-MM-DD}[_{HHMMSS}]_{type}_{scope-with-dashes}/`.
 
 ## Retired sub-systems

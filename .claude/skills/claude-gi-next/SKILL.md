@@ -8,7 +8,7 @@ argument-hint: bug|feature
 # Work Next GitHub Issue
 
 Find the highest-priority pending issue of the given type and invoke the
-work workflow on it. Counterpart to `/claude-ticket-next`.
+work workflow on it.
 
 ## Your Role
 

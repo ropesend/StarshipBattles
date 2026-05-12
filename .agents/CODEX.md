@@ -21,13 +21,16 @@ This file is the Codex-specific supplement for Starship Battles. Read it after `
 
 ## Skill Routing
 
-- `$codex-starship-ticket-system`: bug and feature tickets in `Tracking/`.
 - `$codex-starship-project-system`: `PROJ-XX` planning, continuation, review, audit, revision, extraction, and closure.
 - `$codex-starship-analysis-review`: dead code, complexity, architecture sweeps, and focused reviews.
 - `$codex-starship-qa-observer`: QA Observer session triage, feedback, and conversion to projects.
 - `$codex-starship-combat-lab`: Combat Lab scenarios, ability tests, simulation fixtures, and validation.
 - `$codex-starship-design-assets`: design validation and asset/tool workflows.
 - `$codex-ship-theme-creator`: complete Starship Battles ship theme generation.
+
+Ticket work lives on GitHub Issues. Use direct `gh issue` commands for small
+issue reads/comments, and use the canonical workflow at
+`AgentCoordination/protocols/ticket_workflow.md` for full ticket work.
 
 Use the skill that matches the user request. If no skill matches, follow `AGENTS.md` and the project docs directly.
 

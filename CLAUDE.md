@@ -122,27 +122,32 @@ source of truth. Do not copy architecture summaries into this adapter.
 
 Claude skills live under `.claude/skills/` and use the `claude-` prefix. Skills
 should be thin entry points that route to shared protocols in `Projects/`,
-`Tracking/`, `Reviews/`, and `docs/`.
+`AgentCoordination/protocols/`, `Reviews/`, and `docs/`.
 
 Use the current surface name in examples and handoffs. Do not reference retired
 Antigravity project, ticket, QA, or debug skills from Claude files.
 
-### Ticket systems (parallel, both active)
+### Ticket system (GitHub Issues)
 
-Two ticket systems run side-by-side. Both are valid.
+Tickets live on GitHub Issues: https://github.com/ropesend/StarshipBattles/issues.
+Use the `/claude-gi-*` skill family. The canonical TDD work-loop protocol is at
+[`AgentCoordination/protocols/ticket_workflow.md`](AgentCoordination/protocols/ticket_workflow.md);
+the deep-dive investigation protocol is at
+[`AgentCoordination/protocols/ticket_deep_dive.md`](AgentCoordination/protocols/ticket_deep_dive.md).
 
-| System | Skills | Storage | Use for |
-|---|---|---|---|
-| Legacy markdown | `/claude-ticket-*` (10 skills) | `Tracking/bugs/active/`, `Tracking/features/active/` | Existing in-flight tickets; new tickets if you specifically want offline-first or the on-disk audit trail |
-| GitHub Issues | `/claude-gi-*` (10 skills) | https://github.com/ropesend/StarshipBattles/issues | New tickets by default — visible on the GitHub page, native PR/commit linkage |
+Authority constraint: agents may set `status:awaiting-confirmation`, but only
+the user applies the `verified` label and closes the issue. Screenshots and
+logs live under `tracking-assets/`.
 
-Both systems use the same authority constraint: agents may set
-`status:awaiting-confirmation` (or its legacy equivalent), but only the user
-closes / archives. Screenshots and logs for the GitHub system live under
-`tracking-assets/`.
+The Projects system (`Projects/active_projects/PROJ-XX/` with
+`claude-proj-*` skills) runs in parallel with the GitHub-backed GP system
+(`tracking-assets/projects/GP-<n>/` with `claude-gp-*` skills). Both are valid
+for project-scale multi-phase work; pick per project.
 
-The Projects system (`Projects/active_projects/PROJ-XX/`) is **not** migrating
-to GitHub — it stays on disk with its existing `claude-proj-*` skills.
+Historical (read-only) archived tickets from the retired legacy
+`Tracking/` system live under
+[`AgentCoordination/legacy_tickets/`](AgentCoordination/legacy_tickets/).
+Do not cite them as current behavior.
 
 **Setup (one-time per machine)** for the GitHub Issues system:
 

@@ -62,8 +62,13 @@ def test_build_command_codex_includes_sandbox_and_output_last_message(tmp_path: 
     assert "--ask-for-approval" not in cmd
     assert "--sandbox" in cmd and "read-only" in cmd
     assert "--skip-git-repo-check" in cmd
+    # --output-last-message must NOT point at response_file itself — codex
+    # writes that file via apply_patch and --output-last-message would
+    # overwrite it with the final chat message (regression 2026-05-12).
     assert "--output-last-message" in cmd
-    assert str(response_file) in cmd
+    assert str(response_file) not in cmd
+    expected_last_message = response_file.with_name("last_message.txt")
+    assert str(expected_last_message) in cmd
     # --add-dir must point at the response file's parent (consult leaf)
     assert "--add-dir" in cmd
     assert str(response_file.parent) in cmd
@@ -160,11 +165,15 @@ def test_build_command_unknown_partner_raises(tmp_path: Path) -> None:
 
 
 def test_resolve_binary_returns_none_when_not_on_path(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CODEX_BIN", raising=False)
     monkeypatch.setattr(partner_invoke.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(partner_invoke, "_known_install_locations", lambda _p: [])
     assert partner_invoke.resolve_binary("codex") is None
 
 
 def test_resolve_binary_finds_plain_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("OPENCODE_BIN", raising=False)
+
     def fake_which(name: str) -> str | None:
         return "/usr/local/bin/opencode" if name == "opencode" else None
     monkeypatch.setattr(partner_invoke.shutil, "which", fake_which)
@@ -172,6 +181,7 @@ def test_resolve_binary_finds_plain_name(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 def test_resolve_binary_finds_windows_extensions(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CLAUDE_BIN", raising=False)
     monkeypatch.setattr(partner_invoke.sys, "platform", "win32", raising=False)
     seen = []
 
@@ -184,6 +194,69 @@ def test_resolve_binary_finds_windows_extensions(monkeypatch: pytest.MonkeyPatch
     assert result == r"C:\bin\claude.ps1"
     assert "claude" in seen
     assert "claude.ps1" in seen
+
+
+def test_resolve_binary_uses_env_override_when_set(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """CODEX_BIN env var pointing at a real file wins over PATH lookup."""
+    stub = tmp_path / "my-codex.exe"
+    stub.write_text("")
+    monkeypatch.setenv("CODEX_BIN", str(stub))
+
+    def fake_which(_name: str) -> str | None:
+        raise AssertionError("PATH lookup must not happen when env override resolves")
+
+    monkeypatch.setattr(partner_invoke.shutil, "which", fake_which)
+    assert partner_invoke.resolve_binary("codex") == str(stub)
+
+
+def test_resolve_binary_ignores_env_override_when_file_missing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """CODEX_BIN pointing at a non-existent file falls back to PATH."""
+    monkeypatch.setenv("CODEX_BIN", str(tmp_path / "nope.exe"))
+    monkeypatch.setattr(
+        partner_invoke.shutil, "which",
+        lambda n: "/path/codex" if n == "codex" else None,
+    )
+    monkeypatch.setattr(partner_invoke, "_known_install_locations", lambda _p: [])
+    assert partner_invoke.resolve_binary("codex") == "/path/codex"
+
+
+def test_resolve_binary_falls_back_to_known_install_location(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """When env override is unset and PATH lookup fails, known install locations are checked."""
+    monkeypatch.delenv("CODEX_BIN", raising=False)
+    monkeypatch.setattr(partner_invoke.shutil, "which", lambda _n: None)
+
+    fake_install = tmp_path / "OpenAI" / "Codex" / "bin" / "codex.exe"
+    fake_install.parent.mkdir(parents=True)
+    fake_install.write_text("")
+    monkeypatch.setattr(
+        partner_invoke, "_known_install_locations",
+        lambda partner: [fake_install] if partner == "codex" else [],
+    )
+    assert partner_invoke.resolve_binary("codex") == str(fake_install)
+
+
+def test_known_install_locations_codex_uses_localappdata_on_windows(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The Windows fallback maps codex to %LOCALAPPDATA%\\OpenAI\\Codex\\bin\\codex.exe."""
+    monkeypatch.setattr(partner_invoke.sys, "platform", "win32", raising=False)
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+    paths = partner_invoke._known_install_locations("codex")
+    assert paths == [tmp_path / "OpenAI" / "Codex" / "bin" / "codex.exe"]
+
+
+def test_known_install_locations_empty_on_non_windows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """On non-Windows platforms, no fallback locations are probed."""
+    monkeypatch.setattr(partner_invoke.sys, "platform", "linux", raising=False)
+    assert partner_invoke._known_install_locations("codex") == []
 
 
 # ---------- invoke_sync ----------
