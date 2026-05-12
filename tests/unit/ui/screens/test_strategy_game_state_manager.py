@@ -360,13 +360,23 @@ class TestApplyTurnStartState:
 
         screen.on_ui_selection.assert_called_once_with(empire.colonies[0])
 
-    def test_opens_event_log_scoped_to_new_empire(self):
-        """Helper opens the event log for the new empire's per-turn events
-        (BUG-123 scoping: ``empire_id=empire.id`` + ``empire_name``)."""
+    def test_opens_event_log_scoped_to_previous_turn_and_new_empire(self):
+        """Helper opens the event log for the new empire's events from the
+        just-completed turn (``session.turn_number - 1``).
+
+        ``GameSession.process_turn`` post-increments ``session.turn_number``,
+        so by the time the helper runs after ``process_full_turn`` the
+        facade's ``get_turn_number()`` returns ``N+1`` while the events the
+        player needs to see were filed with ``turn=N``. The helper must
+        subtract one to find them. Mock values are deliberately asymmetric
+        (8 -> 7) so the test cannot tautologise: it verifies the helper
+        queries the *previous* turn, not whatever ``get_turn_number``
+        returns. BUG-123 scoping: ``empire_id=empire.id`` + ``empire_name``.
+        """
         manager, screen = _make_game_state_manager()
         mock_events = [MagicMock()]
         screen._facade.get_turn_events.return_value = mock_events
-        screen._facade.get_turn_number.return_value = 7
+        screen._facade.get_turn_number.return_value = 8
         empire = screen.empires[1]
 
         manager._apply_turn_start_state(empire)
@@ -416,6 +426,39 @@ class TestApplyTurnStartState:
         screen.center_camera_on.assert_not_called()
         screen.on_ui_selection.assert_not_called()
         screen.ui.open_event_log_with_events.assert_not_called()
+
+    def test_finds_events_after_process_turn_increment(self):
+        """Issue #9 regression: end-to-end simulation of the rejected-fix
+        scenario.
+
+        ``GameSession.process_turn`` increments ``turn_number`` after
+        running, so events filed at turn N live in the log while
+        ``facade.get_turn_number()`` returns N+1. A live facade-shaped
+        fake that maps ``get_turn_events(turn, ...)`` -> only events
+        with matching turn proves the helper looks up the *just-completed*
+        turn (N), not the upcoming turn (N+1).
+        """
+        manager, screen = _make_game_state_manager()
+        empire = screen.empires[1]
+
+        # Events filed under turn N=3 (turn engine wrote them before the
+        # session.turn_number += 1 in GameSession.process_turn).
+        turn_n_events = [MagicMock(name="evt_turn_3")]
+        events_by_turn = {3: turn_n_events}
+
+        # Post-process: session.turn_number is now N+1 = 4.
+        screen._facade.get_turn_number.return_value = 4
+        screen._facade.get_turn_events.side_effect = (
+            lambda turn, *, empire_id: list(events_by_turn.get(turn, []))
+        )
+
+        manager._apply_turn_start_state(empire)
+
+        # The helper must find the turn-3 events even though the live
+        # session is now on turn 4.
+        screen.ui.open_event_log_with_events.assert_called_once_with(
+            turn_n_events, empire_name=empire.name
+        )
 
 
 class TestAdvanceTurnPerPlayerSwitch:
@@ -491,7 +534,10 @@ class TestAdvanceTurnPerPlayerSwitch:
 
     def test_else_branch_opens_event_log_for_next_empire(self):
         """Acceptance criterion: event log auto-opens on each per-player
-        turn-start (not only after a full turn)."""
+        turn-start (not only after a full turn). The lookup uses the
+        previous turn (``session.turn_number - 1``) because the helper
+        runs after ``process_turn`` has incremented; asymmetric mock
+        (5 -> 4) prevents tautology."""
         manager, screen = _make_game_state_manager()
         screen.current_player_index = 0
         screen.human_player_ids = [0, 1]
@@ -503,7 +549,7 @@ class TestAdvanceTurnPerPlayerSwitch:
 
         next_empire = screen.empires[1]
         screen._facade.get_turn_events.assert_called_once_with(
-            turn=5, empire_id=next_empire.id
+            turn=4, empire_id=next_empire.id
         )
         screen.ui.open_event_log_with_events.assert_called_once_with(
             mock_events, empire_name=next_empire.name
