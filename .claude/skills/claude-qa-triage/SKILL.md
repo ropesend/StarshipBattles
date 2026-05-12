@@ -1,19 +1,29 @@
 ---
 name: claude-qa-triage
-description: Process QA session logs into bugs, features, and prospective projects through interactive triage
+description: Process QA session logs into GitHub issues (bugs/features) and Projects/Triage/ files (prospective projects), through interactive triage.
 disable-model-invocation: true
 argument-hint: [session_directory_name] (e.g., 20260314_074413, or omit for latest)
 ---
 
 # QA Session Triage
 
-Process a QA Observer session log interactively, categorizing each observation as a Bug, Feature, Prospective Project, or acting on existing bug fixes (reject/approve).
+Process a QA Observer session log interactively, categorising each observation as a Bug, Feature, Prospective Project, or acting on existing bug fixes (reject/approve).
+
+Bugs and features become GitHub issues; prospective projects become `Projects/Triage/<name>.md` files on disk.
 
 ## Your Role
 
-Adopt the **QA Analyst / Technical Investigator** persona. You walk through each observation with the user, perform code review to understand context, check for duplicates against existing tickets, and create tickets in the appropriate system.
+Adopt the **QA Analyst / Technical Investigator** persona. You walk through each observation with the user, perform code review to understand context, check for duplicates against existing GitHub issues, and create issues in the appropriate system.
 
 **Be conversational and collaborative** — explain your findings, ask clarifying questions, and confirm decisions with the user before creating anything.
+
+## Authority Constraints (inherited from `/claude-gi-add`)
+
+- You **MUST NOT** call `gh issue close`.
+- You **MUST NOT** add the `verified` label to any issue.
+- Final closure is reserved for the user via `/claude-gi-close`.
+
+If during triage the user signals "this fix is confirmed," you DO NOT close the issue. You post a comment recording the confirmation and tell the user the close command.
 
 ---
 
@@ -35,14 +45,14 @@ The session argument is: **$ARGUMENTS**
 
 ### Step 1b: Check for Prior Triage
 
-After selecting a session (whether auto-selected or specified by argument):
+After selecting a session:
 
 1. Check if `Tools/qa_observer/session_data/<session_id>/triage_summary.md` exists.
 2. If it exists:
    - Read it and display the summary table to the user
    - Use **AskUserQuestion** with options:
      - **Re-triage** — process the session again from scratch (proceed normally)
-     - **Pick another** — list all untriaged sessions (directories that do NOT contain `triage_summary.md`) and let the user choose, or STOP if none remain
+     - **Pick another** — list all untriaged sessions and let the user choose, or STOP if none remain
    - If no untriaged sessions exist for "Pick another", report: "All sessions have been triaged. Nothing to do." and **STOP**.
 3. If it does not exist, proceed normally.
 
@@ -65,14 +75,6 @@ After selecting a session (whether auto-selected or specified by argument):
    - Show a one-line summary
    - Flag any that were merged from multiple mentions
    - **Ask the user** if the grouping is correct — they may want to split or merge items
-
-### Step 3: Load Dashboards for Duplicate Detection
-
-Read these files and keep them in context:
-- `Tracking/debug_plan.md` — all active bug IDs and descriptions
-- `Tracking/feature_plan.md` — all active feature IDs and descriptions
-
-Note the next available IDs (highest existing ID + 1 for each system).
 
 ---
 
@@ -102,25 +104,36 @@ Launch Explore agent(s) to understand the relevant code:
 3. Also check `logs/battle_log.txt` (combat events) and `logs/crash_log.txt` (crash tracebacks) if they exist.
 4. Include pertinent log excerpts in your investigation findings.
 
-This investigation informs whether it's truly a bug, a feature gap, or something that needs deeper architectural work.
+### Step C: Duplicate Check (against GitHub Issues)
 
-### Step C: Duplicate Check
+Query existing GitHub issues for overlap:
 
-Compare the observation against existing active tickets:
-- Scan bug descriptions in `Tracking/debug_plan.md` for overlap
-- Scan feature descriptions in `Tracking/feature_plan.md` for overlap
-- If a potential match is found:
-  1. Read the full existing ticket file (e.g., `Tracking/bugs/active/BUG-XX.md`) for detailed context
-  2. Present the match: "This may overlap with BUG-XX: [description]"
-  3. **If the matching bug has status `[Awaiting Confirmation]`**, use **AskUserQuestion** with these options:
-     - **Approve Fix** — the bug is confirmed fixed during this QA session (proceed to Step E: Approve Bug Fix)
-     - **Reject Fix** — the bug is NOT fixed, user observed it again (proceed to Step E: Reject Bug Fix)
-     - **Add Context** — related observation but not directly about the fix status (append `### 📝 User Update` block)
-     - **New Ticket** — distinct issue, proceed to Step D
-  4. **For all other matches**, use **AskUserQuestion** with:
-     - **Duplicate** — skip this observation entirely (note in session summary)
-     - **Add Context** — append new information and screenshots to the existing ticket as a `### 📝 User Update` block (Protocol 04 pattern), then move on
-     - **New Ticket** — this is a distinct issue, proceed to Step D
+```bash
+gh issue list --state all --limit 50 \
+  --json number,title,state,labels \
+  --search "<keywords from observation>"
+```
+
+Pick 2–4 high-signal keywords from the observation (subject + verb of the symptom). If `--search` returns candidates, fetch the body of each plausible match:
+
+```bash
+gh issue view <#> --json number,title,state,labels,body,comments
+```
+
+If a potential match is found:
+
+1. Present the match: "This may overlap with #N: [title]"
+2. **If the matching issue is open AND has `status:awaiting-confirmation`**, use **AskUserQuestion** with these options:
+   - **Approve Fix** — the bug is confirmed fixed during this QA session (proceed to Step E: Approve Bug Fix)
+   - **Reject Fix** — the bug is NOT fixed, user observed it again (proceed to Step E: Reject Bug Fix)
+   - **Add Context** — related observation but not directly about the fix status (post a comment with new info)
+   - **New Issue** — distinct issue, proceed to Step D
+3. **For all other matches** (open, closed, or different status), use **AskUserQuestion** with:
+   - **Duplicate** — skip this observation entirely (note in session summary)
+   - **Add Context** — post a comment to the existing issue with the new information and screenshots, then move on
+   - **New Issue** — this is a distinct issue, proceed to Step D
+
+When posting a comment for "Add Context", use the same screenshot-commit pipeline as for new issues (see Step E asset workflow), but skip body editing — the screenshots go in the comment body itself.
 
 ### Step D: Categorize
 
@@ -129,109 +142,81 @@ Propose a category based on code investigation findings, and confirm with the us
 1. **Bug** — something is broken or behaving incorrectly
 2. **Feature** — a new capability or enhancement request
 3. **Prospective Project** — a large-scope item requiring architecture review and multi-phase planning
-4. **Reject Bug Fix** — an existing bug (status: Awaiting Confirmation) was NOT actually fixed; the user observed the same problem during this QA session. This option is only valid when the observation matches an existing `[Awaiting Confirmation]` bug (typically offered during Step C).
-5. **Approve Bug Fix** — an existing bug (status: Awaiting Confirmation) IS confirmed fixed; remove it from the active list. This option is only valid when the observation matches an existing `[Awaiting Confirmation]` bug (typically offered during Step C).
+4. **Reject Bug Fix** — an existing issue with `status:awaiting-confirmation` was NOT actually fixed; the user observed the same problem during this QA session. Only valid when the observation matched an existing awaiting-confirmation issue (typically offered during Step C).
+5. **Approve Bug Fix** — an existing issue with `status:awaiting-confirmation` IS confirmed fixed. Only valid when the observation matched an existing awaiting-confirmation issue (typically offered during Step C). **You will NOT close the issue** — you post a confirmation comment and tell the user to run `/claude-gi-close <#>` themselves.
 6. **Skip** — not actionable, or user changed their mind
 
-### Step E: Create Ticket
+### Step E: Create / Update Issue
 
 Based on the confirmed category:
 
 ---
 
-#### For Bugs
+#### For Bugs and Features
 
-1. **Draft** a bug title and description:
+The two flows are nearly identical; only the label set and template fields differ.
+
+1. **Draft** the title and body:
    - Clean up speech-to-text artifacts (missing punctuation, filler words, repetition, false starts)
-   - Include screenshot references using the image pattern (see Image Handling below)
-   - Include relevant findings from code investigation
-2. **Present** the draft to the user for approval or edits
-3. **Determine priority** (Critical/High/Medium/Low) — propose one based on severity, confirm with user
-4. **Copy session logs** into the bug's directory (so they survive session pruning):
-   - If `Tools/qa_observer/session_data/<session_id>/logs/` exists:
-     - Create `Tracking/bugs/logs/BUG-XX_logs/`
-     - Copy all log files from the session `logs/` directory into `BUG-XX_logs/`
-   - If `Tools/qa_observer/session_data/<session_id>/word_timestamps.jsonl` exists:
-     - Copy it into `BUG-XX_logs/` as well
-
-5. **Create** the ticket file `Tracking/bugs/active/BUG-XX.md`:
-
-```markdown
-# BUG-XX: [Title]
-
-## Description
-[Cleaned description with screenshot references and code context]
-
-## Priority
-[Agreed priority]
-
-## Status
-Pending
-
-## Relevant Logs
-
-**Session:** <session_id>
-**Time window:** HH:MM:SS — HH:MM:SS
-
-Log excerpts (use a fenced code block):
-
-    [Relevant lines from battle.log / battle_log.txt / crash_log.txt around the observed time.
-    Include a few lines of context before and after the key event. Omit if no relevant log entries found.]
-
-Full logs: [BUG-XX_logs/](./BUG-XX_logs/)
-
-## Work Log
-- YYYY-MM-DD: Created from QA Session <session_id>.
-```
-
-> **Note:** The "Relevant Logs" section should be omitted entirely if no session logs were captured or no relevant log entries were found for the observation's time window. In that case, also skip step 4 (no `BUG-XX_logs/` directory needed).
-
-6. **Update** `Tracking/debug_plan.md` — append a new row to the Bug Queue table
-7. Report: "Created BUG-XX: [title]"
-
----
-
-#### For Features
-
-1. **Draft** a feature title and description:
-   - Clean up speech-to-text artifacts
-   - Include screenshot references
-   - Include context from code investigation
-2. **Present** the draft to the user for approval or edits
-3. **Determine priority** — propose one, confirm with user
-4. **Create** the ticket file `Tracking/features/active/FEAT-XX.md`:
-
-```markdown
-# FEAT-XX: [Title]
-
-## Description
-[Cleaned description with screenshot references]
-
-## Priority
-[Agreed priority]
-
-## Status
-Pending
-
-## Work Log
-- YYYY-MM-DD: Created from QA Session <session_id>.
-```
-
-5. **Update** `Tracking/feature_plan.md` — append a new row to the Feature Queue table
-6. Report: "Created FEAT-XX: [title]"
+   - Title: ≤72 chars, plain English, no `[BUG]`/`[FEAT]` prefix (labels carry that)
+   - Body sections per [`.github/ISSUE_TEMPLATE/bug.yml`](../../../.github/ISSUE_TEMPLATE/bug.yml) / [`feature.yml`](../../../.github/ISSUE_TEMPLATE/feature.yml):
+     - **Bug:** Description, Steps to Reproduce, Expected vs Actual, Acceptance Criteria, Screenshot/Logs (placeholder — added in step 5), Priority
+     - **Feature:** Description, Motivation, Acceptance Criteria, Priority
+   - Include relevant findings from code investigation in the Description.
+2. **Present** the draft to the user for approval or edits.
+3. **Determine priority** (`critical` / `high` / `medium` / `low`) — propose one based on severity, confirm with user.
+4. **Create the issue** with type/priority/status labels:
+   ```bash
+   # Write the body (without image link yet) to a temp file
+   gh issue create \
+     --title "<derived title>" \
+     --body-file "<tmp-body.md>" \
+     --label "type:<bug|feature>" \
+     --label "priority:<P>" \
+     --label "status:pending"
+   ```
+   Capture the issue number `N` from stdout (URL ends `…/issues/N`). Delete the temp body file after creation.
+5. **Derive a slug** from the title:
+   - Lowercase
+   - Replace any non-alphanumeric run with a single `-`
+   - Trim leading/trailing `-`
+   - Truncate to 30 characters at a word boundary
+6. **Copy assets** (only if the observation had screenshots and/or session logs):
+   - **Screenshots:** for each relevant image in `Tools/qa_observer/session_data/<sid>/images/`, copy to `tracking-assets/screenshots/<YYYY-MM>/issue-<N>-<slug>-<idx>.png` (1-based `idx`; `<YYYY-MM>` = current month).
+   - **Logs:** copy any of `battle.log`, `battle_log.txt`, `crash_log.txt`, `combat_lab.log`, `profiling_history.json`, `word_timestamps.jsonl` from `Tools/qa_observer/session_data/<sid>/logs/` (and the session root for `word_timestamps.jsonl`) to `tracking-assets/logs/issue-<N>/`.
+7. **Commit and push assets** (skip if step 6 produced no files):
+   ```bash
+   git add tracking-assets/screenshots/<YYYY-MM>/issue-<N>-* \
+           tracking-assets/logs/issue-<N>/
+   git commit -m "chore(qa): add assets for #<N>"
+   git push origin main
+   ```
+8. **Edit the issue body** to insert the rendered image link(s) into the Screenshot/Logs section (Bug) or append a Screenshots section (Feature). Use the `?raw=1` query so it renders inline:
+   ```markdown
+   ![<short alt text>](https://github.com/ropesend/StarshipBattles/blob/main/tracking-assets/screenshots/<YYYY-MM>/issue-<N>-<slug>-1.png?raw=1)
+   ```
+   Apply via `gh issue edit <N> --body-file <updated-body.md>`.
+9. **Post a logs comment** if any log files were copied:
+   ```bash
+   gh issue comment <N> --body-file <logs-comment.md>
+   ```
+   The comment body links each log file by its raw GitHub URL plus a one-line description of the time window.
+10. **Report:** "Created #<N> ([title]) — <URL>".
 
 ---
 
-#### For Prospective Projects
+#### For Prospective Projects (unchanged from the legacy skill)
+
+Projects stay 100% on disk. **Do NOT create a GitHub issue.**
 
 1. **Draft** a triage document:
    - Clean up speech-to-text artifacts
-   - Include screenshot references (using `./assets/` paths — see Image Handling)
+   - Include screenshot references using `./assets/` paths (see Image Handling below)
    - Include code investigation findings
    - Explain why this is project-sized (scope, architectural implications)
-2. **Present** the draft to the user for approval or edits
-3. **Choose a descriptive filename** (e.g., `star_rendering_overhaul.md`) — confirm with user
-4. **Copy** associated screenshots to `Projects/Triage/assets/` (see Image Handling)
+2. **Present** the draft to the user for approval or edits.
+3. **Choose a descriptive filename** (e.g., `star_rendering_overhaul.md`) — confirm with user.
+4. **Copy** associated screenshots to `Projects/Triage/assets/` (do NOT copy to `tracking-assets/`).
 5. **Create** the triage file `Projects/Triage/<descriptive_name>.md`:
 
 ```markdown
@@ -250,47 +235,56 @@ Pending
 [Why this warrants a full project rather than a bug fix or feature]
 ```
 
-6. Report: "Created triage item: `<filename>.md` — use `/claude-triage-to-proj <filename>` to convert to a full project."
+6. Report: "Created triage item: `Projects/Triage/<filename>.md` — use `/claude-triage-to-proj <filename>` to convert to a full project."
 
 ---
 
 #### For Reject Bug Fix
 
-Follow `Tracking/protocols/05_reject_ticket.md` pattern:
+Apply the rejection to the existing GitHub issue (whose number was identified in Step C):
 
-1. **Identify** the matching BUG-XX ticket (from Step C)
-2. **Ask the user** for their rejection explanation — clean up speech-to-text artifacts but preserve meaning
-3. **Append** to the end of `Tracking/bugs/active/BUG-XX.md`:
+1. **Ask the user** for their rejection explanation — clean up speech-to-text artifacts but preserve meaning.
+2. **Run the asset workflow** (steps 5–7 of the Bugs/Features flow) for any screenshots from this QA session, using the existing issue's `<N>` and the issue's existing slug (re-derived from its current title).
+3. **Post a rejection comment** with the asset image link(s):
 
-```markdown
----
-### ❌ Fix Rejected [YYYY-MM-DD HH:MM]
-**Reason:** [User's explanation, cleaned up]
-**New Constraints:** [Any specific new data or observations, including screenshot references]
----
-```
+   ```bash
+   gh issue comment <N> --body-file <rejection-comment.md>
+   ```
 
-Include screenshot references from this QA session using the standard relative path pattern:
-`[![Description](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)`
+   Body template:
+   ```markdown
+   ### ❌ Fix Rejected — QA session `<sid>` (YYYY-MM-DD HH:MM)
 
-4. **Update** `Tracking/debug_plan.md` — change status from `[Awaiting Confirmation]` to `[In-Progress]`
-5. Report: "BUG-XX fix rejected and reverted to In-Progress."
+   **Reason:** [User's explanation, cleaned up.]
+
+   **New observations:**
+   ![…](https://github.com/ropesend/StarshipBattles/blob/main/tracking-assets/screenshots/<YYYY-MM>/issue-<N>-<slug>-1.png?raw=1)
+   ```
+4. **Flip the status label atomically** (single `gh issue edit` invocation, both flags):
+   ```bash
+   gh issue edit <N> --remove-label "status:awaiting-confirmation" --add-label "status:in-progress"
+   ```
+5. Report: "#<N> fix rejected and reverted to `status:in-progress`."
 
 ---
 
 #### For Approve Bug Fix
 
-Follow `Tracking/protocols/03_close_ticket.md` pattern:
+You DO NOT close the issue. You record confirmation and ask the user to close.
 
-1. **Identify** the matching BUG-XX ticket (from Step C)
-2. **Read** the ticket to extract the title, solution summary, and key test case
-3. **Append** entry to `Tracking/solved_bugs.md`:
-   - Format: `## BUG-XX [Title]`
-   - Content: Date Solved, Brief Summary of Solution, Key Test Case
-4. **Move** `Tracking/bugs/active/BUG-XX.md` to `Tracking/bugs/archived/BUG-XX.md` (do not modify the ticket content — preserve full logs)
-5. **Move** `Tracking/bugs/logs/BUG-XX_logs/` to `Tracking/bugs/archived/BUG-XX_logs/` if it exists
-6. **Remove** the row for BUG-XX from `Tracking/debug_plan.md`
-7. Report: "BUG-XX confirmed fixed and archived."
+1. **Post a confirmation comment** on the existing issue:
+   ```bash
+   gh issue comment <N> --body "✅ Fix confirmed by user during QA session \`<sid>\` (YYYY-MM-DD). Ready for closure."
+   ```
+2. **Tell the user** in the conversation: "#<N> looks fixed. Run `/claude-gi-close <N>` to close it."
+3. **Do NOT** add the `verified` label. **Do NOT** call `gh issue close`. Both are forbidden by Authority Constraints.
+4. Report: "#<N> confirmation logged. Awaiting user `/claude-gi-close`."
+
+---
+
+#### For Skip
+
+Note in the session summary; no GitHub action.
 
 ---
 
@@ -301,19 +295,19 @@ After all observations have been processed, present a final summary table:
 ```markdown
 ## QA Triage Summary — Session <session_id>
 
-| # | Observation | Category | Ticket | Notes |
-|---|-------------|----------|--------|-------|
-| 1 | Star display too small | Bug | BUG-94 | New ticket |
-| 2 | Want fleet auto-routing | Feature | FEAT-06 | New ticket |
+| # | Observation | Category | Issue / File | Notes |
+|---|-------------|----------|--------------|-------|
+| 1 | Star display too small | Bug | #127 | New issue |
+| 2 | Want fleet auto-routing | Feature | #128 | New issue |
 | 3 | Combat UI needs overhaul | Project | combat_ui_overhaul.md | Triage created |
-| 4 | Shield flicker | Reject Fix | BUG-69 | Fix rejected, reverted to In-Progress |
-| 5 | Fleet display correct now | Approve Fix | BUG-85 | Confirmed fixed, archived |
+| 4 | Shield flicker | Reject Fix | #69 | Fix rejected, reverted to status:in-progress |
+| 5 | Fleet display correct now | Approve Fix | #85 | Confirmed; user must run /claude-gi-close 85 |
 | 6 | Minor comment | Skip | — | Not actionable |
 
-**Created:** X bugs, Y features, Z project triage items
+**Created:** X issues (bugs+features), Z project triage items
 **Bug fixes rejected:** R
-**Bug fixes approved:** A
-**Duplicates/context added:** N
+**Bug fixes confirmed (awaiting user close):** A
+**Duplicates / context added:** D
 **Skipped:** M
 ```
 
@@ -322,36 +316,33 @@ After all observations have been processed, present a final summary table:
 Write the summary table above (the full markdown block including the stats lines) to:
 `Tools/qa_observer/session_data/<session_id>/triage_summary.md`
 
-This file serves as a persistent record that the session has been triaged, and is checked in Phase 1 to prevent redundant processing.
+This file marks the session as triaged and is checked in Phase 1 to prevent redundant processing.
 
 ---
 
 ## Image Handling
 
 ### Source
+
 All session images are in: `Tools/qa_observer/session_data/<session_id>/images/`
 
-### For Bug Tickets (`Tracking/bugs/active/BUG-XX.md`)
+### For GitHub Issues (Bugs / Features)
 
-Reference images in-place using relative paths from the ticket back to the session directory. **Do NOT copy images.** The session data is the image archive.
+**COPY** images to `tracking-assets/screenshots/<YYYY-MM>/issue-<N>-<slug>-<idx>.png`. Reference them via the `?raw=1` URL pattern so they render inline on github.com:
 
-Pattern (matching existing BUG-90, BUG-91 convention):
 ```markdown
-[![Screenshot description](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)
+![<alt>](https://github.com/ropesend/StarshipBattles/blob/main/tracking-assets/screenshots/<YYYY-MM>/issue-<N>-<slug>-1.png?raw=1)
 ```
 
-### For Feature Tickets (`Tracking/features/active/FEAT-XX.md`)
-
-Same relative path pattern as bugs:
-```markdown
-[![Screenshot description](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)
-```
+Conventions per [`tracking-assets/README.md`](../../../tracking-assets/README.md):
+- `<YYYY-MM>` = month the asset was first attached
+- `<slug>` = lowercased title, alphanum-and-hyphens, ≤30 chars
+- `<idx>` = 1-based index when multiple images for one issue
+- Auto-commit and push the assets (single commit per issue): `chore(qa): add assets for #<N>`
 
 ### For Project Triage Files (`Projects/Triage/<name>.md`)
 
-**COPY** images from the session `images/` directory to `Projects/Triage/assets/`. Reference them as `./assets/<filename>.png` in the triage markdown.
-
-This is required because the `/claude-triage-to-proj` skill expects `./assets/` references and handles copying them to the project directory during conversion. If images are not in `./assets/`, the conversion will break.
+**COPY** images to `Projects/Triage/assets/` (NOT `tracking-assets/`). Reference as `./assets/<filename>.png`. The `/claude-triage-to-proj` skill expects this path during conversion.
 
 ---
 
@@ -359,8 +350,10 @@ This is required because the `/claude-triage-to-proj` skill expects `./assets/` 
 
 - **INTERACTIVE:** Do NOT batch-process all observations silently. Walk through each one with the user, one at a time.
 - **CODE REVIEW:** Always investigate relevant code before categorizing. Use Explore agents. Don't guess — look at the actual code.
-- **USER APPROVAL:** Always present drafts and get confirmation before creating any ticket or file.
+- **USER APPROVAL:** Always present drafts and get confirmation before creating any issue or file.
 - **CLEAN TEXT:** Speech-to-text output has no punctuation, contains filler words, repetition, and false starts. Clean it up into proper sentences when writing descriptions. Preserve the original meaning faithfully.
 - **NO IMPLEMENTATION:** Do not start fixing bugs or implementing features. This is triage and data entry only.
-- **SEQUENTIAL IDs:** Always check the relevant dashboard for the next available ID before creating a ticket. Never reuse or skip IDs.
-- **IMAGE CONTEXT:** Every screenshot referenced in a ticket must have a text description explaining what it shows and why it's relevant.
+- **AUTHORITY:** Never call `gh issue close`. Never add the `verified` label. Final closure belongs to the user.
+- **ATOMIC LABEL FLIPS:** Use a single `gh issue edit --remove-label X --add-label Y` invocation for status transitions; never two separate commands.
+- **IMAGE CONTEXT:** Every screenshot referenced in an issue must have a text description explaining what it shows and why it's relevant.
+- **NO BULK COMMITS:** One asset commit per issue (steps 6–7), so `git log` shows clean per-issue history.
