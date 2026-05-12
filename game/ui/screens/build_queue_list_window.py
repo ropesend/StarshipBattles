@@ -17,6 +17,7 @@ import pygame_gui
 from pygame_gui.elements import UILabel
 
 from game.core.input_actions import InputAction
+from game.core.profiling import profile_action
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
 
 if TYPE_CHECKING:
@@ -48,6 +49,7 @@ class BuildQueueRowCollector:
     tests without ``bypass_init``.
     """
 
+    @profile_action("Panel: BuildQueue.collect_rows")
     def collect(self, empire) -> List[BuildQueueRow]:
         rows: List[BuildQueueRow] = []
         for planet in empire.colonies:
@@ -88,6 +90,7 @@ class BuildQueueListUiBuilder:
     HEADER_TEXT = "Location                    Item                 Turns Left"
     EMPTY_TEXT = "No active build queues."
 
+    @profile_action("Panel: BuildQueue.rebuild_ui_labels")
     def build(self, screen: "BuildQueueListWindow") -> None:
         container = screen.get_container()
         content_width = container.get_size()[0] - 20

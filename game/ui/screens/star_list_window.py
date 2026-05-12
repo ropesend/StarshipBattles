@@ -18,6 +18,7 @@ from typing import Any, Optional, TYPE_CHECKING
 import pygame
 from pygame_gui.elements import UIPanel, UIButton
 
+from game.core.profiling import profile_action
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
 from game.ui.screens.data_list_window_mixin import DataListWindowMixin
 
@@ -137,10 +138,15 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
     PROJ-313: Migrated to StrategyModalWindow base class.
     """
 
+    # PROJ-411 Task 1.10: full-window-init span — captures the entire
+    # open path including pygame_gui widget construction, VirtualTable
+    # build, sidebar / main panel layout, etc.
+    @profile_action("Panel: StarRegistry.window_init")
     def __init__(self, rect, manager, galaxy, *,
                  window_manager: "StrategyWindowManager",
                  on_close_callback=None, on_navigate_callback=None,
-                 ui_builder: Optional[StarListWindowUiBuilder] = None):
+                 ui_builder: Optional[StarListWindowUiBuilder] = None,
+                 facade_state=None):
         """Initialize the Star List Window.
 
         Args:
@@ -151,6 +157,9 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
             on_close_callback: Called when window is closed.
             on_navigate_callback: Called with HexCoord to navigate camera to star.
             ui_builder: Optional UI builder override (test seam).
+            facade_state: PROJ-411 Phase 1. Optional ``FacadeSessionState``
+                — passed through to ``gather_stars`` so the per-turn cache
+                short-circuits the galaxy walk on re-opens within one turn.
         """
         # ---- Stage 1: cheap state (set BEFORE super().__init__) ----
         # Note: super().__init__ triggers set_dimensions which may read
@@ -183,7 +192,9 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
         # --- State ---
-        self.all_stars = gather_stars(galaxy)
+        # PROJ-411 Phase 1: thread facade_state through gather_stars so
+        # the per-turn cache short-circuits the galaxy walk on re-opens.
+        self.all_stars = gather_stars(galaxy, facade_state=facade_state)
         self.filtered_stars = []
 
         # Preset manager

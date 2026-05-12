@@ -22,24 +22,46 @@ compose without growing the function signature.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 from game.core.constants import EARTH_MASS
+from game.core.profiling import profile_action
 from game.ui.filters.filter_state import FilterState
+
+if TYPE_CHECKING:
+    from game.strategy.facade.slices._facade_state import FacadeSessionState
 from game.ui.utils.formatters import format_compact_number
 from game.strategy.services.system_effects_collector import make_group_key
 from game.ui.screens.list_filter_utils import make_attr_sort_key
 
 
-def gather_planets(galaxy, empire) -> Any:
+@profile_action("Panel: PlanetRegistry.gather_planets")
+def gather_planets(
+    galaxy,
+    empire,
+    *,
+    facade_state: "Optional[FacadeSessionState]" = None,
+) -> Any:
     """Collect all planets from the galaxy with pre-computed filter values.
 
     Args:
         galaxy: The galaxy object containing systems and planets
         empire: The current player's empire for context
+        facade_state: PROJ-411 Phase 1. Optional reference to the session's
+            ``FacadeSessionState``. When supplied, the resulting list is
+            cached at ``facade_state.planets_for_empire_cache[empire.id]``
+            for the rest of the turn and returned by identity on subsequent
+            calls. Cleared by ``FacadeSessionState.invalidate_all()`` at
+            each turn boundary. Engine-side or test callers may omit this
+            kwarg and get the legacy uncached behaviour.
 
     Returns:
         List of planets with cached filter values attached
     """
+    if facade_state is not None:
+        cached = facade_state.planets_for_empire_cache.get(empire.id)
+        if cached is not None:
+            return cached
+
     planets = []
     m_earth_const = EARTH_MASS
     g_const = 9.81
@@ -60,6 +82,8 @@ def gather_planets(galaxy, empire) -> Any:
                 p._cached_type_category = p.planet_type.name.title().replace('_', ' ')
 
                 planets.append(p)
+    if facade_state is not None:
+        facade_state.planets_for_empire_cache[empire.id] = planets
     return planets
 
 
@@ -130,6 +154,7 @@ def effects_predicate(filter_effects: Dict[str, FilterState] | None) -> Callable
     return predicate
 
 
+@profile_action("Panel: PlanetRegistry.compute_effect_keys")
 def compute_planet_effect_keys(all_planets) -> List[str]:
     """Return sorted, de-duplicated list of effect group-keys present on any
     planet in the supplied list.

@@ -7,6 +7,11 @@ import pytest
 from game.core.registry import RegistryManager, set_default_registry_manager
 from game.core.config import DisplayConfig
 
+# PROJ-411: register the perf smoke-scenario fixture as a session-wide plugin
+# so any test (under tests/performance/, tests/fixtures/, etc.) can request
+# `smoke_turn1_scenario` without a directory-local conftest wrapper.
+pytest_plugins = ("tests.fixtures.perf_smoke_scenario",)
+
 @pytest.fixture(autouse=True)
 def reset_game_state(monkeypatch, request):
     """

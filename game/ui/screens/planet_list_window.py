@@ -12,6 +12,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any, Optional, TYPE_CHECKING
 import pygame
+from game.core.profiling import profile_action
 from game.core.resources import ResourceCatalog
 from pygame_gui.elements import UIPanel, UIButton
 
@@ -86,6 +87,7 @@ def _render_effect_cell(planet, group_key: str) -> str:
     return rendered if rendered else "—"
 
 
+@profile_action("Panel: PlanetRegistry.build_effect_columns")
 def build_effect_columns(effect_keys: list[str]) -> list[dict]:
     """Build per-effect column definitions for the Planet List (FEAT-16).
 
@@ -220,6 +222,7 @@ class PlanetListUiBuilder:
 
 
 class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
+    @profile_action("Panel: PlanetRegistry.window_init")
     def __init__(self, rect, manager, galaxy, empire, *,
                  window_manager: "StrategyWindowManager",
                  on_close_callback=None, asset_resolver=None, empires=None,
@@ -271,7 +274,11 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.panel_margin = 20
 
         # Filter / preset state
-        self.all_planets = gather_planets(galaxy, empire)
+        # PROJ-411 Phase 1: pass facade_state when available so the
+        # per-turn cache short-circuits the galaxy walk on re-opens.
+        # Use getattr to tolerate test stubs that lack `facade_state`.
+        _proj411_state = getattr(facade, "facade_state", None) if facade is not None else None
+        self.all_planets = gather_planets(galaxy, empire, facade_state=_proj411_state)
         self.filtered_planets: list = []
         self.preset_manager = PresetManager()
         self._filter_mgr = PlanetListFilterManager()

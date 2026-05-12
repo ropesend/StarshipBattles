@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from game.core.registry import GameRegistries
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 from game.core.paths import Paths
+from game.core.profiling import profile_action
 from game.strategy.services.empire_economy_service import EmpireEconomyService  # PROJ-292 M1
 from game.ui.panels.empire_treasury_panel import EmpireTreasuryPanel, load_resource_icons
 from game.ui.screens.race_asset_loader import RaceAssetLoader
@@ -69,6 +70,10 @@ class EmpirePanelWindow(StrategyModalWindow):
     PROJ-313: Migrated to StrategyModalWindow base class.
     """
 
+    # PROJ-411 Task 1.10: full-window-init span — captures the entire
+    # open path including pygame_gui widget construction, Treasury tab
+    # build (Population tab is lazy per Task 1.8), and load_resource_icons.
+    @profile_action("Panel: EmpireOverview.window_init")
     def __init__(
         self,
         rect: pygame.Rect,
@@ -80,6 +85,7 @@ class EmpirePanelWindow(StrategyModalWindow):
         registries: 'GameRegistries' = None,
         race_registry: Optional[Any] = None,
         ui_builder: Optional[EmpirePanelUiBuilder] = None,
+        facade_state=None,
     ):
         """
         Create empire panel window.
@@ -102,6 +108,13 @@ class EmpirePanelWindow(StrategyModalWindow):
         self.on_close_callback = on_close_callback
         self._registries = registries  # PROJ-211: Injected registries
         self._race_registry = race_registry  # PROJ-290
+        # PROJ-411 Phase 1: optional per-turn cache for EmpireEconomyService.
+        self._facade_state = facade_state
+        # PROJ-411 Task 1.8: lazy-build flag for the Population tab. The
+        # tab's content (race portrait + flag, both heavy pygame.image.load
+        # calls) is built on first ``_show_tab(TAB_POPULATION)`` rather
+        # than eagerly on open. Idempotent: re-shows don't rebuild.
+        self._population_tab_built = False
 
         # Tab state
         self.tab_buttons: List[UIButton] = []
@@ -187,14 +200,17 @@ class EmpirePanelWindow(StrategyModalWindow):
         self.step_panels.append(panel_treasury)
 
         # Population panel
+        # PROJ-411 Task 1.8: do NOT build content here. The heavy
+        # pygame.image.load calls (portrait + flag) defer to first
+        # ``_show_tab(TAB_POPULATION)`` via ``_population_tab_built``.
         panel_population = UIPanel(
             relative_rect=panel_rect,
             manager=self.ui_manager,
             container=container,
             object_id="#panel_population"
         )
-        self._build_population_tab(panel_population)
         self.step_panels.append(panel_population)
+        self._population_panel = panel_population
 
         # Placeholder panel
         panel_more = UIPanel(
@@ -217,12 +233,29 @@ class EmpirePanelWindow(StrategyModalWindow):
         tab_index = max(0, min(tab_index, len(self.step_panels) - 1))
         self.current_tab = tab_index
 
-        # Hide all panels, show target
+        # Hide all panels, show target. Must run BEFORE the lazy-build below
+        # so the target panel is visible when children are added — pygame_gui's
+        # ``UIContainer.add_element`` calls ``child.hide()`` on a hidden parent,
+        # and ``UIScrollingContainer.hide()`` crashes before ``__init__`` has
+        # assigned ``vert_scroll_bar``.
         for i, panel in enumerate(self.step_panels):
             if i == tab_index:
                 panel.show()
             else:
                 panel.hide()
+
+        # PROJ-411 Task 1.8: lazy-build the Population tab on first show.
+        # Skips ~2 pygame.image.load + smoothscale calls per panel open
+        # for players who never click Population. Skipped under
+        # ``bypass_init`` because the test mock builder pre-populates
+        # ``step_panels`` with MagicMocks that can't host real widgets.
+        if (
+            tab_index == TAB_POPULATION
+            and not self._population_tab_built
+            and not getattr(self, "_window_init_bypassed", False)
+        ):
+            self._build_population_tab(self.step_panels[tab_index])
+            self._population_tab_built = True
 
         # Update tab button highlighting
         for i, btn in enumerate(self.tab_buttons):
@@ -231,6 +264,7 @@ class EmpirePanelWindow(StrategyModalWindow):
             else:
                 btn.unselect()
 
+    @profile_action("Panel: EmpireOverview.build_treasury_tab")
     def _build_treasury_tab(self, panel: UIPanel) -> None:
         """Build Treasury tab content using EmpireTreasuryPanel.
 
@@ -251,7 +285,7 @@ class EmpirePanelWindow(StrategyModalWindow):
             economy_config=economy,
             race_registry=race_registry,
         )
-        snapshot = service.get_snapshot(self.empire)
+        snapshot = service.get_snapshot(self.empire, facade_state=self._facade_state)
         self._treasury_panel = EmpireTreasuryPanel(
             panel,
             self.ui_manager,

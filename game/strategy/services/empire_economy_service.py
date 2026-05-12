@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from game.core.registry import GameRegistries
     from game.strategy.config.economy_config import EconomyConfig
     from game.strategy.data.empire import Empire
+    from game.strategy.facade.slices._facade_state import FacadeSessionState
 
 
 class EmpireEconomyService:
@@ -62,9 +63,34 @@ class EmpireEconomyService:
             race_registry=race_registry,
         )
 
-    def get_snapshot(self, empire: "Empire") -> EmpireEconomySnapshot:
-        """Return a fresh `EmpireEconomySnapshot` for the given empire."""
-        return self._calculator.calculate(empire)
+    def get_snapshot(
+        self,
+        empire: "Empire",
+        *,
+        facade_state: "Optional[FacadeSessionState]" = None,
+    ) -> EmpireEconomySnapshot:
+        """Return an `EmpireEconomySnapshot` for the given empire.
+
+        Args:
+            empire: The empire to snapshot.
+            facade_state: PROJ-411 Phase 1. Optional reference to the
+                session's ``FacadeSessionState``. When supplied, the
+                snapshot is cached at
+                ``facade_state.empire_economy_snapshot[empire.id]`` for
+                the rest of the turn and returned by identity on
+                subsequent calls. Cleared by
+                ``FacadeSessionState.invalidate_all()`` at each turn
+                boundary. Engine-side or test callers may omit this
+                kwarg and get the legacy uncached behaviour.
+        """
+        if facade_state is not None:
+            cached = facade_state.empire_economy_snapshot.get(empire.id)
+            if cached is not None:
+                return cached
+        snapshot = self._calculator.calculate(empire)
+        if facade_state is not None:
+            facade_state.empire_economy_snapshot[empire.id] = snapshot
+        return snapshot
 
 
 __all__ = ["EmpireEconomyService", "EmpireEconomySnapshot"]

@@ -25,6 +25,10 @@
 | `game/ui/screens/build_queue_renderer.py` | Production | 1 | May need a `profile_action` span. |
 | `game/ui/screens/strategy_build_queue_manager.py` | Production | 1 | Pass `facade_state` when constructing `DesignLibrary` at line 196 (and similar). |
 | `game/ui/panels/build_queue_controller.py` | Production | 1 | Pass `facade_state` through to `DesignLibrary`. |
+| `game/strategy/facade/strategy_session_facade.py` | Production | 1 | Added in session 1: public `facade_state` property as cross-layer accessor for the per-turn cache holder. ≤15 LOC. |
+| `game/ui/screens/strategy_windows/empire_panel_ctrl.py` | Production | 1 | Edited in session 1: pass `facade_state` to `EmpirePanelWindow` constructor. |
+| `game/ui/screens/strategy_windows/list_windows.py` | Production | 1 | Edited in session 1: pass `facade_state` to `StarListWindow` constructor. |
+| `conftest.py` (root) | Test infra | 1 | Added in session 1: `pytest_plugins = ("tests.fixtures.perf_smoke_scenario",)` line so the smoke fixture is session-wide. |
 | `game/screen_router.py` | Production | (reference only) | No edits — read for `@profile_action` decorator usage pattern. |
 | `data/builder_theme.json` | Data | (reference only) | No edits — `panel.@fast_panel` already defined at lines 72-82. |
 
@@ -34,16 +38,15 @@
 |------|------|-------|-------|
 | `tests/fixtures/perf_smoke_scenario.py` | Test fixture | 1 | **NEW.** Turn 1, 2 empires, 2 systems, 1 planet each, 0 fleets. |
 | `tests/fixtures/test_perf_smoke_scenario.py` | Test | 1 | **NEW.** Smoke test the fixture itself. |
-| `tests/performance/test_strategy_panel_smoke_scalene.py` | Test | 1 | **NEW.** Single test opening all 5 panels under smoke scenario; asserts profile_action spans recorded. |
-| `tests/unit/strategy/design_library/test_design_scan_caching.py` | Test | 1 | **NEW.** 3 tests: cached_per_turn, save_invalidates, isolated_per_empire. |
+| `tests/performance/test_strategy_panel_spans.py` | Test | 1 | **NEW (renamed from `_smoke_scalene` in plan).** 13 tests: 12 introspection (one per span) + 1 runtime (calls 7 module-level spans, asserts records). |
+| `tests/unit/strategy/design_library/test_scan_designs_caching.py` | Test | 1 | **NEW (renamed from `test_design_scan_caching`).** 6 tests covering all 5 cache contracts. |
 | `tests/unit/strategy/design_library/test_basics.py` | Test | 1 | **EDIT.** Update lines 43, 68, 183-226 to account for caching. |
 | `tests/unit/strategy/design_library/test_per_empire.py` | Test | 1 | **EDIT.** Update lines 65-66 to use distinct turns or assert isolation. |
-| `tests/unit/ui/screens/test_gather_planets_caching.py` | Test | 1 | **NEW.** cache_per_turn assertion. |
-| `tests/unit/ui/screens/test_gather_stars_caching.py` | Test | 1 | **NEW.** cache_per_turn assertion. |
-| `tests/unit/strategy/facade/test_facade_state.py` | Test | 1 | **EDIT or NEW.** `test_invalidate_all_clears_proj411_caches`. |
-| `tests/unit/strategy/services/test_empire_economy_caching.py` | Test | 1 | **NEW.** snapshot_cached_per_turn, snapshot_cleared_on_turn_advance. |
-| `tests/unit/ui/screens/test_empire_panel_lazy_load.py` | Test | 1 | **NEW.** 4 tests for deferred asset loading. |
-| `tests/unit/ui/screens/test_event_log_window.py` | Test | 1 | **EDIT.** Add `test_open_does_not_copy_events_list`. |
+| `tests/unit/ui/screens/test_gather_planets_caching.py` | Test | 1 | **NEW.** 7 tests covering gather_planets AND gather_stars cache contracts (merged into one file). |
+| `tests/unit/strategy/facade/test_facade_state_proj411_caches.py` | Test | 1 | **NEW.** 9 tests: 4 cache-default-state + 4 invalidate_all clears + 1 regression guard for pre-PROJ-411 cache clears. |
+| `tests/unit/strategy/services/test_empire_economy_caching.py` | Test | 1 | **NEW.** 4 tests: cached_per_turn, isolated_per_empire, invalidate_all_drops_cache, no_facade_state_is_uncached. |
+| `tests/unit/ui/screens/test_empire_panel_lazy_load.py` | Test | 1 | **NEW.** 3 tests for Population-tab lazy build. |
+| `tests/unit/ui/screens/test_event_log_no_copy.py` | Test | 1 | **NEW.** Identity assertion that EventLogWindow holds a reference, not a copy. |
 | `tests/performance/test_strategy_panel_regression.py` | Test | 3 | **NEW.** 10 count-based regression gates. |
 | `tests/performance/benchmark_strategy_panels.py` | Test | 3 | **NEW.** Informational wall-clock benchmarks for 5 panels. |
 | `tests/unit/ui/components/table/test_virtual_table.py` | Test | 3 | **EDIT.** Extend `TestRowPoolReuseGuard` with 3 new per-panel tests. |
@@ -52,8 +55,32 @@
 
 | File | Type | Phase | Notes |
 |------|------|-------|-------|
-| `docs/02_PATTERNS.md` | Docs | 3 | Pattern #11 — note PROJ-411 per-turn `FacadeSessionState` cache extension; bump Last verified date. |
+| `docs/02_PATTERNS.md` | Docs | 3 | Pattern #11 — note PROJ-411 per-turn `FacadeSessionState` cache extension; bump Last verified date. Add note about window-reuse pattern from Phase 2 (`open_for_X` + `show`/`hide` mirroring PROJ-376 BuildQueueScreen). |
 | `docs/systems/strategy_layer.md` | Docs | 3 | Section 1 Performance/caching contracts — list 4 new caches; bump Last verified date. |
+
+## Phase 2 production files (planned edits)
+
+| File | Type | Phase | Notes |
+|------|------|-------|-------|
+| `game/ui/screens/planet_list_window.py` | Production | 2 | Task 2.1: add `show()`/`hide()`, extract `open_for_galaxy(...)` from `__init__`. ≤25 LOC (737 LOC file). |
+| `game/ui/screens/star_list_window.py` | Production | 2 | Task 2.2: same template, `open_for_galaxy(galaxy)`. |
+| `game/ui/screens/empire_panel_window.py` | Production | 2 | Task 2.3: `open_for_empire(empire)` — must rebuild Treasury (empire change) + reset Population lazy flag. ≤15 LOC budget. |
+| `game/ui/screens/event_log_window.py` | Production | 2 | Task 2.4: `open_for_events(events, *, empire_name=None)` — rebuild events list for hot-seat empire. |
+| `game/ui/screens/strategy_windows/list_windows.py` | Production | 2 | Modify Planet + Star registrars to reuse slot instead of `kill()` + reconstruct. |
+| `game/ui/screens/strategy_windows/empire_panel_ctrl.py` | Production | 2 | Modify Empire registrar to reuse slot. |
+| `game/ui/screens/strategy_windows/event_log_window_ctrl.py` | Production | 2 | Modify Event Log registrar to reuse slot. |
+
+## Phase 2 test files (planned new + edits)
+
+| File | Type | Phase | Notes |
+|------|------|-------|-------|
+| `tests/unit/ui/screens/strategy_windows/test_planet_list_window_registrar.py` | Test | 2 | **NEW.** Reuse-path coverage. |
+| `tests/unit/ui/screens/strategy_windows/test_star_list_window_registrar.py` | Test | 2 | **NEW.** Reuse-path coverage. |
+| `tests/unit/ui/screens/strategy_windows/test_empire_panel_ctrl.py` | Test | 2 | **EDIT.** Add reuse-path assertions. |
+| `tests/unit/ui/screens/test_planet_list_window.py` | Test | 2 | **EDIT.** Regression: re-open does not re-walk galaxy. |
+| `tests/unit/ui/screens/test_star_list_window.py` | Test | 2 | **EDIT.** Same shape. |
+| `tests/unit/ui/screens/test_empire_panel_window.py` | Test | 2 | **EDIT.** `open_for_empire` resets state correctly. |
+| `tests/unit/ui/screens/test_event_log_window.py` | Test | 2 | **EDIT.** `open_for_events` rebuilds list for hot-seat empire. |
 
 ## Project-internal files (created during execution)
 
@@ -61,7 +88,7 @@
 |------|------|-------|-------|
 | `Projects/active_projects/PROJ-411/findings/profile_baseline.md` | Findings | 1 | Scalene baseline BEFORE Phase 1 wins land. |
 | `Projects/active_projects/PROJ-411/findings/profile_after.md` | Findings | 1 | Scalene profile AFTER Phase 1 wins. |
-| `Projects/active_projects/PROJ-411/findings/profile_after_phase2.md` | Findings | 2 | Scalene profile after Phase 2 fixes. |
+| `Projects/active_projects/PROJ-411/findings/profile_after_phase2.md` | Findings | 2 | F9 real-game capture after each Phase 2 PR. Expect re-open spans <500 ms for all 4 windows. |
 | `Projects/active_projects/PROJ-411/findings/profile_final.md` | Findings | 3 | Final before/after table for user verification. |
 
 ## Conflict awareness
