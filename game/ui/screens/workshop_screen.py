@@ -10,9 +10,10 @@ import os
 from typing import Optional, Any
 
 import pygame
-import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton, UIWindow
 from pygame_gui.windows import UIConfirmationDialog
+
+from game.ui.pygame_gui_patch import StarshipUIManager
 
 from game.core.profiling import profile_block
 from game.core.constants import LayerType
@@ -85,7 +86,7 @@ class DesignWorkshopScreen:
         # UI Manager
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
         with profile_block("Builder: Init UIManager"):
-            self.ui_manager = pygame_gui.UIManager(
+            self.ui_manager = StarshipUIManager(
                 (screen_width, screen_height),
                 theme_path=theme_path if os.path.exists(theme_path) else None
             )

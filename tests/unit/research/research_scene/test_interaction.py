@@ -39,7 +39,7 @@ def _patched_research_scene():
         'TechTree': patch('game.ui.research.research_scene.TechTree'),
         'Tracker': patch('game.ui.research.research_scene.ResearchTracker'),
         'Camera': patch('game.ui.research.research_scene.Camera'),
-        'pygame_gui': patch('game.ui.research.research_scene.pygame_gui'),
+        'StarshipUIManager': patch('game.ui.research.research_scene.StarshipUIManager'),
         'Renderer': patch('game.ui.research.research_scene.ResearchRenderer'),
         'Panel': patch('game.ui.research.research_scene.ResearchControlPanel'),
     }
@@ -187,7 +187,7 @@ class TestUpdateMethod:
             mocks['Camera'].return_value = mock_camera_instance
 
             mock_ui_manager = MagicMock()
-            mocks['pygame_gui'].UIManager.return_value = mock_ui_manager
+            mocks['StarshipUIManager'].return_value = mock_ui_manager
 
             from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
@@ -223,7 +223,7 @@ class TestCycleDetectionCall:
         mock_tree.detect_cycles.return_value = []  # No cycles
 
         with patch('game.ui.research.research_scene.TechTree', return_value=mock_tree):
-            with patch('game.ui.research.research_scene.pygame_gui'):
+            with patch('game.ui.research.research_scene.StarshipUIManager'):
                 with patch('game.ui.research.research_scene.ResearchControlPanel'):
                     from game.ui.research.research_scene import ResearchTreeScene
 

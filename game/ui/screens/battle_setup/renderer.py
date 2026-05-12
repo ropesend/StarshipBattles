@@ -11,8 +11,9 @@ keeps Phase 4 a pure structural extraction with no behavior change.
 from __future__ import annotations
 
 import pygame
-import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton
+
+from game.ui.pygame_gui_patch import StarshipUIManager
 
 from game.ui.screens.battle_setup.panels import (
     center_panel,
@@ -39,7 +40,7 @@ class BattleSetupRenderer:
         if screen._ui_manager:
             screen._ui_manager.clear_and_reset()
 
-        screen._ui_manager = pygame_gui.UIManager(
+        screen._ui_manager = StarshipUIManager(
             (screen.screen_width, screen.screen_height)
         )
 

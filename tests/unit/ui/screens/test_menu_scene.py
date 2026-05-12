@@ -27,7 +27,7 @@ class TestMenuScene:
 
         mock_ui_button_class = MagicMock(side_effect=mock_button_init)
 
-        with patch('game.ui.screens.menu_scene.pygame_gui.UIManager', return_value=mock_ui_manager):
+        with patch('game.ui.screens.menu_scene.StarshipUIManager', return_value=mock_ui_manager):
             with patch('game.ui.screens.menu_scene.UIButton', mock_ui_button_class):
                 with patch('game.ui.screens.menu_scene.os.path.exists', return_value=False):
                     from game.ui.screens.menu_scene import MenuScene
@@ -227,7 +227,7 @@ class TestMenuSceneConstants:
         """Create MenuScene with mocked dependencies."""
         mock_ui_manager = MagicMock()
 
-        with patch('game.ui.screens.menu_scene.pygame_gui.UIManager', return_value=mock_ui_manager):
+        with patch('game.ui.screens.menu_scene.StarshipUIManager', return_value=mock_ui_manager):
             with patch('game.ui.screens.menu_scene.UIButton', MagicMock()):
                 with patch('game.ui.screens.menu_scene.os.path.exists', return_value=False):
                     from game.ui.screens.menu_scene import MenuScene

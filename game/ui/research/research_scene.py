@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 import pygame
-import pygame_gui
+from game.ui.pygame_gui_patch import StarshipUIManager
 
 from game.core.protocols import ICamera
 
@@ -117,7 +117,7 @@ class ResearchTreeScene:
         self._center_camera()
 
         # UI Manager for pygame_gui elements
-        self.ui_manager = pygame_gui.UIManager((screen_width, screen_height))
+        self.ui_manager = StarshipUIManager((screen_width, screen_height))
 
         # Selected node
         self.selected_node_id = None
@@ -265,7 +265,7 @@ class ResearchTreeScene:
         self.camera.height = self.canvas_height
 
         # Recreate UI manager with new size
-        self.ui_manager = pygame_gui.UIManager((width, height))
+        self.ui_manager = StarshipUIManager((width, height))
 
         # Recreate control panel
         self.control_panel = ResearchControlPanel(

@@ -30,8 +30,9 @@ class TestBuilderDragDropReal:
         mock_create_ui = p_create_ui.start()
         patchers.append(p_create_ui)
 
-        # Patch UIManager to avoid theme loading real files or needing display
-        p_manager = patch('game.ui.screens.workshop_screen.pygame_gui.UIManager')
+        # Patch UIManager to avoid theme loading real files or needing display.
+        # PROJ-411 Task 3.0: production now uses StarshipUIManager subclass.
+        p_manager = patch('game.ui.screens.workshop_screen.StarshipUIManager')
         MockUIManager = p_manager.start()
         patchers.append(p_manager)
 

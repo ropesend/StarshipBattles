@@ -6,6 +6,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
 
+from game.ui.pygame_gui_patch import StarshipUIManager
+
 from game.core.paths import Paths
 from game.core.protocols import IScene
 from game.ui.colors import BG_MENU
@@ -42,7 +44,7 @@ class MenuScene:
 
         # Create UI manager for menu buttons (use same theme as strategy/workshop)
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
-        self.ui_manager = pygame_gui.UIManager(
+        self.ui_manager = StarshipUIManager(
             (width, height),
             theme_path=theme_path if os.path.exists(theme_path) else None
         )

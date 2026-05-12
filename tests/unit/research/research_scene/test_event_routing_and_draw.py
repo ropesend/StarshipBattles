@@ -41,7 +41,7 @@ def _patched_research_scene(*, with_service=False):
         'TechTree': patch('game.ui.research.research_scene.TechTree'),
         'Tracker': patch('game.ui.research.research_scene.ResearchTracker'),
         'Camera': patch('game.ui.research.research_scene.Camera'),
-        'pygame_gui': patch('game.ui.research.research_scene.pygame_gui'),
+        'StarshipUIManager': patch('game.ui.research.research_scene.StarshipUIManager'),
         'Renderer': patch('game.ui.research.research_scene.ResearchRenderer'),
         'Panel': patch('game.ui.research.research_scene.ResearchControlPanel'),
     }
@@ -69,7 +69,7 @@ def _make_scene(mocks, *, canvas_width=1570, screen_height=1080):
     # ui_manager.process_events returns False so event passes through
     ui_manager = MagicMock()
     ui_manager.process_events.return_value = False
-    mocks['pygame_gui'].UIManager.return_value = ui_manager
+    mocks['StarshipUIManager'].return_value = ui_manager
 
     scene = ResearchTreeScene(canvas_width + 350, screen_height)
     return scene
@@ -118,7 +118,7 @@ class TestHandleEventRouting:
             mocks['Panel'].return_value.handle_event.return_value = False
             ui_manager = MagicMock()
             ui_manager.process_events.return_value = False
-            mocks['pygame_gui'].UIManager.return_value = ui_manager
+            mocks['StarshipUIManager'].return_value = ui_manager
 
             scene = ResearchTreeScene(1920, 1080, on_close_callback=close_cb)
 

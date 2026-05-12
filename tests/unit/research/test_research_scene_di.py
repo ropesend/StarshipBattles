@@ -40,7 +40,7 @@ class TestResearchSceneCameraInjection:
     def test_research_scene_accepts_camera_parameter(self, mock_camera):
         """ResearchTreeScene should accept an optional camera parameter."""
         # Patch pygame_gui to avoid initialization issues
-        with patch('game.ui.research.research_scene.pygame_gui'):
+        with patch('game.ui.research.research_scene.StarshipUIManager'):
             with patch('game.ui.research.research_scene.ResearchControlPanel'):
                 with patch('game.ui.research.research_scene.ResearchRenderer'):
                     from game.ui.research.research_scene import ResearchTreeScene
@@ -57,7 +57,7 @@ class TestResearchSceneCameraInjection:
 
     def test_research_scene_creates_camera_when_not_provided(self):
         """ResearchTreeScene should create its own camera if none provided."""
-        with patch('game.ui.research.research_scene.pygame_gui'):
+        with patch('game.ui.research.research_scene.StarshipUIManager'):
             with patch('game.ui.research.research_scene.ResearchControlPanel'):
                 with patch('game.ui.research.research_scene.ResearchRenderer'):
                     from game.ui.research.research_scene import ResearchTreeScene

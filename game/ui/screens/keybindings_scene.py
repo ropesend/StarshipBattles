@@ -17,6 +17,8 @@ from typing import Any, Callable, Dict, List, Optional
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UIPanel, UIScrollingContainer
+
+from game.ui.pygame_gui_patch import StarshipUIManager
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.ui.fonts import get_font
@@ -98,7 +100,7 @@ class KeybindingsScene:
         self._pending_reset_all = False
 
         # UI manager
-        self._ui_manager = pygame_gui.UIManager((width, height))
+        self._ui_manager = StarshipUIManager((width, height))
 
         # Row data indexed by action / group name
         self._action_rows: Dict[InputAction, Dict[str, Any]] = {}
@@ -347,7 +349,7 @@ class KeybindingsScene:
         """Handle window resize."""
         self._width = width
         self._height = height
-        self._ui_manager = pygame_gui.UIManager((width, height))
+        self._ui_manager = StarshipUIManager((width, height))
         self._build_ui()
 
     # ────────────────────────────────────────────────────────────────

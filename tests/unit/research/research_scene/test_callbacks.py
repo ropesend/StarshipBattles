@@ -43,7 +43,7 @@ def _patched_research_scene(*, with_service=False):
         'TechTree': patch('game.ui.research.research_scene.TechTree'),
         'Tracker': patch('game.ui.research.research_scene.ResearchTracker'),
         'Camera': patch('game.ui.research.research_scene.Camera'),
-        'pygame_gui': patch('game.ui.research.research_scene.pygame_gui'),
+        'StarshipUIManager': patch('game.ui.research.research_scene.StarshipUIManager'),
         'Renderer': patch('game.ui.research.research_scene.ResearchRenderer'),
         'Panel': patch('game.ui.research.research_scene.ResearchControlPanel'),
     }

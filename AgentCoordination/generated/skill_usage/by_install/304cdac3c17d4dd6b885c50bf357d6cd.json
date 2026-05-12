@@ -2,6 +2,13 @@
   "install_id": "304cdac3c17d4dd6b885c50bf357d6cd",
   "schema_version": 1,
   "skills": {
+    "claude-consult": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-12T03:59:27Z"
+    },
     "claude-delegate-review": {
       "agents": {
         "claude": 2

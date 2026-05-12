@@ -15,7 +15,7 @@ import os
 from typing import Optional, Any
 
 import pygame
-import pygame_gui
+from game.ui.pygame_gui_patch import StarshipUIManager
 from game.ui.config import UIConfig
 from game.ui.fonts import get_font
 from game.core.paths import Paths
@@ -72,7 +72,7 @@ class StrategyUI:
 
         # UI State
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
-        self.manager = pygame_gui.UIManager((screen_width, screen_height), theme_path=theme_path)
+        self.manager = StarshipUIManager((screen_width, screen_height), theme_path=theme_path)
         self.manager.preload_fonts([
             {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': '1'}
         ])

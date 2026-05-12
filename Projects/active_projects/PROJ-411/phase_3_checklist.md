@@ -5,12 +5,36 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
-**Objective:** Lock in the wins from Phases 1 and 2 with regression gates and doc updates.
+**Status:** In Progress — Task 3.0 (Track B kickoff) complete + F9 verified (20 % win); original 3.1–3.x lock-in tasks still pending
+**Objective:** Lock in the wins from Phases 1 and 2 with regression gates and doc updates, AND attack first-open cost (Track B) — the dominant remaining UX lag after Phase 2 reuse eliminated re-open cost.
 
 ---
 
 ## Tasks
+
+### Task 3.0: pygame_gui cache-key fix via scoped UI adapter [Medium] — Track B kickoff
+**Files:**
+- `game/ui/pygame_gui_patch.py` (new) — `StarshipUIAppearanceTheme` + `StarshipUIManager` subclasses + source-fingerprint guard
+- 8 production sites migrated from `pygame_gui.UIManager(...)` to `StarshipUIManager(...)`: `strategy_ui.py:75`, `battle_setup/renderer.py:42`, `research_scene.py:120,268`, `workshop_screen.py:88`, `menu_scene.py:45`, `keybindings_scene.py:101,350`, `galaxy_test/screen.py:68,272`, `test_lab/screen.py:89`
+- `requirements.txt` — pin `pygame_gui==0.6.14`
+
+**Tests:** `tests/unit/ui/test_pygame_gui_patch.py` — 11 tests
+
+- [x] Phase 1 cProfile attribution refreshed: 47/65 s (~72 %) of total open time in `str.join` + `build_all_combined_ids` self-time.
+- [x] Root cause found in pygame_gui 0.6.14 `ui_appearance_theme.py:1625-1627`: cache key built via chained `str.join` where each `str(x)` is the *separator*; each character of the prior result becomes an element. Key balloons to ~10 KB; ~15 MB of string allocation per window open.
+- [x] Codex consult (planning mode) reviewed approach — pushed back on monkey-patching, recommended scoped UI adapter; consult artifact at `AgentCoordination/Scratchpad/Consult/20260512T035945Z_pygame-gui-cache-key-patch/`.
+- [x] Implemented `StarshipUIAppearanceTheme` (private tuple-keyed cache `_combined_ids_cache`; preserves upstream body otherwise — `ValueError` validation, `_get_next_id_node` recursion, dotted-id suffix loop).
+- [x] Implemented `StarshipUIManager.create_new_theme` returning the subclass.
+- [x] Source-fingerprint guard `UPSTREAM_HAS_KNOWN_BUG` — detects the unique `str(element_base_ids).join(` pattern in upstream source via `inspect.getsource`. Flips False when upstream fixes the bug; cue to delete the patch.
+- [x] 11 new tests covering: guard truthy, manager returns subclass, parity (4 parametrized inputs incl. empty / None), `ValueError` preserved, no tuple keys leak into `unique_theming_ids`, cache is idempotent, key size bounded (<1 KB), perf smoke (≥2× faster than upstream on 1000 hits).
+- [x] All 8 production UIManager construction sites migrated. Tests still use `pygame_gui.UIManager` directly (no migration needed — they don't pay the per-window cost).
+- [x] `requirements.txt`: `pygame_gui>=0.6.9` → `pygame_gui==0.6.14` with a note tying the pin to this patch's lifecycle.
+- [x] Sharded suite green: 20,157 / 20,153 passed / 0 failed / 4 skipped (after retargeting 7 test patches from `module.pygame_gui` → `module.StarshipUIManager`).
+- [x] User F9 verified — actual payoff ~20 % (less than projected ~70 %). PlanetRegistry 4527.9→3720.9 ms (−18 %), StarRegistry 5026.9→3883.8 ms (−23 %), EventLog 2676.9→2147.6 ms (−20 %). EmpireOverview not exercised. cProfile self-time attribution turned out to overcount parallel/opportunistic work; cache-key fix wasn't fully on the serial critical path. User accepted the 20 % win; deeper first-open optimisation deferred. Task 3.0 complete.
+
+**Notes:**
+- Codex's main pushbacks addressed: (1) no monkey-patching — subclass instead; (2) source-fingerprint guard instead of signature-only; (3) private tuple cache attribute instead of mutating `unique_theming_ids: Dict[str, List[str]]` (type-shape preserved); (4) pinned `pygame_gui` while the patch is live.
+- Patch removal procedure: when `UPSTREAM_HAS_KNOWN_BUG` flips False (upstream fix released), delete `game/ui/pygame_gui_patch.py`, revert all 8 migration sites to `pygame_gui.UIManager`, un-pin `pygame_gui` in `requirements.txt`, delete `tests/unit/ui/test_pygame_gui_patch.py`. Single-PR cleanup.
 
 ### Task 3.1: Count-based regression gates [Medium]
 **Files:**

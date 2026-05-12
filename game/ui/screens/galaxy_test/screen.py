@@ -11,6 +11,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
 
+from game.ui.pygame_gui_patch import StarshipUIManager
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -65,7 +67,7 @@ class GalaxyTestScreen:
         self.camera.target_zoom = 0.1
 
         # UI Manager
-        self.ui_manager = pygame_gui.UIManager((screen_width, screen_height))
+        self.ui_manager = StarshipUIManager((screen_width, screen_height))
 
         # Galaxy mode helper (for GALAXY mode)
         self.galaxy_helper = GalaxyModeHelper(self)
@@ -269,7 +271,7 @@ class GalaxyTestScreen:
         self.camera.height = self.canvas_height
 
         # Recreate UI
-        self.ui_manager = pygame_gui.UIManager((width, height))
+        self.ui_manager = StarshipUIManager((width, height))
 
         if self.mode == self.MODE_MENU:
             self._create_menu_ui()

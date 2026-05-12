@@ -17,6 +17,8 @@ from typing import Any, Callable, TYPE_CHECKING
 import pygame
 import pygame_gui
 
+from game.ui.pygame_gui_patch import StarshipUIManager
+
 if TYPE_CHECKING:
     from game.ui.screens.battle_screen import BattleScreen
 import os
@@ -86,7 +88,7 @@ class TestLabScreen:
         self.screen_height = screen_height
 
         # pygame_gui UIManager for buttons
-        self.ui_manager = pygame_gui.UIManager((self.screen_width, self.screen_height))
+        self.ui_manager = StarshipUIManager((self.screen_width, self.screen_height))
         self._button_callbacks = {}  # Maps UIButton -> callback function
 
         # Initialize controller (handles all business logic)
