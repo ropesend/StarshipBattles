@@ -1,0 +1,12 @@
+{
+  "command": "python Tools/test_sharded/test_sharded.py",
+  "errors": 0,
+  "failed": 0,
+  "git_sha": "9a27f35e9cada09a8ce934b7a178764fea1e91c4",
+  "install_id": "d3edf38132a34365b4feafda0231ebda",
+  "passed": 20156,
+  "schema_version": 1,
+  "skipped": 4,
+  "total": 20160,
+  "verified_at": "2026-05-12T23:31:13Z"
+}
