@@ -95,10 +95,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 15
+        "codex": 16
       },
-      "count": 15,
-      "last_used": "2026-05-11T23:01:58Z"
+      "count": 16,
+      "last_used": "2026-05-12T02:39:47Z"
     },
     "codex-starship-analysis-review": {
       "agents": {
@@ -120,6 +120,13 @@
       },
       "count": 2,
       "last_used": "2026-05-10T14:26:27Z"
+    },
+    "codex-starship-consult-respond": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-12T02:13:32Z"
     },
     "codex-starship-design-assets": {
       "agents": {

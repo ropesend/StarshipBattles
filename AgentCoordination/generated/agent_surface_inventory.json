@@ -41,7 +41,7 @@
   "surfaces": [
     {
       "agent": "codex",
-      "directory_count": 13,
+      "directory_count": 12,
       "exists": true,
       "expected_prefix": "codex-",
       "kind": "skill_surface",
@@ -58,8 +58,7 @@
         "codex-starship-design-assets",
         "codex-starship-performance-profiling",
         "codex-starship-project-system",
-        "codex-starship-qa-observer",
-        "codex-starship-ticket-system"
+        "codex-starship-qa-observer"
       ],
       "skills": [
         {
@@ -207,10 +206,10 @@
           "directory": "codex-starship-consult",
           "expected_prefix": "codex-",
           "frontmatter": {
-            "description": "Consult Claude Code or OpenCode during Starship Battles work through the lightweight consult/v1 protocol. Use when Codex needs a pairwise second opinion, planning critique, mid-project review, pre-final check, or deep-dive feedback without delegating implementation or starting the heavier v2.6 discussion protocol.",
+            "description": "Consult Claude Code, OpenCode, or Gemini during Starship Battles work through the lightweight consult/v1 protocol. Use when Codex needs a pairwise second opinion, planning critique, mid-project review, pre-final check, or deep-dive feedback without delegating implementation or starting the heavier v2.6 discussion protocol.",
             "name": "codex-starship-consult"
           },
-          "frontmatter_description": "Consult Claude Code or OpenCode during Starship Battles work through the lightweight consult/v1 protocol. Use when Codex needs a pairwise second opinion, planning critique, mid-project review, pre-final check, or deep-dive feedback without delegating implementation or starting the heavier v2.6 discussion protocol.",
+          "frontmatter_description": "Consult Claude Code, OpenCode, or Gemini during Starship Battles work through the lightweight consult/v1 protocol. Use when Codex needs a pairwise second opinion, planning critique, mid-project review, pre-final check, or deep-dive feedback without delegating implementation or starting the heavier v2.6 discussion protocol.",
           "frontmatter_fields": [
             "description",
             "name"
@@ -337,36 +336,13 @@
           "prefix_compliant": true,
           "skill_md": ".agents/skills/codex-starship-qa-observer/SKILL.md",
           "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": false,
-          "claude_specific_frontmatter": [],
-          "directory": "codex-starship-ticket-system",
-          "expected_prefix": "codex-",
-          "frontmatter": {
-            "description": "Work Starship Battles bug and feature tickets using the Tracking system. Use for ticket-add, ticket-work, ticket-next, ticket-continue, ticket-deep-dive, ticket-close, ticket-batch-close, ticket-update, ticket-reject, and ticket-answer style requests; for active files under Tracking/bugs or Tracking/features; and for TDD ticket resolution workflows.",
-            "name": "codex-starship-ticket-system"
-          },
-          "frontmatter_description": "Work Starship Battles bug and feature tickets using the Tracking system. Use for ticket-add, ticket-work, ticket-next, ticket-continue, ticket-deep-dive, ticket-close, ticket-batch-close, ticket-update, ticket-reject, and ticket-answer style requests; for active files under Tracking/bugs or Tracking/features; and for TDD ticket resolution workflows.",
-          "frontmatter_fields": [
-            "description",
-            "name"
-          ],
-          "frontmatter_name": "codex-starship-ticket-system",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".agents/skills/codex-starship-ticket-system/SKILL.md",
-          "spec_violations": []
         }
       ],
       "surface_path": ".agents/skills"
     },
     {
       "agent": "claude",
-      "directory_count": 60,
+      "directory_count": 56,
       "exists": true,
       "expected_prefix": "claude-",
       "kind": "skill_surface",
@@ -377,8 +353,6 @@
         "claude-analysis-sweep",
         "claude-consult",
         "claude-consult-respond",
-        "claude-debug-parallel",
-        "claude-deep-dive-parallel",
         "claude-delegate-review",
         "claude-discuss-continue",
         "claude-discuss-respond",
@@ -396,6 +370,14 @@
         "claude-gi-reject",
         "claude-gi-update",
         "claude-gi-work",
+        "claude-gp-add",
+        "claude-gp-audit",
+        "claude-gp-close",
+        "claude-gp-continue",
+        "claude-gp-extract-phase",
+        "claude-gp-from-audit",
+        "claude-gp-review",
+        "claude-gp-revise",
         "claude-loc",
         "claude-proj-add-to-plan",
         "claude-proj-archive",
@@ -420,16 +402,6 @@
         "claude-qa-feedback",
         "claude-qa-triage",
         "claude-qa-triage-gh",
-        "claude-ticket-add",
-        "claude-ticket-answer",
-        "claude-ticket-batch-close",
-        "claude-ticket-close",
-        "claude-ticket-continue",
-        "claude-ticket-deep-dive",
-        "claude-ticket-next",
-        "claude-ticket-reject",
-        "claude-ticket-update",
-        "claude-ticket-work",
         "claude-triage-to-proj",
         "claude-validate-designs"
       ],
@@ -527,10 +499,10 @@
           "directory": "claude-consult",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Pairwise advisory consult with another agent (codex or opencode). Single round-trip, autonomous \u2014 Claude shells out to the partner CLI directly, no daemon, no manual user invocation on the partner side. Use when you want a second set of eyes/brains on a question, plan, or piece of code; or as the opening move in solving a problem where another perspective helps. NOT a delegation channel \u2014 you (the initiator) own synthesis and action; the partner advises only.",
+            "description": "Pairwise advisory consult with another agent (codex, gemini, or opencode). Single round-trip, autonomous \u2014 Claude shells out to the partner CLI directly, no daemon, no manual user invocation on the partner side. Use when you want a second set of eyes/brains on a question, plan, or piece of code; or as the opening move in solving a problem where another perspective helps. NOT a delegation channel \u2014 you (the initiator) own synthesis and action; the partner advises only.",
             "name": "claude-consult"
           },
-          "frontmatter_description": "Pairwise advisory consult with another agent (codex or opencode). Single round-trip, autonomous \u2014 Claude shells out to the partner CLI directly, no daemon, no manual user invocation on the partner side. Use when you want a second set of eyes/brains on a question, plan, or piece of code; or as the opening move in solving a problem where another perspective helps. NOT a delegation channel \u2014 you (the initiator) own synthesis and action; the partner advises only.",
+          "frontmatter_description": "Pairwise advisory consult with another agent (codex, gemini, or opencode). Single round-trip, autonomous \u2014 Claude shells out to the partner CLI directly, no daemon, no manual user invocation on the partner side. Use when you want a second set of eyes/brains on a question, plan, or piece of code; or as the opening move in solving a problem where another perspective helps. NOT a delegation channel \u2014 you (the initiator) own synthesis and action; the partner advises only.",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -568,62 +540,6 @@
           "opencode_visible": true,
           "prefix_compliant": true,
           "skill_md": ".claude/skills/claude-consult-respond/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-debug-parallel",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Fix multiple bugs in parallel using coordinated agents with file-level conflict avoidance (e.g., /claude-debug-parallel 85 86 87 or /claude-debug-parallel all)",
-            "name": "claude-debug-parallel"
-          },
-          "frontmatter_description": "Fix multiple bugs in parallel using coordinated agents with file-level conflict avoidance (e.g., /claude-debug-parallel 85 86 87 or /claude-debug-parallel all)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-debug-parallel",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-debug-parallel/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-deep-dive-parallel",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Parallel deep-dive investigation of multiple tickets using agent teams with real-time Q&A (e.g., /claude-deep-dive-parallel or /claude-deep-dive-parallel bug 85 86 87)",
-            "name": "claude-deep-dive-parallel"
-          },
-          "frontmatter_description": "Parallel deep-dive investigation of multiple tickets using agent teams with real-time Q&A (e.g., /claude-deep-dive-parallel or /claude-deep-dive-parallel bug 85 86 87)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-deep-dive-parallel",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-deep-dive-parallel/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1092,6 +1008,230 @@
           "opencode_visible": true,
           "prefix_compliant": true,
           "skill_md": ".claude/skills/claude-gi-work/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-gp-add",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Create a new GitHub-backed project (GP-<n>) from a free-form description or QA-triage item. Mandatory blocking codex consult.",
+            "name": "claude-gp-add"
+          },
+          "frontmatter_description": "Create a new GitHub-backed project (GP-<n>) from a free-form description or QA-triage item. Mandatory blocking codex consult.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-gp-add",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-gp-add/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-gp-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Skeptical post-completion audit of a GP project. Loops up to 5 cycles of audit \u2192 fix \u2192 re-audit before handing to the user.",
+            "name": "claude-gp-audit"
+          },
+          "frontmatter_description": "Skeptical post-completion audit of a GP project. Loops up to 5 cycles of audit \u2192 fix \u2192 re-audit before handing to the user.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-gp-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-gp-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-gp-close",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Archive a confirmed GP project \u2014 moves assets to archived/, closes sub-issues. User performs the final parent close.",
+            "name": "claude-gp-close"
+          },
+          "frontmatter_description": "Archive a confirmed GP project \u2014 moves assets to archived/, closes sub-issues. User performs the final parent close.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-gp-close",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-gp-close/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-gp-continue",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Continue working on a GP project \u2014 autonomous sequential TDD loop on the active phase. Optional --consult for material scope changes.",
+            "name": "claude-gp-continue"
+          },
+          "frontmatter_description": "Continue working on a GP project \u2014 autonomous sequential TDD loop on the active phase. Optional --consult for material scope changes.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-gp-continue",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-gp-continue/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-gp-extract-phase",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Extract a phase from a GP project into its own new GP project. Closes parent's phase sub-issue, renumbers remaining phases. Mandatory blocking codex consult.",
+            "name": "claude-gp-extract-phase"
+          },
+          "frontmatter_description": "Extract a phase from a GP project into its own new GP project. Closes parent's phase sub-issue, renumbers remaining phases. Mandatory blocking codex consult.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-gp-extract-phase",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-gp-extract-phase/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-gp-from-audit",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Create GitHub-backed project(s) from a verified audit/review. Thin dispatcher across audit types. Mandatory blocking codex consult.",
+            "name": "claude-gp-from-audit"
+          },
+          "frontmatter_description": "Create GitHub-backed project(s) from a verified audit/review. Thin dispatcher across audit types. Mandatory blocking codex consult.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-gp-from-audit",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-gp-from-audit/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-gp-review",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Validate a GP project's plan against the current codebase. Five-agent parallel review; findings posted as parent-issue comment.",
+            "name": "claude-gp-review"
+          },
+          "frontmatter_description": "Validate a GP project's plan against the current codebase. Five-agent parallel review; findings posted as parent-issue comment.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-gp-review",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-gp-review/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint",
+            "disable-model-invocation"
+          ],
+          "directory": "claude-gp-revise",
+          "expected_prefix": "claude-",
+          "frontmatter": {
+            "description": "Revise a closed/awaiting-confirmation GP project by creating a new GP that adds phases addressing user feedback. Mandatory blocking codex consult.",
+            "name": "claude-gp-revise"
+          },
+          "frontmatter_description": "Revise a closed/awaiting-confirmation GP project by creating a new GP that adds phases addressing user feedback. Mandatory blocking codex consult.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "disable-model-invocation",
+            "name"
+          ],
+          "frontmatter_name": "claude-gp-revise",
+          "name_matches_directory": true,
+          "opencode_permission": "deny",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".claude/skills/claude-gp-revise/SKILL.md",
           "spec_violations": []
         },
         {
@@ -1771,286 +1911,6 @@
             "argument-hint",
             "disable-model-invocation"
           ],
-          "directory": "claude-ticket-add",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Create new bug or feature tickets (e.g., /claude-ticket-add bug <descriptions> or /claude-ticket-add feature <descriptions>)",
-            "name": "claude-ticket-add"
-          },
-          "frontmatter_description": "Create new bug or feature tickets (e.g., /claude-ticket-add bug <descriptions> or /claude-ticket-add feature <descriptions>)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-add",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-add/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-answer",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /claude-ticket-answer bug 42 <answers>)",
-            "name": "claude-ticket-answer"
-          },
-          "frontmatter_description": "Log answers to clarification questions and return a ticket to the work queue (e.g., /claude-ticket-answer bug 42 <answers>)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-answer",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-answer/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-batch-close",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Archive multiple confirmed tickets in one operation (e.g., /claude-ticket-batch-close bug 46 49 50)",
-            "name": "claude-ticket-batch-close"
-          },
-          "frontmatter_description": "Archive multiple confirmed tickets in one operation (e.g., /claude-ticket-batch-close bug 46 49 50)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-batch-close",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-batch-close/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-close",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /claude-ticket-close bug 42)",
-            "name": "claude-ticket-close"
-          },
-          "frontmatter_description": "Archive a confirmed ticket \u2014 move to archive and update indexes (e.g., /claude-ticket-close bug 42)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-close",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-close/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-continue",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /claude-ticket-continue bug or /claude-ticket-continue feature)",
-            "name": "claude-ticket-continue"
-          },
-          "frontmatter_description": "Autonomously work through multiple tickets in sequence until context limit or queue empty (e.g., /claude-ticket-continue bug or /claude-ticket-continue feature)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-continue",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-continue/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-deep-dive",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /claude-ticket-deep-dive bug 42)",
-            "name": "claude-ticket-deep-dive"
-          },
-          "frontmatter_description": "Perform thorough investigation (bug) or scope assessment (feature) using agent swarm (e.g., /claude-ticket-deep-dive bug 42)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-deep-dive",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-deep-dive/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-next",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Pick the highest priority pending ticket and start working on it (e.g., /claude-ticket-next bug or /claude-ticket-next feature)",
-            "name": "claude-ticket-next"
-          },
-          "frontmatter_description": "Pick the highest priority pending ticket and start working on it (e.g., /claude-ticket-next bug or /claude-ticket-next feature)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-next",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-next/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-reject",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /claude-ticket-reject bug 42 <reason>)",
-            "name": "claude-ticket-reject"
-          },
-          "frontmatter_description": "Reject a fix/implementation and revert status to In-Progress with feedback (e.g., /claude-ticket-reject bug 42 <reason>)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-reject",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-reject/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-update",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Append new context or information to an existing ticket without analyzing it (e.g., /claude-ticket-update bug 42 <text>)",
-            "name": "claude-ticket-update"
-          },
-          "frontmatter_description": "Append new context or information to an existing ticket without analyzing it (e.g., /claude-ticket-update bug 42 <text>)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-update",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-update/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-ticket-work",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Fix a bug or implement a feature by ticket ID (e.g., /claude-ticket-work bug 42 or /claude-ticket-work feature 7)",
-            "name": "claude-ticket-work"
-          },
-          "frontmatter_description": "Fix a bug or implement a feature by ticket ID (e.g., /claude-ticket-work bug 42 or /claude-ticket-work feature 7)",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-ticket-work",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-ticket-work/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
           "directory": "claude-triage-to-proj",
           "expected_prefix": "claude-",
           "frontmatter": {
@@ -2100,13 +1960,14 @@
     },
     {
       "agent": "opencode",
-      "directory_count": 13,
+      "directory_count": 14,
       "exists": true,
       "expected_prefix": "ocode-",
       "kind": "skill_surface",
       "opencode_visible": true,
       "skill_names": [
         "ocode-audit-shrink",
+        "ocode-consult-respond",
         "ocode-discuss-continue",
         "ocode-discuss-respond",
         "ocode-discuss-start",
@@ -2145,6 +2006,32 @@
           "opencode_visible": true,
           "prefix_compliant": true,
           "skill_md": ".opencode/skills/ocode-audit-shrink/SKILL.md",
+          "spec_violations": []
+        },
+        {
+          "agent_skills_spec_compliant": true,
+          "claude_frontmatter_present": true,
+          "claude_specific_frontmatter": [
+            "argument-hint"
+          ],
+          "directory": "ocode-consult-respond",
+          "expected_prefix": "ocode-",
+          "frontmatter": {
+            "description": "Respond to a `consult/v1` request from another agent. Invoked when claude or codex shells out to `opencode run` with a prompt loading this skill. Reads the request artifact at the supplied path, advises within the permission contract (read repo + run tests when allowed; write only inside the consult leaf), and writes a complete `response.md` per the harmonized schema. NOT a delegation channel \u2014 the initiator owns synthesis and action; you advise only.",
+            "name": "ocode-consult-respond"
+          },
+          "frontmatter_description": "Respond to a `consult/v1` request from another agent. Invoked when claude or codex shells out to `opencode run` with a prompt loading this skill. Reads the request artifact at the supplied path, advises within the permission contract (read repo + run tests when allowed; write only inside the consult leaf), and writes a complete `response.md` per the harmonized schema. NOT a delegation channel \u2014 the initiator owns synthesis and action; you advise only.",
+          "frontmatter_fields": [
+            "argument-hint",
+            "description",
+            "name"
+          ],
+          "frontmatter_name": "ocode-consult-respond",
+          "name_matches_directory": true,
+          "opencode_permission": "allow",
+          "opencode_visible": true,
+          "prefix_compliant": true,
+          "skill_md": ".opencode/skills/ocode-consult-respond/SKILL.md",
           "spec_violations": []
         },
         {
