@@ -11,7 +11,7 @@
     },
     {
       "kind": "absolute_path",
-      "line": 77,
+      "line": 76,
       "path": "AGENTS.md",
       "pattern": "s://github.com/ropesend/StarshipBattles/issues.",
       "severity": "warn"
@@ -25,14 +25,14 @@
     },
     {
       "kind": "absolute_path",
-      "line": 137,
+      "line": 132,
       "path": "CLAUDE.md",
-      "pattern": "s://github.com/ropesend/StarshipBattles/issues",
+      "pattern": "s://github.com/ropesend/StarshipBattles/issues.",
       "severity": "warn"
     },
     {
       "kind": "absolute_path",
-      "line": 153,
+      "line": 158,
       "path": "CLAUDE.md",
       "pattern": "C:\\\\Program",
       "severity": "warn"
@@ -342,7 +342,7 @@
     },
     {
       "agent": "claude",
-      "directory_count": 56,
+      "directory_count": 55,
       "exists": true,
       "expected_prefix": "claude-",
       "kind": "skill_surface",
@@ -401,7 +401,6 @@
         "claude-proj-start",
         "claude-qa-feedback",
         "claude-qa-triage",
-        "claude-qa-triage-gh",
         "claude-triage-to-proj",
         "claude-validate-designs"
       ],
@@ -1020,10 +1019,10 @@
           "directory": "claude-gp-add",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Create a new GitHub-backed project (GP-<n>) from a free-form description or QA-triage item. Mandatory blocking codex consult.",
+            "description": "Create a new GitHub-backed project (GP-<n>) from a free-form description. Mandatory blocking codex consult.",
             "name": "claude-gp-add"
           },
-          "frontmatter_description": "Create a new GitHub-backed project (GP-<n>) from a free-form description or QA-triage item. Mandatory blocking codex consult.",
+          "frontmatter_description": "Create a new GitHub-backed project (GP-<n>) from a free-form description. Mandatory blocking codex consult.",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1858,10 +1857,10 @@
           "directory": "claude-qa-triage",
           "expected_prefix": "claude-",
           "frontmatter": {
-            "description": "Process QA session logs into bugs, features, and prospective projects through interactive triage",
+            "description": "Process QA session logs into GitHub issues (bugs/features) and Projects/Triage/ files (prospective projects), through interactive triage.",
             "name": "claude-qa-triage"
           },
-          "frontmatter_description": "Process QA session logs into bugs, features, and prospective projects through interactive triage",
+          "frontmatter_description": "Process QA session logs into GitHub issues (bugs/features) and Projects/Triage/ files (prospective projects), through interactive triage.",
           "frontmatter_fields": [
             "argument-hint",
             "description",
@@ -1874,34 +1873,6 @@
           "opencode_visible": true,
           "prefix_compliant": true,
           "skill_md": ".claude/skills/claude-qa-triage/SKILL.md",
-          "spec_violations": []
-        },
-        {
-          "agent_skills_spec_compliant": true,
-          "claude_frontmatter_present": true,
-          "claude_specific_frontmatter": [
-            "argument-hint",
-            "disable-model-invocation"
-          ],
-          "directory": "claude-qa-triage-gh",
-          "expected_prefix": "claude-",
-          "frontmatter": {
-            "description": "Process QA session logs into GitHub issues (bugs/features) and Projects/Triage/ files (prospective projects), through interactive triage.",
-            "name": "claude-qa-triage-gh"
-          },
-          "frontmatter_description": "Process QA session logs into GitHub issues (bugs/features) and Projects/Triage/ files (prospective projects), through interactive triage.",
-          "frontmatter_fields": [
-            "argument-hint",
-            "description",
-            "disable-model-invocation",
-            "name"
-          ],
-          "frontmatter_name": "claude-qa-triage-gh",
-          "name_matches_directory": true,
-          "opencode_permission": "deny",
-          "opencode_visible": true,
-          "prefix_compliant": true,
-          "skill_md": ".claude/skills/claude-qa-triage-gh/SKILL.md",
           "spec_violations": []
         },
         {

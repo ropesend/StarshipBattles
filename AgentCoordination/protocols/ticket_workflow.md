@@ -15,14 +15,17 @@ This protocol is parameterized by ticket type. The calling skill sets these valu
 |----------|-----|---------|
 | TYPE | Bug | Feature |
 | PREFIX | BUG | FEAT |
-| ACTIVE_DIR | Tracking/bugs/active | Tracking/features/active |
-| ARCHIVE_DIR | Tracking/bugs/archived | Tracking/features/archived |
-| DASHBOARD | Tracking/debug_plan.md | Tracking/feature_plan.md |
-| INDEX | Tracking/solved_bugs.md | Tracking/completed_features.md |
+
+Tickets live on GitHub Issues with `type:bug` or `type:feature` labels. The
+{TYPE} and {PREFIX} variables describe taxonomy, not storage. Status labels
+(`status:pending`, `status:in-progress`, `status:awaiting-confirmation`,
+etc.) are the source of truth; "dashboards" are dynamic queries
+(`gh issue list --label "type:bug" --label "status:pending"`); the
+historical narrative index is `gh issue list --state closed --label "verified"`.
 
 ---
 
-**CRITICAL CONSTRAINT:** You do NOT have the authority to mark a {TYPE} as [Solved]/[Completed]. You do NOT have the authority to move files to `{ARCHIVE_DIR}/`. Your authority ends at [Awaiting Confirmation], [Needs Clarification], or (Feature only) [Needs Refactor].
+**CRITICAL CONSTRAINT:** You do NOT have the authority to mark a {TYPE} as `verified` or close the issue. Your authority ends at `status:awaiting-confirmation`, `status:needs-clarification`, or (Feature only) `status:needs-refactor`.
 
 ### [Bug Only] Anti-Reversion Rules
 
