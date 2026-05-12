@@ -1,69 +1,58 @@
-# Phase 6: Secondary Phase Optimizations (energy / environmental / movement)
+# Phase 5: Orchestration Overhead (snapshot, progress callback, `_run_phases`)
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-412 6`
+> 1. Run `python Projects/scripts/validate_phase.py PROJ-412 5`
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Objective:** Apply the cache pattern proven in Phase 4 to the remaining redundant per-tick scans (`PlanetEnergyEngine`, `EnvironmentalHazardEngine`, `FleetMovementEngine`). Each task is independently gated on the Phase 1 measurement — if a phase's bucket is < 50 ms / turn on the tiny scenario by Phase 5 completion, drop that task.
-
-This phase is the cleanest place to stop if the user is satisfied with Phase 4+5's reduction. Re-evaluate scope at the start of this phase.
+**Objective:** Address the 2.5–3.7 s "unaccounted overhead" gap. Specifically: `TurnStateSnapshot.capture`, the per-tick `progress_callback`, and the per-call cost of `_run_phases`. Only the items Phase 1 measurement actually confirms as material proceed.
 
 ---
 
 ## Tasks
 
-### Task 6.1: Reduce remaining `PlanetEnergyEngine` per-tick work [Simple] ⚠ scope reduced (codex consult)
+### Task 5.1: Reduce `TurnStateSnapshot.capture` cost [Medium]
 
-**Files:** `game/strategy/engine/planet_energy_engine.py`
-**Tests:** existing `tests/unit/strategy/engine/test_planet_energy_engine.py`; bench
+**Files:** `game/strategy/engine/turn_state_snapshot.py`, `game/strategy/engine/turn_engine.py`
+**Tests:** rollback-on-failure tests in `tests/unit/strategy/turn_engine/`; bench
 
-- [ ] `PlanetEnergyEngine` **already has** `_energy_cache` keyed by planet_id with a facility-fingerprint cache invalidator and a public `invalidate_energy_cache(planet_id)` method ([planet_energy_engine.py:154-179, 204-240](../../../game/strategy/engine/planet_energy_engine.py#L154)). The bulk of the per-tick scan is already cached. The original Phase 5.1 task description was wrong.
-- [ ] If Phase 1 profile still shows `planet_energy` as a measurable cost, identify what remains: most likely shield drain / auto-deactivate logic on the **active** code path, not the cached generation/capacity scan.
-- [ ] Add per-tick short-circuits where they exist: e.g. `no_active_shields_and_no_energy_consumers` skip; skip the entire phase when no planet has energy storage > 0
-- [ ] Failing test first: shield activated at tick 30 starts draining energy at tick 31 (only add if not already covered)
-- [ ] If Phase 1 shows this phase is < 50 ms / turn (or already reduced by Phase 4's universal-pipeline cache benefiting from `IAbilitySource` invalidation hooks), **cut this task** and document the cut in `decisions.md`
-
-**Notes:**
-
-### Task 6.2: `EnvironmentalHazardEngine` short-circuit and storm cache [Simple]
-
-**Files:** `game/strategy/engine/environmental_hazard_engine.py`
-**Tests:** existing environmental tests; bench
-
-- [ ] If Phase 2 didn't already add the `no_active_storms_on_galaxy` short-circuit, add it now
-- [ ] Cache the storm-effect lookup per-turn-per-system (storms don't appear/disappear mid-tick except via combat, which is out of scope)
-- [ ] Failing test first: storm appearing mid-turn (if any in-scope path causes this) still applies effect at the correct tick
-- [ ] Verify: bench shows `environmental` phase reduced; storm-damage integration tests still pass
+- [ ] Identify what `TurnStateSnapshot.capture` actually copies (full `empire.to_dict()` + `galaxy.to_dict()` per swarm-03)
+- [ ] Narrow the snapshot to the fields actually needed by `restore` — likely only `resource_pool`, `colonies[*].stockpile`, `colonies[*].facilities`, and fleet `ships[*].components`. Confirm by reading `TurnStateSnapshot.restore`.
+- [ ] Failing test first: a unit test asserts that `capture` + `restore` round-trips the minimal-fields set without functional regression
+- [ ] If the snapshot is heavyweight even after narrowing, consider copy-on-write — but only if Phase 1 measurement justifies the additional complexity
+- [ ] Verify: existing rollback-on-`EnginePhaseError` tests still pass; bench shows reduction in the per-turn one-time cost
 
 **Notes:**
 
-### Task 6.3: `FleetMovementEngine` pathfinding memoization [Complex]
+### Task 5.2: Trim per-tick orchestration cost in `_run_phases` [Medium]
 
-**Files:** `game/strategy/engine/fleet_movement_engine.py`, possibly `game/strategy/services/galaxy_pathfinding_service.py`
-**Tests:** new characterization test for path invalidation; bench
+**Files:** `game/strategy/engine/turn_engine.py`, `game/strategy/engine/turn_phase_registry.py`
+**Tests:** `tests/unit/strategy/turn_engine/`; bench
 
-- [ ] Per swarm-01: pathfinding fires every eligible tick for every fleet. With stable fleet speed and galaxy map, the path is deterministic. Memoize the computed path per `(fleet_id, target_hex, fleet.speed, galaxy_version)`.
-- [ ] Galaxy mutations (warp point open/close, system destruction) must invalidate; those mutations route through superweapon handlers which are in scope.
-- [ ] Fleet speed change (damage, component activation, modifier) must invalidate the fleet's entry.
-- [ ] Failing test first: speed change at tick 50 causes re-pathfind at tick 51 (or whenever the fleet next becomes movement-eligible); stable speed across ticks reuses the cached path.
-- [ ] Verify: bench shows `move_calc` phase reduced; intercept tests, mutual-pursuit tests, and jump-past-collision tests still green
+- [ ] Confirm Phase 1's measurement that `_run_phases` adds ≈ 100–200 ms per turn over 1500 invocations
+- [ ] Move `from game.core.exceptions import EnginePhaseError; from game.core.error_codes import ErrorCode` out of `_time_phase` (likely already done in Phase 2)
+- [ ] Consider pre-resolving `phase.callable_target(self)` and `phase.timing_bucket` *once* per `TurnEngine` instance instead of every tick. Store a flat list of (callable, args_resolver, bucket_key, pre_hook, post_hook) tuples on `__init__`. Re-derive only if `tick_phases` is replaced (tests do this).
+- [ ] Avoid allocating fresh tuples inside `args_resolver` callbacks when the args are constant per-tick — but only if the descriptor change does not require touching the frozen descriptor list contract
+- [ ] Failing test first: assert that the new `_run_phases` still routes through `_time_phase`, still wraps exceptions as `EnginePhaseError`, still honors pre/post hooks
+- [ ] Verify: golden tests `test_default_tick_phase_list.py` / `test_default_end_of_turn_phase_list.py` still green; `test_turn_engine_phase_timing.py` still green
 
 **Notes:**
 
-### Task 6.4: Final benchmark and documentation update [Medium]
+### Task 5.3: Investigate the `progress_callback` overhead [Medium]
 
-**Files:** `tests/performance/bench_turn_processing.baseline.json`, `docs/systems/strategy_layer.md`, `docs/systems/production_system.md` if relevant
-**Tests:** full sharded suite
+**Files:** wherever the UI registers its progress callback (likely `game/ui/screens/strategy_screen.py` or `game/strategy/facade/strategy_session_facade.py`); `game/strategy/engine/turn_engine.py`
+**Tests:** characterization test for the callback contract; bench
 
-- [ ] Run `bench_turn_processing.py` and write the final baseline JSON
-- [ ] Compute Phase 1 → final delta on total time and on each phase bucket
-- [ ] Update `docs/systems/strategy_layer.md` to mention the new caching contracts (per-turn `_storage_dirty` / `_booster_dirty` flags, who flips them, who clears them)
-- [ ] Update `docs/guides/performance_profiling.md` with a one-paragraph reference to `bench_turn_processing.py` as the canonical turn-processing benchmark
-- [ ] Update `docs/03_CONVENTIONS.md` only if a new convention was introduced (e.g. "dirty-flag invalidation lives on `Empire` and is cleared by the engine that owns the cache")
-- [ ] Run full sharded suite: `python Tools/test_sharded/test_sharded.py`
-- [ ] Cross-check: the docs/code consistency rule — any doc claim that disagrees with code must be surfaced
+- [ ] Use Phase 1 Task 1.4 Probe B's measurement: if a noop callback yields ≥ 200 ms / turn improvement, the UI side is doing real work
+- [ ] Find the UI callback implementation; document what it does per tick (likely a pygame event pump or partial redraw)
+- [ ] Options to evaluate, in order of preference:
+  - (a) Coalesce: only invoke the callback every Nth tick (e.g. every 5 ticks → 20 callback calls/turn instead of 100). This is a UX trade-off — surface it to the user.
+  - (b) Move the UI repaint out of the callback into a separate thread / async pump. Risky; only if (a) is unacceptable.
+  - (c) If the callback is purely event-pumping for responsiveness, consider whether the existing pygame loop already covers that and the per-tick callback is redundant.
+- [ ] **User checkpoint required**: any UX-visible change (e.g. coarser progress bar) needs explicit approval before merging
+- [ ] Failing test first: contract test pinning the new callback cadence
+- [ ] Verify: bench shows the expected reduction; the UI still updates the "Tick N / 100" overlay visibly during a turn
 
 **Notes:**
 
@@ -74,14 +63,12 @@ This phase is the cleanest place to stop if the user is satisfied with Phase 4+5
 When all tasks above are done:
 
 - [ ] All task checkboxes above are checked
-- [ ] Final `bench_turn_processing.py` total time vs. the Phase-1 baseline: agreed reduction met (target to be confirmed with user at end of Phase 5)
-- [ ] All sub-engine unit tests green
-- [ ] All three Phase-1 mid-turn characterization tests still green
-- [ ] Full sharded suite green
-- [ ] `docs/` updated where behavior or pattern changed
-- [ ] No new save migration / fallback / compatibility shim
-- [ ] User has verified the tiny-scenario turn time on their own machine
+- [ ] `bench_turn_processing.py` shows the unaccounted-overhead gap from Phase 1 reduced by ≥ 50%
+- [ ] Rollback-on-failure tests still green
+- [ ] `test_turn_engine_progress_callback.py` updated to reflect the new cadence (and remains green)
+- [ ] Phase descriptor golden tests still green (no reorder, no rename)
+- [ ] No regression in mid-turn characterization tests
+- [ ] User signed off on any UX-visible cadence change to the progress overlay
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to `Project Complete`
-- [ ] Move project to `Projects/completed_projects/` per the standard close-out flow
+- [ ] Update plan.md Current State to point to Phase 6
