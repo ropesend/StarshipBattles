@@ -622,14 +622,13 @@ def _policy_text_targets(repo_root: Path) -> list[Path]:
         "CLAUDE.md",
         ".agents/CODEX.md",
         "Projects/README.md",
-        "Tracking/README.md",
         "AgentCoordination/README.md",
         "Tools/agent_coordination/README.md",
     ):
         path = repo_root / rel
         if path.is_file():
             candidates.add(path)
-    for pattern in ("Projects/protocols/*.md", "Tracking/protocols/*.md"):
+    for pattern in ("Projects/protocols/*.md", "AgentCoordination/protocols/ticket_*.md"):
         for path in repo_root.glob(pattern):
             if path.is_file():
                 candidates.add(path)
@@ -813,7 +812,7 @@ def check_tracked_local_settings(repo_root: Path) -> list[Finding]:
 def check_rollback_policy(repo_root: Path) -> list[Finding]:
     findings: list[Finding] = []
     targets: set[Path] = set()
-    for pattern in ("Projects/protocols/*.md", "Tracking/protocols/*.md"):
+    for pattern in ("Projects/protocols/*.md", "AgentCoordination/protocols/ticket_*.md"):
         for path in repo_root.glob(pattern):
             if path.is_file():
                 targets.add(path)
@@ -1233,18 +1232,15 @@ LEGACY_SCAN_TARGETS = (
     "CLAUDE.md",
     ".agents/CODEX.md",
     "Projects/README.md",
-    "Tracking/README.md",
     "docs/README.md",
 )
 LEGACY_SCAN_GLOBS = (
     "Tools/*/README.md",
     "Projects/protocols/*.md",
-    "Tracking/protocols/*.md",
+    "AgentCoordination/protocols/ticket_*.md",
     "Projects/active_projects/*/manifest.md",
     "Projects/active_projects/*/plan.md",
     "Projects/active_projects/*/design.md",
-    "Tracking/bugs/active/*.md",
-    "Tracking/features/active/*.md",
 )
 LEGACY_SCAN_EXCLUDE_DIRS = (
     "AgentCoordination",

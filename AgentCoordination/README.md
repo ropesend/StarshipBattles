@@ -56,7 +56,7 @@ review rounds are kept as `*_v[1-4]_*.md` for historical context.
 
 ## Maintenance cadence
 
-- Run `validate_agent_surfaces.py` before committing changes to any file under `AgentCoordination/`, `.claude/`, `.agent/`, `.agents/`, `.opencode/`, `Projects/protocols/`, `Tracking/protocols/`, `AGENTS.md`, `CLAUDE.md`, `.agents/CODEX.md`, or `opencode.json`.
+- Run `validate_agent_surfaces.py` before committing changes to any file under `AgentCoordination/`, `.claude/`, `.agent/`, `.agents/`, `.opencode/`, `Projects/protocols/`, `AGENTS.md`, `CLAUDE.md`, `.agents/CODEX.md`, or `opencode.json`.
 - Re-run `inventory_agent_surfaces.py` whenever you add, remove, or rename a skill, and commit the updated JSON in the same change.
 - Run the full sharded suite before large coordination commits so the local per-install baseline verification stays current even when canonical counts are unchanged.
 
@@ -95,7 +95,7 @@ repos:
         entry: python Tools/agent_coordination/validate_agent_surfaces.py
         language: system
         pass_filenames: false
-        files: ^(AgentCoordination|\.claude|\.agent|\.agents|\.opencode|Projects/protocols|Tracking/protocols)/|^AGENTS\.md$|^CLAUDE\.md$|^opencode\.json$
+        files: ^(AgentCoordination|\.claude|\.agent|\.agents|\.opencode|Projects/protocols)/|^AGENTS\.md$|^CLAUDE\.md$|^opencode\.json$
 ```
 
 Install once with `pre-commit install`. The same commands run unconditionally

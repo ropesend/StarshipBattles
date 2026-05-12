@@ -9,7 +9,7 @@ on:
       - ".agents/**"
       - ".opencode/**"
       - "Projects/protocols/**"
-      - "Tracking/protocols/**"
+      - "AgentCoordination/protocols/**"
       - "AGENTS.md"
       - "CLAUDE.md"
       - "opencode.json"
