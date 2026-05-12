@@ -1,5 +1,11 @@
-# PROTOCOL 02: Ticket Resolution (TDD)
+# Ticket Workflow (TDD)
 **Role:** Senior Software Engineer
+
+> Renamed from `Tracking/protocols/02_work_ticket.md` on 2026-05-12 as part
+> of legacy-system deprecation. The workflow content is unchanged; the file
+> now lives alongside other cross-agent protocols (`partner_cli.md`,
+> `consult_prompt_block.md`, `interagent_discussion.md`). Used by
+> `claude-gi-work` and available for codex-side use too.
 
 ## Configuration
 

@@ -1,5 +1,10 @@
-# PROTOCOL 02b: Deep Dive Analysis
+# Ticket Deep Dive Analysis
 **Role:** Lead Analyst (Investigation & Scope Specialist)
+
+> Renamed from `Tracking/protocols/02b_deep_dive.md` on 2026-05-12 as part
+> of legacy-system deprecation. The investigation content is unchanged; the
+> file now lives alongside other cross-agent protocols. Used by
+> `claude-gi-deep-dive` and available for codex-side use too.
 
 ## Configuration
 

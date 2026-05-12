@@ -8,8 +8,9 @@ argument-hint: <issue-number>
 # Deep Dive on GitHub Issue
 
 Investigation-only mode for issues that resist quick fixes or whose scope is
-unclear. Counterpart to `/claude-ticket-deep-dive`. Procedural rigour from
-`Tracking/protocols/02b_deep_dive.md` applies.
+unclear. Procedural rigour from
+[`AgentCoordination/protocols/ticket_deep_dive.md`](../../../AgentCoordination/protocols/ticket_deep_dive.md)
+applies.
 
 ## Your Role
 
@@ -44,8 +45,10 @@ You **MUST NOT**:
    (Or `--remove-label "status:in-progress"` if you're being invoked after
    a stuck `/claude-gi-work` session.)
 3. **INVESTIGATE.** Read code paths, related projects under `Projects/`, prior
-   archived tickets in `Tracking/bugs/archived/` and `Tracking/features/archived/`,
-   and any referenced PROJ-XXX. Spawn Explore subagents for breadth.
+   closed GitHub issues (`gh issue list --state closed --search <terms>` —
+   especially issues with the `verified` label), historical context under
+   `AgentCoordination/legacy_tickets/` if relevant, and any referenced PROJ-XXX.
+   Spawn Explore subagents for breadth.
 4. **POST FINDINGS** as comments. Each major finding gets its own comment with
    a `### Finding N: <Title>` heading. Include file+line references.
 5. **TERMINAL STATE** — choose one:
