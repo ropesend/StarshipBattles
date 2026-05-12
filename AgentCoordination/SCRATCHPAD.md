@@ -18,7 +18,7 @@ If a file needs to persist beyond the current scratch lifecycle, it belongs
 in a tracked location:
 
 - Architectural plans / projects → `Projects/active_projects/PROJ-XX/`
-- Tickets → `Tracking/` or GitHub Issues (`/claude-gi-add`)
+- Tickets → GitHub Issues (`/claude-gi-add`)
 - Review reports worth keeping → `Reviews/results/<dated-dir>/`
 - Documentation → `docs/`
 

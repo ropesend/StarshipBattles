@@ -15,19 +15,18 @@ This directory contains the infrastructure for managing multi-file refactoring p
 | **Close/archive a project** | `/claude-proj-archive` | `/claude-proj-archive 87` or `/claude-proj-archive 87 88 89` |
 | **Revise a completed project** | `/claude-proj-revise` | `/claude-proj-revise 87 Add error handling` |
 | **Extract a phase to sub-project** | `/claude-proj-extract-phase` | `/claude-proj-extract-phase 87 3` |
-| **Report a bug** | `/claude-ticket-add` | `/claude-ticket-add bug Ship doesn't move after turn 5` |
-| **Request a feature** | `/claude-ticket-add` | `/claude-ticket-add feature Add zoom to galaxy map` |
-| **Fix a specific bug** | `/claude-ticket-work` | `/claude-ticket-work bug 42` |
-| **Implement a feature** | `/claude-ticket-work` | `/claude-ticket-work feature 7` |
-| **Auto-fix next bug** | `/claude-ticket-next` | `/claude-ticket-next bug` |
-| **Auto-implement next feature** | `/claude-ticket-next` | `/claude-ticket-next feature` |
-| **Batch fix bugs** | `/claude-ticket-continue` | `/claude-ticket-continue bug` |
-| **Deep investigate a bug** | `/claude-ticket-deep-dive` | `/claude-ticket-deep-dive bug 42` |
-| **Close a resolved ticket** | `/claude-ticket-close` | `/claude-ticket-close bug 42` |
-| **Batch close tickets** | `/claude-ticket-batch-close` | `/claude-ticket-batch-close bug 46 49 50` |
-| **Reject a fix/implementation** | `/claude-ticket-reject` | `/claude-ticket-reject bug 42 Still crashes on turn 3` |
-| **Answer ticket questions** | `/claude-ticket-answer` | `/claude-ticket-answer bug 42 Only happens in 4K mode` |
-| **Update ticket with new info** | `/claude-ticket-update` | `/claude-ticket-update bug 42 Also affects fleet view` |
+| **Report a bug** | `/claude-gi-add` | `/claude-gi-add bug Ship doesn't move after turn 5` |
+| **Request a feature** | `/claude-gi-add` | `/claude-gi-add feature Add zoom to galaxy map` |
+| **Fix a specific issue** | `/claude-gi-work` | `/claude-gi-work 42` |
+| **Auto-fix next issue** | `/claude-gi-next` | `/claude-gi-next bug` |
+| **Batch fix issues** | `/claude-gi-continue` | `/claude-gi-continue bug` |
+| **Deep investigate an issue** | `/claude-gi-deep-dive` | `/claude-gi-deep-dive 42` |
+| **Parallel deep dive across issues** | `/claude-gi-deep-dive-parallel` | `/claude-gi-deep-dive-parallel` |
+| **Close a resolved issue** | `/claude-gi-close` | `/claude-gi-close 42` |
+| **Batch close issues** | `/claude-gi-batch-close` | `/claude-gi-batch-close 46 49 50` |
+| **Reject a fix** | `/claude-gi-reject` | `/claude-gi-reject 42 Still crashes on turn 3` |
+| **Answer issue questions** | `/claude-gi-answer` | `/claude-gi-answer 42 Only happens in 4K mode` |
+| **Update issue with new info** | `/claude-gi-update` | `/claude-gi-update 42 Also affects fleet view` |
 | **Run QA triage session** | `/claude-qa-triage` | `/claude-qa-triage` |
 | **Convert triage to project** | `/claude-triage-to-proj` | `/claude-triage-to-proj star_rendering` |
 | **Manage refactor plan** | `/claude-proj-manage-plan` | `/claude-proj-manage-plan ADD 87` |
@@ -51,15 +50,15 @@ proj-close ─────────────► Projects/protocols/05_clos
 proj-revise ────────────► Projects/protocols/06_revise
 proj-extract-phase ─────► Projects/protocols/07_extract
 
-ticket-add ─────────────► Tracking/protocols/01_ingest...     Tracking/bugs/active/BUG-XX.md
-ticket-work ────────────► Tracking/protocols/02_work...       Tracking/features/active/FEAT-XX.md
-ticket-continue ────────► Tracking/protocols/02a_batch...
-ticket-deep-dive ───────► Tracking/protocols/02b_deep...
-ticket-close ───────────► Tracking/protocols/03_close...
-ticket-batch-close ─────► Tracking/protocols/03a_batch...
-ticket-update ──────────► Tracking/protocols/04_update...
-ticket-reject ──────────► Tracking/protocols/05_reject...
-ticket-answer ──────────► Tracking/protocols/06_answer...
+gi-add ─────────────────► (no shared protocol — skill is self-contained)
+gi-work ────────────────► AgentCoordination/protocols/ticket_workflow.md
+gi-deep-dive ───────────► AgentCoordination/protocols/ticket_deep_dive.md
+gi-deep-dive-parallel ──► (self-contained)
+gi-continue, gi-next, gi-close, gi-batch-close,
+gi-update, gi-reject, gi-answer ──► (each self-contained, ~50 lines)
+
+Issues live on GitHub:                   https://github.com/ropesend/StarshipBattles/issues
+Evidence (screenshots/logs):             tracking-assets/screenshots/, tracking-assets/logs/
 
 Loop Workers (retired) ─► see _marked_for_deletion_2026-05-29/Projects/
 ```
@@ -90,7 +89,9 @@ Loop Workers (retired) ─► see _marked_for_deletion_2026-05-29/Projects/
 
 ## Ticket System (Bugs & Features)
 
-The ticket system uses unified skills and protocols that handle both bugs and features. The first argument to any `/ticket-*` command is always the type: `bug` or `feature`.
+Tickets live on **GitHub Issues**: https://github.com/ropesend/StarshipBattles/issues.
+Skills are `/claude-gi-*`. The first argument to `/claude-gi-add` is the type
+(`bug` or `feature`); other commands take the issue number directly.
 
 ### Bug-specific behavior
 - **Anti-reversion rules**: Fixes must not undo recent refactors (checked via git history)
@@ -100,16 +101,14 @@ The ticket system uses unified skills and protocols that handle both bugs and fe
 
 ### Feature-specific behavior
 - **Ambiguity check**: Requirements clarity verification before implementation
-- **Refactor flag**: Can escalate to `[Needs Refactor]` if structural issues found
+- **Refactor flag**: Can escalate to a project if structural issues are found
 - **Deep dive**: Scope assessment and complexity rating (Simple/Moderate/Complex/Project-Scale)
 
-### Data locations
-- Bug tickets: `Tracking/bugs/active/BUG-XX.md` → `Tracking/bugs/archived/`
-- Bug dashboard: `Tracking/debug_plan.md`
-- Bug index: `Tracking/solved_bugs.md`
-- Feature tickets: `Tracking/features/active/FEAT-XX.md` → `Tracking/features/archived/`
-- Feature dashboard: `Tracking/feature_plan.md`
-- Feature index: `Tracking/completed_features.md`
+### Storage
+- Issues: GitHub (state, labels, comments, parent/sub-issue links)
+- Evidence: `tracking-assets/screenshots/<YYYY-MM>/` and `tracking-assets/logs/issue-N/`
+- Historical (read-only) archives from the retired `Tracking/` system: `AgentCoordination/legacy_tickets/`
+- Dashboard equivalent: `gh issue list --label "type:bug" --label "status:pending"` (and variants)
 
 ---
 
@@ -152,19 +151,16 @@ WORKER.md files now live in the staging directory:
 | 10 | `10_manage_refactor_plan.md` | Master refactor plan management |
 | — | `WORKER_TEMPLATE.md` | Shared worker protocol for all loops |
 
-### Ticket Protocols (`Tracking/protocols/`)
+### Ticket Protocols (`AgentCoordination/protocols/`)
 
-| # | File | Purpose |
-|---|------|---------|
-| 01 | `01_ingest_ticket.md` | Create new bug/feature ticket |
-| 02 | `02_work_ticket.md` | Fix bug or implement feature (TDD) |
-| 02a | `02a_batch_work.md` | Autonomous batch processing |
-| 02b | `02b_deep_dive.md` | Deep investigation (bug) or scope assessment (feature) |
-| 03 | `03_close_ticket.md` | Archive confirmed ticket |
-| 03a | `03a_batch_close.md` | Batch archive tickets |
-| 04 | `04_update_ticket.md` | Append context to ticket |
-| 05 | `05_reject_ticket.md` | Reject fix/implementation |
-| 06 | `06_answer_questions.md` | Log answers to clarification questions |
+| File | Purpose |
+|------|---------|
+| `ticket_workflow.md` | TDD work loop: reproduce → failing test → root-cause → fix → verify → doc-sync. Used by `/claude-gi-work` (and codex-side equivalents). |
+| `ticket_deep_dive.md` | Investigation-only mode for issues resisting quick fixes or with unclear scope. Used by `/claude-gi-deep-dive`. |
+
+Other ticket workflows (`gi-add`, `gi-continue`, `gi-close`, `gi-batch-close`,
+`gi-update`, `gi-reject`, `gi-answer`, `gi-next`, `gi-deep-dive-parallel`)
+are self-contained in their SKILL.md — no shared protocol file.
 
 ---
 
@@ -204,14 +200,15 @@ When modifying this system, follow these rules to prevent drift:
 ### File relationships
 ```
 .claude/skills/*/SKILL.md  ──references──►  Projects/protocols/*.md
-                                            Tracking/protocols/*.md
+                                            Projects/gp_protocols/*.md
+                                            AgentCoordination/protocols/ticket_*.md
 Loop WORKER.md files        ──references──►  Projects/protocols/WORKER_TEMPLATE.md
                                             Projects/protocols/08_automated_loop_protocol.md
 ```
 
 ### Verification checklist
 After any structural change:
-- [ ] `grep -r "old_name" .claude/skills/ Projects/ Tracking/` finds no stale references
+- [ ] `grep -r "old_name" .claude/skills/ Projects/ AgentCoordination/protocols/` finds no stale references
 - [ ] All skills in Quick Reference table match actual `.claude/skills/` directories
 - [ ] All protocols in Protocol Reference tables match actual files on disk
 - [ ] README accurately describes the current system
