@@ -132,7 +132,12 @@ class StrategyGameStateManager:
         screen.on_ui_selection(home_colony)
 
         # Per-player event-log auto-open (BUG-123 scoping).
-        turn = screen._facade.get_turn_number()
+        # `GameSession.process_turn` post-increments `session.turn_number`,
+        # so when the helper runs after the rollover branch's
+        # `process_full_turn`, `get_turn_number()` returns N+1 while the
+        # events the player needs were filed with turn=N. Look up the
+        # just-completed turn explicitly so the popup actually fires.
+        turn = screen._facade.get_turn_number() - 1
         events = screen._facade.get_turn_events(turn=turn, empire_id=empire.id)
         if events and not self._suppress_event_log:
             screen.ui.open_event_log_with_events(

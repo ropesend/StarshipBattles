@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-05-11 — issue #9: per-player turn-start state helper
+> **Last verified:** 2026-05-12 — issue #9: per-player turn-start state helper queries previous turn for event log
 
 System documentation for the turn-based strategy layer.
 
@@ -124,6 +124,7 @@ Per-player turn-start UI state (issue #9):
 - The helper performs four ordered actions: clear `screen.selected_fleet` / `selected_object` / `last_selected_system`; centre the camera on `empire.colonies[0]`; auto-select that home colony via `screen.on_ui_selection(home_colony)` — the same code path a manual planet click takes, so `PlanetReportPanel` is populated through `ui.show_detailed_report` and selection-side concerns (e.g. `transfer_dialog.handle_external_selection`, `last_selected_system` derivation) stay consistent; and open the per-player event log scoped to `empire.id` (BUG-123).
 - `process_full_turn` does NOT duplicate any of these concerns. It still returns the active empire's `turn_events` so the FEAT-20 dev-loop caller (`run_n_turns`) can aggregate them for a single combined end-of-loop log.
 - The helper respects `_suppress_event_log` (FEAT-20) as a defensive guard. `run_n_turns` itself calls `process_full_turn` directly (not `advance_turn`), so the helper does not fire during dev bulk runs.
+- The event-log lookup uses `facade.get_turn_number() - 1`, i.e. the just-completed turn. `GameSession.process_turn` post-increments `session.turn_number`, so by the time the helper runs after the rollover branch's `process_full_turn`, the facade reports the upcoming turn (`N+1`) while the events the player must see were filed with `turn=N`. The `- 1` is required for the popup to fire at all; the bare `get_turn_number()` value yields an empty event list and the auto-open silently no-ops.
 
 Base helper surface:
 
