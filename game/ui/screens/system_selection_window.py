@@ -34,7 +34,12 @@ class SystemSelectionUiBuilder:
     """
 
     def build(self, screen: "SystemSelectionWindow") -> None:
-        rect = screen.rect
+        # Issue #24: use the content-area container rect, not screen.rect.
+        # screen.rect is the outer pygame_gui window rect, inflated by
+        # shadow_width on every side and including the title bar — placing
+        # widgets relative to it clips them past the container's render
+        # bounds. get_container().rect is the actual content area.
+        rect = screen.get_container().rect
 
         screen.label = UILabel(
             pygame.Rect(10, 10, rect.width - 20, 30),
