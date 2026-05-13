@@ -21,6 +21,11 @@ from game.core.hex_math import HexCoord, hex_circle_filled, hex_to_pixel
 from game.strategy.data.planet import PlanetType
 from game.ui.screens.strategy_render.dyson_spheres import draw_dyson_spheres
 
+# Symmetric slack on the occupied-hex bbox fit assertion. Covers the
+# 1.05x DYSON_SPHERE_FILL_FACTOR plus integer rounding from the int()
+# cast in screen_radius — see #26 QA iteration 2.
+DYSON_SPHERE_FIT_TOLERANCE: float = 1.06
+
 
 @pytest.fixture(autouse=True, scope="module")
 def _pygame_init():
@@ -261,12 +266,15 @@ def test_sphere_image_fits_inside_occupied_hex_bounding_box(
 
     bbox_w, bbox_h = _occupied_hex_bbox(planet.location, radius_hexes, renderer.hex_size)
     bbox_min = min(bbox_w, bbox_h)
+    tolerance = bbox_min * DYSON_SPHERE_FIT_TOLERANCE
 
-    assert img_w <= bbox_min, (
+    assert img_w <= tolerance, (
         f"radius_hexes={radius_hexes}: sphere image width {img_w}px exceeds "
-        f"occupied-hex bbox min dim {bbox_min:.2f}px (bbox=({bbox_w:.2f}, {bbox_h:.2f}))."
+        f"occupied-hex bbox min dim {bbox_min:.2f}px * {DYSON_SPHERE_FIT_TOLERANCE} "
+        f"= {tolerance:.2f}px (bbox=({bbox_w:.2f}, {bbox_h:.2f}))."
     )
-    assert img_h <= bbox_min, (
+    assert img_h <= tolerance, (
         f"radius_hexes={radius_hexes}: sphere image height {img_h}px exceeds "
-        f"occupied-hex bbox min dim {bbox_min:.2f}px (bbox=({bbox_w:.2f}, {bbox_h:.2f}))."
+        f"occupied-hex bbox min dim {bbox_min:.2f}px * {DYSON_SPHERE_FIT_TOLERANCE} "
+        f"= {tolerance:.2f}px (bbox=({bbox_w:.2f}, {bbox_h:.2f}))."
     )

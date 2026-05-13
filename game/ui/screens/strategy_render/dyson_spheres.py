@@ -25,6 +25,13 @@ from game.core.hex_math import hex_to_pixel
 from game.strategy.data.planet import PlanetType
 from game.ui.colors import DYSON_FALLBACK, WHITE
 
+# ~5% bump past the q-axis inscribed-circle minimum, set per QA visual
+# judgment in #26 iteration 2: the strict inscribed result left a visible
+# vertical gap to the outer-ring hexes. The sprite still does not reach
+# the r-axis apothem (which is ~12% larger than q at R=6), so it remains
+# inside the occupied hex set in the binding direction.
+DYSON_SPHERE_FILL_FACTOR: float = 1.05
+
 
 def draw_dyson_spheres(r: Any, screen: Any, sys: Any, sys_world_pos: Any) -> None:
     """Draw Dyson Sphere planets at their full multi-hex size.
@@ -46,17 +53,20 @@ def draw_dyson_spheres(r: Any, screen: Any, sys: Any, sys_world_pos: Any) -> Non
         center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
         center_screen = r.camera.world_to_screen(center_world)
 
-        # Size the sprite to fit inside the planet's occupied hex disc
-        # ``occupied_hexes() = hex_circle_filled(loc, R - 1)``. For
-        # flat-topped hexes, the disc's narrowest radial extent is along the
+        # Size the sprite to fit (mostly) inside the planet's occupied hex
+        # disc. ``occupied_hexes() = hex_circle_filled(loc, R - 1)``. For
+        # flat-topped hexes the disc's narrowest radial extent is along the
         # horizontal axis (the pointy corner of the side hex), at distance
         # ``(3R - 1) / 2 * hex_size`` from the centre — strictly smaller than
-        # the vertical apothem ``sqrt(3) * (R - 0.5) * hex_size``. The image
-        # must fit inside this minimum distance to avoid overflowing into
-        # adjacent sectors (issue #26).
+        # the vertical apothem ``sqrt(3) * (R - 0.5) * hex_size``. The strict
+        # inscribed-circle result is visually too small (QA #26 iteration 2),
+        # so we bump by ``DYSON_SPHERE_FILL_FACTOR``. The resulting horizontal
+        # overshoot lands in the corner notches of the outer-ring side hex
+        # (still inside the occupied set), not in unoccupied neighbouring
+        # sectors.
         screen_radius = max(
             6,
-            int((3 * radius_hexes - 1) / 2 * r.hex_size * r.camera.zoom),
+            int((3 * radius_hexes - 1) / 2 * r.hex_size * r.camera.zoom * DYSON_SPHERE_FILL_FACTOR),
         )
 
         # Load Dyson Sphere image
