@@ -247,7 +247,7 @@ Strategy/core event logging:
 
 ## 11. Surface Caching
 
-> **Last verified:** 2026-05-12 — PROJ-411 Phase 1 extension added: per-turn UI caches on `FacadeSessionState` for data-gathering panels (planet/star/design/economy snapshots), cleared by `FacadeSessionState.invalidate_all()` from `StrategySessionFacade.process_turn`. PROJ-411 Phase 2 added: window-reuse for strategy modals (`hide()` instead of `kill()`; instance preserved across opens). PROJ-411 Phase 3 added: `StarshipUIAppearanceTheme` subclass with tuple-keyed `_combined_ids_cache` working around pygame_gui 0.6.14's pathological `build_all_combined_ids` cache key.
+> **Last verified:** 2026-05-12 — issue #17 follow-up: `invalidate_widget_caches()` now also hides each `row["bg"]`, and `BuildQueueScreen.show()` re-runs `force_update() + update_visible_rows()` after `panels.background.show()` so the per-row visibility invariant survives pygame_gui's recursive un-hide. PROJ-411 Phase 1 extension: per-turn UI caches on `FacadeSessionState` for data-gathering panels (planet/star/design/economy snapshots), cleared by `FacadeSessionState.invalidate_all()` from `StrategySessionFacade.process_turn`. PROJ-411 Phase 2 added: window-reuse for strategy modals (`hide()` instead of `kill()`; instance preserved across opens). PROJ-411 Phase 3 added: `StarshipUIAppearanceTheme` subclass with tuple-keyed `_combined_ids_cache` working around pygame_gui 0.6.14's pathological `build_all_combined_ids` cache key.
 
 Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`, `game/ui/panels/race_flag_gallery.py`, `game/ui/panels/race_portrait_gallery.py`, `game/ui/panels/race_theme_gallery.py`, `game/ui/components/table/virtual_table.py`.
 
@@ -266,12 +266,26 @@ When a cached widget pool is reused for *different content* (e.g. yard switch in
 
 - Nulls per-row/per-widget caches (`_last_text`, `_last_img`, `_last_color`).
 - **Clears the widget content too** — `UILabel.set_text("")` on labels, `UIImage.set_image(blank_surface)` on images (issue #17). Cache-attr nulling alone is insufficient: pygame_gui's `UIPanel.show(show_contents=True)` calls `panel_container.show(True)`, and `UIContainer.show(True)` iterates every child and calls `.show()` on it unconditionally — regardless of each child's prior individual `visible` state. So any stale text/image left on a pool row that `update_visible_rows()` individually hid will re-appear on the next `panel.show()`.
+- **Hides each row's background panel** — `row["bg"].hide()` (issue #17 follow-up). Content-clearing addresses stale text/portrait BUT leaves the row-pool widgets (action buttons `+ – ^ v`, the blank portrait `UIImage`, labels) visible. With an empty active queue (`row_count == 0`) every pool row goes through the `else` (hide) branch in `update_visible_rows()` — but the subsequent `BuildQueueScreen.show()` → `panels.background.show()` un-hides every descendant again via the same recursive contract. `UIPanel.hide(hide_contents=True)` recursively hides every child of the row background, so one `row["bg"].hide()` per row suffices.
 - Sets a private `_data_identity_dirty: bool` flag.
 - Does NOT call `.kill()` on any pool widget — `kill()` defeats the perf-lock that `TestRowPoolReuseGuard` enforces.
 
 The flag is **ephemeral**: cleared at the end of the next `update_visible_rows()` re-render so subsequent frames keep the early-return optimization. Without this, every frame after invalidation re-renders all visible rows (~10–20% FPS drop).
 
 Pair the invalidation method with a content-mutation hook in the renderer (`BuildQueueRenderer.refresh_queue_display()` calls it before `update_visible_rows()`) and a screen-lifecycle hook (`BuildQueueScreen.on_active_player_changed()` calls it on player change). The renderer hook handles per-mutation refreshes; the lifecycle hook handles cross-context boundaries (yard/player swap, save/load).
+
+**Screen-level show() override (issue #17 follow-up):** any screen that calls `panel.show()` on a container above the row pool must re-assert per-row visibility AFTER the show, because pygame_gui's recursive `UIContainer.show(True)` un-hides descendants regardless of their prior individual visibility. The canonical pattern is:
+
+```python
+def show(self) -> None:
+    if self.panels is not None:
+        self.panels.background.show()
+        self.panels.virtual_table.force_update()
+        self.panels.virtual_table.update_visible_rows()
+        self.manager.update(0)
+```
+
+`force_update()` resets `_last_scroll_pct`/`_last_row_count` so `update_visible_rows()` cannot early-return on the unchanged tuple. PROJ-373 perf-lock and PROJ-410 ephemeral dirty flag are both preserved — `force_update()` only mutates dirty-tracking scalars and `update_visible_rows()` uses hide/show/set_text/set_image, not `.kill()`. Canonical example: `BuildQueueScreen.show()` in `game/ui/screens/build_queue_screen.py`.
 
 Canonical example: `VirtualTable.invalidate_widget_caches()` in `game/ui/components/table/virtual_table.py`.
 

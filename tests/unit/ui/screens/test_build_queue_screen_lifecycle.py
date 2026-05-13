@@ -1145,3 +1145,187 @@ def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
         f"VirtualTable.invalidate_widget_caches() to defeat pygame_gui's "
         f"UIPanel.show(show_contents=True) recursive un-hide."
     )
+
+
+# =========================================================================
+# Issue #17 follow-up (rejected fix) regression tests
+# =========================================================================
+#
+# After the first issue #17 fix (commit a3ced0e1f), QA reported in session
+# 20260512_103437 that on a brand-new game with an empty Build Queue,
+# opening the panel still shows ~40 phantom empty rows — each with
+# +/-/^/v action buttons and a blank portrait slot. The first fix cleared
+# label text and image surfaces but left the row pool widgets (action
+# buttons, portrait UIImage) visible.
+#
+# Root cause (deeper layer): when an empty queue is bound via
+# update_visible_rows(), the surplus pool rows ARE hidden via
+# row["bg"].hide(). But BuildQueueScreen.open_for_yard() then calls
+# self.show() which invokes panels.background.show() — pygame_gui's
+# UIPanel.show(show_contents=True) recursively un-hides every descendant
+# (verified against pygame-ce 2.5.7 source: ui_panel.py:468-476,
+# ui_container.py:380-394). So the pool rows that update_visible_rows()
+# just hid are immediately re-exposed.
+#
+# Fix has two parts:
+# 1) invalidate_widget_caches() also hides each row["bg"] (covered by
+#    test_virtual_table.py::test_invalidate_hides_row_backgrounds).
+# 2) BuildQueueScreen.show() re-runs force_update() + update_visible_rows()
+#    after panels.background.show() so the per-row visibility is re-asserted
+#    AFTER pygame_gui's recursive un-hide (this test class).
+# =========================================================================
+
+
+def test_issue17_show_reasserts_row_visibility_after_panel_show(
+    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, mock_registries,
+):
+    """Issue #17 follow-up: ``BuildQueueScreen.show()`` must re-run the
+    virtual table's visibility pass AFTER ``panels.background.show()``
+    so out-of-range pool rows stay hidden.
+
+    The scenario: empty queue, ``_refresh_queue_display()`` runs
+    ``update_visible_rows()`` which hides every surplus row (data_idx >=
+    row_count). Then ``show()`` invokes ``panels.background.show()``
+    which is pygame_gui's ``UIPanel.show(show_contents=True)`` and
+    recursively un-hides every descendant. Without the override, the
+    just-hidden row backgrounds + their action buttons / image / label
+    children are all re-exposed.
+
+    FAILS today (pre-override): at least one out-of-range row_bg has
+    ``visible == 1`` after show().
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    planet = _planet_with_two_yards("Twin-Yard", 17_001, hex_a)
+    galaxy = _MockGalaxy()
+    galaxy._global_hex_planets[hex_a] = [planet]
+    session = _MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy,
+        empire=empire,
+        initial_yard=planet,
+    )
+
+    # Empty queue (default state — planet has yards but no items queued).
+    assert screen._get_active_queue() == [], (
+        "test setup: expected empty queue on a brand-new planet"
+    )
+
+    pool = screen.panels.virtual_table._row_pool
+    row_count = screen.panels.virtual_table._data_source.get_row_count()
+    assert row_count == 0, "test setup: expected zero queue items"
+    assert len(pool) > 0, "test setup: expected a non-empty row pool"
+
+    # Simulate the close-then-reopen path: hide + invalidate caches +
+    # refresh + show, mirroring open_for_yard()'s flow.
+    screen.hide()
+    screen.panels.virtual_table.invalidate_widget_caches()
+    screen._refresh_queue_display()
+    screen.show()
+
+    # After show(): every pool row whose data_idx >= row_count (== 0)
+    # must have row_bg.visible falsy. pygame_gui sets `visible` to int
+    # 0 or 1 (sometimes bool); compare via bool().
+    visible_phantom_rows = []
+    for pool_idx, row in enumerate(pool):
+        data_idx = row.get("row_index", -1)
+        if data_idx >= row_count or data_idx < 0:
+            bg = row.get("bg")
+            if bg is not None and bool(getattr(bg, "visible", 0)):
+                visible_phantom_rows.append((pool_idx, data_idx))
+
+    assert visible_phantom_rows == [], (
+        f"Issue #17 follow-up: BuildQueueScreen.show() must re-run "
+        f"the virtual table's visibility pass after pygame_gui's "
+        f"UIPanel.show(show_contents=True) recursive un-hide. "
+        f"Found {len(visible_phantom_rows)} phantom rows visible "
+        f"after show() on an empty queue: {visible_phantom_rows!r}. "
+        f"Fix: override BuildQueueScreen.show() to invoke "
+        f"force_update() + update_visible_rows() after the existing "
+        f"panels.background.show() call."
+    )
+
+
+def test_issue17_show_reasserts_child_widget_visibility_after_panel_show(
+    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, mock_registries,
+):
+    """Issue #17 follow-up: the child widgets inside hidden rows
+    (action buttons, image, label) must also be hidden after
+    ``BuildQueueScreen.show()`` returns.
+
+    Why this is a separate assertion from the row_bg test: the QA
+    rejection screenshot specifically called out the visible
+    ``+ – ^ v`` action buttons and blank portrait slot — these are the
+    children of row_bg. Hiding row_bg via
+    ``UIPanel.hide(hide_contents=True)`` recursively hides them, so
+    asserting at the child level pins the symptom from the QA report
+    directly.
+
+    FAILS today (pre-fix): action buttons on out-of-range rows have
+    ``visible == 1``.
+    """
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    planet = _planet_with_two_yards("Twin-Yard", 17_002, hex_a)
+    galaxy = _MockGalaxy()
+    galaxy._global_hex_planets[hex_a] = [planet]
+    session = _MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy,
+        empire=empire,
+        initial_yard=planet,
+    )
+
+    pool = screen.panels.virtual_table._row_pool
+    row_count = screen.panels.virtual_table._data_source.get_row_count()
+    assert row_count == 0
+
+    # Close, invalidate, refresh, reopen — exercising the full reopen path.
+    screen._request_close()
+    screen.open_for_yard(planet, hex_coord=hex_a)
+
+    visible_child_widgets = []
+    for pool_idx, row in enumerate(pool):
+        data_idx = row.get("row_index", -1)
+        if data_idx >= row_count or data_idx < 0:
+            for w in row.get("widgets", []):
+                wtype = w.get("type")
+                if wtype == "actions":
+                    for action, btn in w.get("actions_dict", {}).items():
+                        if bool(getattr(btn, "visible", 0)):
+                            visible_child_widgets.append(
+                                (pool_idx, wtype, action)
+                            )
+                elif wtype in ("image", "label"):
+                    el = w.get("el")
+                    if el is not None and bool(getattr(el, "visible", 0)):
+                        visible_child_widgets.append(
+                            (pool_idx, wtype, None)
+                        )
+
+    assert visible_child_widgets == [], (
+        f"Issue #17 follow-up: after close + open_for_yard on an empty "
+        f"queue, out-of-range pool rows' child widgets (+/-/^/v buttons, "
+        f"portrait image, label) must all be hidden. The QA rejection "
+        f"screenshot (2026-05-12 10:35) flagged exactly these widgets as "
+        f"visible: action buttons and a blank portrait slot. "
+        f"Visible widgets after reopen: {visible_child_widgets!r}."
+    )
