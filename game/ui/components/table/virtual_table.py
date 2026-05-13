@@ -334,6 +334,25 @@ class VirtualTable:
         the pygame_gui widget content here (``set_text("")`` on labels,
         ``set_image(blank)`` on images).
 
+        Issue #17 follow-up: the content-clearing above is still
+        insufficient when the active queue has 0 items. With zero items
+        every pool row's ``data_idx >= current_count``, so
+        ``update_visible_rows()`` sends every row through the ``else``
+        (hide) branch — but the subsequent
+        ``BuildQueueScreen.show()`` → ``panels.background.show()``
+        un-hides every descendant again via the same recursive contract
+        documented above, leaving the +/-/^/v action buttons and the
+        blank portrait surface visible as ~40 phantom rows on a
+        brand-new game (verified by QA session 20260512_103437). To
+        defeat that, also call ``row["bg"].hide()`` here.
+        ``UIPanel.hide(hide_contents=True)`` recursively hides the
+        row's children (buttons, image, label) in one call, so no
+        per-child hide is needed. ``update_visible_rows()`` re-shows
+        only rows with ``data_idx < current_count``; the
+        ``BuildQueueScreen.show()`` override re-runs the visibility
+        pass AFTER pygame_gui's recursive un-hide so this invariant
+        is re-asserted.
+
         Hard constraint (PROJ-373 phase 3 perf lock): this method MUST
         NOT call ``.kill()`` on any pool widget. ``TestRowPoolReuseGuard``
         asserts widget ``.kill()`` call counts are zero on cache reuse.
@@ -357,6 +376,12 @@ class VirtualTable:
                     # text to clear — their disabled/enabled state is
                     # unconditionally rewritten in update_visible_rows.
                     widget["_last_img"] = None
+            # Issue #17 follow-up: hide the row background panel.
+            # UIPanel.hide(hide_contents=True) recursively hides every
+            # child (buttons, image, label) so the row pool widgets do
+            # not show through an empty queue on reopen.
+            if row.get("bg") is not None:
+                row["bg"].hide()
         self._data_identity_dirty = True
 
     def update_visible_rows(self) -> None:

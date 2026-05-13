@@ -1832,3 +1832,54 @@ class TestIssue17InvalidateClearsWidgetContent:
                 "clear content) must NOT call .kill() on any pool widget. "
                 "PROJ-373 perf-lock contract."
             )
+
+    def test_invalidate_hides_row_backgrounds(
+        self, patched_pygame_gui, mock_panel, mock_manager,
+        column_manager, selection_strategy,
+    ):
+        """Issue #17 follow-up: ``invalidate_widget_caches()`` must call
+        ``hide()`` on every pool row's background panel.
+
+        Why: the first issue #17 fix (a3ced0e1f) cleared label text and
+        image surfaces but left the row background AND its child action
+        buttons / portrait UIImage / label widgets visible. On a
+        brand-new game with an empty queue, every pool row's
+        ``data_idx >= current_count`` so the rows should be hidden —
+        but pygame_gui's ``UIPanel.show(show_contents=True)`` recursively
+        un-hides every descendant in the same panel.show() call that
+        ``BuildQueueScreen.open_for_yard()`` makes after
+        ``_refresh_queue_display()``, re-exposing ~40 phantom empty
+        rows with ``+ – ^ v`` buttons and a blank portrait slot.
+
+        Fix: ``invalidate_widget_caches()`` hides each ``row["bg"]``.
+        ``UIPanel.hide(hide_contents=True)`` recursively hides child
+        widgets, so action buttons / image / label all participate. The
+        ``BuildQueueScreen.show()`` override (separate test) re-runs
+        ``force_update() + update_visible_rows()`` to re-show rows where
+        ``data_idx < current_count``.
+
+        FAILS today (pre-fix): row_bg.hide is not called by invalidate.
+        """
+        table = self._build_table(
+            patched_pygame_gui, mock_panel, mock_manager,
+            column_manager, selection_strategy, MockDataSource(rows=5),
+        )
+
+        bg_widgets = []
+        for row in table._row_pool:
+            if row.get("bg") is not None:
+                row["bg"].hide.reset_mock()
+                bg_widgets.append(row["bg"])
+        assert bg_widgets, "test setup: expected at least one row_bg widget"
+
+        table.invalidate_widget_caches()
+
+        for bg in bg_widgets:
+            assert bg.hide.called, (
+                "Issue #17 follow-up: invalidate_widget_caches() must call "
+                "row['bg'].hide() on every pool row so the row background "
+                "AND its child action buttons + image + label widgets are "
+                "all hidden via pygame_gui's UIPanel.hide(hide_contents=True). "
+                "Otherwise an empty queue on reopen shows ~40 phantom rows "
+                "with +/-/^/v buttons visible."
+            )

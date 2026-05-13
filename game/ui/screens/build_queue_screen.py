@@ -389,9 +389,38 @@ class BuildQueueScreen:
             self.manager.update(0)
 
     def show(self) -> None:
-        """Reveal the build-queue overlay (panels must already exist)."""
+        """Reveal the build-queue overlay (panels must already exist).
+
+        Issue #17 follow-up: pygame_gui's
+        ``UIPanel.show(show_contents=True)`` calls
+        ``panel_container.show(True)``, and ``UIContainer.show(True)``
+        iterates ``self.elements`` and calls ``element.show()`` on every
+        descendant regardless of each descendant's prior individual
+        ``visible`` state (verified against pygame-ce 2.5.7:
+        ``ui_panel.py:468-476`` + ``ui_container.py:380-394``). So any
+        pool row that ``invalidate_widget_caches()`` or
+        ``update_visible_rows()`` individually hid because
+        ``data_idx >= current_count`` is re-exposed by the call below.
+
+        Re-run the virtual table's visibility pass AFTER the recursive
+        un-hide so rows beyond ``row_count`` stay hidden.
+        ``force_update()`` resets the ``(scroll_pct, row_count)`` early
+        return so ``update_visible_rows()`` cannot short-circuit on the
+        unchanged tuple. PROJ-373 perf-lock (no ``.kill()``), PROJ-410
+        ephemeral ``_data_identity_dirty``, and PROJ-376 repeat-open
+        budget are preserved (``force_update()`` only mutates
+        dirty-tracking scalars; ``update_visible_rows()`` uses
+        hide/show/set_text/set_image, not ``.kill()``).
+        """
         if self.panels is not None:
             self.panels.background.show()
+            # Issue #17 follow-up: re-assert per-row visibility after the
+            # recursive un-hide. Guarded against shell-only construction
+            # where panels exist but virtual_table may not (defensive).
+            virtual_table = getattr(self.panels, "virtual_table", None)
+            if virtual_table is not None:
+                virtual_table.force_update()
+                virtual_table.update_visible_rows()
             self.manager.update(0)
 
     def is_visible(self) -> bool:
