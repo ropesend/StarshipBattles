@@ -53,6 +53,16 @@ class Empire:
         self._fleet_resource_pool = {}  # Dict[str, float] - fleet construction resources
         self.max_storage = {}     # Dict[str, float] - aggregate storage capacity (set by HarvestingEngine)
 
+    def is_eliminated(self) -> bool:
+        """Return True when this empire owns no fleets and no colonies.
+
+        Pure read; no side effects. Used by the hot-seat turn-start hook
+        (issue #25) to detect defeat, remove the empire from the rotation,
+        and fire a one-shot defeat modal. AI/non-human empires use the
+        same predicate.
+        """
+        return len(self.fleets) == 0 and len(self.colonies) == 0
+
     def add_colony(self, planet) -> None:
         if planet not in self.colonies:
             self.colonies.append(planet)

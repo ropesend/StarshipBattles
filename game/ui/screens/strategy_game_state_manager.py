@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 import pygame
 
 from game.core.exceptions import TurnFailedError
+from game.ui.screens.defeat_dialog import DefeatDialog
 from game.ui.screens.turn_failed_dialog import TurnFailedDialog
 
 if TYPE_CHECKING:
@@ -52,18 +53,62 @@ class StrategyGameStateManager:
         # FEAT-20: when True, process_full_turn defers the event-log popup so
         # run_n_turns can surface a single combined log at the end.
         self._suppress_event_log = False
+        # Issue #25: player IDs that have already seen their defeat modal
+        # and been removed from the hot-seat rotation. Populated lazily by
+        # ``_apply_turn_start_state`` the first time an empire satisfies
+        # ``is_eliminated()``. Set membership keeps the skip check O(1)
+        # and the modal one-shot. Not serialised — recoverable from
+        # current empire state at load time.
+        self._defeated_player_ids: set[int] = set()
+
+    def _next_live_player_index(self, start_index: int) -> tuple[int, bool]:
+        """Walk forward from ``start_index`` to the next non-defeated player.
+
+        Issue #25: replaces the linear ``+= 1`` increment so the rotation
+        skips empires already in ``_defeated_player_ids``. Bounded by
+        ``len(human_player_ids)`` iterations so a fully-defeated session
+        still terminates.
+
+        Returns:
+            ``(index, rolled_over)``. ``rolled_over`` is True when the
+            walk crossed the end of ``human_player_ids``; the caller uses
+            that to trigger full-turn processing the same way the linear
+            advance did.
+        """
+        ids = self._screen.human_player_ids
+        if not ids:
+            return 0, False
+        rolled = False
+        idx = start_index + 1
+        for _ in range(len(ids)):
+            if idx >= len(ids):
+                idx = 0
+                rolled = True
+            if ids[idx] not in self._defeated_player_ids:
+                return idx, rolled
+            idx += 1
+        # Every player defeated. Shouldn't happen in a normal session,
+        # but return cleanly so a smoke test doesn't infinite-loop.
+        return 0, True
 
     def advance_turn(self) -> None:
-        """End current player's order phase. Process turn when all humans ready."""
-        self._screen.current_player_index += 1
+        """End current player's order phase. Process turn when all humans ready.
 
-        if self._screen.current_player_index >= len(self._screen.human_player_ids):
-            # All humans ready - process the full turn
-            self._screen.current_player_index = 0
+        Issue #25: rotation skips empires in ``_defeated_player_ids`` via
+        ``_next_live_player_index``. Single-survivor case: every End Turn
+        rolls over and re-processes the survivor's turn.
+        """
+        next_index, rolled_over = self._next_live_player_index(
+            self._screen.current_player_index
+        )
+        self._screen.current_player_index = next_index
+
+        if rolled_over:
+            # All live humans ready - process the full turn.
             self.process_full_turn()
             self._update_player_label()
-            # BUG-125: rotation reset to player 1 — push into session
-            # so command handlers see the active turn-taker.
+            # BUG-125: rotation reset — push into session so command
+            # handlers see the active turn-taker.
             self._sync_active_empire()
             # Issue #9: single source of truth for per-player turn-start UI
             # state (selection clear, camera focus, home-colony auto-select,
@@ -71,8 +116,8 @@ class StrategyGameStateManager:
             # facade.get_turn_events scopes to the correct empire.
             self._apply_turn_start_state(self._screen.current_empire)
         else:
-            # Switch to next human player's view
-            next_player_id = self._screen.human_player_ids[self._screen.current_player_index]
+            # Switch to next live human player's view.
+            next_player_id = self._screen.human_player_ids[next_index]
             logger.info(f"Player {next_player_id + 1}'s turn to give orders.")
             self._update_player_label()
             # BUG-125: push rotation into the session so command handlers
@@ -103,13 +148,19 @@ class StrategyGameStateManager:
             self._screen.session.active_empire = current_empire
 
     def _apply_turn_start_state(self, empire) -> None:
-        """Reset per-player UI state at turn-start (Issue #9).
+        """Reset per-player UI state at turn-start (Issue #9 + #25).
 
         Single source of truth for what happens when a new player takes
         control: clear stale selection, focus the camera on their home
         colony, populate the lower-right detail panel via the
         manual-click code path (``on_ui_selection``), and open the
         per-player event log for any turn events scoped to ``empire``.
+
+        Issue #25: if ``empire`` has just become defeated, surface the
+        last-turn event log first (so the player sees what led to their
+        defeat), then the one-shot defeat modal, then return. Camera /
+        on_ui_selection are skipped because a defeated empire has no
+        home colony to anchor on.
 
         Invoked from both ``advance_turn`` branches (per-player switch
         and full-turn rollover) so every empire sees identical
@@ -121,6 +172,29 @@ class StrategyGameStateManager:
         screen.selected_fleet = None
         screen.selected_object = None
         screen.last_selected_system = None
+
+        # Issue #25: defeat detection. Already-defeated empires shouldn't
+        # reach here (``advance_turn`` skips them), but guard defensively
+        # in case the helper is invoked directly.
+        if empire.id in self._defeated_player_ids:
+            return
+        if empire.is_eliminated():
+            self._defeated_player_ids.add(empire.id)
+            # Show the last-turn event log first so the player sees what
+            # happened, then the defeat modal pops on top. Both honour
+            # Pattern #31 modal tracking — End Turn is blocked while
+            # either is up.
+            turn = screen._facade.get_turn_number()
+            events = screen._facade.get_turn_events(
+                turn=turn, empire_id=empire.id,
+            )
+            if events and not self._suppress_event_log:
+                screen.ui.open_event_log_with_events(
+                    events,
+                    empire_name=getattr(empire, "name", None),
+                )
+            self._show_defeat_dialog(empire)
+            return
 
         if not empire.colonies:
             return
@@ -353,6 +427,38 @@ class StrategyGameStateManager:
             rect=rect,
             manager=manager,
             error=error,
+            window_manager=window_manager,
+        )
+
+    def _show_defeat_dialog(self, empire) -> None:
+        """Issue #25: open the one-shot defeat modal for ``empire``.
+
+        Mirrors :meth:`_show_turn_failed_dialog` plumbing — centred rect,
+        headless fallback when no UIManager is available (tests), and
+        threading the :class:`StrategyWindowManager` through so the
+        dialog auto-registers with ``iter_live_modals()`` for Pattern #31
+        modal tracking. While the dialog is alive ``has_modal_open()``
+        returns True, blocking End Turn and fleet commands.
+        """
+        manager = getattr(self._screen.ui, "manager", None)
+        if manager is None:
+            logger.error(
+                "Empire defeated but no UIManager available to show dialog "
+                "(empire_id=%s, empire_name=%s)",
+                getattr(empire, "id", "?"),
+                getattr(empire, "name", "?"),
+            )
+            return
+
+        width = getattr(self._screen.ui, "width", 1920)
+        height = getattr(self._screen.ui, "height", 1080)
+        rect = pygame.Rect(0, 0, 480, 240)
+        rect.center = (width // 2, height // 2)
+        window_manager = getattr(self._screen.ui, "window_manager", None)
+        DefeatDialog(
+            rect=rect,
+            manager=manager,
+            empire_name=getattr(empire, "name", "Your empire"),
             window_manager=window_manager,
         )
 
