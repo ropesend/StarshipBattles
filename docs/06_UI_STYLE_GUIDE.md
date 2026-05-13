@@ -1,6 +1,6 @@
 # UI Style Guide Compact Reference
 
-> **Last verified:** 2026-05-11 — issues #12 and #18: Strategy Modal Windows section now documents (a) `is_blocking=True` set on the base class so background hover state is suppressed alongside clicks (issue #12), and (b) Esc-closes-topmost (the strategy event router walks `iter_live_modals()` and kills the last-appended modal when no menu panel is open) (issue #18).
+> **Last verified:** 2026-05-12 — issue #24: Strategy Modal Windows contracts now include the child-widget layout rule — builders must size against `screen.get_container().rect`, not `screen.rect`, because the latter is shadow-inflated and includes the title bar. Previous entries (#12 hover suppression, #18 Esc-closes-topmost) preserved.
 
 Audience: LLM agents working on Starship Battles UI. This is the compact current-system reference for color constants, pygame_gui theme usage, strategy modal windows, read-only component-status rendering, and UI style extension points.
 
@@ -79,6 +79,7 @@ Contracts:
 - Full modality (issue #12): while any subclass instance is live, the strategy event router blocks ALL background clicks (hex grid AND top-bar buttons) regardless of click position relative to the window's rect. There is no per-window opt-out.
 - Native hover suppression (issue #12 scope-expansion): the base class also sets pygame-gui's `is_blocking = True` after `super().__init__()`, so `UIWindow.check_hover()` claims the hover layer unconditionally and `UIManager._handle_hovering` skips every lower-layer button (top bar, detail panel, tree items) — no per-button retrofit needed.
 - Esc-closes-topmost (issue #18): when no menu panel is open, the strategy event router walks `list(window_manager.iter_live_modals())[-1].kill()` on K_ESCAPE. New `StrategyModalWindow` subclasses pick this up automatically; do not add per-window Esc handlers. The kill() chain fires the window's existing `on_close_callback` before `super().kill()`, matching the X-button close path. Per-window Esc bindings on `BuildQueueListWindow` and `TransferDialog` are retained for tooltip contract and remain safe (double-kill is idempotent).
+- Child-widget layout (issue #24): when a UI builder places child widgets inside a `StrategyModalWindow` (or any `pygame_gui.UIWindow`), size and position them against `screen.get_container().rect` — NOT `screen.rect`. `screen.rect` is the outer display rect inflated by `shadow_width` on every side and includes the title bar; the actual content-area container is smaller (default deltas: 15px shadow each side, 28px title bar top, border-width bottom). Bottom-anchored buttons computed from `screen.rect.height - N` fall past the container clip line and render zero visible pixels.
 
 Test-only bypass invariant:
 

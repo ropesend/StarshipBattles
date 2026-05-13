@@ -343,3 +343,54 @@ class TestFacadeThreading:
         assert mock_panel_cls.call_count == 1
         _, panel_kwargs = mock_panel_cls.call_args
         assert panel_kwargs["view"] is None
+
+
+# ---------------------------------------------------------------------------
+# Issue #24: button geometry must fit inside the content-area container,
+# not the outer (shadow-inclusive) window rect.
+# ---------------------------------------------------------------------------
+
+class TestPlanetSelectionWindowButtonGeometry:
+    """Issue #24 regression (sibling fix): Confirm and 'Any Planet' buttons
+    must render inside the pygame_gui window's content-area container
+    (``get_container().rect``), not the outer ``screen.rect`` which is
+    inflated by ``shadow_width`` on each side and includes the title bar.
+    """
+
+    def test_buttons_fit_within_container_content_area(self):
+        """Confirm/Any buttons must render entirely inside the content
+        container at the production spawn size (950x650).
+        """
+        import pygame_gui
+
+        pygame.display.set_mode((1280, 800))
+        ui_manager = pygame_gui.UIManager((1280, 800))
+
+        planets = [_planet("Earth"), _planet("Mars")]
+        rect = pygame.Rect(50, 50, 950, 650)
+        window = PlanetSelectionWindow(
+            rect,
+            ui_manager,
+            planets,
+            MagicMock(),
+            window_manager=None,
+        )
+
+        container_rect = window.get_container().rect
+        assert window.btn_select.relative_rect.bottom <= container_rect.height, (
+            f"Confirm button bottom ({window.btn_select.relative_rect.bottom}) "
+            f"exceeds container content height ({container_rect.height}); "
+            f"button is clipped/invisible (issue #24)."
+        )
+        assert window.btn_select.relative_rect.right <= container_rect.width
+        assert window.btn_select.relative_rect.left >= 0
+
+        # "Any Planet" button is optional but defaults to shown.
+        if window.btn_any is not None:
+            assert window.btn_any.relative_rect.bottom <= container_rect.height, (
+                f"Any Planet button bottom ({window.btn_any.relative_rect.bottom}) "
+                f"exceeds container content height ({container_rect.height}); "
+                f"button is clipped/invisible (issue #24)."
+            )
+            assert window.btn_any.relative_rect.right <= container_rect.width
+            assert window.btn_any.relative_rect.left >= 0

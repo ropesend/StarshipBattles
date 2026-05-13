@@ -153,3 +153,53 @@ class TestUpdateButtonDispatch:
 
         callback.assert_not_called()
         mock_kill.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Issue #24: button geometry must fit inside the content-area container,
+# not the outer (shadow-inclusive) window rect.
+# ---------------------------------------------------------------------------
+
+class TestFleetSelectionWindowButtonGeometry:
+    """Issue #24 regression (sibling fix): Confirm/Cancel buttons must
+    render inside the pygame_gui window's content-area container
+    (``get_container().rect``), not the outer ``screen.rect`` which is
+    inflated by ``shadow_width`` on each side and includes the title bar.
+    """
+
+    def test_buttons_fit_within_container_content_area(self):
+        """Both buttons must render entirely inside the content container.
+
+        Spawn size matches production (``prompt_fleet`` in
+        ``selection_prompts.py``: 450x400).
+        """
+        import pygame_gui
+
+        pygame.display.set_mode((800, 600))
+        ui_manager = pygame_gui.UIManager((800, 600))
+
+        fleets = [_fleet(1, "Alpha", "3 ships"), _fleet(2, "Bravo", "5 ships")]
+        rect = pygame.Rect(100, 100, 450, 400)
+        window = FleetSelectionWindow(
+            rect,
+            ui_manager,
+            fleets,
+            MagicMock(),
+            window_manager=None,
+        )
+
+        container_rect = window.get_container().rect
+        assert window.btn_confirm.relative_rect.bottom <= container_rect.height, (
+            f"Confirm button bottom ({window.btn_confirm.relative_rect.bottom}) "
+            f"exceeds container content height ({container_rect.height}); "
+            f"button is clipped/invisible (issue #24)."
+        )
+        assert window.btn_cancel.relative_rect.bottom <= container_rect.height, (
+            f"Cancel button bottom ({window.btn_cancel.relative_rect.bottom}) "
+            f"exceeds container content height ({container_rect.height}); "
+            f"button is clipped/invisible (issue #24)."
+        )
+        assert window.btn_confirm.relative_rect.right <= container_rect.width
+        assert window.btn_cancel.relative_rect.right <= container_rect.width
+        assert window.btn_confirm.relative_rect.left >= 0
+        assert window.btn_cancel.relative_rect.left >= 0

@@ -281,3 +281,81 @@ class TestSystemSelectionWindowWidgetPlaceholders:
         assert window.selection_list is None
         assert window.btn_confirm is None
         assert window.btn_cancel is None
+
+
+# ---------------------------------------------------------------------------
+# Issue #24: button geometry must fit inside the content-area container,
+# not the outer (shadow-inclusive) window rect.
+# ---------------------------------------------------------------------------
+
+class TestSystemSelectionWindowButtonGeometry:
+    """Issue #24 regression: Confirm/Cancel buttons must render inside the
+    pygame_gui window's content-area container (``get_container().rect``),
+    not the outer ``screen.rect`` which is inflated by ``shadow_width`` on
+    each side and includes the title bar.
+
+    Reproduces the original bug: at the 450x500 spawn size used by
+    ``SelectionPromptRegistrar.open_system``, the buttons fell entirely past
+    the container's clip line and rendered zero visible pixels.
+    """
+
+    @pytest.fixture
+    def pygame_setup(self):
+        pygame.display.set_mode((800, 600))
+        yield
+
+    @pytest.fixture
+    def ui_manager(self, pygame_setup):
+        return pygame_gui.UIManager((800, 600))
+
+    @pytest.fixture
+    def systems(self):
+        def _sys(name, q, r):
+            s = Mock()
+            s.name = name
+            s.global_location = HexCoord(q, r)
+            return s
+        return [_sys("Alpha", 0, 0), _sys("Beta", 1, 1)]
+
+    @pytest.fixture
+    def current_system(self):
+        s = Mock()
+        s.name = "Current"
+        s.global_location = HexCoord(0, 0)
+        return s
+
+    def test_buttons_fit_within_container_content_area(
+        self, ui_manager, systems, current_system
+    ):
+        """Both buttons must render entirely inside the content container.
+
+        Spawn size matches production (``open_system`` in
+        ``selection_prompts.py``) so the test exercises the real bug shape.
+        """
+        from game.ui.screens.system_selection_window import SystemSelectionWindow
+
+        rect = pygame.Rect(100, 100, 450, 500)
+        window = SystemSelectionWindow(
+            rect=rect,
+            manager=ui_manager,
+            systems=systems,
+            current_system=current_system,
+            on_selection_callback=Mock(),
+            window_manager=None,
+        )
+
+        container_rect = window.get_container().rect
+        assert window.btn_confirm.relative_rect.bottom <= container_rect.height, (
+            f"Confirm button bottom ({window.btn_confirm.relative_rect.bottom}) "
+            f"exceeds container content height ({container_rect.height}); "
+            f"button is clipped/invisible (issue #24)."
+        )
+        assert window.btn_cancel.relative_rect.bottom <= container_rect.height, (
+            f"Cancel button bottom ({window.btn_cancel.relative_rect.bottom}) "
+            f"exceeds container content height ({container_rect.height}); "
+            f"button is clipped/invisible (issue #24)."
+        )
+        assert window.btn_confirm.relative_rect.right <= container_rect.width
+        assert window.btn_cancel.relative_rect.right <= container_rect.width
+        assert window.btn_confirm.relative_rect.left >= 0
+        assert window.btn_cancel.relative_rect.left >= 0
