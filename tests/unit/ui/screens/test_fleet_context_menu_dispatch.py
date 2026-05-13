@@ -202,3 +202,94 @@ def test_esc_no_menus_open_does_not_call_close():
     router = StrategyEventRouter(ui)
     router.route_event(_keydown(pygame.K_ESCAPE))
     ui.close_fleet_context_menu.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Issue #20 — full event-chain regression test.
+#
+# The previous fix was rejected because the dispatch never landed in
+# production. Existing tests stub the menu and only exercise the
+# router-side of dispatch; none drove a real ``pygame_gui.UIManager``
+# through a MOUSEBUTTONDOWN -> MOUSEBUTTONUP -> UI_BUTTON_PRESSED cycle.
+# This test does exactly that against a real ``FleetContextMenu`` and
+# asserts the carried ``InputAction`` reaches the ``on_action_selected``
+# callback. Catches both the structural ``process_event`` wiring and
+# any future layer-shuffling regression.
+# ---------------------------------------------------------------------------
+
+
+def test_T30_full_event_chain_dispatches_action_to_callback():
+    """A real left-click on a menu row dispatches its action.
+
+    Faithful production repro: real ``pygame_gui.UIManager``, real
+    ``FleetContextMenu``, real ``MOUSEBUTTONDOWN`` / ``MOUSEBUTTONUP``
+    events with ``manager.update`` interleaved between frames. The
+    queued ``UI_BUTTON_PRESSED`` is drained from the global pygame
+    event queue and replayed through the manager — the same pattern
+    the production app loop uses (``pygame.event.get()`` ->
+    ``handle_event(event)``).
+    """
+    import os
+
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    pygame.init()
+    try:
+        pygame.display.set_mode((800, 600))
+        import pygame_gui
+
+        from game.ui.screens.strategy_fleet_context_menu import FleetContextMenu
+        from game.ui.screens.fleet_menu_items import FleetMenuItem
+        from game.core.input_actions import InputAction
+
+        manager = pygame_gui.UIManager((800, 600))
+
+        captured: list[InputAction] = []
+
+        def on_action(action: InputAction) -> None:
+            captured.append(action)
+
+        items = [
+            FleetMenuItem(label="Move", action=InputAction.FLEET_MOVE, shortcut="M"),
+        ]
+        menu = FleetContextMenu(
+            pygame.Rect(300, 100, 260, 100), manager, items, on_action,
+        )
+        # Drain stale events left over from prior tests in the same
+        # session so they don't confuse the UI_BUTTON_PRESSED replay below.
+        pygame.event.clear()
+
+        button = next(iter(menu._action_buttons.keys()))
+        abs_rect = button.get_abs_rect()
+        click_pos = (abs_rect.x + 10, abs_rect.y + 10)
+
+        # Frame 1: MOUSEBUTTONDOWN on the row button.
+        manager.update(0.016)
+        manager.process_events(
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN, {"pos": click_pos, "button": 1},
+            ),
+        )
+
+        # Frame 2: MOUSEBUTTONUP. UIButton posts UI_BUTTON_PRESSED.
+        manager.update(0.016)
+        manager.process_events(
+            pygame.event.Event(
+                pygame.MOUSEBUTTONUP, {"pos": click_pos, "button": 1},
+            ),
+        )
+
+        # Frame 3: replay the queued UI_BUTTON_PRESSED back through the
+        # manager — matches the production app loop dispatch.
+        manager.update(0.016)
+        for posted in pygame.event.get():
+            if posted.type == pygame_gui.UI_BUTTON_PRESSED:
+                manager.process_events(posted)
+
+        assert captured == [InputAction.FLEET_MOVE], (
+            "Full event-chain dispatch must reach on_action_selected with "
+            "the menu row's InputAction. If this fires the regression we "
+            "shipped in the rejected fix (no dispatch, no logs)."
+        )
+    finally:
+        pygame.event.clear()
+        pygame.display.quit()

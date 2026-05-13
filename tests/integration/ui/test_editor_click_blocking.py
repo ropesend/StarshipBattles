@@ -67,6 +67,7 @@ def _make_router_with_editor(editor_rect: tuple[int, int, int, int] = (800, 500,
     ui.width = 1920
     ui.sidebar_width = 300
     ui.menu_panel = None
+    ui.fleet_context_menu = None  # issue #20: fleet right-click menu slot
     ui.top_bar = MagicMock()
     ui.top_bar.rect.collidepoint.return_value = False
     ui.resource_bar = MagicMock()
@@ -215,6 +216,7 @@ def test_no_editors_open_passes_clicks_through() -> None:
     ui.width = 1920
     ui.sidebar_width = 300
     ui.menu_panel = None
+    ui.fleet_context_menu = None  # issue #20: fleet right-click menu slot
     ui.top_bar = MagicMock()
     ui.top_bar.rect.collidepoint.return_value = False
     ui.resource_bar = MagicMock()

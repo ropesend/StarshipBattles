@@ -73,6 +73,10 @@ def _create_strategy_event_router():
 
     # No menu panel by default
     ui.menu_panel = None
+    # issue #20: fleet right-click context menu starts closed; this slot
+    # must default to None so the click gate's defensive ``getattr`` doesn't
+    # treat a MagicMock auto-attribute as an open menu.
+    ui.fleet_context_menu = None
 
     # Top bar and resource bar (should block clicks in their areas)
     top_bar = MagicMock()

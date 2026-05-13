@@ -536,6 +536,16 @@ class StrategyEventRouter:
             if self.ui.menu_panel.get_abs_rect().collidepoint((mx, my)):
                 return True
 
+        # Check fleet right-click context menu (issue #20). Without this
+        # branch, a left-click on a menu row falls through to
+        # ``_handle_picking``, which calls ``on_ui_selection`` mid
+        # MOUSEBUTTONDOWN/UP cycle and prevents the queued
+        # UI_BUTTON_PRESSED from reaching the panel's dispatcher.
+        fleet_menu = getattr(self.ui, "fleet_context_menu", None)
+        if fleet_menu is not None:
+            if fleet_menu.get_abs_rect().collidepoint((mx, my)):
+                return True
+
         # Check top bar and resource bar (they are above the map)
         if hasattr(self.ui, 'top_bar') and self.ui.top_bar.rect.collidepoint((mx, my)):
             return True
