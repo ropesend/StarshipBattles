@@ -71,3 +71,53 @@ class TestEmpireResidentSpecies:
         ])
 
         assert empire.resident_species() == {"voidari"}
+
+
+class TestEmpireIsEliminated:
+    """Issue #25: ``Empire.is_eliminated()`` returns True when the empire
+    owns no fleets and no colonies. Pure read, no side effects. Used by
+    the hot-seat turn-start hook to detect defeat and remove the empire
+    from the rotation.
+    """
+
+    def test_fresh_empire_no_assets_is_eliminated(self):
+        """A newly constructed empire has empty fleets and colonies — it
+        is "eliminated" by the predicate. (Used during galaxy setup
+        before colonisation is wired; the predicate is purely a function
+        of empire state, not a lifecycle flag.)"""
+        empire = Empire(empire_id=1, name="Testers", color=(255, 255, 255))
+
+        assert empire.is_eliminated() is True
+
+    def test_with_colony_only_not_eliminated(self):
+        empire = Empire(empire_id=1, name="Testers", color=(255, 255, 255))
+        empire.colonies.append(SimpleNamespace(populations=[]))
+
+        assert empire.is_eliminated() is False
+
+    def test_with_fleet_only_not_eliminated(self):
+        empire = Empire(empire_id=1, name="Testers", color=(255, 255, 255))
+        empire.fleets.append(SimpleNamespace())
+
+        assert empire.is_eliminated() is False
+
+    def test_with_both_fleet_and_colony_not_eliminated(self):
+        empire = Empire(empire_id=1, name="Testers", color=(255, 255, 255))
+        empire.fleets.append(SimpleNamespace())
+        empire.colonies.append(SimpleNamespace(populations=[]))
+
+        assert empire.is_eliminated() is False
+
+    def test_after_losing_all_assets_is_eliminated(self):
+        """Symmetric path: empire had assets, lost them all, predicate
+        flips back to True."""
+        empire = Empire(empire_id=1, name="Testers", color=(255, 255, 255))
+        fleet = SimpleNamespace()
+        colony = SimpleNamespace(populations=[])
+        empire.fleets.append(fleet)
+        empire.colonies.append(colony)
+
+        empire.fleets.remove(fleet)
+        empire.colonies.remove(colony)
+
+        assert empire.is_eliminated() is True

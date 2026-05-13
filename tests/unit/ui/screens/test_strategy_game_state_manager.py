@@ -30,10 +30,16 @@ def _make_game_state_manager():
     empire0.id = 0
     empire0.name = "Empire Zero"
     empire0.colonies = [MagicMock(name="empire0_home")]
+    # Issue #25: defeat detection runs at the top of
+    # `_apply_turn_start_state`; explicitly stub `is_eliminated` so the
+    # existing live-empire tests don't trip the defeat path because of
+    # MagicMock's auto-truthy return.
+    empire0.is_eliminated = MagicMock(return_value=False)
     empire1 = MagicMock()
     empire1.id = 1
     empire1.name = "Empire One"
     empire1.colonies = [MagicMock(name="empire1_home")]
+    empire1.is_eliminated = MagicMock(return_value=False)
     mock_screen.empires = [empire0, empire1]
     mock_screen.session.empires = [empire0, empire1]
     mock_screen.session.human_player_ids = [0, 1]
@@ -766,3 +772,340 @@ class TestRunNTurns:
             manager.run_n_turns(2)
 
         screen.ui.open_event_log_with_events.assert_not_called()
+
+
+# ===========================================================================
+# Issue #25: defeated player elimination from turn rotation
+# ===========================================================================
+
+def _make_n_player_state_manager(n_players: int):
+    """Build a game state manager wired with ``n_players`` human empires.
+
+    Each empire has one fleet and one colony so ``is_eliminated()`` is
+    False by default. Tests then strip assets to flip a specific empire.
+    """
+    from game.ui.screens.strategy_game_state_manager import StrategyGameStateManager
+
+    mock_screen = MagicMock()
+    mock_screen.session = MagicMock()
+    mock_screen._facade = MagicMock()
+    mock_screen.ui = MagicMock()
+    mock_screen.ui.manager = MagicMock()
+    mock_screen.ui.width = 1920
+    mock_screen.ui.height = 1080
+    mock_screen.turn_processing = False
+    mock_screen.current_player_index = 0
+    mock_screen.selected_object = None
+    mock_screen.selected_fleet = None
+    mock_screen.last_selected_system = None
+
+    empires = []
+    for i in range(n_players):
+        emp = MagicMock()
+        emp.id = i
+        emp.name = f"Empire {i}"
+        emp.colonies = [MagicMock(name=f"empire{i}_home")]
+        emp.fleets = [MagicMock(name=f"empire{i}_fleet")]
+        emp.is_eliminated = MagicMock(return_value=False)
+        empires.append(emp)
+
+    mock_screen.empires = empires
+    mock_screen.session.empires = empires
+    ids = list(range(n_players))
+    mock_screen.session.human_player_ids = ids
+    mock_screen.human_player_ids = ids
+    mock_screen.active_empire = empires[0]
+
+    def _current_empire(self):
+        idx = self.human_player_ids[self.current_player_index]
+        return next(e for e in self.empires if e.id == idx)
+
+    type(mock_screen).current_empire = property(_current_empire)
+
+    mock_screen.draw = MagicMock()
+    mock_screen.center_camera_on = MagicMock()
+    mock_screen.on_ui_selection = MagicMock()
+
+    manager = StrategyGameStateManager(mock_screen)
+    return manager, mock_screen, empires
+
+
+def _eliminate(empire) -> None:
+    """Flip an empire's assets so ``is_eliminated()`` returns True."""
+    empire.colonies = []
+    empire.fleets = []
+    empire.is_eliminated = MagicMock(return_value=True)
+
+
+class TestEmpireIsEliminatedIntegration:
+    """Issue #25: ``_defeated_player_ids`` tracker initialises empty for
+    a fresh session and detection runs through the turn-start hook."""
+
+    def test_defeated_player_ids_starts_empty(self):
+        """Fresh manager has no entries — first turn-start of an already
+        defeated empire will populate it."""
+        manager, _, _ = _make_n_player_state_manager(2)
+
+        assert manager._defeated_player_ids == set()
+
+
+class TestAdvanceTurnRotationSkip:
+    """Issue #25: ``advance_turn`` must skip empires whose IDs are in
+    ``_defeated_player_ids`` when picking the next rotation slot.
+    """
+
+    def test_3p_skips_defeated_middle_player(self):
+        """3 players, P1 defeated mid-game: P0 → (skip P1) → P2 → rollover."""
+        manager, screen, empires = _make_n_player_state_manager(3)
+        screen._facade.get_turn_events.return_value = []
+        manager._defeated_player_ids = {1}
+
+        # Currently at P0 (index 0). Advance — should land on P2 (index 2),
+        # NOT P1 (index 1).
+        screen.current_player_index = 0
+        manager.advance_turn()
+
+        assert screen.current_player_index == 2
+
+    def test_3p_rollover_skips_defeated(self):
+        """3 players, P1 defeated, currently at P2 (last live): advance
+        rolls over to P0 and processes the full turn."""
+        manager, screen, empires = _make_n_player_state_manager(3)
+        screen._facade.get_turn_events.return_value = []
+        manager._defeated_player_ids = {1}
+        screen.current_player_index = 2
+
+        with patch("pygame.display.get_surface", return_value=None):
+            manager.advance_turn()
+
+        # Rollover landed on P0 and called process_turn.
+        assert screen.current_player_index == 0
+        screen._facade.process_turn.assert_called_once()
+
+    def test_2p_single_survivor_repeated_end_turn_advances_survivor(self):
+        """2 players, P0 defeated. Repeated End Turn keeps advancing P1's
+        turn without prompting P0 and without crashing."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen._facade.get_turn_events.return_value = []
+        manager._defeated_player_ids = {0}
+        screen.current_player_index = 1
+
+        with patch("pygame.display.get_surface", return_value=None):
+            for _ in range(5):
+                manager.advance_turn()
+
+        # P1 stays the active player; full-turn rollover fires every click.
+        assert screen.current_player_index == 1
+        assert screen._facade.process_turn.call_count == 5
+
+    def test_2p_p2_defeated_advance_lands_back_on_p1(self):
+        """2P, P1 (index 1) defeated. From P0, End Turn rolls over to P0
+        with a full-turn processed."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen._facade.get_turn_events.return_value = []
+        manager._defeated_player_ids = {1}
+        screen.current_player_index = 0
+
+        with patch("pygame.display.get_surface", return_value=None):
+            manager.advance_turn()
+
+        assert screen.current_player_index == 0
+        screen._facade.process_turn.assert_called_once()
+
+
+class TestApplyTurnStartStateDefeatDetection:
+    """Issue #25: turn-start hook detects new defeats, fires modal once,
+    AND still surfaces the just-completed turn's event log so the player
+    sees what led to their defeat (per user direction).
+    """
+
+    def test_newly_eliminated_empire_fires_defeat_modal(self):
+        """First turn-start after an empire is eliminated: ``_show_defeat_dialog``
+        is called and the empire id is added to ``_defeated_player_ids``."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen._facade.get_turn_events.return_value = []
+        defeated = empires[1]
+        _eliminate(defeated)
+
+        with patch.object(manager, "_show_defeat_dialog") as mock_modal:
+            manager._apply_turn_start_state(defeated)
+
+        mock_modal.assert_called_once_with(defeated)
+        assert 1 in manager._defeated_player_ids
+
+    def test_defeat_modal_fires_once(self):
+        """Subsequent turn-start calls for the same empire do NOT re-fire
+        the modal — ``_defeated_player_ids`` membership gates it."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen._facade.get_turn_events.return_value = []
+        defeated = empires[1]
+        _eliminate(defeated)
+
+        with patch.object(manager, "_show_defeat_dialog") as mock_modal:
+            manager._apply_turn_start_state(defeated)
+            manager._apply_turn_start_state(defeated)
+
+        assert mock_modal.call_count == 1
+
+    def test_defeated_empire_still_sees_event_log(self):
+        """Per user direction (Q3): a newly defeated empire sees both the
+        last-turn event log AND the defeat modal. The event-log lookup
+        must still happen for the just-completed turn."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        mock_events = [MagicMock(name="last_turn_event")]
+        screen._facade.get_turn_events.return_value = mock_events
+        screen._facade.get_turn_number.return_value = 7
+        defeated = empires[1]
+        _eliminate(defeated)
+
+        with patch.object(manager, "_show_defeat_dialog"):
+            manager._apply_turn_start_state(defeated)
+
+        # Event log opened scoped to the defeated empire. (Matches the
+        # current helper's ``get_turn_number()`` call — the `-1` queried
+        # by the issue #9 fix lives on the fix/issue-9 branch and is not
+        # yet merged into main, so the helper uses the bare turn number
+        # here.)
+        screen._facade.get_turn_events.assert_called_once_with(
+            turn=7, empire_id=defeated.id
+        )
+        screen.ui.open_event_log_with_events.assert_called_once_with(
+            mock_events, empire_name=defeated.name
+        )
+
+    def test_defeated_empire_skips_camera_focus(self):
+        """A defeated empire has no colonies — ``center_camera_on`` and
+        ``on_ui_selection`` must not be called."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen._facade.get_turn_events.return_value = []
+        defeated = empires[1]
+        _eliminate(defeated)
+
+        with patch.object(manager, "_show_defeat_dialog"):
+            manager._apply_turn_start_state(defeated)
+
+        screen.center_camera_on.assert_not_called()
+        screen.on_ui_selection.assert_not_called()
+
+    def test_live_empire_does_not_fire_defeat_modal(self):
+        """Regression guard: live empires must NOT trigger the modal or
+        the defeated-set bookkeeping."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen._facade.get_turn_events.return_value = []
+        live = empires[1]
+
+        with patch.object(manager, "_show_defeat_dialog") as mock_modal:
+            manager._apply_turn_start_state(live)
+
+        mock_modal.assert_not_called()
+        assert manager._defeated_player_ids == set()
+
+    def test_live_empire_path_unchanged(self):
+        """Issue #9 composition: a live empire still gets the four
+        original actions — clear selection, camera focus, on_ui_selection,
+        event log."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        mock_events = [MagicMock(name="evt")]
+        screen._facade.get_turn_events.return_value = mock_events
+        screen._facade.get_turn_number.return_value = 3
+        screen.selected_fleet = MagicMock()
+        screen.selected_object = MagicMock()
+        screen.last_selected_system = MagicMock()
+        live = empires[1]
+
+        manager._apply_turn_start_state(live)
+
+        assert screen.selected_fleet is None
+        assert screen.selected_object is None
+        assert screen.last_selected_system is None
+        screen.center_camera_on.assert_called_once_with(live.colonies[0])
+        screen.on_ui_selection.assert_called_once_with(live.colonies[0])
+        screen.ui.open_event_log_with_events.assert_called_once_with(
+            mock_events, empire_name=live.name
+        )
+
+    def test_event_log_fires_before_defeat_modal(self):
+        """UX ordering: the event log opens first (so the player sees
+        what happened), then the defeat modal pops. Both must be
+        invoked, in that order, by a single ``_apply_turn_start_state``
+        call on a newly defeated empire."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen._facade.get_turn_events.return_value = [MagicMock()]
+        defeated = empires[1]
+        _eliminate(defeated)
+
+        call_order = []
+        screen.ui.open_event_log_with_events.side_effect = (
+            lambda *a, **k: call_order.append("event_log")
+        )
+
+        with patch.object(
+            manager, "_show_defeat_dialog",
+            side_effect=lambda *_: call_order.append("defeat_modal"),
+        ):
+            manager._apply_turn_start_state(defeated)
+
+        assert call_order == ["event_log", "defeat_modal"]
+
+
+class TestShowDefeatDialog:
+    """Issue #25: ``_show_defeat_dialog`` mirrors ``_show_turn_failed_dialog``
+    plumbing — Pattern #31 modal tracking, headless fallback.
+    """
+
+    def test_logs_when_no_ui_manager(self, caplog):
+        """Headless / mocked environment: no UIManager → logger.error
+        and no crash."""
+        import logging
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen.ui.manager = None
+        defeated = empires[1]
+        _eliminate(defeated)
+
+        with caplog.at_level(logging.ERROR,
+                             logger="game.ui.screens.strategy_game_state_manager"):
+            manager._show_defeat_dialog(defeated)
+
+        # No exception means the headless fallback fired.
+        assert any("defeat" in rec.message.lower() for rec in caplog.records)
+
+    def test_constructs_dialog_with_empire_name_and_window_manager(self):
+        """When a real ui.manager is present, the dialog is constructed
+        with the empire name and the strategy window manager threaded
+        through for Pattern #31 modal tracking."""
+        manager, screen, empires = _make_n_player_state_manager(2)
+        defeated = empires[1]
+        _eliminate(defeated)
+        fake_wm = MagicMock(name="window_manager")
+        screen.ui.window_manager = fake_wm
+
+        with patch(
+            "game.ui.screens.strategy_game_state_manager.DefeatDialog"
+        ) as MockDialog:
+            manager._show_defeat_dialog(defeated)
+
+        MockDialog.assert_called_once()
+        kwargs = MockDialog.call_args.kwargs
+        assert kwargs["manager"] is screen.ui.manager
+        assert kwargs["empire_name"] == defeated.name
+        assert kwargs["window_manager"] is fake_wm
+
+
+class TestAdvanceTurnDefeatedSkipEndToEnd:
+    """Issue #25: end-to-end advance_turn with a defeated empire already
+    in the set — the helper must NOT be called for them."""
+
+    def test_advance_skips_helper_for_defeated_empire(self):
+        """3P, P1 in defeated set. From P0, advance lands on P2 and the
+        helper is invoked for P2, not P1."""
+        manager, screen, empires = _make_n_player_state_manager(3)
+        screen._facade.get_turn_events.return_value = []
+        manager._defeated_player_ids = {1}
+        screen.current_player_index = 0
+
+        with patch.object(manager, "_apply_turn_start_state") as mock_helper:
+            manager.advance_turn()
+
+        mock_helper.assert_called_once()
+        called_empire = mock_helper.call_args[0][0]
+        assert called_empire.id == 2

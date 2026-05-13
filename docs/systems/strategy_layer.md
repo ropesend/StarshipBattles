@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-05-12 — issue #9: per-player turn-start state helper queries previous turn for event log
+> **Last verified:** 2026-05-12 — issue #25: defeated players skip rotation; one-shot defeat modal composes with the issue #9 turn-start helper
 
 System documentation for the turn-based strategy layer.
 
@@ -125,6 +125,22 @@ Per-player turn-start UI state (issue #9):
 - `process_full_turn` does NOT duplicate any of these concerns. It still returns the active empire's `turn_events` so the FEAT-20 dev-loop caller (`run_n_turns`) can aggregate them for a single combined end-of-loop log.
 - The helper respects `_suppress_event_log` (FEAT-20) as a defensive guard. `run_n_turns` itself calls `process_full_turn` directly (not `advance_turn`), so the helper does not fire during dev bulk runs.
 - The event-log lookup uses `facade.get_turn_number() - 1`, i.e. the just-completed turn. `GameSession.process_turn` post-increments `session.turn_number`, so by the time the helper runs after the rollover branch's `process_full_turn`, the facade reports the upcoming turn (`N+1`) while the events the player must see were filed with `turn=N`. The `- 1` is required for the popup to fire at all; the bare `get_turn_number()` value yields an empty event list and the auto-open silently no-ops.
+
+Defeated-player elimination (issue #25):
+
+- `Empire.is_eliminated()` (`game/strategy/data/empire.py`) returns `True` when the empire owns no fleets and no colonies. Pure read; no side effects. Used by the hot-seat turn-start hook to detect defeat. AI/non-human empires use the same predicate.
+- `StrategyGameStateManager._defeated_player_ids: set[int]` tracks empires that have already seen their one-shot defeat modal and been removed from the rotation. Initialised empty; populated lazily by `_apply_turn_start_state` the first time an empire satisfies `is_eliminated()`. Not serialised — recoverable from current empire state at load time.
+- `StrategyGameStateManager._next_live_player_index(start_index)` replaces the linear `+= 1` increment in `advance_turn`. It walks forward to the next non-defeated player ID, rolling over the end of `human_player_ids` when needed, and returns `(index, rolled_over)`. Bounded by `len(human_player_ids)` iterations so a fully-defeated session still terminates cleanly. **Rotation skips eliminated players; it does not pre-count them as still-in-rotation slots** — a 3-player game with P2 eliminated rotates P1 → P3 → P1 → P3 → ..., not P1 → (silent skip) → P3.
+- `_apply_turn_start_state(empire)` checks `empire.id in self._defeated_player_ids` first (defensive no-op for already-defeated empires; `advance_turn` already skips them). Then checks `empire.is_eliminated()`; if True, the helper:
+  1. Adds the empire id to `_defeated_player_ids` so subsequent rotations skip them and the modal is one-shot.
+  2. Opens the last-turn event log scoped to the defeated empire (BUG-123 scoping), so the player sees what led to their defeat — including the combat / superweapon event that destroyed their last asset.
+  3. Constructs `DefeatDialog` on top (`game/ui/screens/defeat_dialog.py`).
+  4. Returns; the live-empire actions (camera focus, `on_ui_selection`, event-log auto-open) are skipped because a defeated empire has no home colony to anchor on.
+- `DefeatDialog` subclasses `StrategyModalWindow` so it auto-registers with `StrategyWindowManager.iter_live_modals()` (Pattern #31). While alive, `StrategyEventRouter.has_modal_open()` returns True, blocking End Turn and fleet commands until the player dismisses it. Single read-only `UITextBox` + Dismiss button.
+- Final user-locked wording: `Your empire has been destroyed.` (heading) / `<empire name>` / `All of your units and planets are lost.` Do not add a trailing "you may continue to observe" sentence — explicitly removed by the user.
+- Single-survivor case: out of scope for #25. `_next_live_player_index` finds only one non-defeated id and rolls over every End Turn click, so `process_full_turn` fires each click and the survivor's turn keeps advancing forever. A future victory-condition issue can decide when to stop.
+- AI/non-human empires are NOT in `session.human_player_ids` today (the list is filtered by `is_human` at session construction), so they never enter the rotation skip path. The `is_eliminated()` predicate is available for any future AI rotation.
+- Anti-reversion: do NOT mutate `session.human_player_ids` for elimination — it would force a save-format migration for a UI-only display concern. Do NOT detect defeat inside `TurnEngine` or sub-engines; engines must not open UI. Detection belongs on the per-player turn-start hook.
 
 Base helper surface:
 
