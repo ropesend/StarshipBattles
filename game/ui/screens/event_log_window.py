@@ -83,6 +83,11 @@ class EventLogWindow(StrategyModalWindow):
     PROJ-313: Migrated to StrategyModalWindow base class.
     BUG-123: ``empire_name`` (optional) surfaces the active empire in
     the window title so players can confirm per-empire scoping is active.
+    Issue #28: opts into per-player UI view-state container so column
+    toggles and sort selection survive hot-seat rotation. Active filter
+    tab is intentionally NOT persisted — turn-start opens the window
+    afresh for the new player's events, so the previous player's tab
+    isn't meaningful.
 
     Args:
         rect: Window position and size.
@@ -97,6 +102,9 @@ class EventLogWindow(StrategyModalWindow):
             the plain ``"Event Log"`` title (back-compat for callers
             that don't supply it, including tests).
     """
+
+    # Issue #28: opts into per-player UI view-state container.
+    SNAPSHOT_SLOT: str = "event_log"
 
     @profile_action("Panel: EventLog.init")
     def __init__(
@@ -588,6 +596,52 @@ class EventLogWindow(StrategyModalWindow):
         self._rebuild_list()
 
     # ---- end PROJ-411 Task 2.4 ----
+
+    # ---- Issue #28: per-player UI view-state opt-in ----
+
+    def capture_view_state(self) -> dict:
+        """Snapshot column visibility + sort selection.
+
+        Filter tab is intentionally NOT captured: the event-log auto-open
+        (issue #9 / BUG-123) clobbers the filter on every per-empire
+        turn-start by calling ``open_for_events`` which resets to "all",
+        so persisting the previous player's tab choice would be
+        immediately overwritten.
+        """
+        cm = self.column_manager
+        if cm is None:
+            return {"columns": [], "sort_column_id": None, "sort_descending": False}
+        cols = [
+            {"id": col["id"], "visible": col.get("visible", True)}
+            for col in cm.get_columns()
+        ]
+        return {
+            "columns": cols,
+            "sort_column_id": cm.sort_column_id,
+            "sort_descending": cm.sort_descending,
+        }
+
+    def apply_view_state(self, state: dict | None) -> None:
+        """Restore previously-captured snapshot. ``None`` is a no-op."""
+        if state is None or self.column_manager is None:
+            return
+        cm_cols = self.column_manager.get_columns()
+        saved_cols = state.get("columns") or []
+        if saved_cols:
+            current_map = {c["id"]: c for c in cm_cols}
+            new_cols = []
+            for item in saved_cols:
+                col = current_map.get(item["id"])
+                if col is not None:
+                    col["visible"] = item.get("visible", True)
+                    new_cols.append(col)
+                    del current_map[item["id"]]
+            new_cols.extend(current_map.values())
+            cm_cols[:] = new_cols
+        sort_col = state.get("sort_column_id")
+        if sort_col is not None:
+            self.column_manager.sort_column_id = sort_col
+            self.column_manager.sort_descending = state.get("sort_descending", False)
 
     def kill(self) -> None:
         """Clean up and invoke close callback."""

@@ -92,16 +92,37 @@ def test_empire_build_queue_open_wires_scene_dependencies() -> None:
     assert composer.empire_build_queue_window is window_cls.return_value
 
 
-def test_empire_build_queue_open_kills_existing_window() -> None:
+def test_empire_build_queue_open_reuses_existing_alive_window() -> None:
+    """Issue #28: existing alive window is reused via ``open_for_empire``
+    rather than killed and reconstructed."""
     composer = _composer()
     existing = MagicMock(name="existing_window")
+    existing.alive.return_value = True
     composer.empire_build_queue_window = existing
     registrar = build_queue_windows.EmpireBuildQueueRegistrar(composer)
 
-    with patch.object(build_queue_windows, "EmpireBuildQueueWindow"):
+    with patch.object(build_queue_windows, "EmpireBuildQueueWindow") as window_cls:
         registrar.open()
 
-    existing.kill.assert_called_once()
+    existing.open_for_empire.assert_called_once_with(
+        composer.scene.current_empire, composer.scene.galaxy
+    )
+    existing.kill.assert_not_called()
+    window_cls.assert_not_called()
+
+
+def test_empire_build_queue_open_constructs_when_dead() -> None:
+    composer = _composer()
+    dead = MagicMock(name="dead_window")
+    dead.alive.return_value = False
+    composer.empire_build_queue_window = dead
+    registrar = build_queue_windows.EmpireBuildQueueRegistrar(composer)
+
+    with patch.object(build_queue_windows, "EmpireBuildQueueWindow") as window_cls:
+        registrar.open()
+
+    window_cls.assert_called_once()
+    dead.open_for_empire.assert_not_called()
 
 
 def test_empire_build_queue_close_kills_and_clears_slot() -> None:

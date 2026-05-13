@@ -222,6 +222,11 @@ class PlanetListUiBuilder:
 
 
 class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
+    # Issue #28: opts into the per-player UI view-state container.
+    # ``StrategyGameStateManager`` reads this attribute when iterating
+    # snapshot windows.
+    SNAPSHOT_SLOT: str = "planet_list"
+
     @profile_action("Panel: PlanetRegistry.window_init")
     def __init__(self, rect, manager, galaxy, empire, *,
                  window_manager: "StrategyWindowManager",
@@ -282,11 +287,12 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.filtered_planets: list = []
         self.preset_manager = PresetManager()
         self._filter_mgr = PlanetListFilterManager()
-        # PROJ-411 Task 2.10: per-empire filter snapshots so hot-seat
-        # players don't see each other's filter state. Captured on
-        # empire switch; default snapshot is taken at the end of Stage 3
-        # below so first-time-for-this-empire opens get a fresh view.
-        self._filter_snapshots_by_empire: dict[int, dict] = {}
+        # Issue #28: per-empire view-state is now centrally orchestrated
+        # via ``StrategyGameStateManager._per_player_ui_state``. The
+        # window opts in by exposing ``SNAPSHOT_SLOT``,
+        # ``capture_view_state`` and ``apply_view_state``. The pristine
+        # post-Stage-3 snapshot below is the "fresh empire" default
+        # applied when the central container returns None.
         self._default_filter_snapshot: dict | None = None
 
         # Compute dynamic filter ranges from actual planet data
@@ -762,49 +768,54 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         constructed instance instead of constructing a fresh one. Net
         cost should be <500 ms vs ~4.4 s for fresh construction.
 
-        PROJ-411 Task 2.10: filter state is per-empire. Same-empire
-        re-opens preserve in-place state for repeat lookups; empire
-        switches save the outgoing player's view and restore the
-        incoming player's (or defaults on first sight).
+        Issue #28: per-empire view-state save/restore on empire switch
+        was removed from this method. It is now handled centrally by
+        ``StrategyGameStateManager`` at turn rotation
+        (``advance_turn`` captures, ``_apply_turn_start_state``
+        restores). Same-turn re-opens preserve in-place state because
+        the central swap only runs at turn boundaries.
         """
-        outgoing_empire = self.empire
-        # The per-empire snapshot path requires Stage-3 widgets to exist;
-        # ``_default_filter_snapshot`` is the sentinel for that (None when
-        # bypass_init skipped widget construction in tests).
-        snapshots_active = self._default_filter_snapshot is not None
-        empire_switched = (
-            snapshots_active
-            and outgoing_empire is not None
-            and outgoing_empire is not empire
-        )
-
-        if empire_switched:
-            self._filter_snapshots_by_empire[outgoing_empire.id] = (
-                capture_planet_list_state(
-                    self.columns, self.txt_name_filter, self.filter_types,
-                    self.filter_owner, self.ui_filters,
-                    filter_effects=self.filter_effects,
-                )
-            )
-
         self.galaxy = galaxy
         self.empire = empire
         self._facade = facade
         self.selected_planet = None
 
-        if empire_switched:
-            target = self._filter_snapshots_by_empire.get(
-                empire.id, self._default_filter_snapshot
-            )
-            self.columns = apply_planet_list_state(
-                target, self.columns, self.txt_name_filter,
-                self.filter_types, self.ui_filters,
-                filter_owner=self.filter_owner,
-                filter_effects=self.filter_effects,
-            )
-
         self.show()
         self.refresh_list()
+
+    def capture_view_state(self) -> dict:
+        """Issue #28: snapshot current columns + filters + ranges.
+
+        Called by ``StrategyGameStateManager._capture_outgoing_player_state``
+        at turn-end. Delegates to the existing preset capture so the
+        serialised shape matches preset save/load.
+        """
+        return capture_planet_list_state(
+            self.columns, self.txt_name_filter, self.filter_types,
+            self.filter_owner, self.ui_filters,
+            filter_effects=self.filter_effects,
+        )
+
+    def apply_view_state(self, state: dict | None) -> None:
+        """Issue #28: restore a previously-captured snapshot, or reset to defaults.
+
+        ``state is None`` means the incoming empire has no saved
+        snapshot (their first turn after this window opened). We apply
+        the pristine ``_default_filter_snapshot`` captured at the end
+        of Stage 3 so the new player starts from a fresh view rather
+        than inheriting the outgoing player's filters.
+        """
+        target = state if state is not None else self._default_filter_snapshot
+        if target is None:
+            # Stage 3 was bypassed (test stub) and no default was
+            # captured. Nothing to apply.
+            return
+        self.columns = apply_planet_list_state(
+            target, self.columns, self.txt_name_filter,
+            self.filter_types, self.ui_filters,
+            filter_owner=self.filter_owner,
+            filter_effects=self.filter_effects,
+        )
 
     # ---- end PROJ-411 Task 2.1 ----
 

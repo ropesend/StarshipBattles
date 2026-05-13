@@ -228,6 +228,36 @@ class StrategyWindowManager:
         self._modals = [w for w in self._modals if w.alive()]
         yield from self._modals
 
+    def iter_snapshot_windows(self) -> Iterator[UIWindow]:
+        """Yield each opt-in window participating in per-player UI snapshots.
+
+        Issue #28: ``StrategyGameStateManager`` calls this at turn-end
+        (capture) and turn-start (restore). Windows opt in by exposing
+        a ``SNAPSHOT_SLOT`` string attribute plus the
+        ``capture_view_state`` / ``apply_view_state`` methods. The window
+        manager owns the slot references; this method filters them to
+        the slots that are non-None and alive — falling back to
+        ``iter_live_modals`` is wrong because not every modal owns
+        snapshotable view-state.
+        """
+        slot_candidates = [
+            self.planet_list_window,
+            self.star_list_window,
+            self.empire_build_queue_window,
+            self.empire_panel_window,
+            self.build_queue_list_window,
+            self.fleet_report_window,
+            self.event_log_window,
+        ]
+        for w in slot_candidates:
+            if w is None:
+                continue
+            if not hasattr(w, "SNAPSHOT_SLOT"):
+                continue
+            if not w.alive():
+                continue
+            yield w
+
     # ---------------------------------------------------------------- windows
 
     def open_planet_list(self) -> None:

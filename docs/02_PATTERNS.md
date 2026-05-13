@@ -302,9 +302,28 @@ For panels whose data is stable within a single turn (Galactic Planet Registry, 
 
 `FacadeSessionState.invalidate_all()` clears every PROJ-411 slot and is called from `StrategySessionFacade.process_turn` post-turn-advance. Functions check the cache first and fall back to a fresh gather when the slot is empty or `facade_state` is `None` (the latter is the test stub / non-strategy path — uncached behavior preserved).
 
-### Window reuse for strategy modals (PROJ-411 Phase 2)
+### Window reuse for strategy modals (PROJ-411 Phase 2, extended by issue #28)
 
-Galactic Planet Registry, Galactic Star Registry, Empire Overview, Event Log subclass `StrategyModalWindow` and override `on_close_window_button_pressed` + `request_close` to call `self.hide()` instead of `self.kill()`. `StrategyModalWindow.hide()` consolidates: `is_blocking=False`, unregister from window manager, remove from pygame_gui's `UIWindowStack`. `show()` mirrors. Registrars branch on `existing.alive()`: hit calls `existing.open_for_X(...)` rebinding context (+ filter snapshot save/restore on empire switch — see hot-seat note); miss constructs fresh. Re-open cost drops from 3–5 s to <500 ms. Per-empire filter snapshots prevent hot-seat state leak via `_filter_snapshots_by_empire: dict[int, dict]` on the window using the existing preset capture/apply infrastructure.
+Galactic Planet Registry, Galactic Star Registry, Empire Overview, Event Log, Empire Build Queue, Fleet Report subclass `StrategyModalWindow` and override `on_close_window_button_pressed` + `request_close` to call `self.hide()` instead of `self.kill()`. `StrategyModalWindow.hide()` consolidates: `is_blocking=False`, unregister from window manager, remove from pygame_gui's `UIWindowStack`. `show()` mirrors. Registrars branch on `existing.alive()`: hit calls `existing.open_for_X(...)` rebinding context; miss constructs fresh. Re-open cost drops from 3–5 s to <500 ms.
+
+Issue #28 extended this from same-empire reuse to **cross-empire reuse**. Empire Build Queue (`open_for_empire(empire, galaxy)`) and Empire Overview (`open_for_empire(empire)`) rebuild per-empire data in place when the empire differs: Empire Build Queue calls `viewmodel.update_sources(new_sources)`; Empire Overview re-fetches the economy snapshot, calls `EmpireTreasuryPanel.refresh(snapshot)`, invalidates the lazily-built Population tab, and rebinds `self.empire`. Fleet Report uses `open_for_fleet(fleet, empire=)` which is a thin rebind + `refresh_list()` since its content is fleet-keyed, not empire-keyed.
+
+### Per-player UI view-state (issue #28)
+
+Per-player view-state (column visibility, sort selection, expanded tab indices, scroll positions) is partitioned by `empire.id` via `PerPlayerUiState` in `game/ui/screens/per_player_ui_state.py`, owned by `StrategyGameStateManager`. Windows opt in by exposing three class-level / instance attributes:
+
+- `SNAPSHOT_SLOT: str` — registry key. Current slots: `"planet_list"`, `"star_list"`, `"empire_build_queue"`, `"empire_panel"`, `"fleet_report"`, `"event_log"`.
+- `capture_view_state() -> dict` — produces a serialisable snapshot.
+- `apply_view_state(state: dict | None) -> None` — restores; `state is None` means "no saved state, use defaults".
+
+`StrategyWindowManager.iter_snapshot_windows()` is the registry — it walks the slot attributes (`planet_list_window`, `star_list_window`, etc.) and filters to non-`None`, alive instances exposing `SNAPSHOT_SLOT`.
+
+The capture/restore hooks in `StrategyGameStateManager`:
+
+- **Capture** runs at the head of `advance_turn` via `_capture_outgoing_player_state` BEFORE `_next_live_player_index` mutates `current_player_index` (otherwise capture writes to the incoming player's slot).
+- **Restore** runs at the TOP of `_apply_turn_start_state` via `_restore_incoming_player_state` BEFORE issue #25's defeat short-circuit (so a defeated empire's defeat modal and last-turn event log surface against the player's own saved view).
+
+Lifecycle: session-scoped, not serialised — symmetric with #25's `_defeated_player_ids`. Defeated empires' snapshots remain in the container indefinitely (cheap, safe if a save reload revives them). Anti-reversion: single source of truth — do NOT reintroduce per-window `_filter_snapshots_by_empire` dicts.
 
 ### pygame_gui theme-id cache key (PROJ-411 Phase 3)
 

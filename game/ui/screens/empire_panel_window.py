@@ -619,34 +619,97 @@ class EmpirePanelWindow(StrategyModalWindow):
     # (PROJ-411 Task 2.8 consolidated the reuse-hide/show logic there).
 
     def open_for_empire(self, empire: 'IEmpire') -> None:
-        """Reset to Treasury tab and show. SAME-empire reuse only.
+        """Rebind to ``empire`` (same OR different) and show.
 
-        The registrar validates `empire is self.empire` before calling.
-        Cross-empire (hot-seat) re-open is handled by the registrar
-        via kill + reconstruct since per-empire data (snapshot, portrait,
-        flag) cached in widgets needs invalidation we don't yet model.
+        Issue #28 delivers the cross-empire path that PROJ-411 Task 2.3
+        deferred: when ``empire is not self.empire``, the Treasury
+        snapshot is recomputed (``EmpireTreasuryPanel.refresh``), the
+        Population tab's content is invalidated (lazy-rebuilt on next
+        show), and ``self.empire`` is rebound. The window-reuse path
+        replaces the prior kill-and-reconstruct so the central
+        ``PerPlayerUiState`` swap at turn rotation has a live instance
+        to ``apply_view_state`` against (tab index).
+
+        Same-empire reuse is the cheap fast-path: no widget rebuild,
+        just show().
         """
-        assert empire is self.empire, (
-            "EmpirePanelWindow.open_for_empire only supports same-empire "
-            "reuse. The registrar must kill + reconstruct on hot-seat "
-            "empire switch."
-        )
-        self.current_tab = TAB_TREASURY
-        # Update tab button highlighting to match.
-        for i, btn in enumerate(self.tab_buttons):
-            if i == TAB_TREASURY:
-                btn.select()
-            else:
-                btn.unselect()
-        # Show the Treasury panel; hide the others.
-        for i, panel in enumerate(self.step_panels):
-            if i == TAB_TREASURY:
-                panel.show()
-            else:
-                panel.hide()
+        if empire is not self.empire:
+            self._rebuild_for_empire(empire)
+        # Tab visibility now driven by ``current_tab`` (which #28's
+        # apply_view_state may have just restored). Reuse the existing
+        # ``_show_tab`` to set button highlights + panel visibility.
+        self._show_tab(self.current_tab)
         self.show()
 
-    # ---- end PROJ-411 Task 2.3 ----
+    def _rebuild_for_empire(self, empire: 'IEmpire') -> None:
+        """Issue #28: cross-empire widget rebuild without recreating the window.
+
+        Three slots need invalidation when the active empire changes:
+
+        1. Treasury — re-fetch the economy snapshot for ``empire`` and
+           call ``EmpireTreasuryPanel.refresh(snapshot)`` (already a
+           rebuild-in-place primitive).
+        2. Population — kill the lazily-built scroll container and reset
+           ``_population_tab_built`` so the next ``_show_tab(TAB_POPULATION)``
+           rebuilds with the new empire's portrait + flag.
+        3. ``self.empire`` reference — flipped last so the rebuild
+           helpers above see the outgoing empire while running, then the
+           new empire is in place for subsequent reads.
+        """
+        # 1. Treasury rebuild.
+        from game.strategy.config.economy_config import get_default_economy_config
+
+        economy = get_default_economy_config()
+        race_registry = getattr(self, "_race_registry", None)
+        service = EmpireEconomyService(
+            registries=self._registries,
+            economy_config=economy,
+            race_registry=race_registry,
+        )
+        snapshot = service.get_snapshot(empire, facade_state=self._facade_state)
+        if self._treasury_panel is not None:
+            self._treasury_panel.refresh(snapshot)
+
+        # 2. Population invalidation. Killing the panel's children (the
+        # UIScrollingContainer + everything inside) is the simplest
+        # primitive — pygame_gui's UIPanel doesn't expose a "clear"
+        # method, so iterate the element list and kill each. Idempotent
+        # if the panel was never lazily built.
+        pop_panel = self.step_panels[TAB_POPULATION] if len(self.step_panels) > TAB_POPULATION else None
+        if pop_panel is not None:
+            # ``get_container().elements`` is the live list of children.
+            container = pop_panel.get_container()
+            children = list(getattr(container, "elements", []))
+            for child in children:
+                child.kill()
+        self._population_tab_built = False
+
+        # 3. Empire rebind.
+        self.empire = empire
+
+    # Issue #28: per-player UI view-state opt-in.
+    SNAPSHOT_SLOT: str = "empire_panel"
+
+    def capture_view_state(self) -> dict:
+        """Snapshot the active tab index for the current empire."""
+        return {"current_tab": self.current_tab}
+
+    def apply_view_state(self, state: dict | None) -> None:
+        """Restore previously-saved tab index. ``None`` → reset to Treasury.
+
+        ``_show_tab`` is NOT called here — ``open_for_empire`` calls it
+        after this method runs so the new empire's rebuilt widgets see
+        the restored tab state.
+        """
+        if state is None:
+            self.current_tab = TAB_TREASURY
+            return
+        target = state.get("current_tab", TAB_TREASURY)
+        # Clamp defensively in case the saved index is out of range
+        # (e.g. tabs added/removed between snapshot and restore).
+        self.current_tab = max(0, min(target, len(self.step_panels) - 1)) if self.step_panels else target
+
+    # ---- end PROJ-411 Task 2.3 / Issue #28 ----
 
     def kill(self) -> None:
         """Clean up and fire close callback."""

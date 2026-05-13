@@ -1,8 +1,9 @@
-"""PROJ-411 Task 2.10: Per-empire filter snapshots for StarListWindow.
+"""Issue #28: StarListWindow per-player UI view-state contract.
 
-Mirrors the PlanetListWindow snapshot tests. StarListWindow previously
-took only ``galaxy`` in ``open_for_galaxy``; this task adds an
-``empire`` argument so the registrar can drive per-empire snapshots.
+Replaces the PROJ-411 Task 2.10 per-window dict (``_filter_snapshots_by_empire``)
+with a slot-based opt-in into ``PerPlayerUiState``. See
+``test_planet_list_filter_snapshot.py`` for the design rationale; the
+Star Registry uses ``SNAPSHOT_SLOT = "star_list"``.
 """
 from __future__ import annotations
 
@@ -16,27 +17,7 @@ from tests.fixtures.ui_widget_factory import bypass_init
 
 
 @pytest.fixture
-def window_with_two_empires():
-    with bypass_init(StarListWindow):
-        rect = pygame.Rect(0, 0, 1600, 800)
-        manager = MagicMock(name="ui_manager")
-        galaxy = MagicMock(name="galaxy")
-        empire_a = MagicMock(name="empire_a")
-        empire_a.id = 0
-        window_manager = MagicMock(name="window_manager")
-        window = StarListWindow(
-            rect, manager, galaxy,
-            window_manager=window_manager,
-            empire=empire_a,
-        )
-        window.virtual_table = MagicMock(name="virtual_table")
-        window.txt_name_filter = MagicMock(name="txt_name_filter")
-        window.ui_filters = {}
-        window._default_filter_snapshot = {"default": "stub"}
-        return window
-
-
-def test_init_initializes_per_empire_snapshot_bookkeeping():
+def window():
     with bypass_init(StarListWindow):
         rect = pygame.Rect(0, 0, 1600, 800)
         manager = MagicMock(name="ui_manager")
@@ -44,97 +25,76 @@ def test_init_initializes_per_empire_snapshot_bookkeeping():
         empire = MagicMock(name="empire")
         empire.id = 0
         wm = MagicMock(name="window_manager")
-        window = StarListWindow(
-            rect, manager, galaxy, window_manager=wm, empire=empire
-        )
-    assert hasattr(window, "_filter_snapshots_by_empire")
-    assert window._filter_snapshots_by_empire == {}
-    assert window.empire is empire
+        w = StarListWindow(rect, manager, galaxy, window_manager=wm, empire=empire)
+        w.virtual_table = MagicMock(name="virtual_table")
+        w.txt_name_filter = MagicMock(name="txt_name_filter")
+        w.ui_filters = {}
+        w._default_filter_snapshot = {"default": "stub"}
+        return w
 
 
-def test_open_for_galaxy_saves_outgoing_empire_snapshot_on_switch(
-    window_with_two_empires,
-):
-    window = window_with_two_empires
-    empire_b = MagicMock(name="empire_b")
-    empire_b.id = 1
-    captured_snapshot = {"types": {"Main Sequence": False}}
-
-    with patch(
-        "game.ui.screens.star_list_window.capture_star_list_state",
-        return_value=captured_snapshot,
-    ) as mock_capture, patch(
-        "game.ui.screens.star_list_window.apply_star_list_state",
-        return_value=window.columns,
-    ), patch.object(window, "show"), patch.object(window, "refresh_list"):
-        window.open_for_galaxy(window.galaxy, empire_b)
-
-    assert window._filter_snapshots_by_empire[0] is captured_snapshot
-    mock_capture.assert_called_once()
+class TestSnapshotSlot:
+    def test_class_constant(self):
+        assert StarListWindow.SNAPSHOT_SLOT == "star_list"
 
 
-def test_open_for_galaxy_restores_incoming_empire_saved_snapshot(
-    window_with_two_empires,
-):
-    window = window_with_two_empires
-    empire_b = MagicMock(name="empire_b")
-    empire_b.id = 1
-    saved_b_snapshot = {"types": {"Red Giant": False}, "marker": "b_state"}
-    window._filter_snapshots_by_empire[1] = saved_b_snapshot
-
-    with patch(
-        "game.ui.screens.star_list_window.capture_star_list_state",
-        return_value={"outgoing": "a"},
-    ), patch(
-        "game.ui.screens.star_list_window.apply_star_list_state",
-        return_value=window.columns,
-    ) as mock_apply, patch.object(window, "show"), patch.object(
-        window, "refresh_list"
-    ):
-        window.open_for_galaxy(window.galaxy, empire_b)
-
-    assert mock_apply.called
-    applied_state = mock_apply.call_args.args[0]
-    assert applied_state is saved_b_snapshot
+class TestCaptureViewState:
+    def test_delegates_to_preset_capture(self, window):
+        captured = {"types": {"Yellow Dwarf": False}}
+        with patch(
+            "game.ui.screens.star_list_window.capture_star_list_state",
+            return_value=captured,
+        ) as mock_capture:
+            result = window.capture_view_state()
+        assert result is captured
+        mock_capture.assert_called_once()
 
 
-def test_open_for_galaxy_new_empire_first_time_applies_defaults(
-    window_with_two_empires,
-):
-    window = window_with_two_empires
-    empire_b = MagicMock(name="empire_b")
-    empire_b.id = 1
-    assert 1 not in window._filter_snapshots_by_empire
+class TestApplyViewState:
+    def test_applies_saved_state(self, window):
+        saved = {"marker": "saved"}
+        with patch(
+            "game.ui.screens.star_list_window.apply_star_list_state",
+            return_value=window.columns,
+        ) as mock_apply:
+            window.apply_view_state(saved)
+        applied = mock_apply.call_args.args[0]
+        assert applied is saved
 
-    with patch(
-        "game.ui.screens.star_list_window.capture_star_list_state",
-        return_value={"outgoing": "a"},
-    ), patch(
-        "game.ui.screens.star_list_window.apply_star_list_state",
-        return_value=window.columns,
-    ) as mock_apply, patch.object(window, "show"), patch.object(
-        window, "refresh_list"
-    ):
-        window.open_for_galaxy(window.galaxy, empire_b)
+    def test_none_falls_back_to_default_snapshot(self, window):
+        with patch(
+            "game.ui.screens.star_list_window.apply_star_list_state",
+            return_value=window.columns,
+        ) as mock_apply:
+            window.apply_view_state(None)
+        applied = mock_apply.call_args.args[0]
+        assert applied is window._default_filter_snapshot
 
-    applied_state = mock_apply.call_args.args[0]
-    assert applied_state is window._default_filter_snapshot
+    def test_none_and_no_default_is_noop(self, window):
+        window._default_filter_snapshot = None
+        with patch(
+            "game.ui.screens.star_list_window.apply_star_list_state",
+        ) as mock_apply:
+            window.apply_view_state(None)
+        mock_apply.assert_not_called()
 
 
-def test_open_for_galaxy_same_empire_does_not_capture_or_apply(
-    window_with_two_empires,
-):
-    window = window_with_two_empires
-    same_empire = window.empire
+class TestOpenForGalaxyNoLongerHandlesSnapshots:
+    def test_empire_switch_does_not_capture_or_apply(self, window):
+        empire_b = MagicMock(name="empire_b")
+        empire_b.id = 1
+        with patch(
+            "game.ui.screens.star_list_window.capture_star_list_state",
+        ) as mock_capture, patch(
+            "game.ui.screens.star_list_window.apply_star_list_state",
+        ) as mock_apply, patch.object(window, "show"), patch.object(
+            window, "refresh_list"
+        ):
+            window.open_for_galaxy(window.galaxy, empire_b)
+        mock_capture.assert_not_called()
+        mock_apply.assert_not_called()
 
-    with patch(
-        "game.ui.screens.star_list_window.capture_star_list_state",
-    ) as mock_capture, patch(
-        "game.ui.screens.star_list_window.apply_star_list_state",
-    ) as mock_apply, patch.object(window, "show"), patch.object(
-        window, "refresh_list"
-    ):
-        window.open_for_galaxy(window.galaxy, same_empire)
 
-    mock_capture.assert_not_called()
-    mock_apply.assert_not_called()
+class TestNoLegacyPerWindowDict:
+    def test_legacy_attr_absent(self, window):
+        assert not hasattr(window, "_filter_snapshots_by_empire")

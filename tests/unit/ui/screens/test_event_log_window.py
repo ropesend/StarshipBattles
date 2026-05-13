@@ -715,3 +715,68 @@ class TestEventLogColumnReorder:
             EventLogWindow.update(stub, 0.016)
         stub.virtual_table.rebuild_headers.assert_not_called()
         stub.virtual_table.rebuild_row_pool.assert_not_called()
+
+
+# ===========================================================================
+# Issue #28: per-player UI view-state opt-in
+# ===========================================================================
+
+
+class TestSnapshotSlot:
+    def test_class_constant(self):
+        from game.ui.screens.event_log_window import EventLogWindow
+        assert EventLogWindow.SNAPSHOT_SLOT == "event_log"
+
+
+class TestCaptureViewStateNoColumnManager:
+    def test_returns_empty_when_column_manager_is_none(self):
+        win = _make_window()
+        win.column_manager = None
+        state = win.capture_view_state()
+        assert state == {"columns": [], "sort_column_id": None, "sort_descending": False}
+
+
+class TestApplyViewStateNoOps:
+    def test_apply_none_is_noop(self):
+        win = _make_window()
+        win.column_manager = MagicMock()
+        win.apply_view_state(None)
+        # No exception. column_manager wasn't touched for column reassignment.
+        win.column_manager.get_columns.assert_not_called()
+
+    def test_apply_when_column_manager_is_none_is_noop(self):
+        win = _make_window()
+        win.column_manager = None
+        win.apply_view_state({"columns": [{"id": "x", "visible": False}]})
+        # No exception raised.
+
+
+class TestCaptureApplyRoundTrip:
+    def test_round_trip_through_column_manager(self):
+        from game.ui.components.table.column_manager import TableColumnManager
+        win = _make_window()
+        columns = [
+            {"id": "turn", "title": "Turn", "width": 60, "visible": True},
+            {"id": "category", "title": "Cat", "width": 80, "visible": True},
+            {"id": "message", "title": "Message", "width": 400, "visible": True},
+        ]
+        win.column_manager = TableColumnManager(columns)
+
+        win.column_manager.get_columns()[1]["visible"] = False
+        win.column_manager.sort_column_id = "turn"
+        win.column_manager.sort_descending = True
+
+        state = win.capture_view_state()
+
+        # Reset to defaults.
+        for col in win.column_manager.get_columns():
+            col["visible"] = True
+        win.column_manager.sort_column_id = None
+        win.column_manager.sort_descending = False
+
+        win.apply_view_state(state)
+
+        cols = win.column_manager.get_columns()
+        assert cols[1]["visible"] is False
+        assert win.column_manager.sort_column_id == "turn"
+        assert win.column_manager.sort_descending is True

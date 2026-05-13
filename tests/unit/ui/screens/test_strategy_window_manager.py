@@ -190,14 +190,17 @@ class TestEmpireBuildQueueWindow:
         assert window_manager.empire_build_queue_window is not None
 
     @patch('game.ui.screens.strategy_windows.build_queue_windows.EmpireBuildQueueWindow')
-    def test_open_empire_build_queue_kills_existing(self, mock_window_class, window_manager):
-        """Test open_empire_build_queue_window kills existing first."""
+    def test_open_empire_build_queue_reuses_existing_alive(self, mock_window_class, window_manager):
+        """Issue #28: existing alive window is reused, not killed."""
         existing = Mock()
+        existing.alive.return_value = True
         window_manager.empire_build_queue_window = existing
 
         window_manager.open_empire_build_queue_window()
 
-        existing.kill.assert_called_once()
+        existing.kill.assert_not_called()
+        existing.open_for_empire.assert_called_once()
+        mock_window_class.assert_not_called()
 
     def test_on_empire_build_queue_closed_clears_reference(self, window_manager):
         """Test callback clears window reference."""
@@ -381,14 +384,17 @@ class TestEmpirePanelWindow:
         assert window_manager.empire_panel_window is not None
 
     @patch('game.ui.screens.strategy_windows.empire_panel_ctrl.EmpirePanelWindow')
-    def test_open_empire_panel_kills_existing(self, mock_window_class, window_manager):
-        """Test open_empire_panel kills existing window first."""
+    def test_open_empire_panel_reuses_existing_alive(self, mock_window_class, window_manager):
+        """Issue #28: existing alive window is reused, not killed."""
         existing = Mock()
+        existing.alive.return_value = True
         window_manager.empire_panel_window = existing
 
         window_manager.open_empire_panel()
 
-        existing.kill.assert_called_once()
+        existing.kill.assert_not_called()
+        existing.open_for_empire.assert_called_once()
+        mock_window_class.assert_not_called()
 
     def test_on_empire_panel_closed_clears_reference(self, window_manager):
         """Test callback clears window reference."""
@@ -456,15 +462,21 @@ class TestFleetReportWindow:
         assert window_manager.fleet_report_window is not None
 
     @patch('game.ui.screens.strategy_windows.fleet_report_ctrl.FleetReportWindow')
-    def test_open_fleet_report_kills_existing(self, mock_window_class, window_manager):
-        """Test open_fleet_report_window kills existing first."""
+    def test_open_fleet_report_reuses_existing_alive(self, mock_window_class, window_manager):
+        """Issue #28: existing alive window is reused via ``open_for_fleet``,
+        not killed."""
         existing = Mock()
+        existing.alive.return_value = True
         window_manager.fleet_report_window = existing
         fleet = Mock()
 
         window_manager.open_fleet_report_window(fleet)
 
-        existing.kill.assert_called_once()
+        existing.kill.assert_not_called()
+        existing.open_for_fleet.assert_called_once_with(
+            fleet, empire=window_manager.scene.current_empire
+        )
+        mock_window_class.assert_not_called()
 
     def test_on_fleet_report_closed_clears_reference(self, window_manager):
         """Test callback clears window reference."""

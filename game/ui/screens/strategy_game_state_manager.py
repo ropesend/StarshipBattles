@@ -25,6 +25,7 @@ import pygame
 
 from game.core.exceptions import TurnFailedError
 from game.ui.screens.defeat_dialog import DefeatDialog
+from game.ui.screens.per_player_ui_state import PerPlayerUiState
 from game.ui.screens.turn_failed_dialog import TurnFailedDialog
 
 if TYPE_CHECKING:
@@ -60,6 +61,15 @@ class StrategyGameStateManager:
         # and the modal one-shot. Not serialised — recoverable from
         # current empire state at load time.
         self._defeated_player_ids: set[int] = set()
+        # Issue #28: per-empire UI view-state snapshots (column visibility,
+        # sort selection, expanded tab indices, scroll positions). Captured
+        # at turn-end in ``advance_turn`` BEFORE ``_next_live_player_index``
+        # mutates the rotation index, and restored at turn-start at the TOP
+        # of ``_apply_turn_start_state`` BEFORE the defeat short-circuit
+        # (so defeated empires see their saved view in the defeat modal /
+        # last-turn event log). Session-scoped; not serialised — symmetric
+        # with ``_defeated_player_ids``.
+        self._per_player_ui_state = PerPlayerUiState()
 
     def _next_live_player_index(self, start_index: int) -> tuple[int, bool]:
         """Walk forward from ``start_index`` to the next non-defeated player.
@@ -97,7 +107,13 @@ class StrategyGameStateManager:
         Issue #25: rotation skips empires in ``_defeated_player_ids`` via
         ``_next_live_player_index``. Single-survivor case: every End Turn
         rolls over and re-processes the survivor's turn.
+
+        Issue #28: capture the outgoing player's per-window UI snapshots
+        BEFORE ``_next_live_player_index`` mutates ``current_player_index``.
+        The capture identity would otherwise resolve to the incoming player.
         """
+        self._capture_outgoing_player_state()
+
         next_index, rolled_over = self._next_live_player_index(
             self._screen.current_player_index
         )
@@ -147,14 +163,71 @@ class StrategyGameStateManager:
         if current_empire is not None:
             self._screen.session.active_empire = current_empire
 
+    def _iter_snapshot_windows(self):
+        """Yield each opt-in window participating in the per-player UI snapshot.
+
+        Issue #28: a window participates by exposing ``SNAPSHOT_SLOT``
+        (a string), ``alive()``, ``capture_view_state()`` and
+        ``apply_view_state(state)``. The window manager's
+        ``iter_snapshot_windows`` is the registry; headless / mock
+        environments without that surface yield nothing and the
+        capture/restore steps become no-ops.
+        """
+        wm = getattr(self._screen.ui, "window_manager", None)
+        if wm is None:
+            return
+        iter_fn = getattr(wm, "iter_snapshot_windows", None)
+        if iter_fn is None:
+            return
+        for window in iter_fn():
+            if window is not None and window.alive():
+                yield window
+
+    def _capture_outgoing_player_state(self) -> None:
+        """Issue #28: snapshot each opt-in window into the outgoing empire's slot.
+
+        Called from the head of ``advance_turn`` BEFORE
+        ``_next_live_player_index`` mutates ``current_player_index``, so
+        ``current_player_index`` still identifies the player whose turn
+        is ending.
+        """
+        ids = self._screen.human_player_ids
+        if not ids:
+            return
+        outgoing_id = ids[self._screen.current_player_index]
+        for window in self._iter_snapshot_windows():
+            slot = window.SNAPSHOT_SLOT
+            snapshot = window.capture_view_state()
+            self._per_player_ui_state.save(outgoing_id, slot, snapshot)
+
+    def _restore_incoming_player_state(self, empire) -> None:
+        """Issue #28: re-apply ``empire``'s saved snapshots to each opt-in window.
+
+        Called from the TOP of ``_apply_turn_start_state`` BEFORE issue
+        #25's defeat short-circuit so a defeated empire still sees their
+        own saved view in the defeat modal and last-turn event log.
+
+        Windows receive ``None`` when no snapshot exists (the empire's
+        first turn). The window decides whether to no-op (keep current
+        view) or reset to construction defaults.
+        """
+        for window in self._iter_snapshot_windows():
+            slot = window.SNAPSHOT_SLOT
+            window.apply_view_state(self._per_player_ui_state.load(empire.id, slot))
+
     def _apply_turn_start_state(self, empire) -> None:
-        """Reset per-player UI state at turn-start (Issue #9 + #25).
+        """Reset per-player UI state at turn-start (Issue #9 + #25 + #28).
 
         Single source of truth for what happens when a new player takes
-        control: clear stale selection, focus the camera on their home
-        colony, populate the lower-right detail panel via the
+        control: restore the incoming empire's per-window view-state
+        (issue #28), clear stale selection, focus the camera on their
+        home colony, populate the lower-right detail panel via the
         manual-click code path (``on_ui_selection``), and open the
         per-player event log for any turn events scoped to ``empire``.
+
+        Issue #28: per-player view-state restore runs FIRST so the
+        defeated-empire branch below still presents the player's own
+        column toggles in the last-turn event log and defeat modal.
 
         Issue #25: if ``empire`` has just become defeated, surface the
         last-turn event log first (so the player sees what led to their
@@ -168,6 +241,11 @@ class StrategyGameStateManager:
         defensively gates the popup so callers that re-enter via the
         dev bulk-run path stay quiet.
         """
+        # Issue #28: restore BEFORE selection-clear / defeat / camera so
+        # every downstream step sees the empire's view-state already in
+        # place.
+        self._restore_incoming_player_state(empire)
+
         screen = self._screen
         screen.selected_fleet = None
         screen.selected_object = None

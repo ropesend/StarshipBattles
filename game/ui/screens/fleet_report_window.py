@@ -127,7 +127,16 @@ class FleetReportWindow(StrategyModalWindow):
     bypass point so test fixtures see the real delegate graph.
     Layout/widget construction lives behind
     ``FleetReportLayoutBuilder``.
+
+    Issue #28: opts into per-player UI view-state container so column
+    toggles, sort order, and filter selections survive hot-seat
+    rotation. Uses window reuse via ``open_for_fleet`` instead of
+    kill-and-reconstruct so the central state swap has a live
+    instance to ``apply_view_state`` against.
     """
+
+    # Issue #28: opts into per-player UI view-state container.
+    SNAPSHOT_SLOT: str = "fleet_report"
 
     def __init__(
         self,
@@ -414,6 +423,96 @@ class FleetReportWindow(StrategyModalWindow):
         self.virtual_table.rebuild_headers()
         self.virtual_table.rebuild_row_pool()
         self.refresh_list()
+
+    # -----------------------------------------------------------------------
+    # Issue #28: window reuse (Pattern §29) + per-player view-state opt-in
+    # -----------------------------------------------------------------------
+
+    def on_close_window_button_pressed(self) -> None:
+        """X-button close hides for reuse."""
+        self.hide()
+
+    def request_close(self) -> None:
+        """Esc-key close hides for reuse."""
+        self.hide()
+
+    def open_for_fleet(self, fleet, empire=None) -> None:
+        """Rebind fleet (and optionally empire), refresh, show.
+
+        Called by ``FleetReportRegistrar.open()`` on slot reuse. Per-
+        player column visibility / sort / filter state was already
+        swapped onto this instance by ``StrategyGameStateManager`` at
+        turn-start, so this method only handles the fleet rebind.
+        """
+        self.fleet = fleet
+        if empire is not None:
+            self.empire = empire
+        self.selected_ship = None
+        self.selection.clear()
+        if self.virtual_table is not None:
+            self.refresh_list()
+        self.show()
+
+    def capture_view_state(self) -> dict:
+        """Snapshot column visibility + order + sort + filter state.
+
+        ``column_manager`` is the source of truth for column state
+        (accessed via ``get_columns()``). ``view_model`` owns the
+        filter state via its FilterStateManager.
+        """
+        cm_cols = self.column_manager.get_columns()
+        cols = [
+            {"id": col["id"], "visible": col.get("visible", True)}
+            for col in cm_cols
+        ]
+        filters = {}
+        fm = getattr(self.view_model, "_filter_mgr", None)
+        if fm is not None and hasattr(fm, "get_all_states"):
+            filters = {
+                key: state.value for key, state in fm.get_all_states().items()
+            }
+        return {
+            "columns": cols,
+            "sort_column_id": getattr(self.column_manager, "sort_column_id", None),
+            "sort_descending": getattr(self.column_manager, "sort_descending", False),
+            "filters": filters,
+        }
+
+    def apply_view_state(self, state: dict | None) -> None:
+        """Restore previously-captured snapshot. ``None`` is a no-op."""
+        if state is None:
+            return
+
+        cm_cols = self.column_manager.get_columns()
+        saved_cols = state.get("columns") or []
+        if saved_cols:
+            current_map = {c["id"]: c for c in cm_cols}
+            new_cols = []
+            for item in saved_cols:
+                col = current_map.get(item["id"])
+                if col is not None:
+                    col["visible"] = item.get("visible", True)
+                    new_cols.append(col)
+                    del current_map[item["id"]]
+            new_cols.extend(current_map.values())
+            # ``get_columns()`` returns the live ``_columns`` reference,
+            # so mutating in place is sufficient — but the reorder requires
+            # the underlying list to be replaced.
+            cm_cols[:] = new_cols
+
+        sort_col = state.get("sort_column_id")
+        if sort_col is not None:
+            self.column_manager.sort_column_id = sort_col
+            self.column_manager.sort_descending = state.get("sort_descending", False)
+
+        from game.ui.filters.filter_state import FilterState
+        fm = getattr(self.view_model, "_filter_mgr", None)
+        if fm is not None and hasattr(fm, "set_state"):
+            for key, raw in (state.get("filters") or {}).items():
+                try:
+                    fm.set_state(key, FilterState(raw))
+                except (ValueError, KeyError):
+                    continue
 
     def kill(self) -> None:
         """Clean up when window is closed."""

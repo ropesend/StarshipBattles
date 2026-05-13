@@ -37,19 +37,16 @@ class EmpirePanelRegistrar:
         if facade is not None and hasattr(facade, "get_race_registry"):
             race_registry = facade.get_race_registry()
 
-        # PROJ-411 Task 2.3: window reuse — same-empire only.
-        # If the slot has a live window for the *same* empire, just
-        # ``open_for_empire`` it (reset to Treasury + show). Hot-seat
-        # empire switch falls back to kill + reconstruct since per-
-        # empire widget content (snapshot, portrait, flag) needs
-        # invalidation we don't yet model.
+        # Issue #28 (extends PROJ-411 Task 2.3): full window reuse, including
+        # cross-empire. ``open_for_empire`` now rebuilds Treasury snapshot +
+        # Population content when the empire differs (formerly deferred to
+        # kill+reconstruct). The central ``PerPlayerUiState`` swap at turn
+        # rotation has a live instance to ``apply_view_state`` against
+        # (saved tab index).
         existing = c.empire_panel_window
-        if existing is not None and existing.alive() and existing.empire is empire:
+        if existing is not None and existing.alive():
             existing.open_for_empire(empire)
             return
-        if existing is not None and existing.alive():
-            existing.kill()  # hot-seat empire switch — full teardown
-            c.empire_panel_window = None
 
         # PROJ-411 Phase 1: pass facade_state so EmpireEconomyService.get_snapshot
         # reuses its per-turn cache across Treasury-tab toggles. Use getattr

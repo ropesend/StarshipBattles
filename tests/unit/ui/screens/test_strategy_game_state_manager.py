@@ -1109,3 +1109,263 @@ class TestAdvanceTurnDefeatedSkipEndToEnd:
         mock_helper.assert_called_once()
         called_empire = mock_helper.call_args[0][0]
         assert called_empire.id == 2
+
+
+class TestPerPlayerUiStateContainer:
+    """Issue #28: ``StrategyGameStateManager`` owns a session-scoped
+    ``PerPlayerUiState`` container so per-window view-state (column
+    visibility, sort, tab indices, scroll positions) survives hot-seat
+    rotation."""
+
+    def test_container_initialised(self):
+        from game.ui.screens.per_player_ui_state import PerPlayerUiState
+        manager, _ = _make_game_state_manager()
+        assert isinstance(manager._per_player_ui_state, PerPlayerUiState)
+
+
+class TestAdvanceTurnCapturesOutgoingState:
+    """Issue #28: ``advance_turn`` captures the outgoing player's per-window
+    view-state snapshots BEFORE ``_next_live_player_index`` mutates
+    ``current_player_index``. Otherwise the capture identity would be
+    the incoming player, not the outgoing one."""
+
+    def test_capture_hook_invoked_before_index_advance(self):
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+
+        captured_index_at_call = []
+        original = manager._capture_outgoing_player_state
+
+        def spy() -> None:
+            captured_index_at_call.append(screen.current_player_index)
+            original()
+
+        with patch.object(manager, "_capture_outgoing_player_state", side_effect=spy):
+            manager.advance_turn()
+
+        assert captured_index_at_call == [0]
+
+    def test_capture_writes_each_live_windows_snapshot_to_outgoing_slot(self):
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+
+        # Two opt-in windows: each exposes SNAPSHOT_SLOT, capture_view_state.
+        window_a = MagicMock()
+        window_a.SNAPSHOT_SLOT = "planet_list"
+        window_a.alive = MagicMock(return_value=True)
+        window_a.capture_view_state = MagicMock(return_value={"a": 1})
+        window_b = MagicMock()
+        window_b.SNAPSHOT_SLOT = "empire_panel"
+        window_b.alive = MagicMock(return_value=True)
+        window_b.capture_view_state = MagicMock(return_value={"b": 2})
+
+        screen.ui.window_manager.iter_snapshot_windows = MagicMock(
+            return_value=[window_a, window_b]
+        )
+
+        manager.advance_turn()
+
+        assert manager._per_player_ui_state.load(0, "planet_list") == {"a": 1}
+        assert manager._per_player_ui_state.load(0, "empire_panel") == {"b": 2}
+
+    def test_capture_skips_dead_windows(self):
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+
+        dead = MagicMock()
+        dead.SNAPSHOT_SLOT = "planet_list"
+        dead.alive = MagicMock(return_value=False)
+        dead.capture_view_state = MagicMock()
+
+        screen.ui.window_manager.iter_snapshot_windows = MagicMock(
+            return_value=[dead]
+        )
+
+        manager.advance_turn()
+
+        dead.capture_view_state.assert_not_called()
+        assert manager._per_player_ui_state.load(0, "planet_list") is None
+
+    def test_capture_handles_missing_window_manager_protocol(self):
+        """Headless tests / mocks without ``iter_snapshot_windows`` must not crash."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+
+        # Strip the optional registry hook only; rest of screen.ui is intact.
+        screen.ui.window_manager = None
+
+        # Must not raise.
+        manager.advance_turn()
+
+    def test_capture_handles_window_manager_without_iter(self):
+        """Window manager without ``iter_snapshot_windows`` attr — no-op."""
+        manager, screen = _make_game_state_manager()
+        screen.current_player_index = 0
+        screen.human_player_ids = [0, 1]
+
+        # Real-shaped window manager but missing the optional hook.
+        screen.ui.window_manager = MagicMock(spec=["register_modal"])
+
+        manager.advance_turn()  # no raise
+
+
+class TestApplyTurnStartStateRestoresIncomingState:
+    """Issue #28: at the TOP of ``_apply_turn_start_state``, BEFORE
+    issue #25's defeat short-circuit and BEFORE selection-clear, the
+    incoming player's snapshots are pushed back onto each opt-in
+    window via ``apply_view_state``."""
+
+    def test_restore_called_before_defeat_short_circuit(self):
+        """Even a defeated empire's incoming state is restored — so the
+        defeat-modal-adjacent windows present in their saved view."""
+        manager, screen = _make_game_state_manager()
+        empire = screen.empires[0]
+        _eliminate(empire)
+
+        # Pre-seed a saved snapshot for the eliminated empire.
+        manager._per_player_ui_state.save(empire.id, "planet_list", {"v": 1})
+
+        window = MagicMock()
+        window.SNAPSHOT_SLOT = "planet_list"
+        window.alive = MagicMock(return_value=True)
+        screen.ui.window_manager.iter_snapshot_windows = MagicMock(
+            return_value=[window]
+        )
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.get_turn_number.return_value = 5
+
+        with patch.object(manager, "_show_defeat_dialog"):
+            manager._apply_turn_start_state(empire)
+
+        window.apply_view_state.assert_called_once_with({"v": 1})
+
+    def test_restore_uses_load_so_first_turn_passes_none(self):
+        """An empire with no saved snapshot still has apply called, with
+        ``None`` — windows decide whether to no-op or reset to defaults."""
+        manager, screen = _make_game_state_manager()
+        empire = screen.empires[0]
+
+        window = MagicMock()
+        window.SNAPSHOT_SLOT = "planet_list"
+        window.alive = MagicMock(return_value=True)
+        screen.ui.window_manager.iter_snapshot_windows = MagicMock(
+            return_value=[window]
+        )
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.get_turn_number.return_value = 5
+
+        manager._apply_turn_start_state(empire)
+
+        window.apply_view_state.assert_called_once_with(None)
+
+    def test_restore_skips_dead_windows(self):
+        manager, screen = _make_game_state_manager()
+        empire = screen.empires[0]
+
+        dead = MagicMock()
+        dead.SNAPSHOT_SLOT = "planet_list"
+        dead.alive = MagicMock(return_value=False)
+        screen.ui.window_manager.iter_snapshot_windows = MagicMock(
+            return_value=[dead]
+        )
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.get_turn_number.return_value = 5
+
+        manager._apply_turn_start_state(empire)
+
+        dead.apply_view_state.assert_not_called()
+
+    def test_restore_handles_missing_window_manager_protocol(self):
+        manager, screen = _make_game_state_manager()
+        empire = screen.empires[0]
+
+        # Strip the registry hook.
+        screen.ui = MagicMock(spec=["lbl_current_player", "manager", "width", "height", "show_detailed_report", "open_event_log_with_events"])
+        screen.ui.lbl_current_player = MagicMock()
+        screen.ui.manager = MagicMock()
+        screen.ui.width = 1920
+        screen.ui.height = 1080
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.get_turn_number.return_value = 5
+
+        # Must not raise.
+        manager._apply_turn_start_state(empire)
+
+
+class TestPerPlayerStateHotSeatRoundTrip:
+    """Issue #28: end-to-end — Player 0 saves a snapshot at turn-end,
+    Player 1 takes the turn (gets None), then rotation returns to
+    Player 0 who sees their saved state restored."""
+
+    def test_hot_seat_two_player_round_trip(self):
+        manager, screen, empires = _make_n_player_state_manager(2)
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.get_turn_number.return_value = 5
+
+        # Each empire's window starts with empire-specific state.
+        captures = {0: {"view": "p0_view"}, 1: {"view": "p1_view"}}
+        applies: list[tuple[int, dict | None]] = []
+
+        window = MagicMock()
+        window.SNAPSHOT_SLOT = "planet_list"
+        window.alive = MagicMock(return_value=True)
+
+        def _capture():
+            return captures[screen.current_player_index]
+
+        def _apply(state):
+            applies.append((screen.current_player_index, state))
+
+        window.capture_view_state.side_effect = _capture
+        window.apply_view_state.side_effect = _apply
+        screen.ui.window_manager.iter_snapshot_windows = MagicMock(
+            return_value=[window]
+        )
+
+        # P0 → P1 (else branch)
+        screen.current_player_index = 0
+        manager.advance_turn()
+        assert screen.current_player_index == 1
+        # P1 → P0 (rollover; processes full turn). Test the index-2 capture/restore.
+        manager.advance_turn()
+        # Back to P0
+        assert screen.current_player_index == 0
+
+        # Snapshots saved per empire
+        assert manager._per_player_ui_state.load(0, "planet_list") == {"view": "p0_view"}
+        assert manager._per_player_ui_state.load(1, "planet_list") == {"view": "p1_view"}
+
+        # P1 saw None on their first apply; P0 (returning) sees their saved snapshot.
+        first_apply_for_p1 = next((s for idx, s in applies if idx == 1), "missing")
+        last_apply_for_p0 = [s for idx, s in applies if idx == 0][-1]
+        assert first_apply_for_p1 is None
+        assert last_apply_for_p0 == {"view": "p0_view"}
+
+
+class TestDefeatedPlayerSnapshotPreserved:
+    """Issue #28: defeated empires' snapshots remain in the container
+    (option a — keep indefinitely). They are never re-applied because
+    ``_apply_turn_start_state`` is never invoked for them again
+    (rotation skips). The container's contents do not block memory
+    reclamation in any meaningful way and survive in case of session
+    state restoration."""
+
+    def test_defeated_empires_snapshot_is_not_cleared(self):
+        manager, screen, empires = _make_n_player_state_manager(3)
+        screen._facade.get_turn_events.return_value = []
+        screen._facade.get_turn_number.return_value = 5
+
+        # Pre-seed P1's snapshot, then eliminate them.
+        manager._per_player_ui_state.save(1, "planet_list", {"v": "p1"})
+        _eliminate(empires[1])
+
+        # Drive the defeat detection through the helper directly.
+        with patch.object(manager, "_show_defeat_dialog"):
+            manager._apply_turn_start_state(empires[1])
+
+        # Snapshot remains (option a).
+        assert manager._per_player_ui_state.load(1, "planet_list") == {"v": "p1"}

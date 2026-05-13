@@ -1757,3 +1757,126 @@ class TestColumnSwap:
             win.update(0.016)
 
         win._refresh_list.assert_called()
+
+
+# =======================================================================
+# Issue #28: per-player UI view-state opt-in
+# =======================================================================
+
+
+class TestSnapshotSlot:
+    def test_class_constant(self):
+        from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
+        assert EmpireBuildQueueWindow.SNAPSHOT_SLOT == "empire_build_queue"
+
+
+class TestEmpireBuildQueueViewStateRoundTrip:
+    """Round-trip: snapshot a window's view-state, mutate, restore, verify
+    columns / search / filters / sort match the snapshot."""
+
+    def test_capture_returns_columns_visibility(self):
+        win = _make_window()
+        for col in win._filter_mgr.columns:
+            if col["id"] == "system":
+                col["visible"] = False
+
+        state = win.capture_view_state()
+        col_map = {c["id"]: c["visible"] for c in state["columns"]}
+        assert col_map["system"] is False
+        assert col_map["location"] is True
+
+    def test_apply_restores_columns_visibility(self):
+        win = _make_window()
+        snapshot = {
+            "columns": [{"id": c["id"], "visible": c["id"] != "system"} for c in win._filter_mgr.columns],
+            "search_text": "",
+            "filters": {},
+            "sort_column_id": None,
+            "sort_descending": False,
+        }
+        win.apply_view_state(snapshot)
+        col_map = {c["id"]: c["visible"] for c in win._filter_mgr.columns}
+        assert col_map["system"] is False
+
+    def test_capture_includes_search_text(self):
+        win = _make_window()
+        win._filter_mgr.search_text = "alpha"
+        state = win.capture_view_state()
+        assert state["search_text"] == "alpha"
+
+    def test_apply_restores_search_text(self):
+        win = _make_window()
+        win.apply_view_state({
+            "columns": [],
+            "search_text": "beta",
+            "filters": {},
+            "sort_column_id": None,
+            "sort_descending": False,
+        })
+        assert win._filter_mgr.search_text == "beta"
+
+    def test_capture_includes_filters(self):
+        from game.ui.filters.filter_state import FilterState
+        win = _make_window()
+        win._filter_mgr.set_filter_state("loc_Planet", FilterState.YES)
+        win._filter_mgr.set_filter_state("status_Empty", FilterState.NO)
+
+        state = win.capture_view_state()
+        assert state["filters"]["loc_Planet"] == "yes"
+        assert state["filters"]["status_Empty"] == "no"
+
+    def test_apply_restores_filters(self):
+        from game.ui.filters.filter_state import FilterState
+        win = _make_window()
+        win.apply_view_state({
+            "columns": [],
+            "search_text": "",
+            "filters": {"loc_Planet": "yes", "status_Empty": "no"},
+            "sort_column_id": None,
+            "sort_descending": False,
+        })
+        assert win._filter_mgr.get_filter_state("loc_Planet") is FilterState.YES
+        assert win._filter_mgr.get_filter_state("status_Empty") is FilterState.NO
+
+    def test_apply_none_is_noop(self):
+        win = _make_window()
+        win._filter_mgr.search_text = "preserve_me"
+        win.apply_view_state(None)
+        assert win._filter_mgr.search_text == "preserve_me"
+
+    def test_apply_unknown_filter_key_skipped_silently(self):
+        win = _make_window()
+        win.apply_view_state({
+            "columns": [],
+            "search_text": "",
+            "filters": {"unknown_key": "yes"},
+            "sort_column_id": None,
+            "sort_descending": False,
+        })  # no raise
+
+    def test_round_trip_preserves_state(self):
+        from game.ui.filters.filter_state import FilterState
+        win = _make_window()
+        win._filter_mgr.set_filter_state("cap_Ships", FilterState.YES)
+        for col in win._filter_mgr.columns:
+            if col["id"] == "build_rate":
+                col["visible"] = False
+        win._filter_mgr.search_text = "scout"
+
+        state = win.capture_view_state()
+
+        # Mutate to defaults.
+        win._filter_mgr.set_filter_state("cap_Ships", FilterState.IGNORE)
+        for col in win._filter_mgr.columns:
+            if col["id"] == "build_rate":
+                col["visible"] = True
+        win._filter_mgr.search_text = ""
+
+        win.apply_view_state(state)
+
+        assert win._filter_mgr.get_filter_state("cap_Ships") is FilterState.YES
+        assert win._filter_mgr.search_text == "scout"
+        for col in win._filter_mgr.columns:
+            if col["id"] == "build_rate":
+                assert col["visible"] is False
+

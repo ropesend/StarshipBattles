@@ -283,3 +283,70 @@ class TestFleetReportTriStateWiring:
         })
         window.update(0.016)
         window.view_model.toggle_filter.assert_called_once_with('damaged')
+
+
+# ===========================================================================
+# Issue #28: per-player UI view-state opt-in
+# ===========================================================================
+
+
+class TestSnapshotSlot:
+    def test_class_constant(self):
+        assert FleetReportWindow.SNAPSHOT_SLOT == "fleet_report"
+
+
+class TestFleetReportViewStateRoundTrip:
+    def test_capture_includes_column_visibility(self):
+        window, _ = _make_fleet_report_window()
+        # Hide the first column.
+        first_id = window.column_manager.get_columns()[0]["id"]
+        window.column_manager.get_columns()[0]["visible"] = False
+
+        state = window.capture_view_state()
+
+        first_in_state = next(c for c in state["columns"] if c["id"] == first_id)
+        assert first_in_state["visible"] is False
+
+    def test_apply_restores_column_visibility(self):
+        window, _ = _make_fleet_report_window()
+        original_cols = [c["id"] for c in window.column_manager.get_columns()]
+        snapshot = {
+            "columns": [
+                {"id": cid, "visible": (i % 2 == 0)}
+                for i, cid in enumerate(original_cols)
+            ],
+            "sort_column_id": None,
+            "sort_descending": False,
+            "filters": {},
+        }
+
+        window.apply_view_state(snapshot)
+
+        for i, col in enumerate(window.column_manager.get_columns()):
+            assert col["visible"] is (i % 2 == 0)
+
+    def test_apply_none_is_noop(self):
+        window, _ = _make_fleet_report_window()
+        window.column_manager.get_columns()[0]["visible"] = False
+        window.apply_view_state(None)
+        assert window.column_manager.get_columns()[0]["visible"] is False
+
+    def test_capture_includes_sort(self):
+        window, _ = _make_fleet_report_window()
+        window.column_manager.sort_column_id = "name"
+        window.column_manager.sort_descending = True
+
+        state = window.capture_view_state()
+        assert state["sort_column_id"] == "name"
+        assert state["sort_descending"] is True
+
+    def test_apply_restores_sort(self):
+        window, _ = _make_fleet_report_window()
+        window.apply_view_state({
+            "columns": [],
+            "sort_column_id": "hp",
+            "sort_descending": True,
+            "filters": {},
+        })
+        assert window.column_manager.sort_column_id == "hp"
+        assert window.column_manager.sort_descending is True

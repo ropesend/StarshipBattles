@@ -45,18 +45,26 @@ class BuildQueueListRegistrar:
 
 
 class EmpireBuildQueueRegistrar:
-    """Lifecycle for the Empire-Wide Build Queue Window slot (PROJ-76)."""
+    """Lifecycle for the Empire-Wide Build Queue Window slot (PROJ-76).
+
+    Issue #28: migrated from kill-and-reconstruct to window reuse so the
+    central ``PerPlayerUiState`` swap at turn rotation has a live window
+    instance to ``apply_view_state`` against. X-button close hides
+    (StrategyModalWindow base class behaviour) and re-open rebinds context.
+    """
 
     def __init__(self, composer: "StrategyWindowManager") -> None:
         self._composer = composer
 
     def open(self) -> None:
         c = self._composer
-        if c.empire_build_queue_window:
-            c.empire_build_queue_window.kill()
-
         empire = c.scene.current_empire
         galaxy = c.scene.galaxy
+
+        existing = c.empire_build_queue_window
+        if existing is not None and existing.alive():
+            existing.open_for_empire(empire, galaxy)
+            return
 
         w, h = int(c.width * 0.9), int(c.height * 0.9)
         rect = pygame.Rect((c.width - w) / 2, (c.height - h) / 2, w, h)

@@ -136,6 +136,11 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
     Uses MVVM pattern: ViewModel owns state, Sidebar owns filter UI,
     Window coordinates rendering and navigation.
 
+    Issue #28: opts into per-player UI view-state container via
+    ``SNAPSHOT_SLOT`` + ``capture_view_state`` / ``apply_view_state``.
+    Persists column visibility, search text, and tri-state filter
+    selections across hot-seat rotation.
+
     PROJ-313: Migrated to StrategyModalWindow. Auto-registers with the
     window manager for modal tracking.
 
@@ -149,6 +154,9 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         on_navigate_to_hex: Called with (hex_coord, source) when user
             navigates to a specific queue.
     """
+
+    # Issue #28: opts into per-player UI view-state container.
+    SNAPSHOT_SLOT: str = "empire_build_queue"
 
     def __init__(
         self,
@@ -533,6 +541,69 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         return self._filter_mgr.toggle_column_visibility(col_id)
 
     # -----------------------------------------------------------------------
+    # Issue #28: per-player UI view-state capture / apply
+    # -----------------------------------------------------------------------
+
+    def capture_view_state(self) -> dict:
+        """Snapshot column visibility, search text, and tri-state filters.
+
+        Sort selection is read from ``_column_manager`` when available.
+        Stage-3-bypassed test stubs may have a None column_manager — that
+        case captures only the filter-manager-owned state.
+        """
+        cols = [{"id": c["id"], "visible": c.get("visible", True)} for c in self._filter_mgr.columns]
+        filters = {
+            key: state.value
+            for key, state in self._filter_mgr.filter_manager.get_all_states().items()
+        }
+        sort_col = getattr(self._column_manager, "sort_column_id", None)
+        sort_desc = getattr(self._column_manager, "sort_descending", False)
+        return {
+            "columns": cols,
+            "search_text": self._filter_mgr.search_text,
+            "filters": filters,
+            "sort_column_id": sort_col,
+            "sort_descending": sort_desc,
+        }
+
+    def apply_view_state(self, state: dict | None) -> None:
+        """Restore previously-captured view-state. ``None`` is a no-op
+        (the window keeps construction defaults for a fresh empire)."""
+        if state is None:
+            return
+
+        # Restore column order + visibility.
+        saved_cols = state.get("columns") or []
+        if saved_cols:
+            current_map = {c["id"]: c for c in self._filter_mgr.columns}
+            new_cols = []
+            for item in saved_cols:
+                col = current_map.get(item["id"])
+                if col is not None:
+                    col["visible"] = item.get("visible", True)
+                    new_cols.append(col)
+                    del current_map[item["id"]]
+            # Append any columns that weren't in the snapshot at the end.
+            new_cols.extend(current_map.values())
+            self._filter_mgr.columns = new_cols
+
+        # Restore search text + filter state.
+        self._filter_mgr.search_text = state.get("search_text", "") or ""
+        from game.ui.filters.filter_state import FilterState
+        for key, raw in (state.get("filters") or {}).items():
+            try:
+                self._filter_mgr.set_filter_state(key, FilterState(raw))
+            except (ValueError, KeyError):
+                continue
+
+        # Restore sort.
+        if self._column_manager is not None:
+            sort_col = state.get("sort_column_id")
+            if sort_col is not None:
+                self._column_manager.sort_column_id = sort_col
+                self._column_manager.sort_descending = state.get("sort_descending", False)
+
+    # -----------------------------------------------------------------------
     # Filtering (delegated to ViewModel)
     # -----------------------------------------------------------------------
 
@@ -581,6 +652,40 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         """Return turns remaining for the first item in queue."""
         from game.ui.screens.empire_build_queue_formatter import get_turns_left_text
         return get_turns_left_text(source)
+
+    # -----------------------------------------------------------------------
+    # Issue #28: window reuse (Pattern §29) — hide instead of kill on
+    # user-initiated close so the central per-player state swap has a
+    # live instance to apply against on the next open.
+    # -----------------------------------------------------------------------
+
+    def on_close_window_button_pressed(self) -> None:
+        """X-button close hides for reuse instead of killing."""
+        self.hide()
+
+    def request_close(self) -> None:
+        """Esc-key close hides for reuse instead of killing."""
+        self.hide()
+
+    def open_for_empire(self, empire: Empire, galaxy: Any) -> None:
+        """Rebind context + reset selection + refresh + show.
+
+        Called by ``EmpireBuildQueueRegistrar.open()`` on slot reuse.
+        The per-empire view-state was already swapped onto this
+        instance by ``StrategyGameStateManager`` at turn-start (issue
+        #28), so this method does not touch view-state itself.
+        """
+        # Empire change requires rebuilding the underlying source set.
+        if empire is not self.empire:
+            self.empire = empire
+            sources = collect_all_build_queues_for_empire(
+                empire, registries=self._facade.get_registries()
+            )
+            self._viewmodel.update_sources(sources)
+        self.galaxy = galaxy
+
+        self.show()
+        self._refresh_list()
 
     # -----------------------------------------------------------------------
     # Cleanup

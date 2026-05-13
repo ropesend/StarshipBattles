@@ -116,6 +116,14 @@ Ownership and hot-seat rules:
 - Use `_resolve_fleet(empire_id=None)` only for legitimate cross-empire targets, such as an intercept target. Source-fleet authorization must already have happened.
 - Planet handlers gate on `planet.owner_id == session.active_empire.id`.
 
+Per-player UI view-state (issue #28):
+
+- `StrategyGameStateManager._per_player_ui_state` is a `PerPlayerUiState` container (in `game/ui/screens/per_player_ui_state.py`) keyed by `empire.id` × `slot` (e.g. `"planet_list"`, `"empire_panel"`). It captures column visibility, sort selections, expanded tab indices, and filter state per player so hot-seat rotation does not leak view choices.
+- Capture runs at the head of `advance_turn` via `_capture_outgoing_player_state` BEFORE `_next_live_player_index` mutates `current_player_index`. Restore runs at the TOP of `_apply_turn_start_state` via `_restore_incoming_player_state` BEFORE issue #25's defeat short-circuit. Ordering is load-bearing: capturing after the index advance would write to the incoming player's slot; restoring after the defeat check would leave the defeated empire's defeat modal and last-turn event log presenting the previous player's view.
+- Windows opt in by exposing `SNAPSHOT_SLOT: str`, `capture_view_state() -> dict`, and `apply_view_state(state: dict | None)`. `StrategyWindowManager.iter_snapshot_windows()` is the registry; it walks the existing slot attributes (`planet_list_window`, etc.) and yields each non-None, alive instance exposing `SNAPSHOT_SLOT`.
+- Windows that previously held per-instance `_filter_snapshots_by_empire` dicts (Planet List, Star List — PROJ-411 Task 2.10) were migrated to the central container; the per-instance dicts are deleted. Empire Build Queue, Empire Panel, and Fleet Report migrated their registrars from kill-and-reconstruct to window reuse so the central swap has a live instance to `apply_view_state` against.
+- Defeated empires' snapshots remain in the container indefinitely. They are never re-applied (rotation skips them); the storage cost is negligible and the data survives if a save reload revives the empire.
+
 Per-player turn-start UI state (issue #9):
 
 - `StrategyGameStateManager._apply_turn_start_state(empire)` is the single source of truth for what happens when a new player takes control. It is invoked from both branches of `advance_turn`:

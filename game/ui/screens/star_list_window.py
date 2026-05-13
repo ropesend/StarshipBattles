@@ -138,6 +138,9 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
     PROJ-313: Migrated to StrategyModalWindow base class.
     """
 
+    # Issue #28: opts into per-player UI view-state container.
+    SNAPSHOT_SLOT: str = "star_list"
+
     # PROJ-411 Task 1.10: full-window-init span — captures the entire
     # open path including pygame_gui widget construction, VirtualTable
     # build, sidebar / main panel layout, etc.
@@ -203,13 +206,11 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         # Filter state manager
         self._filter_mgr = StarListFilterManager()
 
-        # PROJ-411 Task 2.10: per-empire filter snapshots so hot-seat
-        # players don't see each other's filter state. The Star Registry
-        # is galaxy-scoped, but the *view* (filters, search, columns) is
-        # still per-player; track current empire so the registrar's
-        # ``open_for_galaxy`` can drive snapshot save/restore.
+        # Issue #28: per-empire view-state is now centrally orchestrated
+        # via ``StrategyGameStateManager._per_player_ui_state``. Keep
+        # ``self.empire`` for current-context queries and the pristine
+        # ``_default_filter_snapshot`` for the "no saved state yet" fallback.
         self.empire = empire
-        self._filter_snapshots_by_empire: dict[int, dict] = {}
         self._default_filter_snapshot: dict | None = None
 
         # Compute dynamic filter ranges from actual star data
@@ -498,45 +499,34 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         Used by ``StarListRegistrar.open()`` on slot-reuse path: ~5 s
         widget construction → <500 ms re-open.
 
-        PROJ-411 Task 2.10: filter state is per-empire. Same-empire
-        re-opens preserve in-place state; empire switches save the
-        outgoing player's view and restore the incoming player's (or
-        defaults on first sight). ``empire`` is optional for legacy
-        callers (no per-empire memory if absent).
+        Issue #28: per-empire view-state save/restore on empire switch
+        was removed from this method. It is now handled centrally by
+        ``StrategyGameStateManager`` at turn rotation.
         """
-        outgoing_empire = self.empire
-        snapshots_active = self._default_filter_snapshot is not None
-        empire_switched = (
-            snapshots_active
-            and empire is not None
-            and outgoing_empire is not None
-            and outgoing_empire is not empire
-        )
-
-        if empire_switched:
-            self._filter_snapshots_by_empire[outgoing_empire.id] = (
-                capture_star_list_state(
-                    self.columns, self.txt_name_filter,
-                    self.filter_types, self.ui_filters,
-                )
-            )
-
         self.galaxy = galaxy
         if empire is not None:
             self.empire = empire
         self.selected_star = None
 
-        if empire_switched:
-            target = self._filter_snapshots_by_empire.get(
-                empire.id, self._default_filter_snapshot
-            )
-            self.columns = apply_star_list_state(
-                target, self.columns, self.txt_name_filter,
-                self.filter_types, self.ui_filters,
-            )
-
         self.show()
         self.refresh_list()
+
+    def capture_view_state(self) -> dict:
+        """Issue #28: snapshot current columns + filters + ranges."""
+        return capture_star_list_state(
+            self.columns, self.txt_name_filter,
+            self.filter_types, self.ui_filters,
+        )
+
+    def apply_view_state(self, state: dict | None) -> None:
+        """Issue #28: restore a previously-captured snapshot or pristine defaults."""
+        target = state if state is not None else self._default_filter_snapshot
+        if target is None:
+            return
+        self.columns = apply_star_list_state(
+            target, self.columns, self.txt_name_filter,
+            self.filter_types, self.ui_filters,
+        )
 
     # ---- end PROJ-411 Task 2.2 ----
 
