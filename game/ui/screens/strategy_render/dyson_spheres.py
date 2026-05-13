@@ -1,11 +1,17 @@
 """Dyson Sphere multi-hex render + owner flag (PROJ-309 sub-phase 3.2).
 
-PRESERVED LATENT BUG: ``screen_diameter`` referenced at L 90 and L 98 below
-is undefined — only ``screen_radius`` is in scope. This is a pre-existing
-bug from the original ``strategy_renderer.py`` (~L 846/854) that only
-triggers in the rare path where a Dyson Sphere is owner-marked AND the
-empire has no ``'colony'`` asset (or the flag-image branch raises a
-NameError first). Out of scope to fix — flagged for follow-up ticket.
+Per-hex sector outlines for the Dyson Sphere's occupied hexes are drawn
+by ``HexOutlineLayer.draw()`` BEFORE this module runs (step 3 of
+``StrategyRenderer.draw()``), via the ``global_hex_zones`` registry that
+``GalaxyEntityRegistry`` populates for any planet with ``radius_hexes > 0``.
+The sphere image then blits over them, so outlines remain visible only
+where they peek beyond the sphere silhouette — the same z-order stars use.
+
+PRESERVED LATENT BUG: ``screen_diameter`` referenced in the owner-marker
+branch below is undefined — only ``screen_radius`` is in scope. Pre-existing
+bug from ``strategy_renderer.py`` (~L 846/854); only triggers when a Dyson
+Sphere is owner-marked AND the empire has no ``'colony'`` asset. Out of
+scope to fix — flagged for follow-up ticket.
 """
 from __future__ import annotations
 
@@ -17,12 +23,7 @@ import pygame
 from game.core.paths import Paths
 from game.core.hex_math import hex_to_pixel
 from game.strategy.data.planet import PlanetType
-from game.ui.colors import (
-    DYSON_FALLBACK,
-    HEX_OUTLINE_OCCUPIED,
-    HEX_OUTLINE_PLAYER_OWNED,
-    WHITE,
-)
+from game.ui.colors import DYSON_FALLBACK, WHITE
 
 from game.ui.screens.strategy_render.context import hex_radius_to_screen
 
@@ -69,25 +70,6 @@ def draw_dyson_spheres(r: Any, screen: Any, sys: Any, sys_world_pos: Any) -> Non
             pygame.draw.circle(screen, DYSON_FALLBACK,
                                (int(center_screen.x), int(center_screen.y)),
                                screen_radius)
-
-        # Per-hex sector outlines (issue #21). HexOutlineLayer already
-        # registers these zones in global_hex_zones, but draws them BEFORE
-        # the sphere image — which then overwrites them. Re-draw after the
-        # image (and selection ring) so they remain visible.
-        active_empire = r.scene.session.active_empire
-        player_id = active_empire.id if active_empire else None
-        is_player_owned = (
-            planet.owner_id is not None and planet.owner_id == player_id
-        )
-        outline_color = (
-            HEX_OUTLINE_PLAYER_OWNED if is_player_owned else HEX_OUTLINE_OCCUPIED
-        )
-        for local_hex in planet.occupied_hexes:
-            hx, hy = hex_to_pixel(local_hex, r.hex_size)
-            r._draw_inner_hex(
-                screen, sys_world_pos.x + hx, sys_world_pos.y + hy,
-                0.88, outline_color,
-            )
 
         # Draw owner marker if colonized
         if planet.owner_id is not None:

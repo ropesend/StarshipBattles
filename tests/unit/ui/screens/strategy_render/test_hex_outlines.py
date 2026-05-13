@@ -115,3 +115,32 @@ def test_draw_skips_offscreen_outline() -> None:
     layer.draw(renderer, MagicMock())
 
     renderer._draw_inner_hex.assert_not_called()
+
+
+def test_build_data_includes_dyson_sphere_zone_hexes(_pygame_inited=None) -> None:
+    """Issue #21 regression: Dyson Sphere occupied hexes contribute to
+    ``build_data()`` so the pre-image outline pass renders them before the
+    sphere image blit. This documents that ``draw_dyson_spheres`` itself
+    must NOT issue a duplicate post-blit outline pass.
+    """
+    from game.core.hex_math import hex_circle_filled
+
+    layer = HexOutlineLayer()
+    renderer = _renderer_context()
+
+    dyson_sphere = SimpleNamespace(owner_id=99)  # non-player
+    center = HexCoord(0, 0)
+    occupied = hex_circle_filled(center, 1)  # 7 hexes for radius_hexes=2
+
+    for global_hex in occupied:
+        renderer.galaxy.state.global_hex_zones[global_hex] = [dyson_sphere]
+
+    data = layer.build_data(renderer)
+
+    assert len(data) == 7
+    for global_hex in occupied:
+        # owner_id 99 != active empire id 1, so non-player ownership.
+        assert data[global_hex] == (False, True), (
+            f"Expected non-player ownership for Dyson Sphere hex {global_hex}, "
+            f"got {data[global_hex]}."
+        )
