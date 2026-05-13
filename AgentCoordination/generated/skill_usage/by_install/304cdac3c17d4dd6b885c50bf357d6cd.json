@@ -39,10 +39,10 @@
     },
     "claude-gi-deep-dive-parallel": {
       "agents": {
-        "claude": 2
+        "claude": 3
       },
-      "count": 2,
-      "last_used": "2026-05-12T23:03:49Z"
+      "count": 3,
+      "last_used": "2026-05-13T03:15:54Z"
     },
     "claude-proj-archive": {
       "agents": {
