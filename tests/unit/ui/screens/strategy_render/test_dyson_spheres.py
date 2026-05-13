@@ -1,9 +1,11 @@
-"""Tests for ``draw_dyson_spheres`` per-hex outline pass (issue #21).
+"""Tests for ``draw_dyson_spheres`` (issue #21).
 
-The Dyson Sphere image blit obscures the outlines drawn earlier by
-``HexOutlineLayer``. To restore per-hex visibility, ``draw_dyson_spheres``
-issues its own outline pass *after* the image blit (and selection ring)
-and *before* the owner marker.
+After the rejection of commit ``1c82bdb55``, the per-hex outline pass for
+Dyson Spheres lives entirely in ``HexOutlineLayer.draw()`` (step 3 of the
+strategy renderer's draw order), which runs BEFORE the sphere image blit.
+``draw_dyson_spheres`` itself does NOT issue any outline draws — that
+matches how stars render and produces the requested z-order where outlines
+appear only where they peek beyond the sphere silhouette.
 """
 from __future__ import annotations
 
@@ -13,9 +15,8 @@ from unittest.mock import MagicMock, patch
 import pygame
 import pytest
 
-from game.core.hex_math import HexCoord, hex_circle_filled
+from game.core.hex_math import HexCoord
 from game.strategy.data.planet import PlanetType
-from game.ui.colors import HEX_OUTLINE_OCCUPIED, HEX_OUTLINE_PLAYER_OWNED
 from game.ui.screens.strategy_render.dyson_spheres import draw_dyson_spheres
 
 
@@ -27,11 +28,6 @@ def _pygame_init():
     yield
 
 
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-
 def _make_planet(
     *,
     radius_hexes: int,
@@ -41,17 +37,11 @@ def _make_planet(
 ) -> SimpleNamespace:
     """Minimal planet duck-type for the renderer."""
     loc = location if location is not None else HexCoord(0, 0)
-    occupied = (
-        hex_circle_filled(loc, max(0, radius_hexes - 1))
-        if radius_hexes > 0
-        else frozenset({loc})
-    )
     return SimpleNamespace(
         planet_type=planet_type,
         radius_hexes=radius_hexes,
         owner_id=owner_id,
         location=loc,
-        occupied_hexes=occupied,
     )
 
 
@@ -92,114 +82,102 @@ def _make_screen() -> pygame.Surface:
     return pygame.Surface((400, 400))
 
 
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("radius_hexes", [2, 3, 4, 5, 6])
+@pytest.mark.parametrize("owner_id", [None, 1, 99])
+def test_draw_dyson_spheres_does_not_issue_inner_hex_outlines(
+    radius_hexes: int, owner_id: int | None,
+) -> None:
+    """The load-bearing regression test for issue #21.
 
-
-def test_non_player_dyson_sphere_draws_red_outlines_per_hex() -> None:
-    """Non-player Dyson Sphere (radius_hexes=2) issues 7 red outline calls."""
-    renderer = _make_renderer(active_empire_id=1)
-    sys_world_pos = pygame.math.Vector2(0, 0)
-    planet = _make_planet(radius_hexes=2, owner_id=99)  # not player
-    sys_obj = SimpleNamespace(planets=[planet])
-
-    draw_dyson_spheres(renderer, _make_screen(), sys_obj, sys_world_pos)
-
-    # radius_hexes=2 -> hex_circle_filled(center, 1) -> 7 hexes.
-    assert renderer._draw_inner_hex.call_count == 7
-    for call in renderer._draw_inner_hex.call_args_list:
-        # call.args = (screen, cx, cy, scale, color)
-        assert call.args[4] == HEX_OUTLINE_OCCUPIED
-
-
-def test_player_owned_dyson_sphere_draws_white_outlines_per_hex() -> None:
-    """Player-owned Dyson Sphere draws white outlines for every hex."""
-    renderer = _make_renderer(active_empire_id=1)
-    sys_world_pos = pygame.math.Vector2(0, 0)
-    planet = _make_planet(radius_hexes=2, owner_id=1)  # matches active empire
-    sys_obj = SimpleNamespace(planets=[planet])
-
-    draw_dyson_spheres(renderer, _make_screen(), sys_obj, sys_world_pos)
-
-    assert renderer._draw_inner_hex.call_count == 7
-    for call in renderer._draw_inner_hex.call_args_list:
-        assert call.args[4] == HEX_OUTLINE_PLAYER_OWNED
-
-
-def test_outline_pass_runs_after_sphere_image_blit() -> None:
-    """Z-order: every per-hex outline call is issued AFTER the sphere image
-    blit. This is the load-bearing test for the issue.
-
-    The bug was that outlines drawn earlier in ``HexOutlineLayer`` were
-    overwritten by the sphere image blit. The fix is a second outline pass
-    *after* the image. If a future refactor moves the outline pass back
-    above the blit, this test catches it.
-
-    ``pygame.Surface.blit`` is read-only, so we use a MagicMock screen and
-    stub ``pygame.draw.circle`` (called for the cyan fallback path) so the
-    test doesn't actually need a real Surface to issue draws.
+    Per-hex outlines for Dyson-Sphere-occupied hexes are drawn by
+    ``HexOutlineLayer.draw()`` BEFORE the sphere image blit. The Dyson
+    Sphere renderer must NOT issue its own outline pass — that would
+    paint borders on top of the sphere image (the rejected behavior
+    from commit ``1c82bdb55``).
     """
     renderer = _make_renderer(active_empire_id=1)
+    sys_world_pos = pygame.math.Vector2(0, 0)
+    planet = _make_planet(radius_hexes=radius_hexes, owner_id=owner_id)
+    sys_obj = SimpleNamespace(planets=[planet])
 
-    # Force the image-blit branch by returning a non-sentinel surface.
+    draw_dyson_spheres(renderer, _make_screen(), sys_obj, sys_world_pos)
+
+    renderer._draw_inner_hex.assert_not_called()
+
+
+def test_sphere_image_blitted_when_image_available() -> None:
+    """When the Sphereworld image loads successfully, it is blitted to the screen."""
+    renderer = _make_renderer(active_empire_id=1)
     real_image = pygame.Surface((50, 50))
-    renderer._asset_manager.load_external_image = MagicMock(
-        return_value=real_image
-    )
-
-    call_log: list[str] = []
+    renderer._asset_manager.load_external_image = MagicMock(return_value=real_image)
 
     screen = MagicMock()
-    screen.blit.side_effect = lambda *a, **kw: call_log.append("blit")
-    renderer._draw_inner_hex.side_effect = (
-        lambda *a, **kw: call_log.append("inner_hex")
-    )
-
     sys_world_pos = pygame.math.Vector2(0, 0)
     planet = _make_planet(radius_hexes=2, owner_id=99)
     sys_obj = SimpleNamespace(planets=[planet])
 
-    # Stub draw.circle so the (not used here) fallback path wouldn't trip
-    # over a MagicMock screen if exercised in other branches.
-    with patch("pygame.draw.circle"):
-        draw_dyson_spheres(renderer, screen, sys_obj, sys_world_pos)
+    draw_dyson_spheres(renderer, screen, sys_obj, sys_world_pos)
 
-    blit_indices = [i for i, name in enumerate(call_log) if name == "blit"]
-    inner_indices = [i for i, name in enumerate(call_log) if name == "inner_hex"]
-
-    assert blit_indices, "Expected the sphere image to be blitted at least once."
-    assert inner_indices, "Expected per-hex outline calls."
-    assert max(blit_indices) < min(inner_indices), (
-        "Every per-hex outline call must occur AFTER the sphere image blit; "
-        f"recorded sequence: {call_log}"
-    )
+    assert screen.blit.called, "Expected the sphere image to be blitted."
 
 
-@pytest.mark.parametrize("radius_hexes", [2, 3, 4, 5, 6])
-def test_outline_call_count_matches_occupied_hexes_for_each_radius(
-    radius_hexes: int,
-) -> None:
-    """For each radius in the acceptance-criterion range (2..6), the outline
-    pass issues exactly ``len(occupied_hexes)`` calls to ``_draw_inner_hex``.
+def test_selection_ring_drawn_when_selected() -> None:
+    """When the Dyson Sphere is the selected object, a WHITE selection ring is drawn."""
+    planet = _make_planet(radius_hexes=2, owner_id=99)
+    renderer = _make_renderer(active_empire_id=1, selected_object=planet)
+    sys_obj = SimpleNamespace(planets=[planet])
+    sys_world_pos = pygame.math.Vector2(0, 0)
+
+    with patch("game.ui.screens.strategy_render.dyson_spheres.pygame.draw.circle") as mock_circle:
+        draw_dyson_spheres(renderer, _make_screen(), sys_obj, sys_world_pos)
+
+    from game.ui.colors import WHITE
+    selection_calls = [
+        c for c in mock_circle.call_args_list
+        if len(c.args) >= 2 and c.args[1] == WHITE
+    ]
+    assert selection_calls, "Expected a WHITE selection ring when planet is selected."
+
+
+def test_fallback_circle_drawn_when_image_missing() -> None:
+    """When ``load_dyson_sphere_image`` returns None, a DYSON_FALLBACK circle is drawn."""
+    renderer = _make_renderer(active_empire_id=1)
+    sys_obj = SimpleNamespace(planets=[_make_planet(radius_hexes=2, owner_id=None)])
+    sys_world_pos = pygame.math.Vector2(0, 0)
+
+    with patch("game.ui.screens.strategy_render.dyson_spheres.pygame.draw.circle") as mock_circle:
+        draw_dyson_spheres(renderer, _make_screen(), sys_obj, sys_world_pos)
+
+    from game.ui.colors import DYSON_FALLBACK
+    fallback_calls = [
+        c for c in mock_circle.call_args_list
+        if len(c.args) >= 2 and c.args[1] == DYSON_FALLBACK
+    ]
+    assert fallback_calls, "Expected a DYSON_FALLBACK circle when image is missing."
+
+
+def test_unowned_dyson_sphere_does_not_attempt_owner_marker() -> None:
+    """When ``planet.owner_id is None``, the owner-marker block is skipped.
+
+    The owner-marker branch contains a preserved latent ``screen_diameter``
+    NameError (documented in the file-header docstring, out of scope for
+    #21). This test pins the unowned path so a future refactor that
+    inadvertently runs that branch is caught.
     """
     renderer = _make_renderer(active_empire_id=1)
-    sys_world_pos = pygame.math.Vector2(0, 0)
-    planet = _make_planet(radius_hexes=radius_hexes, owner_id=99)
+    planet = _make_planet(radius_hexes=2, owner_id=None)
     sys_obj = SimpleNamespace(planets=[planet])
+    sys_world_pos = pygame.math.Vector2(0, 0)
 
     draw_dyson_spheres(renderer, _make_screen(), sys_obj, sys_world_pos)
 
-    expected = len(hex_circle_filled(HexCoord(0, 0), radius_hexes - 1))
-    assert renderer._draw_inner_hex.call_count == expected
+    # If the owner-marker branch had run, it would have raised NameError.
+    # Reaching this line is the assertion.
 
 
-def test_non_dyson_planet_in_same_system_does_not_trigger_outline_pass() -> None:
-    """A non-Dyson planet sharing the system with a Dyson Sphere produces
-    outlines only for the sphere's hexes, not the planet's.
-    """
+def test_non_dyson_planet_in_system_is_skipped() -> None:
+    """A non-Dyson planet sharing a system with a Dyson Sphere triggers no outlines."""
     renderer = _make_renderer(active_empire_id=1)
-    sys_world_pos = pygame.math.Vector2(0, 0)
     dyson = _make_planet(radius_hexes=2, owner_id=99)
     normal = _make_planet(
         radius_hexes=0,
@@ -208,8 +186,8 @@ def test_non_dyson_planet_in_same_system_does_not_trigger_outline_pass() -> None
         location=HexCoord(5, -3),
     )
     sys_obj = SimpleNamespace(planets=[normal, dyson])
+    sys_world_pos = pygame.math.Vector2(0, 0)
 
     draw_dyson_spheres(renderer, _make_screen(), sys_obj, sys_world_pos)
 
-    # 7 outlines for the Dyson Sphere, 0 for the normal planet.
-    assert renderer._draw_inner_hex.call_count == 7
+    renderer._draw_inner_hex.assert_not_called()
