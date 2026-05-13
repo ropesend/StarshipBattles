@@ -25,8 +25,6 @@ from game.core.hex_math import hex_to_pixel
 from game.strategy.data.planet import PlanetType
 from game.ui.colors import DYSON_FALLBACK, WHITE
 
-from game.ui.screens.strategy_render.context import hex_radius_to_screen
-
 
 def draw_dyson_spheres(r: Any, screen: Any, sys: Any, sys_world_pos: Any) -> None:
     """Draw Dyson Sphere planets at their full multi-hex size.
@@ -48,8 +46,18 @@ def draw_dyson_spheres(r: Any, screen: Any, sys: Any, sys_world_pos: Any) -> Non
         center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
         center_screen = r.camera.world_to_screen(center_world)
 
-        # Calculate size using non-linear hex-to-screen scaling (BUG-94)
-        screen_radius = max(6, hex_radius_to_screen(radius_hexes, r.hex_size, r.camera.zoom))
+        # Size the sprite to fit inside the planet's occupied hex disc
+        # ``occupied_hexes() = hex_circle_filled(loc, R - 1)``. For
+        # flat-topped hexes, the disc's narrowest radial extent is along the
+        # horizontal axis (the pointy corner of the side hex), at distance
+        # ``(3R - 1) / 2 * hex_size`` from the centre — strictly smaller than
+        # the vertical apothem ``sqrt(3) * (R - 0.5) * hex_size``. The image
+        # must fit inside this minimum distance to avoid overflowing into
+        # adjacent sectors (issue #26).
+        screen_radius = max(
+            6,
+            int((3 * radius_hexes - 1) / 2 * r.hex_size * r.camera.zoom),
+        )
 
         # Load Dyson Sphere image
         img = load_dyson_sphere_image(r)
