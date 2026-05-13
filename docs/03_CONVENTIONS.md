@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-05-08 - Balanced compact convention pass; restored current contracts, paths, invariants, and commands while removing release-note archaeology.
+> **Last verified:** 2026-05-12 - Added Planets_V3 / stellar-objects split note to Image Assets section.
 
 Compact convention reference for Starship Battles. Use this with `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` before coding.
 
@@ -222,6 +222,10 @@ Contracts:
 - `Components 1024/` is tracked source. `2048`, `512`, `256`, `128`, and `64` are generated derivatives and must not be committed.
 - Startup runs `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load.
 - Derivative hash manifest: `assets/Images/Components/.component_derivatives_manifest.json`; it is intentionally ignored.
+
+#### Planet portraits and special stellar-object portraits
+
+Planet portraits live in `assets/Images/Stellar Objects/Planets/Planets_V3/Planets_V3_<size>/` (128/256/512/1024/2048; all tracked, hand-curated). Special stellar-object portraits (e.g., the Dyson Sphere) live in dedicated `assets/Images/Stellar Objects/<thing>/` folders (e.g., `Sphere world/Sphereworld_Portrait.png`) — one resolution per object, not size-tiered. `AssetManager.load_planet_image()` searches the `Planets_V3_*` size chain first, then falls back to the stellar-object directories listed in its `_STELLAR_OBJECT_FALLBACK_DIRS` tuple. To add a new special stellar-object portrait, place the PNG in its own `Stellar Objects/<thing>/` folder, expose a `Paths.<THING>_DIR` constant, and append it to `_STELLAR_OBJECT_FALLBACK_DIRS` — no asset duplication into the planet pool.
 
 ## Test Conventions
 

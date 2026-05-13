@@ -257,11 +257,25 @@ class AssetManager:
             raise ResourceException(f"Invalid star image size: {size}")
         return size_to_path[size]
 
+    # Special stellar-object portraits live outside Planets_V3_* in their own
+    # dedicated directories. See docs/03_CONVENTIONS.md (Image Assets) for the
+    # split convention. Append new entries here to support future special
+    # stellar objects (ringworlds, etc.) without duplicating assets.
+    _STELLAR_OBJECT_FALLBACK_DIRS: tuple = (Paths.SPHERE_WORLD_DIR,)
+
     def load_planet_image(self, image_filename: str, requested_size: int = 512) -> pygame.Surface:
         """
         Load a planet image at the most appropriate resolution.
 
-        Implements fallback chain: requested size → higher resolutions → None
+        Implements fallback chain: requested size → higher resolutions →
+        stellar-object directories → missing texture.
+
+        Most planet portraits live in `Planets_V3_<size>/` size folders. A few
+        special stellar objects (e.g., the Dyson Sphere) live in dedicated
+        `Stellar Objects/<thing>/` folders and have only one resolution. When
+        the size-chain probe fails, the loader falls back to those directories
+        (see `_STELLAR_OBJECT_FALLBACK_DIRS` and
+        docs/03_CONVENTIONS.md Image Assets section).
 
         Args:
             image_filename: The planet image filename (e.g., "planet_5_994_1769750020702.png")
@@ -276,6 +290,9 @@ class AssetManager:
 
             # Load for 40x40 icon (will use 128px)
             surface = manager.load_planet_image("planet_5_994.png", 128)
+
+            # Load Dyson Sphere portrait (resolves via stellar-object fallback)
+            surface = manager.load_planet_image("Sphereworld_Portrait.png", 128)
         """
         # Resolution fallback chain (try requested size, then progressively higher)
         size_chain = [128, 256, 512, 1024, 2048]
@@ -305,7 +322,18 @@ class AssetManager:
                 logger.warning(f"Could not load planet image {image_filename} at {size}px: {e}")
                 continue
 
-        # All resolutions failed - return missing texture
+        # Size chain exhausted — try stellar-object fallback directories for
+        # special portraits (e.g., Dyson Sphere) that live outside Planets_V3_*.
+        for stellar_dir in self._STELLAR_OBJECT_FALLBACK_DIRS:
+            try:
+                image_path = os.path.join(stellar_dir, image_filename)
+                img = self.load_external_image(image_path)
+                if img and img != self.get_missing_texture():
+                    return img
+            except (FileNotFoundError, pygame.error, ValueError):
+                continue
+
+        # All resolutions and fallbacks failed - return missing texture
         logger.error(f"Could not load planet image {image_filename} at any resolution")
         return self.get_missing_texture()
 
