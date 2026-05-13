@@ -15,7 +15,9 @@ from unittest.mock import MagicMock, patch
 import pygame
 import pytest
 
-from game.core.hex_math import HexCoord
+import math
+
+from game.core.hex_math import HexCoord, hex_circle_filled, hex_to_pixel
 from game.strategy.data.planet import PlanetType
 from game.ui.screens.strategy_render.dyson_spheres import draw_dyson_spheres
 
@@ -191,3 +193,80 @@ def test_non_dyson_planet_in_system_is_skipped() -> None:
     draw_dyson_spheres(renderer, _make_screen(), sys_obj, sys_world_pos)
 
     renderer._draw_inner_hex.assert_not_called()
+
+
+def _occupied_hex_bbox(
+    location: HexCoord, radius_hexes: int, hex_size: float
+) -> tuple[float, float]:
+    """Compute the world-space bounding box of ``occupied_hexes(planet)``.
+
+    Mirrors ``PlanetQueryService.occupied_hexes``: the occupied set is
+    ``hex_circle_filled(location, radius_hexes - 1)``. We take each hex's
+    centre via ``hex_to_pixel`` and inflate by ``(hex_size, sqrt(3)/2 * hex_size)``
+    so the bbox spans corner-to-corner horizontally and flat-to-flat vertically
+    for each hex (the maximum hex extent in those axes).
+
+    Returns:
+        (width, height) of the bounding box in world units.
+    """
+    occupied = hex_circle_filled(location, max(0, radius_hexes - 1))
+    pixels = [hex_to_pixel(h, hex_size) for h in occupied]
+    apothem = (math.sqrt(3) / 2.0) * hex_size
+    min_x = min(p[0] for p in pixels) - hex_size
+    max_x = max(p[0] for p in pixels) + hex_size
+    min_y = min(p[1] for p in pixels) - apothem
+    max_y = max(p[1] for p in pixels) + apothem
+    return (max_x - min_x, max_y - min_y)
+
+
+@pytest.mark.parametrize("radius_hexes", [2, 3, 4, 5, 6])
+def test_sphere_image_fits_inside_occupied_hex_bounding_box(
+    radius_hexes: int,
+) -> None:
+    """AC for #26: the rendered sphere image must fit inside the bounding
+    box of the planet's ``occupied_hexes()`` at every supported radius.
+
+    The image is square, sized to ``screen_radius * 2`` pixels in both axes.
+    At zoom = 1.0, world units == screen pixels, so we can compare the
+    scaled image's dimensions directly against the world-space bounding
+    box of the occupied hex disc. If the formula on
+    ``dyson_spheres.py:52`` overshoots the disc (the bug), this assertion
+    fails for radii where the overshoot exceeds the bbox apothem.
+    """
+    renderer = _make_renderer(active_empire_id=1)
+    # Force the image-blit branch so we can capture the scaled size.
+    real_image = pygame.Surface((50, 50))
+    renderer._asset_manager.load_external_image = MagicMock(return_value=real_image)
+
+    captured_sizes: list[tuple[int, int]] = []
+    original_smoothscale = pygame.transform.smoothscale
+
+    def _capturing_smoothscale(surf, size):
+        captured_sizes.append(tuple(size))
+        return original_smoothscale(surf, size)
+
+    sys_world_pos = pygame.math.Vector2(0, 0)
+    planet = _make_planet(radius_hexes=radius_hexes, owner_id=None)
+    sys_obj = SimpleNamespace(planets=[planet])
+
+    screen = MagicMock()
+    with patch(
+        "game.ui.screens.strategy_render.dyson_spheres.pygame.transform.smoothscale",
+        side_effect=_capturing_smoothscale,
+    ):
+        draw_dyson_spheres(renderer, screen, sys_obj, sys_world_pos)
+
+    assert captured_sizes, "Expected smoothscale to be called for the sphere image."
+    img_w, img_h = captured_sizes[0]
+
+    bbox_w, bbox_h = _occupied_hex_bbox(planet.location, radius_hexes, renderer.hex_size)
+    bbox_min = min(bbox_w, bbox_h)
+
+    assert img_w <= bbox_min, (
+        f"radius_hexes={radius_hexes}: sphere image width {img_w}px exceeds "
+        f"occupied-hex bbox min dim {bbox_min:.2f}px (bbox=({bbox_w:.2f}, {bbox_h:.2f}))."
+    )
+    assert img_h <= bbox_min, (
+        f"radius_hexes={radius_hexes}: sphere image height {img_h}px exceeds "
+        f"occupied-hex bbox min dim {bbox_min:.2f}px (bbox=({bbox_w:.2f}, {bbox_h:.2f}))."
+    )
