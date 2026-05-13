@@ -635,11 +635,17 @@ class EmpirePanelWindow(StrategyModalWindow):
         """
         if empire is not self.empire:
             self._rebuild_for_empire(empire)
-        # Tab visibility now driven by ``current_tab`` (which #28's
-        # apply_view_state may have just restored). Reuse the existing
-        # ``_show_tab`` to set button highlights + panel visibility.
-        self._show_tab(self.current_tab)
+        # Issue #32: order matters. ``self.show()`` MUST run before
+        # ``_show_tab(...)`` because pygame_gui's ``UIWindow.show()``
+        # cascades ``window_element_container.show(show_contents=True)``,
+        # which iterates children and re-shows every step_panel —
+        # undoing the hides ``_show_tab`` would otherwise have just
+        # made. With show() first, ``_show_tab`` is the last writer to
+        # panel visibility and the single-visible-panel invariant holds.
+        # (``current_tab`` was restored by #28's ``apply_view_state``
+        # before this method ran.)
         self.show()
+        self._show_tab(self.current_tab)
 
     def _rebuild_for_empire(self, empire: 'IEmpire') -> None:
         """Issue #28: cross-empire widget rebuild without recreating the window.

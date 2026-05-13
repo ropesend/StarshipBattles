@@ -120,6 +120,83 @@ def test_open_for_empire_same_empire_skips_rebuild(reusable_window):
 
 
 # ---------------------------------------------------------------------------
+# Issue #32: visibility-invariant regression — UIWindow.show() cascades
+# show() onto every child of window_element_container, un-hiding any
+# step_panel that was hidden BEFORE show() ran. open_for_empire must
+# call show() FIRST so _show_tab is the last writer to panel visibility.
+# ---------------------------------------------------------------------------
+
+
+def test_open_for_empire_show_runs_before_show_tab(reusable_window):
+    """Issue #32: ``self.show()`` must be invoked BEFORE
+    ``self._show_tab(self.current_tab)`` in ``open_for_empire``.
+
+    pygame_gui's ``UIWindow.show()`` calls
+    ``window_element_container.show(show_contents=True)``, which iterates
+    children and calls ``element.show()`` on each — un-hiding any
+    step_panels that ``_show_tab`` had just hidden. The only safe
+    ordering is show() first, _show_tab last.
+    """
+    reusable_window.step_panels = [MagicMock(), MagicMock(), MagicMock()]
+    reusable_window.tab_buttons = [MagicMock(), MagicMock(), MagicMock()]
+    call_order: list[str] = []
+    with patch.object(
+        reusable_window, "show", side_effect=lambda: call_order.append("show")
+    ), patch.object(
+        reusable_window,
+        "_show_tab",
+        side_effect=lambda _i: call_order.append("_show_tab"),
+    ):
+        reusable_window.open_for_empire(reusable_window.empire)
+    assert call_order == ["show", "_show_tab"], (
+        f"open_for_empire must call show() before _show_tab(); got {call_order}"
+    )
+
+
+def test_open_for_empire_leaves_exactly_one_step_panel_visible(reusable_window):
+    """Issue #32: after ``open_for_empire`` returns, exactly one of the
+    three ``step_panels`` is visible (the one matching ``current_tab``).
+
+    Simulates pygame_gui's ``UIWindow.show()`` cascade: ``show()``
+    un-hides every step_panel (as ``UIContainer.show(show_contents=True)``
+    does in production), then ``_show_tab`` must be the last writer that
+    re-establishes the single-visible-panel invariant.
+    """
+
+    class FakePanel:
+        def __init__(self) -> None:
+            self.visible = False
+
+        def show(self) -> None:
+            self.visible = True
+
+        def hide(self) -> None:
+            self.visible = False
+
+    reusable_window.step_panels = [FakePanel() for _ in range(3)]
+    reusable_window.tab_buttons = [MagicMock(), MagicMock(), MagicMock()]
+    reusable_window.current_tab = 1  # Population
+
+    def fake_show() -> None:
+        # Mimic pygame_gui's UIContainer.show(show_contents=True) cascade:
+        # every child of window_element_container has show() called.
+        for panel in reusable_window.step_panels:
+            panel.show()
+
+    # _show_tab is NOT mocked — let the production loop hide/show panels.
+    # The lazy-build branch inside _show_tab is skipped because
+    # _window_init_bypassed is True under bypass_init.
+    with patch.object(reusable_window, "show", side_effect=fake_show):
+        reusable_window.open_for_empire(reusable_window.empire)
+
+    visible = [i for i, p in enumerate(reusable_window.step_panels) if p.visible]
+    assert visible == [1], (
+        f"exactly one step_panel must be visible after open_for_empire; "
+        f"visible indices = {visible}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Issue #28: per-player UI view-state opt-in
 # ---------------------------------------------------------------------------
 
