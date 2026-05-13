@@ -257,3 +257,49 @@ class TestLoadPlanetImage:
             # Should load successfully (default is 512)
             assert surface is not None
             assert surface != asset_manager.get_missing_texture()
+
+    def test_load_planet_image_finds_sphere_world_portrait(self, asset_manager):
+        """Dyson Sphere portrait lives in Stellar Objects/Sphere world/, not Planets_V3_*.
+
+        Regression for issue #27: load_planet_image() must fall back to
+        Paths.SPHERE_WORLD_DIR for filenames not present in any Planets_V3_*
+        size folder. Asserts the acceptance criterion from the issue body.
+        """
+        sphere_path = os.path.join(
+            Paths.SPHERE_WORLD_DIR, "Sphereworld_Portrait.png"
+        )
+        # Sanity: asset is in the canonical Sphere world directory on disk.
+        assert os.path.exists(sphere_path), (
+            f"Test prerequisite missing: {sphere_path}"
+        )
+        # And NOT in any Planets_V3_* size folder.
+        for size_dir in (
+            Paths.PLANETS_V3_128_DIR,
+            Paths.PLANETS_V3_256_DIR,
+            Paths.PLANETS_V3_512_DIR,
+            Paths.PLANETS_V3_1024_DIR,
+            Paths.PLANETS_V3_2048_DIR,
+        ):
+            assert not os.path.exists(
+                os.path.join(size_dir, "Sphereworld_Portrait.png")
+            ), f"Sphereworld_Portrait.png unexpectedly present in {size_dir}"
+
+        surface = asset_manager.load_planet_image(
+            "Sphereworld_Portrait.png", requested_size=128
+        )
+
+        assert surface is not asset_manager.get_missing_texture()
+        assert isinstance(surface, pygame.Surface)
+        assert surface.get_width() > 0 and surface.get_height() > 0
+
+    def test_load_planet_image_unknown_filename_still_returns_missing(self, asset_manager):
+        """Stellar-objects fallback must NOT mask genuinely missing files.
+
+        Negative guard for issue #27: a filename that exists in neither the
+        Planets_V3_* size folders nor the stellar-objects fallback directories
+        must still return the missing-texture placeholder.
+        """
+        surface = asset_manager.load_planet_image(
+            "definitely_not_a_real_planet_zzz_999.png", requested_size=128
+        )
+        assert surface is asset_manager.get_missing_texture()
