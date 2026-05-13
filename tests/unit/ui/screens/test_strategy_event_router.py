@@ -368,6 +368,57 @@ class TestClickGateMenuPanel:
         assert result is False
 
 
+class TestClickGateFleetContextMenu:
+    """Test clicks blocked by the fleet right-click context menu (issue #20).
+
+    The rejected fix shipped the menu without teaching the click gate
+    about it, so left-clicks on a menu row fell through to
+    ``_handle_picking`` and the queued ``UI_BUTTON_PRESSED`` dispatch
+    never landed. Treat the fleet context menu identically to the
+    top-bar ``menu_panel``: clicks inside its rect are blocking, clicks
+    outside it pass through.
+    """
+
+    def test_click_blocked_by_fleet_context_menu(self, event_router, mock_ui):
+        """Click inside the fleet context menu rect must be blocked."""
+        menu = MagicMock()
+        menu.get_abs_rect.return_value = MockRect(800, 400, 260, 200)
+        mock_ui.fleet_context_menu = menu
+
+        mx, my = 900, 500  # inside the menu rect
+        result = event_router._is_blocking_ui_element_at(mx, my)
+
+        assert result is True, (
+            "Issue #20: clicks inside the fleet context menu rect must be "
+            "treated as blocking so they don't leak to _handle_picking, "
+            "which would mutate UI state mid-MOUSEBUTTONDOWN/UP cycle and "
+            "prevent the queued UI_BUTTON_PRESSED from dispatching."
+        )
+
+    def test_click_outside_fleet_context_menu_not_blocked(self, event_router, mock_ui):
+        """Click outside the fleet context menu rect must pass through."""
+        menu = MagicMock()
+        menu.get_abs_rect.return_value = MockRect(800, 400, 260, 200)
+        mock_ui.fleet_context_menu = menu
+
+        mx, my = 200, 800  # well outside the menu rect
+        result = event_router._is_blocking_ui_element_at(mx, my)
+
+        assert result is False, (
+            "Click outside the fleet context menu rect should pass through "
+            "to the hex picker (matches the click-outside-dismiss contract)."
+        )
+
+    def test_no_fleet_context_menu_does_not_block(self, event_router, mock_ui):
+        """When no fleet context menu is open, the branch must be inert."""
+        mock_ui.fleet_context_menu = None
+
+        mx, my = 900, 500
+        result = event_router._is_blocking_ui_element_at(mx, my)
+
+        assert result is False
+
+
 class TestClickGateTopBar:
     """Test clicks blocked by top bar and resource bar."""
 
