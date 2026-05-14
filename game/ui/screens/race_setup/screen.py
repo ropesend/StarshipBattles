@@ -357,11 +357,30 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self.step_panels.append(panel)
 
     def ensure_panel_built(self, tab_index: int) -> None:
-        """Materialise a deferred tab panel if not yet built (Issue #11)."""
+        """Materialise a deferred tab panel if not yet built (Issue #11).
+
+        The factory runs with the panel temporarily shown. pygame_gui's
+        ``UIContainer.add_element`` calls ``hide()`` on a freshly-created
+        ``UIScrollingContainer`` child whenever the parent container is
+        hidden — and that ``hide()`` dereferences ``vert_scroll_bar``
+        before ``UIScrollingContainer.__init__`` has assigned it, raising
+        ``AttributeError``. Non-active tab panels are hidden, so building
+        a gallery into one (via ``randomize_all`` or first tab activation)
+        would trip that bug. We restore the original visibility afterwards
+        so callers that materialise a non-active tab leave it hidden.
+        """
         factory = self._deferred_panel_factories.pop(tab_index, None)
         if factory is None:
             return
-        factory(self, self.step_panels[tab_index])
+        panel = self.step_panels[tab_index]
+        was_visible = panel.visible
+        if not was_visible:
+            panel.show()
+        try:
+            factory(self, panel)
+        finally:
+            if not was_visible:
+                panel.hide()
 
     def _create_navigation_buttons(self, container, content_width: int, content_height: int) -> None:
         """Bottom action buttons."""

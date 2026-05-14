@@ -1488,6 +1488,69 @@ class TestIssue11LazyPanelConstruction:
         assert screen.race_config.flag_id == "flag_a"
         assert screen.race_config.theme_id == "Federation"
 
+    def test_ensure_panel_built_runs_factory_with_panel_visible(self):
+        """Deferred panels must be materialised inside a *visible*
+        container. pygame_gui's ``UIContainer.add_element`` calls
+        ``hide()`` on a freshly-created ``UIScrollingContainer`` child
+        when the parent is hidden — and that ``hide()`` runs before the
+        scroll bars exist, raising ``AttributeError``. So
+        ``ensure_panel_built`` shows the panel for the duration of the
+        factory call, then restores the original (hidden) state so a
+        non-active tab materialised by ``randomize_all`` stays hidden."""
+        screen, _ = _make_race_setup_screen()
+
+        class _PanelStub:
+            def __init__(self) -> None:
+                self.visible = 0  # hidden, as a non-active tab panel is
+
+            def show(self) -> None:
+                self.visible = 1
+
+            def hide(self) -> None:
+                self.visible = 0
+
+        panels = [_PanelStub() for _ in range(screen.TAB_VISUALS + 1)]
+        screen.step_panels = panels
+        target = panels[screen.TAB_VISUALS]
+
+        seen_visible: list[int] = []
+
+        def factory(_s, panel):
+            seen_visible.append(panel.visible)
+
+        screen._deferred_panel_factories = {screen.TAB_VISUALS: factory}
+
+        RaceSetupScreen.ensure_panel_built(screen, screen.TAB_VISUALS)
+
+        assert seen_visible == [1], "factory must run while panel is visible"
+        assert target.visible == 0, "hidden panel must stay hidden afterwards"
+
+    def test_ensure_panel_built_leaves_already_visible_panel_visible(self):
+        """When the panel is already visible (the active tab), visibility
+        is left untouched after the factory runs."""
+        screen, _ = _make_race_setup_screen()
+
+        class _PanelStub:
+            def __init__(self) -> None:
+                self.visible = 1
+
+            def show(self) -> None:
+                self.visible = 1
+
+            def hide(self) -> None:
+                self.visible = 0
+
+        panels = [_PanelStub() for _ in range(screen.TAB_VISUALS + 1)]
+        screen.step_panels = panels
+        target = panels[screen.TAB_VISUALS]
+        screen._deferred_panel_factories = {
+            screen.TAB_VISUALS: lambda _s, _p: None
+        }
+
+        RaceSetupScreen.ensure_panel_built(screen, screen.TAB_VISUALS)
+
+        assert target.visible == 1
+
 
 class TestBug118SummaryRefreshOnPopulate:
     """BUG-118: `populate_ui_from_config` must call `_summary_panel.refresh()`.
