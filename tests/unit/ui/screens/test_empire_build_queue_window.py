@@ -154,6 +154,12 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win._virtual_table.rebuild_row_pool = MagicMock()
     win._virtual_table.kill = MagicMock()
 
+    # Issue #28 iteration 2: bypass-init skips the builder, so
+    # ``_default_view_state`` is never captured by the production path.
+    # Set it to None here; tests that exercise the "restore defaults"
+    # path populate it themselves.
+    win._default_view_state = None
+
     return win
 
 
@@ -1838,11 +1844,48 @@ class TestEmpireBuildQueueViewStateRoundTrip:
         assert win._filter_mgr.get_filter_state("loc_Planet") is FilterState.YES
         assert win._filter_mgr.get_filter_state("status_Empty") is FilterState.NO
 
-    def test_apply_none_is_noop(self):
+    def test_apply_none_without_default_is_noop(self):
+        """Issue #28 iteration 2: when defaults haven't been captured yet
+        (bypass-init test stubs), ``None`` is a no-op."""
         win = _make_window()
+        win._default_view_state = None
         win._filter_mgr.search_text = "preserve_me"
         win.apply_view_state(None)
         assert win._filter_mgr.search_text == "preserve_me"
+
+    def test_apply_none_falls_through_to_default_view_state(self):
+        """Issue #28 iteration 2: when defaults ARE captured (production
+        path), ``None`` means "first turn for this player" — restore
+        construction defaults rather than preserving the outgoing
+        player's edits."""
+        win = _make_window()
+        # Capture defaults BEFORE the outgoing player edits anything.
+        win._default_view_state = win.capture_view_state()
+
+        # Outgoing player edits the window.
+        win._filter_mgr.search_text = "outgoing_player_edit"
+
+        # Turn handoff: P2 has no snapshot stored yet.
+        win.apply_view_state(None)
+
+        # Default had empty search text.
+        assert win._filter_mgr.search_text == ""
+
+    def test_apply_none_rebuilds_table_widgets(self):
+        """Issue #28 iteration 2: applying defaults must trigger the
+        same widget rebuild as an interactive column toggle, otherwise
+        the rendered row pool keeps the outgoing player's column
+        fingerprint."""
+        win = _make_window()
+        win._default_view_state = win.capture_view_state()
+
+        win._virtual_table.rebuild_headers.reset_mock()
+        win._virtual_table.rebuild_row_pool.reset_mock()
+
+        win.apply_view_state(None)
+
+        win._virtual_table.rebuild_headers.assert_called_once()
+        win._virtual_table.rebuild_row_pool.assert_called_once()
 
     def test_apply_unknown_filter_key_skipped_silently(self):
         win = _make_window()

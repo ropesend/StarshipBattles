@@ -63,6 +63,13 @@ def _make_window(events=None, on_close=None):
     win.data_source = None
     win.column_manager = None
     win.virtual_table = None
+    win.sidebar = None
+
+    # Issue #28 iteration 2: bypass-init tests don't run the builder, so
+    # ``_default_view_state`` is never captured. Set it explicitly to
+    # ``None`` here; tests that exercise the "restore defaults" path
+    # populate it themselves.
+    win._default_view_state = None
 
     # Mock UI elements (filter buttons)
     win.btn_all = MagicMock()
@@ -737,11 +744,14 @@ class TestCaptureViewStateNoColumnManager:
 
 
 class TestApplyViewStateNoOps:
-    def test_apply_none_is_noop(self):
+    def test_apply_none_without_default_is_noop(self):
+        """Issue #28 iteration 2: when the pristine default has not been
+        captured yet (e.g. bypass-init test stubs), ``None`` is a
+        no-op — there's nothing to restore to."""
         win = _make_window()
         win.column_manager = MagicMock()
+        win._default_view_state = None
         win.apply_view_state(None)
-        # No exception. column_manager wasn't touched for column reassignment.
         win.column_manager.get_columns.assert_not_called()
 
     def test_apply_when_column_manager_is_none_is_noop(self):
@@ -749,6 +759,56 @@ class TestApplyViewStateNoOps:
         win.column_manager = None
         win.apply_view_state({"columns": [{"id": "x", "visible": False}]})
         # No exception raised.
+
+    def test_apply_none_falls_through_to_default_view_state(self):
+        """Issue #28 iteration 2: ``None`` means "first turn for this
+        player" — restore to construction defaults."""
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        win = _make_window()
+        columns = [
+            {"id": "turn", "title": "Turn", "width": 60, "visible": True},
+            {"id": "category", "title": "Cat", "width": 80, "visible": True},
+        ]
+        win.column_manager = TableColumnManager(columns)
+        win.virtual_table = MagicMock()
+        win.sidebar = MagicMock()
+        # Capture defaults BEFORE the outgoing player edits anything.
+        win._default_view_state = win.capture_view_state()
+
+        # Outgoing player hides "category" and sets descending sort.
+        win.column_manager.get_columns()[1]["visible"] = False
+        win.column_manager.sort_column_id = "turn"
+        win.column_manager.sort_descending = True
+
+        # Turn handoff: P2 has no snapshot stored yet.
+        win.apply_view_state(None)
+
+        cols = win.column_manager.get_columns()
+        # Default had both columns visible; restored should match.
+        assert cols[0]["visible"] is True
+        assert cols[1]["visible"] is True
+
+    def test_apply_none_rebuilds_table_widgets(self):
+        """Issue #28 iteration 2: applying defaults must trigger the
+        same widget rebuild as an interactive column toggle, otherwise
+        the rendered row pool keeps the outgoing player's column
+        fingerprint."""
+        from game.ui.components.table.column_manager import TableColumnManager
+
+        win = _make_window()
+        win.column_manager = TableColumnManager(
+            [{"id": "turn", "title": "Turn", "width": 60, "visible": True}]
+        )
+        win.virtual_table = MagicMock()
+        win.sidebar = MagicMock()
+        win._default_view_state = win.capture_view_state()
+
+        win.apply_view_state(None)
+
+        win.virtual_table.rebuild_headers.assert_called_once()
+        win.virtual_table.rebuild_row_pool.assert_called_once()
+        win.sidebar.refresh_button_labels.assert_called_once()
 
 
 class TestCaptureApplyRoundTrip:

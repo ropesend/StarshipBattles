@@ -325,11 +325,67 @@ class TestFleetReportViewStateRoundTrip:
         for i, col in enumerate(window.column_manager.get_columns()):
             assert col["visible"] is (i % 2 == 0)
 
-    def test_apply_none_is_noop(self):
+    def test_apply_none_falls_through_to_default_view_state(self):
+        """Issue #28 iteration 2: ``None`` means "first turn for this
+        player" — restore to construction defaults captured at end of
+        init rather than preserving the outgoing player's edits."""
         window, _ = _make_fleet_report_window()
+        # The real constructor captured ``_default_view_state`` at end
+        # of init (after the builder ran); confirm it.
+        assert window._default_view_state is not None
+
+        # Outgoing player hides the first column.
+        window.column_manager.get_columns()[0]["visible"] = False
+
+        # Turn handoff: P2 has no snapshot stored yet.
+        window.apply_view_state(None)
+
+        # Default had column[0] visible.
+        assert window.column_manager.get_columns()[0]["visible"] is True
+
+    def test_apply_none_without_default_is_noop(self):
+        """When the default snapshot hasn't been captured (early-init or
+        synthetic test stubs), ``None`` is a no-op."""
+        window, _ = _make_fleet_report_window()
+        window._default_view_state = None
         window.column_manager.get_columns()[0]["visible"] = False
         window.apply_view_state(None)
+        # No restore happened — outgoing edit preserved.
         assert window.column_manager.get_columns()[0]["visible"] is False
+
+    def test_apply_state_rebuilds_table_widgets(self):
+        """Issue #28 iteration 2: applying state must trigger the same
+        widget rebuild as an interactive column toggle, otherwise the
+        rendered row pool keeps the outgoing player's column
+        fingerprint."""
+        window, _ = _make_fleet_report_window()
+        window.virtual_table = MagicMock()
+        window.apply_view_state({
+            "columns": [],
+            "sort_column_id": None,
+            "sort_descending": False,
+            "filters": {},
+        })
+        window.virtual_table.rebuild_headers.assert_called_once()
+        window.virtual_table.rebuild_row_pool.assert_called_once()
+
+    def test_apply_sort_syncs_view_model(self):
+        """Issue #28 iteration 2: restored sort writes BOTH the column
+        manager AND the view model — same as the interactive sort path
+        (line 380+ of fleet_report_window.py). Otherwise the sort
+        indicator would agree with the column manager while rows
+        remained sorted by the outgoing player's choice."""
+        window, _ = _make_fleet_report_window()
+        window.view_model.set_sort = MagicMock()
+
+        window.apply_view_state({
+            "columns": [],
+            "sort_column_id": "name",
+            "sort_descending": True,
+            "filters": {},
+        })
+
+        window.view_model.set_sort.assert_called_once_with("name")
 
     def test_capture_includes_sort(self):
         window, _ = _make_fleet_report_window()

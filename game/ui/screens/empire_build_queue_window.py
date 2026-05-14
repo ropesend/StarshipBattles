@@ -215,6 +215,11 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         self._column_manager = None
         self._selection = None
 
+        # Issue #28 iteration 2: pristine view-state captured at end of init,
+        # used as the fallback when ``apply_view_state(None)`` runs for a
+        # player on their first turn after this window opened.
+        self._default_view_state: dict | None = None
+
         # ---- Stage 2: shell ----
         super().__init__(
             rect, manager,
@@ -227,9 +232,14 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         if getattr(self, '_window_init_bypassed', False):
             if ui_builder is not None:
                 ui_builder.build(self)
+            # Capture pristine defaults after the (mock) builder runs.
+            self._default_view_state = self.capture_view_state()
             return
 
         (ui_builder or EmpireBuildQueueUiBuilder()).build(self)
+        # Issue #28 iteration 2: capture the pristine snapshot now that
+        # ``_column_manager`` and ``_filter_mgr`` are fully wired.
+        self._default_view_state = self.capture_view_state()
 
     # -----------------------------------------------------------------------
     # Public API facade (delegates to ViewModel)
@@ -567,8 +577,19 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         }
 
     def apply_view_state(self, state: dict | None) -> None:
-        """Restore previously-captured view-state. ``None`` is a no-op
-        (the window keeps construction defaults for a fresh empire)."""
+        """Restore previously-captured view-state.
+
+        ``None`` falls through to the pristine defaults captured at end
+        of init (issue #28 iteration 2) — that's the "first turn for
+        this player" case. Without a captured default (early bypass-init
+        or before-builder-ran) we no-op as before.
+
+        After mutating state, the rendered ``VirtualTable`` row pool is
+        rebuilt to match the new column visibility — see line 453+ for
+        the live-toggle equivalent.
+        """
+        if state is None:
+            state = self._default_view_state
         if state is None:
             return
 
@@ -602,6 +623,14 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
             if sort_col is not None:
                 self._column_manager.sort_column_id = sort_col
                 self._column_manager.sort_descending = state.get("sort_descending", False)
+
+        # Mirror the interactive column-toggle / sidebar refresh path so
+        # the rendered widgets reflect the restored column visibility.
+        # See line 453+ for the live-toggle equivalent.
+        if self._virtual_table is not None:
+            self._virtual_table.rebuild_headers()
+            self._virtual_table.rebuild_row_pool()
+            self._virtual_table.update_visible_rows()
 
     # -----------------------------------------------------------------------
     # Filtering (delegated to ViewModel)

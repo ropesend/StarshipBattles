@@ -149,6 +149,12 @@ class EventLogWindow(StrategyModalWindow):
         # Sidebar component (populated by builder)
         self.sidebar: Optional[EventLogSidebar] = None
 
+        # Issue #28 iteration 2: pristine view-state captured at end of init,
+        # used as the fallback when ``apply_view_state(None)`` runs for a
+        # player on their first turn after this window opened. See also
+        # ``planet_list_window.py``'s ``_default_filter_snapshot``.
+        self._default_view_state: dict | None = None
+
         # ---- Stage 2: shell ----
         title = (
             f"Event Log — {empire_name} Empire"
@@ -167,9 +173,17 @@ class EventLogWindow(StrategyModalWindow):
         if getattr(self, '_window_init_bypassed', False):
             if ui_builder is not None:
                 ui_builder.build(self)
+            # Capture pristine defaults after the (mock) builder runs.
+            if self.column_manager is not None:
+                self._default_view_state = self.capture_view_state()
             return
 
         (ui_builder or EventLogUiBuilder()).build(self)
+        # Issue #28 iteration 2: capture the pristine snapshot now that
+        # ``column_manager`` and the sidebar are wired. This is the
+        # construction-defaults state ``apply_view_state(None)`` resets to
+        # on a player's first turn after this window opened.
+        self._default_view_state = self.capture_view_state()
 
     # ------------------------------------------------------------------
     # Layout
@@ -622,7 +636,20 @@ class EventLogWindow(StrategyModalWindow):
         }
 
     def apply_view_state(self, state: dict | None) -> None:
-        """Restore previously-captured snapshot. ``None`` is a no-op."""
+        """Restore previously-captured snapshot.
+
+        ``None`` falls through to the pristine defaults captured at end
+        of init (issue #28 iteration 2) — that's the "first turn for
+        this player" case. Without a captured default (early bypass-init
+        tests, ``column_manager`` still ``None``) we no-op as before.
+
+        The rendered ``VirtualTable`` row pool is built from the current
+        visible-column fingerprint, so we mirror the interactive
+        column-toggle path's rebuild sequence to make the new column
+        state actually visible on the next paint.
+        """
+        if state is None:
+            state = self._default_view_state
         if state is None or self.column_manager is None:
             return
         cm_cols = self.column_manager.get_columns()
@@ -642,6 +669,17 @@ class EventLogWindow(StrategyModalWindow):
         if sort_col is not None:
             self.column_manager.sort_column_id = sort_col
             self.column_manager.sort_descending = state.get("sort_descending", False)
+
+        # Mirror the interactive sidebar-toggle refresh path so the
+        # rendered table reflects the newly-applied column visibility.
+        # See line 407+ for the live-toggle equivalent.
+        if self.sidebar is not None:
+            self.sidebar.refresh_button_labels()
+        if self.virtual_table is not None:
+            self.virtual_table.rebuild_headers()
+            self.virtual_table.rebuild_row_pool()
+            self.virtual_table.force_update()
+            self.virtual_table.update_visible_rows()
 
     def kill(self) -> None:
         """Clean up and invoke close callback."""

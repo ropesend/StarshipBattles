@@ -197,6 +197,11 @@ class FleetReportWindow(StrategyModalWindow):
         self.detail_panel = None
         self.ship_detail_panel = None
 
+        # Issue #28 iteration 2: pristine view-state captured at end of
+        # init, used as the fallback when ``apply_view_state(None)`` runs
+        # for a player on their first turn after this window opened.
+        self._default_view_state: dict | None = None
+
         # ---- Stage 2: shell ----
         super().__init__(
             rect=rect,
@@ -210,9 +215,13 @@ class FleetReportWindow(StrategyModalWindow):
         if getattr(self, '_window_init_bypassed', False):
             if ui_builder is not None:
                 ui_builder.build(self)
+            self._default_view_state = self.capture_view_state()
             return
 
         (ui_builder or FleetReportLayoutBuilder()).build(self)
+        # Issue #28 iteration 2: capture the pristine snapshot now that
+        # ``column_manager`` and the view model are wired.
+        self._default_view_state = self.capture_view_state()
 
     def _swap_columns(self, col, direction) -> None:
         """Swap a column with its neighbor in the given direction."""
@@ -479,7 +488,19 @@ class FleetReportWindow(StrategyModalWindow):
         }
 
     def apply_view_state(self, state: dict | None) -> None:
-        """Restore previously-captured snapshot. ``None`` is a no-op."""
+        """Restore previously-captured snapshot.
+
+        ``None`` falls through to the pristine defaults captured at end
+        of init (issue #28 iteration 2). Sort is mirrored onto both the
+        ``column_manager`` AND ``view_model`` because the interactive
+        sort path writes both (see line 380+); skipping the view model
+        would leave the visible sort indicator agreeing with the
+        column_manager while rows are still sorted by the previous
+        player's order. After mutating, mirror the live-toggle rebuild
+        sequence so the widgets reflect the new column visibility.
+        """
+        if state is None:
+            state = self._default_view_state
         if state is None:
             return
 
@@ -504,6 +525,13 @@ class FleetReportWindow(StrategyModalWindow):
         if sort_col is not None:
             self.column_manager.sort_column_id = sort_col
             self.column_manager.sort_descending = state.get("sort_descending", False)
+            # Issue #28 iteration 2: mirror the live-toggle path which
+            # writes both column_manager AND view_model (line 381). A
+            # default restore that touched only the column_manager would
+            # reset the sort indicator while the view model still sorted
+            # by the outgoing player's choice.
+            if hasattr(self.view_model, "set_sort"):
+                self.view_model.set_sort(sort_col)
 
         from game.ui.filters.filter_state import FilterState
         fm = getattr(self.view_model, "_filter_mgr", None)
@@ -513,6 +541,14 @@ class FleetReportWindow(StrategyModalWindow):
                     fm.set_state(key, FilterState(raw))
                 except (ValueError, KeyError):
                     continue
+
+        # Mirror the interactive column-toggle rebuild path so the
+        # rendered table headers and row pool reflect the new column
+        # visibility. See ``_swap_columns`` (line 222+) and the sort
+        # handler (line 380+) for live-toggle equivalents.
+        if self.virtual_table is not None:
+            self.virtual_table.rebuild_headers()
+            self.virtual_table.rebuild_row_pool()
 
     def kill(self) -> None:
         """Clean up when window is closed."""
