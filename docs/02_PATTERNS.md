@@ -800,8 +800,9 @@ Where (4 confirmed sites at PROJ-382 verification, 2026-05-07):
 - `game/ui/screens/race_setup_screen.py` (~31 LOC) — re-exports
   `RaceSetupScreen`, `RaceRandomizer`, `RaceBrowserDialog` from
   `game/ui/screens/race_setup/`.
-- `game/ui/screens/test_lab/test_run_details.py` (~12 LOC) — re-exports
-  `TestRunDetailsPanel` from `game/ui/screens/test_lab/details/`.
+- (Removed PROJ-417) `game/ui/screens/test_lab/test_run_details.py` —
+  the ~12-LOC re-export shim is deleted; callers import
+  `TestRunDetailsPanel` from `game/ui/screens/test_lab/details/` directly.
 - `game/simulation/components/component.py:395-405` — re-exports
   loader symbols from `game/simulation/components/component_loader.py`.
 - (Removed PROJ-383) `game/strategy/engine/command_handlers.py` —

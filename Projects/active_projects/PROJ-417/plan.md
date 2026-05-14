@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate 2 callers and delete test_run_details.py shim | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate 2 callers and delete test_run_details.py shim | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-13
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-13_194106_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1 (Complete)
+**Last Action:** Migrated `panel_manager.py` and test imports to `.details`, deleted the 12-line shim file, cleaned up docs (`__init__.py`, `README.md`, `details/__init__.py`, `docs/02_PATTERNS.md`). `pytest tests/ -k test_lab` shows 234 passed. Targeted grep for legacy import surface confirms zero hits outside `__pycache__` and project tracking artifacts.
+**Next Action:** Audit ready — run `validate_phase.py` and full sharded suite.
 **Blockers:** None
 
 ## Overview

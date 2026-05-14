@@ -12,7 +12,7 @@ Modules:
     component_dropdown.py - ComponentDropdown for component selection
     ship_panels.py      - ShipPanel, TabbedShipPanel, ComponentPanel
     test_run_card.py    - TestRunCard for test history display
-    test_run_details.py - TestRunDetailsPanel for detailed results
+    details/            - TestRunDetailsPanel for detailed results (subpackage)
     results_panel.py    - ResultsPanel for test run history
 """
 
