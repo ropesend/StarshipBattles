@@ -1,0 +1,2050 @@
+{
+    "_format_version": "2.0",
+    "name": "QS Battleship",
+    "ship_class": "Battleship",
+    "vehicle_type": "Ship",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "movement_policy": "kite_max",
+    "targeting_policy": "standard",
+    "design_role": "line_combatant",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 64.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 27.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 30.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "combat_sensor",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "ecm_suite",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "tactical_data_link",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "electronic_warfare_suite",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "multiplex_tracking",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 27.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 27.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 27.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 64.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 64.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 64.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 64.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "INNER": [
+            {
+                "id": "shield_generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "ordnance_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 70.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 70.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 70.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 70.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "shield_generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "shield_generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "shield_generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 100.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "warp_drive",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "railgun",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "point_defence_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 4.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": [
+            {
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 200.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "emissive_armor",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "shield_regenerating_armor",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "scattering_armor",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ]
+    },
+    "resources": {
+        "fuel": 9850000.0,
+        "energy": 60000.0,
+        "ammo": 5000.0
+    },
+    "expected_stats": {
+        "max_hp": 214521,
+        "max_fuel": 10000000.0,
+        "max_energy": 60000.0,
+        "max_ammo": 20000.0,
+        "max_speed": 8.263964342145615,
+        "acceleration_rate": 0.006504105395071828,
+        "turn_speed": 19.87198326353009,
+        "total_thrust": 42000.0,
+        "strategic_movement": 28000.0,
+        "mass": 127057.66343219522,
+        "armor_hp_pool": 50550,
+        "warp_max_tonnage": 128000.0,
+        "warp_energy_cost": 0.0,
+        "mass_valid": true
+    }
+}
