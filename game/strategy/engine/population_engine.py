@@ -26,7 +26,8 @@ from game.strategy.services.race_resolver import resolve_race_config
 
 if TYPE_CHECKING:
     from game.core.protocols import IRaceRegistry
-    from game.strategy.data.planet import Planet, SpeciesPopulation
+    from game.strategy.data.planet import Planet
+    from game.strategy.data.species_population import SpeciesPopulation
     from game.strategy.data.race_config import RaceConfig
     from game.strategy.data.empire import Empire
 

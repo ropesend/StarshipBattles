@@ -39,7 +39,8 @@ from game.strategy.interfaces.engines import IHarvestingEngine
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
-    from game.strategy.data.planet import Planet, PlanetaryFacility
+    from game.strategy.data.planet import Planet
+    from game.strategy.data.planetary_facility import PlanetaryFacility
 
 
 def _get_ability_info(

@@ -210,7 +210,7 @@ class _TransferDispatchMixin:
         species_id: Optional[str] = None,
     ) -> int:
         """Branch 5: fleet -> planet, passengers."""
-        from game.strategy.data.planet import SpeciesPopulation
+        from game.strategy.data.species_population import SpeciesPopulation
 
         current_cargo = fleet.resources.get_fleet_cargo_current("passengers")
 

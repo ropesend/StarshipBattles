@@ -149,7 +149,7 @@ class ColonizeHandler(BaseOrderHandler):
         the empire's storage/booster dirty flags flip mid-turn.
         """
         from uuid import uuid4
-        from game.strategy.data.planet import PlanetaryFacility
+        from game.strategy.data.planetary_facility import PlanetaryFacility
         from game.strategy.validation.colonize_validator import ColonizeValidator
 
         ship, item_index = ColonizeValidator.find_ship_with_drop_pod(fleet)

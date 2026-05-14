@@ -27,7 +27,7 @@ from game.strategy.interfaces.engines import IResupplyEngine
 from game.strategy.services.component_inspector import get_ability_list
 
 if TYPE_CHECKING:
-    from game.strategy.data.planet import PlanetaryFacility
+    from game.strategy.data.planetary_facility import PlanetaryFacility
 
 
 @dataclass
