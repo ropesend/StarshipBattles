@@ -10,7 +10,7 @@ import uuid
 from typing import Optional, Any, Dict, List, Tuple, TYPE_CHECKING
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
 
 if TYPE_CHECKING:

@@ -16,7 +16,7 @@ from game.strategy.data.empire import Empire
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.galaxy import Galaxy
-from game.strategy.data.planet import SpeciesPopulation
+from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.generation.placement_strategies import (
     RandomPlacementStrategy,

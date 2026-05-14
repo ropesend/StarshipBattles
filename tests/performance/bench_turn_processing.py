@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from tests.fixtures.perf_smoke_scenario import make_smoke_turn1_scenario
 
 

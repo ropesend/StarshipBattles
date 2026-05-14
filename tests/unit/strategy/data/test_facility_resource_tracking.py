@@ -7,7 +7,8 @@ fuel operations.
 """
 import pytest
 from unittest.mock import MagicMock
-from game.strategy.data.planet import Planet, PlanetaryFacility
+from game.strategy.data.planet import Planet
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 
 

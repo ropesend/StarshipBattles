@@ -14,7 +14,8 @@ from game.strategy.data.build_queue_source import (
     get_default_production_rates,
     _get_facility_production_rates,
 )
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 
 

@@ -10,7 +10,8 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.planet import Planet, PlanetaryFacility
+from game.strategy.data.planet import Planet
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.engine.commands import SetBuildQueuePausedCommand
 from game.strategy.engine.handlers.construction_queue import (
     SetBuildQueuePausedCommandHandler,

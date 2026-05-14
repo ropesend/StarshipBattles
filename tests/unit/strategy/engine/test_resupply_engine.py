@@ -8,7 +8,7 @@ facilities, and facilities without synthesizers.
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.engine.resupply_engine import ResupplyEngine, ResupplyEvent
 from game.core.exceptions import ValidationException
 

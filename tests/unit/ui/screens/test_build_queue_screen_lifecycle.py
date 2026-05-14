@@ -22,7 +22,8 @@ from unittest.mock import MagicMock
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
 from game.strategy.data.empire import Empire
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.systems.design_library import DesignLoadResult
 
 

@@ -8,7 +8,8 @@ import os
 import json
 import tempfile
 from unittest.mock import MagicMock
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.engine.turn_engine import TurnEngine

@@ -13,7 +13,7 @@ from typing import Dict, Optional, List, TYPE_CHECKING
 
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
 from game.strategy.data.race_config import RaceConfig
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.systems.design_library import DesignLibrary
 from game.core.json_utils import load_json, save_json
 from game.core.paths import Paths

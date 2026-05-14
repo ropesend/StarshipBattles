@@ -11,7 +11,8 @@ Tests cover:
 
 import pytest
 from unittest.mock import MagicMock
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.build_queue_source import BuildQueueSource
@@ -106,7 +107,7 @@ def build_queue_screen(ui_manager, mock_design_library, mock_design_loader, mock
     planet.owner_id = 1
     planet.id = 100
     # Add PlanetaryYard facility so base queue source is created
-    from game.strategy.data.planet import PlanetaryFacility
+    from game.strategy.data.planetary_facility import PlanetaryFacility
     yard = PlanetaryFacility(
         instance_id="yard_test", design_id="colony_hub", name="Colony Hub",
         design_data={"layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}},
@@ -295,7 +296,7 @@ def test_multi_select_sets_active_to_none(ui_manager):
     )
     planet.owner_id = 1
     planet.id = 100
-    from game.strategy.data.planet import PlanetaryFacility
+    from game.strategy.data.planetary_facility import PlanetaryFacility
     planet.facilities = [PlanetaryFacility(
         instance_id="yard_multi", design_id="hub", name="Hub",
         design_data={"layers": {"CORE": [{"id": "h", "abilities": {"PlanetaryYard": True}}]}},
@@ -372,7 +373,7 @@ def test_queue_display_shows_active_source_items(ui_manager):
     )
     planet.owner_id = 1
     planet.id = 100
-    from game.strategy.data.planet import PlanetaryFacility
+    from game.strategy.data.planetary_facility import PlanetaryFacility
     planet.facilities = [PlanetaryFacility(
         instance_id="yard_disp", design_id="hub", name="Hub",
         design_data={"layers": {"CORE": [{"id": "h", "abilities": {"PlanetaryYard": True}}]}},

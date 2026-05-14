@@ -24,7 +24,8 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.config.economy_config import EconomyConfig
 from game.strategy.data.colony_species_config import ColonySpeciesConfig
-from game.strategy.data.planet import Planet, PlanetaryFacility, PlanetType
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.data.species_population import SpeciesPopulation
 

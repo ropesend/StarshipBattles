@@ -79,7 +79,7 @@ def test_build_button_visibility_owned_planet(strategy_ui):
     # Setup
     planet = create_dummy_planet("Test Planet", strategy_ui.scene.current_empire.id)
     # Add a PlanetaryYard facility so the build button shows
-    from game.strategy.data.planet import PlanetaryFacility
+    from game.strategy.data.planetary_facility import PlanetaryFacility
     yard = PlanetaryFacility(
         instance_id="yard_test", design_id="colony_hub", name="Colony Hub",
         design_data={"layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}},

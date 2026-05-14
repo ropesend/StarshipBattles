@@ -12,7 +12,7 @@ process_production() method.
 """
 
 import pytest
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 
 
 def _process_one_turn(engine, empires, galaxy=None, save_path=None):

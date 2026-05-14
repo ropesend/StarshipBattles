@@ -17,7 +17,8 @@ from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.harvesting_engine import HarvestingEngine
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.empire import Empire
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance

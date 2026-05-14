@@ -1,7 +1,6 @@
 """
 Planet data class.
 
-PlanetaryFacility and SpeciesPopulation extracted to own modules (PROJ-210).
 PROJ-372 Phase 2: query/calc methods (active_abilities, is_ability_active,
 occupied_hexes, can_build_type) routed through `PlanetQueryService`;
 habitability calculator made injectable via `ApplicationContext`.
@@ -15,14 +14,13 @@ from game.core.hex_math import HexCoord
 
 if _TC:
     from game.strategy.data.order_types import Order
+    from game.strategy.data.planetary_facility import PlanetaryFacility
+    from game.strategy.data.species_population import SpeciesPopulation
 
-# PROJ-210: PlanetaryFacility and SpeciesPopulation are extracted classes.
-# Kept as imports here so external readers using `from planet import ...`
-# continue to resolve them.
-from game.strategy.data.planetary_facility import PlanetaryFacility  # noqa: F401
-from game.strategy.data.species_population import SpeciesPopulation  # noqa: F401
-# PROJ-284: per-colony per-species config (food allocation slider, etc.)
-from game.strategy.data.colony_species_config import ColonySpeciesConfig  # noqa: F401
+# PROJ-284: per-colony per-species config (food allocation slider, etc.).
+# Runtime dependency: dataclass field at line 107, return annotation at
+# line 187, constructor call at line 190.
+from game.strategy.data.colony_species_config import ColonySpeciesConfig
 
 class PlanetType(Enum):
     """

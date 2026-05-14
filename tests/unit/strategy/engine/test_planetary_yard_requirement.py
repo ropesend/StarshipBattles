@@ -11,7 +11,7 @@ factory at `tests.fixtures.yard_facility`.
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.build_queue_source import colony_has_planetary_yard as _colony_has_planetary_yard
 from tests.fixtures.yard_facility import make_planetary_yard_facility

@@ -153,7 +153,7 @@ def mock_fleet():
 @pytest.fixture
 def planet_with_shipyard(minimal_planet):
     """Create a planet with an operational space shipyard."""
-    from game.strategy.data.planet import PlanetaryFacility
+    from game.strategy.data.planetary_facility import PlanetaryFacility
 
     # Add a facility with space_shipyard ability
     facility = PlanetaryFacility(

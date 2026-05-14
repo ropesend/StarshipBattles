@@ -33,7 +33,8 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.config.economy_config import EconomyConfig
 from game.strategy.data.empire import Empire
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.services.planet_economy_projector import PlanetEconomyProjector
 

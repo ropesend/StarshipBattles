@@ -17,7 +17,7 @@ from game.core.paths import Paths
 from game.strategy.services.modifier_resolver import resolve_size_multiplier
 
 if TYPE_CHECKING:
-    from game.strategy.data.planet import PlanetaryFacility
+    from game.strategy.data.planetary_facility import PlanetaryFacility
 
 
 

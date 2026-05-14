@@ -1,7 +1,9 @@
 """Tests for Planet.from_dict validation (PROJ-171 Phase 3)."""
 import pytest
 from game.core.exceptions import PersistenceException
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility, SpeciesPopulation
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
+from game.strategy.data.species_population import SpeciesPopulation
 
 
 def _valid_planet_data() -> dict:
