@@ -470,16 +470,16 @@ class TestEdgeCases:
         mock_scene._fleet_ops.handle_move_designation.assert_not_called()
         assert result is False
 
-    def test_right_click_quick_move_with_fleet(self, mock_scene, mapper):
-        """Right-click quick move in SELECT mode with fleet dispatches move."""
+    def test_right_click_on_empty_hex_with_fleet_is_silent_no_op(self, mock_scene, mapper):
+        """Issue #29: empty-hex RMB with a fleet selected does NOT call
+        ``handle_move_designation``. Move orders go through M -> LMB."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         handler.input_mode = 'SELECT'
         mock_scene.selected_fleet = MagicMock()
-        mock_scene._fleet_ops.handle_move_designation.return_value = None
 
-        result = handler.handle_click(100, 200, 3)
+        handler.handle_click(100, 200, 3)
 
-        mock_scene._fleet_ops.handle_move_designation.assert_called_once()
+        mock_scene._fleet_ops.handle_move_designation.assert_not_called()
 
 
 class TestButtonPressHandling:

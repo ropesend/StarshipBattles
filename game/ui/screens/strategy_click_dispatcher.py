@@ -375,45 +375,18 @@ class ClickModeDispatcher:
             self._handle_picking(mx, my)
             return True
 
-        elif button == 3:  # Right Click: friendly fleet -> menu, else Quick-Move
-            # Issue #20: 3-way branch.
+        elif button == 3:  # Right Click: friendly fleet -> menu, else silent no-op.
+            # Issue #20 added a 3-way branch; issue #29 removed the third arm
+            # (empty-hex Quick-Move) in favour of the M-key path. The two
+            # surviving arms are menu-related:
             #   1. Selected fleet's hex          -> open menu.
             #   2. Different friendly fleet hex  -> select + open menu.
-            #   3. No friendly fleet under hex   -> existing Quick-Move.
+            # Anything else falls through to the function-final ``return False``.
             friendly = self._friendly_fleet_at_screen(mx, my)
             if friendly is not None:
                 if self.scene.selected_fleet is not friendly:
                     self.scene.on_ui_selection(friendly)
                 self.scene.ui.open_fleet_context_menu(friendly, mx, my)
-                return True
-
-            if self.scene.selected_fleet:
-                result = self.scene._fleet_ops.handle_move_designation(
-                    mx, my, self.scene.selected_fleet
-                )
-                if result and result.get('type') == 'choice':
-                    target_hex = result['target_hex']
-                    target_fleet = result['target_fleet']
-
-                    def on_move() -> None:
-                        res = self.scene._fleet_ops.execute_move(
-                            self.scene.selected_fleet, target_hex
-                        )
-                        if res and res.get('type') == 'success':
-                            self._handler._fleet_router.finish_move_action(res['fleet'])
-
-                    def on_intercept() -> None:
-                        res = self.scene._fleet_ops.execute_intercept(
-                            self.scene.selected_fleet, target_fleet
-                        )
-                        if res and res.get('type') == 'success':
-                            self._handler._fleet_router.finish_move_action(res['fleet'])
-
-                    self.scene.ui.prompt_move_choice(
-                        target_fleet, target_hex, on_move, on_intercept
-                    )
-                elif result and result.get('type') == 'success':
-                    self._handler._fleet_router.finish_move_action(result['fleet'])
                 return True
 
         return False

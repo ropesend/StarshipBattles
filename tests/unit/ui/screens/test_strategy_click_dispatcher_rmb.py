@@ -121,11 +121,13 @@ def test_T15_rmb_on_different_friendly_fleet_selects_then_opens_menu():
 
 
 # ---------------------------------------------------------------------------
-# T16 — Right-click on enemy fleet: no menu, Quick-Move falls through
+# T16 — Right-click on enemy fleet (with fleet selected): silent no-op (#29).
 # ---------------------------------------------------------------------------
 
 
-def test_T16_rmb_on_enemy_fleet_falls_through_to_quick_move():
+def test_T16_rmb_on_enemy_fleet_is_silent_no_op():
+    """Issue #29: empty/enemy-only hex with a fleet selected does NOT issue
+    a Quick-Move. The legacy arm was removed in favour of the M-key path."""
     f1 = _fleet(fleet_id=1, owner_id=1, location=HexCoord(5, 5))
     enemy = _fleet(fleet_id=99, owner_id=2, location=HexCoord(0, 0))
     scene = _scene(
@@ -133,31 +135,31 @@ def test_T16_rmb_on_enemy_fleet_falls_through_to_quick_move():
         empires=[_empire(1, [f1]), _empire(2, [enemy])],
         hex_at=HexCoord(0, 0),
     )
-    # Quick-Move returns a result so we can verify it was invoked.
-    scene._fleet_ops.handle_move_designation.return_value = {"type": "success", "fleet": f1}
     disp, _ = _dispatcher(scene)
     disp.dispatch_click(50, 50, 3)
     scene.ui.open_fleet_context_menu.assert_not_called()
-    scene._fleet_ops.handle_move_designation.assert_called_once()
+    scene._fleet_ops.handle_move_designation.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
-# T17 — Right-click on empty hex still issues Quick-Move (regression guard)
+# T17 — Right-click on empty hex with fleet selected: silent no-op (#29).
 # ---------------------------------------------------------------------------
 
 
-def test_T17_rmb_on_empty_hex_preserves_quick_move():
+def test_T17_rmb_on_empty_hex_is_silent_no_op():
+    """Issue #29: empty hex with a fleet selected does NOT issue a Quick-Move
+    and does NOT open a menu. Move orders go through M -> LMB or the fleet
+    context menu's Move row."""
     f1 = _fleet(fleet_id=1, owner_id=1, location=HexCoord(5, 5))
     scene = _scene(
         selected_fleet=f1,
         empires=[_empire(1, [f1])],
         hex_at=HexCoord(0, 0),
     )
-    scene._fleet_ops.handle_move_designation.return_value = {"type": "success", "fleet": f1}
     disp, _ = _dispatcher(scene)
     disp.dispatch_click(50, 50, 3)
     scene.ui.open_fleet_context_menu.assert_not_called()
-    scene._fleet_ops.handle_move_designation.assert_called_once()
+    scene._fleet_ops.handle_move_designation.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

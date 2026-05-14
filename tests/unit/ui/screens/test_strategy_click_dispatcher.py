@@ -288,32 +288,6 @@ def test_join_choice_callback_executes_join_and_selects_result() -> None:
     scene.on_ui_selection.assert_called_once_with(joined)
 
 
-def test_select_right_click_choice_callbacks_use_quick_move_paths() -> None:
-    fleet = SimpleNamespace(id=1)
-    target_hex = HexCoord(4, 5)
-    target_fleet = SimpleNamespace(id=2)
-    scene = _click_scene(selected_fleet=fleet)
-    scene._fleet_ops.handle_move_designation.return_value = {
-        "type": "choice",
-        "target_hex": target_hex,
-        "target_fleet": target_fleet,
-    }
-    scene._fleet_ops.execute_move.return_value = {"type": "success", "fleet": fleet}
-    scene._fleet_ops.execute_intercept.return_value = {"type": "success", "fleet": fleet}
-    dispatcher, handler = _dispatcher_with_handler(scene, input_mode="SELECT")
-
-    handled = dispatcher.dispatch_click(100, 200, 3)
-    on_move = scene.ui.prompt_move_choice.call_args.args[2]
-    on_intercept = scene.ui.prompt_move_choice.call_args.args[3]
-    on_move()
-    on_intercept()
-
-    assert handled is True
-    scene._fleet_ops.execute_move.assert_called_once_with(fleet, target_hex)
-    scene._fleet_ops.execute_intercept.assert_called_once_with(fleet, target_fleet)
-    assert handler._fleet_router.finish_move_action.call_count == 2
-
-
 def test_edit_move_left_click_completes_order_with_resolved_hex() -> None:
     scene = _click_scene(selected_fleet=SimpleNamespace(id=1))
     dispatcher, _handler = _dispatcher_with_handler(scene, input_mode="EDIT_MOVE")

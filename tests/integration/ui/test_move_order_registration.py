@@ -195,8 +195,14 @@ class TestClickDispatcherRoutesMove:
         # args[2] and args[3] are the on_move and on_intercept callbacks
 
 
-class TestSelectModeQuickMove:
-    """Tests for quick move (right-click) in SELECT mode."""
+class TestSelectModeRightClick:
+    """Tests for right-click in SELECT mode.
+
+    Issue #29 removed the legacy empty-hex Quick-Move arm; only the
+    menu-related arms (selected-fleet hex / different-friendly-fleet hex)
+    survive. Empty-hex RMB is a silent no-op regardless of whether a
+    fleet is selected.
+    """
 
     def _create_click_dispatcher(self):
         """Create a ClickModeDispatcher with mocked dependencies."""
@@ -209,30 +215,30 @@ class TestSelectModeQuickMove:
         scene.selected_fleet = MagicMock()
         scene.selected_fleet.id = 42
         scene._fleet_ops = MagicMock()
-        scene._fleet_ops.handle_move_designation.return_value = {
-            'type': 'success',
-            'fleet': scene.selected_fleet
-        }
 
         handler.scene = scene
         handler._fleet_router = MagicMock()
 
         dispatcher = ClickModeDispatcher(handler)
+        # ``_friendly_fleet_at_screen`` iterates empires; force the
+        # "no friendly fleet under cursor" branch so the click lands on
+        # an empty hex regardless of upstream mock state.
+        dispatcher._friendly_fleet_at_screen = MagicMock(return_value=None)
 
         return dispatcher, handler, scene
 
-    def test_select_mode_right_click_with_fleet_issues_move(self):
-        """Right click in SELECT mode with selected fleet triggers move."""
+    def test_select_mode_right_click_on_empty_hex_with_fleet_is_silent_no_op(self):
+        """Issue #29: empty-hex RMB with a fleet selected is a silent no-op."""
         dispatcher, handler, scene = self._create_click_dispatcher()
 
         handler.input_mode = 'SELECT'
 
         result = dispatcher.dispatch_click(500, 400, 3)  # Right click
 
-        assert result is True
-        scene._fleet_ops.handle_move_designation.assert_called_once_with(
-            500, 400, scene.selected_fleet
-        )
+        # Empty-hex RMB falls through to function-final ``return False``.
+        assert result is False
+        scene._fleet_ops.handle_move_designation.assert_not_called()
+        scene.ui.open_fleet_context_menu.assert_not_called()
 
     def test_select_mode_right_click_without_fleet_does_nothing(self):
         """Right click in SELECT mode without selected fleet does nothing."""
