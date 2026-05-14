@@ -179,8 +179,6 @@ class ScreenRouter:
 
     def start_strategy_layer(self) -> None:
         """Show new game setup screen."""
-        import pygame_gui  # noqa: F401 — historical import retained for parity.
-
         logger.info("Opening new game setup")
 
         # Font preloading is handled in MenuScene/StrategyUI UIManager init.
@@ -301,7 +299,6 @@ class ScreenRouter:
 
     def show_load_menu(self) -> None:
         """Show load game menu."""
-        import pygame_gui  # noqa: F401 — historical import retained for parity.
         from game.ui.screens.save_selection_window import SaveSelectionWindow
 
         logger.info("Opening load game menu")
@@ -426,8 +423,6 @@ class ScreenRouter:
 
     def start_race_setup(self) -> None:
         """Open race setup wizard."""
-        import pygame_gui  # noqa: F401 — historical import retained for parity.
-
         logger.info("Opening race setup wizard")
 
         # Font preloading is handled in MenuScene/StrategyUI UIManager init.
