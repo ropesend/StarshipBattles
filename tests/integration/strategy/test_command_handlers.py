@@ -81,7 +81,7 @@ def test_preview_fleet_path():
     
     # Mock TurnEngine or internal pathfinder helper
     # We expect preview_fleet_path to call find_hybrid_path or similar
-    with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_find:
+    with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_find:
         expected_path_full = [HexCoord(0,0), HexCoord(1,0), HexCoord(2,0)]
         mock_find.return_value = expected_path_full
         
@@ -307,7 +307,7 @@ class TestColonizeMissionCommandHandler:
         cmd = QueueColonizeMissionCommand(fleet_id=101, target_hex=target_hex, planet_id=42)
 
         # Mock pathfinding
-        with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(0, 0), HexCoord(5, 5), HexCoord(10, 10)]
 
             result = session.handle_command(cmd)
@@ -346,7 +346,7 @@ class TestColonizeMissionCommandHandler:
 
         # Mock pathfinding to return None (no path)
         # PROJ-207: Patch at command_handlers where function is imported
-        with patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
+        with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_path.return_value = None
 
             result = session.handle_command(cmd)
@@ -417,7 +417,7 @@ class TestColonizeMissionCommandHandler:
 
         # Mock pathfinding - path should start from (5,5) not (0,0)
         # PROJ-207: Patch at command_handlers where function is imported
-        with patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
+        with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
 
             result = session.handle_command(cmd)
@@ -426,7 +426,8 @@ class TestColonizeMissionCommandHandler:
             # Pathfinding should be called with start_hex=(5,5)
             mock_path.assert_called_once()
             call_args = mock_path.call_args
-            assert call_args[0][1] == HexCoord(5, 5)  # second arg is start_hex
+            # PROJ-414: patched on GPS class -> args are (start_hex, target_hex).
+            assert call_args[0][0] == HexCoord(5, 5)  # first positional is start_hex
 
 
 # =============================================================================

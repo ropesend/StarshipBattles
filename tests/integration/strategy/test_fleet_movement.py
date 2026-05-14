@@ -2,7 +2,12 @@ import pytest
 from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.star_system import StarSystem, WarpPoint
 from game.core.hex_math import HexCoord
-from game.strategy.data.pathfinding import find_path_interstellar
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+
+
+def find_path_interstellar(start_system, end_system, galaxy):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return GalaxyPathfindingService(galaxy).find_path_interstellar(start_system, end_system)
 from game.strategy.data.fleet import Fleet
 
 def test_fleet_initialization():

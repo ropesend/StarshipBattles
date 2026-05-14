@@ -181,7 +181,7 @@ class TestProjectionMatchesExecution:
         # Final position should be destination
         assert fleet.location == destination
 
-    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
+    @patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path')
     def test_warp_move_consistency(self, mock_path, turn_engine, nav_service, mock_galaxy, empire):
         """Warp jump projection matches execution."""
         # Setup: Fleet at origin with warp jump in path

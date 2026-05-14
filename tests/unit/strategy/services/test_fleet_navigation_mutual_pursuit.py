@@ -140,7 +140,7 @@ class TestGetDestinationMutualBranch:
         service = FleetNavigationService()
 
         with patch(
-            "game.strategy.data.pathfinding.calculate_intercept_point",
+            "game.strategy.services.intercept_calculator.InterceptCalculator.calculate_intercept_point",
             return_value=HexCoord(5, 0),
         ) as mock_intercept:
             destination = service.get_destination(
@@ -163,7 +163,7 @@ class TestGetDestinationMutualBranch:
         service = FleetNavigationService()
 
         with patch(
-            "game.strategy.data.pathfinding.calculate_intercept_point",
+            "game.strategy.services.intercept_calculator.InterceptCalculator.calculate_intercept_point",
             return_value=HexCoord(8, 0),
         ) as mock_intercept:
             destination = service.get_destination(

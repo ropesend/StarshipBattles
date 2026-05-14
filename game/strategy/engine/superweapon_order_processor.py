@@ -24,7 +24,7 @@ from game.strategy.data.galaxy import Galaxy
 from game.strategy.events.event_types import EventCategory
 from game.strategy.services.superweapon_registry import SuperweaponSpec
 from game.strategy.validation.superweapon_validator import SuperweaponValidator
-from game.strategy.data.pathfinding import get_system_at_hex
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -343,13 +343,13 @@ class SuperweaponOrderProcessor:
     def _get_system_at_hex(galaxy, location):  # type: ignore[no-untyped-def]
         """Resolve the star system at ``location`` (or None).
 
-        Thin pass-through to ``game.strategy.data.pathfinding.get_system_at_hex``
-        kept on the processor so handler modules share a single patch surface
-        for tests: patching
-        ``game.strategy.engine.superweapon_order_processor.get_system_at_hex``
-        affects this method's lookup, which is the only callsite handlers use.
+        Thin pass-through to ``GalaxyPathfindingService.get_system_at_hex``
+        kept on the processor as a single internal call site for handlers
+        (PROJ-414: the deleted shim previously provided a module-level
+        ``get_system_at_hex`` symbol; tests now patch
+        ``GalaxyPathfindingService.get_system_at_hex`` directly).
         """
-        return get_system_at_hex(galaxy, location)
+        return GalaxyPathfindingService(galaxy).get_system_at_hex(location)
 
     def _stabilizer_target_label(
         self, spec: SuperweaponSpec, order, fleet, galaxy
@@ -362,7 +362,7 @@ class SuperweaponOrderProcessor:
             target_planet = order.target
             return f"Planet {target_planet.name}" if target_planet else "Planet"
         # System-scope weapons: name of the system at fleet location.
-        system = get_system_at_hex(galaxy, fleet.location)
+        system = GalaxyPathfindingService(galaxy).get_system_at_hex(fleet.location)
         if system is not None:
             return f"System {system.name}"
         return "System"
@@ -488,7 +488,10 @@ class SuperweaponOrderProcessor:
 
         Returns the first planet in the system, or None if there are none.
         """
-        system = get_system_at_hex(galaxy, fleet_location) if galaxy else None
+        system = (
+            GalaxyPathfindingService(galaxy).get_system_at_hex(fleet_location)
+            if galaxy else None
+        )
         if system is None:
             return None
         planets = getattr(system, 'planets', [])

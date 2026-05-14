@@ -64,7 +64,7 @@ class TestProjectPathActionTiming:
         mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path'
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
         ) as mock_find_path:
             # Return path from (2,0) to (4,0) after colonize
             mock_find_path.return_value = [HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0)]
@@ -122,7 +122,7 @@ class TestProjectPathActionTiming:
         mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path'
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
         ) as mock_find_path:
             mock_find_path.return_value = [HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0)]
 
@@ -180,7 +180,7 @@ class TestProjectPathActionTiming:
         mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path'
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
         ) as mock_find_path:
             mock_find_path.return_value = [HexCoord(5, 5), HexCoord(6, 5), HexCoord(7, 5)]
 
@@ -256,7 +256,7 @@ class TestProjectPathActionTimingEdgeCases:
         mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path'
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
         ) as mock_find_path:
             mock_find_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
@@ -299,7 +299,7 @@ class TestProjectPathActionTimingEdgeCases:
         mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path'
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
         ) as mock_find_path:
             mock_find_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
@@ -369,7 +369,7 @@ class TestProjectPathWarpOrders:
         mock_galaxy.get_system_by_name = MagicMock(return_value=mock_dest_system)
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path'
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
         ) as mock_find_path:
             # Path to warp point
             mock_find_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)]
@@ -464,7 +464,10 @@ class TestProjectPathPathfindingFailure:
 
         call_count = 0
 
-        def mock_find_path_selective(galaxy, start, end, fleet=None, can_warp=None):
+        # PROJ-414: patched on the GPS class; the migrated production code
+        # calls `GalaxyPathfindingService(galaxy).find_hybrid_path(start, end, ...)`,
+        # so the side_effect signature is `(start, end, fleet=None, can_warp=None)`.
+        def mock_find_path_selective(start, end, fleet=None, can_warp=None):
             nonlocal call_count
             call_count += 1
             if end == second_dest:
@@ -472,7 +475,7 @@ class TestProjectPathPathfindingFailure:
             return [start, HexCoord(3, 0), HexCoord(4, 0)]  # Dummy path
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path',
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path',
             side_effect=mock_find_path_selective
         ):
             segments = service.project_path(fleet, mock_galaxy, max_turns=10)
@@ -503,7 +506,7 @@ class TestProjectPathPathfindingFailure:
         mock_galaxy.state.global_hex_warp_points = {}
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path',
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path',
             return_value=None
         ):
             segments = service.project_path(fleet, mock_galaxy, max_turns=10)

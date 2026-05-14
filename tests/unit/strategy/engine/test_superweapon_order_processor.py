@@ -1096,7 +1096,7 @@ class TestNoShipFallback:
 
         # Act - patch to return None
         with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=None), \
-             patch('game.strategy.engine.superweapon_order_processor.get_system_at_hex', return_value=mock_system):
+             patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex', return_value=mock_system):
             result = processor.process_open_warp_point(
                 mock_fleet, empire, mock_galaxy, component_registry=component_registry
             )
@@ -1130,7 +1130,7 @@ class TestNoShipFallback:
 
         # Act - patch to return None
         with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=None), \
-             patch('game.strategy.engine.superweapon_order_processor.get_system_at_hex', return_value=mock_system):
+             patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex', return_value=mock_system):
             result = processor.process_create_dyson_sphere(
                 mock_fleet, empire, mock_galaxy, [empire], component_registry
             )
@@ -1237,7 +1237,7 @@ class TestEnemyColonyCleanup:
 
         # Act
         with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship), \
-             patch('game.strategy.engine.superweapon_order_processor.get_system_at_hex', return_value=mock_system):
+             patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex', return_value=mock_system):
             result = processor.process_create_dyson_sphere(
                 mock_fleet, player_empire, mock_galaxy, empires, component_registry
             )

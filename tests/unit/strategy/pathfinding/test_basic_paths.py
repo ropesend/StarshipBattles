@@ -5,13 +5,28 @@ Unit tests for basic pathfinding: deep space, system location, interstellar, hex
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.pathfinding import (
-    find_path_deep_space,
-    find_path_interstellar,
-    get_system_at_hex,
-    find_nearest_system,
-)
-from game.core.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance, hex_linedraw
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+
+
+def find_path_deep_space(start, end):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return hex_linedraw(start, end)
+
+
+def find_path_interstellar(start_system, end_system, galaxy):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return GalaxyPathfindingService(galaxy).find_path_interstellar(start_system, end_system)
+
+
+def get_system_at_hex(galaxy, hex_c, radius=50):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return GalaxyPathfindingService(galaxy).get_system_at_hex(hex_c, radius=radius)
+
+
+def find_nearest_system(galaxy, hex_c):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return GalaxyPathfindingService(galaxy).find_nearest_system(hex_c)
 
 
 # =============================================================================

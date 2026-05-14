@@ -110,7 +110,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
+             patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             # Path should be calculated from (8,8) not (5,5)
             mock_path.return_value = [HexCoord(8, 8), HexCoord(10, 10), HexCoord(12, 12)]
@@ -119,8 +119,9 @@ class TestSetupMissionMove:
             # find_hybrid_path called with start=(8,8)
             mock_path.assert_called_once()
             call_args = mock_path.call_args[0]
-            assert call_args[1] == HexCoord(8, 8)  # start hex
-            assert call_args[2] == HexCoord(12, 12)  # target hex
+            # PROJ-414: patched on GPS class -> args are (start, target).
+            assert call_args[0] == HexCoord(8, 8)  # start hex
+            assert call_args[1] == HexCoord(12, 12)  # target hex
 
     def test_uses_fleet_location_when_no_orders(self, mock_session, mock_fleet, mock_planet):
         """Start hex is fleet.location when no orders exist."""
@@ -133,13 +134,14 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
+             patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
 
             call_args = mock_path.call_args[0]
-            assert call_args[1] == HexCoord(5, 5)  # Uses fleet location
+            # PROJ-414: patched on GPS class -> first positional is start hex.
+            assert call_args[0] == HexCoord(5, 5)  # Uses fleet location
 
     def test_ignores_non_move_orders_for_start_hex(self, mock_session, mock_fleet, mock_planet):
         """Non-MOVE orders are ignored when determining start hex."""
@@ -155,14 +157,15 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
+             patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
 
             call_args = mock_path.call_args[0]
-            # Should use fleet location, not the IMPLODE_PLANET order's target
-            assert call_args[1] == HexCoord(5, 5)
+            # PROJ-414: patched on GPS class -> first positional is start hex.
+            # Should use fleet location, not the IMPLODE_PLANET order's target.
+            assert call_args[0] == HexCoord(5, 5)
 
     def test_does_not_set_path_when_not_first_order(self, mock_session, mock_fleet, mock_planet):
         """fleet.path is not set when move order is not the first order."""
@@ -178,7 +181,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
+             patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(8, 8), HexCoord(10, 10), HexCoord(12, 12)]
             handler.execute(mock_session, cmd)

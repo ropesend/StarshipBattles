@@ -343,7 +343,7 @@ def test_warp_returns_move_validation_failure_without_queuing_warp() -> None:
     session.galaxy.state.global_hex_warp_points[warp_hex] = object()
 
     with patch(
-        "game.strategy.engine.handlers.base.find_hybrid_path",
+        "game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path",
         return_value=[],
     ):
         result = WarpCommandHandler().execute(

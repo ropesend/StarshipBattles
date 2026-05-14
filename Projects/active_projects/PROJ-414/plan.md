@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Audit + migrate + delete pathfinding shim (3 sub-tasks: 1a audit, 1b migrate, 1c delete) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Audit + migrate + delete pathfinding shim (3 sub-tasks: 1a audit, 1b migrate, 1c delete) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-13
 **Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-13_194106_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Action:** Audit ready — all phases (1a audit, 1b migrate, 1c delete) complete; shim and guard test deleted; full sharded suite passes (only pre-existing QS Battleship `_metadata` failure remains)
+**Next Action:** User verification + merge
 **Blockers:** None
 
 ## Overview

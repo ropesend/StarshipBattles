@@ -116,14 +116,14 @@ class InterceptCalculator:
         if chaser_speed <= 0:
             return target_fleet.location
 
-        # Route through the shim so tests patching
-        # `pathfinding.project_fleet_path` still take effect.
-        from game.strategy.data import pathfinding as _pf_shim
-        target_path = _pf_shim.project_fleet_path(target_fleet, galaxy, max_turns=50)
+        # PROJ-414: call the module-level `project_fleet_path` directly;
+        # tests patch it at this module's attribute
+        # (`game.strategy.services.intercept_calculator.project_fleet_path`).
+        target_path = project_fleet_path(target_fleet, galaxy, max_turns=50)
         points_to_check = target_path or [{"hex": target_fleet.location, "turn": 0}]
 
         best_intercept, best_time, best_turn, fallback = self._evaluate_intercept_candidates(
-            points_to_check, chaser_location, chaser_speed, chaser_proxy, galaxy,
+            points_to_check, chaser_location, chaser_speed, chaser_proxy,
         )
 
         if best_intercept is not None:
@@ -146,14 +146,14 @@ class InterceptCalculator:
         chaser_location: HexCoord,
         chaser_speed: float,
         chaser_proxy: _ChaserProxy,
-        galaxy=None,
     ) -> tuple:
         """Score each candidate; return (best_hex, best_time, best_turn, fallback_hex).
 
-        ``galaxy`` is passed when callers want test-patches of
-        ``pathfinding.find_hybrid_path`` to take effect — we route via
-        the shim. When ``galaxy`` is None, we use ``self._pathfinding``
-        directly (faster, no extra layer of indirection)."""
+        PROJ-414: previously, a `galaxy` parameter forced a shim hop so
+        tests patching `pathfinding.find_hybrid_path` would take effect.
+        With the shim removed, all path queries go through
+        `self._pathfinding`; tests patch
+        `GalaxyPathfindingService.find_hybrid_path` on the class."""
         best_intercept = None
         best_intercept_time = float("inf")
         best_target_turn = None
@@ -163,17 +163,9 @@ class InterceptCalculator:
             target_turn = pt["turn"]
             target_hex = pt["hex"]
 
-            if galaxy is not None:
-                # Route through the shim so test patches of
-                # ``pathfinding.find_hybrid_path`` still apply.
-                from game.strategy.data import pathfinding as _pf_shim
-                path_to_target = _pf_shim.find_hybrid_path(
-                    galaxy, chaser_location, target_hex, fleet=chaser_proxy,
-                )
-            else:
-                path_to_target = self._pathfinding.find_hybrid_path(
-                    chaser_location, target_hex, fleet=chaser_proxy,
-                )
+            path_to_target = self._pathfinding.find_hybrid_path(
+                chaser_location, target_hex, fleet=chaser_proxy,
+            )
             if not path_to_target:
                 continue
 

@@ -33,8 +33,8 @@ class TestMoveToFleetIntercept:
         mock_fleet.location = HexCoord(0, 0)
 
         # PROJ-35: Patch at the source module since it's imported locally in get_destination()
-        with patch('game.strategy.data.pathfinding.calculate_intercept_point') as mock_intercept:
-            with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
+        with patch('game.strategy.services.intercept_calculator.InterceptCalculator.calculate_intercept_point') as mock_intercept:
+            with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
                 mock_intercept.return_value = HexCoord(25, 0)
                 mock_path.return_value = [HexCoord(0, 0), HexCoord(5, 0)]
 
@@ -152,7 +152,7 @@ class TestPathManagement:
         mock_fleet.location = HexCoord(0, 0)
 
         # PROJ-35: Patch where the import is used (in the service that engine delegates to)
-        with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
+        with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             # Path starts with current location
             mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
@@ -174,7 +174,7 @@ class TestPathManagement:
         mock_fleet.location = HexCoord(0, 0)
 
         # PROJ-35: Patch where the import is used (in the service that engine delegates to)
-        with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
+        with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_path.return_value = []  # No path found
 
             result = engine.calculate_next_hex(mock_fleet, mock_galaxy)

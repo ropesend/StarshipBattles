@@ -5,13 +5,27 @@ Unit tests for hybrid pathfinding and intercept calculations.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from game.strategy.data.pathfinding import (
-    find_hybrid_path,
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+from game.strategy.services.intercept_calculator import (
+    InterceptCalculator,
     project_fleet_path,
-    calculate_intercept_point,
 )
 from game.core.hex_math import HexCoord
 from game.strategy.services.fleet_navigation_service import NavigationState
+
+
+def find_hybrid_path(galaxy, start, end, fleet=None, can_warp=None):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return GalaxyPathfindingService(galaxy).find_hybrid_path(
+        start, end, fleet=fleet, can_warp=can_warp,
+    )
+
+
+def calculate_intercept_point(chaser, target_fleet, galaxy):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return InterceptCalculator(
+        GalaxyPathfindingService(galaxy),
+    ).calculate_intercept_point(chaser, target_fleet, galaxy)
 
 
 # =============================================================================
@@ -197,7 +211,7 @@ class TestInterceptCalculation:
         target.orders = []
         target.path = []
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
             mock_project.return_value = []  # Stationary
 
             result = calculate_intercept_point(chaser, target, galaxy)
@@ -246,7 +260,7 @@ class TestInterceptCalculation:
             {'hex': HexCoord(15, 0), 'turn': 1},
         ]
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
             mock_project.return_value = target_path
 
             result = calculate_intercept_point(chaser, target, galaxy)
@@ -284,7 +298,7 @@ class TestInterceptCalculation:
         slow_chaser.location = HexCoord(0, 0)
         slow_chaser.speed = 5.0
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
             mock_project.return_value = target_path
 
             fast_result = calculate_intercept_point(fast_chaser, target, galaxy)
@@ -310,7 +324,7 @@ class TestInterceptCalculation:
         target.location = shared_location
         target.speed = 10.0
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
             mock_project.return_value = []
 
             result = calculate_intercept_point(chaser, target, galaxy)
@@ -333,8 +347,8 @@ class TestInterceptCalculation:
 
         target_path = [{'hex': HexCoord(101, 0), 'turn': 0}]
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
-            with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_hybrid:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
+            with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_hybrid:
                 mock_project.return_value = target_path
                 mock_hybrid.return_value = [HexCoord(0, 0), HexCoord(50, 0), HexCoord(100, 0)]
 
@@ -363,7 +377,7 @@ class TestInterceptCalculation:
         target.orders = []
         target.path = []
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
             mock_project.return_value = []  # Stationary
 
             result = calculate_intercept_point(chaser_state, target, galaxy)
@@ -391,8 +405,8 @@ class TestInterceptCalculation:
 
         target_path = [{'hex': HexCoord(101, 0), 'turn': 0}]
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
-            with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_hybrid:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
+            with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_hybrid:
                 mock_project.return_value = target_path
                 mock_hybrid.return_value = [HexCoord(0, 0), HexCoord(50, 0), HexCoord(100, 0)]
 
@@ -426,8 +440,8 @@ class TestInterceptCalculation:
         target.orders = []
         target.path = []
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
-            with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_hybrid:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
+            with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_hybrid:
                 mock_project.return_value = []  # Stationary
                 # Return path from chaser location to target
                 mock_hybrid.return_value = [HexCoord(25, 0), HexCoord(35, 0), HexCoord(50, 0)]
@@ -437,8 +451,9 @@ class TestInterceptCalculation:
                 # Should have calculated path from NavigationState's location
                 mock_hybrid.assert_called()
                 call_args = mock_hybrid.call_args
-                # First positional arg should be galaxy, second is start location
-                assert call_args[0][1] == HexCoord(25, 0)
+                # PROJ-414: after migration the mocked method signature is
+                # `(start_hex, end_hex, fleet=...)` — the start hex is index 0.
+                assert call_args[0][0] == HexCoord(25, 0)
 
     def test_fleet_chaser_still_works_unchanged(self, mock_galaxy):
         """Regular Fleet object still works as chaser (backward compatibility)."""
@@ -457,7 +472,7 @@ class TestInterceptCalculation:
         target.orders = []
         target.path = []
 
-        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+        with patch('game.strategy.services.intercept_calculator.project_fleet_path') as mock_project:
             mock_project.return_value = []  # Stationary
 
             result = calculate_intercept_point(chaser, target, galaxy)

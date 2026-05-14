@@ -70,7 +70,7 @@ class TestFacadeRobustResolution:
         mock_session.galaxy.get_system_at_location.return_value = None
 
         # Radius lookup succeeds (mocking pathfinding import)
-        with patch('game.strategy.data.pathfinding.get_system_at_hex') as mock_pathfinding:
+        with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex') as mock_pathfinding:
             mock_pathfinding.return_value = system
 
             result = facade.get_planets_at_hex(planet_global_hex)
@@ -84,7 +84,7 @@ class TestFacadeRobustResolution:
         mock_session.galaxy.get_system_at_location.return_value = None
         
         # Radius lookup fails
-        with patch('game.strategy.data.pathfinding.get_system_at_hex') as mock_pathfinding:
+        with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex') as mock_pathfinding:
             mock_pathfinding.return_value = None
             
             result = facade.get_planets_at_hex(HexCoord(100, 100))

@@ -19,7 +19,7 @@ import logging
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import ValidationException
 from game.core.validation import ValidationResult
-from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
 from game.strategy.data.order_types import Order, OrderType
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,9 @@ def add_move_order_if_needed(
         return ValidationResult.success()
 
     # Calculate path from chain-aware start
-    path = find_hybrid_path(session.galaxy, start_hex, target_hex)
+    path = GalaxyPathfindingService(session.galaxy).find_hybrid_path(
+        start_hex, target_hex,
+    )
     if not path:
         return ValidationResult.error("No path found to target.")
 
@@ -80,7 +82,7 @@ def add_move_order_if_needed(
     if len(fleet.orders) == 1 and fleet.location == start_hex:
         # PROJ-370 Phase 2: route Fleet.path write through IFleetMutator.
         session.fleet_mutator.set_path(
-            fleet, strip_start_hex(fleet.location, path)
+            fleet, GalaxyPathfindingService.strip_start_hex(fleet.location, path),
         )
 
     return ValidationResult.success()

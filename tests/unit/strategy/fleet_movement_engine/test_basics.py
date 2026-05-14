@@ -42,8 +42,12 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        # PROJ-35: Patch where the import is used (in the service that engine delegates to)
-        with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
+        # PROJ-414: patch on the canonical service class (the migration
+        # replaced the module-level `find_hybrid_path` lookup with
+        # `GalaxyPathfindingService(galaxy).find_hybrid_path(...)`).
+        with patch(
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path',
+        ) as mock_path:
             mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
             result = engine.calculate_next_hex(mock_fleet, mock_galaxy)

@@ -63,8 +63,12 @@ class PlanetSlice:
 
         # 2. If strict failed, try radius/ownership lookup (robust for area clicks)
         if system is None:
-            from game.strategy.data.pathfinding import get_system_at_hex
-            system = get_system_at_hex(self._state.session.galaxy, hex_coord, radius=50)
+            from game.strategy.services.galaxy_pathfinding_service import (
+                GalaxyPathfindingService,
+            )
+            system = GalaxyPathfindingService(
+                self._state.session.galaxy,
+            ).get_system_at_hex(hex_coord, radius=50)
 
         if system is None:
             return []
