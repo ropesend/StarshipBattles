@@ -139,7 +139,7 @@ class TestAdvancedFleetOrders:
         # Let's try Static Target first for simpler mock?
         # No, current test logic relies on 'calculate_intercept_point' importing 'project_fleet_path'.
         # Since we use real 'calculate_intercept_point', we need to mock what it calls.
-        # But wait, 'from game.strategy.data.pathfinding import calculate_intercept_point' inside updated TurnEngine
+        # But wait, the inline import inside updated TurnEngine (now via IC)
         # might import the REAL function which calls REAL project_fleet_path.
 
         # We need to control the projection to test prediction.
