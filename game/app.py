@@ -121,11 +121,6 @@ class Game:
             state_machine=self.state_machine,
         )
 
-        # Legacy `running` flag — read by `_handle_strategy_action("quit_game")`
-        # tests via `Game.__new__`-bypass. RunLoop owns the canonical flag,
-        # but we keep the attribute on Game for backward compatibility.
-        self.running = True
-
         # NOTE (2026-04-27 merge resolution): the `ensure_component_derivatives()`
         # call and `sprite_mgr.load_sprites(...)` from branch 8ec8eafe9 were
         # MOVED into `app_bootstrap.bootstrap()`, where sprite loading already
@@ -263,7 +258,6 @@ class Game:
 
     def _request_shutdown(self) -> None:
         """Hook passed to ScreenRouter so handlers can stop the loop."""
-        self.running = False
         if hasattr(self, '_loop'):
             self._loop.request_shutdown()
 
@@ -449,7 +443,7 @@ class Game:
             self._switch_scene(GameState.MENU, self.menu_scene)
         elif action == "quit_game":
             logger.info("Quitting game from strategy menu")
-            self.running = False
+            self._request_shutdown()
 
     def _create_workshop_context(self, context_data: dict) -> Optional["WorkshopContext"]:
         """Create WorkshopContext from strategy scene context data."""
@@ -499,12 +493,7 @@ class Game:
 
     def run(self) -> None:
         """Main game loop."""
-        # Bridge legacy `self.running` flag with the loop's authoritative flag.
-        # If a caller flips `self.running = False` before run(), respect it.
-        self._loop.running = self.running
         self._loop.run()
-        # On exit, mirror final state back.
-        self.running = self._loop.running
 
 
 def main() -> None:

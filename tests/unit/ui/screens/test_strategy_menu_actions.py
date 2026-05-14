@@ -273,7 +273,7 @@ class TestAppStrategyActionHandler:
 
         game.width = 1920
         game.height = 1080
-        game.running = True
+        game._loop = MagicMock()
         game.strategy_scene = MagicMock()
         game.menu_scene = MagicMock()
 
@@ -308,12 +308,13 @@ class TestAppStrategyActionHandler:
         game._switch_scene.assert_called_once_with(GameState.MENU, game.menu_scene)
 
     def test_quit_game_handler(self):
-        """'quit_game' action should set running to False."""
+        """'quit_game' action must route through `_request_shutdown` so
+        the RunLoop's shutdown path runs (not a stale attribute write)."""
         game = self._make_game()
 
         game._handle_strategy_action("quit_game")
 
-        assert game.running is False
+        game._loop.request_shutdown.assert_called_once_with()
 
     def test_open_builder_still_works(self):
         """Existing 'open_builder' action should still work."""

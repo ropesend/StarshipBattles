@@ -6,23 +6,23 @@ from game.app import Game
 from game.core.constants import GameState
 
 
-def test_request_shutdown_clears_running_without_loop():
+def test_request_shutdown_is_safe_without_loop():
+    """`_request_shutdown` must tolerate a missing `_loop` attribute
+    (Game.__new__-bypass tests, partial construction)."""
     game = Game.__new__(Game)
-    game.running = True
 
+    # Should not raise even though `_loop` was never set.
     game._request_shutdown()
 
-    assert game.running is False
 
-
-def test_request_shutdown_notifies_loop_when_present():
+def test_request_shutdown_delegates_to_loop_when_present():
+    """`_request_shutdown` is the canonical shutdown entry point; it
+    must forward to `RunLoop.request_shutdown()`."""
     game = Game.__new__(Game)
-    game.running = True
     game._loop = MagicMock()
 
     game._request_shutdown()
 
-    assert game.running is False
     game._loop.request_shutdown.assert_called_once_with()
 
 
