@@ -20,14 +20,22 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
-from game.strategy.data.pathfinding import (
-    calculate_intercept_point,
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+from game.strategy.services.intercept_calculator import (
+    InterceptCalculator,
     project_fleet_path,
 )
 from game.strategy.services.fleet_navigation_service import (
     FleetNavigationService,
     NavigationState,
 )
+
+
+def calculate_intercept_point(chaser, target_fleet, galaxy):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return InterceptCalculator(
+        GalaxyPathfindingService(galaxy),
+    ).calculate_intercept_point(chaser, target_fleet, galaxy)
 
 
 def _make_intercept_fleet(fleet_id: int, location: HexCoord, target_fleet) -> Fleet:

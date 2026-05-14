@@ -37,8 +37,9 @@ def test_get_planets_at_hex_uses_radius_lookup_when_strict_lookup_misses(
     galaxy = SimpleNamespace(get_system_at_location=Mock(return_value=None))
     state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
     radius_lookup = Mock(return_value=system)
+    # PROJ-414: shim deleted; patch the canonical GPS method directly.
     monkeypatch.setattr(
-        "game.strategy.data.pathfinding.get_system_at_hex",
+        "game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
         radius_lookup,
     )
     monkeypatch.setattr(
@@ -50,7 +51,10 @@ def test_get_planets_at_hex_uses_radius_lookup_when_strict_lookup_misses(
     result = PlanetSlice(state).get_planets_at_hex(HexCoord(5, 4))
 
     assert result == [5]
-    radius_lookup.assert_called_once_with(galaxy, HexCoord(5, 4), radius=50)
+    # PROJ-414: patched on the GPS class -> the call args are (hex_coord, radius=50)
+    # (the GPS `self` is not visible because the descriptor protocol unbinds
+    # when the class attribute is replaced).
+    radius_lookup.assert_called_once_with(HexCoord(5, 4), radius=50)
 
 
 def test_can_colonize_with_no_planet_target_delegates_with_none() -> None:

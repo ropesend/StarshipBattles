@@ -119,7 +119,7 @@ def test_colonize_mission_returns_move_validation_failure_without_colonize_order
     session = _FakeSession([fleet])
 
     with patch(
-        "game.strategy.engine.handlers.base.find_hybrid_path",
+        "game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path",
         return_value=[],
     ):
         result = ColonizeMissionCommandHandler().execute(

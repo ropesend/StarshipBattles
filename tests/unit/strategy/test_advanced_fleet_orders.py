@@ -95,8 +95,8 @@ class TestAdvancedFleetOrders:
         assert len(f1.ships) == 0
         assert len(f1.orders) == 0
 
-    @patch('game.strategy.data.pathfinding.project_fleet_path')
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.services.intercept_calculator.project_fleet_path')
+    @patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path')
     def test_move_to_fleet_logic(self, mock_find_path, mock_project_path, turn_engine, test_empire, galaxy_mock):
         """Verify predictive pathing updates."""
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
@@ -153,8 +153,8 @@ class TestAdvancedFleetOrders:
     # PROJ-35: Patch paths updated - FleetMovementEngine now delegates to FleetNavigationService
     # calculate_intercept_point is imported locally in get_destination(), so patch at source
     # find_hybrid_path is imported at module level in FleetNavigationService
-    @patch('game.strategy.data.pathfinding.calculate_intercept_point')
-    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
+    @patch('game.strategy.services.intercept_calculator.InterceptCalculator.calculate_intercept_point')
+    @patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path')
     def test_intercept_integration(self, mock_find_path, mock_calc_intercept, turn_engine, test_empire, galaxy_mock):
         """Verify TurnEngine calls calculate_intercept_point."""
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
@@ -187,11 +187,18 @@ class TestAdvancedFleetOrders:
         mock_find_path.assert_called()
         assert f1.location == HexCoord(1, 0)
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
-    @patch('game.strategy.data.pathfinding.project_fleet_path')
+    @patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path')
+    @patch('game.strategy.services.intercept_calculator.project_fleet_path')
     def test_calculate_intercept_algorithm(self, mock_project, mock_find_path, turn_engine, test_empire, galaxy_mock):
         """Test the math of calculate_intercept_point using real path lengths."""
-        from game.strategy.data.pathfinding import calculate_intercept_point
+        from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+        from game.strategy.services.intercept_calculator import InterceptCalculator
+
+        def calculate_intercept_point(chaser, target, galaxy):
+            """PROJ-414: local helper preserving the pre-shim signature."""
+            return InterceptCalculator(
+                GalaxyPathfindingService(galaxy),
+            ).calculate_intercept_point(chaser, target, galaxy)
 
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
@@ -225,7 +232,9 @@ class TestAdvancedFleetOrders:
         # Path to (5,0) = 5 steps. Time = 2.5 turns. Target at T=1. 2.5 < 2? FAIL.
         # Path to (6,0) = 6 steps. Time = 3.0 turns. Target at T=2. 3.0 < 3? FAIL.
         # Path to (7,0) = 7 steps. Time = 3.5 turns. Target at T=3. 3.5 < 4? SUCCESS!
-        def path_mock(galaxy, start, end, fleet=None):
+        # PROJ-414: GPS method patched on the class -> mock call signature is
+        # (start, end, fleet=None) (no galaxy positional).
+        def path_mock(start, end, fleet=None):
             # Return a list including start hex (like real pathfinding)
             dist = abs(end.q - start.q) + abs(end.r - start.r)  # Simplified hex dist
             return [HexCoord(i, 0) for i in range(dist + 1)]  # +1 to include start
@@ -302,8 +311,8 @@ class TestAdvancedFleetOrders:
         assert f1.get_current_order() is not None
         assert f1.get_current_order().type == OrderType.JOIN_FLEET
 
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
-    @patch('game.strategy.data.pathfinding.project_fleet_path')
+    @patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path')
+    @patch('game.strategy.services.intercept_calculator.project_fleet_path')
     def test_intercept_picks_earliest_chaser_arrival(self, mock_project, mock_find_path, turn_engine, test_empire, galaxy_mock):
         """
         Regression test: Algorithm must pick EARLIEST chaser arrival, not first valid point.
@@ -313,7 +322,14 @@ class TestAdvancedFleetOrders:
         The old buggy code would never find B since it returns on first valid.
         The fix should find B since 4 < 6.
         """
-        from game.strategy.data.pathfinding import calculate_intercept_point
+        from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+        from game.strategy.services.intercept_calculator import InterceptCalculator
+
+        def calculate_intercept_point(chaser, target, galaxy):
+            """PROJ-414: local helper preserving the pre-shim signature."""
+            return InterceptCalculator(
+                GalaxyPathfindingService(galaxy),
+            ).calculate_intercept_point(chaser, target, galaxy)
 
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
@@ -337,7 +353,9 @@ class TestAdvancedFleetOrders:
         ]
 
         # Mock pathfinding to return paths of correct length (includes start hex)
-        def path_mock(galaxy, start, end, fleet=None):
+        # PROJ-414: GPS method patched on the class -> mock call signature is
+        # (start, end, fleet=None) (no galaxy positional).
+        def path_mock(start, end, fleet=None):
             dist = abs(end.q - start.q)  # Simple distance for 1D case
             return [HexCoord(i, 0) for i in range(dist + 1)]  # +1 to include start
 

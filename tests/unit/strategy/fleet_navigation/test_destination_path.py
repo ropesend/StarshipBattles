@@ -100,7 +100,7 @@ class TestGetDestination:
 
         # Mock calculate_intercept_point at the source location (where it's imported from)
         with patch(
-            'game.strategy.data.pathfinding.calculate_intercept_point',
+            'game.strategy.services.intercept_calculator.InterceptCalculator.calculate_intercept_point',
             return_value=HexCoord(5, 5)
         ) as mock_intercept:
             result = service.get_destination(state, order, galaxy=MagicMock())
@@ -153,7 +153,7 @@ class TestComputePath:
         # Mock find_hybrid_path to return path starting with current location
         mock_path = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)]
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path',
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path',
             return_value=mock_path
         ):
             result = service.compute_path(state, destination, galaxy=MagicMock())
@@ -197,7 +197,7 @@ class TestComputePath:
         )
 
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path',
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path',
             return_value=None
         ):
             result = service.compute_path(state, HexCoord(10, 10), galaxy=MagicMock())
@@ -320,7 +320,7 @@ class TestComputeNextStep:
         # Mock to return a new path to the actual target
         new_path = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0), HexCoord(5, 0)]
         with patch(
-            'game.strategy.services.fleet_navigation_service.find_hybrid_path',
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path',
             return_value=new_path
         ):
             step = service.compute_next_step(state, galaxy=MagicMock())

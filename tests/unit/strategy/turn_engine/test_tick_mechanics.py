@@ -44,7 +44,7 @@ class TestMovementCalculation:
         mock_fleet.location = HexCoord(0, 0)
 
         # PROJ-35: FleetMovementEngine delegates to FleetNavigationService, patch there
-        with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
+        with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
             result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
@@ -77,8 +77,8 @@ class TestMovementCalculation:
 
         # PROJ-35: FleetMovementEngine delegates to FleetNavigationService
         # calculate_intercept_point is imported locally, so patch at source
-        with patch('game.strategy.data.pathfinding.calculate_intercept_point') as mock_intercept:
-            with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
+        with patch('game.strategy.services.intercept_calculator.InterceptCalculator.calculate_intercept_point') as mock_intercept:
+            with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
                 mock_intercept.return_value = HexCoord(25, 0)
                 mock_path.return_value = [HexCoord(0, 0), HexCoord(5, 0)]
 

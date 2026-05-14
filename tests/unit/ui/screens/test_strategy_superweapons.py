@@ -492,13 +492,18 @@ class TestHelperMethods:
 
     def test_get_system_at_hex(self, superweapon_ops):
         """Test _get_system_at_hex delegates correctly."""
-        with patch('game.strategy.data.pathfinding.get_system_at_hex') as mock_get:
+        with patch(
+            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex',
+        ) as mock_get:
             mock_get.return_value = Mock()
             hex_coord = (5, 5)
 
             result = superweapon_ops._get_system_at_hex(hex_coord)
 
-            mock_get.assert_called_once_with(superweapon_ops.galaxy, hex_coord)
+            # PROJ-414: patched on the GPS class -> the call args are (hex_coord,)
+            # (the `self` GPS instance is the implicit first arg the descriptor
+            # protocol swallows when MagicMock replaces the class attribute).
+            mock_get.assert_called_once_with(hex_coord)
 
     def test_get_warp_point_at_hex_no_system(self, superweapon_ops):
         """Test _get_warp_point_at_hex returns None when no system."""

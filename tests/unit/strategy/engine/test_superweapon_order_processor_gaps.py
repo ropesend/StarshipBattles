@@ -158,7 +158,7 @@ class TestStabilizerCancellation:
         # `get_system_at_hex` so the system resolves regardless of mock_galaxy.
         sd_path = "game.strategy.services.system_destroyer"
         with patch(FBS_PATH, return_value=_stabilizer_block()), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=mock_system), \
              patch(f"{sd_path}.collect_system_contents") as mock_collect, \
              patch(f"{sd_path}.destroy_system") as mock_destroy:
@@ -198,7 +198,7 @@ class TestStabilizerCancellation:
         empire = MagicMock()
 
         with patch(FBS_PATH, return_value=_stabilizer_block()), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=current_system):
             result = processor.process_open_warp_point(
                 mock_fleet, empire, mock_galaxy, component_registry=component_registry
@@ -230,7 +230,7 @@ class TestStabilizerCancellation:
         empire = MagicMock()
 
         with patch(FBS_PATH, return_value=_stabilizer_block()), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=current_system):
             result = processor.process_close_warp_point(
                 mock_fleet, empire, mock_galaxy, component_registry=component_registry
@@ -256,7 +256,7 @@ class TestStabilizerCancellation:
         empire.colonies = []
 
         with patch(FBS_PATH, return_value=_stabilizer_block()), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=mock_system):
             result = processor.process_create_dyson_sphere(
                 mock_fleet, empire, mock_galaxy, [empire], component_registry
@@ -313,7 +313,7 @@ class TestOpenWarpPointFarEndGeometry:
         empire = MagicMock()
 
         with patch(FBS_PATH, return_value=None), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=current_system), \
              patch("game.strategy.engine.superweapon_order_processor."
                    "SuperweaponValidator.find_ship_with_ability", return_value=ship):
@@ -345,7 +345,7 @@ class TestOpenWarpPointFarEndGeometry:
         empire = MagicMock()
 
         with patch(FBS_PATH, return_value=None), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=current_system), \
              patch("game.strategy.engine.superweapon_order_processor."
                    "SuperweaponValidator.find_ship_with_ability", return_value=ship):
@@ -388,7 +388,7 @@ class TestCloseWarpPointLegacy:
         empire = MagicMock()
 
         with patch(FBS_PATH, return_value=None), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=current_system), \
              patch("game.strategy.engine.superweapon_order_processor."
                    "SuperweaponValidator.find_ship_with_ability", return_value=ship):
@@ -450,7 +450,7 @@ class TestCloseWarpPointPreconditions:
         empire = MagicMock()
 
         with patch(FBS_PATH, return_value=None), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=None):
             result = processor.process_close_warp_point(
                 mock_fleet, empire, mock_galaxy, [empire], component_registry
@@ -565,7 +565,7 @@ class TestDysonSphereRaceConfigFallback:
         empire.race_config = None  # Triggers the fallback branch
 
         with patch(FBS_PATH, return_value=None), \
-             patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=mock_system), \
              patch("game.strategy.engine.superweapon_order_processor."
                    "SuperweaponValidator.find_ship_with_ability", return_value=ship):
@@ -601,7 +601,7 @@ class TestGetReferencePlanet:
 
         processor = SuperweaponOrderProcessor()
 
-        with patch("game.strategy.engine.superweapon_order_processor.get_system_at_hex",
+        with patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex",
                    return_value=system):
             ref = processor._get_reference_planet(HexCoord(10, 10), mock_galaxy)
 

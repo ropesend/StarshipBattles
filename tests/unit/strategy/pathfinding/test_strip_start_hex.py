@@ -6,7 +6,9 @@ PROJ-204 Phase 2: Consolidate path stripping logic (CQ-42).
 
 import pytest
 from game.core.hex_math import HexCoord
-from game.strategy.data.pathfinding import strip_start_hex
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+
+strip_start_hex = GalaxyPathfindingService.strip_start_hex
 
 
 class TestStripStartHex:

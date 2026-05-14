@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 from .conftest import MockGalaxy, create_colony_ship, MockPlanetType
 
 
-@patch('game.strategy.data.pathfinding.find_hybrid_path')
+@patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path')
 def test_movement_timing(mock_path, fresh_registries):
     """Verify ships move at correct tick intervals based on speed."""
     engine = build_test_turn_engine(fresh_registries)
@@ -48,7 +48,7 @@ def test_movement_timing(mock_path, fresh_registries):
     assert f10.location == HexCoord(2,0)  # Moved again at tick 20
 
 
-@patch('game.strategy.data.pathfinding.find_hybrid_path')
+@patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path')
 def test_full_turn_distance(mock_path, fresh_registries):
     """Verify total distance traveled in a turn."""
     engine = build_test_turn_engine(fresh_registries)

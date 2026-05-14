@@ -72,7 +72,9 @@ def synthetic_galaxy():
 
 
 def _bench_pathfinding(galaxy) -> float:
-    from game.strategy.data.pathfinding import find_path_interstellar
+    from game.strategy.services.galaxy_pathfinding_service import (
+        GalaxyPathfindingService,
+    )
 
     systems = list(galaxy.systems.values())
     if len(systems) < 2:
@@ -82,12 +84,13 @@ def _bench_pathfinding(galaxy) -> float:
         (random.choice(systems), random.choice(systems))
         for _ in range(_NUM_PATHS)
     ]
+    pathfinding = GalaxyPathfindingService(galaxy)
 
     def run():
         for a, b in pairs:
             if a is b:
                 continue
-            find_path_interstellar(a, b, galaxy)
+            pathfinding.find_path_interstellar(a, b)
 
     return _measure_min("pathfinding", run)
 

@@ -125,11 +125,15 @@ def test_strip_start_hex_static() -> None:
     assert stripped == [HexCoord(1, 0), HexCoord(2, 0)]
 
 
-def test_pathfinding_shim_forwards_to_hex_linedraw() -> None:
-    """Phase 4 shim must produce identical results to direct ``hex_linedraw`` (PROJ-392)."""
+def test_hex_linedraw_used_for_deep_space_paths() -> None:
+    """PROJ-414: the deleted shim's ``find_path_deep_space`` was a 1-line
+    forwarder to ``hex_linedraw``. Deep-space path semantics are now
+    served by ``hex_linedraw`` directly. This pin guards against future
+    drift of that semantic."""
     from game.core.hex_math import hex_linedraw
-    from game.strategy.data.pathfinding import find_path_deep_space
 
-    shim_path = find_path_deep_space(HexCoord(0, 0), HexCoord(2, 0))
-    direct_path = hex_linedraw(HexCoord(0, 0), HexCoord(2, 0))
-    assert shim_path == direct_path
+    path = hex_linedraw(HexCoord(0, 0), HexCoord(2, 0))
+    assert path[0] == HexCoord(0, 0)
+    assert path[-1] == HexCoord(2, 0)
+    # Path is contiguous, includes both endpoints.
+    assert len(path) == 3

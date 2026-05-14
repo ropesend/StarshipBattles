@@ -221,7 +221,7 @@ def test_mission_handler_passes_component_registry(
     """All mission handlers call validator with component_registry."""
     handler = handler_cls()
     with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-         patch('game.strategy.engine.handlers.base.find_hybrid_path') as mock_path:
+         patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path') as mock_path:
         getattr(mock_validator, validator_attr).return_value = ValidationResult()
         mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
         handler.execute(mock_session, cmd)
