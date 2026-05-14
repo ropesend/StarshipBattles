@@ -9,10 +9,9 @@ All business logic lives on the delegates per `docs/03_CONVENTIONS.md
 §1.6` (MVVM) and the design at
 `Projects/active_projects/PROJ-309/findings/race_setup_screen_decomposition.md`.
 
-Public API stability: `from game.ui.screens.race_setup_screen import
-RaceSetupScreen` keeps working via a 4-line shim at the legacy path
-(Option A). The constructor signature is unchanged so `app.py:522` and
-`new_game_setup_screen.py:433` continue to construct it the same way.
+Canonical import path: `from game.ui.screens.race_setup.screen import
+RaceSetupScreen`. The legacy `race_setup_screen.py` re-export shim was
+removed in PROJ-416.
 """
 from __future__ import annotations
 
@@ -24,9 +23,8 @@ import pygame_gui
 
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
-# Re-exported for the FEAT-12 tests that patch
-# `game.ui.screens.race_setup_screen.RaceRandomizer` — the legacy shim
-# at `race_setup_screen.py` re-exports this name from the package.
+# Re-exported so tests can patch
+# `game.ui.screens.race_setup.screen.RaceRandomizer` directly.
 from game.strategy.systems.race_randomizer import RaceRandomizer  # noqa: F401
 
 # PROJ-12 Phase 4: extracted siblings.

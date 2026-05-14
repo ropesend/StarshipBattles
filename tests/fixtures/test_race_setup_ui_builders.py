@@ -17,7 +17,7 @@ from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
 
 
 def _build_screen(*, ui_builder):
-    from game.ui.screens.race_setup_screen import RaceSetupScreen
+    from game.ui.screens.race_setup.screen import RaceSetupScreen
 
     with bypass_init(RaceSetupScreen):
         return make_ui_widget(

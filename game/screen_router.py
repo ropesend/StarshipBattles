@@ -436,7 +436,7 @@ class ScreenRouter:
         window_rect = create_centered_rect(1800, 1200, self.width, self.height)
 
         # Import here to avoid circular imports.
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        from game.ui.screens.race_setup.screen import RaceSetupScreen
 
         self.race_setup_window = RaceSetupScreen(
             window_rect,

@@ -796,14 +796,14 @@ Boundary:
 
 > **Last verified:** 2026-05-08 (PROJ-396 MAJ-006: Pattern #5 facade-bypass prohibition added)
 
-Where (4 confirmed sites at PROJ-382 verification, 2026-05-07):
-- `game/ui/screens/race_setup_screen.py` (~31 LOC) — re-exports
-  `RaceSetupScreen`, `RaceRandomizer`, `RaceBrowserDialog` from
-  `game/ui/screens/race_setup/`.
+Where (remaining sites; PROJ-416 deleted `race_setup_screen.py`, 2026-05-13):
 - `game/ui/screens/test_lab/test_run_details.py` (~12 LOC) — re-exports
   `TestRunDetailsPanel` from `game/ui/screens/test_lab/details/`.
 - `game/simulation/components/component.py:395-405` — re-exports
   loader symbols from `game/simulation/components/component_loader.py`.
+- (Removed PROJ-416) `game/ui/screens/race_setup_screen.py` —
+  the transitional re-export shim is deleted; all callers import
+  from `game/ui/screens/race_setup/screen.py` directly.
 - (Removed PROJ-383) `game/strategy/engine/command_handlers.py` —
   the transitional re-export shim is deleted; all callers import
   from `game/strategy/engine/handlers/base.py` directly.

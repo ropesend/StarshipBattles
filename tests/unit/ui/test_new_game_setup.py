@@ -420,7 +420,7 @@ class TestSetupRacePassesLoadedData:
         screen = self._make_screen()
         screen.player_races[0] = loaded_race
 
-        with patch('game.ui.screens.race_setup_screen.RaceSetupScreen') as MockRaceSetup:
+        with patch('game.ui.screens.race_setup.screen.RaceSetupScreen') as MockRaceSetup:
             screen._on_setup_race_clicked(0)
 
             MockRaceSetup.assert_called_once()
@@ -435,7 +435,7 @@ class TestSetupRacePassesLoadedData:
         screen = self._make_screen()
         # All player_races already default to None from the view model.
 
-        with patch('game.ui.screens.race_setup_screen.RaceSetupScreen') as MockRaceSetup:
+        with patch('game.ui.screens.race_setup.screen.RaceSetupScreen') as MockRaceSetup:
             screen._on_setup_race_clicked(0)
 
             MockRaceSetup.assert_called_once()

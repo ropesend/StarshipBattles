@@ -282,7 +282,7 @@ def test_dialog_and_load_menu_flags_use_menu_manager_callbacks(
     race_factory = SceneFactory("race_setup")
     monkeypatch.setitem(
         sys.modules,
-        "game.ui.screens.race_setup_screen",
+        "game.ui.screens.race_setup.screen",
         SimpleNamespace(RaceSetupScreen=race_factory),
     )
 
