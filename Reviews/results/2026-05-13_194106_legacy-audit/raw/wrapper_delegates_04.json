@@ -1,0 +1,43 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 207,
+  "total_findings": 4,
+  "findings": [
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 568,
+      "function": "to_dict",
+      "delegates_to": "ShipSerializer.to_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def to_dict(self) -> Dict[str, Any]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 581,
+      "function": "from_dict",
+      "delegates_to": "ShipSerializer.from_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def from_dict("
+    },
+    {
+      "file": "game/simulation/systems/battle_engine.py",
+      "line": 449,
+      "function": "_collect_new_attacks",
+      "delegates_to": "_attacks.collect_new_attacks",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _collect_new_attacks(self, alive_ships: List['Ship']) -> List[Any]:"
+    },
+    {
+      "file": "game/ui/screens/builder/weapons_viewmodel.py",
+      "line": 392,
+      "function": "calc_damage_at_range",
+      "delegates_to": "ab.get_damage",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "        def calc_damage_at_range(r) -> Any:"
+    }
+  ]
+}

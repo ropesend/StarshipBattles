@@ -93,6 +93,13 @@
       "count": 2,
       "last_used": "2026-05-04T14:24:03Z"
     },
+    "ocode-legacy-audit": {
+      "agents": {
+        "ocode": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-14T03:10:35Z"
+    },
     "ocode-review-request": {
       "agents": {
         "ocode": 27

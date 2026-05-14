@@ -144,6 +144,37 @@
         "type_checking_only_reexports": 0,
         "optional_protocol_methods": 0
       }
+    },
+    {
+      "date": "2026-05-13",
+      "review_dir": "Reviews/results/2026-05-13_194106_legacy-audit",
+      "findings": {
+        "module_aliases": 0,
+        "init_reexports": 1,
+        "deprecation_markers": 5,
+        "wrapper_delegates": 8,
+        "name_pair_drift": 1,
+        "save_migration_code": 0,
+        "type_checking_only_reexports": 0,
+        "optional_protocol_methods": 0,
+        "superseded_pattern_uses": 0
+      },
+      "by_category": {
+        "module_aliases": 0,
+        "init_reexports": 1,
+        "deprecation_markers": 5,
+        "wrapper_delegates": 8,
+        "name_pair_drift": 1,
+        "save_migration_code": 0,
+        "type_checking_only_reexports": 0,
+        "optional_protocol_methods": 0
+      }
+    },
+    {
+      "critical": 0,
+      "major": 3,
+      "minor": 11,
+      "info": 7
     }
   ]
 }

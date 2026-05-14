@@ -1,0 +1,19 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 207,
+  "total_findings": 2,
+  "findings": [
+    {
+      "file": "game/ui/panels/race_summary_panel.py",
+      "line": 149,
+      "marker": "# legacy",
+      "context": "        # legacy three-column split and the y-55 alignment hack."
+    },
+    {
+      "file": "game/ui/screens/test_lab/dialogs.py",
+      "line": 256,
+      "marker": "# Old",
+      "context": "            # Old value (strikethrough)"
+    }
+  ]
+}
