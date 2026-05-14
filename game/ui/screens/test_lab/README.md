@@ -21,7 +21,7 @@ This package provides the Combat Lab screen where users can:
 | `component_dropdown.py` | ~140 | ComponentDropdown | Component selection dropdown |
 | `ship_panels.py` | ~240 | ShipPanel, TabbedShipPanel, ComponentPanel | Ship/component display panels |
 | `test_run_card.py` | ~370 | TestRunCard | Individual test run history card |
-| `test_run_details.py` | ~830 | TestRunDetailsPanel | Detailed results for selected test |
+| `details/` | (subpackage) | TestRunDetailsPanel | Detailed results for selected test |
 | `results_panel.py` | ~245 | ResultsPanel | Test run history list |
 
 ## Internal Dependencies
@@ -41,7 +41,7 @@ screen.py (orchestrator)
             |
             +-- test_run_card.py (TestRunCard)
             |
-            +-- test_run_details.py (TestRunDetailsPanel)
+            +-- details/ (TestRunDetailsPanel)
 ```
 
 ## Usage

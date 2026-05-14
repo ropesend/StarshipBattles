@@ -1,71 +1,40 @@
-"""Contract tests for the public API of `game.ui.screens.test_lab.test_run_details`.
+"""Contract tests for the public API of `game.ui.screens.test_lab.details`.
 
-PROJ-309 sub-phase 3.6 decomposes `test_run_details.py` (960 LOC) into a
-`details/` subpackage. These tests lock the public surface so the split is
-invisible to callers:
+PROJ-309 sub-phase 3.6 decomposed the original `test_run_details.py` (960 LOC)
+into a `details/` subpackage. PROJ-417 removed the re-export shim; the
+canonical import path is now the subpackage. These tests lock the public
+surface so future refactors stay invisible to callers:
 
-* `TestRunDetailsPanel` class is importable from the canonical historical
-  path `game.ui.screens.test_lab.test_run_details` (preserved via shim).
-* `TestRunDetailsPanel` is also importable from the new canonical path
+* `TestRunDetailsPanel` class is importable from the canonical path
   `game.ui.screens.test_lab.details`.
 * The constructor signature `(x, y, width, height)` is preserved.
 * The public method surface — `set_run`, `clear`, `handle_event`, `draw` —
-  survives the split.
+  survives.
 * The three callback attributes — `on_view_states`, `on_use_seed`,
   `on_copy_results` — survive (these are set by `panel_manager.py`).
 * The three button-rect attributes — `view_states_button_rect`,
   `use_seed_button_rect`, `copy_results_button_rect` — survive (these are
   read by `handle_event` after being written by the action-buttons render).
-
-These tests must PASS pre-split (against the original 960-line file) AND
-post-split (against the new subpackage). That guarantees byte-for-byte
-public-API stability for the two real callers (`panel_manager.py`,
-`results_panel.py`).
 """
 from __future__ import annotations
 
 import pygame
 
 
-def test_test_run_details_panel_importable_from_canonical_legacy_path() -> None:
-    """`TestRunDetailsPanel` must remain importable from
-    `game.ui.screens.test_lab.test_run_details` (the path used by
-    `panel_manager.py`)."""
-    from game.ui.screens.test_lab.test_run_details import TestRunDetailsPanel
+def test_test_run_details_panel_importable_from_canonical_path() -> None:
+    """`TestRunDetailsPanel` must be importable from the canonical path
+    `game.ui.screens.test_lab.details` (used by `panel_manager.py`)."""
+    from game.ui.screens.test_lab.details import TestRunDetailsPanel
 
     assert TestRunDetailsPanel is not None
     assert isinstance(TestRunDetailsPanel, type)
-
-
-def test_test_run_details_panel_importable_from_new_subpackage_path() -> None:
-    """Post-split, `TestRunDetailsPanel` is also importable from
-    `game.ui.screens.test_lab.details`. Pre-split this import is allowed
-    to fail, but we mark it as expected for the new layout."""
-    try:
-        from game.ui.screens.test_lab.details import TestRunDetailsPanel as DetailsPanel
-    except ImportError:
-        # Pre-split: the subpackage doesn't exist yet. Acceptable.
-        return
-    assert DetailsPanel is not None
-    assert isinstance(DetailsPanel, type)
-
-
-def test_legacy_and_new_paths_resolve_to_same_class() -> None:
-    """If both import paths exist, they must point at the same class object —
-    not two parallel definitions."""
-    from game.ui.screens.test_lab.test_run_details import TestRunDetailsPanel as Legacy
-    try:
-        from game.ui.screens.test_lab.details import TestRunDetailsPanel as Canonical
-    except ImportError:
-        return  # Pre-split state — only legacy exists, vacuous pass.
-    assert Legacy is Canonical
 
 
 def _make_panel():
     """Helper: instantiate the panel with reasonable rect."""
     pygame.init()
     pygame.font.init()
-    from game.ui.screens.test_lab.test_run_details import TestRunDetailsPanel
+    from game.ui.screens.test_lab.details import TestRunDetailsPanel
     return TestRunDetailsPanel(0, 0, 600, 400)
 
 

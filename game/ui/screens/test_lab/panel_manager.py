@@ -11,7 +11,7 @@ from pygame_gui.elements import UIButton
 from game.core.config import DisplayConfig
 
 from .ship_panels import ShipPanel, TabbedShipPanel, ComponentPanel
-from .test_run_details import TestRunDetailsPanel
+from .details import TestRunDetailsPanel
 from .results_panel import ResultsPanel
 
 # Module-level height constant (used for panel positioning)
