@@ -4,10 +4,10 @@
   "skills": {
     "claude-consult": {
       "agents": {
-        "claude": 2
+        "claude": 3
       },
-      "count": 2,
-      "last_used": "2026-05-12T04:49:20Z"
+      "count": 3,
+      "last_used": "2026-05-14T02:19:37Z"
     },
     "claude-delegate-review": {
       "agents": {
