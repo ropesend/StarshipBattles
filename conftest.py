@@ -39,10 +39,15 @@ def reset_game_state(monkeypatch, request):
 
     # 0. PRE-TEST CLEANUP (ALWAYS - ensures isolation even after test failures)
     # PROJ-258: RegistryManager is no longer a singleton — create fresh and set as default
+    # PROJ-420: set_default_registry_manager() now also invalidates the
+    # shared lazy GameRegistries cache; explicit reset below is belt-and-
+    # braces in case the helper is referenced before this line in future.
     mgr = RegistryManager()
     set_default_registry_manager(mgr)
 
     # Reset module-level caches to prevent stale data from previous tests
+    from game.core.registry_cache import reset_cached_registries
+    reset_cached_registries()
     reset_component_caches()
     # PROJ-360 audit A1: registry mutable state must reset per-test, not just
     # via in-test cleanup fixtures. A test that crashes before its
@@ -109,7 +114,11 @@ def reset_game_state(monkeypatch, request):
         # Order: Core singletons -> Simulation caches -> AI -> UI managers
 
         # 1. Core singletons
+        # PROJ-420: mgr.clear() does NOT invalidate the helper cache
+        # (only the module-level clear_registry() function does); reset
+        # explicitly here to keep test isolation tight.
         mgr.clear()
+        reset_cached_registries()
 
         # PROJ-181: _default_registries removed - no cleanup needed
 

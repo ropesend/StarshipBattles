@@ -289,9 +289,16 @@ def set_default_registry_manager(manager: RegistryManager) -> None:
 
     Called from ApplicationContext or app.py during startup.
     Module-level wrapper functions (freeze_registry, etc.) use this reference.
+
+    PROJ-420: Invalidates the shared registries cache so callers don't
+    keep dict refs to the previous manager's data.
     """
     global _default_manager
     _default_manager = manager
+    # Local import to avoid an import cycle (registry_cache imports from
+    # this module at module-load time).
+    from game.core.registry_cache import reset_cached_registries
+    reset_cached_registries()
 
 
 def get_default_registry_manager() -> RegistryManager:
@@ -343,10 +350,16 @@ def clear_registry() -> None:
 
     Used by test fixtures to ensure clean state between tests.
 
+    PROJ-420: Invalidates the shared registries cache — the cached
+    ``GameRegistries`` snapshot's ``resource_catalog`` field may be stale
+    after a clear/reload cycle.
+
     Raises:
         FrozenStateException: If the registry is frozen
     """
     get_default_registry_manager().clear()
+    from game.core.registry_cache import reset_cached_registries
+    reset_cached_registries()
 
 
 # =============================================================================
