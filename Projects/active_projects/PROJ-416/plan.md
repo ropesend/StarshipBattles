@@ -13,14 +13,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate 26 race_setup_screen.py imports + 4 test patches, then delete the shim | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Remove Game.running legacy attribute | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Migrate 26 race_setup_screen.py imports + 4 test patches, then delete the shim | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Remove Game.running legacy attribute | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-13
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-13_194106_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Audit ready
+**Last Action:** Phase 1 and Phase 2 implemented; shim deleted; `Game.running` removed and tests migrated to behavior assertions
+**Next Action:** Audit
 **Blockers:** None
 
 ## Overview
