@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate 61 caller files (64 import statements) off planet.py re-exports, then delete the block | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate 61 caller files (64 import statements) off planet.py re-exports, then delete the block | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-14
-**Active Phase:** Phase 1
-**Last Action:** Codex consult completed (leaf: AgentCoordination/Scratchpad/Consult/20260514T035545Z_proj-415_legacy_review); checklist updated with corrected caller counts, ColonySpeciesConfig runtime-dependency note, TYPE_CHECKING/local import coverage, and pre-deletion static verification task
-**Next Action:** Begin Phase 1 tasks per updated checklist
+**Last Updated:** 2026-05-13
+**Active Phase:** Phase 1 (complete)
+**Last Action:** Phase 1 complete — 61 caller files migrated to canonical modules; planet.py shim block deleted (ColonySpeciesConfig retained as runtime import, PlanetaryFacility/SpeciesPopulation moved under TYPE_CHECKING); AST scan reports 0 external shim usages; full test suite passes apart from pre-existing QS Battleship _metadata case.
+**Next Action:** Audit ready
 **Blockers:** None
 
 ## Overview
