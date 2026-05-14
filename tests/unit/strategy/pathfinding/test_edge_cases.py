@@ -5,13 +5,33 @@ Unit tests for pathfinding edge cases, path segments, and hex math integration.
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.pathfinding import (
-    find_path_deep_space,
-    find_path_interstellar,
-    find_hybrid_path,
-    calculate_intercept_point,
-)
-from game.core.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance, hex_linedraw
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+from game.strategy.services.intercept_calculator import InterceptCalculator
+
+
+def find_path_deep_space(start, end):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return hex_linedraw(start, end)
+
+
+def find_path_interstellar(start_system, end_system, galaxy):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return GalaxyPathfindingService(galaxy).find_path_interstellar(start_system, end_system)
+
+
+def find_hybrid_path(galaxy, start, end, fleet=None, can_warp=None):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return GalaxyPathfindingService(galaxy).find_hybrid_path(
+        start, end, fleet=fleet, can_warp=can_warp,
+    )
+
+
+def calculate_intercept_point(chaser, target_fleet, galaxy):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return InterceptCalculator(
+        GalaxyPathfindingService(galaxy),
+    ).calculate_intercept_point(chaser, target_fleet, galaxy)
 
 
 # =============================================================================
@@ -205,7 +225,7 @@ class TestInterceptFallbackBehaviors:
         ]
         endpoint_hex = target_path[-1]["hex"]
 
-        with patch("game.strategy.data.pathfinding.project_fleet_path") as mock_project:
+        with patch("game.strategy.services.intercept_calculator.project_fleet_path") as mock_project:
             mock_project.return_value = target_path
             result = calculate_intercept_point(chaser, target, galaxy)
 
@@ -250,11 +270,12 @@ class TestInterceptFallbackBehaviors:
             HexCoord(3, 0): [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)],  # 3.0
         }
 
-        def fake_hybrid(galaxy, start, end, fleet=None):
+        # PROJ-414: patched on GPS class; signature is `(start, end, fleet=...)`.
+        def fake_hybrid(start, end, fleet=None):
             return canned_paths.get(end, [])
 
-        with patch("game.strategy.data.pathfinding.project_fleet_path") as mock_project, \
-             patch("game.strategy.data.pathfinding.find_hybrid_path", side_effect=fake_hybrid) as mock_hybrid:
+        with patch("game.strategy.services.intercept_calculator.project_fleet_path") as mock_project, \
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path", side_effect=fake_hybrid) as mock_hybrid:
             mock_project.return_value = target_path
             result = calculate_intercept_point(chaser, target, galaxy)
 
@@ -290,12 +311,13 @@ class TestInterceptFallbackBehaviors:
 
         captured_fleets = []
 
-        def fake_hybrid(galaxy, start, end, fleet=None):
+        # PROJ-414: patched on GPS class; signature is `(start, end, fleet=...)`.
+        def fake_hybrid(start, end, fleet=None):
             captured_fleets.append(fleet)
             return [HexCoord(0, 0), HexCoord(50, 0)]
 
-        with patch("game.strategy.data.pathfinding.project_fleet_path") as mock_project, \
-             patch("game.strategy.data.pathfinding.find_hybrid_path", side_effect=fake_hybrid):
+        with patch("game.strategy.services.intercept_calculator.project_fleet_path") as mock_project, \
+             patch("game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path", side_effect=fake_hybrid):
             mock_project.return_value = target_path
             calculate_intercept_point(chaser_state, target, galaxy)
 

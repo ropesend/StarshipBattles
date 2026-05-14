@@ -21,7 +21,7 @@ from game.strategy.data.fleet import (
     MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES,
 )
 from game.strategy.data.order_types import Order
-from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
 
 logger = logging.getLogger(__name__)
 
@@ -182,8 +182,10 @@ class FleetNavigationService:
                 return target_fleet.location
             # Use intercept calculation with NavigationState directly
             # (PROJ-35 Phase 3: calculate_intercept_point now accepts NavigationState)
-            from game.strategy.data.pathfinding import calculate_intercept_point
-            return calculate_intercept_point(state, target_fleet, galaxy)
+            from game.strategy.services.intercept_calculator import InterceptCalculator
+            return InterceptCalculator(
+                GalaxyPathfindingService(galaxy),
+            ).calculate_intercept_point(state, target_fleet, galaxy)
         else:
             # COLONIZE, JOIN_FLEET etc. have no movement component
             return None
@@ -209,13 +211,15 @@ class FleetNavigationService:
             return []
 
         # PROJ-239: Pass can_warp directly instead of constructing a fake fleet object
-        path = find_hybrid_path(galaxy, state.location, destination, can_warp=state.can_warp)
+        path = GalaxyPathfindingService(galaxy).find_hybrid_path(
+            state.location, destination, can_warp=state.can_warp,
+        )
 
         if not path:
             return []
 
         # PROJ-204: Remove start hex if it matches current location
-        stripped = strip_start_hex(state.location, path)
+        stripped = GalaxyPathfindingService.strip_start_hex(state.location, path)
         return stripped if stripped else []
 
     def _needs_path_recalculation(

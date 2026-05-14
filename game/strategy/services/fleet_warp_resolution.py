@@ -12,7 +12,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.pathfinding import find_hybrid_path
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
 
 if TYPE_CHECKING:
     from game.strategy.services.fleet_navigation_service import NavigationState
@@ -35,7 +35,9 @@ def compute_path_for_warp(
 
     # 1. If not at warp point, compute path to it.
     if state.location != warp_point_hex:
-        path_to_wp = find_hybrid_path(galaxy, state.location, warp_point_hex)
+        path_to_wp = GalaxyPathfindingService(galaxy).find_hybrid_path(
+            state.location, warp_point_hex,
+        )
         if path_to_wp:
             # Remove start if matches current location.
             if path_to_wp and path_to_wp[0] == state.location:

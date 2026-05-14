@@ -361,8 +361,10 @@ class SuperweaponOperations:
 
     def _get_system_at_hex(self, hex_coord) -> Any:
         """Find system at hex coordinate."""
-        from game.strategy.data.pathfinding import get_system_at_hex
-        return get_system_at_hex(self.galaxy, hex_coord)
+        from game.strategy.services.galaxy_pathfinding_service import (
+            GalaxyPathfindingService,
+        )
+        return GalaxyPathfindingService(self.galaxy).get_system_at_hex(hex_coord)
 
     def _get_warp_point_at_hex(self, hex_coord) -> Any:
         """Find warp point at the given global hex coordinate."""
