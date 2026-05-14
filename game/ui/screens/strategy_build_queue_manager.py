@@ -30,30 +30,15 @@ if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
     from game.strategy.data.fleet import Fleet
     from game.core.protocols import IFleet
-    from game.core.registry import GameRegistries
     from game.core.hex_math import HexCoord
 
 logger = logging.getLogger(__name__)
 
 
-# PROJ-211: Lazy registries initialization (not available at import time)
-_cached_registries = None
-
-
-def _get_registries() -> 'GameRegistries':
-    """Get or create registries for DesignLoaderAdapter."""
-    global _cached_registries
-    if _cached_registries is None:
-        from game.core.registry import get_default_registry_provider, GameRegistries
-        provider = get_default_registry_provider()
-        _cached_registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-            resource_catalog=provider.get_resource_catalog(),
-        )
-    return _cached_registries
+# PROJ-420: Lazy registries cache lives in game.core.registry_cache —
+# single source of truth shared across ship_io, strategy_build_queue_manager,
+# and setup_data_io.
+from game.core.registry_cache import get_cached_registries
 
 
 class StrategyBuildQueueManager:
@@ -200,7 +185,7 @@ class StrategyBuildQueueManager:
                     facade_state=getattr(self._screen.facade, "facade_state", None),
                 )
                 # PROJ-211: Pass registries explicitly
-                design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
+                design_loader = DesignLoaderAdapter(registry_provider=get_cached_registries())
 
                 # PROJ-69: Calculate hex coord for multi-queue discovery
                 parent_sys = self._screen.galaxy.get_system_of_planet(planet)
@@ -313,7 +298,7 @@ class StrategyBuildQueueManager:
             facade_state=getattr(self._screen.facade, "facade_state", None),
         )
         # PROJ-211: Pass registries explicitly
-        design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
+        design_loader = DesignLoaderAdapter(registry_provider=get_cached_registries())
 
         self._open_build_queue(
             entity, hex_coord, portrait_surface,
@@ -343,7 +328,7 @@ class StrategyBuildQueueManager:
                     facade_state=getattr(self._screen.facade, "facade_state", None),
                 )
                 # PROJ-211: Pass registries explicitly
-                design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
+                design_loader = DesignLoaderAdapter(registry_provider=get_cached_registries())
 
                 # PROJ-69: Use fleet.location as hex_coord for multi-queue discovery
                 hex_coord = fleet.location

@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Introduce shared registries-cache helper and migrate 3 modules | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Introduce shared registries-cache helper and migrate 3 modules | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-13
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-13_194106_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1 (Complete)
+**Last Action:** All Phase 1 tasks implemented and committed. Helper `game/core/registry_cache.py` introduced; 4 UI modules migrated (3 lazy-cache consolidations + 1 dead-code deletion); cache invalidation wired into `set_default_registry_manager`, `clear_registry`, and `conftest.py`'s `reset_game_state`. New tests in `tests/unit/core/test_registry_cache.py` (7 passing). All targeted tests green; full `pytest tests/ --testmon` showed only an unrelated `QS Battleship` metadata failure (20313 passed, 1 unrelated fail).
+**Next Action:** Audit ready
 **Blockers:** None
 
 ## Overview

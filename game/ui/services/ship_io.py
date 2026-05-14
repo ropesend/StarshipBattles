@@ -32,27 +32,12 @@ from game.ui.services.tkinter_utils import (
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
-    from game.core.registry import GameRegistries
 
 
-# PROJ-211: Lazy registries initialization (not available at import time)
-_cached_registries = None
-
-
-def _get_registries() -> 'GameRegistries':
-    """Get or create registries for DesignLoaderAdapter."""
-    global _cached_registries
-    if _cached_registries is None:
-        from game.core.registry import get_default_registry_provider, GameRegistries
-        provider = get_default_registry_provider()
-        _cached_registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-            resource_catalog=provider.get_resource_catalog(),
-        )
-    return _cached_registries
+# PROJ-420: Lazy registries cache lives in game.core.registry_cache —
+# single source of truth shared across ship_io, strategy_build_queue_manager,
+# and setup_data_io.
+from game.core.registry_cache import get_cached_registries
 
 
 class ShipIO:
@@ -82,7 +67,7 @@ class ShipIO:
         PROJ-211: Now passes registries to DesignLoaderAdapter.
         """
         if cls._design_loader is None:
-            cls._design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
+            cls._design_loader = DesignLoaderAdapter(registry_provider=get_cached_registries())
         return cls._design_loader
 
     @staticmethod
