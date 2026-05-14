@@ -7,7 +7,8 @@ import tempfile
 import os
 import json
 import shutil
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
 from tests.fixtures.turn_engine import build_test_turn_engine

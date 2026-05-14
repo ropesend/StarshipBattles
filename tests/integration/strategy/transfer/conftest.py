@@ -8,7 +8,8 @@ PROJ-211: Updated to use ship_factory fixture for DI compliance.
 """
 
 import pytest
-from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord

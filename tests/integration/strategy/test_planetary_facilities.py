@@ -1,5 +1,6 @@
 import pytest
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 
 

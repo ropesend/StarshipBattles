@@ -12,7 +12,8 @@ from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.engine.resupply_engine import ResupplyEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 
 

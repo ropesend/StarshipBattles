@@ -12,7 +12,7 @@ from game.strategy.engine.turn_engine import TurnEngine, TICKS_PER_TURN
 from tests.fixtures.turn_engine import build_test_turn_engine
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 from tests.conftest import make_mock_ship_instance
 from tests.unit.strategy.mocks import MockMovementEngine

@@ -20,7 +20,7 @@ import pytest
 from game.core.resources import ResourceCatalog
 from game.core.registry import GameRegistries, get_default_registry_manager
 from game.strategy.data.empire import Empire
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.engine.harvesting_engine import HarvestingEngine
 from game.simulation.entities.ship_design_stats import calculate_design_stats
 from tests.fixtures.strategy_entities import create_test_planet
