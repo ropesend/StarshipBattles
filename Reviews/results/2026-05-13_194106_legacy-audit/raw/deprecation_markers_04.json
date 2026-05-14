@@ -1,0 +1,13 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 207,
+  "total_findings": 1,
+  "findings": [
+    {
+      "file": "game/app.py",
+      "line": 124,
+      "marker": "# Legacy",
+      "context": "        # Legacy `running` flag \u2014 read by `_handle_strategy_action(\"quit_game\")`"
+    }
+  ]
+}

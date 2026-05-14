@@ -1,0 +1,16 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 185,
+  "total_findings": 1,
+  "findings": [
+    {
+      "file": "game/simulation/components/component_constants.py",
+      "line": 45,
+      "function": "create_modifier",
+      "delegates_to": "ApplicationModifier",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def create_modifier(self, value=None) -> \"ApplicationModifier\":"
+    }
+  ]
+}
