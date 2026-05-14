@@ -90,6 +90,13 @@ def process_close_warp_point(
 
         galaxy.remove_warp_link(current_system.name, destination_id)
 
+        # Issue #31: clear baked-in fleet paths so the next movement tick
+        # re-pathfinds against the post-close warp graph. Even more critical
+        # than the OPEN case — without invalidation, fleets with paths that
+        # traversed the removed lane stall (``compute_path_for_warp`` finds
+        # no source system at the now-gone warp endpoint).
+        processor._get_nav_service().invalidate_paths_for_graph_change(empires or [])
+
         return {
             "event_message": f"Warp point to {destination_id} closed",
             "log_message": (

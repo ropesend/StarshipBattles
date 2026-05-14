@@ -76,8 +76,18 @@ def process_open_warp_point(
         far_r = round(direction_r / dist * orbit_distance)
         far_wp = WarpPoint(current_system.name, HexCoord(far_q, far_r))
 
-        current_system.warp_points.append(near_wp)
-        target_system.warp_points.append(far_wp)
+        # Issue #31: route both endpoints through ``Galaxy.add_warp_point`` so
+        # the ``global_hex_warp_points`` index stays in sync with the live
+        # ``system.warp_points`` lists. Without this, ``IssueWarpCommand``
+        # validation, ``compute_path_for_warp``, hex outline rendering, and
+        # the spatial index all silently misbehave around the new lane.
+        galaxy.add_warp_point(current_system, near_wp)
+        galaxy.add_warp_point(target_system, far_wp)
+
+        # Issue #31: clear baked-in fleet paths so the next movement tick
+        # re-pathfinds against the new warp graph. Fleets in flight on the
+        # old route would otherwise walk the entire stale path to completion.
+        processor._get_nav_service().invalidate_paths_for_graph_change(empires or [])
 
         return {
             "event_message": f"Warp point opened to {target_system.name}",

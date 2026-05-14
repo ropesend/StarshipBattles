@@ -47,6 +47,11 @@ def mock_galaxy():
     galaxy.planets_by_id = {}
     galaxy._planet_to_system = {}
     galaxy._global_hex_planets = {}
+    # Issue #31: ``open_warp_point`` routes through ``Galaxy.add_warp_point``.
+    # Wire the mock to mutate ``warp_points`` so geometry assertions still hold.
+    galaxy.add_warp_point.side_effect = (
+        lambda system, wp: system.warp_points.append(wp)
+    )
     return galaxy
 
 

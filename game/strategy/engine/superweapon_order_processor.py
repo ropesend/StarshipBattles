@@ -53,15 +53,19 @@ class SuperweaponOrderProcessor:
     PROJ-368 Phase 2; it is no longer routed through this processor.
     """
 
-    def __init__(self, event_bus=None, empire_mutator=None):
+    def __init__(self, event_bus=None, empire_mutator=None, nav_service=None):
         """Initialize the superweapon order processor.
 
         Args:
             event_bus: Optional EventBus for structured event logging.
             empire_mutator: PROJ-370 IEmpireMutator. Lazy-defaulted.
+            nav_service: ``FleetNavigationService`` used by warp-graph
+                mutation handlers (#31) to broadcast path invalidation.
+                Lazy-defaulted.
         """
         self._event_bus = event_bus
         self._empire_mutator = empire_mutator
+        self._nav_service = nav_service
 
     def _get_empire_mutator(self):
         if self._empire_mutator is None:
@@ -70,6 +74,14 @@ class SuperweaponOrderProcessor:
             )
             self._empire_mutator = EmpireWriteService()
         return self._empire_mutator
+
+    def _get_nav_service(self):
+        if self._nav_service is None:
+            from game.strategy.services.fleet_navigation_service import (
+                FleetNavigationService,
+            )
+            self._nav_service = FleetNavigationService()
+        return self._nav_service
 
     def _finalize_superweapon(
         self,

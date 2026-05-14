@@ -493,3 +493,22 @@ class FleetNavigationService:
     def set_path(self, fleet: Fleet, new_path) -> None:
         """Replace the fleet's movement path."""
         fleet.path = list(new_path)
+
+    def invalidate_paths_for_graph_change(self, empires) -> None:
+        """Clear baked-in paths across all fleets so the next movement tick
+        re-pathfinds against the updated warp graph.
+
+        Used as a broadcast after a warp-graph mutation (``OPEN_WARP_POINT``,
+        ``CLOSE_WARP_POINT``) — see issue #31. Path writes route through
+        ``set_path`` to honour the PROJ-370 ``IFleetMutator`` boundary.
+
+        Cheaper to invalidate broadly than to enumerate movement order types:
+        the next-tick recompute is fast, idempotent when the existing path
+        is still optimal, and correct under all order-shape interpretations
+        (MOVE, MOVE_TO_FLEET, WARP, and queued movement sub-orders from
+        COLONIZE / JOIN_FLEET).
+        """
+        for empire in empires:
+            for fleet in empire.fleets:
+                if fleet.path:
+                    self.set_path(fleet, [])

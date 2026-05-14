@@ -242,6 +242,19 @@ class Galaxy:
             wp = sys_b.warp_points[-1]
             self._state.global_hex_warp_points[sys_b.global_location + wp.location] = sys_b
 
+    def add_warp_point(self, system: 'StarSystem', wp: 'WarpPoint') -> None:
+        """Append a warp point at runtime and keep the global hex index in sync.
+
+        Canonical seam for handlers that mutate the warp graph (#31). Mirrors
+        the ``remove_warp_link`` pattern: list-append plus index update in a
+        single call. Use this instead of writing ``system.warp_points.append(wp)``
+        directly, otherwise consumers of ``state.global_hex_warp_points`` (warp
+        validation, warp pathfinding, hex outline rendering, spatial index)
+        silently misbehave around the new point.
+        """
+        system.warp_points.append(wp)
+        self._state.global_hex_warp_points[system.global_location + wp.location] = system
+
     def generate_warp_lanes(
         self,
         region_classifier: 'Optional[RegionClassifier]' = None,

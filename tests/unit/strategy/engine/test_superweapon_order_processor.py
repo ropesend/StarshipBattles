@@ -412,6 +412,12 @@ class TestProcessOpenWarpPoint:
             'Alpha': current_system,
             'Beta': target_system,
         }
+        # Issue #31: ``open_warp_point`` now routes through
+        # ``Galaxy.add_warp_point``. Wire the mock to mutate the
+        # ``warp_points`` list so the existing assertions still hold.
+        mock_galaxy.add_warp_point.side_effect = (
+            lambda system, wp: system.warp_points.append(wp)
+        )
 
         processor = SuperweaponOrderProcessor()
         empire = MagicMock()
