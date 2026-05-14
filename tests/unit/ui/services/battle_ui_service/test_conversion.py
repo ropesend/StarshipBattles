@@ -112,6 +112,38 @@ class TestBattleUIServiceShipConversion:
 
         assert dto.current_target_name == "Enemy Ship"
 
+    def test_ship_targeting_projectile_does_not_crash(self, mock_battle_service, mock_ship):
+        """A PDC ship can target a missile (Projectile), which has no .name.
+
+        Regression: _convert_ship() assumed targets are always Ships and did
+        `current_target.name`, raising AttributeError on a Projectile. That
+        error was then swallowed by ShipStatsPanel._get_ships(), which fell
+        back to raw domain Ship objects and crashed the DTO-only renderer.
+        """
+        # spec=[...] omits "name" so accessing it raises AttributeError,
+        # exactly like a real Projectile.
+        missile = Mock(spec=["type", "id", "is_alive", "team_id"])
+        missile.type = AttackType.MISSILE
+        mock_ship.current_target = missile
+
+        service = BattleUIService(mock_battle_service)
+        dto = service.get_ships()[0]  # must not raise
+
+        assert dto.current_target_name == "Missile"
+
+    def test_ship_with_projectile_secondary_target_does_not_crash(
+        self, mock_battle_service, mock_ship
+    ):
+        """Secondary targets may also be projectiles (PDC multi-targeting)."""
+        missile = Mock(spec=["type", "id", "is_alive", "team_id"])
+        missile.type = AttackType.MISSILE
+        mock_ship.secondary_targets = [missile]
+
+        service = BattleUIService(mock_battle_service)
+        dto = service.get_ships()[0]  # must not raise
+
+        assert dto.secondary_target_names == ["Missile"]
+
     def test_ship_with_components_converts_to_dto(self, mock_battle_service, mock_ship):
         """Ship components are converted to ComponentDTO."""
         # Add mock component

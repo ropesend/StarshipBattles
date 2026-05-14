@@ -324,6 +324,22 @@ class TestBattlePanelsDTOIntegration:
         # Verify ui_service.get_ships() was called
         self.mock_scene.ui_service.get_ships.assert_called()
 
+    def test_get_ships_does_not_swallow_real_errors(self):
+        """_get_ships() must not mask real bugs in ui_service.get_ships().
+
+        Regression: a broad `except (AttributeError, TypeError)` swallowed
+        real conversion errors and silently fell back to raw domain Ship
+        objects, which the DTO-only renderer then crashed on with a
+        misleading, far-removed traceback. A real error must propagate.
+        """
+        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
+        self.mock_scene.ui_service.get_ships.side_effect = AttributeError(
+            "'Projectile' object has no attribute 'name'"
+        )
+
+        with pytest.raises(AttributeError, match="Projectile"):
+            panel._get_ships()
+
     def test_toggle_expansion_with_dto_ids(self):
         """Test toggle expand/collapse using DTO ship IDs (PROJ-43)."""
         panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)

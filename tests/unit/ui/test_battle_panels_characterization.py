@@ -9,7 +9,7 @@ Uses the established mocked-pygame substitution pattern: a ``MockRect``
 be imported and exercised without the real pygame display layer.
 
 Coverage focus:
-- BattlePanel._get_ships() fallback (ui_service non-list, AttributeError, etc.)
+- BattlePanel._get_ships() fallback (ui_service non-list) and error propagation
 - ExpandableIdPanel base helpers
 - ShipStatsPanel: banner rect recording per draw, scroll offset translation,
   dead/derelict status colours, shift-click focus, click outside banner
@@ -133,24 +133,32 @@ class TestGetShipsFallback:
         result = panel._get_ships()
         assert result == ["from_scene"]
 
-    def test_get_ships_falls_back_when_ui_service_get_ships_raises_attributeerror(
+    def test_get_ships_propagates_real_errors_from_ui_service(
         self, battle_panels_module
     ):
+        """A genuine error from get_ships() must NOT be swallowed.
+
+        Previously _get_ships() caught AttributeError/TypeError and fell back
+        to raw domain Ship objects, masking conversion bugs and crashing the
+        DTO-only renderer later with a misleading traceback. Real errors now
+        propagate so the failure surfaces at its true source.
+        """
         mod, _ = battle_panels_module
         scene = MagicMock()
         scene.ui_service.get_ships.side_effect = AttributeError("no method")
         scene.ships = ["fallback_ship"]
         panel = mod.BattlePanel(scene, 0, 0, 100, 100)
-        result = panel._get_ships()
-        assert result == ["fallback_ship"]
+        with pytest.raises(AttributeError, match="no method"):
+            panel._get_ships()
 
     def test_get_ships_falls_back_to_empty_list_when_scene_has_no_ships_attr(
         self, battle_panels_module
     ):
         mod, _ = battle_panels_module
         scene = MagicMock(spec=["ui_service"])
-        scene.ui_service.get_ships.side_effect = AttributeError("no method")
-        # spec=['ui_service'] → no .ships attribute
+        # Non-list result (MagicMock auto-result) triggers the fallback;
+        # spec=['ui_service'] → no .ships attribute → empty list.
+        scene.ui_service.get_ships.return_value = MagicMock()
         panel = mod.BattlePanel(scene, 0, 0, 100, 100)
         result = panel._get_ships()
         assert result == []

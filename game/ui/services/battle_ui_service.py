@@ -40,6 +40,25 @@ PROJECTILE_COLORS: Dict[AttackType, Tuple[int, int, int]] = {
 DEFAULT_PROJECTILE_COLOR: Tuple[int, int, int] = PROJECTILE_STANDARD
 
 
+def _target_display_name(target: object) -> str | None:
+    """Resolve a combat target to a display name for the UI.
+
+    A ship's target is not always another ship: PDC-policy ships acquire
+    enemy missiles (``Projectile`` objects) as primary or secondary targets.
+    Ships expose ``.name``; projectiles do not, but expose an attack ``.type``
+    enum we can label with ("Missile", etc.). Returns ``None`` only when the
+    target has neither — callers treat that as "no displayable target".
+    """
+    name = getattr(target, "name", None)
+    if name is not None:
+        return name
+    proj_type = getattr(target, "type", None)
+    if proj_type is not None:
+        type_label = getattr(proj_type, "name", None) or str(proj_type)
+        return type_label.replace("_", " ").title()
+    return None
+
+
 class BattleUIService:
     """Service that provides UI-friendly access to battle state.
 
@@ -168,17 +187,20 @@ class BattleUIService:
             for comp in layer_data.components:
                 components.append(self._convert_component(comp, layer_name))
 
-        # Get target name - current_target is always initialized (may be None)
-        # Target is always a Ship if present (ICombatShip protocol)
+        # Get target name - current_target is always initialized (may be None).
+        # The target may be a Ship OR a Projectile (PDC ships target missiles),
+        # so resolve through _target_display_name rather than assuming .name.
         current_target_name = None
         if ship.current_target:
-            current_target_name = ship.current_target.name
+            current_target_name = _target_display_name(ship.current_target)
 
-        # Get secondary target names - secondary_targets is always initialized (may be empty)
-        # All targets are Ships (ICombatShip protocol)
+        # Get secondary target names - secondary_targets is always initialized
+        # (may be empty). Like current_target, entries may be Ships or Projectiles.
         secondary_target_names = []
         for target in ship.secondary_targets:
-            secondary_target_names.append(target.name)
+            label = _target_display_name(target)
+            if label is not None:
+                secondary_target_names.append(label)
 
         ship_id = ship.id
 

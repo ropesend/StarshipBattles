@@ -4,10 +4,10 @@
   "skills": {
     "claude-fix-crash": {
       "agents": {
-        "claude": 2
+        "claude": 3
       },
-      "count": 2,
-      "last_used": "2026-05-14T16:32:55Z"
+      "count": 3,
+      "last_used": "2026-05-14T17:35:43Z"
     },
     "ocode-docs-audit": {
       "agents": {

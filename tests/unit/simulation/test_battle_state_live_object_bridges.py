@@ -135,6 +135,21 @@ class TestShipStateFromShip:
         state = ShipState.from_ship(ship)
         assert state.current_target_id == "enemy-ship"
 
+    def test_from_ship_resolves_projectile_target_without_crashing(self):
+        """A PDC ship can target a missile (Projectile), which has no .name.
+
+        Regression: `from_ship` assumed `current_target` is always a Ship and
+        did `current_target.name`, raising AttributeError on a Projectile.
+        Projectiles expose `.id`, which is used as the target identifier.
+        """
+        # spec=[...] omits "name" so accessing it raises AttributeError,
+        # exactly like a real Projectile.
+        missile = MagicMock(spec=["id", "type", "is_alive", "team_id"])
+        missile.id = "proj-42"
+        ship = _make_mock_ship(current_target=missile)
+        state = ShipState.from_ship(ship)
+        assert state.current_target_id == "proj-42"
+
 
 # ---------------------------------------------------------------------------
 # ShipState.to_ship

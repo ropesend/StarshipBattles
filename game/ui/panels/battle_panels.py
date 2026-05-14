@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import logging
 import pygame
 from game.core.profiling import profile_action
 from game.ui.widgets.scroll_state import ScrollState
 
-logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
 from game.ui.colors import (
     HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, RESOURCE_FUEL, TEXT_MUTED,
@@ -45,20 +43,24 @@ class BattlePanel:
         draw_stat_bar(surface, x, y, width, height, pct, color)
 
     def _get_ships(self) -> list:
-        """Get ships from ui_service if available, otherwise fallback to scene.ships.
+        """Get ships from ui_service if available, otherwise fall back to scene.ships.
 
-        BattleScreen always has ui_service; this fallback is for test mocks.
+        BattleScreen always has a real ui_service that returns ShipDTOs. The
+        scene.ships fallback exists only for test mocks whose ui_service is a
+        MagicMock — its get_ships() returns a MagicMock, not a list, which the
+        isinstance check below filters out.
+
+        Real exceptions from get_ships() are deliberately NOT caught: they
+        indicate genuine conversion bugs. Swallowing them here would silently
+        substitute raw domain Ship objects for DTOs and crash the DTO-only
+        renderer later with a misleading, far-removed traceback.
         """
         ui_service = self.scene.ui_service
         if ui_service is not None:
-            try:
-                # Try to get ships from ui_service
-                ships = ui_service.get_ships()
-                # Verify it's actually a list (not a MagicMock auto-created result)
-                if isinstance(ships, list):
-                    return ships
-            except (AttributeError, TypeError) as e:
-                logger.debug("Failed to get ships from ui_service, using fallback: %s", e)
+            ships = ui_service.get_ships()
+            # Verify it's actually a list (not a MagicMock auto-created result)
+            if isinstance(ships, list):
+                return ships
         # Fallback to direct ships access (for test mocks)
         return getattr(self.scene, 'ships', [])
 

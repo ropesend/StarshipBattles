@@ -299,11 +299,13 @@ class ShipState:
                 resource_max[name] = ship.resources.get_max_value(name)
 
         # Get current target ID if available
-        # Ship.current_target is always initialized (None by default)
+        # Ship.current_target is always initialized (None by default). The
+        # target may be a Ship OR a Projectile (PDC ships target missiles):
+        # ships are resolved by name, projectiles expose only .id.
         current_target_id = None
         if ship.current_target is not None:
-            # We'll resolve this by ship name for now (should use proper IDs)
-            current_target_id = ship.current_target.name
+            target = ship.current_target
+            current_target_id = getattr(target, 'name', None) or getattr(target, 'id', None)
 
         return cls(
             ship_id=ship_id,

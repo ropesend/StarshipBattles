@@ -132,18 +132,21 @@ class TestShipStatsPanelExtended:
         assert len(ships) == 1
         assert ships[0].name == "Fallback"
 
-    def test_get_ships_with_ui_service_exception_falls_back(self):
-        """Test _get_ships() with ui_service.get_ships() raising exception falls back."""
+    def test_get_ships_propagates_ui_service_exception(self):
+        """Test _get_ships() does NOT swallow real errors from get_ships().
+
+        A genuine error (e.g. a conversion bug) must propagate rather than
+        being masked by a silent fallback to raw domain Ship objects, which
+        the DTO-only renderer cannot consume.
+        """
         panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
 
         ship = self.create_mock_ship(0, "Fallback")
         self.mock_scene.ships = [ship]
         self.mock_scene.ui_service.get_ships.side_effect = AttributeError("No method")
 
-        ships = panel._get_ships()
-
-        assert len(ships) == 1
-        assert ships[0].name == "Fallback"
+        with pytest.raises(AttributeError, match="No method"):
+            panel._get_ships()
 
     def test_multiple_teams_display(self):
         """Test display of multiple teams (team 0 and team 1)."""
