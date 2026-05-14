@@ -18,8 +18,9 @@ into the PROJ-282 MVVM shape. Module roles:
   - `panel_factory.py` — per-tab content factories (delegate to the
     extracted panel/gallery classes in `game/ui/panels/`).
 
-The legacy import path `game.ui.screens.race_setup_screen` remains valid
-via a re-export shim — see `race_setup_screen.py`.
+The legacy `game.ui.screens.race_setup_screen` re-export shim was
+removed in PROJ-416; all callers now import `RaceSetupScreen` from
+`game.ui.screens.race_setup.screen` directly.
 """
 from game.ui.screens.race_setup.screen import RaceSetupScreen
 

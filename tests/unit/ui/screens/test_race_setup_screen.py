@@ -13,6 +13,7 @@ from tests.fixtures.race_setup_ui_builders import (
     MockRaceSetupUiBuilder,
     NullRaceSetupUiBuilder,
 )
+from game.ui.screens.race_setup.screen import RaceSetupScreen
 
 
 # --- Helpers ---
@@ -47,7 +48,6 @@ def _make_race_setup_screen():
     ``with bypass_init(...)`` plus ``MockRaceSetupUiBuilder``. See
     ``Projects/active_projects/PROJ-325/findings/consensus_discussion/uiwindow_mvvm_refactor_plan_r002.md``.
     """
-    from game.ui.screens.race_setup_screen import RaceSetupScreen
 
     race_config = _make_race_config_mock()
     race_library = MagicMock(name="race_library")
@@ -102,7 +102,6 @@ class TestPROJ325TwoStageConstruction:
     """
 
     def test_bypass_init_with_null_builder_yields_useful_instance(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         with bypass_init(RaceSetupScreen):
             screen = make_ui_widget(
@@ -788,7 +787,6 @@ class TestSliderEventDispatch:
         """Original crash reproduction. Pre-fix: raised
         `AttributeError: 'RaceEnvironmentPanel' object has no attribute
         'update_labels'`. Post-fix: runs cleanly."""
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
         screen, _ = self._spec_bound_screen()
         with patch.object(RaceSetupScreen.__mro__[1], "process_event", return_value=False):
             screen.process_event(self._slider_event())
@@ -799,7 +797,6 @@ class TestSliderEventDispatch:
         (writes slider values into `race_config.preferences`). Either
         omission reintroduces a silent bug — stale labels or stale
         config."""
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
         screen, _ = self._spec_bound_screen()
 
         with patch.object(RaceSetupScreen.__mro__[1], "process_event", return_value=False):
@@ -873,7 +870,6 @@ class TestFeat12NavigationButtonVisibility:
     """
 
     def test_randomize_button_visible_on_identity_tab(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_IDENTITY
@@ -881,7 +877,6 @@ class TestFeat12NavigationButtonVisibility:
         screen.btn_randomize.show.assert_called()
 
     def test_randomize_button_visible_on_visuals_tab(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_VISUALS
@@ -889,7 +884,6 @@ class TestFeat12NavigationButtonVisibility:
         screen.btn_randomize.show.assert_called()
 
     def test_randomize_button_visible_on_ships_tab(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_SHIPS
@@ -897,7 +891,6 @@ class TestFeat12NavigationButtonVisibility:
         screen.btn_randomize.show.assert_called()
 
     def test_randomize_button_visible_on_environment_tab(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_ENVIRONMENT
@@ -905,7 +898,6 @@ class TestFeat12NavigationButtonVisibility:
         screen.btn_randomize.show.assert_called()
 
     def test_randomize_button_visible_on_aptitudes_tab(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_APTITUDES
@@ -915,7 +907,6 @@ class TestFeat12NavigationButtonVisibility:
     def test_randomize_button_hidden_on_summary_tab(self):
         """Summary tab uses the master 'Randomize All' button on the
         summary panel — the bottom-bar button is hidden there."""
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_SUMMARY
@@ -923,7 +914,6 @@ class TestFeat12NavigationButtonVisibility:
         screen.btn_randomize.hide.assert_called()
 
     def test_randomize_button_hidden_on_descriptions_tab(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_DESCRIPTIONS
@@ -969,7 +959,6 @@ class TestFeat12RandomizeEnvironmentHandler:
 
     def test_writes_preferences_homeworld_repro_happiness_to_config(self):
         from game.strategy.data.environmental_preference import EnvironmentalPreference
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         # Use a real RaceConfig so dataclass attribute access works.
@@ -990,11 +979,10 @@ class TestFeat12RandomizeEnvironmentHandler:
             "base_reproduction_rate": 0.05,
             "base_happiness": 0.7,
         }
-        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # RaceRandomizer is imported by
         # `game.ui.screens.race_setup.controller`, so we patch the
         # canonical module path that the controller actually imports
-        # from. The legacy `game.ui.screens.race_setup_screen`
-        # re-export still exists but is no longer the import site.
+        # from.
         with patch(
             "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
@@ -1007,7 +995,6 @@ class TestFeat12RandomizeEnvironmentHandler:
         assert screen.race_config.base_happiness == 0.7
 
     def test_refreshes_environment_and_aptitudes_panels(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
         from game.strategy.data.race_config import RaceConfig
 
         screen, mocks = _make_race_setup_screen()
@@ -1015,11 +1002,10 @@ class TestFeat12RandomizeEnvironmentHandler:
         screen.race_config = new_config
         screen._controller.race_config = new_config
 
-        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # RaceRandomizer is imported by
         # `game.ui.screens.race_setup.controller`, so we patch the
         # canonical module path that the controller actually imports
-        # from. The legacy `game.ui.screens.race_setup_screen`
-        # re-export still exists but is no longer the import site.
+        # from.
         with patch(
             "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
@@ -1056,11 +1042,10 @@ class TestFeat12RandomizeAptitudesHandler:
             "cooperation": 50,
             "conflict_tolerance": 40,
         }
-        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # RaceRandomizer is imported by
         # `game.ui.screens.race_setup.controller`, so we patch the
         # canonical module path that the controller actually imports
-        # from. The legacy `game.ui.screens.race_setup_screen`
-        # re-export still exists but is no longer the import site.
+        # from.
         with patch(
             "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
@@ -1071,7 +1056,6 @@ class TestFeat12RandomizeAptitudesHandler:
             assert getattr(screen.race_config, f"aptitude_{name}") == value
 
     def test_refreshes_aptitudes_panel(self):
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
         from game.strategy.data.race_config import RaceConfig
 
         screen, mocks = _make_race_setup_screen()
@@ -1079,11 +1063,10 @@ class TestFeat12RandomizeAptitudesHandler:
         screen.race_config = new_config
         screen._controller.race_config = new_config
 
-        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # RaceRandomizer is imported by
         # `game.ui.screens.race_setup.controller`, so we patch the
         # canonical module path that the controller actually imports
-        # from. The legacy `game.ui.screens.race_setup_screen`
-        # re-export still exists but is no longer the import site.
+        # from.
         with patch(
             "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
@@ -1158,11 +1141,10 @@ class TestFeat12RandomizeAllHandler:
                 "cooperation": 50, "conflict_tolerance": 40,
             },
         }
-        # PROJ-309 Sub-phase 3.1: RaceRandomizer is now imported by
+        # RaceRandomizer is imported by
         # `game.ui.screens.race_setup.controller`, so we patch the
         # canonical module path that the controller actually imports
-        # from. The legacy `game.ui.screens.race_setup_screen`
-        # re-export still exists but is no longer the import site.
+        # from.
         with patch(
             "game.ui.screens.race_setup.controller.RaceRandomizer"
         ) as mock_rand:
@@ -1204,7 +1186,6 @@ class TestProj299KillHookAndErrorMessages:
         worker threads don't try to populate dead UI widgets."""
         from unittest.mock import MagicMock, patch
 
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         with patch.object(RaceSetupScreen, '__init__', lambda self, *a, **k: None):
             screen = RaceSetupScreen.__new__(RaceSetupScreen)
@@ -1224,7 +1205,6 @@ class TestProj299KillHookAndErrorMessages:
     def test_kill_when_no_controller_does_not_raise(self):
         from unittest.mock import MagicMock, patch
 
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         with patch.object(RaceSetupScreen, '__init__', lambda self, *a, **k: None):
             screen = RaceSetupScreen.__new__(RaceSetupScreen)
@@ -1336,7 +1316,6 @@ class TestBug115CloseButtonInvokesCancel:
         screen, _ = _make_race_setup_screen()
         screen.kill = MagicMock()
 
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
         RaceSetupScreen.on_close_window_button_pressed(screen)
 
         screen.on_cancel_callback.assert_called_once()
@@ -1351,7 +1330,6 @@ class TestBug115CloseButtonInvokesCancel:
         screen.kill = MagicMock()
 
         with patch.object(mocks['controller'], 'on_cancel') as on_cancel:
-            from game.ui.screens.race_setup_screen import RaceSetupScreen
             RaceSetupScreen.on_close_window_button_pressed(screen)
 
         on_cancel.assert_called_once()
@@ -1378,7 +1356,6 @@ class TestIssue11LazyPanelConstruction:
         The other six factories are deferred until tab activation."""
         from unittest.mock import patch, MagicMock
 
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
         from game.ui.screens.race_setup import panel_factory
 
         # Build a screen via bypass + NullRaceSetupUiBuilder so we control
@@ -1420,7 +1397,6 @@ class TestIssue11LazyPanelConstruction:
         subsequent activations."""
         from unittest.mock import MagicMock
 
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         screen, _ = _make_race_setup_screen()
         screen._flag_gallery = None

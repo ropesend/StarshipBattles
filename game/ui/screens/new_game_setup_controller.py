@@ -86,9 +86,7 @@ class NewGameSetupController:
         """Handle Load Species button — open the race browser dialog."""
         logger.debug(f"Opening race browser for player {player_index + 1}")
 
-        # PROJ-309 Sub-phase 3.1: import directly from the canonical
-        # location instead of through the legacy ``race_setup_screen``
-        # leaked re-export.
+        # Import directly from the canonical location.
         from game.ui.screens.race_browser_dialog import RaceBrowserDialog
 
         dialog_rect = self._centered_modal_rect(width=600, height=500)
@@ -106,10 +104,10 @@ class NewGameSetupController:
         """Handle Setup Species button — open the race setup wizard."""
         logger.debug(f"Opening race setup for player {player_index + 1}")
 
-        # Import here to avoid circular imports (race_setup_screen
-        # imports new_game_setup_screen at module load via a re-export
-        # chain; deferring keeps the cycle broken).
-        from game.ui.screens.race_setup_screen import RaceSetupScreen
+        # Import here to avoid circular imports (the race_setup
+        # package transitively imports new_game_setup_screen at
+        # module load; deferring keeps the cycle broken).
+        from game.ui.screens.race_setup.screen import RaceSetupScreen
 
         # Race setup is larger than the browser — center on screen.
         setup_rect = self._screen_centered_rect(width=1800, height=1200)
