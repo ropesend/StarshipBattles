@@ -9,12 +9,12 @@ Tests cover:
 """
 import pytest
 import random
+from game.core.spectrum_math import SOLAR_TEMP_K
+from game.strategy.data.spectrum import Spectrum
 from game.strategy.data.stars import (
-    Spectrum,
     Star,
     StarType,
     StarGenerator,
-    SOLAR_TEMP_K,
 )
 from unittest.mock import patch
 from game.core.hex_math import HexCoord, hex_distance

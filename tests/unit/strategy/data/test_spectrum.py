@@ -43,10 +43,3 @@ def test_from_dict_negative_value_raises() -> None:
     bad["xray"] = -0.1
     with pytest.raises(PersistenceException):
         Spectrum.from_dict(bad)
-
-
-def test_stars_module_re_exports_spectrum() -> None:
-    """Backward-compat: external code imports Spectrum from stars.py."""
-    from game.strategy.data import stars
-
-    assert stars.Spectrum is Spectrum

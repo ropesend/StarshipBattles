@@ -139,8 +139,7 @@ class TestSystemInfoFactory:
     def test_from_star_system_basic(self):
         """from_star_system creates DTO from basic StarSystem."""
         from game.strategy.facade.dto.system_dto import SystemInfo
-        from game.strategy.data.galaxy import StarSystem
-
+        from game.strategy.data.star_system import StarSystem
         system = StarSystem(
             name="Test System",
             global_location=HexCoord(10, 5),
@@ -157,8 +156,9 @@ class TestSystemInfoFactory:
     def test_from_star_system_with_star(self):
         """from_star_system includes primary star info."""
         from game.strategy.facade.dto.system_dto import SystemInfo
-        from game.strategy.data.galaxy import StarSystem
-        from game.strategy.data.stars import Star, StarType, Spectrum
+        from game.strategy.data.star_system import StarSystem
+        from game.strategy.data.spectrum import Spectrum
+        from game.strategy.data.stars import Star, StarType
 
         star = Star(
             name="Alpha",
@@ -189,7 +189,7 @@ class TestSystemInfoFactory:
     def test_from_star_system_with_planets(self):
         """from_star_system counts planets correctly."""
         from game.strategy.facade.dto.system_dto import SystemInfo
-        from game.strategy.data.galaxy import StarSystem
+        from game.strategy.data.star_system import StarSystem
         from game.strategy.data.planet import Planet, PlanetType
 
         system = StarSystem(
@@ -224,7 +224,7 @@ class TestSystemInfoFactory:
     def test_from_star_system_counts_colonies(self):
         """from_star_system counts colonized planets."""
         from game.strategy.facade.dto.system_dto import SystemInfo
-        from game.strategy.data.galaxy import StarSystem
+        from game.strategy.data.star_system import StarSystem
         from game.strategy.data.planet import Planet, PlanetType
 
         system = StarSystem(
@@ -261,8 +261,7 @@ class TestSystemInfoFactory:
     def test_from_star_system_counts_warp_points(self):
         """from_star_system counts warp points."""
         from game.strategy.facade.dto.system_dto import SystemInfo
-        from game.strategy.data.galaxy import StarSystem
-
+        from game.strategy.data.star_system import StarSystem
         system = StarSystem(
             name="Test System",
             global_location=HexCoord(10, 5),

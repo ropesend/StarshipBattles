@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from game.core.hex_math import HexCoord
 from game.core.protocols import IAbilitySource, is_ability_source
-from game.strategy.data.galaxy import WarpPoint
+from game.strategy.data.star_system import WarpPoint
 from game.strategy.services.ability_sources import WarpPointAbilitySource
 
 

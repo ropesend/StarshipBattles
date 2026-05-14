@@ -51,8 +51,7 @@ def test_satisfies_iability_source_protocol():
 def test_starsystem_archetype_serialization_roundtrip():
     """StarSystem with archetype + intrinsic_abilities round-trips."""
     from game.core.hex_math import HexCoord
-    from game.strategy.data.galaxy import StarSystem
-
+    from game.strategy.data.star_system import StarSystem
     sys = StarSystem(
         name="Bellatrix",
         global_location=HexCoord(50, 50),

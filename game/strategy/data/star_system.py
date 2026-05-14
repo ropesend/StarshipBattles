@@ -1,8 +1,8 @@
 """``WarpPoint`` and ``StarSystem`` — system-level data classes.
 
 PROJ-372 Phase 3: extracted from ``galaxy.py`` so the Galaxy facade
-can fit under the 350 LOC ceiling. Save format unchanged. ``galaxy.py``
-re-exports both classes for the 7+ external import sites.
+can fit under the 350 LOC ceiling. Save format unchanged. This is the
+canonical module for both classes — import directly from here.
 """
 from __future__ import annotations
 

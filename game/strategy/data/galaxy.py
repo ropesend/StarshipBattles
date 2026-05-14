@@ -10,9 +10,6 @@ from game.strategy.data.naming import NameRegistry
 from game.strategy.data.planet import Planet, PlanetType  # noqa: F401  (PlanetType re-export)
 from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.data.galaxy_state import GalaxyState
-# PROJ-372 Phase 3: WarpPoint + StarSystem extracted to star_system.py.
-# Re-exported here so external import sites continue to resolve them.
-from game.strategy.data.star_system import StarSystem, WarpPoint  # noqa: F401
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 from game.strategy.generation.star_image_registry import StarImageRegistry
 from game.strategy.generation.storm_generator import StormGenerator
@@ -28,6 +25,7 @@ if TYPE_CHECKING:
     from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
     from game.strategy.generation.region_classifier import RegionClassifier
     from game.strategy.data.fleet import Fleet
+    from game.strategy.data.star_system import StarSystem, WarpPoint
 
 
 class Galaxy:
@@ -290,6 +288,11 @@ class Galaxy:
             PersistenceException: required key missing or radius non-positive,
             or any system entry corrupt (PROJ-251 strict).
         """
+        # Local import: ``StarSystem`` lives in ``star_system`` (PROJ-372
+        # Phase 3). Avoids module-level reference now that the re-export is
+        # gone.
+        from game.strategy.data.star_system import StarSystem
+
         require_keys(data, ['radius'], 'Galaxy')
         validate_positive(data['radius'], 'radius', 'Galaxy')
 

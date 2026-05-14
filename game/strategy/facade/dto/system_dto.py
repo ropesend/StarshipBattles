@@ -8,7 +8,7 @@ from typing import List, Optional, Tuple, TYPE_CHECKING
 from game.core.hex_math import HexCoord
 
 if TYPE_CHECKING:
-    from game.strategy.data.galaxy import StarSystem
+    from game.strategy.data.star_system import StarSystem
     from game.strategy.data.stars import Star
 
 

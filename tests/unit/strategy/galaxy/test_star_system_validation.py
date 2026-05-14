@@ -5,9 +5,7 @@ PROJ-171: Deserialization Input Validation - Phase 2
 import pytest
 from game.core.exceptions import PersistenceException
 from game.core.hex_math import HexCoord
-from game.strategy.data.galaxy import StarSystem
-
-
+from game.strategy.data.star_system import StarSystem
 class TestStarSystemFromDictValidation:
     """Test validation in StarSystem.from_dict()."""
 

@@ -41,7 +41,7 @@ from typing import (
 
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
-    from game.strategy.data.galaxy import StarSystem
+    from game.strategy.data.star_system import StarSystem
     from game.strategy.data.planet import Planet
 
 

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.galaxy import StarSystem, WarpPoint
+from game.strategy.data.star_system import StarSystem, WarpPoint
 from tests.fixtures.galaxy_fixtures import make_galaxy_stub
 
 

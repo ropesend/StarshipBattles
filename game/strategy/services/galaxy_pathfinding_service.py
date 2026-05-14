@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, List, Optional, Sequence, TypeVar, Union
 from game.core.hex_math import HexCoord, hex_distance, hex_linedraw
 
 if TYPE_CHECKING:
-    from game.strategy.data.galaxy import StarSystem
+    from game.strategy.data.star_system import StarSystem
     from game.strategy.data.galaxy_protocols import IGalaxySystemGraph
 
 

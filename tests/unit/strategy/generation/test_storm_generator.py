@@ -47,8 +47,9 @@ def storm_defs():
 @pytest.fixture
 def mock_star_system():
     """Create a mock star system for testing."""
-    from game.strategy.data.galaxy import StarSystem
-    from game.strategy.data.stars import Star, Spectrum, StarType
+    from game.strategy.data.star_system import StarSystem
+    from game.strategy.data.spectrum import Spectrum
+    from game.strategy.data.stars import Star, StarType
 
     # Create a simple star
     spectrum = Spectrum(0, 0, 0.1, 0.3, 0.3, 0.2, 0.1, 0, 0)

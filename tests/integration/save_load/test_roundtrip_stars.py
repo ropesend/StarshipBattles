@@ -3,7 +3,8 @@
 import json
 import pytest
 
-from game.strategy.data.stars import Spectrum, Star, StarType
+from game.strategy.data.spectrum import Spectrum
+from game.strategy.data.stars import Star, StarType
 from game.core.hex_math import HexCoord
 from tests.fixtures.strategy_entities import create_test_spectrum, create_test_star
 from tests.integration.save_load.conftest import assert_round_trip_fidelity, assert_field_preserved

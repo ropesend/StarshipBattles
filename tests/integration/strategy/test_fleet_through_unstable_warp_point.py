@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any, List
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.galaxy import WarpPoint
+from game.strategy.data.star_system import WarpPoint
 from game.strategy.services.system_effects_collector import collect_sector_effects
 
 

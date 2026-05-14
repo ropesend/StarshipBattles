@@ -3,9 +3,8 @@
 PROJ-372 Phase 1 split: extracted from ``stars.py`` for the file-LOC
 budget. Save format unchanged — old saves load identically.
 
-External readers should import ``Spectrum`` from here, but
-``stars.py`` re-exports the symbol for backwards-compat with the 15+
-existing import sites.
+This is the canonical module for ``Spectrum``. Import it directly from
+here; ``stars.py`` no longer re-exports the symbol.
 """
 from __future__ import annotations
 

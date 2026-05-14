@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 import game.strategy.data.galaxy_warp_generator as warp_mod
 from game.core.hex_math import HexCoord
-from game.strategy.data.galaxy import StarSystem, WarpPoint
+from game.strategy.data.star_system import StarSystem, WarpPoint
 from game.strategy.data.galaxy_warp_generator import (
     GalaxyWarpGenerator,
     _roll_warp_type,
@@ -79,7 +79,8 @@ class TestWarpGenerationSmallN:
         no other points in between. The warp MST must still produce exactly
         one bidirectional link.
         """
-        from game.strategy.data.galaxy import Galaxy, StarSystem
+        from game.strategy.data.galaxy import Galaxy
+        from game.strategy.data.star_system import StarSystem
         from game.core.hex_math import HexCoord
 
         galaxy = Galaxy(radius=4000)

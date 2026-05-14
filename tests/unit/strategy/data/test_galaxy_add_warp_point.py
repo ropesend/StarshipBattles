@@ -7,9 +7,8 @@ in one call. Mirrors the ``remove_warp_link`` pattern.
 from __future__ import annotations
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
-
-
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import StarSystem, WarpPoint
 class TestGalaxyAddWarpPoint:
     def _make_galaxy_with_two_systems(self):
         galaxy = Galaxy(radius=1000)

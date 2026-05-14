@@ -13,9 +13,11 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.galaxy import Galaxy, StarSystem
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import StarSystem
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.stars import Spectrum, Star, StarType
+from game.strategy.data.spectrum import Spectrum
+from game.strategy.data.stars import Star, StarType
 from game.strategy.services.system_destroyer import (
     SYSTEM_RADIUS_HEXES,
     SystemDestructionPlan,

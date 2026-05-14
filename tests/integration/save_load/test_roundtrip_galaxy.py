@@ -2,7 +2,8 @@
 
 import pytest
 
-from game.strategy.data.galaxy import WarpPoint, StarSystem, Galaxy
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import WarpPoint, StarSystem
 from game.core.hex_math import HexCoord
 from tests.fixtures.strategy_entities import (
     create_test_warp_point,

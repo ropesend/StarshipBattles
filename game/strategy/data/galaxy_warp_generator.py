@@ -11,7 +11,8 @@ from typing import List, Optional, TYPE_CHECKING
 from game.core.hex_math import hex_distance, hex_to_pixel, pixel_to_hex
 
 if TYPE_CHECKING:
-    from game.strategy.data.galaxy import Galaxy, StarSystem
+    from game.strategy.data.galaxy import Galaxy
+    from game.strategy.data.star_system import StarSystem
     from game.strategy.generation.region_classifier import RegionClassifier
 
 

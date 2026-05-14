@@ -42,7 +42,7 @@ class TestSpectrumFactory:
         assert s.gamma_ray == 99.0
 
     def test_to_dict_round_trip(self):
-        from game.strategy.data.stars import Spectrum
+        from game.strategy.data.spectrum import Spectrum
         s = create_test_spectrum()
         d = s.to_dict()
         restored = Spectrum.from_dict(d)
@@ -80,7 +80,7 @@ class TestWarpPointFactory:
         assert wp.destination_id == "SystemX"
 
     def test_to_dict_round_trip(self):
-        from game.strategy.data.galaxy import WarpPoint
+        from game.strategy.data.star_system import WarpPoint
         wp = create_test_warp_point()
         d = wp.to_dict()
         restored = WarpPoint.from_dict(d)

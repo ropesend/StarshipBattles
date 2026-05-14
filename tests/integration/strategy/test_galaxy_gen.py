@@ -1,7 +1,8 @@
 import pytest
 import random
 from game.core.hex_math import HexCoord, hex_distance
-from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import StarSystem, WarpPoint
 from game.strategy.generation.placement_strategies import (
     RandomPlacementStrategy,
     DensityBasedPlacementStrategy,
