@@ -20,6 +20,7 @@ import pygame
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.order_types import Order, OrderType
+from game.ui.config import UIConfig
 from game.ui.screens.orders_window import (
     EDITABLE_ORDER_TYPES,
     OrderDescriber,
@@ -185,3 +186,39 @@ class TestOrdersWindowConstruction:
         window = _make_window(entity)
         order = Order(OrderType.MOVE, target=HexCoord(7, 8))
         assert window._get_order_description(order) == "MOVE (7, 8)"
+
+
+# ---------------------------------------------------------------------------
+# Clear-confirmation dialog positioning (issue #30).
+# ---------------------------------------------------------------------------
+
+
+class TestClearConfirmationDialogPositioning:
+    def test_dialog_rect_is_centered_on_window(self, monkeypatch):
+        # bypass_init skips Sprite.__init__ which populates ``blit_data``.
+        # The pygame_gui ``rect`` setter writes into ``blit_data[1]``, so we
+        # have to seed ``blit_data`` before assigning a rect.
+        entity = _make_entity()
+        window = _make_window(entity)
+        window.blit_data = [None, None, None]
+        window.rect = pygame.Rect(100, 200, 400, 500)
+        window.entity_type = "fleet"
+        window.ui_manager = MagicMock(name="ui_manager")
+
+        captured: dict = {}
+
+        def fake_dialog(**kwargs):
+            captured.update(kwargs)
+            return MagicMock(name="UIConfirmationDialog")
+
+        monkeypatch.setattr(
+            "game.ui.screens.orders_window.UIConfirmationDialog",
+            fake_dialog,
+        )
+
+        window.show_clear_confirmation()
+
+        rect = captured["rect"]
+        assert rect.center == window.rect.center
+        assert rect.width == UIConfig.CONFIRM_DIALOG_WIDTH
+        assert rect.height == UIConfig.CONFIRM_DIALOG_HEIGHT

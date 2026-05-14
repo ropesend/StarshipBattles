@@ -437,8 +437,12 @@ class OrdersWindow(StrategyModalWindow):
 
     def show_clear_confirmation(self) -> None:
         entity_label = self.entity.name if self.entity_type == "planet" else f"fleet {self.entity.id}"
+        confirm_rect = pygame.Rect(
+            0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT
+        )
+        confirm_rect.center = (self.rect.centerx, self.rect.centery)
         UIConfirmationDialog(
-            rect=pygame.Rect(0, 0, 300, 200),
+            rect=confirm_rect,
             manager=self.ui_manager,
             action_long_desc=f"Are you sure you want to clear ALL orders for {entity_label}?",
             window_title="Confirm Clear",
