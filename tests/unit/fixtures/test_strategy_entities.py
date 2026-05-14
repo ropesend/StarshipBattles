@@ -42,7 +42,7 @@ class TestSpectrumFactory:
         assert s.gamma_ray == 99.0
 
     def test_to_dict_round_trip(self):
-        from game.strategy.data.stars import Spectrum
+        from game.strategy.data.spectrum import Spectrum
         s = create_test_spectrum()
         d = s.to_dict()
         restored = Spectrum.from_dict(d)

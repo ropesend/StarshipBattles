@@ -1,7 +1,7 @@
 """Tests for Spectrum.from_dict validation (PROJ-171 Phase 3)."""
 import pytest
 from game.core.exceptions import PersistenceException
-from game.strategy.data.stars import Spectrum
+from game.strategy.data.spectrum import Spectrum
 
 
 def _valid_spectrum_data() -> dict:

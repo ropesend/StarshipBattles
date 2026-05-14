@@ -37,7 +37,8 @@ from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.planetary_facility import PlanetaryFacility
-from game.strategy.data.stars import Spectrum, Star, StarType
+from game.strategy.data.spectrum import Spectrum
+from game.strategy.data.stars import Star, StarType
 from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 from game.strategy.services.stabilizer_registry import find_blocking_stabilizer
 

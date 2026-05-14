@@ -1,16 +1,10 @@
-"""``Star`` data class + re-export shims.
+"""``Star`` data class.
 
-PROJ-372 Phase 1 split:
-- ``Spectrum`` moved to ``game/strategy/data/spectrum.py``
-- ``StarGenerator`` moved to ``game/strategy/generation/star_generator.py``
-- Spectral math moved to ``game/core/spectrum_math.py``
-
-This module re-exports ``Spectrum`` and ``StarGenerator`` for backwards
-compatibility — the 15+ existing import sites for ``from
-game.strategy.data.stars import Spectrum/StarGenerator`` continue to
-work without churn.
-
-The `Star` data class itself stays here; save format unchanged.
+``Spectrum`` lives in ``game/strategy/data/spectrum.py``; ``StarGenerator``
+lives in ``game/strategy/generation/star_generator.py``; solar/Kelvin
+constants and spectral math live in ``game/core/spectrum_math.py``. Import
+those symbols directly from their canonical modules — this module no
+longer re-exports them.
 """
 from __future__ import annotations
 
@@ -27,28 +21,16 @@ from game.core.validation_helpers import (
     validate_positive,
 )
 
-# Re-exports (PROJ-372 Phase 1 backwards-compat).
-from game.core.spectrum_math import (  # noqa: F401  (re-export)
-    SOLAR_LUMINOSITY_W,
-    SOLAR_MASS_KG,
-    SOLAR_RADIUS_M,
-    SOLAR_TEMP_K,
-    WIEN_DISPLACEMENT_CONSTANT,
-)
-from game.strategy.data.spectrum import Spectrum  # noqa: F401  (re-export)
+# Internal use only: ``Star.from_dict`` calls ``Spectrum.from_dict`` and the
+# ``Star.spectrum`` field is typed as ``Spectrum``. The canonical public
+# module for Spectrum is ``game.strategy.data.spectrum``; this private alias
+# is not part of the ``stars`` module's public surface.
+from game.strategy.data.spectrum import Spectrum as _Spectrum
 
 
 __all__ = [
     "StarType",
     "Star",
-    "Spectrum",
-    "StarGenerator",
-    # PROJ-372 backwards-compat re-exports of solar/Kelvin constants.
-    "SOLAR_TEMP_K",
-    "SOLAR_MASS_KG",
-    "SOLAR_RADIUS_M",
-    "SOLAR_LUMINOSITY_W",
-    "WIEN_DISPLACEMENT_CONSTANT",
 ]
 
 
@@ -70,7 +52,7 @@ class Star:
     radius_hexes: int  # Radius in hexes (1 = center only, 2 = center + ring 1, etc.)
     temperature: float  # Kelvin
     luminosity: float  # Solar Luminosity
-    spectrum: Spectrum
+    spectrum: _Spectrum
     star_type: StarType
     color: tuple  # (R, G, B)
     age: float  # Years
@@ -137,7 +119,7 @@ class Star:
         validate_non_negative(data["temperature"], "temperature", "Star")
         validate_positive(data["luminosity"], "luminosity", "Star")
 
-        spectrum = safe_from_dict(Spectrum.from_dict, data["spectrum"], "Star.spectrum")
+        spectrum = safe_from_dict(_Spectrum.from_dict, data["spectrum"], "Star.spectrum")
 
         try:
             location = hex_from_dict(data["location"])

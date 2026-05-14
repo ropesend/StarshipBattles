@@ -7,10 +7,38 @@
 
 ## Files
 
+### Phase 1 (Spectrum + SOLAR_TEMP_K migration)
+
 | File | Type | Action | Notes |
 |------|------|--------|-------|
-| `game/strategy/data/stars.py` | Production | Edit | Delete lines 31-45 re-export block |
+| `game/strategy/data/stars.py` | Production | Edit | Delete re-export block (Spectrum + 5 solar constants), clean __all__, update docstring; keep private `_Spectrum` import for Star.from_dict |
 | `game/strategy/data/spectrum.py` | Production | Edit | Update docstring once shim is gone |
-| `game/strategy/data/galaxy.py` | Production | Edit | Delete WarpPoint/StarSystem re-export |
-| `game/strategy/data/star_system.py` | Production | Edit | Update docstring once shim is gone |
-| `<~61 caller files across game/, tests/>` | Production+Test | Migrate-callers | Rewrite imports to canonical modules |
+| `tests/unit/strategy/data/test_spectrum.py` | Test | Edit | Delete `test_stars_module_re_exports_spectrum` |
+| `game/strategy/data/physics.py` | Production | Migrate-import | Spectrum -> spectrum module |
+| `tests/fixtures/strategy_entities.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/fixtures/test_strategy_entities.py` | Test | Migrate-import | Inline Spectrum import |
+| `tests/unit/ui/screens/test_star_list_filters.py` | Test | Migrate-import | Spectrum |
+| `tests/integration/save_load/test_roundtrip_stars.py` | Test | Migrate-import | Spectrum |
+| `tests/integration/strategy/test_radiation.py` | Test | Migrate-import | Spectrum |
+| `tests/integration/strategy/facade/test_system_queries.py` | Test | Migrate-import | Spectrum |
+| `tests/integration/strategy/test_stabilizer_blocks_superweapon.py` | Test | Migrate-import | Spectrum |
+| `tests/integration/strategy/test_superweapon_integration.py` | Test | Migrate-import | Spectrum |
+| `tests/integration/strategy/test_system_destruction.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/core/test_protocols.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/strategy/stars/test_spectrum_validation.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/strategy/services/test_system_destroyer.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/strategy/generation/test_storm_generator.py` | Test | Migrate-import | Spectrum (inline) |
+| `tests/unit/strategy/facade/test_system_dto.py` | Test | Migrate-import | Spectrum (inline) |
+| `tests/unit/strategy/facade/test_star_info_dto.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/strategy/data/test_galaxy.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/strategy/data/test_radiation_physics.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/strategy/data/test_storm.py` | Test | Migrate-import | Spectrum |
+| `tests/unit/strategy/data/test_stars.py` | Test | Migrate-import | Spectrum + SOLAR_TEMP_K (split: SOLAR_TEMP_K -> game.core.spectrum_math) |
+
+### Phase 2 (WarpPoint/StarSystem migration)
+
+| File | Type | Action | Notes |
+|------|------|--------|-------|
+| `game/strategy/data/galaxy.py` | Production | Edit | Delete ONLY WarpPoint/StarSystem re-export (line 15); preserve PlanetType |
+| `game/strategy/data/star_system.py` | Production | Edit | Update docstring |
+| Phase-2 callers (51) | Production+Test | Migrate-callers | Discovered via grep; see audit log |

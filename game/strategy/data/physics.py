@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List
 
-from game.strategy.data.stars import Spectrum
+from game.strategy.data.spectrum import Spectrum
 from game.core.hex_math import HexCoord, hex_distance
 
 if TYPE_CHECKING:

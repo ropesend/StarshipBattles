@@ -1,6 +1,7 @@
 import pytest
 from game.strategy.data.physics import calculate_incident_radiation, FLUX_SCALE, FALLOFF_EXPONENT
-from game.strategy.data.stars import Star, Spectrum, StarType
+from game.strategy.data.spectrum import Spectrum
+from game.strategy.data.stars import Star, StarType
 from game.core.hex_math import HexCoord
 
 

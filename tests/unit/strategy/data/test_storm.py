@@ -4,7 +4,8 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.storm import Storm
 from game.strategy.data.galaxy import StarSystem, Galaxy
-from game.strategy.data.stars import Star, StarType, Spectrum
+from game.strategy.data.spectrum import Spectrum
+from game.strategy.data.stars import Star, StarType
 
 
 # StormEffect tests removed in PROJ-300 Phase 7 — the legacy dataclass was

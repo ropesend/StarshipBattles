@@ -2,7 +2,8 @@
 import pytest
 from unittest.mock import MagicMock
 from game.core.hex_math import HexCoord
-from game.strategy.data.stars import Star, StarType, Spectrum
+from game.strategy.data.spectrum import Spectrum
+from game.strategy.data.stars import Star, StarType
 from game.strategy.facade.dto.system_dto import StarInfo, SystemInfo
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 

@@ -158,7 +158,8 @@ class TestSystemInfoFactory:
         """from_star_system includes primary star info."""
         from game.strategy.facade.dto.system_dto import SystemInfo
         from game.strategy.data.galaxy import StarSystem
-        from game.strategy.data.stars import Star, StarType, Spectrum
+        from game.strategy.data.spectrum import Spectrum
+        from game.strategy.data.stars import Star, StarType
 
         star = Star(
             name="Alpha",

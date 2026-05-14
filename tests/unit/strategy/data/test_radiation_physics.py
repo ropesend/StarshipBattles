@@ -10,7 +10,7 @@ from unittest.mock import Mock
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.physics import SectorEnvironment, calculate_incident_radiation, FLUX_SCALE, FALLOFF_EXPONENT
-from game.strategy.data.stars import Spectrum
+from game.strategy.data.spectrum import Spectrum
 
 
 class TestSectorEnvironment:

@@ -13,14 +13,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate Spectrum + solar constant imports off stars.py, then delete shim block | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate Spectrum + solar constant imports off stars.py, then delete shim block | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate WarpPoint/StarSystem imports off galaxy.py, then delete shim | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-13
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-13_194106_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete — Spectrum + SOLAR_TEMP_K callers migrated; re-export block deleted from stars.py; guard test removed; private `_Spectrum` alias retained for `Star.from_dict`.
+**Next Action:** Begin Phase 2 (WarpPoint/StarSystem migration off galaxy.py)
 **Blockers:** None
 
 ## Overview
