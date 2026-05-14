@@ -40,7 +40,7 @@ def _make_galaxy(systems_dict):
 
 def _make_system(name, stars, planets=None, location=None):
     """Create a StarSystem with given attributes."""
-    from game.strategy.data.galaxy import StarSystem
+    from game.strategy.data.star_system import StarSystem
     system = StarSystem(name, location or HexCoord(0, 0), stars=stars)
     if planets:
         system.planets = planets

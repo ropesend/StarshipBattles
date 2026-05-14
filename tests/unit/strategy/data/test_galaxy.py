@@ -6,7 +6,8 @@ and zone registry (PROJ-139).
 """
 
 import pytest
-from game.strategy.data.galaxy import Galaxy, StarSystem
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import StarSystem
 from game.strategy.data.spectrum import Spectrum
 from game.strategy.data.stars import Star, StarType
 from game.strategy.data.planet import Planet, PlanetType

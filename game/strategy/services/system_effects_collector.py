@@ -52,8 +52,7 @@ from game.strategy.services.effect_ability_display import (
 )
 
 if TYPE_CHECKING:
-    from game.strategy.data.galaxy import StarSystem
-
+    from game.strategy.data.star_system import StarSystem
 logger = logging.getLogger(__name__)
 
 

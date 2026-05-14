@@ -24,7 +24,8 @@ from game.core.hex_math import HexCoord
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
-    from game.strategy.data.galaxy import Galaxy, StarSystem
+    from game.strategy.data.galaxy import Galaxy
+    from game.strategy.data.star_system import StarSystem
     from game.strategy.services.fleet_navigation_service import NavigationState
 
 PathT = TypeVar("PathT", List[HexCoord], tuple)

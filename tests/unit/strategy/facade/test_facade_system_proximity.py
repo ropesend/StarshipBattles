@@ -3,8 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 from game.core.hex_math import HexCoord
-from game.strategy.data.galaxy import StarSystem
-
+from game.strategy.data.star_system import StarSystem
 class TestFacadeSystemProximity:
     @pytest.fixture
     def mock_session(self):

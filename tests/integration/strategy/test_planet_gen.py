@@ -1,6 +1,7 @@
 import pytest
 import math
-from game.strategy.data.galaxy import Galaxy, StarSystem
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import StarSystem
 from game.strategy.data.planet import Planet, PlanetType
 from game.core.hex_math import HexCoord
 

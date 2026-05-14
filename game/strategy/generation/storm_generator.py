@@ -220,4 +220,4 @@ class StormGenerator:
 # Type hint forward reference
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from game.strategy.data.galaxy import StarSystem
+    from game.strategy.data.star_system import StarSystem

@@ -3,9 +3,8 @@ import tempfile
 import pytest
 import yaml
 from game.strategy.data.naming import NameRegistry
-from game.strategy.data.galaxy import Galaxy, StarSystem, Planet, PlanetType
-
-
+from game.strategy.data.galaxy import Galaxy, Planet, PlanetType
+from game.strategy.data.star_system import StarSystem
 @pytest.fixture
 def temp_yaml_file():
     """Create a temp yaml file for testing."""

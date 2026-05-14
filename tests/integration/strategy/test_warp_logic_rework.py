@@ -3,7 +3,8 @@ import math
 from unittest.mock import patch
 
 from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel
-from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import StarSystem, WarpPoint
 from game.strategy.data.stars import Star
 
 class TestWarpLogicRework:

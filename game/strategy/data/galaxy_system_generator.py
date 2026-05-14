@@ -7,7 +7,8 @@ import random
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.strategy.data.galaxy import Galaxy, StarSystem
+    from game.strategy.data.galaxy import Galaxy
+    from game.strategy.data.star_system import StarSystem
     from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
     from game.strategy.generation.star_generator import StarGenerator
     from game.strategy.data.planet_gen import PlanetGenerator
@@ -128,8 +129,7 @@ class GalaxySystemGenerator:
         # Import here to avoid circular dependency
         from game.strategy.generation.placement_strategies import RandomPlacementStrategy
         from game.strategy.data.spatial_index import SpatialIndex
-        from game.strategy.data.galaxy import StarSystem
-
+        from game.strategy.data.star_system import StarSystem
         if placement_strategy is None:
             placement_strategy = RandomPlacementStrategy()
 

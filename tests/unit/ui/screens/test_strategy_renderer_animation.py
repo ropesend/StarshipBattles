@@ -39,7 +39,7 @@ class TestWarpPointRotationAngle:
         across 100 distinct warp points, the offset distribution should be
         wide (not collapsed to a single value).
         """
-        from game.strategy.data.galaxy import WarpPoint
+        from game.strategy.data.star_system import WarpPoint
         from game.core.hex_math import HexCoord
 
         warp_points = [
@@ -58,7 +58,7 @@ class TestWarpPointRotationAngle:
 
     def test_rotation_offset_is_deterministic(self):
         """Same warp point should always get the same rotation offset."""
-        from game.strategy.data.galaxy import WarpPoint
+        from game.strategy.data.star_system import WarpPoint
         from game.core.hex_math import HexCoord
 
         wp = WarpPoint("sys1", HexCoord(1, 0))

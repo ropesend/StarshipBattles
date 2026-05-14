@@ -5,9 +5,7 @@ PROJ-171: Deserialization Input Validation - Phase 2
 import pytest
 from game.core.exceptions import PersistenceException
 from game.core.hex_math import HexCoord
-from game.strategy.data.galaxy import WarpPoint
-
-
+from game.strategy.data.star_system import WarpPoint
 class TestWarpPointFromDictValidation:
     """Test validation in WarpPoint.from_dict()."""
 

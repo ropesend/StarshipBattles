@@ -12,9 +12,8 @@ from game.core.validation import ValidationResult
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
-from game.strategy.data.galaxy import Galaxy, StarSystem, Planet
-
-
+from game.strategy.data.galaxy import Galaxy, Planet
+from game.strategy.data.star_system import StarSystem
 # PROJ-55: Mock planet type enum for tests
 class MockPlanetType(Enum):
     CONTINENTAL = "CONTINENTAL"

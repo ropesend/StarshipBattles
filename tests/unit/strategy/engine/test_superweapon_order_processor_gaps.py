@@ -16,7 +16,8 @@ from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import StarSystem, WarpPoint
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.stars import Star

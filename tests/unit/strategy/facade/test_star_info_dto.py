@@ -128,8 +128,7 @@ class TestStarInfoBackwardCompatibility:
     def test_system_info_from_star_system_still_works(self):
         """SystemInfo.from_star_system() calls StarInfo.from_star(star) with no extra args.
         This must not break."""
-        from game.strategy.data.galaxy import StarSystem
-
+        from game.strategy.data.star_system import StarSystem
         star = _make_star(name="TestStar")
         system = StarSystem(
             name="TestSystem",
@@ -167,8 +166,7 @@ class TestFacadeGetAllStars:
 
     def test_single_system_single_star(self):
         """One system with one star returns one StarInfo."""
-        from game.strategy.data.galaxy import StarSystem
-
+        from game.strategy.data.star_system import StarSystem
         star = _make_star(name="Sol", mass=1.0)
         system = StarSystem("Solar", HexCoord(10, 20), stars=[star])
         # Add a mock planet
@@ -187,8 +185,7 @@ class TestFacadeGetAllStars:
 
     def test_binary_system(self):
         """Binary system: each star has companion_star_count == 1."""
-        from game.strategy.data.galaxy import StarSystem
-
+        from game.strategy.data.star_system import StarSystem
         star_a = _make_star(name="Alpha A", mass=1.1)
         star_b = _make_star(name="Alpha B", mass=0.9, star_type=StarType.RED_DWARF)
         system = StarSystem("Alpha", HexCoord(5, 5), stars=[star_a, star_b])
@@ -203,8 +200,7 @@ class TestFacadeGetAllStars:
 
     def test_multiple_systems(self):
         """Stars from all systems are collected."""
-        from game.strategy.data.galaxy import StarSystem
-
+        from game.strategy.data.star_system import StarSystem
         s1 = StarSystem("Sys1", HexCoord(0, 0), stars=[_make_star(name="Star1")])
         s2 = StarSystem("Sys2", HexCoord(100, 100), stars=[
             _make_star(name="Star2A"),

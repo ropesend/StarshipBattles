@@ -16,7 +16,8 @@ def _find_project_root():
 
 sys.path.insert(0, str(_find_project_root()))
 
-from game.strategy.data.galaxy import Galaxy, StarSystem
+from game.strategy.data.galaxy import Galaxy
+from game.strategy.data.star_system import StarSystem
 from game.strategy.data.hex_math import hex_to_pixel
 # Imports for snapping
 from game.strategy.data.hex_math import pixel_to_hex, HexCoord

@@ -80,7 +80,7 @@ class TestWarpPointFactory:
         assert wp.destination_id == "SystemX"
 
     def test_to_dict_round_trip(self):
-        from game.strategy.data.galaxy import WarpPoint
+        from game.strategy.data.star_system import WarpPoint
         wp = create_test_warp_point()
         d = wp.to_dict()
         restored = WarpPoint.from_dict(d)

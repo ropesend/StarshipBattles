@@ -205,7 +205,7 @@ class SystemModeHelper:
 
     def generate(self) -> None:
         """Generate a new star system using selected blueprint and seed."""
-        from game.strategy.data.galaxy import StarSystem
+        from game.strategy.data.star_system import StarSystem
         from game.strategy.data.stars import StarGenerator
         from game.strategy.data.planet_gen import PlanetGenerator
         from game.strategy.generation.planet_image_registry import PlanetImageRegistry

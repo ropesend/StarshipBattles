@@ -17,7 +17,7 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.spectrum import Spectrum
 from game.strategy.data.stars import Star, StarType
 from game.strategy.data.storm import Storm
-from game.strategy.data.galaxy import WarpPoint, StarSystem
+from game.strategy.data.star_system import WarpPoint, StarSystem
 from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.planet import Planet, PlanetType
