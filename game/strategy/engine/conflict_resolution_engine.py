@@ -376,9 +376,8 @@ class ConflictResolutionEngine(IConflictEngine):
         location = fleets[0].location
 
         # BUG-126: every-fleet-empty case is not a real combat. The
-        # legacy `_rng_resolve_empty_fleets` only existed to keep
-        # empire bookkeeping consistent when picking a "winner" — and
-        # the strategy layer no longer assigns winners. Skip silently.
+        # strategy layer no longer assigns winners, so empire bookkeeping
+        # does not need to be reconciled here. Skip silently.
         if not any(f.ships for f in fleets):
             logger.info(
                 f"Skipping combat at {location}: no participating fleet "

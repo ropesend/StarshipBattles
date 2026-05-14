@@ -94,7 +94,7 @@ class Paths:
     PLANETS_V3_256_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_256")
     PLANETS_V3_128_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_128")
 
-    # Star subdirectories (PROJ-XX Star Expansion)
+    # Star subdirectories (PROJ-231 star image variant support)
     STARS_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Stars")
     STARS_1024_DIR: str = os.path.join(STARS_DIR, "Stars_1024")
     STARS_512_DIR: str = os.path.join(STARS_DIR, "Stars_512")

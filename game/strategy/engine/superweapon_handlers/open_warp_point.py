@@ -85,8 +85,8 @@ def process_open_warp_point(
         galaxy.add_warp_point(target_system, far_wp)
 
         # Issue #31: clear baked-in fleet paths so the next movement tick
-        # re-pathfinds against the new warp graph. Fleets in flight on the
-        # old route would otherwise walk the entire stale path to completion.
+        # re-pathfinds against the new warp graph. Without this invalidation,
+        # fleets in flight would walk the stale path to completion.
         processor._get_nav_service().invalidate_paths_for_graph_change(empires or [])
 
         return {

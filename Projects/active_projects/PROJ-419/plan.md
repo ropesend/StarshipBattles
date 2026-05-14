@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Single-PR sweep of stale comments and dead imports | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Single-PR sweep of stale comments and dead imports | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-13
-**Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-13_194106_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** Phase 1 (Complete)
+**Last Action:** Applied 5 zero-call-site edits across 5 files; screen_router pytest suite (7 tests) passes.
+**Next Action:** Audit ready
 **Blockers:** None
 
 ## Overview

@@ -145,8 +145,7 @@ class RaceSummaryPanel:
         y += 55
 
         # FEAT-23: two-column layout — left ⅓ stacks Identity/Flag/Portrait,
-        # right ⅔ holds the FACTOR_REGISTRY scroll container. Drops the
-        # legacy three-column split and the y-55 alignment hack.
+        # right ⅔ holds the FACTOR_REGISTRY scroll container.
         left_col_width = panel_width // 3 - 15
         right_col_width = panel_width - left_col_width - 30
         col1_x = 10
