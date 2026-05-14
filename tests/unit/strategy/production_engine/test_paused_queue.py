@@ -15,7 +15,7 @@ import pytest
 
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.engine.production_engine import ProductionEngine
 
 

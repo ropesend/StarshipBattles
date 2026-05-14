@@ -15,7 +15,8 @@ from game.strategy.data.build_queue_source import (
     get_production_rate_for_queue,
     estimate_build_turns,
 )
-from game.strategy.data.planet import Planet, PlanetaryFacility
+from game.strategy.data.planet import Planet
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord

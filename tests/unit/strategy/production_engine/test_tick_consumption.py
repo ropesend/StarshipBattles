@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.engine.production_engine import ProductionEngine
 from tests.fixtures.yard_facility import make_planetary_yard_facility as _make_yard
 

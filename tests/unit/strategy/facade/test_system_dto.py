@@ -386,7 +386,8 @@ class TestPlanetInfoFactory:
     def test_from_planet_with_shipyard(self):
         """from_planet detects space shipyard."""
         from game.strategy.facade.dto.planet_dto import PlanetInfo
-        from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
+        from game.strategy.data.planet import Planet, PlanetType
+        from game.strategy.data.planetary_facility import PlanetaryFacility
 
         planet = Planet(
             name="Shipyard World",

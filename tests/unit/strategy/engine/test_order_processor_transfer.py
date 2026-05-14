@@ -15,7 +15,7 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
-from game.strategy.data.planet import SpeciesPopulation
+from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.engine.order_processor import OrderProcessor
 
 

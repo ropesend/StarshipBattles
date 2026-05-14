@@ -10,7 +10,8 @@ from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
-from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.engine.order_processor import OrderProcessor, TransferResult
 from game.strategy.engine.commands import IssueTransferCommand
 

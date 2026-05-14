@@ -8,7 +8,8 @@ from unittest.mock import MagicMock, patch
 from tests.fixtures.turn_engine import build_test_turn_engine
 
 from game.strategy.engine.population_engine import PopulationEngine
-from game.strategy.data.planet import Planet, SpeciesPopulation, PlanetType
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord

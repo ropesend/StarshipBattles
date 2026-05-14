@@ -63,7 +63,7 @@ def _make_mock_galaxy():
 
 
 def _make_shipyard_facility():
-    from game.strategy.data.planet import PlanetaryFacility
+    from game.strategy.data.planetary_facility import PlanetaryFacility
 
     return PlanetaryFacility(
         instance_id="yard_test",

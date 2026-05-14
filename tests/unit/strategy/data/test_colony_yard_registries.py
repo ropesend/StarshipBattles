@@ -10,7 +10,7 @@ abilities, so the function MUST look up abilities via registries.components.
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.build_queue_source import colony_has_planetary_yard
 
 

@@ -37,7 +37,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 
 
 def make_planetary_yard_facility(

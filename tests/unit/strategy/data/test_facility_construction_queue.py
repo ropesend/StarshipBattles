@@ -5,7 +5,8 @@ PROJ-69 Phase 1: Verifies that facilities can have their own build queues
 and that serialization round-trips correctly.
 """
 import pytest
-from game.strategy.data.planet import Planet, PlanetaryFacility
+from game.strategy.data.planet import Planet
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 
 

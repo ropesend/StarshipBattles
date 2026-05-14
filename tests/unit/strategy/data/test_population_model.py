@@ -5,7 +5,8 @@ Tests SpeciesPopulation dataclass, Planet population tracking,
 max_population calculation, and Empire.race_config storage.
 """
 import pytest
-from game.strategy.data.planet import Planet, SpeciesPopulation, PlanetType
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.species_population import SpeciesPopulation
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 

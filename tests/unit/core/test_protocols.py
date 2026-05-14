@@ -39,7 +39,8 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import StarSystem, WarpPoint
 from game.strategy.data.physics import SectorEnvironment
-from game.strategy.data.planet import Planet, PlanetaryFacility, PlanetType
+from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.stars import Spectrum, Star, StarType
 

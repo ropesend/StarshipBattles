@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.systems.design_library import DesignLoadResult
 
 

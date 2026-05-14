@@ -17,7 +17,7 @@ from game.strategy.quickstart_builder import (
     INITIAL_COMPLEXES,
 )
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planetary_facility import PlanetaryFacility
 
 
 class TestQuickstartBuilderPaths:

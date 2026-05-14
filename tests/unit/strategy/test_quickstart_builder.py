@@ -264,7 +264,7 @@ class TestQuickstartBuilderSpawnComplexes:
 
     def test_spawn_initial_complexes_creates_planetary_facility(self, tmp_path):
         """spawn_initial_complexes creates PlanetaryFacility instances."""
-        from game.strategy.data.planet import PlanetaryFacility
+        from game.strategy.data.planetary_facility import PlanetaryFacility
 
         home_planet = _make_planet()
         session = _make_session([_make_empire(1, colonies=[home_planet])])
