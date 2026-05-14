@@ -13,21 +13,6 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
 
 
-def to_roman(n: int) -> str:
-    """
-    Convert an integer to Roman numeral representation.
-
-    Delegates to NameRegistry.to_roman() for consistent implementation.
-
-    Args:
-        n: Integer to convert (1-3999 supported)
-
-    Returns:
-        Roman numeral string (e.g., 1 -> "I", 4 -> "IV", 9 -> "IX")
-    """
-    return NameRegistry.to_roman(n)
-
-
 def assign_body_names(bodies: List['Planet'], system_name: str) -> None:
     """
     Assign names to planetary bodies based on distance and mass.
@@ -61,7 +46,7 @@ def assign_body_names(bodies: List['Planet'], system_name: str) -> None:
         # Sort group by mass descending (largest is primary, others are moons)
         group.sort(key=lambda x: x.mass, reverse=True)
 
-        roman = to_roman(planet_idx)
+        roman = NameRegistry.to_roman(planet_idx)
         base_name = f"{system_name} {roman}"
 
         # Primary body

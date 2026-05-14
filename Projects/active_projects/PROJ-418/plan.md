@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Inline 1 caller and delete to_roman wrapper | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Inline 1 caller and delete to_roman wrapper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-13
 **Active Phase:** Phase 1
-**Last Action:** Project created from `2026-05-13_194106_legacy-audit` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Action:** Phase 1 complete — inlined caller at planet_naming.py:64, deleted to_roman wrapper, removed TestToRoman from test_planet_naming.py
+**Next Action:** Audit ready
 **Blockers:** None
 
 ## Overview

@@ -1,48 +1,9 @@
 """
 Unit tests for planet naming utilities.
 """
-import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.planet_naming import to_roman, assign_body_names
-
-
-class TestToRoman:
-    """Tests for the to_roman function."""
-
-    def test_one_returns_i(self):
-        """1 should return 'I'."""
-        assert to_roman(1) == "I"
-
-    def test_four_returns_iv(self):
-        """4 should return 'IV' (subtractive notation)."""
-        assert to_roman(4) == "IV"
-
-    def test_five_returns_v(self):
-        """5 should return 'V'."""
-        assert to_roman(5) == "V"
-
-    def test_nine_returns_ix(self):
-        """9 should return 'IX' (subtractive notation)."""
-        assert to_roman(9) == "IX"
-
-    def test_ten_returns_x(self):
-        """10 should return 'X'."""
-        assert to_roman(10) == "X"
-
-    def test_fourteen_returns_xiv(self):
-        """14 should return 'XIV'."""
-        assert to_roman(14) == "XIV"
-
-    def test_thirty_nine_returns_xxxix(self):
-        """39 should return 'XXXIX'."""
-        assert to_roman(39) == "XXXIX"
-
-    def test_sequential_roman_numerals(self):
-        """Verify common sequential numerals for planet naming."""
-        expected = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
-        for n, roman in enumerate(expected, start=1):
-            assert to_roman(n) == roman
+from game.strategy.data.planet_naming import assign_body_names
 
 
 def _make_planet(location: HexCoord, mass: float, name: str = "") -> Planet:
