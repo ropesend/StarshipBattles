@@ -279,12 +279,17 @@ class TestLoadBattleSetup:
 class TestLoadShipsFromEntries:
     """Tests for load_ships_from_entries function."""
 
+    # PROJ-420: ShipFactory class itself is patched (not a module-level
+    # `_ship_factory` instance — that was removed). The factory instance is
+    # accessed via ``mock_factory_cls.return_value``.
+
     @patch('game.ui.screens.setup_data_io.load_json_required')
-    @patch('game.ui.screens.setup_data_io._ship_factory')
-    def test_loads_basic_ships(self, mock_factory, mock_load_json):
+    @patch('game.ui.screens.setup_data_io.ShipFactory')
+    def test_loads_basic_ships(self, mock_factory_cls, mock_load_json):
         """Verify basic ship loading works."""
         from game.ui.screens.setup_data_io import load_ships_from_entries
 
+        mock_factory = mock_factory_cls.return_value
         mock_ship = MagicMock()
         mock_factory.create_from_design.return_value = mock_ship
         mock_load_json.return_value = {'name': 'Frigate', 'layers': []}
@@ -298,11 +303,12 @@ class TestLoadShipsFromEntries:
         mock_ship.recalculate_stats.assert_called_once()
 
     @patch('game.ui.screens.setup_data_io.load_json_required')
-    @patch('game.ui.screens.setup_data_io._ship_factory')
-    def test_uses_relative_position(self, mock_factory, mock_load_json):
+    @patch('game.ui.screens.setup_data_io.ShipFactory')
+    def test_uses_relative_position(self, mock_factory_cls, mock_load_json):
         """Verify relative positions are applied."""
         from game.ui.screens.setup_data_io import load_ships_from_entries
 
+        mock_factory = mock_factory_cls.return_value
         mock_ship = MagicMock()
         mock_factory.create_from_design.return_value = mock_ship
         mock_load_json.return_value = {'name': 'Frigate', 'layers': []}
@@ -321,11 +327,12 @@ class TestLoadShipsFromEntries:
         assert position.y == 2200  # 2000 + 200
 
     @patch('game.ui.screens.setup_data_io.load_json_required')
-    @patch('game.ui.screens.setup_data_io._ship_factory')
-    def test_default_position_spacing(self, mock_factory, mock_load_json):
+    @patch('game.ui.screens.setup_data_io.ShipFactory')
+    def test_default_position_spacing(self, mock_factory_cls, mock_load_json):
         """Verify default position spacing when no relative_position."""
         from game.ui.screens.setup_data_io import load_ships_from_entries
 
+        mock_factory = mock_factory_cls.return_value
         mock_ship = MagicMock()
         mock_factory.create_from_design.return_value = mock_ship
         mock_load_json.return_value = {'name': 'Frigate', 'layers': []}
@@ -344,11 +351,12 @@ class TestLoadShipsFromEntries:
         assert pos2.y == 5000  # i * 5000
 
     @patch('game.ui.screens.setup_data_io.load_json_required')
-    @patch('game.ui.screens.setup_data_io._ship_factory')
-    def test_sets_up_formations(self, mock_factory, mock_load_json):
+    @patch('game.ui.screens.setup_data_io.ShipFactory')
+    def test_sets_up_formations(self, mock_factory_cls, mock_load_json):
         """Verify formations are set up when formation_id present."""
         from game.ui.screens.setup_data_io import load_ships_from_entries
 
+        mock_factory = mock_factory_cls.return_value
         mock_ship = MagicMock()
         mock_factory.create_from_design.return_value = mock_ship
         mock_load_json.return_value = {'name': 'Frigate', 'layers': []}
@@ -368,11 +376,12 @@ class TestLoadShipsFromEntries:
         assert formation_data[0]['rotation_mode'] == 'relative'
 
     @patch('game.ui.screens.setup_data_io.load_json_required')
-    @patch('game.ui.screens.setup_data_io._ship_factory')
-    def test_passes_facing_angle(self, mock_factory, mock_load_json):
+    @patch('game.ui.screens.setup_data_io.ShipFactory')
+    def test_passes_facing_angle(self, mock_factory_cls, mock_load_json):
         """Verify facing angle is passed to configure_ship."""
         from game.ui.screens.setup_data_io import load_ships_from_entries
 
+        mock_factory = mock_factory_cls.return_value
         mock_ship = MagicMock()
         mock_factory.create_from_design.return_value = mock_ship
         mock_load_json.return_value = {'name': 'Frigate', 'layers': []}

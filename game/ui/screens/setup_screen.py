@@ -1,10 +1,9 @@
 """Battle setup screen module for configuring teams before battle.
 
-PROJ-43: Uses ShipFactory facade instead of direct Ship import.
-- ShipFactory: Creates and configures Ship instances via UI services layer
-
-PROJ-211: ShipFactory now requires registry_provider. Uses lazy initialization
-to get registries from get_default_registry_provider() when first needed.
+PROJ-43: Uses ShipFactory facade indirectly via setup_data_io.
+PROJ-420: The local ``_ship_factory`` lazy-init block was dead code
+(``_get_ship_factory()`` was defined but never called — all IO is delegated
+to ``setup_data_io.py``). Removed in the lazy-cache-consolidation cleanup.
 """
 from __future__ import annotations
 
@@ -21,7 +20,6 @@ from game.ui.widgets.scroll_state import ScrollState
 from game.ui.colors import BG_PANEL_DARK, TEAM_1_TEXT, TEAM_2_TEXT
 
 logger = logging.getLogger(__name__)
-from game.ui.services.ship_factory import ShipFactory
 from game.core.paths import Paths
 from game.ui.screens.setup_data_io import (
     scan_ship_designs,
@@ -43,26 +41,6 @@ _MOVEMENT_OPTIONS = [
     ("ramming_speed", "Ram"),
     ("flee_panic", "Evasive"),
 ]
-
-# PROJ-211: Lazy factory initialization (registries not available at import time)
-_ship_factory = None
-
-
-def _get_ship_factory() -> ShipFactory:
-    """Get or create the module-level ShipFactory with DI."""
-    global _ship_factory
-    if _ship_factory is None:
-        from game.core.registry import get_default_registry_provider, GameRegistries
-        provider = get_default_registry_provider()
-        registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-            resource_catalog=provider.get_resource_catalog(),
-        )
-        _ship_factory = ShipFactory(registry_provider=registries)
-    return _ship_factory
 
 
 class BattleSetupScreen:

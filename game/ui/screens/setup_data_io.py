@@ -24,27 +24,11 @@ logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
 from game.core.json_utils import load_json, load_json_required, save_json
 from game.core.paths import Paths
-
-
-# PROJ-211: Lazy factory initialization (registries not available at import time)
-_ship_factory = None
-
-
-def _get_ship_factory() -> ShipFactory:
-    """Get or create the module-level ShipFactory with DI."""
-    global _ship_factory
-    if _ship_factory is None:
-        from game.core.registry import get_default_registry_provider, GameRegistries
-        provider = get_default_registry_provider()
-        registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-            resource_catalog=provider.get_resource_catalog(),
-        )
-        _ship_factory = ShipFactory(registry_provider=registries)
-    return _ship_factory
+# PROJ-420: shared lazy GameRegistries cache (see game/core/registry_cache.py).
+# Core cannot import UI, so the ShipFactory itself isn't cached here — it's
+# constructed inline at the call site below. ShipFactory.__init__ only stores
+# the registry_provider reference (no expensive work).
+from game.core.registry_cache import get_cached_registries
 
 
 def get_base_path() -> Any:
@@ -97,7 +81,10 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
     """
     ships = []
     formation_data = []
-    factory = _get_ship_factory()
+    # PROJ-420: construct ShipFactory inline using the shared registries
+    # cache. ShipFactory.__init__ only stores the provider ref (no expensive
+    # work), so this is cheap to repeat per call.
+    factory = ShipFactory(registry_provider=get_cached_registries())
 
     for i, entry in enumerate(team_entries):
         data = load_json_required(entry['design']['path'])
