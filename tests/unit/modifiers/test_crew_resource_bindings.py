@@ -51,7 +51,7 @@ class TestCrewRequiredBindings:
 
     def test_crew_required_has_crew_req_binding(self):
         """CrewRequired should have CREW_REQ_MULT binding."""
-        from game.simulation.components.abilities.crew import CrewRequired
+        from game.simulation.components.abilities.crew import RequiresMaintenance as CrewRequired
 
         bindings = [b for b in CrewRequired.STAT_BINDINGS
                    if b.stat_key == StatKey.CREW_REQ_MULT]
@@ -63,7 +63,7 @@ class TestCrewRequiredBindings:
 
     def test_crew_required_also_consumes_mass_mult(self):
         """CrewRequired also depends on MASS_MULT for scaling."""
-        from game.simulation.components.abilities.crew import CrewRequired
+        from game.simulation.components.abilities.crew import RequiresMaintenance as CrewRequired
 
         # Note: CrewRequired uses mass_mult indirectly (sqrt(mass_mult))
         # but we don't add it as a binding since the relationship is complex

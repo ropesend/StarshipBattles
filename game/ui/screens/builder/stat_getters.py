@@ -36,13 +36,15 @@ def fmt_targeting(val) -> Any:
 # --- Getters / Helpers ---
 
 def get_total_crew_requirement(ship) -> Any:
-    """Get total crew requirement from CrewRequired ability.
+    """Get total maintenance requirement from RequiresMaintenance ability.
 
     Public helper used by validators and registered as the
     ``'get_crew_required'`` dispatch entry (dispatch key kept stable for
-    JSON layouts; PROJ-392 dropped the trivial wrapper).
+    JSON layouts; PROJ-392 dropped the trivial wrapper). The semantic
+    moved from "crew required" to "maintenance required" as part of QA
+    Observation 5; the function name is retained to limit ripple.
     """
-    return ship.get_ability_total('CrewRequired')
+    return ship.get_ability_total('RequiresMaintenance')
 
 
 # --- Validators ---

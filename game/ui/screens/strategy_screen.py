@@ -190,7 +190,14 @@ class StrategyScreen:
 
     @property
     def current_empire(self) -> Any:
-        """Get the empire for the current player (supports N players)."""
+        """Get the empire for the current player (supports N players).
+
+        This is the *viewing* human — the player whose turn-order index
+        is at ``current_player_index``. Prefer the explicit
+        ``viewing_empire_id`` accessor (below) when only the id is
+        needed; reserve ``active_empire`` for turn-gated authorization
+        decisions (command handlers, end-turn).
+        """
         empires = self.empires
         if not empires:
             return self.active_empire
@@ -201,6 +208,27 @@ class StrategyScreen:
 
         current_player_id = human_player_ids[self.current_player_index]
         return next((e for e in empires if e.id == current_player_id), empires[0])
+
+    @property
+    def viewing_empire_id(self) -> int | None:
+        """Canonical anchor for 'whose data should this UI show'.
+
+        Returns ``current_empire.id`` (the human at the keyboard), not
+        ``active_empire.id`` (the empire whose turn it is). The two
+        diverge in hot-seat play — e.g. when a save is loaded mid-turn,
+        or when ``advance_turn`` has rotated ``active_empire`` but the
+        UI is rendering for the previous viewer.
+
+        New UI surfaces that fetch empire-scoped data (designs,
+        planets, fleets, build queues, deployments, etc.) should
+        anchor here. Turn-gated actions (move orders, end-turn) still
+        authorize against ``active_empire``.
+
+        See ``feedback_viewing_empire_anchor`` memory and QA Obs 1
+        (post-PROJ-FMS, 2026-05-16).
+        """
+        empire = self.current_empire
+        return empire.id if empire is not None else None
 
     @property
     def facade(self) -> Any:

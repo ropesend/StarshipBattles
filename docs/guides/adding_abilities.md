@@ -162,7 +162,7 @@ class CustomAbility(Ability):
         return self.damage
 ```
 
-Current examples: `WeaponAbility`, `ResourceConsumption`, `CrewRequired`, `WarpJump`, `EmissiveArmor`, strategic planetary abilities.
+Current examples: `WeaponAbility`, `ResourceConsumption`, `RequiresMaintenance`, `WarpJump`, `EmissiveArmor`, strategic planetary abilities.
 
 ## Marker Abilities
 

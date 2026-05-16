@@ -8,7 +8,7 @@ import pytest
 import math
 from unittest.mock import MagicMock
 
-from game.simulation.components.abilities.crew import CrewRequired
+from game.simulation.components.abilities.crew import RequiresMaintenance as CrewRequired
 from game.simulation.components.abilities.stat_keys import StatKey
 
 

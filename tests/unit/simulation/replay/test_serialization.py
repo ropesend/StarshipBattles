@@ -625,7 +625,7 @@ class TestComponentsRegistryHash:
 
         class ComponentObject:
             def to_dict(self):
-                return {"mass": 3, "abilities": {"CrewRequired": 1}}
+                return {"mass": 3, "abilities": {"RequiresMaintenance": 1}}
 
         class BadComponentObject:
             def to_dict(self):

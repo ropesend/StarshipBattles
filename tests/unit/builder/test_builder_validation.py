@@ -265,48 +265,63 @@ class TestComplexRules:
         return Component(data, registries=self.registries)
 
     def test_class_requirements(self):
-        """Verify ClassRequirementsRule (Crew/LifeSupport) validates component abilities."""
-        # Note: Post-Phase 5, the validator no longer reads 'requirements' from JSON.
-        # It validates crew/life-support by comparing component ability totals directly.
+        """Verify ClassRequirementsRule validates the maintenance + crew-needs-LS rules.
 
-        # Case 1: Insufficient Crew Housing
-        # Component needing 10 Crew
+        QA Observation 5 maintenance abstraction: the old crew-housing-vs-required
+        check is replaced by (a) a hard crew-needs-life-support rule and (b) a
+        maintenance rule comparing RequiresMaintenance vs ProvidesMaintenance.
+        """
+
+        # Case 1: Insufficient Maintenance
         bridge = self.create_component_with_abilities(
-            {"CrewRequired": 10},
+            {"RequiresMaintenance": 10},
             name="Bridge"
         )
-
-        # Quarters providing 5 Crew
+        # Quarters provides only 5 maintenance (and 5 crew, with no LS).
         quarters = self.create_component_with_abilities(
-            {"CrewCapacity": 5},
+            {"CrewCapacity": 5, "ProvidesMaintenance": 5},
             name="Quarters"
         )
-
         self.ship.add_component(bridge, LayerType.INNER)
         self.ship.add_component(quarters, LayerType.INNER)
 
-        # Run validation
         result = self.validator.validate_design(self.ship)
 
-        # Check errors - should report crew housing shortage (Need 5 more)
-        found_crew_error = any("more crew housing" in e for e in result.errors)
-        assert found_crew_error, f"Should report crew housing shortage. Errors: {result.errors}"
+        # Crew-needs-LS rule: 5 crew capacity but 0 life support → error.
+        found_crew_ls_error = any(
+            "life support" in e.lower() and "crew" in e.lower()
+            for e in result.errors
+        )
+        assert found_crew_ls_error, (
+            f"Should report crew-without-life-support. Errors: {result.errors}"
+        )
 
-        # Case 2: Insufficient Life Support
-        # We have 5 capacity, 10 required.
-        # Add Life Support for 8 people.
+        # Maintenance rule: 10 required, 5 provided → error.
+        found_maint_error = any("maintenance" in e.lower() for e in result.errors)
+        assert found_maint_error, (
+            f"Should report maintenance shortage. Errors: {result.errors}"
+        )
+
+        # Case 2: Add enough life support and enough maintenance providers.
         life_support = self.create_component_with_abilities(
-            {"LifeSupportCapacity": 8},
+            {"LifeSupportCapacity": 20},
             name="LifeSupport"
         )
+        extra_maint = self.create_component_with_abilities(
+            {"ProvidesMaintenance": 10},
+            name="ExtraMaint"
+        )
         self.ship.add_component(life_support, LayerType.INNER)
+        self.ship.add_component(extra_maint, LayerType.INNER)
 
         result = self.validator.validate_design(self.ship)
-
-        # Crew Housing: 5 cap < 10 req -> Error
-        # Life Support: 8 cap < 10 req -> Error
-        found_ls_error = any("more life support" in e for e in result.errors)
-        assert found_ls_error, f"Should report life support shortage. Errors: {result.errors}"
+        joined = " ".join(result.errors).lower()
+        assert "maintenance" not in joined, (
+            f"Maintenance should now be satisfied. Errors: {result.errors}"
+        )
+        assert "life support" not in joined, (
+            f"Crew-needs-LS should now pass. Errors: {result.errors}"
+        )
 
     def test_resource_dependency(self):
         """Verify ResourceDependencyRule (Ammo/Fuel)."""

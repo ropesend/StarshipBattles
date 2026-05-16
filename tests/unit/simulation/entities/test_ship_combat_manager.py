@@ -145,17 +145,21 @@ class TestShipCombatManagerDerelict:
         assert self.ship.bridge_destroyed is False
 
     def test_derelict_crew_check(self):
-        """Ship with insufficient crew capacity becomes derelict."""
-        # Add a bridge (requires crew) but no crew quarters
+        """Ship with insufficient maintenance providers becomes derelict.
+
+        QA Observation 5: derelict status now keys off RequiresMaintenance
+        vs ProvidesMaintenance (crew is one provider; without crew_quarters
+        the bridge's maintenance demand goes unmet).
+        """
+        # Add a bridge (requires maintenance) but no crew quarters / maintenance unit
         self.ship.add_component(
             create_component('bridge', registries=self.registries),
             LayerType.CORE
         )
-        # Bridge requires crew. Without crew quarters, capacity < required.
         self.ship.recalculate_stats()
-        crew_req = self.ship.get_total_ability_value('CrewRequired')
-        crew_cap = self.ship.get_total_ability_value('CrewCapacity')
-        if crew_req > 0 and crew_req > crew_cap:
+        maint_req = self.ship.get_total_ability_value('RequiresMaintenance')
+        maint_provided = self.ship.get_total_ability_value('ProvidesMaintenance')
+        if maint_req > 0 and maint_req > maint_provided:
             self.ship.update_derelict_status()
             assert self.ship.is_derelict is True
 

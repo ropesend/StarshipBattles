@@ -137,7 +137,7 @@ def test_formatters_and_validators_cover_boundary_values() -> None:
 
     ship = SimpleNamespace(
         mass_limits_ok=True,
-        get_ability_total=lambda ability: 5 if ability == "CrewRequired" else 0,
+        get_ability_total=lambda ability: 5 if ability == "RequiresMaintenance" else 0,
     )
     assert stat_getters.mass_validator(ship, 0)[0] is True
     assert stat_getters.crew_validator(ship, 5)[0] is True
@@ -155,7 +155,7 @@ def test_basic_stat_getters_read_ship_fields_and_ability_totals() -> None:
         ammo_consumption=2.5,
         energy_consumption=3.5,
         get_ability_total=lambda ability: {
-            "CrewRequired": 9,
+            "RequiresMaintenance": 9,
             "CrewCapacity": -4,
             "LifeSupportCapacity": 6,
         }.get(ability, 0),
@@ -227,6 +227,26 @@ def test_weapon_and_combat_summary_getters() -> None:
 
     ship.cached_summary = None
     assert stat_getters.get_total_dps(ship) == 0
+
+
+def test_dps_duration_finite_when_ammo_endurance_is_finite() -> None:
+    """QA Observation 4 regression.
+
+    A fighter armed only with mini_railgun (now consuming ammo per shot) should
+    surface a finite DPS-duration in the Builder. Before the data fix,
+    ``ammo_endurance`` defaulted to ``float('inf')`` because no
+    ResourceConsumption ability was bound, so the Builder displayed "Infinite".
+    """
+    weapon = FakeComponent({"WeaponAbility": object()})
+    ship = FakeShip(components=[weapon])
+    ship.cached_summary = {"dps": 5.0}
+    ship.ammo_endurance = 400.0  # 200 ammo / 0.5 ammo-per-sec = 400s
+    ship.energy_endurance = float("inf")
+    ship.max_weapon_range = 1000
+
+    duration = stat_getters.get_dps_duration(ship)
+    assert duration != float("inf")
+    assert duration == 400.0
 
 
 def test_warp_and_strategic_range_getters_cover_resource_edges() -> None:

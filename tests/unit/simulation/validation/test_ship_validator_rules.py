@@ -603,14 +603,13 @@ class TestClassRequirementsRule:
             assert not result.is_valid
             assert any("Combat propulsion" in e for e in result.errors)
 
-    def test_insufficient_crew_housing_fails(self, mock_registries, mock_ship):
-        """Should fail when crew capacity insufficient."""
+    def test_insufficient_maintenance_fails(self, mock_registries, mock_ship):
+        """QA Observation 5: missing maintenance providers triggers a hard error."""
         with patch('game.simulation.entities.ship_stats.ShipStatsCalculator') as MockCalc:
             mock_calc = Mock()
             mock_calc.calculate_ability_totals.return_value = {
-                'CrewCapacity': 5,
-                'CrewRequired': 10,
-                'LifeSupportCapacity': 10
+                'RequiresMaintenance': 10,
+                'ProvidesMaintenance': 5,
             }
             MockCalc.return_value = mock_calc
 
@@ -618,16 +617,15 @@ class TestClassRequirementsRule:
             result = rule.validate(mock_ship, None, None)
 
             assert not result.is_valid
-            assert any("crew housing" in e for e in result.errors)
+            assert any("maintenance" in e.lower() for e in result.errors)
 
-    def test_insufficient_life_support_fails(self, mock_registries, mock_ship):
-        """Should fail when life support insufficient."""
+    def test_crew_without_life_support_fails(self, mock_registries, mock_ship):
+        """QA Observation 5: declaring crew without life support is a hard error."""
         with patch('game.simulation.entities.ship_stats.ShipStatsCalculator') as MockCalc:
             mock_calc = Mock()
             mock_calc.calculate_ability_totals.return_value = {
                 'CrewCapacity': 10,
-                'CrewRequired': 10,
-                'LifeSupportCapacity': 5
+                'LifeSupportCapacity': 5,
             }
             MockCalc.return_value = mock_calc
 
@@ -635,7 +633,8 @@ class TestClassRequirementsRule:
             result = rule.validate(mock_ship, None, None)
 
             assert not result.is_valid
-            assert any("life support" in e for e in result.errors)
+            joined = " ".join(result.errors).lower()
+            assert "life support" in joined and "crew" in joined
 
 
 # =============================================================================

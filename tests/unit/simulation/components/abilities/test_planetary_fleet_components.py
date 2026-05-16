@@ -83,7 +83,7 @@ class TestSystemDefenseUplinkDefinition:
     def test_has_crew_required(self, fresh_registries):
         """Should have CrewRequired ability."""
         comp = create_component(SYSTEM_DEFENSE_UPLINK_ID, registries=fresh_registries)
-        ability = _find_ability(comp, "CrewRequired")
+        ability = _find_ability(comp, "RequiresMaintenance")
         assert ability is not None
 
     def test_has_requires_cnc(self, fresh_registries):
@@ -157,7 +157,7 @@ class TestSystemCountermeasuresNetworkDefinition:
     def test_has_crew_required(self, fresh_registries):
         """Should have CrewRequired ability."""
         comp = create_component(SYSTEM_COUNTERMEASURES_NETWORK_ID, registries=fresh_registries)
-        ability = _find_ability(comp, "CrewRequired")
+        ability = _find_ability(comp, "RequiresMaintenance")
         assert ability is not None
 
     def test_has_requires_cnc(self, fresh_registries):

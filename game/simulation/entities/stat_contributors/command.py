@@ -1,20 +1,25 @@
 """
-Command / control stat contributor — priority sort + multiplex tracking + crew alloc.
+Command / control stat contributor — priority sort + multiplex tracking + maintenance alloc.
 
 Command-and-control concerns:
 
-- Component priority for crew allocation (CommandAndControl > engines >
+- Component priority for maintenance allocation (CommandAndControl > engines >
   weapons > everything else).
 - ``MultiplexTracking`` ability — sets ``ship.max_targets`` to the highest
   multiplex value across active components.
-- Crew + life-support allocation across components (deactivates components
-  that can't be staffed).
+- Maintenance allocation across components (deactivates components that
+  can't be maintained).
 
 PROJ-360 Phase 2: extracted from ``ShipStatsCalculator
 ._priority_sort_key`` + ``_phase_resource_allocation`` + the inline
 multiplex block. PROJ-367 Phase 1: typed MultiplexTrackingAbility access.
 PROJ-367 Phase 2: ``contribute_multiplex_tracking`` registered as a
-default Phase-3 contributor at module import.
+default Phase-3 contributor at module import. QA Observation 5
+maintenance abstraction: per-component requirement now comes from
+``RequiresMaintenance``; per-ship supply now comes from
+``ProvidesMaintenance``. Crew and life support are reported but no
+longer silently clamp each other at runtime — the validator rejects
+crew-without-life-support designs at design time.
 """
 from __future__ import annotations
 
@@ -53,17 +58,29 @@ def allocate_crew_and_life_support(
     component_pool: List["Component"],
     available_crew: int,
     available_life_support: int,
+    available_maintenance: int,
     vehicle_classes: dict,
 ) -> None:
-    """Phase 2 of the calculator: allocate crew/life support across components.
+    """Phase 2 of the calculator: allocate maintenance across components.
+
+    Records crew, life-support, and maintenance supply on the ship for UI
+    consumption, then allocates maintenance per-component in priority
+    order. Components that can't be maintained are deactivated with
+    ``ComponentStatus.NO_CREW``.
 
     Mutations:
 
     - ``ship.crew_onboard`` / ``ship.crew_required`` / ``ship.max_targets``
     - ``ship.max_mass_budget``
     - Sorts ``component_pool`` in place by ``lookup_crew_priority``
-    - Deactivates components that can't be crewed (sets
+    - Deactivates components that can't be maintained (sets
       ``ComponentStatus.NO_CREW``)
+
+    Note: ``ship.crew_required`` historically stored "crew the ship needs
+    to run"; after QA Observation 5 it stores the total maintenance
+    demand (sum of ``RequiresMaintenance`` across active components).
+    The field name is retained to limit UI/test ripple while the
+    semantic change percolates.
     """
     ship.crew_onboard = available_crew
     ship.crew_required = 0
@@ -73,7 +90,11 @@ def allocate_crew_and_life_support(
         "max_mass", DEFAULT_MAX_MASS
     )
 
-    effective_crew = min(available_crew, available_life_support)
+    # QA Observation 5: no silent runtime degradation by life-support shortage.
+    # The validator rejects designs where CrewCapacity > LifeSupportCapacity
+    # at design time, so available_life_support is informational here.
+    _ = available_life_support
+    remaining_maintenance = available_maintenance
 
     component_pool.sort(key=lookup_crew_priority)
 
@@ -81,15 +102,15 @@ def allocate_crew_and_life_support(
         if not comp.is_active:
             continue
 
-        req_crew = 0
-        for ab in comp.get_abilities("CrewRequired"):
-            req_crew += ab.amount
+        req_maint = 0
+        for ab in comp.get_abilities("RequiresMaintenance"):
+            req_maint += ab.amount
 
-        ship.crew_required += req_crew
+        ship.crew_required += req_maint
 
-        if req_crew > 0:
-            if effective_crew >= req_crew:
-                effective_crew -= req_crew
+        if req_maint > 0:
+            if remaining_maintenance >= req_maint:
+                remaining_maintenance -= req_maint
             else:
                 comp.is_active = False
                 comp.status = ComponentStatus.NO_CREW

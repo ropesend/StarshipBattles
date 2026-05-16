@@ -46,7 +46,12 @@ from .defense import (
 )
 
 # Crew abilities
-from .crew import CrewCapacity, LifeSupportCapacity, CrewRequired
+from .crew import (
+    CrewCapacity,
+    LifeSupportCapacity,
+    RequiresMaintenance,
+    ProvidesMaintenance,
+)
 
 # Marker abilities
 from .markers import (
@@ -153,7 +158,8 @@ ABILITY_REGISTRY = {
     "CommandAndControl": CommandAndControl,
     "CrewCapacity": CrewCapacity,
     "LifeSupportCapacity": LifeSupportCapacity,
-    "CrewRequired": CrewRequired,
+    "RequiresMaintenance": RequiresMaintenance,
+    "ProvidesMaintenance": ProvidesMaintenance,
     "ToHitAttackModifier": ToHitAttackModifier,
     "ToHitDefenseModifier": ToHitDefenseModifier,
     "EmissiveArmor": EmissiveArmor,
@@ -301,7 +307,8 @@ __all__ = [
     # Crew
     'CrewCapacity',
     'LifeSupportCapacity',
-    'CrewRequired',
+    'RequiresMaintenance',
+    'ProvidesMaintenance',
     # Markers
     'CommandAndControl',
     'RequiresCommandAndControl',

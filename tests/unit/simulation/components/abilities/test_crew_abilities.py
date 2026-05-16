@@ -1,7 +1,7 @@
 """
 Unit tests for crew abilities.
 
-Tests CrewCapacity, LifeSupportCapacity, and CrewRequired ability classes.
+Tests CrewCapacity, LifeSupportCapacity, and RequiresMaintenance ability classes.
 
 Addresses TCG-SIM-018 / UNK-03: Crew ability classes have minimal test coverage.
 """
@@ -12,7 +12,7 @@ import math
 from game.simulation.components.abilities.crew import (
     CrewCapacity,
     LifeSupportCapacity,
-    CrewRequired,
+    RequiresMaintenance,
 )
 from game.simulation.components.abilities.stat_keys import StatKey
 from game.simulation.components.abilities.ui_colors import (
@@ -307,15 +307,15 @@ class TestLifeSupportCapacity:
 
 
 # =============================================================================
-# CrewRequired Tests
+# RequiresMaintenance Tests
 # =============================================================================
 
-class TestCrewRequired:
-    """Tests for CrewRequired ability class."""
+class TestRequiresMaintenance:
+    """Tests for RequiresMaintenance ability class."""
 
     def test_init_with_numeric_value(self, mock_component):
         """Initialize with a simple numeric value."""
-        ability = CrewRequired(mock_component, 5)
+        ability = RequiresMaintenance(mock_component, 5)
 
         assert ability.amount == 5
         assert ability._base_amount == 5
@@ -324,40 +324,40 @@ class TestCrewRequired:
     def test_init_with_dict_value_key(self, mock_component):
         """Initialize with dict containing 'value' key."""
         data = {'value': 8}
-        ability = CrewRequired(mock_component, data)
+        ability = RequiresMaintenance(mock_component, data)
 
         assert ability.amount == 8
 
     def test_init_with_dict_amount_key(self, mock_component):
         """Initialize with dict containing 'amount' key."""
         data = {'amount': 12}
-        ability = CrewRequired(mock_component, data)
+        ability = RequiresMaintenance(mock_component, data)
 
         assert ability.amount == 12
 
     def test_init_with_dict_value_takes_priority(self, mock_component):
         """'value' key takes priority over 'amount' key."""
         data = {'value': 5, 'amount': 10}
-        ability = CrewRequired(mock_component, data)
+        ability = RequiresMaintenance(mock_component, data)
 
         assert ability.amount == 5
 
     def test_init_with_float_truncates(self, mock_component):
         """Initialize with float truncates to int."""
-        ability = CrewRequired(mock_component, 7.8)
+        ability = RequiresMaintenance(mock_component, 7.8)
 
         assert ability.amount == 7
         assert isinstance(ability.amount, int)
 
     def test_init_with_zero(self, mock_component):
         """Initialize with zero value."""
-        ability = CrewRequired(mock_component, 0)
+        ability = RequiresMaintenance(mock_component, 0)
 
         assert ability.amount == 0
 
     def test_recalculate_no_modifier(self, mock_component):
         """recalculate with no modifier keeps base amount (using sqrt of 1.0)."""
-        ability = CrewRequired(mock_component, 5)
+        ability = RequiresMaintenance(mock_component, 5)
 
         ability.recalculate()
 
@@ -367,7 +367,7 @@ class TestCrewRequired:
     def test_recalculate_with_mass_mult(self, mock_component_with_stats):
         """recalculate applies sqrt(mass_mult) scaling."""
         component = mock_component_with_stats(stats={'mass_mult': 4.0})
-        ability = CrewRequired(component, 5)
+        ability = RequiresMaintenance(component, 5)
 
         ability.recalculate()
 
@@ -377,7 +377,7 @@ class TestCrewRequired:
     def test_recalculate_with_crew_req_mult(self, mock_component_with_stats):
         """recalculate applies crew_req_mult."""
         component = mock_component_with_stats(stats={'crew_req_mult': 2.0})
-        ability = CrewRequired(component, 5)
+        ability = RequiresMaintenance(component, 5)
 
         ability.recalculate()
 
@@ -390,7 +390,7 @@ class TestCrewRequired:
             'mass_mult': 4.0,  # sqrt = 2.0
             'crew_req_mult': 1.5
         })
-        ability = CrewRequired(component, 10)
+        ability = RequiresMaintenance(component, 10)
 
         ability.recalculate()
 
@@ -400,7 +400,7 @@ class TestCrewRequired:
     def test_recalculate_uses_ceiling(self, mock_component_with_stats):
         """recalculate uses ceiling for fractional results."""
         component = mock_component_with_stats(stats={'mass_mult': 2.0})
-        ability = CrewRequired(component, 3)
+        ability = RequiresMaintenance(component, 3)
 
         ability.recalculate()
 
@@ -411,7 +411,7 @@ class TestCrewRequired:
     def test_recalculate_negative_mass_mult_clamped(self, mock_component_with_stats):
         """Negative mass_mult is clamped to 0."""
         component = mock_component_with_stats(stats={'mass_mult': -5.0})
-        ability = CrewRequired(component, 10)
+        ability = RequiresMaintenance(component, 10)
 
         ability.recalculate()
 
@@ -421,7 +421,7 @@ class TestCrewRequired:
     def test_recalculate_preserves_base_amount(self, mock_component_with_stats):
         """recalculate does not modify _base_amount."""
         component = mock_component_with_stats(stats={'mass_mult': 4.0})
-        ability = CrewRequired(component, 5)
+        ability = RequiresMaintenance(component, 5)
 
         ability.recalculate()
 
@@ -430,18 +430,18 @@ class TestCrewRequired:
 
     def test_get_ui_rows_format(self, mock_component):
         """get_ui_rows returns correct format."""
-        ability = CrewRequired(mock_component, 8)
+        ability = RequiresMaintenance(mock_component, 8)
 
         rows = ability.get_ui_rows()
 
         assert len(rows) == 1
-        assert rows[0]['label'] == 'Crew Req'
+        assert rows[0]['label'] == 'Maint Req'
         assert rows[0]['value'] == '8'
         assert rows[0]['color_hint'] == HINT_CREW_REQ
 
     def test_get_ui_rows_zero(self, mock_component):
         """get_ui_rows displays zero correctly."""
-        ability = CrewRequired(mock_component, 0)
+        ability = RequiresMaintenance(mock_component, 0)
 
         rows = ability.get_ui_rows()
 
@@ -449,15 +449,15 @@ class TestCrewRequired:
 
     def test_get_primary_value(self, mock_component):
         """get_primary_value returns amount as float."""
-        ability = CrewRequired(mock_component, 7)
+        ability = RequiresMaintenance(mock_component, 7)
 
         assert ability.get_primary_value() == 7.0
         assert isinstance(ability.get_primary_value(), float)
 
     def test_stat_bindings_defined(self):
         """STAT_BINDINGS contains crew_req_mult binding."""
-        assert len(CrewRequired.STAT_BINDINGS) == 1
-        binding = CrewRequired.STAT_BINDINGS[0]
+        assert len(RequiresMaintenance.STAT_BINDINGS) == 1
+        binding = RequiresMaintenance.STAT_BINDINGS[0]
         assert binding.stat_key == StatKey.CREW_REQ_MULT
         assert binding.attribute_name == 'amount'
         assert binding.operation == 'multiply'
@@ -483,9 +483,9 @@ class TestCrewAbilitiesEdgeCases:
         assert ability.amount == 50000
 
     def test_crew_required_zero_base(self, mock_component_with_stats):
-        """CrewRequired with zero base stays zero regardless of multipliers."""
+        """RequiresMaintenance with zero base stays zero regardless of multipliers."""
         component = mock_component_with_stats(stats={'mass_mult': 4.0, 'crew_req_mult': 2.0})
-        ability = CrewRequired(component, 0)
+        ability = RequiresMaintenance(component, 0)
 
         ability.recalculate()
 
@@ -510,9 +510,9 @@ class TestCrewAbilitiesEdgeCases:
         assert ability.amount == 0
 
     def test_crew_required_very_large_mass_mult(self, mock_component_with_stats):
-        """CrewRequired handles very large mass_mult (sqrt scaling prevents explosion)."""
+        """RequiresMaintenance handles very large mass_mult (sqrt scaling prevents explosion)."""
         component = mock_component_with_stats(stats={'mass_mult': 10000.0})
-        ability = CrewRequired(component, 5)
+        ability = RequiresMaintenance(component, 5)
 
         ability.recalculate()
 
@@ -523,16 +523,16 @@ class TestCrewAbilitiesEdgeCases:
         """All crew abilities store reference to component."""
         crew_cap = CrewCapacity(mock_component, 10)
         life_sup = LifeSupportCapacity(mock_component, 20)
-        crew_req = CrewRequired(mock_component, 5)
+        crew_req = RequiresMaintenance(mock_component, 5)
 
         assert crew_cap.component is mock_component
         assert life_sup.component is mock_component
         assert crew_req.component is mock_component
 
     def test_crew_required_fractional_input_ceiling(self, mock_component_with_stats):
-        """CrewRequired rounds up any fractional crew requirement."""
+        """RequiresMaintenance rounds up any fractional crew requirement."""
         component = mock_component_with_stats(stats={'mass_mult': 1.21})  # sqrt = 1.1
-        ability = CrewRequired(component, 1)
+        ability = RequiresMaintenance(component, 1)
 
         ability.recalculate()
 

@@ -932,3 +932,108 @@ class TestAdditionalCombatEnduranceEdgeCases:
 
         assert ship.fuel_consumption == 100.0
         assert ship.fuel_endurance == 100.0  # 10000 / 100
+
+
+# ============================================================================
+# QA Observation 4 regression: mini-weapon ammo endurance must be finite
+# ============================================================================
+
+class TestMiniWeaponAmmoEnduranceFinite:
+    """Regression tests for QA Observation 4.
+
+    A fighter armed with mini_railgun previously had `ammo_endurance =
+    float('inf')` because mini_railgun lacked any ResourceConsumption ability.
+    Once the data binding is in place, the endurance must become finite given
+    a finite ammo pool.
+    """
+
+    @staticmethod
+    def _load_component(component_id: str) -> dict:
+        import json
+        import os
+
+        here = os.path.dirname(__file__)
+        path = os.path.abspath(
+            os.path.join(here, "..", "..", "..", "..", "data", "components.json")
+        )
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        for entry in data.get("components", []):
+            if entry["id"] == component_id:
+                return entry
+        raise AssertionError(f"Component {component_id} not found in {path}")
+
+    @classmethod
+    def _build_ability_pair(cls, mock_rc, mock_weapon, component_data: dict):
+        """Construct (resource_consumption, weapon) ability mocks from data."""
+        abilities_data = component_data["abilities"]
+        rc_entries = abilities_data.get("ResourceConsumption", [])
+        if isinstance(rc_entries, dict):
+            rc_entries = [rc_entries]
+        activation_rc = next(e for e in rc_entries if e.get("trigger") == "activation")
+
+        # Beam or projectile or seeker — pick whichever the data declares.
+        weapon_block = None
+        for key in ("BeamWeaponAbility", "ProjectileWeaponAbility", "SeekerWeaponAbility"):
+            if key in abilities_data:
+                weapon_block = abilities_data[key]
+                break
+        assert weapon_block is not None, (
+            f"{component_data['id']} must declare a weapon ability"
+        )
+
+        weapon = mock_weapon(
+            reload_time=float(weapon_block["reload"]),
+            damage=float(weapon_block["damage"]),
+        )
+        rc = mock_rc(
+            activation_rc["resource"],
+            float(activation_rc["amount"]),
+            trigger="activation",
+        )
+        return rc, weapon
+
+    def test_mini_railgun_yields_finite_ammo_endurance(
+        self,
+        mock_ship,
+        mock_component,
+        mock_resource_consumption_ability,
+        mock_weapon_ability,
+    ):
+        comp_data = self._load_component("mini_railgun")
+        rc, weapon = self._build_ability_pair(
+            mock_resource_consumption_ability, mock_weapon_ability, comp_data
+        )
+        # Mini ordnance pool: 200 ammo per the data file (mini_ordnance tank).
+        ship = mock_ship(ammo_max=200)
+        comp = mock_component(is_active=True, abilities=[rc, weapon])
+
+        calculate_combat_endurance(ship, [comp])
+
+        # Expected: amount(0.5) / reload(1.0) = 0.5 ammo/sec; 200 / 0.5 = 400s.
+        assert ship.ammo_consumption > 0.0, (
+            "mini_railgun must register non-zero ammo consumption; data binding missing?"
+        )
+        assert ship.ammo_endurance != float("inf"), (
+            "mini_railgun must produce finite ammo endurance once ResourceConsumption is bound"
+        )
+        assert ship.ammo_endurance == pytest.approx(400.0)
+
+    def test_mini_capital_missile_yields_finite_ammo_endurance(
+        self,
+        mock_ship,
+        mock_component,
+        mock_resource_consumption_ability,
+        mock_weapon_ability,
+    ):
+        comp_data = self._load_component("mini_capital_missile")
+        rc, weapon = self._build_ability_pair(
+            mock_resource_consumption_ability, mock_weapon_ability, comp_data
+        )
+        ship = mock_ship(ammo_max=200)
+        comp = mock_component(is_active=True, abilities=[rc, weapon])
+
+        calculate_combat_endurance(ship, [comp])
+
+        assert ship.ammo_consumption > 0.0
+        assert ship.ammo_endurance != float("inf")

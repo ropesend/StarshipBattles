@@ -4,6 +4,19 @@ PROJ-77 Phase 4: Modal window showing turn events (production, colonies, combat)
 PROJ-188 Phase 5: Migrated to VirtualTable with EventLogDataSource.
 Supports filter tabs and scrollable event list sorted newest first.
 FEAT-26: Per-row Replay button on combat events with a captured replay.
+
+Obs 3 (QA 2026-05-15): row-pool widgets leaking across re-opens.
+pygame_gui's ``UIWindow.show()`` -> ``UIContainer.show(True)`` cascade
+recursively un-hides every descendant, including row-pool entries that
+``VirtualTable.update_visible_rows()`` individually hid because their
+``data_idx >= row_count``. The fix is the ``_post_show_hook`` override
+on ``StrategyModalWindow`` (added at the same time as this comment):
+subclasses owning a ``VirtualTable`` re-run ``force_update()`` +
+``update_visible_rows()`` after the cascade lands. The factor lives on
+the base class so the sibling reusable modals (PlanetListWindow,
+StarListWindow) get the fix with a one-line override each.
+``BuildQueueScreen.show()`` already had this pattern inline; it stays
+inline because that screen is not a ``StrategyModalWindow``.
 """
 from __future__ import annotations
 
@@ -581,6 +594,20 @@ class EventLogWindow(StrategyModalWindow):
 
     # ``hide()`` / ``show()`` inherited from StrategyModalWindow base
     # (PROJ-411 Task 2.8 consolidated the reuse-hide/show logic there).
+
+    def _post_show_hook(self) -> None:
+        """Obs 3: re-assert row-pool visibility after the show cascade.
+
+        See module docstring. Mirrors the inline pattern in
+        ``BuildQueueScreen.show()`` at build_queue_screen.py:391-424.
+        Defensive against shell-only states (no virtual_table yet) so
+        the override is safe to run before the builder has populated
+        the row pool.
+        """
+        vt = getattr(self, "virtual_table", None)
+        if vt is not None:
+            vt.force_update()
+            vt.update_visible_rows()
 
     def open_for_events(
         self,

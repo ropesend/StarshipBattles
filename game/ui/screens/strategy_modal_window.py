@@ -228,6 +228,16 @@ class StrategyModalWindow(UIWindow):
 
         PROJ-411 Task 2.8: consolidated reuse-show logic on the base
         class. Mirrors ``hide()`` step-for-step in reverse.
+
+        Obs 3 (PROJ-411 follow-up): after the recursive un-hide cascade
+        from pygame_gui's ``UIWindow.show()`` -> ``UIContainer.show(True)``
+        propagates through every descendant, subclasses that own a
+        ``VirtualTable`` row pool need a chance to re-assert per-row
+        visibility (rows beyond ``row_count`` get un-hidden by the
+        cascade). The ``_post_show_hook`` extension point runs after
+        z-stack restoration so subclass overrides can call
+        ``virtual_table.force_update()`` + ``update_visible_rows()``
+        without racing against pygame_gui's container show pass.
         """
         super().show()
         self.is_blocking = True
@@ -243,6 +253,22 @@ class StrategyModalWindow(UIWindow):
             except (ValueError, KeyError):
                 pass  # Intentional broad ignore.
             stack.add_new_window(self)
+        self._post_show_hook()
+
+    def _post_show_hook(self) -> None:
+        """Extension point invoked at the end of ``show()``.
+
+        Default is a no-op. Subclasses owning a ``VirtualTable`` override
+        to re-assert row-pool visibility after pygame_gui's recursive
+        ``UIContainer.show(True)`` cascade re-exposes individually-hidden
+        descendants (Obs 3 — stale row-pool widgets leaking onto the
+        screen on re-open).
+
+        See ``BuildQueueScreen.show()`` (build_queue_screen.py) for the
+        canonical pattern: ``virtual_table.force_update()`` followed by
+        ``virtual_table.update_visible_rows()``.
+        """
+        return None
 
     def check_clicked_inside_or_blocking(self, event):
         """Skip the pygame_gui focus/block check when hidden.

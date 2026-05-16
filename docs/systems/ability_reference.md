@@ -1,6 +1,6 @@
 # Ability Reference
 
-> **Last verified:** 2026-05-16 - Verified against `game/simulation/components/abilities/`, strategic ability services, and the compact ability reference. Current live registry has 71 keys (PROJ-FMS-A added 11 new abilities — `Warhead`, `Laserhead`, `RamTarget`, `VehicleBay`, and the six launch + two recovery skeletons; PROJ-FMS-C audit Fix 1 removed `VehicleLaunch`).
+> **Last verified:** 2026-05-16 - Verified against `game/simulation/components/abilities/`, strategic ability services, and the compact ability reference. Current live registry has 72 keys (PROJ-FMS-A added 11 new abilities — `Warhead`, `Laserhead`, `RamTarget`, `VehicleBay`, and the six launch + two recovery skeletons; PROJ-FMS-C audit Fix 1 removed `VehicleLaunch`; QA Observation 5 renamed `CrewRequired` to `RequiresMaintenance` and added `ProvidesMaintenance`).
 
 Compact agent reference for the component ability system. It preserves live registry keys, data shapes, contracts, invariants, extension recipes, warnings, stale-reference corrections, and validation commands while omitting release-note history.
 
@@ -70,8 +70,8 @@ Current production formulas in `data/components.json`:
 | `laser_cannon` | `BeamWeaponAbility` | `damage = "=20 * (1 - 0.00005 * range_to_target)"` | runtime weapon formula |
 | `warp_drive` | `WarpJump` | `max_tonnage = "=ship_class_mass"` | load-time ship-class formula |
 | `warp_drive` | `ResourceConsumption` | `[0].amount = "=5 * (ship_class_mass ** (2/3))"` | load-time ship-class formula |
-| `bridge` | `CrewRequired` | `=ceil(sqrt(ship_class_mass / 1000))` | load-time ship-class formula |
-| `central_complex_command` | `CrewRequired` | `=ceil(sqrt(ship_class_mass / 1000))` | load-time ship-class formula |
+| `bridge` | `RequiresMaintenance` | `=ceil(sqrt(ship_class_mass / 1000))` | load-time ship-class formula |
+| `central_complex_command` | `RequiresMaintenance` | `=ceil(sqrt(ship_class_mass / 1000))` | load-time ship-class formula |
 | `emissive_armor` | `EmissiveArmor` | `value = "=8 * (ship_class_mass / 1000)**(1/3)"` | load-time ship-class formula |
 | `shield_regenerating_armor` | `ShieldRegeneratingArmor` | `value = "=5 * (ship_class_mass / 1000)**(1/3)"` | load-time ship-class formula |
 
@@ -223,7 +223,8 @@ Live keys from `ABILITY_REGISTRY`.
 | `CommandAndControl` | `CommandAndControl` | `markers.py` | combat | `self` |
 | `CrewCapacity` | `CrewCapacity` | `crew.py` | combat | `self` |
 | `LifeSupportCapacity` | `LifeSupportCapacity` | `crew.py` | combat | `self` |
-| `CrewRequired` | `CrewRequired` | `crew.py` | combat | `self` |
+| `RequiresMaintenance` | `RequiresMaintenance` | `crew.py` | combat | `self` |
+| `ProvidesMaintenance` | `ProvidesMaintenance` | `crew.py` | combat | `self` |
 | `ToHitAttackModifier` | `ToHitAttackModifier` | `defense.py` | combat | `self` |
 | `ToHitDefenseModifier` | `ToHitDefenseModifier` | `defense.py` | combat | `self` |
 | `EmissiveArmor` | `EmissiveArmor` | `defense.py` | combat | `self` |
@@ -325,7 +326,8 @@ Sources: `crew.py`, `cargo.py`, `markers.py`.
 |---|---|---|---|
 | `CrewCapacity` | scalar amount or `value` | `crew_capacity_mult -> amount` | Integer crew capacity. |
 | `LifeSupportCapacity` | scalar amount or `value` | `life_support_capacity_mult -> amount` | Integer supported crew. |
-| `CrewRequired` | scalar amount or `value`/`amount` | `crew_req_mult -> amount` | Also scales by `sqrt(mass_mult)` internally; `mass_mult` is intentionally not a `STAT_BINDINGS` entry. |
+| `RequiresMaintenance` | scalar amount or `value`/`amount` | `crew_req_mult -> amount` | Per-component maintenance demand (renamed from `CrewRequired` in the QA Observation 5 maintenance abstraction). Also scales by `sqrt(mass_mult)` internally; `mass_mult` is intentionally not a `STAT_BINDINGS` entry. |
+| `ProvidesMaintenance` | scalar amount or `value` | `crew_capacity_mult -> amount` | Ship-level maintenance supply. Crew quarters declare it alongside `CrewCapacity`; automated maintenance units declare it standalone. Validator rejects designs where `RequiresMaintenance` total exceeds `ProvidesMaintenance` total. |
 | `CargoStorage` | scalar capacity, or dict `cargo_type="generic"`, `capacity` | `capacity_mult -> capacity` | Strategic cargo; `passengers` is used for population transport. |
 | `VehicleStorage` | scalar capacity, or dict `capacity` | none | Adds fighter storage capacity. |
 | `PodStorage` | scalar mass, or dict `capacity_mass` | none | Adds pod mass capacity; single attribute only. |

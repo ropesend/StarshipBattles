@@ -12,7 +12,7 @@
             "sprite_index": 4,
             "abilities": {
                 "CommandAndControl": true,
-                "CrewRequired": "=ceil(sqrt(ship_class_mass / 1000))"
+                "RequiresMaintenance": "=ceil(sqrt(ship_class_mass / 1000))"
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -36,7 +36,7 @@
             "sprite_index": 4,
             "abilities": {
                 "CommandAndControl": true,
-                "CrewRequired": "=ceil(sqrt(ship_class_mass / 1000))"
+                "RequiresMaintenance": "=ceil(sqrt(ship_class_mass / 1000))"
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -60,7 +60,7 @@
             ],
             "sprite_index": 86,
             "abilities": {
-                "CrewRequired": 5,
+                "RequiresMaintenance": 5,
                 "ResourceConsumption": [
                     {
                         "resource": "ammo",
@@ -342,7 +342,7 @@
                         "generation_rate": 25000
                     }
                 ],
-                "CrewRequired": 1,
+                "RequiresMaintenance": 1,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -370,7 +370,7 @@
                         "amount": 300
                     }
                 ],
-                "CrewRequired": 10,
+                "RequiresMaintenance": 10,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -393,7 +393,7 @@
             ],
             "sprite_index": 88,
             "abilities": {
-                "CrewRequired": 1,
+                "RequiresMaintenance": 1,
                 "ResourceConsumption": [
                     {
                         "resource": "energy",
@@ -431,7 +431,8 @@
             ],
             "sprite_index": 6,
             "abilities": {
-                "CrewCapacity": 10
+                "CrewCapacity": 10,
+                "ProvidesMaintenance": 10
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -540,7 +541,7 @@
                         "trigger": "constant"
                     }
                 ],
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -575,7 +576,7 @@
                         "trigger": "constant"
                     }
                 ],
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -608,7 +609,7 @@
                         "trigger": "constant"
                     }
                 ],
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -641,7 +642,7 @@
                         "trigger": "constant"
                     }
                 ],
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -664,7 +665,7 @@
             "sprite_index": 27,
             "abilities": {
                 "MultiplexTracking": 10,
-                "CrewRequired": 2,
+                "RequiresMaintenance": 2,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Sensors",
@@ -740,7 +741,7 @@
             ],
             "sprite_index": 90,
             "abilities": {
-                "CrewRequired": 3,
+                "RequiresMaintenance": 3,
                 "ResourceConsumption": [
                     {
                         "resource": "ammo",
@@ -779,7 +780,7 @@
             ],
             "sprite_index": 91,
             "abilities": {
-                "CrewRequired": 1,
+                "RequiresMaintenance": 1,
                 "ResourceConsumption": [
                     {
                         "resource": "energy",
@@ -820,7 +821,8 @@
             "abilities": {
                 "CommandAndControl": true,
                 "LifeSupportCapacity": 1,
-                "CrewCapacity": 1
+                "CrewCapacity": 1,
+                "ProvidesMaintenance": 1
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -993,6 +995,13 @@
             ],
             "sprite_index": 139,
             "abilities": {
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 0.5,
+                        "trigger": "activation"
+                    }
+                ],
                 "BeamWeaponAbility": {
                     "damage": 10,
                     "range": 1000,
@@ -1055,6 +1064,13 @@
             ],
             "sprite_index": 217,
             "abilities": {
+                "ResourceConsumption": [
+                    {
+                        "resource": "ammo",
+                        "amount": 2.5,
+                        "trigger": "activation"
+                    }
+                ],
                 "BeamWeaponAbility": {
                     "damage": 60,
                     "range": 200,
@@ -1270,12 +1286,14 @@
             "hp": 50,
             "allowed_vehicle_types": [
                 "Ship",
+                "Satellite",
                 "Planetary Complex"
             ],
             "sprite_index": 5,
             "abilities": {
                 "CrewCapacity": 10,
                 "LifeSupportCapacity": 10,
+                "ProvidesMaintenance": 10,
                 "ResourceConsumption": [
                     {
                         "resource": "energy",
@@ -1293,6 +1311,93 @@
             }
         },
         {
+            "id": "automated_maintenance_unit_small",
+            "name": "Automated Maintenance Unit (Small)",
+            "type": "CrewQuarters",
+            "mass": 50,
+            "hp": 40,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 5,
+            "abilities": {
+                "ProvidesMaintenance": 10,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 2.0,
+                        "trigger": "constant"
+                    }
+                ]
+            },
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "metals": 60,
+                "vapors": 10,
+                "exotics": 10
+            }
+        },
+        {
+            "id": "automated_maintenance_unit_medium",
+            "name": "Automated Maintenance Unit (Medium)",
+            "type": "CrewQuarters",
+            "mass": 120,
+            "hp": 90,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 5,
+            "abilities": {
+                "ProvidesMaintenance": 25,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 4.0,
+                        "trigger": "constant"
+                    }
+                ]
+            },
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "metals": 140,
+                "vapors": 25,
+                "exotics": 25
+            }
+        },
+        {
+            "id": "automated_maintenance_unit_large",
+            "name": "Automated Maintenance Unit (Large)",
+            "type": "CrewQuarters",
+            "mass": 250,
+            "hp": 180,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Satellite",
+                "Planetary Complex"
+            ],
+            "sprite_index": 5,
+            "abilities": {
+                "ProvidesMaintenance": 60,
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 8.0,
+                        "trigger": "constant"
+                    }
+                ]
+            },
+            "major_classification": "Crewsupport",
+            "resource_cost": {
+                "metals": 300,
+                "vapors": 50,
+                "exotics": 60
+            }
+        },
+        {
             "id": "emergency_repair_bay",
             "name": "Emergency Repair Bay",
             "type": "Engineering",
@@ -1305,7 +1410,7 @@
             "sprite_index": 21,
             "abilities": {
                 "ShipRepair": 5.0,
-                "CrewRequired": 5,
+                "RequiresMaintenance": 5,
                 "ResourceConsumption": [
                     {
                         "resource": "energy",
@@ -1341,7 +1446,7 @@
                         "amount": 2.0
                     }
                 ],
-                "CrewRequired": 5,
+                "RequiresMaintenance": 5,
                 "ResourceConsumption": [
                     {
                         "resource": "energy",
@@ -2042,7 +2147,7 @@
                     "resource_type": "metals",
                     "base_harvest_rate": 1000.0
                 },
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2068,7 +2173,7 @@
                     "resource_type": "organics",
                     "base_harvest_rate": 1000.0
                 },
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2094,7 +2199,7 @@
                     "resource_type": "vapors",
                     "base_harvest_rate": 1000.0
                 },
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2120,7 +2225,7 @@
                     "resource_type": "radioactives",
                     "base_harvest_rate": 500.0
                 },
-                "CrewRequired": 25
+                "RequiresMaintenance": 25
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2147,7 +2252,7 @@
                     "resource_type": "exotics",
                     "base_harvest_rate": 250.0
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2175,7 +2280,7 @@
                     "capacity": 100000.0
                 },
                 "StructuralIntegrity": true,
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2201,7 +2306,7 @@
                     "capacity": 100000.0
                 },
                 "StructuralIntegrity": true,
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2227,7 +2332,7 @@
                     "capacity": 100000.0
                 },
                 "StructuralIntegrity": true,
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2253,7 +2358,7 @@
                     "capacity": 50000.0
                 },
                 "StructuralIntegrity": true,
-                "CrewRequired": 15
+                "RequiresMaintenance": 15
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2280,7 +2385,7 @@
                     "capacity": 25000.0
                 },
                 "StructuralIntegrity": true,
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
@@ -2315,7 +2420,7 @@
                         "exotics": 30000
                     }
                 },
-                "CrewRequired": 150
+                "RequiresMaintenance": 150
             },
             "major_classification": "Production",
             "resource_cost": {
@@ -2411,7 +2516,7 @@
                     "capacity": 5000
                 },
                 "LifeSupportCapacity": 5000,
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -2435,7 +2540,7 @@
                 "StagingYard": {
                     "capacity_mass": 2000
                 },
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -2458,7 +2563,7 @@
                 "StagingYard": {
                     "capacity_mass": 10000
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -2480,7 +2585,7 @@
             "sprite_index": 8,
             "abilities": {
                 "PlanetaryYard": true,
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -2545,7 +2650,7 @@
                         "base_harvest_rate": 25
                     }
                 ],
-                "CrewRequired": 50
+                "RequiresMaintenance": 50
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -2589,7 +2694,7 @@
                         "capacity": 10000
                     }
                 ],
-                "CrewRequired": 5
+                "RequiresMaintenance": 5
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -3157,7 +3262,7 @@
                 "AtmosphereModifier": {
                     "modification_rate": 7800000000000000.0
                 },
-                "CrewRequired": 50
+                "RequiresMaintenance": 50
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -3182,7 +3287,7 @@
                     "resource_type": "metals",
                     "improvement_rate": 0.1
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Production",
             "resource_cost": {
@@ -3206,7 +3311,7 @@
                     "resource_type": "organics",
                     "improvement_rate": 0.1
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Production",
             "resource_cost": {
@@ -3230,7 +3335,7 @@
                     "resource_type": "vapors",
                     "improvement_rate": 0.1
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Production",
             "resource_cost": {
@@ -3254,7 +3359,7 @@
                     "resource_type": "radioactives",
                     "improvement_rate": 0.1
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Production",
             "resource_cost": {
@@ -3278,7 +3383,7 @@
                     "resource_type": "exotics",
                     "improvement_rate": 0.1
                 },
-                "CrewRequired": 40
+                "RequiresMaintenance": 40
             },
             "major_classification": "Production",
             "resource_cost": {
@@ -3326,7 +3431,7 @@
                         "scope": "system"
                     }
                 ],
-                "CrewRequired": 50
+                "RequiresMaintenance": 50
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -3353,7 +3458,7 @@
                     "activation_time": 250,
                     "deactivation_time": 150
                 },
-                "CrewRequired": 60
+                "RequiresMaintenance": 60
             },
             "major_classification": "PlanetaryDefense",
             "resource_cost": {
@@ -3381,7 +3486,7 @@
                     "activation_time": 25,
                     "deactivation_time": 10
                 },
-                "CrewRequired": 40
+                "RequiresMaintenance": 40
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3409,7 +3514,7 @@
                     "activation_time": 25,
                     "deactivation_time": 10
                 },
-                "CrewRequired": 35
+                "RequiresMaintenance": 35
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3437,7 +3542,7 @@
                     "activation_time": 15,
                     "deactivation_time": 5
                 },
-                "CrewRequired": 25
+                "RequiresMaintenance": 25
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3465,7 +3570,7 @@
                     "activation_time": 15,
                     "deactivation_time": 5
                 },
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3490,7 +3595,7 @@
                     "scope": "enemy_sector",
                     "stack_group": "shield_suppressor_fleet"
                 },
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3514,7 +3619,7 @@
                     "scope": "fleet",
                     "stack_group": "shield_booster_fleet"
                 },
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3541,7 +3646,7 @@
                     "activation_time": 25,
                     "deactivation_time": 10
                 },
-                "CrewRequired": 40
+                "RequiresMaintenance": 40
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3569,7 +3674,7 @@
                     "activation_time": 25,
                     "deactivation_time": 10
                 },
-                "CrewRequired": 35
+                "RequiresMaintenance": 35
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3597,7 +3702,7 @@
                     "activation_time": 15,
                     "deactivation_time": 5
                 },
-                "CrewRequired": 25
+                "RequiresMaintenance": 25
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3625,7 +3730,7 @@
                     "activation_time": 15,
                     "deactivation_time": 5
                 },
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3650,7 +3755,7 @@
                     "scope": "enemy_sector",
                     "stack_group": "damage_suppressor_fleet"
                 },
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3674,7 +3779,7 @@
                     "scope": "fleet",
                     "stack_group": "damage_booster_fleet"
                 },
-                "CrewRequired": 10
+                "RequiresMaintenance": 10
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3700,7 +3805,7 @@
                     "activation_time": 15,
                     "deactivation_time": 5
                 },
-                "CrewRequired": 20
+                "RequiresMaintenance": 20
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3727,7 +3832,7 @@
                     "activation_time": 25,
                     "deactivation_time": 10
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Defense",
             "resource_cost": {
@@ -3752,7 +3857,7 @@
                     "activation_time": 15,
                     "deactivation_time": 5
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -3775,7 +3880,7 @@
                 "WaterModifier": {
                     "modification_rate": 0.005
                 },
-                "CrewRequired": 25
+                "RequiresMaintenance": 25
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -3801,7 +3906,7 @@
                     "deactivation_time": 5,
                     "max_shielding": 1.0
                 },
-                "CrewRequired": 30
+                "RequiresMaintenance": 30
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -4097,7 +4202,7 @@
                     "capacity_per_action": 1,
                     "cycle_time": 5.0
                 },
-                "CrewRequired": 2,
+                "RequiresMaintenance": 2,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4126,7 +4231,7 @@
                     "capacity_per_action": 2,
                     "cycle_time": 6.0
                 },
-                "CrewRequired": 4,
+                "RequiresMaintenance": 4,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4155,7 +4260,7 @@
                     "capacity_per_action": 1,
                     "cycle_time": 8.0
                 },
-                "CrewRequired": 4,
+                "RequiresMaintenance": 4,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4179,7 +4284,7 @@
                 "RecoverFighters": {
                     "recovery_per_action": 4
                 },
-                "CrewRequired": 3,
+                "RequiresMaintenance": 3,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4203,7 +4308,7 @@
                 "RecoverSatellites": {
                     "recovery_per_action": 2
                 },
-                "CrewRequired": 3,
+                "RequiresMaintenance": 3,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4228,7 +4333,7 @@
                     "capacity_mass": 250,
                     "allowed_types": ["mine", "fighter", "satellite"]
                 },
-                "CrewRequired": 2,
+                "RequiresMaintenance": 2,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4254,7 +4359,7 @@
                     "capacity_mass": 250,
                     "allowed_types": ["fighter"]
                 },
-                "CrewRequired": 2,
+                "RequiresMaintenance": 2,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4280,7 +4385,7 @@
                     "capacity_mass": 300,
                     "allowed_types": ["satellite"]
                 },
-                "CrewRequired": 2,
+                "RequiresMaintenance": 2,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4306,7 +4411,7 @@
                     "capacity_mass": 800,
                     "allowed_types": ["satellite"]
                 },
-                "CrewRequired": 5,
+                "RequiresMaintenance": 5,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4332,7 +4437,7 @@
                     "capacity_mass": 2100,
                     "allowed_types": ["satellite"]
                 },
-                "CrewRequired": 12,
+                "RequiresMaintenance": 12,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4358,7 +4463,7 @@
                     "capacity_mass": 750,
                     "allowed_types": ["mine", "fighter", "satellite"]
                 },
-                "CrewRequired": 5,
+                "RequiresMaintenance": 5,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
@@ -4384,7 +4489,7 @@
                     "capacity_mass": 2000,
                     "allowed_types": ["mine", "fighter", "satellite"]
                 },
-                "CrewRequired": 12,
+                "RequiresMaintenance": 12,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",

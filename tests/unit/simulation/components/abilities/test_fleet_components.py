@@ -75,7 +75,7 @@ class TestTacticalDataLinkDefinition:
     def test_has_crew_required(self, fresh_registries):
         """Should have CrewRequired ability."""
         comp = create_component(TACTICAL_DATA_LINK_ID, registries=fresh_registries)
-        ability = _find_ability(comp, "CrewRequired")
+        ability = _find_ability(comp, "RequiresMaintenance")
         assert ability is not None
 
     def test_has_requires_cnc(self, fresh_registries):
@@ -138,7 +138,7 @@ class TestElectronicWarfareSuiteDefinition:
     def test_has_crew_required(self, fresh_registries):
         """Should have CrewRequired ability."""
         comp = create_component(ELECTRONIC_WARFARE_SUITE_ID, registries=fresh_registries)
-        ability = _find_ability(comp, "CrewRequired")
+        ability = _find_ability(comp, "RequiresMaintenance")
         assert ability is not None
 
     def test_has_requires_cnc(self, fresh_registries):

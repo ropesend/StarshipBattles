@@ -72,7 +72,7 @@ Current families include:
 - Weapons: `WeaponAbility`, `ProjectileWeaponAbility`, `BeamWeaponAbility`, `SeekerWeaponAbility`.
 - Propulsion: `CombatPropulsion`, `ManeuveringThruster`, `StrategicMovement`, `WarpJump`.
 - Defense/armor: `ShieldProjection`, `ShieldRegeneration`, `ToHitAttackModifier`, `ToHitDefenseModifier`, `EmissiveArmor`, `ShieldRegeneratingArmor`, `Armor`.
-- Crew/markers/storage: `CrewCapacity`, `LifeSupportCapacity`, `CrewRequired`, `CommandAndControl`, `RequiresCommandAndControl`, `RequiresCombatMovement`, `StructuralIntegrity`, `MultiplexTracking`, `VehicleLaunch`, `VehicleStorage`, `PodStorage`.
+- Crew/markers/storage: `CrewCapacity`, `LifeSupportCapacity`, `RequiresMaintenance`, `ProvidesMaintenance`, `CommandAndControl`, `RequiresCommandAndControl`, `RequiresCombatMovement`, `StructuralIntegrity`, `MultiplexTracking`, `VehicleLaunch`, `VehicleStorage`, `PodStorage`.
 - Resources/cargo/production: `ResourceConsumption`, `ResourceStorage`, `ResourceGeneration`, `CargoStorage`, `ResourceHarvester`, `SpaceShipyard`, `PlanetaryYard`, `StagingYard`, `LocalStorage`.
 - Colonization/superweapons: `ColonizePlanet`, `DestroyPlanet`, `DestroyStar`, `OpenWarpPoint`, `CloseWarpPoint`, `CreateDysonSphere`, `SelfDestruct`.
 - Strategic/environmental: `PlanetaryShield`, `StrategicResourceGeneration`, `GeologicStabilizer`, `StellarStabilizer`, `WarpFieldStabilizer`, `ResourceHarvestBooster`, `BuildRateBooster`, `AtmosphereModifier`, `QualityImprovement`, `ShieldModifier`, `DamageModifier`, `GravityModifier`, `WaterModifier`, `RadiationShield`, `ThrustModifier`, `StrategicSpeedModifier`, `EnvironmentalDamage`, `FuelDrain`.
@@ -213,7 +213,7 @@ Attachment order matters:
 
 This keeps formula-derived attributes current across recalculations while preserving runtime state such as cooldowns. New ability classes that parse fields from data should override `_parse_attrs`, not duplicate parsing in both `__init__` and `sync_data`.
 
-Known formula-sensitive production abilities include `WarpJump`, `EmissiveArmor`, `ShieldRegeneratingArmor`, `CrewRequired`, and `ResourceConsumption`.
+Known formula-sensitive production abilities include `WarpJump`, `EmissiveArmor`, `ShieldRegeneratingArmor`, `RequiresMaintenance`, and `ResourceConsumption`.
 
 ## Modifier Flow
 
@@ -266,7 +266,7 @@ Components live in the top-level `"components"` array in `data/components.json`.
   "sprite_index": 4,
   "major_classification": "Weapon",
   "abilities": {
-    "CrewRequired": 5,
+    "RequiresMaintenance": 5,
     "ResourceConsumption": [
       {"resource": "ammo", "amount": 1, "trigger": "activation"}
     ],
@@ -286,7 +286,7 @@ Components live in the top-level `"components"` array in `data/components.json`.
 
 Ability payload formats:
 - Dict: full parameters, e.g. `{"damage": 100, "range": 5000}`.
-- Primitive: shorthand single value, e.g. `"CrewRequired": 5` or marker `true`.
+- Primitive: shorthand single value, e.g. `"RequiresMaintenance": 5` or marker `true`.
 - List: multiple entries for abilities that can appear more than once.
 - Formula: string starting with `=`, evaluated during recalculation or preserved for runtime weapon variables.
 

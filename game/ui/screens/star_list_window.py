@@ -493,6 +493,17 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
     # ``hide()`` / ``show()`` inherited from StrategyModalWindow base
     # (PROJ-411 Task 2.8 consolidated the reuse-hide/show logic there).
 
+    def _post_show_hook(self) -> None:
+        """Obs 3: re-assert row-pool visibility after the show cascade.
+
+        See ``planet_list_window.py``'s identical override for the
+        contract. Mirrors ``BuildQueueScreen.show()``.
+        """
+        vt = getattr(self, "virtual_table", None)
+        if vt is not None:
+            vt.force_update()
+            vt.update_visible_rows()
+
     def open_for_galaxy(self, galaxy, empire=None) -> None:
         """Rebind galaxy + empire, reset selection, show, refresh.
 

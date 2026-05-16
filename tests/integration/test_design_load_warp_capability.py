@@ -142,13 +142,13 @@ class TestFrigateCrewRequiredFormulaIsEvaluated:
         bridge = next((c for _, c in ship.iter_components() if c.id == 'bridge'), None)
         assert bridge is not None
 
-        crew_reqs = bridge.get_abilities('CrewRequired')
-        assert crew_reqs, "bridge has no CrewRequired ability instance"
+        crew_reqs = bridge.get_abilities('RequiresMaintenance')
+        assert crew_reqs, "bridge has no RequiresMaintenance ability instance"
         # ceil(sqrt(2000/1000)) = ceil(1.414) = 2
         assert crew_reqs[0]._base_amount == 2, (
-            f"CrewRequired._base_amount={crew_reqs[0]._base_amount}, expected 2 "
+            f"RequiresMaintenance._base_amount={crew_reqs[0]._base_amount}, expected 2 "
             f"from =ceil(sqrt(ship_class_mass / 1000)) with ship_class_mass=2000. "
-            f"Either the formula in components.json is wrong, or CrewRequired's "
+            f"Either the formula in components.json is wrong, or RequiresMaintenance's "
             f"sync_data is not refreshing formula-derived attributes."
         )
 

@@ -25,11 +25,22 @@ logger = logging.getLogger(__name__)
 
 
 def on_design_click(screen: "StrategyScreen") -> None:
-    """Handle 'Design' button click - opens Design Workshop."""
+    """Handle 'Design' button click - opens Design Workshop.
+
+    Anchors ``context_data["empire"]`` to ``screen.current_empire``
+    (the viewing human), NOT ``session.active_empire`` (the turn-acting
+    empire). In hot-seat play the two can diverge — the user saw QA
+    Obs 1 (post-PROJ-FMS, 2026-05-16) where saving a Mine design while
+    ``active_empire`` had rotated wrote the JSON under the wrong
+    empire's ``designs/`` folder and the build queue (which scans the
+    planet owner's folder) showed empty Available Designs.
+
+    See ``feedback_viewing_empire_anchor`` memory for the rule.
+    """
     logger.debug("Design button clicked - opening Design Workshop")
 
     context_data = {
-        "empire": screen.session.active_empire,
+        "empire": screen.current_empire,
         "game_session": screen.session,
     }
 

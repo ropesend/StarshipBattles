@@ -86,6 +86,13 @@
       "count": 1,
       "last_used": "2026-04-29T13:47:16Z"
     },
+    "claude-qa-feedback": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-16T13:10:28Z"
+    },
     "claude-qa-triage": {
       "agents": {
         "claude": 2

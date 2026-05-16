@@ -18,6 +18,11 @@ def _make_screen():
     screen.scene_callback = MagicMock()
     screen.session = MagicMock()
     screen.session.active_empire = MagicMock(id=0)
+    # QA Obs 1 (post-PROJ-FMS, 2026-05-16): on_design_click now anchors
+    # ``context_data["empire"]`` to ``screen.current_empire`` (the viewing
+    # human), not ``session.active_empire``. The mock exposes a separate
+    # ``current_empire`` so the test can verify the anchor.
+    screen.current_empire = MagicMock(id=0)
     screen.ui = MagicMock()
     screen.ui.manager = MagicMock()
     screen.ui.window_manager = MagicMock()
@@ -32,7 +37,10 @@ class TestOnDesignClick:
         screen.scene_callback.assert_called_once()
         args, kwargs = screen.scene_callback.call_args
         assert args[0] == "open_builder"
-        assert kwargs["context_data"]["empire"] is screen.session.active_empire
+        # QA Obs 1: anchor is ``current_empire`` (viewing human), NOT
+        # ``session.active_empire`` (turn-acting empire). The dedicated
+        # regression suite lives in ``test_viewing_empire_anchor.py``.
+        assert kwargs["context_data"]["empire"] is screen.current_empire
         assert kwargs["context_data"]["game_session"] is screen.session
 
     def test_no_callback_no_call(self):

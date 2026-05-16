@@ -91,30 +91,33 @@ class TestTrackMultiplex:
         assert ship.max_targets == 5
 
 
-def _make_crew_required_ability(amount: int):
+def _make_maintenance_required_ability(amount: int):
     ab = MagicMock()
     ab.amount = amount
     return ab
 
 
-def _make_active_comp(*, crew_required: int = 0):
+def _make_active_comp(*, maintenance_required: int = 0):
     comp = MagicMock()
     comp.is_active = True
     comp.has_ability = lambda name: False  # ensures lookup_crew_priority returns 3
     comp.get_abilities = lambda name: (
-        [_make_crew_required_ability(crew_required)] if name == "CrewRequired" and crew_required else []
+        [_make_maintenance_required_ability(maintenance_required)]
+        if name == "RequiresMaintenance" and maintenance_required
+        else []
     )
     comp.status = ComponentStatus.ACTIVE
     return comp
 
 
 class TestAllocateCrewAndLifeSupport:
-    def test_zero_crew_ships_pass_through_when_no_components_demand_crew(self):
+    def test_zero_demand_passes_through(self):
         ship = MagicMock()
         ship.ship_class = "Frigate"
-        pool = [_make_active_comp(crew_required=0)]
+        pool = [_make_active_comp(maintenance_required=0)]
         command.allocate_crew_and_life_support(
-            ship, pool, available_crew=0, available_life_support=0,
+            ship, pool,
+            available_crew=0, available_life_support=0, available_maintenance=0,
             vehicle_classes={"Frigate": {"max_mass": 5000}},
         )
         assert ship.crew_onboard == 0
@@ -123,35 +126,39 @@ class TestAllocateCrewAndLifeSupport:
         assert ship.max_mass_budget == 5000
         assert pool[0].is_active is True
 
-    def test_components_deactivated_when_crew_runs_out(self):
+    def test_components_deactivated_when_maintenance_runs_out(self):
         ship = MagicMock()
         ship.ship_class = "Frigate"
-        c1 = _make_active_comp(crew_required=3)
-        c2 = _make_active_comp(crew_required=5)  # not enough crew
+        c1 = _make_active_comp(maintenance_required=3)
+        c2 = _make_active_comp(maintenance_required=5)  # not enough maintenance
         pool = [c1, c2]
         command.allocate_crew_and_life_support(
-            ship, pool, available_crew=4, available_life_support=10,
+            ship, pool,
+            available_crew=4, available_life_support=10, available_maintenance=4,
             vehicle_classes={"Frigate": {"max_mass": 5000}},
         )
-        assert ship.crew_required == 8  # both demands recorded
-        # First in priority order gets staffed, second is deactivated
+        assert ship.crew_required == 8  # both demands recorded as maintenance demand
+        # First in priority order gets serviced, second is deactivated
         assert c1.is_active is True
         assert c2.is_active is False
         assert c2.status == ComponentStatus.NO_CREW
 
-    def test_life_support_can_clamp_below_crew(self):
-        """Effective crew = min(crew, life_support); LS shortage drops crew avail."""
+    def test_life_support_no_longer_silently_clamps(self):
+        """QA Observation 5: LS shortage is a design-time validator error,
+        not a runtime silent degradation. Runtime ignores life_support
+        because the validator guarantees CrewCap <= LSCap.
+        """
         ship = MagicMock()
         ship.ship_class = "Frigate"
-        c = _make_active_comp(crew_required=3)
+        c = _make_active_comp(maintenance_required=3)
         pool = [c]
         command.allocate_crew_and_life_support(
-            ship, pool, available_crew=10, available_life_support=2,
+            ship, pool,
+            available_crew=10, available_life_support=2, available_maintenance=10,
             vehicle_classes={"Frigate": {"max_mass": 5000}},
         )
-        # Effective crew was 2 (LS clamp), comp wanted 3, so deactivated
-        assert c.is_active is False
-        assert c.status == ComponentStatus.NO_CREW
+        # Maintenance was sufficient (10 >= 3); LS shortage does NOT deactivate.
+        assert c.is_active is True
 
     def test_unknown_ship_class_uses_default_mass_budget(self):
         from game.simulation.physics_constants import DEFAULT_MAX_MASS
@@ -160,7 +167,8 @@ class TestAllocateCrewAndLifeSupport:
         ship.ship_class = "UnknownClass"
         pool = []
         command.allocate_crew_and_life_support(
-            ship, pool, available_crew=0, available_life_support=0,
+            ship, pool,
+            available_crew=0, available_life_support=0, available_maintenance=0,
             vehicle_classes={},
         )
         assert ship.max_mass_budget == DEFAULT_MAX_MASS

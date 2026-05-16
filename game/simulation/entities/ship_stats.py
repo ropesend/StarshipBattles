@@ -107,16 +107,20 @@ class ShipStatsCalculator:
         self._reset_base_state(ship)
 
         # Phase 1: Damage Check & Resource Supply Gathering
-        component_pool, available_crew, available_life_support = (
-            self._phase_damage_check_and_supply(ship)
-        )
+        (
+            component_pool,
+            available_crew,
+            available_life_support,
+            available_maintenance,
+        ) = self._phase_damage_check_and_supply(ship)
 
-        # Phase 2: Resource Allocation (Crew & Life Support)
+        # Phase 2: Resource Allocation (Crew, Life Support, Maintenance)
         _cmd.allocate_crew_and_life_support(
             ship,
             component_pool,
             available_crew,
             available_life_support,
+            available_maintenance,
             self.vehicle_classes,
         )
 
@@ -204,10 +208,22 @@ class ShipStatsCalculator:
 
     def _phase_damage_check_and_supply(
         self, ship: "Ship"
-    ) -> Tuple[List["Component"], int, int]:
-        """Phase 1: Reset component status, mark damaged, gather crew/LS supply."""
+    ) -> Tuple[List["Component"], int, int, int]:
+        """Phase 1: Reset component status, mark damaged, gather crew/LS/maintenance supply.
+
+        Returns (component_pool, available_crew, available_life_support,
+        available_maintenance). Maintenance supply is the new
+        QA-Observation-5 axis: it is sourced from ``ProvidesMaintenance``
+        across functional components (crew quarters, robotic drone crew,
+        automated maintenance units). Crew/life-support remain tracked
+        separately for the design-time crew-needs-LS rule and for UI
+        bookkeeping; the validator guarantees CrewCapacity ≤
+        LifeSupportCapacity at design time, so runtime does not silently
+        clamp by life-support shortages.
+        """
         available_crew = 0
         available_life_support = 0
+        available_maintenance = 0
         component_pool: List["Component"] = []
 
         for _layer_type, comp in ship.iter_components():
@@ -234,10 +250,17 @@ class ShipStatsCalculator:
                     available_crew += ab.amount
                 for ab in comp.get_abilities("LifeSupportCapacity"):
                     available_life_support += ab.amount
+                for ab in comp.get_abilities("ProvidesMaintenance"):
+                    available_maintenance += ab.amount
 
             component_pool.append(comp)
 
-        return component_pool, available_crew, available_life_support
+        return (
+            component_pool,
+            available_crew,
+            available_life_support,
+            available_maintenance,
+        )
 
     # ------------------------------------------------------------------ #
     # Phase 3: stats aggregation (delegates per-domain aggregation)

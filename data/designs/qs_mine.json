@@ -1,0 +1,67 @@
+{
+    "_format_version": "2.0",
+    "name": "qs_mine",
+    "ship_class": "Mine (Small)",
+    "vehicle_type": "Mine",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "movement_policy": "kite_max",
+    "targeting_policy": "standard",
+    "design_role": "general_purpose",
+    "layers": {
+        "CORE": [
+            {
+                "id": "warhead_small",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "warhead_small",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ]
+    },
+    "resources": {
+        "fuel": 2000.0,
+        "energy": 0.0,
+        "ammo": 200.0
+    },
+    "expected_stats": {
+        "max_hp": 6,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
+        "max_speed": 0,
+        "acceleration_rate": 0.0,
+        "turn_speed": 0.0,
+        "total_thrust": 0.0,
+        "strategic_movement": 0,
+        "mass": 5.0,
+        "armor_hp_pool": 0,
+        "warp_max_tonnage": 0.0,
+        "warp_energy_cost": 0.0,
+        "mass_valid": true
+    }
+}

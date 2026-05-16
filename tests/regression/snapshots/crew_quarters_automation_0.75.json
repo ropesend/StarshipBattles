@@ -48,6 +48,12 @@
       "tags": [],
       "amount": 10,
       "base_amount": 10
+    },
+    {
+      "class_name": "ProvidesMaintenance",
+      "tags": [],
+      "amount": 10,
+      "base_amount": 10
     }
   ]
 }

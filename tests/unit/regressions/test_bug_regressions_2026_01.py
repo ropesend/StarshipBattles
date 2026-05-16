@@ -9,7 +9,7 @@ from game.core.validation import ValidationResult
 from game.simulation.entities.ship import Ship
 from game.simulation.components.abilities import ABILITY_REGISTRY, create_ability
 from game.simulation.components.abilities.resources import ResourceStorage, ResourceConsumption
-from game.simulation.components.abilities import CrewRequired
+from game.simulation.components.abilities import RequiresMaintenance as CrewRequired
 
 
 class TestBugFixRegressions:
@@ -30,14 +30,14 @@ class TestBugFixRegressions:
         comp_data = {
             'id': 'bridge_test', 'name': 'Bridge', 'type': 'Bridge', 'mass': 100, 'hp': 100,
             'abilities': {
-                'CrewRequired': {'amount': 10}  # 'amount' key was previously ignored
+                'RequiresMaintenance': {'amount': 10}  # 'amount' key was previously ignored
             }
         }
         c = Component(comp_data, registries=fresh_registries)
 
         # Verify initial
-        ab = c.get_ability('CrewRequired')
-        assert ab is not None, "CrewRequired should exist"
+        ab = c.get_ability('RequiresMaintenance')
+        assert ab is not None, "RequiresMaintenance should exist"
         assert ab.amount == 10, "Should read 'amount' correctly (Fix applied)"
 
         # 2. Simulate Modifier Calculation

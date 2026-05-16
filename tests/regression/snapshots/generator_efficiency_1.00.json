@@ -48,7 +48,7 @@
       "tags": []
     },
     {
-      "class_name": "CrewRequired",
+      "class_name": "RequiresMaintenance",
       "tags": [],
       "amount": 1,
       "base_amount": 1

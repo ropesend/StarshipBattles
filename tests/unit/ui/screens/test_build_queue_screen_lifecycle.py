@@ -397,6 +397,144 @@ def test_open_for_yard_planet_to_planet_does_not_rebuild_panels(
     assert screen.build_context is planet_b
 
 
+# =========================================================================
+# Obs 2 (PROJ-376 follow-up): planet info panel must refresh on yard switch
+# =========================================================================
+#
+# BuildQueueScreen.open_for_yard() caches the screen across opens
+# (PROJ-376 Phase 2) and updates build_context + the queue selector, but
+# never refreshes the PlanetReportPanel — so re-opening on Planet B while
+# panels were last bound to Planet A leaves Planet A's report visible.
+#
+# Fix: open_for_yard() calls panels.planet_report.update_planet(...) when
+# the new yard is a planet and a planet_report panel already exists.
+# When the previous context was a fleet (planet_report is None), or when
+# the new context is a fleet, _rebuild_panels handles the transition.
+# =========================================================================
+
+
+def test_obs2_open_for_yard_planet_to_planet_refreshes_planet_report(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
+):
+    """Open on Planet A → open on Planet B → panels.planet_report.planet
+    must now be planet_b (was previously stuck at planet_a)."""
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    galaxy_with_planet._global_hex_planets[hex_b] = [planet_b]
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=planet_a,
+    )
+
+    assert screen.panels.planet_report is not None
+    assert screen.panels.planet_report.planet is planet_a
+
+    screen.open_for_yard(planet_b, hex_coord=hex_b)
+
+    assert screen.panels.planet_report is not None, (
+        "Obs 2: planet→planet open must keep the planet_report panel."
+    )
+    assert screen.panels.planet_report.planet is planet_b, (
+        "Obs 2: planet→planet re-open must refresh planet_report.planet "
+        "to the new yard. Today the cached panel stays bound to the "
+        "previous planet, showing stale info on the new open."
+    )
+
+
+def test_obs2_open_for_yard_fleet_to_planet_rebuilds_panels(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, hex_a, hex_b,
+):
+    """Fleet → Planet transition: panels.planet_report is None before
+    the open (fleet path), so the screen MUST force _rebuild_panels to
+    construct the PlanetReportPanel for the new context."""
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    fleet = _make_fleet(fleet_id=1, hex_coord=hex_b)
+    galaxy_with_planet._fleets_at_hex[hex_b] = [fleet]
+    galaxy_with_planet._global_hex_planets[hex_a] = [planet_a]
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_b,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=fleet,
+    )
+
+    # Fleet context: planet_report is None.
+    assert screen.panels.planet_report is None
+
+    # Switch to a planet.
+    screen.open_for_yard(planet_a, hex_coord=hex_a)
+
+    # Now planet_report must exist and be bound to planet_a.
+    assert isinstance(screen.panels.context_report, PlanetReportPanel)
+    assert screen.panels.planet_report is not None
+    assert screen.panels.planet_report.planet is planet_a
+
+
+def test_obs2_open_for_yard_planet_to_fleet_round_trip_back_to_planet(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
+):
+    """Planet → Fleet → Planet round trip: the final planet_report must
+    reflect the *new* planet, not the originally-opened one."""
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    fleet_hex = HexCoord(9, 9)
+    fleet = _make_fleet(fleet_id=2, hex_coord=fleet_hex)
+    galaxy_with_planet._fleets_at_hex[fleet_hex] = [fleet]
+    galaxy_with_planet._global_hex_planets[hex_b] = [planet_b]
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=planet_a,
+    )
+
+    # Start: planet_a is bound.
+    assert screen.panels.planet_report.planet is planet_a
+
+    # Hop to fleet (cross-type — rebuilds panels, planet_report becomes None).
+    screen.open_for_yard(fleet, hex_coord=fleet_hex)
+    assert screen.panels.planet_report is None
+
+    # Hop back to a *different* planet — must rebuild to a planet panel
+    # AND bind to planet_b (not planet_a's stale reference).
+    screen.open_for_yard(planet_b, hex_coord=hex_b)
+    assert isinstance(screen.panels.context_report, PlanetReportPanel)
+    assert screen.panels.planet_report is not None
+    assert screen.panels.planet_report.planet is planet_b
+
+
 def test_drag_handler_reset_state_clears_all_5_fields():
     """``BuildQueueDragHandler.reset_state()`` zeros the 5 transient fields."""
     from game.ui.panels.build_queue_drag_handler import BuildQueueDragHandler

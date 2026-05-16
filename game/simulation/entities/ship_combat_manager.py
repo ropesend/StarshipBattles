@@ -143,21 +143,24 @@ class ShipCombatManager:
         enforcement happens per-component (e.g., RequiresCommandAndControl
         marks individual components non-operational when C&C is missing).
 
-        The crew check remains as a ship-level requirement.
+        The maintenance check remains as a ship-level requirement: if the
+        live ProvidesMaintenance can no longer cover the live
+        RequiresMaintenance (e.g. crew quarters destroyed in combat), the
+        ship is derelict.
         """
         ship = self._ship
 
-        # Check 1: Crew capacity requirement (ship-level)
-        crew_required = ship.get_total_ability_value('CrewRequired')
+        # Check 1: Maintenance requirement (ship-level, QA Observation 5)
+        maint_required = ship.get_total_ability_value('RequiresMaintenance')
 
-        if crew_required > 0:
-            crew_capacity = ship.get_total_ability_value('CrewCapacity')
+        if maint_required > 0:
+            maint_provided = ship.get_total_ability_value('ProvidesMaintenance')
 
-            if crew_required > crew_capacity:
+            if maint_required > maint_provided:
                 if not ship.is_derelict:
                     logger.info(
                         f"{ship.name} has become DERELICT "
-                        f"(Insufficient crew capacity)"
+                        f"(Insufficient maintenance capacity)"
                     )
                 ship.is_derelict = True
                 return

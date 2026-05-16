@@ -3,7 +3,8 @@ import pytest
 from unittest.mock import patch
 from game.simulation.components.abilities import (
     Ability, CombatPropulsion, ManeuveringThruster, ShieldProjection,
-    ShieldRegeneration, CrewCapacity, LifeSupportCapacity, CrewRequired,
+    ShieldRegeneration, CrewCapacity, LifeSupportCapacity,
+    RequiresMaintenance as CrewRequired,
     ResourceStorage, ResourceGeneration, ResourceConsumption,
     ToHitAttackModifier, ToHitDefenseModifier, EmissiveArmor,
     WeaponAbility, CommandAndControl,

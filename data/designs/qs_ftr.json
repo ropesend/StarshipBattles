@@ -1,0 +1,238 @@
+{
+    "_format_version": "2.0",
+    "name": "qs_ftr",
+    "ship_class": "Fighter (Small)",
+    "vehicle_type": "Fighter",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "movement_policy": "kite_max",
+    "targeting_policy": "standard",
+    "design_role": "general_purpose",
+    "layers": {
+        "CORE": [
+            {
+                "id": "fighter_cockpit",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_engine",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_thruster",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_ordnance",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.25
+                    }
+                ]
+            },
+            {
+                "id": "mini_railgun",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 45.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.9
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_sensor",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_ecm",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_shield_generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "mini_railgun",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 45.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 0.9
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": [
+            {
+                "id": "mini_scattering_armor",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ]
+    },
+    "resources": {
+        "fuel": 2000.0,
+        "energy": 0.0,
+        "ammo": 200.0
+    },
+    "expected_stats": {
+        "max_hp": 51,
+        "max_fuel": 500.0,
+        "max_energy": 0.0,
+        "max_ammo": 200.0,
+        "max_speed": 40.329891462075416,
+        "acceleration_rate": 162.6500145342784,
+        "turn_speed": 10123.964015265059,
+        "total_thrust": 40.0,
+        "strategic_movement": 0,
+        "mass": 24.795504370259938,
+        "armor_hp_pool": 5,
+        "warp_max_tonnage": 0.0,
+        "warp_energy_cost": 0.0,
+        "mass_valid": true
+    }
+}

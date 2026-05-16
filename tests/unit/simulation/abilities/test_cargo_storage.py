@@ -255,7 +255,7 @@ class TestPassengerQuartersComponent:
         assert abilities['LifeSupportCapacity'] == 5000
 
     def test_passenger_quarters_requires_crew(self, fresh_registries):
-        """passenger_quarters has CrewRequired ability."""
+        """passenger_quarters has RequiresMaintenance ability (QA Observation 5 rename)."""
         from game.simulation.components.component import load_components_data
 
         # PROJ-211: Pass registries explicitly (no fallback)
@@ -263,5 +263,5 @@ class TestPassengerQuartersComponent:
         component = components.get('passenger_quarters')
 
         abilities = component.abilities
-        assert 'CrewRequired' in abilities
-        assert abilities['CrewRequired'] == 10
+        assert 'RequiresMaintenance' in abilities
+        assert abilities['RequiresMaintenance'] == 10

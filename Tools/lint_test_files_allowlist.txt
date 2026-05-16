@@ -76,6 +76,8 @@ tests/unit/strategy/services/test_ability_sources_no_global_registry_access.py
 # JSON-schema / data-fixture regression tests (stdlib only).
 tests/regression/test_caption_schemas_validate.py
 tests/unit/data/test_data_validation.py
+tests/unit/validation/test_maintenance_components.py
+tests/unit/validation/test_mini_weapon_resource_consumption.py
 
 # pygame_gui-only repro (no game.* dependency).
 tests/repro_issues/test_bug_11_dialog_size.py

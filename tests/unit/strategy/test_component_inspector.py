@@ -331,7 +331,7 @@ class TestListShipAbilities:
             }
         }
         registry = {
-            "laser": {"abilities": {"BeamWeaponAbility": {}, "CrewRequired": 2}},
+            "laser": {"abilities": {"BeamWeaponAbility": {}, "RequiresMaintenance": 2}},
             "spare_laser": {"abilities": {"BeamWeaponAbility": {}}},
             "fuel_tank": {"abilities": {"ResourceStorage": {}}},
         }
@@ -340,7 +340,7 @@ class TestListShipAbilities:
 
         assert set(result) == {
             "BeamWeaponAbility",
-            "CrewRequired",
+            "RequiresMaintenance",
             "ResourceStorage",
         }
 
@@ -366,7 +366,7 @@ class TestGetAbilityList:
         assert result == [payload]
 
     def test_scalar_payload_is_wrapped_as_value_dict(self):
-        result = get_ability_list({"CrewRequired": 5}, "CrewRequired")
+        result = get_ability_list({"RequiresMaintenance": 5}, "RequiresMaintenance")
 
         assert result == [{"value": 5}]
 
@@ -410,9 +410,9 @@ class TestIterFacilityAbilityEntries:
         assert result[0][0] is comp and result[1][0] is comp
 
     def test_scalar_ability_wrapped_as_value_dict(self):
-        comp = {"id": "c1", "abilities": {"CrewRequired": 5}}
+        comp = {"id": "c1", "abilities": {"RequiresMaintenance": 5}}
         facility = self._facility({"hull": [comp]})
-        result = list(iter_facility_ability_entries(facility, "CrewRequired"))
+        result = list(iter_facility_ability_entries(facility, "RequiresMaintenance"))
         assert result == [(comp, {"value": 5})]
 
     def test_missing_ability_skipped(self):

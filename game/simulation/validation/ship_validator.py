@@ -319,19 +319,31 @@ class ClassRequirementsRule(DesignValidationRule):
             if not ability_totals.get('CombatPropulsion', 0):
                 result.add_error("Needs Combat propulsion")
 
-        # Crew & Life Support
+        # Crew-needs-life-support hard rule (QA Observation 5):
+        # Crew cannot exist without life support. Validator rejects at design
+        # time — there is no silent runtime degradation.
         crew_capacity = ability_totals.get('CrewCapacity', 0)
         if crew_capacity < 0:
             crew_capacity = 0
-
         life_support = ability_totals.get('LifeSupportCapacity', 0)
-        crew_required = ability_totals.get('CrewRequired', 0)
+        if crew_capacity > 0 and life_support < crew_capacity:
+            result.add_error(
+                f"Design declares {crew_capacity} crew capacity but only "
+                f"{life_support} life support capacity — crew cannot exist "
+                f"without life support."
+            )
 
-        if crew_capacity < crew_required:
-            result.add_error(f"Need {crew_required - crew_capacity} more crew housing")
-
-        if crew_required > 0 and life_support < crew_required:
-            result.add_error(f"Need {crew_required - life_support} more life support")
+        # Maintenance rule (QA Observation 5): components that need
+        # maintenance must be matched by enough providers (crew quarters,
+        # robotic drone crew, automated maintenance units, etc.).
+        maint_required = ability_totals.get('RequiresMaintenance', 0)
+        maint_provided = ability_totals.get('ProvidesMaintenance', 0)
+        if maint_required > maint_provided:
+            result.add_error(
+                f"Design requires {maint_required} maintenance units but only "
+                f"{maint_provided} are provided. Add crew quarters or "
+                f"automated maintenance units."
+            )
 
         return result
 

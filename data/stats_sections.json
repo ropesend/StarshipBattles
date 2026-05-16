@@ -265,7 +265,7 @@
             "order": 20,
             "visibility": {
                 "type": "ability_present",
-                "abilities": ["CrewCapacity", "LifeSupportCapacity", "CrewRequired"]
+                "abilities": ["CrewCapacity", "LifeSupportCapacity", "RequiresMaintenance"]
             },
             "items": [
                 {

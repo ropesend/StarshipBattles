@@ -149,7 +149,7 @@ class TestShipStatsCalculatorPhases:
             'mass': 50,
             'hp': 50,
             'abilities': {
-                'CrewRequired': 2,
+                'RequiresMaintenance': 2,
                 'WeaponAbility': {
                     'damage': 10,
                     'range': 500,
@@ -176,7 +176,8 @@ class TestShipStatsCalculatorPhases:
             'hp': 30,
             'abilities': {
                 'CrewCapacity': 5,
-                'LifeSupportCapacity': 10
+                'LifeSupportCapacity': 10,
+                'ProvidesMaintenance': 5
             }
         }
         weapon_data = {
@@ -186,7 +187,7 @@ class TestShipStatsCalculatorPhases:
             'mass': 50,
             'hp': 50,
             'abilities': {
-                'CrewRequired': 2,
+                'RequiresMaintenance': 2,
                 'WeaponAbility': {
                     'damage': 10,
                     'range': 500,

@@ -26,6 +26,7 @@ from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.build_queue_helpers import format_empire_resources
 from game.ui.screens.build_queue_panel_factory import BuildQueuePanelFactory
 from game.ui.screens.build_queue_renderer import BuildQueueRenderer
+from game.strategy.services.planet_economy_projector import compute_planet_production
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
@@ -283,6 +284,7 @@ class BuildQueueScreen:
         """
         prev_type = self.build_context.context_type if self.build_context is not None else None
         new_type = yard.context_type
+        prev_yard = self.build_context
 
         # Decide whether to rebuild panels.
         if self.panels is None:
@@ -291,6 +293,35 @@ class BuildQueueScreen:
         elif prev_type is not None and prev_type != new_type:
             # Cross-context-type transition (planet ↔ fleet) — rebuild.
             self._rebuild_panels(yard, hex_coord, portrait_surface)
+        elif new_type == "fleet" and prev_yard is not yard:
+            # Obs 2: fleet info panel has no refresh_fleet() API.
+            # When swapping between two distinct fleets on the same screen
+            # the cheapest correct path is a panel rebuild — the fleet
+            # info panel is small (a single UITextBox), so the rebuild
+            # cost is negligible. Same-yard re-opens skip this and reuse.
+            self._rebuild_panels(yard, hex_coord, portrait_surface)
+        elif (
+            new_type == "planet"
+            and self.panels.planet_report is not None
+            and prev_yard is not yard
+        ):
+            # Obs 2: planet→planet on a cached screen — refresh the
+            # PlanetReportPanel in place. Mirrors the arg shape used by
+            # ``BuildQueuePanelFactory._create_context_report_panel`` at
+            # construction time so the post-refresh state matches a
+            # fresh open. ``update_planet`` is the existing in-place
+            # refresh primitive (planet_report_panel.py:320-385).
+            view = None
+            if yard.owner_id is not None:
+                view = self.facade.get_colony_demographic_view(yard.id)
+            self.panels.planet_report.update_planet(
+                planet=yard,
+                portrait_surface=portrait_surface,
+                production_rates=compute_planet_production(
+                    yard, self.facade.get_registries()
+                ),
+                view=view,
+            )
 
         # Update yard-specific state.
         self.build_context = yard

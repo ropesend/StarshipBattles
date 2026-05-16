@@ -61,7 +61,7 @@ All ability modules live in `game/simulation/components/abilities/`.
 - `base.py`: ability base classes.
 - `cargo.py`: `CargoStorage`.
 - `colonize.py`: `ColonizePlanet`.
-- `crew.py`: `CrewCapacity`, `LifeSupportCapacity`, `CrewRequired`.
+- `crew.py`: `CrewCapacity`, `LifeSupportCapacity`, `RequiresMaintenance`, `ProvidesMaintenance`.
 - `defense.py`: `ShieldProjection`, `ShieldRegeneration`, `EmissiveArmor`, `ToHit*Modifier`.
 - `harvester.py`: `ResourceHarvesterAbility`, `SpaceShipyardAbility`, `LocalStorageAbility`.
 - `markers.py`: `VehicleLaunchAbility`, `CommandAndControl`, `StructuralIntegrity`.
@@ -292,7 +292,7 @@ Example shape:
   "sprite_index": 4,
   "abilities": {
     "CommandAndControl": true,
-    "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"
+    "RequiresMaintenance": "=ceil(5 * sqrt(ship_class_mass / 1000))"
   },
   "major_classification": "Crewsupport",
   "construction_cost": {

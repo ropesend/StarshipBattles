@@ -44,7 +44,7 @@
   },
   "abilities": [
     {
-      "class_name": "CrewRequired",
+      "class_name": "RequiresMaintenance",
       "tags": [],
       "amount": 6,
       "base_amount": 3

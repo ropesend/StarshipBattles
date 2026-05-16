@@ -41,8 +41,8 @@ class DesignValidator:
     Delegates to the simulation-layer ShipDesignValidator which checks:
     - Command & control: RequiresCommandAndControl → CommandAndControl
     - Combat movement: RequiresCombatMovement → CombatPropulsion
-    - Crew housing: CrewCapacity >= CrewRequired
-    - Life support: LifeSupportCapacity >= CrewRequired
+    - Crew-needs-life-support: CrewCapacity > 0 requires LifeSupportCapacity >= CrewCapacity
+    - Maintenance: RequiresMaintenance total covered by ProvidesMaintenance total
     - Mass budgets: total mass and per-layer mass within vehicle class limits
     - Resource dependencies: resource consumers have storage (warnings)
     """

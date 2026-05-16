@@ -14,7 +14,7 @@
             ],
             "sprite_index": 86,
             "abilities": {
-                "CrewRequired": 5,
+                "RequiresMaintenance": 5,
                 "ResourceConsumption": [
                     {
                         "resource": "ammo",
@@ -50,7 +50,7 @@
             ],
             "sprite_index": 88,
             "abilities": {
-                "CrewRequired": 1,
+                "RequiresMaintenance": 1,
                 "ResourceConsumption": [
                     {
                         "resource": "energy",
