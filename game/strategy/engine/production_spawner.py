@@ -325,11 +325,47 @@ class ProductionSpawner:
                 f"Spawned {staging_item['vehicle_type']} '{staging_item['name']}' "
                 f"to staging yard on {planet.name} (mass: {total_mass:.0f})"
             )
+            # QA-OBS-4: emit a SHIP_BUILT event so the in-game event log
+            # surfaces fighter / mine / satellite / drop-pod production.
+            # Without this, the staging-yard spawn path was the only
+            # production output that produced zero user-visible feedback.
+            if self._event_bus:
+                self._event_bus.log_event(
+                    EventType.SHIP_BUILT,
+                    category=EventCategory.PRODUCTION,
+                    empire_id=empire.id,
+                    message=(
+                        f"Built {staging_item['vehicle_type']} "
+                        f"{staging_item['name']} on {planet.name} (staging yard)"
+                    ),
+                    design_id=design_id,
+                    planet_id=planet.id,
+                    location_name=planet.name,
+                    vehicle_type=staging_item['vehicle_type'],
+                )
         else:
             logger.warning(
                 f"Staging yard full on {planet.name}: cannot store "
                 f"'{staging_item['name']}' (mass: {total_mass:.0f})"
             )
+            # QA-OBS-4: failure path also needs a visible event so the
+            # player learns the output was discarded (mirrors the
+            # fleet-bay-full pattern in _spawn_fleet_carried_vehicle).
+            if self._event_bus:
+                self._event_bus.log_event(
+                    EventType.SHIP_BUILT,
+                    category=EventCategory.PRODUCTION,
+                    empire_id=empire.id,
+                    message=(
+                        f"Cannot store {staging_item['vehicle_type']} "
+                        f"{staging_item['name']} on {planet.name} - "
+                        f"staging yard full (output discarded)"
+                    ),
+                    design_id=design_id,
+                    planet_id=planet.id,
+                    location_name=planet.name,
+                    vehicle_type=staging_item['vehicle_type'],
+                )
 
     def _spawn_ship(
         self,

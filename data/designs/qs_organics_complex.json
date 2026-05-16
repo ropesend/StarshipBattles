@@ -189,6 +189,19 @@
                         "value": 0.0
                     }
                 ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
             }
         ],
         "INNER": [],
@@ -254,8 +267,8 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 2787,
-        "mass": 1320.710678,
+        "max_hp": 2827,
+        "mass": 1340.7106781186549,
         "resource_storage": {},
         "cargo_storage": {},
         "pod_storage_mass": 0.0,

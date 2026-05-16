@@ -83,9 +83,13 @@ class WorkshopShipIO:
             logger.debug(f"  context.empire_id: {self.context.empire_id}")
             logger.debug(f"  context.mode: {self.context.mode}")
 
+            # QA Obs 3 (2026-05-16): thread facade_state so save_design()
+            # invalidates the per-turn scan_designs cache. Without this,
+            # the Build Queue serves stale data after a workshop save.
             library = DesignLibrary(
                 self.context.savegame_path,
-                self.context.empire_id
+                self.context.empire_id,
+                facade_state=self.context.facade_state,
             )
 
             logger.debug(f"  library.designs_folder: {library.designs_folder}")
@@ -132,9 +136,13 @@ class WorkshopShipIO:
             logger.debug(f"  context.empire_id: {self.context.empire_id}")
             logger.debug(f"  context.mode: {self.context.mode}")
 
+            # QA Obs 3 (2026-05-16): thread facade_state so this scan reads
+            # from the same per-turn cache the Build Queue uses (keeps the
+            # workshop and build queue in sync within one turn).
             library = DesignLibrary(
                 self.context.savegame_path,
-                self.context.empire_id
+                self.context.empire_id,
+                facade_state=self.context.facade_state,
             )
 
             logger.debug(f"  library.designs_folder: {library.designs_folder}")
@@ -197,9 +205,11 @@ class WorkshopShipIO:
                 self._show_error(message)
         else:
             # Use design selector with ALL designs (player + AI)
+            # QA Obs 3 (2026-05-16): thread facade_state for cache consistency.
             library = DesignLibrary(
                 self.context.savegame_path,
-                self.context.empire_id
+                self.context.empire_id,
+                facade_state=self.context.facade_state,
             )
 
             def on_target_selected(design_id: str) -> None:

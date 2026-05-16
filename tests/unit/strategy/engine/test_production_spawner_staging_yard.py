@@ -10,6 +10,7 @@ Crash 2: Mass calculation called .get('mass') on a Component object
 import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.engine.production_spawner import ProductionSpawner
+from game.strategy.events.event_types import EventType, EventCategory
 
 
 def _make_empire(empire_id: int = 1) -> MagicMock:
@@ -109,3 +110,97 @@ class TestSpawnToStagingYardMassCalculation:
         # Ship mass includes hull base mass from the vehicle class
         assert staging_item['mass'] > 0
         assert staging_item['mass'] == pytest.approx(65.0, abs=1.0)
+
+
+# ---------------------------------------------------------------------------
+# QA Observation 4: staged-yard spawn must emit a SHIP_BUILT event so the
+# user sees feedback when fighter/mine/satellite/drop-pod queues complete.
+# Prior to this fix, ``_spawn_to_staging_yard`` only logged to the python
+# logger -- the in-game event log stayed silent and players had no way to
+# tell whether their shipyard queue was actually producing anything.
+# ---------------------------------------------------------------------------
+
+
+def _planet_with_open_staging() -> MagicMock:
+    """A planet whose staging yard accepts the next item."""
+    planet = MagicMock()
+    planet.id = 17
+    planet.name = "OutpostPrime"
+    planet.add_to_staging_yard = MagicMock(return_value=True)
+    return planet
+
+
+def _planet_with_full_staging() -> MagicMock:
+    """A planet whose staging yard rejects the next item (full)."""
+    planet = MagicMock()
+    planet.id = 18
+    planet.name = "OverflowWorld"
+    planet.add_to_staging_yard = MagicMock(return_value=False)
+    return planet
+
+
+class TestStagingYardEmitsProductionEvent:
+    """QA-OBS-4: every successful staging-yard spawn must emit SHIP_BUILT."""
+
+    def test_successful_staging_spawn_emits_ship_built_event(self):
+        event_bus = MagicMock()
+        spawner = ProductionSpawner(registries=MagicMock(), event_bus=event_bus)
+        empire = _make_empire(empire_id=7)
+        planet = _planet_with_open_staging()
+        item = {
+            'design_id': 'fighter_mk1',
+            'type': 'fighter',
+            'design_data': {'name': 'Razor MK1'},
+        }
+
+        spawner._spawn_to_staging_yard(planet, 'fighter_mk1', item, empire, '/fake/save')
+
+        event_bus.log_event.assert_called_once()
+        call = event_bus.log_event.call_args
+        # Positional event_type
+        assert call.args[0] == EventType.SHIP_BUILT
+        assert call.kwargs['category'] == EventCategory.PRODUCTION
+        assert call.kwargs['empire_id'] == 7
+        # Message should call out the planet name so the event log is useful
+        assert 'OutpostPrime' in call.kwargs['message']
+        assert 'Razor MK1' in call.kwargs['message']
+
+    def test_staging_full_emits_failure_event(self):
+        """Production output discarded when staging full -- must still emit
+        an event so the player can react (clear staging or pause queue)."""
+        event_bus = MagicMock()
+        spawner = ProductionSpawner(registries=MagicMock(), event_bus=event_bus)
+        empire = _make_empire(empire_id=9)
+        planet = _planet_with_full_staging()
+        item = {
+            'design_id': 'mine_v2',
+            'type': 'mine',
+            'design_data': {'name': 'Mk2 Mine'},
+        }
+
+        spawner._spawn_to_staging_yard(planet, 'mine_v2', item, empire, '/fake/save')
+
+        event_bus.log_event.assert_called_once()
+        call = event_bus.log_event.call_args
+        assert call.args[0] == EventType.SHIP_BUILT
+        assert call.kwargs['category'] == EventCategory.PRODUCTION
+        assert call.kwargs['empire_id'] == 9
+        msg = call.kwargs['message']
+        # Failure message should make it clear output was dropped
+        assert 'OverflowWorld' in msg
+        assert 'full' in msg.lower() or 'discarded' in msg.lower()
+
+    def test_staging_spawn_with_no_event_bus_does_not_crash(self):
+        """Backwards-compat: spawner constructed without an event_bus
+        must still complete the spawn (event emission is a no-op)."""
+        spawner = ProductionSpawner(registries=MagicMock(), event_bus=None)
+        empire = _make_empire(empire_id=3)
+        planet = _planet_with_open_staging()
+        item = {
+            'design_id': 'sat_relay',
+            'type': 'satellite',
+            'design_data': {'name': 'CommSat'},
+        }
+        # Should not raise
+        spawner._spawn_to_staging_yard(planet, 'sat_relay', item, empire, '/fake/save')
+        planet.add_to_staging_yard.assert_called_once()

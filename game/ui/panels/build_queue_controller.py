@@ -31,8 +31,16 @@ if TYPE_CHECKING:
 # Signature: (entity_id, entity_type, design_id, category, index, target_planet_id, queue_id) -> None
 AddToQueueCallback = Callable[[int, str, str, str, Optional[int], Optional[int], Optional[str]], None]
 
-# Category-to-build-capability mapping
-_SHIP_CATEGORIES = {"ship", "satellite", "fighter"}
+# Category-to-build-capability mapping.
+#
+# QA-OBS-4: 'mine' was previously absent from both sets, which made
+# ``_source_can_build_category`` fall through to ``return True`` and let
+# mines queue onto complex-only base yards. The production engine then
+# silently stopped the queue at ``_validate_queue_item`` without any
+# event - the user saw no feedback at all. Mines belong with fighters /
+# satellites: they are vehicles that need a shipyard's can_build_ships
+# capability.
+_SHIP_CATEGORIES = {"ship", "satellite", "fighter", "mine"}
 _COMPLEX_CATEGORIES = {"complex", "drop_pod"}
 
 

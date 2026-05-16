@@ -370,6 +370,96 @@ class TestControllerModeTransitions:
         assert build_context.construction_queue[0]["design_id"] == "factory"
 
 
+class TestMineRoutingToCorrectYard:
+    """QA-OBS-4 secondary fix: mines must not be queued onto complex-only yards.
+
+    Prior to this fix, the category 'mine' was in neither _SHIP_CATEGORIES
+    nor _COMPLEX_CATEGORIES, so `_source_can_build_category` fell through to
+    `return True` and the controller silently accepted the queue add. The
+    production engine then stopped the queue with a STOP action at
+    `_validate_queue_item` without emitting any event - the player saw
+    nothing happen.
+    """
+
+    def test_mine_rejected_on_complex_only_yard(self):
+        """A mine queued onto a base (complex-only) planetary yard must be
+        rejected by the controller before reaching the engine."""
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        base_yard = _make_source(
+            queue_id="base",
+            display_name="Base Planetary Yard",
+            can_build_ships=False,
+            can_build_complexes=True,
+            entity_registry=entity_registry,
+        )
+        controller.set_active_queue(base_yard)
+
+        controller.add_to_queue("mine_mk1", turns=1, category="mine")
+
+        # Rejection: nothing was added to the queue
+        assert len(base_yard.construction_queue) == 0
+
+    def test_mine_accepted_on_shipyard(self):
+        """A mine queued onto a shipyard (can_build_ships=True) is accepted."""
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        shipyard = _make_source(
+            queue_id="shipyard_1",
+            display_name="Shipyard 1",
+            can_build_ships=True,
+            can_build_complexes=True,
+            entity_registry=entity_registry,
+        )
+        controller.set_active_queue(shipyard)
+
+        controller.add_to_queue("mine_mk1", turns=1, category="mine")
+
+        assert len(shipyard.construction_queue) == 1
+        assert shipyard.construction_queue[0]["design_id"] == "mine_mk1"
+
+    def test_source_can_build_category_rejects_mine_on_complex_only(self):
+        """Direct unit test on the predicate the controller uses for routing."""
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        base_yard = _make_source(
+            can_build_ships=False,
+            can_build_complexes=True,
+            entity_registry=entity_registry,
+        )
+        assert controller._source_can_build_category(base_yard, "mine") is False
+
+    def test_source_can_build_category_accepts_mine_on_shipyard(self):
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        yard = _make_source(
+            can_build_ships=True,
+            can_build_complexes=False,
+            entity_registry=entity_registry,
+        )
+        assert controller._source_can_build_category(yard, "mine") is True
+
+    def test_multi_add_mine_skips_complex_only_yard(self):
+        """In multi-queue mode, a mine add must skip complex-only sources
+        (same shape as fighter/satellite tests above)."""
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        base_queue = _make_source(
+            can_build_ships=False, can_build_complexes=True,
+            entity_registry=entity_registry,
+        )
+        yard_queue = _make_source(
+            can_build_ships=True, can_build_complexes=True,
+            entity_registry=entity_registry,
+        )
+        controller.set_selected_queues([base_queue, yard_queue])
+
+        controller.add_to_queue("mine_mk1", turns=1, category="mine")
+
+        assert len(base_queue.construction_queue) == 0
+        assert len(yard_queue.construction_queue) == 1
+
+
 class TestBuildTimeCalculation:
     """PROJ-79 Phase 2: Tests for build time calculation from resource cost."""
 

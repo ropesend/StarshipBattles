@@ -39,9 +39,16 @@ def on_design_click(screen: "StrategyScreen") -> None:
     """
     logger.debug("Design button clicked - opening Design Workshop")
 
+    # QA Obs 3 (2026-05-16): pass the live facade so the app-side workshop
+    # context can thread ``facade_state`` into ``DesignLibrary``. Without
+    # this, ``DesignLibrary.save_design`` silently skips per-turn cache
+    # invalidation and the Build Queue serves stale data after a workshop
+    # save. See ``feedback_viewing_empire_anchor`` for the related
+    # current_empire-vs-active_empire anchoring rule.
     context_data = {
         "empire": screen.current_empire,
         "game_session": screen.session,
+        "facade": screen.facade,
     }
 
     if screen.scene_callback:

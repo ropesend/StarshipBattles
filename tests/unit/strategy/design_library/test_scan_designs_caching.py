@@ -181,3 +181,75 @@ def test_no_facade_state_means_no_caching(empire_0_savegame: str) -> None:
     second = lib.scan_designs()
     # Disk-scan path returns a freshly built list each time.
     assert second is not first
+
+
+# --------------------------------------------------------------------------
+# QA Obs 3 regression: workshop-flavor save_design must invalidate the
+# cache so a subsequent build-queue-flavor scan sees the new design.
+# --------------------------------------------------------------------------
+
+def test_workshop_save_invalidates_cache_so_build_queue_sees_new_design(
+    fake_state: FacadeSessionState,
+) -> None:
+    """End-to-end regression for QA Observation 3 (2026-05-16).
+
+    Reproduces the pre-fix bug: workshop constructs ``DesignLibrary`` without
+    ``facade_state`` and silently bypasses cache invalidation, so the build
+    queue's next ``scan_designs()`` returns the stale pre-save list and the
+    new design is invisible in Available Designs.
+
+    With the fix (workshop threads ``facade_state`` through ``WorkshopContext``
+    into all three ``DesignLibrary(...)`` constructions in ``workshop_ship_io.py``),
+    the workshop's ``save_design`` pops the per-empire cache entry and the
+    build queue's subsequent scan re-reads disk and surfaces the new design.
+    """
+    from unittest.mock import MagicMock
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Build-queue scan first: pre-seed cache with the "stale 49 designs"
+        # situation from the QA battle.log.
+        designs_folder = os.path.join(tmpdir, "designs", "empire_1")
+        _write_design(designs_folder, "existing_design", "Existing Design")
+
+        bq_library = DesignLibrary(tmpdir, empire_id=1, facade_state=fake_state)
+        initial = bq_library.scan_designs()
+        assert len(initial) == 1
+        assert 1 in fake_state.designs_by_empire
+
+        # Workshop save: must construct DesignLibrary WITH facade_state.
+        ws_library = DesignLibrary(tmpdir, empire_id=1, facade_state=fake_state)
+
+        ship = MagicMock()
+        ship.name = "My New Ship"
+        ship.ship_class = "Escort"
+        ship.vehicle_type = "Ship"
+        ship.mass = 1000.0
+        ship.theme_id = "Federation"
+        ship.layers = {}
+        ship.to_dict.return_value = {
+            "name": "My New Ship",
+            "ship_class": "Escort",
+            "vehicle_type": "Ship",
+            "mass": 1000.0,
+            "layers": {},
+        }
+
+        success, _msg = ws_library.save_design(ship, "My New Ship", set())
+        assert success
+
+        # Cache must be invalidated by the workshop save.
+        assert 1 not in fake_state.designs_by_empire, (
+            "Workshop save_design with facade_state must pop the per-empire "
+            "cache entry. This is the QA Obs 3 root cause: pre-fix the workshop "
+            "passed no facade_state, save_design's invalidation no-op'd, and "
+            "the build queue's next scan returned the stale list."
+        )
+
+        # Build-queue rescan now sees the new design.
+        bq_library2 = DesignLibrary(tmpdir, empire_id=1, facade_state=fake_state)
+        refreshed = bq_library2.scan_designs()
+        names = {d.name for d in refreshed}
+        assert "My New Ship" in names, (
+            f"Build queue rescan should include the workshop-saved design. "
+            f"Got: {names}"
+        )

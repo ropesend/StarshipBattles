@@ -63,11 +63,19 @@ class TestConstructionLayout:
     code paths via attribute injection rather than running full __init__.
     """
 
-    def _construct_with_pygame_gui_patched(self, *, show_complexes: bool):
+    def _construct_with_pygame_gui_patched(
+        self, *, show_complexes: bool, show_staged_units: bool = False,
+    ):
         """Run the real __init__ with all pygame_gui widgets patched out.
 
         Returns a tuple of (panel, ui_textbox_mock, ui_scrolling_container_mock)
         so callers can inspect what production code passed to each.
+
+        QA-OBS-4: ``show_staged_units`` defaults to False here so existing
+        layout assertions (which pinned ``show_complexes=False`` ⇒ no right
+        column) continue to hold. The new contract for production callers
+        is that ``show_staged_units`` defaults to True at the call site —
+        a separate test below covers that path.
         """
         manager = MagicMock()
         rect = pygame.Rect(0, 0, 800, 600)
@@ -82,6 +90,7 @@ class TestConstructionLayout:
              patch.object(PlanetReportPanel, "_update_graph", lambda self: None), \
              patch.object(PlanetReportPanel, "_build_resource_grid", lambda self: None), \
              patch.object(PlanetReportPanel, "_update_complexes_list", lambda self: None), \
+             patch.object(PlanetReportPanel, "_update_staged_units_list", lambda self: None), \
              patch("game.ui.panels.planet_report_panel.format_planet_info", return_value=""):
             panel = PlanetReportPanel(
                 manager=manager,
@@ -89,6 +98,7 @@ class TestConstructionLayout:
                 planet=planet,
                 container=MagicMock(),
                 show_complexes=show_complexes,
+                show_staged_units=show_staged_units,
             )
         return panel, utextbox, uscroll
 
@@ -203,6 +213,8 @@ class TestUpdatePlanet:
         panel._update_portrait = MagicMock()
         panel._update_graph = MagicMock()
         panel._update_complexes_list = MagicMock()
+        # QA-OBS-4: staged units list is part of update_planet; stub it too.
+        panel._update_staged_units_list = MagicMock()
         panel._update_resource_grid = MagicMock()
 
     def test_update_planet_overwrites_view_unconditionally_with_new_value(self):

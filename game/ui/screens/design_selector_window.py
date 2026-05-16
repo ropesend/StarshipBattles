@@ -177,6 +177,30 @@ class DesignSelectorWindow(StrategyModalWindow):
         )
         y_offset += 40
 
+        # Vehicle type filter
+        # QA Obs 2 (2026-05-16): Vehicle Type rendered ABOVE Ship Class so
+        # the user picks the broad vehicle category first (Ship / Fighter /
+        # Mine / etc.) and then narrows by class within that category.
+        UILabel(
+            relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 25),
+            text="Vehicle Type:",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y_offset += 30
+
+        # Registry-driven: derives type list from VehicleClassRegistry so new
+        # vehicle types (e.g. Mine) appear automatically without code edits.
+        type_options = self._get_type_filter_options()
+        self.type_dropdown = UIDropDownMenu(
+            options_list=type_options,
+            starting_option="All Types",
+            relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 30),
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y_offset += 40
+
         # Ship class filter
         UILabel(
             relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 25),
@@ -186,30 +210,13 @@ class DesignSelectorWindow(StrategyModalWindow):
         )
         y_offset += 30
 
-        class_options = ["All Classes", "Escort", "Frigate", "Destroyer", "Cruiser",
-                        "Battlecruiser", "Battleship", "Carrier", "Dreadnought"]
+        # Registry-driven: derives class list from VehicleClassRegistry so
+        # spelling matches the data exactly (e.g. 'Battle Cruiser' with a
+        # space) and the phantom 'Carrier' role no longer appears.
+        class_options = self._get_class_filter_options()
         self.class_dropdown = UIDropDownMenu(
             options_list=class_options,
             starting_option="All Classes",
-            relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 30),
-            manager=self.ui_manager,
-            container=self.sidebar_panel
-        )
-        y_offset += 40
-
-        # Vehicle type filter
-        UILabel(
-            relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 25),
-            text="Vehicle Type:",
-            manager=self.ui_manager,
-            container=self.sidebar_panel
-        )
-        y_offset += 30
-
-        type_options = ["All Types", "Ship", "Fighter", "Satellite", "Planetary Complex", "Drop Pod"]
-        self.type_dropdown = UIDropDownMenu(
-            options_list=type_options,
-            starting_option="All Types",
             relative_rect=pygame.Rect(10, y_offset, self.sidebar_width - 20, 30),
             manager=self.ui_manager,
             container=self.sidebar_panel
@@ -387,6 +394,36 @@ class DesignSelectorWindow(StrategyModalWindow):
         for role in roles:
             options.append(role.display_name)
         return options
+
+    def _get_type_filter_options(self) -> List[str]:
+        """Get unique vehicle types for the Vehicle Type filter dropdown.
+
+        QA Obs 2 (2026-05-16): registry-driven so new vehicle types (e.g.
+        Mine) flow through without code edits. Mirrors the pattern in
+        :py:meth:`_get_role_filter_options`.
+        """
+        from game.core.registry import get_default_registry_provider
+        from game.ui.services.vehicle_class_service import VehicleClassService
+
+        service = VehicleClassService(get_default_registry_provider())
+        types = service.get_vehicle_types()  # already sorted by service
+        return ["All Types", *types]
+
+    def _get_class_filter_options(self) -> List[str]:
+        """Get vehicle class names for the Ship Class filter dropdown.
+
+        QA Obs 2 (2026-05-16): registry-driven so the dropdown matches
+        ``data/vehicleclasses.json`` verbatim (drops the phantom 'Carrier'
+        role, fixes 'Battlecruiser' -> 'Battle Cruiser', surfaces
+        Light/Heavy Cruiser, Superdreadnought, Monitor, plus the
+        parametric Fighter/Satellite/Mine/Drop Pod tiers).
+        """
+        from game.core.registry import get_default_registry_provider
+        from game.ui.services.vehicle_class_service import VehicleClassService
+
+        service = VehicleClassService(get_default_registry_provider())
+        class_names = sorted(service.get_all_classes().keys())
+        return ["All Classes", *class_names]
 
     def _rebuild_design_list(self) -> None:
         """Rebuild the design list UI"""

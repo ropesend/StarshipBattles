@@ -465,6 +465,14 @@ class Game:
         empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None
         logger.debug(f"Creating WorkshopContext with empire_theme_id={empire_theme_id}")
 
+        # QA Obs 3 (2026-05-16): thread the live FacadeSessionState into the
+        # workshop context so DesignLibrary writes invalidate the per-turn
+        # scan_designs cache. The strategy scene passes its live facade in
+        # ``context_data["facade"]`` (see ``strategy_screen_lifecycle.on_design_click``).
+        # Fall back to None when absent so standalone / test paths still work.
+        facade = context_data.get("facade")
+        facade_state = getattr(facade, "facade_state", None) if facade is not None else None
+
         # PROJ-211: Pass registries explicitly (no fallback)
         # Create integrated context regardless of save_path
         return WorkshopContext.integrated(
@@ -474,6 +482,7 @@ class Game:
             built_designs=empire.built_ship_designs if hasattr(empire, 'built_ship_designs') else set(),
             empire_theme_id=empire_theme_id,
             registries=self.registries,
+            facade_state=facade_state,
         )
 
     def _handle_test_lab_action(self, action: str, **kwargs: Any) -> None:

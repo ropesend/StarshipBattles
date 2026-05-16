@@ -122,6 +122,19 @@ class DesignLibrary:
                 builder) omit this kwarg and get the legacy uncached
                 shape, since they already run inside the turn loop and
                 don't benefit from cross-call caching.
+
+                CONTRACT (QA Obs 3, 2026-05-16): UI callers that write
+                designs MUST pass ``facade_state``. Omitting it causes
+                ``save_design()`` to silently skip cache invalidation —
+                the write hits disk, but the Build Queue's cached scan
+                result (populated under its own ``facade_state``) goes
+                stale and the new design is invisible in Available
+                Designs. The Workshop save/load paths (in
+                ``workshop_ship_io.py``) and the Build Queue paths (in
+                ``strategy_build_queue_manager.py``) must agree on this
+                state. Engine-side write callers may still omit it
+                intentionally (turn engines invalidate the whole cache
+                at the boundary anyway).
         """
         self.savegame_path = savegame_path
         self.empire_id = empire_id

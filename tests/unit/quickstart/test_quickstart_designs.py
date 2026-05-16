@@ -62,6 +62,24 @@ class TestQuickstartDesignFixturesExist:
 
 
 @pytest.mark.parametrize("design_name,design_data", QUICKSTART_DESIGNS, ids=lambda x: x if isinstance(x, str) else x[0] if isinstance(x, tuple) else "unknown")
+class TestQuickstartDesignsPassValidator:
+    """Every shipped quickstart design must pass the strategy-layer
+    DesignValidator (crew→life-support, maintenance, C&C, combat propulsion,
+    mass budgets). QA Observation 1 fix: data-only fix to clear (INVD) flags.
+    """
+
+    def test_design_passes_strategy_validator(self, design_name, design_data, quickstart_ship_data, fresh_registries):
+        """Each quickstart design must pass DesignValidator with zero errors."""
+        from game.strategy.services.design_validator import DesignValidator
+        validator = DesignValidator(fresh_registries)
+        result = validator.validate(design_data)
+        assert result.is_valid, (
+            f"{design_name} failed strategy DesignValidator. "
+            f"Errors: {result.errors}. Warnings: {result.warnings}"
+        )
+
+
+@pytest.mark.parametrize("design_name,design_data", QUICKSTART_DESIGNS, ids=lambda x: x if isinstance(x, str) else x[0] if isinstance(x, tuple) else "unknown")
 class TestQuickstartDesignsValid:
     """Data-driven tests for quickstart design fixture validity."""
 

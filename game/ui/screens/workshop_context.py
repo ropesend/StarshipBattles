@@ -14,6 +14,7 @@ from typing import Optional, List, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
+    from game.strategy.facade.slices._facade_state import FacadeSessionState
 
 
 class WorkshopMode(Enum):
@@ -63,6 +64,16 @@ class WorkshopContext:
     # PROJ-38: Dependency injection for registries
     registries: Optional['GameRegistries'] = None
 
+    # PROJ-411 Phase 1 / QA Obs 3 (2026-05-16): Optional reference to the
+    # strategy session's FacadeSessionState. When supplied, threaded into
+    # ``DesignLibrary(facade_state=...)`` in ``WorkshopShipIO`` so save_design()
+    # invalidates the per-turn ``scan_designs`` cache that the Build Queue
+    # reads from. Without this wiring the build queue serves stale data after
+    # a workshop save and never surfaces the newly-saved design.
+    # ``None`` for standalone mode (no facade exists) and for legacy
+    # construction paths that don't yet thread the live facade through.
+    facade_state: Optional['FacadeSessionState'] = None
+
 
     @classmethod
     def standalone(cls, tech_preset_name: str = "default",
@@ -101,7 +112,9 @@ class WorkshopContext:
                    available_tech_ids: Optional[List[str]] = None,
                    built_designs: Optional[set] = None,
                    empire_theme_id: Optional[str] = None,
-                   *, registries: 'GameRegistries') -> 'WorkshopContext':
+                   *,
+                   registries: 'GameRegistries',
+                   facade_state: Optional['FacadeSessionState'] = None) -> 'WorkshopContext':
         """
         Create integrated workshop context for strategy layer.
 
@@ -118,6 +131,11 @@ class WorkshopContext:
             available_tech_ids: List of tech IDs available to this empire (default: empty list)
             built_designs: Set of design IDs that have been built (default: empty set)
             empire_theme_id: Ship theme for the empire (default: None)
+            facade_state: Optional FacadeSessionState from the live strategy
+                session. When supplied, propagated to every
+                ``DesignLibrary(...)`` constructed by ``WorkshopShipIO`` so
+                ``save_design()`` invalidates the per-turn ``scan_designs``
+                cache that the Build Queue reads from (PROJ-411 / QA Obs 3).
 
         Returns:
             WorkshopContext configured for integrated mode
@@ -141,7 +159,8 @@ class WorkshopContext:
             available_tech_ids=available_tech_ids if available_tech_ids is not None else [],
             built_designs=built_designs if built_designs is not None else set(),
             empire_theme_id=empire_theme_id,
-            registries=registries
+            registries=registries,
+            facade_state=facade_state,
         )
 
     def is_standalone(self) -> bool:

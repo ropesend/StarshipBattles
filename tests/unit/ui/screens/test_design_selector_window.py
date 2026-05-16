@@ -660,3 +660,155 @@ class TestDesignSelectorWindowWidgetPlaceholders:
                 f"Pattern §33 placeholder {slot!r} should be None under "
                 f"Null builder; got {getattr(window, slot)!r}"
             )
+
+
+# ---------------------------------------------------------------------------
+# QA Observation 2 (2026-05-16): Load Design dropdown options + ordering.
+# ---------------------------------------------------------------------------
+
+def _vehicleclasses_data():
+    """Load data/vehicleclasses.json — single source of truth for filter
+    expectations in these tests."""
+    import json
+    import os
+    repo_root = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
+    )
+    path = os.path.join(repo_root, "data", "vehicleclasses.json")
+    with open(path, "r", encoding="utf-8") as fh:
+        return json.load(fh)["classes"]
+
+
+class TestDesignSelectorDropdownOptions:
+    """QA Obs 2 — verify the Ship Class and Vehicle Type dropdowns are
+    derived from `data/vehicleclasses.json` rather than hardcoded stale
+    lists.
+    """
+
+    def _capture_dropdown_calls(self):
+        """Run _create_sidebar with UIDropDownMenu patched; return the
+        list of constructor-kwargs in call order so we can interrogate
+        per-dropdown options and y-positions.
+        """
+        from unittest.mock import patch
+        window, _ = _make_selector_window()
+
+        # _create_sidebar reads a UIPanel container - stub the constructors
+        # so we can run the real builder without pygame_gui state.
+        with patch("game.ui.screens.design_selector_window.UIPanel"), \
+             patch("game.ui.screens.design_selector_window.UILabel") as mock_label, \
+             patch("game.ui.screens.design_selector_window.UIButton"), \
+             patch("game.ui.screens.design_selector_window.UITextEntryLine"), \
+             patch(
+                 "game.ui.screens.design_selector_window.UIDropDownMenu"
+             ) as mock_dd:
+            mock_dd.return_value = MagicMock()
+            mock_label.return_value = MagicMock()
+            window._create_sidebar()
+
+            return mock_dd.call_args_list, mock_label.call_args_list
+
+    def _get_dropdown_options(self, call_args_list, starting_option):
+        """Find the dropdown construction call whose starting_option matches
+        and return its options_list."""
+        for ca in call_args_list:
+            kwargs = ca.kwargs
+            if kwargs.get("starting_option") == starting_option:
+                return kwargs["options_list"]
+        raise AssertionError(
+            f"No UIDropDownMenu constructed with starting_option={starting_option!r}"
+        )
+
+    def _get_dropdown_y(self, call_args_list, starting_option):
+        """Find the dropdown construction call and return its
+        relative_rect.y position."""
+        for ca in call_args_list:
+            kwargs = ca.kwargs
+            if kwargs.get("starting_option") == starting_option:
+                return kwargs["relative_rect"].y
+        raise AssertionError(
+            f"No UIDropDownMenu constructed with starting_option={starting_option!r}"
+        )
+
+    # --- Vehicle Type dropdown ---
+
+    def test_type_dropdown_includes_mine(self):
+        """The Vehicle Type filter must include 'Mine' (QA Obs 2)."""
+        dd_calls, _ = self._capture_dropdown_calls()
+        opts = self._get_dropdown_options(dd_calls, "All Types")
+        assert "Mine" in opts, (
+            f"Vehicle Type dropdown is missing 'Mine'; got {opts!r}"
+        )
+
+    def test_type_dropdown_includes_all_vehicleclasses_types(self):
+        """Every unique `type` in vehicleclasses.json must appear in the
+        Vehicle Type dropdown (registry-driven contract)."""
+        dd_calls, _ = self._capture_dropdown_calls()
+        opts = self._get_dropdown_options(dd_calls, "All Types")
+
+        data_types = {cls["type"] for cls in _vehicleclasses_data().values()}
+        missing = data_types - set(opts)
+        assert not missing, (
+            f"Vehicle Type dropdown missing types from data: {missing}"
+        )
+
+    # --- Ship Class dropdown ---
+
+    def test_class_dropdown_excludes_phantom_carrier(self):
+        """'Carrier' is a role/configuration, not a vehicle class — must
+        NOT appear in the Ship Class dropdown."""
+        dd_calls, _ = self._capture_dropdown_calls()
+        opts = self._get_dropdown_options(dd_calls, "All Classes")
+        assert "Carrier" not in opts, (
+            f"Phantom 'Carrier' class present in dropdown: {opts!r}"
+        )
+
+    def test_class_dropdown_uses_data_spelling(self):
+        """Data uses 'Battle Cruiser' (with space); dropdown must match
+        verbatim because filter_designs does exact-string equality."""
+        dd_calls, _ = self._capture_dropdown_calls()
+        opts = self._get_dropdown_options(dd_calls, "All Classes")
+        assert "Battle Cruiser" in opts, (
+            f"'Battle Cruiser' missing from dropdown: {opts!r}"
+        )
+        assert "Battlecruiser" not in opts, (
+            f"Stale 'Battlecruiser' (no space) present: {opts!r}"
+        )
+
+    def test_class_dropdown_includes_all_vehicleclasses_classes(self):
+        """Every class name in vehicleclasses.json must appear in the
+        Ship Class dropdown (registry-driven contract)."""
+        dd_calls, _ = self._capture_dropdown_calls()
+        opts = self._get_dropdown_options(dd_calls, "All Classes")
+
+        for class_name in _vehicleclasses_data().keys():
+            assert class_name in opts, (
+                f"Class '{class_name}' from data missing from dropdown: {opts!r}"
+            )
+
+    # --- Ordering ---
+
+    def test_filter_order_vehicle_type_before_ship_class(self):
+        """QA Obs 2: Vehicle Type filter must render ABOVE Ship Class."""
+        dd_calls, _ = self._capture_dropdown_calls()
+        type_y = self._get_dropdown_y(dd_calls, "All Types")
+        class_y = self._get_dropdown_y(dd_calls, "All Classes")
+        assert type_y < class_y, (
+            f"Vehicle Type (y={type_y}) should render above Ship Class "
+            f"(y={class_y})"
+        )
+
+    # --- Mine filter end-to-end ---
+
+    def test_mine_filter_propagates_to_search_designs(self):
+        """Selecting 'Mine' in the type dropdown must be forwarded to
+        DesignLibrary.search_designs as a vehicle_type filter."""
+        library = _make_design_library()
+        window, _ = _make_selector_window(design_library=library)
+        window._rebuild_design_list = MagicMock()
+        window.type_dropdown.selected_option = "Mine"
+
+        window._refresh_designs()
+
+        call_args = library.search_designs.call_args
+        assert call_args[1]["filters"]["vehicle_type"] == "Mine"
