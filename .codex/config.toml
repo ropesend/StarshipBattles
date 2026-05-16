@@ -1,7 +1,7 @@
 # Repo-local Codex configuration for Starship Battles.
 # User secrets and login state must stay outside the repo.
 
-model = "gpt-5.5"
+model = "gpt-5.4"
 model_reasoning_effort = "xhigh"
 personality = "pragmatic"
 project_doc_max_bytes = 65536
@@ -10,6 +10,8 @@ project_doc_max_bytes = 65536
 # directory. AGENTS.md is the neutral shared entry point for this repo.
 project_doc_fallback_filenames = ["CLAUDE.md"]
 
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
 [windows]
 sandbox = "unelevated"
 
@@ -27,3 +29,6 @@ enabled = true
 
 [plugins."presentations@openai-primary-runtime"]
 enabled = true
+
+[sandbox_workspace_write]
+network_access = true

@@ -371,3 +371,24 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-378 | Galaxy Cleanup Test Pattern Update (post-PROJ-372 facade-delegate) | 2026-05-10 | PROJ-351-400 |
 | PROJ-379 | Deterministic Golden-Save Fixture (PROJ-377 MIN-002) | 2026-05-10 | PROJ-351-400 |
 | PROJ-380 | Audit-shrink cleanup 2026-05-07 | 2026-05-10 | PROJ-351-400 |
+| PROJ-381 | Error handling cleanup — strategy/ui/assets/sim (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-382 | Pattern conformance — Facade integrity, EventBus injection, doc drift, LOC sweep (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-383 | Legacy removal — command_handlers.py shim eradication (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-384 | Legacy removal — PROJ-241 deprecated *_static methods (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-385 | Legacy removal — formula_evaluator backward-compat aliases (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-386 | Legacy removal — Save-format migration eradication (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-387 | Legacy removal — Galaxy backward-compat property forwarders (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-388 | Legacy removal — ModifierLogic deprecated class wrapper (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-389 | Legacy removal — score_planet_for_race wrapper migration (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-390 | Legacy removal — log_event module-level compat shim retirement (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-391 | Legacy removal — Underscore-prefixed legacy pair consolidations (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-392 | Legacy removal — Misc orphan wrappers + zero-call-site placeholders (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-393 | Legacy removal — Test-injection fallbacks + comment cleanups (2026-05-07) | 2026-05-10 | PROJ-351-400 |
+| PROJ-394 | PROJ-387 follow-up — Galaxy state public property + guard cleanup | 2026-05-10 | PROJ-351-400 |
+| PROJ-395 | PROJ-381 remediation — review CRITICAL + MAJOR findings (B-5 modal, ValidationException registry, test assertions, etc.) | 2026-05-10 | PROJ-351-400 |
+| PROJ-396 | PROJ-382 remediation — review CRITICAL + MAJOR + Task 5.4 deferred (static-guard blind spot, GameSession.from_dict mutators, superweapon_order_processor decomp) | 2026-05-10 | PROJ-351-400 |
+| PROJ-397 | PROJ-393 remediation — review CRITICAL + MAJOR + 3 deferred items (Combat Lab dead vars reclaim, fleet_id field deletion, view=None branch) | 2026-05-10 | PROJ-351-400 |
+| PROJ-398 | PROJ-380 remediation — 5 review MAJOR findings (consolidation refinements) | 2026-05-10 | PROJ-351-400 |
+| PROJ-399 | Branch hygiene — pre-existing test failures and pytest collection errors (Galaxy._intercept, docs-drift, basename collisions) | 2026-05-10 | PROJ-351-400 |
+| PROJ-400 | Tier 1 B-01: NewGameSetupScreen deleted-wrapper call | 2026-05-10 | PROJ-351-400 |
+| PROJ-401 | Tier 1 B-02: Passenger-load validator missing species_id rejection | 2026-05-15 | PROJ-401-450 |
