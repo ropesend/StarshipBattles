@@ -4,7 +4,14 @@
 
 ## Context
 
-The game already exposes **fighter** and **satellite** vehicle classes in the workshop ([vehicleclasses.json](../../../data/vehicleclasses.json), [vehiclelayers.json](../../../data/vehiclelayers.json)) but has no plumbing to carry, deploy, fight with, or recover them at the unit level. **Mines do not exist at all.** A tactical-only `VehicleLaunchAbility` exists at [markers.py:9-61](../../../game/simulation/components/abilities/markers.py#L9) that auto-launches when a ship has a target, but there is no recovery code anywhere in the repo and nothing at the strategic layer.
+> **Status update (2026-05-16):** The legacy `VehicleLaunchAbility`
+> referenced below was removed in PROJ-FMS-C audit Fix 1. The
+> replacement is `TacticalFighterLaunchAbility` (PROJ-FMS-A Phase 5),
+> driven by the production-side `CarrierAIController` (PROJ-FMS-C
+> audit Fix 1). All `file:line` citations in this document that point
+> to since-deleted symbols are annotated inline.
+
+The game already exposes **fighter** and **satellite** vehicle classes in the workshop ([vehicleclasses.json](../../../data/vehicleclasses.json), [vehiclelayers.json](../../../data/vehiclelayers.json)) but has no plumbing to carry, deploy, fight with, or recover them at the unit level. **Mines do not exist at all.** A tactical-only `VehicleLaunchAbility` existed at [markers.py](../../../game/simulation/components/abilities/markers.py) (removed in PROJ-FMS-C audit Fix 1) that auto-launched when a ship had a target, but there is no recovery code anywhere in the repo and nothing at the strategic layer.
 
 This project sequence adds the three unit types end-to-end: workshop → cargo → strategic launch → sector presence → tactical participation → recovery (fighters/sats only — mines are one-way). Construction reuses the existing `SpaceShipyard` component. All deployed units visible to all empires for now; fog-of-war is later, once sensors land.
 
@@ -14,10 +21,10 @@ Design produced via a two-party inter-agent discussion between claude and codex 
 
 ## Core architectural decisions
 
-1. **Strategic map presence uses `Fleet` with a `group_kind` discriminator.** Values: `fleet | fighter_group | satellite_group | mine_group`. Non-`fleet` kinds carry a `can_strategic_move = False` invariant enforced at order validation. Inherits Fleet's existing location/owner/ship-roster/serialization/DTO/contested-hex inclusion at [fleet.py:39-93](../../../game/strategy/data/fleet.py#L39); [fleet_dto.py:96-100,187-218](../../../game/strategy/facade/dto/fleet_dto.py#L96); [conflict_resolution_engine.py:312-321,357-376](../../../game/strategy/engine/conflict_resolution_engine.py#L312). **No parallel `global_hex_deployments` store.**
-2. **Cargo / storage generalises the existing `carried_items` and `Planet.staging_yard` flows** to hold design-backed vehicles ([ship_instance.py:135-136](../../../game/strategy/data/ship_instance.py#L135); [transfer_branches.py:128-281](../../../game/strategy/engine/order_handlers/transfer_branches.py#L128); [transfer_view_model.py:264-303](../../../game/ui/screens/transfer_view_model.py#L264)). No parallel transport concept.
-3. **Production output normalisation**: planet-built fighters/satellites/mines → `Planet.staging_yard`; fleet-yard-built → carried cargo if bay capacity exists. Resolves the current colony-vs-fleet inconsistency at [production_spawner.py:107-117](../../../game/strategy/engine/production_spawner.py#L107).
-4. **Tactical launch deploys actual carried design instances**, not generic-class shells. Replaces the `fighter_class` string path at [weapon_firing_system.py:130-140](../../../game/simulation/combat/weapon_firing_system.py#L130) and [attack_processor.py:68-97](../../../game/simulation/systems/attack_processor.py#L68).
+1. **Strategic map presence uses `Fleet` with a `group_kind` discriminator.** Values: `fleet | fighter_group | satellite_group | mine_group`. Non-`fleet` kinds carry a `can_strategic_move = False` invariant enforced at order validation. Inherits Fleet's existing location/owner/ship-roster/serialization/DTO/contested-hex inclusion at [`fleet.py::Fleet`](../../../game/strategy/data/fleet.py); [`fleet_dto.py::FleetInfo`](../../../game/strategy/facade/dto/fleet_dto.py); [`conflict_resolution_engine.py`](../../../game/strategy/engine/conflict_resolution_engine.py). **No parallel `global_hex_deployments` store.**
+2. **Cargo / storage generalises the existing `carried_items` and `Planet.staging_yard` flows** to hold design-backed vehicles ([`ship_instance.py::ShipInstance.carried_items`](../../../game/strategy/data/ship_instance.py); [`transfer_branches.py`](../../../game/strategy/engine/order_handlers/transfer_branches.py); [`transfer_view_model.py`](../../../game/ui/screens/transfer_view_model.py)). No parallel transport concept.
+3. **Production output normalisation**: planet-built fighters/satellites/mines → `Planet.staging_yard`; fleet-yard-built → carried cargo if bay capacity exists. Resolves the current colony-vs-fleet inconsistency at [`production_spawner.py`](../../../game/strategy/engine/production_spawner.py).
+4. **Tactical launch deploys actual carried design instances**, not generic-class shells. Replaced the `fighter_class` string path at [`weapon_firing_system.py`](../../../game/simulation/combat/weapon_firing_system.py) (legacy `_process_hangar_launch` removed in PROJ-FMS-C audit Fix 1) and [`attack_processor.py::process_launch_attack`](../../../game/simulation/systems/attack_processor.py) (class-string branch removed in PROJ-FMS-C audit Fix 1).
 5. **Construction yard**: existing `SpaceShipyard` component. No new facility.
 6. **Visibility**: all deployed groups visible to all empires until a sensor / fog-of-war system lands.
 
@@ -26,16 +33,16 @@ Design produced via a two-party inter-agent discussion between claude and codex 
 - **Fighters & Satellites**: reuse existing classes in `vehicleclasses.json` and `vehiclelayers.json`. Fighter layer allow-list extended to include `Warhead` and `RamTarget` for kamikaze fighter designs.
 - **Mines**: new `mine_small / mine_medium / mine_large / mine_heavy` vehicle classes plus a `Mine_Standard` layer with a single CORE layer. **Component whitelist**: `Warhead`, `Laserhead`, `Hull`, `SmallTargetingSensor` (new — see below). Everything else blocked at layer validation.
 - **Mine HP** comes from the slotted `Hull` component.
-- **Mine class-level `signature_bonus`** feeds `total_defense_score` via [ship_stats.py:424-444](../../../game/simulation/entities/ship_stats.py#L424); combined with their tiny `size_score`, mines are very hard to hit by conventional weapons.
+- **Mine class-level `signature_bonus`** feeds `total_defense_score` via [`ship_stats.py`](../../../game/simulation/entities/ship_stats.py) (`signature_bonus` aggregation block); combined with their tiny `size_score`, mines are very hard to hit by conventional weapons.
 - **Mixed-design groups supported**: a `mine_group` may contain mines from multiple designs; same for `fighter_group` and `satellite_group`.
 
 ### New components / abilities
 
 | Component | Ability class | Layer | Notes |
 |---|---|---|---|
-| `Warhead` | `WarheadAbility` | BOTH | Single attribute: `damage`. **Always hits when triggered** — no second accuracy roll. Damage via [damage_calculator.py:44-84](../../../game/simulation/combat/damage_calculator.py#L44). Also placeable on fighters/ships for ramming. |
-| `Laserhead` | `LaserheadAbility(BeamWeaponAbility)` | BOTH | Subclass of `BeamWeaponAbility`. Inherits beam targeting / range / hit-chance sigmoid at [weapons.py:312-331](../../../game/simulation/components/abilities/weapons.py#L312). MRO-based lookup at [ability_manager.py:71-145](../../../game/simulation/components/ability_manager.py#L71); family detection at [weapon_registry.py:78-94](../../../game/simulation/combat/weapon_registry.py#L78) — both transparent to the subclass. Adds `consume_on_fire=True` honored by the tactical fire path. |
-| `SmallTargetingSensor` | (uses existing `ToHitAttackModifier`) | COMBAT | New mine/small-craft sensor **without** `RequiresCommandAndControl`. The existing `mini_sensor` at [components.json:1108](../../../data/components.json#L1108) requires C&C which crewless mines fail. Boosts laserhead hit chance via existing stat aggregator. |
+| `Warhead` | `WarheadAbility` | BOTH | Single attribute: `damage`. **Always hits when triggered** — no second accuracy roll. Damage via [`damage_calculator.py::apply_damage`](../../../game/simulation/combat/damage_calculator.py). Also placeable on fighters/ships for ramming. |
+| `Laserhead` | `LaserheadAbility(BeamWeaponAbility)` | BOTH | Subclass of `BeamWeaponAbility`. Inherits beam targeting / range / hit-chance sigmoid at [`weapons.py::calculate_hit_chance`](../../../game/simulation/components/abilities/weapons.py). MRO-based lookup at [`ability_manager.py`](../../../game/simulation/components/ability_manager.py); family detection at [`weapon_registry.py`](../../../game/simulation/combat/weapon_registry.py) — both transparent to the subclass. Adds `consume_on_fire=True` honored by the tactical fire path. |
+| `SmallTargetingSensor` | (uses existing `ToHitAttackModifier`) | COMBAT | New mine/small-craft sensor **without** `RequiresCommandAndControl`. The existing `mini_sensor` (in [`components.json`](../../../data/components.json)) requires C&C which crewless mines fail. Boosts laserhead hit chance via existing stat aggregator. |
 | `RamTarget` | `RamTargetAbility` | COMBAT | Explicit "set ram target" action only — no collision-driven auto-detonation. On collision with the assigned target, every `Warhead` on the rammer detonates against it via the damage pipeline; rammer is destroyed. Designs without `RamTargetAbility` carry warheads inertly. |
 
 ### New storage / launch / recovery abilities
@@ -107,14 +114,14 @@ Each project ships independently testable behavior. PROJ-FMS-B depends on PROJ-F
 - `game/simulation/components/abilities/__init__.py` — register new abilities
 - `game/simulation/components/abilities/markers.py` — refactor `VehicleLaunchAbility`; add new launch families (skeleton)
 - `game/simulation/components/abilities/cargo.py` (or new file) — `VehicleBayAbility`
-- `game/strategy/data/ship_instance.py:135-136` — typed `carried_items` extension or replacement
+- `game/strategy/data/ship_instance.py::ShipInstance.carried_items` — typed `carried_items` extension or replacement
 - `game/strategy/data/ship_cargo_manager.py` — `load_vehicle()`, `unload_vehicle()`
-- `game/strategy/data/fleet.py:39-93` — `group_kind` field + order-validation hook
-- `game/simulation/entities/ship_stats.py:424-444` — `signature_bonus` wiring
-- `game/strategy/engine/production_spawner.py:107-117` — output normalisation
-- `game/strategy/engine/order_handlers/transfer_branches.py:128-281` — generalise staging transfer
-- `game/ui/screens/transfer_view_model.py:264-303` — generic carried-vehicle DTO rows
-- `game/strategy/facade/dto/fleet_dto.py:96-100,187-218` — DTO surface for carried vehicles + `group_kind`
+- `game/strategy/data/fleet.py::Fleet` — `group_kind` field + order-validation hook
+- `game/simulation/entities/ship_stats.py` — `signature_bonus` wiring (aggregation block)
+- `game/strategy/engine/production_spawner.py` — output normalisation
+- `game/strategy/engine/order_handlers/transfer_branches.py` — generalise staging transfer
+- `game/ui/screens/transfer_view_model.py` — generic carried-vehicle DTO rows
+- `game/strategy/facade/dto/fleet_dto.py::FleetInfo` — DTO surface for carried vehicles + `group_kind`
 
 ### PROJ-FMS-B (Mines)
 - `data/balance/mines.json` — new
@@ -127,15 +134,15 @@ Each project ships independently testable behavior. PROJ-FMS-B depends on PROJ-F
 - `game/ui/...` — sensitivity slider + threshold slider + self-destruct UI action (paths TBD during PROJ-FMS-B planning)
 
 ### PROJ-FMS-C (Fighters)
-- `game/simulation/combat/weapon_firing_system.py:115-141` — replace auto-launch with design-instance deploy
-- `game/simulation/systems/attack_processor.py:68-97` — accept design-instance payload, not class string
+- `game/simulation/combat/weapon_firing_system.py` — legacy `_process_hangar_launch` auto-launch path removed in PROJ-FMS-C audit Fix 1; replaced with design-instance deploy via `BattleEngine.launch_fighters_in_battle`
+- `game/simulation/systems/attack_processor.py::process_launch_attack` — accepts design-instance payload (`carried_vehicle`); class-string branch removed in PROJ-FMS-C audit Fix 1
 - `game/simulation/systems/battle_engine.py` — end-of-battle reboard + overflow-to-sector-group hook
 - `game/strategy/engine/conflict_resolution_engine.py` — confirm fighter_group inclusion in combat manifest (free if group_kind already a Fleet kind)
-- `game/simulation/entities/stat_contributors/launch.py:29-61` — update for new ability shape
+- `game/simulation/entities/stat_contributors/launch.py::contribute_vehicle_launch` — updated for new ability shape
 - `game/ai/controller.py` — minimal "target nearest enemy" fighter AI
 
 ### PROJ-FMS-D (Satellites)
-- Same shape as PROJ-FMS-C with stationary AI ([game/ai/controller.py:361-363](../../../game/ai/controller.py#L361) is the existing stationary satellite ref)
+- Same shape as PROJ-FMS-C with stationary AI ([`game/ai/controller.py::AIController`](../../../game/ai/controller.py) short-circuits Satellite-type ships)
 - Separate `*BayAbility` / `Recover*Ability` ability gates from fighters
 
 ## Verification (per project)

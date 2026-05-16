@@ -107,7 +107,10 @@ Source: claude/codex inter-agent discussion at `AgentCoordination/Scratchpad/Dis
   attribute. When `None`, battles run exactly as before. When
   set, `update()` calls `_run_mine_resolver_tick()` after the
   standard tick phases. The hook bypasses `tick_phase` plumbing
-  to avoid coupling test ticks to the mine system.
+  to avoid coupling test ticks to the mine system. (Superseded
+  2026-05-16 by audit Fix 2 — `mine_resolvers: List` is the
+  production slot; the singular `mine_resolver` is a
+  backwards-compat alias retained for the Phase 3 unit tests.)
 - **Mine HP.** Mines participate in tactical combat with hull HP
   from their `StructuralIntegrity` component (sum across all hull
   components on the design). Reduced to 0 HP without detonating
@@ -316,12 +319,15 @@ implementation — no reverts.
 
 ### Known limitations / things for codex consult
 
-- **Tactical-side full `battle_engine` integration.** The
-  `BattleEngine.mine_resolver` hook is in place and the
-  `TacticalMineResolver` is tested standalone, but the
-  strategy-side battle-spec compiler does NOT yet wire the
-  resolver onto live battles automatically. The next pass
-  needs to:
+- ~~**Tactical-side full `battle_engine` integration.**~~ **Resolved
+  2026-05-16 in audit Fix 2** (see "2026-05-16 — Audit fix pass"
+  below). The spec compiler now auto-wires
+  `TacticalMineResolver`s via `build_mine_resolver_setup` per
+  contested-hex `mine_group`, threads them through the
+  `pre_tick_loop_callback`, and the post-battle hook calls
+  `writeback_to_mine_group` for each. The original 5-step plan
+  below is retained for historical context.
+
   1. Detect contested-hex `mine_group` Fleets in
      `game/strategy/combat/spec_compiler.py` (or the equivalent
      post-PROJ-275 location).
@@ -331,9 +337,6 @@ implementation — no reverts.
   4. Set `mine_resolver._owner_team_id` so the resolver knows
      which team_id is "friendly".
   5. Call `writeback_to_mine_group(mg)` in the post-battle hook.
-  None of this is hard, but it's outside this pass's scope. The
-  unit tests pin the resolver's API surface so the integration
-  is mechanical.
 - **UI screens.** Sensitivity radio, threshold slider, selective
   self-destruct modal, and "set ram target" context action are
   intentionally minimal — service-layer is tested but pygame

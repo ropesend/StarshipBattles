@@ -199,7 +199,19 @@ sections cover:
 ## Production wiring inventory
 
 This section explicitly enumerates every production caller that was
-wired vs not wired, per the audit-lesson rule from PROJ-FMS-B:
+wired vs not wired, per the audit-lesson rule from PROJ-FMS-B.
+
+> **Historical pre-audit snapshot (2026-05-16 reconciliation):** The
+> tables below reflect the state at the end of the PROJ-FMS-C
+> implementation phases. The subsequent audit-fix pass (see
+> [`audit_fix_report.md`](audit_fix_report.md) Fix 1) **removed** the
+> legacy `VehicleLaunchAbility` deprecation path entirely and
+> **shipped** a production `CarrierAIController` for carrier-side
+> auto-launch decisions. Treat the "Legacy `VehicleLaunchAbility`
+> deprecation warning" YES row and the "Auto-launch AI ... follow-up"
+> bullet as superseded — the post-audit architecture is design-instance
+> only, with `CarrierAIController` driving carrier launch timing via
+> `AIControllerFactory.create_for_ship`.
 
 ### Wired into production game-loop callers
 

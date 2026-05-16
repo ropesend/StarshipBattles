@@ -21,9 +21,11 @@
 **Last Action:** Phase 5 integration tests + statistical balance + docs landed
 **Next Action:** Codex consult / audit pass
 **Blockers:** None
-**Known follow-ups:** Strategy-side battle-spec compiler does not yet wire
-`BattleEngine.mine_resolver` automatically; the resolver + service layers
-are fully tested in isolation. See `decisions.md` "Known limitations".
+**Known follow-ups:** ~~Strategy-side battle-spec compiler does not yet
+wire `BattleEngine.mine_resolver` automatically.~~ **Resolved 2026-05-16
+in audit Fix 2** — wiring is now automatic via `build_mine_resolver_setup`
++ `_mine_groups` side-channel on the frozen `BattleSpec`; see
+`findings/audit_fix_report.md` Fix 2 for the full mechanism.
 
 ## Overview
 End-to-end mines: lay them strategically, hit fleets entering the hex, deal damage; tactical participation; ramming for fighters/ships with warheads; selective self-destruct; mine field sensitivity and laserhead threshold UI.

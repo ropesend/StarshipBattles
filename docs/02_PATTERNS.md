@@ -56,6 +56,10 @@ stale pattern count to 35.
 | 33 | UI Widget Test Factory | Retrofit legacy pygame_gui widgets with `make_ui_widget` and scoped `bypass_init`. |
 | 34 | Weapon Family Registry | Weapon family handlers dispatch attacks; no central branch edits for new families. |
 | 35 | Stat Contributor Registry | Per-component stat contributors run through one typed accumulator pipeline. |
+| 36 | Re-Export Shim | Thin module shim preserves a legacy import path during decomposition; tied to a tracked migration project. |
+| 37 | Group-Kind Fleet Discriminator | `Fleet.group_kind` plus `BaseCommandHandler._reject_if_non_fleet_group` constrain non-`fleet` Fleet kinds (`mine_group` / `fighter_group` / `satellite_group`) from movement / build / warp / intercept / join commands. |
+| 38 | CarriedVehicle Substrate | `VehicleBayAbility` (`capacity_mass`, `allowed_types`) plus the `CarriedVehicle` payload and shared `carried_vehicle_to_ship_instance` helper carry design-backed vehicles through bay storage, strategic launch / recovery, and end-of-battle reboard. |
+| 39 | `pre_tick_loop_callback` Composition | `_compose_setup_callbacks` chains battle-setup closures (mine resolver wiring, fighter reboard tracker, etc.) onto the single `run_battle(..., pre_tick_loop_callback=...)` slot, letting independent subsystems install per-battle state without fighting for the same hook. |
 
 ## 1. ApplicationContext
 
@@ -857,6 +861,111 @@ Retirement:
   `game/`, delete the shim file in the same PR that removes the last
   caller. Audit guard: a periodic grep for shim contents is the
   current detection mechanism; a future audit may add a static check.
+
+## 37. Group-Kind Fleet Discriminator
+
+Where: `game/strategy/data/fleet.py::Fleet.group_kind`;
+`game/strategy/engine/handlers/base.py::BaseCommandHandler._reject_if_non_fleet_group`;
+order handlers under `game/strategy/engine/order_handlers/`
+(`lay_mines.py`, `launch_fighters.py`, `launch_satellites.py`,
+`recover_fighters.py`, `recover_satellites.py`).
+
+Contract:
+- `Fleet.group_kind` ∈ `{"fleet", "mine_group", "fighter_group",
+  "satellite_group"}`. Default is `"fleet"`.
+- Non-`fleet` kinds carry a `can_strategic_move = False` invariant —
+  movement, intercept, join, warp, and build commands reject them at
+  validation via `_reject_if_non_fleet_group`.
+- Combat membership is unchanged: the conflict-resolution engine
+  iterates `empire.fleets` and pulls every Fleet at the contested hex
+  regardless of `group_kind` (mine_groups are split back out by
+  `_split_mine_groups_from_fleets` at spec-compile time).
+- Strategic launch / lay actions mint a fresh group every time — no
+  same-hex auto-merge (PROJ-FMS-B audit Fix 4; mirrored by PROJ-FMS-C
+  fighter launch and PROJ-FMS-D satellite launch).
+- Fleet-id namespace conventions: `mine_group` 100000+,
+  `fighter_group` 200000+, `satellite_group` 300000+.
+
+Use for: any new "presence on the strategic map but not a freely
+moving fleet" entity. Extend `group_kind` with a new value, add the
+matching reject-guard in command handlers that should not apply, and
+let the existing conflict-resolution / DTO / serialization paths pick
+it up for free.
+
+Boundary: this pattern is for entities that conceptually ARE Fleets
+(location, owner, ship roster, contested-hex inclusion). Entities that
+need a fundamentally different data shape should not piggy-back on
+Fleet.
+
+## 38. CarriedVehicle Substrate
+
+Where: `game/strategy/data/ship_instance.py::ShipInstance.carried_items`;
+`game/simulation/components/abilities/vehicle_bay.py::VehicleBayAbility`;
+`game/strategy/data/carried_vehicle_deploy.py::carried_vehicle_to_ship_instance`;
+`game/strategy/data/ship_cargo_manager.py`; order handlers under
+`game/strategy/engine/order_handlers/` for launch / recovery.
+
+Contract:
+- `VehicleBayAbility` data shape: `{"capacity_mass": <int>,
+  "allowed_types": ["mine", "fighter", "satellite"]}`. `allowed_types`
+  is the typed-bay filter — `fighter_bay_*` carries `["fighter"]`,
+  `satellite_bay_*` carries `["satellite"]`, universal
+  `vehicle_bay_*` carries all three.
+- `CarriedVehicle` (a typed payload in `carried_items`) holds
+  `design_id`, `design_data`, `current_hp`, optional
+  `component_states`, and `vehicle_type`. Mass is the capacity gate;
+  `ShipCargoManager.can_accept_vehicle` queries `allowed_types`.
+- Deploy: `carried_vehicle_to_ship_instance(cv, fleet_id, ...)` is the
+  single shared helper that mints a deployed `ShipInstance` from a
+  `CarriedVehicle`, preserving HP and per-component damage. Used by
+  both strategic launch order handlers and tactical
+  `BattleEngine.launch_*_in_battle`.
+- Reboard: `fighter_reboard.apply_reboard` and the satellite reboard
+  hook convert deployed `ShipInstance`s back into `CarriedVehicle`s
+  for the recovering carrier's bay (HP + component_states preserved).
+
+Use for: any future design-backed cargo (drones, drop pods, boarding
+craft). Reuse `VehicleBayAbility` with a new `vehicle_type` plus an
+`allowed_types` entry on the bay rather than inventing a parallel
+storage concept.
+
+Boundary: pods and other non-design-backed cargo continue to use the
+legacy `PodStorage` / `CargoStorage` surface. `VehicleBay` is for
+items that round-trip a full design through the bay.
+
+## 39. `pre_tick_loop_callback` Composition
+
+Where: `game/strategy/combat/spec_compiler.py::_compose_setup_callbacks`,
+`build_mine_resolver_setup`, `build_fighter_reboard_setup`;
+`game/simulation/battle_runner.py::run_battle`
+(`pre_tick_loop_callback` parameter); `game/simulation/systems/battle_engine.py`.
+
+Contract:
+- `run_battle` accepts a single `pre_tick_loop_callback(engine,
+  battle_spec)` invoked once after engine construction and before the
+  tick loop starts.
+- Independent subsystems (mine resolvers, fighter reboard tracker,
+  etc.) each export a `build_*_setup(...)` factory that returns its
+  own closure over its inputs (`mine_groups`, `owner_to_team_id`,
+  `battle_boundary`, etc.).
+- `_compose_setup_callbacks(*callbacks)` chains those closures in
+  registration order so they share the single `run_battle` hook
+  without coupling.
+- Frozen-`BattleSpec` side-channels: subsystems whose data does not
+  belong on the public spec stash it via
+  `object.__setattr__(spec, "_attr", value)` and read it back in the
+  setup closure. Current side-channels: `_mine_groups`,
+  `_owner_to_team_id`, `_fighter_reboard_inputs`.
+
+Use for: any new battle-setup wiring that needs to install state on
+the live `BattleEngine` before the tick loop. Compose with existing
+setup callbacks rather than racing for the single `pre_tick_loop_callback`
+slot or adding a parallel kwarg to `run_battle`.
+
+Boundary: things that need to run per-tick belong in the tick-phase
+registry (Pattern #23). Things that need to run at end-of-battle
+belong on the strategy post-battle hook
+(`_build_strategy_post_battle_hook`), not on this setup callback.
 
 ## Critical Naming Reminders
 

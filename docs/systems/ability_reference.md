@@ -1,6 +1,6 @@
 # Ability Reference
 
-> **Last verified:** 2026-05-08 - Verified against `game/simulation/components/abilities/`, strategic ability services, and the compact ability reference. Current live registry has 60 keys.
+> **Last verified:** 2026-05-16 - Verified against `game/simulation/components/abilities/`, strategic ability services, and the compact ability reference. Current live registry has 71 keys (PROJ-FMS-A added 11 new abilities — `Warhead`, `Laserhead`, `RamTarget`, `VehicleBay`, and the six launch + two recovery skeletons; PROJ-FMS-C audit Fix 1 removed `VehicleLaunch`).
 
 Compact agent reference for the component ability system. It preserves live registry keys, data shapes, contracts, invariants, extension recipes, warnings, stale-reference corrections, and validation commands while omitting release-note history.
 
@@ -17,7 +17,7 @@ Compact agent reference for the component ability system. It preserves live regi
 - Ship-stat extension point: `game/simulation/entities/stat_contributors/registry.py`.
 - Strategic source/effect pipeline: `game/strategy/services/ability_iterator.py`, `system_effects_collector.py`, `effect_ability_metadata.py`.
 - Design/facility ability inspection must use `game/strategy/services/component_inspector.py`; loaded designs usually store component IDs, with abilities resolved through the component registry.
-- Current stale-reference corrections: old counts such as 39, 53, or 56 are obsolete; `PodStorage`, `VehicleStorage`, and `MultiplexTracking` are typed marker abilities, not raw-dict stat reads.
+- Current stale-reference corrections: old counts such as 39, 53, 56, or 60 are obsolete; `PodStorage`, `VehicleStorage`, and `MultiplexTracking` are typed marker abilities, not raw-dict stat reads.
 - `PlanetaryShield` and `StrategicResourceGeneration` still inherit the base combat-layer class metadata in live code, but gameplay consumes them as strategic component abilities.
 
 ## JSON Data Shapes
@@ -213,7 +213,6 @@ Live keys from `ABILITY_REGISTRY`.
 | `WarpJump` | `WarpJump` | `propulsion.py` | strategic | `self` |
 | `ShieldProjection` | `ShieldProjection` | `defense.py` | both | `self` |
 | `ShieldRegeneration` | `ShieldRegeneration` | `defense.py` | combat | `self` |
-| `VehicleLaunch` | `VehicleLaunchAbility` | `markers.py` | combat | `self` |
 | `MultiplexTracking` | `MultiplexTrackingAbility` | `markers.py` | combat | `self` |
 | `VehicleStorage` | `VehicleStorageAbility` | `markers.py` | combat | `self` |
 | `PodStorage` | `PodStorageAbility` | `markers.py` | combat | `self` |
@@ -328,7 +327,6 @@ Sources: `crew.py`, `cargo.py`, `markers.py`.
 | `LifeSupportCapacity` | scalar amount or `value` | `life_support_capacity_mult -> amount` | Integer supported crew. |
 | `CrewRequired` | scalar amount or `value`/`amount` | `crew_req_mult -> amount` | Also scales by `sqrt(mass_mult)` internally; `mass_mult` is intentionally not a `STAT_BINDINGS` entry. |
 | `CargoStorage` | scalar capacity, or dict `cargo_type="generic"`, `capacity` | `capacity_mult -> capacity` | Strategic cargo; `passengers` is used for population transport. |
-| `VehicleLaunch` | `fighter_class="Fighter (Small)"`, `capacity=0`, `cycle_time=5.0`, `max_launch_mass=0.0` | `capacity_mult -> capacity` | Launch bay; `max_launch_mass` is typed and additive. |
 | `VehicleStorage` | scalar capacity, or dict `capacity` | none | Adds fighter storage capacity. |
 | `PodStorage` | scalar mass, or dict `capacity_mass` | none | Adds pod mass capacity; single attribute only. |
 | `MultiplexTracking` | scalar slots, or dict `slots` | none | Adds max target slots. |
@@ -448,7 +446,7 @@ Default built-ins:
 |---|---:|---|
 | movement | 10 | `CombatPropulsion`, `StrategicMovement`, `WarpJump`, `ManeuveringThruster` |
 | defense | 20 | `Armor`, `ShieldProjection`, `ShieldRegeneration` |
-| hangar | 40 | `VehicleLaunch` |
+| hangar | 40 | `TacticalFighterLaunch`, `TacticalSatelliteLaunch`, `VehicleBay` |
 | command | 50 | `MultiplexTracking` |
 
 Registration API:
@@ -594,7 +592,7 @@ python Tools/test_sharded/test_sharded.py
 | `StrategicFighterLaunch` | `StrategicFighterLaunchAbility` | STRATEGIC | `launch.py` | Skeleton; behavior in PROJ-FMS-C Phase 1 via `OrderType.LAUNCH_FIGHTERS`. |
 | `StrategicSatelliteLaunch` | `StrategicSatelliteLaunchAbility` | STRATEGIC | `launch.py` | Skeleton; behavior in PROJ-FMS-D Phase 1 via `OrderType.LAUNCH_SATELLITES`. |
 | `TacticalMineLayer` | `TacticalMineLayerAbility` | COMBAT | `launch.py` | Skeleton; behavior in PROJ-FMS-B Phase 3 (battle-engine hook). |
-| `TacticalFighterLaunch` | `TacticalFighterLaunchAbility` | COMBAT | `launch.py` | Skeleton; replaces legacy `VehicleLaunchAbility` at `markers.py:9` in PROJ-FMS-C Phase 1. |
+| `TacticalFighterLaunch` | `TacticalFighterLaunchAbility` | COMBAT | `launch.py` | Skeleton; replaced legacy `VehicleLaunchAbility` (deleted from `markers.py` in PROJ-FMS-C audit Fix 1). |
 | `TacticalSatelliteLaunch` | `TacticalSatelliteLaunchAbility` | COMBAT | `launch.py` | Skeleton; PROJ-FMS-D Phase 1. |
 | `RecoverFighters` | `RecoverFightersAbility` | STRATEGIC | `recovery.py` | Skeleton; PROJ-FMS-C Phase 3 via `OrderType.RECOVER_FIGHTERS`. |
 | `RecoverSatellites` | `RecoverSatellitesAbility` | STRATEGIC | `recovery.py` | Skeleton; PROJ-FMS-D Phase 2 via `OrderType.RECOVER_SATELLITES`. |
@@ -626,6 +624,13 @@ Fleet discriminator: `Fleet.group_kind` ∈ `{"fleet", "fighter_group",
 Intercept / Join / Warp / Build at command validation
 (`BaseCommandHandler._reject_if_non_fleet_group`).
 
+`SmallTargetingSensor` (PROJ-FMS-A) is **not** a new ability class — it is
+a new component (`small_targeting_sensor` / `small_targeting_sensor_advanced`
+in `data/components.json`) that carries the existing `ToHitAttackModifier`
+ability. The distinction from `mini_sensor` is that `SmallTargetingSensor`
+does **not** carry `RequiresCommandAndControl`, so it stays operational on
+crewless mines and other small craft that would fail the C&C gate.
+
 ## PROJ-FMS-B — Mines runtime behaviour
 
 PROJ-FMS-B wired runtime behaviour for the abilities skeletoned in
@@ -640,11 +645,11 @@ end-to-end system design.
 | `StrategicMineLayer` | `StrategicMineLayerAbility` | STRATEGIC | `abilities/launch.py` | Wired via `OrderType.LAY_MINES` -> `LayMinesOrderHandler`. Pops mines from `VehicleBay` -> creates / extends a `mine_group` Fleet at the target hex. |
 | `TacticalMineLayer` | `TacticalMineLayerAbility` | COMBAT | `abilities/launch.py` | Wired via the battle-engine `mine_resolver` hook. Mid-battle-laid mines persist to the laying empire's `mine_group`. |
 
-Reserved `OrderType` enum values still pending (PROJ-FMS-D):
-`LAUNCH_SATELLITES`, `RECOVER_SATELLITES`. `LAY_MINES` was moved
-to the reachable-via-command set in PROJ-FMS-B Phase 1.
-`LAUNCH_FIGHTERS` and `RECOVER_FIGHTERS` were moved to the
-reachable-via-command set in PROJ-FMS-C Phase 1+3.
+`LAY_MINES` was moved to the reachable-via-command set in PROJ-FMS-B
+Phase 1. `LAUNCH_FIGHTERS` and `RECOVER_FIGHTERS` were moved to the
+reachable-via-command set in PROJ-FMS-C Phase 1+3. `LAUNCH_SATELLITES`
+and `RECOVER_SATELLITES` followed in PROJ-FMS-D Phase 1+2 — see the
+PROJ-FMS-D section below for the full wiring summary.
 
 Mine-group runtime fields on `Fleet` (only meaningful when
 `group_kind == "mine_group"`):
@@ -666,7 +671,7 @@ in PROJ-FMS-A and added end-of-battle reboard. See
 | Ability | Class | Layer | File | Behavior |
 |---|---|---|---|---|
 | `StrategicFighterLaunch` | `StrategicFighterLaunchAbility` | STRATEGIC | `abilities/launch.py` | Wired via `OrderType.LAUNCH_FIGHTERS` -> `LaunchFightersOrderHandler`. Pops fighter `CarriedVehicle`s from `VehicleBay` -> mints a new `fighter_group` Fleet at the target hex with one `ShipInstance` per launched fighter. HP preserved from `CarriedVehicle.current_hp`. |
-| `TacticalFighterLaunch` | `TacticalFighterLaunchAbility` | COMBAT | `abilities/launch.py` | Drives the design-instance launch path. `BattleEngine.launch_fighters_in_battle(carrier, [CarriedVehicle, ...])` spawns full design-backed fighters with components / weapons / HP, tags them with `launched_in_battle_id` for end-of-battle reboard. Legacy `VehicleLaunchAbility`-string spawn path retained with deprecation warning. |
+| `TacticalFighterLaunch` | `TacticalFighterLaunchAbility` | COMBAT | `abilities/launch.py` | Drives the design-instance launch path. `BattleEngine.launch_fighters_in_battle(carrier, [CarriedVehicle, ...])` spawns full design-backed fighters with components / weapons / HP, tags them with `launched_in_battle_id` for end-of-battle reboard. The legacy `VehicleLaunchAbility` class-string spawn path was fully removed in PROJ-FMS-C audit Fix 1 — payloads without `carried_vehicle` are skipped (no fallback). |
 | `RecoverFighters` | `RecoverFightersAbility` | STRATEGIC | `abilities/recovery.py` | Wired via `OrderType.RECOVER_FIGHTERS` -> `RecoverFightersOrderHandler`. Pops `ShipInstance`s from the target `fighter_group`, converts each to a `CarriedVehicle` (HP + per-component damage preserved), loads into the recovering carrier's bay. Partial recovery allowed; empty groups pruned from `empire.fleets`. |
 
 `OrderType.LAUNCH_FIGHTERS` and `OrderType.RECOVER_FIGHTERS` were moved

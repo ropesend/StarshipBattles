@@ -37,6 +37,7 @@ notes, not project documentation.
 | Save / Load | `docs/systems/save_load.md` | `SaveGameService` v3.0.0, turn-based disk layout, atomic writes, no migration, replay-store coupling |
 | Fighters | `docs/systems/fighters.md` | fighter design -> bay -> strategic launch -> tactical combat -> recovery; mid-battle launch + end-of-battle reboard; overflow into sector fighter_group |
 | Satellites | `docs/systems/satellites.md` | satellite design -> bay -> strategic launch -> stationary tactical combat -> recovery; mirrors fighters with stationary AI, separate ability gates, separate satellite_group namespace |
+| Minefields | `docs/systems/minefields.md` | mine design -> bay -> strategic lay -> entry resolution -> tactical per-tick resolver; sensitivity / threshold; selective self-destruct; ramming via warhead detonation |
 
 ## How-To Guides
 
@@ -234,5 +235,6 @@ docs/
     save_load.md
     fighters.md
     satellites.md
+    minefields.md
 ```
 

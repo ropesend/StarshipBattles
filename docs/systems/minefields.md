@@ -18,9 +18,10 @@ Authored in `data/vehicleclasses.json` and `data/vehiclelayers.json`
 - One `Mine_Standard` layer (single CORE) with a component whitelist
   for `Warhead`, `Laserhead`, `StructuralIntegrity`, and
   `ToHitAttackModifier`.
-- Per-class ``signature_bonus`` flowed into `total_defense_score` at
-  `game/simulation/entities/ship_stats.py:454-464`, making mines very
-  hard to hit by conventional weapons.
+- Per-class ``signature_bonus`` flowed into `total_defense_score`
+  through `game/simulation/entities/ship_stats.py` (the
+  `signature_bonus` aggregation block), making mines very hard to
+  hit by conventional weapons.
 
 Component data (in `data/components.json`):
 
@@ -70,8 +71,9 @@ The mine_group stores:
 - `mine_positions` (List[(x, y)]) — scatter coords.
 - `scatter_seed` (int) — stable PRNG seed for the layout.
 
-Multiple `mine_group`s per owner per hex are allowed; same-hex
-re-issues coalesce into the existing group.
+Multiple `mine_group`s per owner per hex are allowed; each
+`IssueLayMinesCommand` mints a fresh `mine_group` — no auto-merge
+(PROJ-FMS-B audit Fix 4).
 
 ## Strategic detonation math
 
@@ -95,8 +97,8 @@ P_trigger_pass = 1 - (1 - p_trigger) ** N         (over N warhead mines)
 
 where:
 
-- `bulk_score = -ship.size_score` (the `size_score` from
-  `ship_stats.py:443` is negative for bigger ships because it's a
+- `bulk_score = -ship.size_score` (the `size_score` computed in
+  `ship_stats.py` is negative for bigger ships because it's a
   defense term; the trigger formula uses the negated value so bigger
   = more triggers).
 - `maneuver_score = sqrt(accel / 20 + turn_speed / 360)`.
@@ -152,10 +154,15 @@ behaviour:
   detonating.
 
 The battle engine calls `_run_mine_resolver_tick()` after the
-standard tick phases (`update()` in `battle_engine.py`). The hook is
-opt-in: when `engine.mine_resolver is None`, battles run exactly as
-before. Wiring this attribute is the strategy-side battle
-compiler's job at battle setup time.
+standard tick phases (`update()` in `battle_engine.py`). PROJ-FMS-B
+audit Fix 2 added automatic spec-compiler wiring via
+`build_mine_resolver_setup` (one `TacticalMineResolver` per
+`mine_group` attached to `BattleEngine.mine_resolvers`, threaded
+through a `pre_tick_loop_callback` plus a `_mine_groups` side-channel
+on the frozen `BattleSpec`). `BattleEngine.mine_resolvers` (plural
+list) is the load-bearing slot; `BattleEngine.mine_resolver`
+(singular) is retained as a backwards-compat alias for the Phase 3
+unit tests.
 
 ## Player controls (UI / service)
 

@@ -10,6 +10,14 @@ Source: claude/codex inter-agent discussion at
 
 ## 2026-05-16 — Implementation decisions
 
+> **Banner:** Initial decisions about the legacy
+> `VehicleLaunchAbility` deprecation policy below were **superseded by
+> audit Fix 1** (see "2026-05-16 — Audit fix pass" later in this file).
+> The audit pass fully removed the legacy class and the class-string
+> spawn branch in `attack_processor.process_launch_attack`; there is
+> no shim or deprecation-warning path in shipped code. Items not
+> specifically about deprecation strategy remain accurate.
+
 ### Phase 1 — Strategic + tactical fighter launch
 
 - **No auto-merge across same-hex launches.** Each

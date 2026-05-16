@@ -26,13 +26,22 @@
   - Carrier with both ability sets and both bay types: handles both correctly.
 
 ### Hand verification (gameplay smoke)
-- [x] Empire A designs a satellite with a weapon + sensor. Builds 5 on a carrier with satellite bay capacity.
-- [x] Strategic-launches 4 into the current hex → `satellite_group` visible on map; 1 satellite remains in bay.
-- [x] Empire B's fleet moves into the hex → battle starts.
-- [x] All 4 satellites appear on Empire A's side at scattered positions, stay stationary, fire weapons when targets in range.
-- [x] Battle ends with 3 surviving satellites.
-- [x] Execute strategic recovery on the carrier (with `RecoverSatellitesAbility`) → 3 satellites back in bay (bay now has 4 total).
-- [x] HP / damage state preserved through the round trip — verified by inspecting `CarriedVehicle.current_hp`.
+
+> **2026-05-16 correction (mirrors PROJ-FMS-C audit Fix 3 pattern):**
+> These boxes were marked `[x]` without an actual in-game manual run.
+> Re-flagged `[ ]` as accurate state. Manual in-game smoke verification
+> is deferred to the UI-binding pass that lands the launch / recover
+> action buttons. The automated coverage in
+> `tests/integration/test_fms_cd_isolation.py` plus the per-phase unit
+> tests fully exercises the production code paths.
+
+- [ ] Empire A designs a satellite with a weapon + sensor. Builds 5 on a carrier with satellite bay capacity.
+- [ ] Strategic-launches 4 into the current hex → `satellite_group` visible on map; 1 satellite remains in bay.
+- [ ] Empire B's fleet moves into the hex → battle starts.
+- [ ] All 4 satellites appear on Empire A's side at scattered positions, stay stationary, fire weapons when targets in range.
+- [ ] Battle ends with 3 surviving satellites.
+- [ ] Execute strategic recovery on the carrier (with `RecoverSatellitesAbility`) → 3 satellites back in bay (bay now has 4 total).
+- [ ] HP / damage state preserved through the round trip — verified by inspecting `CarriedVehicle.current_hp`.
 
 ### Documentation
 - [x] Update [`docs/systems/`](../../../docs/systems/) with `satellites.md` describing the launch / recover / stationary-AI behavior.

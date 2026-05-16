@@ -208,10 +208,12 @@ sections cover:
    When `registries` is None or the ship's `design_data` is partial,
    it falls back to direct HP decrement. Production flows should
    always pass registries; tests deliberately do not.
-5. **Per-tick scaling factor is coarse-grained.** `DEFAULT_EXPECTED_TICKS_IN_PROXIMITY
-   = 50` is a single global constant. Real playtest data may want
-   to parametrise by ship speed (faster ship => fewer ticks in
-   proximity => higher per-tick chance).
+5. **Per-tick scaling factor is balance-tunable** via
+   `data/balance/mines.json::tactical.expected_ticks_in_proximity`
+   (PROJ-FMS-B audit Fix 5); the default value (50) is still a coarse
+   global — per-ship-speed parametrisation (faster ship => fewer ticks
+   in proximity => higher per-tick chance) is a follow-up
+   balance-tuning task.
 6. **`LAY_MINES` action_time fallback.** Added to
    `_ABILITY_LOOKUP_EXEMPT` in the contract test; the action falls
    through to the default action_time. A dedicated

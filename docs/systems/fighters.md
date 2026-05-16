@@ -74,18 +74,21 @@ Files: [`game/strategy/engine/handlers/launch_fighters.py`](../../game/strategy/
 
 ## Tactical launch (mid-battle, design-instance)
 
-The legacy `VehicleLaunchAbility` auto-launch path at
-[`weapon_firing_system.py`](../../game/simulation/combat/weapon_firing_system.py)
-still emits `AttackType.LAUNCH` attacks for old designs, but
-`process_launch_attack` now accepts an optional `carried_vehicle` payload
-that drives a full design-backed spawn via `ShipSerializer.from_dict`.
-Legacy class-string payloads still spawn a generic fighter but log a
-deprecation warning.
+The legacy `VehicleLaunchAbility` auto-launch path was removed in
+PROJ-FMS-C audit Fix 1. The shipped production path is design-instance
+only: `BattleEngine.launch_fighters_in_battle(carrier, [CarriedVehicle, ...])`
+drives the spawn via `ShipSerializer.from_dict`, and
+[`attack_processor.process_launch_attack`](../../game/simulation/systems/attack_processor.py)
+now requires a `carried_vehicle` payload — legacy class-string payloads
+without `carried_vehicle` are logged and skipped (no generic-fighter
+fallback). The carrier-side decision of *when* to launch is owned by
+[`CarrierAIController`](../../game/ai/carrier_controller.py), wired through
+`AIControllerFactory.create_for_ship` and the spec compiler's
+`pre_tick_loop_callback`.
 
-Production entry point: `BattleEngine.launch_fighters_in_battle(carrier,
-[CarriedVehicle, ...])`. The engine spawns each fighter, tags it with
-`launched_in_battle_id`, and registers it on the engine's
-`ReboardTracker` for end-of-battle reboard.
+`BattleEngine.launch_fighters_in_battle` spawns each fighter, tags it with
+`launched_in_battle_id`, and registers it on the engine's `ReboardTracker`
+for end-of-battle reboard.
 
 ## Combat join via `group_kind`
 
